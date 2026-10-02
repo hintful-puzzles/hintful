@@ -135,6 +135,8 @@ function poly(flat: number[], count: number): Point[] {
 const MARK_RING = 1;
 const MARK_OUTLINE = 2;
 const MARK_STRIPES = 4;
+/** A flag the check found on a square with no mine. */
+const MARK_MISTAKE = 8;
 
 /** The draw cache's key: the tile's value `v` (which reaches 66, and -24 when
  * pressed) with its hint marks above it. */
@@ -158,7 +160,9 @@ function drawStripes(
     );
 }
 
-/** A ring or an outline on the tile's border, over everything it draws. */
+/** A ring, an outline or a mistake's frame on the tile's border, over
+ * everything it draws. The check refuses a hint while it finds a mistake, so a
+ * frame never shares a tile with a hint's mark. */
 function drawBand(
   dr: GameDrawing,
   ts: number,
@@ -169,6 +173,7 @@ function drawBand(
   const band = { box: { x, y, w: ts, h: ts }, outer: 0, inner: Math.max(2, ts >> 3) };
   if (marks & MARK_RING) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
   else if (marks & MARK_OUTLINE) drawMarkSides(dr, band, MARK_ALL, COL_HINT_EVIDENCE);
+  else if (marks & MARK_MISTAKE) drawMarkSides(dr, band, MARK_ALL, COL_BANG);
 }
 
 function drawTile(
@@ -301,6 +306,7 @@ export function redraw(
   _animTime: number,
   flashTime: number,
   hint?: HintStep<MinesMove, MinesHint>,
+  mistakes?: readonly Point[],
 ): void {
   const ts = ds.tileSize;
   const border = borderFor(ts);
@@ -313,6 +319,7 @@ export function redraw(
   const ring = keys("ring");
   const outline = keys("outline");
   const stripes = keys("stripes");
+  const wrong = new Set((mistakes ?? []).map((p) => `${p.x},${p.y}`));
 
   let bg: number;
   if (flashTime) {
@@ -373,7 +380,8 @@ export function redraw(
       const marks =
         (ring.has(key) ? MARK_RING : 0) |
         (outline.has(key) ? MARK_OUTLINE : 0) |
-        (stripes.has(key) ? MARK_STRIPES : 0);
+        (stripes.has(key) ? MARK_STRIPES : 0) |
+        (wrong.has(key) ? MARK_MISTAKE : 0);
       const packed = packTile(v, marks);
       if (ds.grid[y * ds.w + x] !== packed || bg !== ds.bg || cc) {
         drawTile(

@@ -9,13 +9,13 @@ import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { answerCount } from "./answer.ts";
 import { deduce } from "./hint.ts";
 import { blackboxGame as game } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import {
   BALL_CORRECT,
   BALL_GUESS,
-  BALL_LOCK,
   type BlackboxMove,
   type BlackboxParams,
   type BlackboxState,
@@ -182,10 +182,14 @@ describe("Black Box's hint", () => {
   });
 });
 
+/** Pinned as a board, found in 400 deals: one of its five balls sits on the
+ * one square no laser reaches, which the count of five fills. */
+const HIDDEN_BALL = "4fa6ab5019c09e710317f3c0";
+
 describe("the end of the box", () => {
   it("puts a ball where no laser can tell, when the board must hold more", () => {
-    // Pinned as a board: one of its five balls sits where no laser reaches.
-    const s = game.newState(P8, "34ee6895a0d7a3660bc1acb7");
+    const s = game.newState(P8, HIDDEN_BALL);
+    expect(answerCount(s)).toBe(1);
     const { state, said } = follow(s);
     expect(said).toContain(
       "Every laser's way is settled, and 1 more ball hides on squares no laser reaches. One of them: put a ball on this square.",
@@ -193,44 +197,31 @@ describe("the end of the box", () => {
     expect(game.status(state)).toBe("solved");
   });
 
-  it("takes the known mark off first, where every unsettled square is marked known", () => {
-    let s = game.newState(P8, "34ee6895a0d7a3660bc1acb7");
+  // The board has one answer, so the count fills the squares no laser reaches,
+  // and a known mark on one of them is a mark no finish could keep: the check
+  // finds it, and the midend refuses a hint until it comes off.
+  it("finds a known mark on the square the count fills", () => {
+    let s = game.newState(P8, HIDDEN_BALL);
     s = follow(s, (t) => t.includes("more ball hides")).state;
-    for (const { at, holds } of deduce(s).known.squares())
-      if (holds === null && !(gridGet(s, at.x, at.y) & BALL_LOCK))
-        s = game.executeMove(s, { type: "toggleLock", x: at.x, y: at.y });
-    const res = game.hint?.(s);
-    if (!res?.ok) throw new Error("refused");
-    expect(res.steps.map((st) => st.explanation)).toEqual([
-      "Every laser's way is settled, and 1 more ball hides on squares no laser reaches. One of them: take the known mark off this square.",
-      "…and put a ball on this square, for the same count.",
-    ]);
-    expect(res.steps.map((st) => st.move.type)).toEqual(["toggleLock", "toggleBall"]);
+    expect(game.findMistakes?.(s)).toEqual([]);
+    const hidden = [...deduce(s).known.squares()].filter(
+      ({ at, holds }) => holds === null && gridGet(s, at.x, at.y) & BALL_CORRECT,
+    );
+    expect(hidden.length).toBe(1);
+    const { at } = hidden[0];
+    const marked = game.executeMove(s, { type: "toggleLock", x: at.x, y: at.y });
+    expect(game.findMistakes?.(marked)).toEqual([at]);
   });
 
-  it("takes a ball off an unsettled square when more are marked than the box holds", () => {
-    let found = 0;
-    for (let seed = 0; seed < 40 && found === 0; seed++) {
-      let { state: s } = deal(P8, `bbh-extra-${seed}`);
-      s = follow(s, (t) => t.startsWith("Check your answer")).state;
-      const open = [...deduce(s).known.squares()].filter(
-        ({ at, holds }) => holds === null && !(gridGet(s, at.x, at.y) & BALL_GUESS),
-      );
-      // A square some laser could still reach takes its ball off as part of a
-      // layout instead; the one wanted is a square no laser reaches at all.
-      for (const { at } of open) {
-        const step = next(
-          game.executeMove(s, { type: "toggleBall", x: at.x, y: at.y }),
-        );
-        if (step.explanation.startsWith("Every laser is fired")) continue;
-        found++;
-        expect(step.explanation).toBe(
-          "The box holds at most 5 balls, and no laser needs those on unsettled squares. One of them: take the ball off this square.",
-        );
-        expect(step.move).toEqual({ type: "toggleBall", x: at.x, y: at.y });
-        break;
-      }
-    }
-    expect(found).toBeGreaterThan(0);
+  it("finds a ball beyond the real ones, wherever no laser could tell", () => {
+    const { state } = deal(P8, "bbh-extra");
+    const s = follow(state, (t) => t.startsWith("Check your answer")).state;
+    expect(game.findMistakes?.(s)).toEqual([]);
+    const empty = [...deduce(s).known.squares()].find(
+      ({ at }) => !(gridGet(s, at.x, at.y) & (BALL_CORRECT | BALL_GUESS)),
+    );
+    if (!empty) throw new Error("no empty square");
+    const extra = game.executeMove(s, { type: "toggleBall", ...empty.at });
+    expect(game.findMistakes?.(extra)).toEqual([empty.at]);
   });
 });

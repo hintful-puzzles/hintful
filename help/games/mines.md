@@ -23,9 +23,13 @@ Every opened square is marked with the number of mines in the
 surrounding 8 squares, if there are any; if not, all the surrounding
 squares are automatically opened.
 
+**Check & Save** checks your flags against the mines, as it checks your
+answers in every other puzzle, and highlights a flag on a square with no
+mine under it.
+
 ## Hints
 
-**Hint** explains the next step rather than simply making it. Each step flags squares that must be mines, opens squares that must be safe, or takes a flag off a square the numbers prove safe. The hint reasons only from the numbers you have opened, never from your flags, since a flag is your guess until the numbers prove a mine under it: a mine it mentions is one the numbers prove, and flagged by an earlier step if you had not flagged it already. An *unopened* square, in its words, is one that is neither opened nor proved.
+**Hint** explains the next step rather than simply making it. Each step flags squares that must be mines or opens squares that must be safe. It waits until no flag is wrong, as Check & Save does. The hint reasons only from the numbers you have opened, never from your flags, since a flag may be a lucky guess until the numbers prove a mine under it: a mine it mentions is one the numbers prove, and flagged by an earlier step if you had not flagged it already. An *unopened* square, in its words, is one that is neither opened nor proved.
 
 {{hint-marks}}
 

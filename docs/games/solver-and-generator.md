@@ -938,6 +938,35 @@ overlay must be in the render diff key
 ([rendering.md](./rendering.md) § "Overlay sidecars"), and the refusal/banner
 coupling is in [hints.md](./hints.md).
 
+### One answer, even when it is hidden
+
+**A game with a mistake check plays only boards with one answer, and the
+engine enforces it.** Check & Save saves only a board that agrees with the
+answer, so a saved board can always be finished; on a board with two answers it
+would call a mark that fits the other a mistake. So `loadDesc` asks the game's
+own `solve` about every board it loads, and refuses one the solver proves has
+several answers (`DESC_NOT_UNIQUE`) or none (`DESC_CONTRADICTORY`), whoever wrote
+the desc ([`engine/desc-error.ts`](../../src/engine/desc-error.ts)). A game joins
+by having a `solve` that says `MULTIPLE_SOLUTIONS` or `NO_SOLUTION` when it has
+proved it; a solver that merely gave up says neither, and the board loads. A tier
+declared in `nonUniqueTiers` is not asked. The generator's half is the game's:
+deal only boards the same count calls unique, and hold it with a test against an
+answer count that has no search in it.
+
+**A hidden answer is no reason to skip the check.** Black Box's balls and
+Mines' mines are hidden, and both games check marks against them as every other
+game checks a digit: a guess with no ball, a known mark on a ball, a flag with no
+mine. Check & Save is an answer check in every game; a player who wants to use
+it to probe can do so anywhere. What a hidden-answer game owes instead is a
+generator that makes the answer the only one the visible clues allow: Black
+Box's verify accepts any balls that send every laser where the real ones do, and
+its upstream generator scattered balls at random, so it now builds a board a
+ball at a time, keeping each ball only where the board still has one answer
+([`blackbox/answer.ts`](../../src/games/blackbox/answer.ts)). Building beat
+scattering and redealing by a wide margin: on 8×8 with 16 balls, redealing found
+no board in 2,000 tries where building found one in 0.2 s, and on a ranged preset
+redealing skewed the count toward its fewest balls.
+
 ### Marks are checked like entries
 
 **Where the player pencils candidates, a blank cell whose marks leave out its

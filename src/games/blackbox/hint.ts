@@ -2,8 +2,11 @@
  * Black Box's hint: what the fired lasers prove about the box, and what to fire
  * when they prove nothing more.
  *
- * It reads only what the player can see, the lasers fired and where they went,
- * never the hidden balls, so it gives nothing away the board has not.
+ * It reads only what the player can see, the lasers fired and where they went
+ * and the marks on the box, never the hidden balls, so it gives nothing away
+ * the board has not. The midend asks only about a board whose marks the check
+ * passes, and every board has one answer (`answer.ts`), so no mark it meets is
+ * wrong and its steps only ever add marks.
  *
  * 1. **Settle squares.** Follow a fired laser through the squares already
  *    settled to the first one nothing has settled. If one of the two things
@@ -16,11 +19,12 @@
  * 2. **Fire a laser** whose way through the box still depends on squares
  *    nothing has settled.
  * 3. **Offer a layout.** When every laser is fired and none settles a square on
- *    its own, a bounded search finds balls that send every laser where it went.
- *    Past its budget the hint says it is out of reach.
+ *    its own, a bounded search finds balls that send every laser where it went,
+ *    keeping the player's marks. Past its budget the hint says it is out of
+ *    reach.
  * 4. **Check the answer** once every laser's way is settled by the balls on
- *    the board. The check accepts any balls that send every laser where the
- *    real ones do, so balls no laser can see may sit on any unsettled square.
+ *    the board, first putting any balls the count still needs on the squares
+ *    no laser reaches.
  */
 
 import {
@@ -30,7 +34,6 @@ import {
   narratedStep,
 } from "../../engine/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Seen, type Settled, say, type Would } from "./hint-text.ts";
 import {
@@ -134,7 +137,13 @@ function startsOf(state: BlackboxState): Start[] {
 export function deduce(state: BlackboxState): { known: Knowledge; firings: Firing[] } {
   const known = new Knowledge(state.w, state.h);
   const firings: Firing[] = [];
-  const starts = startsOf(state);
+  settle(startsOf(state), known, firings);
+  return { known, firings };
+}
+
+/** Settle in `known` every square the lasers `starts` settle one at a time,
+ * recording each in `firings`. */
+function settle(starts: readonly Start[], known: Knowledge, firings: Firing[]): void {
   for (let changed = true; changed; ) {
     changed = false;
     for (const s of starts) {
@@ -155,7 +164,6 @@ export function deduce(state: BlackboxState): { known: Knowledge; firings: Firin
       }
     }
   }
-  return { known, firings };
 }
 
 type Step = HintStep<BlackboxMove>;
@@ -165,53 +173,41 @@ const guessed = (s: BlackboxState, p: Point): boolean =>
 const locked = (s: BlackboxState, p: Point): boolean =>
   (gridGet(s, p.x, p.y) & BALL_LOCK) !== 0;
 
-/** The moves that show a settled square on the board: a ball is a guess on a
- * square not marked known; an empty square holds no guess and is marked known.
- * A square shown otherwise takes two moves, the first undoing it. */
-function movesTo(s: BlackboxState, at: Point, ball: boolean): BlackboxMove[] {
-  const lock: BlackboxMove = { type: "toggleLock", x: at.x, y: at.y };
-  const toggle: BlackboxMove = { type: "toggleBall", x: at.x, y: at.y };
-  if (ball)
-    return [...(locked(s, at) ? [lock] : []), ...(guessed(s, at) ? [] : [toggle])];
-  return [...(guessed(s, at) ? [toggle] : []), ...(locked(s, at) ? [] : [lock])];
-}
-
-/** One journey over `moves`: its first leg in `lead`'s words and the rest in
- * `later`'s. */
-function journey(
-  moves: readonly BlackboxMove[],
-  lead: () => Sentence,
-  later: () => Sentence,
-): Step[] {
-  return moves.map((move, leg) =>
-    narratedStep<BlackboxMove, unknown>({
-      move,
-      words: leg === 0 ? lead() : later(),
-      ...(leg > 0 ? { continuesPrevious: true } : {}),
-    }),
-  );
+/** The move that shows a settled square on the board, or `null` when it shows
+ * already: a ball is a guess, an empty square is marked known. A square the
+ * board shows the other way would be a mistake, which the midend refuses
+ * first. */
+function moveTo(s: BlackboxState, at: Point, ball: boolean): BlackboxMove | null {
+  if (ball) return guessed(s, at) ? null : { type: "toggleBall", x: at.x, y: at.y };
+  return locked(s, at) ? null : { type: "toggleLock", x: at.x, y: at.y };
 }
 
 /** How many layouts the search may try before it says the board is out of
  * its reach. */
 const LAYOUT_BUDGET = 200_000;
 
-class OutOfReach extends Error {}
+export class OutOfReach extends Error {}
 
 /**
- * Fill the squares the fired lasers leave open so that every fired laser goes
- * where it went, within the most balls the box holds, trying each square empty
- * first so the layout adds as few balls as it can. Fills `known` in place and
- * says whether a layout was found; throws {@link OutOfReach} past its budget.
+ * Walk the ways of filling the squares `known` leaves open so that every fired
+ * laser goes where it went, within the box's ball count, trying each square
+ * empty first and settling what each try forces before the next. A way leaves
+ * open the squares no laser looks at, and `found` is told how many balls it has
+ * and how many such squares; it stops the walk by returning `true`, and the
+ * walk then leaves that way in `known`. Throws {@link OutOfReach} after
+ * `budget` steps.
  */
-function searchLayout(state: BlackboxState, known: Knowledge): boolean {
-  // A numbered laser's two ends are one path, so its entry alone suffices.
-  const starts = startsOf(state).filter(
-    (s) => s.seen.kind !== "exit" || s.from < s.arrives,
-  );
+function walkLayouts(
+  state: BlackboxState,
+  known: Knowledge,
+  found: (balls: number, open: number) => boolean,
+  budget: number,
+): boolean {
+  const starts = startsOf(state);
+  const scratch: Firing[] = [];
   let tried = 0;
-  const rec = (open: number): boolean => {
-    if (++tried > LAYOUT_BUDGET) throw new OutOfReach();
+  const rec = (): boolean => {
+    if (++tried > budget) throw new OutOfReach();
     const balls = known.balls();
     if (balls > state.maxballs) return false;
     let pick: Point | null = null;
@@ -220,28 +216,67 @@ function searchLayout(state: BlackboxState, known: Knowledge): boolean {
       if (typeof t !== "number") pick ??= t.unknown;
       else if (t !== s.arrives) return false;
     }
-    if (pick === null) return balls + open >= state.minballs;
+    if (pick === null) {
+      const open = known.cells.filter((c) => c === null).length;
+      return balls + open >= state.minballs && found(balls, open);
+    }
+    const before = known.cells.slice();
     for (const ball of [false, true]) {
       known.set(pick, ball);
-      if (rec(open - 1)) return true;
+      settle(starts, known, scratch);
+      scratch.length = 0;
+      if (rec()) return true;
+      known.cells.splice(0, before.length, ...before);
     }
-    known.set(pick, null);
     return false;
   };
-  return rec(known.cells.filter((c) => c === null).length);
+  return rec();
+}
+
+/** Fill `known` with a layout that sends every fired laser where it went, and
+ * say whether there is one; throws {@link OutOfReach} past its budget. */
+function searchLayout(state: BlackboxState, known: Knowledge): boolean {
+  return walkLayouts(state, known, () => true, LAYOUT_BUDGET);
+}
+
+/** How many ways `k` balls can sit on `n` squares, capped at 2. */
+function waysUpTo2(n: number, k: number): number {
+  if (k < 0 || k > n) return 0;
+  return k === 0 || k === n ? 1 : 2;
+}
+
+/**
+ * How many layouts send every fired laser where it went, counted up to 2, from
+ * what the lasers settle; throws {@link OutOfReach} after `budget` steps. Fired
+ * on every laser, this is how many answers the board has.
+ */
+export function layoutsUpTo2(state: BlackboxState, budget: number): number {
+  const { known } = deduce(state);
+  let count = 0;
+  walkLayouts(
+    state,
+    known,
+    (balls, open) => {
+      for (let more = 0; more <= open && count < 2; more++)
+        if (balls + more >= state.minballs && balls + more <= state.maxballs)
+          count += waysUpTo2(open, more);
+      return count >= 2;
+    },
+    budget,
+  );
+  return Math.min(count, 2);
 }
 
 /** Black Box's hint (see the file header). */
 export function hint(state: BlackboxState): HintResult<BlackboxMove> {
   const { known, firings } = deduce(state);
-  const settle = firings.flatMap((f) =>
-    journey(
-      movesTo(state, f.settled.at, f.settled.ball),
-      () => say.ray(f.seen, f.would, f.settled),
-      () => say.again(f.settled, "ray"),
-    ),
-  );
-  if (settle.length > 0) return { ok: true, steps: settle };
+  const settled = firings.flatMap((f) => {
+    const move = moveTo(state, f.settled.at, f.settled.ball);
+    return move === null
+      ? []
+      : [narratedStep({ move, words: say.ray(f.seen, f.would, f.settled) })];
+  });
+  if (settled.length > 0) return { ok: true, steps: settled };
 
   const open: number[] = [];
   for (let i = 0; i < state.nlasers; i++)
@@ -269,10 +304,13 @@ export function hint(state: BlackboxState): HintResult<BlackboxMove> {
 }
 
 /** The steps that put a found layout on the board, as one journey; none when
- * the board shows it already, `null` past the search's budget. Leaves the
- * layout in `known`. */
+ * the board shows it already, `null` past the search's budget. The search keeps
+ * the player's marks, so the layout only adds balls. Leaves the layout in
+ * `known`. */
 function layoutSteps(state: BlackboxState, known: Knowledge): Step[] | null {
-  const before = known.cells.slice();
+  for (const { at, holds } of known.squares())
+    if (holds === null && (guessed(state, at) || locked(state, at)))
+      known.set(at, guessed(state, at));
   try {
     if (!searchLayout(state, known))
       throw new Error("blackbox hint: the fired lasers admit no layout");
@@ -280,74 +318,44 @@ function layoutSteps(state: BlackboxState, known: Knowledge): Step[] | null {
     if (e instanceof OutOfReach) return null;
     throw e;
   }
-  const changes: Settled[] = [];
-  for (const [i, { at, holds }] of [...known.squares()].entries())
-    if (before[i] === null && holds !== null && holds !== guessed(state, at))
-      changes.push({ at, ball: holds });
-  // A ball goes on through a known mark; an empty square only loses its ball.
-  const legs = changes.flatMap(({ at, ball }) => {
-    const out: { at: Point; change: "ball" | "unball" | "unlock" }[] = [];
-    if (!ball) out.push({ at, change: "unball" });
-    else {
-      if (locked(state, at)) out.push({ at, change: "unlock" });
-      out.push({ at, change: "ball" });
-    }
-    return out;
-  });
-  const all = changes.map((c) => c.at);
-  return legs.map(({ at, change }, i) => {
-    const leg =
-      legs.length === 1
-        ? "only"
-        : i === 0
-          ? "first"
-          : i === legs.length - 1
-            ? "last"
-            : "next";
-    return narratedStep<BlackboxMove, unknown>({
-      move: {
-        type: change === "unlock" ? "toggleLock" : "toggleBall",
-        x: at.x,
-        y: at.y,
-      },
-      words: say.layout(at, change, leg, all),
+  const add: Point[] = [];
+  for (const { at, holds } of known.squares())
+    if (holds === true && !guessed(state, at)) add.push(at);
+  return add.map((at, i) =>
+    narratedStep<BlackboxMove, unknown>({
+      move: { type: "toggleBall", x: at.x, y: at.y },
+      words: say.layout(at, sequenceLeg(i, add.length), add),
       ...(i > 0 ? { continuesPrevious: true } : {}),
-    });
-  });
+    }),
+  );
 }
 
-/** Every laser's way is settled by `known`: bring the balls on unsettled
- * squares to a count the box can hold, then check the answer. */
+const sequenceLeg = (i: number, n: number): "only" | "first" | "next" | "last" =>
+  n === 1 ? "only" : i === 0 ? "first" : i === n - 1 ? "last" : "next";
+
+/** Every laser's way is settled by `known`: put any balls the count still
+ * needs on squares no laser reaches, then check the answer. Every board has one
+ * answer, so the count fixes those squares: all of them hold a ball, or none
+ * does, and none is marked known. */
 function finish(state: BlackboxState, known: Knowledge): Step[] {
   let onOpen = 0;
   let free: Point | null = null;
-  let freeLocked: Point | null = null;
-  let extra: Point | null = null;
   for (const { at, holds } of known.squares()) {
     if (holds !== null) continue;
-    if (guessed(state, at)) {
-      onOpen++;
-      extra ??= at;
-    } else if (locked(state, at)) freeLocked ??= at;
-    else free ??= at;
+    if (guessed(state, at)) onOpen++;
+    else if (!locked(state, at)) free ??= at;
   }
-  const found = known.balls();
-  const more = state.minballs - found - onOpen;
-  const spare = free ?? freeLocked;
-  if (more > 0 && spare !== null) {
-    return journey(
-      movesTo(state, spare, true),
-      () => say.hidden(more, spare, locked(state, spare)),
-      () => say.again({ at: spare, ball: true }, "count"),
-    );
-  }
-  if (found + onOpen > state.maxballs && extra !== null)
+  const more = state.minballs - known.balls() - onOpen;
+  if (more > 0) {
+    if (free === null)
+      throw new Error("blackbox hint: the count needs a ball no square can take");
     return [
       narratedStep({
-        move: { type: "toggleBall", x: extra.x, y: extra.y },
-        words: say.extra(state.maxballs, extra),
+        move: { type: "toggleBall", x: free.x, y: free.y },
+        words: say.hidden(more, free),
       }),
     ];
+  }
   return [narratedStep({ move: { type: "reveal" }, words: say.done() })];
 }
 

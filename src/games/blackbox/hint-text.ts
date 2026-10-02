@@ -105,17 +105,6 @@ export const say = {
     );
   },
 
-  /** The later leg of a settled square that took two moves to show: a ball
-   * taken off before the square is marked known, or a known mark taken off
-   * before the ball goes on. */
-  again: (s: Settled, why: "ray" | "layout" | "count"): Sentence =>
-    sentence({
-      move: s.ball
-        ? phrase`put a ball on ${thisSquare(s.at)}`
-        : phrase`mark ${thisSquare(s.at)} as known`,
-      relation: { kind: "again", basis: phrase`the same ${why}` },
-    }),
-
   /** Nothing settles another square: fire a laser whose way through the box
    * still depends on squares nothing has settled. */
   fire: (laser: number, firedAny: boolean): Sentence =>
@@ -131,35 +120,25 @@ export const say = {
     }),
 
   /**
-   * One move of a layout that sends every fired laser where it went, found by
+   * One ball of a layout that sends every fired laser where it went, found by
    * trying once no single laser settles a square: the first leg names every
-   * square the layout changes, and each leg makes one change.
+   * square the layout puts a ball on, and each leg puts one.
    */
   layout: (
     at: Point,
-    change: "ball" | "unball" | "unlock",
     leg: "only" | "first" | "next" | "last",
     all: readonly Point[],
   ): Sentence => {
-    const here = thisSquare(at);
+    const move = phrase`put a ball on ${thisSquare(at)}`;
     if (leg === "only")
       return sentence({
         look: phrase`Every laser is fired, and none settles a square alone`,
-        move:
-          change === "ball"
-            ? phrase`put a ball on ${here}`
-            : phrase`take the ball off ${here}`,
+        move,
         relation: {
           kind: "effect",
           effect: phrase`then every laser goes where it went`,
         },
       });
-    const move =
-      change === "ball"
-        ? phrase`put a ball on ${here}`
-        : change === "unball"
-          ? phrase`take the ball off ${here}`
-          : phrase`take the known mark off ${here}`;
     const ringed = mark.as("ring", CELL, all, (els) =>
       els.length === 1 ? "the ringed square" : "the ringed squares",
     );
@@ -175,24 +154,12 @@ export const say = {
   },
 
   /** Every laser's way is settled by the balls found, but the board must hold
-   * more: the rest sit where no laser can tell. */
-  hidden: (more: number, at: Point, known: boolean): Sentence =>
+   * more: the rest sit on squares no laser reaches, and the count fills every
+   * one of them. */
+  hidden: (more: number, at: Point): Sentence =>
     sentence({
       look: phrase`Every laser's way is settled, and ${more === 1 ? "1 more ball hides" : `${more} more balls hide`} on squares no laser reaches`,
-      // A square marked known takes no ball, so its first move takes the mark
-      // off, and the ball goes on in the journey's next leg.
-      move: known
-        ? phrase`take the known mark off ${thisSquare(at)}`
-        : phrase`put a ball on ${thisSquare(at)}`,
-      relation: { kind: "oneOf" },
-    }),
-
-  /** More balls are marked than the box can hold, and no laser needs the ones
-   * on squares nothing settles. */
-  extra: (most: number, at: Point): Sentence =>
-    sentence({
-      look: phrase`The box holds at most ${most} ${most === 1 ? "ball" : "balls"}, and no laser needs those on unsettled squares`,
-      move: phrase`take the ball off ${thisSquare(at)}`,
+      move: phrase`put a ball on ${thisSquare(at)}`,
       relation: { kind: "oneOf" },
     }),
 

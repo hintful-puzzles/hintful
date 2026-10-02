@@ -61,6 +61,10 @@ const NCOLORS = 14;
  * the cursor's flag, so a mark coming or going repaints it. */
 const HINT_RING = 1 << 17;
 const HINT_OUTLINE = 1 << 18;
+/** A square the check found wrong, in the same word, for the same reason. The
+ * midend refuses a hint while the check finds anything, so its frame never
+ * shares a square with a hint's mark. */
+const MISTAKE = 1 << 19;
 
 export const PREFERRED_TILE_SIZE = 32;
 const FLASH_FRAME = 0.2;
@@ -147,6 +151,8 @@ function drawHintMark(
     drawThickRectOutline(dr, dx + 1, dy + 1, ts - 2, ts - 2, thick, COL_HINT_EVIDENCE);
   if (flags & HINT_RING)
     drawThickRectOutline(dr, dx + 1, dy + 1, ts - 2, ts - 2, thick, COL_HINT);
+  if (flags & MISTAKE)
+    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 2, ts - 2, thick, COL_WRONG);
 }
 
 /** Which tiles the displayed step's words ring or outline, by grid index. */
@@ -339,11 +345,16 @@ export function redraw(
   animTime: number,
   flashTime: number,
   hint?: HintStep<unknown> | null,
+  mistakes?: readonly Point[],
 ): void {
   const ts = ds.tileSize;
   let isflash = false;
   let force = false;
   const marked = hintFlags(state, hint);
+  for (const m of mistakes ?? []) {
+    const i = gridIdx(state.w, m.x, m.y);
+    marked.set(i, (marked.get(i) ?? 0) | MISTAKE);
+  }
   const flagsAt = (x: number, y: number): number =>
     marked.get(gridIdx(state.w, x, y)) ?? 0;
 

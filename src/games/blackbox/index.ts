@@ -23,6 +23,7 @@ import {
 } from "../../engine/params.ts";
 import { gridCursorMove, LEFT_RELEASE, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { MULTIPLE_SOLUTIONS } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   type TargetGeometry,
@@ -30,6 +31,7 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import { answerCount, newDesc } from "./answer.ts";
 import { hint, hintKeepTrack } from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
 import {
@@ -44,6 +46,7 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  BALL_CORRECT,
   BALL_GUESS,
   BALL_LOCK,
   type BlackboxMove,
@@ -64,7 +67,6 @@ import {
   LASER_EMPTY,
   LASER_OMITTED,
   LASER_WRONG,
-  newDesc,
   newState,
   presets,
   range2grid,
@@ -304,6 +306,23 @@ function executeMove(from: BlackboxState, m: BlackboxMove): BlackboxState {
   return ret;
 }
 
+// --- mistakes ---------------------------------------------------------
+
+/** A guess on a square with no ball, and a square marked known that holds
+ * one. Every board has one answer (`answer.ts`), so these are exactly the
+ * marks no finish could keep. */
+function findMistakes(s: BlackboxState): readonly Point[] {
+  if (s.reveal) return [];
+  const out: Point[] = [];
+  for (let y = 1; y <= s.h; y++)
+    for (let x = 1; x <= s.w; x++) {
+      const v = gridGet(s, x, y);
+      const ball = (v & BALL_CORRECT) !== 0;
+      if ((v & BALL_GUESS && !ball) || (v & BALL_LOCK && ball)) out.push({ x, y });
+    }
+  return out;
+}
+
 // --- hint -------------------------------------------------------------
 
 /** A click on the square the step's move acts on: a box square, a laser's
@@ -356,7 +375,8 @@ export const blackboxGame: Game<
   BlackboxState,
   BlackboxMove,
   BlackboxUi,
-  BlackboxDrawState
+  BlackboxDrawState,
+  Point
 > = {
   id: "blackbox",
 
@@ -404,12 +424,13 @@ export const blackboxGame: Game<
   interpretMove,
   executeMove,
   status,
-  notApplicable: {
-    findMistakes:
-      "The balls are hidden, and checking your guesses against them would give them away. They are checked once, when you say you are done.",
-  },
+  findMistakes,
 
-  solve() {
+  solve(orig: BlackboxState) {
+    // A board the lasers cannot pin down has no single answer to show, and
+    // saying so is what keeps such a board from loading (`loadDesc`). A count
+    // past its budget settles nothing, so the board is taken as it comes.
+    if (answerCount(orig) === 2) return { ok: false, error: MULTIPLE_SOLUTIONS };
     // The real balls, guessed and revealed: upstream's Solve revealed them
     // beside the player's guesses, scored as a loss.
     return { ok: true, move: { type: "solve" } };

@@ -2988,18 +2988,19 @@ The recorder + driver shape that made it clean and resume-safe:
 The recorder is **gated** (`this.recording`), so `runSolver` — the generator's
 path — is byte-identical and the differential is unaffected by construction.
 
-### A mark nothing can check is a claim, not a premise (Mines)
+### A right mark is not yet a premise (Mines)
 
-Most hinted games let the midend refuse on a wrong mark (`findMistakes`), so a
-hint may build on the player's marks. Mines cannot: checking a flag would give
-the mines away, so it has no `findMistakes`, and a flag is the player's guess.
-So the hint **deduces from the opened numbers alone**. A flag counts only once a
-deduction proves a mine under it; a flag on a square a deduction proves safe is
-a conflict the step names ("…so the flag on the ringed square must come off"),
-with the open as the journey's next leg. Every mine a sentence cites is then one
-the plan proved, and flagged in an earlier step if the player had not.
-Exemplar: [`mines/hint.ts`](../../src/games/mines/hint.ts), and the wrong-flag
-test in `mines-hint.test.ts`.
+The midend refuses a hint while `findMistakes` finds anything, so a hint never
+meets a wrong mark, and it writes no step to undo one. A hidden answer is no
+exception: Mines' check finds a flag with no mine under it, and Black Box's a
+guess with no ball or a known mark on a ball, exactly as every other game's
+check compares the board with its one answer. But a mark the check passes may
+still be one the player guessed rather than deduced, and a hint that reasoned
+from it would teach the guess. So Mines' hint **deduces from the opened numbers
+alone**: a flag counts only once a deduction proves a mine under it, and every
+mine a sentence cites is one the plan proved, flagged in an earlier step if the
+player had not. Exemplar: [`mines/hint.ts`](../../src/games/mines/hint.ts), and
+"never cites a flag it has not proved" in `mines-hint.test.ts`.
 
 **Measure the ladder against the generator's certifier before trusting it.**
 A game without tiers cannot refuse on a board its generator promised solvable,

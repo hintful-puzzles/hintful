@@ -18,6 +18,10 @@
  * then it is not about either puzzle.
  */
 
+import { type DifficultyContract, tierOf } from "./difficulty.ts";
+import type { ParamConfigItem } from "./game.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "./solve-failure.ts";
+
 declare const descErrorBrand: unique symbol;
 
 /** A player-facing reason a game ID's description was rejected. */
@@ -111,12 +115,27 @@ export function descValue<T>(parse: DescParse<T>): T {
   return parse.value;
 }
 
-/**
- * Build state 0 from a desc, or say why it will not load. The verdict is the
- * game's own `newState` reaching {@link descValue}, so the board a desc builds
- * and the answer to "does it load?" are one reading and cannot disagree.
- */
-export function loadDesc<P, S>(
+/** The puzzle has more than one solution. A game whose mistake check compares
+ * the board with its answer plays only boards that have exactly one
+ * ({@link loadDesc}). */
+export const DESC_NOT_UNIQUE = descError(
+  "This game ID's puzzle has more than one solution, and only puzzles with exactly one can be played here.",
+);
+
+/** What {@link loadDesc} reads off a game: how to build a board, and, for the
+ * answer's verdict, its mistake check, its solver and its tiers. */
+interface Loadable<P, S> {
+  newState(p: P, desc: string): S;
+  findMistakes?: unknown;
+  solve?(orig: S, curr: S): { ok: true } | { ok: false; error: string };
+  difficulty?: DifficultyContract<P>;
+  paramConfig?: readonly ParamConfigItem<P>[];
+}
+
+/** The board a desc describes, or why it describes none: the game's own
+ * `newState` reaching {@link descValue}, so the board and the verdict are one
+ * reading and cannot disagree. */
+function readBoard<P, S>(
   game: { newState(p: P, desc: string): S },
   p: P,
   desc: string,
@@ -129,9 +148,50 @@ export function loadDesc<P, S>(
   }
 }
 
-/** Why `desc` will not load for `p`, or `null` when it does ({@link loadDesc}). */
+/**
+ * Build state 0 from a desc, or say why it will not load: the board it
+ * describes ({@link validateDesc}), then how many answers that board has.
+ *
+ * **A board with a mistake check has exactly one answer.** Check & Save compares
+ * the player's marks with the answer and saves only a board that agrees, so a
+ * saved board can always be finished; on a board with two answers it would call
+ * a mark that fits the other one a mistake. So where the game's own `solve`
+ * proves a board has several answers or none, the board does not load, whoever
+ * wrote it. A tier the game declares `nonUniqueTiers` promises no single answer
+ * and is not asked.
+ */
+export function loadDesc<P, S>(game: Loadable<P, S>, p: P, desc: string): DescParse<S> {
+  const read = readBoard(game, p, desc);
+  if (!read.ok) return read;
+  const answer = answerVerdict(game, p, read.value);
+  return answer === null ? read : { ok: false, error: answer };
+}
+
+function answerVerdict<P, S>(game: Loadable<P, S>, p: P, state: S): DescError | null {
+  if (game.findMistakes === undefined || game.solve === undefined) return null;
+  const relaxed = game.difficulty?.nonUniqueTiers;
+  if (relaxed?.includes(tierOf(game, p))) return null;
+  const solved = game.solve(state, state);
+  if (solved.ok) return null;
+  if (solved.error === MULTIPLE_SOLUTIONS) return DESC_NOT_UNIQUE;
+  if (solved.error === NO_SOLUTION) return DESC_CONTRADICTORY;
+  return null;
+}
+
+/** Why `desc` describes no board for `p`, or `null` when it describes one,
+ * whatever that board's answers: a codec's verdict. */
 export function validateDesc<P>(
   game: { newState(p: P, desc: string): unknown },
+  p: P,
+  desc: string,
+): DescError | null {
+  return descVerdict(readBoard(game, p, desc));
+}
+
+/** Why `desc` will not load for `p`, or `null` when it does ({@link loadDesc}):
+ * the board it describes, and that board's one answer. */
+export function loadVerdict<P>(
+  game: Loadable<P, unknown>,
   p: P,
   desc: string,
 ): DescError | null {

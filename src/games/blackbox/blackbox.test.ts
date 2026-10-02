@@ -22,6 +22,7 @@ import { bin2hex, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { newDesc } from "./answer.ts";
 import { blackboxGame } from "./index.ts";
 import {
   BALL_CORRECT,
@@ -36,7 +37,6 @@ import {
   LASER_EMPTY,
   LASER_HIT,
   LASER_REFLECT,
-  newDesc,
   newState,
 } from "./state.ts";
 
@@ -333,7 +333,7 @@ describe("Black Box — Game surface", () => {
     expect(blackboxGame.statusbarText).toBeDefined();
     expect(blackboxGame.solve).toBeDefined();
     expect(blackboxGame.hint).toBeDefined();
-    expect(blackboxGame.findMistakes).toBeUndefined();
+    expect(blackboxGame.findMistakes).toBeDefined();
   });
 
   it("produces the correct status-bar text across phases", () => {

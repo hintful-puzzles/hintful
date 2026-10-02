@@ -23,7 +23,6 @@ import {
   Narration,
   phrase,
   type Sentence,
-  sentence,
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
@@ -131,27 +130,6 @@ export const conclude = {
     ring: readonly Point[],
     kind: "safe" | "mine" = p.proves,
   ): Sentence => so({ look: p.words, move: conclusion(ring, kind) }),
-
-  /** A safe square under the player's flag: the flag must come off before it
-   * can open. */
-  flags: (p: Premise, ring: readonly Point[]): Sentence =>
-    so({
-      look: p.words,
-      move: phrase`${mark.as("ring", CELL, ring, (els) => (els.length === 1 ? "the flag on the ringed square" : "the flags on the ringed squares"))} must come off`,
-    }),
-
-  /** The leg after the flags came off: open what they covered, which the lead
-   * leg proved safe. */
-  afterFlags: (ring: readonly Point[]): Sentence => {
-    const one = ring.length === 1;
-    return sentence({
-      move: phrase`open ${mark.as("ring", CELL, ring, (els) => (els.length === 1 ? "the ringed square" : "the ringed squares"))}`,
-      relation: {
-        kind: "again",
-        basis: phrase`with ${one ? "its flag" : "their flags"} off ${one ? "it" : "they"} must be safe`,
-      },
-    });
-  },
 };
 
 export const say = {

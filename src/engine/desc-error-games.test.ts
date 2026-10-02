@@ -1,12 +1,12 @@
 /*
  * A game ID a player pastes is refused or played, never thrown.
  *
- * The Enter Game ID dialog shows what `validateDesc` returns, and a player
+ * The Enter Game ID dialog shows what `loadDesc` refuses with, and a player
  * types whatever they type. A throw there is an unhandled rejection in the
  * worker rather than a sentence.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "./desc-error.ts";
+import { loadVerdict, validateDesc } from "./desc-error.ts";
 import { Midend } from "./midend.ts";
 import { randomNew } from "./random/index.ts";
 import { descAlphabet, descMutants } from "./testing/desc-mutants.ts";
@@ -96,8 +96,9 @@ describe("a near-miss game ID", () => {
       let tried = 0;
       let n = 0;
       for (const board of boards) {
-        // A parser made strict must still read what its own generator writes.
-        const own = validateDesc(game, game.decodeParams(board.params), board.desc);
+        // A parser made strict must still read what its own generator writes,
+        // and the board it deals must have the one answer loading asks for.
+        const own = loadVerdict(game, game.decodeParams(board.params), board.desc);
         if (own !== null) failures.push(`${board.params}:${board.desc}: ${own}`);
         const mutants = descMutants(board.desc, alphabet);
         const stride = SLOW_TESTS_ENABLED
@@ -132,10 +133,12 @@ describe("a near-miss game ID", () => {
   // floor is on the sum: a mutator or a slice that went blind would drop it. It
   // was 4,668 when written and 3,443 once every game read its desc strictly
   // (`read-descs-through-one-cursor`), since a near miss a strict parser refuses
-  // never reaches `newState`.
+  // never reaches `newState`. It was 2,629 once loading asked a board for its
+  // one answer (`play-only-boards-with-one-answer`): one edit to a puzzle with
+  // one answer usually leaves it with several or none.
   itOverWholeSweep("loaded enough accepted near misses to mean something", () => {
     expect(accepted.size).toBe(REGISTERED_GAME_COUNT);
     const total = [...accepted.values()].reduce((a, b) => a + b, 0);
-    expect(total).toBeGreaterThanOrEqual(3000);
+    expect(total).toBeGreaterThanOrEqual(2300);
   });
 });

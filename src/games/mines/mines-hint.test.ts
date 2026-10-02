@@ -143,37 +143,26 @@ describe("Mines hint: the deductions", () => {
   });
 });
 
-describe("Mines hint: flags are the player's claims", () => {
-  it("takes a flag off a square the numbers prove safe, then opens it", () => {
-    const s1 = minesGame.executeMove(fresh(9, 9, 10, "wrong-flag"), open(4, 4));
-    const target = plan(s1).find((st) => st.highlights?.kind === "open")?.highlights
-      ?.targets[0];
-    if (!target) throw new Error("the plan opens nothing");
-    const flagged = minesGame.executeMove(s1, {
-      type: "ops",
-      ops: [{ op: "F", x: target.x, y: target.y }],
-    });
-    expect(flagged.grid[target.y * 9 + target.x]).toBe(FLAG);
-    const steps = plan(flagged);
-    const i = steps.findIndex(
-      (st) =>
-        st.highlights?.kind === "unflag" &&
-        st.highlights.targets.some((t) => t.x === target.x && t.y === target.y),
-    );
-    expect(i).toBeGreaterThanOrEqual(0);
-    expect(steps[i].explanation).toMatch(/must come off\.$/);
-    // The same firing goes on to open it.
-    expect(steps[i + 1].continuesPrevious).toBe(true);
-    expect(steps[i + 1].highlights?.kind).toBe("open");
-  });
-
-  it("never cites a flag it has not proved, so a wrong flag does not move a premise", () => {
+describe("Mines hint: a flag is a premise only once proved", () => {
+  it("never cites a flag it has not proved, so a lucky flag does not move a premise", () => {
     const s1 = minesGame.executeMove(fresh(9, 9, 10, "decoy"), open(4, 4));
     const before = plan(s1).map((st) => st.explanation);
-    // A flag on a covered square far from every opened number.
+    // A right flag on a mine no opened number touches.
+    const touched = (i: number) =>
+      [-10, -9, -8, -1, 1, 8, 9, 10].some((d) => {
+        const j = i + d;
+        return (
+          j >= 0 &&
+          j < 81 &&
+          Math.abs((j % 9) - (i % 9)) <= 1 &&
+          s1.grid[j] >= 0 &&
+          s1.grid[j] <= 8
+        );
+      });
     const far = s1.grid.findIndex(
-      (v, i) => v < 0 && !(s1.layout.mines as Int8Array)[i] && i !== 0,
+      (v, i) => v < 0 && (s1.layout.mines as Int8Array)[i] === 1 && !touched(i),
     );
+    expect(far).toBeGreaterThanOrEqual(0);
     const decoy = minesGame.executeMove(s1, {
       type: "ops",
       ops: [{ op: "F", x: far % 9, y: Math.floor(far / 9) }],

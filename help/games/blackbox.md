@@ -21,6 +21,12 @@ inside it, and onto the button once it shows.
 
 A square marked as known takes no ball until you right-click it again.
 
+Every board has exactly one answer: once every laser is fired, only one
+set of balls sends them all where they go. So **Check & Save** can check
+your marks against it, as it does in every other puzzle, and highlights a
+ball on a square that holds none and a square marked as known that holds
+a ball. A game ID whose lasers allow more than one answer won't open.
+
 ## Hints
 
 **Hint** reads only what your lasers have shown, never the hidden balls,
@@ -44,9 +50,9 @@ still runs through squares nothing has settled.
 Once every laser is fired, it can happen that no single laser settles
 any more squares, though all of them together do. The hint then finds
 balls that send every laser where it went by trying, and offers them as
-one run of moves. Your answer is accepted whenever your balls send every
-laser where the real ones do, so a ball that no laser can ever reach may
-sit on any square the lasers leave unsettled.
+one run of moves. A square no laser ever reaches is settled by the count
+alone: when the box must hold more balls than the lasers account for,
+every such square holds one, and the hint asks you to put them on.
 
 ## Black Box parameters
 

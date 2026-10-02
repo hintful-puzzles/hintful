@@ -186,28 +186,65 @@ export function decodeParams(s: string): BlackboxParams {
   return p;
 }
 
-export function validateParams(p: BlackboxParams, _full: boolean): string | null {
+export function validateParams(p: BlackboxParams, full: boolean): string | null {
   if (p.minballs < 1) return "No. of balls must be at least 1.";
   if (p.minballs > p.maxballs)
     return "No. of balls may not have a minimum greater than its maximum.";
   if (p.minballs >= p.w * p.h) return "There must be fewer balls than squares.";
+  // Only a deal is bound by it: a game ID arrives with its board, and loads if
+  // that board has one answer.
+  const most = ballLimit(p.w, p.h);
+  if (full && p.maxballs > most)
+    return `A board this size can be dealt with at most ${most} ${most === 1 ? "ball" : "balls"}.`;
   return null;
+}
+
+/**
+ * The most balls a board of `w`×`h` is dealt with. Every board has one answer
+ * (`answer.ts`), and proving it costs more with every ball and every laser.
+ * Measured 2026-10-02, dealing a ball at a time: the slowest board at each limit
+ * took 1.3 s at 8×8 and well under that elsewhere, and a step past it took
+ * seconds, at 8×8 with 21 balls, 10×10 with 12, 12×12 with 10 and 20×20 with 8
+ * (design.md § "The ball limit"). The largest board, 255×255, takes about 4 s
+ * at its limit, spent tracing its lasers rather than searching.
+ */
+export function ballLimit(w: number, h: number): number {
+  const area = w * h;
+  if (area <= 64) return Math.max(1, Math.min(20, Math.floor(area / 3)));
+  if (area <= 100) return 10;
+  if (area <= 256) return 8;
+  return 6;
 }
 
 // --- desc codec -------------------------------------------------------
 
-/** Scatter `nballs` balls at distinct arena cells, encode `[w, h,
- * x0, y0, …]` as a byte-per-value bitmap, obfuscate, and hex-encode. */
-export function newDesc(p: BlackboxParams, rng: RandomState): { desc: string } {
+/** How many balls a deal for `p` holds. */
+export function dealCount(p: BlackboxParams, rng: RandomState): number {
   let nballs = p.minballs;
   if (p.maxballs > p.minballs) nballs += randomUpto(rng, p.maxballs - p.minballs + 1);
+  return nballs;
+}
 
-  const taken = new Uint8Array(p.w * p.h);
-  const bmp = new Uint8Array(nballs * 2 + 2);
+/** The desc of a board with balls at the 0-based arena squares `balls`:
+ * `[w, h, x0, y0, …]` as a byte-per-value bitmap, obfuscated and hex-encoded. */
+export function encodeBalls(p: BlackboxParams, balls: readonly Point[]): string {
+  const bmp = new Uint8Array(balls.length * 2 + 2);
   bmp[0] = p.w;
   bmp[1] = p.h;
+  balls.forEach((b, i) => {
+    bmp[2 + 2 * i] = b.x;
+    bmp[3 + 2 * i] = b.y;
+  });
+  obfuscateBitmap(bmp, bmp.length * 8, false);
+  return bin2hex(bmp);
+}
 
-  for (let i = 2; i < bmp.length; i += 2) {
+/** Scatter balls at distinct random arena squares. */
+export function scatterDesc(p: BlackboxParams, rng: RandomState): { desc: string } {
+  const nballs = dealCount(p, rng);
+  const taken = new Uint8Array(p.w * p.h);
+  const balls: Point[] = [];
+  while (balls.length < nballs) {
     let x: number;
     let y: number;
     do {
@@ -215,12 +252,9 @@ export function newDesc(p: BlackboxParams, rng: RandomState): { desc: string } {
       y = randomUpto(rng, p.h);
     } while (taken[y * p.w + x]);
     taken[y * p.w + x] = 1;
-    bmp[i] = x;
-    bmp[i + 1] = y;
+    balls.push({ x, y });
   }
-
-  obfuscateBitmap(bmp, bmp.length * 8, false);
-  return { desc: bin2hex(bmp) };
+  return { desc: encodeBalls(p, balls) };
 }
 
 const isHex = (c: string) => "0123456789abcdef".includes(c);

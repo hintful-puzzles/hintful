@@ -928,7 +928,7 @@ wrapper is `clueChar`.
 
 A parse fails with a `DescError`, a branded string only this module makes:
 `DESC_TOO_SHORT`, `DESC_TOO_LONG`, `DESC_OUT_OF_RANGE`, `DESC_REPEATED`,
-`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `descBadCharacter(ch)` (pass the
+`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `DESC_NOT_UNIQUE`, `descBadCharacter(ch)` (pass the
 character when the parser has it), and `descNeedsOne(noun, found)` for a board
 that must have exactly one of something (a starting square, a main piece). A helper on the desc path returns
 `DescError | null` too, so the brand reaches the message where it is written.
@@ -945,10 +945,20 @@ it here rather than rewording one of the two.
 `parseDesc(p, desc): DescParse<T>`, and have `newState` build from
 `descValue(parseDesc(…))`. A failed parse makes `descValue` throw a
 `DescRejection`, and `loadDesc(game, p, desc)` turns exactly that throw back
-into a `DescParse<State>`; `validateDesc(game, p, desc)` is its verdict. A game
+into a `DescParse<State>`; `validateDesc(game, p, desc)` is that reading's
+verdict, the codec's, and `loadVerdict` is `loadDesc`'s, answers included. A game
 writes no validator, so the verdict and the board cannot come from different
 readings. A check that needs the parsed board belongs inside the parse: one
 thrown after `descValue` is a bug, not a refusal, and propagates.
+
+**The verdict also asks how many answers the board has**, for a game with
+`findMistakes`: `loadDesc` calls the game's `solve` on the board it built, and
+refuses one the solver proves has several (`DESC_NOT_UNIQUE`) or none
+(`DESC_CONTRADICTORY`), except at a `nonUniqueTiers` tier. A game supplies
+nothing for this beyond a `solve` that says `MULTIPLE_SOLUTIONS` or
+`NO_SOLUTION` only when it has proved it
+([solver-and-generator.md](./solver-and-generator.md) § "One answer, even when it
+is hidden").
 
 ### `desc-reader.ts` — the cursor a desc parser drives
 

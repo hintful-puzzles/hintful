@@ -3,16 +3,18 @@
  * and narrated by `hint-text.ts`.
  *
  * **The plan is the board's own proof, step by step.** Each firing proves some
- * squares mines and some safe; a step flags the mines not yet flagged, takes a
- * flag off a square proved safe, and opens the safe squares. Opening reveals
- * numbers, so the plan plays each step on a scratch copy before looking for the
- * next deduction, and a later step can reason from a number an earlier one
- * uncovered. A firing that changes nothing on the board (its mines already
- * flagged) is not shown, but what it proved is kept.
+ * squares mines and some safe; a step flags the mines not yet flagged and opens
+ * the safe squares. Opening reveals numbers, so the plan plays each step on a
+ * scratch copy before looking for the next deduction, and a later step can
+ * reason from a number an earlier one uncovered. A firing that changes nothing
+ * on the board (its mines already flagged) is not shown, but what it proved is
+ * kept.
  *
- * **Nothing the player marked is taken on trust.** A flag counts as a mine
- * only once a deduction proves one under it (`deduce.ts`), and every mine a
- * sentence cites was proved and flagged by an earlier step of the same plan if
+ * **A flag is not a premise until a deduction proves it.** The midend asks only
+ * about a board whose flags all sit on mines (`findMistakes`), but a flag
+ * placed by a lucky guess is not something the numbers show, so it counts as a
+ * mine only once a deduction proves one under it (`deduce.ts`). Every mine a
+ * sentence cites was proved, and flagged by an earlier step of the same plan if
  * the player had not flagged it already.
  */
 
@@ -47,7 +49,7 @@ import {
 
 /** What a step does to its ringed squares. */
 export interface MinesHint {
-  readonly kind: "open" | "flag" | "unflag";
+  readonly kind: "open" | "flag";
   readonly targets: readonly Point[];
 }
 
@@ -86,21 +88,16 @@ interface Leg {
 }
 
 /** The moves a firing asks of the board as it stands: flags for the mines not
- * flagged yet, flags off the squares proved safe, then the safe squares opened,
- * leaving out any that an earlier one's flood will have opened already. */
+ * flagged yet, then the safe squares opened, leaving out any that an earlier
+ * one's flood will have opened already. No flag sits on a safe square: the
+ * midend refuses a hint while one does. */
 function legsOf(board: MinesState, f: Firing, execute: Execute): Leg[] {
   const { w } = board;
   const pt = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
   const mines = f.rung === "satisfied" ? [] : f.mines;
   const safes = f.rung === "full" ? [] : f.safes;
   const flag = mines.filter((i) => board.grid[i] === COVERED);
-  const unflag = safes.filter((i) => board.grid[i] === FLAG);
   let scratch = board;
-  if (unflag.length > 0)
-    scratch = execute(scratch, {
-      type: "ops",
-      ops: unflag.map((i) => ({ op: "F", ...pt(i) })),
-    });
   const open: number[] = [];
   for (const i of safes) {
     if (scratch.grid[i] !== COVERED) continue;
@@ -109,7 +106,6 @@ function legsOf(board: MinesState, f: Firing, execute: Execute): Leg[] {
   }
   const legs: Leg[] = [];
   if (flag.length > 0) legs.push({ kind: "flag", targets: flag.map(pt) });
-  if (unflag.length > 0) legs.push({ kind: "unflag", targets: unflag.map(pt) });
   if (open.length > 0) legs.push({ kind: "open", targets: open.map(pt) });
   return legs;
 }
@@ -260,19 +256,13 @@ function narrate(board: MinesState, f: Firing, legs: readonly Leg[]): Sentence[]
     }
   }
 
-  return legs.map((leg, i) => {
-    if (i === 0)
-      return leg.kind === "unflag"
-        ? conclude.flags(lead, leg.targets)
-        : conclude.plain(lead, leg.targets, leg.kind === "flag" ? "mine" : "safe");
-    const prev = legs[i - 1];
-    if (leg.kind === "open" && prev.kind === "unflag")
-      return conclude.afterFlags(leg.targets);
-    const premise = then ?? lead;
-    return leg.kind === "unflag"
-      ? conclude.flags(premise, leg.targets)
-      : conclude.plain(premise, leg.targets, leg.kind === "flag" ? "mine" : "safe");
-  });
+  return legs.map((leg, i) =>
+    conclude.plain(
+      i === 0 ? lead : (then ?? lead),
+      leg.targets,
+      leg.kind === "flag" ? "mine" : "safe",
+    ),
+  );
 }
 
 /** The hint plan from `state`, or the reason there is none. `execute` is the
@@ -322,7 +312,6 @@ export function minesHint(
 function holds(s: MinesState, kind: MinesHint["kind"], t: Point): boolean {
   const v = s.grid[t.y * s.w + t.x];
   if (kind === "flag") return v === FLAG;
-  if (kind === "unflag") return v !== FLAG;
   return isOpened(v);
 }
 

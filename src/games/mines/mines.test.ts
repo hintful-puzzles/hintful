@@ -23,9 +23,10 @@ import { decodeSave } from "../../engine/save.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import type { Point } from "../../engine/types.ts";
 import { minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
-import { borderFor } from "./render.ts";
+import { borderFor, COL_BANG } from "./render.ts";
 import { minesolve } from "./solver.ts";
 import {
   COVERED,
@@ -625,5 +626,55 @@ describe("mines render", () => {
     ui.hy = -1;
     const released = paint(s);
     expect(released.ops.length).toBeGreaterThan(0);
+  });
+});
+
+// --- mistakes ------------------------------------------------------------
+
+describe("mines mistakes", () => {
+  const p = decodeParams("9x9n10");
+  const opened = () =>
+    minesGame.executeMove(
+      minesGame.newState(p, minesGame.newDesc(p, randomNew("wrong-flag")).desc),
+      openMove(4, 4),
+    );
+  const flagAt = (s: MinesState, mine: boolean): Point => {
+    const mines = s.layout.mines as Int8Array;
+    const i = s.grid.findIndex((v, j) => v === -2 && (mines[j] === 1) === mine);
+    if (i < 0) throw new Error("no such covered square");
+    return { x: i % s.w, y: Math.floor(i / s.w) };
+  };
+  const flag = (s: MinesState, at: Point) =>
+    minesGame.executeMove(s, { type: "ops", ops: [{ op: "F", ...at }] });
+
+  it("finds a flag on a square with no mine, and only that", () => {
+    const blank = minesGame.newState(p, minesGame.newDesc(p, randomNew("wf")).desc);
+    expect(minesGame.findMistakes?.(blank)).toEqual([]);
+    const s = opened();
+    const right = flag(s, flagAt(s, true));
+    expect(minesGame.findMistakes?.(right)).toEqual([]);
+    const at = flagAt(s, false);
+    expect(minesGame.findMistakes?.(flag(right, at))).toEqual([at]);
+  });
+
+  it("frames a wrong flag on a board already drawn, and clears it (paint twice)", () => {
+    const s = opened();
+    const at = flagAt(s, false);
+    const wrong = flag(s, at);
+    const palette = minesGame.colors(BG);
+    const ui = minesGame.newUi(wrong);
+    const ds = minesGame.newDrawState(wrong, 20);
+    const paint = (mistakes?: readonly Point[]) => {
+      const rec = new RecordingDrawing(palette);
+      minesGame.redraw(rec, ds, null, wrong, 0, ui, 0, 0, undefined, mistakes);
+      return rec.ops;
+    };
+    paint();
+    expect(paint()).toEqual([]);
+    const framed = paint(minesGame.findMistakes?.(wrong));
+    expect(framed.some((o) => o.op === "rect" && o.color === COL_BANG)).toBe(true);
+    const cleared = paint();
+    expect(cleared.length).toBeGreaterThan(0);
+    expect(cleared.some((o) => "color" in o && o.color === COL_BANG)).toBe(false);
   });
 });

@@ -280,7 +280,7 @@ export const minesGame: Game<
   MinesMove,
   MinesUi,
   MinesDrawState,
-  unknown,
+  Point,
   MinesHint
 > = {
   id: "mines",
@@ -505,9 +505,16 @@ export const minesGame: Game<
     return isWon(s) ? "solved" : "ongoing";
   },
 
-  notApplicable: {
-    findMistakes:
-      "The mines are hidden, and checking your flags against them would give them away.",
+  // A flag on a square with no mine under it. A mine the player opened is not
+  // a mark to fix: the hint's dead-board refusal answers that.
+  findMistakes(s: MinesState): readonly Point[] {
+    const mines = s.layout.mines;
+    if (!mines) return [];
+    const out: Point[] = [];
+    for (let i = 0; i < s.w * s.h; i++)
+      if (s.grid[i] === FLAG && !mines[i])
+        out.push({ x: i % s.w, y: Math.floor(i / s.w) });
+    return out;
   },
 
   // A death is not a loss (the player undoes and plays on), yet nobody is

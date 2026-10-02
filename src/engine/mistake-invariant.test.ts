@@ -64,6 +64,7 @@ import { registerAllGames } from "../games/index.ts";
 import { tierOf } from "./difficulty.ts";
 import { Midend } from "./midend.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { NOT_STARTED } from "./solve-failure.ts";
 import { capabilitySets } from "./testing/enrollment.ts";
 import { leafPresets } from "./testing/presets.ts";
 import { SLOW_TESTS_ENABLED } from "./testing/slow.ts";
@@ -151,8 +152,18 @@ describe("a board with nothing wrong on it reports no mistakes", () => {
             "player has entered nothing, so nothing can diverge from the solution",
         ).toBe(0);
 
+        // A board laid out by the first move (Mines) has nothing to solve until
+        // that move is made, and Solve says so; the hint makes it.
+        let solved = midend.solve();
+        if (solved === NOT_STARTED) {
+          expect(
+            midend.executeHint(),
+            `${name}/${title}: no hint to start the board with`,
+          ).toBeNull();
+          solved = midend.solve();
+        }
         expect(
-          midend.solve(),
+          solved,
           `${name}/${title}: solve refused on its own generated board`,
         ).toBeNull();
 
