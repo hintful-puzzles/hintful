@@ -26,7 +26,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type Narration } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -309,7 +309,7 @@ function buildHighlights(f: LightupFiring): Marks {
  * player is looking at**, so a branch can tell whether a second mark is even
  * on the board before deciding how much to say. The words, and the deixis
  * ties they carry, are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(f: LightupFiring, hl: Marks): Narration {
+function narrate(f: LightupFiring, hl: Marks): Sentence {
   const m: Marked = {
     targets: hl.targets,
     area: hl.area,

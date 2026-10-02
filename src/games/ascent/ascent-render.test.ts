@@ -183,7 +183,9 @@ describe("ascent hint frames", () => {
 
   it("outlines the rival and the ends a fill step counts from, and stripes nothing", () => {
     const isFill = (s: HintStep<AscentMove>) =>
-      / can fill this square: /.test(s.explanation);
+      /^(?:No other run (?:comes close to|can reach)|The run [^,]* (?:is too far from|can't fill)) this square/.test(
+        s.explanation,
+      );
     for (let seed = 0; seed < 80; seed++) {
       const { recording, hint } = renderScenario({
         game: ascentGame,
@@ -205,7 +207,8 @@ describe("ascent hint frames", () => {
   });
 
   it("draws a whole run's route as a path line in the hint's color, ringing its squares", () => {
-    const whole = (s: HintStep<AscentMove>) => / only one route/.test(s.explanation);
+    const whole = (s: HintStep<AscentMove>) =>
+      / only one route| the one route that does/.test(s.explanation);
     for (let seed = 0; seed < 40; seed++) {
       const { recording, hint } = renderScenario({
         game: ascentGame,

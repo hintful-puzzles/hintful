@@ -32,8 +32,11 @@ import { joinOr, joinWith } from "../../engine/hint-text.ts";
 import {
   type MarkKind,
   mark,
-  type Narration,
+  Narration,
   phrase,
+  type Sentence,
+  so,
+  unshaped,
 } from "../../engine/hint-words.ts";
 
 /** A region of the map, as a mark: its band, its dashed line or its chain
@@ -80,42 +83,71 @@ export type Conclusion =
   | { kind: "strike"; struck: number }
   | { kind: "mark"; left: number };
 
-/** A narrowing's conclusion: what the rule rules out (`cannot`, "it can't be
- * red"), then what that leaves the move to do. */
-function conclude(c: Conclusion, cannot: string): string {
+/** A narrowing's conclusion, as the sentence's last parts: what the rule rules
+ * out (`cannot`, "it can't be red"), then what that leaves the move to do. A
+ * placed color is the move itself; a strike or a dotting follows from the
+ * color ruled out. */
+function conclude(
+  c: Conclusion,
+  cannot: string,
+): { readonly follows?: Narration; readonly move: Narration } {
   switch (c.kind) {
     case "place":
-      return `${cannot} and must be ${colorName(c.color)}`;
+      return { move: phrase`${cannot} and must be ${colorName(c.color)}` };
     case "strike": {
       const ns = names(c.struck);
-      return `${cannot}: its ${joinWith(ns)} ${ns.length > 1 ? "dots" : "dot"} must go`;
+      return {
+        follows: phrase`${cannot}`,
+        move: phrase`its ${joinWith(ns)} ${ns.length > 1 ? "dots" : "dot"} must go`,
+      };
     }
     case "mark":
-      return `${cannot}: dot ${joinWith(names(c.left))}`;
+      return {
+        follows: phrase`${cannot}`,
+        move: phrase`dot ${joinWith(names(c.left))}`,
+      };
   }
 }
 
 export const say = {
   /** The populate reading's opening, the Mark-all press's fill. */
-  fillAll:
-    "Start by dotting all four colors into each blank region, so there is something to cross out.",
+  fillAll: unshaped(
+    Narration.plain(
+      "Start by dotting all four colors into each blank region, so there is something to cross out.",
+    ),
+    "setup",
+  ),
 
   /** The press's second half, which follows the fill in one journey. */
-  cleanNeighbors:
-    "Now clear the easy ones: remove from each blank region the dot of every color a neighbor already shows.",
+  cleanNeighbors: unshaped(
+    Narration.plain(
+      "Now clear the easy ones: remove from each blank region the dot of every color a neighbor already shows.",
+    ),
+    "setup",
+  ),
 
   /** A region whose neighbors show every color but one, and which has no dots
    * to consult. `others` is the three colors its neighbors show. */
-  touchesTheRest: (r: number, color: number, others: number): Narration =>
-    phrase`${thisRegion(r).capitalized()} touches ${joinWith(names(others))}, so it must be ${colorName(color)}.`,
+  touchesTheRest: (r: number, color: number, others: number): Sentence =>
+    so({
+      look: phrase`${thisRegion(r)} touches ${joinWith(names(others))}`,
+      move: phrase`it must be ${colorName(color)}`,
+    }),
 
-  /** A region the player has dotted with one color only. */
-  lastDot: (r: number, color: number): Narration =>
-    phrase`The only dot in ${thisRegion(r)} is ${colorName(color)}, so it must be ${colorName(color)}.`,
+  /** A region the player has dotted with one color only. The dot shows its
+   * color, so the sentence names it once, in the conclusion. */
+  lastDot: (r: number, color: number): Sentence =>
+    so({
+      look: phrase`${thisRegion(r)} has a single dot`,
+      move: phrase`it must be ${colorName(color)}`,
+    }),
 
   /** A region whose other dots are all colors a neighbor already has. */
-  deadDots: (r: number, color: number): Narration =>
-    phrase`Its other dots match its neighbors' colors, so ${thisRegion(r)} must be ${colorName(color)}.`,
+  deadDots: (r: number, color: number): Sentence =>
+    so({
+      look: phrase`${thisRegion(r)}'s other dots match its neighbors' colors`,
+      move: phrase`it must be ${colorName(color)}`,
+    }),
 
   /**
    * Two touching regions down to the same two colors, which they must then use
@@ -131,8 +163,11 @@ export const say = {
     regions: readonly RegionMark[],
     pair: number,
     c: Conclusion,
-  ): Narration =>
-    phrase`${mark.as("outline", REGION, regions, "The outlined pair")} touch and can only be ${joinOr(names(pair))}, so they use both. ${thisRegion(r).capitalized()} touches both, so ${conclude(c, "it can't be either")}.`,
+  ): Sentence =>
+    so({
+      look: phrase`${mark.as("outline", REGION, regions, "The outlined pair")} touch and can only be ${joinOr(names(pair))}, so they use both. ${thisRegion(r).capitalized()} touches both`,
+      ...conclude(c, "it can't be either"),
+    }),
 
   /**
    * A forcing chain, as the case split it is, walked with its actual colors:
@@ -154,7 +189,7 @@ export const say = {
     color: number,
     forced: readonly number[],
     c: Conclusion,
-  ): Narration => {
+  ): Sentence => {
     const last = forced.length;
     const red = colorName(color);
     const at = (k: number): Narration => numbered(chain, k);
@@ -167,7 +202,10 @@ export const say = {
             forced.slice(1).map((f, i) => phrase`${at(i + 2)} is ${colorName(f)}`),
           )
         : phrase`${mark.as("outline", REGION, chain, "each numbered region")} takes the dot the one before it leaves, down to ${at(last)} being ${red}`;
-    return phrase`If ${at(1)} isn't ${red}, it's ${colorName(forced[0])}, so ${walk}. Either way ${at(1)} or ${at(last)} is ${red}, and ${thisRegion(r)} touches both, so ${conclude(c, `it can't be ${red}`)}.`;
+    return so({
+      look: phrase`If ${at(1)} isn't ${red}, it's ${colorName(forced[0])}, so ${walk}. Either way ${at(1)} or ${at(last)} is ${red}, and ${thisRegion(r)} touches both`,
+      ...conclude(c, `it can't be ${red}`),
+    });
   },
 
   /**
@@ -181,11 +219,14 @@ export const say = {
     chain: readonly RegionMark[],
     color: number,
     c: Conclusion,
-  ): Narration => {
+  ): Sentence => {
     const red = colorName(color);
     const last = chain.length;
     const at = (k: number): Narration => numbered(chain, k);
-    return phrase`${mark.as("outline", REGION, chain, "Every numbered region")} has a ${red} dot. If ${at(1)} isn't ${red}, ${at(2)} must be, and so on every other region to ${at(last)}. Either way ${at(1)} or ${at(last)} is ${red}, and ${thisRegion(r)} touches both, so ${conclude(c, `it can't be ${red}`)}.`;
+    return so({
+      look: phrase`${mark.as("outline", REGION, chain, "Every numbered region")} has a ${red} dot. If ${at(1)} isn't ${red}, ${at(2)} must be, and so on every other region to ${at(last)}. Either way ${at(1)} or ${at(last)} is ${red}, and ${thisRegion(r)} touches both`,
+      ...conclude(c, `it can't be ${red}`),
+    });
   },
 
   /**
@@ -195,13 +236,20 @@ export const say = {
    * writing, not what it reasons from, and its other region's dots may not be
    * on the board yet.
    */
-  pairDot: (r: number, touched: number, two: number): Narration =>
-    phrase`Its neighbors show ${joinWith(names(touched))}, so ${thisRegion(r)} can only be ${joinOr(names(two))}: dot those.`,
+  pairDot: (r: number, touched: number, two: number): Sentence =>
+    so({
+      look: phrase`${thisRegion(r)}'s neighbors show ${joinWith(names(touched))}`,
+      follows: phrase`it can only be ${joinOr(names(two))}`,
+      move: phrase`dot those`,
+    }),
 
   /** The same, for a pair's region whose dots include a color a neighbor
    * already shows. */
-  pairTrim: (r: number, two: number): Narration =>
-    phrase`Its other dots match its neighbors' colors, so ${thisRegion(r)} can only be ${joinOr(names(two))}.`,
+  pairTrim: (r: number, two: number): Sentence =>
+    so({
+      look: phrase`${thisRegion(r)}'s other dots match its neighbors' colors`,
+      move: phrase`it can only be ${joinOr(names(two))}`,
+    }),
 
   /**
    * A chain's region, the `k`th, dotted with its two colors before the chain is
@@ -214,8 +262,12 @@ export const say = {
     chain: readonly RegionMark[],
     touched: number,
     two: number,
-  ): Narration =>
-    phrase`${regionK(r, k)} of ${theChain(chain)} touches ${joinWith(names(touched))}, so it can only be ${joinOr(names(two))}: dot those.`,
+  ): Sentence =>
+    so({
+      look: phrase`${regionK(r, k)} of ${theChain(chain)} touches ${joinWith(names(touched))}`,
+      follows: phrase`it can only be ${joinOr(names(two))}`,
+      move: phrase`dot those`,
+    }),
 
   /** The same, for a chain's region whose dots include colors a neighbor
    * already has. */
@@ -224,8 +276,11 @@ export const say = {
     k: number,
     chain: readonly RegionMark[],
     two: number,
-  ): Narration =>
-    phrase`${regionK(r, k)} of ${theChain(chain)} has other dots that match its neighbors' colors, so it can only be ${joinOr(names(two))}.`,
+  ): Sentence =>
+    so({
+      look: phrase`${regionK(r, k)} of ${theChain(chain)} has other dots that match its neighbors' colors`,
+      move: phrase`it can only be ${joinOr(names(two))}`,
+    }),
 } as const;
 
 /** "the numbered chain": every region of a chain, by the numbers on them. */

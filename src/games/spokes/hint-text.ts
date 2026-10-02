@@ -17,6 +17,9 @@ import {
   mark,
   type Narration,
   phrase,
+  type Sentence,
+  sentence,
+  so,
 } from "../../engine/hint-words.ts";
 import type { SpokesFiring } from "./solver.ts";
 
@@ -45,17 +48,30 @@ const hub = (m: Marked, words = "the outlined hub"): Narration =>
   mark.as("outline", HUB, m.hubs, words);
 
 export const say = {
-  twoOnes: (m: Marked): Narration =>
-    phrase`Connecting ${hub(m, "the outlined 1-hubs")} would strand them from the rest, so rule out ${spokes(m)}.`,
+  twoOnes: (m: Marked): Sentence =>
+    so({
+      look: phrase`Connecting ${hub(m, "the outlined 1-hubs")} would strand them from the rest`,
+      move: phrase`rule out ${spokes(m)}`,
+    }),
 
   /** The hub's count leaves exactly its free spokes, `count` of them. */
-  saturation: (count: number, m: Marked): Narration =>
+  saturation: (count: number, m: Marked): Sentence =>
     count === 1
-      ? phrase`${hub(m).capitalized()} has only one free spoke left for its count, so ${spokes(m)} must be a line.`
-      : phrase`${hub(m).capitalized()} has just enough free spokes left for its count, so ${spokes(m)} must all be lines.`,
+      ? so({
+          look: phrase`${hub(m)} has only one free spoke left for its count`,
+          move: phrase`${spokes(m)} must be a line`,
+        })
+      : so({
+          look: phrase`${hub(m)} has just enough free spokes left for its count`,
+          move: phrase`${spokes(m)} must all be lines`,
+        }),
 
-  exhaustion: (m: Marked): Narration =>
-    phrase`${hub(m).capitalized()} already has all its lines, so none of its other spokes can be one. Rule out ${spokes(m)}.`,
+  exhaustion: (m: Marked): Sentence =>
+    so({
+      look: phrase`${hub(m)} already has all its lines`,
+      follows: phrase`none of its other spokes can be one`,
+      move: phrase`rule out ${spokes(m)}`,
+    }),
 
   /** The trial (a line when `asLine`, else a mark) breaks the board in the
    * way `breakKind` names. */
@@ -63,7 +79,7 @@ export const say = {
     asLine: boolean,
     breakKind: SpokesFiring["breakKind"],
     m: Marked,
-  ): Narration => {
+  ): Sentence => {
     const consequence =
       breakKind === "overfilled"
         ? phrase`over-fill ${hub(m)}`
@@ -73,20 +89,29 @@ export const say = {
             ? phrase`strand ${hub(m, "the outlined hubs")}`
             : phrase`strand a group of hubs`;
     return asLine
-      ? phrase`Drawing ${mark.as("ring", SPOKE, m.spokes, "this line")} would ${consequence}, so rule it out.`
-      : phrase`Ruling ${spokes(m)} out would ${consequence}, so it must be a line.`;
+      ? so({
+          look: phrase`Drawing ${mark.as("ring", SPOKE, m.spokes, "this line")} would ${consequence}`,
+          move: phrase`rule it out`,
+        })
+      : so({
+          look: phrase`Ruling ${spokes(m)} out would ${consequence}`,
+          move: phrase`it must be a line`,
+        });
   },
 
   /** Legs 2+ of a multi-spoke firing, reading as the same deduction; `line`
    * when the firing draws lines rather than marks. Names the spokes the
    * firing still has to settle and the hub it reasons from, which the leg
    * still shows. */
-  continuation: (line: boolean, m: Marked): Narration => {
+  continuation: (line: boolean, m: Marked): Sentence => {
     const rest = mark.as("ring", SPOKE, m.spokes, (els) =>
       els.length === 1 ? "this one" : "these",
     );
-    return line
-      ? phrase`And ${rest} must be ${m.spokes.length === 1 ? "a line" : "lines"} too, for ${hub(m)}.`
-      : phrase`And rule ${rest} out too, for ${hub(m)}.`;
+    return sentence({
+      move: line
+        ? phrase`${rest} must be ${m.spokes.length === 1 ? "a line" : "lines"} too`
+        : phrase`rule ${rest} out too`,
+      relation: { kind: "again", basis: hub(m) },
+    });
   },
 };

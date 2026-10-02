@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { isDeadEnd } from "../../engine/hint-refusal.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
+import { MOVE, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import {
@@ -219,7 +219,7 @@ describe("pegs hint", () => {
   it("stripes a rival that cuts a peg off at once, and outlines that peg", () => {
     const { s, steps } = planAt(
       PINNED.trap,
-      /^This peg's striped jump would cut off the outlined peg, so jump this peg into the ringed hole instead\.$/,
+      /^This peg's striped jump would cut off the outlined peg\. One way to save it: jump into the ringed hole\.$/,
     );
     const marks = stepMarks(steps[0]);
     const [rival] = marks.of("stripes", JUMP);
@@ -351,13 +351,13 @@ describe("pegs hint", () => {
     ],
     [
       "trapSoonOwn",
-      /^After this peg's striped jump, any next jump cuts off the outlined peg, so jump this peg into the ringed hole instead\.$/,
+      /^After this peg's striped jump, any next jump cuts off the outlined peg\. One way to save it: jump into the ringed hole\.$/,
       true,
       "soon",
     ],
     [
       "strandOwn",
-      /^This peg's striped jump would strand the outlined peg, so jump this peg into the ringed hole instead\.$/,
+      /^This peg's striped jump would strand the outlined peg\. One way to keep a peg beside it: jump into the ringed hole\.$/,
       true,
       "strand",
     ],
@@ -392,7 +392,7 @@ describe("pegs hint", () => {
   it("goes back for a stranded peg", () => {
     const { s, steps } = planAt(
       PINNED.joins,
-      /^The outlined peg is stranded, with no peg beside it; go back for it\.$/,
+      /^The outlined peg is stranded, with no peg beside it\. One way to save it: go back for it\.$/,
     );
     const [lone] = stepMarks(steps[0]).of("outline", PEG);
     const j = asMarked(s, steps[0].move);
@@ -413,7 +413,7 @@ describe("pegs hint", () => {
   });
 
   it("names the jump that leaves one peg", () => {
-    const { s, steps } = planAt(PINNED.last, /to finish with one peg\.$/);
+    const { s, steps } = planAt(PINNED.last, /: that finishes with one peg\.$/);
     expect(status(G.executeMove(s, steps[0].move))).toBe("solved");
   });
 
@@ -445,13 +445,15 @@ describe("pegs hint", () => {
         const m = step.move;
         if (m.type !== "jump") throw new Error("jump");
         const marks = stepMarks(step);
-        // Rung as a peg and a hole, or as the whole jump where the words
-        // leave the move to the board.
-        const whole = marks.of("ring", JUMP);
-        const pegs = [...marks.of("ring", PEG), ...whole.map((j) => j.from)];
-        const holes = [...marks.of("ring", HOLE), ...whole.map((j) => j.to)];
-        expect(pegs).toEqual([m.sy * s.w + m.sx]);
-        expect(holes).toEqual([m.ty * s.w + m.tx]);
+        // Rung as a peg and a hole, or as the whole move where the words
+        // leave it to the board.
+        if (marks.of("ring", MOVE).length > 0) {
+          expect(marks.of("ring", PEG)).toEqual([]);
+          expect(marks.of("ring", HOLE)).toEqual([]);
+        } else {
+          expect(marks.of("ring", PEG)).toEqual([m.sy * s.w + m.sx]);
+          expect(marks.of("ring", HOLE)).toEqual([m.ty * s.w + m.tx]);
+        }
         expect(hintKeepTrack(m, step, s)).toBe("completed");
         s = G.executeMove(s, m);
       }

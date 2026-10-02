@@ -10,7 +10,7 @@ import {
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
 import { type Conclusions, narrateLatinReason } from "./hint-text.ts";
-import { CELL, mark, Narration, phrase } from "./hint-words.ts";
+import { CELL, mark, Narration, phrase, unshaped } from "./hint-words.ts";
 import { type RowColRegion, rowColRegions, type SingleReason } from "./latin-hint.ts";
 import type { Point } from "./types.ts";
 
@@ -67,7 +67,10 @@ function walk(
     regionsOf: (x, y) => rowColRegions(x, y, over.w),
     singleReason: (_n, why) => ({ kind: why.kind }),
     placeWords: (m, r, continues) => ({
-      words: near(`${r.kind} ${m.x},${m.y}${continues ? " (cont)" : ""}`, r),
+      words: unshaped(
+        near(`${r.kind} ${m.x},${m.y}${continues ? " (cont)" : ""}`, r),
+        "bare",
+      ),
     }),
     strikeWords: (marks, r, continues) => ({
       premise: near(`${r.kind} strike ${marks.length}${continues ? " (cont)" : ""}`, r),
@@ -162,7 +165,7 @@ describe("runCandidatePlan", () => {
     const { steps, pencil } = corner(false);
     expect(steps.map((s) => s.explanation)).toEqual([
       "clue 0,0",
-      "dup strike 4 (cont), so struck 1111.",
+      "Dup strike 4 (cont), so struck 1111.",
     ]);
     expect(steps[0].move).toEqual({
       type: "set",
@@ -220,8 +223,8 @@ describe("runCandidatePlan", () => {
   it("splits a firing's strikes on the game's axis, the later legs continuing", () => {
     const { steps, pencil } = cage((op) => op.x);
     expect(steps.map((s) => s.explanation)).toEqual([
-      "cage strike 2, so struck 23.",
-      "cage strike 1 (cont), so struck 2.",
+      "Cage strike 2, so struck 23.",
+      "Cage strike 1 (cont), so struck 2.",
     ]);
     expect(steps[0].continuesPrevious).toBeUndefined();
     expect(steps[1].continuesPrevious).toBe(true);
@@ -232,7 +235,7 @@ describe("runCandidatePlan", () => {
 
   it("keeps a firing whole without an axis, each cell a target once", () => {
     const { steps } = cage();
-    expect(steps.map((s) => s.explanation)).toEqual(["cage strike 3, so struck 223."]);
+    expect(steps.map((s) => s.explanation)).toEqual(["Cage strike 3, so struck 223."]);
     expect(steps[0].highlights?.targets).toEqual([
       { x: 1, y: 0 },
       { x: 2, y: 0 },
@@ -250,10 +253,13 @@ describe("runCandidatePlan", () => {
     });
     const notes = {
       populate: "populate",
-      cleanObvious: () => Narration.plain("clean"),
+      cleanObvious: () => unshaped(Narration.plain("clean"), "setup"),
       note: (c: Point, values: number[], every: boolean) =>
-        Narration.plain(
-          `note ${c.x},${c.y} ${values.join("")}${every ? " every" : ""}`,
+        unshaped(
+          Narration.plain(
+            `note ${c.x},${c.y} ${values.join("")}${every ? " every" : ""}`,
+          ),
+          "bare",
         ),
     };
     /** Walk a 3×3 board whose solver's one firing is `ops`. */
@@ -284,7 +290,7 @@ describe("runCandidatePlan", () => {
       const steps = implicitWalk(Uint8Array.from([0, 2, 0, 0, 0, 0, 0, 0, 0]), [
         elim(0, 0, 3),
       ]);
-      expect(steps[0].explanation).toBe("pair strike 1, so placed 1.");
+      expect(steps[0].explanation).toBe("Pair strike 1, so placed 1.");
       expect(steps[0].move).toMatchObject({ type: "set", x: 0, y: 0, n: 1 });
       // Nothing is struck on the board, so nothing is drawn struck.
       expect(steps[0].highlights?.targets).toEqual([{ x: 0, y: 0 }]);
@@ -293,7 +299,7 @@ describe("runCandidatePlan", () => {
 
     it("folds it into a note of the values left when several are", () => {
       const steps = implicitWalk(new Uint8Array(9), [elim(0, 0, 3)]);
-      expect(steps[0].explanation).toBe("pair strike 1, so kept 12.");
+      expect(steps[0].explanation).toBe("Pair strike 1, so kept 12.");
       expect(steps[0].move).toEqual({
         type: "pencilAdd",
         marks: [
@@ -308,14 +314,14 @@ describe("runCandidatePlan", () => {
       const blank = implicitWalk(new Uint8Array(9), [elim(0, 0, 3, { x: 1, y: 1 })]);
       expect(blank.slice(0, 2).map((s) => s.explanation)).toEqual([
         "note 1,1 123 every",
-        "pair strike 1, so kept 12.",
+        "Pair strike 1, so kept 12.",
       ]);
       // The note leg opens the journey the deduction continues.
       expect(blank[1].continuesPrevious).toBe(true);
       const filled = new Uint8Array(9);
       filled[4] = 2;
       expect(implicitWalk(filled, [elim(0, 0, 3, { x: 1, y: 1 })])[0].explanation).toBe(
-        "pair strike 1, so kept 12.",
+        "Pair strike 1, so kept 12.",
       );
     });
 
@@ -344,8 +350,8 @@ describe("runCandidatePlan", () => {
       });
       expect(steps.slice(0, 3).map((s) => s.explanation)).toEqual([
         "note 0,0 123 every",
-        "pair strike 1, so kept 12.",
-        "later strike 1 (cont), so struck 3.",
+        "Pair strike 1, so kept 12.",
+        "Later strike 1 (cont), so struck 3.",
       ]);
     });
 
@@ -371,8 +377,8 @@ describe("runCandidatePlan", () => {
         },
       });
       expect(steps.slice(0, 2).map((s) => s.explanation)).toEqual([
-        "pair strike 2, so placed 1.",
-        "pair strike 1 (cont), so placed 2.",
+        "Pair strike 2, so placed 1.",
+        "Pair strike 1 (cont), so placed 2.",
       ]);
     });
 
@@ -399,7 +405,7 @@ describe("runCandidatePlan", () => {
       });
       expect(steps.slice(0, 2).map((s) => s.explanation)).toEqual([
         "note 0,0 123 every",
-        "pair strike 1, so struck 3 from the rest.",
+        "Pair strike 1, so struck 3 from the rest.",
       ]);
     });
 
@@ -426,7 +432,7 @@ describe("runCandidatePlan", () => {
       });
       expect(steps.slice(0, 2).map((s) => s.explanation)).toEqual([
         "note 1,0 123 every",
-        "pair strike 1, so kept 12.",
+        "Pair strike 1, so kept 12.",
       ]);
       // Read, not drawn: nothing the game did not mark is outlined, and the
       // read cells ride on the step as data a guard can check.
@@ -538,7 +544,7 @@ describe("runLatinCandidatePlan", () => {
         words:
           r.kind === "hiddenSingle"
             ? narrateLatinReason(r, m, 3)
-            : Narration.plain(`${r.kind} ${m.x},${m.y}`),
+            : unshaped(Narration.plain(`${r.kind} ${m.x},${m.y}`), "bare"),
       }),
       strikeWords: (marks, r) => ({
         premise: Narration.plain(`${r.kind} strike ${marks.length}`),
@@ -562,7 +568,9 @@ describe("runLatinCandidatePlan", () => {
         { kind: "place", x: 0, y: 0, n: 1, reason: { kind: "single" }, group: 0 },
       ],
     });
-    expect(steps[0].explanation).toMatch(/^In this row, 1 can go in only this cell/);
+    expect(steps[0].explanation).toBe(
+      "Every other cell in this row rules out 1, so this cell must be 1.",
+    );
     // "In this row" is striped; nothing is outlined, since no particular cell
     // is the reason.
     expect(steps[0].highlights?.hatch).toEqual([

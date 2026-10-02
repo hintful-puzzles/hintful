@@ -34,7 +34,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -137,7 +137,7 @@ function explain(
   leg: number,
   left: readonly ForcedBorderEdge[],
   groupSize: number,
-): Narration {
+): Sentence {
   const c = clues[fe.y * w + fe.x];
   const at = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
   const cells = (fe.cells ?? []).map(at);

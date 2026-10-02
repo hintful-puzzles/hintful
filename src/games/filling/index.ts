@@ -24,7 +24,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type Narration } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -231,7 +231,7 @@ function narrate(
   cells: readonly number[],
   region: readonly number[],
   evidence: readonly number[],
-): Narration {
+): Sentence {
   const at = (i: number): Point => pointOf(i, w);
   const m: Marked = {
     cells: cells.map(at),

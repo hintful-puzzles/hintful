@@ -14,8 +14,8 @@
  *    (§ "Necessity for deductions, imperative for moves"): a
  *    deduction is narrated as what *must* / *can't* be, never a bare
  *    state of being. Movement games narrate imperatively instead and are
- *    exempt, as are the candidate games' mechanical populate/cleanup
- *    openers (procedure, not deduction) and each game's declared idioms
+ *    exempt, as are the steps whose words declare a setup or a journey's
+ *    later leg (`exemptByForm`) and each game's declared idioms
  *    (owner-endorsed phrasings whose necessity is carried by the words
  *    themselves — e.g. Filling's "fits exactly into").
  *  - **Narration stays readable at a glance** (§ "Keep the narration terse"):
@@ -42,6 +42,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { difficultyTiers, withTier } from "./difficulty.ts";
+import type { HintStep } from "./game.ts";
 import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
@@ -51,6 +52,7 @@ import {
   gatePresets,
   HINT_GAMES,
   SEARCH_PLANNING_GAMES,
+  SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import { PRECOMMIT_HOOK_RUN, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
@@ -192,7 +194,7 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   },
   {
     games: ["boats"],
-    match: /so one of these must be a boat segment; either way/,
+    match: /so one of these must be a boat segment: either way/,
     why:
       "A two-case argument: the line's water budget forces a boat segment into " +
       "one of the marked squares, and the conclusion holds whichever it is, " +
@@ -281,7 +283,7 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   },
   {
     games: ["signpost"],
-    match: /, are in its chain or hold the wrong number\.$/,
+    match: /, are in its chain or hold the wrong number, so /,
     why:
       "A link's rivals ruled out for all three of Signpost's reasons at once: the " +
       "sentence names each reason some rival has, and a reason left out would " +
@@ -363,9 +365,18 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
 const NECESSITY =
   /\bmust\b|\bcan(?:no|')t\b|\bcannot\b|\bcan only\b|\bcan never\b|\bhas to\b|\bhave to\b|\bneeds?\b|\brul(?:e|es|ed|ing)\b.{0,40}\bout\b|\bno other\b|\bnowhere\b|\bonly\b|\bnever\b|\bforce[sd]?\b|\bimpossible\b|\bneither\b|\bat most\b|\bnone of\b[^.]{0,40}\bcan\b/i;
 
-/** The candidate-elimination games' mechanical openers — procedure the
- * player is walked through, not a deduction, so no necessity modal. */
-const MECHANICAL = /^Start by (?:penciling|dotting)|^Now clear the easy ones/;
+/**
+ * Steps the necessity rule does not read, by the form their words declare: a
+ * setup step is procedure the player is walked through, not a deduction, and a
+ * journey's later leg (`again`) rests on the necessity its first leg stated,
+ * so making every leg restate the modal is the flattening this file's header
+ * forbids.
+ */
+function exemptByForm(step: HintStep<unknown>): boolean {
+  const form = step.words?.form;
+  if (!form) return false;
+  return "unshaped" in form ? form.unshaped === "setup" : form.relation === "again";
+}
 
 /**
  * Games whose hints narrate **moves** rather than deductions, with the reason
@@ -467,27 +478,18 @@ const IDIOMS: Record<string, (step: NarratedStep) => boolean> = {
   // (docs/games/hints.md § "Group one firing into one step"; owner-endorsed with the Filling hint).
   filling: (s) => /fits exactly into/.test(s.explanation),
 
-  // Subsets' continuation legs, and only those: the firing's necessity is
-  // stated once in the lead ("The highlighted set can go nowhere but this
-  // cell"), and each leg then reports one consequence of it — "Still filling
-  // this cell — the highlighted set has no A either, so clear A here." Making
-  // every leg restate the modal is the flattening this file's header forbids.
-  // Scoped to `continuesPrevious` because a lead leg gets no such inheritance
-  // (owner-endorsed, `audit-declared-versus-derived-capabilities`).
-  subsets: (s) =>
-    s.continuesPrevious === true && /^Still filling this cell:/.test(s.explanation),
-
-  // Loopy's blocked-pair rung: "Both ringed dots already have a line, so
-  // joining them leaves this 2 short. That edge is out; the other 2 are
+  // Loopy's blocked-pair rung: "Both outlined dots already have a line, so
+  // joining them leaves this 2 short: that edge is out and the other 2 are
   // lines." The necessity is in "leaves this 2 short" — the clue could not be
   // met — and the conclusion is then stated in Loopy's own board word, where an
   // edge that is *out* is one ruled out (the same word its other sentences use:
   // "aren't ruled out", "already out"). Endorsed because the sentence is: the
-  // owner settled this exact shape on 2026-09-19, and `loopy/hint-text.ts`
-  // records what each clause is doing and why it says it that way. Reached only
+  // owner settled its words on 2026-09-19, and `loopy/hint-text.ts` records what
+  // each clause is doing and why it says it that way; the "so … :" join is the
+  // engine's form for a look, what follows from it, and the move. Reached only
   // at Hard, which is why the walk met it for the first time when it started
   // reading the presets menu rather than the first preset.
-  loopy: (s) => /leaves this \d+ short\. That edge is out/.test(s.explanation),
+  loopy: (s) => /leaves this \d+ short: that edge is out/.test(s.explanation),
 };
 
 /**
@@ -581,7 +583,7 @@ describe("hint narration form, cross-game", () => {
             // below, across every tier and into the middle game.
 
             // A deduction concludes in the necessity voice.
-            if (DEDUCTIVE.has(name) && !MECHANICAL.test(step.explanation)) {
+            if (DEDUCTIVE.has(name) && !exemptByForm(step)) {
               expect(
                 NECESSITY.test(step.explanation) || (IDIOMS[name]?.(step) ?? false),
                 `${at} — no necessity modal (and no declared idiom)`,
@@ -625,6 +627,42 @@ describe("hint narration form, cross-game", () => {
  */
 const BOUND_GAMES = HINT_GAMES.filter(([, g]) => g.hintMarks !== undefined);
 
+/** The games whose hint searches: a move other than the offered one can be as
+ * good, so a "so" there is a claim about the rivals. Derived, as the two
+ * populations it joins are. */
+const SEARCHING = new Set([...SEARCH_PLANNING_GAMES, ...SEARCH_REACH_GAMES]);
+
+/**
+ * What is wrong with the form a step's words declare (`hint-words.ts`'s
+ * `Form`), one line per defect. An exception must have its kind's property,
+ * which is what keeps the closed set of kinds from becoming a set of excuses;
+ * and a searching game's forced step must say its rivals were judged lost,
+ * the mechanical half of "so concludes only a move narrowed to one". Whether
+ * the conclusion really follows is the reviewer's, not this walk's.
+ */
+function formDefects(step: HintStep<unknown>, searching: boolean): string[] {
+  const words = step.words;
+  if (!words) return [];
+  const roles = new Set(words.refs.map((r) => r.role));
+  const form = words.form;
+  if ("unshaped" in form) {
+    if (form.unshaped === "bare" && [...roles].some((r) => r !== "ring"))
+      return ["is declared bare, yet names evidence beside the move"];
+    if (form.unshaped === "setup" && (roles.has("outline") || roles.has("stripes")))
+      return ["is declared setup, yet reasons from outlined or striped marks"];
+    if (form.unshaped === "evident" && !roles.has("ring"))
+      return ["is declared evident, yet rings nothing for the board to say"];
+    return [];
+  }
+  if (searching && form.relation === "forced" && form.rivals !== "lost")
+    return ['concludes with "so" in a searching hint without saying its rivals lost'];
+  return [];
+}
+
+/** Forms seen across the walk, so the close-out can tell that every kind of
+ * exception and the searching check met real steps. */
+const formsSeen = new Map<string, number>();
+
 /**
  * Both readings of a note-less cell for a game whose `Ui` offers the choice
  * (`candidateReading`), since the player may pick either and the implicit one
@@ -661,6 +699,16 @@ describe("a bound hint's words name exactly the marks it draws", () => {
         checked++;
         for (const d of bindingDefects(game, state, ui, step))
           defects.push(`${at}: "${step.explanation}": ${d}`);
+        for (const d of formDefects(step, SEARCHING.has(name)))
+          defects.push(`${at}: "${step.explanation}": ${d}`);
+        const form = step.words?.form;
+        if (form) {
+          const key =
+            "unshaped" in form
+              ? `unshaped:${form.unshaped}`
+              : `${SEARCHING.has(name) ? "searching " : ""}${form.relation}${form.rivals ? `:${form.rivals}` : ""}`;
+          formsSeen.set(key, (formsSeen.get(key) ?? 0) + 1);
+        }
       };
       for (const { title, params } of gatePresets(name, game))
         for (const seed of FORM_SEEDS)
@@ -701,6 +749,17 @@ describe("a bound hint's words name exactly the marks it draws", () => {
       expect(checked, `${name}: the walk checked no step`).toBeGreaterThan(0);
     });
   }
+
+  it("met every form it checks on real steps", () => {
+    // Vacuity: each property the form checks hold steps to was held on some.
+    // `bare` is not here: no walked board leaves a hint nothing to say, and
+    // the games that can (Pegs, Flood) pin it in their own tests.
+    const seen = [...formsSeen.keys()];
+    expect(seen).toContain("unshaped:setup");
+    expect(seen).toContain("unshaped:evident");
+    expect(seen).toContain("searching forced:lost");
+    expect(seen.filter((k) => k.startsWith("searching ")).length).toBeGreaterThan(2);
+  });
 });
 
 /**

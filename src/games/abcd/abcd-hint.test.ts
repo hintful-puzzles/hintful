@@ -156,7 +156,7 @@ function kindOf(step: Step, diag: boolean): Kind {
     )
       return "naked";
     if (text.startsWith("Every other letter is already ")) return "regionsFull";
-    if (text.startsWith(`So this cell must be ${l} too, for the same `))
+    if (text.startsWith(`…and this cell must be ${l} too, for the same `))
       return "alsoForced";
     if (text.includes("fit only")) return "packed";
     if (text.includes("can take one")) return "onlyHomes";

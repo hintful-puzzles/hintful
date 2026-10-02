@@ -129,7 +129,7 @@ describe("salad hint — the three signature techniques", () => {
     // The standing bar: no "just because" fallback (docs/games/solver-and-generator.md § "Guess-free generation"). Every
     // narration must match one of the arms the game knows how to say.
     const KNOWN =
-      /(sees [A-C1-9] first|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|can go in only this square|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
+      /(sees [A-C1-9] first|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|square in this (?:row|column) rules out|too, for the same (?:row|column)|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
     for (const p of [LETTERS, NUMBERS, { ...LETTERS, diff: DIFF_HARD }]) {
       for (const t of walk(p, "bar-1").texts) {
         expect(t, `unnamed technique: ${t}`).toMatch(KNOWN);
@@ -144,8 +144,8 @@ describe("salad hint — journeys and highlights", () => {
     // once; those legs must read as one multi-leg hint, not N unrelated ones
     // (quality-bar rule 2). Note two *different* lines produce word-for-word the
     // same narration, so sameness of text proves nothing — the flag is what
-    // separates one firing from the next, and a flagged leg must always restate
-    // its own firing's premise.
+    // separates one firing from the next, and a flagged leg must always name
+    // its own firing's line as its basis.
     let journeys = 0;
     for (const seed of ["j1", "j2", "j3", "j4"]) {
       let state = board(NUMBERS, seed);
@@ -160,8 +160,13 @@ describe("salad hint — journeys and highlights", () => {
             typeof (cur.move as { value?: unknown }).value === "string";
           if (!isMarker || !cur.continuesPrevious) continue;
           // A continuation leg of a marker journey is the same firing, so it
-          // carries the same premise — never glued to an unrelated deduction.
-          expect(cur.explanation).toBe(prev.explanation);
+          // rests on the same line — never glued to an unrelated deduction.
+          expect(cur.explanation).toMatch(
+            /^…and this square must (hold a number|be empty) too, for the same (row|column)\.$/,
+          );
+          expect((cur.highlights as SaladHint).area).toEqual(
+            (prev.highlights as SaladHint).area,
+          );
           journeys++;
         }
         state = saladGame.executeMove(state, res.steps[0].move);

@@ -39,6 +39,8 @@ import {
   mark,
   type Narration,
   phrase,
+  type Sentence,
+  sentence,
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
@@ -85,36 +87,67 @@ const place = (m: Marked): Narration =>
     : mark.as("ring", SQUARE, [m.landing, m.destination], "the two ringed squares");
 
 const thisLine = (m: Marked, noun: "row" | "column"): Narration =>
-  mark.this("stripes", whole(CELL), m.line, noun).capitalized();
+  mark.this("stripes", whole(CELL), m.line, noun);
 
 /** How a first leg closes: on the arrival, or on the shared staging marker. */
 const tail = (home: boolean): string =>
   home ? ", where it belongs" : ` ${HINT_SETTING_UP}`;
 
+/** What a slide that a look explains does: it arrives, or it only stages the
+ * tile, what `HINT_SETTING_UP` says elsewhere. The planner chose the move
+ * among others as good, so the sentence says what it does (`effect`) rather
+ * than that the look forces it. */
+const arrives = (home: boolean, where = "there"): Narration =>
+  home ? phrase`it belongs ${where}` : phrase`that sets it up`;
+
+/** The slide as a step toward placing its tile: the tile is the aim, and the
+ * planner, not a deduction, chose it. */
+const working = (m: Marked, move: Narration): Sentence =>
+  sentence({ aim: thisTile(m), move, relation: { kind: "serves" } });
+
 export const say = {
-  /** A later leg of the journey: it neither re-introduces the tile nor
-   * re-explains the why, since leg one carried both and is still on screen. */
-  next: (m: Marked, home: boolean): Narration =>
-    phrase`Now take ${tile(m, "it")} on to ${place(m)}${home ? ", where it belongs" : ""}.`,
+  /** A later leg of the journey: it does not re-explain the why, since leg one
+   * carried it and is still on screen, so it serves the same tile. */
+  next: (m: Marked, home: boolean): Sentence =>
+    working(
+      m,
+      phrase`take ${tile(m, "it")} on to ${place(m)}${home ? ", where it belongs" : ""}`,
+    ),
 
   /** The tile sits in the source's row, striped. */
-  rowFixed: (m: Marked, home: boolean): Narration =>
-    phrase`${thisLine(m, "row")} never slides, so only a column move can shift ${thisTile(m)}: take it to ${place(m)}${tail(home)}.`,
+  rowFixed: (m: Marked, home: boolean): Sentence =>
+    sentence({
+      look: phrase`${thisLine(m, "row")} never slides`,
+      follows: phrase`only a column move shifts ${thisTile(m)}`,
+      move: phrase`take it to ${place(m)}`,
+      relation: { kind: "effect", effect: arrives(home) },
+    }),
 
   /** The tile sits in the source's column, striped. */
-  colFixed: (m: Marked, home: boolean): Narration =>
-    phrase`${thisLine(m, "column")} never slides, so only a row move can shift ${thisTile(m)}: take it to ${place(m)}${tail(home)}.`,
+  colFixed: (m: Marked, home: boolean): Sentence =>
+    sentence({
+      look: phrase`${thisLine(m, "column")} never slides`,
+      follows: phrase`only a row move shifts ${thisTile(m)}`,
+      move: phrase`take it to ${place(m)}`,
+      relation: { kind: "effect", effect: arrives(home) },
+    }),
 
   // Stated, not argued: *why* the source is fixed is a rule, and rules live in
-  // the help text. "Belongs beside the source" is itself the arrival marker, so
-  // the arriving leg closes on it rather than on `tail`'s ", where it belongs"
-  // (which would say "belongs" twice); a leg still on its way keeps the shared
-  // "(setting up)" marker.
-  besideSource: (m: Marked, home: boolean): Narration =>
+  // the help text. "Belongs beside the source" is itself the arrival, so the
+  // arriving leg closes on it; a leg still on its way says so as its look and
+  // closes on setting things up, so "belongs" is never said twice.
+  besideSource: (m: Marked, home: boolean): Sentence =>
     home
-      ? phrase`Take ${thisTile(m)} to ${place(m)}; it belongs beside the source.`
-      : phrase`${thisTile(m, "This")} belongs beside the source: take it to ${place(m)} ${HINT_SETTING_UP}.`,
+      ? sentence({
+          move: phrase`take ${thisTile(m)} to ${place(m)}`,
+          relation: { kind: "effect", effect: arrives(true, "beside the source") },
+        })
+      : sentence({
+          look: phrase`${thisTile(m)} belongs beside the source`,
+          move: phrase`take it to ${place(m)}`,
+          relation: { kind: "effect", effect: arrives(false) },
+        }),
 
-  working: (m: Marked, home: boolean): Narration =>
-    phrase`Working on ${thisTile(m)}: take it to ${place(m)}${tail(home)}.`,
+  working: (m: Marked, home: boolean): Sentence =>
+    working(m, phrase`take it to ${place(m)}${tail(home)}`),
 };

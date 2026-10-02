@@ -10,7 +10,7 @@ different colors.
 
 ## Hints
 
-**Hint** names the next color to fill with — *"Fill with orange to join
+**Hint** names the next color to fill with — *"Fill with orange: it joins
 the dotted squares to your region"*.
 
 {{hint-marks}}

@@ -27,6 +27,10 @@ import {
   NOTE,
   type Note,
   phrase,
+  type Sentence,
+  sentence,
+  so,
+  unshaped,
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
@@ -74,15 +78,18 @@ export const say = {
 
   clean:
     (diag: boolean) =>
-    (marks: readonly Note[]): Narration =>
-      phrase`Now clear the easy ones: cross out ${mark.as(
-        "ring",
-        NOTE,
-        marks,
-        diag
-          ? "any letter already in a cell touching the cell, even at a corner"
-          : "any letter already beside, above or below the cell",
-      )}.`,
+    (marks: readonly Note[]): Sentence =>
+      unshaped(
+        phrase`Now clear the easy ones: cross out ${mark.as(
+          "ring",
+          NOTE,
+          marks,
+          diag
+            ? "any letter already in a cell touching the cell, even at a corner"
+            : "any letter already beside, above or below the cell",
+        )}.`,
+        "setup",
+      ),
 
   /** A note-less cell's candidates, written because a deduction rests on them. */
   note: (
@@ -90,19 +97,28 @@ export const say = {
     values: readonly number[],
     every: boolean,
     diag: boolean,
-  ): Narration => {
+  ): Sentence => {
     if (every)
-      return phrase`No letter stands next to ${thisCell(at)} yet, so pencil in every one.`;
+      return so({
+        look: phrase`No letter stands next to ${thisCell(at)} yet`,
+        move: phrase`pencil in every one`,
+      });
     const one = values.length === 1;
-    return phrase`Only ${joinWith(values.map(L))} ${one ? "isn't" : "aren't"} already ${around(diag, thisCell(at))}, so pencil ${one ? "it" : "them"} in.`;
+    return so({
+      look: phrase`Only ${joinWith(values.map(L))} ${one ? "isn't" : "aren't"} already ${around(diag, thisCell(at))}`,
+      move: phrase`pencil ${one ? "it" : "them"} in`,
+    });
   },
 
-  naked: (at: Note, w: number): Narration =>
+  naked: (at: Note, w: number): Sentence =>
     narrateLatinReason({ kind: "single" }, at, w, LETTERS),
 
   /** A note-less cell every other letter is ruled out of. */
-  regionsFull: (at: Note, diag: boolean): Narration =>
-    phrase`Every other letter is already ${around(diag, thisCell(at))}, so it can only be ${L(at.n)}.`,
+  regionsFull: (at: Note, diag: boolean): Sentence =>
+    so({
+      look: phrase`Every other letter is already ${around(diag, thisCell(at))}`,
+      move: phrase`it can only be ${L(at.n)}`,
+    }),
 
   /** A placement's own strikes, as the leg after it, from the letter just
    * placed at `placed`. */
@@ -149,10 +165,14 @@ export const say = {
     need: number,
     more: boolean,
     open: readonly Point[],
-  ): Narration =>
-    need === 1
-      ? phrase`${thisLine(line)} needs ${count(line, needs(1, at.n, more))} and no other cell in it can take one, so ${thisCell(at)} must be ${L(at.n)}.`
-      : phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))} and only ${mark.the("outline", CELL, open, "cell")} can take one, so ${thisCell(at)} must be ${L(at.n)}.`,
+  ): Sentence =>
+    so({
+      look:
+        need === 1
+          ? phrase`${thisLine(line)} needs ${count(line, needs(1, at.n, more))} and no other cell in it can take one`
+          : phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))} and only ${mark.the("outline", CELL, open, "cell")} can take one`,
+      move: phrase`${thisCell(at)} must be ${L(at.n)}`,
+    }),
 
   /**
    * The runs technique proper: the outlined cells, split into stretches by the
@@ -166,11 +186,21 @@ export const say = {
     need: number,
     more: boolean,
     open: readonly Point[],
-  ): Narration =>
-    phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))}, and ${mark.the("outline", CELL, open, "cell")} fit only ${need} apart, so each stretch is full: ${thisCell(at)} must be ${L(at.n)}.`,
+  ): Sentence =>
+    so({
+      look: phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))}, and ${mark.the("outline", CELL, open, "cell")} fit only ${need} apart`,
+      follows: phrase`each stretch is full`,
+      move: phrase`${thisCell(at)} must be ${L(at.n)}`,
+    }),
 
   /** A later cell of the same firing: the line its first leg named is still
    * striped, and the words point back to it. */
-  alsoForced: (line: LineMarks, at: Note): Narration =>
-    phrase`So ${thisCell(at)} must be ${L(at.n)} too, for ${mark.the("stripes", whole(CELL), line.cells, line.word, "the same")}.`,
+  alsoForced: (line: LineMarks, at: Note): Sentence =>
+    sentence({
+      move: phrase`${thisCell(at)} must be ${L(at.n)} too`,
+      relation: {
+        kind: "again",
+        basis: mark.the("stripes", whole(CELL), line.cells, line.word, "the same"),
+      },
+    }),
 };

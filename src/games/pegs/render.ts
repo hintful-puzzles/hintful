@@ -17,7 +17,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
+import { MOVE, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import {
@@ -268,12 +268,15 @@ export function redraw(
   const { w, h } = s;
   const ts = ds.tileSize;
   const marks = stepMarks(hint ?? deadEnd);
-  // A ring on a whole jump, named by words that do not spell the move out,
+  // A ring on the step's whole move, named by words that do not spell it out,
   // rings its peg and its hole as the two separate rings do.
+  const move = hint?.move;
   const ringed = new Set([
     ...marks.of("ring", PEG),
     ...marks.of("ring", HOLE),
-    ...marks.of("ring", JUMP).flatMap((j) => [j.from, j.to]),
+    ...(marks.of("ring", MOVE).length > 0 && move?.type === "jump"
+      ? [move.sy * w + move.sx, move.ty * w + move.tx]
+      : []),
   ]);
   const outlined = new Set(marks.of("outline", PEG));
   const hw = raisedBevelWidth(ts);

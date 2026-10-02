@@ -23,7 +23,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { type Narration, stepMarks } from "../../engine/hint-words.ts";
+import { type Narration, type Sentence, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { evident, narrate, type TracksPicture } from "./hint.ts";
@@ -86,7 +86,7 @@ function walk(params: TracksParams, seed: string) {
   const out: {
     move: TracksMove;
     explanation: string;
-    words?: Narration;
+    words?: Sentence;
   }[] = [];
   for (let i = 0; i < 900; i++) {
     if (tracksGame.status(state) === "solved") break;
@@ -317,13 +317,15 @@ describe("the picture holds exactly the number the sentence states", () => {
       const { steps } = walk(params, `parity-${seed}`);
       for (const { step } of steps) {
         const m = step.explanation.match(
-          /^Every time the track enters the striped block/,
+          /^Every entry to the striped block needs an exit/,
         );
         if (!m) continue;
         checked++;
-        const said = /with none marked yet/.test(step.explanation)
+        const said = /no crossing is marked yet/.test(step.explanation)
           ? 0
-          : Number(step.explanation.match(/with (\d+) crossings? marked/)?.[1]);
+          : Number(
+              step.explanation.match(/and (\d+) crossings? (?:is|are) marked/)?.[1],
+            );
         const hl = outlinedBy(step);
         expect(hl.areaEdges.length, step.explanation).toBe(said);
         // The block is hatched, not outlined: the sentence is about it.
@@ -446,7 +448,7 @@ describe("every narratable premise the corpus reaches is reached", () => {
       "the loose end must run straight on", // looseEndSpans
       "Track here would carry on", // sharedFate, fill arm
       "No track here means none", // sharedFate, empty arm
-      "enters the striped block it must leave", // crossingParity
+      "entry to the striped block needs an exit", // crossingParity
     ]) {
       expect(all, `no step ever said "${marker}"`).toContain(marker);
     }
@@ -512,12 +514,12 @@ describe("narration reads correctly at the degenerate extremes", () => {
 
   it("a parity step with nothing marked yet does not say it crosses 0 times", () => {
     const s = say({ kind: "crossingParity", x: 0, y: 0, dir: 8, crossings: 0, ev });
-    expect(s).toContain("with none marked yet");
+    expect(s).toContain("and no crossing is marked yet");
     expect(s).not.toMatch(/\b0 crossings?\b/);
     expect(s).toContain("must be blocked");
     expect(
       say({ kind: "crossingParity", x: 0, y: 0, dir: 8, crossings: 1, ev }),
-    ).toContain("with 1 crossing marked");
+    ).toContain("and 1 crossing is marked");
   });
 
   // The three arms the census above ledgers as unreachable. A sentence no board

@@ -14,6 +14,8 @@ import {
   type Narration,
   phrase,
   pronoun,
+  type Sentence,
+  so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
@@ -43,20 +45,33 @@ const given = (m: Marked): Narration | string =>
 
 export const say = {
   /** A run of `run` that can slide only `slack` cells along the line. */
-  overlap: (m: Marked, run: number, slack: number): Narration =>
-    slack === 0
-      ? phrase`${thisLine(m).capitalized()}'s ${clue(m, `run of ${run}`)} has nowhere to slide${given(m)}, so ${theseCells(m)} must be black.`
-      : phrase`${thisLine(m).capitalized()}'s ${clue(m, `run of ${run}`)} can slide only ${slack} cell${
-          slack > 1 ? "s" : ""
-        }${given(m)}, so ${theseCells(m)} must be black.`,
+  overlap: (m: Marked, run: number, slack: number): Sentence =>
+    so({
+      look:
+        slack === 0
+          ? phrase`${thisLine(m)}'s ${clue(m, `run of ${run}`)} has nowhere to slide${given(m)}`
+          : phrase`${thisLine(m)}'s ${clue(m, `run of ${run}`)} can slide only ${slack} cell${
+              slack > 1 ? "s" : ""
+            }${given(m)}`,
+      move: phrase`${theseCells(m)} must be black`,
+    }),
 
-  unreachable: (m: Marked): Narration =>
-    phrase`No run of ${thisLine(m)}'s ${clue(m, "clue")} can reach ${theseCells(m)}, so ${they(m)} must be white.`,
+  unreachable: (m: Marked): Sentence =>
+    so({
+      look: phrase`No run of ${thisLine(m)}'s ${clue(m, "clue")} can reach ${theseCells(m)}`,
+      move: phrase`${they(m)} must be white`,
+    }),
 
-  lineEmpty: (m: Marked): Narration =>
-    phrase`${thisLine(m).capitalized()} has no clues, so ${theseCells(m)} must be white.`,
+  lineEmpty: (m: Marked): Sentence =>
+    so({
+      look: phrase`${thisLine(m)} has no clues`,
+      move: phrase`${theseCells(m)} must be white`,
+    }),
 
   /** Every fit of the line's runs agrees these cells are `black`, or white. */
-  intersection: (m: Marked, black: boolean): Narration =>
-    phrase`Whichever way ${thisLine(m)}'s ${clue(m, "runs")} fit, ${theseCells(m)} must be ${black ? "black" : "white"}.`,
+  intersection: (m: Marked, black: boolean): Sentence =>
+    so({
+      look: phrase`Every way ${thisLine(m)}'s ${clue(m, "runs")} can fit ${black ? "covers" : "leaves out"} ${theseCells(m)}`,
+      move: phrase`${they(m)} must be ${black ? "black" : "white"}`,
+    }),
 };

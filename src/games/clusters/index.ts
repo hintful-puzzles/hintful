@@ -28,7 +28,7 @@ import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -337,7 +337,7 @@ function narrate(
   d: ClustersDeduction,
   target: Point,
   hl: ClustersHintHighlights,
-): Narration {
+): Sentence {
   const m: Marked = { target, danger: hl.danger ?? null, chain: hl.chain };
   return d.reason.kind === "chain" ? say.chain(d, m) : say.direct(d, m);
 }

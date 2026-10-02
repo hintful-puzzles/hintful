@@ -27,7 +27,7 @@ import {
 } from "../../engine/game.ts";
 import { key, MARK_ALL_CODE, type PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, Narration, NOTE } from "../../engine/hint-words.ts";
+import { CELL, NOTE, type Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
@@ -415,7 +415,7 @@ function narrate(
   bits: number,
   continues: boolean,
   hl: UndeadHint,
-): Narration {
+): Sentence {
   const m = markedOf(hl);
   switch (reason.kind) {
     case "sightline": {
@@ -462,7 +462,7 @@ function narrowedTo(
 function spoken(
   move: UndeadMove,
   highlights: UndeadHint,
-  words: Narration,
+  words: Sentence,
 ): HintStep<UndeadMove, UndeadHint> {
   return { move, explanation: words.text, words, highlights };
 }
@@ -611,11 +611,7 @@ function buildSteps(state: UndeadState): HintStep<UndeadMove, UndeadHint>[] {
       if (wGuess[i] === MON_NONE && wPen[i] === 0) wPen[i] = MON_NONE;
     }
     steps.push(
-      spoken(
-        { type: "markAll" },
-        { area: [], targets: [], marks: [] },
-        Narration.plain(say.populate),
-      ),
+      spoken({ type: "markAll" }, { area: [], targets: [], marks: [] }, say.populate),
     );
     populated = true;
   };

@@ -27,7 +27,7 @@ import {
 } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
@@ -383,7 +383,7 @@ function narrate(
   firing: SticksFiring,
   state: SticksState,
   continues: boolean,
-): Narration {
+): Sentence {
   const { reason, to } = firing;
   const at = (i: number): Point => pointOf(i, state.w);
   // The evidence, split by the part each cell plays in the sentence.

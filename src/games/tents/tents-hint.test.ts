@@ -195,7 +195,7 @@ describe("every premise the corpus reaches is reached", () => {
     countMet: /already has|number is 0/,
     allOpen: /has only \d+ open/,
     noSpareRoom: /have room for only/,
-    betweenThem: /^Tents never touch, so/,
+    betweenThem: /, for tents never touch\.$/,
   };
 
   it("reaches every kind of premise and every line case", () => {

@@ -45,7 +45,7 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
 import {
@@ -387,7 +387,7 @@ function premise(
 }
 
 /** Why a placement is forced: always a generic single, since no clue places. */
-function narrate(reason: HintReason, m: Mark, o: number): Narration {
+function narrate(reason: HintReason, m: Mark, o: number): Sentence {
   if (reason.kind === "clue") throw new Error("a clue deduction strikes");
   return narrateLatinReason(reason, m, o);
 }

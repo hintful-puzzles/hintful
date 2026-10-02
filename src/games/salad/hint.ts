@@ -67,7 +67,7 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Narration, Sentence } from "../../engine/hint-words.ts";
 import type { LatinRepeatReason } from "../../engine/latin.ts";
 import {
   type ForcingLink,
@@ -151,7 +151,7 @@ export function narrate(
   reason: SaladReason,
   at: Mark,
   state: { mode: number; order: number; nums: number },
-): Narration {
+): Sentence {
   const { mode, order, nums } = state;
   const text = say(mode);
   switch (reason.kind) {
@@ -180,6 +180,23 @@ export function narrate(
     default:
       return narrateLatinReason(reason, at, order, saladVocab(mode));
   }
+}
+
+/** A count firing's later leg, the square `at`, settled by the line the first
+ * leg named. Only a count settles several squares at once. */
+function narrateAgain(
+  reason: SaladReason,
+  at: Point,
+  state: { mode: number; order: number },
+): Sentence {
+  if (reason.kind !== "countHolesDone" && reason.kind !== "countLettersDone")
+    throw new Error(`a ${reason.kind} settles one square`);
+  return say(state.mode).countAgain(
+    reason.line,
+    hiddenSingleLine(reason.line, reason.index, state.order),
+    at,
+    reason.kind === "countLettersDone",
+  );
 }
 
 /** The squares of the line a border clue looks along, nearest first. */
@@ -508,8 +525,11 @@ type SaladFiring = Firing<SaladMove, SaladHint, SaladReason>;
 function markerFiring(f: MarkerFiring, w: Working, state: SaladState): SaladFiring {
   const o = state.order;
   const nums = state.nums;
-  const legs: Leg<SaladMove, SaladHint, SaladReason>[] = f.cells.map((c) => {
-    const words = narrate(f.reason, { ...c, n: 0 }, state);
+  const legs: Leg<SaladMove, SaladHint, SaladReason>[] = f.cells.map((c, i) => {
+    const words =
+      i === 0
+        ? narrate(f.reason, { ...c, n: 0 }, state)
+        : narrateAgain(f.reason, c, state);
     return {
       step: narratedStep<SaladMove, SaladHint>({
         move: { type: "set", x: c.x, y: c.y, value: f.mark },

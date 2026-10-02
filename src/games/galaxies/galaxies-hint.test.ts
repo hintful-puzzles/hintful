@@ -191,11 +191,11 @@ describe("each deduction is narrated in its own vocabulary", () => {
     ],
     [
       "a wall between two galaxies",
-      "These two cells point at different dots, so they belong to different galaxies, and a wall must run between them.",
+      "These two cells point at different dots, so they belong to different galaxies: a wall must run between them.",
     ],
     [
       "the only dot that could own a cell",
-      "Only the ringed white dot can own this cell and its partner: any other dot mirrors it off the board or onto a dot.",
+      "Any other dot mirrors this cell off the board or onto a dot, so it and its partner must belong to the ringed white dot.",
     ],
     [
       "the limit of a galaxy's reach",

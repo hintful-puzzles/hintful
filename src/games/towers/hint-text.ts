@@ -3,8 +3,8 @@
  *
  * Towers keeps its own version of the generic Latin arms rather than the
  * engine's (`engine/hint-text.ts`), because its values need qualifying in some
- * arms and not others ("height 5 can go in only this cell … so it must be
- * 5"), which one vocabulary cannot say. It shares the forcing chain, and the
+ * arms and not others ("every other cell in this row rules out height 5, so
+ * this cell must be 5"), which one vocabulary cannot say. It shares the forcing chain, and the
  * two setup steps are built by the row/column preset from the two words Towers
  * gives it (`index.ts`'s `notes`).
  *
@@ -29,6 +29,9 @@ import {
   type Narration,
   type Note,
   phrase,
+  type Sentence,
+  sentence,
+  so,
   whole,
 } from "../../engine/hint-words.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
@@ -58,13 +61,27 @@ export const say = {
   /** Clue `c` sees every tower in its line, so height `n` sits at `at`. A
    * journey's later leg (`continues`) does not restate the premise its first
    * leg gave, only which clue and line it is still working along. */
-  fullLine: (c: ClueSight, n: number, at: Point, continues: boolean): Narration =>
+  fullLine: (c: ClueSight, n: number, at: Point, continues: boolean): Sentence =>
     continues
-      ? phrase`Continuing up ${line(c, "the line")} from ${clue(c, `clue ${c.value}`)}, height ${n} can only sit ${here(at)}.`
-      : phrase`${clue(c)} sees every tower in ${line(c, "this line")}, so heights must climb 1, 2, … from the clue: height ${n} can only sit ${here(at)}.`,
+      ? sentence({
+          move: phrase`height ${n} can only sit ${here(at)}`,
+          relation: {
+            kind: "again",
+            basis: phrase`${line(c, "the same line")} from ${clue(c, `clue ${c.value}`)}`,
+          },
+        })
+      : so({
+          look: phrase`${clue(c)} sees every tower in ${line(c, "this line")}`,
+          follows: phrase`heights must climb 1, 2, … from the clue`,
+          move: phrase`height ${n} can only sit ${here(at)}`,
+        }),
 
-  tallestNearest: (c: ClueSight, n: number, at: Point): Narration =>
-    phrase`${clue(c)} sees one tower, so the tallest must stand next to it, hiding the rest of ${line(c, "its line")}: height ${n} can only sit ${here(at)}.`,
+  tallestNearest: (c: ClueSight, n: number, at: Point): Sentence =>
+    so({
+      look: phrase`${clue(c)} sees one tower in ${line(c, "its line")}`,
+      follows: phrase`the tallest must stand next to it`,
+      move: phrase`height ${n} can only sit ${here(at)}`,
+    }),
 
   /** Two clues at the two ends of one line. */
   facing: (
@@ -72,8 +89,12 @@ export const say = {
     sight: readonly Point[],
     n: number,
     at: Point,
-  ): Narration =>
-    phrase`${mark.as("outline", CELL, clues, "These facing clues")} sum to one more than the grid size, pinning the tallest in ${mark.as("stripes", whole(CELL), sight, "their line")}: height ${n} can only sit ${here(at)}.`,
+  ): Sentence =>
+    so({
+      look: phrase`${mark.as("outline", CELL, clues, "These facing clues")} sum to one more than the grid size`,
+      follows: phrase`${mark.as("stripes", whole(CELL), sight, "their line")}'s tallest is pinned`,
+      move: phrase`height ${n} can only sit ${here(at)}`,
+    }),
 
   // The strike arms below are premises, which the walk concludes with the move
   // it makes (`engine/hint-text.ts`'s `Premise`). The struck cells are named
@@ -99,20 +120,29 @@ export const say = {
   /** Where the placement's cull strikes from. */
   dupWhere: "from the other cells there",
 
-  single: (at: Point, n: number): Narration =>
-    phrase`Every other height has been ruled out in ${thisCell(at)}, so it can only be ${n}.`,
+  single: (at: Point, n: number): Sentence =>
+    so({
+      look: phrase`Every other height has been ruled out in ${thisCell(at)}`,
+      move: phrase`it can only be ${n}`,
+    }),
 
-  regionsFull: (at: Point, n: number): Narration =>
-    phrase`${thisCell(at).capitalized()}'s row and column already hold every other height, so it can only be ${n}.`,
+  regionsFull: (at: Point, n: number): Sentence =>
+    so({
+      look: phrase`${thisCell(at)}'s row and column already hold every other height`,
+      move: phrase`it can only be ${n}`,
+    }),
 
   hiddenSingle: (
     kind: "row" | "col",
     cells: readonly Point[],
     at: Point,
     n: number,
-  ): Narration => {
+  ): Sentence => {
     const name = kind === "row" ? "row" : "column";
-    return phrase`In ${mark.this("stripes", whole(CELL), cells, name)}, height ${n} can go in only ${thisCell(at)}, since every other cell in the ${name} rules it out, so it must be ${n}.`;
+    return so({
+      look: phrase`Every other cell in ${mark.this("stripes", whole(CELL), cells, name)} rules out height ${n}`,
+      move: phrase`${thisCell(at)} must be ${n}`,
+    });
   },
 
   set: (cells: readonly Point[], n: number): Narration =>

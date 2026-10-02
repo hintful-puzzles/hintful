@@ -28,6 +28,8 @@ import {
   mark,
   type Narration,
   phrase,
+  type Sentence,
+  so,
 } from "../../engine/hint-words.ts";
 import type { LineKind } from "./premises.ts";
 
@@ -97,10 +99,7 @@ const runWords = (r: RunEnds): string =>
       ? `the run after ${r.from}`
       : `the run before ${r.to}`;
 
-const runName = (r: RunEnds, cap = false): Narration => {
-  const w = runWords(r);
-  return outlined(r.cells, cap ? w[0].toUpperCase() + w.slice(1) : w);
-};
+const runName = (r: RunEnds): Narration => outlined(r.cells, runWords(r));
 
 /** A placed number a premise measures from: its value, how far it is, and its
  * square. */
@@ -128,11 +127,13 @@ export type Rival =
  */
 export type Others = { kind: "none" } | { kind: "unnamed" } | Rival;
 
-function othersText(o: Others, at: readonly number[]): Narration | string {
-  if (o.kind === "none") return "no other run comes close";
-  if (o.kind === "unnamed") return "no other run can reach it";
-  if (o.kind === "run") return phrase`${runName(o.run)} is too far away`;
-  return phrase`${runName(o.run)} can't, as ${ring(at, "this square")} doesn't touch ${o.need.join(" or ")}`;
+/** Why no other run fills the square, said first in a fill sentence. */
+function othersText(o: Others, at: readonly number[]): Narration {
+  const square = ring(at, "this square");
+  if (o.kind === "none") return phrase`No other run comes close to ${square}`;
+  if (o.kind === "unnamed") return phrase`No other run can reach ${square}`;
+  if (o.kind === "run") return phrase`${runName(o.run)} is too far from ${square}`;
+  return phrase`${runName(o.run)} can't fill ${square}, which doesn't touch ${o.need.join(" or ")}`;
 }
 
 /**
@@ -221,21 +222,31 @@ export const say = {
     n: number,
     beside: Bound[],
     line: Arrowed | null,
-  ): Narration => {
+  ): Sentence => {
     const where =
       beside.length === 2
         ? phrase`next to both ${num(beside[0])} and ${num(beside[1])}`
         : beside.length === 1
           ? phrase`next to ${num(beside[0])}`
           : null;
+    const move = phrase`it must be ${n}`;
     if (!line) {
       if (!where)
-        return phrase`${ring(at, "This")} is the last empty square, so it must be ${n}.`;
-      return phrase`${n} must sit ${where}, and ${ring(at, "this")} is the only empty square that does, so it must be ${n}.`;
+        return so({ look: phrase`${ring(at, "This")} is the last empty square`, move });
+      return so({
+        look: phrase`${n} must sit ${where}, and ${ring(at, "this")} is the only empty square that does`,
+        move,
+      });
     }
     if (!where)
-      return phrase`${n} must be on ${itsLine(line)}, and ${ring(at, "this")} is its only empty square, so it must be ${n}.`;
-    return phrase`${n} must sit ${where}, on ${itsLine(line)}. Only ${ring(at, "this square")} does, so it must be ${n}.`;
+      return so({
+        look: phrase`${n} must be on ${itsLine(line)}, and ${ring(at, "this")} is its only empty square`,
+        move,
+      });
+    return so({
+      look: phrase`${n} must sit ${where}, on ${itsLine(line)}. Only ${ring(at, "this square")} does`,
+      move,
+    });
   },
 
   /** `n` must be within reach of each bound; `line` as for {@link say.touch}. */
@@ -244,49 +255,63 @@ export const say = {
     n: number,
     bounds: Bound[],
     line: Arrowed | null,
-  ): Narration => {
+  ): Sentence => {
     const where =
       bounds.length === 2 ? nearBoth(bounds[0], bounds[1]) : near(bounds[0]);
+    const move = phrase`it must be ${n}`;
     if (!line)
-      return phrase`${n} must be ${where}, and only ${ring(at, "this empty square")} is, so it must be ${n}.`;
-    return phrase`${n} must be ${where}, on ${itsLine(line)}. Only ${ring(at, "this square")} is, so it must be ${n}.`;
+      return so({
+        look: phrase`${n} must be ${where}, and only ${ring(at, "this empty square")} is`,
+        move,
+      });
+    return so({
+      look: phrase`${n} must be ${where}, on ${itsLine(line)}. Only ${ring(at, "this square")} is`,
+      move,
+    });
   },
 
   /** The path can reach this square from one neighbor only (`open`); `other`
-   * is the path's other end, and `why` it cannot be here. */
+   * is the path's other end, and `why` it cannot be here. The dead end gives
+   * "the path must end here", and the second reason picks which end. */
   deadEnd: (
     at: readonly number[],
     open: number,
     n: number,
     other: number,
     why: EndRuledOut,
-  ): Narration => {
-    const lead = phrase`Only ${outlined([open], "the outlined square")} leads into ${ring(at, "this one")}, so the path must end here.`;
-    if (why === "placed") return phrase`${lead} With ${other} placed, it must be ${n}.`;
-    if (why === "reach")
-      return phrase`${lead} The path's ${n === 1 ? "last" : "first"} number can't reach it, so it must be ${n}.`;
-    return phrase`${lead} ${other}'s arrow points elsewhere, so it must be ${n}.`;
+  ): Sentence => {
+    const which =
+      why === "placed"
+        ? `with ${other} placed`
+        : why === "reach"
+          ? `with the path's ${n === 1 ? "last" : "first"} number out of reach`
+          : `with ${other}'s arrow pointing elsewhere`;
+    return so({
+      look: phrase`Only ${outlined([open], "the outlined square")} leads into ${ring(at, "this one")}`,
+      follows: phrase`the path must end here`,
+      move: phrase`${which}, it must be ${n}`,
+    });
   },
 
   /**
-   * Only `n` can fill this square: no other run can (`others`), and the step
-   * counts to the run's own ends rule out the rest of it (`counts`, empty when
-   * `n` is its run's only number).
+   * No other run can fill this square (`others`), and the step counts to the
+   * run's own ends rule out the rest of it (`counts`, empty when `n` is its
+   * run's only number), so it must be `n`.
    */
   fill: (
     at: readonly number[],
     n: number,
     others: Others,
     counts: Count[],
-  ): Narration => {
+  ): Sentence => {
     const why = othersText(others, at);
-    const lead = phrase`Only ${n} can fill ${ring(at, "this square")}: ${why}`;
-    if (counts.length === 0) return phrase`${lead}.`;
+    const move = phrase`it must be ${n}`;
+    if (counts.length === 0) return so({ look: why, move });
     const rest =
       counts.length === 2
         ? phrase`${counts[0].d} steps from ${num(counts[0])} and ${counts[1].d} from ${num(counts[1])} rule out the rest`
         : phrase`${counts[0].d} steps from ${num(counts[0])} rules out anything ${counts[0].side}`;
-    return phrase`${lead}, and ${rest}.`;
+    return so({ look: phrase`${why}, and ${rest}`, move });
   },
 
   /**
@@ -302,7 +327,7 @@ export const say = {
     run: RunEnds,
     reach: readonly number[],
     byRoute: boolean,
-  ): Narration => {
+  ): Sentence => {
     const reaches = byRoute
       ? phrase`${striped(reach, "can step")} ${ring(at, "here")} through empty squares`
       : phrase`${striped(reach, "can reach")} ${ring(at, "this square")}`;
@@ -310,8 +335,12 @@ export const say = {
     const who = single
       ? phrase`Only ${n}, ${outlined(run.cells, runWords(run).slice("the run ".length))},`
       : phrase`Only ${runName(run)}`;
-    if (single) return phrase`${who} ${reaches}, so it must be ${n}.`;
-    return phrase`${who} ${reaches}, and of its numbers only ${n} can, so it must be ${n}.`;
+    const move = phrase`it must be ${n}`;
+    if (single) return so({ look: phrase`${who} ${reaches}`, move });
+    return so({
+      look: phrase`${who} ${reaches}, and of its numbers only ${n} can`,
+      move,
+    });
   },
 
   /**
@@ -323,8 +352,11 @@ export const say = {
     n: number,
     run: RunEnds,
     through: readonly number[],
-  ): Narration =>
-    phrase`${runName(run, true)} must step through ${outlined(through, "the outlined squares")}, so ${n} can only go ${ring(at, "here")}.`,
+  ): Sentence =>
+    so({
+      look: phrase`${runName(run)} must step through ${outlined(through, "the outlined squares")}`,
+      move: phrase`${n} can only go ${ring(at, "here")}`,
+    }),
 
   /**
    * Edges: `n` is on its arrow's line (`own`; `null` when it has no arrow) and
@@ -335,10 +367,13 @@ export const say = {
     n: number,
     own: Arrowed | null,
     near: readonly Near[],
-  ): Narration =>
-    own
-      ? phrase`${n} must be on ${itsLine(own)}, ${within(near)}. Only ${ring(at, "this square")} is, so it must be ${n}.`
-      : phrase`${n} has no arrow, but must be ${within(near)}. Only ${ring(at, "this square")} is, so it must be ${n}.`,
+  ): Sentence =>
+    so({
+      look: own
+        ? phrase`${n} must be on ${itsLine(own)}, ${within(near)}. Only ${ring(at, "this square")} is`
+        : phrase`${n} has no arrow, but must be ${within(near)}. Only ${ring(at, "this square")} is`,
+      move: phrase`it must be ${n}`,
+    }),
 
   /**
    * Edges: of the missing numbers, only `n` and those of `out` can stand here
@@ -350,12 +385,17 @@ export const say = {
     n: number,
     own: number,
     out: readonly Out[],
-  ): Narration => {
+  ): Sentence => {
     const here = ring(at, "here");
+    const move = phrase`it must be ${n}`;
     if (out.length === 0)
-      return own >= 0
-        ? phrase`Of the missing numbers, only ${outlined([own], `${n}'s arrow`)} points ${here}, so it must be ${n}.`
-        : phrase`No missing number's arrow points ${here}, and only ${n} has none, so it must be ${n}.`;
+      return so({
+        look:
+          own >= 0
+            ? phrase`Of the missing numbers, only ${outlined([own], `${n}'s arrow`)} points ${here}`
+            : phrase`No missing number's arrow points ${here}, and only ${n} has none`,
+        move,
+      });
     // A number without an arrow points nowhere, so it "could go" here.
     const arrowless = own < 0 || out.some((o) => o.arrow < 0);
     const all = [...out, { m: n, arrow: own }].sort((a, b) => a.m - b.m);
@@ -368,7 +408,7 @@ export const say = {
         ? phrase`${o.m} is too far from ${nearTarget(o.by)}`
         : phrase`${o.m} from ${nearTarget(o.by)}`,
     );
-    const full = phrase`${lead}. ${listed(why)}, so it must be ${n}.`;
+    const full = so({ look: phrase`${lead}. ${listed(why)}`, move });
     if (full.text.length <= GLANCE) return full;
     // Too many to name each reason at a glance: they are drawn instead, and the
     // words point at them together. What these words do not name is not drawn
@@ -379,9 +419,14 @@ export const say = {
       placed.length > 0
         ? phrase`${striped(lines, "the striped lines")} and ${outlined(placed, "outlined numbers")}`
         : striped(lines, "the striped lines");
+    // "All but one": the conclusion names the number left, so saying it here
+    // too would name it twice.
     const shorter = [
-      phrase`${lead}, and ${drawn} rule out all but ${n}, so it must be ${n}.`,
-      phrase`Of the missing numbers that ${arrowless ? "could go" : "point"} ${here}, ${drawn} rule out all but ${n}, so it must be ${n}.`,
+      so({ look: phrase`${lead}, and ${drawn} rule out all but one`, move }),
+      so({
+        look: phrase`Of the missing numbers that ${arrowless ? "could go" : "point"} ${here}, ${drawn} rule out all but one`,
+        move,
+      }),
     ];
     return shorter.find((s) => s.text.length <= GLANCE) ?? shorter[shorter.length - 1];
   },
@@ -401,20 +446,39 @@ export const say = {
       | { kind: "must"; squares: readonly number[] }
       | { kind: "room"; run: RunEnds },
     arrows: readonly number[] | null,
-  ): Narration => {
+  ): Sentence => {
     const path = (words: string) => mark.as("ring", PATH, route, words);
     // Edges: the arrows are why there is one route, so the sentence says so.
     // The route is "the one drawn", since "the line" would read as an arrow's.
     if (arrows && why.kind === "plain")
-      return phrase`With each number on ${outlined(arrows, "its arrow's")} line, ${runName(run)} has only one route, so it must take ${path("the one drawn")}.`;
-    if (arrows && why.kind === "must") {
-      const said = phrase`No other run reaches ${striped(why.squares, "the striped squares")}, so ${runName(run)} must take them, on ${path("the one route")} ${outlined(arrows, "its arrows")} allow.`;
-      if (said.text.length <= GLANCE) return said;
+      return so({
+        look: phrase`With each number on ${outlined(arrows, "its arrow's")} line, ${runName(run)} has only one route`,
+        move: phrase`it must take ${path("the one drawn")}`,
+      });
+    if (why.kind === "must") {
+      const look = phrase`No other run reaches ${striped(why.squares, "the striped squares")}`;
+      if (arrows) {
+        const said = so({
+          look,
+          move: phrase`${runName(run)} must take them, on ${path("the one route")} ${outlined(arrows, "its arrows")} allow`,
+        });
+        if (said.text.length <= GLANCE) return said;
+      }
+      // One conclusion, the route: taking every striped square is what singles
+      // it out.
+      return so({
+        look,
+        move: phrase`${runName(run)} must take them all, on ${path("the one route")} that does`,
+      });
     }
-    if (why.kind === "must")
-      return phrase`No other run reaches ${striped(why.squares, "the striped squares")}, so ${runName(run)} must take them all, and only ${path("one route")} does.`;
     if (why.kind === "room")
-      return phrase`Only one route for ${runName(run)} leaves ${runName(why.run)} a way through, so it must take ${path("the line")}.`;
-    return phrase`${runName(run, true)} has only one route through the empty squares, so it must go along ${path("the line")}.`;
+      return so({
+        look: phrase`Only one route for ${runName(run)} leaves ${runName(why.run)} a way through`,
+        move: phrase`it must take ${path("the line")}`,
+      });
+    return so({
+      look: phrase`${runName(run)} has only one route through the empty squares`,
+      move: phrase`it must go along ${path("the line")}`,
+    });
   },
 };

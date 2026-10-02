@@ -54,7 +54,7 @@
  */
 
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { leadsAcross, type Marked, say } from "./hint-text.ts";
@@ -655,7 +655,7 @@ export function deduceCrossingPlan(state: CrossingState): CrossingPlan {
 export function narrateCrossing(
   puzzle: CrossingPuzzle,
   firing: CrossingFiring,
-): Narration {
+): Sentence {
   const m = markedOf(puzzle, firing);
   switch (firing.technique) {
     case "onlyNumber": {

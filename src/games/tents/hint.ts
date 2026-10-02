@@ -24,7 +24,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { lineSquares, pointOf } from "./hint-marks.ts";
 import { type Counted, type Dir, type LineKind, say } from "./hint-text.ts";
@@ -188,7 +188,7 @@ function cellsLeg(
   state: TentsState,
   cells: number[],
   v: number,
-  words: Narration,
+  words: Sentence,
 ): TentsStep {
   const { w } = state;
   return {
@@ -206,7 +206,7 @@ function linkStep(
   state: TentsState,
   sq: number,
   d: number,
-  words: Narration,
+  words: Sentence,
 ): TentsStep {
   const { w } = state;
   return {
@@ -225,7 +225,7 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
   const grass = f.cells.filter((c) => c.v === NONTENT).map((c) => c.i);
   const at = (i: number) => pointOf(i, w);
   const pts = (is: readonly number[]) => is.map(at);
-  const leg = (cells: number[], v: number, words: Narration) =>
+  const leg = (cells: number[], v: number, words: Sentence) =>
     cellsLeg(state, cells, v, words);
 
   switch (reason.kind) {
@@ -311,7 +311,7 @@ function lineSteps(
 ): TentsStep[] {
   const { squares, open, need, counted } = lineOf(state, f, line);
   const pts = (is: readonly number[]) => is.map((i) => pointOf(i, state.w));
-  const leg = (cells: number[], v: number, words: Narration) =>
+  const leg = (cells: number[], v: number, words: Sentence) =>
     cellsLeg(state, cells, v, words);
 
   if (need === 0)

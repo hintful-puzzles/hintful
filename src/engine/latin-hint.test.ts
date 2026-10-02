@@ -211,7 +211,7 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
       3,
     );
     expect(hidden.text).toBe(
-      "In this column, 2 can go in only this cell, since every other cell in the column rules it out, so it must be 2.",
+      "Every other cell in this column rules out 2, so this cell must be 2.",
     );
     // "this column" stripes the whole column; "this cell" rings the one.
     expect(keys(hidden)).toEqual([

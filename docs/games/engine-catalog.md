@@ -664,6 +664,12 @@ sentence builder: `phrase` composes a `Narration` from literal words and
 `mark.this` / `mark.the` / `mark.paren` / `mark.as` references, each carrying the
 elements of the mark it names. A literal saying "this", "these" or a role's
 adjective throws, so an unbound "the striped row" cannot be written.
+A step's words are a `Sentence`, made only by `sentence(said)` (its parts: an
+`aim`, a `look`, what `follows`, the `move` and the `Relation` that picks the
+engine's joining words), its shorthand `so({ look, move })`, or
+`unshaped(words, kind)` for a declared exception; `mark.move(words)` rings the
+step's own move (`MOVE`) so the words can leave it to the board. See
+[`hints.md`](./hints.md) § "A sentence has parts".
 `stepMarks(step)` is what a bound game's renderer paints the step's marks from,
 and `testing/hint-binding.ts` holds the rendered frame to the words in the
 hint-quality walk; `legendMarkdown` is the help's generated list of marks. See
@@ -678,8 +684,8 @@ games whose generic-arm wording is verbatim-identical (normative rule: the
 candidate games' `populateText`/`cleanObviousText`, the `Premise` a strike's
 words are and the `Conclusions` the walk ends it with (`candidateConclusions`
 for a game whose values print one way), the `LatinVocab` a value is spoken in, the
-sliding-tile games' `workingOn(tile)` + `HINT_SETTING_UP` (so Fifteen, Sixteen
-and Netslide read as one voice), and the English list joiners
+sliding-tile games' `HINT_SETTING_UP` (their "Working on tile N:" is a
+sentence's `aim`), and the English list joiners
 `joinNums`/`joinWith`. Nothing in it decides which sentence fires. See
 [`hints.md`](./hints.md) § "The sentences live in one file per game".
 

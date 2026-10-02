@@ -8,7 +8,15 @@
  * are outlined, and the row or column the sentence calls "this row" is striped.
  */
 
-import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  so,
+  whole,
+} from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { ONE, ZERO } from "./constants.ts";
 import type { HintReason } from "./solver.ts";
@@ -32,15 +40,29 @@ const thisLine = (m: Marked, horizontal: boolean): Narration =>
   mark.this("stripes", whole(CELL), m.line, lineName(horizontal));
 
 export const say = {
-  threes: (reason: R<"threes">, m: Marked): Narration =>
-    phrase`${mark.the("outline", CELL, m.evidence, "cell").capitalized()} are already ${colorName(reason.color)}, so ${thisCell(m)} would make three in a row: it must be ${oppositeName(reason.color)}.`,
+  threes: (reason: R<"threes">, m: Marked): Sentence =>
+    so({
+      look: phrase`${mark.the("outline", CELL, m.evidence, "cell")} are already ${colorName(reason.color)}`,
+      follows: phrase`${thisCell(m)} would make three in a row`,
+      move: phrase`it must be ${oppositeName(reason.color)}`,
+    }),
 
-  complete: (reason: R<"complete">, m: Marked): Narration =>
-    phrase`${thisLine(m, reason.horizontal).capitalized()} already holds ${mark.paren("outline", CELL, m.evidence, `all of its ${colorName(reason.full)} cells`)}, so ${thisCell(m)} and every other empty one in it must be ${colorName(reason.fill)}.`,
+  complete: (reason: R<"complete">, m: Marked): Sentence =>
+    so({
+      look: phrase`${thisLine(m, reason.horizontal)} already holds ${mark.paren("outline", CELL, m.evidence, `all of its ${colorName(reason.full)} cells`)}`,
+      move: phrase`${thisCell(m)} and every other empty one in it must be ${colorName(reason.fill)}`,
+    }),
 
-  unique: (reason: R<"unique">, m: Marked): Narration =>
-    phrase`${thisLine(m, reason.horizontal).capitalized()}'s ${oppositeName(reason.fill)}s all sit where ${mark.the("outline", whole(CELL), m.evidence, lineName(reason.horizontal))}'s do, so a ${oppositeName(reason.fill)} in ${thisCell(m)} would make them identical: it must be ${colorName(reason.fill)}.`,
+  unique: (reason: R<"unique">, m: Marked): Sentence =>
+    so({
+      look: phrase`${thisLine(m, reason.horizontal)}'s ${oppositeName(reason.fill)}s all sit where ${mark.the("outline", whole(CELL), m.evidence, lineName(reason.horizontal))}'s do`,
+      follows: phrase`a ${oppositeName(reason.fill)} in ${thisCell(m)} would copy that ${lineName(reason.horizontal)}`,
+      move: phrase`it must be ${colorName(reason.fill)}`,
+    }),
 
-  nearcomplete: (reason: R<"nearcomplete">, m: Marked): Narration =>
-    phrase`The last ${oppositeName(reason.fill)} in ${thisLine(m, reason.horizontal)} fits only in ${mark.as("outline", CELL, m.evidence, "an outlined cell")} without making three ${colorName(reason.fill)}s, so ${thisCell(m)} must be ${colorName(reason.fill)}.`,
+  nearcomplete: (reason: R<"nearcomplete">, m: Marked): Sentence =>
+    so({
+      look: phrase`The last ${oppositeName(reason.fill)} in ${thisLine(m, reason.horizontal)} fits only in ${mark.as("outline", CELL, m.evidence, "an outlined cell")} without making three ${colorName(reason.fill)}s`,
+      move: phrase`${thisCell(m)} must be ${colorName(reason.fill)}`,
+    }),
 };

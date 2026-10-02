@@ -27,7 +27,7 @@ import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
   type CornerBound,
@@ -152,7 +152,7 @@ const NO_MARKS: Marks = {
 };
 
 /** The words a step speaks, given the marks it draws. */
-type Words = (m: Marked) => Narration;
+type Words = (m: Marked) => Sentence;
 
 function push(
   pl: Planner,

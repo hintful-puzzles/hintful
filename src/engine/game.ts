@@ -17,7 +17,7 @@
 import type { DifficultyContract } from "./difficulty.ts";
 import type { PointerAction } from "./hint-gesture.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
-import type { MarkRole, Narration } from "./hint-words.ts";
+import type { MarkRole, Sentence } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type { NotApplicableReasons } from "./sections.ts";
 import type { SolveFailure } from "./solve-failure.ts";
@@ -71,8 +71,10 @@ export interface HintStep<Move, Highlights = unknown> {
   /** The sentence with its references to the marks the step draws
    * (`hint-words.ts`). Every step of a game with {@link Game.hintMarks} has
    * them, its renderer paints its marks from them (`stepMarks`), and
-   * `testing/hint-binding.ts` holds the rendered frame to them. */
-  words?: Narration;
+   * `testing/hint-binding.ts` holds the rendered frame to them. A
+   * {@link Sentence}, so they were built from their parts or declared an
+   * exception. */
+  words?: Sentence;
   highlights?: Highlights;
   /** True when this step is the continuation of the journey the
    * previous step previewed (e.g. the "then to column 5" leg of
@@ -124,7 +126,7 @@ export type HintTrackVerdict = "completed" | "onTrack" | "off";
 /** A step built from its words: the explanation is theirs. */
 export function narratedStep<Move, Highlights>(
   step: Omit<HintStep<Move, Highlights>, "explanation" | "words"> & {
-    words: Narration;
+    words: Sentence;
   },
 ): HintStep<Move, Highlights> {
   return { ...step, explanation: step.words.text };

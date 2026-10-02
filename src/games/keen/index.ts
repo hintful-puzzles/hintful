@@ -38,7 +38,7 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
@@ -328,7 +328,7 @@ function premise(reason: HintReason, marks: readonly Mark[]): Premise {
 
 /** Why a placement is forced: always a generic single, since no cage deduction
  * places. */
-function narrate(reason: HintReason, m: Mark, w: number): Narration {
+function narrate(reason: HintReason, m: Mark, w: number): Sentence {
   if (reason.kind === "cage" || reason.kind === "cageLine")
     throw new Error(`a ${reason.kind} deduction strikes`);
   return narrateLatinReason(reason, m, w);

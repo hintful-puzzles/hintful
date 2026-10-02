@@ -25,8 +25,9 @@ The plan puts the tiles home one at a time, and each step opens by
 naming the tile it is working on — *"Working on tile 3:"* — which stays
 the same until that tile is home, even while other tiles are moving. The
 rest says what this slide does: slides the tile *into place*, slides it
-*closer*, or *repositions* it (the hole sometimes has to go round it,
-which can take it further away for a while); or, for another tile,
+*closer*, or slides it *back a step*, leaving the hole between it and its
+home (the hole sometimes has to go round it, which takes it further away
+for a while); or, for another tile,
 slides that one *into place* again or *out of the way*.
 
 Follow it or go your own way: when you make a different slide, the next

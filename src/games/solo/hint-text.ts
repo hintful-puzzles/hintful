@@ -34,7 +34,15 @@ import {
   populateText,
   thisCell,
 } from "../../engine/hint-text.ts";
-import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  so,
+  whole,
+} from "../../engine/hint-words.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import { digitChar } from "./render.ts";
@@ -97,29 +105,36 @@ export const say = {
 
   /** A note step under the implicit reading at `at`; `regions` names the
    * kinds of region the cell lies in. */
-  note: (at: Point, ns: number[], every: boolean, regions: string[]): Narration =>
+  note: (at: Point, ns: number[], every: boolean, regions: string[]): Sentence =>
     noteText(at, ns.map(g), every, {
       noun: "number",
       placedVerb: "placed",
       regions: joinOr(regions),
     }),
 
-  single: (at: Point, n: number): Narration =>
-    phrase`Every other number has been ruled out in ${thisCell(at)}, so it can only be ${g(n)}.`,
+  single: (at: Point, n: number): Sentence =>
+    so({
+      look: phrase`Every other number has been ruled out in ${thisCell(at)}`,
+      move: phrase`it can only be ${g(n)}`,
+    }),
 
   /** A single in a note-less cell; `regions` as for {@link say.note}. */
-  regionsFull: (at: Point, n: number, regions: string[]): Narration =>
-    phrase`${thisCell(at).capitalized()}'s ${joinWith(regions)} already hold every other number, so it can only be ${g(n)}.`,
+  regionsFull: (at: Point, n: number, regions: string[]): Sentence =>
+    so({
+      look: phrase`${thisCell(at)}'s ${joinWith(regions)} already hold every other number`,
+      move: phrase`it can only be ${g(n)}`,
+    }),
 
   hiddenSingle: (
     at: Point,
     region: SoloRegion,
     n: number,
     cells: RegionCells,
-  ): Narration => {
-    const r = regionName(region);
-    return phrase`In ${thisRegion(region, cells)}, ${g(n)} can go in only ${thisCell(at)}, since every other cell in the ${r} rules it out, so it must be ${g(n)}.`;
-  },
+  ): Sentence =>
+    so({
+      look: phrase`Every other cell in ${thisRegion(region, cells)} rules out ${g(n)}`,
+      move: phrase`${thisCell(at)} must be ${g(n)}`,
+    }),
 
   // The strike arms below are premises, which the walk concludes with the move
   // it makes, in these words (`engine/hint-text.ts`'s `Premise`).
@@ -190,20 +205,32 @@ export const say = {
     n: number,
     total: number,
     cells: RegionCells,
-  ): Narration => {
+  ): Sentence => {
     const last = mark.as("ring", CELL, [at], "its last cell");
     switch (origin.kind) {
       case "cage":
         return origin.placed === 0
-          ? phrase`${thisCage(open).capitalized()} has only ${thisCell(at)}, so it must be its total, ${g(n)}.`
-          : phrase`${thisCage(open).capitalized()} must total ${origin.total} and its other cells already make ${origin.placed}, so ${last} must be ${g(n)}.`;
+          ? so({
+              look: phrase`${thisCage(open)} has only ${thisCell(at)}`,
+              move: phrase`it must be its total, ${g(n)}`,
+            })
+          : so({
+              look: phrase`${thisCage(open)} must total ${origin.total} and its other cells already make ${origin.placed}`,
+              move: phrase`${last} must be ${g(n)}`,
+            });
       // The one sentence that states the region rule in full, the 45 and all:
       // the residual *is* the digit, so it says the number once, as the thing
       // left over, and has the room.
       case "region":
-        return phrase`${thisRegion(origin.region, cells).capitalized()} must total ${total}; the cages and digits inside it account for all but ${g(n)}, so ${mark.as("ring", CELL, [at], "its one open cell")} must be ${g(n)}.`;
+        return so({
+          look: phrase`${thisRegion(origin.region, cells)} must total ${total}; the cages and digits inside it account for all but ${g(n)}`,
+          move: phrase`${mark.as("ring", CELL, [at], "its one open cell")} must be ${g(n)}`,
+        });
       case "outside":
-        return phrase`${outsideRest(origin, cells)}, so ${last} must be ${g(n)}.`;
+        return so({
+          look: outsideRest(origin, cells),
+          move: phrase`${last} must be ${g(n)}`,
+        });
     }
   },
 

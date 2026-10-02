@@ -11,7 +11,15 @@
  */
 
 import { type LatinVocab, thisCell } from "../../engine/hint-text.ts";
-import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  sentence,
+  so,
+} from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { toChar } from "./state.ts";
 
@@ -41,11 +49,14 @@ export const say = {
     bcCell: Point;
     thirdCell: Point;
     at: Point;
-  }): Narration => {
+  }): Sentence => {
     const { A, B, C } = p;
     const known = p.knownLeft ? `(${A}·${B})·${C}` : `${A}·(${B}·${C})`;
     const forced = p.knownLeft ? `${A}·(${B}·${C})` : `(${A}·${B})·${C}`;
-    return phrase`The grid shows ${shows(p.abCell, `${A}·${B} = ${p.ab}`)}, ${shows(p.bcCell, `${B}·${C} = ${p.bc}`)} and ${shows(p.thirdCell, `${known} = ${p.v}`)}. Because (${A}·${B})·${C} = ${A}·(${B}·${C}) in any group, ${mark.as("ring", CELL, [p.at], forced)} must also be ${p.v}.`;
+    return so({
+      look: phrase`The grid shows ${shows(p.abCell, `${A}·${B} = ${p.ab}`)}, ${shows(p.bcCell, `${B}·${C} = ${p.bc}`)} and ${shows(p.thirdCell, `${known} = ${p.v}`)}. In any group, (${A}·${B})·${C} = ${A}·(${B}·${C})`,
+      move: phrase`${mark.as("ring", CELL, [p.at], forced)} must also be ${p.v}`,
+    });
   },
 
   /** `A·B`, at `via`, came out as `A` (`productIsA`) or as `B`, which reveals
@@ -57,17 +68,30 @@ export const say = {
     value: string,
     via: Point,
     at: Point,
-  ): Narration => {
+  ): Sentence => {
+    // "The product" opens the sentence because a sentence capitalizes its
+    // first letter, which would turn an element's letter into another symbol.
     const reveals = productIsA
-      ? phrase`${shows(via, `${A}·${B} = ${A}`)} shows ${B} is the identity`
-      : phrase`${shows(via, `${A}·${B} = ${B}`)} shows ${A} is the identity`;
-    return phrase`${reveals}, so its row and column are just the element labels, and ${thisCell(at)} must be ${value}.`;
+      ? phrase`The product ${shows(via, `${A}·${B} = ${A}`)} shows ${B} is the identity`
+      : phrase`The product ${shows(via, `${A}·${B} = ${B}`)} shows ${A} is the identity`;
+    return so({
+      look: reveals,
+      follows: phrase`its row and column are just the element labels`,
+      move: phrase`${thisCell(at)} must be ${value}`,
+    });
   },
 
   /** A later leg of the identity-fill journey: the premise is already given,
-   * and the product that gave it is still outlined. */
-  identityFillNext: (value: string, via: Point, at: Point): Narration =>
-    phrase`${mark.the("outline", CELL, [via], "product").capitalized()} shows the identity, whose row and column are just the element labels, so ${thisCell(at)} must be ${value}.`,
+   * and the product that gave it is still outlined. Each leg places its own
+   * label, so the move says no "too". */
+  identityFillNext: (value: string, via: Point, at: Point): Sentence =>
+    sentence({
+      move: phrase`${thisCell(at)} must be ${value}`,
+      relation: {
+        kind: "again",
+        basis: phrase`the identity ${mark.the("outline", CELL, [via], "product")} shows`,
+      },
+    }),
 
   /** `E·O` (or `O·E` when not `left`) is `product`, shown at `at`, not `O`, so
    * `E` is not the identity: the premise, which the walk concludes by striking
@@ -80,10 +104,12 @@ export const say = {
     at: Point,
   ): Narration => {
     const shown = left ? `${E}·${O} = ${product}` : `${O}·${E} = ${product}`;
-    return phrase`${shows(at, shown)}, not ${O}, and the identity would leave ${O} unchanged, which rules ${E} out`;
+    // Opens on "The product", not the equation: the finished sentence
+    // capitalizes its first letter, which would change an element's letter.
+    return phrase`The product ${shows(at, shown)}, not ${O} as it would be if ${E} were the identity`;
   },
 
-  /** What an identity elimination strikes: in each cell of the element's row
-   * and column, the note that would make it the identity there. */
-  identityMarks: "its identity marks",
+  /** What an identity elimination strikes: in each cell of `E`'s row and
+   * column, the note that would make it the identity there. */
+  identityMarks: (E: string): string => `${E}'s identity marks`,
 };

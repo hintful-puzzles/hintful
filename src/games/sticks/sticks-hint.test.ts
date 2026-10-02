@@ -54,7 +54,7 @@ const KINDS = [
 const PHRASE: Record<SticksReason["kind"], RegExp> = {
   tooLong: /too long for it/,
   unreachable: /needs a longer line/,
-  twoClues: /(?:into|on) one line\./,
+  twoClues: /(?:into|on) one line, so /,
   overConnected: /already has its \d+ lines?|takes no lines/,
   starved: /needs (?:all \d+|both) of its open sides|has one open side left/,
 };
@@ -99,7 +99,9 @@ describe("sticks hint — narration", () => {
     for (const kind of KINDS) {
       const s = stepsFor(SEED_FOR[kind]).find((x) => PHRASE[kind].test(x.explanation));
       expect(s, kind).toBeDefined();
-      expect(s?.explanation, kind).toMatch(/ must be (horizontal|vertical)\.$/);
+      expect(s?.explanation, kind).toMatch(
+        /, so this \w+ must be (horizontal|vertical)\.$/,
+      );
     }
   });
 
@@ -118,7 +120,7 @@ describe("sticks hint — narration", () => {
     let seen = 0;
     for (let seed = 0; seed < 12; seed++) {
       for (const s of stepsFor(seed)) {
-        if (/The black 0/.test(s.explanation)) {
+        if (/[Tt]he black 0/.test(s.explanation)) {
           expect(s.explanation).not.toMatch(/as well|another/);
           seen++;
         }
@@ -132,7 +134,7 @@ describe("sticks hint — narration", () => {
   it("says which orientation is being ruled out, and it is not the forced one", () => {
     for (let seed = 0; seed < 6; seed++) {
       for (const s of stepsFor(seed)) {
-        const forced = /must be (horizontal|vertical)\.$/.exec(s.explanation)?.[1];
+        const forced = /must be (horizontal|vertical)\b/.exec(s.explanation)?.[1];
         // "here" is optional: a continuation leg drops it, since the opening
         // leg already located the move.
         const ruledOut = /[Aa] (horizontal|vertical) line\b/.exec(s.explanation)?.[1];
@@ -260,7 +262,7 @@ describe("sticks hint — grouping", () => {
       for (const s of r.steps) {
         if (s.continuesPrevious)
           expect(s.explanation).toMatch(
-            /rules this (square|\d) out too|same numbers|close another side/,
+            /^…and this (square|\d) must be (horizontal|vertical), for /,
           );
       }
     }

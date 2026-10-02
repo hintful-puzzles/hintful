@@ -82,13 +82,13 @@ describe("group hint — recorded deductions", () => {
     let text: string | null = null;
     for (const seed of ["a1", "a2", "a3", "a4", "a5", "a6"]) {
       const { texts } = walk(NORMAL, seed);
-      text = texts.find((t) => /in any group/.test(t)) ?? null;
+      text = texts.find((t) => /In any group/.test(t)) ?? null;
       if (text) break;
     }
     expect(text).not.toBeNull();
-    // "…Because (a·b)·c = a·(b·c) in any group, <fourth> must also be <v>."
+    // "…In any group, (a·b)·c = a·(b·c), so <fourth> must also be <v>."
     expect(text).toMatch(/The grid shows .+·.+ = .+, .+·.+ = .+ and/);
-    expect(text).toMatch(/Because \(.+·.+\)·.+ = .+·\(.+·.+\) in any group/);
+    expect(text).toMatch(/In any group, \(.+·.+\)·.+ = .+·\(.+·.+\), so /);
     expect(text).toMatch(/must also be [a-z]\./);
   });
 });
@@ -109,7 +109,7 @@ describe("group hint — plan solves boards", () => {
       if (solved) anySolved = true;
       if (
         texts.some((t) =>
-          /rules \w out, so we must cross out its identity marks/.test(t),
+          /if (\w) were the identity, so we must cross out \1's identity marks/.test(t),
         ) &&
         solved
       ) {
@@ -164,7 +164,9 @@ describe("group hint — placements on a note-free board", () => {
         if (mv.type === "pencilAll") break;
         if (mv.type !== "set") continue;
         const { x, y } = mv.cells[0];
-        const line = /^In this (row|column)/.exec(st.explanation)?.[1];
+        const line = /^Every other cell in this (row|column) rules out/.exec(
+          st.explanation,
+        )?.[1];
         if (line) {
           claims++;
           for (let k = 0; k < w; k++) {

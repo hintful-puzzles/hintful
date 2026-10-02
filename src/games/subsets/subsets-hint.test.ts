@@ -577,7 +577,9 @@ describe("subgoal continuation narration", () => {
           // sub-goal; a firing's lead after its rule-outs states its own.
           const prev = res.steps[k - 1].move;
           if (st.move.kind === "set" && prev.kind === "set" && prev.pos === st.move.pos)
-            expect(st.explanation).toMatch(/Still filling this cell/);
+            expect(st.explanation).toMatch(
+              /^…and (?:mark [A-Z] present|clear [A-Z]) in this cell too, for /,
+            );
         });
         state = applyFiring(state, deduceHintPlan(state).deductions[0]);
       }

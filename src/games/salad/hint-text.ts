@@ -21,6 +21,9 @@ import {
   mark,
   type Narration,
   phrase,
+  type Sentence,
+  sentence,
+  so,
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
@@ -176,8 +179,11 @@ export function say(mode: number) {
 
     /** The line `cells` already has all `k` of its empty squares; `at` is the
      * square the leg settles. */
-    countHolesDone: (line: Line, cells: Squares, k: number, at: Point): Narration =>
-      phrase`${thisLine(line, cells).capitalized()} already has ${allItsHoles(k)}, so ${thisSquareAndTheRest(at)} must hold a ${noun}.`,
+    countHolesDone: (line: Line, cells: Squares, k: number, at: Point): Sentence =>
+      so({
+        look: phrase`${thisLine(line, cells)} already has ${allItsHoles(k)}`,
+        move: phrase`${thisSquareAndTheRest(at)} must hold a ${noun}`,
+      }),
 
     /** The line `cells`' `nums` symbols are all placed (`allPlaced`), or at
      * least their squares are known; `at` is the square the leg settles. */
@@ -187,19 +193,36 @@ export function say(mode: number) {
       allPlaced: boolean,
       nums: number,
       at: Point,
-    ): Narration => {
+    ): Sentence => {
       const theLine = thisLine(line, cells);
-      const rest = thisSquareAndTheRest(at);
       // The two halves of one firing: either the line's symbols are all written
       // in, or we merely know *which* squares hold them (a line of balls). Each
       // claims only what it has.
-      return allPlaced
-        ? phrase`${nums === 1 ? `The one ${noun}` : nums === 2 ? `Both ${noun}s` : `All ${count(nums, noun)}`} of ${theLine} ${nums === 1 ? "is" : "are"} already placed, so ${rest} must be empty.`
-        : phrase`We already know which ${nums === 1 ? "square" : count(nums, "square")} of ${theLine} ${nums === 1 ? `holds its ${noun}` : `hold its ${noun}s`}, so ${rest} must be empty.`;
+      return so({
+        look: allPlaced
+          ? phrase`${nums === 1 ? `The one ${noun}` : nums === 2 ? `Both ${noun}s` : `All ${count(nums, noun)}`} of ${theLine} ${nums === 1 ? "is" : "are"} already placed`
+          : phrase`We already know which ${nums === 1 ? "square" : count(nums, "square")} of ${theLine} ${nums === 1 ? `holds its ${noun}` : `hold its ${noun}s`}`,
+        move: phrase`${thisSquareAndTheRest(at)} must be empty`,
+      });
     },
 
-    crossNaked: (at: Point): Narration =>
-      phrase`Every ${noun} is ruled out here, so the empty-square mark is the only one left: ${square(at)} must be empty.`,
+    /** A count firing's later leg: the square `at`, settled by the same line
+     * `cells` its first leg named, as `empty` or as holding a symbol. */
+    countAgain: (line: Line, cells: Squares, at: Point, empty: boolean): Sentence =>
+      sentence({
+        move: phrase`${mark.this("ring", CELL, [at], "square")} must ${empty ? "be empty" : `hold a ${noun}`} too`,
+        relation: {
+          kind: "again",
+          basis: mark.as("stripes", whole(CELL), cells, `the same ${axisName(line)}`),
+        },
+      }),
+
+    crossNaked: (at: Point): Sentence =>
+      so({
+        look: phrase`Every ${noun} is ruled out here`,
+        follows: phrase`the empty-square mark is the only one left`,
+        move: phrase`${square(at)} must be empty`,
+      }),
 
     /** The squares `cells`, just settled as holding a symbol, keep no
      * empty-square mark. */

@@ -22,7 +22,7 @@ import {
   DEDUCTION_EXHAUSTED,
   type HintRefusal,
 } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { SPAN, say } from "./hint-text.ts";
 import {
@@ -95,7 +95,7 @@ export function narrate(
   state: BridgesState,
   reason: BridgesReason,
   hl: BridgesHighlights,
-): Narration {
+): Sentence {
   const clue = state.islands[reason.island].count;
   switch (reason.kind) {
     case "exactSpace":

@@ -15,6 +15,9 @@ import {
   mark,
   type Narration,
   phrase,
+  type Sentence,
+  sentence,
+  so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import type { BarrierTechnique, PlaceTechnique } from "./solver.ts";
@@ -49,18 +52,30 @@ export const say = {
     b: number,
     spot: Spot,
     evidence: readonly Point[],
-  ): Narration => {
+  ): Sentence => {
     const dom = domino(a, b);
     if (technique === "squareOnly")
-      return phrase`${outlined(evidence, "square").capitalized()} has only one neighbor left to pair with, so the ${dom} domino must go ${at(spot, "here")}.`;
-    return phrase`The ${dom} domino has only one spot left where it fits, because every other pairing is blocked, so it must go ${at(spot, "here")}.`;
+      return so({
+        look: phrase`${outlined(evidence, "square")} has only one neighbor left to pair with`,
+        move: phrase`the ${dom} domino must go ${at(spot, "here")}`,
+      });
+    return so({
+      look: phrase`The ${dom} domino has only one spot left where it fits`,
+      move: phrase`it must go ${at(spot, "here")}`,
+    });
   },
 
   /** A later barrier of the same firing, whose reason the first one gave. */
-  barrierNext: (spot: Spot, evidence: readonly Point[]): Narration =>
-    evidence.length
-      ? phrase`${at(spot, "This spot")} can't hold a domino either, for the same reason about ${outlined(evidence, "square")}.`
-      : phrase`${at(spot, "This spot")} can't hold a domino for the same reason.`,
+  barrierNext: (spot: Spot, evidence: readonly Point[]): Sentence =>
+    sentence({
+      move: phrase`${at(spot, "this spot")} can't hold a domino either`,
+      relation: {
+        kind: "again",
+        basis: evidence.length
+          ? phrase`the same reason about ${outlined(evidence, "square")}`
+          : phrase`the same reason`,
+      },
+    }),
 
   /** A barrier between two squares showing `a` and `b`. */
   barrier: (
@@ -69,21 +84,39 @@ export const say = {
     b: number,
     spot: Spot,
     evidence: readonly Point[],
-  ): Narration => {
+  ): Sentence => {
     const dom = domino(a, b);
     switch (technique) {
       case "squareSingleDomino":
-        return phrase`${outlined(evidence, "square").capitalized()} can only be part of the ${dom} domino, so ${dom} can't sit ${at(spot, "here")} instead.`;
+        return so({
+          look: phrase`${outlined(evidence, "square")} can only be part of the ${dom} domino`,
+          move: phrase`${dom} can't sit ${at(spot, "here")} instead`,
+        });
       case "mustOverlap":
-        return phrase`${mark.as("outline", CELL, evidence, "Every remaining spot for the outlined domino")} overlaps ${at(spot, "this pair")}, so no other domino can go there.`;
+        return so({
+          look: phrase`${mark.as("outline", CELL, evidence, "Every remaining spot for the outlined domino")} overlaps ${at(spot, "this pair")}`,
+          move: phrase`no other domino can go there`,
+        });
       case "localDuplicate":
-        return phrase`${indefinite(dom, true)} ${dom} domino ${at(spot, "here")} would force a second ${dom} at ${outlined(evidence, "square")}, but each domino is used once, so it can't.`;
+        return so({
+          look: phrase`${indefinite(dom, true)} ${dom} domino ${at(spot, "here")} would force a second ${dom} at ${outlined(evidence, "square")}, but each domino is used once`,
+          move: phrase`it can't`,
+        });
       case "localDuplicate2":
-        return phrase`A domino ${at(spot, "here")} would leave ${outlined(evidence, "square", "both")} needing one and the same domino, a duplicate, so it can't.`;
+        return so({
+          look: phrase`A domino ${at(spot, "here")} would leave ${outlined(evidence, "square", "both")} needing one and the same domino, a duplicate`,
+          move: phrase`it can't`,
+        });
       case "parity":
-        return phrase`A domino ${at(spot, "here")} would split the empty squares into odd-sized regions, which dominoes can't fill, so it can't go there.`;
+        return so({
+          look: phrase`A domino ${at(spot, "here")} would split the empty squares into odd-sized regions, which dominoes can't fill`,
+          move: phrase`it can't go there`,
+        });
       case "set":
-        return phrase`${outlined(evidence, "square").capitalized()} can only hold one set of dominoes, which uses the ${dom}, so ${dom} can't sit ${at(spot, "here")} as well.`;
+        return so({
+          look: phrase`${outlined(evidence, "square")} can only hold one set of dominoes, which uses the ${dom}`,
+          move: phrase`${dom} can't sit ${at(spot, "here")} as well`,
+        });
     }
   },
 };

@@ -36,7 +36,6 @@ import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
-import { phrase } from "../../engine/hint-words.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -552,11 +551,11 @@ function stepsForFiring(
       ? pickExclusion(board, d.pos, d.reason.survivors)
       : null;
   d.sets.forEach((set, k) => {
-    const leg = say.leg(d, k, legMarks(board, d, exclusion, k));
-    const words =
+    const example =
       k === 0 && exclusion
-        ? phrase`${leg}${say.exclusion(exclusion, board.n, pointOf(blockerCell(exclusion), board.w))}`
-        : leg;
+        ? say.exclusion(exclusion, board.n, pointOf(blockerCell(exclusion), board.w))
+        : null;
+    const words = say.leg(d, k, legMarks(board, d, exclusion, k), example);
     steps.push({
       move: { kind: "set", type: set.type, pos: d.pos, bit: set.bit },
       explanation: words.text,

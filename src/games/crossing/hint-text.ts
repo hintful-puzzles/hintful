@@ -22,6 +22,8 @@ import {
   NOTE,
   type Note,
   phrase,
+  type Sentence,
+  so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import type { CrossingFiring } from "./hint-solver.ts";
@@ -81,27 +83,44 @@ export const say = {
     len: number,
     num: string,
     m: Marked,
-  ): Narration => {
+  ): Sentence => {
+    const move = mustBe(m, num);
     // The fresh-board opener says nothing about entered digits: on an empty
     // run there are none, so that premise does no work and reads as plainly
     // false — the length is the whole argument there.
     if (f.because === "length") {
-      return phrase`${thisRun(m, "This run")} is ${len} squares long, and only one number in the list is ${len} digits, so ${mustBe(m, num)}.`;
+      return so({
+        look: phrase`${thisRun(m, "This run")} is ${len} squares long, and only one number in the list is ${len} digits`,
+        move,
+      });
     }
     if (f.because === "used") {
-      return phrase`Every other ${len}-digit number is already on the board, so none can go in ${thisRun(m, "this run")}: ${mustBe(m, num)}.`;
+      return so({
+        look: phrase`Every other ${len}-digit number is already on the board`,
+        follows: phrase`none can go in ${thisRun(m, "this run")}`,
+        move,
+      });
     }
     if (f.because === "notes") {
       const what = f.fill.length < len ? "digits and notes" : "notes";
-      return phrase`Only one ${len}-digit number left fits the ${what} in ${thisRun(m, "this run")}, so ${mustBe(m, num)}.`;
+      return so({
+        look: phrase`Only one ${len}-digit number left fits the ${what} in ${thisRun(m, "this run")}`,
+        move,
+      });
     }
-    return phrase`Only one ${len}-digit number left matches the digits already in ${thisRun(m, "this run")}, so ${mustBe(m, num)}.`;
+    return so({
+      look: phrase`Only one ${len}-digit number left matches the digits already in ${thisRun(m, "this run")}`,
+      move,
+    });
   },
 
-  sharedDigit: (f: Firing<"sharedDigit">, horizontal: boolean, m: Marked): Narration =>
-    phrase`Every ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} has ${indefinite(String(f.digit))} ${f.digit} in ${thisSquare(m)}, so it must be ${f.digit}.`,
+  sharedDigit: (f: Firing<"sharedDigit">, horizontal: boolean, m: Marked): Sentence =>
+    so({
+      look: phrase`Every ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} has ${indefinite(String(f.digit))} ${f.digit} in ${thisSquare(m)}`,
+      move: phrase`it must be ${f.digit}`,
+    }),
 
-  crossRuns: (f: Firing<"crossRuns">, m: Marked): Narration => {
+  crossRuns: (f: Firing<"crossRuns">, m: Marked): Sentence => {
     // Lead with whichever run is the *tighter* constraint and let the other
     // knock out the rest: listing both sets in full is the same proof, but
     // one of them routinely runs to six digits and reads as noise. Only a set
@@ -112,18 +131,27 @@ export const say = {
     const leadAcross = leadsAcross(f);
     const [near, far] = leadAcross ? ["across", "down"] : ["down", "across"];
     const small = leadAcross ? f.acrossDigits : f.downDigits;
-    return phrase`${thisRun(m, `The ${near} run's`)} ${fits(m, "numbers")} leave ${thisSquare(m)} only ${joinOr(small)}; ${mark.as("outline", LISTED, m.otherFitting, "those")} ${mark.as("stripes", CELL, m.otherRun, `of the ${far} run`)} rule out all but ${f.digit}, so it must be ${f.digit}.`;
+    return so({
+      look: phrase`${thisRun(m, `The ${near} run's`)} ${fits(m, "numbers")} leave ${thisSquare(m)} only ${joinOr(small)}; ${mark.as("outline", LISTED, m.otherFitting, "those")} ${mark.as("stripes", CELL, m.otherRun, `of the ${far} run`)} rule out all but ${f.digit}`,
+      move: phrase`it must be ${f.digit}`,
+    });
   },
 
   /** Always two digits or more: a run leaving one would pin the square. */
-  noteDigits: (f: Firing<"noteDigits">, horizontal: boolean, m: Marked): Narration =>
-    phrase`Every ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} puts ${joinOr(f.digits)} in ${thisSquare(m)}, so note them.`,
+  noteDigits: (f: Firing<"noteDigits">, horizontal: boolean, m: Marked): Sentence =>
+    so({
+      look: phrase`Every ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} puts ${joinOr(f.digits)} in ${thisSquare(m)}`,
+      move: phrase`note them`,
+    }),
 
-  noteStrike: (f: Firing<"noteStrike">, horizontal: boolean, m: Marked): Narration => {
+  noteStrike: (f: Firing<"noteStrike">, horizontal: boolean, m: Marked): Sentence => {
     const ds = joinOr(f.digits);
     const struck = mark.as("ring", NOTE, m.notes, (els) =>
       els.length === 1 ? "it" : "them",
     );
-    return phrase`No ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} puts ${f.digits.length === 1 ? `${indefinite(ds)} ${ds}` : ds} in ${thisSquare(m)}, so rule ${struck} out.`;
+    return so({
+      look: phrase`No ${fits(m, "number that still fits")} ${thisRun(m, `this ${way(horizontal)} run`)} puts ${f.digits.length === 1 ? `${indefinite(ds)} ${ds}` : ds} in ${thisSquare(m)}`,
+      move: phrase`rule ${struck} out`,
+    });
   },
 };

@@ -24,7 +24,7 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import {
   planSlides,
   type SlideMove,
@@ -637,7 +637,7 @@ function narrateStep(
   // The single degree of freedom. A tile in the source's row sits on a line that
   // never slides, so the only line that can move it is its column — and the other
   // way about. The row is "this row", striped: the board draws no numbers.
-  let words: (m: Marked) => Narration;
+  let words: (m: Marked) => Sentence;
   if (continuesPrevious) {
     words = (m) => say.next(m, arrivesHome);
   } else if (row === cy && m.axis === "col") {

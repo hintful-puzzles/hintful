@@ -376,15 +376,17 @@ describe("solo hint", () => {
         const res = soloGame.hint?.(state, aux);
         if (!res?.ok) break;
         const step = res.steps.find((s) =>
-          /can go in only this cell/.test(s.explanation),
+          /^Every other cell in this \w+ rules out \w, so this cell must be/.test(
+            s.explanation,
+          ),
         ) as AnyStep | undefined;
         if (step) {
           const m = step.move as { type: string; x: number; y: number; n: number };
           expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
-          expect(step.explanation).toMatch(/In this (row|column|block|diagonal)/);
+          expect(step.explanation).toMatch(/in this (row|column|block|diagonal)/);
           // The region it names contains the target: hatched when it is a line,
           // outlined when it is a block.
-          const isBlock = /In this block/.test(step.explanation);
+          const isBlock = /in this block/.test(step.explanation);
           const region = (isBlock ? step.highlights?.area : step.highlights?.hatch) as {
             x: number;
             y: number;

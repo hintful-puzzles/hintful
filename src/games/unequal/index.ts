@@ -40,7 +40,7 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
@@ -397,7 +397,7 @@ function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise
 
 /** Why a placement is forced: always a generic single, since no sign or bar
  * places. */
-function narrate(reason: HintReason, m: Mark, o: number): Narration {
+function narrate(reason: HintReason, m: Mark, o: number): Sentence {
   switch (reason.kind) {
     case "greater":
     case "lesser":

@@ -190,7 +190,7 @@ describe("the hint's idea of where a tile belongs", () => {
     expect(res.steps).toHaveLength(1);
     expect(isComplete(netslideGame.executeMove(fresh, res.steps[0].move))).toBe(true);
     expect(res.steps[0].explanation).toContain("where it belongs");
-    expect(res.steps[0].explanation).not.toContain("setting up");
+    expect(res.steps[0].explanation).not.toMatch(/setting up|sets it up/);
   });
 });
 
@@ -287,10 +287,11 @@ describe("netslide hint narration", () => {
         // Every other step states the consequence the move actually has — it puts a
         // tile where it belongs, or it is setting one up to get there. "Belongs" in
         // any of its phrasings is the arrival marker ("where it belongs", "it
-        // belongs beside the source"); "(setting up)" is the shared not-yet marker.
+        // belongs beside the source"); "(setting up)" and "that sets it up" are
+        // the not-yet markers.
         // The vocabulary test below holds it to *one* "belongs" per sentence, so
         // this cannot be satisfied by a stutter.
-        expect(step.explanation).toMatch(/\bbelongs\b|\(setting up\)/);
+        expect(step.explanation).toMatch(/\bbelongs\b|\(setting up\)|that sets it up/);
       }
     }
   });
@@ -335,7 +336,7 @@ describe("netslide hint narration", () => {
           step.move.axis === "col"
         ) {
           expect(step.explanation).toContain("This row never slides");
-          expect(step.explanation).toContain("only a column move can shift");
+          expect(step.explanation).toContain("only a column move shifts");
           expect(marks.line).toEqual(
             Array.from({ length: state.w }, (_, x) => state.cy * state.w + x),
           );
@@ -347,7 +348,7 @@ describe("netslide hint narration", () => {
           step.move.axis === "row"
         ) {
           expect(step.explanation).toContain("This column never slides");
-          expect(step.explanation).toContain("only a row move can shift");
+          expect(step.explanation).toContain("only a row move shifts");
           expect(marks.line).toEqual(
             Array.from({ length: state.h }, (_, y) => y * state.w + state.cx),
           );
@@ -424,7 +425,9 @@ describe("netslide hint narration", () => {
         seen = true;
         // A continuation leg works the same tile the leg before it did, and it
         // does not re-explain itself.
-        expect(res.steps[k].explanation).toMatch(/^Now take it on to/);
+        expect(res.steps[k].explanation).toMatch(
+          /^Working on this [-a-zA-Z ]+: take it on to/,
+        );
       }
     }
     expect(seen, "no plan in 30 boards ever needed a multi-slide journey").toBe(true);

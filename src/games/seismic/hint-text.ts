@@ -25,6 +25,9 @@ import {
   NOTE,
   type Note,
   phrase,
+  type Sentence,
+  so,
+  unshaped,
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
@@ -52,15 +55,18 @@ export const say = {
    * them, so a distance of N or less is a clash. */
   clean:
     (tectonic: boolean) =>
-    (marks: readonly Note[]): Narration =>
-      phrase`Now clear the easy ones: cross out ${mark.as(
-        "ring",
-        NOTE,
-        marks,
-        tectonic
-          ? "any number already in the cell's area or in a cell touching it"
-          : "any N already in the cell's area or within N cells of it in its row or column",
-      )}.`,
+    (marks: readonly Note[]): Sentence =>
+      unshaped(
+        phrase`Now clear the easy ones: cross out ${mark.as(
+          "ring",
+          NOTE,
+          marks,
+          tectonic
+            ? "any number already in the cell's area or in a cell touching it"
+            : "any N already in the cell's area or within N cells of it in its row or column",
+        )}.`,
+        "setup",
+      ),
 
   /** A note-less cell's candidates, written because a deduction rests on them. */
   note: (
@@ -68,26 +74,41 @@ export const say = {
     values: readonly number[],
     every: boolean,
     tectonic: boolean,
-  ): Narration => {
+  ): Sentence => {
     if (every)
-      return phrase`No number stands near enough to rule one out ${mark.as("ring", CELL, [at], "here")} yet, so pencil in every one.`;
+      return so({
+        look: phrase`No number stands near enough to rule one out ${mark.as("ring", CELL, [at], "here")} yet`,
+        move: phrase`pencil in every one`,
+      });
     const one = values.length === 1;
-    return phrase`Only ${joinWith(values.map(String))} ${one ? "isn't" : "aren't"} already in ${reach(at, tectonic)}, so pencil ${one ? "it" : "them"} in.`;
+    return so({
+      look: phrase`Only ${joinWith(values.map(String))} ${one ? "isn't" : "aren't"} already in ${reach(at, tectonic)}`,
+      move: phrase`pencil ${one ? "it" : "them"} in`,
+    });
   },
 
   /** An area of one cell owes only a 1, and needs no notes to say so. */
-  singleton: (at: Point): Narration =>
-    phrase`${mark.this("stripes", whole(CELL), [at], "area").capitalized()} is a single cell, so ${mark.as("ring", CELL, [at], "it")} can only be 1.`,
+  singleton: (at: Point): Sentence =>
+    so({
+      look: phrase`${mark.this("stripes", whole(CELL), [at], "area")} is a single cell`,
+      move: phrase`${mark.as("ring", CELL, [at], "it")} can only be 1`,
+    }),
 
-  naked: (at: Note, w: number): Narration =>
+  naked: (at: Note, w: number): Sentence =>
     narrateLatinReason({ kind: "single" }, at, w),
 
   /** A note-less cell every other number is ruled out of. */
-  regionsFull: (at: Point, n: number, tectonic: boolean): Narration =>
-    phrase`Every other number is already in ${reach(at, tectonic)}, so it can only be ${n}.`,
+  regionsFull: (at: Point, n: number, tectonic: boolean): Sentence =>
+    so({
+      look: phrase`Every other number is already in ${reach(at, tectonic)}`,
+      move: phrase`it can only be ${n}`,
+    }),
 
-  hidden: (area: readonly Point[], at: Point, n: number): Narration =>
-    phrase`No other cell in ${stripedArea(area)} can still be ${n}, so ${thisCell(at)} must be ${n}.`,
+  hidden: (area: readonly Point[], at: Point, n: number): Sentence =>
+    so({
+      look: phrase`No other cell in ${stripedArea(area)} can still be ${n}`,
+      move: phrase`${thisCell(at)} must be ${n}`,
+    }),
 
   /** A placement's own strikes, as the leg after it: the number just placed at
    * `at`, outlined. */

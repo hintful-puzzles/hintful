@@ -28,7 +28,16 @@ import type { HintStep } from "./game.ts";
 import { click, MARK_ALL_CODE, key as press } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
-import { CELL, mark, Narration, NOTE, phrase } from "./hint-words.ts";
+import {
+  CELL,
+  mark,
+  Narration,
+  NOTE,
+  phrase,
+  type Sentence,
+  so,
+  unshaped,
+} from "./hint-words.ts";
 import type { DeductionRecord } from "./latin.ts";
 import { rowColRegions } from "./latin-hint.ts";
 import { PENCIL_MODE_BUTTON } from "./pointer.ts";
@@ -168,7 +177,7 @@ describe("anyEmptyLacksNotes", () => {
 const rc = (w: number) => (x: number, y: number) => rowColRegions(x, y, w);
 const rr = (w: number) => regionReach(w, rc(w));
 /** The obvious clean's words, which carry no reference in these cases. */
-const easy = (): Narration => Narration.plain("clear the easy ones");
+const easy = (): Sentence => unshaped(Narration.plain("clear the easy ones"), "setup");
 
 describe("regionDuplicateMarks", () => {
   it("marks every empty cell of the value's regions that still notes it", () => {
@@ -735,7 +744,15 @@ describe("refreshCandidateHintStep", () => {
       { x: 0, y: 0, n: 1 },
       { x: 0, y: 0, n: 2 },
     ];
-    const words = phrase`${mark.this("ring", CELL, [{ x: 0, y: 0 }], "cell").capitalized()} loses them, so ${mark.as("ring", NOTE, marks, (ms) => `we must cross out ${joinNums(ms.map((m) => m.n))}`)}.`;
+    const words = so({
+      look: phrase`${mark.this("ring", CELL, [{ x: 0, y: 0 }], "cell")} loses them`,
+      move: mark.as(
+        "ring",
+        NOTE,
+        marks,
+        (ms) => `we must cross out ${joinNums(ms.map((m) => m.n))}`,
+      ),
+    });
     const s: HintStep<CandidateMove, CandidateHighlights> = {
       move: { type: "pencilStrike", marks },
       explanation: words.text,

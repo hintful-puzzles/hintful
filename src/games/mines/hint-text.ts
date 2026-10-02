@@ -17,7 +17,15 @@
  * of one value by where they sit, so "the outlined 1" always means one square.
  */
 
-import { CELL, mark, Narration, phrase } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  Narration,
+  phrase,
+  type Sentence,
+  sentence,
+  so,
+} from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 
 /** A number the sentence names: where it is and its value. */
@@ -122,28 +130,48 @@ export const conclude = {
     p: Premise,
     ring: readonly Point[],
     kind: "safe" | "mine" = p.proves,
-  ): Narration => phrase`${capital(p.words)}, so ${conclusion(ring, kind)}.`,
+  ): Sentence => so({ look: p.words, move: conclusion(ring, kind) }),
 
   /** A safe square under the player's flag: the flag must come off before it
    * can open. */
-  flags: (p: Premise, ring: readonly Point[]): Narration =>
-    phrase`${capital(p.words)}, so ${mark.as("ring", CELL, ring, (els) => (els.length === 1 ? "the flag on the ringed square" : "the flags on the ringed squares"))} must come off.`,
+  flags: (p: Premise, ring: readonly Point[]): Sentence =>
+    so({
+      look: p.words,
+      move: phrase`${mark.as("ring", CELL, ring, (els) => (els.length === 1 ? "the flag on the ringed square" : "the flags on the ringed squares"))} must come off`,
+    }),
 
-  /** The leg after the flags came off: open what they covered. */
-  afterFlags: (ring: readonly Point[]): Narration =>
-    phrase`With those flags off, ${conclusion(ring, "safe")}: open them.`,
+  /** The leg after the flags came off: open what they covered, which the lead
+   * leg proved safe. */
+  afterFlags: (ring: readonly Point[]): Sentence => {
+    const one = ring.length === 1;
+    return sentence({
+      move: phrase`open ${mark.as("ring", CELL, ring, (els) => (els.length === 1 ? "the ringed square" : "the ringed squares"))}`,
+      relation: {
+        kind: "again",
+        basis: phrase`with ${one ? "its flag" : "their flags"} off ${one ? "it" : "they"} must be safe`,
+      },
+    });
+  },
 };
 
 export const say = {
   /** No board yet: the generator lays the mines out around the first square
    * opened, never in it or beside it. */
-  firstClick: (at: Point): Narration =>
-    phrase`No mine is ever laid in the first square you open or beside it, so ${mark.this("ring", CELL, [at], "square")} can't hold one: open it to begin.`,
+  firstClick: (at: Point): Sentence =>
+    so({
+      look: phrase`no mine is ever laid in the first square you open or beside it`,
+      follows: phrase`${mark.this("ring", CELL, [at], "square")} can't hold one`,
+      move: phrase`open it to begin`,
+    }),
 
   /** Back at the start of a board already laid out: its first square is drawn
    * with a cross. */
-  restart: (at: Point): Narration =>
-    phrase`The board began at ${mark.the("ring", CELL, [at], "square")}, drawn with a cross, so it can't hold a mine: open it.`,
+  restart: (at: Point): Sentence =>
+    so({
+      look: phrase`the board began at ${mark.the("ring", CELL, [at], "square")}, drawn with a cross`,
+      follows: phrase`it can't hold a mine`,
+      move: phrase`open it`,
+    }),
 
   /** A number already touching all its mines. */
   satisfied: (w: Words, c: Clue, minesAt: readonly Point[]): Premise => ({

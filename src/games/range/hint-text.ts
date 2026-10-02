@@ -31,6 +31,8 @@ import {
   type Narration,
   phrase,
   pronoun,
+  type Sentence,
+  so,
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
@@ -54,36 +56,59 @@ const theClue = (m: Marked, n: number): Narration =>
   mark.as("outline", CLUE, m.clue ? [m.clue] : [], `this ${n}`);
 
 export const say = {
-  adjacency: (m: Marked): Narration =>
-    phrase`No two black squares may touch. ${thisCell(m).capitalized()} sits right next to ${mark.the("outline", CELL, m.blacks, "black square")}, so it must be white.`,
+  adjacency: (m: Marked): Sentence =>
+    so({
+      look: phrase`${thisCell(m)} touches ${mark.the("outline", CELL, m.blacks, "black square")}, and no two black squares may touch`,
+      move: phrase`it must be white`,
+    }),
 
   // Read at the small extremes (docs/games/hints.md § "Sanity-read at the
   // degenerate extremes"): a 1 sees only its own cell, and "all 2 of" reads
   // wrong where "both" is the word — Salad's line counts say it the same way.
   /** The clue `n` already sees all its white cells. */
-  satisfied: (m: Marked, n: number): Narration => {
+  satisfied: (m: Marked, n: number): Sentence => {
     const seen =
       n === 1
         ? "its one white cell"
         : n === 2
           ? "both of its white cells"
           : `all ${n} of its white cells`;
-    return phrase`${theClue(m, n).capitalized()} already sees ${mark.paren("outline", CELL, m.area, seen)}, so ${mark.as("ring", CELL, [m.target], `the cell just past ${pronoun(CELL, m.area)}`)} must be black.`;
+    return so({
+      look: phrase`${theClue(m, n)} already sees ${mark.paren("outline", CELL, m.area, seen)}`,
+      move: phrase`${mark.as("ring", CELL, [m.target], `the cell just past ${pronoun(CELL, m.area)}`)} must be black`,
+    });
   },
 
-  overrun: (m: Marked, n: number): Narration =>
-    phrase`${thisCell(m).capitalized()}, just past ${mark.the("outline", CELL, m.area, "cell")}, would let ${theClue(m, n)} see more than ${n} if white, so it must be black.`,
+  overrun: (m: Marked, n: number): Sentence =>
+    so({
+      look: phrase`if ${thisCell(m)}, just past ${mark.the("outline", CELL, m.area, "cell")}, were white, ${theClue(m, n)} would see more than ${n}`,
+      move: phrase`it must be black`,
+    }),
 
-  reach: (m: Marked, n: number): Narration => {
-    const along = phrase`along ${mark.the("stripes", whole(CELL), m.run, "run")} to ${mark.the("ring", CELL, [m.target], "cell")}, which must be white.`;
+  // The solver forces the run because the clue's other directions, even at
+  // their longest, leave it short of `n` without the cells up to the target;
+  // the bare arm, whose other directions see nothing yet, says that outright.
+  reach: (m: Marked, n: number): Sentence => {
+    const run = mark.the("stripes", whole(CELL), m.run, "run");
+    const target = mark.the("ring", CELL, [m.target], "cell");
     return m.area.length > 0
-      ? phrase`${theClue(m, n).capitalized()} needs more than ${mark.the("outline", CELL, m.area, "cell")}: it must see ${along}`
-      : phrase`To see ${n}, ${theClue(m, n)} must see ${along}`;
+      ? so({
+          look: phrase`${theClue(m, n)} needs more than ${mark.the("outline", CELL, m.area, "cell")}`,
+          follows: phrase`it must see along ${run}`,
+          move: phrase`${target} must be white`,
+        })
+      : so({
+          look: phrase`${theClue(m, n)} can't see ${n} without seeing along ${run} to ${target}`,
+          move: phrase`that cell must be white`,
+        });
   },
 
   // Both `ruleConnectedness` call sites record WHITE, so there is no
   // black-target sentence to write: a cut vertex of the white region is
   // forced *white*, never black.
-  connect: (m: Marked): Narration =>
-    phrase`Painting ${thisCell(m)} black would cut some of ${mark.the("outline", CELL, m.area, "cell")} around it off from the rest, so it must stay white.`,
+  connect: (m: Marked): Sentence =>
+    so({
+      look: phrase`painting ${thisCell(m)} black would cut some of ${mark.the("outline", CELL, m.area, "cell")} around it off from the rest`,
+      move: phrase`it must stay white`,
+    }),
 };

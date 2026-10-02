@@ -51,7 +51,7 @@ describe("rect hint rungs", () => {
       "fit",
       P7,
       "2j8_4b2b4a4d3b6j6b6b2b2",
-      /^Only this rectangle fits the \d+: any other would/,
+      /^Elsewhere the \d+ would .*, so only this rectangle fits\.$/,
     ],
     [
       "reach",

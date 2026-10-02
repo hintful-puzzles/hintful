@@ -35,7 +35,7 @@ import {
 } from "../../engine/game.ts";
 import { markAllNow } from "../../engine/hint-gesture.ts";
 import type { Premise } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { SingleWhy } from "../../engine/latin-hint.ts";
 import {
@@ -465,7 +465,7 @@ function soloSingleReason(
  * narration"): indication, reasoning, necessity-voice conclusion, the digit
  * placed at `at`. The region a sentence names is striped by the words that name
  * it, so the walk reads the step's marks off them. */
-function narrate(reason: SoloReason, at: Mark, state: SoloState): Narration {
+function narrate(reason: SoloReason, at: Mark, state: SoloState): Sentence {
   const cells: RegionCells = (r) => regionCells(r, state);
   switch (reason.kind) {
     case "single":

@@ -192,7 +192,9 @@ describe("inertia hint narration", () => {
     const step = firstStep(stateOf(["wwww", "wSmw", "wmgw", "wwww"]));
     // The gem is south-east; the mines are east and south.
     expect(step.explanation).toContain("Slide south-east");
-    expect(step.explanation).toContain("the only way that doesn't run you onto a mine");
+    expect(step.explanation).toContain(
+      "Every other way you can go runs you onto a mine",
+    );
   });
 
   it("says walls, not mines, when walls are what block every other way", () => {
@@ -200,7 +202,7 @@ describe("inertia hint narration", () => {
     // "every other way runs you onto a mine" would be a lie (docs/games/hints.md § "Sanity-read at the degenerate extremes").
     const step = firstStep(stateOf(["wwww", "wwgw", "wwSw", "wwww"]));
     expect(step.explanation).toContain("Slide north");
-    expect(step.explanation).toContain("walls block every other direction");
+    expect(step.explanation).toContain("Walls block every other direction");
     expect(step.explanation).not.toContain("mine");
   });
 
@@ -316,7 +318,9 @@ describe("inertia hint narration", () => {
     // "strands" is the proved claim (`unreachableGems`): a gem the ball can
     // never reach again.
     expect(step.explanation).toContain("it strands a gem");
-    // And the move it actually suggests is the safe approach.
+    // And the move it actually suggests is the safe approach, said as the
+    // answer to the stranding.
+    expect(step.explanation).toContain("One safe way: slide north.");
     expect(step.move).toEqual({ type: "move", dir: N });
   });
 });

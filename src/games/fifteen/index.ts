@@ -8,7 +8,7 @@ import type {
 } from "../../engine/game.ts";
 import { click } from "../../engine/hint-gesture.ts";
 import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -152,8 +152,8 @@ function statusbarText(state: FifteenState, _ui: FifteenUi): string {
  * cell is index `t - 1`. Given the goal:
  * - the goal lands home → "slide it into place";
  * - the goal moves but not home → "slide it closer" only when its Manhattan
- *   distance to home shrinks, else "reposition it" (the solver often pushes
- *   the goal *away* to route the gap round it);
+ *   distance to home shrinks, else "slide it back a step" (a one-cell slide
+ *   changes that distance by exactly one, so the goal is then further away);
  * - another tile lands in its own home → "slide tile N into place";
  * - any other slide → "slide tile N out of the way". */
 function narrateFifteenStep(
@@ -161,7 +161,7 @@ function narrateFifteenStep(
   tile: number,
   goal: number,
   dest: Point,
-): Narration {
+): Sentence {
   const w = board.w;
   const landsAtOwnHome = board.gapPos === tile - 1;
 

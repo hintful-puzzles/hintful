@@ -32,7 +32,7 @@ import {
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED, type HintRefusal } from "../../engine/hint-refusal.ts";
-import { type Narration, StepMarks } from "../../engine/hint-words.ts";
+import { type Sentence, StepMarks } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { findLines, findPointers, type RuledOut } from "./hint-edges.ts";
 import {
@@ -863,7 +863,7 @@ const nearOf = (state: AscentState, p: Premise): Near => ({
 export function stepOf(f: AscentFiring): AscentStep {
   const { n, cell, before } = f;
   const at = cellsOf(f);
-  const step = (words: Narration): AscentStep => ({
+  const step = (words: Sentence): AscentStep => ({
     move: moveOf(f),
     explanation: words.text,
     words,

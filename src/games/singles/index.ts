@@ -27,7 +27,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type Narration } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { isMouseDown, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -284,7 +284,7 @@ const sameCell = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
 /** Narrate *why* the grouped firing forces its cell(s), naming the marks in
  * `named` and reading each number the sentence names off the board. The words
  * are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: SinglesReason, named: Named, state: SinglesState): Narration {
+function narrate(reason: SinglesReason, named: Named, state: SinglesState): Sentence {
   const numAt = (c: Point): number => state.nums[c.y * state.w + c.x];
   const m: Marked = {
     targets: named.targets.map(({ x, y }) => ({ x, y })),

@@ -22,6 +22,8 @@ import {
   type Narration,
   type Noun,
   phrase,
+  type Sentence,
+  so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 
@@ -57,34 +59,63 @@ export const say = {
    * that could (dark ones ruled out, lit ones), so the sentence names them; a
    * corridor of just this square shows no second mark, and then the bare
    * deictic is right. */
-  forcedLightSelf: (m: Marked): Narration =>
+  forcedLightSelf: (m: Marked): Sentence =>
     m.area.length > 0
-      ? phrase`Nothing else can light ${these(m, "dark square")}: ${mark.the("outline", CELL, m.area, "square", "each")} is ruled out or already lit. It must hold a bulb.`
-      : phrase`Nothing else can light ${these(m, "dark square")}: every square that could is ruled out or already lit. It must hold a bulb.`,
+      ? so({
+          look: phrase`${mark.the("outline", CELL, m.area, "square", "each")} is ruled out or already lit`,
+          follows: phrase`nothing else can light ${these(m, "dark square")}`,
+          move: phrase`it must hold a bulb`,
+        })
+      : so({
+          look: phrase`Every other square that could light ${these(m, "dark square")} is ruled out or already lit`,
+          move: phrase`it must hold a bulb`,
+        }),
 
-  forcedLightOther: (m: Marked): Narration =>
+  forcedLightOther: (m: Marked): Sentence =>
     m.area.length > 0
-      ? phrase`${others(m).capitalized()} can't light ${darkSquare(m)}, so only ${these(m, "square")} can: it must hold a bulb.`
-      : phrase`Only ${these(m, "square")} can still light ${darkSquare(m)}, so ${these(m, "one")} must hold a bulb.`,
+      ? so({
+          look: phrase`${others(m)} can't light ${darkSquare(m)}`,
+          follows: phrase`only ${these(m, "square")} can`,
+          move: phrase`it must hold a bulb`,
+        })
+      : so({
+          look: phrase`Only ${these(m, "square")} can still light ${darkSquare(m)}`,
+          move: phrase`${these(m, "one")} must hold a bulb`,
+        }),
 
   /** The clue `n` is met; the ringed free neighbors are left to cross out. */
-  clueSatisfied: (n: number, m: Marked): Narration => {
+  clueSatisfied: (n: number, m: Marked): Sentence => {
     if (n === 0) {
-      return phrase`${clue(m)} is 0: no bulb may sit beside it. So ${ringed(m, "its")} can't hold a bulb.`;
+      return so({
+        look: phrase`${clue(m)} is 0`,
+        follows: phrase`no bulb may sit beside it`,
+        move: phrase`${ringed(m, "its")} can't hold a bulb`,
+      });
     }
     const bulbs =
       n === 1 ? "its bulb" : n === 2 ? "both its bulbs" : `all ${n} of its bulbs`;
-    return phrase`${clue(m)} already has ${mark.paren("outline", CELL, m.area, bulbs)}, so ${ringed(m, "its other")} can't hold a bulb.`;
+    return so({
+      look: phrase`${clue(m)} already has ${mark.paren("outline", CELL, m.area, bulbs)}`,
+      move: phrase`${ringed(m, "its other")} can't hold a bulb`,
+    });
   },
 
   /** The clue still needs a bulb in each of its free neighbors, which are the
-   * ringed squares; counted from them, so a partly followed step re-counts. */
-  clueSaturated: (m: Marked): Narration =>
-    phrase`${clue(m)} ${mark.as("ring", CELL, m.targets, (els) =>
-      els.length === 1
-        ? "still needs 1 more bulb and has exactly 1 free neighbor left, so the ringed one must be a bulb"
-        : `still needs ${els.length} more bulbs and has exactly ${els.length} free neighbors left, so each ringed one must be a bulb`,
-    )}.`,
+   * ringed squares; both parts count from them, so a partly followed step
+   * re-counts. */
+  clueSaturated: (m: Marked): Sentence =>
+    so({
+      look: phrase`${clue(m)} ${mark.as("ring", CELL, m.targets, (els) =>
+        els.length === 1
+          ? "still needs 1 more bulb and has exactly 1 free neighbor left"
+          : `still needs ${els.length} more bulbs and has exactly ${els.length} free neighbors left`,
+      )}`,
+      move: mark.as("ring", CELL, m.targets, (els) =>
+        els.length === 1
+          ? "the ringed one must be a bulb"
+          : "each ringed one must be a bulb",
+      ),
+    }),
 
   // Several marks are in view (target, evidence set, dark square), so "a bulb
   // here" is tied to the set by the relation `discountSet` guarantees:
@@ -97,11 +128,17 @@ export const say = {
   // others, so the sentence names it among the squares that could light it.
   /** One of the other outlined squares (plus the dark square itself, when
    * `darkInSet`) must light the dark square. */
-  discountUnlit: (darkInSet: boolean, m: Marked): Narration =>
-    darkInSet
-      ? phrase`${darkSquare(m).capitalized()} must be lit by itself or by ${m.area.length === 1 ? "" : "one of "}${others(m)}, and a bulb here would leave each of them lit or beside a full clue, so ${these(m, "square")} can't hold a bulb.`
-      : phrase`One of ${others(m)} must light ${darkSquare(m)}, and a bulb here would leave each of them lit or beside a full clue, so ${these(m, "square")} can't hold a bulb.`,
+  discountUnlit: (darkInSet: boolean, m: Marked): Sentence =>
+    so({
+      look: darkInSet
+        ? phrase`${darkSquare(m)} must be lit by itself or by ${m.area.length === 1 ? "" : "one of "}${others(m)}, and a bulb here would leave each of them lit or beside a full clue`
+        : phrase`One of ${others(m)} must light ${darkSquare(m)}, and a bulb here would leave each of them lit or beside a full clue`,
+      move: phrase`${these(m, "square")} can't hold a bulb`,
+    }),
 
-  discountClue: (m: Marked): Narration =>
-    phrase`${clue(m)} needs a bulb in one of ${others(m)}, and a bulb here would leave each of them lit or beside a full clue, so ${these(m, "square")} can't hold a bulb.`,
+  discountClue: (m: Marked): Sentence =>
+    so({
+      look: phrase`${clue(m)} needs a bulb in one of ${others(m)}, and a bulb here would leave each of them lit or beside a full clue`,
+      move: phrase`${these(m, "square")} can't hold a bulb`,
+    }),
 };

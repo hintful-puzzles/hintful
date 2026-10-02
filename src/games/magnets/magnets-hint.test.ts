@@ -339,7 +339,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     );
     if (!step) throw new Error("the plan never neutralizes the top left domino");
     expect(step.explanation).toContain(
-      "it touches a +, and a − there would exceed its column's clue",
+      "it touches a +, and a − would exceed its column's clue, so it must be neutral",
     );
     // "Its column" is the only line named, so it is hatched, with its count.
     expect(picture(step).line).toEqual({ roworcol: COLUMN, num: 1 });

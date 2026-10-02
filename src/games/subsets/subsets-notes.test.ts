@@ -364,7 +364,7 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       for (const v of sets)
         expect(head ? strictSub(m.value, v) : strictSub(v, m.value)).toBe(false);
       expect(marks.of("ring", TALLY_SET)).toEqual([m.value]);
-    } else if (m.kind === "set" && !st.explanation.startsWith("Still filling")) {
+    } else if (m.kind === "set" && !st.explanation.startsWith("…and ")) {
       if (/can go nowhere but this cell/.test(st.explanation))
         expect(candidateCells(board, sets[0])).toEqual([m.pos]);
       if (/can still go in this cell/.test(st.explanation)) {

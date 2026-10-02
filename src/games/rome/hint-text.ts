@@ -28,7 +28,15 @@ import {
   populateText,
   thisCell,
 } from "../../engine/hint-text.ts";
-import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  so,
+  whole,
+} from "../../engine/hint-words.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import type { Point } from "../../engine/types.ts";
 
@@ -72,28 +80,43 @@ export const say = {
   /** A note step under the implicit reading. A square at the edge can never
    * point off the board, so what its area leaves it is said of the ways it can
    * point, never of all four. */
-  note: (at: Point, ns: number[], every: boolean): Narration => {
+  note: (at: Point, ns: number[], every: boolean): Sentence => {
     if (every)
-      return phrase`Nothing in ${here(at)}'s area rules out a way it can point yet, so pencil in every one.`;
+      return so({
+        look: phrase`Nothing in ${here(at)}'s area rules out a way it can point yet`,
+        move: phrase`pencil in every one`,
+      });
     const one = ns.length === 1;
-    return phrase`Of the ways ${here(at)} can point, only ${joinWith(ns.map(arrow))} ${one ? "isn't" : "aren't"} already used in its area, so pencil ${one ? "it" : "them"} in.`;
+    return so({
+      look: phrase`Of the ways ${here(at)} can point, only ${joinWith(ns.map(arrow))} ${one ? "isn't" : "aren't"} already used in its area`,
+      move: phrase`pencil ${one ? "it" : "them"} in`,
+    });
   },
 
   /** A naked single: the square's own notes have come down to one. */
-  single: (at: Point, n: number): Narration =>
-    phrase`Every other arrow has been ruled out in ${here(at)}, so it must point ${arrow(n)}.`,
+  single: (at: Point, n: number): Sentence =>
+    so({
+      look: phrase`Every other arrow has been ruled out in ${here(at)}`,
+      move: phrase`it must point ${arrow(n)}`,
+    }),
 
   /** A single in a square with no marks: its area already uses every other way
    * it can point. */
-  regionsFull: (at: Point, n: number): Narration =>
-    phrase`Every other way ${here(at)} can point is already used in its area, so it must point ${arrow(n)}.`,
+  regionsFull: (at: Point, n: number): Sentence =>
+    so({
+      look: phrase`Every other way ${here(at)} can point is already used in its area`,
+      move: phrase`it must point ${arrow(n)}`,
+    }),
 
   /** A hidden single: a four-square area, `region`, holds all four arrows, and
    * one of them has a single home left. Synthesized by the plan rather than
    * recorded — the solver only ever *places* a naked single, but the plan may
    * reach the square before it has taken every strike the solver did. */
-  hiddenSingle: (region: readonly Point[], at: Point, n: number): Narration =>
-    phrase`${itsArea(region)} must hold all four arrows, and only ${here(at)} can still point ${arrow(n)}, so it does.`,
+  hiddenSingle: (region: readonly Point[], at: Point, n: number): Sentence =>
+    so({
+      look: phrase`${itsArea(region)} must hold all four arrows, and only ${here(at)} can still point ${arrow(n)}`,
+      move: phrase`it must point ${arrow(n)}`,
+    }),
 
   /** How a step ends, by the move it makes, said of the ways a square points.
    * A strike with a `where` speaks for the other squares it names; one whose

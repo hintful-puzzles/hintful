@@ -22,7 +22,7 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { markedDeadEnd, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import { mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { type Marked, type Package, PEG, say } from "./hint-text.ts";
 import { findFinish, frozenPegs, type Jump, judge, legalJumps } from "./solver.ts";
@@ -112,7 +112,7 @@ function packageAt(s: PegsState, plan: readonly Jump[]): Package | null {
   return null;
 }
 
-function step(s: PegsState, j: Jump, words: Narration, continues = false): Step {
+function step(s: PegsState, j: Jump, words: Sentence, continues = false): Step {
   return {
     move: toMove(s, j),
     explanation: words.text,
@@ -182,7 +182,7 @@ export function hint(state: PegsState): HintResult<PegsMove> {
   // First, a peg alone now that this jump lands beside; then a rival that
   // would newly leave a peg with none beside it, where this jump would not.
   // Neither is a proof about winning, and the words do not claim one.
-  const plain = (): Narration => {
+  const plain = (): Sentence => {
     const now = new Set(alone(state));
     const mine = new Set(alone(jumped(state, j)));
     const joined = [...now].find((p) => !mine.has(p) && p !== j.from && p !== j.over);
@@ -199,7 +199,7 @@ export function hint(state: PegsState): HintResult<PegsMove> {
       .sort((a, b) => dist(a.r) - dist(b.r))[0];
     return lone?.p !== undefined ? say.leavesAlone(j, lone.r, lone.p) : say.plain(j);
   };
-  let words: Narration;
+  let words: Sentence;
   if (rivals.length === 0) words = plain();
   else if (!lost) words = unsettled ? plain() : say.anyJump(j);
   else if (!unsettled) words = goods.length > 0 ? say.onlyThese(j, goods) : say.only(j);

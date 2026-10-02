@@ -15,7 +15,7 @@ import {
 } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { blockOf } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
 import {
@@ -44,7 +44,7 @@ function firingAt(
   state: MosaicState,
   grid: Uint8Array,
   i: number,
-): { hint: MosaicHint; words: Narration } | null {
+): { hint: MosaicHint; words: Sentence } | null {
   const { width: w, height: h, board } = state;
   const n = board.clues[i];
   if (n < 0) return null;

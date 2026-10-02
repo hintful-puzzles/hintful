@@ -1114,7 +1114,7 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
     // out reads with 2 throughout, a 3 in a square with 3.
     const m = { ...NO_MARKS, targets: [0, 1, 2], faces: [0], dots: [0, 1] };
     expect(say.clueBlockedPair(3, m).text).toBe(
-      "Both outlined dots already have a line, so joining them leaves this 3 short. That edge is out; the other 3 are lines.",
+      "Both outlined dots already have a line, so joining them leaves this 3 short: that edge is out and the other 3 are lines.",
     );
     expect(say.clueBlockedPair(2, m).text).toBe(
       say.clueBlockedPair(3, m).text.replaceAll("3", "2"),

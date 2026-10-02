@@ -31,9 +31,10 @@ land beside it again. A board with a cut-off peg can never finish with one.
 
 So the first thing the hint looks for is a jump that would cut a peg off,
 either straight away or whatever you jump next. It stripes that jump,
-outlines the peg, and shows a jump that keeps the peg in reach. When the
+outlines the peg, and shows one jump that keeps the peg in reach. When the
 striped jump and the suggested one start from the same peg, the suggested
-jump is that peg going the other way.
+jump is one other way that peg can go; it is offered as one way to save
+the peg, not the only one.
 
 Otherwise, a hint may show a **package**: a short run of jumps that clears
 a row or column of three, or a block of two by three, and puts every

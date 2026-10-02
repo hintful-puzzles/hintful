@@ -21,7 +21,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type Narration } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   endDrag,
@@ -302,7 +302,7 @@ export interface PatternHint {
  * already-placed marks the deduction leans on, outlined in their own color's
  * reference color (the cross-game element-type legend). The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(m: PatternHintMove, w: number): Narration {
+function narrate(m: PatternHintMove, w: number): Sentence {
   const at = (i: number) => cellAt(i, w);
   const marked: Marked = {
     cells: m.cells.map(at),

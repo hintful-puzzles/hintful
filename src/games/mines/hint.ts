@@ -18,7 +18,7 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED, puzzleDeadEnd } from "../../engine/hint-refusal.ts";
-import { CELL, mark, Narration } from "../../engine/hint-words.ts";
+import { CELL, mark, Narration, type Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Firing, learn, nextFiring, type Side } from "./deduce.ts";
 import {
@@ -65,7 +65,7 @@ const opOf = (kind: MinesHint["kind"]): MineOp["op"] => (kind === "open" ? "O" :
 function stepFor(
   kind: MinesHint["kind"],
   targets: readonly Point[],
-  words: Narration,
+  words: Sentence,
   continuesPrevious: boolean,
 ): Step {
   return {
@@ -116,7 +116,7 @@ function legsOf(board: MinesState, f: Firing, execute: Execute): Leg[] {
 
 /** The sentence for each leg of one firing: the first carries the reason, and
  * the others say what follows from it. */
-function narrate(board: MinesState, f: Firing, legs: readonly Leg[]): Narration[] {
+function narrate(board: MinesState, f: Firing, legs: readonly Leg[]): Sentence[] {
   const { w } = board;
   const pt = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
   const clueOf = (i: number): Clue => ({ at: pt(i), value: board.grid[i] });

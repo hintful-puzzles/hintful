@@ -18,7 +18,15 @@
  */
 
 import { joinNums } from "../../engine/hint-text.ts";
-import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  so,
+  whole,
+} from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 
 /** What a step marks, and the number each square shows. */
@@ -66,16 +74,24 @@ export const say = {
   // deduction — and name the *values* (the square's locator), not "two
   // matching numbers".
   /** Two `n`s one square apart, with the ringed square between them. */
-  sandwich: (m: Marked, n: number): Narration =>
-    phrase`${outlined(m.evidence, n).capitalized()} sit one square apart, so one of them must be black: ${ringed(
-      m,
-      (b) => `the ${b} between them`,
-      () => "the squares between them",
-    )} must be white.`,
+  sandwich: (m: Marked, n: number): Sentence =>
+    so({
+      look: phrase`${outlined(m.evidence, n)} sit one square apart`,
+      follows: phrase`one of them must be black`,
+      move: phrase`${ringed(
+        m,
+        (b) => `the ${b} between them`,
+        () => "the squares between them",
+      )} must be white`,
+    }),
 
   /** A touching pair of `n`s: every other `n` in their line is ringed. */
-  pair: (m: Marked, n: number): Narration =>
-    phrase`${outlined(m.evidence, n).capitalized()} touch, so one of them stays white and uses up the ${n} in ${thisLine(m)}: ${mark.the("ring", CELL, m.targets, String(n))} must be black.`,
+  pair: (m: Marked, n: number): Sentence =>
+    so({
+      look: phrase`${outlined(m.evidence, n)} touch`,
+      follows: phrase`one of them stays white and uses up the ${n} in ${thisLine(m)}`,
+      move: phrase`${mark.the("ring", CELL, m.targets, String(n))} must be black`,
+    }),
 
   // All four share a number, so a diagonal pair must be black (two black
   // cells, never adjacent). At a *grid* corner the corner cell's only
@@ -88,7 +104,7 @@ export const say = {
     corner: Point,
     sides: Point[],
     inner: Point,
-  ): Narration => {
+  ): Sentence => {
     const decides = (p: Point): boolean => m.targets.some((t) => same(t, p));
     const cornerRef = decides(corner)
       ? mark.this("ring", CELL, [corner], `corner ${n}`)
@@ -102,18 +118,27 @@ export const say = {
     const like = decides(inner)
       ? ""
       : phrase`, like ${mark.the("outline", CELL, [inner], innerWords)}`;
-    return phrase`${cornerRef.capitalized()} matches ${mark.the("outline", CELL, sides, "neighbor", "both its")}; keeping it white would make both black and box it in, so ${black} must be black${like}.`;
+    return so({
+      look: phrase`${cornerRef} matches ${mark.the("outline", CELL, sides, "neighbor", "both its")}; keeping it white would make both black and box it in`,
+      move: phrase`${black} must be black${like}`,
+    });
   },
 
   // Name the referent explicitly ("the corner") so it never reads as the
   // matching number.
   /** The corner `t` itself matches both neighboring `n`s. */
-  corner3Corner: (m: Marked, t: number, n: number): Narration =>
-    phrase`${mark.this("ring", CELL, m.targets, `corner ${t}`).capitalized()} matches ${mark.the("outline", CELL, m.evidence, String(n), "both")}; keeping it white would make both black and box it in, so it must be black.`,
+  corner3Corner: (m: Marked, t: number, n: number): Sentence =>
+    so({
+      look: phrase`${mark.this("ring", CELL, m.targets, `corner ${t}`)} matches ${mark.the("outline", CELL, m.evidence, String(n), "both")}; keeping it white would make both black and box it in`,
+      move: phrase`it must be black`,
+    }),
 
   /** The inner `t` matches the two `n`s flanking the corner `c`. */
-  corner3Inner: (m: Marked, t: number, n: number, c: number): Narration =>
-    phrase`${mark.this("ring", CELL, m.targets, `inner ${t}`).capitalized()} matches ${mark.the("outline", CELL, m.evidence, String(n), "both")} flanking ${mark.the("outline", CELL, m.strand, `corner ${c}`)}; keeping it white would make both black and box the corner in, so it must be black.`,
+  corner3Inner: (m: Marked, t: number, n: number, c: number): Sentence =>
+    so({
+      look: phrase`${mark.this("ring", CELL, m.targets, `inner ${t}`)} matches ${mark.the("outline", CELL, m.evidence, String(n), "both")} flanking ${mark.the("outline", CELL, m.strand, `corner ${c}`)}; keeping it white would make both black and box the corner in`,
+      move: phrase`it must be black`,
+    }),
 
   // Indication-first: open on the spotted pattern — a touching pair of equal
   // numbers at a grid corner — then run the proof-by-contradiction arc with
@@ -128,8 +153,11 @@ export const say = {
     side: Point,
     p: number,
     c: number,
-  ): Narration =>
-    phrase`${mark.as("outline", CELL, pair, `A touching pair of ${p}s`)} sits at the corner, so one of them must be black. Blacking out ${mark.this("ring", CELL, m.targets, String(m.num(m.targets[0])))} would force ${mark.as("outline", CELL, [side], `the ${p} beside the corner`)} black too, leaving ${mark.as("outline", CELL, m.strand, `the corner ${c}`)} boxed in, so it must stay white.`,
+  ): Sentence =>
+    so({
+      look: phrase`${mark.as("outline", CELL, pair, `A touching pair of ${p}s`)} sits at the corner, so one must be black. Blacking out ${mark.this("ring", CELL, m.targets, String(m.num(m.targets[0])))} would force ${mark.as("outline", CELL, [side], `the ${p} beside the corner`)} black, leaving ${mark.as("outline", CELL, m.strand, `the corner ${c}`)} boxed in`,
+      move: phrase`it must stay white`,
+    }),
 
   // The A-pair (n) shares one line, the B-pair (k) the next. Lead with the
   // *indication* — the spotted pattern, a pair of n in one line and a pair of
@@ -145,7 +173,7 @@ export const say = {
     n: number,
     k: number,
     line: "row" | "column",
-  ): Narration => {
+  ): Sentence => {
     const first = mark.as("outline", CELL, a, `a pair of ${n}s`);
     const second = mark.as(
       "outline",
@@ -155,42 +183,57 @@ export const say = {
     );
     const forced =
       n === k ? `two of the ${n}s` : `one of the ${n}s and one of the ${k}s`;
-    return phrase`There's ${first} in one ${line} and ${second} in the next, lined up so that blacking out ${ringed(
-      m,
-      (v) => `the ringed ${v}`,
-      () => "either ringed square",
-    )} would force ${forced} to be black next to each other, and black squares can't touch. So ${ringed(
-      m,
-      () => "it",
-      () => "both",
-    )} must be white.`;
+    return so({
+      look: phrase`There's ${first} in one ${line} and ${second} in the next, lined up so that blacking out ${ringed(
+        m,
+        (v) => `the ringed ${v}`,
+        () => "either ringed square",
+      )} would force ${forced} to be black next to each other, and black squares can't touch`,
+      move: phrase`${ringed(
+        m,
+        () => "it",
+        () => "both",
+      )} must be white`,
+    });
   },
 
   // The forced squares are a black square's neighbors — their values are
   // unrelated to the deduction (it's pure adjacency), but still name them so
   // the player knows which squares without hunting the marks. The group can
   // hold mixed/repeated values, so list them all.
-  adjBlack: (m: Marked): Narration =>
-    phrase`${ringed(
-      m,
-      (v) => `This ${v} touches`,
-      (els) => `These squares (${joinNums(els.map(m.num))}) touch`,
-    )} ${mark.paren("outline", CELL, m.evidence, "a black square")}, and black squares can't touch, so ${they(m)} must be white.`,
+  adjBlack: (m: Marked): Sentence =>
+    so({
+      look: phrase`${ringed(
+        m,
+        (v) => `This ${v} touches`,
+        (els) => `These squares (${joinNums(els.map(m.num))}) touch`,
+      )} ${mark.paren("outline", CELL, m.evidence, "a black square")}, and black squares can't touch`,
+      move: phrase`${they(m)} must be white`,
+    }),
 
   // The forced square(s) and the outlined white square all show the same
   // number — that duplicate is the whole reason — so name it. A line is
   // striped only when every forced square shares it with the white square.
   /** Copies of `t` share a line with the outlined white `t`. */
-  sameLine: (m: Marked, t: number): Narration =>
-    phrase`${ringed(
-      m,
-      () => `This ${t} shares`,
-      () => `These ${t}s share`,
-    )} ${m.line.length > 0 ? thisLine(m) : "a line"} with ${mark.the("outline", CELL, m.evidence, `white ${t}`)}, which already uses that number, so ${they(m)} must be black.`,
+  sameLine: (m: Marked, t: number): Sentence =>
+    so({
+      look: phrase`${ringed(
+        m,
+        () => `This ${t} shares`,
+        () => `These ${t}s share`,
+      )} ${m.line.length > 0 ? thisLine(m) : "a line"} with ${mark.the("outline", CELL, m.evidence, `white ${t}`)}, which already uses that number`,
+      move: phrase`${they(m)} must be black`,
+    }),
 
-  boxedIn: (m: Marked, v: number): Narration =>
-    phrase`${mark.this("ring", CELL, m.targets, String(v)).capitalized()} is ${mark.the("outline", CELL, m.evidence, "white square")}'s last neighbor that isn't black, so it must be white to keep that square joined.`,
+  boxedIn: (m: Marked, v: number): Sentence =>
+    so({
+      look: phrase`${mark.this("ring", CELL, m.targets, String(v))} is ${mark.the("outline", CELL, m.evidence, "white square")}'s last neighbor that isn't black`,
+      move: phrase`it must be white to keep that square joined`,
+    }),
 
-  split: (m: Marked, v: number): Narration =>
-    phrase`Blacking out ${mark.this("ring", CELL, m.targets, String(v))} would cut some of ${mark.the("outline", CELL, m.evidence, "square")} off from the rest of the white region, so it must be white.`,
+  split: (m: Marked, v: number): Sentence =>
+    so({
+      look: phrase`Blacking out ${mark.this("ring", CELL, m.targets, String(v))} would cut some of ${mark.the("outline", CELL, m.evidence, "square")} off from the rest of the white region`,
+      move: phrase`it must be white`,
+    }),
 };

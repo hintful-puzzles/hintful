@@ -9,7 +9,7 @@
  * the other squares pointing at a square are outlined.
  */
 
-import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import { CELL, mark, phrase, type Sentence, so } from "../../engine/hint-words.ts";
 import type { Rival, SignpostFiring, SignpostHint } from "./hint.ts";
 import { ARROW } from "./hint-marks.ts";
 
@@ -24,7 +24,8 @@ const NEXT: Record<Rival, readonly [string, string]> = {
 
 /** How the rivals of an "only before" link are ruled out. */
 const BEFORE: Record<Rival, readonly [string, string]> = {
-  taken: ["already leads elsewhere", "already lead elsewhere"],
+  // The drawn link shows it, so "already" would add only width.
+  taken: ["leads elsewhere", "lead elsewhere"],
   chain: ["is in its chain", "are in its chain"],
   number: ["holds the wrong number", "hold the wrong number"],
 };
@@ -47,26 +48,49 @@ function ruledOut(
 
 export const say = {
   /** The link `f` makes, over the marks `h` draws. */
-  firing: (f: SignpostFiring, h: SignpostHint): Narration => {
+  firing: (f: SignpostFiring, h: SignpostHint): Sentence => {
     const arrow = mark.this("ring", ARROW, [h.arrow], "arrow");
     switch (f.kind) {
       case "follows":
-        return phrase`${mark.as("ring", CELL, [h.target], `The ${f.k + 1}`)} must come right after the ${f.k}, and ${mark.as("ring", ARROW, [h.arrow], `the ${f.k}'s arrow`)} points at it, so the two must be linked.`;
+        return so({
+          look: phrase`${mark.as("ring", CELL, [h.target], `The ${f.k + 1}`)} must come right after the ${f.k}, and ${mark.as("ring", ARROW, [h.arrow], `the ${f.k}'s arrow`)} points at it`,
+          move: phrase`the two must be linked`,
+        });
       case "onlyNext": {
         if (h.line.length === 0)
-          return phrase`${arrow.capitalized()} points only at ${mark.as("ring", CELL, [h.target], "the ringed square")}, so it must come next.`;
+          return so({
+            look: phrase`${arrow} points only at ${mark.as("ring", CELL, [h.target], "the ringed square")}`,
+            move: phrase`it must come next`,
+          });
         const target = mark.as("ring", CELL, [h.target], "the ringed one");
         const rivals = h.line.length - 1;
-        return phrase`Of ${mark.the("stripes", CELL, h.line, "square")}, only ${target} can follow ${arrow}: the ${rivals > 1 ? "rest" : "other"} ${ruledOut(f.why, rivals, NEXT)}.`;
+        // The striped squares are every square the arrow points at, the
+        // ringed one among them; the words name the rest.
+        const rest = mark.as(
+          "stripes",
+          CELL,
+          h.line,
+          rivals > 1 ? "the other squares" : "the other square",
+        );
+        return so({
+          look: phrase`${rest} ${arrow} points at ${ruledOut(f.why, rivals, NEXT)}`,
+          move: phrase`only ${target} can follow it`,
+        });
       }
       case "onlyBefore": {
         const target = mark.as("ring", CELL, [h.target], "the ringed square");
         if (h.others.length === 0)
-          return phrase`Only ${arrow} points at ${target}, so it must lead there.`;
+          return so({
+            look: phrase`Only ${arrow} points at ${target}`,
+            move: phrase`it must lead there`,
+          });
         // The outlined squares are the other arrows pointing at it; the help's
         // list of marks says so, which leaves the sentence the reasons.
-        const others = mark.the("outline", CELL, h.others, ["one", "ones"]);
-        return phrase`Only ${arrow} can lead into ${target}: ${others} ${ruledOut(f.why, h.others.length, BEFORE)}.`;
+        const others = mark.the("outline", CELL, h.others, ["arrow", "arrows"]);
+        return so({
+          look: phrase`${others} into ${target} ${ruledOut(f.why, h.others.length, BEFORE)}`,
+          move: phrase`${arrow} must lead there`,
+        });
       }
     }
   },

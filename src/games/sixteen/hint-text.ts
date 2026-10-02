@@ -2,7 +2,7 @@
  * Every sentence Sixteen's hint speaks.
  *
  * Goal:tactic narration, shared in shape with Fifteen: the prefix names the
- * tile being worked toward home (the engine's `workingOn`), the tactic says
+ * tile being worked toward home (the sentence's aim), the tactic says
  * where this move sends it, and a trailing clause says *why* — ", its final
  * spot" when the journey ends in the tile's solved cell, else the shared staging
  * marker. Where it goes is a square marked on the board, never a row or column
@@ -16,12 +16,14 @@
  * (outlined, the nearer dashed). The words that point at them are references.
  */
 
-import { HINT_SETTING_UP, workingOn } from "../../engine/hint-text.ts";
+import { HINT_SETTING_UP } from "../../engine/hint-text.ts";
 import {
   type MarkKind,
   mark,
-  type Narration,
+  Narration,
   phrase,
+  type Sentence,
+  sentence,
 } from "../../engine/hint-words.ts";
 
 /** A tile, by its number, wherever it sits; its mark includes the arrow that
@@ -45,7 +47,7 @@ export const say = {
     onward: number | null;
     continues: boolean;
     home: boolean;
-  }): Narration => {
+  }): Sentence => {
     const it = mark.as("ring", TILE, [p.tile], "it");
     const to =
       p.onward === null
@@ -59,6 +61,12 @@ export const say = {
       : p.home
         ? ", its final spot"
         : ` ${HINT_SETTING_UP}`;
-    return phrase`${workingOn(p.tile)}${tactic}${suffix}.`;
+    // A continuation leg serves the same aim with nothing more to say: its
+    // first leg is still on screen.
+    return sentence({
+      aim: Narration.plain(`tile ${p.tile}`),
+      move: phrase`${tactic}${suffix}`,
+      relation: { kind: "serves" },
+    });
   },
 };

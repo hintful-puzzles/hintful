@@ -320,7 +320,7 @@ describe("Fifteen hint", () => {
     // Like Sixteen, the plan is the whole solution, not a single step.
     expect(result.steps.length).toBeGreaterThan(1);
     expect(result.steps[0].explanation).toMatch(
-      /^Working on tile \d+: (slide it into place|slide it closer|reposition it|slide tile \d+ into place|slide tile \d+ out of the way)\.$/,
+      /^Working on tile \d+: (slide it into place|slide it closer|slide it back a step, leaving the hole between it and its home|slide tile \d+ into place|slide tile \d+ out of the way)\.$/,
     );
     // Following every step reaches the solved board.
     for (const step of result.steps) state = executeMove(state, step.move);
@@ -347,10 +347,18 @@ describe("Fifteen hint", () => {
         // land the slid tile in its own solved cell.
         expect(after.tiles[tile - 1]).toBe(tile);
       } else {
-        // A non-placing step is a nudge, a reposition, or a clear-the-way move.
+        // A non-placing step is a nudge, a step back, or a clear-the-way move.
         expect(step.explanation).toMatch(
-          /slide it closer|reposition it|slide tile \d+ out of the way/,
+          /slide it closer|slide it back a step|slide tile \d+ out of the way/,
         );
+        if (step.explanation.includes("back a step")) {
+          // The goal lands where the hole was, leaving the hole one cell
+          // nearer its home than the tile now is.
+          const dist = (i: number) =>
+            Math.abs((i % board.w) - ((tile - 1) % board.w)) +
+            Math.abs(Math.floor(i / board.w) - Math.floor((tile - 1) / board.w));
+          expect(dist(after.gapPos)).toBe(dist(board.gapPos) - 1);
+        }
         sawHelper = true;
       }
       board = after;

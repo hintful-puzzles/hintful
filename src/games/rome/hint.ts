@@ -46,7 +46,7 @@ import {
 import { type DupReason, runCandidatePlan } from "../../engine/candidate-plan.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Premise } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
@@ -119,7 +119,7 @@ const cellsOf = (w: number, cells: readonly number[]): Point[] =>
 /** The sentence a placement speaks, at the placed square `m`. What it marks is
  * what it names: the square ringed, and the area a hidden single reasons over
  * striped (docs/games/hints.md § "Bind the words to the marks"). */
-function narrate(reason: RomeHintReason | DupReason, m: Mark, w: number): Narration {
+function narrate(reason: RomeHintReason | DupReason, m: Mark, w: number): Sentence {
   switch (reason.kind) {
     case "single":
       return say.single(m, m.n);

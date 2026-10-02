@@ -15,6 +15,9 @@ import {
   mark,
   Narration,
   phrase,
+  type Sentence,
+  sentence,
+  so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { D, L, R, U, wireCount } from "../../engine/wires.ts";
@@ -179,28 +182,21 @@ function trapped(p: Premises): Narration {
 }
 
 /**
- * A whole premise and conclusion about `subject`. The turning that loops or
- * seals comes first ("Lying across, this straight would …"), so it cannot be
- * read as describing the striped squares after it.
+ * What to look at about `subject`: the fit and the turnings that loop or seal.
+ * The turning that loops or seals comes first ("Lying across, this straight
+ * would …"), so it cannot be read as describing the striped squares after it.
  */
-function sentence(
-  subject: Narration,
-  p: Premises,
-  which: Which,
-  conclusion: Narration,
-): Narration {
+function look(subject: Narration, p: Premises, which: Which): Narration {
   const fit = fitted(p);
-  if (!p.loop && !p.seal)
-    return phrase`${subject.capitalized()} must fit ${fit ?? ""}, ${conclusion}`;
+  if (!p.loop && !p.seal) return phrase`${subject} must fit ${fit ?? ""}`;
   const trap = trapped(p);
   if (fit === null) {
     const lead = p.only !== null ? lying(p.only) : `pointing ${which.pointing}`;
-    const Lead = lead.charAt(0).toUpperCase() + lead.slice(1);
-    return phrase`${Lead}, ${subject} ${trap}, ${conclusion}`;
+    return phrase`${lead}, ${subject} ${trap}`;
   }
   return p.only !== null
-    ? phrase`${subject.capitalized()} must fit ${fit}, and, ${lying(p.only)}, it ${trap}, ${conclusion}`
-    : phrase`${subject.capitalized()} must fit ${fit}, and ${which.fitting} ${trap}, ${conclusion}`;
+    ? phrase`${subject} must fit ${fit}, and, ${lying(p.only)}, it ${trap}`
+    : phrase`${subject} must fit ${fit}, and ${which.fitting} ${trap}`;
 }
 
 const OTHER_WAYS: Which = {
@@ -210,26 +206,27 @@ const OTHER_WAYS: Which = {
 
 export const say = {
   /** The first leg of a lock the tile must turn for. */
-  turn: (tile: Point, wires: number, p: Premises): Narration =>
-    sentence(
-      mark.this("ring", CELL, [tile], pieceName(wires)),
-      p,
-      OTHER_WAYS,
-      phrase`so only one way fits: turn it.`,
-    ),
+  turn: (tile: Point, wires: number, p: Premises): Sentence =>
+    so({
+      look: look(mark.this("ring", CELL, [tile], pieceName(wires)), p, OTHER_WAYS),
+      follows: phrase`only one way fits`,
+      move: phrase`turn it`,
+    }),
 
   /** A lock whose tile already shows its one way. */
-  lock: (tile: Point, wires: number, p: Premises): Narration =>
-    sentence(
-      mark.this("ring", CELL, [tile], pieceName(wires)),
-      p,
-      OTHER_WAYS,
-      phrase`so it must stay ${staying(wires)}: lock it.`,
-    ),
+  lock: (tile: Point, wires: number, p: Premises): Sentence =>
+    so({
+      look: look(mark.this("ring", CELL, [tile], pieceName(wires)), p, OTHER_WAYS),
+      follows: phrase`it must stay ${staying(wires)}`,
+      move: phrase`lock it`,
+    }),
 
-  /** The lock after the turn. */
-  thenLock: (tile: Point, wires: number): Narration =>
-    phrase`Now lock ${mark.this("ring", CELL, [tile], pieceName(wires))}: no other way fits.`,
+  /** The lock after the turn, for the turn's reason. */
+  thenLock: (tile: Point, wires: number): Sentence =>
+    sentence({
+      move: phrase`lock ${mark.this("ring", CELL, [tile], pieceName(wires))}`,
+      relation: { kind: "again", basis: phrase`no other way fits` },
+    }),
 
   /** A side every surviving turning agrees on: `facing` is the direction from
    * the outlined tile to the ringed side. */
@@ -239,22 +236,26 @@ export const say = {
     side: SideMark,
     facing: number,
     p: Premises,
-  ): Narration => {
+  ): Sentence => {
     const subject = mark.the("outline", CELL, [tile], pieceName(wires));
     const where = mark.this("ring", SIDE, [side], "side");
     const d = dirWords(facing);
     return side.note === NOTE_WIRE
-      ? sentence(
-          subject,
-          p,
-          { pointing: `any way but ${d}`, fitting: `any way that fits but ${d}` },
-          phrase`so it must point ${d}: note a wire across ${where}.`,
-        )
-      : sentence(
-          subject,
-          p,
-          { pointing: d, fitting: `any way that fits and points ${d}` },
-          phrase`so it can never point ${d}: note no wire across ${where}.`,
-        );
+      ? so({
+          look: look(subject, p, {
+            pointing: `any way but ${d}`,
+            fitting: `any way that fits but ${d}`,
+          }),
+          follows: phrase`it must point ${d}`,
+          move: phrase`note a wire across ${where}`,
+        })
+      : so({
+          look: look(subject, p, {
+            pointing: d,
+            fitting: `any way that fits and points ${d}`,
+          }),
+          follows: phrase`it can never point ${d}`,
+          move: phrase`note no wire across ${where}`,
+        });
   },
 };

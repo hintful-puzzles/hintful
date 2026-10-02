@@ -24,7 +24,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { type Axis, type Marked, PIECE, type Piece, say } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
@@ -146,7 +146,7 @@ export function narrate(
   b: Board,
   reason: TracksReason,
   picture: TracksPicture,
-): Narration {
+): Sentence {
   const m = markedOf(picture);
   switch (reason.kind) {
     case "onlyOneSideLeft":

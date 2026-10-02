@@ -75,7 +75,7 @@ describe("group render scenarios", () => {
     // step must have two premises side by side, which is what the contour
     // assertion below is about.
     const isAssoc = (step: { explanation: string; highlights?: unknown }) => {
-      if (!/in any group/.test(step.explanation)) return false;
+      if (!/In any group/.test(step.explanation)) return false;
       const area = (step.highlights as { area: { x: number; y: number }[] }).area;
       return area.some((a) =>
         area.some((b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1),

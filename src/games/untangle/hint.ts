@@ -36,7 +36,7 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { ENDGAME_CROSSINGS, type Endgame, planEndgame } from "./endgame.ts";
 import {
@@ -581,7 +581,7 @@ function plan(board: Board, vertex: number, to: RationalPoint): Planned {
 /** A step's sentence. A move to the solved layout is narrated by what it does
  * on the board — the layout itself is nothing the player can see — and by the
  * crossings the next move removes, when that repays what this one adds. */
-function narrate(p: Planned, next: Planned | null): Narration {
+function narrate(p: Planned, next: Planned | null): Sentence {
   const m: UntangleMarks = {
     vertex: p.vertex,
     to: p.to,

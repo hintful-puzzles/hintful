@@ -15,10 +15,14 @@
 import {
   CELL,
   mark,
-  type Narration,
+  Narration,
   NOTE,
   type Note,
   phrase,
+  type Sentence,
+  sentence,
+  so,
+  unshaped,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { MON_GHOST, MON_VAMPIRE, MONSTERS } from "./state.ts";
@@ -60,18 +64,25 @@ const sightline = (m: Marked, words: string): Narration =>
 export const say = {
   // Undead's opener is its own: it pencils monsters, not the candidate games'
   // values (`engine/hint-text.ts`'s `populateText`).
-  populate:
-    "Start by penciling every monster into each empty cell, so there is something to cross out.",
+  populate: unshaped(
+    Narration.plain(
+      "Start by penciling every monster into each empty cell, so there is something to cross out.",
+    ),
+    "setup",
+  ),
 
   /** A later cell of the same sightline firing. */
-  sightlineNext: (m: Marked): Narration =>
-    phrase`${sightline(m, "The same sightline")} rules ${struck(m, (b) => `the ${joinMonsters(b, "and")}`)} out of ${thisCell(m)} too.`,
+  sightlineNext: (m: Marked): Sentence =>
+    sentence({
+      move: phrase`we must cross out ${struck(m, (b) => `the ${joinMonsters(b, "and")}`)} in ${thisCell(m)} too`,
+      relation: { kind: "again", basis: sightline(m, "the same sightline") },
+    }),
 
   // Which monster shows where is the game's rule, and the help teaches it
   // (help/games/undead.md); the step says only what this sightline's two
   // clues decide (docs/games/hints.md § "Rules belong in the help").
   /** The sightline's clues `a` and `b` leave no room for `bits` in the cell. */
-  sightline: (a: number, b: number, bits: number, m: Marked): Narration => {
+  sightline: (a: number, b: number, bits: number, m: Marked): Sentence => {
     const them = (left: number): string => {
       const kinds = MONSTERS.filter((k) => left & k).length;
       return kinds === 1
@@ -80,21 +91,33 @@ export const say = {
           ? "both"
           : "all three";
     };
-    return phrase`${sightline(m, "This sightline")}'s ${a} and ${b} leave no room for a ${joinMonsters(bits)} in ${thisCell(m)}, so we must cross out ${struck(m, them)}.`;
+    return so({
+      look: phrase`${sightline(m, "This sightline")}'s ${a} and ${b} leave no room for a ${joinMonsters(bits)} in ${thisCell(m)}`,
+      move: phrase`we must cross out ${struck(m, them)}`,
+    });
   },
 
-  total: (monster: number, m: Marked): Narration => {
+  total: (monster: number, m: Marked): Sentence => {
     const name = monsterName(monster);
-    return phrase`No ${name}s are left to place, so no undecided cell can be one; we must cross out ${struck(m, () => `the ${name}`)} in ${thisCell(m)}.`;
+    return so({
+      look: phrase`No ${name}s are left to place`,
+      follows: phrase`no undecided cell can be one`,
+      move: phrase`we must cross out ${struck(m, () => `the ${name}`)} in ${thisCell(m)}`,
+    });
   },
 
-  onlyCells: (monster: number, m: Marked): Narration => {
+  onlyCells: (monster: number, m: Marked): Sentence => {
     const name = monsterName(monster);
-    return phrase`Exactly as many cells can still hold a ${name} as there are ${name}s left to place, so ${thisCell(m, "one")} can only be a ${name}.`;
+    return so({
+      look: phrase`Exactly as many cells can still hold a ${name} as there are ${name}s left to place`,
+      move: phrase`${thisCell(m, "one")} can only be a ${name}`,
+    });
   },
 
-  single: (bits: number, m: Marked): Narration => {
-    const list = joinMonsters(bits);
-    return phrase`Only the ${list} is left uncrossed in ${thisCell(m)}, so it can only be a ${list}.`;
-  },
+  /** A placement: `bits` is the one monster the cell's notes still allow. */
+  single: (bits: number, m: Marked): Sentence =>
+    so({
+      look: phrase`Every other monster is crossed out in ${thisCell(m)}`,
+      move: phrase`it can only be a ${joinMonsters(bits)}`,
+    }),
 };

@@ -4,7 +4,7 @@
 // completion-flash highlight shift, and the cache suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { CELL, mark, phrase } from "../../engine/hint-words.ts";
+import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -216,7 +216,10 @@ describe("Unruly redraw", () => {
     const ds = freshDs(state);
     const target = { x: 2, y: 0, value: ONE as Cell };
     const row0 = Array.from({ length: state.w2 }, (_, x) => ({ x, y: 0 }));
-    const words = phrase`${mark.the("ring", CELL, [{ x: 2, y: 0 }], "cell")} on ${mark.the("stripes", CELL, row0, "row")}, by ${mark.the("outline", CELL, [{ x: 0, y: 0 }], "cell")}`;
+    const words = so({
+      look: phrase`${mark.the("outline", CELL, [{ x: 0, y: 0 }], "cell")} is black`,
+      move: phrase`${mark.the("ring", CELL, [{ x: 2, y: 0 }], "cell")} on ${mark.the("stripes", CELL, row0, "row")} must be black`,
+    });
     const hint: HintStep<UnrulyMove, UnrulyHint> = {
       move: { type: "place", x: 2, y: 0, value: ONE },
       explanation: words.text,

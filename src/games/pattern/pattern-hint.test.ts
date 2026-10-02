@@ -99,7 +99,7 @@ describe("pattern hint — narration", () => {
         read++;
         const t = step.explanation;
         // Opens by naming the board pattern (the row/column being reasoned over).
-        expect(t, `bad opener: "${t}"`).toMatch(/^(This|No run|Whichever)\b/);
+        expect(t, `bad opener: "${t}"`).toMatch(/^(This|No run|Every way)\b/);
         // Concludes with a modal of necessity, never a bare state-of-being verb.
         expect(t, `no necessity modal: "${t}"`).toMatch(/must (be|stay) (black|white)/);
         expect(t, `flat state-of-being verb: "${t}"`).not.toMatch(
@@ -159,7 +159,7 @@ describe("pattern hint — narration", () => {
         if (!res.ok) continue;
         const t = res.steps[k].explanation;
         expect(t, `bad intersection narration: "${t}"`).toMatch(
-          /^Whichever way this (row|column)'s runs fit, .* must (be|stay) (black|white)\.$/,
+          /^Every way this (row|column)'s runs can fit (covers|leaves out) .*, so (it|they) must be (black|white)\.$/,
         );
         expect(t).not.toMatch(/only one arrangement/i);
         saw = true;

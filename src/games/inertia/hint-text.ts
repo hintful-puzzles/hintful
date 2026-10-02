@@ -16,6 +16,8 @@ import {
   mark,
   type Narration,
   phrase,
+  type Sentence,
+  sentence,
 } from "../../engine/hint-words.ts";
 import type { SlidePath } from "./state.ts";
 
@@ -61,15 +63,20 @@ function stopClause(stopper: SlidePath["stopper"]): string {
  * mine. */
 type Only = "mines" | "walls";
 
-/** "Slide north", pointing at the arrow on the ball. */
-const slideWay = (m: Marked, verb = "Slide"): Narration =>
-  mark.as("ring", ARROW, [m.dir], `${verb} ${DIR_NAMES[m.dir]}`);
+/** "slide north", pointing at the arrow on the ball. */
+const slideWay = (m: Marked): Narration =>
+  mark.as("ring", ARROW, [m.dir], `slide ${DIR_NAMES[m.dir]}`);
 
 /** The gem the leg is going for: circled, and an outline in role, since it is
  * what the step works toward rather than what it decides. */
 const theGem = (m: Marked): Narration => mark.the("outline", GEM, [m.goal], "gem");
 
-const working = (m: Marked): Narration => phrase`Working on ${theGem(m)}`;
+/** Why the slide is the ball's only move (`onlyMove` checked every other
+ * direction). */
+const onlyBecause = (only: Only): Narration =>
+  only === "mines"
+    ? phrase`every other way you can go runs you onto a mine`
+    : phrase`walls block every other direction`;
 
 export const say = {
   /** The leg's payoff: the slide sweeps up the goal gem, after `extras`
@@ -79,39 +86,70 @@ export const say = {
     extras: number,
     only: Only | null,
     stopper: SlidePath["stopper"],
-  ): Narration => {
+  ): Sentence => {
     const sweep = extras
       ? phrase`it sweeps up ${gemsPhrase(extras)} and then ${theGem(m)}`
       : phrase`it sweeps up ${theGem(m)}`;
-    if (only === "mines") {
-      return phrase`${slideWay(m)}, the only way that doesn't run you onto a mine: ${sweep}.`;
+    if (only) {
+      return sentence({
+        look: onlyBecause(only),
+        move: slideWay(m),
+        relation: { kind: "effect", effect: sweep },
+      });
     }
-    if (only === "walls") {
-      return phrase`${slideWay(m)}: ${sweep}, and walls block every other direction.`;
-    }
-    return phrase`${slideWay(m)}: ${sweep}, and ${stopClause(stopper)}.`;
+    return sentence({
+      move: slideWay(m),
+      relation: {
+        kind: "effect",
+        effect: phrase`${sweep}, and ${stopClause(stopper)}`,
+      },
+    });
   },
 
-  // A move that collects nothing says what it is *for*.
+  // A move that collects nothing says what it is *for*. `onlyMove` judged
+  // every other direction lost, which is what `rivals: "lost"` claims.
   /** The only move the ball has, collecting nothing. */
-  forced: (m: Marked, only: Only): Narration =>
-    only === "mines"
-      ? phrase`${working(m)}: ${slideWay(m, "slide")}, because every other direction you can set off in runs you onto a mine.`
-      : phrase`${working(m)}: ${slideWay(m, "slide")}, because walls block every other direction.`,
+  forced: (m: Marked, only: Only): Sentence =>
+    sentence({
+      aim: theGem(m),
+      look: onlyBecause(only),
+      move: slideWay(m),
+      relation: { kind: "forced", rivals: "lost" },
+    }),
 
+  // The slide starts the plan's leg to the same gem, and `nextLeg` keeps only a
+  // leg after which every gem is still reachable, so the slide answers the
+  // stranding with a safe way to the gem; it may not be the only one.
   /** Sliding `grab` would take the gem but strand `stranded` others. */
-  strands: (m: Marked, grab: number, stranded: number): Narration =>
-    phrase`Sliding ${DIR_NAMES[grab]} grabs ${theGem(m)}, but you can't pick where you stop and it strands ${gemsPhrase(stranded)}: ${slideWay(m, "slide")}.`,
+  strands: (m: Marked, grab: number, stranded: number): Sentence =>
+    sentence({
+      look: phrase`Sliding ${DIR_NAMES[grab]} grabs ${theGem(m)}, but you can't pick where you stop and it strands ${gemsPhrase(stranded)}`,
+      move: slideWay(m),
+      relation: { kind: "answers", how: "One safe way" },
+    }),
 
   // The route declines a grab it could take. Which side the ball comes at a
   // gem from decides where it fetches up, so this is a real trade-off — but we
   // have not proved the grab is a trap, so we don't say it is.
-  declined: (m: Marked): Narration =>
-    phrase`${working(m)}: ${slideWay(m, "slide")}. You could grab it from here, but the route comes at it from another side.`,
+  declined: (m: Marked): Sentence =>
+    sentence({
+      aim: theGem(m),
+      look: phrase`you could grab it from here, but the route comes at it from another side`,
+      move: slideWay(m),
+      relation: { kind: "serves" },
+    }),
 
   /** No slide reaches the gem yet; `oneMore` when the plan's next slide does. */
-  positioning: (m: Marked, oneMore: boolean): Narration =>
-    oneMore
-      ? phrase`${working(m)}: no slide from here reaches it. ${slideWay(m)}, and one more slide sweeps it up.`
-      : phrase`${working(m)}: no slide from here reaches it. ${slideWay(m)} to work the ball round toward it.`,
+  positioning: (m: Marked, oneMore: boolean): Sentence =>
+    sentence({
+      aim: theGem(m),
+      look: phrase`no slide from here reaches it`,
+      move: slideWay(m),
+      relation: {
+        kind: "effect",
+        effect: oneMore
+          ? phrase`one more slide sweeps it up`
+          : phrase`it works the ball round toward it`,
+      },
+    }),
 };

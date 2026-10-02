@@ -33,7 +33,7 @@ import {
 } from "../../engine/game.ts";
 import { markAllNow } from "../../engine/hint-gesture.ts";
 import type { Premise } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { hiddenSingleLine, rowColRegions } from "../../engine/latin-hint.ts";
@@ -375,7 +375,7 @@ function findMistakes(state: TowersState): readonly TowersMistake[] {
  * `continues` (a journey continuation leg) gets a terser line that doesn't
  * restate the premise the journey's first leg already gave. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason, m: Mark, w: number, continues = false): Narration {
+function narrate(reason: HintReason, m: Mark, w: number, continues = false): Sentence {
   const n = m.n;
   switch (reason.kind) {
     case "fullLine":

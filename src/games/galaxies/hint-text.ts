@@ -9,7 +9,15 @@
  * a step shrunk by the player's own moves re-reads from what it still draws.
  */
 
-import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  so,
+  whole,
+} from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import type { GalaxiesHint } from "./hint.ts";
 import { DOT, type Painted, painted, WALL } from "./hint-marks.ts";
@@ -44,7 +52,7 @@ const itAnd = (p: Painted): Narration =>
 const ringedDot = (p: Painted, words: string): Narration =>
   mark.as("ring", DOT, els(p.targetDot), words);
 
-function sentence(p: Painted, said: GalaxiesSaid): Narration {
+function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
   switch (said.kind) {
     case "dotTile": {
       const cells = mark.as("ring", CELL, p.others, (cs) =>
@@ -62,7 +70,10 @@ function sentence(p: Painted, said: GalaxiesSaid): Narration {
           : said.n === 4
             ? "at their shared corner"
             : "they touch";
-      return phrase`A galaxy covers the cells its dot sits on, so ${cells} must belong to ${ringedDot(p, `the ${dot(said.black)}`)} ${where}.`;
+      return so({
+        look: phrase`A galaxy covers the cells its dot sits on`,
+        move: phrase`${cells} must belong to ${ringedDot(p, `the ${dot(said.black)}`)} ${where}`,
+      });
     }
 
     // A cell that *holds* its own dot draws no arrow — there is nothing to point
@@ -70,7 +81,11 @@ function sentence(p: Painted, said: GalaxiesSaid): Narration {
     // looking for an arrow that is not there. Both cells are still visibly
     // settled: one shows an arrow, the other shows the dot.
     case "separate":
-      return phrase`${mark.as("outline", CELL, p.area, "These two cells")} ${said.points ? "point at" : "go with"} ${mark.as("outline", DOT, p.refDots, "different dots")}, so they belong to different galaxies, and ${mark.as("ring", WALL, p.targetWalls, "a wall")} must run between them.`;
+      return so({
+        look: phrase`${mark.as("outline", CELL, p.area, "These two cells")} ${said.points ? "point at" : "go with"} ${mark.as("outline", DOT, p.refDots, "different dots")}`,
+        follows: phrase`they belong to different galaxies`,
+        move: phrase`${mark.as("ring", WALL, p.targetWalls, "a wall")} must run between them`,
+      });
 
     // The mirrored wall is very often the board's own rim, and calling that
     // "the outlined wall" would have the player hunting for a wall they are
@@ -82,11 +97,17 @@ function sentence(p: Painted, said: GalaxiesSaid): Narration {
       const pair =
         p.area.length === 1
           ? phrase`${mark.as("outline", CELL, p.area, "The outlined cell")} is its own partner across ${across}`
-          : phrase`${mark.the("outline", CELL, p.area, "cell").capitalized()} are partners across ${across}`;
+          : phrase`${mark.the("outline", CELL, p.area, "cell")} are partners across ${across}`;
       const wall = mark.this("ring", WALL, p.targetWalls, "wall");
       return said.edge
-        ? phrase`${pair}; one ${p.area.length === 1 ? "side " : ""}meets ${mark.as("outline", WALL, p.walls, "the board's edge")}, so ${wall} must match it.`
-        : phrase`${pair}, so ${mark.the("outline", WALL, p.walls, "wall")} must be mirrored by ${wall}.`;
+        ? so({
+            look: phrase`${pair}; one ${p.area.length === 1 ? "side " : ""}meets ${mark.as("outline", WALL, p.walls, "the board's edge")}`,
+            move: phrase`${wall} must match it`,
+          })
+        : so({
+            look: pair,
+            move: phrase`${mark.the("outline", WALL, p.walls, "wall")} must be mirrored by ${wall}`,
+          });
     }
 
     // Its walled sides are drawn on the board, and "every way out" already
@@ -99,24 +120,36 @@ function sentence(p: Painted, said: GalaxiesSaid): Narration {
         p.area,
         said.openings === 1 ? "The only way out" : "Every way out",
       );
-      return phrase`${lead} of ${thisCell(p)} leads into ${mark.the("stripes", whole(CELL), p.hatch, "galaxy")}, so ${itAnd(p)} must belong to ${ringedDot(p, `the ringed ${dot(said.black)}`)}.`;
+      return so({
+        look: phrase`${lead} of ${thisCell(p)} leads into ${mark.the("stripes", whole(CELL), p.hatch, "galaxy")}`,
+        move: phrase`${itAnd(p)} must belong to ${ringedDot(p, `the ringed ${dot(said.black)}`)}`,
+      });
     }
 
     // The claim *is* this rung's own condition, so it is checkable by the player
     // with the gesture they already have: drag from the cell and count the rings.
     case "soleOwner":
-      return phrase`Only ${ringedDot(p, `the ringed ${dot(said.black)}`)} can own ${thisCell(p)}${partner(p)}: any other dot mirrors it off the board or onto a dot.`;
+      return so({
+        look: phrase`Any other dot mirrors ${thisCell(p)} off the board or onto a dot`,
+        move: phrase`${itAnd(p)} must belong to ${ringedDot(p, `the ringed ${dot(said.black)}`)}`,
+      });
 
     // "shows how far", not "is everywhere": the acted-on cell carries the action
     // mark rather than the hatch, so the striped set is the reach minus one
     // square and an absolute claim would be a shade off true.
     case "onlyReach":
-      return phrase`No other galaxy reaches ${thisCell(p)}, so ${itAnd(p)} must join ${ringedDot(p, `the ringed ${dot(said.black)}`)}, whose reach ${mark.as("stripes", CELL, p.hatch, "the stripes show")}.`;
+      return so({
+        look: phrase`No other galaxy reaches ${thisCell(p)}`,
+        move: phrase`${itAnd(p)} must join ${ringedDot(p, `the ringed ${dot(said.black)}`)}, whose reach ${mark.as("stripes", CELL, p.hatch, "the stripes show")}`,
+      });
 
     case "exclave":
-      return phrase`${mark.the("stripes", CELL, p.hatch, "cell").capitalized()} can reach ${ringedDot(p, p.hatch.length === 1 ? "its ringed dot" : "their ringed dot")} only through ${thisCell(p)}, so ${itAnd(p)} must be that dot's too.`;
+      return so({
+        look: phrase`${mark.the("stripes", CELL, p.hatch, "cell")} can reach ${ringedDot(p, p.hatch.length === 1 ? "its ringed dot" : "their ringed dot")} only through ${thisCell(p)}`,
+        move: phrase`${itAnd(p)} must be that dot's too`,
+      });
   }
 }
 
 /** A step's sentence, from its highlights. */
-export const tell = (hl: GalaxiesHint): Narration => sentence(painted(hl), hl.said);
+export const tell = (hl: GalaxiesHint): Sentence => sentenceOf(painted(hl), hl.said);

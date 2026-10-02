@@ -19,7 +19,7 @@ import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { key, MARK_ALL_CODE, type PointerAction } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import { CELL, Narration, NOTE } from "./hint-words.ts";
+import { CELL, Narration, NOTE, type Sentence, unshaped } from "./hint-words.ts";
 import type { CellRegion } from "./latin-hint.ts";
 import { type NoteTakingUi, noteEntryGesture } from "./note-taking-cell.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
@@ -609,7 +609,7 @@ export function impliedNotes(
  * this shape as the one step allowed to paint nothing. Building it here keeps
  * that contract in one place. */
 export function populateStep<M, H>(move: M, explanation: string): HintStep<M, H> {
-  const words = Narration.plain(explanation);
+  const words = unshaped(Narration.plain(explanation), "setup");
   return {
     move,
     explanation: words.text,
@@ -868,7 +868,7 @@ export function emitObviousCleanStep<M, H>(
   pencil: Int32Array,
   w: number,
   reach: Reach,
-  words: (marks: readonly Mark[]) => Narration,
+  words: (marks: readonly Mark[]) => Sentence,
   opts?: { enc?: NoteEncoding; adapter?: CandidateMoveAdapter<M> },
 ): boolean {
   const bit = noteBitOf(opts?.enc);

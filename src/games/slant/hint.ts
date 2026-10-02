@@ -11,7 +11,7 @@
 import { Dsf } from "../../engine/dsf.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Narration, Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Beyond, type ClueSources, say } from "./hint-text.ts";
 import {
@@ -354,7 +354,7 @@ function vLine(
   soln: Int8Array,
   clues: Int8Array,
   ev: VEvidence,
-): Narration | null {
+): Sentence | null {
   // One scratch per end, so the words can tell the pair across a 2 from the
   // pairs beyond it.
   const scratches: VEvidence[] = keys.map(() => ({ clues: [], squares: [] }));
@@ -503,7 +503,7 @@ function markStep(
 ): Step {
   const mark = markOf(m.a, m.b, w);
   const W = w + 1;
-  let words: Narration;
+  let words: Sentence;
   const hl: SlantHint = { mark };
   if (m.why.kind === "clue") {
     const { pt, c, pair } = m.why;
@@ -625,12 +625,7 @@ function firingHighlights(
 
 /** Narrate why this leg's move is forced. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(
-  firing: SlantFiring,
-  leg: number,
-  hl: SlantHint,
-  w: number,
-): Narration {
+function narrate(firing: SlantFiring, leg: number, hl: SlantHint, w: number): Sentence {
   const target = hl.target;
   if (!target) throw new Error("slant hint: a firing leg with no target");
   const cells = [target, ...(hl.siblings ?? [])];

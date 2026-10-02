@@ -9,7 +9,15 @@
  * squares and marks it reasons from are outlined.
  */
 
-import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  sentence,
+  so,
+} from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import type { SlantMark } from "./hint.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
@@ -23,9 +31,6 @@ const lines = (n: number): string =>
 /** The squares a step decides: this leg's and the rest of its firing's. */
 const decided = (cells: readonly Point[]): Narration =>
   mark.this("ring", CELL, cells, "square");
-
-/** "it" or "they", for the squares a step decides. */
-const subject = (cells: readonly Point[]): string => (cells.length > 1 ? "they" : "it");
 
 /** A same-slant mark the step places, as the pair it joins. */
 const joined = (m: SlantMark, words: string): Narration =>
@@ -75,12 +80,17 @@ export const say = {
     area: readonly Point[],
     cells: readonly Point[],
     away: boolean,
-  ): Narration => {
-    const same = clueAt([clue], "the same clue").capitalized();
-    const toward = away ? "away" : "toward the clue";
-    return area.length
-      ? phrase`${same}, with ${mark.the("outline", CELL, area, "square")}, forces ${decided(cells)} too, so ${subject(cells)} must slant ${toward}.`
-      : phrase`${same} forces ${decided(cells)} too, so ${subject(cells)} must slant ${toward}.`;
+  ): Sentence => {
+    const same = clueAt([clue], "the same clue");
+    return sentence({
+      move: phrase`${decided(cells)} must slant ${away ? "away" : "toward it"} too`,
+      relation: {
+        kind: "again",
+        basis: area.length
+          ? phrase`${same} and ${mark.the("outline", CELL, area, "square")}`
+          : same,
+      },
+    });
   },
 
   /** A clue `c` still short of diagonals, needing one from each of `cells`. */
@@ -89,16 +99,24 @@ export const say = {
     c: number,
     src: ClueSources,
     cells: readonly Point[],
-  ): Narration => {
-    const it = mark.this("outline", CLUE, [clue], `${c} clue`).capitalized();
+  ): Sentence => {
+    const it = mark.this("outline", CLUE, [clue], `${c} clue`);
+    const move = phrase`${decided(cells)} must slant toward it`;
     const held = has(src);
     if (held === null)
-      return c === 4
-        ? phrase`${it} must be touched by all four diagonals, so ${decided(cells)} must slant toward it.`
-        : phrase`${it} needs a line from every square around it, so ${decided(cells)} must slant toward it.`;
-    return held.both
-      ? phrase`${it} has ${held.got}, so ${decided(cells)} must slant toward it.`
-      : phrase`${it} has ${held.got} and needs ${cells.length} more, so ${decided(cells)} must slant toward it.`;
+      return so({
+        look:
+          c === 4
+            ? phrase`${it} must be touched by all four diagonals`
+            : phrase`${it} needs a line from every square around it`,
+        move,
+      });
+    return so({
+      look: held.both
+        ? phrase`${it} has ${held.got}`
+        : phrase`${it} has ${held.got} and needs ${cells.length} more`,
+      move,
+    });
   },
 
   /** A clue `c` already touched by all its diagonals. */
@@ -107,24 +125,39 @@ export const say = {
     c: number,
     src: ClueSources,
     cells: readonly Point[],
-  ): Narration => {
-    const it = mark.this("outline", CLUE, [clue], `${c} clue`).capitalized();
+  ): Sentence => {
+    const it = mark.this("outline", CLUE, [clue], `${c} clue`);
     if (c === 0)
-      return src.area.length
-        ? phrase`${it} is touched by no diagonals, so ${decided(cells)} must slant away from it, like ${mark.the("outline", CELL, src.area, "square")}.`
-        : phrase`${it} is touched by no diagonals, so ${decided(cells)} must slant away from it.`;
+      return so({
+        look: phrase`${it} is touched by no diagonals`,
+        move: src.area.length
+          ? phrase`${decided(cells)} must slant away from it, like ${mark.the("outline", CELL, src.area, "square")}`
+          : phrase`${decided(cells)} must slant away from it`,
+      });
     const held = has(src);
     if (held === null) throw new Error("slant hint: a full clue with no lines");
     return held.both
-      ? phrase`${it} has ${held.got}, so ${decided(cells)} must slant away.`
-      : phrase`${it} already has ${held.got}, so ${decided(cells)} must slant away from it.`;
+      ? so({
+          look: phrase`${it} has ${held.got}`,
+          move: phrase`${decided(cells)} must slant away`,
+        })
+      : so({
+          look: phrase`${it} already has ${held.got}`,
+          move: phrase`${decided(cells)} must slant away from it`,
+        });
   },
 
-  loop: (cell: Point, area: readonly Point[]): Narration =>
-    phrase`Diagonals in ${mark.the("outline", CELL, area, "square")} join two corners of ${decided([cell])}, so it must slant the other way to avoid a loop.`,
+  loop: (cell: Point, area: readonly Point[]): Sentence =>
+    so({
+      look: phrase`Diagonals in ${mark.the("outline", CELL, area, "square")} join two corners of ${decided([cell])}`,
+      move: phrase`it must slant the other way to avoid a loop`,
+    }),
 
-  deadend: (cell: Point, area: readonly Point[]): Narration =>
-    phrase`${mark.the("outline", CELL, area, "square").capitalized()} ${area.length > 1 ? "leave" : "leaves"} two corners of ${decided([cell])} one way out each, so it must slant the other way or seal a loop.`,
+  deadend: (cell: Point, area: readonly Point[]): Sentence =>
+    so({
+      look: phrase`${mark.the("outline", CELL, area, "square")} ${area.length > 1 ? "leave" : "leaves"} two corners of ${decided([cell])} one way out each`,
+      move: phrase`it must slant the other way or seal a loop`,
+    }),
 
   /** A square whose same-slant partner `anchor`, holding `v`, is already
    * placed, joined to it by `marks`. */
@@ -133,9 +166,12 @@ export const say = {
     anchor: Point,
     v: number,
     marks: readonly SlantMark[],
-  ): Narration => {
-    const by = mark.the("outline", ALIKE, marks, "mark").capitalized();
-    return phrase`${by} ${marks.length > 1 ? "link" : "links"} ${decided([cell])} to ${mark.the("outline", CELL, [anchor], "square")}, so it must be ${slashWord(v)} too.`;
+  ): Sentence => {
+    const by = mark.the("outline", ALIKE, marks, "mark");
+    return so({
+      look: phrase`${by} ${marks.length > 1 ? "link" : "links"} ${decided([cell])} to ${mark.the("outline", CELL, [anchor], "square")}`,
+      move: phrase`it must be ${slashWord(v)} too`,
+    });
   },
 
   // --- the same-slant mark, placed as a step -----------------------------
@@ -143,20 +179,27 @@ export const say = {
   // "From just these two" is the premise: exactly one of two squares side by
   // side around a point touches it only when they slant the same way.
   /** Two squares around a clue `c` that must share its one remaining line. */
-  markClue: (clue: Point, c: number, src: ClueSources, m: SlantMark): Narration => {
-    const it = mark.this("outline", CLUE, [clue], `${c} clue`).capitalized();
+  markClue: (clue: Point, c: number, src: ClueSources, m: SlantMark): Sentence => {
+    const it = mark.this("outline", CLUE, [clue], `${c} clue`);
     const held = has(src);
-    return held === null
-      ? phrase`${it} needs one line, from just ${joined(m, "these two squares")}, so they must slant the same way.`
-      : phrase`${it} has ${held.got} and needs ${c > 1 ? "one more" : "one"} from ${joined(m, "these two")}, so they must slant the same way.`;
+    return so({
+      look:
+        held === null
+          ? phrase`${it} needs one line, from just ${joined(m, "these two squares")}`
+          : phrase`${it} has ${held.got} and needs ${c > 1 ? "one more" : "one"} from ${joined(m, "these two")}`,
+      move: phrase`they must slant the same way`,
+    });
   },
 
   /** Two side-by-side squares with both v-shapes ruled out, by one clause
    * each or by one `vBoth` for both. */
-  markV: (m: SlantMark, clauses: Narration[]): Narration => {
+  markV: (m: SlantMark, clauses: Narration[]): Sentence => {
     const both =
       clauses.length === 1 ? clauses[0] : phrase`${clauses[0]}, or both ${clauses[1]}`;
-    return phrase`${joined(m, "these two").capitalized()} can't both ${both}, so they must slant the same way.`;
+    return so({
+      look: phrase`${joined(m, "these two")} can't both ${both}`,
+      move: phrase`they must slant the same way`,
+    });
   },
 
   // A v-shape clause says what the pair can't both do at one end of its
@@ -219,7 +262,7 @@ export const say = {
     pairs: readonly Point[],
     one: boolean,
     caps: readonly Point[],
-  ): Narration => {
+  ): Sentence => {
     const digit = one ? "1" : "3";
     const diagonal = one ? "meeting" : "missing";
     const single = twos.length === 1;
@@ -230,9 +273,12 @@ export const say = {
         : caps.length === 0
           ? phrase`two diagonals ${diagonal} ${it}`
           : phrase`${clueAt(caps, `a ${digit}`)} and a diagonal ${diagonal} ${it}`;
-    const head = mark.this("outline", CLUE, twos, "2").capitalized();
+    const head = mark.this("outline", CLUE, twos, "2");
     const theirs = squaresAs(pairs, single ? "its pair" : "their pairs");
-    return phrase`${head} and ${theirs} line up between ${capWords}, so ${joined(m, "these two")} must slant the same way.`;
+    return so({
+      look: phrase`${head} and ${theirs} line up between ${capWords}`,
+      move: phrase`${joined(m, "these two")} must slant the same way`,
+    });
   },
 
   /**
@@ -248,7 +294,7 @@ export const say = {
     touches: boolean,
     end: "one" | "three" | "touches" | "misses",
     beyond: Beyond,
-  ): Narration => {
+  ): Sentence => {
     const cap =
       end === "one" || end === "three"
         ? beyond.cap
@@ -262,7 +308,10 @@ export const say = {
     const bounds = touches
       ? phrase`gives it one line and, with ${far}, no more`
       : phrase`gives it at most one line and, with ${far}, at least one`;
-    return phrase`${squaresAs(pair, "The pair across")} ${mark.this("outline", CLUE, [two], "2")} ${bounds}, so ${joined(m, "these two")} must slant the same way.`;
+    return so({
+      look: phrase`${squaresAs(pair, "the pair across")} ${mark.this("outline", CLUE, [two], "2")} ${bounds}`,
+      move: phrase`${joined(m, "these two")} must slant the same way`,
+    });
   },
 
   /** Both v-shapes ruled out by the same kind of clue, one at each end. */

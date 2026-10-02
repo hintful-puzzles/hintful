@@ -182,7 +182,7 @@ describe("narration states the premise, in the necessity voice", () => {
     if (!found) return;
     const text = hintSteps(found.state)[0].explanation;
     expect(text).toMatch(/already has all its lines/);
-    expect(text).toMatch(/Rule out (?:this spoke|these spokes)\.$/);
+    expect(text).toMatch(/: rule out (?:this spoke|these spokes)\.$/);
     expect(text.length).toBeLessThan(120);
   });
 
@@ -300,7 +300,7 @@ describe("a saturated hub is one multi-leg journey, one color", () => {
       expect(hl.evidence).toEqual(first.evidence);
     });
     expect(legs[k - 1].explanation).toBe(
-      "And this one must be a line too, for the outlined hub.",
+      "…and this one must be a line too, for the outlined hub.",
     );
 
     // Each leg draws a distinct spoke.

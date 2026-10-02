@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { BORDER } from "../../engine/border-grid.ts";
 import { EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
-import { CELL, mark, phrase } from "../../engine/hint-words.ts";
+import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -125,7 +125,10 @@ describe("Palisade redraw", () => {
     const stepRinging = (
       edges: { x: number; y: number; dir: number }[],
     ): HintStep<PalisadeMove, PalisadeHint> => {
-      const words = phrase`${mark.as("outline", CELL, cells, "cells")} ${mark.as("ring", EDGE, edges, "edges")}`;
+      const words = so({
+        look: mark.as("outline", CELL, cells, "cells"),
+        move: phrase`${mark.as("ring", EDGE, edges, "edges")}`,
+      });
       return {
         move: { type: "edges", edits: [] },
         explanation: words.text,

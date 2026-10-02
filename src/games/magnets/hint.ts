@@ -27,7 +27,7 @@ import {
   type HintRefusal,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { type StepBudget, stepBudget } from "../../engine/step-budget.ts";
 import {
   type Axis,
@@ -291,7 +291,7 @@ function endFact(b: ReadableBoard, i: number, pole: number, r: NotReason): EndFa
 }
 
 interface Told {
-  words: Narration;
+  words: Sentence;
   area: number[];
   /** The clue digits of the line the sentence counts. */
   clues: number[];
@@ -363,7 +363,7 @@ function tellForce(
   // Different ends, so the same pole is ruled out of both.
   const { pole } = plus;
   const [a, b2] = [plus.cause, minus.cause];
-  let words: Narration;
+  let words: Sentence;
   if (a.kind === "touch" && b2.kind === "touch")
     words = say.bothEndsTouch(targets, pole, [a.at, b2.at]);
   else if (a.kind === "full" && b2.kind === "full" && a.axis === b2.axis) {

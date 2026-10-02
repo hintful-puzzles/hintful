@@ -22,7 +22,14 @@
  * unambiguous there and a disambiguating phrase would be noise.
  */
 
-import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  so,
+} from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import type { ClustersDeduction } from "./solver.ts";
 import { type ClustersFill, F_COLOR_0 } from "./state.ts";
@@ -47,7 +54,7 @@ const danger = (m: Marked): Point[] => (m.danger ? [m.danger] : []);
 export const say = {
   /** A lookahead firing: one standing hypothesis plus the forced single-cell
    * consequences (never nested), shown statically as the numbered cells. */
-  chain: (d: ClustersDeduction, m: Marked): Narration => {
+  chain: (d: ClustersDeduction, m: Marked): Sentence => {
     const f = colorName(d.fill);
     const t = colorName(d.refuted);
     const at = d.reason.at;
@@ -82,32 +89,52 @@ export const say = {
       n === 1
         ? phrase`${cells} is then forced from it, and`
         : phrase`${cells} are then forced from it, and by ${n}`;
-    return phrase`Suppose ${thisCell(m)} were ${t}: ${run} ${end}, so ${thisCell(m)} must be ${f}.`;
+    return so({
+      look: phrase`Suppose ${thisCell(m)} were ${t}: ${run} ${end}`,
+      move: phrase`${thisCell(m)} must be ${f}`,
+    });
   },
 
   /** A direct firing: the refuted color breaks a rule at once. */
-  direct: (d: ClustersDeduction, m: Marked): Narration => {
+  direct: (d: ClustersDeduction, m: Marked): Sentence => {
     const f = colorName(d.fill);
     const t = colorName(d.refuted);
     const at = d.reason.at;
+    const itMust = phrase`it must be ${f}`;
+    const thisMust = phrase`${thisCell(m)} must be ${f}`;
     if (at.cell === d.index) {
       if (at.kind === "surrounded") {
-        return phrase`Every neighbor of ${thisCell(m)} is ${f}. A ${t} tile here could never touch another ${t} tile, so it must be ${f}.`;
+        return so({
+          look: phrase`Every neighbor of ${thisCell(m)} is ${f}. A ${t} tile here could never touch another ${t} tile`,
+          move: itMust,
+        });
       }
       // reachTwo at the cell itself (an empty cell is never a dot). Count- and
       // edge-neutral: at a corner the board edge does part of the hemming, and
       // "at most one" stays honest when one open neighbor remains.
-      return phrase`If ${thisCell(m)} were ${t}, at most one neighbor could ever match it, but it needs to touch two, so it must be ${f}.`;
+      return so({
+        look: phrase`If ${thisCell(m)} were ${t}, at most one neighbor could ever match it, but it needs to touch two`,
+        move: itMust,
+      });
     }
     if (at.kind === "dotOvercount") {
       // "its one" carries the rule (a dot touches exactly one tile of its color),
       // and the rule itself is the help's to state.
-      return phrase`${mark.the("outline", CELL, danger(m), `${t} dot`).capitalized()} beside ${thisCell(m)} already touches its one ${t} tile, so ${thisCell(m)} must be ${f}.`;
+      return so({
+        look: phrase`${mark.the("outline", CELL, danger(m), `${t} dot`)} beside ${thisCell(m)} already touches its one ${t} tile`,
+        move: thisMust,
+      });
     }
     const neighbor = mark.as("outline", CELL, danger(m), `its outlined ${f} neighbor`);
     if (at.kind === "surrounded") {
-      return phrase`Painting ${thisCell(m)} ${t} would seal ${neighbor} off from every other ${f} tile, so ${thisCell(m)} must be ${f}.`;
+      return so({
+        look: phrase`Painting ${thisCell(m)} ${t} would seal ${neighbor} off from every other ${f} tile`,
+        move: thisMust,
+      });
     }
-    return phrase`If ${thisCell(m)} were ${t}, ${neighbor} could never touch two ${f} tiles, so ${thisCell(m)} must be ${f}.`;
+    return so({
+      look: phrase`If ${thisCell(m)} were ${t}, ${neighbor} could never touch two ${f} tiles`,
+      move: thisMust,
+    });
   },
 };

@@ -40,7 +40,7 @@ import {
 } from "../../engine/game.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -373,7 +373,7 @@ function drawnSquares(hl: BoatsHint, w: number, h: number) {
 
 /** Which sentence a firing speaks, and with what values, naming the squares
  * `hl` marks. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(f: BoatsFiring, hl: BoatsHint): Narration {
+function narrate(f: BoatsFiring, hl: BoatsHint): Sentence {
   const t = f.technique;
   const { evidence, line } = drawnSquares(hl, hl.w, hl.h);
   const pt = ({ x, y }: Point): Point => ({ x, y });

@@ -9,6 +9,11 @@ import {
   NOTE,
   phrase,
   pronoun,
+  type Relation,
+  type Said,
+  sentence,
+  so,
+  unshaped,
   whole,
 } from "./hint-words.ts";
 
@@ -146,5 +151,93 @@ describe("narrow", () => {
     const empty = sentence.narrow(() => false);
     expect(empty.text).toBe(sentence.text);
     expect(empty.refs).toEqual([]);
+  });
+});
+
+describe("a sentence is its parts, joined in the relation's words", () => {
+  const cell = mark.this("ring", CELL, [{ x: 1, y: 1 }], "cell");
+  const clue = mark.the("outline", CELL, [{ x: 0, y: 0 }], "clue");
+  const look = phrase`${clue} has all its walls`;
+  const move = phrase`${cell} must be open`;
+  const rivals = mark.the("stripes", CELL, [{ x: 2, y: 2 }], "jump");
+
+  it("forced: 'so', or 'so … :' over what follows from the look", () => {
+    expect(so({ look, move }).text).toBe(
+      "The outlined clue has all its walls, so this cell must be open.",
+    );
+    expect(so({ look, follows: phrase`nothing more can reach it`, move }).text).toBe(
+      "The outlined clue has all its walls, so nothing more can reach it: this cell must be open.",
+    );
+  });
+
+  it("each other relation has its one form", () => {
+    const go = phrase`jump ${cell}`;
+    const danger = phrase`${rivals} would cut it off`;
+    const said = (relation: Relation, parts: Partial<Said> = {}): string =>
+      sentence({ look: danger, move: go, relation, ...parts }).text;
+    expect(said({ kind: "oneOf" })).toBe(
+      "The striped jump would cut it off. One of them: jump this cell.",
+    );
+    expect(said({ kind: "answers", how: "One way to save it" })).toBe(
+      "The striped jump would cut it off. One way to save it: jump this cell.",
+    );
+    expect(said({ kind: "effect", effect: phrase`it clears two crossings` })).toBe(
+      "The striped jump would cut it off. Jump this cell: it clears two crossings.",
+    );
+    expect(
+      said({ kind: "effect", effect: phrase`it clears two` }, { look: undefined }),
+    ).toBe("Jump this cell: it clears two.");
+    expect(said({ kind: "sequence", at: "first" })).toBe(
+      "The striped jump would cut it off. First, jump this cell.",
+    );
+    expect(
+      said({ kind: "sequence", at: "next" }, { look: phrase`to clear ${rivals}` }),
+    ).toBe("Next, to clear the striped jump, jump this cell.");
+    expect(said({ kind: "sequence", at: "last" }, { look: undefined })).toBe(
+      "Last, jump this cell.",
+    );
+    expect(said({ kind: "again", basis: clue }, { look: undefined })).toBe(
+      "…and jump this cell, for the outlined clue.",
+    );
+    expect(said({ kind: "serves" }, { look: undefined, aim: phrase`tile 3` })).toBe(
+      "Working on tile 3: jump this cell.",
+    );
+  });
+
+  it("carries every part's marks", () => {
+    expect(keysOf(so({ look, move }).refs)).toEqual([
+      "outline|cell|0,0",
+      "ring|cell|1,1",
+    ]);
+  });
+
+  it("refuses parts its relation cannot join", () => {
+    expect(() => sentence({ move, relation: { kind: "forced" } })).toThrow(
+      /needs a look/,
+    );
+    expect(() => sentence({ move, relation: { kind: "serves" } })).toThrow(
+      /needs an aim/,
+    );
+    expect(() =>
+      sentence({ look, move, relation: { kind: "again", basis: clue } }),
+    ).toThrow(/first leg's/);
+  });
+
+  it("keeps its form through a narrow and a capitalization", () => {
+    const s = sentence({ look, move, relation: { kind: "forced", rivals: "lost" } });
+    expect(s.narrow(() => false).form).toEqual({ relation: "forced", rivals: "lost" });
+    expect(s.capitalized().form).toEqual(s.form);
+    expect(unshaped(move, "bare").narrow(() => true).form).toEqual({
+      unshaped: "bare",
+    });
+  });
+
+  it("leaves the move to the board with a ring on the whole move", () => {
+    const s = sentence({
+      look: phrase`${clue} is alone`,
+      move: mark.move("go back for it"),
+      relation: { kind: "answers", how: "So" },
+    });
+    expect(keysOf(s.refs)).toContain("ring|move|move");
   });
 });

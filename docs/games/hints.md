@@ -185,6 +185,68 @@ are about prose. The arc every nontrivial hint follows:
 > → **reasoning** (why that pattern forces the move) → **conclusion** (the
 > action, in the necessity voice).
 
+### A sentence has parts
+
+A step's words are a `Sentence` (`engine/hint-words.ts`), and the only ways
+to make one are `sentence(said)`, its shorthand `so(...)`, and `unshaped(...)`.
+So the arc above is the shape of what a game hands over, and the engine
+writes the joins (`give-a-hint-sentence-its-parts`; the census behind it is
+that change's `design.md`). Five rules, settled on the Pegs playtest, hold for
+every game:
+
+1. **Look, then what follows, then the move.** Start with what the player
+   should pay attention to.
+2. **Each part follows from the last.** Never "move A is bad; do move B" with
+   no stated relation between them.
+3. **"So" concludes only a move the sentence has narrowed to one.** Where
+   several moves would do, offer the move as one of them.
+4. **Leave the move to the board when the board makes it obvious.**
+5. **Omit needless words.**
+
+The parts are `look` (the indication, and whatever follows inside the same
+clause: 132 of the census's premises fuse the two, and that is fine), an
+optional `follows` (a consequence the move rests on), the `move` as it reads
+mid-sentence, an optional `aim` (a stable subgoal), and the `relation`, which
+picks the engine's words. The forms are in `hint-words.ts`'s `Relation` and
+pinned word for word in `hint-words.test.ts`:
+
+| relation | reads |
+|---|---|
+| forced (`so`) | "L, so M." / "L, so F: M." |
+| oneOf | "L. One of them: M." |
+| answers | "L. One way to save it: M." (the game's words before the colon) |
+| effect | "L. M: E." (a move no rule forces, narrated by what it does) |
+| sequence | "L. First, M." / "Next, L, M." / "Last, L, M." |
+| again | "…and M, for B." (a journey's later leg) |
+| serves | "Working on A: M." |
+
+Any form takes an aim: "Working on A: …". `sentence` capitalizes the result,
+so a look that opens on a reference needs no `.capitalized()`.
+
+**Rules 1 and 3 are where the parts have teeth.** Order is fixed, and rule 3
+has a mechanical half: in a game whose hint searches, `forced` must say
+`rivals: "lost"`, which only the code that judged every rival can honestly
+write, and the hint-quality walk fails a searching game's forced step without
+it. Pegs' same-peg trap arms ("…, so jump this peg into the ringed hole
+instead") are the case: the code never judged the peg's other jumps, and the
+parts left no way to say "so" there except by writing that claim down. Rule 2
+is the one the structure cannot check: it guarantees the order and the
+connective, not that the conclusion follows. A reviewer reads the parts.
+
+**Rule 4 is `mark.move(words)`**: a ring on the step's own move (the engine's
+`MOVE` kind), which the renderer draws as it draws any move, so "go back for
+it" is bound to the frame like any other reference.
+
+**Exceptions are a closed set, each with a property the walk checks**:
+`bare` (nothing to say but the move; names only ring marks), `setup` (the
+method's opening procedure; names no outline or stripes), `evident` (a look
+alone whose ringed squares say the move, Filling's owner-endorsed "fits
+exactly into"; names a ring). A step that fits none of them is a question
+about the relations first; a new kind is an engine change with its reason.
+
+**Refusals stay `Narration`**: a dead end is not a step, and its words are
+checked by the refusal machinery (§ "Refusal wording comes from one module").
+
 ### Bind the words to the marks
 
 **A sentence that points at the board is built from references to the marks it
@@ -312,8 +374,9 @@ can carry an imperative tail ("draw them all"), because the forced-ness is
 already explicit in the premise.
 
 **Guarded cross-game** (`src/engine/hint-quality.test.ts`): every deductive
-game's steps must match the shared necessity vocabulary; mechanical
-populate/cleanup openers are recognized, and an owner-endorsed phrasing that
+game's steps must match the shared necessity vocabulary; a step whose words
+declare a setup (`unshaped(…, "setup")`) or a journey's later leg (`again`) is
+read by its form and not held to it, and an owner-endorsed phrasing that
 carries necessity in its own words (Filling's "fits exactly into") is a
 *declared idiom* in that file — add to the idiom table deliberately, never by
 loosening the shared pattern. Game-specific phrasing rules (the exact modal
@@ -3307,9 +3370,10 @@ across the run of moves that serves it — derive it once, from the plan, and
 carry it. Re-deriving it per step makes the banner flip-flop — "tile 8" →
 "tile 7" → "tile 8" — and read as though the hint has lost the plot.
 Fifteen's `index.ts` carries the scar in a comment; Inertia holds the gem its
-leg is going for. The shared sliding-tile vocabulary
-([`engine/hint-text.ts`](../../src/engine/hint-text.ts) `workingOn` +
-`HINT_SETTING_UP`) keeps Fifteen, Sixteen and Netslide reading as one voice.
+leg is going for. The sentence's `aim` part ("Working on tile N:",
+§ "A sentence has parts") and the shared `HINT_SETTING_UP`
+([`engine/hint-text.ts`](../../src/engine/hint-text.ts)) keep Fifteen, Sixteen
+and Netslide reading as one voice.
 
 When the game has no *name* for the goal — Inertia's gems are anonymous — the
 board must carry the reference: mark it, and say "the marked gem". Watch the
@@ -4432,8 +4496,8 @@ itself still shows several candidates). Narrating all of them as "every other
 number has been ruled out in this cell" is **wrong for a hidden single**: the
 player is looking at a cell that visibly still has 1, 2, 3, 4 penciled
 (owner-flagged on Keen, 2026-06-23). A hidden single must instead name its
-line — *"In this row, 3 can go in only this cell — every other cell in the row
-has ruled it out — so it must be 3"* — and shade the whole row/column as
+line — *"Every other cell in this row rules out 3, so this cell must be 3"* —
+and shade the whole row/column as
 evidence, so the player can *see* that no other cell takes the digit.
 
 **Re-derive the placement reason from the working board at emit time; never

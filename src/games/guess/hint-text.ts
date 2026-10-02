@@ -21,6 +21,8 @@ import {
   mark,
   type Narration,
   phrase,
+  type Sentence,
+  sentence,
 } from "../../engine/hint-words.ts";
 import type { SlotMark } from "./state.ts";
 
@@ -63,9 +65,8 @@ interface GuessMarks {
 
 const pegs = (n: number): string => (n === 1 ? "1 peg" : `${n} pegs`);
 
-export function say(r: Reason, m: GuessMarks): Narration {
+export function say(r: Reason, m: GuessMarks): Sentence {
   const row = mark.the("stripes", ROW, m.line, "row");
-  const Row = row.capitalized();
   const slots = mark.the("outline", SLOT, m.slots, "slot");
   const framed = (words = "the framed colors"): Narration =>
     mark.as("ring", COLOR, m.marked, words);
@@ -75,32 +76,93 @@ export function say(r: Reason, m: GuessMarks): Narration {
     m.marked.length > 1
       ? phrase`${framed()} are out`
       : phrase`${framed("the framed color")} is out`;
+  // Guess's hint searches, so "so" claims every rival lost. A deduction's
+  // rule-out is proved from the scores, which leaves no rival standing, and
+  // the one answer left is the only guess that can win.
+  const proved = (look: Narration, follows: Narration | null, move = out): Sentence =>
+    sentence({
+      look,
+      ...(follows ? { follows } : {}),
+      move,
+      relation: { kind: "forced", rivals: "lost" },
+    });
   switch (r.kind) {
     case "scoredNothing":
-      return phrase`${Row} scored nothing, so none of its colors can be in the answer: ${out}.`;
+      return proved(
+        phrase`${row} scored nothing`,
+        phrase`none of its colors can be in the answer`,
+      );
     case "noBlack":
-      return phrase`${Row} scored no black pegs, so none of its colors can be where it was guessed: ${out}.`;
+      return proved(
+        phrase`${row} scored no black pegs`,
+        phrase`none of its colors can be where it was guessed`,
+      );
     case "everyPegScored":
-      return phrase`Every peg of ${row} scored, so the answer can only use its colors: ${out}.`;
+      return proved(
+        phrase`Every peg of ${row} scored`,
+        phrase`the answer can only use its colors`,
+      );
     case "noRepeats":
-      return phrase`${slots.capitalized()} can only be one color, and no color repeats, so no other slot can hold it: ${out}.`;
+      return proved(
+        phrase`${slots} can only be one color, and no color repeats`,
+        phrase`no other slot can hold it`,
+      );
     case "blacksForced":
       return r.black === 1
-        ? phrase`${Row}'s 1 black can only be in ${slots}, so that peg is right: ${out}.`
-        : phrase`${Row}'s ${r.black} blacks can only be in ${slots}, so those pegs are right: ${out}.`;
+        ? proved(
+            phrase`${row}'s 1 black can only be in ${slots}`,
+            phrase`that peg is right`,
+          )
+        : proved(
+            phrase`${row}'s ${r.black} blacks can only be in ${slots}`,
+            phrase`those pegs are right`,
+          );
     case "blacksAccounted":
       return r.black === 1
-        ? phrase`${slots.capitalized()} accounts for ${row}'s black peg, so its other pegs are misplaced: ${out}.`
-        : phrase`${slots.capitalized()} account for ${row}'s ${r.black} blacks, so its other pegs are misplaced: ${out}.`;
+        ? proved(
+            phrase`${slots} accounts for ${row}'s black peg`,
+            phrase`its other pegs are misplaced`,
+          )
+        : proved(
+            phrase`${slots} account for ${row}'s ${r.black} blacks`,
+            phrase`its other pegs are misplaced`,
+          );
     case "totalAccounted":
-      return phrase`${slots.capitalized()} account for all ${pegs(r.total)} ${row} scored, so ${out}.`;
+      return proved(
+        phrase`${slots} account for all ${pegs(r.total)} ${row} scored`,
+        null,
+      );
     case "onlyAnswer":
-      return phrase`Only one answer fits every score so far: ${framed()}.`;
+      return proved(
+        phrase`Only one answer fits every score so far`,
+        null,
+        phrase`guess ${framed()}`,
+      );
+    // A probe is not forced: it is chosen by what it leaves, so it is narrated
+    // by that, or, past the enumeration budget, as one of the guesses that fit.
     case "opening":
-      return phrase`Nothing is scored yet. Guess ${framed()}: whatever they score, at most ${r.worst} of the ${r.fitting} answers will be left.`;
+      return sentence({
+        look: phrase`Nothing is scored yet`,
+        move: phrase`guess ${framed()}`,
+        relation: {
+          kind: "effect",
+          effect: phrase`whatever they score, at most ${r.worst} of the ${r.fitting} answers will be left`,
+        },
+      });
     case "probe":
-      return phrase`${r.fitting} answers fit every score so far, and ${framed()} are one. Guess them, and at most ${r.worst} will be left.`;
+      return sentence({
+        look: phrase`${r.fitting} answers fit every score so far, and ${framed()} are one`,
+        move: phrase`guess them`,
+        relation: {
+          kind: "effect",
+          effect: phrase`at most ${r.worst} will be left`,
+        },
+      });
     case "probeFits":
-      return phrase`Guess ${framed()}: only a guess that fits every score so far can win, and they do.`;
+      return sentence({
+        look: phrase`Only guesses that fit every score so far can win`,
+        move: phrase`guess ${framed()}`,
+        relation: { kind: "oneOf" },
+      });
   }
 }

@@ -19,7 +19,14 @@
  * brick-wall supports one row down/up.
  */
 
-import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  type Sentence,
+  so,
+} from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import type { CellColor } from "./state.ts";
 
@@ -29,9 +36,15 @@ const thisCell = (target: Point): Narration =>
 const outlined = (cells: readonly Point[], words: string): Narration =>
   mark.as("outline", CELL, cells, words);
 
+const stayClear = phrase`it must stay clear`;
+const beShaded = phrase`it must be shaded`;
+
 export const say = {
-  three: (target: Point, evidence: readonly Point[]): Narration =>
-    phrase`Shading ${thisCell(target)}, next to ${mark.the("outline", CELL, evidence, "shaded brick")}, would make three in a row, so it must stay clear.`,
+  three: (target: Point, evidence: readonly Point[]): Sentence =>
+    so({
+      look: phrase`Shading ${thisCell(target)}, next to ${mark.the("outline", CELL, evidence, "shaded brick")}, would make three in a row`,
+      move: stayClear,
+    }),
 
   // An outlined cell below is an unshaded brick *or a clue* —
   // `validateGravity` masks a clue down to no color, so a clue supports
@@ -40,27 +53,41 @@ export const say = {
   // cell below does not trigger the rule at all, so this branch never claims
   // anything about one. The brick-wall corners can leave a cell with only one
   // support, or — at the padded triangles — none to outline, hence three arms.
-  unsupported: (target: Point, evidence: readonly Point[]): Narration =>
-    evidence.length === 0
-      ? phrase`Shading ${thisCell(target)} would leave it with no shaded brick beneath it to rest on, so it must stay clear.`
-      : evidence.length === 1
-        ? phrase`${mark.the("outline", CELL, evidence, "cell").capitalized()} below ${thisCell(target)} is all it could rest on, and it isn't a shaded brick, so it must stay clear.`
-        : phrase`${mark.the("outline", CELL, evidence, "cell").capitalized()} below ${thisCell(target)} are all it could rest on, and neither is a shaded brick, so it must stay clear.`,
+  unsupported: (target: Point, evidence: readonly Point[]): Sentence =>
+    so({
+      look:
+        evidence.length === 0
+          ? phrase`Shading ${thisCell(target)} would leave it with no shaded brick beneath it to rest on`
+          : evidence.length === 1
+            ? phrase`${mark.the("outline", CELL, evidence, "cell")} below ${thisCell(target)} is all it could rest on, and it isn't a shaded brick`
+            : phrase`${mark.the("outline", CELL, evidence, "cell")} below ${thisCell(target)} are all it could rest on, and neither is a shaded brick`,
+      move: stayClear,
+    }),
 
   // "More than its 0 shaded neighbors" is nonsense: a 0 allows none at all
   // (docs/games/hints.md § "Sanity-read at the degenerate extremes").
   /** Shading the target over-fills the outlined clue `n`. */
-  overcount: (target: Point, clue: Point, n: number): Narration =>
-    n === 0
-      ? phrase`${outlined([clue], "The outlined 0")} beside ${thisCell(target)} allows no shaded neighbors at all, so it must stay clear.`
-      : phrase`Shading ${thisCell(target)} would give ${outlined([clue], `the outlined ${n}`)} beside it more than its ${n} shaded neighbor${n === 1 ? "" : "s"}, so it must stay clear.`,
+  overcount: (target: Point, clue: Point, n: number): Sentence =>
+    so({
+      look:
+        n === 0
+          ? phrase`${outlined([clue], "The outlined 0")} beside ${thisCell(target)} allows no shaded neighbors at all`
+          : phrase`Shading ${thisCell(target)} would give ${outlined([clue], `the outlined ${n}`)} beside it more than its ${n} shaded neighbor${n === 1 ? "" : "s"}`,
+      move: stayClear,
+    }),
 
-  strandSupport: (target: Point, above: Point): Narration =>
-    phrase`${outlined([above], "The outlined shaded brick above")} rests only on ${thisCell(target)}; clearing it would strand that brick, so it must be shaded.`,
+  strandSupport: (target: Point, above: Point): Sentence =>
+    so({
+      look: phrase`${outlined([above], "The outlined shaded brick above")} rests only on ${thisCell(target)}; clearing it would strand that brick`,
+      move: beShaded,
+    }),
 
   /** Clearing the target leaves the outlined clue `n` unreachable. */
-  undercount: (target: Point, clue: Point, n: number): Narration =>
-    phrase`${outlined([clue], `The outlined ${n}`)} beside ${thisCell(target)} can't reach ${n} shaded neighbor${n === 1 ? "" : "s"} without it, so it must be shaded.`,
+  undercount: (target: Point, clue: Point, n: number): Sentence =>
+    so({
+      look: phrase`${outlined([clue], `The outlined ${n}`)} beside ${thisCell(target)} can't reach ${n} shaded neighbor${n === 1 ? "" : "s"} without it`,
+      move: beShaded,
+    }),
 
   // The direct rung's *unclassified* case: one color placed, one validator
   // call, the board breaks — but at a cell none of the four named arms
@@ -77,11 +104,14 @@ export const say = {
     target: Point,
     forced: CellColor,
     evidence: readonly Point[],
-  ): Narration => {
+  ): Sentence => {
     const act = forced === "unshade" ? "Shading" : "Clearing";
-    const end = forced === "unshade" ? "stay clear" : "be shaded";
-    return evidence.length === 0
-      ? phrase`${act} ${thisCell(target)} would break the board, so it must ${end}.`
-      : phrase`${act} ${thisCell(target)} would break the board at ${mark.the("outline", CELL, evidence, "cell")}, so it must ${end}.`;
+    return so({
+      look:
+        evidence.length === 0
+          ? phrase`${act} ${thisCell(target)} would break the board`
+          : phrase`${act} ${thisCell(target)} would break the board at ${mark.the("outline", CELL, evidence, "cell")}`,
+      move: forced === "unshade" ? stayClear : beShaded,
+    });
   },
 };

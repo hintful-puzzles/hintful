@@ -120,7 +120,7 @@ describe("slant hint", () => {
         ) {
           sawGroupedJourney = true;
           expect(res.steps[i].explanation).toMatch(
-            /^The same clue(?:, with the outlined squares?,)? forces (?:this square|these squares) too/,
+            /^…and (?:this square|these squares) must slant (?:away|toward it) too, for the same clue(?: and the outlined squares?)?\.$/,
           );
         }
       }

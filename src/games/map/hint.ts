@@ -41,7 +41,7 @@
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { HintFrontier } from "../../engine/hint-frontier.ts";
-import { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { type Conclusion, colorsOf, type RegionMark, say } from "./hint-text.ts";
 import {
@@ -205,7 +205,7 @@ interface Firing {
   legs(w: Work): MapHintStep[];
 }
 
-function step(w: Work, r: number, want: SingleWant, words: Narration): MapHintStep {
+function step(w: Work, r: number, want: SingleWant, words: Sentence): MapHintStep {
   const s: MapHintStep = {
     move: moveFor(r, w.pencil[r], want),
     explanation: words.text,
@@ -222,7 +222,7 @@ function narrowLegs(
   w: Work,
   targets: readonly number[],
   struck: number,
-  speak: (k: number, c: Conclusion) => Narration,
+  speak: (k: number, c: Conclusion) => Sentence,
 ): MapHintStep[] {
   const out: MapHintStep[] = [];
   for (const k of targets) {
@@ -344,7 +344,7 @@ function chainSentence(
   chain: readonly MapEvidence[],
   color: number,
   other: number,
-): (k: number, c: Conclusion) => Narration {
+): (k: number, c: Conclusion) => Sentence {
   if (chain.every(({ region }) => colorsLeft(w, region) & (1 << color)))
     return (k, c) => say.chainAlternates(k, chain, color, c);
   const forced = [other];
@@ -361,8 +361,8 @@ function chainSentence(
  * premise's list, `r` the region, `touched` its neighbors' colors and `two`
  * what they leave. */
 interface DotWords {
-  dot(i: number, r: number, touched: number, two: number): Narration;
-  trim(i: number, r: number, two: number): Narration;
+  dot(i: number, r: number, touched: number, two: number): Sentence;
+  trim(i: number, r: number, two: number): Sentence;
 }
 
 /**
@@ -413,7 +413,7 @@ function setUp(w: Work, steps: MapHintStep[]): void {
     const press = markAll({ map: w.state.map, coloring: w.coloring, pencil: w.pencil });
     if (!press) return;
     const clean = press.kind === "clean";
-    const words = Narration.plain(clean ? say.cleanNeighbors : say.fillAll);
+    const words = clean ? say.cleanNeighbors : say.fillAll;
     steps.push({
       move: regionsMove(w.pencil, press.regions),
       explanation: words.text,

@@ -22,10 +22,10 @@ import type { MapMove, MapParams, MapState } from "./state.ts";
  * pinned here or ledgered below. */
 const ARMS = {
   touches: /^This region touches /,
-  lastDot: /^The only dot in this region/,
-  deadDots: /^Its other dots match .* must be \w+\.$/,
-  pairDot: /^Its neighbors show /,
-  pairTrim: /^Its other dots match .* can only be /,
+  lastDot: /^This region has a single dot/,
+  deadDots: /^This region's other dots match .* must be \w+\.$/,
+  pairDot: /^This region's neighbors show /,
+  pairTrim: /^This region's other dots match .* can only be /,
   pairPlace: /^The outlined pair .* and must be \w+\.$/,
   pairStrike: /^The outlined pair .* must go\.$/,
   pairMark: /^The outlined pair .*: dot [\w ,]+\.$/,

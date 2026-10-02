@@ -48,7 +48,7 @@ import {
   type Premise,
   populateText,
 } from "./hint-text.ts";
-import { CELL, mark, type Narration, NOTE, phrase } from "./hint-words.ts";
+import { CELL, mark, type Narration, NOTE, type Sentence, so } from "./hint-words.ts";
 import {
   availablePlacements,
   type CellRegion,
@@ -138,7 +138,7 @@ export type CandidateRung<M, H, R, Reason> = (
  * the implicit reading their notes go on the board first. They ride on the
  * step's highlights (`CandidateHighlights.reads`) as data; nothing draws them. */
 export type StepWords<H> = Omit<H, "targets" | "marks" | "area" | "hatch"> & {
-  words: Narration;
+  words: Sentence;
   reads?: readonly Point[];
 };
 
@@ -274,8 +274,8 @@ export interface CandidatePlan<
   notes?: {
     populate: string;
     /** Words over the notes the clean strikes, which it rings. */
-    cleanObvious: (marks: readonly Mark[]) => Narration;
-    note: (cell: Point, values: number[], every: boolean) => Narration;
+    cleanObvious: (marks: readonly Mark[]) => Sentence;
+    note: (cell: Point, values: number[], every: boolean) => Sentence;
   };
   /** A setup of the game's own, replacing the default. */
   setUp?: PlanSetUp;
@@ -993,9 +993,9 @@ class CandidateWalk<
     const left = this.valuesIn(bits);
     // What the fold concludes is said of the ringed cell, so its conclusion
     // names it: "so this cell must be 3".
-    const concluded = (ending: string): Narration =>
-      phrase`${premise}, so ${mark.as("ring", CELL, [{ x, y }], ending)}.`;
-    const highlightsOf = (said: Narration): H =>
+    const concluded = (ending: string): Sentence =>
+      so({ look: premise, move: mark.as("ring", CELL, [{ x, y }], ending) });
+    const highlightsOf = (said: Sentence): H =>
       ({
         ...rest,
         ...evidenceOf(said),
@@ -1096,7 +1096,7 @@ class CandidateWalk<
     const ending = mark.as("ring", NOTE, marks, (live) =>
       this.plan.conclude.strike(valuesOf(live), { where, struck: noun, named }),
     );
-    const said = phrase`${premise}, so ${ending}.`;
+    const said = so({ look: premise, move: ending });
     return {
       move: this.strike(marks),
       explanation: said.text,

@@ -159,7 +159,7 @@ describe("narration — a second mark on the board is named", () => {
    * or in line with the target, so the tie is the reach relation `discountSet`
    * does guarantee. */
   const TIE =
-    /[Oo]nly this square can|Nothing else can light this|would leave each of them lit/;
+    /[Oo]nly this square can|nothing else can light this|would leave each of them lit/;
 
   it("no step points bare at a square while a second mark is displayed", () => {
     const kinds = new Set<string>();

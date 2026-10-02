@@ -22,6 +22,10 @@ import {
   NOTE,
   type Note,
   phrase,
+  type Sentence,
+  sentence,
+  so,
+  unshaped,
   whole,
 } from "./hint-words.ts";
 import {
@@ -74,19 +78,13 @@ const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
 // --- the sliding-tile games' goal prefix -------------------------------------
 //
-// Shared "goal: tactic" vocabulary for the sliding-tile games (Fifteen, Sixteen,
-// Netslide). Every step names the tile it is working toward home ("Working on
-// tile N:") and then states the tactic, so the player always sees the goal
+// The sliding-tile games (Fifteen, Sixteen, Netslide) name the tile a step works
+// toward home as the sentence's aim (`hint-words.ts`'s `Said.aim`, "Working on
+// tile N:") and then state the tactic, so the player always sees the goal
 // behind a move, even when the tile being slid is only clearing the way. A move
 // that lands its tile in the solved cell is a **home** move; one that only
 // repositions toward a later home is a **staging** move (marked with
 // `HINT_SETTING_UP`).
-
-/** The shared "goal" prefix naming the tile a step works toward home,
- * e.g. `Working on tile 3: `, so the games' hints read as one voice. */
-export function workingOn(tile: number): string {
-  return `Working on tile ${tile}: `;
-}
 
 /** Shared marker appended to a staging move (one that does not yet land
  * its tile in its final spot). */
@@ -103,12 +101,14 @@ export const HINT_SETTING_UP = "(setting up)";
 export function edgeContinuation(
   left: readonly ForcedBorderEdge[],
   basis: Narration,
-): Narration {
+): Sentence {
   const edges = mark.this("ring", EDGE, left, "edge");
   const many = left.length > 1;
-  return left[0].kind === "wall"
-    ? phrase`…and ${edges} must be ${many ? "walls" : "a wall"} too, for ${basis}.`
-    : phrase`…and ${edges} can't be ${many ? "walls" : "a wall"} either, for ${basis}.`;
+  const move =
+    left[0].kind === "wall"
+      ? phrase`${edges} must be ${many ? "walls" : "a wall"} too`
+      : phrase`${edges} can't be ${many ? "walls" : "a wall"} either`;
+  return sentence({ move, relation: { kind: "again", basis } });
 }
 
 // --- the candidate games' setup steps ---------------------------------------
@@ -132,12 +132,15 @@ export function cleanObviousText(
   placedVerb: string,
   regions: string,
   cell = "cell",
-): (marks: readonly Note[]) => Narration {
+): (marks: readonly Note[]) => Sentence {
   // Says nothing about the "fill all pencil marks" button doing this same
   // cleanup: help/features.md says so once (docs/games/hints.md § "Rules belong
   // in the help"). The notes it names are the ringed ones it strikes.
   return (marks) =>
-    phrase`Now clear the easy ones: cross out ${mark.as("ring", NOTE, marks, `any ${noun} already ${placedVerb} in each ${cell}'s ${regions}`)}.`;
+    unshaped(
+      phrase`Now clear the easy ones: cross out ${mark.as("ring", NOTE, marks, `any ${noun} already ${placedVerb} in each ${cell}'s ${regions}`)}.`,
+      "setup",
+    );
 }
 
 /**
@@ -153,16 +156,22 @@ export function noteText(
   values: readonly string[],
   every: boolean,
   vocab: { noun: string; placedVerb: string; regions: string; cell?: string },
-): Narration {
+): Sentence {
   const { noun, placedVerb, regions } = vocab;
   const here = thisCell(at, vocab.cell);
   // The noun is a word ("element"), not a letter name, so `indefinite` would
   // misread it ("an number").
   const a = /^[aeiou]/i.test(noun) ? "an" : "a";
   if (every)
-    return phrase`Nothing in ${here}'s ${regions} rules out ${a} ${noun} yet, so pencil in every one.`;
+    return so({
+      look: phrase`Nothing in ${here}'s ${regions} rules out ${a} ${noun} yet`,
+      move: phrase`pencil in every one`,
+    });
   const one = values.length === 1;
-  return phrase`Only ${joinWith([...values])} ${one ? "isn't" : "aren't"} already ${placedVerb} in ${here}'s ${regions}, so pencil ${one ? "it" : "them"} in.`;
+  return so({
+    look: phrase`Only ${joinWith([...values])} ${one ? "isn't" : "aren't"} already ${placedVerb} in ${here}'s ${regions}`,
+    move: phrase`pencil ${one ? "it" : "them"} in`,
+  });
 }
 
 /** "this cell": the ringed cell a step decides, in the game's word for it. */
@@ -255,7 +264,8 @@ export function candidateConclusions(vocab: {
  *
  * **Who declines, and why** (measured against the arms, not assumed):
  * **Towers** needs the value *qualified* in some arms and bare in others
- * ("height 5 can go in only this cell … so it must be 5"), i.e. two renderers
+ * ("every other cell in this row rules out height 5, so this cell must be 5"),
+ * i.e. two renderers
  * for six arms; **Solo** names a different region set per arm ("row, column
  * **and** block", plus block/diagonal region names in `hiddenSingle`). Both stay
  * on their own `narrate` — one vocabulary can't express a per-arm difference,
@@ -290,16 +300,22 @@ export function narrateLatinReason(
   at: Note,
   w: number,
   vocab: LatinVocab = NUMBER_VOCAB,
-): Narration {
+): Sentence {
   const { noun } = vocab;
   const v = vocab.value;
   const cell = vocab.cell ?? "cell";
   const here = thisCell(at, cell);
   switch (reason.kind) {
     case "single":
-      return phrase`Every other ${noun} has been ruled out in ${here}, so it can only be ${v(at.n)}.`;
+      return so({
+        look: phrase`Every other ${noun} has been ruled out in ${here}`,
+        move: phrase`it can only be ${v(at.n)}`,
+      });
     case "regionsFull":
-      return phrase`${here.capitalized()}'s row and column already hold every other ${noun}, so it can only be ${v(at.n)}.`;
+      return so({
+        look: phrase`${here}'s row and column already hold every other ${noun}`,
+        move: phrase`it can only be ${v(at.n)}`,
+      });
     case "hiddenSingle": {
       const name = reason.line === "row" ? "row" : "column";
       const line = mark.this(
@@ -308,7 +324,10 @@ export function narrateLatinReason(
         hiddenSingleLine(reason.line, reason.index, w),
         name,
       );
-      return phrase`In ${line}, ${v(reason.n)} can go in only ${here}, since every other ${cell} in the ${name} rules it out, so it must be ${v(reason.n)}.`;
+      return so({
+        look: phrase`Every other ${cell} in ${line} rules out ${v(reason.n)}`,
+        move: phrase`${here} must be ${v(reason.n)}`,
+      });
     }
     default:
       throw new Error(`a ${reason.kind} strikes, and is narrated by latinPremise`);

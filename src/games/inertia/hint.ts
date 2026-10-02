@@ -31,7 +31,7 @@ import {
   NO_MOVE_WORTH_MAKING,
   puzzleDeadEnd,
 } from "../../engine/hint-refusal.ts";
-import { mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { GEM, say } from "./hint-text.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";
@@ -112,7 +112,7 @@ function narrate(
   goal: number,
   /** How many moves of this leg are left, counting this one. */
   toGoal: number,
-): Narration {
+): Sentence {
   const only = onlyMove(before, dir);
   const m = { dir, goal };
 

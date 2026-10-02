@@ -220,17 +220,17 @@ describe("keen hint", () => {
         const res = keenGame.hint?.(state);
         if (!res?.ok) break;
         const step = res.steps.find((s) =>
-          /can go in only this cell/.test(s.explanation),
+          /rules out \d, so this cell must be/.test(s.explanation),
         ) as AnyStep | undefined;
         if (step) {
           const m = step.move as { type: string; x: number; y: number; n: number };
           // The narration is a placement, never the naked-single phrasing.
           expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
-          expect(step.explanation).toMatch(/In this (row|column)/);
+          expect(step.explanation).toMatch(/in this (row|column) rules out/);
           // The hatch is exactly one full line (w cells) through the target.
           const area = (step.highlights?.hatch ?? []) as { x: number; y: number }[];
           expect(area.length).toBe(w);
-          const isRow = /In this row/.test(step.explanation);
+          const isRow = /in this row/.test(step.explanation);
           for (const a of area) {
             if (isRow) expect(a.y).toBe(m.y);
             else expect(a.x).toBe(m.x);
@@ -380,7 +380,11 @@ function hiddenSingleFrame(p: KeenParams): string {
     const { st } = gen(p, seed);
     const res = keenGame.hint?.(st);
     if (!res?.ok) continue;
-    if (res.steps.some((step) => /can go in only this cell/.test(step.explanation)))
+    if (
+      res.steps.some((step) =>
+        /rules out \d, so this cell must be/.test(step.explanation),
+      )
+    )
       return `${encodeParams(p, true)}#${seed}`;
   }
   throw new Error(`no hidden-single frame found for ${p.diff}`);
@@ -427,15 +431,15 @@ describe("keen hint render", () => {
       id,
       defaultBackground: DEFAULT_BACKGROUND,
       showHint: true,
-      hintUntil: (s) => /can go in only this cell/.test(s.explanation),
+      hintUntil: (s) => /rules out \d, so this cell must be/.test(s.explanation),
     });
-    expect(hint?.explanation).toMatch(/In this (row|column)/);
+    expect(hint?.explanation).toMatch(/in this (row|column) rules out/);
     // One hatch per cell of the line, all in one strip, and no outline: the
     // line is the hatch, and nothing in it is a particular reason.
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(hatches).toHaveLength(small.w);
     for (const h of hatches) expect(h.color).toBe(COL_HINT);
-    const isRow = /In this row/.test(hint?.explanation ?? "");
+    const isRow = /in this row/.test(hint?.explanation ?? "");
     expect(new Set(hatches.map((h) => (isRow ? h.y : h.x))).size).toBe(1);
     expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
     expectRing(recording.ops, COL_HINT);

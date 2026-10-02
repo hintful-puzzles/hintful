@@ -29,7 +29,7 @@ import {
   FLIP,
 } from "./border-grid.ts";
 import { type HintStep, type HintTrackVerdict, narratedStep } from "./game.ts";
-import type { MarkKind, Narration } from "./hint-words.ts";
+import type { MarkKind, Sentence } from "./hint-words.ts";
 
 /** An edge, named on the square `(x, y)`'s `dir` side. */
 export interface BorderEdge {
@@ -84,7 +84,7 @@ export type BorderHint = ForcedBorderEdge;
  */
 export function borderHintJourney<M>(
   edges: readonly ForcedBorderEdge[],
-  words: (leg: number, left: readonly ForcedBorderEdge[]) => Narration,
+  words: (leg: number, left: readonly ForcedBorderEdge[]) => Sentence,
   toMove: (edits: BorderEdit[]) => M,
 ): HintStep<M, BorderHint>[] {
   return edges.map((e, leg) => {

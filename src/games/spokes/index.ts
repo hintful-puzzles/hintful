@@ -35,7 +35,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,
@@ -409,7 +409,7 @@ const markedOf = (hl: SpokesHint): Marked => ({
  * rules, premise then conclusion, in the necessity voice (the hint quality bar).
  * Every claim here is one {@link deduceSpokesPlan} has checked.
  */
-function narrate(f: SpokesFiring, hl: SpokesHint): Narration {
+function narrate(f: SpokesFiring, hl: SpokesHint): Sentence {
   const m = markedOf(hl);
   switch (f.kind) {
     case "twoOnes":
@@ -424,7 +424,7 @@ function narrate(f: SpokesFiring, hl: SpokesHint): Narration {
 }
 
 /** The short continuation narration for legs 2+ of a multi-spoke firing. */
-function continuation(f: SpokesFiring, hl: SpokesHint): Narration {
+function continuation(f: SpokesFiring, hl: SpokesHint): Sentence {
   return say.continuation(f.kind === "saturation", markedOf(hl));
 }
 

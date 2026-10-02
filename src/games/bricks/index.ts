@@ -30,7 +30,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -411,7 +411,7 @@ function narrate(
   state: BricksState,
   targetIndex: number,
   evidenceIndices: readonly number[],
-): Narration {
+): Sentence {
   const clueVal = (i: number): number => state.grid[i] & NUM_MASK;
   const at = (i: number): Point => pointOf(i, state.w);
   const target = at(targetIndex);

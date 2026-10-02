@@ -56,18 +56,18 @@ export function deadEndBindingDefects(
 }
 
 /** What `redraw` is given to show `words`. */
-type Shown = (words: Narration) => {
+type Shown<W> = (words: W) => {
   hint?: HintStep<unknown>;
   deadEnd?: MarkedDeadEnd;
 };
 
-function defects(
+function defects<W extends Narration>(
   game: AnyGame,
   state: unknown,
   ui: unknown,
-  words: Narration,
+  words: W,
   explanation: string,
-  shown: Shown,
+  shown: Shown<W>,
 ): string[] {
   const legend = game.hintMarks;
   if (!legend) return ["the game declares no hintMarks"];
@@ -80,7 +80,7 @@ function defects(
 
   const palette = game.colors(DEFAULT_BACKGROUND);
   const tileSize = game.preferredTileSize ?? 32;
-  const frame = (w?: Narration): string => {
+  const frame = (w?: W): string => {
     const rec = new RecordingDrawing(palette);
     const ds = game.newDrawState(state, tileSize);
     const { hint, deadEnd } = w ? shown(w) : {};

@@ -20,7 +20,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { digitOf, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -160,7 +160,7 @@ const pointOf = (i: number, w2: number): Point => ({
 
 /** Narrate *why* the move is forced, per the deduction technique, naming the
  * cells `m` marks. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason, m: Marked): Narration {
+function narrate(reason: HintReason, m: Marked): Sentence {
   switch (reason.kind) {
     case "threes":
       return say.threes(reason, m);

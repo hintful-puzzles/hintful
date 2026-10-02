@@ -36,7 +36,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -138,7 +138,7 @@ function explain(
   k: number,
   leg: number,
   left: readonly ForcedBorderEdge[],
-): Narration {
+): Sentence {
   const at = (sqs: readonly number[]): Point[] =>
     sqs.map((i) => ({ x: i % w, y: Math.floor(i / w) }));
   const { striped, outlined } = evidence(f);

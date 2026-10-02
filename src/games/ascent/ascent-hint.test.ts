@@ -64,6 +64,10 @@ const outlines = (step: { words?: Narration }): number[] => [
   ...stepMarks(step).of("outline", SQUARE),
 ];
 
+/** A fill step's opening: why no other run can fill the square. */
+const FILL =
+  /^(?:No other run (?:comes close to|can reach)|The run [^,]* (?:is too far from|can't fill)) this square/;
+
 const custom = (
   w: number,
   h: number,
@@ -308,7 +312,11 @@ describe("every premise, restated from the board, singles out its square", () =>
       const { explanation } = shown;
       expect(outlines(shown), explanation).toEqual(open);
       expect(explanation).toMatch(
-        why === "placed" ? /placed/ : why === "reach" ? /can't reach/ : /arrow points/,
+        why === "placed"
+          ? /placed/
+          : why === "reach"
+            ? /out of reach/
+            : /arrow pointing/,
       );
     }
     expect([...causes].sort()).toEqual(["arrow", "placed", "reach"]);
@@ -331,8 +339,8 @@ describe("every premise, restated from the board, singles out its square", () =>
       const shown = stepOf(firing);
       const { explanation, highlights } = shown;
       const at = `${board.label}: "${explanation}"`;
-      // "Only n can fill this square: <why no other run can>, and <counts>."
-      if (explanation.startsWith(`Only ${n + 1} can fill`)) {
+      // "<Why no other run can fill this square>, and <counts>, so it must be n."
+      if (FILL.test(explanation)) {
         fills++;
         // Every claim in it holds by straight reach, whatever the technique.
         expect(others, at).toEqual([]);
@@ -358,9 +366,9 @@ describe("every premise, restated from the board, singles out its square", () =>
         const rivals = runsOf(before)
           .filter((r) => !(r.lo <= n && n <= r.hi))
           .filter((r) => runShortfall(before, r, cell) <= 2);
-        if (explanation.includes("no other run comes close"))
+        if (explanation.startsWith("No other run comes close"))
           expect(rivals, at).toEqual([]);
-        else if (explanation.includes("no other run can reach it")) {
+        else if (explanation.startsWith("No other run can reach this square")) {
           // Close rivals too many or too long to name: only the counts' ends
           // are outlined, and the run has numbers for the counts to rule out.
           unnamed++;
@@ -376,7 +384,8 @@ describe("every premise, restated from the board, singles out its square", () =>
               : r.a
                 ? `the run after ${r.a.m + 1}`
                 : `the run before ${(r.b?.m ?? -1) + 1}`;
-          expect(explanation, at).toContain(named);
+          // The rival may open the sentence, capitalized.
+          expect(explanation.toLowerCase(), at).toContain(named);
           // The rival's shortfall, restated: the steps to its ends add up to
           // more than the numbers between them allow.
           if (r.a && r.b)
@@ -785,7 +794,7 @@ describe("positions from the owner's playtest", () => {
     const step = stepOf(first);
     expect(first.cell).toBe(0);
     expect(step.explanation).toBe(
-      "Only 70 can fill this square: no other run can reach it, and 3 steps from 67 and 2 from 72 rule out the rest.",
+      "No other run can reach this square, and 3 steps from 67 and 2 from 72 rule out the rest, so it must be 70.",
     );
     expect(outlines(step)).toEqual([at(67), at(72)]);
     expect(step.highlights?.hatch).toEqual([]);

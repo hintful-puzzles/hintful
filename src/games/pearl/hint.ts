@@ -23,7 +23,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
-import { type Narration, phrase } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
   type Axis,
@@ -190,12 +190,7 @@ function noStraight(
 }
 
 /** A firing that reads one square's own edges. */
-function narrateSquare(
-  b: PearlBoard,
-  f: ShownFiring,
-  sq: number,
-  m: Marked,
-): Narration {
+function narrateSquare(b: PearlBoard, f: ShownFiring, sq: number, m: Marked): Sentence {
   const ws = f.before;
   const clue = b.clues[sq];
   if (clue === CORNER) {
@@ -237,7 +232,7 @@ function markedOf(b: PearlBoard, f: ShownFiring, reason: PearlReason): Marked {
 }
 
 /** Which sentence a firing speaks, and with what values. */
-function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): Narration {
+function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): Sentence {
   // Only a black pearl's own square firing draws a line whose run-on is still
   // open, and its sentence names it; the other rungs that draw a line beside
   // one draw its run-on too.
@@ -246,11 +241,7 @@ function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): Narration 
     !(reason.kind === "square" && b.clues[reason.sq] === CORNER)
   )
     throw new Error(`pearl hint: a ${reason.kind} step drew a black pearl's run-on`);
-  const m = markedOf(b, f, reason);
-  const base = premise(b, f, reason, m);
-  return m.white.length > 0
-    ? phrase`${base} ${say.throughNextWhite(m.white.length > 1, m)}`
-    : base;
+  return premise(b, f, reason, markedOf(b, f, reason));
 }
 
 /** The sentence for the firing's own deduction. */
@@ -259,7 +250,7 @@ function premise(
   f: ShownFiring,
   reason: PearlReason,
   m: Marked,
-): Narration {
+): Sentence {
   const ws = f.before;
   switch (reason.kind) {
     case "square":

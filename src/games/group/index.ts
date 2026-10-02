@@ -44,7 +44,7 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
 import { rowColRegions, type SingleReason } from "../../engine/latin-hint.ts";
@@ -505,7 +505,7 @@ function narrate(
   w: number,
   id: boolean,
   continues: boolean,
-): Narration {
+): Sentence {
   const ch = (v: number): string => toChar(v, id);
   const at = { x: m.x, y: m.y };
   // The premise cells are outlined by the words that name them: associativity's
@@ -563,7 +563,7 @@ function premise(
           reason.left,
           { x: reason.wx, y: reason.wy },
         ),
-        struck: say.identityMarks,
+        struck: say.identityMarks(ch(reason.elem)),
       };
     case "associativity":
     case "identityFill":

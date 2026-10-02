@@ -22,7 +22,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   cursorDelta,
@@ -292,7 +292,7 @@ const pointOf = (cell: Cell): Point => ({ x: cell.c, y: cell.r });
 /** Narrate *why* the move is forced, per the deduction rule, naming the marks
  * `m`. The words, and the tie each carries from the ringed cell to the
  * evidence, are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason, m: Marked): Narration {
+function narrate(reason: HintReason, m: Marked): Sentence {
   switch (reason.kind) {
     case "adjacency":
       return say.adjacency(m);
