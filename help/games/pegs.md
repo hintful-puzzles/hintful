@@ -17,16 +17,34 @@ that direction; press Enter or Space again instead to put it back down.
 
 **Hint** shows the next jump rather than making it. No jump in Pegs is
 forced by logic, so the hint searches for a line of jumps that leaves
-one peg and walks you along it, saying what it has checked about each
-jump on the way.
+one peg and shows you its first jump. Alongside it, the hint compares that
+jump with the other jumps you could make, because telling a jump that can
+still finish from one that cannot is what winning at Pegs takes.
 
 {{hint-marks}}
 
-When every other jump from here would leave a board that can no longer
-finish with one peg, the hint says this is the only jump that can. When
-some other jump would leave a peg cut off, where no peg could ever get
-next to it again, it outlines that peg. A peg that keeps jumping is one
-hint: the next jump shows as soon as you make the last.
+The first thing to look for is a peg cut off: one with no peg beside it,
+and nowhere a peg could ever land beside it. A board with a cut-off peg can
+never finish with one. So when some other jump would cut a peg off, either
+straight away or whatever you jump next, the hint stripes that jump and
+outlines the peg it would strand.
+
+Otherwise, a hint may show a **package**: a short run of jumps that clears
+a row or column of three, or a block of two by three, and puts every
+other peg back where it was. For three in a line, a spare peg beside one
+end can jump across the line into an empty hole, the line's far peg jumps
+in, and the spare jumps back to where it began. Learning these shapes is
+how to
+clear a board one area at a time. A package is one hint, shown a jump at a
+time.
+
+When the search has checked the other jumps, the hint says what it found.
+It draws an arrow on each other jump that can still finish, and when it
+checked every jump it says that only those can. When every jump can still
+finish, which is usual early in a game, it says that too. In the middle
+of a game on the larger boards there are often too many ways to go for the
+search to check every jump quickly, and then the hint makes no claim about
+the jumps it did not settle.
 
 The hint refuses when there is nothing to search for: if a peg is
 already cut off, or the search proves no line of jumps from here leaves

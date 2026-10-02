@@ -1,18 +1,28 @@
 ## ADDED Requirements
 
-### Requirement: Pegs' hint walks a line of jumps it has found, and says only what it checked
+### Requirement: Pegs' hint sets the jump it offers against the jumps that lose, and says only what it checked
 
-Pegs SHALL provide a `hint` that searches for a line of jumps leaving one peg and offers it one jump per step, ringing the peg that jumps and the hole it lands in. A step SHALL say the jump is the only one that can still finish only where every other jump from that position was searched to the end and found to lose; it SHALL outline a peg some other jump would leave where no peg can ever arrive beside it; and a jump by the peg that jumped last SHALL continue the same journey. The hint SHALL refuse with a sentence counting the pegs no jump can ever involve again when there are any and more than one peg is left, with `NO_SOLUTION_FROM_HERE` when the search proved no line finishes, and with `SEARCH_OUT_OF_REACH` when the search could not settle the position.
+Pegs SHALL provide a `hint` that searches for a line of jumps leaving one peg and offers its first jump, ringing the peg that jumps and the hole it lands in, and judging the other jumps from the same position within a work allowance per request. Where another jump would leave a peg that no peg can ever arrive beside, at once or after any jump that follows it, the step SHALL stripe that jump and outline that peg. Where the line opens with three or six jumps that empty a line of three or a two-by-three block and leave every other peg where it began, the hint SHALL offer those jumps as one journey with the shape striped. Otherwise, where some other jump was proved unable to finish, the step SHALL draw an arrow on each other jump a finish was found after, and SHALL say only these can finish only when no other jump was left unsettled. A step SHALL say every jump can still finish only where a finish was found after each one. The hint SHALL refuse with a sentence counting the pegs no jump can ever involve again when there are any and more than one peg is left, with `NO_SOLUTION_FROM_HERE` when the search proved no line finishes, and with `SEARCH_OUT_OF_REACH` when the search could not settle the position.
 
 #### Scenario: A peg cut off
 
 - **WHEN** a peg has no peg beside it and no peg can ever arrive beside it, and another peg remains
 - **THEN** the hint refuses, says how many pegs are cut off, and asks the player to undo
 
+#### Scenario: A jump that would cut a peg off
+
+- **WHEN** some jump other than the one offered would leave a peg that no peg can ever arrive beside
+- **THEN** the step stripes that jump, outlines that peg, and says the striped jump would cut it off
+
 #### Scenario: The only jump that can finish
 
 - **WHEN** every jump but one from the position leaves a board no line of jumps finishes from
 - **THEN** the step for the remaining jump says it is the only one from here that can still finish with one peg
+
+#### Scenario: A jump the search could not settle
+
+- **WHEN** some other jump was proved to lose and another was neither found to finish nor proved to lose within the allowance
+- **THEN** the step draws arrows only on jumps a finish was found after, and does not say that only those can finish
 
 #### Scenario: Following the hint from the dealt board
 

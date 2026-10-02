@@ -15,9 +15,10 @@ import { HELD, HINT_ACTION, HINT_EVIDENCE } from "../../engine/color/palette.ts"
 import { drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { HOLE, PEG } from "./hint-text.ts";
+import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import {
   GRID_HOLE,
   GRID_OBST,
@@ -62,8 +63,9 @@ export interface PegsDrawState {
   dragging: boolean;
   dragX: number;
   dragY: number;
-  /** Per-tile cache of last-drawn cell value (including cursor/jumping overlays). */
-  grid: Uint8Array;
+  /** Per-tile cache of what each square last showed: its value with the
+   * cursor and hint flags, then the hint jumps drawn across it. */
+  tiles: string[];
   started: boolean;
   bgColor: number;
 }
@@ -128,13 +130,52 @@ export function newDrawState(s: PegsState, tileSize: number): PegsDrawState {
     dragging: false,
     dragX: 0,
     dragY: 0,
-    grid: new Uint8Array(s.w * s.h).fill(255),
+    tiles: new Array<string>(s.w * s.h).fill(""),
     started: false,
     bgColor: -1,
   };
 }
 
 // --- draw_tile -------------------------------------------------------
+
+/** The hint jumps a square shows a piece of: arrows for jumps that can still
+ * finish, and the stripes of a jump that loses. Each is a line of three
+ * squares, so all three carry it and each paints its own piece. */
+interface TileJumps {
+  readonly striped: boolean;
+  /** Each arrow as the pixel centers of the peg that jumps and the hole it
+   * lands in. */
+  readonly arrows: readonly (readonly [Point, Point])[];
+}
+
+const NO_JUMPS: TileJumps = { striped: false, arrows: [] };
+
+/** An arrow from the edge of the peg at `a` to the edge of the hole at `b`,
+ * in the evidence color, laid over the peg it jumps. */
+function drawArrow(dr: GameDrawing, ts: number, a: Point, b: Point): void {
+  const len = Math.hypot(b.x - a.x, b.y - a.y);
+  const ux = (b.x - a.x) / len;
+  const uy = (b.y - a.y) / len;
+  const at = (p: Point, d: number): Point => ({
+    x: Math.round(p.x + ux * d),
+    y: Math.round(p.y + uy * d),
+  });
+  const tip = at(b, -Math.floor(ts / 4));
+  const head = Math.max(4, Math.floor(ts / 4));
+  const base = at(tip, -head);
+  dr.drawLine(
+    at(a, Math.floor(ts / 3)),
+    base,
+    COL_HINT_EVIDENCE,
+    Math.max(2, Math.floor(ts / 12)),
+  );
+  const side = (k: number): Point => ({
+    x: Math.round(base.x - uy * k),
+    y: Math.round(base.y + ux * k),
+  });
+  const half = Math.floor(head / 2);
+  dr.drawPolygon([tip, side(half), side(-half)], COL_HINT_EVIDENCE, COL_HINT_EVIDENCE);
+}
 
 function drawTile(
   dr: GameDrawing,
@@ -143,14 +184,19 @@ function drawTile(
   y: number,
   v: number,
   bgColor: number,
+  jumps: TileJumps = NO_JUMPS,
 ): void {
   const ts = ds.tileSize;
   let jumping = false;
   let cursor = false;
 
+  // A hint jump spans three squares, so each square paints only its own piece
+  // of it, and the piece leaves with the square's own repaint.
+  dr.clip({ x, y, w: ts, h: ts });
   if (bgColor >= 0) {
     dr.drawRect({ x, y, w: ts, h: ts }, bgColor);
   }
+  if (jumps.striped) dr.drawHatch({ x, y, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 
   let outlined = false;
   let ringed = false;
@@ -197,7 +243,9 @@ function drawTile(
   const outer = half - 1;
   if (ringed) ring(outer, COL_HINT);
   if (outlined) ring(ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
+  for (const [a, b] of jumps.arrows) drawArrow(dr, ts, a, b);
 
+  dr.unclip();
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
 
@@ -220,6 +268,20 @@ export function redraw(
   const ringed = new Set([...marks.of("ring", PEG), ...marks.of("ring", HOLE)]);
   const outlined = new Set(marks.of("outline", PEG));
   const hw = raisedBevelWidth(ts);
+  const center = (i: number): Point => ({
+    x: tileCenter(i % w, ts),
+    y: tileCenter(Math.floor(i / w), ts),
+  });
+  // A jump's three squares: from, the peg it takes (their midpoint, in grid
+  // indices as in coordinates), and to.
+  const across = (j: Marked) => [j.from, (j.from + j.to) / 2, j.to];
+  const striped = new Set([
+    ...marks.of("stripes", JUMP).flatMap(across),
+    ...marks.of("stripes", PEG),
+  ]);
+  const arrowsAt = new Map<number, Marked[]>();
+  for (const j of marks.of("outline", JUMP))
+    for (const i of across(j)) arrowsAt.set(i, [...(arrowsAt.get(i) ?? []), j]);
 
   let bgColor: number;
   if (flashTime > 0) {
@@ -343,9 +405,16 @@ export function redraw(
       }
       if (ringed.has(y * w + x)) v += GRID_HINT_RING;
       if (outlined.has(y * w + x)) v += GRID_HINT_OUTLINE;
-      if (v !== GRID_OBST && (bgColor !== ds.bgColor || v !== ds.grid[y * w + x])) {
-        drawTile(dr, ds, coord(x, ts), coord(y, ts), v, bgColor);
-        ds.grid[y * w + x] = v;
+      if (v === GRID_OBST) continue;
+      const i = y * w + x;
+      const arrows = arrowsAt.get(i) ?? [];
+      const key = `${v}${striped.has(i) ? "s" : ""}:${arrows.map(JUMP.key).join(",")}`;
+      if (bgColor !== ds.bgColor || key !== ds.tiles[i]) {
+        drawTile(dr, ds, coord(x, ts), coord(y, ts), v, bgColor, {
+          striped: striped.has(i),
+          arrows: arrows.map((j) => [center(j.from), center(j.to)] as const),
+        });
+        ds.tiles[i] = key;
       }
     }
   }

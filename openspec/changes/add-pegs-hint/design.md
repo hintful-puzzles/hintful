@@ -169,6 +169,100 @@ The binding rules hold throughout: every sentence built with `phrase` and
 references, at most 120 characters, no em-dashes, the help page's Hints section
 rewritten with the new marks.
 
+## D7. The redesign as built (tasks §4)
+
+Measured 2026-10-02 at load average 6–9 with swap nearly full, so read the
+milliseconds as upper bounds and the ratios as the result.
+
+### Packages (task 4.1)
+
+Plans from the dealt board of every preset, three seeds, searched for the
+named shapes first: of 859 plan jumps, **276 (32%)** lie in a package: 38 rows
+or columns of three and 27 blocks of two by three. The L never appeared. Of the
+859 positions along those plans, 61 (7%) have a plan that *opens* with a
+package, which is what a request can offer, and following it covers three or six
+jumps. That is often enough to teach, so a package is narrated (D6 item 3), and
+a package-aware search is not needed to make them appear. An earlier count that
+took the longest pure-removal window first reported 66% of jumps in *some*
+window, but in dozens of shapes no player would name; that count is not the
+one to quote.
+
+A package is detected on the plan, not searched for: three or six jumps from
+the plan's head whose net effect only empties a line of three or a 2×3 block.
+"Every other peg ends where it began" is then true by construction, which is
+what the first leg says. The help's description of how a row is cleared (a
+spare peg jumps across the line's end and back) was read off the pinned row
+and column journeys, and the help says "can", not "always".
+
+### The rivals' cost (task 4.2)
+
+Each rival was classified in stages on the hint's own path and on a wandering
+player's, for 9×9 Cross, 9×9 Random and 7×7 Cross:
+
+- **Early** (all rivals finish): the 300-wide beam settles every rival,
+  200–350 ms for 9×9 Cross's four or six rivals and 1–1.7 s for 9×9 Random's
+  sixteen.
+- **Middle** (about 20–38 pegs): the 3,000-wide beam took 1.5–4 s per position
+  (20 s at worst) and converted at most two rivals; the proof at 30,000
+  positions settled almost none. Most middle rivals are unsettled whatever the
+  budget, so spending more buys nothing.
+- **Late** (17 pegs or fewer): everything settles within 2,000–30,000 positions,
+  in well under half a second.
+
+So a rival is judged by a 30-wide beam, then a 300-wide one, then a proof of at
+most 10,000 positions (`judge`), all drawing on one allowance of 400,000
+positions per request, counted rather than timed so the same position always
+gets the same answer. The 3,000-wide beam is not used on rivals. Read out
+loud over whole games, a request's worst case was 300 ms on 9×9 Cross and
+290 ms on 9×9 Random, outside the plan search's own out-of-reach refusals.
+
+A request plans one step, or one package's journey, and the next request plans
+from wherever the player is. That is what "classified for the displayed step
+only" asks, and it keeps every claim about the rivals about the board on
+display. The cross-game walks call the hint more often as a result. Timed for
+Pegs alone under comparable load, against HEAD: the resume walk went from 23.8 s
+to 11.6 s (the old plan-wide proofs are gone), the binding and gesture walks
+from about 2 s to 7 s each, and the CI-only readability walk from 9 s to 36 s.
+
+### Traps (task 4.4)
+
+On positions with fewer than 20 pegs, across eight presets, 85 rivals cut a
+peg off at once, 18 within one more jump whatever is played (10 of them
+leaving the same peg cut off after every reply), and 33 within two. 69 of 193
+positions had at least one.
+
+The step shows the first two kinds. "After the striped jump, any jump you make
+next cuts off the outlined peg" can be checked on the board by trying each
+reply, and the hint says it only where one peg is cut off after every reply. The
+two-jump case is a tree a player cannot follow by eye, so it is not narrated.
+A cut-off at once is preferred over one a move later, then the rival nearest
+the offered jump.
+
+### What each step says
+
+In order: a trap; a package; then, from the judged rivals, *only* (every rival
+lost), *only it and the arrows* (all settled, some finish), *the arrows can
+also finish; some others cannot* (some lost, some unsettled), *every jump here
+can still finish* (all finish), or the plain step, which says only that the
+board can still finish after it. The jump that leaves one peg says so.
+The plain step is common in the middle of the larger boards, and it is honest
+there: most rivals are unsettled at any budget. "N pegs left" and "Keep going"
+are gone.
+
+The opening's region (D6 item 4) is the package where the plan opens with one.
+Otherwise no region is named, because nothing measured gives a region the
+player could check.
+
+### Marks
+
+`JUMP` is a mark kind keyed by both ends. An arrow (outline) runs from the
+edge of the jumping peg over the peg it takes to the edge of the hole; stripes
+on a `JUMP` hatch its three squares, and stripes on a package shape hatch the
+pegs it clears. A jump spans three tiles, so each tile is clipped to its own
+square and carries the jumps through it in its cache key, and every tile a
+mark crosses repaints its own piece (docs/games/rendering.md § "A tile paints
+only its own box, and tiles that share pixels repaint together").
+
 ### Elsewhere
 
 Two owner requests from the same review are their own changes:

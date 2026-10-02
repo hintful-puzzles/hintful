@@ -3396,13 +3396,31 @@ search only proves loss, which is what lets the hint say
 
 Three things carried over from that work:
 
-- **Narrate each claim only where its proof finished.** "The only jump that
-  can still finish" needs every rival searched to the end. The proofs share a
-  budget per plan, and a step whose proof ran out says something weaker.
+- **Narrate each claim only where its proof finished.** "Only it and the
+  jumps with arrows can still finish" needs every rival settled; where some
+  were not, the words claim nothing about the undrawn ones. The searches of
+  one request share an allowance counted in positions, never in time, so the
+  same board always gets the same sentence.
+- **Teach the contrast, not the move.** The owner rejected the first cut's
+  narration of the hinted jump alone (*"none of these phrasings really
+  [teach]"*) and kept only the sentences that set it against a jump that
+  loses. A searching hint can do that by judging the *rivals* of the jump it
+  offers, so it plans one step per request and judges them on the board on
+  display (`add-pegs-hint` design D6, D7).
 - **A cheap sound check is both a refusal and a warning.** The frozen-peg
   closure ("no peg can ever arrive beside this one") refuses a lost position
   at a glance, and the same check run on each rival jump finds the peg a
-  careless jump would cut off, which the step outlines.
+  careless jump would cut off. The step stripes that jump and outlines the
+  peg: the reason a player can see leads, ahead of anything only a search
+  knows.
+- **Read the plan for shapes a player can name.** A third of the beam's jumps
+  fall into Bell's packages (a line of three cleared by a spare peg, a block of
+  two by three), found on the plan by their net effect rather than searched for.
+  Narrated as one journey, they are what the middle game teaches.
+- **Measure where the budget buys nothing.** In the middle of the larger
+  boards most rivals stay unsettled even at many times the allowance, so the
+  honest step there says only that the board can still finish. Spending more
+  would make the hint slower without making it say more.
 - **A game whose every move shrinks something needs no stability work.** Each
   jump removes a peg, so any plan recomputed after any move terminates.
   Look for that potential before reaching for Inertia's nearest-goal machinery.

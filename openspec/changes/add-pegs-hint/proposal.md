@@ -1,7 +1,8 @@
 # add-pegs-hint
 
-**Status: first cut shipped (2026-10-02); its wording was rejected and the
-redesign in design D6 is open (tasks §4).** Pulled in by `own-the-player-facing-messages`, whose check this game
+**Status: first cut shipped (2026-10-02); its wording was rejected, and the
+redesign in design D6 is built as design D7 records, awaiting the owner's
+acceptance (tasks 4.7).** Pulled in by `own-the-player-facing-messages`, whose check this game
 was. Pegs was a draft twice over: it had no `hint`, and no `solve` either,
 because upstream had no solver.
 

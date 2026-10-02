@@ -171,13 +171,25 @@ function play(board: PegsBoard, pegs: Uint8Array, k: number, peg: 0 | 1): void {
   pegs[jumps[k + 2]] = peg ? 0 : 1;
 }
 
+/** Positions a run of searches may still visit between them, counted rather
+ * than timed so that the same position always gets the same answer. */
+export interface Allowance {
+  left: number;
+}
+
 /**
  * Each level keeps the `width` most compact positions one jump on from the
  * last, so a level is one peg fewer. Stable sort and insertion-ordered maps
  * keep it deterministic, which a hint needs: the same position must give the
- * same plan.
+ * same plan. `null` when no finish was found, which never means there is none;
+ * an `allowance` that runs out ends the search the same way.
  */
-function beam(board: PegsBoard, start: Uint8Array, width: number): number[] | null {
+function beam(
+  board: PegsBoard,
+  start: Uint8Array,
+  width: number,
+  allowance: Allowance = { left: Number.POSITIVE_INFINITY },
+): number[] | null {
   interface Node {
     readonly pegs: Uint8Array;
     readonly parent: Node | null;
@@ -189,6 +201,7 @@ function beam(board: PegsBoard, start: Uint8Array, width: number): number[] | nu
     const next = new Map<number | string, Node>();
     for (const node of level) {
       for (const k of board.legal(node.pegs)) {
+        if (--allowance.left < 0) return null;
         const pegs = node.pegs.slice();
         play(board, pegs, k, 0);
         const key = keyOf(pegs);
@@ -208,12 +221,13 @@ function beam(board: PegsBoard, start: Uint8Array, width: number): number[] | nu
 /**
  * Whether any line of jumps from `pegs` leaves one peg, searched to
  * exhaustion within `budget` positions: the line's offsets, `"lost"` when every
- * line was searched, or `null` past the budget.
+ * line was searched, or `null` past the budget or the `allowance`.
  */
 function exhaust(
   board: PegsBoard,
   start: Uint8Array,
   budget: number,
+  allowance: Allowance = { left: Number.POSITIVE_INFINITY },
 ): number[] | "lost" | null {
   const pegs = start.slice();
   let left = pegs.reduce((a, b) => a + b, 0);
@@ -225,7 +239,7 @@ function exhaust(
     if (left === 1) return true;
     const key = keyOf(pegs);
     if (lost.has(key)) return false;
-    if (++work > budget) return null;
+    if (++work > budget || --allowance.left < 0) return null;
     if (board.frozen(pegs).length === 0) {
       for (const k of board.legal(pegs)) {
         play(board, pegs, k, 0);
@@ -279,6 +293,27 @@ export function findFinish(s: PegsState, proofBudget = PROOF_BUDGET): Finish {
 export function provedLost(s: PegsState, budget: number): boolean {
   const board = new PegsBoard(s);
   return exhaust(board, board.pegsOf(s), budget) === "lost";
+}
+
+/** What searching one position settled. */
+export type Verdict = "finishes" | "lost" | "unknown";
+
+/**
+ * Whether `s` can still finish, from what searches costing at most `proof`
+ * positions of their own, and no more than `allowance` holds, can settle.
+ * A narrow beam first, since most positions that can finish are easy to finish
+ * from; then the proof of loss.
+ */
+export function judge(s: PegsState, allowance: Allowance, proof: number): Verdict {
+  const board = new PegsBoard(s);
+  const pegs = board.pegsOf(s);
+  if (pegs.reduce((a, b) => a + b, 0) === 1) return "finishes";
+  for (const width of [30, 300]) {
+    if (beam(board, pegs, width, allowance)) return "finishes";
+  }
+  if (allowance.left <= 0) return "unknown";
+  const r = exhaust(board, pegs, proof, allowance);
+  return r === "lost" ? "lost" : r === null ? "unknown" : "finishes";
 }
 
 /** The pegs of `s` no jump can ever involve again, as grid indices; empty on a

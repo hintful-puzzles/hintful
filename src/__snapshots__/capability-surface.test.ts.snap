@@ -1195,9 +1195,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "dragX",
       "dragY",
       "dragging",
-      "grid",
       "started",
       "tileSize",
+      "tiles",
     ],
     "id": "pegs",
     "members": [

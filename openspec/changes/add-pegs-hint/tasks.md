@@ -23,18 +23,23 @@
 
 ## 4. Redesign (design D6, owner-approved 2026-10-02)
 
-- [ ] 4.1 Measure how often the beam's plans decompose into packages (rows of
+- [x] 4.1 Measure how often the beam's plans decompose into packages (rows of
       three with a catalyst, the L, the 6-block); decide on package narration.
-- [ ] 4.2 Time the rival classification's stages apart, and set a per-request
-      budget that keeps a hint under ~0.5 s on 9×9 Cross.
-- [ ] 4.3 A `JUMP` mark kind and its arrow, bound to words; the good-jump
+      32% of plan jumps; narrated as journeys (design D7).
+- [x] 4.2 Time the rival classification's stages apart, and set a per-request
+      budget that keeps a hint under ~0.5 s on 9×9 Cross. Allowance of 400,000
+      positions, no 3,000-wide beam on rivals; worst request 300 ms (D7).
+- [x] 4.3 A `JUMP` mark kind and its arrow, bound to words; the good-jump
       overlay drawn only where a rival is BAD.
-- [ ] 4.4 The trap step: a rival that cuts a peg off at once or within two
-      jumps, with a depiction a player can follow.
-- [ ] 4.5 Rewrite every sentence, the opening's included; drop the peg count
-      and "Keep going". Read one whole plan out loud.
-- [ ] 4.6 Rewrite the help page's Hints section for the new marks.
-- [ ] 4.7 Run the app; owner acceptance.
+- [x] 4.4 The trap step: a rival that cuts a peg off at once or within two
+      jumps, with a depiction a player can follow. At once, or after every
+      reply with one common victim; the two-jump tree is not narrated (D7).
+- [x] 4.5 Rewrite every sentence, the opening's included; drop the peg count
+      and "Keep going". Read one whole plan out loud (four presets, followed
+      and wandering; it caught the last jump's "Start with").
+- [x] 4.6 Rewrite the help page's Hints section for the new marks.
+- [ ] 4.7 Run the app; owner acceptance. Trap, arrows and a package journey
+      checked in Chromium (2026-10-02); owner acceptance is the remaining step.
 
 ## 3. Engine
 

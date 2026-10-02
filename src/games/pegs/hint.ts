@@ -3,22 +3,29 @@
  *
  * Pegs is a search game: no jump is forced by logic, so the hint is the
  * non-deductive kind (docs/games/hints.md § "Non-deductive (heuristic) hints").
- * It finds a line of jumps that leaves one peg (`findFinish`) and narrates each
- * jump by what this file has checked about it, which `add-pegs-hint` design D1
- * measured: a jump that is the only one left that can finish, a rival jump that
- * would cut a peg off for good, and one peg's run of jumps.
+ * It finds a line of jumps that leaves one peg (`findFinish`) and offers its
+ * first jump, set against the other jumps from the same position, which is
+ * what a player has to learn to tell apart (`add-pegs-hint` design D6):
  *
- * Every jump removes a peg, so a plan recomputed after any move cannot cycle:
- * the peg count is the potential (docs/games/hints.md § "Recompute-stable
- * plans").
+ * 1. a rival jump that cuts a peg off, at once or whatever is jumped next, is
+ *    a reason the player can see, so it leads;
+ * 2. a plan that starts by clearing a known shape while every other peg ends
+ *    where it began is walked as one journey;
+ * 3. otherwise the rivals are searched, within an allowance per request, and
+ *    the jumps that can still finish are shown where some rival cannot.
+ *
+ * A request plans one step, or one shape's journey, and the next request plans
+ * from wherever the player is, so what a step says about its rivals is always
+ * about the board on display. Every jump removes a peg, so the plans cannot
+ * cycle (docs/games/hints.md § "Recompute-stable plans").
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { puzzleHintRefusal, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
-import { type Marked, say } from "./hint-text.ts";
-import { findFinish, frozenPegs, type Jump, legalJumps, provedLost } from "./solver.ts";
+import { type Marked, type Package, say } from "./hint-text.ts";
+import { findFinish, frozenPegs, type Jump, judge, legalJumps } from "./solver.ts";
 import {
   GRID_HOLE,
   GRID_PEG,
@@ -29,11 +36,12 @@ import {
 
 type Step = HintStep<PegsMove>;
 
-/** How far one rival jump is searched before giving up on proving it lost, and
- * how far all of a plan's proofs together; past either, the step makes no
- * claim it has not checked. */
-const RIVAL_BUDGET = 20_000;
-const PLAN_PROOF_BUDGET = 120_000;
+/** Positions the searches of one request may visit between them, and one
+ * rival's proof of loss alone. Past either a rival is unsettled and the step
+ * claims nothing about it. Measured against the half second a hint may take on
+ * 9×9 Cross (`add-pegs-hint` design D7). */
+const ALLOWANCE = 400_000;
+const RIVAL_PROOF = 10_000;
 
 /** The board after `j`. */
 function jumped(s: PegsState, j: Jump): PegsState {
@@ -54,45 +62,63 @@ function toMove(s: PegsState, j: Jump): PegsJump {
   };
 }
 
+const same = (a: Marked, b: Marked) => a.from === b.from && a.to === b.to;
+
 /**
- * The sentence for jump `j` from `s`, from what checks out:
- *
- * - **only** — every rival jump was searched to the end and none finishes. A
- *   rival that leaves a peg frozen is lost without a search, which is most of
- *   the proofs late in a game;
- * - **strands** — some rival jump leaves a peg frozen (`frozenPegs`), which the
- *   step outlines;
- * - **again** — the peg that jumped last jumps on;
- * - **plain** — the jump, and how many pegs it leaves.
+ * The peg rival jump `r` cuts off: one frozen as soon as `r` is made, or else
+ * one that every jump after `r` leaves frozen. A board some reply finishes
+ * from has no frozen peg, so it is never called a trap.
  */
-function narrate(
-  s: PegsState,
-  j: Jump,
-  runs: boolean,
-  budget: { left: number },
-): Narration {
-  const m: Marked = { from: j.from, to: j.to };
-  const rivals = legalJumps(s).filter((r) => r.from !== j.from || r.to !== j.to);
-  let cut: number | null = null;
-  let allLost = rivals.length > 0;
-  for (const r of rivals) {
-    const after = jumped(s, r);
-    const frozen = frozenPegs(after);
-    if (frozen.length > 0) {
-      cut ??= frozen[0];
-      continue;
-    }
-    if (!allLost) continue;
-    const spend = Math.min(RIVAL_BUDGET, budget.left);
-    budget.left -= spend;
-    if (spend === 0 || !provedLost(after, spend)) allLost = false;
+function cutOff(s: PegsState, r: Jump): { victim: number; soon: boolean } | null {
+  const after = jumped(s, r);
+  const now = frozenPegs(after);
+  if (now.length > 0) return { victim: now[0], soon: false };
+  const replies = legalJumps(after);
+  if (replies.length === 0) return null;
+  let common: number[] | null = null;
+  for (const j of replies) {
+    const f = frozenPegs(jumped(after, j));
+    common = common === null ? f : common.filter((p) => f.includes(p));
+    if (common.length === 0) return null;
   }
-  if (allLost) return say.only(m);
-  if (cut !== null) return say.strands(m, cut);
-  if (runs) return say.again(m);
-  let left = 0;
-  for (const v of s.grid) if (v === GRID_PEG) left++;
-  return say.plain(m, left - 1);
+  return common === null ? null : { victim: common[0], soon: true };
+}
+
+/**
+ * The package `plan` opens with, if any: three or six jumps whose only effect
+ * is to empty a line of three or a two-by-three block.
+ */
+function packageAt(s: PegsState, plan: readonly Jump[]): Package | null {
+  for (const n of [3, 6]) {
+    if (plan.length < n) continue;
+    let end = s;
+    for (const j of plan.slice(0, n)) end = jumped(end, j);
+    const pegs: number[] = [];
+    let pure = true;
+    s.grid.forEach((v, i) => {
+      if (end.grid[i] === GRID_PEG && v !== GRID_PEG) pure = false;
+      if (v === GRID_PEG && end.grid[i] !== GRID_PEG) pegs.push(i);
+    });
+    if (!pure || pegs.length !== n) continue;
+    const xs = pegs.map((i) => i % s.w);
+    const ys = pegs.map((i) => Math.floor(i / s.w));
+    const bw = Math.max(...xs) - Math.min(...xs) + 1;
+    const bh = Math.max(...ys) - Math.min(...ys) + 1;
+    if (n === 3 && bw * bh === 3)
+      return { pegs, shape: bh === 1 ? "row" : "column", jumps: 3 };
+    if (n === 6 && bw * bh === 6 && Math.min(bw, bh) === 2)
+      return { pegs, shape: "block", jumps: 6 };
+  }
+  return null;
+}
+
+function step(s: PegsState, j: Jump, words: Narration, continues = false): Step {
+  return {
+    move: toMove(s, j),
+    explanation: words.text,
+    words,
+    ...(continues ? { continuesPrevious: true } : {}),
+  };
 }
 
 export function hint(state: PegsState): HintResult<PegsMove> {
@@ -119,23 +145,54 @@ export function hint(state: PegsState): HintResult<PegsMove> {
   if (finish.kind === "lost") return { ok: false, error: NO_SOLUTION_FROM_HERE };
   if (finish.kind === "out-of-reach") return { ok: false, error: SEARCH_OUT_OF_REACH };
 
-  const budget = { left: PLAN_PROOF_BUDGET };
-  const steps: Step[] = [];
-  let s = state;
-  let last: Jump | null = null;
-  for (const j of finish.jumps) {
-    const runs = last !== null && last.to === j.from;
-    const words = narrate(s, j, runs, budget);
-    steps.push({
-      move: toMove(s, j),
-      explanation: words.text,
-      words,
-      ...(runs ? { continuesPrevious: true } : {}),
-    });
-    s = jumped(s, j);
-    last = j;
+  const plan = finish.jumps;
+  const j = plan[0];
+  if (plan.length === 1) return { ok: true, steps: [step(state, j, say.last(j))] };
+  const rivals = legalJumps(state).filter((r) => !same(r, j));
+
+  // A trap the player can see leads: a cut-off at once before one a move
+  // later, and the rival nearest the suggested jump.
+  const dist = (r: Jump) =>
+    Math.abs((r.from % state.w) - (j.from % state.w)) +
+    Math.abs(Math.floor(r.from / state.w) - Math.floor(j.from / state.w));
+  const traps = rivals
+    .map((r) => ({ r, cut: cutOff(state, r) }))
+    .filter((t) => t.cut !== null)
+    .sort((a, b) => Number(a.cut?.soon) - Number(b.cut?.soon) || dist(a.r) - dist(b.r));
+  const trap = traps[0];
+  if (trap?.cut) {
+    const say1 = trap.cut.soon ? say.trapSoon : say.trap;
+    return { ok: true, steps: [step(state, j, say1(j, trap.r, trap.cut.victim))] };
   }
-  return { ok: true, steps };
+
+  const pkg = packageAt(state, plan);
+  if (pkg) {
+    const steps: Step[] = [];
+    let s = state;
+    plan.slice(0, pkg.jumps).forEach((pj, i) => {
+      const words =
+        i === 0
+          ? say.packageStart(pj, pkg)
+          : i === pkg.jumps - 1
+            ? say.packageEnd(pj, pkg)
+            : say.packageNext(pj, pkg);
+      steps.push(step(s, pj, words, i > 0));
+      s = jumped(s, pj);
+    });
+    return { ok: true, steps };
+  }
+
+  const allowance = { left: ALLOWANCE };
+  const verdicts = rivals.map((r) => judge(jumped(state, r), allowance, RIVAL_PROOF));
+  const goods = rivals.filter((_, i) => verdicts[i] === "finishes");
+  const lost = verdicts.includes("lost");
+  const unsettled = verdicts.includes("unknown");
+  let words: Narration;
+  if (rivals.length === 0) words = say.plain(j);
+  else if (!lost) words = unsettled ? say.plain(j) : say.anyJump(j);
+  else if (!unsettled) words = goods.length > 0 ? say.onlyThese(j, goods) : say.only(j);
+  else words = goods.length > 0 ? say.alsoThese(j, goods) : say.plain(j);
+  return { ok: true, steps: [step(state, j, words)] };
 }
 
 /** A jump is settled by its two ends, so the step's own jump lands exactly the
