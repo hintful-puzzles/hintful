@@ -44,5 +44,5 @@
 
 - [x] 4.1 docs/games/hints.md: the five rules in the general narration
       section, the parts as the way to follow them, and the exception path.
-- [ ] 4.2 Run the app on a sample of converted games; owner acceptance on the
-      wording.
+- [x] 4.2 Run the app on a sample of converted games; owner acceptance on the
+      wording. (Black Box and Pegs run in Chromium; owner accepted 2026-10-02.)

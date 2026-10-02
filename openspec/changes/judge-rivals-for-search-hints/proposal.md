@@ -37,10 +37,20 @@ finish line").
 ## What
 
 An engine helper that takes a position, the offered move, the legal moves and
-a game's judge, and returns the verdicts within one allowance; plus, once
-`give-a-hint-sentence-its-parts` exists, the relation and arrow marks those
-verdicts imply. The game keeps its search, its judge and its visible-fact
-fallback, since those are about the puzzle.
+a game's judge, and returns the verdicts within one allowance, plus the
+relation and arrow marks those verdicts imply. The game keeps its search, its
+judge and its visible-fact fallback, since those are about the puzzle.
+
+**The relation should come from the verdicts, not from the game.**
+`give-a-hint-sentence-its-parts` made a searching game's "so" declare
+`rivals: "lost"` (`hint-words.ts`'s `Relation`), and the hint-quality walk fails
+a forced step without it. That is the mechanical half of rule 3, and it is a
+statement the game writes by hand and only a check reads: Pegs' `only` and
+Guess's deductions each type it where their code judged the rivals. Once the
+helper returns verdicts, it should hand back the relation as well, `forced`
+with `rivals: "lost"` exactly when every rival was settled lost and `oneOf`
+when some finish, so the claim is built from the judging rather than beside
+it, and a game cannot write "so" over rivals nobody judged.
 
 ## Hints to pull in
 

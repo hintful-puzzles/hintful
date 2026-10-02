@@ -337,7 +337,7 @@ function finish(state: BlackboxState, known: Knowledge): Step[] {
   if (more > 0 && spare !== null) {
     return journey(
       movesTo(state, spare, true),
-      () => say.hidden(more, spare),
+      () => say.hidden(more, spare, locked(state, spare)),
       () => say.again({ at: spare, ball: true }, "count"),
     );
   }

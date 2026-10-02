@@ -22,7 +22,7 @@ balls`, `10×10, 5 balls`, `10×10, 4-10 balls` — SHALL be offered. The
 preset/custom **type summary** SHALL read `{w}x{h}, {n} balls` (or `{min}-{max}
 balls`) via a `no-of-balls` annotation key mapped in the worker adapter.
 `validateParams` SHALL reject `w < 2` or `h < 2`, `w > 255` or `h > 255`,
-`minballs < 1`, `minballs > maxballs`, and `minballs >= w*h`. The game SHALL provide `statusbarText` and `solve`, and SHALL NOT provide `textFormat`, `hint` or `findMistakes`.
+`minballs < 1`, `minballs > maxballs`, and `minballs >= w*h`. The game SHALL provide `statusbarText`, `solve` and `hint`, and SHALL NOT provide `textFormat` or `findMistakes`.
 
 #### Scenario: Params round-trip and lenient decode
 
@@ -152,3 +152,43 @@ the status bar.
 - **WHEN** the player invokes Solve with some balls guessed wrongly
 - **THEN** the guesses become exactly the real balls, the arena is revealed, and
   `status` returns `"solved"`
+
+### Requirement: Black Box's hint SHALL reason only from the lasers fired
+
+Black Box SHALL provide a `hint` that reads only the lasers fired and where they went, never
+the hidden balls, so two boards whose balls send every fired laser the same way get the same
+plan. It SHALL settle a square by following a fired laser through the squares already settled
+to the first one nothing has settled, and concluding that square holds what does not send the
+laser somewhere it did not go; a laser that came out at a numbered square SHALL be followed from
+either end. A settled empty square SHALL be shown by marking it known and a settled ball by
+guessing it, the step ringing the square and outlining the laser's ends. When nothing more
+settles, the hint SHALL ask for a laser whose path still depends on unsettled squares. When
+every laser is fired and none settles a square on its own, it SHALL offer, found by a bounded
+search, balls that send every laser where it went, and refuse with `SEARCH_OUT_OF_REACH` past
+the search's budget. Once every laser's path is settled by the balls on the board, it SHALL put
+any balls the count still requires on squares no laser reaches, take off any the box cannot
+hold, and ask the player to check the answer.
+
+#### Scenario: A square a laser settles
+
+- **WHEN** a fired laser came out at its other numbered end, and a ball on the first unsettled
+  square along its path would keep any ray from running between those ends
+- **THEN** the step rings that square, outlines both ends, says the square must be empty, and
+  marks it known
+
+#### Scenario: Nothing settles
+
+- **WHEN** no fired laser settles a square and some laser's path still runs through unsettled
+  squares
+- **THEN** the step rings one such laser and asks the player to fire it
+
+#### Scenario: The hint gives nothing away
+
+- **WHEN** a hidden ball is moved to another square and every fired laser still goes where it
+  went
+- **THEN** the hint's plan is unchanged
+
+#### Scenario: Following the hint wins
+
+- **WHEN** the player follows every step from a dealt board of any preset
+- **THEN** the answer is checked and accepted

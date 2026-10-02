@@ -211,8 +211,9 @@ solves it, preferring at each step:
    a row or column, the cell itself still showing several candidates), narrated and
    highlighted by *which* it is (the recorded reason conflates them, so the *why* is
    re-derived from the working board): a naked single concludes "every other number
-   has been ruled out in this cell", a hidden single names its line ("in this
-   row/column, N can go in only this cell") and shades the whole line as evidence.
+   has been ruled out in this cell", a hidden single names its line ("every other
+   cell in this row/column rules out N, so this cell must be N") and shades the
+   whole line as evidence.
 
 Each step SHALL carry a narration meeting the hint quality bar — leading with the
 spotted indication (the cage, named by its arithmetic clue), then the reasoning,
@@ -263,7 +264,8 @@ or one digit-out-of-one-line cross-cage elimination) SHALL map to exactly one
 
 - **WHEN** the hint forces a placement into a cell that still shows several
   candidates, because the placed digit fits nowhere else in its row (or column)
-- **THEN** the narration names the line ("in this row, N can go in only this cell")
+- **THEN** the narration names the line ("every other cell in this row rules out N,
+  so this cell must be N")
   rather than claiming every number is ruled out in the cell
 - **AND** the whole row (or column) is shaded as evidence, with the cell marked as
   the placement target

@@ -15,6 +15,7 @@ import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import {
   BALL_CORRECT,
   BALL_GUESS,
+  BALL_LOCK,
   type BlackboxMove,
   type BlackboxParams,
   type BlackboxState,
@@ -190,6 +191,21 @@ describe("the end of the box", () => {
       "Every laser's way is settled, and 1 more ball hides on squares no laser reaches. One of them: put a ball on this square.",
     );
     expect(game.status(state)).toBe("solved");
+  });
+
+  it("takes the known mark off first, where every unsettled square is marked known", () => {
+    let s = game.newState(P8, "34ee6895a0d7a3660bc1acb7");
+    s = follow(s, (t) => t.includes("more ball hides")).state;
+    for (const { at, holds } of deduce(s).known.squares())
+      if (holds === null && !(gridGet(s, at.x, at.y) & BALL_LOCK))
+        s = game.executeMove(s, { type: "toggleLock", x: at.x, y: at.y });
+    const res = game.hint?.(s);
+    if (!res?.ok) throw new Error("refused");
+    expect(res.steps.map((st) => st.explanation)).toEqual([
+      "Every laser's way is settled, and 1 more ball hides on squares no laser reaches. One of them: take the known mark off this square.",
+      "…and put a ball on this square, for the same count.",
+    ]);
+    expect(res.steps.map((st) => st.move.type)).toEqual(["toggleLock", "toggleBall"]);
   });
 
   it("takes a ball off an unsettled square when more are marked than the box holds", () => {

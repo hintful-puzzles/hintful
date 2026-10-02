@@ -176,10 +176,14 @@ export const say = {
 
   /** Every laser's way is settled by the balls found, but the board must hold
    * more: the rest sit where no laser can tell. */
-  hidden: (more: number, at: Point): Sentence =>
+  hidden: (more: number, at: Point, known: boolean): Sentence =>
     sentence({
       look: phrase`Every laser's way is settled, and ${more === 1 ? "1 more ball hides" : `${more} more balls hide`} on squares no laser reaches`,
-      move: phrase`put a ball on ${thisSquare(at)}`,
+      // A square marked known takes no ball, so its first move takes the mark
+      // off, and the ball goes on in the journey's next leg.
+      move: known
+        ? phrase`take the known mark off ${thisSquare(at)}`
+        : phrase`put a ball on ${thisSquare(at)}`,
       relation: { kind: "oneOf" },
     }),
 

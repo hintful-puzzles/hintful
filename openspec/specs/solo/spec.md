@@ -290,8 +290,9 @@ SHALL map to exactly one `group` so a hint step never mixes regions.
 - **WHEN** the hint forces a placement into a cell that still shows several
   candidates, because the placed digit fits nowhere else in its row (or column,
   block, or diagonal)
-- **THEN** the narration names that region ("in this row, N can go in only this
-  cell") rather than claiming every number is ruled out in the cell
+- **THEN** the narration names that region ("every other cell in this row rules out
+  N, so this cell must be N") rather than claiming every number is ruled out in the
+  cell
 - **AND** the whole region is shaded as evidence, with the cell marked as the
   placement target
 
