@@ -28,7 +28,7 @@ import {
   type AnyGame,
   gatePresets,
   HINT_GAMES,
-  SEARCH_PLANNING_GAMES,
+  SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
@@ -111,13 +111,10 @@ function solveByHints(
  * seeds it is given and could go red truthfully on a new one, which would be
  * the guard reporting the truth rather than a regression.
  *
- * **Derived from what the game is, never declared** — the derivation lives in
- * `testing/hint-games.ts` as `SEARCH_PLANNING_GAMES`, because a second guard
- * needs the same population for a different reason (what the *gate* may afford
- * to walk). Membership is "calls the shared slide planner", read out of each
- * game's own comment-stripped source.
+ * **Derived from what the game is, never declared**: `SEARCH_REACH_GAMES` in
+ * `testing/hint-games.ts`, the games whose own code names the refusal.
  */
-const BOUNDED_SEARCH_HINTS = SEARCH_PLANNING_GAMES;
+const BOUNDED_SEARCH_HINTS = SEARCH_REACH_GAMES;
 
 /**
  * Why each derived member is excused the walk's promise, **and what covers the
@@ -132,15 +129,26 @@ const BOUNDED_SEARCH_HINTS = SEARCH_PLANNING_GAMES;
  * as well as its ledger.
  *
  * **The second sentence is load-bearing since
- * `retire-tests-that-do-not-earn-their-runtime`.** These games' walk is sliced
- * to its modes' smallest boards in the gate (see `gatePresets`), so each entry has to
- * name the test that still walks a full-size board on every commit. A future
- * third member joins the derivation by *having* the mechanic and fails the
- * equality below until someone writes that sentence — which is the point of
- * deriving the population and attaching the reason to the member
- * (`AGENTS.md` § "Convention over configuration").
+ * `retire-tests-that-do-not-earn-their-runtime`.** A member whose walk the gate
+ * slices to its modes' smallest boards (the slide planner's, see `gatePresets`)
+ * has to name the test that still walks a full-size board on every commit; one
+ * the gate walks whole says so. A new member joins the derivation by *having*
+ * the refusal and fails the equality below until someone writes that sentence,
+ * which is the point of deriving the population and attaching the reason to
+ * the member (`AGENTS.md` § "Convention over configuration").
  */
 const SEARCH_REACH: Record<string, string> = {
+  guess:
+    "Enumerates the answers that still fit, and a huge custom board can exhaust " +
+    "the enumeration budget before finding one. No preset reaches it. Largest " +
+    "board on every commit: this walk, which the gate does not slice for Guess.",
+  pegs:
+    "Finds a line of jumps by beam search and proves a position lost by an " +
+    "exhaustive one with a budget, and positions random play leaves on the " +
+    "33-hole and larger boards outrun the proof (`add-pegs-hint` design D1). A " +
+    "walk that follows the hint never leaves a soluble position, so it has not " +
+    "been seen refusing here. Largest board on every commit: this walk, which " +
+    "the gate does not slice for Pegs.",
   netslide:
     "Plans by searching for an arrangement that powers the grid. Has not been " +
     "seen refusing — its finish condition is weak, so its distances are short — " +

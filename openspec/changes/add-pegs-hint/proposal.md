@@ -1,9 +1,9 @@
 # add-pegs-hint
 
-**Status: scaffolded, not started (2026-09-30).** Pulled in by
-`own-the-player-facing-messages`, whose check this game was. Pegs is a draft
-twice over: it has no `hint`, and no `solve` either, because upstream had no
-solver (its `notApplicable` names only `findMistakes`).
+**Status: implemented (2026-10-02); owner acceptance on how it plays is
+open.** Pulled in by `own-the-player-facing-messages`, whose check this game
+was. Pegs was a draft twice over: it had no `hint`, and no `solve` either,
+because upstream had no solver.
 
 ## Why
 

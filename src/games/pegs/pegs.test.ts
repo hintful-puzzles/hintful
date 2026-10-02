@@ -248,9 +248,9 @@ describe("Pegs colors", () => {
     expect(palette[0][2]).toBeLessThan(1);
   });
 
-  it("has 6 colors: upstream's five plus the held-peg ring", () => {
+  it("has 8 colors: upstream's five, the held-peg ring and the hint's two", () => {
     const palette = G.colors([0.9, 0.9, 0.9]);
-    expect(palette.length).toBe(6);
+    expect(palette.length).toBe(8);
   });
 });
 

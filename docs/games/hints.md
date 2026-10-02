@@ -1358,10 +1358,12 @@ endgames where most moves *did* get the player closer, reached by following
 thirty-odd of its own hints.
 
 This is the one place the walk's central promise is relaxed, so it is derived
-rather than declared: `hint-resume.test.ts` reads which games call the shared
-slide planner out of their own source and accepts this refusal from exactly
-those, with a per-member ledger saying why each has a reach. A deductive game
-emitting it fails, and so does a searching game emitting anything else.
+rather than declared: `hint-resume.test.ts` accepts this refusal from exactly
+the games whose own code names it (`SEARCH_REACH_GAMES` in
+`testing/hint-games.ts`), with a per-member ledger saying why each has a reach.
+A deductive game emitting it fails, and so does a searching game emitting
+anything else. It was keyed on calling the slide planner until Pegs, and that
+had already missed Guess, whose enumeration says it too.
 
 **Whether your hint needs a second wrong-board check is decided by your own
 `findMistakes`, so read it rather than copying a neighbor.** A game whose
@@ -3377,6 +3379,33 @@ Two things to take from it if you meet the same shape:
   shares the whole planner and cannot have this term — its wire tiles are
   interchangeable, so "tiles in each other's cells" means nothing there. That is
   the AGENTS.md test for a real per-game decision, answered.
+
+### Find with one search, prove with another (Pegs)
+
+A game whose hint is a search may need two searches that are good at
+different things, and only a measurement says so. Pegs'
+([`pegs/solver.ts`](../../src/games/pegs/solver.ts)) depth-first search, with a
+memo of lost positions, could not solve the opening of three presets in two
+million positions, and move ordering only changed which boards it was lucky on.
+A beam search keeping the 300 most compact positions per level solved every
+opening in about 100 ms, and every position any method solved. But a beam can
+never say a position is lost. So the beam finds, and a budgeted exhaustive
+search only proves loss, which is what lets the hint say
+`NO_SOLUTION_FROM_HERE` honestly and `SEARCH_OUT_OF_REACH` past the budget
+(`add-pegs-hint` design D1).
+
+Three things carried over from that work:
+
+- **Narrate each claim only where its proof finished.** "The only jump that
+  can still finish" needs every rival searched to the end. The proofs share a
+  budget per plan, and a step whose proof ran out says something weaker.
+- **A cheap sound check is both a refusal and a warning.** The frozen-peg
+  closure ("no peg can ever arrive beside this one") refuses a lost position
+  at a glance, and the same check run on each rival jump finds the peg a
+  careless jump would cut off, which the step outlines.
+- **A game whose every move shrinks something needs no stability work.** Each
+  jump removes a peg, so any plan recomputed after any move terminates.
+  Look for that potential before reaching for Inertia's nearest-goal machinery.
 
 ### Read one plan out loud
 

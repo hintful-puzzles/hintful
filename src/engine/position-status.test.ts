@@ -75,6 +75,7 @@ const UNBREAKABLE: Record<string, string> = {
   flood: "a flooded board accepts no fill",
   mosaic: "a solved board accepts only the cursor keys",
   net: "Solve locks every tile, a locked tile does not turn, and unlocking is a notes-mode tap",
+  pegs: "a solved board has one peg left, and one peg has nothing to jump over",
 };
 
 function games(): [string, AnyGame][] {

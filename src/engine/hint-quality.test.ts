@@ -390,6 +390,10 @@ const NARRATES_MOVES: Record<string, string> = {
   inertia:
     "movement: the one thing it can prove is a gem's unreachability, and its " +
     "steps narrate the consequence a slide has (`add-inertia-hint`)",
+  pegs:
+    "search: no jump is forced by logic; a step names the jump and what was " +
+    "checked about it, a necessity only where every rival was proved lost " +
+    "(`add-pegs-hint`)",
   untangle:
     "objective: a step names how many crossings a point's lines make before " +
     "and after the move, not a forced fact",

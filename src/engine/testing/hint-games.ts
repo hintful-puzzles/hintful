@@ -32,24 +32,39 @@ export const HINT_GAMES: [string, AnyGame][] = REGISTERED_GAMES.filter(
  * planner), never declared. The marker carries its opening paren so importing
  * the planner without calling it does not count.
  *
- * **Two guards read this for two different reasons, which is why it lives
- * here.** `hint-resume.test.ts` reads it to excuse a member the walk's
- * completion promise — a bounded search may honestly run out of reach.
- * `hint-quality.test.ts` and `hint-resume.test.ts` both read it to bound what
- * the *gate* walks, because a search is the one hint shape whose cost explodes
+ * **It bounds what the *gate* walks**, in `hint-quality.test.ts` and
+ * `hint-resume.test.ts`, because a search is the one hint shape whose cost explodes
  * with board size: the walk is quadratic in it twice over (one full search per
  * move, and more moves on a bigger board). Measured 2026-09-09, the two members
  * were **43% of the whole suite's test time** — Sixteen 30%, Netslide 13%.
  *
- * A third game that calls the planner joins both concerns by *having* the
- * mechanic, and `hint-resume.test.ts`'s `SEARCH_REACH` ledger then fails until
- * someone writes down what covers its largest board.
+ * Which games may *refuse* as a search past its reach is a different question,
+ * answered by {@link SEARCH_REACH_GAMES}: Guess and Pegs search without this
+ * planner.
  */
-export const SEARCH_PLANNING_GAMES: readonly string[] = (() => {
+export const SEARCH_PLANNING_GAMES: readonly string[] =
+  membersMentioning("planSlides(");
+
+/**
+ * The games whose hint can say `SEARCH_OUT_OF_REACH`, the one refusal that
+ * admits a search ran out rather than claiming anything about the board —
+ * derived from each game's own code naming it, never declared.
+ *
+ * `hint-resume.test.ts` excuses exactly these its walk's completion promise,
+ * with a ledger saying why each has a reach. It was derived from calling the
+ * slide planner until `add-pegs-hint`, which keyed it on a name: Guess already
+ * gave this refusal from its own enumeration and was not excused, and Pegs'
+ * beam-and-proof search would not have been either.
+ */
+export const SEARCH_REACH_GAMES: readonly string[] =
+  membersMentioning("SEARCH_OUT_OF_REACH");
+
+/** The hinted games whose comment-stripped code contains `marker`. */
+function membersMentioning(marker: string): string[] {
   const ids = HINT_GAMES.map(([id]) => id);
-  const without = new Set(membersNotMentioning(ids, "planSlides("));
+  const without = new Set(membersNotMentioning(ids, marker));
   return ids.filter((id) => !without.has(id));
-})();
+}
 
 /** True when a step declares no board marks at all — `highlights` absent, or an
  * object whose every field is empty. The candidate-elimination games' populate

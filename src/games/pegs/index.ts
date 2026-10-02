@@ -12,7 +12,10 @@
  * `tree234`.
  */
 
-import { rejectMove } from "../../engine/assert-never.ts";
+import { assertNever } from "../../engine/assert-never.ts";
+import type { SolveResult } from "../../engine/game.ts";
+import { drag } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   type Game,
   registerGame,
@@ -28,8 +31,11 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/pointer.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
+import { hint, hintKeepTrack } from "./hint.ts";
+import { HINT_MARKS } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -39,7 +45,9 @@ import {
   type PegsDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
+  tileCenter,
 } from "./render.ts";
+import { findFinish } from "./solver.ts";
 import {
   BOARD_TYPE_NAMES,
   decodeParams,
@@ -51,6 +59,7 @@ import {
   GRID_PEG,
   newState,
   newUi,
+  type PegsJump,
   type PegsMove,
   type PegsParams,
   type PegsState,
@@ -72,7 +81,7 @@ function inGrid(s: PegsState, x: number, y: number): boolean {
 }
 
 /** Why `m` is not a legal jump on `s`, or null if it is. */
-function illegalJump(s: PegsState, m: PegsMove): string | null {
+function illegalJump(s: PegsState, m: PegsJump): string | null {
   const { sx, sy, tx, ty } = m;
   if (!inGrid(s, sx, sy)) return "Source out of range";
   if (!inGrid(s, tx, ty)) return "Target out of range";
@@ -193,10 +202,16 @@ function interpretMove(
 // --- executeMove -----------------------------------------------------
 
 function executeMove(s: PegsState, m: PegsMove): PegsState {
-  // Pegs' move is one object shape rather than a union, so `m` does not narrow
-  // to `never` here and there is no compile-time guarantee to be had; this is
-  // the field check the dispatch below depends on (see `rejectMove`).
-  if (m.type !== "jump") rejectMove(m, "pegs: executeMove");
+  if (m.type === "solve") {
+    const { w, h } = s;
+    if (s.grid[m.finish] === undefined || s.grid[m.finish] === GRID_OBST) {
+      throw new Error("pegs: the finishing square is off the board");
+    }
+    const grid = s.grid.map((v) => (v === GRID_OBST ? GRID_OBST : GRID_HOLE));
+    grid[m.finish] = GRID_PEG;
+    return { w, h, grid };
+  }
+  if (m.type !== "jump") return assertNever(m, "pegs: executeMove");
   const error = illegalJump(s, m);
   if (error) throw new Error(error);
 
@@ -221,6 +236,28 @@ function executeMove(s: PegsState, m: PegsMove): PegsState {
 function changedState(ui: PegsUi, _old: PegsState | null, _next: PegsState): void {
   ui.dragging = false;
   ui.curJumping = false;
+}
+
+// --- solve -----------------------------------------------------------
+
+/**
+ * The finished board: from the player's position if a line of jumps finishes
+ * from there, else from the dealt one, which every generator makes soluble.
+ * The fallback is what keeps the hint's out-of-reach refusal honest when it
+ * sends the player here (`add-pegs-hint` design D3).
+ */
+function solve(orig: PegsState, curr: PegsState): SolveResult<PegsMove> {
+  let lost = false;
+  for (const s of [curr, orig]) {
+    const finish = findFinish(s);
+    if (finish.kind === "found") {
+      const last = finish.jumps[finish.jumps.length - 1];
+      const only = s.grid.indexOf(GRID_PEG);
+      return { ok: true, move: { type: "solve", finish: last ? last.to : only } };
+    }
+    lost = finish.kind === "lost";
+  }
+  return { ok: false, error: lost ? NO_SOLUTION : PUZZLE_NOT_REASONABLE };
 }
 
 // --- register --------------------------------------------------------
@@ -269,6 +306,21 @@ export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawSta
   notApplicable: {
     findMistakes:
       "Any sequence of jumps that leaves a single peg wins, so there is no single answer to check a move against.",
+  },
+
+  solve,
+
+  hint,
+  hintMarks: HINT_MARKS,
+  hintKeepTrack,
+  // The drag a player makes: pick the peg up and drop it in the hole.
+  hintGesture(_s, _ui, ds, m) {
+    if (m.type !== "jump") return [];
+    const at = (x: number, y: number) => ({
+      x: tileCenter(x, ds.tileSize),
+      y: tileCenter(y, ds.tileSize),
+    });
+    return [drag(at(m.sx, m.sy), at(m.tx, m.ty))];
   },
 
   textFormat,

@@ -48,7 +48,12 @@ export interface PegsState {
   grid: Uint8Array;
 }
 
-export type PegsMove = { type: "jump"; sx: number; sy: number; tx: number; ty: number };
+export type PegsJump = { type: "jump"; sx: number; sy: number; tx: number; ty: number };
+
+/** Solve: the finished board, which the square of its last peg determines. */
+export type PegsSolve = { type: "solve"; finish: number };
+
+export type PegsMove = PegsJump | PegsSolve;
 
 export interface PegsUi {
   dragging: boolean;
@@ -207,11 +212,14 @@ export function textFormat(s: PegsState): string {
 // --- move serialization ----------------------------------------------
 
 export function serializeMove(m: PegsMove): unknown {
+  if (m.type === "solve") return `S${m.finish}`;
   return `${m.sx},${m.sy}-${m.tx},${m.ty}`;
 }
 
 export function deserializeMove(raw: unknown): PegsMove {
   const s = String(raw);
+  const solve = s.match(/^S(\d+)$/);
+  if (solve) return { type: "solve", finish: Number.parseInt(solve[1], 10) };
   const match = s.match(/^(-?\d+),(-?\d+)-(-?\d+),(-?\d+)$/);
   // Pegs parses its moves at the save boundary, so a foreign move is caught
   // here, before `executeMove` sees it. `raw` rather than `s`, which renders

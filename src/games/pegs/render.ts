@@ -11,15 +11,18 @@
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, PURPLE } from "../../engine/color/colors.ts";
-import { HELD } from "../../engine/color/palette.ts";
+import { HELD, HINT_ACTION, HINT_EVIDENCE } from "../../engine/color/palette.ts";
 import { drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { HOLE, PEG } from "./hint-text.ts";
 import {
   GRID_HOLE,
   GRID_OBST,
   GRID_PEG,
+  type PegsMove,
   type PegsParams,
   type PegsState,
   type PegsUi,
@@ -31,6 +34,10 @@ export const PREFERRED_TILE_SIZE = 33;
  * cell, or is on it holding the peg picked up to jump. */
 const GRID_CURSOR = 10;
 const GRID_JUMPING = 20;
+/** Added for a displayed hint step's marks: the cell is ringed (the jump to
+ * make), or outlined (a peg a rival jump would cut off). */
+const GRID_HINT_RING = 40;
+const GRID_HINT_OUTLINE = 80;
 
 // --- color indices --------------------------------------------------
 
@@ -42,6 +49,8 @@ const COL_CURSOR = 4;
 /** Appended past the C enum: the ring round a peg the keyboard has picked up
  * to jump with, which upstream drew in the cursor color. */
 const COL_HELD = 5;
+const COL_HINT = 6;
+const COL_HINT_EVIDENCE = 7;
 
 // --- flash timing ----------------------------------------------------
 
@@ -72,6 +81,11 @@ export function fromCoordWithTileSize(x: number, ts: number): number {
   return fromCoordE(x, ts, border(ts));
 }
 
+/** The pixel at the middle of column (or row) `x`. */
+export function tileCenter(x: number, ts: number): number {
+  return coord(x, ts) + Math.floor(ts / 2);
+}
+
 // --- colors ---------------------------------------------------------
 
 export function colors(defaultBackground: Color): Color[] {
@@ -90,6 +104,8 @@ export function colors(defaultBackground: Color): Color[] {
     BLUE, // COL_PEG — the piece's own color, as upstream paints it
     PURPLE, // COL_CURSOR — not CURSOR: green is the held ring; purple as Spokes
     HELD, // COL_HELD — a peg picked up to jump with
+    HINT_ACTION, // COL_HINT
+    HINT_EVIDENCE, // COL_HINT_EVIDENCE
   ];
 }
 
@@ -136,6 +152,16 @@ function drawTile(
     dr.drawRect({ x, y, w: ts, h: ts }, bgColor);
   }
 
+  let outlined = false;
+  let ringed = false;
+  if (v >= GRID_HINT_OUTLINE) {
+    outlined = true;
+    v -= GRID_HINT_OUTLINE;
+  }
+  if (v >= GRID_HINT_RING) {
+    ringed = true;
+    v -= GRID_HINT_RING;
+  }
   if (v >= GRID_JUMPING) {
     jumping = true;
     v -= GRID_JUMPING;
@@ -162,6 +188,16 @@ function drawTile(
     dr.drawCircle({ x: x + half, y: y + half }, Math.floor(ts / 4), innerBg, innerBg);
   }
 
+  // The hint's rings sit in the margin outside the peg, so they read on the
+  // peg's own blue; an outline inside a ring when one cell carries both.
+  const ring = (r: number, color: number) => {
+    dr.drawCircle({ x: x + half, y: y + half }, r, -1, color);
+    dr.drawCircle({ x: x + half, y: y + half }, r - 1, -1, color);
+  };
+  const outer = half - 1;
+  if (ringed) ring(outer, COL_HINT);
+  if (outlined) ring(ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
+
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
 
@@ -176,9 +212,13 @@ export function redraw(
   ui: PegsUi,
   _animTime: number,
   flashTime: number,
+  hint?: HintStep<PegsMove>,
 ): void {
   const { w, h } = s;
   const ts = ds.tileSize;
+  const marks = stepMarks(hint);
+  const ringed = new Set([...marks.of("ring", PEG), ...marks.of("ring", HOLE)]);
+  const outlined = new Set(marks.of("outline", PEG));
   const hw = raisedBevelWidth(ts);
 
   let bgColor: number;
@@ -301,6 +341,8 @@ export function redraw(
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) {
         v += ui.curJumping ? GRID_JUMPING : GRID_CURSOR;
       }
+      if (ringed.has(y * w + x)) v += GRID_HINT_RING;
+      if (outlined.has(y * w + x)) v += GRID_HINT_OUTLINE;
       if (v !== GRID_OBST && (bgColor !== ds.bgColor || v !== ds.grid[y * w + x])) {
         drawTile(dr, ds, coord(x, ts), coord(y, ts), v, bgColor);
         ds.grid[y * w + x] = v;
