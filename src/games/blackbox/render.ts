@@ -6,11 +6,19 @@
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { GREEN, RED } from "../../engine/color/colors.ts";
-import { ERROR, GRID_MID, INK } from "../../engine/color/palette.ts";
+import {
+  ERROR,
+  GRID_MID,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+} from "../../engine/color/palette.ts";
 import { blackboxCover, blackboxLock } from "../../engine/color/palette-games.ts";
-import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { BUTTON, LASER } from "./hint-text.ts";
 import {
   BALL_GUESS,
   BALL_LOCK,
@@ -45,7 +53,14 @@ const COL_BALL = 8;
 export const COL_WRONG = 9;
 export const COL_BUTTON = 10;
 const COL_CURSOR = 11;
-const NCOLORS = 12;
+export const COL_HINT = 12;
+export const COL_HINT_EVIDENCE = 13;
+const NCOLORS = 14;
+
+/** A tile the displayed hint step rings or outlines, in its cache word beside
+ * the cursor's flag, so a mark coming or going repaints it. */
+const HINT_RING = 1 << 17;
+const HINT_OUTLINE = 1 << 18;
 
 export const PREFERRED_TILE_SIZE = 32;
 const FLASH_FRAME = 0.2;
@@ -112,7 +127,50 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_TEXT] = INK;
   // The laser you just fired, lit up for a beat — not the solved flash.
   ret[COL_FLASHTEXT] = GREEN;
+  ret[COL_HINT] = HINT_ACTION;
+  ret[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   return ret;
+}
+
+/** The hint's mark on a tile at `(dx, dy)`, inside its grid line so a
+ * neighbor's repaint cannot cut it. */
+function drawHintMark(
+  dr: GameDrawing,
+  ds: BlackboxDrawState,
+  dx: number,
+  dy: number,
+  flags: number,
+): void {
+  const ts = ds.tileSize;
+  const thick = Math.max(2, Math.floor(ts / 12));
+  if (flags & HINT_OUTLINE)
+    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 2, ts - 2, thick, COL_HINT_EVIDENCE);
+  if (flags & HINT_RING)
+    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 2, ts - 2, thick, COL_HINT);
+}
+
+/** Which tiles the displayed step's words ring or outline, by grid index. */
+function hintFlags(
+  state: BlackboxState,
+  hint?: HintStep<unknown> | null,
+): Map<number, number> {
+  const out = new Map<number, number>();
+  const marks = stepMarks(hint);
+  const add = (x: number, y: number, flag: number): void => {
+    const i = gridIdx(state.w, x, y);
+    out.set(i, (out.get(i) ?? 0) | flag);
+  };
+  for (const p of marks.of("ring", CELL)) add(p.x, p.y, HINT_RING);
+  for (const [role, flag] of [
+    ["ring", HINT_RING],
+    ["outline", HINT_OUTLINE],
+  ] as const)
+    for (const l of marks.of(role, LASER)) {
+      const rc = range2grid(state.w, state.h, l);
+      if (rc) add(rc.x, rc.y, flag);
+    }
+  if (marks.of("ring", BUTTON).length > 0) add(0, 0, HINT_RING);
+  return out;
 }
 
 // --- small draw helpers -----------------------------------------------
@@ -146,11 +204,12 @@ function drawArenaTile(
   ay: number,
   force: boolean,
   isflash: boolean,
+  hint: number,
 ): void {
   const ts = ds.tileSize;
   const gx = ax + 1;
   const gy = ay + 1;
-  let gsTile = gs.grid[gridIdx(gs.w, gx, gy)];
+  let gsTile = gs.grid[gridIdx(gs.w, gx, gy)] | hint;
   const dsTile = ds.grid[gridIdx(ds.w, gx, gy)];
   const dx = todraw(ds, gx);
   const dy = todraw(ds, gy);
@@ -182,6 +241,7 @@ function drawArenaTile(
     );
 
     if (gsTile & FLAG_CURSOR && bcol === bg) drawSquareCursor(dr, ds, dx, dy);
+    drawHintMark(dr, ds, dx, dy, gsTile);
 
     dr.drawUpdate(rect(dx, dy, ts, ts));
   }
@@ -197,6 +257,7 @@ function drawLaserTile(
   ui: BlackboxUi,
   lno: number,
   force: boolean,
+  hint: number,
 ): void {
   const ts = ds.tileSize;
   const rc = range2grid(gs.w, gs.h, lno);
@@ -222,7 +283,7 @@ function drawLaserTile(
   }
   const flash = (gsTile & LASER_FLASHED) !== 0;
 
-  gsTile |= wrong | omitted;
+  gsTile |= wrong | omitted | hint;
   if (ui.cursor.visible && ui.cursor.x === gx && ui.cursor.y === gy)
     gsTile |= FLAG_CURSOR;
 
@@ -230,7 +291,9 @@ function drawLaserTile(
     dr.drawRect(rect(dx, dy, ts, ts), COL_BACKGROUND);
     drawRectOutline(dr, dx, dy, ts, ts, COL_GRID);
 
-    if (gsTile & ~(LASER_WRONG | LASER_OMITTED | FLAG_CURSOR)) {
+    if (
+      gsTile & ~(LASER_WRONG | LASER_OMITTED | FLAG_CURSOR | HINT_RING | HINT_OUTLINE)
+    ) {
       const tcol = flash ? COL_FLASHTEXT : omitted ? COL_WRONG : COL_TEXT;
       const str = reflect || hit ? (reflect ? "R" : "H") : String(laserval);
 
@@ -257,6 +320,7 @@ function drawLaserTile(
       );
     }
     if (gsTile & FLAG_CURSOR) drawSquareCursor(dr, ds, dx, dy);
+    drawHintMark(dr, ds, dx, dy, gsTile);
 
     dr.drawUpdate(rect(dx, dy, ts, ts));
   }
@@ -274,10 +338,14 @@ export function redraw(
   ui: BlackboxUi,
   animTime: number,
   flashTime: number,
+  hint?: HintStep<unknown> | null,
 ): void {
   const ts = ds.tileSize;
   let isflash = false;
   let force = false;
+  const marked = hintFlags(state, hint);
+  const flagsAt = (x: number, y: number): number =>
+    marked.get(gridIdx(state.w, x, y)) ?? 0;
 
   if (flashTime > 0) {
     const frame = Math.floor(flashTime / FLASH_FRAME);
@@ -312,17 +380,20 @@ export function redraw(
 
   for (let x = 0; x < state.w; x++)
     for (let y = 0; y < state.h; y++)
-      drawArenaTile(dr, state, ds, ui, x, y, force, isflash);
+      drawArenaTile(dr, state, ds, ui, x, y, force, isflash, flagsAt(x + 1, y + 1));
 
   // Which laser to highlight this frame.
   ds.flashLaserno = LASER_EMPTY;
   if (ui.flashLaser === 1) ds.flashLaserno = ui.flashLaserno;
   else if (ui.flashLaser === 2 && animTime > 0) ds.flashLaserno = ui.flashLaserno;
 
-  for (let i = 0; i < 2 * (state.w + state.h); i++)
-    drawLaserTile(dr, state, ds, ui, i, force);
+  for (let i = 0; i < 2 * (state.w + state.h); i++) {
+    const rc = range2grid(state.w, state.h, i);
+    drawLaserTile(dr, state, ds, ui, i, force, rc ? flagsAt(rc.x, rc.y) : 0);
+  }
 
-  // The reveal ("finish") button at (0,0).
+  // The reveal ("finish") button at (0,0), repainted whole every frame, so a
+  // hint ring around it comes and goes with the step.
   const b0 = todraw(ds, 0);
   if (canReveal(state)) {
     const outline =
@@ -330,6 +401,10 @@ export function redraw(
         ? COL_CURSOR
         : COL_BALL;
     dr.clip(rect(b0 - 1, b0 - 1, ts + 1, ts + 1));
+    // The square the no-button branch clears, and no wider: the bevel's line
+    // runs along its far edge and is painted only on the first frame.
+    dr.drawRect(rect(b0 - 1, b0 - 1, ts, ts), COL_BACKGROUND);
+    drawHintMark(dr, ds, b0 - 1, b0 - 1, flagsAt(0, 0));
     dr.drawCircle(
       pt(b0 + ds.ballRadius - 1, b0 + ds.ballRadius - 1),
       ds.ballRadius - 1,

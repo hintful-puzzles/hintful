@@ -9,7 +9,13 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import {
+  type Game,
+  type HintStep,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/game.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -21,8 +27,11 @@ import {
   interpretTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import { hint, hintKeepTrack } from "./hint.ts";
+import { HINT_MARKS } from "./hint-text.ts";
 import {
   animLength,
   type BlackboxDrawState,
@@ -58,6 +67,7 @@ import {
   newDesc,
   newState,
   presets,
+  range2grid,
   revealAnswer,
   status,
   validateParams,
@@ -294,6 +304,29 @@ function executeMove(from: BlackboxState, m: BlackboxMove): BlackboxState {
   return ret;
 }
 
+// --- hint -------------------------------------------------------------
+
+/** A click on the square the step's move acts on: a box square, a laser's
+ * range square, or the corner button. */
+function hintGesture(
+  state: BlackboxState,
+  ui: BlackboxUi,
+  ds: BlackboxDrawState,
+  move: BlackboxMove,
+  step: HintStep<BlackboxMove>,
+): readonly PointerAction[] {
+  let target: Point;
+  if (move.type === "toggleBall" || move.type === "toggleLock")
+    target = { x: move.x, y: move.y };
+  else if (move.type === "fire")
+    target = range2grid(state.w, state.h, move.rangeno) as Point;
+  else if (move.type === "reveal") target = { x: 0, y: 0 };
+  else return [];
+  return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, state, ui, ds, step, [
+    target,
+  ]);
+}
+
 // --- status bar -------------------------------------------------------
 
 function statusbarText(state: BlackboxState, ui: BlackboxUi): string {
@@ -381,6 +414,11 @@ export const blackboxGame: Game<
     // beside the player's guesses, scored as a loss.
     return { ok: true, move: { type: "solve" } };
   },
+
+  hint,
+  hintMarks: HINT_MARKS,
+  hintKeepTrack,
+  hintGesture,
 
   statusbarText,
 

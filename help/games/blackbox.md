@@ -21,6 +21,33 @@ inside it, and onto the button once it shows.
 
 A square marked as known takes no ball until you right-click it again.
 
+## Hints
+
+**Hint** reads only what your lasers have shown, never the hidden balls,
+so it tells you nothing you could not work out yourself.
+
+{{hint-marks}}
+
+Its main tool is following a laser through the box. Start at a laser
+you have fired and walk its path through the squares you already know,
+up to the first square you know nothing about. Ask what that square
+could hold: if a ball there would send the laser somewhere it did not
+go, the square must be empty, and if leaving it empty would, it must
+hold a ball. A laser that came out at a numbered square can be followed
+from either of its two numbers, since a path runs the same both ways.
+
+The hint marks an empty square as known and puts a ball on a square that
+must hold one, so each later step can build on what is on the board.
+When nothing more can be settled, it asks you to fire a laser whose path
+still runs through squares nothing has settled.
+
+Once every laser is fired, it can happen that no single laser settles
+any more squares, though all of them together do. The hint then finds
+balls that send every laser where it went by trying, and offers them as
+one run of moves. Your answer is accepted whenever your balls send every
+laser where the real ones do, so a ball that no laser can ever reach may
+sit on any square the lasers leave unsettled.
+
 ## Black Box parameters
 
 {{parameters}}

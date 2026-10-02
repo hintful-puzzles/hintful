@@ -44,11 +44,12 @@ move that the game's renderer draws as it draws any move.
 - **WHEN** a step's words are declared `bare`
 - **THEN** the hint-quality walk fails the step if its words name any outline or stripes
 
-#### Scenario: A later leg rests on its first leg's necessity
+#### Scenario: Only a forced step is held to the necessity voice
 
-- **WHEN** a journey's later leg is built with the `again` relation, or a step is declared
-  `setup`
+- **WHEN** a deductive game's step is built with any relation but forced (a journey's later
+  leg, a move narrated by its effect, one of several), or is declared `setup` or `bare`
 - **THEN** the necessity-voice rule reads its form and does not require a modal of its own
+- **AND** a forced step, and an `evident` one, is still required to carry necessity
 
 #### Scenario: Words cannot skip the parts
 

@@ -138,6 +138,12 @@ const BOUNDED_SEARCH_HINTS = SEARCH_REACH_GAMES;
  * the member (`AGENTS.md` § "Convention over configuration").
  */
 const SEARCH_REACH: Record<string, string> = {
+  blackbox:
+    "Once every laser is fired and none settles a square on its own, searches " +
+    "for balls that send every laser where it went, within a budget. Measured " +
+    "when the hint was written (125 boards over every preset), the search was " +
+    "needed on some boards and never came near the budget, and no walk refused. " +
+    "Largest board on every commit: this walk.",
   guess:
     "Enumerates the answers that still fit, and a huge custom board can exhaust " +
     "the enumeration budget before finding one. No preset reaches it. Largest " +

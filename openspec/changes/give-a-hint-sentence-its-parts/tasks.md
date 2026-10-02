@@ -35,7 +35,10 @@
       every converted sentence out loud (docs/games/hints.md § "Read one plan
       out loud"). (Census of 39,113 walked steps before and after: every step
       has a form, 33,459 byte-identical, every changed template read.)
-- [ ] 3.2 Black Box's hint, written in the new shape from its first commit.
+- [x] 3.2 Black Box's hint, written in the new shape from its first commit.
+      (Every preset, 125 boards: all won by following it, no settled square
+      contradicting the hidden balls; a planted peek at the hidden balls in its
+      laser choice turned its "reads only the lasers" test red.)
 
 ## 4. Docs and acceptance
 

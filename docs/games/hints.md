@@ -374,9 +374,12 @@ can carry an imperative tail ("draw them all"), because the forced-ness is
 already explicit in the premise.
 
 **Guarded cross-game** (`src/engine/hint-quality.test.ts`): every deductive
-game's steps must match the shared necessity vocabulary; a step whose words
-declare a setup (`unshaped(…, "setup")`) or a journey's later leg (`again`) is
-read by its form and not held to it, and an owner-endorsed phrasing that
+game's **forced** steps must match the shared necessity vocabulary. The
+relation a step's words declare (§ "A sentence has parts") says whether it is
+a deduction at all: a step offering a move (one of several, an answer, an
+effect, a leg of a sequence or of a journey, `serves`) or declared `setup` or
+`bare` is read by its form and not held to the modal, so a deductive game's
+"fire this laser" step needs no ledger. An owner-endorsed phrasing that
 carries necessity in its own words (Filling's "fits exactly into") is a
 *declared idiom* in that file — add to the idiom table deliberately, never by
 loosening the shared pattern. Game-specific phrasing rules (the exact modal
@@ -3735,6 +3738,41 @@ halves apart rather than blending them into one voice.
   re-derives its own and skips what the board already shows, Dominosa's shape
   rather than Seismic's (§ "Deduce from the notes when the mistake check vouches
   for them"). A mistake check against the answer would leak it.
+
+### Follow one ray to the first unknown (Black Box)
+
+Black Box hides its answer and has the player gather evidence, so its hint
+(`src/games/blackbox/hint.ts`) has three kinds of step: settle a square, fire a
+laser, and, once every laser is fired, offer a layout found by trying. Three
+things transfer:
+
+- **One tracer for the truth and for partial knowledge.** The laser physics is
+  `traceLaser` over a function saying what a square holds, which may answer
+  "not known"; the game's own laser and the hint's hypothetical one are the
+  same code, and a trace that consults an unknown square stops there and names
+  it. A deduction is then "set that square each way and trace again": if one way
+  sends the laser where it did not go, the square is the other. That is a Check,
+  narratable in one sentence, and *only the first unknown on a path can ever be
+  settled this way*, since setting any later square leaves the trace stopped
+  where it was. A straight-through ray does not prove its neighbors empty, because
+  a ball beside the path can send it on a detour that comes back; the tracer
+  knows that, so the hint never claims it.
+- **A path read from either end.** A ray that came out at a numbered square is
+  the same path both ways, so the hint follows it from both ends and says "no
+  ray could run between them", which is true whichever end the reasoning
+  started from.
+- **Prove the hint cannot peek.** A hint over hidden information must not read
+  the hidden state. `blackbox-hint.test.ts` moves a hidden ball wherever every
+  fired laser still goes where it went and requires the same plan, at every
+  position along the hint's own path, with a floor on how many of those
+  positions were fire steps. A first cut compared only after three fixed
+  lasers, where deductions always come first, so a planted peek in the
+  laser choice passed it.
+
+The search is not a deduction and is not narrated as one: it offers balls that
+send every laser where it went, which is exactly what the check accepts, and
+names the squares it sets. Measured when it was written, no walk across every
+preset came near its budget; past it, the hint says the search is out of reach.
 
 ## The cross-game guards
 

@@ -25,7 +25,7 @@ checks them best:
   and a board laid out by its first move, which it wrote (2026-10-01).
 
 - `give-a-hint-sentence-its-parts`: Black Box, a deductive hint whose steps
-  rest on several premises (2026-10-02).
+  rest on several premises, which it wrote (2026-10-02).
 - `judge-rivals-for-search-hints`: Same Game, the search game with the most
   good moves per position, or whichever search game gets a hint first
   (2026-10-02).

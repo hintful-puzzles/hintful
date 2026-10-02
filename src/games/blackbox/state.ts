@@ -326,53 +326,85 @@ function offset(x: number, y: number, dir: number): Point {
   return { x: x + d.x, y: y + d.y };
 }
 
-/** Is there a ball forward (and, for LEFT/RIGHT, diagonally) of `(gx,gy)`
- * facing `direction`? Off the arena (into the range) there is never one. */
-function isball(
-  st: BlackboxState,
-  gx: number,
-  gy: number,
-  direction: number,
-  lookwhere: number,
-): boolean {
-  let p = offset(gx, gy, direction);
-  if (lookwhere === LOOK_LEFT) p = offset(p.x, p.y, direction - 1);
-  else if (lookwhere === LOOK_RIGHT) p = offset(p.x, p.y, direction + 1);
+/** What a square of the box holds, as far as a trace knows: a ball, nothing,
+ * or `null` for not known. */
+export type Holds = boolean | null;
 
-  if (p.x < 1 || p.y < 1 || p.x > st.w || p.y > st.h) return false;
-  return (gridGet(st, p.x, p.y) & BALL_CORRECT) !== 0;
-}
+/** A laser's result, or the first square it looks at whose content
+ * {@link traceLaser} was not told. */
+export type Traced = number | { readonly unknown: Point };
 
-/** Trace a laser fired from range cell `entryno` without recording it;
- * returns `LASER_HIT`, `LASER_REFLECT`, or the exit range index. */
-function laserExit(st: BlackboxState, entryno: number): number {
-  const { x: x0, y: y0, direction } = range2grid(st.w, st.h, entryno) as RangeCell;
+/**
+ * Where a laser fired from range cell `entryno` goes, given what each square of
+ * the box holds (`ballAt`, on the 1-based grid): `LASER_HIT`, `LASER_REFLECT`
+ * or its exit range index. Where it looks at a square `ballAt` answers `null`
+ * for, and what that square holds would change what the laser does, it stops
+ * there and returns the square. One tracer for the real balls and for the
+ * hint's partial knowledge, so the two cannot disagree about the physics.
+ */
+export function traceLaser(
+  w: number,
+  h: number,
+  entryno: number,
+  ballAt: (x: number, y: number) => Holds,
+): Traced {
+  /** What lies forward (or diagonally forward) of `(gx, gy)`; off the box
+   * there is never a ball. */
+  const look = (gx: number, gy: number, direction: number, where: number) => {
+    let p = offset(gx, gy, direction);
+    if (where === LOOK_LEFT) p = offset(p.x, p.y, direction - 1);
+    else if (where === LOOK_RIGHT) p = offset(p.x, p.y, direction + 1);
+    const holds = p.x < 1 || p.y < 1 || p.x > w || p.y > h ? false : ballAt(p.x, p.y);
+    return { holds, at: p };
+  };
+
+  const { x: x0, y: y0, direction } = range2grid(w, h, entryno) as RangeCell;
 
   // Entry-cell special cases: hit prioritized over reflection.
-  if (isball(st, x0, y0, direction, LOOK_FORWARD)) return LASER_HIT;
-  if (
-    isball(st, x0, y0, direction, LOOK_LEFT) ||
-    isball(st, x0, y0, direction, LOOK_RIGHT)
-  )
-    return LASER_REFLECT;
+  const front = look(x0, y0, direction, LOOK_FORWARD);
+  if (front.holds === null) return { unknown: front.at };
+  if (front.holds) return LASER_HIT;
+  const left = look(x0, y0, direction, LOOK_LEFT);
+  const right = look(x0, y0, direction, LOOK_RIGHT);
+  if (left.holds || right.holds) return LASER_REFLECT;
+  if (left.holds === null) return { unknown: left.at };
+  if (right.holds === null) return { unknown: right.at };
 
   let { x, y } = offset(x0, y0, direction);
   let dir = direction;
   for (;;) {
-    const exitno = grid2range(st.w, st.h, x, y);
+    const exitno = grid2range(w, h, x, y);
     if (exitno !== null) return exitno === entryno ? LASER_REFLECT : exitno;
 
-    if (isball(st, x, y, dir, LOOK_FORWARD)) return LASER_HIT;
-    if (isball(st, x, y, dir, LOOK_LEFT)) {
+    const ahead = look(x, y, dir, LOOK_FORWARD);
+    if (ahead.holds === null) return { unknown: ahead.at };
+    if (ahead.holds) return LASER_HIT;
+    const l = look(x, y, dir, LOOK_LEFT);
+    if (l.holds === null) return { unknown: l.at };
+    if (l.holds) {
       dir = (dir + 1) % 4; // ball to our left: turn clockwise
       continue;
     }
-    if (isball(st, x, y, dir, LOOK_RIGHT)) {
+    const r = look(x, y, dir, LOOK_RIGHT);
+    if (r.holds === null) return { unknown: r.at };
+    if (r.holds) {
       dir = (dir + 3) % 4; // ball to our right: turn anti-clockwise
       continue;
     }
     ({ x, y } = offset(x, y, dir));
   }
+}
+
+/** Trace a laser fired from range cell `entryno` through the real balls,
+ * without recording it; returns `LASER_HIT`, `LASER_REFLECT`, or the exit
+ * range index. */
+function laserExit(st: BlackboxState, entryno: number): number {
+  return traceLaser(
+    st.w,
+    st.h,
+    entryno,
+    (x, y) => (gridGet(st, x, y) & BALL_CORRECT) !== 0,
+  ) as number;
 }
 
 /** Show a laser's result on the range: `H`/`R` on its entry cell, or the

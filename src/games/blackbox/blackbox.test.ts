@@ -332,7 +332,7 @@ describe("Black Box — Game surface", () => {
     expect(blackboxGame.id).toBe("blackbox");
     expect(blackboxGame.statusbarText).toBeDefined();
     expect(blackboxGame.solve).toBeDefined();
-    expect(blackboxGame.hint).toBeUndefined();
+    expect(blackboxGame.hint).toBeDefined();
     expect(blackboxGame.findMistakes).toBeUndefined();
   });
 

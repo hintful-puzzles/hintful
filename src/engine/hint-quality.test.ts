@@ -366,16 +366,20 @@ const NECESSITY =
   /\bmust\b|\bcan(?:no|')t\b|\bcannot\b|\bcan only\b|\bcan never\b|\bhas to\b|\bhave to\b|\bneeds?\b|\brul(?:e|es|ed|ing)\b.{0,40}\bout\b|\bno other\b|\bnowhere\b|\bonly\b|\bnever\b|\bforce[sd]?\b|\bimpossible\b|\bneither\b|\bat most\b|\bnone of\b[^.]{0,40}\bcan\b/i;
 
 /**
- * Steps the necessity rule does not read, by the form their words declare: a
- * setup step is procedure the player is walked through, not a deduction, and a
- * journey's later leg (`again`) rests on the necessity its first leg stated,
- * so making every leg restate the modal is the flattening this file's header
- * forbids.
+ * Steps the necessity rule does not read, by the form their words declare. The
+ * rule is about deductions, and a step's relation says whether it is one: a
+ * forced step concludes what must be, while every other relation offers a move
+ * (one of several, an answer to a danger, a move narrated by its effect, a leg
+ * of a sequence, a step toward an aim), which the imperative states. A journey's
+ * later leg (`again`) rests on the necessity its first leg stated, so making
+ * every leg restate the modal is the flattening this file's header forbids; a
+ * setup step is procedure, and a bare step has nothing but its move. An
+ * evident step's look carries its own necessity, and is read.
  */
 function exemptByForm(step: HintStep<unknown>): boolean {
   const form = step.words?.form;
   if (!form) return false;
-  return "unshaped" in form ? form.unshaped === "setup" : form.relation === "again";
+  return "unshaped" in form ? form.unshaped !== "evident" : form.relation !== "forced";
 }
 
 /**
