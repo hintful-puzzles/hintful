@@ -6861,6 +6861,10 @@ painted.
   painted a hint frame.
 - **Mistake frames** are counted and not required, because reaching a mistaken
   board takes a move specific to the game.
+- **Pinned boards.** The comparison SHALL accept a game id to start from in
+  place of a seeded deal. A game that draws a mark across tiles which the seeded
+  deal does not show SHALL run the comparison from a board that shows it,
+  pinned as the board and the event stream rather than as a deal seed.
 
 #### Scenario: The clock ticks in whole seconds
 
@@ -6877,10 +6881,18 @@ painted.
 
 #### Scenario: A mark drawn across tiles outlives its flag
 
-- **WHEN** a drag's preview draws a mark across tile edges and the release
-  repaints only the tiles whose own content changed
+- **WHEN** a frame the comparison paints draws a mark across tile edges, and a
+  later frame clears the mark while repainting only some of the tiles it
+  crossed
 - **THEN** a warm frame keeps the mark's pieces over the tiles that did not
-  repaint, and the test fails
+  repaint, and the comparison fails
+
+#### Scenario: A cross-tile mark the seeded deal never shows
+
+- **WHEN** a game's cross-tile mark leaves its tile key, and the seeded run
+  never paints that mark
+- **THEN** the game's comparison from a pinned board that shows the mark fails,
+  where the seeded run alone would pass
 
 ### Requirement: The engine SHALL own the hint mark roles and the words for them
 

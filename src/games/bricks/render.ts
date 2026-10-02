@@ -338,7 +338,8 @@ export function redraw(
     // pieces. The clip is what makes each piece the business of the square
     // that carries its flag, so a piece goes when that square repaints. A
     // square with no neighbor beside it owns the ground there as well, where a
-    // diamond on the board's side edge lands.
+    // diamond on the board's side edge lands (`bricks.test.ts`, "takes an edge
+    // diamond away whole, ground included").
     const { x: tx, y: ty } = tileOrigin(x, y, h, ts);
     let clipX = tx;
     let clipW = ts + 1;

@@ -1,7 +1,14 @@
 # share-marks-across-tiles
 
-**Status: scaffolded, not started (2026-10-02).** Proposed after
-`add-pegs-hint`; the owner asked for it to be scaffolded.
+**Status: done (2026-10-02): no helper, and a net that reaches the marks.**
+Proposed after `add-pegs-hint`; the owner asked for it to be scaffolded.
+
+**Outcome.** The shape is not shared: what Bricks and Pegs have in common is
+the per-tile clip, which is two lines and the ordinary tile idiom, so no helper
+was extracted (`design.md` D1). Planting each defect showed that the net named
+below caught neither game's cross-tile marks, because the seeded run never
+shows them. The differential now starts from a pinned board, and Pegs and
+Bricks each pin the boards that reach their marks (D2).
 
 ## Why
 
@@ -20,7 +27,7 @@ it (docs/games/rendering.md § "A tile paints only its own box, and tiles that
 share pixels repaint together"). Both have gone wrong here before, silently:
 Bricks shipped pieces that stayed after their flag cleared.
 
-## What
+## What Changes
 
 First establish whether the shape really is shared. Bricks' marks are rule and
 mistake flags on neighbors, while Pegs' are hint marks keyed by a move, so the

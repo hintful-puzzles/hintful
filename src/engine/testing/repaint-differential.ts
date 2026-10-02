@@ -343,17 +343,24 @@ const TICK_S = 0.05;
 const MAX_TICKS = 120;
 
 /**
- * Drive `game` through `events` seeded input events on a board of `params`
- * (its default params unless given), comparing every frame against a fresh
- * draw state's, the frames of every animation included. Stops at the first
- * mismatch.
+ * Drive `game` through `events` seeded input events, comparing every frame
+ * against a fresh draw state's, the frames of every animation included. Stops
+ * at the first mismatch.
+ *
+ * The board is dealt from `seed` at the default params, or is `board` (a game
+ * id, `params:desc`) when a frame the run must reach needs a position no deal
+ * reliably gives: the seeded run reaches what is common, and a pinned board is
+ * how a game puts its rarer marks in front of it.
  */
 export function repaintDifferential(
   game: AnyGame,
   seed: string,
   events: number,
-  params: unknown = game.defaultParams(),
+  board?: string,
 ): RepaintRun {
+  const params = board
+    ? game.decodeParams(board.slice(0, board.indexOf(":")))
+    : game.defaultParams();
   const tileSize = game.preferredTileSize ?? 32;
   const size = game.computeSize(params, tileSize);
   const palette = game.colors(DEFAULT_BACKGROUND);
@@ -422,8 +429,12 @@ export function repaintDifferential(
     () => {},
     () => {},
   );
-  const desc = game.newDesc(params, randomNew(`repaint-${seed}`)).desc;
-  m.newGameFromId(`${game.encodeParams(params, true)}:${desc}`);
+  const dealt = () => {
+    const desc = game.newDesc(params, randomNew(`repaint-${seed}`)).desc;
+    return `${game.encodeParams(params, true)}:${desc}`;
+  };
+  const error = m.newGameFromId(board ?? dealt());
+  if (error !== null) throw new Error(`${board}: ${error}`);
   const sink = new RecordingDrawing(palette);
   const paint = () => {
     m.redraw(sink);

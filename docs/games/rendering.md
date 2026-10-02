@@ -203,16 +203,36 @@ cause has so far always been one of these:
   (`eraseBeforeTiles`) and let every tile the band touches repaint on top —
   [`hints.md`](hints.md) § "Where the band goes, and who rubs it out".
 - **A mark drawn whole across its neighbors.** Bricks' three-in-a-row bar and
-  gravity diamond sit across tile edges, and every tile the mark crosses carries
-  a flag for it. Drawn unclipped, the piece over a neighbor stayed after the flag
-  cleared, whenever that neighbor had no reason of its own to repaint. Clip each
-  tile to its own box, as upstream does, so each piece belongs to the tile that
-  carries its flag.
+  gravity diamond sit across tile edges. A diamond on the board's left edge
+  lands a quarter on the ground beside it, which no tile owned, and 171 px of it
+  stayed after its flag cleared. The fix has two parts. The edge square owns
+  that ground and repaints it, which is what clears the piece. Each tile also
+  clips to what it owns, as upstream does, so a flagged square's repaint cannot
+  paint over its neighbors. Every square a mark crosses must carry the mark in
+  its key, and every pixel the mark lands on must belong to one of those
+  squares.
 - **A decoration that repaints only on its own change, inside a tile's box.**
   Towers' pencil-mode indicator lives in a corner square of the clue ring. When
   that square repainted for a hint mark beside it, it filled over the indicator,
   which `repaintPencilIndicator` draws only when the mode changes. A tile that
   repaints over a decoration must forget what the decoration showed.
+
+**A mark that crosses tiles goes into each tile's key in one of two ways**, and
+the choice is the game's:
+
+- **By piece.** The tile's key says which piece of the mark it draws: a side,
+  a direction, half a bar. This is upstream's idiom. Bridges' spans, Pearl's
+  edges, Net's sides and Bricks' rule flags all work this way, and the piece is
+  the game's own geometry. Region outlines are the shared case
+  (`MarkOutlines.packed`, `engine/hint-mark.ts`).
+- **By identity.** The tile's key names the marks crossing it, and the tile
+  draws each one whole while clipped to its box. Pegs' hint jumps work this way
+  (`pegs/render.ts`). It suits a mark whose shape is not a grid's (an arrow
+  over three squares), at the cost of a key that lists marks rather than packs
+  bits.
+
+There is no engine helper for either: what the two share is the clip, and
+`share-marks-across-tiles` records why that was not worth extracting.
 
 **What the run reaches is part of the result.** A pass means nothing for a
 frame the run never painted. So the run:
@@ -230,6 +250,17 @@ requires:
 
 Each requirement was proven red by planting its absence. Mistake frames are
 counted but not required, for the reason the next section gives.
+
+**A mark the seeded deal never shows needs a board that does.** The run deals
+one board per game and plays the opening of its hint, so a rarer mark never
+reaches it. Pegs' rival arrows and stripes did not, and a stale diamond on
+Bricks' edge, which the run once convicted, later fell out of its reach. In
+each case the planted defect passed the collection-wide run. Pass
+`repaintDifferential` a `board` (a game id) and pin the case in the game's own
+tests, as the board and the event seed, never as a deal seed. Then plant the
+defect and watch it fail. Exemplars: `pegs-hint.test.ts` ("takes the … away
+whole when the hint moves on") and `bricks.test.ts` ("takes an edge diamond
+away whole, ground included").
 
 Read the report before the code: it names the frame, the event before it, the
 first differing pixel, what each canvas shows there and which frame painted

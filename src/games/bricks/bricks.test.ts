@@ -17,8 +17,10 @@ import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { repaintDifferential } from "../../engine/testing/repaint-differential.ts";
 import type { Point } from "../../engine/types.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { newBricksDesc } from "./generator.ts";
@@ -424,5 +426,20 @@ describe("bricks rendering (tier 2.5)", () => {
     expect(
       result.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
     ).toBe(true);
+  });
+
+  // A gravity diamond on the board's left edge lands a quarter on the ground
+  // beside it, which only the edge square repaints. The collection-wide run's
+  // own deal never puts one there, so this board and event stream do: with
+  // the ground repaint gone, 171 px of diamond outlive their flag.
+  it("takes an edge diamond away whole, ground included", () => {
+    const run = repaintDifferential(
+      bricksGame as unknown as AnyGame,
+      "bricks-0",
+      60,
+      "6x7de:2b4ba5b3_0_3eb3b2c2b3d2b2c",
+    );
+    expect(run.mismatch, JSON.stringify(run.mismatch)).toBeNull();
+    expect(run.frames).toBeGreaterThan(60);
   });
 });

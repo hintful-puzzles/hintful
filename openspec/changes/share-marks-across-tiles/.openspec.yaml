@@ -1,5 +1,0 @@
-# No delta yet: if task 0.1 finds the shape shared, the requirement is written
-# against the code as it then stands, and skip_specs goes in the same edit.
-schema: spec-driven
-created: 2026-10-02
-skip_specs: true

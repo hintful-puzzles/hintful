@@ -17,12 +17,14 @@ import {
   bindingDefects,
   deadEndBindingDefects,
 } from "../../engine/testing/hint-binding.ts";
+import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { repaintDifferential } from "../../engine/testing/repaint-differential.ts";
 import { hint, hintKeepTrack } from "./hint.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import { pegsGame } from "./index.ts";
@@ -513,6 +515,18 @@ describe("pegs hint", () => {
     );
     expect(heads.length).toBe(arrows.length * 3);
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  // A jump's arrow and stripes cross three squares, and each square keys on
+  // them, so all three repaint when the mark goes. A seeded deal rarely shows
+  // either mark, so the warm-repaint run starts from the boards that do.
+  it.each([
+    ["stripes", PINNED.trap],
+    ["arrows", PINNED.onlyThese],
+  ])("takes the %s away whole when the hint moves on", (_, board) => {
+    const run = repaintDifferential(G as unknown as AnyGame, board, 20, board);
+    expect(run.mismatch, JSON.stringify(run.mismatch)).toBeNull();
+    expect(run.reached.hinted).toBeGreaterThan(0);
   });
 });
 
