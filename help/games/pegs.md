@@ -23,28 +23,37 @@ still finish from one that cannot is what winning at Pegs takes.
 
 {{hint-marks}}
 
-The first thing to look for is a peg cut off: one with no peg beside it,
-and nowhere a peg could ever land beside it. A board with a cut-off peg can
-never finish with one. So when some other jump would cut a peg off, either
-straight away or whatever you jump next, the hint stripes that jump and
-outlines the peg it would strand.
+The game ends with one peg, so every other peg has to be taken along the
+way: **leave no peg stranded**. A peg is *stranded* when no peg is beside
+it. It cannot jump, and nothing can take it until a peg lands next to it,
+so you will have to go back for it. A peg is *cut off* when no peg can ever
+land beside it again. A board with a cut-off peg can never finish with one.
+
+So the first thing the hint looks for is a jump that would cut a peg off,
+either straight away or whatever you jump next. It stripes that jump,
+outlines the peg, and shows a jump that keeps the peg in reach. When the
+striped jump and the suggested one start from the same peg, the suggested
+jump is that peg going the other way.
 
 Otherwise, a hint may show a **package**: a short run of jumps that clears
 a row or column of three, or a block of two by three, and puts every
 other peg back where it was. For three in a line, a spare peg beside one
 end can jump across the line into an empty hole, the line's far peg jumps
 in, and the spare jumps back to where it began. Learning these shapes is
-how to
-clear a board one area at a time. A package is one hint, shown a jump at a
-time.
+how to clear a board one area at a time. A package is one hint, shown a
+jump at a time.
 
 When the search has checked the other jumps, the hint says what it found.
-It draws an arrow on each other jump that can still finish, and when it
-checked every jump it says that only those can. When every jump can still
-finish, which is usual early in a game, it says that too. In the middle
-of a game on the larger boards there are often too many ways to go for the
-search to check every jump quickly, and then the hint makes no claim about
-the jumps it did not settle.
+It draws an arrow on each jump that can still finish, the suggested one
+among them, and when it checked every jump it says that only those can.
+When every jump can still finish, which is usual early in a game, it says
+that too. In the middle of a game on the larger boards there are often too
+many ways to go for the search to check every jump quickly, and then the
+hint makes no claim about the jumps it did not settle. It turns to stranded
+pegs instead: a stranded peg the suggested jump goes back for, or another
+jump that would strand a peg the suggested jump keeps company. Leaving no
+peg stranded is a habit worth having rather than a rule. Sometimes the
+winning line strands a peg for a while and comes back for it later.
 
 The hint refuses when there is nothing to search for: if a peg is
 already cut off, or the search proves no line of jumps from here leaves

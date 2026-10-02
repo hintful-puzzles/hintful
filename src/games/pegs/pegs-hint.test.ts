@@ -64,6 +64,16 @@ const PINNED = {
   anyJump: "5x5:OOOOPPPPPPOPPPPOPPHPOOPPO",
   /** The jump that leaves one peg. */
   last: "5x5:OOOOHHHHHHOHHPPOHHHHOOHHO",
+  /** The rest of the link variants: a different peg's trap, this peg's
+   * trap a jump later, and a jump that would strand a peg, by this peg and by
+   * another (found by a further scan, 2026-10-02). */
+  trapOther: "5x5:OHPPHHOHPPHPHHPHOOPOHOOOO",
+  trapSoonOwn: "5x5:OOOOHOPPHPPPHPHPHHOHPHPOO",
+  strandOwn: "7x7:OOOOOOHOHOOOOHHHOOPPPHPPPHPPHPPHPPHPHPHHPPOOHOHPO",
+  strandOther: "7x7:OHPPHHOOHOPOOOPPPPPPOOPPPPPOOPPPHPOHHPPPPPOOPPPOO",
+  /** A peg alone now, which the offered jump lands beside: the owner's
+   * playtest position (2026-10-02). */
+  joins: "7x7:OOPHHOOOOHHPOOHPPHHHPHHPPPPPHHPPPPPOOPPPOOOOPPPOO",
   /** Lost, with no peg frozen: only the exhaustive search can say so. */
   lost: "5x5:POPPPPHPOOPHHHHPPHOOHOOOO",
 } as const;
@@ -171,21 +181,33 @@ describe("pegs hint", () => {
   it("stripes a rival that cuts a peg off at once, and outlines that peg", () => {
     const { s, steps } = planAt(
       PINNED.trap,
-      /The striped jump would cut off the outlined peg/,
+      /^This peg's striped jump would cut off the outlined peg, so jump this peg into the ringed hole instead\.$/,
     );
     const marks = stepMarks(steps[0]);
     const [rival] = marks.of("stripes", JUMP);
     const [victim] = marks.of("outline", PEG);
-    expect(legalJumps(s).some((j) => same(j, rival))).toBe(true);
-    expect(same(rival, asMarked(s, steps[0].move))).toBe(false);
+    const j = asMarked(s, steps[0].move);
+    expect(legalJumps(s).some((r) => same(r, rival))).toBe(true);
+    expect(same(rival, j)).toBe(false);
+    // "This peg's" striped jump: the same peg, the other way.
+    expect(rival.from).toBe(j.from);
     expect(frozenPegs(played(s, rival))).toContain(victim);
+    expect(frozenPegs(played(s, j))).not.toContain(victim);
   });
 
   it("names a rival after which every jump cuts the outlined peg off", () => {
-    const { s, steps } = planAt(PINNED.trapSoon, /any jump you make next cuts off/);
+    const { s, steps } = planAt(
+      PINNED.trapSoon,
+      /^After the striped jump, any next jump cuts off the outlined peg\. One way to save it: jump/,
+    );
     const marks = stepMarks(steps[0]);
     const [rival] = marks.of("stripes", JUMP);
     const [victim] = marks.of("outline", PEG);
+    const j = asMarked(s, steps[0].move);
+    // A different peg, so the move is offered as one way to save the victim,
+    // which it does: it starts a line that finishes.
+    expect(rival.from).not.toBe(j.from);
+    expect(findFinish(played(s, j)).kind).toBe("found");
     const next = played(s, rival);
     expect(frozenPegs(next)).toEqual([]);
     const replies = legalJumps(next);
@@ -201,7 +223,7 @@ describe("pegs hint", () => {
     it(`walks the clearing of a ${name} as one journey`, () => {
       const { s, steps } = planAt(
         PINNED[name],
-        new RegExp(`clear the striped ${name} and`),
+        new RegExp(`clear the striped ${name} and change nothing else\\. First`),
       );
       expect(steps).toHaveLength(n);
       expect(steps.slice(1).every((st) => st.continuesPrevious)).toBe(true);
@@ -217,21 +239,26 @@ describe("pegs hint", () => {
   }
 
   it("says a jump is the only one only where every rival is proved lost", () => {
-    const { s, steps } = planAt(PINNED.only, /only jump here that can still finish/);
+    const { s, steps } = planAt(
+      PINNED.only,
+      /^No other jump can still finish, so jump/,
+    );
     const j = asMarked(s, steps[0].move);
     const rivals = legalJumps(s).filter((r) => !same(r, j));
     expect(rivals.length).toBeGreaterThan(0);
     for (const r of rivals) expect(provedLost(played(s, r), 100_000)).toBe(true);
   });
 
-  it("draws the arrows on exactly the rivals that can still finish", () => {
+  it("draws the arrows on exactly the jumps that can still finish", () => {
     const { s, steps } = planAt(
       PINNED.onlyThese,
-      /Only it and the jumps? with (an )?arrows?/,
+      /^Only the jumps with arrows can still finish\. One of them: jump/,
     );
     const j = asMarked(s, steps[0].move);
     const arrows = stepMarks(steps[0]).of("outline", JUMP);
-    expect(arrows.length).toBeGreaterThan(0);
+    // The offered jump is one of them, and carries its arrow under the rings.
+    expect(arrows.some((a) => same(a, j))).toBe(true);
+    expect(arrows.length).toBeGreaterThan(1);
     for (const r of legalJumps(s).filter((r) => !same(r, j))) {
       const shown = arrows.some((a) => same(a, r));
       if (shown) expect(findFinish(played(s, r)).kind).toBe("found");
@@ -242,10 +269,11 @@ describe("pegs hint", () => {
   it("claims nothing about an undrawn rival the search could not settle", () => {
     const { s, steps } = planAt(
       PINNED.alsoThese,
-      /can also finish with one peg; some others cannot/,
+      /^The jumps with arrows can still finish; some others cannot\. One of them: jump/,
     );
     const j = asMarked(s, steps[0].move);
     const arrows = stepMarks(steps[0]).of("outline", JUMP);
+    expect(arrows.some((a) => same(a, j))).toBe(true);
     for (const a of arrows) expect(findFinish(played(s, a)).kind).toBe("found");
     const undrawn = legalJumps(s).filter(
       (r) => !same(r, j) && !arrows.some((a) => same(a, r)),
@@ -254,8 +282,96 @@ describe("pegs hint", () => {
   });
 
   it("says every jump can finish only where each one can", () => {
-    const { s } = planAt(PINNED.anyJump, /^Every jump here can still finish/);
+    const { s } = planAt(
+      PINNED.anyJump,
+      /^Every jump can still finish with one peg\. One of them: jump/,
+    );
     for (const r of legalJumps(s)) expect(findFinish(played(s, r)).kind).toBe("found");
+  });
+
+  /** Whether `p` has a peg in one of the four squares beside it. */
+  const hasNeighbor = (st: PegsState, p: number) =>
+    [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ].some(([dx, dy]) => {
+      const x = (p % st.w) + dx;
+      const y = Math.floor(p / st.w) + dy;
+      return (
+        x >= 0 && x < st.w && y >= 0 && y < st.h && st.grid[y * st.w + x] === GRID_PEG
+      );
+    });
+
+  for (const [name, text, own, danger] of [
+    [
+      "trapOther",
+      /^The striped jump would cut off the outlined peg\. One way to save it: jump/,
+      false,
+      "cut",
+    ],
+    [
+      "trapSoonOwn",
+      /^After this peg's striped jump, any next jump cuts off the outlined peg, so jump this peg into the ringed hole instead\.$/,
+      true,
+      "soon",
+    ],
+    [
+      "strandOwn",
+      /^This peg's striped jump would strand the outlined peg, so jump this peg into the ringed hole instead\.$/,
+      true,
+      "strand",
+    ],
+    [
+      "strandOther",
+      /^The striped jump would strand the outlined peg\. One way to keep a peg beside it: jump/,
+      false,
+      "strand",
+    ],
+  ] as const) {
+    it(`links the move to the danger it answers (${name})`, () => {
+      const { s, steps } = planAt(PINNED[name], text);
+      const marks = stepMarks(steps[0]);
+      const [rival] = marks.of("stripes", JUMP);
+      const [victim] = marks.of("outline", PEG);
+      const j = asMarked(s, steps[0].move);
+      expect(rival.from === j.from).toBe(own);
+      const afterRival = played(s, rival);
+      if (danger === "cut") expect(frozenPegs(afterRival)).toContain(victim);
+      if (danger === "soon")
+        for (const r of legalJumps(afterRival))
+          expect(frozenPegs(played(afterRival, r))).toContain(victim);
+      if (danger === "strand") {
+        // Stranded by the striped jump: it had a neighbor, and loses it.
+        expect(hasNeighbor(s, victim)).toBe(true);
+        expect(hasNeighbor(afterRival, victim)).toBe(false);
+        expect(hasNeighbor(played(s, j), victim)).toBe(true);
+      } else expect(findFinish(played(s, j)).kind).toBe("found");
+    });
+  }
+
+  it("goes back for a stranded peg", () => {
+    const { s, steps } = planAt(
+      PINNED.joins,
+      /^The outlined peg is stranded, with no peg beside it; go back for it\.$/,
+    );
+    const [lone] = stepMarks(steps[0]).of("outline", PEG);
+    const j = asMarked(s, steps[0].move);
+    const beside = (a: number, b: number) =>
+      Math.abs((a % s.w) - (b % s.w)) +
+        Math.abs(Math.floor(a / s.w) - Math.floor(b / s.w)) ===
+      1;
+    const pegBeside = (st: PegsState) =>
+      [0, 1, 2, 3].some((d) => {
+        const q = lone + [1, -1, s.w, -s.w][d];
+        return (
+          q >= 0 && q < st.grid.length && beside(q, lone) && st.grid[q] === GRID_PEG
+        );
+      });
+    expect(pegBeside(s)).toBe(false);
+    expect(beside(j.to, lone)).toBe(true);
+    expect(pegBeside(played(s, j))).toBe(true);
   });
 
   it("names the jump that leaves one peg", () => {
@@ -276,8 +392,8 @@ describe("pegs hint", () => {
         checked++;
       }
     }
-    // Ten plans, three of them packages of 3, 3 and 6 legs.
-    expect(checked).toBe(7 + 3 + 3 + 6);
+    // Fifteen plans, three of them packages of 3, 3 and 6 legs.
+    expect(checked).toBe(12 + 3 + 3 + 6);
   });
 
   it("rings the jumping peg and the hole it lands in, and following it solves", () => {
@@ -291,8 +407,13 @@ describe("pegs hint", () => {
         const m = step.move;
         if (m.type !== "jump") throw new Error("jump");
         const marks = stepMarks(step);
-        expect(marks.of("ring", PEG)).toEqual([m.sy * s.w + m.sx]);
-        expect(marks.of("ring", HOLE)).toEqual([m.ty * s.w + m.tx]);
+        // Rung as a peg and a hole, or as the whole jump where the words
+        // leave the move to the board.
+        const whole = marks.of("ring", JUMP);
+        const pegs = [...marks.of("ring", PEG), ...whole.map((j) => j.from)];
+        const holes = [...marks.of("ring", HOLE), ...whole.map((j) => j.to)];
+        expect(pegs).toEqual([m.sy * s.w + m.sx]);
+        expect(holes).toEqual([m.ty * s.w + m.tx]);
         expect(hintKeepTrack(m, step, s)).toBe("completed");
         s = G.executeMove(s, m);
       }

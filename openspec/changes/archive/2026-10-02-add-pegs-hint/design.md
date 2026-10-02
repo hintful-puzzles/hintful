@@ -241,13 +241,43 @@ the offered jump.
 ### What each step says
 
 In order: a trap; a package; then, from the judged rivals, *only* (every rival
-lost), *only it and the arrows* (all settled, some finish), *the arrows can
-also finish; some others cannot* (some lost, some unsettled), *every jump here
-can still finish* (all finish), or the plain step, which says only that the
-board can still finish after it. The jump that leaves one peg says so.
-The plain step is common in the middle of the larger boards, and it is honest
-there: most rivals are unsettled at any budget. "N pegs left" and "Keep going"
-are gone.
+lost), *only the jumps with arrows* (all settled, some finish), *the jumps with
+arrows can still finish; some others cannot* (some lost, some unsettled), or
+*every jump can still finish* (all finish). The offered jump carries an arrow
+too, being one of those that finish. The jump that leaves one peg says so.
+"N pegs left" and "Keep going" are gone.
+
+Where nothing about the rivals is settled, which is common in the middle of
+the larger boards, the step speaks of **stranded** pegs instead (owner
+playtest, 2026-10-02). A peg is stranded when no peg is beside it: it cannot
+jump, and nothing can take it until a peg lands next to it. That is distinct
+from **cut off**, where no peg can ever land beside it again, and the two words
+keep the trap (a proof) apart from the habit (*leave no peg stranded*). The
+step says, in order of preference:
+
+- a peg stranded now that the offered jump lands beside: *"…is stranded, with
+  no peg beside it; go back for it."* The move is left to the rings, which a
+  whole-jump `JUMP` ring names, because the outlined peg leaves only one jump
+  to look for;
+- another jump that would newly strand a peg the offered jump keeps a
+  neighbor beside;
+- otherwise only the move. Measured over whole games on four presets, 53 of 71
+  such steps found something to say about stranded pegs.
+
+Whether a jump strands a peg is a fact on the board, not a verdict on the game:
+jumps that leave a peg alone often still win (D6's 28%), so the words never
+claim the striped jump loses. A first cut contrasting "the only jump that
+leaves no peg on its own" fired on 3 of 71 steps, because jumps usually tie.
+
+**Every part of a sentence follows from the last** (owner, the same
+playtest): look, then what follows, then the move, and never "move A is bad;
+do move B" with no stated link. Where the striped jump is the same peg going
+another way, the move is that peg's other choice and *so … instead* concludes
+it. Where it is a different peg, the move is *one way to save it* (or *to keep
+a peg beside it*), true because the offered jump starts a line that finishes;
+"so" concludes only a choice the sentence has narrowed to one. A wordsmithing
+pass then cut every needless word, and caught that "jump **it** into the ringed
+hole" read as the outlined peg.
 
 The opening's region (D6 item 4) is the package where the plan opens with one.
 Otherwise no region is named, because nothing measured gives a region the

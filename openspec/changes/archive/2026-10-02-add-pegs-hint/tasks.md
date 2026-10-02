@@ -38,8 +38,9 @@
       and "Keep going". Read one whole plan out loud (four presets, followed
       and wandering; it caught the last jump's "Start with").
 - [x] 4.6 Rewrite the help page's Hints section for the new marks.
-- [ ] 4.7 Run the app; owner acceptance. Trap, arrows and a package journey
-      checked in Chromium (2026-10-02); owner acceptance is the remaining step.
+- [x] 4.7 Run the app; owner acceptance. Trap, arrows and a package journey
+      checked in Chromium; the owner's playtest (2026-10-02) added stranded
+      pegs, linked wording and a wordsmithing pass (design D7), and accepted it.
 
 ## 3. Engine
 

@@ -3417,10 +3417,20 @@ Three things carried over from that work:
   fall into Bell's packages (a line of three cleared by a spare peg, a block of
   two by three), found on the plan by their net effect rather than searched for.
   Narrated as one journey, they are what the middle game teaches.
-- **Measure where the budget buys nothing.** In the middle of the larger
-  boards most rivals stay unsettled even at many times the allowance, so the
-  honest step there says only that the board can still finish. Spending more
-  would make the hint slower without making it say more.
+- **Measure where the budget buys nothing, then say something visible.** In
+  the middle of the larger boards most rivals stay unsettled even at many
+  times the allowance, and spending more would make the hint slower without
+  making it say more. "From there the board can still finish" was redundant
+  (the hint offers no other kind of jump); what the owner accepted instead is a
+  fact on the board, a **stranded** peg (no peg beside it) that the move goes
+  back for or that another jump would strand, kept apart from **cut off** (a
+  proof) by its own word, and never worded as a verdict.
+- **Link each part to the next.** A danger is answered by a move that answers
+  it: the same peg's other jump (*so … instead*), or *one way to save it* where
+  the striped jump is another peg's. "Move A is bad. Instead, do B" with no
+  stated link was rejected in playtest. And where the board makes the move
+  obvious, leave it to the rings: a ring on the whole jump can be named by
+  words like *go back for it* (`pegs/hint-text.ts`).
 - **A game whose every move shrinks something needs no stability work.** Each
   jump removes a peg, so any plan recomputed after any move terminates.
   Look for that potential before reaching for Inertia's nearest-goal machinery.

@@ -2,7 +2,7 @@
 
 ### Requirement: Pegs' hint sets the jump it offers against the jumps that lose, and says only what it checked
 
-Pegs SHALL provide a `hint` that searches for a line of jumps leaving one peg and offers its first jump, ringing the peg that jumps and the hole it lands in, and judging the other jumps from the same position within a work allowance per request. Where another jump would leave a peg that no peg can ever arrive beside, at once or after any jump that follows it, the step SHALL stripe that jump and outline that peg. Where the line opens with three or six jumps that empty a line of three or a two-by-three block and leave every other peg where it began, the hint SHALL offer those jumps as one journey with the shape striped. Otherwise, where some other jump was proved unable to finish, the step SHALL draw an arrow on each other jump a finish was found after, and SHALL say only these can finish only when no other jump was left unsettled. A step SHALL say every jump can still finish only where a finish was found after each one. The hint SHALL refuse with a sentence counting the pegs no jump can ever involve again when there are any and more than one peg is left, with `NO_SOLUTION_FROM_HERE` when the search proved no line finishes, and with `SEARCH_OUT_OF_REACH` when the search could not settle the position.
+Pegs SHALL provide a `hint` that searches for a line of jumps leaving one peg and offers its first jump, ringing the peg that jumps and the hole it lands in, and judging the other jumps from the same position within a work allowance per request. Where another jump would leave a peg that no peg can ever arrive beside, at once or after any jump that follows it, the step SHALL stripe that jump and outline that peg. Where the line opens with three or six jumps that empty a line of three or a two-by-three block and leave every other peg where it began, the hint SHALL offer those jumps as one journey with the shape striped. Otherwise, where some other jump was proved unable to finish, the step SHALL draw an arrow on each other jump a finish was found after, and SHALL say only these can finish only when no other jump was left unsettled. A step SHALL say every jump can still finish only where a finish was found after each one. Where nothing about the other jumps is settled, a step SHALL call a peg stranded only where no peg is beside it, either now, with the offered jump landing beside it, or after another jump that the step stripes, with a peg still beside it after the offered jump; and it SHALL NOT say that such a jump loses. The hint SHALL refuse with a sentence counting the pegs no jump can ever involve again when there are any and more than one peg is left, with `NO_SOLUTION_FROM_HERE` when the search proved no line finishes, and with `SEARCH_OUT_OF_REACH` when the search could not settle the position.
 
 #### Scenario: A peg cut off
 
@@ -13,6 +13,11 @@ Pegs SHALL provide a `hint` that searches for a line of jumps leaving one peg an
 
 - **WHEN** some jump other than the one offered would leave a peg that no peg can ever arrive beside
 - **THEN** the step stripes that jump, outlines that peg, and says the striped jump would cut it off
+
+#### Scenario: A stranded peg
+
+- **WHEN** nothing about the other jumps is settled, a peg has no peg beside it, and the offered jump lands beside it
+- **THEN** the step outlines that peg, calls it stranded, and asks the player to go back for it
 
 #### Scenario: The only jump that can finish
 

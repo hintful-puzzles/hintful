@@ -128,7 +128,7 @@ export function hint(state: PegsState): HintResult<PegsMove> {
     return {
       ok: false,
       error: puzzleHintRefusal(
-        "A peg is cut off where no other peg can ever reach it, so more than one peg will always be left. Undo to a position where it can still be jumped.",
+        "A peg is cut off, so the game can never finish with one peg. Undo until a peg can still land beside it.",
       ),
     };
   }
@@ -136,7 +136,7 @@ export function hint(state: PegsState): HintResult<PegsMove> {
     return {
       ok: false,
       error: puzzleHintRefusal(
-        `${frozen.length} pegs are cut off where no other peg can ever reach them, so more than one peg will always be left. Undo to a position where they can still be jumped.`,
+        `${frozen.length} pegs are cut off, so the game can never finish with one peg. Undo until a peg can still land beside each.`,
       ),
     };
   }
@@ -187,12 +187,52 @@ export function hint(state: PegsState): HintResult<PegsMove> {
   const goods = rivals.filter((_, i) => verdicts[i] === "finishes");
   const lost = verdicts.includes("lost");
   const unsettled = verdicts.includes("unknown");
+  // With nothing settled to contrast, a fact the player can see instead.
+  // First, a peg alone now that this jump lands beside; then a rival that
+  // would newly leave a peg with none beside it, where this jump would not.
+  // Neither is a proof about winning, and the words do not claim one.
+  const plain = (): Narration => {
+    const now = new Set(alone(state));
+    const mine = new Set(alone(jumped(state, j)));
+    const joined = [...now].find((p) => !mine.has(p) && p !== j.from && p !== j.over);
+    if (joined !== undefined) return say.joins(j, joined);
+    const lone = rivals
+      .map((r) => ({
+        r,
+        p: alone(jumped(state, r)).find(
+          (p) =>
+            !mine.has(p) && !now.has(p) && p !== r.to && state.grid[p] === GRID_PEG,
+        ),
+      }))
+      .filter((x) => x.p !== undefined)
+      .sort((a, b) => dist(a.r) - dist(b.r))[0];
+    return lone?.p !== undefined ? say.leavesAlone(j, lone.r, lone.p) : say.plain(j);
+  };
   let words: Narration;
-  if (rivals.length === 0) words = say.plain(j);
-  else if (!lost) words = unsettled ? say.plain(j) : say.anyJump(j);
+  if (rivals.length === 0) words = plain();
+  else if (!lost) words = unsettled ? plain() : say.anyJump(j);
   else if (!unsettled) words = goods.length > 0 ? say.onlyThese(j, goods) : say.only(j);
-  else words = goods.length > 0 ? say.alsoThese(j, goods) : say.plain(j);
+  else words = goods.length > 0 ? say.alsoThese(j, goods) : plain();
   return { ok: true, steps: [step(state, j, words)] };
+}
+
+/** The pegs of `s` with no peg in the four squares beside them. */
+function alone(s: PegsState): number[] {
+  const { w, h, grid } = s;
+  const out: number[] = [];
+  grid.forEach((v, i) => {
+    if (v !== GRID_PEG) return;
+    const x = i % w;
+    const y = (i - x) / w;
+    const peg = (dx: number, dy: number) =>
+      x + dx >= 0 &&
+      x + dx < w &&
+      y + dy >= 0 &&
+      y + dy < h &&
+      grid[i + dy * w + dx] === GRID_PEG;
+    if (!peg(1, 0) && !peg(-1, 0) && !peg(0, 1) && !peg(0, -1)) out.push(i);
+  });
+  return out;
 }
 
 /** A jump is settled by its two ends, so the step's own jump lands exactly the

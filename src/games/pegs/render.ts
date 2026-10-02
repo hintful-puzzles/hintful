@@ -265,7 +265,13 @@ export function redraw(
   const { w, h } = s;
   const ts = ds.tileSize;
   const marks = stepMarks(hint);
-  const ringed = new Set([...marks.of("ring", PEG), ...marks.of("ring", HOLE)]);
+  // A ring on a whole jump, named by words that do not spell the move out,
+  // rings its peg and its hole as the two separate rings do.
+  const ringed = new Set([
+    ...marks.of("ring", PEG),
+    ...marks.of("ring", HOLE),
+    ...marks.of("ring", JUMP).flatMap((j) => [j.from, j.to]),
+  ]);
   const outlined = new Set(marks.of("outline", PEG));
   const hw = raisedBevelWidth(ts);
   const center = (i: number): Point => ({
