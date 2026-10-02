@@ -14,8 +14,9 @@
  * say a position has no way forward says {@link NO_SOLUTION_FROM_HERE}.
  *
  * The midend answers {@link ALREADY_SOLVED} itself for a board whose status is
- * solved, before asking the game, so a `solve` checks for a finished board only
- * where its status would not say so.
+ * solved, and `GAME_OVER` for one whose status is lost, before asking the game,
+ * so a `solve` checks for a finished board only where its status would not say
+ * so.
  */
 
 import type { ALREADY_SOLVED, PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";

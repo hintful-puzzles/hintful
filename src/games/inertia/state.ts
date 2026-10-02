@@ -3,8 +3,7 @@
  *
  * The board is a grid of five cell kinds; a single ball slides in one of
  * eight directions until something stops it, collecting gems and dying on
- * mines. The state is immutable, and a clone shares the installed route by
- * reference (where upstream refcounts its `struct soln`).
+ * mines. The state is immutable.
  */
 
 import {
@@ -96,8 +95,8 @@ export function validateParams(p: InertiaParams): string | null {
 export type InertiaMove =
   /** Slide the ball in `dir` (0..7). */
   | { type: "move"; dir: number }
-  /** Install a solver-computed route, without moving the ball. */
-  | { type: "route"; route: readonly number[] };
+  /** Solve: slide the ball along a solver-computed route, every slide at once. */
+  | { type: "solution"; route: readonly number[] };
 
 export interface InertiaUi {
   /** Running tally of self-inflicted deaths. Lives on the Ui, not the state,
@@ -201,11 +200,6 @@ export interface InertiaState {
    * slide animation). */
   readonly distanceMoved: number;
   readonly dead: boolean;
-  /** The installed route, as a direction sequence, or null. Frozen and shared
-   * by reference across clones — nothing ever mutates it. */
-  readonly route: readonly number[] | null;
-  /** Index of the route's next step. */
-  readonly routePos: number;
 }
 
 // --- sliding ---------------------------------------------------------
@@ -336,8 +330,6 @@ export function newState(p: InertiaParams, desc: string): InertiaState {
     gems,
     distanceMoved: 0,
     dead: false,
-    route: null,
-    routePos: 0,
   };
 }
 

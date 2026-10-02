@@ -14,6 +14,7 @@ import {
 } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
@@ -243,7 +244,13 @@ export const floodGame: Game<
       "Any sequence of floods that fills the grid within the move limit wins, so there is no single answer to check a move against.",
   },
 
-  solve() {
+  solve(_orig, curr) {
+    // The solver is greedy, so the moves already spent can leave it no finish
+    // within the limit, and a finish past it is a loss.
+    const fills = solveMoves(curr.w, curr.h, curr.grid, curr.colors);
+    if (curr.moves + fills.length > curr.movelimit) {
+      return { ok: false, error: NO_SOLUTION_FROM_HERE };
+    }
     return { ok: true, move: { type: "solve" as const } };
   },
 

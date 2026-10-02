@@ -105,19 +105,6 @@ function asPrimary(button: number): number {
 }
 
 /**
- * Advance the installed Solve route by one step. Upstream binds `' '`, which
- * this frontend never sends: `puzzleKeyMap` delivers Space as `CURSOR_SELECT2`
- * and Enter as `CURSOR_SELECT`, so a literal transcription would leave a Solve
- * route unwalkable. Accept both select buttons, plus a bare space for anything
- * that sends one.
- */
-function isStepKey(button: number): boolean {
-  return (
-    button === CURSOR_SELECT || button === CURSOR_SELECT2 || button === 0x20 // ' '
-  );
-}
-
-/**
  * Pick up the block covering `(cx, cy)`, held by that square, and work out —
  * once — every square its anchor can be slid to. Returns false when there is
  * no block there.
@@ -193,16 +180,6 @@ function interpretMove(
 
   if (button === LEFT_RELEASE && ui.grabbed) return releaseGrab(ui);
 
-  // An installed Solve route owns the select key. Straying from the route
-  // discards it, and then the select key grabs again.
-  if (isStepKey(button) && state.soln) {
-    const step = state.soln[state.solnIndex];
-    // If the player has already part-way nudged this block, the route's source
-    // is where it *started*, so aim from where it is now.
-    const from = step.from === state.lastmovedPos ? state.lastmoved : step.from;
-    return { kind: "move", from, to: step.to };
-  }
-
   if (isCursorMove(button)) return moveSlideCursor(state, ui, button);
 
   if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
@@ -270,19 +247,12 @@ function moveSlideCursor(
 // --- solve ------------------------------------------------------------
 
 /**
- * Install the shortest route from here to the exit, for the player to walk one
- * step at a time with Space/Enter. Solve deliberately does **not** fill the
- * board in: the route *is* the feature, as in Inertia
- * (docs/games/input.md § "The board keeps the keyboard after a control"). It
- * leaves the position alone.
+ * Play the shortest route from here to the exit.
  *
  * Divergence: upstream solves the *initial* board, though its own comment says
- * "from the current position" and its `execute_move` adjusts the route for a
- * partly-nudged block, which only makes sense from the current one. As
- * written, any Solve after any move yields a route whose first step is illegal,
- * so the step key does nothing — a player-visible defect no desc differential
- * can see (docs/games/solver-and-generator.md § "Divergence and what it costs"
- * rule 3). We solve `curr`.
+ * "from the current position", and a route from the start is illegal from any
+ * later position (docs/games/solver-and-generator.md § "Divergence and what it
+ * costs" rule 3). We solve `curr`.
  */
 function solve(_orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
   const { path } = solveBoard(
@@ -298,7 +268,7 @@ function solve(_orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
   // The search is exhaustive and every slide can be undone, so no path from
   // here means none from the start either.
   if (!path) return { ok: false, error: NO_SOLUTION };
-  return { ok: true, move: { kind: "solve", moves: path } };
+  return { ok: true, move: { kind: "solution", moves: path } };
 }
 
 // --- params form ------------------------------------------------------

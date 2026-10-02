@@ -24,6 +24,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { blackboxGame } from "./index.ts";
 import {
   BALL_CORRECT,
+  BALL_GUESS,
   type BlackboxParams,
   type BlackboxState,
   type BlackboxUi,
@@ -59,9 +60,6 @@ function makeState(
     exits: new Int32Array(nlasers).fill(LASER_EMPTY),
     laserno: 1,
     nguesses: 0,
-    nright: 0,
-    nwrong: 0,
-    nmissed: 0,
     reveal: false,
     justwrong: false,
   };
@@ -165,17 +163,20 @@ describe("Black Box — guess verification", () => {
     return blackboxGame.executeMove(s, { type: "toggleBall", x: x + 1, y: y + 1 });
   }
 
-  it("counts right / wrong / missed on a give-up reveal", () => {
+  it("Solve replaces the guesses with the real balls, which wins", () => {
     let s = makeState(5, 5, balls);
     s = mark(s, 0, 0); // correct
-    s = mark(s, 1, 1); // correct
-    s = mark(s, 3, 3); // wrong (real ball at 2,2 is missed)
-    const revealed = blackboxGame.executeMove(s, { type: "solve" });
-    expect(revealed.reveal).toBe(true);
-    expect(revealed.nright).toBe(2);
-    expect(revealed.nwrong).toBe(1);
-    expect(revealed.nmissed).toBe(1);
-    expect(blackboxGame.status(revealed)).toBe("lost");
+    s = mark(s, 3, 3); // wrong
+    const solved = blackboxGame.executeMove(s, { type: "solve" });
+    expect(solved.reveal).toBe(true);
+    expect(solved.nguesses).toBe(3);
+    for (let x = 1; x <= 5; x++) {
+      for (let y = 1; y <= 5; y++) {
+        const v = solved.grid[y * 7 + x];
+        expect(Boolean(v & BALL_GUESS)).toBe(Boolean(v & BALL_CORRECT));
+      }
+    }
+    expect(blackboxGame.status(solved)).toBe("solved");
   });
 
   it("solves when every ball is guessed correctly", () => {
@@ -183,9 +184,6 @@ describe("Black Box — guess verification", () => {
     for (const [x, y] of balls) s = mark(s, x, y);
     const revealed = blackboxGame.executeMove(s, { type: "reveal" });
     expect(revealed.reveal).toBe(true);
-    expect(revealed.nright).toBe(3);
-    expect(revealed.nwrong).toBe(0);
-    expect(revealed.nmissed).toBe(0);
     expect(blackboxGame.status(revealed)).toBe("solved");
   });
 

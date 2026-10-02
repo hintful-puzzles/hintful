@@ -12,7 +12,6 @@ import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import {
-  BALL_CORRECT,
   BALL_GUESS,
   BALL_LOCK,
   type BlackboxParams,
@@ -165,14 +164,8 @@ function drawArenaTile(
     dr.drawRect(rect(dx, dy, ts, ts), bg);
     drawRectOutline(dr, dx, dy, ts, ts, COL_GRID);
 
-    let bcol: number;
-    if (gs.reveal) {
-      if (gsTile & BALL_GUESS) bcol = isflash ? bg : COL_BALL;
-      else if (gsTile & BALL_CORRECT) bcol = isflash ? bg : COL_WRONG;
-      else bcol = bg;
-    } else {
-      bcol = gsTile & BALL_GUESS ? COL_BALL : bg;
-    }
+    // A reveal shows guesses that are the real balls, so only guesses are drawn.
+    const bcol = gsTile & BALL_GUESS && !(gs.reveal && isflash) ? COL_BALL : bg;
     const ocol = gsTile & FLAG_CURSOR && bcol !== bg ? COL_CURSOR : bcol;
 
     dr.drawCircle(
@@ -190,33 +183,6 @@ function drawArenaTile(
 
     if (gsTile & FLAG_CURSOR && bcol === bg) drawSquareCursor(dr, ds, dx, dy);
 
-    if (gs.reveal && gsTile & BALL_GUESS && !(gsTile & BALL_CORRECT)) {
-      // Incorrect guess: a red cross over the ball.
-      const x1 = dx + 3;
-      const y1 = dy + 3;
-      const x2 = dx + ts - 3;
-      const y2 = dy + ts - 3;
-      dr.drawPolygon(
-        [
-          pt(x1 - 1, y1 + 1),
-          pt(x1 + 1, y1 - 1),
-          pt(x2 + 1, y2 - 1),
-          pt(x2 - 1, y2 + 1),
-        ],
-        COL_WRONG,
-        COL_WRONG,
-      );
-      dr.drawPolygon(
-        [
-          pt(x2 + 1, y1 + 1),
-          pt(x2 - 1, y1 - 1),
-          pt(x1 - 1, y2 - 1),
-          pt(x1 + 1, y2 + 1),
-        ],
-        COL_WRONG,
-        COL_WRONG,
-      );
-    }
     dr.drawUpdate(rect(dx, dy, ts, ts));
   }
   ds.grid[gridIdx(ds.w, gx, gy)] = gsTile;

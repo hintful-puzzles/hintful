@@ -22,7 +22,6 @@ function recordingDrawing() {
 }
 
 const COL_GRID = 3;
-const COL_HINT = 5;
 
 // `solve` is optional on the `Game` interface; Flip always has one.
 const solveFlip = flipGame.solve as NonNullable<typeof flipGame.solve>;
@@ -70,8 +69,8 @@ describe("Flip generation", () => {
       const result = solveFlip(state, state);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.move.kind).toBe("solve");
-      if (result.move.kind !== "solve") return;
+      expect(result.move.kind).toBe("solution");
+      if (result.move.kind !== "solution") return;
 
       let s: FlipState = state;
       result.move.mask.forEach((bit, idx) => {
@@ -132,7 +131,6 @@ describe("Flip solver", () => {
       matrix: new Uint8Array(wh * wh),
       grid: Uint8Array.from([1, 0, 0, 0]),
       moves: 0,
-      hintsActive: false,
     };
     const result = solveFlip(state, state);
     expect(result.ok).toBe(false);
@@ -234,7 +232,6 @@ describe("Flip interpretMove", () => {
       matrix: new Uint8Array(wh * wh), // all zero ⇒ nothing toggles
       grid: new Uint8Array(wh),
       moves: 0,
-      hintsActive: false,
     };
     expect(
       flipGame.interpretMove(
@@ -282,14 +279,21 @@ describe("Flip executeMove is pure and toggles the matrix row", () => {
     expect(next.moves).toBe(from.moves + 1);
   });
 
-  it("a solve move marks the hint bit per the mask", () => {
+  it("a solve move presses every square of its mask", () => {
     const from = flipGame.newState(p, desc);
     const mask = [1, 0, 1, 0, 0, 0, 0, 0, 1];
-    const next = flipGame.executeMove(from, { kind: "solve", mask });
-    expect(next.hintsActive).toBe(true);
+    const next = flipGame.executeMove(from, { kind: "solution", mask });
+    let pressed = from;
     mask.forEach((bit, i) => {
-      expect((next.grid[i] >> 1) & 1).toBe(bit);
+      if (bit)
+        pressed = flipGame.executeMove(pressed, {
+          kind: "flip",
+          x: i % 3,
+          y: (i / 3) | 0,
+        });
     });
+    expect(Array.from(next.grid)).toEqual(Array.from(pressed.grid));
+    expect(next.moves).toBe(from.moves + 3);
   });
 });
 
@@ -316,19 +320,6 @@ describe("Flip redraw", () => {
     flipGame.redraw(b.dr, ds, null, s, 1, ui, 0, 0);
     expect(b.ops.filter((o) => o.op === "line").length).toBe(0);
     expect(b.ops.filter((o) => o.op === "rect").length).toBe(0);
-  });
-
-  it("renders solver hint outlines when hints are active", () => {
-    const base = flipGame.newState(p, desc);
-    const hinted = flipGame.executeMove(base, {
-      kind: "solve",
-      mask: [1, 1, 1, 1, 1, 1, 1, 1, 1],
-    });
-    const ui = flipGame.newUi(hinted);
-    const ds = flipGame.newDrawState(hinted, flipGame.preferredTileSize ?? 32);
-    const a = recordingDrawing();
-    flipGame.redraw(a.dr, ds, null, hinted, 1, ui, 0, 0);
-    expect(a.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(true);
   });
 });
 
@@ -442,7 +433,7 @@ describe("Flip flash-overlay isolation (regression: wave through every cell)", (
     const initial = flipGame.newState(params, desc);
     const result = solveFlip(initial, initial);
     expect(result.ok).toBe(true);
-    if (!result.ok || result.move.kind !== "solve") return;
+    if (!result.ok || result.move.kind !== "solution") return;
     const tile = flipGame.preferredTileSize ?? 32;
     const border = tile >> 1;
     const cells: Array<{ x: number; y: number }> = [];
@@ -515,34 +506,14 @@ describe("Flip through the midend", () => {
   it("plays to solved-with-help and round-trips a save", () => {
     const params: FlipParams = { w: 3, h: 3, matrixType: "crosses" };
     const { desc } = flipGame.newDesc(params, randomNew("flip-midend-seed"));
-    const initial = flipGame.newState(params, desc);
-    const solved = solveFlip(initial, initial);
-    expect(solved.ok).toBe(true);
-    if (!solved.ok || solved.move.kind !== "solve") return;
-
     const h = driveMidend(flipGame);
     const me = h.midend;
     expect(
       me.newGameFromId(`${flipGame.encodeParams(params, false)}:${desc}`),
     ).toBeNull();
 
-    // Reveal the solution (a hint move; marks usedSolve), then click
-    // the hinted cells via processInput at tile centers.
+    // Solve presses the solution's squares itself.
     expect(me.solve()).toBeNull();
-    const tile = flipGame.preferredTileSize ?? 32;
-    const border = tile >> 1;
-    solved.move.mask.forEach((bit, idx) => {
-      if (bit) {
-        const x = idx % params.w;
-        const y = (idx / params.w) | 0;
-        me.processInput(
-          x * tile + border + 1,
-          y * tile + border + 1,
-          0x0200, // LEFT_BUTTON
-        );
-      }
-    });
-
     expect(h.last("game-state-change")?.status).toBe("solved-with-help");
 
     const saved = me.saveGame();

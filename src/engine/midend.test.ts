@@ -11,6 +11,7 @@ import {
   ALREADY_SOLVED,
   DEDUCTION_EXHAUSTED,
   FIX_MISTAKES_FIRST,
+  GAME_OVER,
   NO_MOVE_WORTH_MAKING,
 } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
@@ -369,6 +370,33 @@ describe("Midend status + solve", () => {
     expect(h.m.solve()).toBe(ALREADY_SOLVED);
     expect(asked).toBe(0);
     expect(h.state()?.status).toBe("solved");
+  });
+
+  it("refuses Solve on a lost board, without asking the game", () => {
+    // No move of Solve's can win a lost board back, so the answer is the one a
+    // hint gives there.
+    let asked = 0;
+    const h = harness({
+      ...fakeGame,
+      status: (s) => (s.count < 0 ? "lost" : fakeGame.status(s)),
+      solve: () => {
+        asked++;
+        return { ok: true, move: "solve" };
+      },
+    });
+    h.m.newGame();
+    h.m.processInput(0, 0, RIGHT_BUTTON);
+    expect(h.state()?.status).toBe("lost");
+    expect(h.m.solve()).toBe(GAME_OVER);
+    expect(asked).toBe(0);
+  });
+
+  it("throws on a Solve move that leaves the board unsolved, and keeps no trace of it", () => {
+    const h = harness({ ...fakeGame, solve: () => ({ ok: true, move: "inc" }) });
+    h.m.newGame();
+    expect(() => h.m.solve()).toThrow(/leaves a board whose status is ongoing/);
+    expect(h.m.formatAsText()).toBe("count=0");
+    expect(h.state()?.canUndo).toBe(false);
   });
 
   // The refusals a player can actually read. `canSolve`/`canHint` are the flags

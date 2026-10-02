@@ -136,6 +136,8 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
     </div>`;
   }
 
+  /** What the engine's refusal on a lost board says to do: Solve refuses there,
+   * so it is not offered. */
   private renderLostActions() {
     const actions = [
       html`
@@ -150,15 +152,6 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
         <wa-button @click=${this.undo}>
           <wa-icon slot="start" name="undo"></wa-icon>
           Undo
-        </wa-button>
-      `);
-    }
-    if (this.puzzle?.canSolve) {
-      // TODO: && !usedSolveButton
-      actions.push(html`
-        <wa-button @click=${this.showSolution}>
-          <wa-icon slot="start" name="show-solution"></wa-icon>
-          Show solution
         </wa-button>
       `);
     }
@@ -235,11 +228,6 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
   private async restartGame() {
     await this.hide();
     await this.puzzle?.restartGame();
-  }
-
-  private async showSolution() {
-    await this.hide();
-    await this.puzzle?.solve();
   }
 
   static solvedIcons = [

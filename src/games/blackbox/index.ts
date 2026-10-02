@@ -58,6 +58,7 @@ import {
   newDesc,
   newState,
   presets,
+  revealAnswer,
   status,
   validateDesc,
   validateParams,
@@ -241,7 +242,7 @@ function executeMove(from: BlackboxState, m: BlackboxMove): BlackboxState {
   }
 
   if (m.type === "solve") {
-    checkGuesses(ret, false);
+    revealAnswer(ret);
     return ret;
   }
 
@@ -266,7 +267,7 @@ function executeMove(from: BlackboxState, m: BlackboxMove): BlackboxState {
     case "reveal": {
       if (ret.nguesses < ret.minballs || ret.nguesses > ret.maxballs)
         throw new Error("Ball count out of range to reveal");
-      checkGuesses(ret, true);
+      checkGuesses(ret);
       break;
     }
     case "toggleLock": {
@@ -299,11 +300,8 @@ function executeMove(from: BlackboxState, m: BlackboxMove): BlackboxState {
 function statusbarText(state: BlackboxState, ui: BlackboxUi): string {
   let buf: string;
   if (state.reveal) {
-    // A correct reveal is a win, which the engine's own words announce.
-    buf =
-      status(state) === "solved"
-        ? ""
-        : `${state.nwrong} wrong and ${state.nmissed} missed balls.`;
+    // A reveal is a win, which the engine's own words announce.
+    buf = "";
   } else if (state.justwrong) {
     buf = "Wrong! Guess again.";
   } else if (state.nguesses > state.maxballs) {
@@ -381,8 +379,8 @@ export const blackboxGame: Game<
   },
 
   solve() {
-    // Reveal the real layout: a give-up, scored as a loss unless the
-    // guesses already matched.
+    // The real balls, guessed and revealed: upstream's Solve revealed them
+    // beside the player's guesses, scored as a loss.
     return { ok: true, move: { type: "solve" } };
   },
 

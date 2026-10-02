@@ -601,9 +601,8 @@ board it leaves is solved, so its status says so), and why a solved board the
 player breaks reads ongoing again everywhere: the status bar, the hint, the
 end-of-game dialog and the clock (owner, 2026-10-01).
 
-Keep in the state only what the board *shows*: Black Box's reveal, Guess's
-revealed answer, a dead ball or a killed Mines cell are positions, and status
-reads them. A count the status bar shows (moves, guesses) is the state's own
+Keep in the state only what the board *shows*: Black Box's reveal, a dead ball
+or a killed Mines cell are positions, and status reads them. A count the status bar shows (moves, guesses) is the state's own
 and does not freeze at a solve. `changedState` reacting to "became solved"
 asks `status` of the old and new state.
 

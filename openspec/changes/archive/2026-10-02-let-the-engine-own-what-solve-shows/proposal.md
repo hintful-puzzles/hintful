@@ -1,6 +1,8 @@
 # let-the-engine-own-what-solve-shows
 
-**Status: scaffolded, not started (2026-10-02).** Owner, reviewing
+**Status: implemented and archived (2026-10-02); `design.md` records where it
+departs from this proposal (no exception declaration, D1; Flood, D3).** Owner,
+taking it on: *"make everything here consistent across all games."* Owner, reviewing
 `add-pegs-hint`: *"the main thing for me is that we're consistent with how this
 gets applied across games (preferably by the engine deciding), and it seems to
 me that the only consistent thing is to just show the one peg, even if it's not

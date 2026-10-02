@@ -79,7 +79,6 @@ import {
   COL_BACKGROUND,
   COL_BACKGROUND2,
   COL_BANG,
-  COL_CROSS,
   COL_CURSOR,
   COL_FLAG,
   COL_FLAGBASE,
@@ -112,7 +111,6 @@ import {
   FLAG,
   isWon,
   KILLED,
-  MINE,
   type MineOp,
   type MinesMove,
   type MinesParams,
@@ -122,7 +120,6 @@ import {
   TODO,
   validateDesc,
   validateParams,
-  WRONGFLAG,
 } from "./state.ts";
 
 // --- the flood-open + first-click layout generation (open_square) ------
@@ -445,27 +442,15 @@ export const minesGame: Game<
     const { w, h } = s;
     if (m.type === "solve") {
       if (!s.layout.mines) throw new Error("Game has not been started yet");
-      const ret = cloneState(s);
+      // The finished board, whatever was opened or flagged on the way: an
+      // opened mine and a wrong flag are replaced like any wrong entry.
+      const ret = { ...cloneState(s), dead: false };
       const mines = s.layout.mines;
-      if (!ret.dead) {
-        // Expose the entire grid as a completed solution.
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            ret.grid[y * w + x] = mines[y * w + x]
-              ? FLAG
-              : around(w, h, x, y).filter((q) => mines[q.y * w + q.x]).length;
-          }
-        }
-        // The board is now won, which the midend reports as solved-with-help.
-        // Upstream's Solve left the game "ongoing".
-      } else {
-        // A full corrections grid, standard-Minesweeper style (mines.c:2788).
-        for (let i = 0; i < w * h; i++) {
-          if ((ret.grid[i] === COVERED || ret.grid[i] === QUERY) && mines[i]) {
-            ret.grid[i] = MINE;
-          } else if (ret.grid[i] === FLAG && !mines[i]) {
-            ret.grid[i] = WRONGFLAG;
-          }
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          ret.grid[y * w + x] = mines[y * w + x]
+            ? FLAG
+            : around(w, h, x, y).filter((q) => mines[q.y * w + q.x]).length;
         }
       }
       return ret;
@@ -573,7 +558,7 @@ export const minesGame: Game<
         else if (v >= 1 && v <= 8) c = String(v);
         else if (v === FLAG) c = "*";
         else if (v === COVERED || v === QUERY) c = "?";
-        else if (v >= 64) c = "!";
+        else if (v === KILLED) c = "!";
         else c = " ";
         out += c;
       }
@@ -615,7 +600,6 @@ export const minesGame: Game<
     ret[COL_8] = GRAY;
     ret[COL_MINE] = BLACK;
     ret[COL_BANG] = ERROR;
-    ret[COL_CROSS] = ERROR;
     // Red because a flag is yours and deliberate, not because anything is
     // wrong — but the same red, which is what the collection has one of.
     ret[COL_FLAG] = RED;

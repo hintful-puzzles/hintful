@@ -3,8 +3,8 @@
 ## Purpose
 Slide, the sliding-block puzzle of moving blocks until the key block reaches the
 exit. This capability specifies its port to the TS engine, with a shortest-path
-solver whose route the player walks one move at a time, a board that reads by
-color and not by bevel alone, and full play from the keyboard.
+solver, a board that reads by color and not by bevel alone, and full play from
+the keyboard.
 
 ## Requirements
 
@@ -87,13 +87,8 @@ Moving the same block again SHALL NOT increment the displayed move count, and
 returning a block to where it started SHALL decrement it, so that a multi-step
 slide of one block counts as a single move.
 
-Solve SHALL install a shortest route **from the current position**, for the player
-to walk one step at a time, rather than filling the board in — the route is the
-feature. Pressing the step key SHALL make the next move along the stored route;
-straying from the route or finishing it SHALL discard it. The step key SHALL be
-one the frontend actually delivers: upstream binds the space *character*, which
-this frontend never sends (it maps Space and Enter to the cursor-select buttons),
-so a literal transcription would leave an installed route unwalkable.
+Solve SHALL play a shortest route **from the current position** to the exit, so
+the board is finished, as Solve finishes every game's board.
 
 A drag left in progress across a state change (an undo made while the pointer is
 still down) SHALL be canceled, so no frame is ever asked to preview a block
@@ -101,8 +96,7 @@ against a board it no longer fits.
 
 Rendering SHALL draw each block with beveled highlights, SHALL show the dragged
 block following the pointer with a landing shadow at its snapped destination,
-SHALL highlight the next block to move while a stored solution is active, and
-SHALL flash on completion. There SHALL be no interpolated sliding animation.
+and SHALL flash on completion. There SHALL be no interpolated sliding animation.
 
 #### Scenario: Dragging a block to a reachable space moves it
 
@@ -120,7 +114,52 @@ SHALL flash on completion. There SHALL be no interpolated sliding animation.
 - **WHEN** a block is grabbed and released without having moved
 - **THEN** the board and the move count are unchanged
 
-### Requirement: Slide's board reads by color, not only by bevel
+### Requirement: Slide solves for a shortest path and keeps every board soluble
+
+Slide SHALL provide a solver that finds the minimum number of moves to bring the
+main block to the target, or reports that no solution exists. The solver SHALL be
+a breadth-first search over canonical board layouts, deduplicating already-seen
+layouts by exact board equality and expanding them in first-in-first-out order,
+so that the first path found to the target is a shortest one. The solver SHALL
+respect a move limit by abandoning the search once every remaining candidate
+exceeds it.
+
+The solver SHALL NOT depend on the ordered-collection semantics of upstream's
+`tree234`; its result SHALL depend only on the breadth-first order and on exact
+layout deduplication.
+
+The generator SHALL use the solver to keep every board soluble: it SHALL remove
+singleton blocks until the board becomes soluble, then attempt to merge adjacent
+blocks in a randomized order, keeping a merge only while the board stays soluble.
+Generation from a given seed SHALL be reproducible.
+
+The generator SHALL test solubility **after** its final singleton removal as well
+as before each one. Upstream tests only before, so a board that becomes soluble
+only once its last singleton goes falls through its loop into an abort — which is
+every board at the smallest legal size. The added check draws no randomness.
+
+#### Scenario: The solver returns the shortest solution
+
+- **WHEN** a soluble board is solved
+- **THEN** the reported move count equals the length of a shortest sequence that
+  brings the main block to the target, and the returned moves realize it
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** the same seed is used twice for the same parameters
+- **THEN** both runs produce the identical board description and minimum move
+  count
+
+### Requirement: Slide presets draw tall, and a Slide board is never turned
+
+Slide SHALL offer its default and presets at 6×7 (limits 40 and 25, and no limit) and 6×8 (no limit), upstream's 7×6 and 8×6 turned to draw taller than wide. The 6×8 board costs about what the 8×6 it replaces did to generate: measured over eight seeds, 8×6 averaged 4.3 s a board and 6×8 about 3.8 s. Slide SHALL NOT declare `transposeParams`: the key block starts in the top-left corner and leaves by a gate in the right-hand wall, so a board turned on its side is a different puzzle.
+
+#### Scenario: A Slide board is dealt as chosen
+
+- **WHEN** a Slide board is dealt to fit a wide area
+- **THEN** it is dealt at the size chosen
+
+### Requirement: Slide's board reads by color, not by bevel alone
 
 The floor, the walls, the ordinary blocks and the main block SHALL be
 distinguishable from one another by fill, not solely by their bevels, in both the
@@ -142,10 +181,6 @@ dark one, which is the relationship being preserved rather than a defect.
 The exit marking SHALL be legible at the smallest shipped tile size, and SHALL
 mark the gate's **boundary** rather than filling its squares, because the gate
 usually lies on top of the exit area and two fills cannot both be seen.
-
-The solver's next-piece indication SHALL read as an ordering cue rather than as
-the brightest element of the frame, and SHALL leave the piece's own fill intact
-so that it is not mistaken for a change of state.
 
 Every color SHALL come from the shared palette, and SHALL be checked in both
 schemes — a fill that reads as contrast against a light background must not read
@@ -169,13 +204,7 @@ as a bright patch against a dark one.
 - **THEN** the exit's tint is still drawn across that square, and the gate is
   marked only along the edges where it meets something that is not the gate
 
-#### Scenario: The next-piece cue does not dominate the frame
-
-- **WHEN** the solver indicates the next piece to move
-- **THEN** that piece is marked without being the brightest element on the board,
-  and keeps the fill it had before it was marked
-
-### Requirement: Slide is playable by keyboard
+### Requirement: Slide plays from the keyboard alone
 
 Slide SHALL be playable by keyboard as well as by pointer, both driving the same
 move machinery.
@@ -211,11 +240,6 @@ A grab SHALL be dropped whenever the board changes underneath it, however it was
 made, because its reachable set was computed against the board being replaced.
 The cursor SHALL survive that, being a position on a grid whose size has not
 changed; losing it would read as a dropped keypress.
-
-While a Solve route is installed, the select key SHALL continue to step that
-route rather than grab a block, so a shipped behavior is not broken by the new
-one. The player regains keyboard selection by making any move of their own,
-which already discards the route.
 
 Rendering SHALL show the keyboard cursor and the grabbed block, in both color
 schemes and at the smallest shipped tile size. The grabbed block SHALL be drawn
@@ -263,61 +287,8 @@ color prominent in one scheme is not thereby prominent in the other.
 - **THEN** the grab is dropped, because its reachable set is stale
 - **AND** the cursor stays where the player left it
 
-#### Scenario: An installed Solve route keeps the select key
-
-- **WHEN** a Solve route is installed and the player presses the select key
-- **THEN** the next move along the route is made, rather than a block being
-  grabbed
-- **AND** after the player makes a move of their own, which discards the route,
-  the select key grabs blocks again
-
 #### Scenario: A board can be completed without a pointer
 
 - **WHEN** a player uses only the keyboard from a fresh board
 - **THEN** every move the pointer can make is reachable, and the board can be
   driven to completion
-
-### Requirement: Slide solves for a shortest path and keeps every board soluble
-
-Slide SHALL provide a solver that finds the minimum number of moves to bring the
-main block to the target, or reports that no solution exists. The solver SHALL be
-a breadth-first search over canonical board layouts, deduplicating already-seen
-layouts by exact board equality and expanding them in first-in-first-out order,
-so that the first path found to the target is a shortest one. The solver SHALL
-respect a move limit by abandoning the search once every remaining candidate
-exceeds it.
-
-The solver SHALL NOT depend on the ordered-collection semantics of upstream's
-`tree234`; its result SHALL depend only on the breadth-first order and on exact
-layout deduplication.
-
-The generator SHALL use the solver to keep every board soluble: it SHALL remove
-singleton blocks until the board becomes soluble, then attempt to merge adjacent
-blocks in a randomized order, keeping a merge only while the board stays soluble.
-Generation from a given seed SHALL be reproducible.
-
-The generator SHALL test solubility **after** its final singleton removal as well
-as before each one. Upstream tests only before, so a board that becomes soluble
-only once its last singleton goes falls through its loop into an abort — which is
-every board at the smallest legal size. The added check draws no randomness.
-
-#### Scenario: The solver returns the shortest solution
-
-- **WHEN** a soluble board is solved
-- **THEN** the reported move count equals the length of a shortest sequence that
-  brings the main block to the target, and the returned moves realize it
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description and minimum move
-  count
-
-### Requirement: Slide presets draw tall, and a Slide board is never turned
-
-Slide SHALL offer its default and presets at 6×7 (limits 40 and 25, and no limit) and 6×8 (no limit), upstream's 7×6 and 8×6 turned to draw taller than wide. The 6×8 board costs about what the 8×6 it replaces did to generate: measured over eight seeds, 8×6 averaged 4.3 s a board and 6×8 about 3.8 s. Slide SHALL NOT declare `transposeParams`: the key block starts in the top-left corner and leaves by a gate in the right-hand wall, so a board turned on its side is a different puzzle.
-
-#### Scenario: A Slide board is dealt as chosen
-
-- **WHEN** a Slide board is dealt to fit a wide area
-- **THEN** it is dealt at the size chosen

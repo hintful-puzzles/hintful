@@ -21,8 +21,7 @@ as well.
 
 The arrow keys slide the ball horizontally and vertically, and the
 digit keys work like the numeric keypad even without one: 8 is up, 9
-up and right, 6 right, and so on round. After *Show solution…*, Enter
-or Space makes the next move of the solution.
+up and right, 6 right, and so on round.
 
 ## Hints
 

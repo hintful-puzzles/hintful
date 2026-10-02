@@ -34,7 +34,11 @@ checks them best:
 
 ## The reserve
 
-Every other hintless game: Cube, Flip, Slide, Sokoban and Twiddle. No phase claims them. A game leaves the reserve
+Every other hintless game: Cube, Flip, Slide, Sokoban and Twiddle. Flip and
+Slide each had a Solve that showed the way rather than the finished board (the
+squares to press, a route to step through) until
+`let-the-engine-own-what-solve-shows` (2026-10-02), so a hint is now their only
+step-by-step aid. No phase claims them. A game leaves the reserve
 when a framework change (open or yet to be proposed) turns out to press on it
 harder than its named game does, or when the decision point below says so.
 Rect has left: `draw-hint-marks-from-roles` wrote its hint (archived

@@ -5038,8 +5038,7 @@ What a save or a stored setting means SHALL NOT change to satisfy this rule.
 ### Requirement: A refused Solve is shown in the help banner
 
 A Solve the engine refuses SHALL show the refusal's own text in the same
-transient banner a refused Hint uses, whichever control asked for it (the
-Solve command or the end notification's "show solution"), and in every game
+transient banner a refused Hint uses, whichever control asked for it, and in every game
 that offers Solve — including a game with no hint, whose banner therefore
 cannot depend on the hint controls being rendered. A Solve that lands SHALL add
 no message of its own.
@@ -7352,7 +7351,8 @@ board, the puzzle that cannot be settled, the position nothing finishes from,
 and the game ID with no solution are each one message whichever control asked.
 
 The midend SHALL refuse Solve on a board whose status is solved, with the
-finished-board failure, without asking the game.
+finished-board failure, and on a board whose status is lost, with the game-over
+refusal a hint gives there, without asking the game.
 
 #### Scenario: Two games fail to solve for the same reason
 
@@ -7556,8 +7556,8 @@ A game's `status(state)` SHALL report won, lost or ongoing from the position in
 `state` alone, never from how it was reached, and SHALL NOT write into the
 state. No game's state SHALL record that the board was solved, or that the
 solver was used: the midend owns that history and derives it from the positions
-it holds. A fact the board shows (a revealed arena, a revealed answer, a dead
-ball, a killed cell) is part of the position, and `status` MAY read it.
+it holds. A fact the board shows (a revealed arena, a dead ball, a killed cell)
+is part of the position, and `status` MAY read it.
 
 So a board typed in already solved SHALL be solved at move 0, a Solve move SHALL
 complete the board because the board it leaves is solved, and a solved board the
@@ -7813,3 +7813,44 @@ is drawn and nothing else is.
 - **WHEN** a game returns a marked dead end but its `redraw` paints marks only
   from the hint step
 - **THEN** the binding walk reports each named element as not drawn
+
+### Requirement: Solve leaves a solved board
+
+Solve SHALL mean one thing in every game: it shows the finished board, or it
+refuses with a reason. The midend SHALL hold every game to it rather than each
+game choosing: it SHALL refuse Solve on a board whose status is solved or lost
+without asking the game, and when the game's solve move would leave a board
+whose status is anything but solved it SHALL throw before the move enters the
+history, as a defect in the game.
+
+A Solve SHALL therefore never install a route or marks for the player to
+follow, nor reveal an answer as a loss. A game whose solver finds no finish
+from the player's position SHALL refuse; a game whose answer is fixed SHALL
+replace the player's mistakes with it, as it replaces a wrong entry.
+
+Every game with Solve SHALL be solved, by a test, from its deal and from
+positions reached by playing its own input into it.
+
+#### Scenario: Solve finishes the board
+
+- **WHEN** Solve lands in any game
+- **THEN** the board's status is solved, and the midend reports it
+  solved-with-help
+
+#### Scenario: A Solve move that leaves the board unsolved is a defect
+
+- **WHEN** a game's solve move would leave a board whose status is ongoing or
+  lost
+- **THEN** the midend throws, and the history is unchanged
+
+#### Scenario: A lost board is refused
+
+- **WHEN** Solve is invoked on a board whose status is lost
+- **THEN** it is refused with the message a hint gives there, and the game's
+  solver is not asked
+
+#### Scenario: No finish within the rules is a refusal
+
+- **WHEN** Flood's solver would finish only past the move limit, from moves the
+  player has already spent
+- **THEN** Solve refuses, saying no solution can be found from this position

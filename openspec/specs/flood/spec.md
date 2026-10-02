@@ -42,7 +42,9 @@ clicked / cursor-selected cell's color differs from the current corner color
 and the game is not complete; cursor keys SHALL move the cursor (clamped).
 `executeMove` SHALL be pure: a fill floods the corner region to the chosen
 color and increments the move count; a solve SHALL run the solver and apply its
-fills to reach the solved grid. The state SHALL keep no record of completion or
+fills to reach the solved grid. Solve SHALL refuse, saying no solution can be found
+from this position, when those fills would take the move count past the limit,
+since that grid is a loss. The state SHALL keep no record of completion or
 of the solver: the grid is complete exactly when it is one color, and the
 engine records that Solve was used.
 
@@ -56,6 +58,11 @@ engine records that Solve was used.
 
 - **WHEN** input targets a cell whose color equals the current corner color
 - **THEN** no move is produced
+
+#### Scenario: Solve refuses a finish past the move limit
+
+- **WHEN** the moves already spent plus the solver's fills exceed the move limit
+- **THEN** Solve refuses, and the board is unchanged
 
 #### Scenario: Solve snaps to a completed grid
 

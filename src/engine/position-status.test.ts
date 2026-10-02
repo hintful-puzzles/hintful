@@ -64,15 +64,13 @@ const RECORD_KEYS = [
  * latch in these.
  */
 const UNBREAKABLE: Record<string, string> = {
-  // A Solve that does not leave a solved board to start from.
-  blackbox: "Solve reveals the arena and scores the guesses, as a loss",
-  flip: "Solve marks the lights to press and presses none of them",
-  guess: "Solve reveals the answer, which loses the game",
-  inertia: "Solve plots a route and does not move the ball",
+  // A board Solve refuses, so there is no solved position to start from.
   mines: "the probe board has no first click yet, so there is nothing to solve",
-  slide: "Solve plots a route and does not move a block",
   // A solved board whose rules take no move that could break it.
+  blackbox: "a revealed arena takes no move",
   flood: "a flooded board accepts no fill",
+  guess: "a won game takes no more guesses, and a mark on the answer row is a note",
+  inertia: "a collected gem stays collected, and the gems are all that solved counts",
   mosaic: "a solved board accepts only the cursor keys",
   net: "Solve locks every tile, a locked tile does not turn, and unlocking is a notes-mode tap",
   pegs: "a solved board has one peg left, and one peg has nothing to jump over",
@@ -129,19 +127,31 @@ describe("a game's status is judged from the board alone", () => {
         drag(p, step, 0),
         drag(p, 0, step),
       ];
-      let broke = false;
-      walk: for (const p of probePoints(pb.size)) {
-        for (const input of inputs(p)) {
-          const before = pb.moves();
-          input();
-          if (pb.moves() === before) continue;
-          if (game.status(pb.live().state) !== "solved") {
-            broke = true;
-            break walk;
+      // A solved board can leave room in one direction only (Slide's key block,
+      // home in a corner of the exit), so a board the first pass cannot break
+      // is solved again and dragged the other two ways. A pass of its own,
+      // because mixing the drags into the first walk changes the positions it
+      // reaches, and Bridges then went unbroken; and from the solved board,
+      // because the first pass can box Slide's key block in.
+      const backward = (p: { x: number; y: number }) => [
+        drag(p, -step, 0),
+        drag(p, 0, -step),
+      ];
+      const breaks = (pass: typeof inputs): boolean => {
+        for (const p of probePoints(pb.size)) {
+          for (const input of pass(p)) {
+            const before = pb.moves();
+            input();
+            if (pb.moves() === before) continue;
+            if (game.status(pb.live().state) !== "solved") return true;
           }
         }
-      }
-      if (!broke) unbroken.push(id);
+        return false;
+      };
+      if (breaks(inputs)) continue;
+      pb.reset();
+      if (pb.m.solve() !== null) throw new Error(`${id}: Solve refused a second time`);
+      if (!breaks(backward)) unbroken.push(id);
     }
     expect(unbroken.sort()).toEqual(Object.keys(UNBREAKABLE).sort());
     expect(walked).toBeGreaterThanOrEqual(40);

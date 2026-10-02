@@ -421,11 +421,11 @@ describe("mines supersede + midend", () => {
     expect(Array.from(solved.grid)).toEqual([-1, 1, 0, 1, 1, 0, 0, 0, 0]);
   });
 
-  it("Solve after death paints a standard corrections grid", () => {
+  it("Solve after death shows the finished board", () => {
     const p = decodeParams("3x3n1");
     const layout = decodeDesc(p, "u800").layout; // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
-    grid[8] = 65; // died on (2,2) as if it were a mine (contrived)
+    grid[0] = 65; // trodden on the mine
     grid[1] = -1; // (1,0) wrongly flagged (no mine there)
     const dead: MinesState = {
       w: 3,
@@ -433,14 +433,13 @@ describe("mines supersede + midend", () => {
       n: 1,
       dead: true,
       layout,
-      clickedAt: { x: 2, y: 2 },
+      clickedAt: { x: 0, y: 0 },
       grid,
     };
     const solved = minesGame.executeMove(dead, { type: "solve" });
-    // Corrections are not a win: the player is still dead.
-    expect(minesGame.status(solved)).toBe("ongoing");
-    expect(solved.grid[0]).toBe(64); // the real mine, revealed
-    expect(solved.grid[1]).toBe(66); // the wrong flag, crossed out
+    // The opened mine and the wrong flag are replaced, as any wrong entry is.
+    expect(minesGame.status(solved)).toBe("solved");
+    expect(Array.from(solved.grid)).toEqual([-1, 1, 0, 1, 1, 0, 0, 0, 0]);
   });
 
   it("encodeUi / decodeUi round-trips deaths, and reads an older save's C", () => {

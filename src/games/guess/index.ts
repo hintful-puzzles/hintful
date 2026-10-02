@@ -392,7 +392,6 @@ function interpretMove(
 // --- moves ------------------------------------------------------------
 
 function executeMove(s: GuessState, m: GuessMove): GuessState {
-  if (m.type === "solve") return { ...cloneState(s), revealed: true };
   if (m.type === "mark") {
     const { npegs, ncolors } = s.params;
     const ret = cloneState(s);
@@ -487,11 +486,7 @@ function statusbarText(s: GuessState, ui: GuessUi): string {
     const used = s.nextGo + 1;
     return `Solved in ${used} ${used === 1 ? "guess" : "guesses"}.`;
   }
-  if (over < 0) {
-    return s.nextGo >= nguesses
-      ? "Out of guesses: the answer is revealed."
-      : "The answer is revealed.";
-  }
+  if (over < 0) return "Out of guesses: the answer is revealed.";
   const where = `Guess ${s.nextGo + 1} of ${nguesses}`;
   if (ui.markable) return `${where}: ready to submit.`;
   if (!s.params.allowMultiple && hasRepeat(ui.currPegs)) {
@@ -580,9 +575,11 @@ export const guessGame: Game<
   requestKeys,
   statusbarText,
 
-  solve() {
-    // A give-up, as upstream's "S": reveal the answer, scored as a loss.
-    return { ok: true, move: { type: "solve" } };
+  solve(_orig, curr) {
+    // The answer, played as the next guess: upstream's "S" revealed it as a
+    // loss instead.
+    const holds = new Array<boolean>(curr.params.npegs).fill(false);
+    return { ok: true, move: { type: "guess", pegs: curr.solution.slice(), holds } };
   },
   hint: (state, _aux, ui) => guessHint(state, ui),
   hintMarks: {

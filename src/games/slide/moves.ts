@@ -157,28 +157,19 @@ export function nearestReachable(
 /**
  * Apply a move (upstream `execute_move`). Pure: returns a new state.
  *
- * Two pieces of gameplay logic ride along here:
- *
- *  - **Move counting.** Sliding the *same* block again does not increment the
- *    counter, and sliding it back where it started *decrements* it — so a
- *    multi-nudge slide counts as the one move it is. That is what the
- *    `lastmoved` / `lastmovedPos` pair on the state is for, and it governs the
- *    displayed count that `maxmoves`/`minmoves` are measured in. It is
- *    independent of the engine's undo stack.
- *  - **The stored Solve path.** A `"solve"` move installs a route; each
- *    subsequent slide either advances along it, or strays from it and drops it.
+ * Sliding the *same* block again does not increment the move counter, and
+ * sliding it back where it started *decrements* it — so a multi-nudge slide
+ * counts as the one move it is. That is what the `lastmoved` / `lastmovedPos`
+ * pair on the state is for, and it governs the displayed count that
+ * `maxmoves`/`minmoves` are measured in. It is independent of the engine's undo
+ * stack.
  */
 export function executeMove(state: SlideState, move: SlideMove): SlideState {
-  if (move.kind === "solve") {
-    // If the route's first move is of the block the player has already part-way
-    // nudged, rewrite its source to where that block *started*, so the
-    // stray/advance checks below line up with `lastmovedPos`.
-    const soln = move.moves.map((step, index) =>
-      index === 0 && step.from === state.lastmoved
-        ? { from: state.lastmovedPos, to: step.to }
-        : step,
+  if (move.kind === "solution") {
+    return move.moves.reduce(
+      (s, step) => executeMove(s, { kind: "move", from: step.from, to: step.to }),
+      state,
     );
-    return { ...state, soln, solnIndex: 0 };
   }
   if (move.kind !== "move") return assertNever(move, "slide: executeMove");
 
@@ -188,7 +179,7 @@ export function executeMove(state: SlideState, move: SlideMove): SlideState {
   if (!movePiece(w, state.h, state.board, board, state.forcefield, from, to))
     throw new Error("slide: illegal move");
 
-  let { lastmoved, lastmovedPos, movecount, soln, solnIndex } = state;
+  let { lastmoved, lastmovedPos, movecount } = state;
 
   if (from === lastmoved) {
     if (to === lastmovedPos) {
@@ -204,27 +195,11 @@ export function executeMove(state: SlideState, move: SlideMove): SlideState {
     movecount++;
   }
 
-  if (soln && lastmovedPos >= 0) {
-    const step = soln[solnIndex];
-    if (lastmovedPos !== step.from) {
-      soln = null; // strayed from the path
-      solnIndex = -1;
-    } else if (lastmoved === step.to) {
-      solnIndex++; // advanced along it
-      if (solnIndex >= soln.length) {
-        soln = null; // finished the path
-        solnIndex = -1;
-      }
-    }
-  }
-
   return {
     ...state,
     board,
     lastmoved,
     lastmovedPos,
     movecount,
-    soln,
-    solnIndex,
   };
 }

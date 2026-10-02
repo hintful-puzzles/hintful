@@ -56,12 +56,12 @@ export const COL_GEM = 7;
 export const COL_WALL = 8;
 export const COL_HINT = 9;
 /** Appended past the C enum: the swipe's aim arrow, "let go and you go this
- * way". While a swipe is held it replaces the route arrow (`COL_HINT`, "the
- * solver says go this way"). */
+ * way". While a swipe is held it replaces the hint's arrow (`COL_HINT`, "the
+ * hint says go this way"). */
 export const COL_AIM = 10;
 /** Appended: the ring round the gem a hint is going for. The hint's two roles
  * get two cues (docs/games/hints.md § "The element-type color legend"): the
- * direction is the route arrow's blue *arrow*, the subgoal gem a violet *ring*.
+ * direction is the hint's blue *arrow*, the subgoal gem a violet *ring*.
  * Appending past the C enum is safe: the app addresses Inertia's palette by
  * number only through `paletteSwaps`, which pair indices 2 and 3 (the 3D
  * bevel), and Inertia has no dark-mode `paletteOverrides` at all. */
@@ -231,8 +231,8 @@ function drawTile(dr: GameDrawing, ts: number, x: number, y: number, v: number):
 
 // --- the ball --------------------------------------------------------
 
-/** The ball, plus an arrow — the swipe the player is aiming, or the next step of
- * an installed route. `x`/`y` are the sprite's top-left pixel, which is
+/** The ball, plus an arrow — the swipe the player is aiming, or the hint's
+ * slide. `x`/`y` are the sprite's top-left pixel, which is
  * fractional mid-slide. */
 function drawPlayer(
   dr: GameDrawing,
@@ -414,14 +414,10 @@ export function redraw(
   ds.pbgY = Math.round(oy + ap * (ny - oy));
 
   // Arrows only show on a settled board, never mid-slide. The swipe the player
-  // is aiming wins over the other two: it is what the ball will actually do
-  // next. A displayed hint step then wins over an installed route — both say
-  // "the solver would go this way", and the hint is the one just asked for.
+  // is aiming wins over the hint's: it is what the ball will actually do next.
   const settled = !prev;
   const aimDir = settled && ui.aiming ? ui.aimDir : -1;
   const hintDir = settled ? (marks.of("ring", ARROW)[0] ?? -1) : -1;
-  const routeDir = settled && s.route ? s.route[s.routePos] : -1;
-  const solverDir = hintDir >= 0 ? hintDir : routeDir;
 
   if (!ds.playerBackground) ds.playerBackground = dr.blitterNew({ w: ts, h: ts });
   dr.blitterSave(ds.playerBackground, { x: ds.pbgX, y: ds.pbgY });
@@ -431,7 +427,7 @@ export function redraw(
     ds.pbgX,
     ds.pbgY,
     s.dead && !prev,
-    aimDir >= 0 ? aimDir : solverDir,
+    aimDir >= 0 ? aimDir : hintDir,
     aimDir >= 0 ? COL_AIM : COL_HINT,
   );
   ds.playerBgSaved = true;

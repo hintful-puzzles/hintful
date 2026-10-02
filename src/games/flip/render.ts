@@ -3,7 +3,7 @@
  * neighbors a click will flip, the cursor ring and the win flash.
  */
 
-import { CURSOR, GRID_MID, HINT_ACTION, PAPER } from "../../engine/color/palette.ts";
+import { CURSOR, GRID_MID, PAPER } from "../../engine/color/palette.ts";
 import { flipWrongFace } from "../../engine/color/palette-games.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
@@ -26,9 +26,8 @@ const COL_WRONG = 1;
 const COL_RIGHT = 2;
 const COL_GRID = 3;
 const COL_DIAG = 4;
-const COL_HINT = 5;
-const COL_CURSOR = 6;
-const NCOLORS = 7;
+const COL_CURSOR = 5;
+const NCOLORS = 6;
 
 export const PREFERRED_TILE_SIZE = 48;
 export const ANIM_TIME = 0.25;
@@ -58,7 +57,6 @@ export function colors(defaultBackground: Color): Color[] {
   // paper face and the dark face, and only a mid gray shows on each.
   ret[COL_GRID] = GRID_MID;
   ret[COL_DIAG] = ret[COL_GRID];
-  ret[COL_HINT] = HINT_ACTION;
   ret[COL_CURSOR] = CURSOR;
   return ret;
 }
@@ -123,10 +121,9 @@ export function redraw(
       if (fd === flashFrame) v |= 1;
       else if (fd === flashFrame - 1) v &= ~1;
     }
-    if (!s.hintsActive) v &= ~2;
     if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) v |= 4;
 
-    const drawn = animating && prev && (s.grid[i] ^ prev.grid[i]) & ~2 ? ANIMATING : v;
+    const drawn = animating && prev && s.grid[i] !== prev.grid[i] ? ANIMATING : v;
     if (ds.tiles[i] === ANIMATING || drawn === ANIMATING || ds.tiles[i] !== drawn) {
       drawTile(dr, ds, s, x, y, v, drawn === ANIMATING, progress);
       ds.tiles[i] = drawn;
@@ -196,23 +193,6 @@ function drawTile(
           1,
         );
       }
-    }
-  }
-
-  if (v & 2) {
-    let x1 = bx + ((ts / 20) | 0);
-    let x2 = bx + ts - ((ts / 20) | 0);
-    let y1 = by + ((ts / 20) | 0);
-    let y2 = by + ts - ((ts / 20) | 0);
-    for (let k = 0; k < 3; k++) {
-      dr.drawLine({ x: x1, y: y1 }, { x: x2, y: y1 }, COL_HINT, 1);
-      dr.drawLine({ x: x1, y: y2 }, { x: x2, y: y2 }, COL_HINT, 1);
-      dr.drawLine({ x: x1, y: y1 }, { x: x1, y: y2 }, COL_HINT, 1);
-      dr.drawLine({ x: x2, y: y1 }, { x: x2, y: y2 }, COL_HINT, 1);
-      x1++;
-      y1++;
-      x2--;
-      y2--;
     }
   }
 

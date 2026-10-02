@@ -28,7 +28,7 @@
 
 import type { Color } from "../types.ts";
 import { divide, fraction, mix, scale, token } from "./color-token.ts";
-import { BLUE_BOLD, EIGHT_FILLS, ORANGE } from "./colors.ts";
+import { BLUE_BOLD, EIGHT_FILLS } from "./colors.ts";
 import { INK } from "./palette.ts";
 
 // --- signpost ----------------------------------------------------------
@@ -281,24 +281,6 @@ export const slideTargetBase = (background: Color, highlight: Color): Color => [
   highlight[1],
   background[2],
 ];
-
-/**
- * **The Solve route's next piece**, and the ghost of where it should end up.
- *
- * A solve route is a two-part statement — *move this, to there* — which is the
- * shape the shared hint vocabulary exists for; Slide cannot use it. `HINT_ACTION`
- * is blue and `HINT_BLACKREF` is green, and this board has already spent both on
- * things the help page names to the player. So the route takes the collection's
- * remaining strong accent, and spends it once: the piece and its destination are
- * the same hue at two weights, so they read as one instruction rather than two
- * marks.
- *
- * The destination is a *mix with the board* rather than a third named color,
- * because a ghost has to sit on whatever it is drawn over — floor or exit green
- * — and still read as a hole in the arrangement rather than as another piece.
- */
-export const slideRouteShadow = (background: Color): Color =>
-  mix(background, ORANGE, 0.65);
 
 // --- sokoban ------------------------------------------------------------
 

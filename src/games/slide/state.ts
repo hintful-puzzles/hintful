@@ -198,10 +198,6 @@ export interface SlideState {
   readonly lastmoved: number;
   readonly lastmovedPos: number;
   readonly movecount: number;
-  /** A Solve path the player can step through, and how far along it they are.
-   * Dropped as soon as the player strays from it or finishes it. */
-  readonly soln: readonly SlideStep[] | null;
-  readonly solnIndex: number;
 }
 
 /** The main block's anchor sits on the target. */
@@ -275,17 +271,12 @@ export function cursorPos(ui: SlideUi, w: number): number {
 // --- moves ------------------------------------------------------------
 
 /**
- * A slide of one block's anchor, or the arming of a Solve route — where
+ * A slide of one block's anchor, or Solve's whole route of them at once — where
  * upstream used `"M<from>-<to>"` / `"S<from>-<to>,…"` move strings.
- *
- * A `"solve"` move does **not** fill the board in: it installs a route the
- * player walks with the step key, as Inertia's does. That is a game feature,
- * not the missing-bookkeeping case of
- * docs/games/solver-and-generator.md § "Solve and the generator's aux".
  */
 export type SlideMove =
   | { kind: "move"; from: number; to: number }
-  | { kind: "solve"; moves: readonly SlideStep[] };
+  | { kind: "solution"; moves: readonly SlideStep[] };
 
 // --- desc codec -------------------------------------------------------
 
@@ -419,8 +410,6 @@ export function newState(p: SlideParams, desc: string): SlideState {
     lastmoved: -1,
     lastmovedPos: -1,
     movecount: 0,
-    soln: null,
-    solnIndex: -1,
   };
 }
 

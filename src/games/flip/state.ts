@@ -23,15 +23,15 @@ export interface FlipState {
    * fixed for the game and shared by reference across its states (upstream
    * reference-counts it), so a move clones only the grid. */
   readonly matrix: Uint8Array;
-  /** wh cells; bit 0 = lit ("wrong"), bit 1 = solver-hint marker. */
+  /** wh cells; 1 = lit ("wrong"). */
   readonly grid: Uint8Array;
   readonly moves: number;
-  readonly hintsActive: boolean;
 }
 
 export type FlipMove =
   | { kind: "flip"; x: number; y: number }
-  | { kind: "solve"; mask: number[] };
+  /** Solve: every press of the solution at once. */
+  | { kind: "solution"; mask: number[] };
 
 export interface FlipUi {
   cursor: GridCursor;

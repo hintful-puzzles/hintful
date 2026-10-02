@@ -12,10 +12,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 0,
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -41,10 +41,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -79,7 +79,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 3,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -89,7 +89,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 3,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -108,7 +108,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 3,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -118,7 +118,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 3,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -137,7 +137,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 3,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -147,7 +147,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 3,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -169,10 +169,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 13,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -190,10 +190,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -220,10 +220,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -241,10 +241,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -271,10 +271,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -292,10 +292,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -322,10 +322,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -343,10 +343,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -373,10 +373,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -394,10 +394,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -424,10 +424,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -445,10 +445,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -484,7 +484,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 23,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -494,7 +494,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 23,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -513,7 +513,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 23,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -523,7 +523,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 23,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -542,7 +542,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 23,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -552,7 +552,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 23,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -583,7 +583,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 23,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -593,7 +593,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 23,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -615,10 +615,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 33,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -636,10 +636,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -666,10 +666,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -687,10 +687,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -717,10 +717,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -738,10 +738,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -768,10 +768,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -789,10 +789,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -819,10 +819,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -840,10 +840,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -879,7 +879,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -889,7 +889,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -908,7 +908,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -918,7 +918,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -937,7 +937,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -947,7 +947,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -966,7 +966,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -976,7 +976,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1007,7 +1007,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1017,7 +1017,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1048,7 +1048,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1058,7 +1058,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1089,7 +1089,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1099,7 +1099,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1121,10 +1121,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 53,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1142,10 +1142,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1172,10 +1172,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 44,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1193,10 +1193,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1232,7 +1232,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1242,7 +1242,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1261,7 +1261,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1271,7 +1271,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1290,7 +1290,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1300,7 +1300,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1319,7 +1319,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1329,7 +1329,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1348,7 +1348,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1358,7 +1358,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1377,7 +1377,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1387,7 +1387,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1406,7 +1406,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1416,7 +1416,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1438,10 +1438,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 73,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1459,10 +1459,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1489,10 +1489,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 64,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1510,10 +1510,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1549,7 +1549,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1559,7 +1559,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1578,7 +1578,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1588,7 +1588,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1607,7 +1607,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1617,7 +1617,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1636,7 +1636,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1646,7 +1646,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1665,7 +1665,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1675,7 +1675,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1694,7 +1694,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1704,7 +1704,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1723,7 +1723,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1733,7 +1733,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1755,10 +1755,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 93,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1776,10 +1776,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1806,10 +1806,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 84,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1827,10 +1827,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1866,7 +1866,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1876,7 +1876,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1895,7 +1895,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1905,7 +1905,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1924,7 +1924,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1934,7 +1934,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1953,7 +1953,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1963,7 +1963,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1982,7 +1982,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1992,7 +1992,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2011,7 +2011,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2021,7 +2021,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2040,7 +2040,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2050,7 +2050,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2072,10 +2072,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 113,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2093,10 +2093,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2123,10 +2123,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 104,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2144,10 +2144,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2183,7 +2183,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2193,7 +2193,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2212,7 +2212,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2222,7 +2222,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2241,7 +2241,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2251,7 +2251,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2270,7 +2270,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2280,7 +2280,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2299,7 +2299,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2309,7 +2309,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2328,7 +2328,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2338,7 +2338,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2357,7 +2357,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2367,7 +2367,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2389,10 +2389,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 133,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2410,10 +2410,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2440,10 +2440,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 124,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2461,10 +2461,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2500,7 +2500,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2510,7 +2510,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2529,7 +2529,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2539,7 +2539,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2558,7 +2558,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2568,7 +2568,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2587,7 +2587,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2597,7 +2597,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2616,7 +2616,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2626,7 +2626,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2657,7 +2657,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2667,7 +2667,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2698,7 +2698,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2708,7 +2708,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2730,10 +2730,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 153,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2751,10 +2751,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2781,10 +2781,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 144,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2802,10 +2802,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2841,7 +2841,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2851,7 +2851,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2870,7 +2870,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2880,7 +2880,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2899,7 +2899,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2909,7 +2909,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2928,7 +2928,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2938,7 +2938,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2957,7 +2957,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2967,7 +2967,7 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2989,10 +2989,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 173,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3010,10 +3010,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -3040,10 +3040,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 164,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3061,10 +3061,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -3091,10 +3091,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 164,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3112,10 +3112,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -3142,10 +3142,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     "y": 164,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3163,10 +3163,10 @@ exports[`mines render > paints the opened board: numbers, covered bevels, recess
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [

@@ -109,7 +109,6 @@ describe("desc", () => {
       expect(c).toBeLessThanOrEqual(p.ncolors);
     }
     expect(s.nextGo).toBe(0);
-    expect(s.revealed).toBe(false);
     expect(status(s)).toBe("ongoing");
   });
 

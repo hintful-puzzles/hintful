@@ -1,7 +1,7 @@
 /**
  * Inertia — behavioral tests.
  *
- * Tier 1 (the slide rule, the codec, the generator, the route aid, the deaths
+ * Tier 1 (the slide rule, the codec, the generator, Solve, the deaths
  * tally) plus tier 2.5 render scenarios (docs/games/testing.md § "The test tiers").
  */
 import { describe, expect, it } from "vitest";
@@ -471,108 +471,27 @@ describe("inertia deaths tally", () => {
   });
 });
 
-// --- the route aid ---------------------------------------------------
+// --- Solve ------------------------------------------------------------
 
-describe("inertia route aid", () => {
+describe("inertia Solve", () => {
   /** A board with two gems that need two separate slides to collect. */
   const TWO_GEM = board(["Sbbg", "bwbw", "bbbb", "gbbb"]);
 
-  it("solve installs a route without moving the ball or finishing the game", () => {
+  it("slides the ball along the whole route, collecting every gem", () => {
     const s0 = newState(TWO_GEM.params, TWO_GEM.desc);
     const result = inertiaGame.solve?.(s0, s0);
-    expect(result?.ok).toBe(true);
-    if (!result?.ok) return;
+    if (!result?.ok || result.move.type !== "solution")
+      throw new Error("expected a route");
+    expect(result.move.route.length).toBeGreaterThan(1);
 
     const s1 = inertiaGame.executeMove(s0, result.move);
-    expect([s1.px, s1.py]).toEqual([s0.px, s0.py]); // the ball has not moved
-    expect(s1.gems).toBe(s0.gems); // no gems collected
-    expect(inertiaGame.status(s1)).toBe("ongoing"); // and it is not finished
-    expect(s1.route).not.toBeNull();
-    expect(s1.routePos).toBe(0);
-  });
-
-  it("following the route advances it", () => {
-    const s0 = newState(TWO_GEM.params, TWO_GEM.desc);
-    const result = inertiaGame.solve?.(s0, s0);
-    if (!result?.ok) throw new Error("expected a route");
-    const s1 = inertiaGame.executeMove(s0, result.move);
-    const route = s1.route ?? [];
-    expect(route.length).toBeGreaterThan(1);
-
-    const s2 = play(s1, route[0]);
-    expect(s2.route).toBe(s1.route); // same route object, shared by reference
-    expect(s2.routePos).toBe(1);
-  });
-
-  it("deviating from the route re-solves from where the ball ends up", () => {
-    const s0 = newState(TWO_GEM.params, TWO_GEM.desc);
-    const result = inertiaGame.solve?.(s0, s0);
-    if (!result?.ok) throw new Error("expected a route");
-    const s1 = inertiaGame.executeMove(s0, result.move);
-    const route = s1.route ?? [];
-
-    // Play some *other* legal direction than the one the route asks for.
-    const wrong = [N, NE, E, SE, S, SW, W, NW].find(
-      (d) =>
-        d !== route[0] &&
-        inertiaGame.interpretMove(
-          s1,
-          ui(),
-          preferredDrawState(inertiaGame, s1),
-          { x: 0, y: 0 },
-          padKey(d),
-        ) !== null,
-    );
-    expect(wrong).toBeDefined();
-    if (wrong === undefined) return;
-
-    const s2 = play(s1, wrong);
-    expect(s2.route).not.toBeNull();
-    expect(s2.routePos).toBe(0); // a fresh route, not an advanced one
-    // And the fresh route is a real one: it collects the remaining gems.
-    let end: InertiaState = s2;
-    for (const d of s2.route ?? []) end = play(end, d);
-    expect(end.gems).toBe(0);
-  });
-
-  it("collecting the last gem discards the route", () => {
-    const one = board(["Sbbg", "wwww"]);
-    const s0 = newState(one.params, one.desc);
-    const result = inertiaGame.solve?.(s0, s0);
-    if (!result?.ok) throw new Error("expected a route");
-    const s1 = inertiaGame.executeMove(s0, result.move);
-
-    const s2 = play(s1, E);
-    expect(s2.gems).toBe(0);
-    expect(s2.route).toBeNull();
-  });
-
-  it("dying discards the route", () => {
-    const withMine = board(["Sbbg", "bmbb", "bbbb", "bbbb"]);
-    const s0 = newState(withMine.params, withMine.desc);
-    const result = inertiaGame.solve?.(s0, s0);
-    if (!result?.ok) throw new Error("expected a route");
-    const s1 = inertiaGame.executeMove(s0, result.move);
-
-    const s2 = play(s1, SE); // straight into the mine
-    expect(s2.dead).toBe(true);
-    expect(s2.route).toBeNull();
-  });
-
-  it("Enter follows the route's next step", () => {
-    const s0 = newState(TWO_GEM.params, TWO_GEM.desc);
-    const result = inertiaGame.solve?.(s0, s0);
-    if (!result?.ok) throw new Error("expected a route");
-    const s1 = inertiaGame.executeMove(s0, result.move);
-
-    const move = inertiaGame.interpretMove(
-      s1,
-      ui(),
-      preferredDrawState(inertiaGame, s1),
-      { x: 0, y: 0 },
-      0x020d,
-    );
-    expect(move).toEqual({ type: "move", dir: (s1.route ?? [])[0] });
+    let played = s0;
+    for (const d of result.move.route) played = play(played, d);
+    expect([s1.px, s1.py]).toEqual([played.px, played.py]);
+    expect(s1.gems).toBe(0);
+    expect(inertiaGame.status(s1)).toBe("solved");
+    // The ball jumps to the end rather than animating one slide across walls.
+    expect(s1.distanceMoved).toBe(0);
   });
 
   it("refuses to solve an already-finished board", () => {
@@ -662,11 +581,10 @@ describe("inertia generator", () => {
 // --- save / load -----------------------------------------------------
 
 describe("inertia save round-trip", () => {
-  it("restores a solved-with-help game, route and all", () => {
+  it("restores a solved-with-help game", () => {
     const { m } = harness();
     expect(m.newGameFromId(SEED_ID)).toBeNull();
     expect(m.solve()).toBeNull();
-    m.processInput(0, 0, 0x020d); // Enter: follow one step of the route
 
     const before = m.formatAsText();
     const saved = m.saveGame();
@@ -674,8 +592,7 @@ describe("inertia save round-trip", () => {
     const restored = harness();
     expect(restored.m.loadGame(saved)).toBeNull();
     expect(restored.m.formatAsText()).toBe(before);
-    // The route is rebuilt by replaying the solve move, so the arrow is back.
-    expect(restored.status()).toContain("Auto-solver used.");
+    expect(restored.status()).toContain("Auto-solved.");
   });
 });
 
@@ -692,22 +609,11 @@ describe("inertia rendering", () => {
     expect(recording.ops.some((o) => o.op === "circle" && o.fill === COL_MINE)).toBe(
       true,
     );
-    // No route installed, so no route arrow.
+    // No hint asked for, so no arrow.
     expect(recording.ops.some((o) => o.op === "polygon" && o.fill === COL_HINT)).toBe(
       false,
     );
     expect(recording.ops).toMatchSnapshot();
-  });
-
-  it("draws the route arrow once a route is installed", () => {
-    const { recording } = renderScenario({
-      game: inertiaGame,
-      id: SEED_ID,
-      moves: [{ type: "route", route: routeForSeed() }],
-    });
-    expect(recording.ops.some((o) => o.op === "polygon" && o.fill === COL_HINT)).toBe(
-      true,
-    );
   });
 
   it("draws the aim arrow, in its own color, while a swipe is held", () => {
@@ -734,7 +640,7 @@ describe("inertia rendering", () => {
     expect(arrows(idle, COL_AIM)).toBe(0);
 
     // Holding the ball, aimed east: an arrow appears — and in COL_AIM, not the
-    // COL_HINT the solver's route arrow uses. They mean different things.
+    // COL_HINT the hint's arrow uses. They mean different things.
     const aiming = paint({ ...ui(), aiming: true, aimDir: E });
     expect(arrows(aiming, COL_AIM)).toBe(1);
     expect(arrows(aiming, COL_HINT)).toBe(0);
@@ -765,16 +671,6 @@ describe("inertia rendering", () => {
   });
 });
 
-/** The route the solver picks for `SEED_ID` — the same move the Solve button
- * makes, so the scenario can be driven to a route-installed frame. */
-function routeForSeed(): number[] {
-  const p = { w: 10, h: 8 };
-  const { desc } = newInertiaDesc(p, randomNew("inertia-test"));
-  const result = solveRoute(newState(p, desc));
-  if (!result.ok) throw new Error(result.error);
-  return result.route;
-}
-
 // --- small helpers ---------------------------------------------------
 
 function ui() {
@@ -784,9 +680,4 @@ function ui() {
 /** The engine button code for an arrow key. */
 function key(name: "up" | "down" | "left" | "right"): number {
   return { up: 0x0209, down: 0x020a, left: 0x020b, right: 0x020c }[name];
-}
-
-/** The number-pad button code for a direction (the pad layout is the compass). */
-function padKey(dir: number): number {
-  return 0x4000 | "89632147"[dir].charCodeAt(0);
 }

@@ -6,11 +6,7 @@
  * square catches it or a wall blocks its way — and it dies on any mine it
  * touches.
  *
- * Two things here are unusual for this collection. First, Solve does not finish
- * the game: it *installs a route* into the state, which the game draws as an
- * arrow on the ball and lets the player follow one step at a time — re-solving
- * automatically if the player wanders off it (see `applyRoute`). Second, the
- * deaths tally lives on the Ui rather than the state, so undo and redo can
+ * The deaths tally lives on the Ui rather than the state, so undo and redo can
  * neither rewind nor re-count a death.
  */
 
@@ -28,8 +24,6 @@ import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   CURSOR_UP,
   digitOf,
   LEFT_BUTTON,
@@ -79,45 +73,24 @@ import {
 
 // --- moves -----------------------------------------------------------
 
-/**
- * Keep an installed route in step with the move the player just made.
- *
- * Following the route advances it; wandering off it re-solves from where the
- * ball now is, so the arrow always points somewhere useful; dying, or
- * collecting the last gem, throws the route away.
- */
-function applyRoute(s: InertiaState, dir: number): InertiaState {
-  if (!s.route) return s;
-
-  if (s.dead || s.gems === 0) return { ...s, route: null, routePos: 0 };
-
-  if (s.route[s.routePos] === dir && s.routePos + 1 < s.route.length) {
-    return { ...s, routePos: s.routePos + 1 };
-  }
-
-  const solved = solveRoute(s);
-  if (!solved.ok) return { ...s, route: null, routePos: 0 };
-  return { ...s, route: Object.freeze(solved.route), routePos: 0 };
-}
-
-function executeMove(s: InertiaState, m: InertiaMove): InertiaState {
-  if (m.type === "route") {
-    // A solve move doesn't touch the board at all — it just hands the player a
-    // route to follow, so the new state can share the old board (only `slide`
-    // ever writes to a board, and it clones first).
-    if (m.route.length === 0) throw new Error("inertia: empty route");
-    return { ...s, route: Object.freeze([...m.route]), routePos: 0 };
-  }
-  if (m.type !== "move") return assertNever(m, "inertia: executeMove");
-
-  const dir = m.dir;
+/** One slide, refused where the ball cannot go. */
+function play(s: InertiaState, dir: number): InertiaState {
   if (dir < 0 || dir >= DIRECTIONS) throw new Error(`inertia: bad direction ${dir}`);
   if (s.dead) throw new Error("inertia: the ball is dead");
   if (s.board.at(s.px + DX[dir], s.py + DY[dir]) === WALL) {
     throw new Error("inertia: there's a wall in the way");
   }
+  return slide(s, dir);
+}
 
-  return applyRoute(slide(s, dir), dir);
+function executeMove(s: InertiaState, m: InertiaMove): InertiaState {
+  if (m.type === "solution") {
+    // The ball jumps to the route's end rather than animating one slide across
+    // the board.
+    return { ...m.route.reduce(play, s), distanceMoved: 0 };
+  }
+  if (m.type !== "move") return assertNever(m, "inertia: executeMove");
+  return play(s, m.dir);
 }
 
 // --- input -----------------------------------------------------------
@@ -233,9 +206,6 @@ function interpretMove(
     dir = 6;
   } else if (button === CURSOR_RIGHT) {
     dir = 2;
-  } else if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    // Enter/Space follows the installed route one step.
-    if (s.route && s.routePos < s.route.length) dir = s.route[s.routePos];
   } else {
     // A digit, with or without the number-pad modifier (see DIGIT_DIRECTIONS).
     const digit = digitOf(button);
@@ -320,13 +290,13 @@ export const inertiaGame: Game<
   solve(_orig: InertiaState, curr: InertiaState): SolveResult<InertiaMove> {
     const result = solveRoute(curr);
     if (!result.ok) return { ok: false, error: result.error };
-    return { ok: true, move: { type: "route", route: result.route } };
+    return { ok: true, move: { type: "solution", route: result.route } };
   },
 
   textFormat,
   statusbarText,
 
-  // A nudge, not Solve: it installs no route, and the midend does not count it
+  // A nudge, not Solve: one slide at a time, and the midend does not count it
   // as using the solver.
   hint,
   hintMarks: {

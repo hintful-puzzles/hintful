@@ -203,7 +203,6 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
       matrix,
       grid,
       moves: 0,
-      hintsActive: false,
     };
   },
 
@@ -225,10 +224,15 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   executeMove(from, move): FlipState {
     const { w, h } = from;
     const wh = w * h;
-    if (move.kind === "solve") {
+    if (move.kind === "solution") {
       const grid = from.grid.slice();
-      for (let i = 0; i < wh; i++) grid[i] = (grid[i] & ~2) | (move.mask[i] ? 2 : 0);
-      return { ...from, grid, hintsActive: true };
+      let moves = from.moves;
+      for (let i = 0; i < wh; i++) {
+        if (!move.mask[i]) continue;
+        for (let j = 0; j < wh; j++) grid[j] ^= from.matrix[i * wh + j];
+        moves++;
+      }
+      return { ...from, grid, moves };
     }
     if (move.kind !== "flip") return assertNever(move, "flip: executeMove");
 
@@ -238,23 +242,13 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     }
     const grid = from.grid.slice();
     const i = y * w + x;
-    let done = true;
-    for (let j = 0; j < wh; j++) {
-      grid[j] ^= from.matrix[i * wh + j];
-      if (grid[j] & 1) done = false;
-    }
-    grid[i] ^= 2; // toggle hint marker
-    return {
-      ...from,
-      grid,
-      moves: from.moves + 1,
-      hintsActive: done ? false : from.hintsActive,
-    };
+    for (let j = 0; j < wh; j++) grid[j] ^= from.matrix[i * wh + j];
+    return { ...from, grid, moves: from.moves + 1 };
   },
 
   /** Every light is off. */
   status(s) {
-    return s.grid.every((v) => (v & 1) === 0) ? "solved" : "ongoing";
+    return s.grid.every((v) => v === 0) ? "solved" : "ongoing";
   },
 
   notApplicable: {
@@ -338,7 +332,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
       if (i === und.length) break;
     }
 
-    return { ok: true, move: { kind: "solve", mask: Array.from(shortest) } };
+    return { ok: true, move: { kind: "solution", mask: Array.from(shortest) } };
   },
 
   textFormat(s): string {

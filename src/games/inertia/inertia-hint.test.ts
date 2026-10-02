@@ -326,7 +326,7 @@ describe("inertia hint narration", () => {
 describe("inertia hint is a nudge; only Solve is a commitment", () => {
   const id = "10x8#h-nudge";
 
-  it("does not brand the game auto-solved, and installs no route", () => {
+  it("does not record the solver as used", () => {
     const { m, status } = harness(id);
     expect(m.hint()).toBeNull();
 
@@ -334,17 +334,16 @@ describe("inertia hint is a nudge; only Solve is a commitment", () => {
     expect(status()).not.toContain("Auto-solver used.");
     expect(new TextDecoder().decode(s)).not.toContain('"cheated":true');
 
-    // The hint shows an arrow, but it is the *hint's* arrow: nothing has been
-    // written into the state for the game to follow afterwards.
+    // The hint shows an arrow for one slide, and plays nothing.
     const step = m.activeHintStep();
     expect(step).not.toBeNull();
     expect(step?.move).toMatchObject({ type: "move" });
   });
 
-  it("...whereas Solve does both", () => {
+  it("...whereas Solve does", () => {
     const { m, status } = harness(id);
     expect(m.solve()).toBeNull();
-    expect(status()).toContain("Auto-solver used.");
+    expect(status()).toContain("Auto-solved.");
   });
 
   it("refuses honestly when the ball is dead, and says the move is to undo", () => {

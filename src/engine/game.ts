@@ -452,7 +452,10 @@ export interface Game<
 
   /** Solve from `orig` (the initial state) given `curr`. Having it is what
    * offers Solve to the player. Returns a discriminated result so a `Move`
-   * that is itself a string can't be confused with an error message. */
+   * that is itself a string can't be confused with an error message.
+   *
+   * The move must leave a board whose status is solved: `Midend.solve` throws
+   * on one that does not, so a game that cannot finish from `curr` refuses. */
   solve?(orig: State, curr: State, aux?: string): SolveResult<Move>;
 
   /** Track the pointer over the board when no button is down, for a game

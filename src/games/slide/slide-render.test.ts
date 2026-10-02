@@ -38,8 +38,6 @@ import {
   COL_LOWLIGHT,
   COL_MAIN,
   COL_MAIN_GRABBED,
-  COL_ROUTE,
-  COL_ROUTE_SHADOW,
   COL_TARGET,
   COL_WALL,
   COL_WALL_HIGHLIGHT,
@@ -451,100 +449,6 @@ describe("slide exit gate", () => {
 
   it("matches its snapshot", () => {
     expect(capture(gateBoard())).toMatchSnapshot();
-  });
-});
-
-// --- a Solve route on display ------------------------------------------
-
-describe("slide solve-route frame", () => {
-  function withRoute(): { me: SlideMidend; from: number; to: number } {
-    const me = newBoard();
-    capture(me); // warm the draw state
-    expect(me.solve()).toBeNull();
-    const state = (me as unknown as { state: SlideState }).state;
-    const step = state.soln?.[0];
-    if (!step) throw new Error("solve installed no route");
-    return { me, from: step.from, to: step.to };
-  }
-
-  it("highlights the next block to move and shadows where it goes", () => {
-    const plain = capture(newBoard());
-    const { me, from, to } = withRoute();
-    const ops = capture(me);
-
-    const fx = from % W;
-    const fy = Math.floor(from / W);
-    const tx = to % W;
-    const ty = Math.floor(to / W);
-
-    // The block the route wants moved **keeps its own fill** and wears the
-    // accent where its bevel would be. Upstream replaced the fill with the
-    // block's own highlight — pure white on a light host, which is what its
-    // author called excessive.
-    expect(pieceFillColor(plain, fx, fy)).toBe(COL_BLOCK);
-    expect(pieceFillColor(ops, fx, fy)).toBe(COL_BLOCK);
-    expect(rectsInTile(ops, fx, fy).some((o) => o.color === COL_ROUTE)).toBe(true);
-
-    // Its destination — bare floor before — now carries the piece's outline in
-    // the same accent one step weaker, so the two read as one instruction.
-    expect(rectsInTile(plain, tx, ty).length).toBeLessThan(
-      rectsInTile(ops, tx, ty).length,
-    );
-    expect(rectsInTile(ops, tx, ty).some((o) => o.color === COL_ROUTE_SHADOW)).toBe(
-      true,
-    );
-  });
-
-  it("marks the next piece without making it the brightest thing on the board", () => {
-    // The other half of the author's complaint, and the one a color-index
-    // assertion cannot state: the cue has to be an ordering cue, not a light
-    // source. Nothing the route draws may out-light the exit, which is what
-    // names the goal.
-    const { me } = withRoute();
-    const ops = capture(me);
-    const brightest = Math.max(
-      ...ops
-        .filter((o) => o.op === "rect" && o.w > 2 && o.h > 2)
-        .map((o) => lightness(PALETTE[(o as RectOp).color])),
-    );
-    expect(brightest).toBeCloseTo(lightness(PALETTE[COL_TARGET]), 5);
-    expect(lightness(PALETTE[COL_ROUTE])).toBeLessThan(lightness(PALETTE[COL_TARGET]));
-  });
-
-  it("moves the highlight on as the route advances", () => {
-    // On an untouched board the main block is drawn plain.
-    expect(pieceFillColor(capture(newBoard()), 1, 1)).toBe(COL_MAIN);
-
-    const { me, from } = withRoute();
-    expect(from).toBe(idx(3, 1)); // the route starts by moving the singleton
-    capture(me); // the frame that paints the route's first highlight
-    const stateNow = (): SlideState => (me as unknown as { state: SlideState }).state;
-
-    // Walk the first step. The route now wants the *main* block moved, so the
-    // accent band moves onto it — and its blue fill is untouched, which is what
-    // stops the cue from being read as "this block has changed".
-    const first = stateNow().soln?.[0];
-    if (!first) throw new Error("solve installed no route");
-    me.playMoves([{ kind: "move", ...first }]);
-
-    const next = stateNow().soln?.[stateNow().solnIndex];
-    if (!next) throw new Error("route ended after one step");
-    expect(next.from).toBe(idx(1, 1)); // the main block
-
-    // This frame is *warm*, so the main block's tiles appear in it only because
-    // the accent band is part of the per-tile cache key.
-    const ops = capture(me);
-    expect(pieceFillColor(ops, 1, 1)).toBe(COL_MAIN);
-    expect(rectsInTile(ops, 1, 1).some((o) => o.color === COL_ROUTE)).toBe(true);
-    // ...and it has left the block that just moved, which is drawn ordinarily
-    // at its new home.
-    const [tox, toy] = [first.to % W, Math.floor(first.to / W)];
-    expect(pieceFillColor(ops, tox, toy)).toBe(COL_BLOCK);
-    expect(rectsInTile(ops, tox, toy).some((o) => o.color === COL_ROUTE)).toBe(false);
-  });
-
-  it("matches its snapshot", () => {
-    expect(capture(withRoute().me)).toMatchSnapshot();
   });
 });
 

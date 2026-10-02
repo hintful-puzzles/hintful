@@ -38,6 +38,7 @@ import {
   ALREADY_SOLVED,
   DEDUCTION_EXHAUSTED,
   FIX_MISTAKES_FIRST,
+  GAME_OVER,
   isDeadEnd,
   type MarkedDeadEnd,
   SEARCH_OUT_OF_REACH,
@@ -766,18 +767,31 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     for (const move of moves) this.applyMove(move);
   }
 
+  /** Show the finished board, or say why not: one meaning of Solve in every
+   * game. A lost board is refused here, since no move of Solve's can win it
+   * back, and a move that leaves anything but a solved board is the game's
+   * defect, thrown before it reaches the history. */
   solve(): string | null {
     if (!this.game.solve) {
       return "This game does not support solving";
     }
-    if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;
+    const status = this.statusOf(this.state);
+    if (status === "solved") return ALREADY_SOLVED;
+    if (status === "lost") return GAME_OVER;
     const result = this.game.solve(this.history[0], this.state, this.aux);
     if (!result.ok) return result.error;
+    const next = this.game.executeMove(this.state, result.move);
+    if (this.statusOf(next) !== "solved") {
+      throw new Error(
+        `${this.game.id}: Solve's move leaves a board whose status is ` +
+          `${this.statusOf(next)}, not solved`,
+      );
+    }
     this.clearHint();
     this.cheated = true;
     this.pendingSolve = true;
     try {
-      this.applyMove(result.move);
+      this.commitMove(next, result.move);
     } finally {
       this.pendingSolve = false;
     }

@@ -143,8 +143,9 @@ export const PUZZLE_NOT_REASONABLE = "This puzzle's solution can't be determined
 
 /**
  * The game has been lost and takes no more moves: Guess's answer is revealed,
- * Flood's board is flooded past its move limit. The status says lost, which the
- * midend does not refuse on, because a lost board is not always over: Flood
+ * Flood's board is flooded past its move limit. The status says lost. The
+ * midend refuses Solve there itself, since no Solve move can win the board back,
+ * but leaves a hint to the game, because a lost board is not always over: Flood
  * plays on past its limit, and its hint still leads home.
  */
 export const GAME_OVER = "This game is over. Undo to play on, or start a new one.";

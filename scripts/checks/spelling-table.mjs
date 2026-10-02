@@ -395,10 +395,7 @@ export const QUOTATIONS = {
   raise_colour: ["src/games/slide/render.ts"],
   net_neighbour: ["src/games/net/loops.ts"],
   neighbour_fn_t: ["src/engine/findloop.ts"],
-  nc_colour: [
-    "openspec/specs/guess/spec.md",
-    "openspec/changes/derive-completion-from-the-position/specs/guess/spec.md",
-  ],
+  nc_colour: ["openspec/specs/guess/spec.md"],
   has_incentre: ["src/engine/grid/grid-core.ts"],
   grid_find_incentre: ["src/engine/grid/grid-geometry.ts"],
   face_colour: ["src/engine/loopgen.ts"],

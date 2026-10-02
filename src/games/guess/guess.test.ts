@@ -102,15 +102,13 @@ describe("executeMove", () => {
     expect(status(next)).toBe("lost");
   });
 
-  it("solve reveals (give-up = loss reveal)", () => {
+  it("solve plays the answer as the next guess, which wins", () => {
     const { state } = freshGame();
     const res = guessGame.solve?.(state, state);
-    expect(res?.ok).toBe(true);
-    if (res?.ok) {
-      const next = guessGame.executeMove(state, res.move);
-      expect(next.revealed).toBe(true);
-      expect(status(next)).toBe("lost");
-    }
+    if (!res?.ok) throw new Error("Guess's Solve refused a fresh board");
+    const next = guessGame.executeMove(state, res.move);
+    expect(next.guesses[0].pegs).toEqual(state.solution);
+    expect(status(next)).toBe("solved");
   });
 
   it("rejects an out-of-range peg", () => {

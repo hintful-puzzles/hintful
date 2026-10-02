@@ -14,9 +14,6 @@
  *  - the target area is tinted green wherever the main block would land;
  *  - the exit gate is outlined, so it reads that nothing but the main block may
  *    cross it;
- *  - when a Solve route is installed, the next block to move wears an accent
- *    band (`FG_SOLVEPIECE`) and the *outline* of it is drawn where it should end
- *    up (`FG_SHADOW`);
  *  - completing the puzzle plays a three-interval flash.
  *
  * ## The palette
@@ -50,11 +47,10 @@ import {
   mkhighlight,
   mkhighlightSpecific,
 } from "../../engine/color/color-mkhighlight.ts";
-import { ORANGE, RED } from "../../engine/color/colors.ts";
+import { RED } from "../../engine/color/colors.ts";
 import {
   slideBlockBase,
   slideMainBlockBase,
-  slideRouteShadow,
   slideTargetBase,
   slideWallBase,
 } from "../../engine/color/palette-games.ts";
@@ -99,12 +95,10 @@ export const COL_WALL_LOWLIGHT = 17;
 export const COL_BLOCK = 18;
 export const COL_BLOCK_HIGHLIGHT = 19;
 export const COL_BLOCK_LOWLIGHT = 20;
-export const COL_ROUTE = 21;
-export const COL_ROUTE_SHADOW = 22;
 /** The keyboard cursor. Flat, so it needs no bevel trio and no `paletteSwaps`
  * pair — the token carries its own dark value. */
-export const COL_CURSOR = 23;
-export const NCOLORS = 24;
+export const COL_CURSOR = 21;
+export const NCOLORS = 22;
 
 /** Upstream `raise_colour`: two parts `src` to one part `limit`. */
 function raise(src: Color, limit: Color): Color {
@@ -158,11 +152,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TARGET] = target.base;
   out[COL_TARGET_HIGHLIGHT] = target.highlight;
   out[COL_TARGET_LOWLIGHT] = target.lowlight;
-
-  // The Solve route: one accent at two weights, so "move this" and "to there"
-  // read as one instruction.
-  out[COL_ROUTE] = ORANGE;
-  out[COL_ROUTE_SHADOW] = slideRouteShadow(background);
 
   // The keyboard cursor. `palette.ts`'s default `CURSOR` is green, but Slide has
   // already spent green on the exit area, which the help page names to the
@@ -222,12 +211,8 @@ const FG_WALL = 0x00000020;
 const FG_MAIN = 0x00000040;
 const FG_NORMAL = 0x00000080;
 const FG_GRABBED = 0x00000100;
-const FG_SHADOW = 0x00000200;
-const FG_SOLVEPIECE = 0x00000400;
 /** Shift of the block's own border/corner flags within the packed value. */
 const FG_MAINPIECESH = 11;
-/** Shift of the solve-shadow's border/corner flags. */
-const FG_SHADOWSH = 19;
 /** Which of this square's four sides face *out* of the exit gate (bits 27–30).
  * The gate is outlined around its whole region rather than filled per square,
  * so a square has to know about its neighbors. */
@@ -253,7 +238,7 @@ const hasAll = (val: number, mask: number): boolean => (val & mask) === mask;
 export interface SlideDrawState {
   tileSize: number;
   /** Last-drawn packed value per cell; `-1` forces a repaint. Every overlay
-   * (drag, solve highlight, shadow, flash) is part of this one word, so they
+   * (drag, cursor, gate, flash) is part of this one word, so they
    * all sit in the diff key by construction (docs/games/rendering.md § "The tile cache and the diff key"). */
   grid: Int32Array;
 }
@@ -595,25 +580,6 @@ function drawTile(
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, cc);
   if (val & BG_FORCEFIELD) drawGate(dr, ts, tx, ty, val);
 
-  // Midground: where the Solve route wants the next piece to end up, drawn as
-  // the piece's own outline with **nothing inside it** — `SKIP` as the body
-  // color leaves `drawPiecepart` painting only the bevel bands, which trace
-  // the shape exactly. A filled ghost reads as another piece, whatever color
-  // it is; an empty one reads as a space shaped like the piece, which is what a
-  // destination is. (Upstream filled it with the lowlight, and its author
-  // noted "the shadow blends in too well with the piece lowlights".)
-  if (val & FG_SHADOW)
-    drawPiecepart(
-      dr,
-      ts,
-      tx,
-      ty,
-      (val >> FG_SHADOWSH) & PIECE_MASK,
-      COL_ROUTE_SHADOW,
-      SKIP,
-      COL_ROUTE_SHADOW,
-    );
-
   // Foreground: a section of a block, or of the wall.
   if (val & FG_WALL) {
     cc = COL_WALL;
@@ -631,15 +597,6 @@ function drawTile(
 
     if (val & FLASH_LOW) cc = cl;
     else if (val & FLASH_HIGH) cc = ch;
-
-    // The Solve route's next piece keeps its own fill and wears the accent as a
-    // band where its bevel would be. (Upstream painted the whole piece in its
-    // highlight — pure white on a light host — which its author called
-    // excessive: a light source, where an ordering cue is wanted.)
-    if (val & FG_SOLVEPIECE) {
-      ch = COL_ROUTE;
-      cl = COL_ROUTE;
-    }
 
     drawPiecepart(dr, ts, tx, ty, (val >> FG_MAINPIECESH) & PIECE_MASK, cl, cc, ch);
   }
@@ -730,17 +687,6 @@ export function redraw(
   )
     board.set(state.board);
 
-  // Where the installed Solve route wants to move next, if any.
-  let solvesrc = -1;
-  let solvedst = -1;
-  if (state.soln) {
-    const step = state.soln[state.solnIndex];
-    solvesrc = step.from;
-    solvedst = step.to;
-    if (solvesrc === state.lastmovedPos) solvesrc = state.lastmoved;
-    if (solvesrc === ui.grabAnchor) solvesrc = ui.grabCurrpos;
-  }
-
   // A dsf over the displayed board, so we can tell which edges are internal to
   // a block and which are boundaries. Walls join up with each other.
   const dsf = new Dsf(wh);
@@ -760,7 +706,6 @@ export function redraw(
 
   const mainpos = dsf.canonify(mainanchor);
   const grabpos = ui.grabCurrpos > 0 ? dsf.canonify(ui.grabCurrpos) : -1;
-  const solvepos = solvesrc >= 0 ? dsf.canonify(solvesrc) : -1;
   const cursor = ui.cursor.visible ? cursorPos(ui, w) : -1;
   let flash = 0;
   if (flashTime > 0)
@@ -798,18 +743,8 @@ export function redraw(
         else if (canon === mainpos) val |= FG_MAIN;
         else val |= FG_NORMAL;
         if (canon === grabpos) val |= FG_GRABBED;
-        if (canon === solvepos) val |= FG_SOLVEPIECE;
 
         val |= findPiecepart(w, h, dsf, x, y) << FG_MAINPIECESH;
-      }
-
-      // Mid-route: a shadow of the block where the route wants it to end up.
-      if (solvepos >= 0) {
-        const si = i - solvedst + solvesrc;
-        if (si >= 0 && si < wh && dsf.canonify(si) === solvepos) {
-          val |= findPiecepart(w, h, dsf, si % w, Math.floor(si / w)) << FG_SHADOWSH;
-          val |= FG_SHADOW;
-        }
       }
 
       if (val !== ds.grid[i]) {

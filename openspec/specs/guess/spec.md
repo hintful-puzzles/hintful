@@ -59,7 +59,8 @@ solution by hex-decoding and de-obfuscating the desc.
 ### Requirement: Guess scores submitted rows with Knuth feedback
 
 A `GuessMove` SHALL be a guess submission carrying the working row's pegs and
-holds (`{ type: "guess", pegs, holds }`) or a solve (`{ type: "solve" }`).
+holds (`{ type: "guess", pegs, holds }`), or a set of answer-row marks. Solve
+SHALL submit the answer as the next guess, which wins.
 `executeMove` SHALL be pure. A guess submission SHALL validate each peg against
 `[allowBlank ? 0 : 1, ncolors]`, then mark the row with Knuth's feedback —
 `nc_place` exact-position matches (black) and `nc_colour = Σ_color min(#guess,
@@ -67,9 +68,8 @@ holds (`{ type: "guess", pegs, holds }`) or a solve (`{ type: "solve" }`).
 the row, then advance to the next row unless every peg is in the correct place.
 The game SHALL be won when the last submitted row has every peg in the correct
 place, and lost, with the solution revealed, when the rows are exhausted
-without a win or when Solve reveals the solution. Won and lost SHALL be judged
-from the rows and the revealed answer on the board, never from a separate
-record of the outcome.
+without a win. Won and lost SHALL be judged from the rows on the board, never
+from a separate record of the outcome.
 
 #### Scenario: A correct guess wins
 

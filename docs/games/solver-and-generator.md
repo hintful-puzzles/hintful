@@ -881,18 +881,22 @@ take tens of milliseconds. If you take `aux`, **test Solve through a real
 `Midend`**, not just the game's `solve` directly — the threading lives in the
 midend, so a direct unit test can pass while the shipped Solve is a no-op.
 
-**Solve MUST complete the game — fix upstream's bookkeeping where the C
-forgot it** (owner directive, 2026-07-21). The collection convention: the
-solve move's `executeMove` arm runs the completion check (so the game reports
-solved-with-help) *and* sets `cheated` (so the win flash doesn't fire on a
-solver fill). Upstream Subsets did neither and stayed "ongoing" for ever
-after Solve; that class of quirk is missing bookkeeping, not behavior, and
-is **not** preserved. Safe even on a verdict-matched game: the desc
-differential exercises `newDesc`/solver/codec, never `executeMove`. Assert
-both halves through a real `Midend` (status `"solved-with-help"`,
-`flashLength` 0). Exemplar:
-[`subsets/index.ts`](../../src/games/subsets/index.ts) (the solve arm, with
-its divergence comment).
+**Solve shows the finished board, or says why not — and the engine holds
+every game to it** (`ts-engine` § "Solve leaves a solved board"; owner,
+2026-10-02: *"consistent with how this gets applied across games
+(preferably by the engine deciding)"*). `Midend.solve` refuses a solved or a
+lost board itself, and throws when the move `solve` returns leaves a board
+whose status is not solved. So a Solve is never a reveal scored as a loss, a
+route plotted for the player to walk, or marks on the squares to press:
+upstream's Black Box, Guess, Inertia, Slide and Flip each did one of those,
+and here each plays its answer to the finished board instead. **What a game
+decides is only whether it can:** where its solver finds no finish from here
+it refuses with a `SolveFailure` (Flood, whose greedy finish can overrun the
+move limit once moves are spent, says `NO_SOLUTION_FROM_HERE`), and where a
+mistake stands in the way, the answer replaces it as it replaces a wrong digit
+(Mines shows the finished board over an opened mine).
+[`solve-finishes.test.ts`](../../src/engine/solve-finishes.test.ts) solves
+every game from positions played into, which is how Flood was found.
 
 ## findMistakes
 

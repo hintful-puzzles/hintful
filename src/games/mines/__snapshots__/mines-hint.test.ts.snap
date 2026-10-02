@@ -12,10 +12,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 0,
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -41,10 +41,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -66,35 +66,35 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
       [
         1,
         184,
-      ],
-    ],
-  },
-  {
-    "fill": 17,
-    "fillRgb": "rgb(141, 141, 141)",
-    "op": "polygon",
-    "outline": 17,
-    "outlineRgb": "rgb(141, 141, 141)",
-    "points": [
-      [
-        22,
-        22,
-      ],
-      [
-        22,
-        3,
-      ],
-      [
-        3,
-        22,
       ],
     ],
   },
   {
     "fill": 16,
-    "fillRgb": "rgb(255, 255, 255)",
+    "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
     "outline": 16,
+    "outlineRgb": "rgb(141, 141, 141)",
+    "points": [
+      [
+        22,
+        22,
+      ],
+      [
+        22,
+        3,
+      ],
+      [
+        3,
+        22,
+      ],
+    ],
+  },
+  {
+    "fill": 15,
+    "fillRgb": "rgb(255, 255, 255)",
+    "op": "polygon",
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -121,10 +121,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -142,10 +142,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -172,10 +172,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -193,10 +193,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -223,10 +223,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -244,10 +244,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -274,10 +274,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -295,10 +295,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -325,10 +325,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -346,10 +346,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -376,10 +376,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -397,10 +397,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -427,10 +427,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -448,10 +448,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -478,10 +478,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -499,10 +499,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -529,10 +529,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 4,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -550,10 +550,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -580,10 +580,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -601,10 +601,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -631,10 +631,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -652,10 +652,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -682,10 +682,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -703,10 +703,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -733,10 +733,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -754,10 +754,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -784,7 +784,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -793,7 +793,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 23,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -802,7 +802,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 23,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -811,7 +811,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 41,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -820,10 +820,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 23,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -841,10 +841,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -871,7 +871,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 18,
     "op": "hatch",
     "period": 7,
@@ -881,10 +881,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -902,10 +902,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -932,7 +932,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "color": 20,
+    "color": 19,
     "h": 18,
     "op": "hatch",
     "period": 7,
@@ -942,10 +942,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -963,10 +963,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -993,10 +993,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1014,10 +1014,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1044,10 +1044,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 24,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1065,10 +1065,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1095,10 +1095,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 44,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1116,10 +1116,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1146,10 +1146,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 44,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1167,10 +1167,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1197,10 +1197,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 44,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1230,10 +1230,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -1251,10 +1251,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1272,10 +1272,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1302,10 +1302,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 44,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1335,10 +1335,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -1356,10 +1356,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1377,10 +1377,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1407,10 +1407,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 44,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1440,10 +1440,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -1470,7 +1470,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1480,7 +1480,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1502,7 +1502,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 53,
   },
   {
-    "color": 21,
+    "color": 20,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(14, 88, 91)",
@@ -1511,7 +1511,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 43,
   },
   {
-    "color": 21,
+    "color": 20,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(14, 88, 91)",
@@ -1520,7 +1520,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 43,
   },
   {
-    "color": 21,
+    "color": 20,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(14, 88, 91)",
@@ -1529,7 +1529,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 61,
   },
   {
-    "color": 21,
+    "color": 20,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(14, 88, 91)",
@@ -1547,7 +1547,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1557,7 +1557,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 43,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -1579,7 +1579,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 53,
   },
   {
-    "color": 21,
+    "color": 20,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(14, 88, 91)",
@@ -1588,7 +1588,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 43,
   },
   {
-    "color": 21,
+    "color": 20,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(14, 88, 91)",
@@ -1597,7 +1597,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 43,
   },
   {
-    "color": 21,
+    "color": 20,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(14, 88, 91)",
@@ -1606,7 +1606,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 61,
   },
   {
-    "color": 21,
+    "color": 20,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(14, 88, 91)",
@@ -1615,10 +1615,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 43,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1636,10 +1636,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1666,10 +1666,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 44,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1687,10 +1687,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1717,10 +1717,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 44,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1738,10 +1738,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1768,10 +1768,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 64,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1801,10 +1801,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -1822,10 +1822,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1843,10 +1843,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1873,10 +1873,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 64,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1906,10 +1906,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -1927,10 +1927,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -1948,10 +1948,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -1978,10 +1978,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 64,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2011,10 +2011,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -2041,7 +2041,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2051,7 +2051,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2082,7 +2082,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2092,7 +2092,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2123,7 +2123,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2133,7 +2133,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 63,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2155,10 +2155,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 73,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2176,10 +2176,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2206,10 +2206,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 64,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2239,10 +2239,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -2260,10 +2260,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2281,10 +2281,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2311,10 +2311,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 64,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2344,10 +2344,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -2365,10 +2365,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2386,10 +2386,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2416,10 +2416,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 64,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2449,10 +2449,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -2470,10 +2470,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2491,10 +2491,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2521,10 +2521,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 84,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2554,10 +2554,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -2584,7 +2584,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2594,7 +2594,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2616,10 +2616,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 93,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2637,10 +2637,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2667,10 +2667,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 84,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2700,10 +2700,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -2730,7 +2730,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2740,7 +2740,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2771,7 +2771,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2781,7 +2781,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2800,7 +2800,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2810,7 +2810,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2841,7 +2841,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2851,7 +2851,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2882,7 +2882,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2892,7 +2892,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 83,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -2914,10 +2914,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 93,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -2935,10 +2935,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -2965,10 +2965,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 84,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2998,10 +2998,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -3019,10 +3019,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3040,10 +3040,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -3070,10 +3070,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 104,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3103,10 +3103,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -3133,7 +3133,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3143,7 +3143,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3174,7 +3174,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3184,7 +3184,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3215,7 +3215,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3225,7 +3225,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3256,7 +3256,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3266,7 +3266,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3285,7 +3285,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3295,7 +3295,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3314,7 +3314,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3324,7 +3324,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3343,7 +3343,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3353,7 +3353,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 103,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3375,10 +3375,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 113,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3396,10 +3396,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -3426,10 +3426,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 104,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3459,10 +3459,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -3480,10 +3480,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3501,10 +3501,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -3531,10 +3531,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 124,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3564,10 +3564,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -3585,10 +3585,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3606,10 +3606,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -3636,10 +3636,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 124,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3669,10 +3669,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -3690,10 +3690,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3711,10 +3711,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -3741,10 +3741,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 124,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3774,10 +3774,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -3804,7 +3804,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3814,7 +3814,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3845,7 +3845,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3855,7 +3855,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3886,7 +3886,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3896,7 +3896,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3915,7 +3915,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3925,7 +3925,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3944,7 +3944,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3954,7 +3954,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 123,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -3976,10 +3976,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 133,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -3997,10 +3997,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -4027,10 +4027,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 124,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4060,10 +4060,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -4081,10 +4081,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -4102,10 +4102,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -4132,10 +4132,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 144,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -4153,10 +4153,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -4183,10 +4183,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 144,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4216,10 +4216,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -4246,7 +4246,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4256,7 +4256,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4278,10 +4278,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 153,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -4299,10 +4299,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -4329,10 +4329,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 144,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4362,10 +4362,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -4392,7 +4392,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4402,7 +4402,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4433,7 +4433,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4443,7 +4443,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4474,7 +4474,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4484,7 +4484,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4515,7 +4515,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4525,7 +4525,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4556,7 +4556,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4566,7 +4566,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 143,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4588,10 +4588,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 153,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -4609,10 +4609,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -4639,10 +4639,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 164,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -4660,10 +4660,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -4690,10 +4690,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 164,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4723,10 +4723,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -4744,10 +4744,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -4765,10 +4765,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -4795,10 +4795,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 164,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4828,10 +4828,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -4858,7 +4858,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4868,7 +4868,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4899,7 +4899,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4909,7 +4909,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -4931,10 +4931,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 173,
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -4952,10 +4952,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -4982,10 +4982,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 164,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5015,10 +5015,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -5036,10 +5036,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 17,
+    "fill": 16,
     "fillRgb": "rgb(141, 141, 141)",
     "op": "polygon",
-    "outline": 17,
+    "outline": 16,
     "outlineRgb": "rgb(141, 141, 141)",
     "points": [
       [
@@ -5057,10 +5057,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 16,
+    "fill": 15,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",
-    "outline": 16,
+    "outline": 15,
     "outlineRgb": "rgb(255, 255, 255)",
     "points": [
       [
@@ -5087,10 +5087,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 164,
   },
   {
-    "fill": 14,
+    "fill": 13,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 14,
+    "outline": 13,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5120,10 +5120,10 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     ],
   },
   {
-    "fill": 13,
+    "fill": 12,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "polygon",
-    "outline": 13,
+    "outline": 12,
     "outlineRgb": "rgb(223, 34, 37)",
     "points": [
       [
@@ -5150,7 +5150,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -5160,7 +5160,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -5191,7 +5191,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,
@@ -5201,7 +5201,7 @@ exports[`Mines hint: render (tier 2.5) > rings what a two-number step decides, o
     "y2": 163,
   },
   {
-    "color": 17,
+    "color": 16,
     "op": "line",
     "rgb": "rgb(141, 141, 141)",
     "thickness": 1,

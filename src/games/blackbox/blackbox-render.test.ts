@@ -10,13 +10,7 @@ import { describe, expect, it } from "vitest";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { blackboxGame } from "./index.ts";
-import {
-  type BlackboxDrawState,
-  COL_BUTTON,
-  COL_COVER,
-  COL_WRONG,
-  redraw,
-} from "./render.ts";
+import { type BlackboxDrawState, COL_BUTTON, COL_COVER, redraw } from "./render.ts";
 import {
   BALL_CORRECT,
   type BlackboxState,
@@ -53,9 +47,6 @@ function makeState(
     exits: new Int32Array(nlasers).fill(LASER_EMPTY),
     laserno: 1,
     nguesses: 0,
-    nright: 0,
-    nwrong: 0,
-    nmissed: 0,
     reveal: false,
     justwrong: false,
   };
@@ -110,22 +101,5 @@ describe("Black Box redraw", () => {
     const r1 = recordingDrawing();
     redraw(r1.dr, ds1, null, s1, 1, freshUi(s1), 0, 0);
     expect(r1.ops.some((o) => o.op === "circle" && o.fill === COL_BUTTON)).toBe(true);
-  });
-
-  it("draws the red cross over a wrong guess on reveal", () => {
-    const balls: Array<[number, number]> = [
-      [0, 0],
-      [1, 1],
-      [2, 2],
-    ];
-    let s = makeState(5, 5, balls);
-    s = blackboxGame.executeMove(s, { type: "toggleBall", x: 1, y: 1 }); // correct (0,0)
-    s = blackboxGame.executeMove(s, { type: "toggleBall", x: 2, y: 2 }); // correct (1,1)
-    s = blackboxGame.executeMove(s, { type: "toggleBall", x: 4, y: 4 }); // wrong (3,3)
-    const revealed = blackboxGame.executeMove(s, { type: "solve" });
-    const ds = freshDs(revealed);
-    const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, s, revealed, 1, freshUi(revealed), 0, 0);
-    expect(ops.some((o) => o.op === "polygon" && o.fill === COL_WRONG)).toBe(true);
   });
 });

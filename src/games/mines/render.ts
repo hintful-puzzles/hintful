@@ -30,12 +30,10 @@ import {
   COVERED,
   FLAG,
   KILLED,
-  MINE,
   type MinesMove,
   type MinesState,
   type MinesUi,
   QUERY,
-  WRONGFLAG,
 } from "./state.ts";
 
 // --- palette (upstream enum order, mines.c:24) -------------------------
@@ -51,19 +49,18 @@ export const COL_7 = 8;
 export const COL_8 = 9;
 export const COL_MINE = 10;
 export const COL_BANG = 11;
-export const COL_CROSS = 12;
-export const COL_FLAG = 13;
-export const COL_FLAGBASE = 14;
-export const COL_QUERY = 15;
-export const COL_HIGHLIGHT = 16;
-export const COL_LOWLIGHT = 17;
-export const COL_WRONGNUMBER = 18;
-export const COL_CURSOR = 19;
+export const COL_FLAG = 12;
+export const COL_FLAGBASE = 13;
+export const COL_QUERY = 14;
+export const COL_HIGHLIGHT = 15;
+export const COL_LOWLIGHT = 16;
+export const COL_WRONGNUMBER = 17;
+export const COL_CURSOR = 18;
 /** What a hint step decides: the ring on its border. */
-export const COL_HINT = 20;
+export const COL_HINT = 19;
 /** What a hint step reasons from: the outline on its border. */
-export const COL_HINT_EVIDENCE = 21;
-export const NCOLORS = 22;
+export const COL_HINT_EVIDENCE = 20;
+export const NCOLORS = 21;
 
 export const PREFERRED_TILE_SIZE = 20;
 export const FLASH_FRAME = 0.13;
@@ -253,7 +250,7 @@ function drawTile(
         COL_1 - 1 + v,
         String(v),
       );
-    } else if (v >= MINE) {
+    } else if (v === KILLED) {
       const cx = x + Math.floor(ts / 2);
       const cy = y + Math.floor(ts / 2);
       const r = Math.floor(ts / 2) - 3;
@@ -285,24 +282,6 @@ function drawTile(
         },
         COL_HIGHLIGHT,
       );
-
-      if (v === WRONGFLAG) {
-        // Cross out an incorrectly-flagged mine.
-        for (let dx = -1; dx <= 1; dx++) {
-          dr.drawLine(
-            { x: x + 3 + dx, y: y + 2 },
-            { x: x + ts - 3 + dx, y: y + ts - 2 },
-            COL_CROSS,
-            1,
-          );
-          dr.drawLine(
-            { x: x + ts - 3 + dx, y: y + 2 },
-            { x: x + 3 + dx, y: y + ts - 2 },
-            COL_CROSS,
-            1,
-          );
-        }
-      }
     }
   }
 

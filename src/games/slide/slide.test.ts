@@ -26,7 +26,6 @@ import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_SELECT,
-  CURSOR_SELECT2,
   CURSOR_UP,
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -842,41 +841,6 @@ describe("slide keyboard control", () => {
     expect(pointer(s, ui, at(4, 3), LEFT_BUTTON)).toBeNull();
   });
 
-  it("leaves the select key to an installed Solve route", () => {
-    const me = play("5x5u#slide-solve");
-    expect(me.solve()).toBeNull();
-    const before = stateOf(me).board.slice();
-
-    // A route is installed, so the select key steps it rather than grabbing —
-    // and stepping it moves a block, which grabbing never would.
-    me.processInput(0, 0, CURSOR_SELECT);
-    expect([...stateOf(me).board]).not.toEqual([...before]);
-    expect(stateOf(me).movecount).toBe(1);
-  });
-
-  it("gives the select key back once the route is gone", () => {
-    // Straying from the route discards it, and that is how a player takes the
-    // keyboard back — no third binding needed.
-    const { s, ui } = scenario();
-    const armed: SlideState = {
-      ...s,
-      soln: [{ from: idx(3, 1), to: idx(4, 1) }],
-      solnIndex: 0,
-    };
-    cursorTo(armed, ui, 3, 1);
-    expect(press(armed, ui, CURSOR_SELECT)).toEqual({
-      kind: "move",
-      from: idx(3, 1),
-      to: idx(4, 1),
-    });
-    expect(ui.grabbed).toBe(false);
-
-    // Same board, no route: now the select key grabs.
-    expect(press(s, ui, CURSOR_SELECT)).toBe(UI_UPDATE);
-    expect(ui.grabbed).toBe(true);
-    expect(ui.grabAnchor).toBe(idx(3, 1));
-  });
-
   it("keeps the cursor when a grab is canceled under it", () => {
     // The grab dies with the board it was computed against; the cursor is a
     // position on a grid whose size has not changed, so it survives. Losing it
@@ -945,51 +909,26 @@ function slideSomeBlock(me: SlideMidend, avoid = -1): boolean {
 }
 
 describe("slide solve", () => {
-  it("installs a route the step key walks to completion", () => {
+  it("plays the shortest route to the exit", () => {
     const { m, status } = makeMidend();
     expect(m.newGameFromId("5x5u#slide-solve")).toBeNull();
     const minmoves = stateOf(m).minmoves;
     expect(minmoves).toBeGreaterThan(0);
 
     expect(m.solve()).toBeNull();
-    // Slide's Solve deliberately does not fill the board in: it arms a route,
-    // exactly as Inertia's does. So the board is untouched, and the midend
-    // records that the solver was used.
-    expect(stateOf(m).soln).toHaveLength(minmoves);
-    expect(status()).toBe("ongoing");
-
-    // Space arrives as CURSOR_SELECT2 in this frontend, never as ' ' — the key
-    // upstream binds. Walking the route with it must finish the puzzle.
-    for (let i = 0; i < minmoves; i++) m.processInput(0, 0, CURSOR_SELECT2);
     expect(status()).toBe("solved-with-help");
-    // The route is dropped once it has been walked to the end.
-    expect(stateOf(m).soln).toBeNull();
+    expect(stateOf(m).movecount).toBe(minmoves);
   });
 
   it("solves from the current position, not the starting one", () => {
     // Upstream passes `state` (the *initial* board) to its solver although its
-    // own comment says "from the current position", so any Solve after any move
-    // installs a route whose first step is illegal and the step key does
-    // nothing at all.
+    // own comment says "from the current position", and a route from the start
+    // is illegal from a later position.
     const me = play("5x5u#slide-solve-mid");
     expect(slideSomeBlock(me)).toBe(true);
 
     expect(me.solve()).toBeNull();
-    const steps = stateOf(me).soln?.length ?? 0;
-    expect(steps).toBeGreaterThan(0);
-    for (let i = 0; i < steps; i++) me.processInput(0, 0, CURSOR_SELECT2);
     expect(slideGame.status(stateOf(me))).toBe("solved");
-  });
-
-  it("drops the route when the player strays from it", () => {
-    const me = play("6x5u#slide-stray");
-    expect(me.solve()).toBeNull();
-    const route = stateOf(me).soln;
-    expect(route).not.toBeNull();
-
-    // Move some *other* block than the one the route wants next.
-    expect(slideSomeBlock(me, route?.[0].from ?? -1)).toBe(true);
-    expect(stateOf(me).soln).toBeNull();
   });
 
   it("calls a board that starts with the main block home solved", () => {
@@ -1031,13 +970,13 @@ describe("slide statusbar", () => {
 });
 
 describe("slide save round-trip", () => {
-  it("restores the board, the move count and an armed Solve route", () => {
+  it("restores the board and the move count after Solve", () => {
     const me = play("5x5u#slide-save");
+    expect(slideSomeBlock(me)).toBe(true);
     expect(me.solve()).toBeNull();
-    me.processInput(0, 0, CURSOR_SELECT2);
 
     const before = stateOf(me);
-    expect(before.movecount).toBe(1);
+    expect(before.movecount).toBeGreaterThan(1);
     const saved = me.saveGame();
 
     const me2: SlideMidend = new Midend(slideGame);
@@ -1048,8 +987,6 @@ describe("slide save round-trip", () => {
     expect(after.movecount).toBe(before.movecount);
     expect(after.lastmoved).toBe(before.lastmoved);
     expect(after.lastmovedPos).toBe(before.lastmovedPos);
-    expect(after.soln?.length).toBe(before.soln?.length);
-    expect(after.solnIndex).toBe(before.solnIndex);
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 });

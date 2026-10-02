@@ -39,9 +39,7 @@ import type { Point } from "../../engine/types.ts";
 export const FLAG = -1; // marked as a mine
 export const COVERED = -2; // unknown / covered
 export const QUERY = -3; // question mark (this frontend never sets one)
-export const MINE = 64; // a mine revealed on loss
 export const KILLED = 65; // the mine the player trod on
-export const WRONGFLAG = 66; // a crossed-out incorrectly-flagged square
 /** A square queued to open, seen only inside `openSquare`'s flood. */
 export const TODO = -10;
 

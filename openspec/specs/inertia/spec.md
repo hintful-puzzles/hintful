@@ -94,9 +94,9 @@ from the ball), and SHALL play that direction when the pointer is released.
 Aiming SHALL yield no direction — and so draw no arrow, and make no move on
 release — when the pointer is back on the ball (which is how the player calls the
 swipe off) or when it is aimed at a wall (which is not a move the ball can make).
-The arrow SHALL be drawn in its own color, distinct from the route arrow, since
-the two mean different things ("you are about to go this way" versus "the solver
-says go this way") and a player with a route installed sees both.
+The arrow SHALL be drawn in its own color, distinct from the hint's arrow, since
+the two mean different things ("you are about to go this way" versus "the hint
+says go this way").
 
 The whole gesture SHALL also work on the **secondary** button, because on touch a
 press that stays put for the long-press interval is delivered as one — and a
@@ -142,7 +142,7 @@ character, without exactly one start square, or without at least one gem.
 
 The game SHALL render walls with a bevel, mines, stop-squares as rings, gems as
 diamonds, and the ball as a circle (a jagged red splat when dead) drawn over a
-blitter-saved background, with the route arrow when a route is installed. A move
+blitter-saved background. A move
 SHALL animate the ball sliding along its path, in a time proportional to the
 square root of the distance traveled, with each gem disappearing as the ball
 reaches it. Death SHALL flash the board red and the winning move SHALL flash it
@@ -253,15 +253,12 @@ promise the plan then breaks reads as a hint that has lost the plot.
 
 ### Requirement: A hint is a nudge; only Solve is a commitment
 
-`hint` SHALL NOT mark the game as solved-with-help and SHALL NOT install a route
-into the game state. Solve's existing behavior — installing a route, the engine
-recording that the solver was used, and reporting "Auto-solver used." in the
-status bar for the remainder of the game — SHALL be unchanged.
+`hint` SHALL NOT mark the game as solved-with-help. Solve plays the whole route,
+and the engine records that the solver was used.
 
-This separation is the reason the hint exists: the game already offers a
-step-by-step aid through Solve, but only at the price of recording the game as
-auto-solved, which is precisely the price a player asking for one nudge is trying
-not to pay.
+This separation is the reason the hint exists: Solve shows the finished board,
+but only at the price of recording the game as auto-solved, which is precisely
+the price a player asking for one nudge is trying not to pay.
 
 The game SHALL implement `hintKeepTrack`, so that a move in the displayed step's
 direction **completes** that step and the plan is kept. Without it the midend drops
@@ -272,8 +269,7 @@ prevent.
 #### Scenario: Asking for a hint does not brand the game auto-solved
 
 - **WHEN** the player asks for a hint
-- **THEN** the status bar does not report that the auto-solver was used, and no
-  route arrow is installed on the ball
+- **THEN** the status bar does not report that the auto-solver was used
 
 #### Scenario: Following the hint keeps the plan
 
@@ -295,8 +291,7 @@ prevent.
 ### Requirement: The hint is drawn as a marked gem and an arrow
 
 `redraw` SHALL mark the displayed step's subgoal gem with a ring in its own color,
-and SHALL draw the step's direction as an arrow on the ball, in the same color and
-shape as the route arrow (both mean "the solver says go this way"). The aim arrow
+and SHALL draw the step's direction as an arrow on the ball. The aim arrow
 of a swipe in progress SHALL take precedence over both, being what the ball will
 actually do next.
 
@@ -332,7 +327,7 @@ heading another, so a gem there could be collected but never returned from.
 - **WHEN** a board is generated for any preset
 - **THEN** the route solver finds a route from the start that collects every gem
 
-### Requirement: Solve installs a computed route the player follows
+### Requirement: Solve plays a computed route to the finished board
 
 `solve` SHALL compute a route — a sequence of directions from the ball's current
 position that collects every remaining gem — by building the move graph (a vertex
@@ -347,37 +342,17 @@ The tour is an approximate solution to a traveling-salesman problem, not a
 deduction. Two tours SHALL be grown — one reaching for the nearest uncollected
 gem, one for the farthest — and the shorter kept.
 
-The solve move SHALL **install** that route into the game state rather than
-completing the game: the game remains in progress until the player collects the
-last gem, and the status bar SHALL report that the auto-solver was used. While a
-route is installed:
-
-- the renderer SHALL draw an arrow on the ball pointing along the route's next
-  direction;
-- Enter/Space SHALL play that direction;
-- a move that follows the route SHALL advance it;
-- a move that deviates SHALL cause the game to **re-solve** from the new position
-  and install the new route, or discard the route when the new position admits no
-  route;
-- death, or the collection of the last gem, SHALL discard the route.
-
-#### Scenario: Following the route advances it
-
-- **WHEN** a route is installed and the player plays the direction the arrow shows
-- **THEN** the route advances to its next step and the arrow points along it
-
-#### Scenario: Deviating from the route re-solves
-
-- **WHEN** a route is installed and the player plays some other legal direction
-- **THEN** the game installs a freshly computed route from the resulting position
+The solve move SHALL play the whole route, so the board is finished, as Solve
+finishes every game's board. The ball SHALL jump to the route's end rather than
+animating, since the route is many slides and one interpolated slide would cross
+walls. The step-by-step aid is the hint's.
 
 #### Scenario: A computed route collects every gem
 
 - **WHEN** a route is computed for a board whose gems are all reachable
 - **THEN** following it collects every gem without the ball dying
 
-#### Scenario: Solve does not finish the game
+#### Scenario: Solve finishes the game
 
 - **WHEN** the player invokes Solve on a board with gems remaining
-- **THEN** the ball has not moved, the gems are still uncollected, and the game
-  reports itself as still in progress
+- **THEN** every gem is collected and the game reports itself solved with help

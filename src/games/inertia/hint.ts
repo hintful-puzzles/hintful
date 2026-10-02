@@ -21,10 +21,8 @@
  * 3. **Nothing overclaims.** Every narration branch states only what this file
  *    has actually checked — see `narrate`.
  *
- * And the hint is a *nudge*, which is its whole reason for existing: Solve hands
- * out a route too, and the midend records that the solver was used, so the
- * status bar reads "Auto-solver used." for the rest of the game. Nothing here
- * installs a route.
+ * And the hint is a *nudge*, which is its whole reason for existing: Solve
+ * plays the whole route, and the midend records that the solver was used.
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";

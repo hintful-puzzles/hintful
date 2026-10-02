@@ -61,9 +61,6 @@ export interface GuessState {
   readonly solution: readonly number[];
   /** `0..nguesses`; `nextGo === nguesses` means the rows are exhausted. */
   readonly nextGo: number;
-  /** Solve has shown the answer row. A fact on the board (the answer is
-   * drawn), which ends the game as a loss; see {@link outcome}. */
-  readonly revealed: boolean;
   /**
    * The answer row's marks, one bitmask per slot: bit `c` set means the player
    * has ruled color `c` out of that slot of the answer.
@@ -86,16 +83,14 @@ export interface SlotMark {
   color: number;
 }
 
-/** Submit the working row (`pegs`/`holds` snapshot), reveal the answer, or set
- * answer-row marks. All JSON-safe → the default move codec suffices.
+/** Submit the working row (`pegs`/`holds` snapshot), or set answer-row marks. All JSON-safe → the default move codec suffices.
  *
  * A mark move *sets* each mark to `ruledOut` rather than toggling it, so a
  * hint's step is idempotent and a player's toggle is decided in
  * `interpretMove`, where the current mark is known. */
 export type GuessMove =
   | { type: "guess"; pegs: number[]; holds: boolean[] }
-  | { type: "mark"; marks: SlotMark[]; ruledOut: boolean }
-  | { type: "solve" };
+  | { type: "mark"; marks: SlotMark[]; ruledOut: boolean };
 
 export interface GuessUi {
   params: GuessParams;
@@ -133,7 +128,6 @@ export function cloneState(s: GuessState): GuessState {
     holds: s.holds.slice(),
     solution: s.solution.slice(),
     nextGo: s.nextGo,
-    revealed: s.revealed,
     ruledOut: s.ruledOut.slice(),
   };
 }
@@ -305,23 +299,22 @@ export function newState(p: GuessParams, desc: string): GuessState {
     holds: new Array(p.npegs).fill(false),
     solution: Array.from(bmp),
     nextGo: 0,
-    revealed: false,
     ruledOut: new Int32Array(p.npegs),
   };
 }
 
 // --- status -----------------------------------------------------------
 
-/** `+1` won, `-1` lost or revealed, `0` still playing, read off the board: a
- * win leaves the winning row at `nextGo` with every peg in place, and running
- * out of rows or a Solve shows the answer. */
+/** `+1` won, `-1` lost, `0` still playing, read off the board: a win leaves
+ * the winning row at `nextGo` with every peg in place, and running out of rows
+ * loses and shows the answer. */
 export function outcome(s: GuessState): number {
   const { npegs, nguesses } = s.params;
   const row = s.nextGo < nguesses ? s.guesses[s.nextGo] : null;
   if (row?.feedback.filter((f) => f === FEEDBACK_CORRECTPLACE).length === npegs) {
     return 1;
   }
-  return s.revealed || s.nextGo >= nguesses ? -1 : 0;
+  return s.nextGo >= nguesses ? -1 : 0;
 }
 
 export function status(s: GuessState): GameStatus {

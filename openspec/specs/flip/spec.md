@@ -53,7 +53,8 @@ toggle matrix and return a shortest flip set, or report that no
 solution exists for a hand-entered position. Clicking a cell (or
 selecting it with the keyboard cursor) SHALL toggle the cell and its
 matrix-defined neighbors; `executeMove` SHALL be pure (return a new
-state). Moving the keyboard cursor SHALL redraw without adding a
+state). Solve SHALL press every square of the solution in one move.
+Moving the keyboard cursor SHALL redraw without adding a
 history entry. The game SHALL report `solved` when all lights are off,
 upgraded to `solved-with-help` when the solver was used.
 
@@ -72,8 +73,8 @@ upgraded to `solved-with-help` when the solver was used.
 
 ### Requirement: Flip rendering, timing, and text format
 
-Flip SHALL render the grid, per-cell toggle diagram, solver-hint
-rectangles, and keyboard cursor through `GameDrawing`, with a
+Flip SHALL render the grid, per-cell toggle diagram and keyboard
+cursor through `GameDrawing`, with a
 diagonal flip animation on a move and a win flash on completion, and
 SHALL provide a statusbar string reporting move count and
 completed/auto-solved state, and a plain-text format of the board.

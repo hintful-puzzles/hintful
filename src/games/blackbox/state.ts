@@ -95,9 +95,7 @@ export interface BlackboxState {
   exits: Int32Array;
   laserno: number;
   nguesses: number;
-  nright: number;
-  nwrong: number;
-  nmissed: number;
+  /** The answer is shown: the guesses were verified, or Solve placed them. */
   reveal: boolean;
   justwrong: boolean;
 }
@@ -287,9 +285,6 @@ export function newState(p: BlackboxParams, desc: string): BlackboxState {
     exits: new Int32Array(nlasers).fill(LASER_EMPTY),
     laserno: 1,
     nguesses: 0,
-    nright: 0,
-    nwrong: 0,
-    nmissed: 0,
     reveal: false,
     justwrong: false,
   };
@@ -417,21 +412,6 @@ function gridSeededRandom(st: BlackboxState): RandomState {
   return randomNew(bytes);
 }
 
-/** Recompute nright/nwrong/nmissed from the arena's guess/correct flags. */
-function fillCounts(st: BlackboxState): void {
-  st.nright = 0;
-  st.nwrong = 0;
-  st.nmissed = 0;
-  for (let x = 1; x <= st.w; x++) {
-    for (let y = 1; y <= st.h; y++) {
-      const bs = gridGet(st, x, y) & (BALL_GUESS | BALL_CORRECT);
-      if (bs === (BALL_GUESS | BALL_CORRECT)) st.nright++;
-      else if (bs === BALL_GUESS) st.nwrong++;
-      else if (bs === BALL_CORRECT) st.nmissed++;
-    }
-  }
-}
-
 /** Make the guessed balls the real ones: `BALL_CORRECT` set exactly where
  * `BALL_GUESS` is. */
 function guessesAsCorrect(st: BlackboxState): void {
@@ -453,75 +433,57 @@ function markEvidence(st: BlackboxState, i: number, flag: number): void {
 }
 
 /**
- * Verify the player's guessed balls against the real layout by firing
- * every laser on both and comparing. Mutates `state` (run on the already
- * cloned `executeMove` result).
+ * Verify the player's guessed balls against the real layout (upstream
+ * `check_guesses`, cagey). Mutates `state` (run on the already cloned
+ * `executeMove` result).
  *
- * `cagey` (the player's explicit verify) first shows at most one piece
- * of evidence the guess is wrong — a fired laser that contradicts it, or
- * an unfired laser that would have — and reveals nothing else; only when
- * the guess survives both checks does it run the full reveal.
+ * Shows at most one piece of evidence the guess is wrong: a fired laser that
+ * contradicts it, or else an unfired laser that would have. A guess that
+ * survives both sends every laser where the real layout does, so it is the
+ * answer, and the guessed balls become the real ones.
  */
-export function checkGuesses(state: BlackboxState, cagey: boolean): void {
-  if (cagey) {
-    const guesses = cloneState(state);
-    guessesAsCorrect(guesses);
-    const contradicted: number[] = [];
-    const telling: number[] = []; // unfired, and would tell the layouts apart
-    for (let i = 0; i < state.nlasers; i++) {
-      if (guesses.exits[i] !== LASER_EMPTY) {
-        if (guesses.exits[i] !== laserExit(guesses, i)) contradicted.push(i);
-      } else if (laserExit(state, i) !== laserExit(guesses, i)) {
-        telling.push(i);
-      }
-    }
-    const pick = (lasers: number[]) =>
-      lasers[randomUpto(gridSeededRandom(guesses), lasers.length)];
-
-    if (contradicted.length) {
-      markEvidence(state, pick(contradicted), LASER_WRONG);
-      return;
-    }
-    if (telling.length) {
-      const i = pick(telling);
-      fireLaser(state, i);
-      markEvidence(state, i, LASER_OMITTED);
-      return;
-    }
-  }
-
-  // Full reveal: a real-layout copy and a guess-layout copy, both with
-  // their lasers cleared then fully fired, compared laser by laser.
-  const solution = cloneState(state);
-  solution.exits.fill(LASER_EMPTY);
-  const guesses = cloneState(solution);
+export function checkGuesses(state: BlackboxState): void {
+  const guesses = cloneState(state);
   guessesAsCorrect(guesses);
+  const contradicted: number[] = [];
+  const telling: number[] = []; // unfired, and would tell the layouts apart
   for (let i = 0; i < state.nlasers; i++) {
-    if (solution.exits[i] === LASER_EMPTY) fireLaser(solution, i);
-    if (guesses.exits[i] === LASER_EMPTY) fireLaser(guesses, i);
-  }
-
-  let equivalent = true;
-  for (let i = 0; i < state.nlasers; i++) {
-    if (solution.exits[i] === guesses.exits[i]) continue;
-    equivalent = false;
-    if (state.exits[i] === LASER_EMPTY) {
-      // The player never fired this distinguishing laser: add it.
-      paintLaser(state, i, solution.exits[i]);
-      state.exits[i] = solution.exits[i] | LASER_OMITTED;
-    } else {
-      state.exits[i] |= LASER_WRONG;
+    if (guesses.exits[i] !== LASER_EMPTY) {
+      if (guesses.exits[i] !== laserExit(guesses, i)) contradicted.push(i);
+    } else if (laserExit(state, i) !== laserExit(guesses, i)) {
+      telling.push(i);
     }
   }
+  const pick = (lasers: number[]) =>
+    lasers[randomUpto(gridSeededRandom(guesses), lasers.length)];
 
-  // Proven equivalent: make the real balls match the guesses.
-  if (
-    equivalent &&
-    state.nguesses >= state.minballs &&
-    state.nguesses <= state.maxballs
-  )
-    guessesAsCorrect(state);
-  fillCounts(state);
+  if (contradicted.length) {
+    markEvidence(state, pick(contradicted), LASER_WRONG);
+    return;
+  }
+  if (telling.length) {
+    const i = pick(telling);
+    fireLaser(state, i);
+    markEvidence(state, i, LASER_OMITTED);
+    return;
+  }
+  guessesAsCorrect(state);
+  state.reveal = true;
+}
+
+/** Solve: guess exactly the real balls, and reveal. */
+export function revealAnswer(state: BlackboxState): void {
+  state.nguesses = 0;
+  for (let x = 1; x <= state.w; x++) {
+    for (let y = 1; y <= state.h; y++) {
+      let v = gridGet(state, x, y) & ~BALL_GUESS;
+      if (v & BALL_CORRECT) {
+        v |= BALL_GUESS;
+        state.nguesses++;
+      }
+      gridSet(state, x, y, v);
+    }
+  }
   state.reveal = true;
 }
 
@@ -537,10 +499,8 @@ export function canReveal(s: BlackboxState): boolean {
 
 // --- status -----------------------------------------------------------
 
+/** A reveal is always a win: only a guess proven to be the answer, or Solve's,
+ * is revealed. */
 export function status(s: BlackboxState): GameStatus {
-  if (s.reveal) {
-    if (s.nwrong === 0 && s.nmissed === 0 && s.nright >= s.minballs) return "solved";
-    return "lost";
-  }
-  return "ongoing";
+  return s.reveal ? "solved" : "ongoing";
 }

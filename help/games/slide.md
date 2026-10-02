@@ -20,11 +20,6 @@ However far a block travels in one journey, by drag or by keyboard, it
 counts as a single move — and sliding it straight back where it came from
 takes that move off again.
 
-If you use Solve, it does not fill the board in; it marks the next block to
-move and outlines where it should go. Enter or Space then plays the route
-one move at a time. While a route is showing, those keys belong to it —
-make any move of your own and the route steps aside.
-
 ## Generating a puzzle
 
 Generating a new puzzle takes a moment, and longer on the larger sizes —

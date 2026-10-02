@@ -117,18 +117,16 @@ digits. Exemplar: [`inertia/index.ts`](../../src/games/inertia/index.ts)
 [`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts).
 
 **The same trap, one layer up: a whole feature can hang off a character this
-frontend never sends.** Upstream binds Slide's route-walking to
+frontend never sends.** Upstream bound Slide's route-walking to
 `button == ' '`, but `puzzleKeyMap` maps Space to `CURSOR_SELECT2` and Enter to
 `CURSOR_SELECT`, so the bare space character never arrives — a faithful
-transcription ships a Solve route that literally cannot be walked, and again
-the C build's identical dead binding hides it from any parity comparison.
+transcription shipped a Solve route that literally could not be walked, and
+the C build's identical dead binding hid it from any parity comparison.
 
 **Tell:** an `interpretMove` comparing `button` against a **character literal**
 (`' '`, `'u'`) or against `MOD_NUM_KEYPAD | …`. Check what `puzzleKeyMap`
 actually delivers before porting the comparison; accept the buttons this
-frontend does send (keeping the literal too costs nothing). Exemplars:
-[`slide/index.ts`](../../src/games/slide/index.ts) (`isStepKey`);
-Inertia's route-following accepts `CURSOR_SELECT`/`CURSOR_SELECT2`.
+frontend does send (keeping the literal too costs nothing).
 
 **The erase and cancel keys were the worst instance: fourteen of the
 fifty-seven games.** Upstream writes `button == '\b'` (8) to rub something out,
@@ -354,9 +352,8 @@ null, so a game that takes `n` simply keeps it and has to declare nothing.
 The same table supplies the key drawn on each rail row, so a label cannot
 come adrift from its binding (`src/puzzle/shortcuts.test.ts`).
 
-It matters most to a game whose aid is a *keyboard* loop over a *menu* command
-— Inertia's route-following (pick Solve, then press Enter repeatedly to walk
-the route) is unusable without it. The normative rule is the
+It matters most to a keyboard player who alternates a *menu* command with play
+— asking for a hint, then making its move — which is unusable without it. The normative rule is the
 [`app-shell`](../../openspec/specs/app-shell/spec.md) spec's "Pressing a
 control gives the keyboard back to the board"; its two carve-outs are a click
 that opens a menu (the menu needs the focus) and a keyboard activation of a
