@@ -21,6 +21,21 @@
       gesture, and Show solution checked in Chromium. Owner acceptance on how
       it plays is the remaining step.
 
+## 4. Redesign (design D6, owner-approved 2026-10-02)
+
+- [ ] 4.1 Measure how often the beam's plans decompose into packages (rows of
+      three with a catalyst, the L, the 6-block); decide on package narration.
+- [ ] 4.2 Time the rival classification's stages apart, and set a per-request
+      budget that keeps a hint under ~0.5 s on 9×9 Cross.
+- [ ] 4.3 A `JUMP` mark kind and its arrow, bound to words; the good-jump
+      overlay drawn only where a rival is BAD.
+- [ ] 4.4 The trap step: a rival that cuts a peg off at once or within two
+      jumps, with a depiction a player can follow.
+- [ ] 4.5 Rewrite every sentence, the opening's included; drop the peg count
+      and "Keep going". Read one whole plan out loud.
+- [ ] 4.6 Rewrite the help page's Hints section for the new marks.
+- [ ] 4.7 Run the app; owner acceptance.
+
 ## 3. Engine
 
 - [x] 3.1 Derive the walk's out-of-reach population from the refusal

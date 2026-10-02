@@ -65,7 +65,15 @@ is fully determined by it, as Flood's Solve snaps to the finished board. A
 board no search finishes from says `NO_SOLUTION` if the depth-first search
 proved it, else `PUZZLE_NOT_REASONABLE`, which only a typed game ID can reach.
 
-## D4. The hint
+## D4. The hint (first cut, rejected for its wording)
+
+**Owner review, 2026-10-02: the wording is rejected; the rings are accepted.**
+*"Our guiding light should be for the hints to teach the players how to reason
+about the game, and play effectively on their own; and none of these phrasings
+really do this."* The owner liked the direction of **only** and **strands**,
+because they contrast a good jump with one that makes a finish impossible, and
+asked for everything to focus on that contrast. D6 is the redesign; this
+section records what shipped first.
 
 Refusals, in order:
 
@@ -99,4 +107,71 @@ press and release.
 The hint marks ride the per-tile cache as two more flags on the cached value: a
 ring in `HINT_ACTION` around the ringed peg and hole, and one in
 `HINT_EVIDENCE` around an outlined peg. Both sit in the margin outside the peg,
-so they stay visible on the peg's own blue.
+so they stay visible on the peg's own blue. The owner accepted these
+(2026-10-02: *"The rings look great to me"*).
+
+## D6. The redesign: teach the good jump against the losing one
+
+Owner-approved direction (2026-10-02), from two explorations of that day.
+
+### What was measured
+
+All nine presets, three seeds, every third move, on the hint's own path and
+on a "plausible player" who picks random jumps that still finish: 598
+positions, 4,347 legal jumps. Each jump was classed GOOD (a finish found after
+it), BAD (a frozen peg after it, or proved lost) or UNKNOWN (out of reach).
+Load average 6.5–9, so the times are upper bounds.
+
+- **Traps are a middle- and late-game thing.** Early positions almost never
+  have a BAD jump (most have every jump GOOD). Middle positions have one in
+  37–100% of cases, late ones in 61–100%.
+- **A reason the player can see is rare, and late.** Of 1,000 BAD jumps, 10%
+  leave a peg frozen at once and 19% leave one frozen within two more jumps
+  whatever is played (sound, and under a millisecond per position). By phase:
+  none early, 3% in the middle, 43% late. The other 81% are lost only by
+  search.
+- **"A lonely peg" is not a reason.** A peg with no peg one or two cells away
+  in a line covered 72% of BAD jumps but also followed 28% of GOOD ones, so it
+  is unsound and must not be said.
+- **Classifying every jump costs too much early and mid on the large boards.**
+  Median per position: 0.4–2.5 s on 9×9 (up to ~12 s; a 30k proof budget cuts
+  the worst case to ~5 s but makes over a third of 9×9 Cross's middle jumps
+  UNKNOWN). Late positions cost at most ~60 ms. The beam passes failing on lost
+  rivals are the likely cost, not yet timed apart.
+- **What players reason with** (survey): frozen and straggler pegs, Bell's
+  packages and purges (short patterns that clear a block, such as a row of
+  three with a catalyst peg that ends where it began), clearing one region at a
+  time, compactness. Position classes and pagoda functions cannot be checked by
+  eye, so they can only ever back a verdict, never a premise.
+
+### The design
+
+1. **Lead with a reason the player can see, where there is one.** A rival jump
+   that cuts a peg off, at once or within two jumps, is named as the trap: the
+   victim peg outlined, the rival's path striped, the suggested jump ringed.
+   "Within two jumps whatever you play" has to be shown so a player can follow
+   it; work out the depiction before using it.
+2. **Show every good jump, where it discriminates.** Arrows (a new `JUMP` mark
+   kind keyed by its two ends, since one peg can have a good jump and a losing
+   one) on every jump a finish was found after, with the suggested one ringed.
+   Drawn only when at least one rival is BAD. "Only these can finish" is said
+   only when no jump is UNKNOWN; otherwise the words claim nothing about the
+   undrawn ones. Classified for the displayed step only, within a work budget,
+   so cost is per request rather than per plan.
+3. **The middle game teaches packages, if the plans fall into them.** Measure
+   first how often the beam's plans decompose into known packages; if rarely,
+   consider a package-aware search. A package is one journey of several jumps.
+4. **The opening says so.** Where every jump can still finish, say that, and
+   suggest a region to start clearing.
+5. **Drop** "N pegs left" and the bare "Keep going".
+
+The binding rules hold throughout: every sentence built with `phrase` and
+references, at most 120 characters, no em-dashes, the help page's Hints section
+rewritten with the new marks.
+
+### Elsewhere
+
+Two owner requests from the same review are their own changes:
+`let-a-refusal-point-at-its-cause` (Check & Save refuses a doomed position,
+engine-owned) and `let-the-engine-own-what-solve-shows` (Solve leaves the
+finished board in every game; Pegs' one-peg snap already does).
