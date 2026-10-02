@@ -67,7 +67,6 @@ import {
   type UnrulyParams,
   type UnrulyState,
   type UnrulyUi,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -289,7 +288,6 @@ export const unrulyGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

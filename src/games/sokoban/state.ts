@@ -13,11 +13,9 @@
 import { isDigit } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descNeedsOne,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -168,10 +166,6 @@ function parseDesc(p: SokobanParams, desc: string): DescParse<SokobanState> {
     if (players !== 1) r.fail(descNeedsOne("starting square for the player", players));
     return { w: p.w, h: p.h, grid, px: at % p.w, py: Math.floor(at / p.w) };
   });
-}
-
-export function validateDesc(p: SokobanParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SokobanParams, desc: string): SokobanState {

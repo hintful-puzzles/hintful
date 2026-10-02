@@ -97,7 +97,6 @@ import {
   type SubsetsState,
   type SubsetsUi,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -707,7 +706,6 @@ export const subsetsGame: Game<
   paramConfig: [difficultyItem(DIFF_NAMES, "diff")],
 
   newDesc: newSubsetsDesc,
-  validateDesc,
   newState,
   newUi,
 

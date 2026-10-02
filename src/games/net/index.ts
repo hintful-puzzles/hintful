@@ -95,7 +95,6 @@ import {
   newUi,
   type SideNote,
   sideIndex,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -753,7 +752,6 @@ export const netGame: Game<
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

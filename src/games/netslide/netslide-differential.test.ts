@@ -22,11 +22,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/netslide-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
-import { isComplete, type NetslideParams, newState, validateDesc } from "./state.ts";
+import { netslideGame } from "./index.ts";
+import { isComplete, type NetslideParams, newState } from "./state.ts";
 
 interface NetslideFixture {
   w: number;
@@ -58,7 +60,7 @@ describeDescDifferential<NetslideFixture, NetslideParams>({
     `${f.movetarget ? ` m=${f.movetarget}` : ""}`,
   newDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(netslideGame, p, f.desc)).toBeNull();
   },
 });
 

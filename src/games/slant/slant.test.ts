@@ -9,6 +9,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -49,7 +50,6 @@ import {
   type SlantState,
   type SlantUi,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 const FIXTURE = (
@@ -131,16 +131,16 @@ describe("slant params", () => {
 describe("slant desc codec", () => {
   it("round-trips a generated desc", () => {
     const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
-    expect(validateDesc(p, FIXTURE.desc)).toBeNull();
+    expect(validateDesc(slantGame, p, FIXTURE.desc)).toBeNull();
     expect(encodeClues(decodeClues(p, FIXTURE.desc))).toBe(FIXTURE.desc);
   });
 
   it("rejects malformed descs", () => {
-    expect(validateDesc(P22, "5h")).toBe(DESC_OUT_OF_RANGE); // no vertex touches 5 cells
-    expect(validateDesc(P22, "!h")).toBe(descBadCharacter("!"));
-    expect(validateDesc(P22, "h")).toBe(DESC_TOO_SHORT); // 8 < 9
-    expect(validateDesc(P22, "j")).toBe(DESC_TOO_LONG); // 10 > 9
-    expect(validateDesc(P22, "i")).toBeNull(); // exactly 9 clueless vertices
+    expect(validateDesc(slantGame, P22, "5h")).toBe(DESC_OUT_OF_RANGE); // no vertex touches 5 cells
+    expect(validateDesc(slantGame, P22, "!h")).toBe(descBadCharacter("!"));
+    expect(validateDesc(slantGame, P22, "h")).toBe(DESC_TOO_SHORT); // 8 < 9
+    expect(validateDesc(slantGame, P22, "j")).toBe(DESC_TOO_LONG); // 10 > 9
+    expect(validateDesc(slantGame, P22, "i")).toBeNull(); // exactly 9 clueless vertices
   });
 
   it("emits z-chunked runs for large clueless stretches", () => {
@@ -327,7 +327,7 @@ describe("slant generator (behavioral)", () => {
     for (const diff of [DIFF_EASY, DIFF_HARD]) {
       const p = { w: 6, h: 6, diff };
       const { desc } = newDesc(p, rng);
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(slantGame, p, desc)).toBeNull();
       const clues = decodeClues(p, desc);
       const soln = new Int8Array(36);
       const sc = new SolverScratch(6, 6);

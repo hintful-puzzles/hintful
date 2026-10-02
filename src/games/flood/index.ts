@@ -51,7 +51,6 @@ import {
   presets,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -231,7 +230,6 @@ export const floodGame: Game<
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

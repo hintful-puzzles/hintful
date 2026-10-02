@@ -14,6 +14,7 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -33,7 +34,6 @@ import {
   type PalisadeHint,
   type PalisadeMove,
   type PalisadeParams,
-  validateDesc,
 } from "./state.ts";
 
 const PRESETS: PalisadeParams[] = [
@@ -73,16 +73,16 @@ describe("palisade desc codec", () => {
   it("round-trips a clue grid", () => {
     const p = { w: 5, h: 5, k: 5 };
     const { desc } = newDesc(p, randomNew("palisade-desc"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(palisadeGame, p, desc)).toBeNull();
     const state = newState(p, desc);
     expect(encodeDesc(state.clues, p.w * p.h)).toBe(desc);
   });
 
   it("rejects malformed descs", () => {
     const p = { w: 5, h: 5, k: 5 };
-    expect(validateDesc(p, "5")).toBe(DESC_OUT_OF_RANGE); // clue > 4
-    expect(validateDesc(p, "?")).toBe(descBadCharacter("?"));
-    expect(validateDesc(p, "z".repeat(2))).toBe(DESC_TOO_LONG); // 52 > 25 squares
+    expect(validateDesc(palisadeGame, p, "5")).toBe(DESC_OUT_OF_RANGE); // clue > 4
+    expect(validateDesc(palisadeGame, p, "?")).toBe(descBadCharacter("?"));
+    expect(validateDesc(palisadeGame, p, "z".repeat(2))).toBe(DESC_TOO_LONG); // 52 > 25 squares
   });
 });
 

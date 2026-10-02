@@ -9,6 +9,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -46,7 +47,6 @@ import {
   type TentsParams,
   type TentsState,
   TREE,
-  validateDesc,
 } from "./state.ts";
 
 function genBoard(
@@ -85,30 +85,30 @@ describe("tents desc codec", () => {
   it("round-trips a generated desc", () => {
     const p = { w: 8, h: 8, diff: DIFF_EASY };
     const { desc } = newTentsDesc(p, randomNew("codec-0"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(tentsGame, p, desc)).toBeNull();
     const { grid, numbers } = newState(p, desc);
     expect(encodeDesc(p.w, p.h, grid, numbers)).toBe(desc);
   });
 
   it("rejects malformed descs", () => {
     const p = { w: 4, h: 4, diff: DIFF_EASY };
-    expect(validateDesc(p, "Q,0,0,0,0,0,0,0,0")).not.toBeNull(); // bad char
-    expect(validateDesc(p, "_,0,0,0,0,0,0,0,0")).not.toBeNull(); // too little grid data
-    expect(validateDesc(p, "zzza")).not.toBeNull(); // missing numbers
+    expect(validateDesc(tentsGame, p, "Q,0,0,0,0,0,0,0,0")).not.toBeNull(); // bad char
+    expect(validateDesc(tentsGame, p, "_,0,0,0,0,0,0,0,0")).not.toBeNull(); // too little grid data
+    expect(validateDesc(tentsGame, p, "zzza")).not.toBeNull(); // missing numbers
   });
 
   it("reads exactly what the encoder writes", () => {
     const p = { w: 4, h: 4, diff: DIFF_EASY };
     const zeros = ",0,0,0,0,0,0,0,0";
-    expect(validateDesc(p, `p${zeros}`)).toBeNull();
+    expect(validateDesc(tentsGame, p, `p${zeros}`)).toBeNull();
     // Upstream's pre-placed tent, which the encoder never writes.
-    expect(validateDesc(p, `o_!${zeros}`)).toBe(descBadCharacter("!"));
-    expect(validateDesc(p, "p,0,0,,0,0,0,0,0")).toBe(descBadCharacter(","));
-    expect(validateDesc(p, "p,0,5,0,0,0,0,0,0")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, `q${zeros}`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `z${zeros}`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `p${zeros}x`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "p,0,0")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(tentsGame, p, `o_!${zeros}`)).toBe(descBadCharacter("!"));
+    expect(validateDesc(tentsGame, p, "p,0,0,,0,0,0,0,0")).toBe(descBadCharacter(","));
+    expect(validateDesc(tentsGame, p, "p,0,5,0,0,0,0,0,0")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(tentsGame, p, `q${zeros}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(tentsGame, p, `z${zeros}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(tentsGame, p, `p${zeros}x`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(tentsGame, p, "p,0,0")).toBe(DESC_TOO_SHORT);
   });
 });
 

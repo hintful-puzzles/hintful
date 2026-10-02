@@ -23,10 +23,8 @@ import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
@@ -553,10 +551,6 @@ function parseDesc(p: SoloParams, desc: string): DescParse<SoloDesc> {
     r.end();
     return { grid, blocks, killerData };
   });
-}
-
-export function validateDesc(p: SoloParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SoloParams, desc: string): SoloState {

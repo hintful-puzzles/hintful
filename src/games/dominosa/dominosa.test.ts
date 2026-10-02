@@ -9,6 +9,7 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   puzzleDescError,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -34,7 +35,6 @@ import {
   encodeNumbers,
   encodeParams,
   newState,
-  validateDesc,
 } from "./state.ts";
 
 describe("dominosa params", () => {
@@ -89,14 +89,18 @@ describe("dominosa desc codec", () => {
       { n: 5, diff: DIFF_TRIVIAL, tall: false },
       randomNew("desc-rt"),
     );
-    expect(validateDesc({ n: 5, diff: DIFF_TRIVIAL, tall: false }, desc)).toBeNull();
+    expect(
+      validateDesc(dominosaGame, { n: 5, diff: DIFF_TRIVIAL, tall: false }, desc),
+    ).toBeNull();
     const state = newState({ n: 5, diff: DIFF_TRIVIAL, tall: false }, desc);
     expect(encodeNumbers(state.numbers)).toBe(desc);
   });
 
   it("rejects a wrong number balance", () => {
     // A 3×2 grid (n=1): needs each of {0,1} exactly 3 times. Give all 0s.
-    expect(validateDesc({ n: 1, diff: DIFF_TRIVIAL, tall: false }, "000000")).toBe(
+    expect(
+      validateDesc(dominosaGame, { n: 1, diff: DIFF_TRIVIAL, tall: false }, "000000"),
+    ).toBe(
       puzzleDescError(
         "This game ID's numbers can't be the halves of one full set of dominoes.",
       ),
@@ -106,18 +110,18 @@ describe("dominosa desc codec", () => {
   it("reads a number the way the encoder writes it, and nothing else", () => {
     // A 3×2 grid (n=1): three 0s and three 1s.
     const p = { n: 1, diff: DIFF_TRIVIAL, tall: false };
-    expect(validateDesc(p, "000111")).toBeNull();
-    expect(validateDesc(p, "000[1]11")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "00011x")).toBe(descBadCharacter("x"));
-    expect(validateDesc(p, "000112")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "0001111")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(dominosaGame, p, "000111")).toBeNull();
+    expect(validateDesc(dominosaGame, p, "000[1]11")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(dominosaGame, p, "00011x")).toBe(descBadCharacter("x"));
+    expect(validateDesc(dominosaGame, p, "000112")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(dominosaGame, p, "0001111")).toBe(DESC_TOO_LONG);
     // n=10: 10 is bracketed, and the bracket must close.
     const q = { n: 10, diff: DIFF_TRIVIAL, tall: false };
-    expect(validateDesc(q, "[10")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(q, "[10)")).toBe(descBadCharacter(")"));
-    expect(validateDesc(q, "[]")).toBe(descBadCharacter("]"));
-    expect(validateDesc(q, "[11]")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(q, "[5]")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(dominosaGame, q, "[10")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(dominosaGame, q, "[10)")).toBe(descBadCharacter(")"));
+    expect(validateDesc(dominosaGame, q, "[]")).toBe(descBadCharacter("]"));
+    expect(validateDesc(dominosaGame, q, "[11]")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(dominosaGame, q, "[5]")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 
@@ -156,7 +160,7 @@ describe("dominosa solver / generator", () => {
   it("generates an Ambiguous board (no difficulty guarantee, valid desc)", () => {
     const p = { n: 6, diff: 4, tall: false };
     const { desc, aux } = newDominosaDesc(p, randomNew("ambig"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(dominosaGame, p, desc)).toBeNull();
     expect(aux.length).toBe((p.n + 2) * (p.n + 1));
   });
 });

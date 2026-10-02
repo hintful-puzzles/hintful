@@ -114,7 +114,6 @@ import {
   SHIP_VAGUE,
   STATUS_COMPLETE,
   textFormat,
-  validateDesc,
   WATER,
 } from "./state.ts";
 import { adjustShips, validateFullState } from "./validate.ts";
@@ -695,7 +694,6 @@ export const boatsGame: Game<
   ],
 
   newDesc: newBoatsDesc,
-  validateDesc,
   newState,
   newUi,
 

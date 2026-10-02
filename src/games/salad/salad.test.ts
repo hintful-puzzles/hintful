@@ -15,6 +15,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { clearKey } from "../../engine/key-labels.ts";
@@ -55,7 +56,6 @@ import {
   serialize,
   symbolChar,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 /** A 4×4 ABC End View board and a 5×5 Number Ball board, both taken from the
@@ -177,34 +177,38 @@ describe("salad description codec", () => {
 
   it("rejects each way a description can be wrong", () => {
     const p = LETTERS.p;
-    expect(validateDesc(p, "CaCbAfBaAaA,p")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "C!aCbAfBaAa,p")).toBe(descBadCharacter("!"));
-    expect(validateDesc(p, "IaCbAfBaAa,p")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "CaCbAfBa,p")).toBe(descBadCharacter(","));
-    expect(validateDesc(p, "CaCbAfBa")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2bX")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2!")).toBe(descBadCharacter("!"));
-    expect(validateDesc(NUMBERS.p, "d9")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(LETTERS.p, LETTERS.desc)).toBeNull();
-    expect(validateDesc(NUMBERS.p, NUMBERS.desc)).toBeNull();
+    expect(validateDesc(saladGame, p, "CaCbAfBaAaA,p")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(saladGame, p, "C!aCbAfBaAa,p")).toBe(descBadCharacter("!"));
+    expect(validateDesc(saladGame, p, "IaCbAfBaAa,p")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(saladGame, p, "CaCbAfBa,p")).toBe(descBadCharacter(","));
+    expect(validateDesc(saladGame, p, "CaCbAfBa")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(saladGame, NUMBERS.p, "d1cO32b3aXa1d2bX")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(saladGame, NUMBERS.p, "d1cO32b3aXa1d2!")).toBe(
+      descBadCharacter("!"),
+    );
+    expect(validateDesc(saladGame, NUMBERS.p, "d9")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(saladGame, NUMBERS.p, "d1cO32b3aXa1d")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(saladGame, LETTERS.p, LETTERS.desc)).toBeNull();
+    expect(validateDesc(saladGame, NUMBERS.p, NUMBERS.desc)).toBeNull();
   });
 
   it("refuses what the encoder never writes", () => {
     const p = LETTERS.p;
     // A blank run past the border's sixteen clues, or past the grid.
-    expect(validateDesc(p, "CaCbAfBaAb,p")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "CaCbAfBaAa,q")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2c")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(saladGame, p, "CaCbAfBaAb,p")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(saladGame, p, "CaCbAfBaAa,q")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(saladGame, NUMBERS.p, "d1cO32b3aXa1d2c")).toBe(DESC_TOO_LONG);
     // An empty grid section: the encoder always writes its blanks.
-    expect(validateDesc(p, "CaCbAfBaAa,")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(NUMBERS.p, "")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(saladGame, p, "CaCbAfBaAa,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(saladGame, NUMBERS.p, "")).toBe(DESC_TOO_SHORT);
     // A digit for a letter, a letter for a digit, and a ball in ABC End View.
-    expect(validateDesc(p, "3aCbAfBaAa,p")).toBe(descBadCharacter("3"));
-    expect(validateDesc(NUMBERS.p, "dAcO32b3aXa1d2b")).toBe(descBadCharacter("A"));
-    expect(validateDesc(p, "CaCbAfBaAa,Oo")).toBe(descBadCharacter("O"));
+    expect(validateDesc(saladGame, p, "3aCbAfBaAa,p")).toBe(descBadCharacter("3"));
+    expect(validateDesc(saladGame, NUMBERS.p, "dAcO32b3aXa1d2b")).toBe(
+      descBadCharacter("A"),
+    );
+    expect(validateDesc(saladGame, p, "CaCbAfBaAa,Oo")).toBe(descBadCharacter("O"));
     // The separator replaced.
-    expect(validateDesc(p, "CaCbAfBaAa;p")).toBe(descBadCharacter(";"));
+    expect(validateDesc(saladGame, p, "CaCbAfBaAa;p")).toBe(descBadCharacter(";"));
   });
 });
 
@@ -259,7 +263,7 @@ describe("salad generator", () => {
           p,
           randomNew(`salad-gen-${p.order}-${p.nums}-${p.mode}-${diff}`),
         );
-        expect(validateDesc(p, desc)).toBeNull();
+        expect(validateDesc(saladGame, p, desc)).toBeNull();
         const s = newState(p, desc);
         expect(saladSolve(scratchBoard(s), diff)).toBe(true);
       });

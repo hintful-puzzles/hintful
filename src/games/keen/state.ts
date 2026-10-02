@@ -20,10 +20,8 @@ import {
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
@@ -302,10 +300,6 @@ function parseDesc(p: KeenParams, desc: string): DescParse<KeenClues> {
     r.end();
     return { w, dsf, minimal, clues };
   });
-}
-
-export function validateDesc(p: KeenParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: KeenParams, desc: string): KeenState {

@@ -9,6 +9,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -46,7 +47,6 @@ import {
   F_SHADE,
   gridSize,
   newState,
-  validateDesc,
 } from "./state.ts";
 
 interface Fixture {
@@ -129,31 +129,33 @@ describe("bricks desc codec", () => {
   it("validates and round-trips every fixture desc", () => {
     for (const f of fixtures) {
       const p: BricksParams = { w: f.w, h: f.h, diff: f.diff };
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(bricksGame, p, f.desc)).toBeNull();
       const st = newState(p, f.desc);
       expect(encodeDesc(st.grid, st.w, st.h)).toBe(f.desc);
     }
   });
 
   it("rejects a clue out of range and a wrong cell count", () => {
-    expect(validateDesc(FIX_PARAMS, "8a")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(FIX_PARAMS, "a")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc({ w: 2, h: 2, diff: 0 }, "zzzz")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(bricksGame, FIX_PARAMS, "8a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(bricksGame, FIX_PARAMS, "a")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(bricksGame, { w: 2, h: 2, diff: 0 }, "zzzz")).toBe(
+      DESC_TOO_LONG,
+    );
   });
 
   it("refuses what encodeDesc never writes", () => {
     const p: BricksParams = { w: 2, h: 2, diff: 0 };
-    expect(validateDesc(p, "1_0b")).toBeNull();
+    expect(validateDesc(bricksGame, p, "1_0b")).toBeNull();
     expect(Array.from(newState(p, "1_0b").grid.slice(0, 2))).toEqual([1, 0]);
     // Characters the encoder never writes, anywhere.
-    expect(validateDesc(p, "1_0Ab")).toBe(descBadCharacter("A"));
-    expect(validateDesc(p, "^1_0b")).toBe(descBadCharacter("^"));
+    expect(validateDesc(bricksGame, p, "1_0Ab")).toBe(descBadCharacter("A"));
+    expect(validateDesc(bricksGame, p, "^1_0b")).toBe(descBadCharacter("^"));
     // A `_` anywhere but between two adjacent clues.
-    expect(validateDesc(p, "_1_0b")).toBe(descBadCharacter("_"));
-    expect(validateDesc(p, "1a_0a")).toBe(descBadCharacter("_"));
-    expect(validateDesc(p, "1_0b_")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "1_0b,x")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "10b")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(bricksGame, p, "_1_0b")).toBe(descBadCharacter("_"));
+    expect(validateDesc(bricksGame, p, "1a_0a")).toBe(descBadCharacter("_"));
+    expect(validateDesc(bricksGame, p, "1_0b_")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(bricksGame, p, "1_0b,x")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(bricksGame, p, "10b")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 
@@ -317,7 +319,7 @@ describe("bricks generator", () => {
       { w: 7, h: 6, diff: 1 },
     ] as BricksParams[]) {
       const { desc } = newBricksDesc(p, randomNew(`bricks-unit-${p.diff}`));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(bricksGame, p, desc)).toBeNull();
       const st = newState(p, desc);
       const grid = st.grid.slice();
       expect(solveGame(grid, st.w, st.h, 2, true, true)).toBe("complete");

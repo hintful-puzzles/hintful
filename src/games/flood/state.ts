@@ -1,10 +1,8 @@
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
@@ -146,10 +144,6 @@ function parseDesc(
     r.end();
     return { grid, movelimit };
   });
-}
-
-export function validateDesc(p: FloodParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: FloodParams, desc: string): FloodState {

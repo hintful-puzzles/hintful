@@ -14,6 +14,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -65,7 +66,6 @@ import {
   type SubsetsState,
   type SubsetsUi,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 const PARAMS = { w: 4, h: 4, n: 4, diff: DIFF_EASY };
@@ -204,20 +204,32 @@ describe("subsets desc codec", () => {
   it("rejects each malformed desc with the kind of what went wrong", () => {
     const blanks = (k: number): string =>
       Array.from({ length: k }, () => "_").join(",");
-    expect(validateDesc(PARAMS, `${blanks(17)}`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(PARAMS, `16,${blanks(15)}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(PARAMS, `x,${blanks(15)}`)).toBe(descBadCharacter("x"));
-    expect(validateDesc(PARAMS, "1 2")).toBe(descBadCharacter(" "));
-    expect(validateDesc(PARAMS, "1")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(PARAMS, "1,2,")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(PARAMS, `0U,${blanks(15)}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(PARAMS, `0R,1L,${blanks(14)}`)).toBe(DESC_CONTRADICTORY);
+    expect(validateDesc(subsetsGame, PARAMS, `${blanks(17)}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(subsetsGame, PARAMS, `16,${blanks(15)}`)).toBe(
+      DESC_OUT_OF_RANGE,
+    );
+    expect(validateDesc(subsetsGame, PARAMS, `x,${blanks(15)}`)).toBe(
+      descBadCharacter("x"),
+    );
+    expect(validateDesc(subsetsGame, PARAMS, "1 2")).toBe(descBadCharacter(" "));
+    expect(validateDesc(subsetsGame, PARAMS, "1")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(subsetsGame, PARAMS, "1,2,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(subsetsGame, PARAMS, `0U,${blanks(15)}`)).toBe(
+      DESC_OUT_OF_RANGE,
+    );
+    expect(validateDesc(subsetsGame, PARAMS, `0R,1L,${blanks(14)}`)).toBe(
+      DESC_CONTRADICTORY,
+    );
     // Forms the encoder never writes: a trailing comma, an arrow twice or out
     // of order, and a set given twice.
-    expect(validateDesc(PARAMS, `${blanks(16)},`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(PARAMS, `_DD,${blanks(15)}`)).toBe(descBadCharacter("D"));
-    expect(validateDesc(PARAMS, `_DR,${blanks(15)}`)).toBe(descBadCharacter("R"));
-    expect(validateDesc(PARAMS, `3,3,${blanks(14)}`)).toBe(DESC_REPEATED);
+    expect(validateDesc(subsetsGame, PARAMS, `${blanks(16)},`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(subsetsGame, PARAMS, `_DD,${blanks(15)}`)).toBe(
+      descBadCharacter("D"),
+    );
+    expect(validateDesc(subsetsGame, PARAMS, `_DR,${blanks(15)}`)).toBe(
+      descBadCharacter("R"),
+    );
+    expect(validateDesc(subsetsGame, PARAMS, `3,3,${blanks(14)}`)).toBe(DESC_REPEATED);
   });
 });
 
@@ -258,7 +270,7 @@ describe("subsets solver", () => {
 describe("subsets generator (tier 1)", () => {
   it("generates a valid, uniquely-solvable desc, deterministically", () => {
     const { desc } = newSubsetsDesc(PARAMS, randomNew("tier1-seed"));
-    expect(validateDesc(PARAMS, desc)).toBeNull();
+    expect(validateDesc(subsetsGame, PARAMS, desc)).toBeNull();
     const { result } = solveCopy(newState(PARAMS, desc));
     expect(result).toBe("complete");
     expect(newSubsetsDesc(PARAMS, randomNew("tier1-seed")).desc).toBe(desc);
@@ -279,7 +291,7 @@ describe("subsets difficulty tiers", () => {
     const boards = seedBudget(6, 24);
     for (let s = 0; s < boards; s++) {
       const { desc } = newSubsetsDesc(TRICKY, randomNew(`tricky-${s}`));
-      expect(validateDesc(TRICKY, desc)).toBeNull();
+      expect(validateDesc(subsetsGame, TRICKY, desc)).toBeNull();
       expect(subsetsSolveGame(newState(TRICKY, desc), DIFF_TRICKY)).toBe("complete");
       expect(subsetsSolveGame(newState(TRICKY, desc), DIFF_EASY)).not.toBe("complete");
     }

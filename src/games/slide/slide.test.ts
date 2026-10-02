@@ -16,6 +16,7 @@ import {
   DESC_TOO_SHORT,
   type DescError,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -60,7 +61,6 @@ import {
   type SlideParams,
   type SlideState,
   type SlideUi,
-  validateDesc,
   WALL,
 } from "./state.ts";
 
@@ -242,7 +242,7 @@ describe("slide desc codec", () => {
     const { board, forcefield } = fixtureBoard();
     const p = P(FW, FH, -1);
     const desc = encodeDesc(FWH, board, forcefield, 2, 1, 2);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(slideGame, p, desc)).toBeNull();
     const s = newState(p, desc);
     expect([...s.board]).toEqual([...board]);
     expect([...s.forcefield]).toEqual([...forcefield]);
@@ -267,7 +267,7 @@ describe("slide desc codec", () => {
     const p = P(FW, FH, -1);
     const full = encodeDesc(FWH, board, forcefield, 2, 1, 2);
     const trimmed = full.slice(0, full.lastIndexOf(","));
-    expect(validateDesc(p, trimmed)).toBeNull();
+    expect(validateDesc(slideGame, p, trimmed)).toBeNull();
     expect(newState(p, trimmed).minmoves).toBe(-1);
   });
 
@@ -308,14 +308,16 @@ describe("slide desc codec", () => {
       ["w5ma14,3,4", DESC_OUT_OF_RANGE],
     ];
     for (const [desc, expected] of cases) {
-      expect(validateDesc(p, desc), desc).toBe(expected);
+      expect(validateDesc(slideGame, p, desc), desc).toBe(expected);
     }
-    expect(validateDesc(p, "w5a15,3,1")).toMatch(/no main piece/);
-    expect(validateDesc(p, "w5m2a13,3,1")).toMatch(/more than one main piece/);
+    expect(validateDesc(slideGame, p, "w5a15,3,1")).toMatch(/no main piece/);
+    expect(validateDesc(slideGame, p, "w5m2a13,3,1")).toMatch(
+      /more than one main piece/,
+    );
   });
 
   it("accepts a desc with the target coordinates but no minmoves", () => {
-    expect(validateDesc(P(5, 4, -1), "w5ma14,3,1")).toBeNull();
+    expect(validateDesc(slideGame, P(5, 4, -1), "w5ma14,3,1")).toBeNull();
   });
 
   it("refuses an uppercase F forcefield prefix, which the encoder never writes", () => {
@@ -325,7 +327,7 @@ describe("slide desc codec", () => {
     const lower = encodeDesc(FWH, board, forcefield, 2, 1, 2);
     const upper = lower.replace("f", "F");
     expect(upper).not.toBe(lower);
-    expect(validateDesc(p, upper)).toBe(descBadCharacter("F"));
+    expect(validateDesc(slideGame, p, upper)).toBe(descBadCharacter("F"));
   });
 });
 
@@ -424,7 +426,7 @@ describe("slide generator", () => {
     it(`${w}x${h} generates a soluble board whose minmoves is exact`, () => {
       const p = P(w, h, maxmoves);
       const { desc } = newSlideDesc(p, randomNew(`slide-gen-${w}-${h}-${maxmoves}`));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(slideGame, p, desc)).toBeNull();
       const s = newState(p, desc);
       const { moves } = solveBoard(w, h, s.board, s.forcefield, s.tx, s.ty, -1);
       expect(moves).toBeGreaterThan(0);
@@ -446,7 +448,7 @@ describe("slide generator", () => {
     ] as const) {
       const p = P(w, h, -1);
       const { desc } = newSlideDesc(p, randomNew(`slide-tiny-${w}-${h}`));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(slideGame, p, desc)).toBeNull();
       const s = newState(p, desc);
       expect(s.minmoves).toBeGreaterThan(0);
       expect(solveBoard(w, h, s.board, s.forcefield, s.tx, s.ty, -1).moves).toBe(

@@ -104,7 +104,6 @@ import {
   spokesPlace,
   syncDiagonalBlock,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 // --- presets ----------------------------------------------------------------
@@ -551,7 +550,6 @@ export const spokesGame: Game<
   paramConfig,
 
   newDesc: newSpokesDesc,
-  validateDesc,
   newState,
   newUi,
   prefs: [

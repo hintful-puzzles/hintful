@@ -5,7 +5,7 @@
  * best-effort (AGENTS.md § "Upstream policy"): a player may paste a link to a
  * game on Simon Tatham's site, and the descs are close enough that keeping them
  * loading costs little. Every game's frozen differential fixture holds descs the C
- * generated, so each one must pass `validateDesc`. A parser tightened past what
+ * generated, so each one must load (`validateDesc`). A parser tightened past what
  * upstream writes fails here, naming the desc.
  *
  * A fixture states its params either as a params string or as fields, which
@@ -13,6 +13,7 @@
  * the params name it, the one translation needed.
  */
 import { expect, it } from "vitest";
+import { validateDesc } from "./desc-error.ts";
 import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 
 interface Fields {
@@ -55,7 +56,7 @@ it("every desc upstream's generator wrote loads", () => {
         typeof f.params === "string"
           ? game.decodeParams(f.params)
           : paramsFor(id, f, game.defaultParams() as Fields);
-      const err = game.validateDesc(params, f.desc);
+      const err = validateDesc(game, params, f.desc);
       if (err !== null) refused.push(`${id} ${f.desc}: ${err}`);
     }
   }

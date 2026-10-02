@@ -4,6 +4,7 @@
  * completion, `findMistakes`, and the mistake render overlay.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -28,7 +29,6 @@ import {
   encodeParams,
   type RectParams,
   type RectState,
-  validateDesc,
 } from "./state.ts";
 
 const P = (over: Partial<RectParams> = {}): RectParams => ({
@@ -101,7 +101,7 @@ describe("rect desc codec", () => {
     for (const seed of ["1", "2", "3"]) {
       const p = P();
       const { desc } = newDesc(p, randomNew(seed));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(rectGame, p, desc)).toBeNull();
       const st = newState(p, desc);
       expect(encodeNumbers(st.grid, p.w * p.h)).toBe(desc);
     }
@@ -109,26 +109,26 @@ describe("rect desc codec", () => {
 
   it("rejects malformed descs", () => {
     const p = P({ w: 3, h: 3 }); // area 9
-    expect(validateDesc(p, "i")).toBeNull(); // 9 empties exactly fills
-    expect(validateDesc(p, "h")).not.toBeNull(); // 8 < 9
-    expect(validateDesc(p, "j")).not.toBeNull(); // 10 > 9
-    expect(validateDesc(p, "!")).not.toBeNull(); // bad char
+    expect(validateDesc(rectGame, p, "i")).toBeNull(); // 9 empties exactly fills
+    expect(validateDesc(rectGame, p, "h")).not.toBeNull(); // 8 < 9
+    expect(validateDesc(rectGame, p, "j")).not.toBeNull(); // 10 > 9
+    expect(validateDesc(rectGame, p, "!")).not.toBeNull(); // bad char
   });
 
   it("refuses what encodeNumbers never writes", () => {
     const p = P({ w: 3, h: 3 });
-    expect(validateDesc(p, "3_6g")).toBeNull();
+    expect(validateDesc(rectGame, p, "3_6g")).toBeNull();
     // A number no rectangle on the board can have, including one large
     // enough to wrap a 32-bit cell to a different number.
-    expect(validateDesc(p, "10h")).toMatch(/out of range/);
-    expect(validateDesc(p, "4294967299h")).toMatch(/out of range/);
-    expect(validateDesc(p, "0h")).toMatch(/out of range/);
+    expect(validateDesc(rectGame, p, "10h")).toMatch(/out of range/);
+    expect(validateDesc(rectGame, p, "4294967299h")).toMatch(/out of range/);
+    expect(validateDesc(rectGame, p, "0h")).toMatch(/out of range/);
     // A `_` anywhere but between two adjacent numbers.
-    expect(validateDesc(p, "_3_6g")).toMatch(/"_"/);
-    expect(validateDesc(p, "3_6g_")).toMatch(/too long/);
-    expect(validateDesc(p, "3a_5f")).toMatch(/"_"/);
-    expect(validateDesc(p, "3_6g,")).toMatch(/too long/);
-    expect(validateDesc(p, "3_6f")).toMatch(/too short/);
+    expect(validateDesc(rectGame, p, "_3_6g")).toMatch(/"_"/);
+    expect(validateDesc(rectGame, p, "3_6g_")).toMatch(/too long/);
+    expect(validateDesc(rectGame, p, "3a_5f")).toMatch(/"_"/);
+    expect(validateDesc(rectGame, p, "3_6g,")).toMatch(/too long/);
+    expect(validateDesc(rectGame, p, "3_6f")).toMatch(/too short/);
   });
 });
 

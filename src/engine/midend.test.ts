@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
 import { token } from "./color/color-token.ts";
 import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
+import { DESC_MALFORMED } from "./desc-error.ts";
 import { difficultyItem } from "./difficulty.ts";
 import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
@@ -471,6 +472,21 @@ describe("Midend params + presets", () => {
     expect(h.m.newGameFromId(id)).toMatch(expected);
     // A refusal leaves the game it refused to replace untouched.
     expect(h.m.getParams()).toBe(before);
+  });
+
+  // A save is the other way a desc arrives from outside, and a parser made
+  // stricter since it was written must refuse it rather than throw from
+  // `newState` (the load used to skip the desc check entirely).
+  it("loadGame refuses a save whose desc no longer loads", () => {
+    const h = harness();
+    expect(h.m.newGameFromId("t4:g4-7")).toBeNull();
+    const env = decodeSave(h.m.saveGame());
+    const stale = encodeSave({ ...env, desc: "bad!" });
+    expect(h.m.newGameFromId("t3:g3-1")).toBeNull();
+    expect(h.m.loadGame(stale)).toBe(
+      `Could not restore this saved game: ${DESC_MALFORMED}`,
+    );
+    expect(h.m.getParams()).toBe("t3");
   });
 
   it("the game id carries the tier, so reopening it keeps the difficulty", () => {
@@ -1344,7 +1360,6 @@ function strikeGame(opts: {
     decodeParams: (s) => ({ n: Number(/^n(\d+)$/.exec(s)?.[1] ?? 3) }),
     validateParams: () => null,
     newDesc: () => ({ desc: "g0-0" }),
-    validateDesc: () => null,
     newState: (p) => ({ n: p.n, struck: 0 }),
     newUi: () => null,
     // button 100+i strikes candidate i directly (no coordinate mapping needed).

@@ -72,7 +72,6 @@ import {
   type RectParams,
   type RectState,
   type RectUi,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -432,7 +431,6 @@ export const rectGame: Game<
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

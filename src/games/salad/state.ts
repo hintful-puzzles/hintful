@@ -24,11 +24,9 @@ import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
@@ -476,10 +474,6 @@ function parseDesc(p: SaladParams, desc: string): DescParse<Decoded> {
     }
     return { borderclues, gridclues, grid, holes };
   });
-}
-
-export function validateDesc(p: SaladParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SaladParams, desc: string): SaladState {

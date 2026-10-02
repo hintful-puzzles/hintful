@@ -17,13 +17,7 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
@@ -437,10 +431,6 @@ function parseDesc(p: BoatsParams, desc: string): DescParse<BoatsState> {
 
 export function newState(p: BoatsParams, desc: string): BoatsState {
   return descValue(parseDesc(p, desc));
-}
-
-export function validateDesc(p: BoatsParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 /**

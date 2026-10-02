@@ -78,7 +78,6 @@ import {
   presets,
   status,
   TRI,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -671,7 +670,6 @@ export const dominosaGame: Game<
   ],
 
   newDesc: newDominosaDesc,
-  validateDesc,
   newState,
   newUi,
 

@@ -15,6 +15,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
@@ -49,7 +50,6 @@ import {
   NO_NUMBER,
   newState,
   newUi,
-  validateDesc,
 } from "./state.ts";
 
 const P = (
@@ -188,7 +188,7 @@ describe("abcd generable-size bound", () => {
     // generated — 80 clues, each within the per-axis maximum of 1 + 10/2.
     const desc = "3,3,2,2,".repeat(20);
     const p = P(10, 10, 4);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(abcdGame, p, desc)).toBeNull();
     expect(refusal(p, false)).toBeNull();
 
     const m = new Midend(abcdGame);
@@ -201,27 +201,35 @@ describe("abcd desc codec", () => {
   it("accepts a generated desc and round-trips the numbers", () => {
     const p = P(5, 5, 4);
     const { desc } = newAbcdDesc(p, randomNew("desc-1"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(abcdGame, p, desc)).toBeNull();
     const numbers = newState(p, desc).numbers;
     expect(numbers.length).toBe((p.w + p.h) * p.n);
   });
 
   it("rejects wrong clue counts, invalid characters and out-of-range clues", () => {
     const p = P(3, 3, 3); // (3+3)*3 = 18 clues expected
-    expect(validateDesc(p, "1,".repeat(17))).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "1,".repeat(19))).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `${"1,".repeat(17)}Z,`)).toBe(descBadCharacter("Z"));
+    expect(validateDesc(abcdGame, p, "1,".repeat(17))).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(abcdGame, p, "1,".repeat(19))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(abcdGame, p, `${"1,".repeat(17)}Z,`)).toBe(
+      descBadCharacter("Z"),
+    );
     // A row clue may not exceed 1 + w/2 = 2 for w=3.
-    expect(validateDesc(p, `9,${"1,".repeat(17)}`)).toBe(DESC_OUT_OF_RANGE); // A column clue may not exceed 1 + h/2 either.
-    expect(validateDesc(p, `${"1,".repeat(17)}3,`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(abcdGame, p, `9,${"1,".repeat(17)}`)).toBe(DESC_OUT_OF_RANGE); // A column clue may not exceed 1 + h/2 either.
+    expect(validateDesc(abcdGame, p, `${"1,".repeat(17)}3,`)).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("refuses a clue without its comma, a stray comma and a missing last comma", () => {
     const p = P(3, 3, 3);
-    expect(validateDesc(p, `-,${"1,".repeat(17)}`)).toBeNull();
-    expect(validateDesc(p, `-${"1,".repeat(17)}`)).toBe(descBadCharacter("1"));
-    expect(validateDesc(p, `,${"1,".repeat(18)}`)).toBe(descBadCharacter(","));
-    expect(validateDesc(p, "1,".repeat(18).slice(0, -1))).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(abcdGame, p, `-,${"1,".repeat(17)}`)).toBeNull();
+    expect(validateDesc(abcdGame, p, `-${"1,".repeat(17)}`)).toBe(
+      descBadCharacter("1"),
+    );
+    expect(validateDesc(abcdGame, p, `,${"1,".repeat(18)}`)).toBe(
+      descBadCharacter(","),
+    );
+    expect(validateDesc(abcdGame, p, "1,".repeat(18).slice(0, -1))).toBe(
+      DESC_TOO_SHORT,
+    );
   });
 });
 

@@ -29,6 +29,9 @@ import {
   DESC_REPEATED,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
+  descValue,
+  loadDesc,
+  validateDesc,
 } from "./desc-error.ts";
 
 const sources = {
@@ -142,5 +145,31 @@ describe("a game's own description error", () => {
       sentence !== null && /has more than one /.test(sentence) ? [where] : [],
     );
     expect(own, "use descNeedsOne(noun, found)").toEqual([]);
+  });
+});
+
+describe("the engine's verdict on a desc", () => {
+  // A game whose parse accepts only "ok", and whose build has a bug on "bug".
+  const game = {
+    newState(_p: null, desc: string): string {
+      const value = descValue<string>(
+        desc === "ok" || desc === "bug"
+          ? { ok: true, value: desc }
+          : { ok: false, error: DESC_MALFORMED },
+      );
+      if (value === "bug") throw new TypeError("a bug in the build");
+      return value;
+    },
+  };
+
+  it("is the board newState builds, or the reason its parse refused", () => {
+    expect(loadDesc(game, null, "ok")).toEqual({ ok: true, value: "ok" });
+    expect(loadDesc(game, null, "nope")).toEqual({ ok: false, error: DESC_MALFORMED });
+    expect(validateDesc(game, null, "ok")).toBeNull();
+    expect(validateDesc(game, null, "nope")).toBe(DESC_MALFORMED);
+  });
+
+  it("lets anything but a refusal propagate, since it is a bug", () => {
+    expect(() => loadDesc(game, null, "bug")).toThrow(TypeError);
   });
 });

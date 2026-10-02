@@ -13,10 +13,12 @@
  * `engine/testing/differential.ts`.
  */
 import { expect } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/sokoban-c-reference.json" with { type: "json" };
 import { newSokobanDesc } from "./generator.ts";
-import { type SokobanParams, validateDesc } from "./state.ts";
+import { sokobanGame } from "./index.ts";
+import type { SokobanParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -35,6 +37,6 @@ describeDescDifferential<Fixture, SokobanParams>({
   newDesc: newSokobanDesc,
   extra: (f, p) => {
     // The desc the generator emits must also pass validation.
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(sokobanGame, p, f.desc)).toBeNull();
   },
 });

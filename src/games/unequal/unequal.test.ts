@@ -8,6 +8,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -35,7 +36,6 @@ import {
   newUi,
   type UnequalParams,
   type UnequalState,
-  validateDesc,
 } from "./state.ts";
 
 function gen(
@@ -92,7 +92,7 @@ describe("unequal params", () => {
 describe("unequal desc codec", () => {
   it("round-trips through generate and decode", () => {
     const { p, desc, st } = gen(5, "unequal", "tricky", "codec-1");
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(unequalGame, p, desc)).toBeNull();
     // Every given appears in both immutable and grid; non-givens empty.
     for (let i = 0; i < st.order * st.order; i++) {
       if (st.immutable[i]) expect(st.grid[i]).toBe(st.immutable[i]);
@@ -106,17 +106,19 @@ describe("unequal desc codec", () => {
   it("rejects malformed descriptions", () => {
     const p: UnequalParams = { order: 4, mode: "unequal", diff: "easy" };
     const zeros = "0,".repeat(15);
-    expect(validateDesc(p, "0,0,0")).toBe(DESC_TOO_SHORT); // too few cells
+    expect(validateDesc(unequalGame, p, "0,0,0")).toBe(DESC_TOO_SHORT); // too few cells
     // A flag pointing off the grid (top-left cell with an UP clue).
-    expect(validateDesc(p, `0U,${zeros}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, `5,${zeros}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(unequalGame, p, `0U,${zeros}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(unequalGame, p, `5,${zeros}`)).toBe(DESC_OUT_OF_RANGE);
     // Forms the generator never writes: a cell without its comma, a letter
     // twice or out of order, a skip letter, text after the board.
-    expect(validateDesc(p, `0,${zeros.slice(0, -1)}`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, `0DD,${zeros}`)).toBe(descBadCharacter("D"));
-    expect(validateDesc(p, `0LR,${zeros}`)).toBe(descBadCharacter("R"));
-    expect(validateDesc(p, `a${zeros}`)).toBe(descBadCharacter("a"));
-    expect(validateDesc(p, `0,${zeros},`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(unequalGame, p, `0,${zeros.slice(0, -1)}`)).toBe(
+      DESC_TOO_SHORT,
+    );
+    expect(validateDesc(unequalGame, p, `0DD,${zeros}`)).toBe(descBadCharacter("D"));
+    expect(validateDesc(unequalGame, p, `0LR,${zeros}`)).toBe(descBadCharacter("R"));
+    expect(validateDesc(unequalGame, p, `a${zeros}`)).toBe(descBadCharacter("a"));
+    expect(validateDesc(unequalGame, p, `0,${zeros},`)).toBe(DESC_TOO_LONG);
   });
 });
 
@@ -129,7 +131,7 @@ describe("unequal generator", () => {
     [6, "unequal", "extreme"],
   ] as const)("generates an exactly-graded board: %s %s %s", (order, mode, diff) => {
     const { p, desc, st } = gen(order, mode, diff, `g-${order}-${mode}-${diff}`);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(unequalGame, p, desc)).toBeNull();
     const want = diffToLevel(diff);
     const soln = Uint8Array.from(st.immutable);
     expect(solveUnequal(order, mode, st.clueFlags, soln, want)).toBe(want);

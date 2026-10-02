@@ -1,7 +1,7 @@
 /** Types, bit vocabulary, params and pure state helpers for Net. */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { type DescError, descValue, descVerdict } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/desc-error.ts";
 import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -185,10 +185,6 @@ export interface NetState {
   readonly lastRotateX: number;
   readonly lastRotateY: number;
   readonly lastRotateDir: number;
-}
-
-export function validateDesc(p: NetParams, desc: string): DescError | null {
-  return descVerdict(parseWireDesc(p.w, p.h, p.wrapping, desc));
 }
 
 /**

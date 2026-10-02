@@ -4,13 +4,7 @@ import {
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
 import { isDigit } from "../../engine/decimal.ts";
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
@@ -281,10 +275,6 @@ function parseDesc(p: TowersParams, desc: string): DescParse<TowersDesc> {
     r.end();
     return { clues, givens };
   });
-}
-
-export function validateDesc(p: TowersParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: TowersParams, desc: string): TowersState {

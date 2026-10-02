@@ -19,11 +19,9 @@
 import { c2nUpper, n2cUpper, UPPER_ALPHABET_SIZE } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -384,10 +382,6 @@ function parseDesc(p: TracksParams, desc: string): DescParse<Board> {
     if (b.colS === -1 || b.rowS === -1) r.fail(ONE_ENTRANCE_AND_EXIT);
     return b;
   });
-}
-
-export function validateDesc(p: TracksParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 /** Encode a board's clue squares + numbers as the upstream desc. */

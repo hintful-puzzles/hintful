@@ -17,10 +17,8 @@ import {
 } from "../../engine/desc-alphabet.ts";
 import {
   DESC_OUT_OF_RANGE,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -159,7 +157,7 @@ export const paramConfig: ParamConfigItem<MagnetsParams>[] = [
     doc: "Size of the grid in squares. At least one of them must be 3 or more, or 5 or more for the harder of the two difficulties.",
     // A row clue counts up to `w` magnets and a column clue up to `h`, each
     // written as one desc-alphabet character. Upstream bounds neither, so a
-    // 62-wide board wrote a desc its own `validateDesc` rejected.
+    // 62-wide board wrote a desc its own parser rejected.
     bounds: { min: 2, max: DESC_ALPHABET_SIZE - 1 },
   }),
   difficultyItem(DIFF_NAMES, "diff"),
@@ -281,10 +279,6 @@ function parseDesc(p: MagnetsParams, desc: string): DescParse<Parsed> {
 
     return { dominoes, rowcount, colcount, grid, flags };
   });
-}
-
-export function validateDesc(p: MagnetsParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: MagnetsParams, desc: string): MagnetsState {

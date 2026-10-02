@@ -1,9 +1,4 @@
-import {
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import {
@@ -430,10 +425,6 @@ function parseDesc(p: SamegameParams, desc: string): DescParse<number[]> {
     r.end();
     return tiles;
   });
-}
-
-export function validateDesc(p: SamegameParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SamegameParams, desc: string): SamegameState {

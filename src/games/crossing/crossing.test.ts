@@ -15,6 +15,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
@@ -75,7 +76,6 @@ import {
   placedRuns,
   textFormat,
   validateBoard,
-  validateDesc,
 } from "./state.ts";
 
 const P5 = { w: 5, h: 5, sym: false };
@@ -210,23 +210,27 @@ describe("crossing desc codec", () => {
   });
 
   it("reports what is wrong with a desc", () => {
-    expect(validateDesc(P5, FIX.desc)).toBeNull();
+    expect(validateDesc(crossingGame, P5, FIX.desc)).toBeNull();
     // '!' is not a wall character; the cursor parks on it short of the ','.
-    expect(validateDesc(P5, "a2!3a2a2a2a6a1,12,59")).toBe(descBadCharacter("!"));
+    expect(validateDesc(crossingGame, P5, "a2!3a2a2a2a6a1,12,59")).toBe(
+      descBadCharacter("!"),
+    );
     // More cell data than 25 cells hold.
-    expect(validateDesc(P5, "25a,12,59")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(crossingGame, P5, "25a,12,59")).toBe(DESC_TOO_LONG);
     // The wall section ends before the board does, or there is no ','.
-    expect(validateDesc(P5, "a2,12")).toBe(descBadCharacter(","));
-    expect(validateDesc(P5, "25")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(crossingGame, P5, "a2,12")).toBe(descBadCharacter(","));
+    expect(validateDesc(crossingGame, P5, "25")).toBe(DESC_TOO_SHORT);
     // The same number twice.
-    expect(validateDesc(P5, "a2a3a2a2a2a6a1,12,12")).toBe(DESC_REPEATED);
+    expect(validateDesc(crossingGame, P5, "a2a3a2a2a2a6a1,12,12")).toBe(DESC_REPEATED);
     // A number longer than the format's nine digits.
-    expect(validateDesc(P5, "a2a3a2a2a2a6a1,1234567891")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(crossingGame, P5, "a2a3a2a2a2a6a1,1234567891")).toBe(
+      DESC_OUT_OF_RANGE,
+    );
   });
 
   it("reads exactly what the encoder writes", () => {
     const walls = "a2a3a2a2a2a6a1";
-    const v = (desc: string) => validateDesc(P5, desc);
+    const v = (desc: string) => validateDesc(crossingGame, P5, desc);
     // No run is one cell long, so no number is one digit.
     expect(v(`${walls},7,12`)).toBe(DESC_OUT_OF_RANGE);
     expect(v(`${walls},10,12`)).toBe(descBadCharacter("0"));
@@ -255,7 +259,7 @@ describe("crossing desc codec", () => {
     walls.fill(1, 0, 27);
     const desc = encodeDesc(30, 1, walls, [[1, 2, 3]]);
     expect(desc).toBe("za3,123");
-    expect(validateDesc(params, desc)).toBeNull();
+    expect(validateDesc(crossingGame, params, desc)).toBeNull();
     expect(newState(params, desc).puzzle.walls).toEqual(walls);
     // 52 walls is exactly two letters, with nothing left over.
     const wide = { w: 54, h: 1, sym: false };
@@ -341,7 +345,7 @@ describe("crossing generator", () => {
     CrossingParams,
   ][])("generates a uniquely solvable %s board", (label, params) => {
     const { desc } = newCrossingDesc(params, randomNew(`gen-${label}`));
-    expect(validateDesc(params, desc)).toBeNull();
+    expect(validateDesc(crossingGame, params, desc)).toBeNull();
     const state = newState(params, desc);
     // One number per run, and the solver finishes it outright.
     expect(state.puzzle.numbers.length).toBe(state.puzzle.runs.length);

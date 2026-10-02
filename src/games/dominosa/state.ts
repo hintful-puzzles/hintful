@@ -15,11 +15,9 @@
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
@@ -193,10 +191,6 @@ function parseDesc(p: DominosaParams, desc: string): DescParse<Int32Array> {
 const UNBALANCED = puzzleDescError(
   "This game ID's numbers can't be the halves of one full set of dominoes.",
 );
-
-export function validateDesc(p: DominosaParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
-}
 
 /** Encode a numbers grid back to the desc string (bracket-escaping ≥10). */
 export function encodeNumbers(numbers: Int32Array | number[]): string {

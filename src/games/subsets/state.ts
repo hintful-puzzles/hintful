@@ -23,10 +23,8 @@ import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
@@ -276,10 +274,6 @@ function parseDesc(p: SubsetsParams, desc: string): DescParse<SubsetsState> {
     }
     return state;
   });
-}
-
-export function validateDesc(p: SubsetsParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 /** Decode a validated desc into a fresh state (upstream `new_game`). */

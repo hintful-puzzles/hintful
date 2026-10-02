@@ -7,6 +7,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { GAME_OVER } from "../../engine/hint-refusal.ts";
@@ -26,7 +27,6 @@ import {
   newState,
   status,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 function gen(p: FloodParams, seed = "flood-test"): FloodState {
@@ -93,7 +93,7 @@ describe("Flood desc", () => {
   it("round-trips a generated description", () => {
     const p = defaultParams();
     const { desc } = newDesc(p, randomNew("desc-rt"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(floodGame, p, desc)).toBeNull();
     const state = newState(p, desc);
     expect(state.grid).toHaveLength(p.w * p.h);
     // desc is wh color chars + ",<movelimit>".
@@ -102,15 +102,15 @@ describe("Flood desc", () => {
 
   it("validateDesc rejects malformed descriptions", () => {
     const p: FloodParams = { w: 2, h: 2, colors: 3, leniency: 0 };
-    expect(validateDesc(p, "012")).toBe(DESC_TOO_SHORT); // 3 of 4 cells, no comma
-    expect(validateDesc(p, "012!")).toBe(descBadCharacter("!"));
-    expect(validateDesc(p, "0120")).toBe(DESC_TOO_SHORT); // grid, then nothing
-    expect(validateDesc(p, "01201")).toBe(descBadCharacter("1")); // no ',' after the grid
-    expect(validateDesc(p, "0120,5")).toBeNull();
-    expect(validateDesc(p, "0120,5x")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "0120,")).toBe(DESC_TOO_SHORT); // no move limit
-    expect(validateDesc(p, "0130,5")).toBe(DESC_OUT_OF_RANGE); // a fourth color
-    expect(validateDesc(p, "01A0,5")).toBe(descBadCharacter("A"));
+    expect(validateDesc(floodGame, p, "012")).toBe(DESC_TOO_SHORT); // 3 of 4 cells, no comma
+    expect(validateDesc(floodGame, p, "012!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(floodGame, p, "0120")).toBe(DESC_TOO_SHORT); // grid, then nothing
+    expect(validateDesc(floodGame, p, "01201")).toBe(descBadCharacter("1")); // no ',' after the grid
+    expect(validateDesc(floodGame, p, "0120,5")).toBeNull();
+    expect(validateDesc(floodGame, p, "0120,5x")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(floodGame, p, "0120,")).toBe(DESC_TOO_SHORT); // no move limit
+    expect(validateDesc(floodGame, p, "0130,5")).toBe(DESC_OUT_OF_RANGE); // a fourth color
+    expect(validateDesc(floodGame, p, "01A0,5")).toBe(descBadCharacter("A"));
   });
 });
 

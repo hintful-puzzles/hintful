@@ -63,7 +63,6 @@ import {
   pos2c,
   slideCol,
   slideRow,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -287,7 +286,6 @@ export const netslideGame: Game<
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

@@ -10,6 +10,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { bin2hex, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { describeParams } from "../../engine/param-label.ts";
@@ -28,7 +29,6 @@ import {
   newDesc,
   newState,
   status,
-  validateDesc,
 } from "./state.ts";
 
 describe("params", () => {
@@ -101,7 +101,7 @@ describe("desc", () => {
     const p = defaultParams();
     const { desc } = newDesc(p, randomNew("seed-1"));
     expect(desc.length).toBe(p.npegs * 2);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(guessGame, p, desc)).toBeNull();
     const s = newState(p, desc);
     expect(s.solution).toHaveLength(p.npegs);
     for (const c of s.solution) {
@@ -130,9 +130,11 @@ describe("desc", () => {
   it("rejects malformed descs", () => {
     const p = defaultParams();
     const len = p.npegs * 2;
-    expect(validateDesc(p, "ab")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "a".repeat(len + 1))).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `${"a".repeat(len - 1)}g`)).toBe(descBadCharacter("g"));
+    expect(validateDesc(guessGame, p, "ab")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(guessGame, p, "a".repeat(len + 1))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(guessGame, p, `${"a".repeat(len - 1)}g`)).toBe(
+      descBadCharacter("g"),
+    );
   });
 
   /** The desc newDesc would write for `colors`. */
@@ -145,20 +147,24 @@ describe("desc", () => {
   it("reads only the lowercase hex its encoder writes", () => {
     const p = { ...defaultParams(), allowMultiple: true };
     const desc = encode([1, 2, 3, 4]);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(guessGame, p, desc)).toBeNull();
     const upper = desc.toUpperCase();
     const at = [...upper].findIndex((c) => c !== c.toLowerCase());
     expect(at).toBeGreaterThanOrEqual(0);
-    expect(validateDesc(p, upper)).toBe(descBadCharacter(upper[at]));
-    expect(validateDesc(p, encode([1, 2, 3, p.ncolors + 1]))).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(guessGame, p, upper)).toBe(descBadCharacter(upper[at]));
+    expect(validateDesc(guessGame, p, encode([1, 2, 3, p.ncolors + 1]))).toBe(
+      DESC_OUT_OF_RANGE,
+    );
   });
 
   it("refuses a repeated color where no guess may repeat one", () => {
     const desc = encode([1, 2, 2, 4]);
-    expect(validateDesc({ ...defaultParams(), allowMultiple: true }, desc)).toBeNull();
-    expect(validateDesc({ ...defaultParams(), allowMultiple: false }, desc)).toBe(
-      DESC_REPEATED,
-    );
+    expect(
+      validateDesc(guessGame, { ...defaultParams(), allowMultiple: true }, desc),
+    ).toBeNull();
+    expect(
+      validateDesc(guessGame, { ...defaultParams(), allowMultiple: false }, desc),
+    ).toBe(DESC_REPEATED);
   });
 });
 

@@ -17,16 +17,12 @@
  * too. These fixtures bind on the live default path, not behind a flag.
  */
 import { expect } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "json" };
 import { newSubsetsDesc } from "./generator.ts";
-import {
-  DIFF_EASY,
-  encodeDesc,
-  newState,
-  type SubsetsParams,
-  validateDesc,
-} from "./state.ts";
+import { subsetsGame } from "./index.ts";
+import { DIFF_EASY, encodeDesc, newState, type SubsetsParams } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -44,7 +40,7 @@ describeDescDifferential<Fixture, SubsetsParams>({
   params: (f) => ({ w: f.w, h: f.h, n: f.n, diff: DIFF_EASY }),
   newDesc: newSubsetsDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(subsetsGame, p, f.desc)).toBeNull();
     expect(encodeDesc(newState(p, f.desc))).toBe(f.desc);
   },
 });

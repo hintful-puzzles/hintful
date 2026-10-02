@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import cReference from "./__fixtures__/flip-c-reference.json" with { type: "json" };
 import { type FlipParams, flipGame } from "./index.ts";
@@ -36,7 +37,7 @@ describe("Flip differential vs frozen C reference", () => {
     } else {
       it(`${tag}: TS board solvable (RANDOM may differ from C)`, () => {
         const ts = flipGame.newDesc(p, randomNew(e.seed)).desc;
-        expect(flipGame.validateDesc(p, ts)).toBeNull();
+        expect(validateDesc(flipGame, p, ts)).toBeNull();
         const st = flipGame.newState(p, ts);
         const r = solveFlip(st, st);
         expect(r.ok).toBe(true);

@@ -12,6 +12,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -32,7 +33,6 @@ import {
   isComplete,
   makeRegionDsf,
   newState,
-  validateDesc,
 } from "./state.ts";
 
 const PRESETS: FillingParams[] = [
@@ -80,18 +80,20 @@ describe("filling desc codec", () => {
   });
 
   it("rejects a desc whose area does not fill the grid", () => {
-    expect(validateDesc({ w: 3, h: 1 }, "11")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc({ w: 3, h: 1 }, "1111")).toBe(DESC_TOO_LONG);
-    expect(validateDesc({ w: 3, h: 1 }, "1a2")).toBeNull();
+    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "11")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1111")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1a2")).toBeNull();
   });
 
   it("rejects invalid characters and clues too large for the board", () => {
-    expect(validateDesc({ w: 3, h: 1 }, "1@2")).toBe(descBadCharacter("@"));
-    expect(validateDesc({ w: 3, h: 1 }, "14a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1@2")).toBe(
+      descBadCharacter("@"),
+    );
+    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "14a")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("refuses a 0 clue, which would spell a blank a second way", () => {
-    expect(validateDesc({ w: 3, h: 1 }, "1a0")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1a0")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 
@@ -104,7 +106,7 @@ describe("filling generator + solver", () => {
     it(`generates uniquely solvable ${p.w}x${p.h} boards`, () => {
       for (let seed = 0; seed < 4; seed++) {
         const { desc } = newFillingDesc(p, randomNew(`filling-${p.w}x${p.h}-${seed}`));
-        expect(validateDesc(p, desc)).toBeNull();
+        expect(validateDesc(fillingGame, p, desc)).toBeNull();
         const st = newState(p, desc);
         const { solved, board } = solveFilling(st.clues, p.w, p.h);
         expect(solved).toBe(true);

@@ -1,7 +1,7 @@
 // Tier-1 logic tests for the Same Game port: params, scoring, desc,
 // gravity/completion, the two-click selection, and move execution.
 import { describe, expect, it } from "vitest";
-import { DESC_OUT_OF_RANGE } from "../../engine/desc-error.ts";
+import { DESC_OUT_OF_RANGE, validateDesc } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -22,7 +22,6 @@ import {
   type SamegameUi,
   snuggle,
   status,
-  validateDesc,
 } from "./state.ts";
 
 const TS = 32; // matches PREFERRED_TILE_SIZE; border = 16.
@@ -130,22 +129,22 @@ describe("Same Game scoring", () => {
 describe("Same Game desc", () => {
   it("round-trips through validate/newState", () => {
     const p: SamegameParams = { w: 3, h: 1, ncols: 3, scoresub: 2, soluble: true };
-    expect(validateDesc(p, "1,2,3")).toBeNull();
+    expect(validateDesc(samegameGame, p, "1,2,3")).toBeNull();
     expect(newState(p, "1,2,3").tiles).toEqual([1, 2, 3]);
     // Wrong count / out-of-range color are rejected.
-    expect(validateDesc(p, "1,2")).not.toBeNull();
-    expect(validateDesc(p, "1,2,9")).not.toBeNull();
+    expect(validateDesc(samegameGame, p, "1,2")).not.toBeNull();
+    expect(validateDesc(samegameGame, p, "1,2,9")).not.toBeNull();
   });
 
   it("refuses an empty cell, which no generated board has", () => {
     const p: SamegameParams = { w: 3, h: 1, ncols: 3, scoresub: 2, soluble: true };
-    expect(validateDesc(p, "1,0,3")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(samegameGame, p, "1,0,3")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("a generated soluble board validates and decodes", () => {
     const p: SamegameParams = { w: 5, h: 5, ncols: 3, scoresub: 2, soluble: true };
     const { desc } = newDesc(p, randomNew("samegame-unit-a"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(samegameGame, p, desc)).toBeNull();
     expect(newState(p, desc).tiles.length).toBe(25);
   });
 });

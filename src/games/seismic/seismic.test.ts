@@ -14,6 +14,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
@@ -81,7 +82,6 @@ import {
   type SeismicParams,
   type SeismicState,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 interface Fixture {
@@ -258,35 +258,37 @@ describe("seismic description codec", () => {
   it("re-encodes every C description to itself", () => {
     for (const f of FIXTURES) {
       expect(encodeDesc(stateOf(f))).toBe(f.desc);
-      expect(validateDesc(paramsOf(f), f.desc)).toBeNull();
+      expect(validateDesc(seismicGame, paramsOf(f), f.desc)).toBeNull();
     }
   });
 
   it("reports upstream's three rejection reasons", () => {
     const p = paramsOf(SMALL);
-    expect(validateDesc(p, "!!!,d4c1f3")).toBe(descBadCharacter("!"));
+    expect(validateDesc(seismicGame, p, "!!!,d4c1f3")).toBe(descBadCharacter("!"));
     // No walls at all: one region of 16 cells, far larger than 9. The 24
     // borders are one letter's gaps, its wall falling off the end.
-    expect(validateDesc(p, "x,p")).toBe(REGION_TOO_LARGE);
+    expect(validateDesc(seismicGame, p, "x,p")).toBe(REGION_TOO_LARGE);
     // A clue bigger than the region that holds it.
-    expect(validateDesc(p, `${SMALL.desc.split(",")[0]},9o`)).toBe(CLUE_TOO_LARGE);
+    expect(validateDesc(seismicGame, p, `${SMALL.desc.split(",")[0]},9o`)).toBe(
+      CLUE_TOO_LARGE,
+    );
   });
 
   it("refuses a clue grid that is not exactly what the encoder writes", () => {
     const p = paramsOf(SMALL);
     const walls = SMALL.desc.split(",")[0];
-    expect(validateDesc(p, `${walls},p`)).toBeNull();
+    expect(validateDesc(seismicGame, p, `${walls},p`)).toBeNull();
     // Cut short, a run past the sixteen cells, and anything after them.
-    expect(validateDesc(p, `${walls},o`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, `${walls}`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, `${walls},q`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `${walls},p,`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(seismicGame, p, `${walls},o`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(seismicGame, p, `${walls}`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(seismicGame, p, `${walls},q`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(seismicGame, p, `${walls},p,`)).toBe(DESC_TOO_LONG);
     // A zero, and a character that is neither a run nor a digit.
-    expect(validateDesc(p, `${walls},0o`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, `${walls},!o`)).toBe(descBadCharacter("!"));
+    expect(validateDesc(seismicGame, p, `${walls},0o`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(seismicGame, p, `${walls},!o`)).toBe(descBadCharacter("!"));
     // A wall list that runs past the 24 borders.
-    expect(validateDesc(p, "zz,p")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "25,p")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(seismicGame, p, "zz,p")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(seismicGame, p, "25,p")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 
@@ -390,7 +392,7 @@ describe("seismic generator", () => {
       { w: 5, h: 4, diff: DIFF_EASY, mode: MODE_TECTONIC },
     ]) {
       const { desc } = newSeismicDesc(p, randomNew(`gen-${p.w}x${p.h}-${p.mode}`));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(seismicGame, p, desc)).toBeNull();
       const board = newState(p, desc);
       expect(solveGame(board, p.diff)).not.toBe(SOLVE_FAILED);
     }
@@ -534,7 +536,7 @@ describe("seismic constructive generator", () => {
         const label = `${MODE_NAMES[p.mode]} ${p.w}x${p.h} d${p.diff} ${seed}`;
 
         // The codec's halves are exact inverses, or a fresh game would not load.
-        expect(validateDesc(p, desc), label).toBeNull();
+        expect(validateDesc(seismicGame, p, desc), label).toBeNull();
         expect(encodeDesc(puzzle), label).toBe(desc);
 
         // Soluble at the requested difficulty. The solver never backtracks, so
@@ -1042,7 +1044,7 @@ describe("seismic rendering", () => {
     for (let i = 1; i <= 8; i++) regions.merge(0, i);
     for (let i = 10; i < 16; i++) regions.merge(9, i);
     const desc = `${encodeRegionWalls(regions, 4, 4)},p`;
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(seismicGame, p, desc)).toBeNull();
     expect(newState(p, desc).dsf.size(0)).toBe(9);
 
     // A 9 is enterable there — `interpretMove` caps entry at the region size.

@@ -16,6 +16,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -84,7 +85,6 @@ import {
   SHIP_SINGLE,
   SHIP_VAGUE,
   textFormat,
-  validateDesc,
   WATER,
 } from "./state.ts";
 import { adjustShips, checkFleet, countShips } from "./validate.ts";
@@ -218,15 +218,21 @@ describe("boats desc codec", () => {
 
   it("accepts a short description but rejects an overlong grid", () => {
     const p = params();
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,")).toBeNull();
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,zz")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,Q")).toBe(descBadCharacter("Q"));
+    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,1,")).toBeNull();
+    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,1,zz")).toBe(
+      DESC_TOO_LONG,
+    );
+    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,1,1,")).toBe(
+      DESC_TOO_LONG,
+    );
+    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,1,Q")).toBe(
+      descBadCharacter("Q"),
+    );
   });
 
   it("reads exactly what the encoder writes", () => {
-    const v = (desc: string) => validateDesc(params(), desc);
+    const v = (desc: string) => validateDesc(boatsGame, params(), desc);
     const border = "1,1,1,1,1,1,1,1,1,1,1,1,";
     expect(v(`${border}ziW`)).toBeNull(); // 26 + 9 empty squares, then a clue
     expect(v(`${border}ziWS`)).toBe(DESC_TOO_LONG);
@@ -335,7 +341,7 @@ describe("boats generator", () => {
     for (let i = 0; i < PRESETS.length; i++) {
       const p = presetParams(i);
       const { desc } = newBoatsDesc(p, randomNew(`boats-valid-${i}`));
-      expect(validateDesc(p, desc), desc).toBeNull();
+      expect(validateDesc(boatsGame, p, desc), desc).toBeNull();
     }
   });
 

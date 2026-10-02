@@ -47,7 +47,6 @@ import {
   type TwiddleState,
   type TwiddleUi,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -271,7 +270,6 @@ export const twiddleGame: Game<
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

@@ -11,6 +11,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -34,7 +35,7 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
-import { BE, TE, validateDesc } from "./map-data.ts";
+import { BE, TE } from "./map-data.ts";
 import {
   COL_0,
   COL_CURSOR,
@@ -178,31 +179,35 @@ describe("map desc validation", () => {
   const { desc } = newMapDesc(p, randomNew("desc-valid"));
 
   it("accepts a generated desc", () => {
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(mapGame, p, desc)).toBeNull();
   });
 
   it("rejects a desc with the wrong clue count", () => {
-    expect(validateDesc(p, `${desc}0`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mapGame, p, `${desc}0`)).toBe(DESC_TOO_LONG);
   });
 
   it("rejects an unexpected character", () => {
-    expect(validateDesc(p, desc.replace(",", ",!"))).toBe(descBadCharacter("!"));
+    expect(validateDesc(mapGame, p, desc.replace(",", ",!"))).toBe(
+      descBadCharacter("!"),
+    );
   });
 
   it("rejects an edge list cut short, overlong or without its comma", () => {
     const [edges, clues] = desc.split(",");
-    expect(validateDesc(p, `${edges.slice(0, -1)},${clues}`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, `${edges}a,${clues}`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `${edges};${clues}`)).toBe(descBadCharacter(";"));
-    expect(validateDesc(p, edges)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(mapGame, p, `${edges.slice(0, -1)},${clues}`)).toBe(
+      DESC_TOO_SHORT,
+    );
+    expect(validateDesc(mapGame, p, `${edges}a,${clues}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mapGame, p, `${edges};${clues}`)).toBe(descBadCharacter(";"));
+    expect(validateDesc(mapGame, p, edges)).toBe(DESC_TOO_SHORT);
   });
 
   it("rejects a clue run past the last region, or a color past 3", () => {
     const edges = desc.split(",")[0];
-    expect(validateDesc(p, `${edges},l`)).toBeNull();
-    expect(validateDesc(p, `${edges},m`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `${edges},k`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, `${edges},4k`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(mapGame, p, `${edges},l`)).toBeNull();
+    expect(validateDesc(mapGame, p, `${edges},m`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mapGame, p, `${edges},k`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(mapGame, p, `${edges},4k`)).toBe(DESC_OUT_OF_RANGE);
   });
 });
 

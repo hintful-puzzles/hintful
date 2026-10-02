@@ -14,10 +14,8 @@ import { assertNever } from "../../engine/assert-never.ts";
 import { isDigit } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -225,10 +223,6 @@ function parseDesc(p: PatternParams, desc: string): DescParse<PatternState> {
     const common: PatternCommon = { w, h, clues, immutable, fontLarge };
     return { common, grid };
   });
-}
-
-export function validateDesc(p: PatternParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: PatternParams, desc: string): PatternState {

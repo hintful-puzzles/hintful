@@ -26,10 +26,8 @@
 import { digitValue, isDigit } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
@@ -371,10 +369,6 @@ function parseDesc(p: SpokesParams, desc: string): DescParse<Int8Array> {
     r.end();
     return numbers;
   });
-}
-
-export function validateDesc(p: SpokesParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 // --- game state -------------------------------------------------------------

@@ -1,10 +1,8 @@
 import { c2n, DESC_ALPHABET_SIZE, n2c } from "../../engine/desc-alphabet.ts";
 import {
   DESC_OUT_OF_RANGE,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
@@ -94,7 +92,7 @@ export function defaultParams(): SinglesParams {
  * A cell holds `1..max(w, h)` and the alphabet's 62 slots run `0..61`, so the
  * largest number expressible is 61 — **one less than upstream's bound**, which
  * is `10+26+26` written out. A 62 would encode as `[`, which `c2n` gives no
- * value and `validateDesc` rejects. Derived from the alphabet so the two
+ * value and the desc parse rejects. Derived from the alphabet so the two
  * cannot drift apart.
  */
 const MAX_DIM = DESC_ALPHABET_SIZE - 1;
@@ -157,10 +155,6 @@ function parseDesc(p: SinglesParams, desc: string): DescParse<Int8Array> {
     r.end();
     return nums;
   });
-}
-
-export function validateDesc(p: SinglesParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SinglesParams, desc: string): SinglesState {

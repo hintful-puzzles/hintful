@@ -15,7 +15,7 @@ import {
   PAPER,
 } from "../../engine/color/palette.ts";
 import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
-import { type DescError, descValue, descVerdict } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/desc-error.ts";
 import {
   type DifficultyContract,
   difficultyItem,
@@ -1096,10 +1096,6 @@ export const galaxiesGame: Game<
 
   newDesc(p: GalaxiesParams, rng: RandomState) {
     return { desc: newGameDesc(p, rng) };
-  },
-
-  validateDesc(p, desc): DescError | null {
-    return descVerdict(parseDesc(p, desc));
   },
 
   newState(p, desc): GalaxiesState {

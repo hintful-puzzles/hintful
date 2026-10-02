@@ -54,7 +54,7 @@ export interface DescDifferentialOptions<F extends DescFixture, P> {
   newDesc: (params: P, rng: RandomState) => { desc: string };
   /**
    * Optional follow-on assertion run inside the same `it` after the
-   * byte-match (e.g. `validateDesc(p, f.desc)` is null).
+   * byte-match (e.g. `validateDesc(game, p, f.desc)` is null).
    */
   extra?: (fixture: F, params: P) => void;
   /**

@@ -17,13 +17,7 @@
  * and cursor flags upstream ORs into the same word never reach state here.
  */
 
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -274,10 +268,6 @@ function parseDesc(p: BricksParams, desc: string): DescParse<BricksState> {
     r.end();
     return { w, h, pw: p.w, grid };
   });
-}
-
-export function validateDesc(p: BricksParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 /** Build a fresh state from a desc (upstream `new_game`): clue numbers on

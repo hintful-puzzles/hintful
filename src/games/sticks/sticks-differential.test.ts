@@ -11,10 +11,12 @@
  * `validateDesc` + `newState` + `encodeDesc` (codec inverse property).
  */
 import { expect } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
 import { newSticksDesc } from "./generator.ts";
-import { encodeDesc, newState, type SticksParams, validateDesc } from "./state.ts";
+import { sticksGame } from "./index.ts";
+import { encodeDesc, newState, type SticksParams } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -33,7 +35,7 @@ describeDescDifferential<Fixture, SticksParams>({
   params: (f) => ({ w: f.w, h: f.h, blackpc: f.blackpc, symm: f.symm }),
   newDesc: newSticksDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(sticksGame, p, f.desc)).toBeNull();
     const state = newState(p, f.desc);
     expect(encodeDesc(state.grid, state.numbers, p.w, p.h)).toBe(f.desc);
   },

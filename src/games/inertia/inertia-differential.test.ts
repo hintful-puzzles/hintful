@@ -21,12 +21,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/inertia-c-reference.json" with { type: "json" };
 import { newInertiaDesc } from "./generator.ts";
 import { inertiaGame } from "./index.ts";
 import { solveRoute } from "./solver.ts";
-import { GEM, type InertiaState, newState, validateDesc } from "./state.ts";
+import { GEM, type InertiaState, newState } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -47,7 +48,7 @@ describe("inertia differential vs the C reference", () => {
     it(`${f.w}x${f.h} seed=${f.seed}: generator reproduces the C desc`, () => {
       const { desc } = newInertiaDesc(params, randomNew(f.seed));
       expect(desc).toBe(f.desc);
-      expect(validateDesc(params, f.desc)).toBeNull();
+      expect(validateDesc(inertiaGame, params, f.desc)).toBeNull();
     });
 
     it(`${f.w}x${f.h} seed=${f.seed}: the route collects every gem, alive`, () => {

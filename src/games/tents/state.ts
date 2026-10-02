@@ -11,13 +11,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -233,10 +227,6 @@ function parseDesc(
     r.end();
     return { grid, numbers };
   });
-}
-
-export function validateDesc(p: TentsParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: TentsParams, desc: string): TentsState {

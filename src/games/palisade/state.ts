@@ -14,11 +14,9 @@ import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -219,10 +217,6 @@ function parseDesc(p: PalisadeParams, desc: string): DescParse<Int8Array> {
     if (squares > wh) r.fail(DESC_TOO_LONG);
     return clues;
   });
-}
-
-export function validateDesc(p: PalisadeParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: PalisadeParams, desc: string): PalisadeState {

@@ -106,7 +106,6 @@ import {
   newState,
   newUi,
   status,
-  validateDesc,
 } from "./state.ts";
 
 /** A player marking that contradicts the unique solution:
@@ -434,7 +433,6 @@ export const keenGame: Game<
   ],
 
   newDesc: newKeenDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

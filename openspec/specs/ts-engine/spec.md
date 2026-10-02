@@ -7430,7 +7430,7 @@ refusal a hint gives there, without asking the game.
 
 ### Requirement: A game ID that will not load says why in the collection's words
 
-`Game.validateDesc` SHALL return a description error made by the engine's
+The engine's verdict on a description (`validateDesc(game, p, desc)`, derived from the game's own parse) SHALL be a description error made by the engine's
 description-error module: a kind (too short, too long, a number out of range, a
 value repeated, clues that contradict each other, a layout this puzzle's IDs do
 not have, or a character that cannot appear, naming it where the parser has it),
@@ -7714,46 +7714,16 @@ board (a hint shown, or the solver used), sent only when that readout changes.
 - **WHEN** a hint is shown on a timed board
 - **THEN** the timer's readout reports the board as assisted, until a new board is dealt
 
-### Requirement: A pasted game ID is refused or played, never thrown
-
-Every game SHALL answer a description a player enters with a refusal from
-`validateDesc` or a board that builds and draws; neither `validateDesc`,
-`newState` nor the first `redraw` SHALL throw. This is held by a cross-game
-test over two populations: descriptions no generator writes, and near misses
-made by breaking each game's real descriptions with one edit (truncated, a
-character dropped, doubled, or replaced by a neighbor). The near misses come
-from one board per value of each preset axis, generated from a fixed seed, so
-a failure names the same game ID every run.
-
-The test can see a disagreement between `validateDesc` and `newState` only
-where `newState` throws on what it cannot read. It SHALL say so where it is
-defined, with the measured split of games for which that holds, so that a
-green run is not read as agreement in a game whose parser skips what it does
-not recognize.
-
-#### Scenario: A validator looser than its parser
-
-- **WHEN** a game's `validateDesc` accepts a near miss that its `newState`
-  throws on
-- **THEN** the test fails, naming the game ID that threw
-
-#### Scenario: A mutator that stopped producing near misses
-
-- **WHEN** the mutants reaching `newState` across the collection fall below
-  the floor the test states
-- **THEN** the test fails rather than passing over nothing
-
-#### Scenario: Junk is refused by every game
-
-- **WHEN** a game is given each of the malformed descriptions
-- **THEN** it refuses at least one of them and throws on none
-
 ### Requirement: A game reads its description once
 
 Every game SHALL read its description with one parser returning a
-`DescParse` (`engine/desc-error.ts`): `validateDesc` SHALL answer from that
-parse's verdict and `newState` SHALL build from its value, so the two cannot
-disagree about a character. A check that needs the parsed board (a count, a
+`DescParse` (`engine/desc-error.ts`), and `newState` SHALL build from that
+parse's value through `descValue`. A game SHALL declare no validator: the
+engine SHALL derive the verdict from `newState` itself (`loadDesc`), taking
+the refusal `descValue` raises for a failed parse as the verdict and letting
+any other throw propagate as a bug, so the verdict and the board are one
+reading. The midend SHALL build state 0 from the same load that judged a
+pasted or saved description. A check that needs the parsed board (a count, a
 region, a rule of the puzzle's own) SHALL run inside that parse. A parser
 SHALL accept what the game's own encoder writes and SHALL refuse what the
 grammar has no place for, rather than skip it.
@@ -7784,6 +7754,12 @@ cursor SHALL offer no way to read a number without bounds.
   however many digits it has
 - **THEN** the parse fails as out of range, rather than storing a value a
   typed array wraps
+
+#### Scenario: A save whose board no longer loads
+
+- **WHEN** a player restores a save whose description the game's parser now
+  refuses
+- **THEN** the save is refused with the parse's reason, and nothing throws
 
 ### Requirement: A params refusal is a sentence
 
@@ -7906,3 +7882,36 @@ positions reached by playing its own input into it.
 - **WHEN** Flood's solver would finish only past the move limit, from moves the
   player has already spent
 - **THEN** Solve refuses, saying no solution can be found from this position
+
+### Requirement: A pasted game ID is refused or opened, never thrown
+
+Every game SHALL answer a description a player enters with a refusal or a
+board that builds and draws; neither loading the description nor the first
+`redraw` SHALL throw. This is held by a cross-game test over two populations:
+descriptions no generator writes, and near misses made by breaking each game's
+real descriptions with one edit (truncated, a character dropped, doubled, or
+replaced by a neighbor). The near misses come from one board per value of each
+preset axis, generated from a fixed seed, so a failure names the same game ID
+every run.
+
+The test can see only a `newState` or `redraw` that throws something other than
+a refusal. It SHALL say so where it is defined, with the measured split of
+games for which that holds, so that a green run is not read as proof that a
+parser refuses what it does not recognize.
+
+#### Scenario: A parse that accepts what its board cannot hold
+
+- **WHEN** a game's parse accepts a near miss and its `newState` or first
+  `redraw` then throws
+- **THEN** the test fails, naming the game ID that threw
+
+#### Scenario: A mutator that stopped producing near misses
+
+- **WHEN** the mutants reaching `newState` across the collection fall below
+  the floor the test states
+- **THEN** the test fails rather than passing over nothing
+
+#### Scenario: Junk is refused by every game
+
+- **WHEN** a game is given each of the malformed descriptions
+- **THEN** it refuses at least one of them and throws on none

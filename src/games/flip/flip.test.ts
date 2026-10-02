@@ -3,6 +3,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend.ts";
@@ -57,7 +58,7 @@ describe("Flip generation", () => {
       const wh = p.w * p.h;
       const rng = randomNew(`flip-${p.w}${p.h}${p.matrixType}`);
       const { desc } = flipGame.newDesc(p, rng);
-      expect(flipGame.validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(flipGame, p, desc)).toBeNull();
       const state = flipGame.newState(p, desc);
 
       // Non-trivial start: at least one light is on.
@@ -93,18 +94,18 @@ describe("Flip desc", () => {
   const p: FlipParams = { w: 1, h: 2, matrixType: "crosses" };
 
   it("reads what the encoder writes", () => {
-    expect(flipGame.validateDesc(p, "9,c")).toBeNull();
+    expect(validateDesc(flipGame, p, "9,c")).toBeNull();
     const s = flipGame.newState(p, "9,c");
     expect([...s.matrix]).toEqual([1, 0, 0, 1]);
     expect([...s.grid]).toEqual([1, 1]);
   });
 
   it("refuses uppercase hex, set padding bits and an overlong bitmap", () => {
-    expect(flipGame.validateDesc(p, "9,C")).toBe(descBadCharacter("C"));
-    expect(flipGame.validateDesc(p, "9,d")).toBe(descBadCharacter("d"));
-    expect(flipGame.validateDesc(p, "99,c")).toBe(descBadCharacter("9"));
-    expect(flipGame.validateDesc(p, "9,cc")).toBe(DESC_TOO_LONG);
-    expect(flipGame.validateDesc(p, "9")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(flipGame, p, "9,C")).toBe(descBadCharacter("C"));
+    expect(validateDesc(flipGame, p, "9,d")).toBe(descBadCharacter("d"));
+    expect(validateDesc(flipGame, p, "99,c")).toBe(descBadCharacter("9"));
+    expect(validateDesc(flipGame, p, "9,cc")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(flipGame, p, "9")).toBe(DESC_TOO_SHORT);
   });
 });
 

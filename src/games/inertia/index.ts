@@ -66,7 +66,6 @@ import {
   paramConfig,
   slide,
   textFormat,
-  validateDesc,
   validateParams,
   WALL,
 } from "./state.ts";
@@ -253,7 +252,6 @@ export const inertiaGame: Game<
   paramConfig,
 
   newDesc: newInertiaDesc,
-  validateDesc,
   newState,
   newUi: (): InertiaUi => ({
     deaths: 0,

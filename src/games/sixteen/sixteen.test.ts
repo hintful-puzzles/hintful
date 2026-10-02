@@ -5,6 +5,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { raisedBevelWidth } from "../../engine/draw.ts";
 import type { HintStep } from "../../engine/index.ts";
@@ -35,7 +36,6 @@ import {
   type SixteenState,
   status,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 // --- helpers ----------------------------------------------------------
@@ -151,36 +151,42 @@ describe("Sixteen presets", () => {
 describe("Sixteen desc and state", () => {
   it("validates a correct desc", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,9")).toBeNull();
+    expect(validateDesc(sixteenGame, p, "1,2,3,4,5,6,7,8,9")).toBeNull();
   });
 
   it("rejects desc with wrong number of entries", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,9,10")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(sixteenGame, p, "1,2,3,4,5,6,7,8")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(sixteenGame, p, "1,2,3,4,5,6,7,8,9,10")).toBe(DESC_TOO_LONG);
   });
 
   it("rejects desc with duplicate numbers", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,8")).toBe(DESC_REPEATED);
+    expect(validateDesc(sixteenGame, p, "1,2,3,4,5,6,7,8,8")).toBe(DESC_REPEATED);
   });
 
   it("rejects desc with out-of-range numbers", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,10")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "0,2,3,4,5,6,7,8,9")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sixteenGame, p, "1,2,3,4,5,6,7,8,10")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sixteenGame, p, "0,2,3,4,5,6,7,8,9")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("rejects desc with a non-digit or an empty entry", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,x")).toBe(descBadCharacter("x"));
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(sixteenGame, p, "1,2,3,4,5,6,7,8,x")).toBe(
+      descBadCharacter("x"),
+    );
+    expect(validateDesc(sixteenGame, p, "1,2,3,4,5,6,7,8,")).toBe(DESC_TOO_SHORT);
   });
 
   it("names a wrong separator rather than miscounting the entries", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1;2,3,4,5,6,7,8,9")).toBe(descBadCharacter(";"));
-    expect(validateDesc(p, "1,2,,3,4,5,6,7,8,9")).toBe(descBadCharacter(","));
+    expect(validateDesc(sixteenGame, p, "1;2,3,4,5,6,7,8,9")).toBe(
+      descBadCharacter(";"),
+    );
+    expect(validateDesc(sixteenGame, p, "1,2,,3,4,5,6,7,8,9")).toBe(
+      descBadCharacter(","),
+    );
   });
 
   it("newState parses desc correctly", () => {
@@ -235,14 +241,14 @@ describe("Sixteen generator", () => {
     const p = { w: 4, h: 4, movetarget: 0 };
     const rng = randomNew("test-sixteen-gen");
     const { desc } = newDesc(p, rng);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(sixteenGame, p, desc)).toBeNull();
   });
 
   it("generates a valid desc for shuffle (movetarget>0)", () => {
     const p = { w: 4, h: 4, movetarget: 50 };
     const rng = randomNew("test-sixteen-shuffle");
     const { desc } = newDesc(p, rng);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(sixteenGame, p, desc)).toBeNull();
   });
 
   it("shuffled desc is not solved", () => {

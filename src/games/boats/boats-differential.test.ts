@@ -19,12 +19,13 @@
  * trace harness that captured it are gone (see `engine/testing/differential.ts`).
  */
 
+import { validateDesc } from "../../engine/desc-error.ts";
 import { paramsError } from "../../engine/params.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/boats-c-reference.json" with { type: "json" };
 import { newBoatsDesc } from "./generator.ts";
 import { boatsGame } from "./index.ts";
-import { type BoatsParams, decodeFleet, validateDesc } from "./state.ts";
+import { type BoatsParams, decodeFleet } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -64,7 +65,8 @@ describeDescDifferential<Fixture, BoatsParams>({
     // The C description must also pass the port's own validators — a codec
     // that round-trips against itself but rejects upstream's output would
     // otherwise slip through.
-    if (validateDesc(p, f.desc) !== null) throw new Error("C desc failed validateDesc");
+    if (validateDesc(boatsGame, p, f.desc) !== null)
+      throw new Error("C desc failed validateDesc");
     if (paramsError(boatsGame, p, true) !== null)
       throw new Error("C fixture params failed paramsError");
   },

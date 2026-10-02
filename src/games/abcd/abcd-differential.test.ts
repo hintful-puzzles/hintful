@@ -12,10 +12,12 @@
  * build this repo does not have — see `engine/testing/differential.ts`.
  */
 
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/abcd-c-reference.json" with { type: "json" };
 import { newAbcdDesc } from "./generator.ts";
-import { type AbcdParams, validateDesc } from "./state.ts";
+import { abcdGame } from "./index.ts";
+import type { AbcdParams } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -44,6 +46,7 @@ describeDescDifferential<Fixture, AbcdParams>({
   newDesc: newAbcdDesc,
   // The generated desc must also pass the port's own validator.
   extra: (f, p) => {
-    if (validateDesc(p, f.desc) !== null) throw new Error("C desc failed validateDesc");
+    if (validateDesc(abcdGame, p, f.desc) !== null)
+      throw new Error("C desc failed validateDesc");
   },
 });

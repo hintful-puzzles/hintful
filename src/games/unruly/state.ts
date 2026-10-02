@@ -6,12 +6,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
@@ -174,10 +169,6 @@ function parseDesc(
     });
     return { grid, immutable };
   });
-}
-
-export function validateDesc(p: UnrulyParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: UnrulyParams, desc: string): UnrulyState {

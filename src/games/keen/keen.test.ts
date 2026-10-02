@@ -14,6 +14,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -51,7 +52,6 @@ import {
   type KeenState,
   newState,
   newUi,
-  validateDesc,
 } from "./state.ts";
 
 function gen(p: KeenParams, seed: string) {
@@ -115,7 +115,7 @@ describe("keen params codec", () => {
 
 describe("keen desc codec", () => {
   it("accepts a valid desc and decodes a blank starting grid", () => {
-    expect(validateDesc(P4, D4)).toBeNull();
+    expect(validateDesc(keenGame, P4, D4)).toBeNull();
     const st = newState(P4, D4);
     expect(st.grid.every((v) => v === 0)).toBe(true);
     expect(st.pencil.every((v) => v === 0)).toBe(true);
@@ -128,24 +128,36 @@ describe("keen desc codec", () => {
   });
 
   it("rejects malformed descs", () => {
-    expect(validateDesc(P4, "!!!,a1")).toBe(descBadCharacter("!"));
-    expect(validateDesc(P4, D4.replace(",d2s1a9m4d2m6s2", ",a3"))).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(P4, `${D4}a1`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(keenGame, P4, "!!!,a1")).toBe(descBadCharacter("!"));
+    expect(validateDesc(keenGame, P4, D4.replace(",d2s1a9m4d2m6s2", ",a3"))).toBe(
+      DESC_TOO_SHORT,
+    );
+    expect(validateDesc(keenGame, P4, `${D4}a1`)).toBe(DESC_TOO_LONG);
     // An operation needs its number.
-    expect(validateDesc(P4, D4.replace(",d2", ",d"))).toBe(descBadCharacter("s"));
+    expect(validateDesc(keenGame, P4, D4.replace(",d2", ",d"))).toBe(
+      descBadCharacter("s"),
+    );
     // A repeat count the encoder never writes: two repeats are spelled "aa".
-    expect(validateDesc(P4, D4.replace("aa_", "a2_"))).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(keenGame, P4, D4.replace("aa_", "a2_"))).toBe(
+      DESC_OUT_OF_RANGE,
+    );
     // A block structure cut short by the comma.
-    expect(validateDesc(P4, "aa_a,d2s1a9m4d2m6s2")).toBe(descBadCharacter(","));
+    expect(validateDesc(keenGame, P4, "aa_a,d2s1a9m4d2m6s2")).toBe(
+      descBadCharacter(","),
+    );
     // Two different digits of 1..4 differ by at most 3 and divide to at least 2.
-    expect(validateDesc(P4, D4.replace("s1", "s4"))).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(P4, D4.replace(",d2", ",d1"))).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(keenGame, P4, D4.replace("s1", "s4"))).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(keenGame, P4, D4.replace(",d2", ",d1"))).toBe(
+      DESC_OUT_OF_RANGE,
+    );
     // A subtraction clue on a non-domino cage: take a desc whose first cage is
     // large and tag it 's'. On a 3x3 board 'l' merges all twelve edges, so the
     // whole board is one cage of nine.
     const p3: KeenParams = { w: 3, diff: "easy", multiplicationOnly: false };
-    expect(validateDesc(p3, "l,a9")).toBeNull();
-    expect(validateDesc(p3, "l,s9")).toMatch(/^This game ID .*subtraction.*\.$/);
+    expect(validateDesc(keenGame, p3, "l,a9")).toBeNull();
+    expect(validateDesc(keenGame, p3, "l,s9")).toMatch(
+      /^This game ID .*subtraction.*\.$/,
+    );
   });
 });
 

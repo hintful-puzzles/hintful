@@ -13,11 +13,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/keen-c-reference.json" with { type: "json" };
 import { newKeenDesc } from "./generator.ts";
+import { keenGame } from "./index.ts";
 import { solveKeen } from "./solver.ts";
-import { diffFromLevel, type KeenParams, newState, validateDesc } from "./state.ts";
+import { diffFromLevel, type KeenParams, newState } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -42,7 +44,7 @@ describe("keen differential (byte-match + solver agreement)", () => {
     it(`${label}: desc matches C byte-for-byte`, () => {
       const { desc } = newKeenDesc(p, randomNew(f.seed));
       expect(desc).toBe(f.desc);
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(keenGame, p, desc)).toBeNull();
     });
 
     it(`${label}: TS solver grades at the C difficulty`, () => {

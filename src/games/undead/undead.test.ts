@@ -13,6 +13,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -40,7 +41,6 @@ import {
   newUi,
   type UndeadParams,
   type UndeadState,
-  validateDesc,
 } from "./state.ts";
 
 function gen(w: number, h: number, diff: Difficulty, seed: string) {
@@ -92,7 +92,7 @@ describe("undead generation", () => {
   for (const [w, h, diff] of cases) {
     it(`generates a unique, on-difficulty ${w}x${h} ${diff} board`, () => {
       const { params, desc, aux, state } = gen(w, h, diff, `${w}x${h}-${diff}`);
-      expect(validateDesc(params, desc)).toBeNull();
+      expect(validateDesc(undeadGame, params, desc)).toBeNull();
       expect(isUniquelySolvable(state.common)).toBe(true);
 
       // The unique solution equals the generator's recorded solution.
@@ -126,16 +126,18 @@ describe("undead generation", () => {
 describe("undead validateDesc", () => {
   it("accepts a generated desc and rejects corruptions", () => {
     const { params, desc } = gen(4, 4, "normal", "valid");
-    expect(validateDesc(params, desc)).toBeNull();
-    expect(validateDesc(params, "")).not.toBeNull();
-    expect(validateDesc(params, "0,2,6")).not.toBeNull(); // no grid/sightings
+    expect(validateDesc(undeadGame, params, desc)).toBeNull();
+    expect(validateDesc(undeadGame, params, "")).not.toBeNull();
+    expect(validateDesc(undeadGame, params, "0,2,6")).not.toBeNull(); // no grid/sightings
     // A grid character that overfills.
-    expect(validateDesc(params, desc.replace(/^(\d+,\d+,\d+,)/, "$1z"))).not.toBeNull();
+    expect(
+      validateDesc(undeadGame, params, desc.replace(/^(\d+,\d+,\d+,)/, "$1z")),
+    ).not.toBeNull();
   });
 
   it("reads exactly what the encoder writes", () => {
     const params: UndeadParams = { w: 3, h: 3, diff: "normal" };
-    const v = (desc: string) => validateDesc(params, desc);
+    const v = (desc: string) => validateDesc(undeadGame, params, desc);
     const sightings = ",0,0,0,0,0,0,0,0,0,0,0,0";
     expect(v(`1,1,1,LRLRLRc${sightings}`)).toBeNull();
     expect(v("1,1,1,LRLRLRc,0,,0,0,0,0,0,0,0,0,0,0")).toBe(descBadCharacter(","));

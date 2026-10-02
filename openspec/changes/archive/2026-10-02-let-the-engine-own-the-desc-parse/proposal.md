@@ -1,6 +1,7 @@
 # let-the-engine-own-the-desc-parse
 
-**Status: scaffolded, not started (2026-10-01). Measurement first.**
+**Status: implemented 2026-10-02, in the derived shape `design.md` argues for
+rather than the typed one sketched below.**
 
 ## Why
 

@@ -13,15 +13,11 @@
  * `auxiliary/guess-trace.c` captured it); see `engine/testing/differential.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/guess-c-reference.json" with { type: "json" };
-import {
-  decodeParams,
-  type GuessParams,
-  newDesc,
-  newState,
-  validateDesc,
-} from "./state.ts";
+import { guessGame } from "./index.ts";
+import { decodeParams, type GuessParams, newDesc, newState } from "./state.ts";
 
 interface Ref {
   seed: string;
@@ -46,7 +42,7 @@ describeDescDifferential<Ref, GuessParams>({
   newDesc,
   extra: (ref, params) => {
     // The C desc is a valid, decodable solution.
-    expect(validateDesc(params, ref.desc)).toBeNull();
+    expect(validateDesc(guessGame, params, ref.desc)).toBeNull();
     const state = newState(params, ref.desc);
     expect(state.solution).toHaveLength(params.npegs);
     for (const c of state.solution) {

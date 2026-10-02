@@ -9,6 +9,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -41,7 +42,6 @@ import {
   type PatternParams,
   type PatternState,
   status,
-  validateDesc,
 } from "./state.ts";
 
 function genState(
@@ -92,21 +92,27 @@ describe("pattern desc codec", () => {
 
   it("accepts a generated desc and rejects malformed ones", () => {
     const { desc } = genState({ w: 10, h: 10 }, "pattern-desc-1");
-    expect(validateDesc({ w: 10, h: 10 }, desc)).toBeNull();
+    expect(validateDesc(patternGame, { w: 10, h: 10 }, desc)).toBeNull();
     // Too few line specifications.
-    expect(validateDesc({ w: 5, h: 5 }, "1/2/3")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(patternGame, { w: 5, h: 5 }, "1/2/3")).toBe(DESC_TOO_SHORT);
     // Unrecognized character.
-    expect(validateDesc({ w: 2, h: 2 }, "1/2/!/1")).toBe(descBadCharacter("!"));
+    expect(validateDesc(patternGame, { w: 2, h: 2 }, "1/2/!/1")).toBe(
+      descBadCharacter("!"),
+    );
     // A clue longer than its line, and clues that together overfill it.
-    expect(validateDesc({ w: 3, h: 3 }, "9/1/1/1/1/1")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc({ w: 3, h: 3 }, "2.2/1/1/1/1/1")).toMatch(
+    expect(validateDesc(patternGame, { w: 3, h: 3 }, "9/1/1/1/1/1")).toBe(
+      DESC_OUT_OF_RANGE,
+    );
+    expect(validateDesc(patternGame, { w: 3, h: 3 }, "2.2/1/1/1/1/1")).toMatch(
       /a column whose clues/,
     );
-    expect(validateDesc({ w: 3, h: 3 }, "1/1/1/1/1/2.2")).toMatch(/a row whose clues/);
+    expect(validateDesc(patternGame, { w: 3, h: 3 }, "1/1/1/1/1/2.2")).toMatch(
+      /a row whose clues/,
+    );
   });
 
   it("reads exactly what the encoder writes, and upstream's clue squares", () => {
-    const v = (desc: string) => validateDesc({ w: 2, h: 2 }, desc);
+    const v = (desc: string) => validateDesc(patternGame, { w: 2, h: 2 }, desc);
     expect(v("1/2//1")).toBeNull();
     // A NUL is a character like any other, not the end of a line.
     expect(v("1\0/2//1")).toBe(descBadCharacter("\0"));

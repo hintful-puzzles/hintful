@@ -23,12 +23,14 @@
  * `grid-build.ts` and `generator.ts`) and are covered by `loopy.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/loopy-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
+import { loopyGame } from "./index.ts";
 import { encodeParams, LOOPY_DIFFS, LOOPY_GRIDS, type LoopyParams } from "./params.ts";
 import { solveGame } from "./solver.ts";
-import { newState, validateDesc } from "./state.ts";
+import { newState } from "./state.ts";
 
 interface LoopyFixture {
   /** Loopy's own grid-type index — not `grid.ts`'s `GRIDGEN_LIST` ordering. */
@@ -80,7 +82,7 @@ describe("loopy C differential", () => {
         // board the C built, so it still says something if the generator and
         // the solver ever diverged together.
         const p = paramsOf(f);
-        expect(validateDesc(p, f.desc)).toBeNull();
+        expect(validateDesc(loopyGame, p, f.desc)).toBeNull();
         const state = newState(p, f.desc);
         expect(solveGame(state, p.diff).status).toBe("solved");
         if (p.diff > 0) {

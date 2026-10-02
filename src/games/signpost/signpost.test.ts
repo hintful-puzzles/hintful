@@ -9,6 +9,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descValue,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -80,22 +81,22 @@ describe("signpost desc codec", () => {
   it("validateDesc rejects an unknown direction char", () => {
     const p = { w: 2, h: 2, forceCornerStart: false };
     // 4 cells expected; 'z' is not a-h.
-    expect(signpostGame.validateDesc(p, "1azaaa")).not.toBeNull();
+    expect(validateDesc(signpostGame, p, "1azaaa")).not.toBeNull();
   });
 
   it("validateDesc rejects a too-short desc", () => {
     const p = { w: 3, h: 3, forceCornerStart: false };
-    expect(signpostGame.validateDesc(p, "1aae")).not.toBeNull();
+    expect(validateDesc(signpostGame, p, "1aae")).not.toBeNull();
   });
 
   it("validateDesc refuses a number given twice, or a 0 no generated board writes", () => {
     const p = { w: 2, h: 2, forceCornerStart: false };
-    expect(signpostGame.validateDesc(p, "1ca2a4a")).toBeNull();
-    expect(signpostGame.validateDesc(p, "1ca1a4a")).toBe(DESC_REPEATED);
-    expect(signpostGame.validateDesc(p, "1ca0a4a")).toBe(DESC_OUT_OF_RANGE);
-    expect(signpostGame.validateDesc(p, "1ca5a4a")).toBe(DESC_OUT_OF_RANGE);
-    expect(signpostGame.validateDesc(p, "1ca2a4ab")).toBe(DESC_TOO_LONG);
-    expect(signpostGame.validateDesc(p, "1ca2a4")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(signpostGame, p, "1ca2a4a")).toBeNull();
+    expect(validateDesc(signpostGame, p, "1ca1a4a")).toBe(DESC_REPEATED);
+    expect(validateDesc(signpostGame, p, "1ca0a4a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(signpostGame, p, "1ca5a4a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(signpostGame, p, "1ca2a4ab")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(signpostGame, p, "1ca2a4")).toBe(DESC_TOO_SHORT);
   });
 });
 

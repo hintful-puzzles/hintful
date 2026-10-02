@@ -82,7 +82,6 @@ import {
   type Slash,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -308,7 +307,6 @@ export const slantGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

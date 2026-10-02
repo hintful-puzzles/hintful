@@ -41,7 +41,6 @@ import {
   snuggle,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -221,7 +220,6 @@ export const samegameGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

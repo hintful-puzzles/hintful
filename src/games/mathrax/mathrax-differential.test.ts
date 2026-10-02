@@ -15,7 +15,9 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
+import { mathraxGame } from "./index.ts";
 import { mathraxSolve } from "./solver.ts";
 import {
   DIFF_RECURSIVE,
@@ -23,7 +25,6 @@ import {
   encodeParams,
   type MathraxParams,
   newState,
-  validateDesc,
 } from "./state.ts";
 
 interface MathraxFixture {
@@ -56,7 +57,7 @@ describe("mathrax frozen upstream boards (solver verdicts, every tier)", () => {
   for (const f of fixtures) {
     it(`${encodeParams(paramsOf(f), true)} seed=${f.seed}: TS solver agrees with the recorded verdict`, () => {
       const p = paramsOf(f);
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(mathraxGame, p, f.desc)).toBeNull();
       const st = newState(p, f.desc);
       expect(
         mathraxSolve(p.o, Uint8Array.from(st.grid), st.clues, DIFF_RECURSIVE),

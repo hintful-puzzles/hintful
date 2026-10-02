@@ -68,7 +68,6 @@ import {
   serializeMove,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -295,7 +294,6 @@ export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawSta
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

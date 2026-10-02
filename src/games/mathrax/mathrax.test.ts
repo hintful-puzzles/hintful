@@ -10,6 +10,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -79,7 +80,6 @@ import {
   STATUS_INVALID,
   STATUS_UNFINISHED,
   setClueNum,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -203,7 +203,7 @@ describe("mathrax desc codec", () => {
   it("round-trips every fixture description", () => {
     for (const f of fixtures) {
       const p = paramsOf(f);
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(mathraxGame, p, f.desc)).toBeNull();
       const st = newState(p, f.desc);
       expect(encodeDesc(p.o, st.grid, st.clues)).toBe(f.desc);
     }
@@ -227,37 +227,37 @@ describe("mathrax desc codec", () => {
 
   it("rejects the descriptions upstream rejects", () => {
     const p: MathraxParams = { o: 3, diff: "easy", options: OPTIONSMASK };
-    expect(validateDesc(p, "1231231231,c")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "12345678,d")).toBe(DESC_OUT_OF_RANGE); // 4 > o
-    expect(validateDesc(p, "12?,d")).toBe(descBadCharacter("?"));
-    expect(validateDesc(p, "12,d")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "i,A100")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "i,A2")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "i,dA1")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mathraxGame, p, "1231231231,c")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mathraxGame, p, "12345678,d")).toBe(DESC_OUT_OF_RANGE); // 4 > o
+    expect(validateDesc(mathraxGame, p, "12?,d")).toBe(descBadCharacter("?"));
+    expect(validateDesc(mathraxGame, p, "12,d")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(mathraxGame, p, "i,A100")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(mathraxGame, p, "i,A2")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(mathraxGame, p, "i,dA1")).toBe(DESC_TOO_LONG);
   });
 
   it("refuses what the encoder never writes", () => {
     const p: MathraxParams = { o: 3, diff: "easy", options: OPTIONSMASK };
-    expect(validateDesc(p, "i,d")).toBeNull();
+    expect(validateDesc(mathraxGame, p, "i,d")).toBeNull();
     // A run past either part, and anything after the clues.
-    expect(validateDesc(p, "j,d")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "i,e")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "i,d!")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mathraxGame, p, "j,d")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mathraxGame, p, "i,e")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mathraxGame, p, "i,d!")).toBe(DESC_TOO_LONG);
     // A character the clue part has no use for, where upstream skipped it.
-    expect(validateDesc(p, "i,c!E")).toBe(descBadCharacter("!"));
+    expect(validateDesc(mathraxGame, p, "i,c!E")).toBe(descBadCharacter("!"));
     // An empty desc, an empty grid part, and a missing clue part.
-    expect(validateDesc(p, "")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, ",d")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "i")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(mathraxGame, p, "")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(mathraxGame, p, ",d")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(mathraxGame, p, "i")).toBe(DESC_TOO_SHORT);
     // An arithmetic clue without its number, and a parity clue with one.
-    expect(validateDesc(p, "i,Ac")).toBe(descBadCharacter("c"));
-    expect(validateDesc(p, "i,E5c")).toBe(descBadCharacter("5"));
+    expect(validateDesc(mathraxGame, p, "i,Ac")).toBe(descBadCharacter("c"));
+    expect(validateDesc(mathraxGame, p, "i,E5c")).toBe(descBadCharacter("5"));
     // A number no two of the board's digits can make.
-    expect(validateDesc(p, "i,A7c")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "i,S3c")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "i,M10c")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "i,D1c")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "i,A6S2M9D3")).toBeNull();
+    expect(validateDesc(mathraxGame, p, "i,A7c")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(mathraxGame, p, "i,S3c")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(mathraxGame, p, "i,M10c")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(mathraxGame, p, "i,D1c")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(mathraxGame, p, "i,A6S2M9D3")).toBeNull();
   });
 });
 
@@ -386,7 +386,7 @@ describe("mathrax generator", () => {
     for (const o of [4, 5, 7]) {
       const p: MathraxParams = { o, diff: "normal", options: OPTIONSMASK };
       const { desc } = newMathraxDesc(p, randomNew(`fresh-${o}`));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(mathraxGame, p, desc)).toBeNull();
       const st = newState(p, desc);
       expect(mathraxSolve(o, Uint8Array.from(st.grid), st.clues, DIFF_NORMAL)).toBe(
         SOLVE_UNIQUE,

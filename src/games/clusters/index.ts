@@ -98,7 +98,6 @@ import {
   paramConfig,
   presets,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -453,7 +452,6 @@ export const clustersGame: Game<
   paramConfig,
 
   newDesc: (p, rng) => newClustersDesc(p, rng),
-  validateDesc,
   newState,
   newUi,
 

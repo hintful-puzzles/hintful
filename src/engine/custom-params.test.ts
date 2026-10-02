@@ -71,7 +71,6 @@ function makeGame(
     validateParams: (p) => (p.w > 0 ? null : "Width must be at least one"),
     paramConfig,
     newDesc: () => ({ desc: "d" }),
-    validateDesc: () => null,
     newState: () => ({ done: false }),
     newUi: () => null,
     interpretMove: () => null,

@@ -54,7 +54,6 @@ import {
   hasPresetSize,
   newState,
   presets,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -344,7 +343,6 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

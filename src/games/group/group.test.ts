@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -34,7 +35,6 @@ import {
   newState,
   newUi,
   PRESETS,
-  validateDesc,
 } from "./state.ts";
 
 const P = (w: number, diff: number, id: boolean): GroupParams => ({ w, diff, id });
@@ -128,7 +128,7 @@ describe("generation", () => {
       const { desc, aux } = newGameDesc(p, rng);
 
       // Desc validates and round-trips through the codec.
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(groupGame, p, desc)).toBeNull();
       const state = newState(p, desc);
       expect(encodeGrid(state.grid, p.w * p.w)).toBe(desc);
 
@@ -327,24 +327,24 @@ describe("Group desc parsing", () => {
     const grid = Uint8Array.from([1, 2, 0, 0, 0, 0, 0, 0, 3]);
     const desc = encodeGrid(grid, 9);
     expect(desc).toBe("1_2f3");
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(groupGame, p, desc)).toBeNull();
     expect(Array.from(newState(p, desc).grid)).toEqual(Array.from(grid));
   });
 
   it("refuses what encodeGrid never writes", () => {
-    const tooShort = validateDesc(p, "1_2f");
-    const tooLong = validateDesc(p, "1_2h");
+    const tooShort = validateDesc(groupGame, p, "1_2f");
+    const tooLong = validateDesc(groupGame, p, "1_2h");
     expect(tooShort).toMatch(/too short/);
     expect(tooLong).toMatch(/too long/);
     // Text after the grid, including after a comma.
-    expect(validateDesc(p, "1_2f3,x")).toBe(tooLong);
+    expect(validateDesc(groupGame, p, "1_2f3,x")).toBe(tooLong);
     // A `_` anywhere but between two numbers.
-    expect(validateDesc(p, "_1_2f3")).toMatch(/"_"/);
-    expect(validateDesc(p, "1__2f3")).toMatch(/"_"/);
-    expect(validateDesc(p, "1_2_f3")).toMatch(/"f"/);
+    expect(validateDesc(groupGame, p, "_1_2f3")).toMatch(/"_"/);
+    expect(validateDesc(groupGame, p, "1__2f3")).toMatch(/"_"/);
+    expect(validateDesc(groupGame, p, "1_2_f3")).toMatch(/"f"/);
     // Two numbers run together read as one, out of range.
-    expect(validateDesc(p, "12f3")).toMatch(/out of range/);
-    expect(validateDesc(p, "1_2f0")).toMatch(/out of range/);
-    expect(validateDesc(p, "1_2f!")).toMatch(/"!"/);
+    expect(validateDesc(groupGame, p, "12f3")).toMatch(/out of range/);
+    expect(validateDesc(groupGame, p, "1_2f0")).toMatch(/out of range/);
+    expect(validateDesc(groupGame, p, "1_2f!")).toMatch(/"!"/);
   });
 });

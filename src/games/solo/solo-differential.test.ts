@@ -14,17 +14,13 @@
  * harness that captured it are gone (see `engine/testing/differential.ts`).
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import cReference from "./__fixtures__/solo-c-reference.json" with { type: "json" };
 import { newSoloDesc } from "./generator.ts";
+import { soloGame } from "./index.ts";
 import { solveSolo } from "./solver.ts";
-import {
-  DIFF_KINTERSECT,
-  DIFF_RECURSIVE,
-  newState,
-  type SoloParams,
-  validateDesc,
-} from "./state.ts";
+import { DIFF_KINTERSECT, DIFF_RECURSIVE, newState, type SoloParams } from "./state.ts";
 
 interface Fixture {
   c: number;
@@ -64,7 +60,7 @@ describe("solo differential (frozen C reference)", () => {
     it(`${label(f)}: TS desc matches C byte-for-byte`, () => {
       const { desc } = newSoloDesc(paramsOf(f), randomNew(f.seed));
       expect(desc).toBe(f.desc);
-      expect(validateDesc(paramsOf(f), desc)).toBeNull();
+      expect(validateDesc(soloGame, paramsOf(f), desc)).toBeNull();
     });
 
     it(`${label(f)}: TS solver grades the published board as C did`, () => {

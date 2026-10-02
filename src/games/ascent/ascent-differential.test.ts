@@ -15,14 +15,15 @@
  * harness that recorded it are gone (see `engine/testing/differential.ts`).
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import cReference from "./__fixtures__/ascent-c-reference.json" with { type: "json" };
+import { ascentGame } from "./index.ts";
 import { ascentSolve, SolverScratch } from "./solver.ts";
 import {
   type AscentParams,
   checkCompletion,
   encodeGridDesc,
   newAscentState,
-  validateAscentDesc,
 } from "./state.ts";
 
 interface Fixture {
@@ -56,7 +57,7 @@ describe("ascent frozen upstream boards (decode, round-trip, solve at their tier
         removeends: f.removeends,
         symmetrical: f.symmetrical,
       };
-      expect(validateAscentDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(ascentGame, p, f.desc)).toBeNull();
       const state = newAscentState(p, f.desc);
       expect(encodeGridDesc(state.grid, state.w * state.h)).toBe(f.desc);
       const sc = new SolverScratch(state.w, state.h, state.mode, state.last);

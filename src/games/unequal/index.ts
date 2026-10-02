@@ -126,7 +126,6 @@ import {
   type UnequalParams,
   type UnequalState,
   type UnequalUi,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -551,7 +550,6 @@ export const unequalGame: Game<
   ],
 
   newDesc: newUnequalDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

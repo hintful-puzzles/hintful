@@ -4,6 +4,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -27,7 +28,6 @@ import {
   defaultParams,
   encodeParams,
   newState,
-  validateDesc,
 } from "./state.ts";
 
 const PRESETS: CubeParams[] = [
@@ -109,18 +109,18 @@ describe("cube desc", () => {
   const p: CubeParams = { solid: SolidType.Cube, d1: 3, d2: 1 };
 
   it("reads what the encoder writes", () => {
-    expect(validateDesc(p, "A,1")).toBeNull();
-    expect(validateDesc(p, "0,2")).toBeNull();
+    expect(validateDesc(cubeGame, p, "A,1")).toBeNull();
+    expect(validateDesc(cubeGame, p, "0,2")).toBeNull();
   });
 
   it("refuses a start square off the grid, lowercase hex, set padding bits and junk", () => {
-    expect(validateDesc(p, "A,3")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "a,1")).toBe(descBadCharacter("a"));
-    expect(validateDesc(p, "B,1")).toBe(descBadCharacter("B"));
-    expect(validateDesc(p, "AA,1")).toBe(descBadCharacter("A"));
-    expect(validateDesc(p, "A,1x")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "A,")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "A")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(cubeGame, p, "A,3")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(cubeGame, p, "a,1")).toBe(descBadCharacter("a"));
+    expect(validateDesc(cubeGame, p, "B,1")).toBe(descBadCharacter("B"));
+    expect(validateDesc(cubeGame, p, "AA,1")).toBe(descBadCharacter("A"));
+    expect(validateDesc(cubeGame, p, "A,1x")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(cubeGame, p, "A,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(cubeGame, p, "A")).toBe(DESC_TOO_SHORT);
   });
 });
 
@@ -129,7 +129,7 @@ describe("cube generation + description", () => {
     const rng = randomNew("cube-test-seed");
     for (const p of PRESETS) {
       const { desc } = newDesc(p, rng);
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(cubeGame, p, desc)).toBeNull();
       const state = newState(p, desc);
       // Exactly nfaces squares are painted blue at the start; none on faces.
       const solid = SOLIDS[p.solid];

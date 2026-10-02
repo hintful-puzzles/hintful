@@ -8,11 +8,9 @@ import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -706,7 +704,7 @@ export class BridgesState {
 /**
  * Row-major island-grid encoding: island counts (1-9, A-G) + run-length skips.
  *
- * `keepTrailingBlanks` because {@link validateDesc} insists the cells add up to
+ * `keepTrailingBlanks` because {@link parseDesc} insists the cells add up to
  * the whole grid, in both directions — a desc ending short of the last row is
  * "shorter than expected".
  */
@@ -767,10 +765,6 @@ function parseDesc(
       r.fail(puzzleDescError("This game ID has fewer than two islands."));
     return islands;
   });
-}
-
-export function validateDesc(params: BridgesParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(params, desc));
 }
 
 /** Build a fresh state from a desc (C new_game_sub). */

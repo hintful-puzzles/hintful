@@ -10,13 +10,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -179,10 +173,6 @@ function parseDesc(p: RangeParams, desc: string): DescParse<Int8Array> {
     r.end();
     return grid;
   });
-}
-
-export function validateDesc(p: RangeParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: RangeParams, desc: string): RangeState {

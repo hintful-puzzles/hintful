@@ -17,10 +17,8 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
@@ -295,10 +293,6 @@ function parseDesc(p: MinesParams, desc: string): DescParse<DecodedDesc> {
     r.end();
     return { layout, openXY };
   });
-}
-
-export function validateDesc(p: MinesParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function decodeDesc(p: MinesParams, desc: string): DecodedDesc {

@@ -24,10 +24,8 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
@@ -420,10 +418,6 @@ function parseDesc(p: MathraxParams, desc: string): DescParse<LoadResult> {
     r.end();
     return { grid, flags, clues };
   });
-}
-
-export function validateDesc(p: MathraxParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: MathraxParams, desc: string): MathraxState {

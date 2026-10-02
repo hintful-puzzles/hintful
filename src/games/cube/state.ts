@@ -1,11 +1,6 @@
 /** Cube parameters, state, and the game-description codec. */
 
-import {
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import { enumGridSquares, type GridSquare, gridArea } from "./grid.ts";
@@ -176,10 +171,6 @@ function parseDesc(
     r.end();
     return { blue, start };
   });
-}
-
-export function validateDesc(p: CubeParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: CubeParams, desc: string): CubeState {

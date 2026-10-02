@@ -6,6 +6,7 @@
  * generator, the four-tier solver, the codec and `checkCompletion` together.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
@@ -49,7 +50,6 @@ import {
   NUMBER_EMPTY,
   newAscentState,
   stepDistance,
-  validateAscentDesc,
 } from "./state.ts";
 import { keyboardCursor, mouseCursor } from "./ui.ts";
 
@@ -80,7 +80,7 @@ describe("ascent generation + solving", () => {
       const { desc } = newAscentDesc(params, randomNew(`ascent-${name}`));
 
       // Desc is well-formed for these params.
-      expect(validateAscentDesc(params, desc)).toBeNull();
+      expect(validateDesc(ascentGame, params, desc)).toBeNull();
 
       // Decode, re-solve at max difficulty, and it completes uniquely.
       const state = newAscentState(params, desc);
@@ -98,26 +98,26 @@ describe("ascent desc parsing", () => {
   const p = mk(3, 3, 0, MODE_ORTHOGONAL);
 
   it("reads numbers, blank runs and wall runs", () => {
-    expect(validateAscentDesc(p, "1_2eA9")).toBeNull();
+    expect(validateDesc(ascentGame, p, "1_2eA9")).toBeNull();
     const state = newAscentState(p, "1_2eA9");
     expect(Array.from(state.grid.slice(0, 2))).toEqual([0, 1]);
     expect(state.grid[8]).toBe(8);
     expect(state.last).toBe(7);
-    expect(validateAscentDesc(p, "1_2eB")).toBeNull();
+    expect(validateDesc(ascentGame, p, "1_2eB")).toBeNull();
   });
 
   it("refuses what encodeGridDesc never writes", () => {
     // A clue of 0 would read as an empty cell the player cannot fill.
-    expect(validateAscentDesc(p, "0_2eA9")).toMatch(/out of range/);
-    expect(validateAscentDesc(p, "1_2eA10")).toMatch(/out of range/);
-    expect(validateAscentDesc(p, "1_2eC")).toMatch(/too long/);
-    expect(validateAscentDesc(p, "1_2eA")).toMatch(/too short/);
-    expect(validateAscentDesc(p, "1_2eA9_")).toMatch(/too long/);
+    expect(validateDesc(ascentGame, p, "0_2eA9")).toMatch(/out of range/);
+    expect(validateDesc(ascentGame, p, "1_2eA10")).toMatch(/out of range/);
+    expect(validateDesc(ascentGame, p, "1_2eC")).toMatch(/too long/);
+    expect(validateDesc(ascentGame, p, "1_2eA")).toMatch(/too short/);
+    expect(validateDesc(ascentGame, p, "1_2eA9_")).toMatch(/too long/);
     // A character that is no token.
-    expect(validateAscentDesc(p, "1_2e!A9")).toMatch(/"!"/);
+    expect(validateDesc(ascentGame, p, "1_2e!A9")).toMatch(/"!"/);
     // A `_` anywhere but between two adjacent numbers.
-    expect(validateAscentDesc(p, "_1_2eA9")).toMatch(/"_"/);
-    expect(validateAscentDesc(p, "1_2e_A9")).toMatch(/"_"/);
+    expect(validateDesc(ascentGame, p, "_1_2eA9")).toMatch(/"_"/);
+    expect(validateDesc(ascentGame, p, "1_2e_A9")).toMatch(/"_"/);
   });
 });
 

@@ -7,11 +7,9 @@
  */
 
 import {
-  type DescError,
   type DescParse,
   descNeedsOne,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -311,10 +309,6 @@ function parseDesc(
     if (gems < 1) r.fail(puzzleDescError("This game ID has no gems to collect."));
     return { board, start, gems };
   });
-}
-
-export function validateDesc(p: InertiaParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: InertiaParams, desc: string): InertiaState {

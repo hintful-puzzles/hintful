@@ -43,7 +43,6 @@ const prefGame: Game<{ n: number }, PrefState, "noop", PrefUi> = {
   decodeParams: (s) => ({ n: Number(s.slice(1)) }),
   validateParams: () => null,
   newDesc: () => ({ desc: "d" }),
-  validateDesc: () => null,
   newState: (p) => ({ n: p.n }),
   // Defaults live in newUi (the divergence point, exactly like Untangle):
   // highlight ON, style Circles.

@@ -22,10 +22,12 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/rect-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
-import { type RectParams, validateDesc } from "./state.ts";
+import { rectGame } from "./index.ts";
+import type { RectParams } from "./state.ts";
 
 interface RectFixture {
   w: number;
@@ -56,7 +58,7 @@ describe("rect differential (vs C reference)", () => {
       const { desc, aux } = newDesc(p, randomNew(f.seed));
       expect(desc).toBe(f.desc);
       expect(aux).toBe(f.aux);
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(rectGame, p, desc)).toBeNull();
     });
   }
 });

@@ -3,6 +3,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -37,7 +38,6 @@ import {
   status,
   type UnrulyParams,
   type UnrulyState,
-  validateDesc,
 } from "./state.ts";
 
 function params(w2: number, h2: number, diff: number, unique = false): UnrulyParams {
@@ -108,7 +108,7 @@ describe("desc codec", () => {
     const rng = randomNew("unruly-desc-seed");
     const p = params(8, 8, DIFF_EASY);
     const { desc } = newDesc(p, rng);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(unrulyGame, p, desc)).toBeNull();
     const state = newState(p, desc);
     // Re-encode the clue grid (only immutable cells are present after parse).
     expect(encodeGrid(state.grid, p.w2 * p.h2)).toBe(desc);
@@ -116,24 +116,24 @@ describe("desc codec", () => {
 
   it("rejects malformed descs", () => {
     const p = params(8, 8, DIFF_EASY);
-    expect(validateDesc(p, "!!!")).toBe(descBadCharacter("!"));
-    expect(validateDesc(p, "a")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(unrulyGame, p, "!!!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(unrulyGame, p, "a")).toBe(DESC_TOO_SHORT);
   });
 
   it("reads only the run letters its encoder writes", () => {
     // A 6x6 board with no clues: 36 empties, written as a 25-run and 11 more.
     const p = params(6, 6, DIFF_TRIVIAL);
     expect(encodeGrid(new Uint8Array(36), 36)).toBe("zl");
-    expect(validateDesc(p, "zl")).toBeNull();
+    expect(validateDesc(unrulyGame, p, "zl")).toBeNull();
     // A `z` run takes the case of the clue that ends it.
-    expect(validateDesc(p, "Zl")).toBe(descBadCharacter("l"));
-    expect(validateDesc(p, "zL")).toBe(descBadCharacter("L"));
+    expect(validateDesc(unrulyGame, p, "Zl")).toBe(descBadCharacter("l"));
+    expect(validateDesc(unrulyGame, p, "zL")).toBe(descBadCharacter("L"));
     // The letter landing past the grid stands for a ZERO, so it is lowercase.
-    expect(validateDesc(p, "ZL")).toBe(descBadCharacter("L"));
+    expect(validateDesc(unrulyGame, p, "ZL")).toBe(descBadCharacter("L"));
     // A run overshooting the grid says more than the board holds.
-    expect(validateDesc(p, "zm")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "zk")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "zla")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(unrulyGame, p, "zm")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(unrulyGame, p, "zk")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(unrulyGame, p, "zla")).toBe(DESC_TOO_LONG);
   });
 
   it("parses clues as immutable cells of the right color", () => {
@@ -144,7 +144,7 @@ describe("desc codec", () => {
     grid[0] = ONE;
     grid[1] = ZERO;
     const desc = encodeGrid(grid, s);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(unrulyGame, p, desc)).toBeNull();
     const state = newState(p, desc);
     expect(state.grid[0]).toBe(ONE);
     expect(state.immutable[0]).toBe(1);
@@ -172,7 +172,7 @@ describe("generator + solver", () => {
   it.each(cases)("generates a board the solver solves: %s", (_name, p) => {
     const rng = randomNew(`unruly-gen-${_name}`);
     const { desc } = newDesc(p, rng);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(unrulyGame, p, desc)).toBeNull();
 
     const state = newState(p, desc);
     // The deductive solver at the board's difficulty completes it.

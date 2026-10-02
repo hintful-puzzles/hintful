@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/pointer.ts";
@@ -17,7 +18,6 @@ import {
   type RangeParams,
   type RangeState,
   type RangeUi,
-  validateDesc,
   WHITE,
 } from "./state.ts";
 
@@ -62,7 +62,7 @@ describe("desc codec", () => {
     const grid = [2, 0, 0, 0, 5, 0, 0, 0, 0];
     const desc = encodeDesc(9, Int8Array.from(grid));
     const p = { w: 3, h: 3 };
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(rangeGame, p, desc)).toBeNull();
     const st = newState(p, desc);
     expect(Array.from(st.grid)).toEqual(grid);
     expect(encodeDesc(9, st.grid)).toBe(desc);
@@ -70,27 +70,27 @@ describe("desc codec", () => {
 
   it("rejects malformed or wrong-length descs", () => {
     const p = { w: 3, h: 3 };
-    expect(validateDesc(p, "i")).toBeNull(); // 9 blanks exactly
-    expect(validateDesc(p, "h")).not.toBeNull(); // 8 cells — too few
-    expect(validateDesc(p, "j")).not.toBeNull(); // 10 cells — too many
-    expect(validateDesc(p, "2!2")).not.toBeNull(); // invalid char
-    expect(validateDesc(p, "99i")).not.toBeNull(); // clue > w+h-1 (=5)
+    expect(validateDesc(rangeGame, p, "i")).toBeNull(); // 9 blanks exactly
+    expect(validateDesc(rangeGame, p, "h")).not.toBeNull(); // 8 cells — too few
+    expect(validateDesc(rangeGame, p, "j")).not.toBeNull(); // 10 cells — too many
+    expect(validateDesc(rangeGame, p, "2!2")).not.toBeNull(); // invalid char
+    expect(validateDesc(rangeGame, p, "99i")).not.toBeNull(); // clue > w+h-1 (=5)
   });
 
   it("refuses what encodeDesc never writes", () => {
     const p = { w: 3, h: 3 };
-    expect(validateDesc(p, "2c5d")).toBeNull();
+    expect(validateDesc(rangeGame, p, "2c5d")).toBeNull();
     // Text after the grid, including after a comma.
-    expect(validateDesc(p, "2c5d,x")).toMatch(/too long/);
+    expect(validateDesc(rangeGame, p, "2c5d,x")).toMatch(/too long/);
     // A `_` anywhere but between two adjacent clues.
-    expect(validateDesc(p, "_2c5d")).toMatch(/"_"/);
-    expect(validateDesc(p, "2_c5d")).toMatch(/"c"/);
-    expect(validateDesc(p, "2c_5d")).toMatch(/"_"/);
-    expect(validateDesc(p, "2_5g")).toBeNull();
-    expect(validateDesc(p, "25g")).toMatch(/out of range/);
-    expect(validateDesc(p, "0h")).toMatch(/out of range/);
+    expect(validateDesc(rangeGame, p, "_2c5d")).toMatch(/"_"/);
+    expect(validateDesc(rangeGame, p, "2_c5d")).toMatch(/"c"/);
+    expect(validateDesc(rangeGame, p, "2c_5d")).toMatch(/"_"/);
+    expect(validateDesc(rangeGame, p, "2_5g")).toBeNull();
+    expect(validateDesc(rangeGame, p, "25g")).toMatch(/out of range/);
+    expect(validateDesc(rangeGame, p, "0h")).toMatch(/out of range/);
     // A run overshooting the grid partway through.
-    expect(validateDesc(p, "j2")).toMatch(/too long/);
+    expect(validateDesc(rangeGame, p, "j2")).toMatch(/too long/);
   });
 });
 

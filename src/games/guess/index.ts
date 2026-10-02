@@ -65,7 +65,6 @@ import {
   outcome,
   presets,
   status,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -556,7 +555,6 @@ export const guessGame: Game<
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

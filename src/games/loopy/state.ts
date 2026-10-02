@@ -8,11 +8,9 @@
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
@@ -126,7 +124,7 @@ const GRID_DESC_SEP = "_";
  * (`0`–`9`, then `A`–`Z` for 10–35). Mirrors `state_to_text`.
  *
  * `keepTrailingBlanks` because a description must cover every face exactly —
- * {@link validateDesc} rejects one that is short as well as one that is long.
+ * {@link parseDesc} rejects one that is short as well as one that is long.
  */
 export function encodeClues(clues: Int8Array, numFaces: number): string {
   return encodeRunLength(numFaces, (i) => (clues[i] < 0 ? null : n2cUpper(clues[i])), {
@@ -159,7 +157,7 @@ export function readClues(r: DescReader, numFaces: number): Int8Array {
 }
 
 /**
- * Face counts for `validateDesc`, keyed by `(type, w, h, gridDesc)`.
+ * Face counts for {@link parseDesc}, keyed by `(type, w, h, gridDesc)`.
  *
  * Upstream builds an **entire grid** purely to learn `numFaces`, and flags the
  * inefficiency itself. For an aperiodic tiling that is a full generation plus a
@@ -201,7 +199,7 @@ const TRIMMED_AWAY = puzzleDescError(
  * and its absence means the tiling takes none; reading it is the grid module's
  * business. The clues are read against the face count it gives.
  */
-function parseDesc(
+export function parseDesc(
   p: LoopyParams,
   desc: string,
 ): DescParse<{ gridDesc: string | null; clues: Int8Array }> {
@@ -220,12 +218,6 @@ function parseDesc(
     r.end();
     return { gridDesc, clues };
   });
-}
-
-/** Validate a full game description against params. Returns `null` when
- * acceptable, else why it is rejected. */
-export function validateDesc(p: LoopyParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 /** Build the initial state for a description. */

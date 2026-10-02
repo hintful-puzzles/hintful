@@ -1,11 +1,5 @@
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import {
-  DESC_REPEATED,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
@@ -260,10 +254,6 @@ function parseDesc(
     r.end();
     return { numbers, orient };
   });
-}
-
-export function validateDesc(p: TwiddleParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: TwiddleParams, desc: string): TwiddleState {

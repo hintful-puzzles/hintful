@@ -12,13 +12,7 @@
  */
 
 import { isDigit } from "../../engine/decimal.ts";
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
@@ -242,10 +236,6 @@ function parseDesc(
     r.end();
     return { grid, numbers };
   });
-}
-
-export function validateDesc(p: SticksParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 /** Build a fresh state from a desc (upstream `new_game`). */

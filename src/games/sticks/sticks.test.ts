@@ -10,6 +10,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -57,7 +58,6 @@ import {
   type SticksState,
   type SticksUi,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 // The small frozen C fixture (4x4, ROT2) — a real, uniquely-solvable board.
@@ -132,7 +132,7 @@ describe("sticks desc codec", () => {
     const desc = encodeDesc(grid, numbers, 8, 4);
     expect(desc).toBe("zd5a");
     const p = { w: 8, h: 4, blackpc: 20, symm: SYMM_NONE };
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(sticksGame, p, desc)).toBeNull();
     const back = newState(p, desc);
     expect(back.numbers[30]).toBe(5);
   });
@@ -153,30 +153,30 @@ describe("sticks desc codec", () => {
   });
 
   it("validateDesc rejects wrong lengths and unknown characters", () => {
-    expect(validateDesc(FIX_PARAMS, FIX.desc)).toBeNull();
-    expect(validateDesc(FIX_PARAMS, `${FIX.desc}a`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(FIX_PARAMS, "a1a")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(FIX_PARAMS, "a!b")).toBe(descBadCharacter("!"));
+    expect(validateDesc(sticksGame, FIX_PARAMS, FIX.desc)).toBeNull();
+    expect(validateDesc(sticksGame, FIX_PARAMS, `${FIX.desc}a`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(sticksGame, FIX_PARAMS, "a1a")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(sticksGame, FIX_PARAMS, "a!b")).toBe(descBadCharacter("!"));
   });
 
   it("validateDesc refuses what encodeDesc never writes", () => {
     const p = { w: 4, h: 1, blackpc: 20, symm: SYMM_NONE };
-    expect(validateDesc(p, "B2_1_3a")).toBeNull();
-    expect(validateDesc(p, "B0c")).toBeNull();
+    expect(validateDesc(sticksGame, p, "B2_1_3a")).toBeNull();
+    expect(validateDesc(sticksGame, p, "B0c")).toBeNull();
     // A black cell's clue counts at most four lines; a stick is at most as
     // long as the board.
-    expect(validateDesc(p, "B5_1_3a")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "B2_1_5a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sticksGame, p, "B5_1_3a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sticksGame, p, "B2_1_5a")).toBe(DESC_OUT_OF_RANGE);
     // Large enough to wrap a 16-bit cell to a different clue.
-    expect(validateDesc(p, "B2_1_65539a")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "B2_0_3a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sticksGame, p, "B2_1_65539a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sticksGame, p, "B2_0_3a")).toBe(DESC_OUT_OF_RANGE);
     // A `_` anywhere but before a white clue following a written cell.
-    expect(validateDesc(p, "_B2_1_3a")).toBe(descBadCharacter("_"));
-    expect(validateDesc(p, "B2_1a_3")).toBe(descBadCharacter("_"));
-    expect(validateDesc(p, "B2_1_B")).toBe(descBadCharacter("B"));
-    expect(validateDesc(p, "_1c")).toBe(descBadCharacter("_"));
-    expect(validateDesc(p, "1_23a")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "B2_1_3a,")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(sticksGame, p, "_B2_1_3a")).toBe(descBadCharacter("_"));
+    expect(validateDesc(sticksGame, p, "B2_1a_3")).toBe(descBadCharacter("_"));
+    expect(validateDesc(sticksGame, p, "B2_1_B")).toBe(descBadCharacter("B"));
+    expect(validateDesc(sticksGame, p, "_1c")).toBe(descBadCharacter("_"));
+    expect(validateDesc(sticksGame, p, "1_23a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sticksGame, p, "B2_1_3a,")).toBe(DESC_TOO_LONG);
   });
 });
 

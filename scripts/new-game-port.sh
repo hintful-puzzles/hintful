@@ -163,9 +163,6 @@ export const ${GAME}Game: Game<
   newDesc(p: ${P}Params, rng: RandomState): { desc: string } {
     return new${P}Desc(p, rng);
   },
-  validateDesc(_p: ${P}Params, _desc: string): string | null {
-    return null; // TODO.
-  },
   newState(_p: ${P}Params, _desc: string): ${P}State {
     throw new Error("${GAME} newState: not implemented");
   },

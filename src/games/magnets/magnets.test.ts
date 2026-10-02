@@ -5,6 +5,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -75,7 +76,7 @@ describe("magnets desc codec", () => {
   it("newState re-encodes to the same desc for a generated board", () => {
     const p = P(6, 5, DIFF_EASY);
     const { desc } = newMagnetsDesc(p, randomNew("codec-1"));
-    expect(magnetsGame.validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(magnetsGame, p, desc)).toBeNull();
     const s = newState(p, desc);
     // singletons are pre-set neutral
     for (let i = 0; i < s.wh; i++) {
@@ -88,23 +89,25 @@ describe("magnets desc codec", () => {
 
   it("rejects inconsistent dominoes and short descs", () => {
     const p = P(3, 3, DIFF_EASY);
-    expect(magnetsGame.validateDesc(p, "...,...,...,...,LLLLLLLLL")).toMatch(
+    expect(validateDesc(magnetsGame, p, "...,...,...,...,LLLLLLLLL")).toMatch(
       /two halves/,
     );
-    expect(magnetsGame.validateDesc(p, "...")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(magnetsGame, p, "...")).toBe(DESC_TOO_SHORT);
   });
 
   it("refuses trailing text, commas among the dominoes and a clue longer than its line", () => {
     const p = P(2, 2, DIFF_EASY);
-    expect(magnetsGame.validateDesc(p, "..,..,..,..,LRLR")).toBeNull();
-    expect(magnetsGame.validateDesc(p, "2.,..,..,..,****")).toBeNull();
-    expect(magnetsGame.validateDesc(p, "..,..,..,..,LRLRx")).toBe(DESC_TOO_LONG);
-    expect(magnetsGame.validateDesc(p, "..,..,..,..,LR,LR")).toBe(
+    expect(validateDesc(magnetsGame, p, "..,..,..,..,LRLR")).toBeNull();
+    expect(validateDesc(magnetsGame, p, "2.,..,..,..,****")).toBeNull();
+    expect(validateDesc(magnetsGame, p, "..,..,..,..,LRLRx")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(magnetsGame, p, "..,..,..,..,LR,LR")).toBe(
       descBadCharacter(","),
     );
-    expect(magnetsGame.validateDesc(p, "3.,..,..,..,LRLR")).toBe(DESC_OUT_OF_RANGE);
-    expect(magnetsGame.validateDesc(p, "..,..,..,.3,LRLR")).toBe(DESC_OUT_OF_RANGE);
-    expect(magnetsGame.validateDesc(p, "..,..,..,...LRLR")).toBe(descBadCharacter("."));
+    expect(validateDesc(magnetsGame, p, "3.,..,..,..,LRLR")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(magnetsGame, p, "..,..,..,.3,LRLR")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(magnetsGame, p, "..,..,..,...LRLR")).toBe(
+      descBadCharacter("."),
+    );
   });
 });
 

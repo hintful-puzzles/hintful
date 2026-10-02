@@ -16,6 +16,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -63,7 +64,6 @@ import {
   slideCol,
   slideRow,
   U,
-  validateDesc,
   wireCount,
 } from "./state.ts";
 
@@ -156,7 +156,7 @@ describe("netslide params", () => {
 describe("netslide desc", () => {
   it("parses barriers back symmetrically", () => {
     const { desc } = newDesc(EASY_5x5, randomNew("desc-roundtrip"));
-    expect(validateDesc(EASY_5x5, desc)).toBeNull();
+    expect(validateDesc(netslideGame, EASY_5x5, desc)).toBeNull();
 
     // A wall between two tiles must be recorded on both of them, or the flood
     // fill would leak through it in one direction only.
@@ -192,10 +192,10 @@ describe("netslide desc", () => {
 
   it("rejects a short, a long, and a corrupt desc", () => {
     const p: NetslideParams = { ...EASY_5x5, w: 2, h: 2 };
-    expect(validateDesc(p, "1234")).toBeNull();
-    expect(validateDesc(p, "123")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "12345")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "12z4")).toBe(descBadCharacter("z"));
+    expect(validateDesc(netslideGame, p, "1234")).toBeNull();
+    expect(validateDesc(netslideGame, p, "123")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(netslideGame, p, "12345")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(netslideGame, p, "12z4")).toBe(descBadCharacter("z"));
   });
 });
 

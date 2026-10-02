@@ -20,11 +20,13 @@
  * `add-slide-ts-port` stage-2 commit.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import cReference from "./__fixtures__/slide-c-reference.json" with { type: "json" };
 import { newSlideDesc } from "./generator.ts";
+import { slideGame } from "./index.ts";
 import { solveBoard } from "./solver.ts";
-import { newState, type SlideParams, validateDesc } from "./state.ts";
+import { newState, type SlideParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -70,7 +72,7 @@ describe("slide differential (frozen C reference)", () => {
       const p = params(f);
       const { desc } = newSlideDesc(p, randomNew(f.seed));
       expect(desc).toBe(f.desc);
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(slideGame, p, f.desc)).toBeNull();
     });
   }
 

@@ -247,8 +247,8 @@ Two shapes, both live:
 - **Byte-for-byte desc match** — a faithful generator over the bit-identical
   RNG reproduces the C desc exactly for the same seed. Don't re-roll the loop:
   call `describeDescDifferential` with your fixtures, a params mapper, your
-  `newDesc`, and an optional `extra` follow-on (e.g. `validateDesc` returns
-  null). Exemplar:
+  `newDesc`, and an optional `extra` follow-on (e.g. the engine's
+  `validateDesc(game, …)` returns null). Exemplar:
   [`unruly-differential.test.ts`](../../src/games/unruly/unruly-differential.test.ts).
 - **Solver-agreement** — decode a recorded board, run the TS solver, assert
   the recorded difficulty verdict. Game-specific; stays inline. Exemplar:

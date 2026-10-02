@@ -5,12 +5,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import {
   dimensionParamConfig,
@@ -189,10 +184,6 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     } while (!grid.includes(1));
 
     return { desc: `${encodeBitmap(matrix, wh * wh)},${encodeBitmap(grid, wh)}` };
-  },
-
-  validateDesc(p, desc): DescError | null {
-    return descVerdict(parseDesc(p, desc));
   },
 
   newState(p, desc): FlipState {

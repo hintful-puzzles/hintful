@@ -13,6 +13,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import {
   LEFT_BUTTON,
@@ -90,22 +91,22 @@ describe("tracks desc codec", () => {
     const st = newState(SMALL.p, SMALL.desc);
     expect(st.numbers.rowS).toBeGreaterThanOrEqual(0);
     expect(st.numbers.colS).toBeGreaterThanOrEqual(0);
-    expect(tracksGame.validateDesc(SMALL.p, SMALL.desc)).toBeNull();
+    expect(validateDesc(tracksGame, SMALL.p, SMALL.desc)).toBeNull();
   });
 
   it("rejects malformed descs", () => {
     // A clue flag with the wrong bit-count (a single direction is 1 bit).
-    expect(tracksGame.validateDesc(SMALL.p, "1zc,1,1,1,1,1,S1,1,S1,1,1,1,1")).toMatch(
+    expect(validateDesc(tracksGame, SMALL.p, "1zc,1,1,1,1,1,S1,1,S1,1,1,1,1")).toMatch(
       /doesn't join exactly two/,
     );
     // Missing entrance/exit markers.
-    expect(tracksGame.validateDesc(SMALL.p, "f6pCkC,2,3,3,2,3,3,3,3,3,3,2,2")).toMatch(
+    expect(validateDesc(tracksGame, SMALL.p, "f6pCkC,2,3,3,2,3,3,3,3,3,3,2,2")).toMatch(
       /one entrance and one exit/,
     );
   });
 
   it("reads exactly what the encoder writes", () => {
-    const v = (desc: string) => tracksGame.validateDesc(SMALL.p, desc);
+    const v = (desc: string) => validateDesc(tracksGame, SMALL.p, desc);
     const clues = ",2,3,3,2,3,S3,3,S3,3,3,2,2";
     // A `0` nibble is a clue square with no track, which the encoder never writes.
     expect(v(`f0pCkC${clues}`)).toMatch(/doesn't join exactly two/);

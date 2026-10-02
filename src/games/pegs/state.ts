@@ -4,13 +4,7 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
-import {
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-  puzzleDescError,
-} from "../../engine/desc-error.ts";
+import { type DescParse, descValue, puzzleDescError } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -157,10 +151,6 @@ function parseDesc(p: PegsParams, desc: string): DescParse<Uint8Array> {
     }
     return grid;
   });
-}
-
-export function validateDesc(p: PegsParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 // --- state -----------------------------------------------------------

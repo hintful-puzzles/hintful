@@ -23,12 +23,7 @@ import {
   initBorders,
   outOfBounds,
 } from "../../engine/border-grid.ts";
-import {
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import {
@@ -195,10 +190,6 @@ function parseDesc(p: SeparateParams, desc: string): DescParse<Uint8Array> {
     r.end();
     return letters;
   });
-}
-
-export function validateDesc(p: SeparateParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SeparateParams, desc: string): SeparateState {

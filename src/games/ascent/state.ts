@@ -4,13 +4,7 @@
  * (© 2015 Lennard Sprong). The five grid modes share one square grid and differ
  * only in their movement table, so nothing here knows any other geometry.
  */
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 
@@ -526,14 +520,6 @@ function parseDesc(params: AscentParams, desc: string): DescParse<AscentDesc> {
     r.end();
     return { grid, immutable, walls };
   });
-}
-
-/** `null` when valid, else the rejection reason (upstream `validate_desc`). */
-export function validateAscentDesc(
-  params: AscentParams,
-  desc: string,
-): DescError | null {
-  return descVerdict(parseDesc(params, desc));
 }
 
 // --- state construction --------------------------------------------

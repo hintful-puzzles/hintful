@@ -6,6 +6,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -37,7 +38,6 @@ import {
   status,
   statusbarText,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 // 3×3 all-black image: every clue saturates its clipped neighborhood
@@ -138,17 +138,17 @@ describe("Mosaic desc codec", () => {
     // 6×5 board, clue at the first cell, 29 hidden cells: z (26) + c (3).
     const p = { width: 6, height: 5, aggressive: true };
     const desc = "5zc";
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(mosaicGame, p, desc)).toBeNull();
     const state = newState(p, desc);
     expect(state.board.clues[0]).toBe(5);
     expect(encodeBoard(state.board)).toBe(desc);
   });
 
   it("rejects malformed descs", () => {
-    expect(validateDesc(P3, "46469646!")).toBe(descBadCharacter("!"));
-    expect(validateDesc(P3, "4646")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(P3, "4646964640")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(P3, ALL_BLACK_DESC)).toBeNull();
+    expect(validateDesc(mosaicGame, P3, "46469646!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(mosaicGame, P3, "4646")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(mosaicGame, P3, "4646964640")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(mosaicGame, P3, ALL_BLACK_DESC)).toBeNull();
   });
 });
 

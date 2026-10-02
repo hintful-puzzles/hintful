@@ -63,7 +63,6 @@ import {
   NUMBER_EMPTY,
   NUMBER_WALL,
   newAscentState,
-  validateAscentDesc,
 } from "./state.ts";
 import {
   type AscentUi,
@@ -491,7 +490,6 @@ export const ascentGame: Game<
   prefs,
 
   newDesc: newAscentDesc,
-  validateDesc: validateAscentDesc,
   newState: newAscentState,
   newUi: newAscentUi,
   changedState,

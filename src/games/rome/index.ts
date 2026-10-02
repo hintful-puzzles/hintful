@@ -91,7 +91,7 @@ import {
   type RomeDrawState,
   redraw,
 } from "./render.ts";
-import { parseDesc, romeSolve, validateDesc, validateGame } from "./solver.ts";
+import { parseDesc, romeSolve, validateGame } from "./solver.ts";
 import {
   boardFromClues,
   cloneState,
@@ -668,7 +668,6 @@ export const romeGame: Game<
   paramConfig,
 
   newDesc: newRomeDesc,
-  validateDesc,
   newState,
   newUi,
 

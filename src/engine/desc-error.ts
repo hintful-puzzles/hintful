@@ -11,7 +11,7 @@
  * character" alone at least ten ways.
  *
  * **A {@link DescError} is made here or nowhere.** It is a branded string, so
- * `validateDesc` cannot return a sentence a game typed; a game with a reason
+ * a parse cannot fail with a sentence a game typed; a game with a reason
  * that is genuinely about its own rules (Mines' first click, a Keen block whose
  * operation needs two cells) says so through {@link puzzleDescError}, and
  * `desc-error.test.ts` fails when two games pass it the same sentence, since
@@ -84,18 +84,58 @@ export function descNeedsOne(noun: string, found: number): DescError {
 /** A description read once: what it says, or why it will not load. */
 export type DescParse<T> = { ok: true; value: T } | { ok: false; error: DescError };
 
-/** `validateDesc`'s answer from a parse: `null` when it loaded. */
+/** A parse's verdict: `null` when it loaded. */
 export function descVerdict(parse: DescParse<unknown>): DescError | null {
   return parse.ok ? null : parse.error;
 }
 
 /**
- * `newState`'s value from a parse. The midend validates a desc before building
- * from it, so a failure here is a bug in the caller, not a player's typo.
+ * Why `newState` would not build: the refusal {@link descValue} throws, and the
+ * only throw {@link loadDesc} catches. Anything else `newState` throws is a bug
+ * and propagates.
+ */
+class DescRejection extends Error {
+  constructor(readonly reason: DescError) {
+    super(`a desc that does not load: ${reason}`);
+    this.name = "DescRejection";
+  }
+}
+
+/**
+ * The value of a parse, for `newState` to build from. A failed parse throws
+ * {@link DescRejection}, which is how the game's one reading of its desc
+ * becomes the engine's verdict on it (`loadDesc`): a game writes no validator.
  */
 export function descValue<T>(parse: DescParse<T>): T {
-  if (!parse.ok) throw new Error(`newState given an invalid desc: ${parse.error}`);
+  if (!parse.ok) throw new DescRejection(parse.error);
   return parse.value;
+}
+
+/**
+ * Build state 0 from a desc, or say why it will not load. The verdict is the
+ * game's own `newState` reaching {@link descValue}, so the board a desc builds
+ * and the answer to "does it load?" are one reading and cannot disagree.
+ */
+export function loadDesc<P, S>(
+  game: { newState(p: P, desc: string): S },
+  p: P,
+  desc: string,
+): DescParse<S> {
+  try {
+    return { ok: true, value: game.newState(p, desc) };
+  } catch (e) {
+    if (e instanceof DescRejection) return { ok: false, error: e.reason };
+    throw e;
+  }
+}
+
+/** Why `desc` will not load for `p`, or `null` when it does ({@link loadDesc}). */
+export function validateDesc<P>(
+  game: { newState(p: P, desc: string): unknown },
+  p: P,
+  desc: string,
+): DescError | null {
+  return descVerdict(loadDesc(game, p, desc));
 }
 
 /**

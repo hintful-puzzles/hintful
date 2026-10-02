@@ -82,7 +82,6 @@ import {
   type RangeState,
   type RangeUi,
   textFormat,
-  validateDesc,
   validateParams,
   WHITE,
 } from "./state.ts";
@@ -415,7 +414,6 @@ export const rangeGame: Game<
   paramConfig,
 
   newDesc: (p, rng) => ({ desc: encodeDesc(p.w * p.h, generateGrid(p, rng)) }),
-  validateDesc,
   newState,
   newUi,
 

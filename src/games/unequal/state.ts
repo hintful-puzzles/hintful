@@ -17,10 +17,8 @@ import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
@@ -331,10 +329,6 @@ function parseDesc(
     }
     return { nums, flags };
   });
-}
-
-export function validateDesc(p: UnequalParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: UnequalParams, desc: string): UnequalState {

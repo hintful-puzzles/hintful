@@ -14,17 +14,19 @@
  * `engine/testing/differential.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
+import { slantGame } from "./index.ts";
 import {
   SOLVE_NOT_CONVERGED,
   SOLVE_UNIQUE,
   SolverScratch,
   slantSolve,
 } from "./solver.ts";
-import { DIFF_HARD, decodeClues, type SlantParams, validateDesc } from "./state.ts";
+import { DIFF_HARD, decodeClues, type SlantParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -49,7 +51,7 @@ describeDescDifferential<Fixture, SlantParams>({
   params,
   newDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(slantGame, p, f.desc)).toBeNull();
   },
 });
 

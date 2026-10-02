@@ -13,11 +13,9 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
@@ -158,11 +156,6 @@ function parseDesc(params: MapParams, desc: string): DescParse<ParsedDesc> {
     r.end();
     return { regions, coloring, immutable };
   });
-}
-
-/** Upstream `validate_desc`. */
-export function validateDesc(params: MapParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(params, desc));
 }
 
 /**

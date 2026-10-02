@@ -120,7 +120,6 @@ import {
   status,
   textFormat,
   toChar,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -773,7 +772,6 @@ export const groupGame: Game<
   ],
 
   newDesc: newGameDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

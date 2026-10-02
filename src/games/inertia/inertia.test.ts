@@ -9,6 +9,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
@@ -39,7 +40,6 @@ import {
   type InertiaUi,
   newState,
   STOP,
-  validateDesc,
 } from "./state.ts";
 
 /** The board the generator ran its candidate search on: gems go only on blank
@@ -107,14 +107,14 @@ describe("inertia params and desc codec", () => {
 
   it("rejects malformed descs", () => {
     const p = { w: 3, h: 2 };
-    expect(validateDesc(p, "sSgbbb")).toBeNull();
-    expect(validateDesc(p, "sSgbb")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "sSgbbbb")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "sSgbbz")).toBe(descBadCharacter("z"));
+    expect(validateDesc(inertiaGame, p, "sSgbbb")).toBeNull();
+    expect(validateDesc(inertiaGame, p, "sSgbb")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(inertiaGame, p, "sSgbbbb")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(inertiaGame, p, "sSgbbz")).toBe(descBadCharacter("z"));
     // The three rules of the puzzle itself: one start, at least one gem.
-    const noStart = validateDesc(p, "ssgbbb");
-    const twoStarts = validateDesc(p, "sSSbbb");
-    const noGems = validateDesc(p, "sSbbbb");
+    const noStart = validateDesc(inertiaGame, p, "ssgbbb");
+    const twoStarts = validateDesc(inertiaGame, p, "sSSbbb");
+    const noGems = validateDesc(inertiaGame, p, "sSbbbb");
     expect(new Set([noStart, twoStarts, noGems]).size).toBe(3);
     for (const e of [noStart, twoStarts, noGems]) {
       expect(e).toMatch(/^This game ID .*\.$/);
@@ -514,7 +514,7 @@ describe("inertia generator", () => {
       { w: 15, h: 12 },
     ]) {
       const { desc } = newInertiaDesc(p, randomNew(`gen-${p.w}x${p.h}`));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(inertiaGame, p, desc)).toBeNull();
 
       const wh = p.w * p.h;
       const fifth = Math.floor(wh / 5);

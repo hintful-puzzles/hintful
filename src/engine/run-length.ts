@@ -80,8 +80,8 @@ export function* scanRunLength(desc: string): Generator<RunLengthToken> {
  *
  * **`keepTrailingBlanks` is not a style option**, which is why it has no
  * default worth trusting blindly: it decides whether the desc ends with the
- * run that reaches the last cell, and a game's own `validateDesc` depends on
- * the answer. Palisade drops it and accepts any desc describing *at most* its
+ * run that reaches the last cell, and a game's own parse depends on the
+ * answer. Palisade drops it and accepts any desc describing *at most* its
  * grid; Slant keeps it and rejects anything that does not fill the grid
  * exactly ("Not enough data to fill grid"). Encode a Slant desc without the
  * trailing run and the game refuses to load its own board.

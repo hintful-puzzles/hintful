@@ -9,6 +9,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/midend.ts";
 import { presetMenu } from "../../engine/param-label.ts";
@@ -54,7 +55,6 @@ import {
   F_SINGLE,
   newState,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 const check = (p: ClustersParams, full: boolean) => paramsError(clustersGame, p, full);
@@ -214,7 +214,7 @@ describe("desc codec", () => {
     grid[4] = F_COLOR_1 | F_SINGLE;
     const desc = encodeDesc(grid, 3, 3);
     const p = { w: 3, h: 3, diff: DIFF_EASY };
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(clustersGame, p, desc)).toBeNull();
     const st = newState(p, desc);
     expect(Array.from(st.grid)).toEqual(Array.from(grid));
     expect(encodeDesc(st.grid, 3, 3)).toBe(desc);
@@ -234,23 +234,23 @@ describe("desc codec", () => {
 
   it("rejects too-short / too-long / invalid descs", () => {
     const p = { w: 3, h: 3, diff: DIFF_EASY }; // s = 9, positions must sum to 10
-    expect(validateDesc(p, "j")).toBeNull(); // 'j' = skip 10 = s+1
-    expect(validateDesc(p, "i")).toBe(DESC_TOO_SHORT); // skip 9
-    expect(validateDesc(p, "k")).toBe(DESC_TOO_LONG); // skip 11
-    expect(validateDesc(p, "2")).toBe(descBadCharacter("2"));
+    expect(validateDesc(clustersGame, p, "j")).toBeNull(); // 'j' = skip 10 = s+1
+    expect(validateDesc(clustersGame, p, "i")).toBe(DESC_TOO_SHORT); // skip 9
+    expect(validateDesc(clustersGame, p, "k")).toBe(DESC_TOO_LONG); // skip 11
+    expect(validateDesc(clustersGame, p, "2")).toBe(descBadCharacter("2"));
   });
 
   it("reads only the run letters encodeDesc writes", () => {
     const p = { w: 6, h: 6, diff: DIFF_EASY };
-    expect(validateDesc(p, "zff")).toBeNull();
+    expect(validateDesc(clustersGame, p, "zff")).toBeNull();
     // A `z` run takes the case of the dot that ends it.
-    expect(validateDesc(p, "Zff")).toBe(descBadCharacter("f"));
-    expect(validateDesc(p, "zFf")).toBe(descBadCharacter("F"));
-    expect(validateDesc(p, "ZFf")).toBeNull();
+    expect(validateDesc(clustersGame, p, "Zff")).toBe(descBadCharacter("f"));
+    expect(validateDesc(clustersGame, p, "zFf")).toBe(descBadCharacter("F"));
+    expect(validateDesc(clustersGame, p, "ZFf")).toBeNull();
     // The terminator is lowercase, and lands exactly past the grid.
-    expect(validateDesc(p, "zfF")).toBe(descBadCharacter("F"));
-    expect(validateDesc(p, "zfg")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "zffa")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(clustersGame, p, "zfF")).toBe(descBadCharacter("F"));
+    expect(validateDesc(clustersGame, p, "zfg")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(clustersGame, p, "zffa")).toBe(DESC_TOO_LONG);
   });
 });
 

@@ -810,7 +810,7 @@ what range, and with what error message are the game's rules and stay there.
 `encodeRunLength(count, emit)` is the other direction.
 
 **`keepTrailingBlanks` is not a style option.** Palisade drops the run that
-reaches the last cell; Slant and Mosaic keep it, because their `validateDesc`
+reaches the last cell; Slant and Mosaic keep it, because their parse
 rejects a desc that does not fill the grid *exactly*. Encode a Slant desc
 without it and the game refuses to load its own board.
 
@@ -848,8 +848,8 @@ round trip, because Palisade, the first game converted, has no frozen
 differential; the other seven adopters have one and all seven are byte-clean.
 
 Each adopter reads its desc in one parse (§ "`desc-reader.ts` — the cursor a
-desc parser drives"), so `validateDesc` and `newState` cannot disagree about
-it. What can still go wrong is the encoder and the parser disagreeing about
+desc parser drives"), and the engine's verdict on a desc is that parse
+(§ "`desc-error.ts` — why a game ID will not load"). What can still go wrong is the encoder and the parser disagreeing about
 `keepTrailingBlanks`, and
 [`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) loads
 every desc a game's generator writes: flipping that option in Slant's encoder
@@ -920,7 +920,7 @@ wrapper is `clueChar`.
 
 ### `desc-error.ts` — why a game ID will not load
 
-`validateDesc` returns a `DescError`, a branded string only this module makes:
+A parse fails with a `DescError`, a branded string only this module makes:
 `DESC_TOO_SHORT`, `DESC_TOO_LONG`, `DESC_OUT_OF_RANGE`, `DESC_REPEATED`,
 `DESC_CONTRADICTORY`, `DESC_MALFORMED`, `descBadCharacter(ch)` (pass the
 character when the parser has it), and `descNeedsOne(noun, found)` for a board
@@ -935,10 +935,14 @@ operations. One sentence about "this game ID". `desc-error.test.ts` fails a
 sentence two games pass, because then it is a kind the module is missing: add
 it here rather than rewording one of the two.
 
-**A desc is read once**: write one `parseDesc(p, desc): DescParse<T>`, and let
-`validateDesc` return `descVerdict(parseDesc(…))` and `newState` build from
-`descValue(parseDesc(…))`. A check that needs the parsed board belongs inside
-that parse, so the verdict and the value cannot come from different readings.
+**A desc is read once, and the engine owns the verdict**: write one
+`parseDesc(p, desc): DescParse<T>`, and have `newState` build from
+`descValue(parseDesc(…))`. A failed parse makes `descValue` throw a
+`DescRejection`, and `loadDesc(game, p, desc)` turns exactly that throw back
+into a `DescParse<State>`; `validateDesc(game, p, desc)` is its verdict. A game
+writes no validator, so the verdict and the board cannot come from different
+readings. A check that needs the parsed board belongs inside the parse: one
+thrown after `descValue` is a bug, not a refusal, and propagates.
 
 ### `desc-reader.ts` — the cursor a desc parser drives
 

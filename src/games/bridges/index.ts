@@ -96,7 +96,6 @@ import {
   newStateFromDesc,
   paramConfig,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -633,7 +632,6 @@ export const bridgesGame: Game<
   paramConfig,
 
   newDesc: newBridgesDesc,
-  validateDesc,
   newState: newStateFromDesc,
   newUi,
 

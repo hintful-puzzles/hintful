@@ -126,7 +126,6 @@ import {
   OPTION_SUB,
   OPTIONSMASK,
   status,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -582,7 +581,6 @@ export const mathraxGame: Game<
   ],
 
   newDesc: (p, rng) => newMathraxDesc(p, rng),
-  validateDesc,
   newState,
   newUi,
 

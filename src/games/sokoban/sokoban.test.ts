@@ -16,6 +16,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -46,7 +47,6 @@ import {
   SPACE,
   status,
   TARGET,
-  validateDesc,
 } from "./state.ts";
 
 type SokobanMidend = Midend<
@@ -143,33 +143,45 @@ describe("Sokoban desc codec", () => {
   });
 
   it("validateDesc accepts a well-formed level and rejects malformed ones", () => {
-    expect(validateDesc(p5, desc)).toBeNull();
+    expect(validateDesc(sokobanGame, p5, desc)).toBeNull();
     // Too little / too much data.
-    expect(validateDesc(p5, "w6ubtw2s3w2s3w5")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p5, "w6ubtw2s3w2s3w7")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(sokobanGame, p5, "w6ubtw2s3w2s3w5")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(sokobanGame, p5, "w6ubtw2s3w2s3w7")).toBe(DESC_TOO_LONG);
     // No player.
-    expect(validateDesc(p5, "w6sbtw2s3w2s3w6")).toMatch(/no starting square/);
+    expect(validateDesc(sokobanGame, p5, "w6sbtw2s3w2s3w6")).toMatch(
+      /no starting square/,
+    );
     // Two players.
-    expect(validateDesc(p5, "w6ubuw2s4w2s2w6")).toMatch(/more than one starting/);
+    expect(validateDesc(sokobanGame, p5, "w6ubuw2s4w2s2w6")).toMatch(
+      /more than one starting/,
+    );
     // Invalid character.
-    expect(validateDesc(p5, "w6ubtw2s3w2s3z6")).toBe(descBadCharacter("z"));
+    expect(validateDesc(sokobanGame, p5, "w6ubtw2s3w2s3z6")).toBe(
+      descBadCharacter("z"),
+    );
     // A player run of zero squares is not a player, and is not written.
-    expect(validateDesc(p5, "w6u0sbtw2s3w2s3w6")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p5, "w6ubtw2s3w2s3w1w5")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sokobanGame, p5, "w6u0sbtw2s3w2s3w6")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(sokobanGame, p5, "w6ubtw2s3w2s3w1w5")).toBe(DESC_OUT_OF_RANGE);
     // Two players in one run.
-    expect(validateDesc(p5, "w6u2tw2s3w2s3w6")).toMatch(/more than one starting/);
+    expect(validateDesc(sokobanGame, p5, "w6u2tw2s3w2s3w6")).toMatch(
+      /more than one starting/,
+    );
     // Text after a full board.
-    expect(validateDesc(p5, `${desc}w`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(sokobanGame, p5, `${desc}w`)).toBe(DESC_TOO_LONG);
     // The generator's untouched square and a control character are not ID letters.
-    expect(validateDesc(p5, "w6ubti2s3w2s3w6")).toBe(descBadCharacter("i"));
-    expect(validateDesc(p5, "w6u\u0001tw2s3w2s3w6")).toBe(descBadCharacter("\u0001"));
+    expect(validateDesc(sokobanGame, p5, "w6ubti2s3w2s3w6")).toBe(
+      descBadCharacter("i"),
+    );
+    expect(validateDesc(sokobanGame, p5, "w6u\u0001tw2s3w2s3w6")).toBe(
+      descBadCharacter("\u0001"),
+    );
   });
 
   it("validateDesc accepts pits, deep pits and labeled barrels (hand IDs)", () => {
     // A labeled barrel 'A' and a pit 'p' — the random generator never emits
     // these, but hand-authored level IDs use them.
-    expect(validateDesc(p5, "w6uAtw2p3w2s3w6")).toBeNull();
-    expect(validateDesc(p5, "w6ubdw2s3w2s3w6")).toBeNull();
+    expect(validateDesc(sokobanGame, p5, "w6uAtw2p3w2s3w6")).toBeNull();
+    expect(validateDesc(sokobanGame, p5, "w6ubdw2s3w2s3w6")).toBeNull();
   });
 });
 
@@ -340,7 +352,7 @@ describe("Sokoban generator", () => {
   it("produces a valid, uniquely-playered level with exactly one player", () => {
     const p: SokobanParams = { w: 12, h: 10 };
     const { desc } = newSokobanDesc(p, randomNew("sokoban-valid"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(sokobanGame, p, desc)).toBeNull();
     const s = newState(p, desc);
     expect(s.px).toBeGreaterThanOrEqual(0);
     expect(s.py).toBeGreaterThanOrEqual(0);

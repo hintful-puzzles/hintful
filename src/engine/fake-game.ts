@@ -13,7 +13,7 @@
  * force-redraw behavior without leaking globals.
  */
 
-import { DESC_MALFORMED } from "./desc-error.ts";
+import { DESC_MALFORMED, descValue } from "./desc-error.ts";
 import type { Game } from "./game.ts";
 import { click } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
@@ -70,8 +70,12 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
     const salt = randomUpto(rng, 1000);
     return { desc: `g${p.target}-${salt}` };
   },
-  validateDesc: (_p, desc) => (/^g\d+-\d+$/.test(desc) ? null : DESC_MALFORMED),
-  newState: (p) => ({ count: 0, target: p.target }),
+  newState: (p, desc) =>
+    descValue(
+      /^g\d+-\d+$/.test(desc)
+        ? { ok: true, value: { count: 0, target: p.target } }
+        : { ok: false, error: DESC_MALFORMED },
+    ),
   newUi: () => null,
 
   interpretMove: (_s, _ui, _ds, _p, button) =>

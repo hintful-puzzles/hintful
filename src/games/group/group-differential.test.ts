@@ -16,11 +16,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/group-c-reference.json" with { type: "json" };
 import { newGameDesc } from "./generator.ts";
+import { groupGame } from "./index.ts";
 import { solveGroup } from "./solver.ts";
-import { type GroupParams, newState, validateDesc } from "./state.ts";
+import { type GroupParams, newState } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -42,7 +44,7 @@ describe("group differential (byte-match + solver agreement)", () => {
     it(`${label}: desc matches C byte-for-byte`, () => {
       const { desc } = newGameDesc(params(f), randomNew(f.seed));
       expect(desc).toBe(f.desc);
-      expect(validateDesc(params(f), desc)).toBeNull();
+      expect(validateDesc(groupGame, params(f), desc)).toBeNull();
     });
 
     it(`${label}: TS solver grades at the C difficulty`, () => {

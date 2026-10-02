@@ -18,11 +18,12 @@
  * harness that captured it are gone (see `engine/testing/differential.ts`).
  */
 import { expect } from "vitest";
-import { descValue } from "../../engine/desc-error.ts";
+import { descValue, validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/rome-c-reference.json" with { type: "json" };
 import { newRomeDesc } from "./generator.ts";
-import { parseDesc, romeSolve, validateDesc } from "./solver.ts";
+import { romeGame } from "./index.ts";
+import { parseDesc, romeSolve } from "./solver.ts";
 import { DIFFCOUNT, type RomeParams, STATUS_COMPLETE } from "./state.ts";
 
 interface Fixture {
@@ -56,7 +57,7 @@ describeDescDifferential<Fixture, RomeParams>({
   params: (f) => ({ w: f.w, h: f.h, diff: f.diff }),
   newDesc: newRomeDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(romeGame, p, f.desc)).toBeNull();
     // The TS solver must reach the C solver's verdict at every tier, not just
     // produce a solvable board.
     expect(grade(p, f.desc)).toBe(f.solverDiff);

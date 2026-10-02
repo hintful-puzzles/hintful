@@ -14,9 +14,11 @@
  * `engine/testing/differential.ts`).
  */
 import { expect } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/samegame-c-reference.json" with { type: "json" };
-import { newDesc, type SamegameParams, validateDesc } from "./state.ts";
+import { samegameGame } from "./index.ts";
+import { newDesc, type SamegameParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -44,6 +46,6 @@ describeDescDifferential<Fixture, SamegameParams>({
   }),
   newDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(samegameGame, p, f.desc)).toBeNull();
   },
 });

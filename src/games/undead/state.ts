@@ -1,9 +1,7 @@
 import {
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -533,10 +531,6 @@ function parseDesc(params: UndeadParams, desc: string): DescParse<UndeadState> {
 
 export function newState(params: UndeadParams, desc: string): UndeadState {
   return descValue(parseDesc(params, desc));
-}
-
-export function validateDesc(p: UndeadParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 // --- live error recomputation (check_numbers_draw + check_path_solution) ----

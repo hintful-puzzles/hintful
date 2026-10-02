@@ -32,11 +32,9 @@ import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_MALFORMED,
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descNeedsOne,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
@@ -390,10 +388,6 @@ function parseDesc(p: SlideParams, desc: string): DescParse<SlideDesc> {
     r.end();
     return { board, forcefield, tx, ty, minmoves };
   });
-}
-
-export function validateDesc(p: SlideParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SlideParams, desc: string): SlideState {

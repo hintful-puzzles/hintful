@@ -105,7 +105,6 @@ import {
   type UndeadParams,
   type UndeadState,
   type UndeadUi,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -858,7 +857,6 @@ export const undeadGame: Game<
   paramConfig,
 
   newDesc: (p, rng: RandomState) => newUndeadDesc(p, rng),
-  validateDesc,
   newState,
   newUi,
   changedState,

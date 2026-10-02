@@ -11,10 +11,8 @@ import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
@@ -285,10 +283,6 @@ function parseDesc(p: GuessParams, desc: string): DescParse<Uint8Array> {
     if (!p.allowMultiple && new Set(bmp).size < p.npegs) r.fail(DESC_REPEATED);
     return bmp;
   });
-}
-
-export function validateDesc(p: GuessParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: GuessParams, desc: string): GuessState {

@@ -25,7 +25,6 @@ import {
   type DescError,
   type DescParse,
   descValue,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -396,10 +395,6 @@ function parseDesc(p: SeismicParams, desc: string): DescParse<SeismicBoard> {
     if (error) r.fail(error);
     return board;
   });
-}
-
-export function validateDesc(p: SeismicParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SeismicParams, desc: string): SeismicState {

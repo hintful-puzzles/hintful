@@ -15,6 +15,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -77,7 +78,6 @@ import {
   type SpokesUi,
   spokesPlace,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 // A frozen 4×4 Easy board (the first fixture of the C differential), so every
@@ -188,20 +188,26 @@ describe("spokes params", () => {
 
 describe("spokes description codec", () => {
   it("accepts a well-formed description and rebuilds the clues", () => {
-    expect(validateDesc(FIX, FIX_DESC)).toBeNull();
+    expect(validateDesc(spokesGame, FIX, FIX_DESC)).toBeNull();
     const s = newState(FIX, FIX_DESC);
     expect([...s.numbers].join("")).toBe(FIX_DESC);
   });
 
   it("distinguishes too short from too long", () => {
-    expect(validateDesc(FIX, FIX_DESC.slice(0, 10))).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(FIX, `${FIX_DESC}1`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(spokesGame, FIX, FIX_DESC.slice(0, 10))).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(spokesGame, FIX, `${FIX_DESC}1`)).toBe(DESC_TOO_LONG);
   });
 
   it("rejects a character that is neither a clue digit nor a hole", () => {
-    expect(validateDesc(FIX, `9${FIX_DESC.slice(1)}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(FIX, `z${FIX_DESC.slice(1)}`)).toBe(descBadCharacter("z"));
-    expect(validateDesc(FIX, `x${FIX_DESC.slice(1)}`)).toBe(descBadCharacter("x"));
+    expect(validateDesc(spokesGame, FIX, `9${FIX_DESC.slice(1)}`)).toBe(
+      DESC_OUT_OF_RANGE,
+    );
+    expect(validateDesc(spokesGame, FIX, `z${FIX_DESC.slice(1)}`)).toBe(
+      descBadCharacter("z"),
+    );
+    expect(validateDesc(spokesGame, FIX, `x${FIX_DESC.slice(1)}`)).toBe(
+      descBadCharacter("x"),
+    );
   });
 
   it("carves a wider hole for 'X' than for '0'", () => {
@@ -313,7 +319,7 @@ describe("spokes generator", () => {
       { w: 3, h: 3, diff: "tricky" },
     ] as SpokesParams[]) {
       const { desc } = newSpokesDesc(p, randomNew(`shape-${p.w}x${p.h}-${p.diff}`));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(spokesGame, p, desc)).toBeNull();
       const b = cloneBoard(newState(p, desc));
       clearBoard(b);
       expect(spokesSolve(b, null, DIFFCOUNT)).toBe("valid");

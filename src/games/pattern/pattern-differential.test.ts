@@ -7,10 +7,12 @@
  * The fixture is frozen and cannot be regenerated; see
  * `engine/testing/differential.ts`.
  */
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/pattern-c-reference.json" with { type: "json" };
 import { newPatternDesc } from "./generator.ts";
-import { type PatternParams, validateDesc } from "./state.ts";
+import { patternGame } from "./index.ts";
+import type { PatternParams } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -28,7 +30,7 @@ describeDescDifferential<Fixture, PatternParams>({
   newDesc: newPatternDesc,
   // Each C desc must also pass the TS validator.
   extra: (f, p) => {
-    if (validateDesc(p, f.desc) !== null) {
+    if (validateDesc(patternGame, p, f.desc) !== null) {
       throw new Error(`validateDesc rejected C desc: ${f.desc}`);
     }
   },

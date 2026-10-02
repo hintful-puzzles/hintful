@@ -14,7 +14,6 @@
  * the puzzle's reason in `notApplicable`.
  */
 
-import type { DescError } from "./desc-error.ts";
 import type { DifficultyContract } from "./difficulty.ts";
 import type { PointerAction } from "./hint-gesture.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
@@ -364,9 +363,10 @@ export interface Game<
   transposeParams?(p: Params): Params | null;
 
   newDesc(p: Params, rng: RandomState): { desc: string; aux?: string };
-  /** `null` when valid, else why `desc` is rejected for `p`, in the
-   * collection's words (`desc-error.ts`). */
-  validateDesc(p: Params, desc: string): DescError | null;
+  /** State 0 of the board `desc` describes. It is also the verdict on a
+   * pasted desc: read it through one parse and take the value with
+   * `descValue`, whose refusal `loadDesc` reports in the collection's words
+   * (`desc-error.ts`). There is no separate validator to agree with it. */
   newState(p: Params, desc: string): State;
   newUi(state: State): Ui;
 

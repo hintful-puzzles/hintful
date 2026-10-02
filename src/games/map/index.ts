@@ -73,7 +73,7 @@ import {
   regionsMove,
   sameOps,
 } from "./hint.ts";
-import { newMapData, validateDesc } from "./map-data.ts";
+import { newMapData } from "./map-data.ts";
 import {
   COL_0,
   colors,
@@ -538,7 +538,6 @@ export const mapGame: Game<
   ],
 
   newDesc: newMapDesc,
-  validateDesc,
   newState,
   newUi,
 

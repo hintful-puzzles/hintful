@@ -14,17 +14,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/unequal-c-reference.json" with { type: "json" };
 import { newUnequalDesc } from "./generator.ts";
+import { unequalGame } from "./index.ts";
 import { solveUnequal } from "./solver.ts";
-import {
-  diffFromLevel,
-  type Mode,
-  newState,
-  type UnequalParams,
-  validateDesc,
-} from "./state.ts";
+import { diffFromLevel, type Mode, newState, type UnequalParams } from "./state.ts";
 
 interface Fixture {
   order: number;
@@ -48,7 +44,7 @@ describe("unequal differential (byte-match + solver agreement)", () => {
     it(`${p.mode} ${f.order} d${f.diff} (seed ${f.seed}): desc matches C byte-for-byte`, () => {
       const { desc } = newUnequalDesc(p, randomNew(f.seed));
       expect(desc).toBe(f.desc);
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(unequalGame, p, desc)).toBeNull();
     });
 
     it(`${p.mode} ${f.order} d${f.diff} (seed ${f.seed}): TS solver grades at the C difficulty`, () => {

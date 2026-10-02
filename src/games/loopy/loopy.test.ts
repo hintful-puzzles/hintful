@@ -13,6 +13,7 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   descValue,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { GridDot } from "../../engine/grid/index.ts";
@@ -53,7 +54,6 @@ import {
   opp,
   readClues,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 const squareParams = (w = 4, h = 4, diff = DIFF_EASY) => ({ w, h, diff, type: 0 });
@@ -168,16 +168,16 @@ describe("clue description codec", () => {
 
   it("validates length against the real face count", () => {
     const p = squareParams(4, 4); // 16 faces
-    expect(validateDesc(p, "a")).toBe(DESC_TOO_SHORT); // one empty face, 16 needed
-    expect(validateDesc(p, "z")).toBe(DESC_TOO_LONG); // a run of 26
-    expect(validateDesc(p, "p")).toBeNull(); // 'p' is a run of 16
-    expect(validateDesc(p, "!!!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(loopyGame, p, "a")).toBe(DESC_TOO_SHORT); // one empty face, 16 needed
+    expect(validateDesc(loopyGame, p, "z")).toBe(DESC_TOO_LONG); // a run of 26
+    expect(validateDesc(loopyGame, p, "p")).toBeNull(); // 'p' is a run of 16
+    expect(validateDesc(loopyGame, p, "!!!")).toBe(descBadCharacter("!"));
     // A run past the last face, anything after it, and a character past `z`
     // that upstream would have read as a run.
-    expect(validateDesc(p, "oc")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "p0")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "{")).toBe(descBadCharacter("{"));
-    expect(validateDesc(p, "3o")).toBeNull();
+    expect(validateDesc(loopyGame, p, "oc")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(loopyGame, p, "p0")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(loopyGame, p, "{")).toBe(descBadCharacter("{"));
+    expect(validateDesc(loopyGame, p, "3o")).toBeNull();
   });
 });
 
@@ -612,7 +612,7 @@ describe("generation", () => {
       }
       const p = { w: size, h: size, diff: DIFF_EASY, type };
       const { desc } = newDesc(p, randomNew(`all-${type}`));
-      expect(validateDesc(p, desc), `${e.title}: ${desc}`).toBeNull();
+      expect(validateDesc(loopyGame, p, desc), `${e.title}: ${desc}`).toBeNull();
       const s = newState(p, desc);
       expect(solveGame(s, DIFF_EASY).status, e.title).toBe("solved");
     }

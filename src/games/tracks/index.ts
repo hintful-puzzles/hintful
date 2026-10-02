@@ -93,7 +93,6 @@ import {
   type TracksUi,
   textFormat,
   U,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -426,7 +425,6 @@ export const tracksGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

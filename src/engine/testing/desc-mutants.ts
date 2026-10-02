@@ -1,11 +1,10 @@
 /**
  * Near-miss game descriptions: a real desc, broken by one small edit.
  *
- * `validateDesc` and `newState` read the same grammar twice, and junk input
- * cannot show where they disagree, because junk is refused before `newState` is
- * reached. A near miss is the input that can: it is mostly well formed, so a
- * validator that is loose about one character lets it through to a parser that
- * is strict about it.
+ * Junk is refused at a parse's first character, so it cannot show what a
+ * board does with a desc that is nearly right. A near miss can: it is mostly
+ * well formed, so it reaches deep into a parser, and one that is loose about a
+ * character builds a board from it.
  *
  * Every mutant is derived from the desc and the alphabet alone, with no RNG, so
  * a failure names the same input every run.

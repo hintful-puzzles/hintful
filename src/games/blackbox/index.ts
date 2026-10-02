@@ -60,7 +60,6 @@ import {
   presets,
   revealAnswer,
   status,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -364,7 +363,6 @@ export const blackboxGame: Game<
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

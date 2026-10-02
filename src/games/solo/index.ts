@@ -115,7 +115,6 @@ import {
   SYMM_NONE,
   SYMM_ROT2,
   status as soloStatus,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -728,7 +727,6 @@ export const soloGame: Game<
   ],
 
   newDesc: newSoloDesc,
-  validateDesc,
   newState,
   newUi,
 

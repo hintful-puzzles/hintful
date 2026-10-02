@@ -3,7 +3,9 @@
 // validity + deduction-solvability across sizes/seeds, hideClues
 // minimization, the solve-command bitmap, and findMistakes.
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { mosaicGame } from "./index.ts";
 import {
   encodeSolution,
   findMistakes,
@@ -22,7 +24,6 @@ import {
   newState,
   STATE_BLANK,
   STATE_MARKED,
-  validateDesc,
 } from "./state.ts";
 
 function genCellsFromImage(width: number, height: number, image: Uint8Array): GenCells {
@@ -161,7 +162,7 @@ describe("generator", () => {
       const p = { width: n, height: n, aggressive };
       const rng = randomNew(seed);
       const { desc } = newDesc(p, rng);
-      expect(validateDesc(p, desc), `desc for ${n}/${seed}`).toBeNull();
+      expect(validateDesc(mosaicGame, p, desc), `desc for ${n}/${seed}`).toBeNull();
       const state = newState(p, desc);
       expect(solveGameActual(state.board), `solvable for ${n}/${seed}`).not.toBeNull();
       // Some clue must survive minimization.

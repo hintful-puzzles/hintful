@@ -13,11 +13,13 @@
  * it is gone — see `engine/testing/differential.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/bridges-c-reference.json" with { type: "json" };
 import { newBridgesDesc } from "./generator.ts";
+import { bridgesGame } from "./index.ts";
 import { solveFromScratch } from "./solver.ts";
-import { type BridgesParams, newStateFromDesc, validateDesc } from "./state.ts";
+import { type BridgesParams, newStateFromDesc } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -56,7 +58,7 @@ describeDescDifferential<Fixture, BridgesParams>({
   params,
   newDesc: newBridgesDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(bridgesGame, p, f.desc)).toBeNull();
   },
 });
 

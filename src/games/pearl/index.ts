@@ -76,7 +76,6 @@ import {
   R,
   textFormat,
   U,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -392,7 +391,6 @@ export const pearlGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

@@ -15,10 +15,12 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import cReference from "./__fixtures__/map-c-reference.json" with { type: "json" };
 import { newMapDesc } from "./generator.ts";
-import { newMapData, validateDesc } from "./map-data.ts";
+import { mapGame } from "./index.ts";
+import { newMapData } from "./map-data.ts";
 import { gradeMap } from "./solver.ts";
 import type { MapParams } from "./state.ts";
 
@@ -44,7 +46,7 @@ describe("map differential (frozen C reference)", () => {
       const { desc, aux } = newMapDesc(p, randomNew(f.seed));
       expect(desc).toBe(f.desc);
       expect(aux).toBe(f.aux);
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(mapGame, p, desc)).toBeNull();
     });
 
     it(`${label}: TS solver grades the board at the C difficulty`, () => {

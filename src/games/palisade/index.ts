@@ -72,7 +72,6 @@ import {
   presets,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -250,7 +249,6 @@ export const palisadeGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

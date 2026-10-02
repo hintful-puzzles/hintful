@@ -8,6 +8,7 @@
  * and a mistake overlay, each with targeted op assertions plus a snapshot.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -43,7 +44,6 @@ import {
   type TowersMove,
   type TowersParams,
   type TowersState,
-  validateDesc,
 } from "./state.ts";
 
 function gen(w: number, diff: TowersParams["diff"], seed: string) {
@@ -136,7 +136,7 @@ describe("towers generator", () => {
   for (const [w, diff, seed] of cases) {
     it(`${w}d/${diff} is valid, unique and graded exactly at ${diff}`, () => {
       const { p, desc, aux, st } = gen(w, diff, seed);
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(towersGame, p, desc)).toBeNull();
       // Givens land in both immutable and grid.
       for (let i = 0; i < w * w; i++) {
         if (st.immutable[i]) expect(st.grid[i]).toBe(st.immutable[i]);
@@ -165,29 +165,29 @@ describe("towers desc parsing", () => {
 
   it("reads the clues and givens it was given", () => {
     const desc = `${clues},1_2f3`;
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(towersGame, p, desc)).toBeNull();
     const st = newState(p, desc);
     expect(Array.from(st.clues)).toEqual([1, 0, 3, 2, 0, 0, 0, 0, 0, 1, 0, 2]);
     expect(Array.from(st.immutable)).toEqual([1, 2, 0, 0, 0, 0, 0, 0, 3]);
     expect(Array.from(st.grid)).toEqual([1, 2, 0, 0, 0, 0, 0, 0, 3]);
-    expect(validateDesc(p, clues)).toBeNull();
+    expect(validateDesc(towersGame, p, clues)).toBeNull();
   });
 
   it("refuses what the generator never writes", () => {
-    expect(validateDesc(p, "1//3/2//////1/")).toMatch(/too short/);
-    expect(validateDesc(p, `${clues}/`)).toMatch(/too long/);
-    expect(validateDesc(p, `${clues},1_2f`)).toMatch(/too short/);
-    expect(validateDesc(p, `${clues},1_2h`)).toMatch(/too long/);
-    expect(validateDesc(p, `${clues},1_2f3x`)).toMatch(/too long/);
+    expect(validateDesc(towersGame, p, "1//3/2//////1/")).toMatch(/too short/);
+    expect(validateDesc(towersGame, p, `${clues}/`)).toMatch(/too long/);
+    expect(validateDesc(towersGame, p, `${clues},1_2f`)).toMatch(/too short/);
+    expect(validateDesc(towersGame, p, `${clues},1_2h`)).toMatch(/too long/);
+    expect(validateDesc(towersGame, p, `${clues},1_2f3x`)).toMatch(/too long/);
     // A wrong character among the clues is named.
-    expect(validateDesc(p, "1x/3/2//////1//2")).toMatch(/"x"/);
+    expect(validateDesc(towersGame, p, "1x/3/2//////1//2")).toMatch(/"x"/);
     // After the clues, a character other than `,`.
-    expect(validateDesc(p, `${clues}!`)).toMatch(/too long/);
+    expect(validateDesc(towersGame, p, `${clues}!`)).toMatch(/too long/);
     // A `_` anywhere but between two given numbers.
-    expect(validateDesc(p, `${clues},_1_2f3`)).toMatch(/"_"/);
-    expect(validateDesc(p, `${clues},1_2f_3`)).toMatch(/"_"/);
-    expect(validateDesc(p, `${clues},12f3`)).toMatch(/out of range/);
-    expect(validateDesc(p, `4${clues}`)).toMatch(/out of range/);
+    expect(validateDesc(towersGame, p, `${clues},_1_2f3`)).toMatch(/"_"/);
+    expect(validateDesc(towersGame, p, `${clues},1_2f_3`)).toMatch(/"_"/);
+    expect(validateDesc(towersGame, p, `${clues},12f3`)).toMatch(/out of range/);
+    expect(validateDesc(towersGame, p, `4${clues}`)).toMatch(/out of range/);
   });
 });
 

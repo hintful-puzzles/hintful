@@ -6,7 +6,7 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { type DescError, descValue, descVerdict } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/desc-error.ts";
 import type { GamePref } from "../../engine/game.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
@@ -118,10 +118,6 @@ const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 // --- desc / state ----------------------------------------------------
-
-function validateDesc(p: SignpostParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
-}
 
 function newState(p: SignpostParams, desc: string): SignpostState {
   const s = descValue(parseDesc(p, desc));
@@ -383,7 +379,6 @@ export const signpostGame: Game<
   paramConfig,
 
   newDesc: newSignpostDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

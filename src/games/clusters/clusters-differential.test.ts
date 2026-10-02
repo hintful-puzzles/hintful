@@ -14,15 +14,11 @@
  * it is gone — see `engine/testing/differential.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import cReference from "./__fixtures__/clusters-c-reference.json" with { type: "json" };
+import { clustersGame } from "./index.ts";
 import { COMPLETE, solveGame } from "./solver.ts";
-import {
-  type ClustersParams,
-  DIFF_TRICKY,
-  encodeDesc,
-  newState,
-  validateDesc,
-} from "./state.ts";
+import { type ClustersParams, DIFF_TRICKY, encodeDesc, newState } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -41,7 +37,7 @@ describe("Clusters frozen C boards", () => {
   for (const f of data.fixtures) {
     it(`${f.w}x${f.h} seed=${f.seed}: decodes, round-trips and solves`, () => {
       const p: ClustersParams = { w: f.w, h: f.h, diff: DIFF_TRICKY };
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(clustersGame, p, f.desc)).toBeNull();
       expect(encodeDesc(newState(p, f.desc).grid, f.w, f.h)).toBe(f.desc);
       expect(solveGame(newState(p, f.desc).grid, f.w, f.h, DIFF_TRICKY)).toBe(COMPLETE);
     });

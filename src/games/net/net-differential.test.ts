@@ -16,12 +16,14 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/net-c-reference.json" with { type: "json" };
 import { finishes } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
-import { isComplete, type NetParams, newState, validateDesc } from "./state.ts";
+import { netGame } from "./index.ts";
+import { isComplete, type NetParams, newState } from "./state.ts";
 
 interface NetFixture {
   w: number;
@@ -73,7 +75,7 @@ describeDescDifferential<NetFixture, NetParams>({
     `${f.w}x${f.h}${f.wrapping ? "w" : ""}${f.unique ? "" : "a"} b=${f.barrierProbability}`,
   newDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(netGame, p, f.desc)).toBeNull();
   },
 });
 

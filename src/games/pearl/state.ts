@@ -8,11 +8,9 @@
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
@@ -158,7 +156,7 @@ export function validateParams(p: PearlParams, _full: boolean): string | null {
 /**
  * Run-length encode a clue grid: lowercase runs compress unclued cells, `B` is
  * a black pearl, `W` a white pearl. Trailing blanks are kept because
- * {@link validateDesc} rejects a desc that does not cover the whole grid.
+ * {@link parseDesc} rejects a desc that does not cover the whole grid.
  *
  * Upstream grows a run by incrementing the letter it already wrote, starting a
  * fresh `a` after `z`. That produces exactly the 26-cell chunks
@@ -190,10 +188,6 @@ function parseDesc(p: PearlParams, desc: string): DescParse<Uint8Array> {
     if (sizeSoFar < total) r.fail(DESC_TOO_SHORT);
     return clues;
   });
-}
-
-export function validateDesc(p: PearlParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 // --- state -----------------------------------------------------------------

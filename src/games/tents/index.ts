@@ -98,7 +98,6 @@ import {
   type TentsUi,
   TREE,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -446,7 +445,6 @@ export const tentsGame: Game<
   paramConfig,
 
   newDesc: newTentsDesc,
-  validateDesc,
   newState,
   newUi,
 

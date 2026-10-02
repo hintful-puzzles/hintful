@@ -11,6 +11,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -29,7 +30,6 @@ import {
   newState,
   type SeparateMove,
   type SeparateParams,
-  validateDesc,
 } from "./state.ts";
 
 const P5: SeparateParams = { w: 5, h: 5, k: 5 };
@@ -70,11 +70,11 @@ describe("separate desc codec", () => {
   });
 
   it("rejects a malformed desc", () => {
-    expect(validateDesc(P5, "ABCDE")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(P5, "A".repeat(26))).toBe(DESC_TOO_LONG);
-    expect(validateDesc(P5, "F".repeat(25))).toBe(descBadCharacter("F")); // F is outside k=5
+    expect(validateDesc(separateGame, P5, "ABCDE")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(separateGame, P5, "A".repeat(26))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(separateGame, P5, "F".repeat(25))).toBe(descBadCharacter("F")); // F is outside k=5
     const { desc } = newSeparateDesc(P5, randomNew("sep-valid"));
-    expect(validateDesc(P5, desc)).toBeNull();
+    expect(validateDesc(separateGame, P5, desc)).toBeNull();
   });
 });
 

@@ -3,7 +3,11 @@
  * generator/solver differential is `bridges-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
-import { DESC_TOO_LONG, puzzleDescError } from "../../engine/desc-error.ts";
+import {
+  DESC_TOO_LONG,
+  puzzleDescError,
+  validateDesc,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -34,7 +38,6 @@ import {
   G_MARK,
   G_NOLINEH,
   newStateFromDesc,
-  validateDesc,
 } from "./state.ts";
 
 describe("bridges params codec", () => {
@@ -78,13 +81,13 @@ describe("bridges desc codec", () => {
   });
 
   it("validateDesc accepts a good desc and rejects overruns / lone islands", () => {
-    expect(validateDesc(p3, desc)).toBeNull();
-    expect(validateDesc(p3, "zzz")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p3, "1i")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p3, "1h")).toBe(
+    expect(validateDesc(bridgesGame, p3, desc)).toBeNull();
+    expect(validateDesc(bridgesGame, p3, "zzz")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(bridgesGame, p3, "1i")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(bridgesGame, p3, "1h")).toBe(
       puzzleDescError("This game ID has fewer than two islands."),
     );
-    expect(validateDesc(p3, "11g")).toBe(
+    expect(validateDesc(bridgesGame, p3, "11g")).toBe(
       puzzleDescError("This game ID places two islands next to each other."),
     );
   });

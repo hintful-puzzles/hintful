@@ -13,6 +13,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -34,7 +35,6 @@ import {
   type MinesMove,
   type MinesState,
   type MinesUi,
-  validateDesc,
 } from "./state.ts";
 
 const BG: [number, number, number] = [0.9, 0.9, 0.9];
@@ -128,7 +128,7 @@ describe("mines desc", () => {
     const rs = randomNew("desc-seed");
     const { desc } = minesGame.newDesc(p, rs);
     expect(desc.startsWith("r10,u,")).toBe(true);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(minesGame, p, desc)).toBeNull();
   });
 
   it("decodes r-form to a null (not-yet-generated) layout", () => {
@@ -158,38 +158,46 @@ describe("mines desc", () => {
 
   it("rejects a wrong-length desc", () => {
     const p = decodeParams("9x9n10");
-    expect(validateDesc(p, "4,4,mtooshort")).toBe(descBadCharacter("t"));
-    expect(validateDesc(p, `4,4,m${"0".repeat(20)}`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, `4,4,m${"0".repeat(22)}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(minesGame, p, "4,4,mtooshort")).toBe(descBadCharacter("t"));
+    expect(validateDesc(minesGame, p, `4,4,m${"0".repeat(20)}`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(minesGame, p, `4,4,m${"0".repeat(22)}`)).toBe(DESC_TOO_LONG);
   });
 
   it("reads the layout exactly as the encoder writes it", () => {
     const p = decodeParams("3x3n1");
-    expect(validateDesc(p, "1,1,u800")).toBeNull();
+    expect(validateDesc(minesGame, p, "1,1,u800")).toBeNull();
     // The ninth bit is the last nibble's high bit; the other three are padding.
-    expect(validateDesc(p, "u801")).toBe(descBadCharacter("1"));
-    expect(validateDesc(p, "uA00")).toBe(descBadCharacter("A"));
+    expect(validateDesc(minesGame, p, "u801")).toBe(descBadCharacter("1"));
+    expect(validateDesc(minesGame, p, "uA00")).toBe(descBadCharacter("A"));
     // A layout without its `m` or `u`.
-    expect(validateDesc(p, "a00")).toBe(descBadCharacter("a"));
-    expect(validateDesc(p, "3,1,u800")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "1,3,u800")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "1,1u800")).toBe(descBadCharacter("u"));
+    expect(validateDesc(minesGame, p, "a00")).toBe(descBadCharacter("a"));
+    expect(validateDesc(minesGame, p, "3,1,u800")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(minesGame, p, "1,3,u800")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(minesGame, p, "1,1u800")).toBe(descBadCharacter("u"));
   });
 
   it("reads the r-form's RNG state exactly as the encoder writes it", () => {
     const p = decodeParams("9x9n10");
     const { desc } = minesGame.newDesc(p, randomNew("desc-seed"));
-    expect(validateDesc(p, `${desc}x`)).toBe(descBadCharacter("x"));
-    expect(validateDesc(p, `${desc}0`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, desc.slice(0, -1))).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(minesGame, p, `${desc}x`)).toBe(descBadCharacter("x"));
+    expect(validateDesc(minesGame, p, `${desc}0`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(minesGame, p, desc.slice(0, -1))).toBe(DESC_TOO_SHORT);
     // The last byte is the read position, at most 20.
-    expect(validateDesc(p, `${desc.slice(0, -2)}ff`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, desc.replace(",u,", ",x,"))).toBe(descBadCharacter("x"));
+    expect(validateDesc(minesGame, p, `${desc.slice(0, -2)}ff`)).toBe(
+      DESC_OUT_OF_RANGE,
+    );
+    expect(validateDesc(minesGame, p, desc.replace(",u,", ",x,"))).toBe(
+      descBadCharacter("x"),
+    );
     const letter = desc.slice(6).search(/[a-f]/) + 6;
     const upper = desc[letter].toUpperCase();
     expect(letter).toBeGreaterThanOrEqual(6);
     expect(
-      validateDesc(p, `${desc.slice(0, letter)}${upper}${desc.slice(letter + 1)}`),
+      validateDesc(
+        minesGame,
+        p,
+        `${desc.slice(0, letter)}${upper}${desc.slice(letter + 1)}`,
+      ),
     ).toBe(descBadCharacter(upper));
   });
 });
@@ -276,9 +284,9 @@ describe("mines supersede + midend", () => {
     const publicDesc = (h.gameId() ?? "").replace(/^[^:]*:/, "");
     const { privDesc } = decodeSave(h.m.saveGame());
     expect(publicDesc).toMatch(/^4,4,m/);
-    expect(validateDesc(p, publicDesc)).toBeNull();
+    expect(validateDesc(minesGame, p, publicDesc)).toBeNull();
     expect(privDesc).toMatch(/^m/);
-    expect(validateDesc(p, privDesc ?? "")).toBeNull();
+    expect(validateDesc(minesGame, p, privDesc ?? "")).toBeNull();
     const pub = decodeDesc(p, publicDesc).layout.mines;
     const priv = decodeDesc(p, privDesc ?? "").layout.mines;
     expect(Array.from(pub ?? []).reduce((a, b) => a + b, 0)).toBe(10);

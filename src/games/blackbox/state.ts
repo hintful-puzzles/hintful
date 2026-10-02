@@ -18,10 +18,8 @@ import {
   DESC_REPEATED,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
@@ -258,10 +256,6 @@ function parseDesc(p: BlackboxParams, desc: string): DescParse<Uint8Array> {
     }
     return bmp;
   });
-}
-
-export function validateDesc(p: BlackboxParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: BlackboxParams, desc: string): BlackboxState {

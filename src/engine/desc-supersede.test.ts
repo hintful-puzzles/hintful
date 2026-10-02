@@ -39,7 +39,6 @@ const minesish: Game<MinesishParams, MinesishState, MinesishMove, null, null> = 
   decodeParams: (s) => ({ size: Number(/^s(\d+)$/.exec(s)?.[1] ?? NaN) }),
   validateParams: (p) => (p.size > 0 ? null : "size must be positive"),
   newDesc: () => ({ desc: "blank" }),
-  validateDesc: () => null,
   newState: (p, desc) => {
     if (desc === "blank") {
       return { size: p.size, layout: null, clickedAt: null, opened: [] };

@@ -5,6 +5,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { presetMenu } from "../../engine/param-label.ts";
@@ -33,7 +34,6 @@ import {
   parityP,
   status,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 // --- helpers ----------------------------------------------------------
@@ -108,7 +108,7 @@ describe("Fifteen generation", () => {
     for (let s = 0; s < 40; s++) {
       const rng = randomNew(`fifteen-gen-${s}`);
       const { desc } = newDesc(p, rng);
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(fifteenGame, p, desc)).toBeNull();
       const state = newState(p, desc);
       // Reachable from solved iff permutation parity matches gap parity.
       expect(permParity(state.tiles, state.n)).toBe(parityP(p.w, p.h, state.gapPos));
@@ -152,14 +152,14 @@ describe("Fifteen desc codec", () => {
 
   it("rejects malformed descriptions", () => {
     const p = { w: 2, h: 2 };
-    expect(validateDesc(p, "0,1,2")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "0,1,2,3,0")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "0,1,2,9")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "0,1,1,2")).toBe(DESC_REPEATED);
-    expect(validateDesc(p, "0,1,x,2")).toBe(descBadCharacter("x"));
-    expect(validateDesc(p, "0,1,,2")).toBe(descBadCharacter(","));
-    expect(validateDesc(p, "0,1,2,")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "0,1,2,3")).toBeNull(); // valid
+    expect(validateDesc(fifteenGame, p, "0,1,2")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(fifteenGame, p, "0,1,2,3,0")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(fifteenGame, p, "0,1,2,9")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(fifteenGame, p, "0,1,1,2")).toBe(DESC_REPEATED);
+    expect(validateDesc(fifteenGame, p, "0,1,x,2")).toBe(descBadCharacter("x"));
+    expect(validateDesc(fifteenGame, p, "0,1,,2")).toBe(descBadCharacter(","));
+    expect(validateDesc(fifteenGame, p, "0,1,2,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(fifteenGame, p, "0,1,2,3")).toBeNull(); // valid
   });
 });
 

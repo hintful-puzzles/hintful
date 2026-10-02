@@ -388,15 +388,15 @@ What a tier *means*, and the grading that enforces it, is
 ## Descriptions and state
 
 `newDesc(p, rng)` generates a board (see
-[solver & generator](./solver-and-generator.md)); `validateDesc` rejects a
-malformed desc with a reason (it guards the game-ID surface — descs arrive
-from URLs); `newState` builds state 0 from a validated desc. **The reason is
-the engine's words, not yours**: `validateDesc` returns a `DescError`, and the
-only ways to make one are
-[`desc-error.ts`](../../src/engine/desc-error.ts)'s kinds and its
+[solver & generator](./solver-and-generator.md)); `newState` builds state 0
+from a desc, and its parse is also what refuses a malformed one (it guards the
+game-ID surface — descs arrive from URLs). You write no validator; the engine
+derives the verdict (§ "Read a desc once"). **The reason is the engine's
+words, not yours**: a parse fails with a `DescError`, and the only ways to make
+one are [`desc-error.ts`](../../src/engine/desc-error.ts)'s kinds and its
 `puzzleDescError` escape for a rule of your puzzle's own (engine catalog §
-"`desc-error.ts` — why a game ID will not load"). Return, never throw: a
-malformed ID is a player's typo, not a bug. The desc codec is
+"`desc-error.ts` — why a game ID will not load"). Fail the parse, never throw
+your own error: a malformed ID is a player's typo, not a bug. The desc codec is
 frozen into shared ids, same as params. State is **immutable**: `executeMove`
 returns a new state and `cloneState` is cheap by construction (parallel typed
 arrays clone well; see Galaxies'
@@ -404,11 +404,14 @@ arrays clone well; see Galaxies'
 
 ### Read a desc once
 
-Write **one** parser, `parseDesc(p, desc): DescParse<T>`, and have
-`validateDesc` return `descVerdict(parseDesc(p, desc))` while `newState` builds
-from `descValue(parseDesc(p, desc))` (`engine/desc-error.ts`). Put every check
-that needs the parsed board — a count, a region, a rule of your puzzle — inside
-that parse. Exemplar: [`fifteen/state.ts`](../../src/games/fifteen/state.ts).
+Write **one** parser, `parseDesc(p, desc): DescParse<T>`, and have `newState`
+build from `descValue(parseDesc(p, desc))` (`engine/desc-error.ts`). That is
+the whole of it: a failed parse makes `descValue` throw a `DescRejection`, and
+the engine's `loadDesc` turns that one throw into the verdict the Enter Game ID
+dialog shows, and builds state 0 from the same call. Put every check that needs
+the parsed board — a count, a region, a rule of your puzzle — inside that
+parse; anything `newState` throws after `descValue` is treated as a bug.
+Exemplar: [`fifteen/state.ts`](../../src/games/fifteen/state.ts).
 
 The reason is that two loops disagree in silence. A validator and a parser that
 each read the grammar can differ about a character without any test noticing:
@@ -418,7 +421,10 @@ that, its validator counting `A`–`Z` as blank runs its parser ignored; Rect's
 and Sticks' unbounded clues wrapped in their arrays, so the parser read a
 different board from the one the validator accepted. When every game was read
 for `read-descs-through-one-cursor`, about half the collection's validators
-accepted something their parser skipped.
+accepted something their parser skipped. Each game then read its desc once but
+still wrote the validator line by hand, which only a convention kept honest;
+`let-the-engine-own-the-desc-parse` took the line away, so there is no second
+reading left to write.
 
 **Read with the cursor** ([`engine/desc-reader.ts`](../../src/engine/desc-reader.ts),
 engine catalog § "`desc-reader.ts` — the cursor a desc parser drives") unless
@@ -429,10 +435,11 @@ what your grammar has no place for**: a parser that skips a character it does
 not recognize is a second spelling of every board, and a player's typo loads.
 
 [`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) checks
-what it can from outside: every desc your generator writes must load, and
-every one-edit near miss ([`testing/desc-mutants.ts`](../../src/engine/testing/desc-mutants.ts))
-your validator accepts must build and draw. It sees a disagreement only where
-the parser throws, which is why the single parse, not the test, is the guard.
+what it can from outside: every desc your generator writes must load, every
+one-edit near miss ([`testing/desc-mutants.ts`](../../src/engine/testing/desc-mutants.ts))
+that loads must draw, and junk must be refused at least once — the last is
+what catches a `newState` that never reads through `descValue` and so refuses
+nothing.
 
 Where the desc is the shared run-length grammar — a value character, or a
 letter standing for a run of blanks — use

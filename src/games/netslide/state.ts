@@ -9,7 +9,7 @@
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { type DescError, descValue, descVerdict } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/desc-error.ts";
 import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -221,10 +221,6 @@ export function slideCol(
 /* ----------------------------------------------------------------------
  * Desc codec + state construction.
  */
-
-export function validateDesc(p: NetslideParams, desc: string): DescError | null {
-  return descVerdict(parseWireDesc(p.w, p.h, p.wrapping, desc));
-}
 
 /**
  * Parse a desc into the initial state: the wire grid, the barriers named by

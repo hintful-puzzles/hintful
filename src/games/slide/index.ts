@@ -79,7 +79,6 @@ import {
   status,
   statusbarText,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -322,7 +321,6 @@ export const slideGame: Game<
   paramConfig,
 
   newDesc: newSlideDesc,
-  validateDesc,
   newState,
   newUi,
 

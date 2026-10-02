@@ -19,15 +19,11 @@
  * it is gone — see `engine/testing/differential.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import cReference from "./__fixtures__/salad-c-reference.json" with { type: "json" };
+import { saladGame } from "./index.ts";
 import { saladSolve } from "./solver.ts";
-import {
-  GAMEMODE_LETTERS,
-  newState,
-  type SaladParams,
-  scratchBoard,
-  validateDesc,
-} from "./state.ts";
+import { GAMEMODE_LETTERS, newState, type SaladParams, scratchBoard } from "./state.ts";
 
 interface Fixture {
   order: number;
@@ -59,7 +55,7 @@ describe("salad frozen C boards", () => {
         mode: f.mode,
         diff: f.diff,
       };
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(saladGame, p, f.desc)).toBeNull();
       const s = newState(p, f.desc);
       expect(saladSolve(scratchBoard(s), f.solverDiff)).toBe(true);
       if (f.solverDiff > 0) {

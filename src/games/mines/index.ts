@@ -118,7 +118,6 @@ import {
   type MinesUi,
   QUERY,
   TODO,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -354,7 +353,6 @@ export const minesGame: Game<
     randomUpto(rng, p.h);
     return { desc: `r${p.n},${p.unique ? "u" : "a"},${randomStateEncode(rng)}` };
   },
-  validateDesc,
   newState(p: MinesParams, desc: string): MinesState {
     const { layout, openXY } = decodeDesc(p, desc);
     const state: MinesState = {

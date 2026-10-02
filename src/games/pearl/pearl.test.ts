@@ -8,6 +8,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -33,7 +34,6 @@ import {
   type PearlState,
   R,
   U,
-  validateDesc,
 } from "./state.ts";
 
 const EASY_6 = { w: 6, h: 6, difficulty: DIFF_EASY, nosolve: false };
@@ -93,16 +93,16 @@ describe("pearl desc codec", () => {
   it("round-trips a generated desc through newState + encode", () => {
     for (const seed of ["d0", "d1", "d2"]) {
       const { desc } = newDesc(EASY_6, randomNew(seed));
-      expect(validateDesc(EASY_6, desc)).toBeNull();
+      expect(validateDesc(pearlGame, EASY_6, desc)).toBeNull();
       const state = newState(EASY_6, desc);
       expect(encodeClues(state.clues, EASY_6.w * EASY_6.h)).toBe(desc);
     }
   });
 
   it("rejects a desc that under- or over-fills the grid", () => {
-    expect(validateDesc(EASY_6, "a")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(EASY_6, "z".repeat(10))).toBe(DESC_TOO_LONG);
-    expect(validateDesc(EASY_6, "Q")).toBe(descBadCharacter("Q"));
+    expect(validateDesc(pearlGame, EASY_6, "a")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(pearlGame, EASY_6, "z".repeat(10))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(pearlGame, EASY_6, "Q")).toBe(descBadCharacter("Q"));
   });
 });
 

@@ -16,6 +16,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { bin2hex, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { describeParams } from "../../engine/param-label.ts";
@@ -37,7 +38,6 @@ import {
   LASER_REFLECT,
   newDesc,
   newState,
-  validateDesc,
 } from "./state.ts";
 
 /** Build a state with balls at 0-indexed arena coords `[x, y]`. */
@@ -222,7 +222,7 @@ describe("Black Box — desc codec", () => {
   it("recovers the scattered balls through obfuscation", () => {
     const p = defaultParams();
     const { desc } = newDesc(p, randomNew("blackbox-desc"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(blackboxGame, p, desc)).toBeNull();
     const s = newState(p, desc);
     let placed = 0;
     for (let i = 0; i < s.grid.length; i++) if (s.grid[i] & BALL_CORRECT) placed++;
@@ -242,33 +242,37 @@ describe("Black Box — desc codec", () => {
 
   it("rejects a description of the wrong length", () => {
     const p = defaultParams();
-    expect(validateDesc(p, "abc")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(blackboxGame, p, "abc")).toBe(DESC_TOO_SHORT);
     const two = { w: 3, h: 3, minballs: 1, maxballs: 2 };
     const one = encode(3, 3, 0, 0);
     const pair = encode(3, 3, 0, 0, 1, 1);
-    expect(validateDesc(two, one)).toBeNull();
-    expect(validateDesc(two, pair)).toBeNull();
+    expect(validateDesc(blackboxGame, two, one)).toBeNull();
+    expect(validateDesc(blackboxGame, two, pair)).toBeNull();
     // Part of a ball past one is a second ball cut short; past two, too many.
-    expect(validateDesc(two, `${one}ab`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(two, `${pair}a`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(two, encode(3, 3, 0, 0, 1, 1, 2, 2))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(blackboxGame, two, `${one}ab`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(blackboxGame, two, `${pair}a`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(blackboxGame, two, encode(3, 3, 0, 0, 1, 1, 2, 2))).toBe(
+      DESC_TOO_LONG,
+    );
   });
 
   it("reads only the lowercase hex its encoder writes", () => {
     const p = { w: 3, h: 3, minballs: 1, maxballs: 1 };
     const desc = encode(3, 3, 1, 2);
-    expect(validateDesc(p, desc)).toBeNull();
-    expect(validateDesc(p, `${desc.slice(0, 7)}g`)).toBe(descBadCharacter("g"));
+    expect(validateDesc(blackboxGame, p, desc)).toBeNull();
+    expect(validateDesc(blackboxGame, p, `${desc.slice(0, 7)}g`)).toBe(
+      descBadCharacter("g"),
+    );
     const upper = desc.toUpperCase();
     const at = [...upper].findIndex((c) => c !== c.toLowerCase());
     expect(at).toBeGreaterThanOrEqual(0);
-    expect(validateDesc(p, upper)).toBe(descBadCharacter(upper[at]));
+    expect(validateDesc(blackboxGame, p, upper)).toBe(descBadCharacter(upper[at]));
   });
 
   it("rejects two balls on one cell", () => {
     const p = { w: 3, h: 3, minballs: 2, maxballs: 2 };
-    expect(validateDesc(p, encode(3, 3, 1, 2, 2, 1))).toBeNull();
-    expect(validateDesc(p, encode(3, 3, 1, 2, 1, 2))).toBe(DESC_REPEATED);
+    expect(validateDesc(blackboxGame, p, encode(3, 3, 1, 2, 2, 1))).toBeNull();
+    expect(validateDesc(blackboxGame, p, encode(3, 3, 1, 2, 1, 2))).toBe(DESC_REPEATED);
   });
 
   it("rejects a description whose balls fall outside the arena", () => {
@@ -276,7 +280,7 @@ describe("Black Box — desc codec", () => {
     const p = { w: 2, h: 2, minballs: 1, maxballs: 1 };
     for (const bmp of [Uint8Array.of(2, 2, 2, 0), Uint8Array.of(2, 2, 0, 2)]) {
       obfuscateBitmap(bmp, bmp.length * 8, false);
-      expect(validateDesc(p, bin2hex(bmp))).toBe(DESC_OUT_OF_RANGE);
+      expect(validateDesc(blackboxGame, p, bin2hex(bmp))).toBe(DESC_OUT_OF_RANGE);
     }
   });
 });

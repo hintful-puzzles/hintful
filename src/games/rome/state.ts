@@ -97,7 +97,7 @@ export const DIR_COUNT = DIR_BITS.length;
  * The placed-value a square that is decided but holds no arrow carries on a
  * candidate plan's working grid: a goal. `dirBit` maps it to no candidate bit,
  * which is the truth — a goal rules no arrow out of its neighbors. Goals sit in
- * one-square regions (`validateDesc` rejects any other placement), so nothing
+ * one-square regions (`parseDesc` rejects any other placement), so nothing
  * ever asks it to.
  */
 const GOAL_VALUE = DIR_COUNT + 1;

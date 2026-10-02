@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { descBadCharacter } from "../../engine/desc-error.ts";
+import { descBadCharacter, validateDesc } from "../../engine/desc-error.ts";
 import { difficultyTiers } from "../../engine/difficulty.ts";
 import { UI_UPDATE } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -59,7 +59,7 @@ describe("Galaxies generator integration", () => {
       const rng = randomNew(`gen-${p.w}x${p.h}-normal`);
       const desc = newGameDesc(p, rng);
       // The desc must decode and round-trip.
-      expect(galaxiesGame.validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(galaxiesGame, p, desc)).toBeNull();
       const fresh = galaxiesGame.newState(p, desc);
 
       // Solver run from clean state must complete at exactly the Easy tier.
@@ -78,7 +78,7 @@ describe("Galaxies generator integration", () => {
     };
     const rng = randomNew("gen-7x7-unreasonable");
     const desc = newGameDesc(p, rng);
-    expect(galaxiesGame.validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(galaxiesGame, p, desc)).toBeNull();
     const fresh = galaxiesGame.newState(p, desc);
     clearForSolve(fresh);
     const diff = solverState(fresh, GalaxiesDiff.Unreasonable);
@@ -114,7 +114,7 @@ describe("Galaxies game flow", () => {
 
   it("validateDesc rejects an unparseable desc", () => {
     const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
-    expect(galaxiesGame.validateDesc(p, "1")).toBe(descBadCharacter("1"));
+    expect(validateDesc(galaxiesGame, p, "1")).toBe(descBadCharacter("1"));
   });
 
   it("decodeParams accepts upstream-lenient forms", () => {

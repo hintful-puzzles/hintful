@@ -10,6 +10,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -34,7 +35,6 @@ import {
   SYMM_NONE,
   SYMM_REF4D,
   SYMM_ROT2,
-  validateDesc,
 } from "./state.ts";
 
 function paramsEqual(a: SoloParams, b: SoloParams): boolean {
@@ -199,15 +199,19 @@ describe("solo grid codec", () => {
 
   it("refuses what encodeGrid never writes, by what went wrong", () => {
     const blanks = "z".repeat(3); // 78 blanks
-    expect(validateDesc(STANDARD, `${blanks}a1_2`)).toBeNull();
-    expect(validateDesc(STANDARD, `${blanks}a1_2_`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(STANDARD, `_${blanks}1_2`)).toBe(descBadCharacter("_"));
-    expect(validateDesc(STANDARD, `${blanks}1_a2`)).toBe(descBadCharacter("a"));
-    expect(validateDesc(STANDARD, `${blanks}ab`)).toBe(descBadCharacter("b"));
-    expect(validateDesc(STANDARD, `${blanks}a1_0`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(STANDARD, `${blanks}a1_10`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(STANDARD, `${blanks}a1`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(STANDARD, `${blanks}d`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(soloGame, STANDARD, `${blanks}a1_2`)).toBeNull();
+    expect(validateDesc(soloGame, STANDARD, `${blanks}a1_2_`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(soloGame, STANDARD, `_${blanks}1_2`)).toBe(
+      descBadCharacter("_"),
+    );
+    expect(validateDesc(soloGame, STANDARD, `${blanks}1_a2`)).toBe(
+      descBadCharacter("a"),
+    );
+    expect(validateDesc(soloGame, STANDARD, `${blanks}ab`)).toBe(descBadCharacter("b"));
+    expect(validateDesc(soloGame, STANDARD, `${blanks}a1_0`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(soloGame, STANDARD, `${blanks}a1_10`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(soloGame, STANDARD, `${blanks}a1`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(soloGame, STANDARD, `${blanks}d`)).toBe(DESC_TOO_LONG);
   });
 });
 
@@ -230,7 +234,7 @@ describe("solo block-structure codec", () => {
     const kgrid = new Int32Array(81);
     for (let y = 0; y < 9; y++) kgrid[y * 9] = 45;
     const desc = `${encodeGrid(new Int8Array(81), 81)},${blocks},${encodeGrid(kgrid, 81)}`;
-    expect(validateDesc(KILLER, desc)).toBeNull();
+    expect(validateDesc(soloGame, KILLER, desc)).toBeNull();
     expectSamePartition(
       whichblock,
       newState(KILLER, desc).killerData?.kblocks.whichblock ?? new Int32Array(81),
@@ -241,16 +245,18 @@ describe("solo block-structure codec", () => {
     const p: SoloParams = { ...STANDARD, c: 9, r: 1 };
     const grid = encodeGrid(new Int8Array(81), 81);
     const blocks = encodeBlockStructureDesc(9, rectangularBlocks(3, 3));
-    expect(validateDesc(p, `${grid},${blocks}`)).toBeNull();
-    expect(validateDesc(p, grid)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, `${grid},${blocks.slice(0, -1)}`)).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, `${grid},${blocks}_`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `${grid},${blocks},`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(soloGame, p, `${grid},${blocks}`)).toBeNull();
+    expect(validateDesc(soloGame, p, grid)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(soloGame, p, `${grid},${blocks.slice(0, -1)}`)).toBe(
+      DESC_TOO_SHORT,
+    );
+    expect(validateDesc(soloGame, p, `${grid},${blocks}_`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(soloGame, p, `${grid},${blocks},`)).toBe(DESC_TOO_LONG);
     const oneBlock = encodeBlockStructureDesc(
       9,
       makeBlocksFromWhichblock(9, 1, new Int32Array(81)),
     );
-    expect(validateDesc(p, `${grid},${oneBlock}`)).toMatch(/blocks or cages/);
+    expect(validateDesc(soloGame, p, `${grid},${oneBlock}`)).toMatch(/blocks or cages/);
   });
 
   it("bounds a cage sum by the most its digits can add to", () => {
@@ -258,9 +264,11 @@ describe("solo block-structure codec", () => {
     const kgrid = new Int32Array(81);
     for (const cells of kblocks.blocks) kgrid[cells[0]] = 45;
     const head = `${encodeGrid(new Int8Array(81), 81)},${encodeBlockStructureDesc(9, kblocks)}`;
-    expect(validateDesc(KILLER, `${head},${encodeGrid(kgrid, 81)}`)).toBeNull();
+    expect(
+      validateDesc(soloGame, KILLER, `${head},${encodeGrid(kgrid, 81)}`),
+    ).toBeNull();
     kgrid[0] = 46;
-    expect(validateDesc(KILLER, `${head},${encodeGrid(kgrid, 81)}`)).toBe(
+    expect(validateDesc(soloGame, KILLER, `${head},${encodeGrid(kgrid, 81)}`)).toBe(
       DESC_OUT_OF_RANGE,
     );
   });
@@ -283,7 +291,7 @@ describe("solo desc assembly (validateDesc + newState)", () => {
     grid[10] = 8;
     grid[80] = 2;
     const desc = encodeGrid(grid, area);
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(soloGame, p, desc)).toBeNull();
     const st = newState(p, desc);
     expect(Array.from(st.grid)).toEqual(Array.from(grid));
     expect(st.immutable[0]).toBe(1);
@@ -307,7 +315,7 @@ describe("solo desc assembly (validateDesc + newState)", () => {
     grid[0] = 4;
     const blocks = rectangularBlocks(3, 3); // a valid 9×9-of-9 partition
     const desc = `${encodeGrid(grid, area)},${encodeBlockStructureDesc(cr, blocks)}`;
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(soloGame, p, desc)).toBeNull();
     const st = newState(p, desc);
     expect(st.blocks.nrBlocks).toBe(9);
     // partition preserved
@@ -336,7 +344,7 @@ describe("solo desc assembly (validateDesc + newState)", () => {
     const kgrid = new Int32Array(area);
     for (let b = 0; b < kblocks.nrBlocks; b++) kgrid[kblocks.blocks[b][0]] = 45; // sum 1..9
     const desc = `${encodeGrid(grid, area)},${encodeBlockStructureDesc(cr, kblocks)},${encodeGrid(kgrid, area)}`;
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(soloGame, p, desc)).toBeNull();
     const st = newState(p, desc);
     expect(st.killerData).not.toBeNull();
     expect(st.killerData?.kblocks.nrBlocks).toBe(9);

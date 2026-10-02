@@ -9,11 +9,9 @@ import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
@@ -145,7 +143,7 @@ export function validateParams(p: MosaicParams, _full: boolean): string | null {
 
 /** Encode a clue board as upstream's run-length desc: a digit per shown
  * clue, a letter `a`-`z` per run of 1-26 hidden cells. The trailing run is
- * kept, because `validateDesc` wants exactly `width × height` cells. */
+ * kept, because {@link parseDesc} wants exactly `width × height` cells. */
 export function encodeBoard(board: MosaicBoard): string {
   return encodeRunLength(
     board.clues.length,
@@ -173,10 +171,6 @@ function parseDesc(p: MosaicParams, desc: string): DescParse<Int8Array> {
     if (loc > size) r.fail(DESC_TOO_LONG);
     return clues;
   });
-}
-
-export function validateDesc(p: MosaicParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: MosaicParams, desc: string): MosaicState {

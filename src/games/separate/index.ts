@@ -76,7 +76,6 @@ import {
   type SeparateUi,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -252,7 +251,6 @@ export const separateGame: Game<
   paramConfig,
 
   newDesc: newSeparateDesc,
-  validateDesc,
   newState,
   newUi,
 

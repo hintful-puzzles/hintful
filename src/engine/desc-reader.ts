@@ -11,11 +11,11 @@
  * make it once.
  *
  * The second job is that a game reads its desc **once**. {@link readDesc} runs
- * one parser and returns a {@link DescParse}: `validateDesc` asks whether it
- * succeeded and `newState` builds from its value, so the two cannot disagree
- * about a character. Two loops did, in silence, because a typed array swallows
- * a stray write: the same reading found validators accepting what their
- * parsers skipped in about half the collection.
+ * one parser and returns a {@link DescParse}, which `newState` takes the value
+ * of with `descValue`; the engine's verdict on the desc is that same parse
+ * (`loadDesc`). Two loops, a validator's and a parser's, once disagreed in
+ * silence, because a typed array swallows a stray write: validators accepted
+ * what their parsers skipped in about half the collection.
  *
  * WHAT DOES NOT LIVE HERE is any game's grammar: what a letter means, how runs
  * chunk, which characters a value may be. Those are the puzzle's and its frozen
@@ -23,7 +23,7 @@
  * The cursor only reads what the caller asks for and says why it could not.
  *
  * Failures unwind by throwing a private value that {@link readDesc} catches,
- * so a game never sees one and `validateDesc` still returns rather than throws.
+ * so a game sees only the {@link DescParse} it returns.
  * Calling a reading method outside {@link readDesc} is a bug and throws.
  */
 import { isDigit, parseLeadingInt } from "./decimal.ts";

@@ -64,7 +64,6 @@ import {
   type SixteenUi,
   status,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 // --- move logic -------------------------------------------------------
@@ -695,7 +694,6 @@ export const sixteenGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

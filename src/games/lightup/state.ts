@@ -14,11 +14,9 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
@@ -328,7 +326,7 @@ export function status(s: LightupState): GameStatus {
 /** Encode the black/numbered layout as upstream: row-major, `B` for an
  * unnumbered black, `0`–`4` for a numbered black, runs of open squares
  * compressed as `a`–`z`. The trailing run is kept, because
- * {@link validateDesc} wants exactly `w × h` cells. */
+ * {@link parseDesc} wants exactly `w × h` cells. */
 export function encodeDesc(state: LightupState): string {
   const { w, h, flags, lights } = state;
   return encodeRunLength(
@@ -370,10 +368,6 @@ function parseDesc(p: LightupParams, desc: string): DescParse<LightupState> {
     if (i > wh) r.fail(DESC_TOO_LONG);
     return state;
   });
-}
-
-export function validateDesc(p: LightupParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: LightupParams, desc: string): LightupState {

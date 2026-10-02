@@ -15,11 +15,12 @@
  * clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
  */
 import { expect } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
 import { newLightupDesc } from "./generator.ts";
+import { lightupGame } from "./index.ts";
 import type { LightupParams } from "./state.ts";
-import { validateDesc } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -45,6 +46,6 @@ describeDescDifferential<Fixture, LightupParams>({
   }),
   newDesc: newLightupDesc,
   extra: (f, p) => {
-    expect(validateDesc(p, f.desc)).toBeNull();
+    expect(validateDesc(lightupGame, p, f.desc)).toBeNull();
   },
 });

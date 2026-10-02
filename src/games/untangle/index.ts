@@ -24,7 +24,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, BLUE_WASH, ORANGE, PURPLE } from "../../engine/color/colors.ts";
 import { ERROR, FLASH, HELD, INK } from "../../engine/color/palette.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { descValue, descVerdict } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/desc-error.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
   type Game,
@@ -165,8 +165,6 @@ export const untangleGame: Game<
 
   // --- generation ----------------------------------------------------
   newDesc: newUntangleDesc,
-  validateDesc: (p, desc) => descVerdict(parseDesc(p, desc)),
-
   newState: (p, desc) => {
     const n = p.n;
     const w = coordLimit(n);

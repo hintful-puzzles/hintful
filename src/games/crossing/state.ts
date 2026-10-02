@@ -21,11 +21,9 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   DESC_TOO_LONG,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
@@ -366,10 +364,6 @@ function parseDesc(p: CrossingParams, desc: string): DescParse<CrossingPuzzle> {
       r.fail(DESC_CONTRADICTORY);
     return puzzle;
   });
-}
-
-export function validateDesc(p: CrossingParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 /** A wall run as letters, `z` (26) at a time, the way {@link parseDesc} reads

@@ -1,10 +1,4 @@
-import {
-  DESC_REPEATED,
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -104,10 +98,6 @@ function parseDesc(p: FifteenParams, desc: string): DescParse<Int32Array> {
     r.end();
     return tiles;
   });
-}
-
-export function validateDesc(p: FifteenParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: FifteenParams, desc: string): FifteenState {

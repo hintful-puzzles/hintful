@@ -58,7 +58,6 @@ import {
   status,
   statusbarText,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -230,7 +229,6 @@ export const mosaicGame: Game<
   ],
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

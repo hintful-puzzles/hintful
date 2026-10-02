@@ -89,7 +89,6 @@ import {
   setLight,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -511,7 +510,6 @@ export const lightupGame: Game<
   ],
 
   newDesc: newLightupDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

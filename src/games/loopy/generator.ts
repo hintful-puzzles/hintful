@@ -7,6 +7,7 @@
  * divergence anywhere in the solver changes which descriptions come out, and
  * why the description byte-match is such a strong differential.
  */
+import { descVerdict } from "../../engine/desc-error.ts";
 import { APERIODIC_GRID_TYPES, type GridType } from "../../engine/grid/index.ts";
 import { FACE_BLACK, FACE_GRAY, generateLoop } from "../../engine/loopgen.ts";
 import type { RandomState } from "../../engine/random/index.ts";
@@ -20,7 +21,7 @@ import {
   LINE_UNKNOWN,
   type LoopyState,
   NO_CLUE,
-  validateDesc,
+  parseDesc,
 } from "./state.ts";
 
 /**
@@ -175,9 +176,9 @@ function finishDesc(p: LoopyParams, gridDesc: string | null, clueDesc: string): 
   const desc = gridDesc === null ? clueDesc : `${gridDesc}_${clueDesc}`;
 
   // Upstream asserts the same thing: a description this function produced that
-  // its own validator rejects is a bug in one of them, and it is much cheaper
-  // to find here than in `newState`.
-  const err = validateDesc(p, desc);
+  // its own parser rejects is a bug in one of them, and it is much cheaper to
+  // find here than in `newState`.
+  const err = descVerdict(parseDesc(p, desc));
   if (err !== null) throw new Error(`loopy: generated an invalid desc (${err})`);
 
   return desc;

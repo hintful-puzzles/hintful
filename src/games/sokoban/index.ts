@@ -45,7 +45,6 @@ import {
   status,
   TARGET,
   targetize,
-  validateDesc,
 } from "./state.ts";
 
 // --- input ------------------------------------------------------------
@@ -165,7 +164,6 @@ export const sokobanGame: Game<
   paramConfig,
 
   newDesc: newSokobanDesc,
-  validateDesc,
   newState,
   newUi: () => ({}),
 

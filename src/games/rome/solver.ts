@@ -51,7 +51,6 @@ import {
   DESC_CONTRADICTORY,
   type DescError,
   type DescParse,
-  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
@@ -272,10 +271,6 @@ export function parseDesc(p: RomeParams, desc: string): DescParse<RomeState> {
     if (result) r.fail(result);
     return board;
   });
-}
-
-export function validateDesc(p: RomeParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 // --- the recording projection -----------------------------------------------

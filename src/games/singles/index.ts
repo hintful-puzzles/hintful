@@ -78,7 +78,6 @@ import {
   type SinglesState,
   type SinglesUi,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 /** A cell whose mark contradicts the unique solution (Check & Save). */
@@ -486,7 +485,6 @@ export const singlesGame: Game<
   paramConfig,
 
   newDesc: newSinglesDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

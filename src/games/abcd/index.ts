@@ -85,7 +85,6 @@ import {
   paramConfig,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -334,7 +333,6 @@ export const abcdGame: Game<
   paramConfig,
 
   newDesc: newAbcdDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

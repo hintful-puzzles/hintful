@@ -131,7 +131,6 @@ import {
   type LoopyState,
   newState,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 /** One edge set to one state. Moves are **absolute sets, never toggles**, so
@@ -858,7 +857,6 @@ export const loopyGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

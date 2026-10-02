@@ -8,7 +8,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DESC_REPEATED, DESC_TOO_SHORT, descValue } from "../../engine/desc-error.ts";
+import {
+  DESC_REPEATED,
+  DESC_TOO_SHORT,
+  descValue,
+  validateDesc,
+} from "../../engine/desc-error.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -112,11 +117,11 @@ describe("params", () => {
 describe("desc", () => {
   it("refuses a repeated edge and a board with no edges", () => {
     const p = { n: 4 };
-    expect(untangleGame.validateDesc(p, "0-1,1-2,2-3")).toBeNull();
-    expect(untangleGame.validateDesc(p, "0-1,1-2,0-1")).toBe(DESC_REPEATED);
-    expect(untangleGame.validateDesc(p, "0-1,1-2,1-0")).toBe(DESC_REPEATED);
-    expect(untangleGame.validateDesc(p, "")).toBe(DESC_TOO_SHORT);
-    expect(untangleGame.validateDesc(p, "0-1,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(untangleGame, p, "0-1,1-2,2-3")).toBeNull();
+    expect(validateDesc(untangleGame, p, "0-1,1-2,0-1")).toBe(DESC_REPEATED);
+    expect(validateDesc(untangleGame, p, "0-1,1-2,1-0")).toBe(DESC_REPEATED);
+    expect(validateDesc(untangleGame, p, "")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(untangleGame, p, "0-1,")).toBe(DESC_TOO_SHORT);
   });
 });
 

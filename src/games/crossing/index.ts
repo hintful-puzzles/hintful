@@ -101,7 +101,6 @@ import {
   snapDirection,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -690,7 +689,6 @@ export const crossingGame: Game<
   paramConfig,
 
   newDesc: (p, rng) => newCrossingDesc(p, rng),
-  validateDesc,
   newState,
   newUi,
   changedState,

@@ -3,6 +3,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -122,21 +123,23 @@ describe("Pegs desc and state", () => {
   });
 
   it("validates desc length", () => {
-    expect(G.validateDesc({ w: 7, h: 7, type: 0 }, "PPPPPPP")).toBe(DESC_TOO_SHORT);
-    expect(G.validateDesc({ w: 2, h: 1, type: 0 }, "PHP")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(G, { w: 7, h: 7, type: 0 }, "PPPPPPP")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(G, { w: 2, h: 1, type: 0 }, "PHP")).toBe(DESC_TOO_LONG);
   });
 
   it("validates desc characters", () => {
-    expect(G.validateDesc({ w: 2, h: 2, type: 0 }, "PPXH")).toBe(descBadCharacter("X"));
+    expect(validateDesc(G, { w: 2, h: 2, type: 0 }, "PPXH")).toBe(
+      descBadCharacter("X"),
+    );
   });
 
   it("validates desc has enough pegs and holes", () => {
     // "PPH" is the minimal valid desc (2 pegs + 1 hole).
-    expect(G.validateDesc({ w: 3, h: 1, type: 0 }, "PPH")).toBeNull();
-    expect(G.validateDesc({ w: 2, h: 1, type: 0 }, "OO")).toMatch(
+    expect(validateDesc(G, { w: 3, h: 1, type: 0 }, "PPH")).toBeNull();
+    expect(validateDesc(G, { w: 2, h: 1, type: 0 }, "OO")).toMatch(
       /fewer than two pegs/,
     );
-    expect(G.validateDesc({ w: 2, h: 1, type: 0 }, "PP")).toMatch(/no empty hole/);
+    expect(validateDesc(G, { w: 2, h: 1, type: 0 }, "PP")).toMatch(/no empty hole/);
   });
 
   it("creates state from desc", () => {

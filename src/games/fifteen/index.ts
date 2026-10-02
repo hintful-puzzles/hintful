@@ -50,7 +50,6 @@ import {
   presets,
   status,
   textFormat,
-  validateDesc,
 } from "./state.ts";
 
 // --- move logic -------------------------------------------------------
@@ -243,7 +242,6 @@ export const fifteenGame: Game<
   paramConfig,
 
   newDesc,
-  validateDesc,
   newState,
   newUi,
 

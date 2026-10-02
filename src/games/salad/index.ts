@@ -102,7 +102,6 @@ import {
   symbolChar,
   symbolRange,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -341,7 +340,6 @@ export const saladGame: Game<
   paramConfig,
 
   newDesc: (p, rng) => newSaladDesc(p, rng),
-  validateDesc,
   newState,
   newUi,
 

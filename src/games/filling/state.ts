@@ -14,11 +14,9 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
@@ -131,10 +129,6 @@ function parseDesc(p: FillingParams, desc: string): DescParse<Uint8Array> {
   });
 }
 
-export function validateDesc(p: FillingParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
-}
-
 export function newState(p: FillingParams, desc: string): FillingState {
   const clues = descValue(parseDesc(p, desc));
   return {
@@ -148,7 +142,7 @@ export function newState(p: FillingParams, desc: string): FillingState {
 /**
  * Encode a finished board as a desc — the inverse of {@link newState}.
  *
- * `keepTrailingBlanks` because {@link validateDesc} rejects a desc whose cells
+ * `keepTrailingBlanks` because {@link parseDesc} rejects a desc whose cells
  * do not add up to the whole grid ("Not enough data to fill grid"), so a board
  * ending in empties needs the run that reaches the last cell.
  */

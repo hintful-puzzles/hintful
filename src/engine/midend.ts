@@ -15,7 +15,7 @@
 import { resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
 import { completionStatus } from "./completion-status.ts";
-import { DESC_MALFORMED } from "./desc-error.ts";
+import { DESC_MALFORMED, loadDesc, validateDesc } from "./desc-error.ts";
 import {
   cappedSolveFor,
   difficultyTiers,
@@ -366,7 +366,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const rng = randomNew(freshSeed());
     const params = fitTo ? this.paramsToFit(fitTo) : this.params;
     const { desc, aux } = this.game.newDesc(params, rng);
-    this.startFrom(params, desc, aux);
+    this.startFrom(params, desc, this.game.newState(params, desc), aux);
   }
 
   /** The chosen params, or the same board turned on its side when that draws
@@ -418,14 +418,24 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       const rng = randomNew(rest);
       const { desc, aux } = this.game.newDesc(params, rng);
       this.params = params;
-      this.startFrom(params, desc, aux);
+      this.startFrom(params, desc, this.game.newState(params, desc), aux);
       return null;
     }
-    const dErr = this.game.validateDesc(params, rest);
-    if (dErr) return dErr;
+    const loaded = loadDesc(this.game, params, rest);
+    if (!loaded.ok) return loaded.error;
     this.params = this.withBoardTier(paramsStr, params, rest);
-    this.startFrom(this.params, rest);
+    this.startFrom(this.params, rest, this.stateZero(params, rest, loaded.value));
     return null;
+  }
+
+  /**
+   * State 0 for `desc` under `this.params`, given the board `loaded` built under
+   * `judged` while deciding the desc loads. The tier check returns the same
+   * params object when it keeps them, and then that board is state 0; a changed
+   * tier rebuilds, since a state may carry its tier.
+   */
+  private stateZero(judged: Params, desc: string, loaded: State): State {
+    return this.params === judged ? loaded : this.game.newState(this.params, desc);
   }
 
   /**
@@ -482,13 +492,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return tier === null ? params : withTier(this.game, params, tier);
   }
 
-  private startFrom(params: Params, desc: string, aux?: string): void {
+  /** Begin play on `initial`, the state `desc` builds under `params`. */
+  private startFrom(params: Params, desc: string, initial: State, aux?: string): void {
     this.boardParams = params;
     this.desc = desc;
     this.privDesc = undefined;
     this.descSuperseded = false;
     this.aux = aux;
-    const initial = this.game.newState(params, desc);
     this.history = [initial];
     this.moveLog = [];
     this.pos = 0;
@@ -1637,15 +1647,26 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     } catch (e) {
       return `Invalid saved parameters: ${(e as Error).message}`;
     }
-    // A save pins the tier its board was labeled at, which a build that
-    // mislabeled the board got wrong; `withBoardTier` checks it.
-    this.params = this.withBoardTier(env.params, params, env.desc);
     // State 0 is rebuilt from the private desc when the save carries one — the
     // public desc bakes in the first click the move log is about to replay
     // (upstream midend.c:2663). The public desc is then restored over it, since
     // it, not the layout-only one, is what the game *is* (and what the id names);
-    // the replay's own `applySupersede` will agree with it.
-    this.startFrom(this.params, env.privDesc ?? env.desc);
+    // the replay's own `applySupersede` will agree with it. Both must still
+    // load: a parser made stricter since the save was written refuses it here
+    // rather than throwing, and a restart rebuilds from the public one.
+    const stateDesc = env.privDesc ?? env.desc;
+    const refused = validateDesc(this.game, params, env.desc);
+    if (refused !== null) return `Could not restore this saved game: ${refused}`;
+    const loaded = loadDesc(this.game, params, stateDesc);
+    if (!loaded.ok) return `Could not restore this saved game: ${loaded.error}`;
+    // A save pins the tier its board was labeled at, which a build that
+    // mislabeled the board got wrong; `withBoardTier` checks it.
+    this.params = this.withBoardTier(env.params, params, env.desc);
+    this.startFrom(
+      this.params,
+      stateDesc,
+      this.stateZero(params, stateDesc, loaded.value),
+    );
     if (env.privDesc !== undefined) {
       this.desc = env.desc;
       this.privDesc = env.privDesc;
@@ -1666,7 +1687,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // drawable board with the right params and desc — and report. Anything
       // that leaves a half-replayed history strands the player on a board
       // that throws on every repaint, which is the bug this replaced.
-      this.startFrom(this.params, env.privDesc ?? env.desc);
+      this.startFrom(
+        this.params,
+        stateDesc,
+        this.game.newState(this.params, stateDesc),
+      );
       return `Could not restore this saved game: ${(e as Error).message}`;
     }
     this.pos = Math.min(env.pos, this.history.length - 1);

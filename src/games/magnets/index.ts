@@ -57,7 +57,6 @@ import {
   presets,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -250,7 +249,6 @@ export const magnetsGame: Game<
   paramConfig,
 
   newDesc: newMagnetsDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

@@ -96,7 +96,6 @@ import {
   type SticksState,
   type SticksUi,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -518,7 +517,6 @@ export const sticksGame: Game<
   paramConfig,
 
   newDesc: newSticksDesc,
-  validateDesc,
   newState,
   newUi,
 

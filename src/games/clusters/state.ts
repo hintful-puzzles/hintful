@@ -9,12 +9,7 @@
  * the given bytes stay clean for the desc encoder.
  */
 
-import {
-  type DescError,
-  type DescParse,
-  descValue,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
@@ -208,10 +203,6 @@ function parseDesc(p: ClustersParams, desc: string): DescParse<Uint8Array> {
     });
     return grid;
   });
-}
-
-export function validateDesc(p: ClustersParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: ClustersParams, desc: string): ClustersState {

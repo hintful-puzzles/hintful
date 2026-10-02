@@ -17,17 +17,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";
+import { crossingGame } from "./index.ts";
 import { solveCrossing } from "./solver.ts";
-import {
-  type CrossingParams,
-  collectRuns,
-  makePuzzle,
-  newState,
-  validateDesc,
-} from "./state.ts";
+import { type CrossingParams, collectRuns, makePuzzle, newState } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -63,7 +59,7 @@ describe("crossing frozen boards", () => {
   for (const f of data.fixtures) {
     it(`${label(f)} loads and solves uniquely`, () => {
       const p = params(f);
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(crossingGame, p, f.desc)).toBeNull();
       const { walls, numbers } = newState(p, f.desc).puzzle;
       expect(collectRuns(p.w, p.h, walls)).toHaveLength(numbers.length);
       expect(solveCrossing(makePuzzle(p.w, p.h, walls, numbers)).status).toBe("valid");

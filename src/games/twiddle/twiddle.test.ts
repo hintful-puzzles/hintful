@@ -9,6 +9,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -163,7 +164,7 @@ describe("Twiddle generation", () => {
     for (const orientable of [false, true]) {
       const p = params({ w: 4, h: 4, orientable });
       const { desc } = newDesc(p, randomNew(`rt-${orientable}`));
-      expect(twiddleGame.validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(twiddleGame, p, desc)).toBeNull();
       const state = newState(p, desc);
       expect(state.numbers).toHaveLength(16);
     }
@@ -171,29 +172,29 @@ describe("Twiddle generation", () => {
 
   it("validateDesc rejects malformed descs", () => {
     const p = params({ w: 3, h: 3 });
-    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8")).toBe(DESC_TOO_SHORT);
-    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8,9,10")).toBe(DESC_TOO_LONG);
-    expect(twiddleGame.validateDesc(p, "1,2;3,4,5,6,7,8,9")).toBe(
+    expect(validateDesc(twiddleGame, p, "1,2,3,4,5,6,7,8")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(twiddleGame, p, "1,2,3,4,5,6,7,8,9,10")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(twiddleGame, p, "1,2;3,4,5,6,7,8,9")).toBe(
       descBadCharacter(";"),
     );
     const po = params({ w: 3, h: 3, orientable: true });
     // Orientable mode needs a letter after each number.
-    expect(twiddleGame.validateDesc(po, "1,2,3,4,5,6,7,8,9")).toBe(
+    expect(validateDesc(twiddleGame, po, "1,2,3,4,5,6,7,8,9")).toBe(
       descBadCharacter(","),
     );
-    expect(twiddleGame.validateDesc(po, "1u2u3u4u5u6u7u8u9ux")).toBe(DESC_TOO_LONG);
-    expect(twiddleGame.validateDesc(po, "1u2u3u4u5u6u7u8u9")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(twiddleGame, po, "1u2u3u4u5u6u7u8u9ux")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(twiddleGame, po, "1u2u3u4u5u6u7u8u9")).toBe(DESC_TOO_SHORT);
   });
 
   it("validateDesc refuses numbers no shuffle of the solved board has", () => {
     const p = params({ w: 3, h: 3 });
-    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8,10")).toBe(DESC_OUT_OF_RANGE);
-    expect(twiddleGame.validateDesc(p, "0,2,3,4,5,6,7,8,9")).toBe(DESC_OUT_OF_RANGE);
-    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8,8")).toBe(DESC_REPEATED);
+    expect(validateDesc(twiddleGame, p, "1,2,3,4,5,6,7,8,10")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(twiddleGame, p, "0,2,3,4,5,6,7,8,9")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(twiddleGame, p, "1,2,3,4,5,6,7,8,8")).toBe(DESC_REPEATED);
     const pr = params({ w: 3, h: 3, rowsonly: true });
-    expect(twiddleGame.validateDesc(pr, "2,1,1,3,2,2,1,3,3")).toBeNull();
-    expect(twiddleGame.validateDesc(pr, "1,1,1,1,2,2,3,3,3")).toBe(DESC_REPEATED);
-    expect(twiddleGame.validateDesc(pr, "1,1,1,2,2,2,3,3,4")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(twiddleGame, pr, "2,1,1,3,2,2,1,3,3")).toBeNull();
+    expect(validateDesc(twiddleGame, pr, "1,1,1,1,2,2,3,3,3")).toBe(DESC_REPEATED);
+    expect(validateDesc(twiddleGame, pr, "1,1,1,2,2,2,3,3,4")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 

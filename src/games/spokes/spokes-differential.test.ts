@@ -15,9 +15,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/spokes-c-reference.json" with { type: "json" };
 import { newSpokesDesc } from "./generator.ts";
+import { spokesGame } from "./index.ts";
 import { spokesSolve } from "./solver.ts";
 import {
   clearBoard,
@@ -26,7 +28,6 @@ import {
   diffFromLevel,
   newState,
   type SpokesParams,
-  validateDesc,
 } from "./state.ts";
 
 interface Fixture {
@@ -56,7 +57,7 @@ describe("spokes frozen boards", () => {
   for (const f of data.fixtures) {
     it(`${label(f)} loads and solves at its tier`, () => {
       const p = params(f);
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(spokesGame, p, f.desc)).toBeNull();
       const b = cloneBoard(newState(p, f.desc));
       clearBoard(b);
       expect(spokesSolve(b, null, f.diff)).toBe("valid");

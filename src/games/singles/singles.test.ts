@@ -14,6 +14,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
@@ -35,7 +36,6 @@ import {
   makeState,
   newState,
   type SinglesParams,
-  validateDesc,
 } from "./state.ts";
 
 describe("singles params codec", () => {
@@ -72,7 +72,7 @@ describe("singles desc codec", () => {
   it("decodes a desc to the number grid and round-trips validation", () => {
     const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
     const { desc } = newSinglesDesc(p, randomNew("singles-codec"));
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(singlesGame, p, desc)).toBeNull();
     const s = newState(p, desc);
     expect(s.n).toBe(25);
     for (let i = 0; i < s.n; i++) {
@@ -84,15 +84,17 @@ describe("singles desc codec", () => {
 
   it("rejects a wrong-length desc", () => {
     const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
-    expect(validateDesc(p, "123")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(p, "1".repeat(26))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(singlesGame, p, "123")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(singlesGame, p, "1".repeat(26))).toBe(DESC_TOO_LONG);
   });
 
   it("tells a number too big for the board from a character that is no number", () => {
     const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
-    expect(validateDesc(p, `6${"1".repeat(24)}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, `0${"1".repeat(24)}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, `!${"1".repeat(24)}`)).toBe(descBadCharacter("!"));
+    expect(validateDesc(singlesGame, p, `6${"1".repeat(24)}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(singlesGame, p, `0${"1".repeat(24)}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(singlesGame, p, `!${"1".repeat(24)}`)).toBe(
+      descBadCharacter("!"),
+    );
   });
 });
 

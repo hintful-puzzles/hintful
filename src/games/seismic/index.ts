@@ -86,7 +86,6 @@ import {
   type SeismicState,
   type SeismicUi,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -312,7 +311,6 @@ export const seismicGame: Game<
   paramConfig,
 
   newDesc: (p, rng) => newSeismicDesc(p, rng),
-  validateDesc,
   newState,
   newUi,
 

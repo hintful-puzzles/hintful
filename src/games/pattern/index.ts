@@ -93,7 +93,6 @@ import {
   presets,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -447,7 +446,6 @@ export const patternGame: Game<
   paramConfig,
 
   newDesc: newPatternDesc,
-  validateDesc,
   newState,
   newUi,
 

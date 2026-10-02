@@ -16,6 +16,7 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   descValue,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyTiers } from "../../engine/difficulty.ts";
@@ -50,7 +51,6 @@ import {
   GOAL_NOT_ALONE,
   REGION_TOO_LARGE,
   romeSolve,
-  validateDesc,
   validateGame,
 } from "./solver.ts";
 import {
@@ -198,37 +198,41 @@ describe("desc codec", () => {
 
   it("rejects invalid characters, oversized regions and misplaced goals", () => {
     const p: RomeParams = { w: 3, h: 3, diff: DIFF_EASY };
-    expect(validateDesc(p, "!,i")).toBe(descBadCharacter("!"));
-    expect(validateDesc(p, `${ALL_WALLS_3},QQQQQQQQQ`)).toBe(descBadCharacter("Q"));
-    expect(validateDesc(p, `${ALL_WALLS_3},c`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(romeGame, p, "!,i")).toBe(descBadCharacter("!"));
+    expect(validateDesc(romeGame, p, `${ALL_WALLS_3},QQQQQQQQQ`)).toBe(
+      descBadCharacter("Q"),
+    );
+    expect(validateDesc(romeGame, p, `${ALL_WALLS_3},c`)).toBe(DESC_TOO_SHORT);
     // Five squares in one region: 'd' merges the whole top row of a 5x3.
-    expect(validateDesc({ w: 5, h: 3, diff: 0 }, "d17,o")).toBe(REGION_TOO_LARGE);
+    expect(validateDesc(romeGame, { w: 5, h: 3, diff: 0 }, "d17,o")).toBe(
+      REGION_TOO_LARGE,
+    );
     // A goal must sit alone: merge squares 0 and 1, then put the goal at 0.
-    expect(validateDesc(p, "a10,Xh")).toBe(GOAL_NOT_ALONE);
+    expect(validateDesc(romeGame, p, "a10,Xh")).toBe(GOAL_NOT_ALONE);
   });
 
   it("refuses a desc that is not exactly what the encoder writes", () => {
     const p: RomeParams = { w: 3, h: 3, diff: DIFF_EASY };
     // A wall run past the twelve borders, or a letter's gaps past them.
-    expect(validateDesc(p, "a11,i")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "m,i")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(romeGame, p, "a11,i")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(romeGame, p, "m,i")).toBe(DESC_TOO_LONG);
     // An empty wall run.
-    expect(validateDesc(p, "0a10,i")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(romeGame, p, "0a10,i")).toBe(DESC_OUT_OF_RANGE);
     // The separator replaced, or missing.
-    expect(validateDesc(p, `${ALL_WALLS_3};i`)).toBe(descBadCharacter(";"));
-    expect(validateDesc(p, `${ALL_WALLS_3}i`)).toBe(descBadCharacter("i"));
+    expect(validateDesc(romeGame, p, `${ALL_WALLS_3};i`)).toBe(descBadCharacter(";"));
+    expect(validateDesc(romeGame, p, `${ALL_WALLS_3}i`)).toBe(descBadCharacter("i"));
     // A clue run past the nine squares, and anything after the board.
-    expect(validateDesc(p, `${ALL_WALLS_3},j`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `${ALL_WALLS_3},i,`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, `${ALL_WALLS_3},i`)).toBeNull();
+    expect(validateDesc(romeGame, p, `${ALL_WALLS_3},j`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(romeGame, p, `${ALL_WALLS_3},i,`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(romeGame, p, `${ALL_WALLS_3},i`)).toBeNull();
   });
 
   it("rejects a description that is already finished or already broken", () => {
     const p: RomeParams = { w: 3, h: 3, diff: DIFF_EASY };
     // An arrow on the right column pointing right leaves the grid.
-    expect(validateDesc(p, `${ALL_WALLS_3},bRf`)).toBe(DESC_CONTRADICTORY);
+    expect(validateDesc(romeGame, p, `${ALL_WALLS_3},bRf`)).toBe(DESC_CONTRADICTORY);
     // Two walled-off goals: every square already reaches one.
-    expect(validateDesc({ w: 2, h: 1, diff: DIFF_EASY }, "1,XX")).toBe(
+    expect(validateDesc(romeGame, { w: 2, h: 1, diff: DIFF_EASY }, "1,XX")).toBe(
       ARROWS_ALREADY_SOLVED,
     );
   });
@@ -334,7 +338,7 @@ describe("generation", () => {
       // covers every preset against the C.
       if (p.w > 6) continue;
       const { desc } = newRomeDesc(p, randomNew(`rome-gen-${entry.title}`));
-      expect(validateDesc(p, desc)).toBeNull();
+      expect(validateDesc(romeGame, p, desc)).toBeNull();
       const at = board(p.w, p.h, desc);
       expect(romeSolve(at, p.diff)).toBe(STATUS_COMPLETE);
       swept++;

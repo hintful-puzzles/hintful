@@ -13,9 +13,11 @@
  * bind" (every generated board needs exactly its tier).
  */
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
+import { bricksGame } from "./index.ts";
 import { solveGame } from "./solver.ts";
-import { type BricksParams, encodeDesc, newState, validateDesc } from "./state.ts";
+import { type BricksParams, encodeDesc, newState } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -34,7 +36,7 @@ describe("bricks frozen upstream boards (decode, round-trip, solve at their tier
   for (const f of data.fixtures) {
     it(`${f.w}x${f.h}d${f.diff} seed=${f.seed}`, () => {
       const p: BricksParams = { w: f.w, h: f.h, diff: f.diff };
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(bricksGame, p, f.desc)).toBeNull();
       const state = newState(p, f.desc);
       expect(encodeDesc(state.grid, state.w, state.h)).toBe(f.desc);
       const grid = state.grid.slice();

@@ -16,11 +16,9 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
-  type DescError,
   type DescParse,
   descBadCharacter,
   descValue,
-  descVerdict,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
@@ -181,17 +179,13 @@ function parseDesc(p: SlantParams, desc: string): DescParse<Int8Array> {
   });
 }
 
-export function validateDesc(p: SlantParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
-}
-
 /** Parse a valid desc into the shared vertex-clue array (−1 = no clue). */
 export function decodeClues(p: SlantParams, desc: string): Int8Array {
   return descValue(parseDesc(p, desc));
 }
 
 /** Encode a vertex-clue array as the upstream run-length desc. The trailing run
- * is kept: `validateDesc` above rejects a desc that does not fill the grid
+ * is kept: `parseDesc` above rejects a desc that does not fill the grid
  * exactly, so dropping it would make Slant refuse its own boards. */
 export function encodeClues(clues: Int8Array): string {
   return encodeRunLength(

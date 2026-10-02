@@ -69,7 +69,6 @@ import {
   presets,
   status,
   textFormat,
-  validateDesc,
   validateParams,
 } from "./state.ts";
 
@@ -350,7 +349,6 @@ export const fillingGame: Game<
   paramConfig,
 
   newDesc: newFillingDesc,
-  validateDesc,
   newState,
   newUi,
   changedState,

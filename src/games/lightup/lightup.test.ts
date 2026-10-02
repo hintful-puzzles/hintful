@@ -13,6 +13,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
@@ -48,7 +49,6 @@ import {
   type LightupUi,
   newState,
   setLight,
-  validateDesc,
 } from "./state.ts";
 
 const FIXTURES = (
@@ -147,7 +147,7 @@ describe("lightup desc codec", () => {
         symm: f.symm,
         difficulty: f.difficulty,
       };
-      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(validateDesc(lightupGame, p, f.desc)).toBeNull();
       const state = newState(p, f.desc);
       expect(encodeDesc(state)).toBe(f.desc);
     }
@@ -155,17 +155,17 @@ describe("lightup desc codec", () => {
 
   it("rejects malformed descs", () => {
     const p = EASY_PARAMS;
-    expect(validateDesc(p, "!")).toBe(descBadCharacter("!"));
-    expect(validateDesc(p, "a")).toBe(DESC_TOO_SHORT); // far too short
-    expect(validateDesc(p, `${EASY.desc}a`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "5")).toBe(DESC_OUT_OF_RANGE); // clue out of range 0-4
+    expect(validateDesc(lightupGame, p, "!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(lightupGame, p, "a")).toBe(DESC_TOO_SHORT); // far too short
+    expect(validateDesc(lightupGame, p, `${EASY.desc}a`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(lightupGame, p, "5")).toBe(DESC_OUT_OF_RANGE); // clue out of range 0-4
   });
 
   it("refuses a final run that overshoots the grid", () => {
     const p = { ...EASY_PARAMS, w: 2, h: 2 };
-    expect(validateDesc(p, "Bc")).toBeNull();
-    expect(validateDesc(p, "Bd")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "e")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(lightupGame, p, "Bc")).toBeNull();
+    expect(validateDesc(lightupGame, p, "Bd")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(lightupGame, p, "e")).toBe(DESC_TOO_LONG);
   });
 });
 

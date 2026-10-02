@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { validateDesc } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -40,7 +41,6 @@ import {
   type NetParams,
   newState,
   newUi,
-  validateDesc,
 } from "./state.ts";
 
 const WIRE_MASK = 0x0f;
@@ -111,7 +111,7 @@ describe("desc codec + wrapping re-derivation", () => {
       barrierProbability: 0,
     };
     const { desc, state } = generate(p, "codec-seed");
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(netGame, p, desc)).toBeNull();
     expect(state.tiles).toHaveLength(25);
   });
 
@@ -127,7 +127,7 @@ describe("desc codec + wrapping re-derivation", () => {
       barrierProbability: 0,
     };
     const desc = "000v000v0h0h0vh";
-    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(netGame, p, desc)).toBeNull();
     expect(newState(p, desc).wrapping).toBe(false);
   });
 });

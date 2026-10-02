@@ -13,12 +13,7 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  type DescParse,
-  descVerdict,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
@@ -214,8 +209,4 @@ export function parseDesc(p: RectParams, desc: string): DescParse<Int32Array> {
     r.end();
     return grid;
   });
-}
-
-export function validateDesc(p: RectParams, desc: string): DescError | null {
-  return descVerdict(parseDesc(p, desc));
 }
