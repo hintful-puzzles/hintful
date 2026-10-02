@@ -1,7 +1,9 @@
 # deal-every-tracks-board
 
-**Status: scaffolded, not started (2026-10-02).** Found by
-`reach-every-declared-mark`, while scanning presets for boards to pin.
+Found by `reach-every-declared-mark`, while scanning presets for boards to
+pin. **The preset below is misnamed.** The seeds fail at 15x15 *Hard*, and
+15x15 Tricky deals all of them (`design.md` D1). The rest of this proposal is
+kept as scaffolded, and `design.md` records what was found and done.
 
 ## Why
 

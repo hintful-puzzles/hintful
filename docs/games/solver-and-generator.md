@@ -604,6 +604,17 @@ import it — **one spelling, because a second copy is what the defect was.**
 So when you write a `solveAtCap`, check it against the generator's acceptance
 rule line by line, and put any bound they share in one exported place.
 
+**A grade belongs to a solve that finished.** The runner's grade is the highest
+tier that *fired*, so on a solve that stalled it only says the solver ran out of
+facts before needing more. Reading it as "too easy" rejects a board for lacking
+clues. Tracks' generator did exactly that to its bare boards: it inherited the
+mistake from upstream's 2020 one-solve speed-up, which also turned "solves one
+tier down" into "stalls without the top rung firing". On 15x15 Hard, 95% of the
+paths that reached clue-laying were rejected that way, and about one deal in
+fifteen exhausted `retryLimit` (`deal-every-tracks-board`). Ask "does it solve at
+`t − 1`?" as `solvableAtExactlyTier` does, or check `ret > 0` before reading the
+grade.
+
 ### Cap-monotonicity, and the game that broke it
 
 **A difficulty-capped solver must be monotone in its cap: a board solvable at
@@ -775,6 +786,13 @@ raised, repeat the sizes near it across several seeds first. Two corollaries:
   assumes failure is recoverable; an OOM in the worker is a crash, so that
   boundary belongs in `validateParams`. Measure at least one size past where
   you draw the line, and note which way it fails.
+- **A retry loop's tail is set by its per-attempt success rate.** Attempts are
+  independent, so the count is geometric: with success rate `p`, the chance of
+  exhausting a cap of `n` is about `e^(−np)`. Count attempts and successes over
+  a few hundred deals at every preset and compute that, rather than waiting for
+  a failing seed. Tracks' 15x15 Hard measured `p ≈ 1/3,500` against the
+  `MAX_REGENERATE` cap of 10,000. That predicts 5.7% of deals failing, and
+  7 of 100 and 11 of 200 were observed. Every other preset measured below `10^−15`.
 
 ### Solver-gated generation
 

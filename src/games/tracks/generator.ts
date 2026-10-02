@@ -1,10 +1,10 @@
 /**
- * Tracks generator: a byte-faithful port of `new_game_desc` / `lay_path` /
- * `add_clues` from `tracks.c`. The clue-laying is solver-gated (it keeps a
- * clue only while the board stays soluble at exactly the target difficulty),
- * so over the bit-identical `random.ts` this reproduces the C desc
- * byte-for-byte for the same seed (docs/games/testing.md § "Byte-match:
- * fidelity where there is a right answer").
+ * Tracks generator: a port of `new_game_desc` / `lay_path` / `add_clues` from
+ * `tracks.c`. The clue-laying is solver-gated (it keeps a clue only while the
+ * board stays soluble at exactly the target difficulty). At Easy it reproduces
+ * the C desc byte-for-byte for the same seed over the bit-identical
+ * `random.ts`; above Easy it diverges where `addClues` grades a bare board
+ * (see there).
  */
 
 import type { RandomState } from "../../engine/random/index.ts";
@@ -118,12 +118,16 @@ function addClues(b: Board, rs: RandomState, diff: number): number {
     if (sEDirs(b, i % w, Math.floor(i / w), E_TRACK) !== 0) positions.push(i);
   }
 
-  // Already too easy, or already soluble without any added clues?
+  // Already too easy, or already soluble without any added clues? Only a solve
+  // that finishes is graded: a bare board that stalls before the target tier's
+  // rungs fire has not shown it is too easy, only that it needs clues, and the
+  // laying loop below refuses any clue that finishes it too easily. Upstream's
+  // f8027fb also rejected the stalled board, which left 15x15 Hard dealing one
+  // attempt in 3,500 and exhausting `retryLimit` on about one deal in fifteen.
   let scratch = copyAndStrip(b, -1);
   const first = tracksSolve(scratch, diff);
-  if (first.maxDiff < diff) return -1; // too easy even without clues
   if (first.ret < 0) throw new Error("Generator produced impossible puzzle");
-  if (first.ret > 0) return 1; // already soluble without clues
+  if (first.ret > 0) return first.maxDiff < diff ? -1 : 1;
   let progress = solveProgress(scratch);
 
   // Lay clues until soluble.

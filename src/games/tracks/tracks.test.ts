@@ -4,8 +4,8 @@
  * (paint-twice, so the overlay is proven to live in the diff key).
  *
  * Heavy solver checks use frozen fixture descs (not fresh generation), so they
- * are fast and deterministic; the generator's byte-match + grade is covered by
- * `tracks-differential.test.ts`.
+ * are fast and deterministic; the generator's Easy byte-match and the grade of
+ * C's boards are covered by `tracks-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -39,6 +39,7 @@ import {
 import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
   DIFF_COUNT,
+  DIFF_HARD,
   DIFF_TRICKY,
   decodeParams,
   encodeParams,
@@ -135,6 +136,24 @@ describe("tracks solver", () => {
     const { desc } = newDesc(p, randomNew("tracks-gen-easy"));
     const solved = copyAndStrip(stateToBoard(newState(p, desc)), -1);
     expect(tracksSolve(solved, DIFF_COUNT).ret).toBe(1);
+  });
+
+  // These seeds exhausted `retryLimit` at 15x15 Hard while `addClues` rejected
+  // every bare board that stalled short of Hard (`deal-every-tracks-board`).
+  it.each([
+    "pin-0",
+    "pin-66",
+    "pin-71",
+    "pin-79",
+    "pin-83",
+    "pin-94",
+    "pin-96",
+  ])("deals 15x15 Hard from seed %s, at exactly Hard", (seed) => {
+    const p: TracksParams = { w: 15, h: 15, diff: DIFF_HARD, singleOnes: true };
+    const { desc } = newDesc(p, randomNew(seed));
+    const strip = () => copyAndStrip(stateToBoard(newState(p, desc)), -1);
+    expect(tracksSolve(strip(), DIFF_HARD)).toEqual({ ret: 1, maxDiff: DIFF_HARD });
+    expect(tracksSolve(strip(), DIFF_TRICKY).ret).toBeLessThan(1);
   });
 });
 
