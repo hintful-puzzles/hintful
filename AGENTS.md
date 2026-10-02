@@ -259,6 +259,10 @@ match standing in for a resolved reference.
 **Prove a new guard fails before trusting it.** Break the thing deliberately,
 watch it go red, restore. A guard nobody has seen fail is a guard nobody has seen
 work — and several here silently did nothing until this step was applied.
+**And re-plant before leaning on an old guard for a defect**: a guard that has
+been red once can stop reaching its case as the code around it moves. The
+warm-repaint run convicted Bricks' stale edge diamond, and a few weeks later it
+reached that diamond on none of 200 seeds, while still passing.
 
 **Carry a vacuity guard: "how many things did I look at?"** An unmatched
 `import.meta.glob` yields `{}`, an empty directory yields no iterations, a filter
