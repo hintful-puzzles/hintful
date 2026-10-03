@@ -112,18 +112,6 @@ left click chords wherever chording applies, for a mouse and a finger alike.
 - **WHEN** the player presses the left button on a number whose flags are all placed
 - **THEN** the 3×3 around it shows as pressed, and releasing there opens the unflagged squares
 
-### Requirement: Mines does not offer mistake-checking
-
-Mines SHALL NOT implement `findMistakes`. The only mistake it could report — a flag on a safe
-square — is the very deduction the player is playing the game to make, so reporting it would
-turn Check & Save into a solver. The Check & Save control SHALL therefore degrade to a plain
-quick-save, as it does for every other game without `findMistakes`.
-
-#### Scenario: Check & Save on Mines
-
-- **WHEN** the player invokes the save control while playing Mines
-- **THEN** the board is saved without being checked, and no mistake overlay is shown
-
 ### Requirement: The clock reflects the state of play
 
 Mines SHALL leave when its solve timer runs to the engine's rule, stating only that a dead board holds it (`timerHolds`). The timer SHALL
@@ -137,19 +125,39 @@ the timer stops. Elapsed time SHALL survive a save and restore.
 - **WHEN** a new Mines game is displayed and the player has not yet clicked
 - **THEN** the clock is not running; it starts when the first click uncovers the board
 
-### Requirement: Mines ships an explained deductive hint
+### Requirement: Mines checks flags against its mines
+
+Mines SHALL implement `findMistakes`, reporting every flag on a square with no
+mine under it, and nothing before the first click lays the mines out. An opened
+mine SHALL NOT be reported: the hint's dead-board refusal answers it. The mistake
+SHALL be drawn as a frame in the error color around the flagged square, held in
+the tile's cache key so it repaints when it comes and goes.
+
+#### Scenario: Check & Save on Mines
+
+- **WHEN** the player invokes Check & Save with a flag on a square that has no
+  mine
+- **THEN** the flag is framed as a mistake and the board is not saved
+
+#### Scenario: A right flag passes
+
+- **WHEN** every flag on the board sits on a mine
+- **THEN** `findMistakes` reports nothing, whether or not the numbers prove those
+  mines yet
+
+### Requirement: Mines ships an explained deductive hint from proved facts
 
 Mines SHALL offer a hint that reasons only from what the board proves, the opened
-numbers and squares, and never from the player's flags, because Mines has no mistake
-check to vouch for them. Each step SHALL name the number or numbers it reasons from
-and why the ringed squares must be safe or must be mines: one number on its own, two
-numbers sharing squares, a number whose squares sit inside another's, or the count of
-mines left. A flag on a square the numbers prove safe SHALL get its own step taking it
-off before the square is opened. Before the first click the hint SHALL open a square,
-saying that no mine is laid in the first square opened or beside it. On a board whose
-last move opened a mine, the hint SHALL refuse and tell the player to undo it; on a
-board deduction cannot advance, it SHALL refuse with the collection's
-deduction-exhausted words.
+numbers and squares, and never from the player's flags: the midend asks it only
+about a board whose flags all sit on mines, but a flag the numbers have not
+proved may be a guess, and the hint SHALL NOT teach from it. Each step SHALL name
+the number or numbers it reasons from and why the ringed squares must be safe or
+must be mines: one number on its own, two numbers sharing squares, a number whose
+squares sit inside another's, or the count of mines left. Before the first click
+the hint SHALL open a square, saying that no mine is laid in the first square
+opened or beside it. On a board whose last move opened a mine, the hint SHALL
+refuse and tell the player to undo it; on a board deduction cannot advance, it
+SHALL refuse with the collection's deduction-exhausted words.
 
 #### Scenario: A satisfied number frees its other squares
 
@@ -157,10 +165,10 @@ deduction-exhausted words.
 - **THEN** the hint marks that number and rings its other unopened squares as safe,
   saying so
 
-#### Scenario: A wrong flag is not trusted
+#### Scenario: A lucky flag is not a premise
 
-- **WHEN** the player has flagged a square the numbers prove safe
-- **THEN** the hint's step takes the flag off rather than reasoning from it
+- **WHEN** the player has flagged a mine no opened number touches
+- **THEN** the hint's first step reads as it would without the flag
 
 #### Scenario: A dead board
 

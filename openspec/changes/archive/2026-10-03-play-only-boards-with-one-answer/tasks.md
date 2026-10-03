@@ -38,4 +38,5 @@
       board played through. (Chromium, 2026-10-02: a wrong Black Box guess and
       a wrong Mines flag each framed and the save refused; the 3×3 corners ID
       refused from the URL; an 8×8 3–6 deal auto-solved to completion.)
-- [ ] 5.4 Owner acceptance on how both checks look and read.
+- [x] 5.4 Owner acceptance on how both checks look and read (accepted
+      2026-10-03 after a phone playtest of the deploy).
