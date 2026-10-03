@@ -10,7 +10,8 @@ way round. Walking never pushes a barrel.
 
 To push, drag a barrel the way you want it to go, and you walk round
 behind it first; or press on your character and drag toward a barrel
-beside you. An arrow shows where the barrel will stop: one square
+beside you. An arrow, and a ghost barrel on the square it ends on,
+show where the barrel will stop: one square
 further for each square you drag, as far as it can go before a wall
 or another barrel. A barrel you can't get behind shows no arrow. Let
 go to push. Drag back to where you started before letting go to

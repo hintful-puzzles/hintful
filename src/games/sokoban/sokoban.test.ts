@@ -508,12 +508,21 @@ describe("Sokoban render", () => {
     const COL_AIM = 15;
     const heads = (ops: ReturnType<typeof renderOps>) =>
       ops.filter((o) => o.op === "polygon" && o.fill === COL_AIM).length;
+    // The ghost: rings in the aim color, all on the square the barrel stops on.
+    const ghost = (ops: ReturnType<typeof renderOps>) =>
+      ops.flatMap((o) =>
+        o.op === "circle" && o.fill === -1 && o.outline === COL_AIM ? [o.cx] : [],
+      );
+    const aiming = renderOps(me);
     // The barrel's square, the one it passes and the one it stops on.
-    expect(heads(renderOps(me))).toBe(3);
+    expect(heads(aiming)).toBe(3);
+    expect(ghost(aiming).length).toBeGreaterThan(0);
+    expect(new Set(ghost(aiming))).toEqual(new Set([4 * 32 + 16]));
     me.processInput(48, 48, LEFT_DRAG);
     me.processInput(48, 48, LEFT_RELEASE);
     const after = renderOps(me);
     expect(heads(after)).toBe(0);
+    expect(ghost(after)).toEqual([]);
     // Each of those squares repainted, so no stale piece of arrow is left.
     const repainted = after.filter((o) => o.op === "clip").length;
     expect(repainted).toBeGreaterThanOrEqual(3);

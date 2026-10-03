@@ -51,3 +51,6 @@ step move and its saves are unchanged.
   "Barrels box you in. Push this barrel right: that lets you out." Measured
   over hint-guided play: 17 of 796 steps, a tenth of those that gave no
   reason.
+- **A ghost barrel** marks the square an aimed push stops on, a barrel-sized
+  ring in the aim color: a one-square arrow was too short to notice under a
+  finger.

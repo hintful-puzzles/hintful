@@ -20,6 +20,8 @@
       becomes that drag.
 - [x] 2b.2 Motion for every move (`motion.ts`), drawn by each tile a moving
       piece crosses; undo plays it backward.
+- [x] 2b.3 Dark-mode walls, the "lets you out" sentence, and a ghost barrel on
+      the square an aimed push stops on.
 
 ## 3. Docs and acceptance
 

@@ -145,6 +145,9 @@ interface TileMarks {
   /** The push a drag is aiming, from the barrel to where it will stop: let go
    * and this happens. */
   readonly aim: readonly [Point, Point] | null;
+  /** Whether this is the square the aimed push stops on, which shows the
+   * barrel's ghost: a one-square arrow is too short to see under a finger. */
+  readonly ghost: boolean;
 }
 
 const NO_MARKS: TileMarks = {
@@ -153,6 +156,7 @@ const NO_MARKS: TileMarks = {
   striped: false,
   arrows: [],
   aim: null,
+  ghost: false,
 };
 
 /** A piece in motion, at its pixel center: the player, or a barrel by its
@@ -246,6 +250,8 @@ function drawTile(
   if (marks.outlined) ring(marks.ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
   for (const [a, b] of marks.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
   if (marks.aim) drawMoveArrow(dr, ts, marks.aim[0], marks.aim[1], COL_AIM);
+  if (marks.ghost)
+    for (let k = 0; k < 3; k++) dr.drawCircle(center, pieceDisc + k, -1, COL_AIM);
 
   dr.unclip();
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
@@ -293,10 +299,12 @@ export function redraw(
   // The aimed push's squares, from the barrel to where it stops.
   const aimed = new Set<number>();
   let aim: readonly [Point, Point] | null = null;
+  let ghostAt = -1;
   if (ui.grab && ui.aim) {
     const { x, y, dx, dy, n } = ui.aim;
     for (let k = 0; k <= n; k++) aimed.add((y + k * dy) * w + x + k * dx);
     aim = [tileCenter(x, y, ts), tileCenter(x + n * dx, y + n * dy, ts)];
+    ghostAt = (y + n * dy) * w + x + n * dx;
   }
 
   // A move in motion: the board under it is the earlier one with the moving
@@ -361,6 +369,7 @@ export function redraw(
                 (p) => [centerOf(p.barrel), centerOf(into(p))] as const,
               ),
               aim: aimed.has(i) ? aim : null,
+              ghost: i === ghostAt,
             }
           : NO_MARKS;
       const key = [
