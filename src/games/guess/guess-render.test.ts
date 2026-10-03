@@ -13,7 +13,9 @@ import { guessGame } from "./index.ts";
 import {
   COL_1,
   COL_CORRECTPLACE,
+  COL_CURSOR,
   COL_HOLD,
+  COL_WRONG,
   type GuessDrawState,
   redraw,
 } from "./render.ts";
@@ -124,5 +126,65 @@ describe("Guess redraw", () => {
     const { dr: drB, ops: opsB } = recordingDrawing();
     redraw(drB, dsB, s0, won, 1, freshUi(won), 0, 0);
     expect(pegsBelow(opsB, dsB.solny)).toBe(true);
+  });
+});
+
+describe("Guess's check", () => {
+  const { desc } = newDesc(params, randomNew("check"));
+  const s0 = newState(params, desc);
+  const rule = (s: typeof s0, pos: number, color: number) =>
+    guessGame.executeMove(s, { type: "mark", marks: [{ pos, color }], ruledOut: true });
+  const other = (pos: number) => (s0.solution[pos] % params.ncolors) + 1;
+
+  it("finds a slot whose marks rule out its own color, and says only which slot", () => {
+    expect(guessGame.findMistakes?.(s0)).toEqual([]);
+    // A guess that is not the code is a probe, never a mistake.
+    const probed = guessGame.executeMove(s0, {
+      type: "guess",
+      pegs: s0.solution.map((_, pos) => other(pos)),
+      holds: s0.solution.map(() => false),
+    });
+    expect(probed.nextGo).toBe(1);
+    expect(guessGame.findMistakes?.(probed)).toEqual([]);
+    const right = rule(s0, 1, other(1));
+    expect(guessGame.findMistakes?.(right)).toEqual([]);
+    const wrong = rule(right, 1, s0.solution[1]);
+    expect(guessGame.findMistakes?.(wrong)).toEqual([{ pos: 1 }]);
+    // Every color ruled out still reads as wrong.
+    let all = s0;
+    for (let c = 1; c <= params.ncolors; c++) all = rule(all, 2, c);
+    expect(guessGame.findMistakes?.(all)).toEqual([{ pos: 2 }]);
+  });
+
+  it("frames the slot on a board already drawn, and clears it (paint twice)", () => {
+    const wrong = rule(s0, 0, s0.solution[0]);
+    const ds = freshDs();
+    const ui = freshUi(wrong);
+    const paint = (mistakes?: readonly { pos: number }[]) => {
+      const rec = new RecordingDrawing(PALETTE);
+      redraw(rec, ds, null, wrong, 1, ui, 0, 0, undefined, mistakes);
+      return rec.ops;
+    };
+    paint();
+    const settled = paint().length;
+    const framed = paint(guessGame.findMistakes?.(wrong));
+    expect(framed.length).toBeGreaterThan(settled);
+    expect(framed.some((o) => o.op === "rect" && o.color === COL_WRONG)).toBe(true);
+    const cleared = paint();
+    expect(cleared.length).toBeGreaterThan(settled);
+    expect(cleared.some((o) => "color" in o && o.color === COL_WRONG)).toBe(false);
+  });
+
+  it("draws the frame over the notes cursor on the slot just marked", () => {
+    const wrong = rule(s0, 0, s0.solution[0]);
+    const ui = freshUi(wrong);
+    ui.pencilMode = true;
+    ui.cursor = { ...ui.cursor, x: 0, visible: true };
+    const rec = new RecordingDrawing(PALETTE);
+    redraw(rec, freshDs(), null, wrong, 1, ui, 0, 0, undefined, [{ pos: 0 }]);
+    const last = (color: number) =>
+      rec.ops.findLastIndex((o) => o.op === "rect" && o.color === color);
+    expect(last(COL_CURSOR)).toBeGreaterThanOrEqual(0);
+    expect(last(COL_WRONG)).toBeGreaterThan(last(COL_CURSOR));
   });
 });

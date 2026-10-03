@@ -311,6 +311,28 @@ export function outcome(s: GuessState): number {
   return s.nextGo >= nguesses ? -1 : 0;
 }
 
+/** An answer slot whose marks rule out the color the code has there. */
+export interface GuessMistake {
+  readonly pos: number;
+}
+
+/**
+ * The answer slots whose rule-outs include the code's color there: the one
+ * mark a player can get wrong, since a guess is a probe rather than a claim.
+ * The slot is what is reported, never the color, so the check says that a
+ * rule-out here is wrong without saying which. Rule-outs are the complement of
+ * the candidate masks `entryMistakes` reads, and a slot with every color ruled
+ * out would read there as unmarked, so the test is written out here.
+ */
+export function findMistakes(s: GuessState): readonly GuessMistake[] {
+  if (outcome(s) !== 0) return [];
+  const out: GuessMistake[] = [];
+  s.solution.forEach((color, pos) => {
+    if (s.ruledOut[pos] & (1 << color)) out.push({ pos });
+  });
+  return out;
+}
+
 export function status(s: GuessState): GameStatus {
   const o = outcome(s);
   return o > 0 ? "solved" : o < 0 ? "lost" : "ongoing";

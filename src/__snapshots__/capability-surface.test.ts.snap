@@ -643,6 +643,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "changedState",
       "decodeUi",
       "encodeUi",
+      "findMistakes",
       "hint",
       "hintGesture",
       "hintKeepTrack",

@@ -14,7 +14,7 @@
  */
 
 import { BLACK, PINK_WASH, TEAL_WASH, TEN, WHITE } from "../../engine/color/colors.ts";
-import { HINT_ACTION, HINT_EVIDENCE, INK } from "../../engine/color/palette.ts";
+import { ERROR, HINT_ACTION, HINT_EVIDENCE, INK } from "../../engine/color/palette.ts";
 import {
   guessAnswerWell,
   guessBoard,
@@ -35,6 +35,7 @@ import { COLOR, ROW, SLOT } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTCOLOR,
   FEEDBACK_CORRECTPLACE,
+  type GuessMistake,
   type GuessMove,
   type GuessParams,
   type GuessState,
@@ -60,7 +61,9 @@ export const COL_HINT = 18;
 export const COL_HINT_CELL = 19;
 /** The answer row's well, darker than every peg color in both schemes. */
 const COL_WELL = 20;
-export const NCOLORS = 21;
+/** A mistake: the frame round an answer slot ruling out its own color. */
+export const COL_WRONG = 21;
+export const NCOLORS = 22;
 
 // --- peg overlay flags (upstream PEG_*) -------------------------------
 
@@ -317,6 +320,9 @@ const ANSWER_FRAME_SHIFT = 11;
 const ANSWER_CURSOR = 1 << 22;
 const ANSWER_PREMISE = 1 << 23;
 const ANSWER_LABELED = 1 << 24;
+/** A slot the check found ruling out its own color. The midend refuses a hint
+ * while the check finds anything, so its frame never meets a hint's outline. */
+const ANSWER_MISTAKE = 1 << 25;
 
 /**
  * Everything an answer slot's pixels depend on, as one integer: the colors
@@ -398,6 +404,9 @@ function drawAnswerSlot(
   // the board in either scheme; the well itself is too dark for it in light mode.
   if (key & ANSWER_PREMISE) outline(dr, area, cg, COL_HINT_CELL);
   if (key & ANSWER_CURSOR) outline(dr, area, cg, COL_CURSOR);
+  // Over the cursor: the slot just marked is the likeliest to be wrong and to
+  // hold the cursor, and the frame lasts only until the next move.
+  if (key & ANSWER_MISTAKE) outline(dr, area, cg, COL_WRONG);
   dr.drawUpdate(area);
 }
 
@@ -407,6 +416,7 @@ function answerRowRedraw(
   s: GuessState,
   ui: GuessUi,
   marks: StepMarks,
+  mistakes: readonly GuessMistake[],
 ): void {
   const colors = marks.of("ring", COLOR);
   const slots = marks.of("outline", SLOT);
@@ -415,7 +425,10 @@ function answerRowRedraw(
     for (const d of colors) if (d.pos === pos) framed |= 1 << d.color;
     const cursor = ui.pencilMode && ui.cursor.visible && ui.cursor.x === pos;
     const premise = slots.includes(pos);
-    const key = answerKey(s.ruledOut[pos], framed, cursor, premise, ui.showLabels);
+    const wrong = mistakes.some((m) => m.pos === pos);
+    const key =
+      answerKey(s.ruledOut[pos], framed, cursor, premise, ui.showLabels) |
+      (wrong ? ANSWER_MISTAKE : 0);
     if (ds.answerCache[pos] === key) continue;
     ds.answerCache[pos] = key;
     drawAnswerSlot(dr, ds, pos, key);
@@ -454,6 +467,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_WELL] = guessAnswerWell(defaultBackground);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_WRONG] = ERROR;
 
   return ret;
 }
@@ -679,6 +693,7 @@ export function redraw(
   _animTime: number,
   _flashTime: number,
   hint?: HintStep<GuessMove>,
+  mistakes?: readonly GuessMistake[],
 ): void {
   const newMove = s.nextGo !== ds.nextGo || !ds.started;
   const marks = stepMarks(hint);
@@ -767,7 +782,7 @@ export function redraw(
     dr.drawUpdate(answerArea(ds));
     ds.answerCache.fill(-1);
   }
-  if (!solved) answerRowRedraw(dr, ds, s, ui, marks);
+  if (!solved) answerRowRedraw(dr, ds, s, ui, marks, mistakes ?? []);
   else {
     guessRedraw(
       dr,

@@ -53,12 +53,19 @@ pegs. **Marks** switches between the two as well, keeping the frame
 in the same column, so whichever row the frame is on is always what
 the color buttons will change.
 
+**Check & Save** checks the answer row against the hidden combination,
+as it checks your answers in every other puzzle. A slot where you have
+ruled out the color that is really there gets a red frame. It says
+which slot, not which color, and it never judges your guesses: a guess
+that isn't the answer is how you learn more.
+
 ## Hints
 
 **Next hint** first points out anything the scored rows prove that
 your answer row does not show yet, and rules those colors out of their
 slots for you, as marks you could have made yourself. It reasons only
-from the scores, never from the marks already in your answer row.
+from the scores, never from the marks already in your answer row, and
+it waits until no slot rules out its own color, as Check & Save does.
 
 {{hint-marks}}
 

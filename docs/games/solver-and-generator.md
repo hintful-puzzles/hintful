@@ -953,10 +953,14 @@ declared in `nonUniqueTiers` is not asked. The generator's half is the game's:
 deal only boards the same count calls unique, and hold it with a test against an
 answer count that has no search in it.
 
-**A hidden answer is no reason to skip the check.** Black Box's balls and
-Mines' mines are hidden, and both games check marks against them as every other
-game checks a digit: a guess with no ball, a known mark on a ball, a flag with no
-mine. Check & Save is an answer check in every game; a player who wants to use
+**A hidden answer is no reason to skip the check.** Black Box's balls,
+Mines' mines and Guess's code are hidden, and all three check marks against them
+as every other game checks a digit: a guess with no ball, a known mark on a ball,
+a flag with no mine, a slot whose rule-outs include its own color. **Check the
+player's claims, never their probes**: a Guess row that is not the code is how
+the game is played, so the check never reads one, and it reports a wrong
+rule-out by slot rather than by color, as a pencil-mark check reports the cell
+and not the digit. Check & Save is an answer check in every game; a player who wants to use
 it to probe can do so anywhere. What a hidden-answer game owes instead is a
 generator that makes the answer the only one the visible clues allow: Black
 Box's verify accepts any balls that send every laser where the real ones do, and
