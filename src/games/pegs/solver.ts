@@ -9,6 +9,7 @@
  * can say a position is lost.
  */
 
+import type { Allowance, Verdict } from "../../engine/rival-judging.ts";
 import { GRID_OBST, GRID_PEG, type PegsState } from "./state.ts";
 
 /** A jump as three grid indices: the peg that jumps, the peg it takes, and the
@@ -171,12 +172,6 @@ function play(board: PegsBoard, pegs: Uint8Array, k: number, peg: 0 | 1): void {
   pegs[jumps[k + 2]] = peg ? 0 : 1;
 }
 
-/** Positions a run of searches may still visit between them, counted rather
- * than timed so that the same position always gets the same answer. */
-export interface Allowance {
-  left: number;
-}
-
 /**
  * Each level keeps the `width` most compact positions one jump on from the
  * last, so a level is one peg fewer. Stable sort and insertion-ordered maps
@@ -294,9 +289,6 @@ export function provedLost(s: PegsState, budget: number): boolean {
   const board = new PegsBoard(s);
   return exhaust(board, board.pegsOf(s), budget) === "lost";
 }
-
-/** What searching one position settled. */
-export type Verdict = "finishes" | "lost" | "unknown";
 
 /**
  * Whether `s` can still finish, from what searches costing at most `proof`

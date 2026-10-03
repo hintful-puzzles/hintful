@@ -32,8 +32,9 @@ import {
   puzzleDeadEnd,
 } from "../../engine/hint-refusal.ts";
 import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
+import { judgeRivals } from "../../engine/rival-judging.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
-import { GEM, say } from "./hint-text.ts";
+import { GEM, type Only, say } from "./hint-text.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";
 import {
   type InertiaMove,
@@ -58,14 +59,16 @@ type Step = HintStep<InertiaMove>;
  * about a ball hemmed in by walls would be a lie
  * (docs/games/hints.md § "Sanity-read at the degenerate extremes").
  */
-function onlyMove(s: InertiaState, dir: number): "mines" | "walls" | null {
+function onlyMove(s: InertiaState, dir: number): Only | null {
   const others = legalDirections(s.board, s.px, s.py).filter((d) => d !== dir);
-  if (others.length === 0) return "walls";
-
-  const allFatal = others.every(
-    (d) => slidePath(s.board, s.px, s.py, d).stopper === "mine",
+  // Sliding onto a mine ends the game, which settles that rival; nothing else
+  // here does.
+  const { claim } = judgeRivals(others, 0, (d) =>
+    slidePath(s.board, s.px, s.py, d).stopper === "mine" ? "lost" : "unknown",
   );
-  return allFatal ? "mines" : null;
+  if (claim.kind === "none") return { why: "walls", relation: claim.relation };
+  if (claim.kind === "only") return { why: "mines", relation: claim.relation };
+  return null;
 }
 
 /** A single slide from here that sweeps up `goal` without killing the ball, or

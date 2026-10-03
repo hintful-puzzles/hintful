@@ -11,6 +11,7 @@ import {
   mark,
   type Narration,
   phrase,
+  type Relation,
   type Sentence,
   sentence,
   unshaped,
@@ -118,37 +119,38 @@ export const say = {
       rival,
     ),
 
-  /** Every rival was searched to the end and none can finish. */
-  only: (m: Marked): Sentence =>
+  /** Every rival was searched to the end and none can finish. The relation is
+   * the judging's own (`judgeRivals`), as it is for the three below. */
+  only: (m: Marked, relation: Relation): Sentence =>
     sentence({
       look: phrase`No other jump can still finish`,
       move: lower(m),
-      relation: { kind: "forced", rivals: "lost" },
+      relation,
     }),
 
   /** Every rival was settled: `goods` can finish, the rest cannot. The
    * offered jump carries an arrow too, being one of them. */
-  onlyThese: (m: Marked, goods: readonly Marked[]): Sentence =>
+  onlyThese: (m: Marked, goods: readonly Marked[], relation: Relation): Sentence =>
     sentence({
       look: phrase`Only ${arrows([m, ...goods])} can still finish`,
       move: lower(m),
-      relation: { kind: "oneOf" },
+      relation,
     }),
 
   /** `goods` can finish, at least one rival cannot, and some were not settled. */
-  alsoThese: (m: Marked, goods: readonly Marked[]): Sentence =>
+  alsoThese: (m: Marked, goods: readonly Marked[], relation: Relation): Sentence =>
     sentence({
       look: phrase`${arrows([m, ...goods])} can still finish; some others cannot`,
       move: lower(m),
-      relation: { kind: "oneOf" },
+      relation,
     }),
 
   /** Every jump from here can still finish. */
-  anyJump: (m: Marked): Sentence =>
+  anyJump: (m: Marked, relation: Relation): Sentence =>
     sentence({
       look: phrase`Every jump can still finish with one peg`,
       move: lower(m),
-      relation: { kind: "oneOf" },
+      relation,
     }),
 
   /** The jump that leaves one peg. */

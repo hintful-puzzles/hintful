@@ -16,6 +16,7 @@ import {
   mark,
   type Narration,
   phrase,
+  type Relation,
   type Sentence,
   sentence,
 } from "../../engine/hint-words.ts";
@@ -61,7 +62,11 @@ function stopClause(stopper: SlidePath["stopper"]): string {
 
 /** Why this is the only move: every other way is walled off, or runs onto a
  * mine. */
-type Only = "mines" | "walls";
+export interface Only {
+  readonly why: "mines" | "walls";
+  /** What `judgeRivals` made of the other directions, which says "so". */
+  readonly relation: Relation;
+}
 
 /** "slide north", pointing at the arrow on the ball. */
 const slideWay = (m: Marked): Narration =>
@@ -74,7 +79,7 @@ const theGem = (m: Marked): Narration => mark.the("outline", GEM, [m.goal], "gem
 /** Why the slide is the ball's only move (`onlyMove` checked every other
  * direction). */
 const onlyBecause = (only: Only): Narration =>
-  only === "mines"
+  only.why === "mines"
     ? phrase`every other way you can go runs you onto a mine`
     : phrase`walls block every other direction`;
 
@@ -107,14 +112,14 @@ export const say = {
   },
 
   // A move that collects nothing says what it is *for*. `onlyMove` judged
-  // every other direction lost, which is what `rivals: "lost"` claims.
+  // every other direction lost, and its relation says so.
   /** The only move the ball has, collecting nothing. */
   forced: (m: Marked, only: Only): Sentence =>
     sentence({
       aim: theGem(m),
       look: onlyBecause(only),
       move: slideWay(m),
-      relation: { kind: "forced", rivals: "lost" },
+      relation: only.relation,
     }),
 
   // The slide starts the plan's leg to the same gem, and `nextLeg` keeps only a

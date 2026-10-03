@@ -12,7 +12,7 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, PURPLE } from "../../engine/color/colors.ts";
 import { HELD, HINT_ACTION, HINT_EVIDENCE } from "../../engine/color/palette.ts";
-import { drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
+import { drawMoveArrow, drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -151,33 +151,6 @@ interface TileJumps {
 
 const NO_JUMPS: TileJumps = { striped: false, arrows: [] };
 
-/** An arrow from the edge of the peg at `a` to the edge of the hole at `b`,
- * in the evidence color, laid over the peg it jumps. */
-function drawArrow(dr: GameDrawing, ts: number, a: Point, b: Point): void {
-  const len = Math.hypot(b.x - a.x, b.y - a.y);
-  const ux = (b.x - a.x) / len;
-  const uy = (b.y - a.y) / len;
-  const at = (p: Point, d: number): Point => ({
-    x: Math.round(p.x + ux * d),
-    y: Math.round(p.y + uy * d),
-  });
-  const tip = at(b, -Math.floor(ts / 4));
-  const head = Math.max(4, Math.floor(ts / 4));
-  const base = at(tip, -head);
-  dr.drawLine(
-    at(a, Math.floor(ts / 3)),
-    base,
-    COL_HINT_EVIDENCE,
-    Math.max(2, Math.floor(ts / 12)),
-  );
-  const side = (k: number): Point => ({
-    x: Math.round(base.x - uy * k),
-    y: Math.round(base.y + ux * k),
-  });
-  const half = Math.floor(head / 2);
-  dr.drawPolygon([tip, side(half), side(-half)], COL_HINT_EVIDENCE, COL_HINT_EVIDENCE);
-}
-
 function drawTile(
   dr: GameDrawing,
   ds: PegsDrawState,
@@ -244,7 +217,8 @@ function drawTile(
   const outer = half - 1;
   if (ringed) ring(outer, COL_HINT);
   if (outlined) ring(ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
-  for (const [a, b] of jumps.arrows) drawArrow(dr, ts, a, b);
+  // Laid over the peg each jumps.
+  for (const [a, b] of jumps.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
 
   dr.unclip();
   dr.drawUpdate({ x, y, w: ts, h: ts });

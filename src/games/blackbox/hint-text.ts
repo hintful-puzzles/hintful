@@ -20,6 +20,7 @@ import {
   mark,
   type Narration,
   phrase,
+  type Relation,
   type Sentence,
   sentence,
 } from "../../engine/hint-words.ts";
@@ -76,15 +77,15 @@ function would(w: Would, seen: Seen["kind"]): string {
   return seen === "reflect" ? "come out elsewhere" : "leave the box";
 }
 
-const decided = (look: Narration, move: Narration): Sentence =>
-  sentence({ look, move, relation: { kind: "forced", rivals: "lost" } });
-
 export const say = {
   /** A laser followed to the first square nothing settles, where the square's
    * other content would send it elsewhere. A pair's two ends are one ray's,
    * whichever end it is followed from, so the sentence speaks of a ray between
-   * them rather than of the one fired. */
-  ray: (seen: Seen, w: Would, s: Settled): Sentence => {
+   * them rather than of the one fired. `relation` is the judging of that other
+   * content (`hint.ts`). */
+  ray: (seen: Seen, w: Would, s: Settled, relation: Relation): Sentence => {
+    const decided = (look: Narration, move: Narration): Sentence =>
+      sentence({ look, move, relation });
     if (seen.kind === "exit") {
       const ends = mark.as("outline", LASER, [...seen.ends], `The two ${seen.n}s`);
       return decided(

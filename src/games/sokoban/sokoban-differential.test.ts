@@ -16,9 +16,9 @@ import { expect } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/sokoban-c-reference.json" with { type: "json" };
-import { newSokobanDesc } from "./generator.ts";
+import { sokobanLevel } from "./generator.ts";
 import { sokobanGame } from "./index.ts";
-import type { SokobanParams } from "./state.ts";
+import { encodeBoard, type SokobanParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -34,7 +34,9 @@ describeDescDifferential<Fixture, SokobanParams>({
   fixtures: data.fixtures,
   label: (f) => `${f.w}x${f.h} seed=${f.seed}`,
   params: (f) => ({ w: f.w, h: f.h }),
-  newDesc: newSokobanDesc,
+  // The level as upstream generates it: the dealt board is the first of these
+  // the hint can finish, which the C never asked.
+  newDesc: (p, rng) => ({ desc: encodeBoard(sokobanLevel(p, rng)) }),
   extra: (f, p) => {
     // The desc the generator emits must also pass validation.
     expect(validateDesc(sokobanGame, p, f.desc)).toBeNull();

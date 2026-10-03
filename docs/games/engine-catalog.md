@@ -561,6 +561,21 @@ sending the gesture through `interpretMove` and judging what it made with
 one. A `key` must be one the game's keypad offers, the Marks key, or mark-all
 (`MARK_ALL_CODE`). See [`hints.md`](./hints.md) § "Every step is a gesture".
 
+### `rival-judging.ts` — what a searched move's rivals let it say
+
+`judgeRivals(rivals, allowance, judge)`: the game judges each rival of the
+move its hint offers (finishes, lost, or unsettled) within one allowance
+counted in positions, and gets back the verdicts and the claim they allow
+(`only`, `onlyThese`, `alsoThese`, `every`, `none`, `unsettled`), each with
+the relation its sentence must use. The relation that says "so" over a
+searched move's rivals (`RivalsLost`) is made only here, so a game cannot write
+it beside rivals nobody judged; a deductive game whose rivals are ruled out by
+a deduction (Black Box, Guess) or by a rule (Inertia's mines) judges them
+through it too. The judge, the search behind it and what to say when nothing
+is settled stay the game's. Take the population with
+`npm run refs -- src/engine/rival-judging.ts judgeRivals`. See
+[`hints.md`](./hints.md) § "Judge the rivals of a searched move".
+
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
 The pure helpers for pencil-notes games: the naked singles, the recorded
@@ -1111,7 +1126,9 @@ exists), `glyphFont(size)` (the text options for a glyph centered in a tile —
 the only argument is the size), `strokeScaledPolygon` (a cell's own outline
 drawn a fraction of the way in toward its center: the mark for a cell that is
 not a square, where `hint-mark.ts`'s bands cannot go — Loopy's faces and
-Ascent's hexagons).
+Ascent's hexagons), `drawMoveArrow` (a hint's arrow for a move from one tile
+to another, sized by the tile and drawn by each tile it crosses under its own
+clip: Pegs' jumps and Sokoban's pushes).
 
 **`glyphFont` is the one to reach for when drawing a digit or a letter.**
 Measured 2026-09-12: 56 copies of `{ align: "center", baseline: "mathematical",

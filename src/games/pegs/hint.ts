@@ -11,8 +11,9 @@
  *    a reason the player can see, so it leads;
  * 2. a plan that starts by clearing a known shape while every other peg ends
  *    where it began is walked as one journey;
- * 3. otherwise the rivals are searched, within an allowance per request, and
- *    the jumps that can still finish are shown where some rival cannot.
+ * 3. otherwise the rivals are searched, within an allowance per request
+ *    (`judgeRivals`), and the jumps that can still finish are shown where some
+ *    rival cannot.
  *
  * A request plans one step, or one shape's journey, and the next request plans
  * from wherever the player is, so what a step says about its rivals is always
@@ -23,6 +24,7 @@
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { markedDeadEnd, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
+import { judgeRivals } from "../../engine/rival-judging.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { type Marked, type Package, PEG, say } from "./hint-text.ts";
 import { findFinish, frozenPegs, type Jump, judge, legalJumps } from "./solver.ts";
@@ -173,11 +175,9 @@ export function hint(state: PegsState): HintResult<PegsMove> {
     return { ok: true, steps };
   }
 
-  const allowance = { left: ALLOWANCE };
-  const verdicts = rivals.map((r) => judge(jumped(state, r), allowance, RIVAL_PROOF));
-  const goods = rivals.filter((_, i) => verdicts[i] === "finishes");
-  const lost = verdicts.includes("lost");
-  const unsettled = verdicts.includes("unknown");
+  const { claim } = judgeRivals(rivals, ALLOWANCE, (r, allowance) =>
+    judge(jumped(state, r), allowance, RIVAL_PROOF),
+  );
   // With nothing settled to contrast, a fact the player can see instead.
   // First, a peg alone now that this jump lands beside; then a rival that
   // would newly leave a peg with none beside it, where this jump would not.
@@ -199,11 +199,16 @@ export function hint(state: PegsState): HintResult<PegsMove> {
       .sort((a, b) => dist(a.r) - dist(b.r))[0];
     return lone?.p !== undefined ? say.leavesAlone(j, lone.r, lone.p) : say.plain(j);
   };
-  let words: Sentence;
-  if (rivals.length === 0) words = plain();
-  else if (!lost) words = unsettled ? plain() : say.anyJump(j);
-  else if (!unsettled) words = goods.length > 0 ? say.onlyThese(j, goods) : say.only(j);
-  else words = goods.length > 0 ? say.alsoThese(j, goods) : plain();
+  const words: Sentence =
+    claim.kind === "every"
+      ? say.anyJump(j, claim.relation)
+      : claim.kind === "only"
+        ? say.only(j, claim.relation)
+        : claim.kind === "onlyThese"
+          ? say.onlyThese(j, claim.goods, claim.relation)
+          : claim.kind === "alsoThese"
+            ? say.alsoThese(j, claim.goods, claim.relation)
+            : plain();
   return { ok: true, steps: [step(state, j, words)] };
 }
 

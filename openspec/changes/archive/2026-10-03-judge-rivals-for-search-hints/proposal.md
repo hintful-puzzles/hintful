@@ -1,7 +1,7 @@
 # judge-rivals-for-search-hints
 
-**Status: scaffolded, waiting for its trigger (2026-10-02).** Proposed after
-`add-pegs-hint`; the owner asked for it to be scaffolded.
+**Status: implemented (2026-10-03), with Sokoban as its game.** Proposed after
+`add-pegs-hint`; the owner asked for it to be scaffolded, and chose Sokoban.
 
 ## Trigger
 
@@ -54,6 +54,5 @@ it, and a game cannot write "so" over rivals nobody judged.
 
 ## Hints to pull in
 
-Same Game, the reserve search game with the most good moves per position, which
-is the case "one of them" and the arrows exist for. If another search game
-reaches its hint first, that game is the trigger instead.
+Sokoban (owner, 2026-10-03), in place of Same Game, which this section first
+named as the reserve search game with the most good moves per position.

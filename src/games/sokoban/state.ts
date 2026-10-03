@@ -125,7 +125,70 @@ export type SokobanUi = Record<string, never>;
  * `interpret_move` and `execute_move`, so the move never carries it. Plain
  * JSON data, so the default move codec serves.
  */
-export type SokobanMove = { type: "move"; dx: number; dy: number };
+export type SokobanStep = { type: "move"; dx: number; dy: number };
+
+/** The hint's move: walk to the square behind the barrel at `(x, y)`, then
+ * push it by `(dx, dy)`. No input makes it; a hint step plays it as the taps
+ * that walk there and push (`hintGesture`). */
+export type SokobanPush = {
+  type: "push";
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+};
+
+/** Solve's move: the finished board, written as a game ID writes a board. */
+export type SokobanSolve = { type: "solve"; board: string };
+
+export type SokobanMove = SokobanStep | SokobanPush | SokobanSolve;
+
+/** Whether the player in `s` can walk to square `(x, y)`: through floor and
+ * targets, never through a barrel, a wall or a pit. Orthogonal steps reach
+ * every square a diagonal one does, since a diagonal needs a free square
+ * beside it to pass through. */
+export function canWalkTo(s: SokobanState, x: number, y: number): boolean {
+  const { w, h, grid } = s;
+  const goal = y * w + x;
+  const seen = new Uint8Array(w * h);
+  const queue = [s.py * w + s.px];
+  seen[queue[0]] = 1;
+  for (let q = 0; q < queue.length; q++) {
+    const c = queue[q];
+    if (c === goal) return true;
+    const cx = c % w;
+    for (const [nx, ny] of [
+      [cx - 1, (c - cx) / w],
+      [cx + 1, (c - cx) / w],
+      [cx, (c - cx) / w - 1],
+      [cx, (c - cx) / w + 1],
+    ]) {
+      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+      const n = ny * w + nx;
+      if (seen[n] || (grid[n] !== SPACE && grid[n] !== TARGET)) continue;
+      seen[n] = 1;
+      queue.push(n);
+    }
+  }
+  return false;
+}
+
+/** The board as a game ID writes it: each cell's letter, the player's
+ * square's as the player, a run of one letter as the letter and its count. */
+export function encodeBoard(s: SokobanState): string {
+  const at = s.py * s.w + s.px;
+  const chars = Array.from(s.grid, (v, i) =>
+    i === at ? (v === TARGET ? PLAYERTARGET : PLAYER) : v === INITIAL ? WALL : v,
+  ).map((v) => String.fromCharCode(v));
+  let out = "";
+  for (let i = 0; i < chars.length; ) {
+    let n = 1;
+    while (i + n < chars.length && chars[i + n] === chars[i]) n++;
+    out += n > 1 ? `${chars[i]}${n}` : chars[i];
+    i += n;
+  }
+  return out;
+}
 
 // --- desc codec -------------------------------------------------------
 

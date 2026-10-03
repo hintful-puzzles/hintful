@@ -21,6 +21,7 @@ import {
   mark,
   type Narration,
   phrase,
+  type Relation,
   type Sentence,
   sentence,
 } from "../../engine/hint-words.ts";
@@ -65,7 +66,11 @@ interface GuessMarks {
 
 const pegs = (n: number): string => (n === 1 ? "1 peg" : `${n} pegs`);
 
-export function say(r: Reason, m: GuessMarks): Sentence {
+export function say(
+  r: Reason,
+  m: GuessMarks,
+  judged: Relation | null = null,
+): Sentence {
   const row = mark.the("stripes", ROW, m.line, "row");
   const slots = mark.the("outline", SLOT, m.slots, "slot");
   const framed = (words = "the framed colors"): Narration =>
@@ -76,16 +81,12 @@ export function say(r: Reason, m: GuessMarks): Sentence {
     m.marked.length > 1
       ? phrase`${framed()} are out`
       : phrase`${framed("the framed color")} is out`;
-  // Guess's hint searches, so "so" claims every rival lost. A deduction's
-  // rule-out is proved from the scores, which leaves no rival standing, and
-  // the one answer left is the only guess that can win.
-  const proved = (look: Narration, follows: Narration | null, move = out): Sentence =>
-    sentence({
-      look,
-      ...(follows ? { follows } : {}),
-      move,
-      relation: { kind: "forced", rivals: "lost" },
-    });
+  // Guess's hint searches, so "so" claims every rival lost, and only the
+  // judging that found them lost (`judged`, from `hint.ts`) may say it.
+  const proved = (look: Narration, follows: Narration | null, move = out): Sentence => {
+    if (judged === null) throw new Error(`guess: a ${r.kind} step with no judging`);
+    return sentence({ look, ...(follows ? { follows } : {}), move, relation: judged });
+  };
   switch (r.kind) {
     case "scoredNothing":
       return proved(

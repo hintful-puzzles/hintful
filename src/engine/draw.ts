@@ -206,6 +206,40 @@ export function strokeScaledPolygon(
 }
 
 /**
+ * A hint's arrow for a move from one tile to another: from the edge of the
+ * piece centered at `a` to just short of the center `b`, with a filled head, in
+ * `color`. Sized by the tile `ts`, so it reads alike at every board size. A
+ * move spanning several tiles is drawn by each of them under its own clip, so
+ * every tile paints its own piece (docs/games/rendering.md § "A tile paints
+ * only its own box, and tiles that share pixels repaint together").
+ */
+export function drawMoveArrow(
+  dr: GameDrawing,
+  ts: number,
+  a: Point,
+  b: Point,
+  color: number,
+): void {
+  const len = Math.hypot(b.x - a.x, b.y - a.y);
+  const ux = (b.x - a.x) / len;
+  const uy = (b.y - a.y) / len;
+  const at = (p: Point, d: number): Point => ({
+    x: Math.round(p.x + ux * d),
+    y: Math.round(p.y + uy * d),
+  });
+  const tip = at(b, -Math.floor(ts / 4));
+  const head = Math.max(4, Math.floor(ts / 4));
+  const base = at(tip, -head);
+  dr.drawLine(at(a, Math.floor(ts / 3)), base, color, Math.max(2, Math.floor(ts / 12)));
+  const side = (k: number): Point => ({
+    x: Math.round(base.x - uy * k),
+    y: Math.round(base.y + ux * k),
+  });
+  const half = Math.floor(head / 2);
+  dr.drawPolygon([tip, side(half), side(-half)], color, color);
+}
+
+/**
  * Upstream `misc.c draw_rect_corners`: four L-shaped corner brackets on the
  * square of radius `r` centered at `(cx, cy)`, each arm reaching halfway along
  * its side: the collection's standard "keyboard cursor is here" mark. The

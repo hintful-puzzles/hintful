@@ -17,6 +17,7 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { GAME_OVER, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import { COLOR, type Reason, say } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTPLACE,
@@ -524,7 +525,11 @@ export function guessHint(
     if (place.length === 0) continue;
     for (const m of place) board[m.pos] |= bit(m.color);
     const highlights: GuessHighlights = { line: f.rows, slots: f.slots, marked: place };
-    const words = say(f.reason, highlights);
+    // Each rule-out's rival is that color standing in that slot, which the
+    // firing proved from the scores cannot be the answer; the only-answer
+    // firing proved every other answer misfits a score.
+    const relation = claimRelation(judgeRivals(place, 0, () => "lost").claim);
+    const words = say(f.reason, highlights, relation);
     steps.push({
       move: { type: "mark", marks: place, ruledOut: true },
       explanation: words.text,
@@ -546,7 +551,16 @@ export function guessHint(
     slots: [],
     marked: probe.guess.map((color, pos) => ({ pos, color })),
   };
-  const words = say(probeReason(probe), highlights);
+  // When one answer fits, the enumeration found every other answer misfitting
+  // a score: each is a rival guess, and lost.
+  const only = probe.fitting === 1;
+  const words = say(
+    probeReason(probe),
+    highlights,
+    only
+      ? claimRelation(judgeRivals(["every other answer"], 0, () => "lost").claim)
+      : null,
+  );
   steps.push({
     move: {
       type: "guess",

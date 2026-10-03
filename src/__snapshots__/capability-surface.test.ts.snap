@@ -1666,17 +1666,22 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "grid",
       "started",
       "tileSize",
+      "tiles",
     ],
     "id": "sokoban",
     "members": [
       "animLength",
+      "hint",
+      "hintGesture",
+      "hintKeepTrack",
+      "hintMarks",
       "ignoresSecondaryButton",
       "notApplicable",
       "paramConfig",
       "preferredTileSize",
+      "solve",
       "solvedFlash",
       "transposeParams",
     ],

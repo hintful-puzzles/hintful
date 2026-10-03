@@ -26,15 +26,15 @@ checks them best:
 
 - `give-a-hint-sentence-its-parts`: Black Box, a deductive hint whose steps
   rest on several premises, which it wrote (2026-10-02).
-- `judge-rivals-for-search-hints`: Same Game, the search game with the most
-  good moves per position, or whichever search game gets a hint first
-  (2026-10-02).
+- `judge-rivals-for-search-hints`: Sokoban, by the owner's choice over Same
+  Game, which it wrote (2026-10-03).
 
 `declare-params-in-one-place` and `derive-the-draft-label` pull in none.
 
 ## The reserve
 
-Every other hintless game: Cube, Flip, Slide, Sokoban and Twiddle. Flip and
+Every other hintless game: Cube, Flip, Same Game, Slide and Twiddle. Same Game
+came back when `judge-rivals-for-search-hints` took Sokoban instead. Flip and
 Slide each had a Solve that showed the way rather than the finished board (the
 squares to press, a route to step through) until
 `let-the-engine-own-what-solve-shows` (2026-10-02), so a hint is now their only
@@ -55,7 +55,7 @@ one at a time in what remains, the owner decides between writing reserve hints
 for the target (each change then says it was written for the target, not as a
 check) and moving the target.
 
-The search games in it (Cube, Same Game, Slide, Sokoban) start with a short
+The search games in it (Cube, Same Game, Slide) start with a short
 design pass on what the hint can *prove* (docs/games/hints.md §
 "Non-deductive (heuristic) hints": Inertia's unreachable gem is the shape),
 because a search may certify a position but never teach one.

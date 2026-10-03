@@ -18,6 +18,7 @@
  * good.
  */
 
+import type { RivalsLost } from "./rival-judging.ts";
 import type { Point } from "./types.ts";
 
 /** What a mark means. The engine owns the three, and a game adds one only when
@@ -304,8 +305,9 @@ export function phrase(
  * the collection says each relation one way:
  *
  * - `forced`: the look narrows the move to one. "L, so M." A searching hint's
- *   rivals are as good as its move unless judged, so there it says they were
- *   (`rivals: "lost"`); the hint-quality walk holds it to that.
+ *   rivals are as good as its move unless judged, so there it carries the
+ *   proof that they were, which only `rival-judging.ts`'s `judgeRivals` makes;
+ *   the hint-quality walk fails a searching hint's "so" without it.
  * - `oneOf`: the move is one of several the look describes. "L. One of them: M."
  * - `answers`: the move answers a danger the look names, in the game's words
  *   for how. "L. One way to save it: M."
@@ -319,7 +321,7 @@ export function phrase(
  *   an aim.
  */
 export type Relation =
-  | { readonly kind: "forced"; readonly rivals?: "lost" }
+  | { readonly kind: "forced"; readonly rivals?: RivalsLost }
   | { readonly kind: "oneOf" }
   | { readonly kind: "answers"; readonly how: string }
   | { readonly kind: "effect"; readonly effect: Narration }
@@ -442,7 +444,7 @@ export function sentence(said: Said): Sentence {
   const r = said.relation;
   const form: Form =
     r.kind === "forced" && r.rivals
-      ? { relation: r.kind, rivals: r.rivals }
+      ? { relation: r.kind, rivals: "lost" }
       : { relation: r.kind };
   return Sentence.of(words, form);
 }

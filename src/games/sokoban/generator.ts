@@ -11,8 +11,9 @@
  *
  * Every `randomUpto` draw, and the order of upstream's hand-rolled binary
  * min-heap (keyed on how many `INITIAL` squares a route carves through), match
- * the C, so the desc reproduces the C engine's byte-for-byte. The differential
- * test is the whole assurance here.
+ * the C, so a level reproduces the C engine's byte-for-byte; the differential
+ * test pins that. A dealt board is the first such level the hint's search can
+ * finish, which is the C's own for every seed whose first level it can.
  *
  * Upstream also has a NetHack variant (a deep pit in a corner that barrels are
  * pulled out of) and scores each pull by the damage it does to `INITIAL`
@@ -21,13 +22,16 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { search } from "./solver.ts";
 import {
   BARREL,
   BARRELTARGET,
+  encodeBoard,
   INITIAL,
   PLAYER,
   PLAYERTARGET,
   type SokobanParams,
+  type SokobanState,
   SPACE,
   TARGET,
   WALL,
@@ -193,20 +197,34 @@ function sokobanGenerate(w: number, h: number, rs: RandomState): Uint8Array {
   return grid;
 }
 
-export function newSokobanDesc(p: SokobanParams, rng: RandomState): { desc: string } {
-  // A cell's code is its desc letter; an INITIAL generation never touched is a
-  // wall.
-  const chars = Array.from(sokobanGenerate(p.w, p.h, rng), (v) =>
-    String.fromCharCode(v === INITIAL ? WALL : v),
-  );
+/** Positions the search may generate on a level about to be dealt. Below the
+ * hint's `PLAN_BUDGET`, since a level it rejects costs the whole budget
+ * and another level is cheap; a line found within it is within the hint's
+ * reach too, the search being the same. */
+const DEAL_BUDGET = 30_000;
 
-  // Run-length encode: a char, then a decimal count when the run repeats.
-  let desc = "";
-  for (let i = 0; i < chars.length; ) {
-    let n = 1;
-    while (i + n < chars.length && chars[i + n] === chars[i]) n++;
-    desc += n > 1 ? `${chars[i]}${n}` : chars[i];
-    i += n;
+/** A level as upstream generates it, unchecked: what the frozen C reference
+ * pins (`sokoban-differential.test.ts`). */
+export function sokobanLevel(p: SokobanParams, rng: RandomState): SokobanState {
+  // An INITIAL square generation never touched is a wall.
+  const grid = sokobanGenerate(p.w, p.h, rng).map((v) => (v === INITIAL ? WALL : v));
+  // The player's square holds the floor beneath it, as a state's does.
+  const at = grid.findIndex((v) => v === PLAYER || v === PLAYERTARGET);
+  grid[at] = grid[at] === PLAYERTARGET ? TARGET : SPACE;
+  return { w: p.w, h: p.h, grid, px: at % p.w, py: Math.floor(at / p.w) };
+}
+
+/**
+ * A level the hint can see through from its first push: generated as upstream
+ * does, and generated again where the search finds no line within the
+ * hint's reach. Every level can be solved, being made by playing backwards,
+ * but some are past the search, and a board the hint refuses from its opening
+ * is one whose hint never helps (`judge-rivals-for-search-hints` design D5).
+ */
+export function newSokobanDesc(p: SokobanParams, rng: RandomState): { desc: string } {
+  for (;;) {
+    const state = sokobanLevel(p, rng);
+    if (search(state, DEAL_BUDGET).kind === "found")
+      return { desc: encodeBoard(state) };
   }
-  return { desc };
 }

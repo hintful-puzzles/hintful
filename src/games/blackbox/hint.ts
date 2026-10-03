@@ -34,6 +34,7 @@ import {
   narratedStep,
 } from "../../engine/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Seen, type Settled, say, type Would } from "./hint-text.ts";
 import {
@@ -272,9 +273,14 @@ export function hint(state: BlackboxState): HintResult<BlackboxMove> {
   const { known, firings } = deduce(state);
   const settled = firings.flatMap((f) => {
     const move = moveTo(state, f.settled.at, f.settled.ball);
-    return move === null
-      ? []
-      : [narratedStep({ move, words: say.ray(f.seen, f.would, f.settled) })];
+    if (move === null) return [];
+    // The square's one rival is its other content, which the firing followed
+    // along the laser to somewhere the laser did not go: it is lost.
+    const relation = claimRelation(judgeRivals([f.would], 0, () => "lost").claim);
+    if (relation === null) throw new Error("blackbox: a firing left its rival open");
+    return [
+      narratedStep({ move, words: say.ray(f.seen, f.would, f.settled, relation) }),
+    ];
   });
   if (settled.length > 0) return { ok: true, steps: settled };
 

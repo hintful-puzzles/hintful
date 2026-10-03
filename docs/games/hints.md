@@ -224,12 +224,17 @@ Any form takes an aim: "Working on A: …". `sentence` capitalizes the result,
 so a look that opens on a reference needs no `.capitalized()`.
 
 **Rules 1 and 3 are where the parts have teeth.** Order is fixed, and rule 3
-has a mechanical half: in a game whose hint searches, `forced` must say
-`rivals: "lost"`, which only the code that judged every rival can honestly
-write, and the hint-quality walk fails a searching game's forced step without
-it. Pegs' same-peg trap arms ("…, so jump this peg into the ringed hole
-instead") are the case: the code never judged the peg's other jumps, and the
-parts left no way to say "so" there except by writing that claim down. Rule 2
+has a mechanical half: in a game whose hint searches, `forced` must carry the
+proof that every rival was judged lost, and the hint-quality walk fails a
+searching game's forced step without it. That proof is a value only
+`judgeRivals` makes (§ "Judge the rivals of a searched move"), so the only
+way to write "so" over a searched move is to have judged its rivals. Pegs'
+same-peg trap arms ("…, so jump this peg into the ringed hole instead") are
+the case: the code never judged the peg's other jumps. When the proof became
+a typed value rather than a string any game could type, it found three more
+games writing the claim by hand (Black Box, Guess, Inertia); each now judges
+its rivals through the helper, by the deduction or rule that rules them out.
+Rule 2
 is the one the structure cannot check: it guarantees the order and the
 connective, not that the conclusion follows. A reviewer reads the parts.
 
@@ -3484,7 +3489,10 @@ Three things carried over from that work:
   jumps with arrows can still finish" needs every rival settled; where some
   were not, the words claim nothing about the undrawn ones. The searches of
   one request share an allowance counted in positions, never in time, so the
-  same board always gets the same sentence.
+  same board always gets the same sentence. The judging and what it lets the
+  step say are the engine's now (§ "Judge the rivals of a searched move");
+  Pegs keeps its judge (two beams, then a capped proof of loss), its traps,
+  its packages and its stranded-peg fallback.
 - **Teach the contrast, not the move.** The owner rejected the first cut's
   narration of the hinted jump alone (*"none of these phrasings really
   [teach]"*) and kept only the sentences that set it against a jump that
@@ -3518,6 +3526,54 @@ Three things carried over from that work:
 - **A game whose every move shrinks something needs no stability work.** Each
   jump removes a peg, so any plan recomputed after any move terminates.
   Look for that potential before reaching for Inertia's nearest-goal machinery.
+
+### Judge the rivals of a searched move
+
+A search hint teaches by setting the move it offers against its rivals.
+[`engine/rival-judging.ts`](../../src/engine/rival-judging.ts)'s `judgeRivals`
+owns the shared half: the game passes the rivals, one allowance counted in
+positions, and a judge that settles one rival (finishes, lost, or unsettled);
+it gets back the verdicts and the claim they allow, with the relation the
+sentence must use. The judge, the search behind it, the traps it leads with
+and what to say when nothing is settled stay the game's, because those are
+about the puzzle. Pegs and Sokoban are the two searching users; Black Box,
+Guess and Inertia judge rivals that a deduction or a rule rules out.
+
+What Sokoban's hint (`judge-rivals-for-search-hints`) added to the Pegs
+lessons:
+
+- **Choose the rivals the step is about.** Judging every push on a crowded
+  board drew arrows everywhere, and some other barrel's bad push was on nine
+  steps in ten; naming one each time taught nothing about the push offered.
+  The rivals are this barrel's other pushes, which is the choice the player
+  faces, and judging three of them is cheap. Decide the population of rivals
+  before the words: it sets what "only" means, and the sentence has to say
+  it ("No other push of this barrel can still finish").
+- **A best-first search needs its own potential.** Recomputing after every
+  push, the plan's first push once moved a barrel up and the next plan moved it
+  back down, for ever: best-first search is not shortest, so the line found
+  after a push need not be the rest of the line found before it. The fix keeps
+  the plan and adds a check: offer a push only if the line the search finds
+  after it is shorter than the one it finds now, else the rival whose line is
+  shortest. The search is deterministic and its budget only truncates, so the
+  line's length is a function of the position and every hinted push lowers it.
+  A rival the judging found finishing already has its line's length, so the
+  check is usually free.
+- **The walk is part of the step.** A push needs the player behind the barrel.
+  The step's move is the push itself (walk there, then push, which
+  `executeMove` applies, so the cross-game walks recompute once per push), its
+  gesture taps every square of the walk and then the push, and
+  `hintKeepTrack` answers `"onTrack"` to any walk, since walking changes no
+  barrel and so nothing the step said.
+- **Deal what the hint can see through.** A third of the largest preset's
+  generated levels were past the search from their first move. Every level is
+  soluble (it is made by playing backwards), so the generator now deals the
+  first level the search finishes within a smaller trial budget; the frozen
+  C differential pins the level before that check. A refusal from the opening
+  is a hint that never helps.
+- **Search the board you deal.** The generator first checked the level before
+  its untouched squares became walls, a roomier board than the one dealt, and
+  the cross-game overlay walk caught a dealt board the hint refused.
 
 ### Read one plan out loud
 

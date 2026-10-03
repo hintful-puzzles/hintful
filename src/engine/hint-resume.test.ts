@@ -155,6 +155,14 @@ const SEARCH_REACH: Record<string, string> = {
     "walk that follows the hint never leaves a soluble position, so it has not " +
     "been seen refusing here. Largest board on every commit: this walk, which " +
     "the gate does not slice for Pegs.",
+  sokoban:
+    "Finds a line of pushes by a best-first search from both ends, and every " +
+    "dealt board is one it finishes from the opening; a position the player " +
+    "reaches can still be past it, and the search's congested endgames are " +
+    "(`judge-rivals-for-search-hints` design D1). Each hinted push shortens " +
+    "the line the " +
+    "search finds, so a walk following the hint cannot cycle. Largest board " +
+    "on every commit: this walk, which the gate does not slice for Sokoban.",
   netslide:
     "Plans by searching for an arrangement that powers the grid. Has not been " +
     "seen refusing — its finish condition is weak, so its distances are short — " +

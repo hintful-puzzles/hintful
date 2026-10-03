@@ -74,6 +74,12 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
   ],
   // A striped row or column.
   rome: ["4x4dn:1a3aa5aba2,gUaLRUcX"],
+  sokoban: [
+    // Arrows on the ways a barrel can still finish.
+    "10x12:w11fs2f2w5fs2ws3fw2s7w4s2usbs2w2tbsfs2bsw2tbswst2bw4s2ws2tw3tbsws2fw6f2s2w8s2w11",
+    // A barrel outlined, which another push would freeze.
+    "10x12:w11fs4fs2w2stwbsusbw2sbwtbtstw2s3tbs2w3fw3s4w2fs4fs2w2s5fwfw2s2fs3wfw2fws6w3fs2w2s2w11",
+  ],
   // The number just placed, outlined, and a ringed note.
   seismic: ["4x4dh:1b3a2babaa1,i1f"],
   // An outlined cell.

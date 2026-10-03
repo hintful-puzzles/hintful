@@ -16,6 +16,7 @@ import {
   unshaped,
   whole,
 } from "./hint-words.ts";
+import { judgeRivals } from "./rival-judging.ts";
 
 const keysOf = (refs: readonly MarkRef[]): string[] => [...markKeys(refs)].sort();
 
@@ -224,7 +225,9 @@ describe("a sentence is its parts, joined in the relation's words", () => {
   });
 
   it("keeps its form through a narrow and a capitalization", () => {
-    const s = sentence({ look, move, relation: { kind: "forced", rivals: "lost" } });
+    const { claim } = judgeRivals(["rival"], 1, () => "lost");
+    if (claim.kind !== "only") throw new Error("one lost rival leaves only the move");
+    const s = sentence({ look, move, relation: claim.relation });
     expect(s.narrow(() => false).form).toEqual({ relation: "forced", rivals: "lost" });
     expect(s.capitalized().form).toEqual(s.form);
     expect(unshaped(move, "bare").narrow(() => true).form).toEqual({

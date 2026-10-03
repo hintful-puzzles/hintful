@@ -1,8 +1,8 @@
 /**
  * Sokoban rendering (upstream `game_colours` / `game_redraw` / `draw_tile`):
- * a per-tile `Int32Array` cache (the cell char plus a flash-highlight bit), grid
- * lines drawn once, walls with a bevel, targets / pits / deep pits / player /
- * barrels as discs, and capital-letter barrel labels.
+ * a per-tile cache keyed on what the tile shows, grid lines drawn once, walls
+ * with a bevel, targets / pits / deep pits / player / barrels as discs,
+ * capital-letter barrel labels, and the hint's marks.
  *
  * There is no border (upstream's is a tile wide): the board is
  * `w * tileSize + 1` wide, the 1 for the closing grid line.
@@ -10,11 +10,29 @@
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BROWN, GREEN } from "../../engine/color/colors.ts";
-import { FLASH, GRID_MID, INK, PAPER, wallColor } from "../../engine/color/palette.ts";
+import {
+  FLASH,
+  GRID_MID,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+  PAPER,
+  wallColor,
+} from "../../engine/color/palette.ts";
 import { sokobanPit } from "../../engine/color/palette-games.ts";
-import { drawRaisedBevel, glyphFont, raisedBevelWidth } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import {
+  drawMoveArrow,
+  drawRaisedBevel,
+  glyphFont,
+  raisedBevelWidth,
+} from "../../engine/draw.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
+import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
+import { BARREL, PUSH } from "./hint-text.ts";
+import { DIRS, type Push } from "./solver.ts";
 import {
   barrelLabel,
   DEEP_PIT,
@@ -25,6 +43,7 @@ import {
   PIT,
   PLAYER,
   PLAYERTARGET,
+  type SokobanMove,
   type SokobanState,
   TARGET,
   WALL,
@@ -32,11 +51,6 @@ import {
 
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_LENGTH = 0.3;
-
-/** The flash-highlight bit ORed into the packed cache word (upstream 0x100). */
-const FLASH_BIT = 0x100;
-/** Cache sentinel that forces a redraw (upstream INVALID = '!'). */
-const CACHE_INVALID = -1;
 
 // --- palette (upstream's enum order: augmentation.ts keys its dark-mode swap
 // of the bevel colors, 9 and 10, by index) -------------------------------
@@ -56,7 +70,10 @@ const COL_WALL = 11;
 /** Appended past the upstream enum, which flashed the floor to its own bevel
  * highlight; the index-keyed swap above never reaches it. */
 const COL_FLASH = 12;
-const NCOLORS = 13;
+/** The hint's marks, appended for the same reason. */
+const COL_HINT = 13;
+const COL_HINT_EVIDENCE = 14;
+const NCOLORS = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -75,6 +92,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = GRID_MID;
   out[COL_WALL] = wallColor(background, highlight);
   out[COL_FLASH] = FLASH;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   return out;
 }
 
@@ -82,37 +101,61 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
   return { w: p.w * ts + 1, h: p.h * ts + 1 };
 }
 
+/** The pixel center of square `(x, y)`. */
+export function tileCenter(x: number, y: number, ts: number): Point {
+  return { x: x * ts + Math.floor(ts / 2), y: y * ts + Math.floor(ts / 2) };
+}
+
 // --- draw state -------------------------------------------------------
 
 export interface SokobanDrawState {
   started: boolean;
   tileSize: number;
-  /** Per-cell cache of the last-drawn packed tile value (char | FLASH_BIT). */
-  grid: Int32Array;
+  /** Per-cell key of what was last drawn there; "" forces a redraw. */
+  tiles: string[];
 }
 
 export function newDrawState(state: SokobanState, tileSize: number): SokobanDrawState {
   return {
     started: false,
     tileSize,
-    grid: new Int32Array(state.w * state.h).fill(CACHE_INVALID),
+    tiles: new Array<string>(state.w * state.h).fill(""),
   };
 }
 
 // --- tile drawing -----------------------------------------------------
+
+/** The hint's marks on one square. A push spans two squares, the barrel's and
+ * the one it goes into, so both carry it and each paints its own piece. */
+interface TileMarks {
+  readonly ringed: boolean;
+  readonly outlined: boolean;
+  readonly striped: boolean;
+  /** Each arrow as the pixel centers of the barrel and the square it goes
+   * into. */
+  readonly arrows: readonly (readonly [Point, Point])[];
+}
+
+const NO_MARKS: TileMarks = {
+  ringed: false,
+  outlined: false,
+  striped: false,
+  arrows: [],
+};
 
 function drawTile(
   dr: GameDrawing,
   ds: SokobanDrawState,
   x: number,
   y: number,
-  packed: number,
+  v: number,
+  flash: boolean,
+  marks: TileMarks,
 ): void {
   const ts = ds.tileSize;
   const tx = x * ts;
   const ty = y * ts;
-  const v = packed & 0xff;
-  const center = { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) };
+  const center = tileCenter(x, y, ts);
   const disc = (r: number, fill: number) => dr.drawCircle(center, r, fill, COL_OUTLINE);
   const floorDisc = Math.floor((ts * 3) / 7); // a target or a pit
   const pieceDisc = Math.floor(ts / 3); // the player or a barrel
@@ -120,8 +163,14 @@ function drawTile(
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
   dr.drawRect(
     { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-    packed & FLASH_BIT ? COL_FLASH : COL_BACKGROUND,
+    flash ? COL_FLASH : COL_BACKGROUND,
   );
+  if (marks.striped)
+    dr.drawHatch(
+      { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
+      COL_HINT,
+      hatchPeriod(ts),
+    );
 
   if (v === WALL) {
     const hw = raisedBevelWidth(ts);
@@ -159,6 +208,17 @@ function drawTile(
     }
   }
 
+  // The rings sit in the margin round a piece, so they read on the barrel's
+  // brown; an outline inside a ring when one square carries both.
+  const ring = (r: number, color: number) => {
+    dr.drawCircle(center, r, -1, color);
+    dr.drawCircle(center, r - 1, -1, color);
+  };
+  const outer = Math.floor(ts / 2) - 1;
+  if (marks.ringed) ring(outer, COL_HINT);
+  if (marks.outlined) ring(marks.ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
+  for (const [a, b] of marks.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
+
   dr.unclip();
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 }
@@ -174,6 +234,9 @@ export function redraw(
   _ui: unknown,
   _animTime: number,
   flashTime: number,
+  hint?: HintStep<SokobanMove, unknown>,
+  _mistakes?: readonly unknown[],
+  deadEnd?: MarkedDeadEnd,
 ): void {
   const ts = ds.tileSize;
   const { w, h } = state;
@@ -187,23 +250,51 @@ export function redraw(
   }
 
   // Flash the background in the first and last thirds of the flash.
-  const flashBit =
-    flashTime > 0 && Math.floor((flashTime * 3) / FLASH_LENGTH) % 2 === 0
-      ? FLASH_BIT
-      : 0;
+  const flash = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_LENGTH) % 2 === 0;
+
+  const marks = stepMarks(hint ?? deadEnd);
+  const into = (p: Push) => p.barrel + DIRS[p.dir].dy * w + DIRS[p.dir].dx;
+  const across = (p: Push) => [p.barrel, into(p)];
+  const ringed = new Set(marks.of("ring", PUSH).flatMap(across));
+  const outlined = new Set(marks.of("outline", BARREL));
+  const striped = new Set(marks.of("stripes", PUSH).flatMap(across));
+  const arrowsAt = new Map<number, Push[]>();
+  for (const p of marks.of("outline", PUSH))
+    for (const c of across(p)) arrowsAt.set(c, [...(arrowsAt.get(c) ?? []), p]);
+  const centerOf = (c: number) => tileCenter(c % w, Math.floor(c / w), ts);
 
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
-      let v = state.grid[y * w + x];
+      const i = y * w + x;
+      let v = state.grid[i];
       if (y === state.py && x === state.px) {
         v = v === TARGET ? PLAYERTARGET : PLAYER;
       }
       // A hand-typed desc may carry generation's INITIAL; it draws as a wall.
       if (v === INITIAL) v = WALL;
-      const packed = v | flashBit;
-      if (ds.grid[y * w + x] !== packed) {
-        drawTile(dr, ds, x, y, packed);
-        ds.grid[y * w + x] = packed;
+      const arrows = arrowsAt.get(i) ?? [];
+      const tile: TileMarks =
+        ringed.has(i) || outlined.has(i) || striped.has(i) || arrows.length > 0
+          ? {
+              ringed: ringed.has(i),
+              outlined: outlined.has(i),
+              striped: striped.has(i),
+              arrows: arrows.map(
+                (p) => [centerOf(p.barrel), centerOf(into(p))] as const,
+              ),
+            }
+          : NO_MARKS;
+      const key = [
+        v,
+        flash ? "f" : "",
+        tile.ringed ? "r" : "",
+        tile.outlined ? "o" : "",
+        tile.striped ? "s" : "",
+        arrows.map(PUSH.key).join(","),
+      ].join(":");
+      if (ds.tiles[i] !== key) {
+        drawTile(dr, ds, x, y, v, flash, tile);
+        ds.tiles[i] = key;
       }
     }
 }

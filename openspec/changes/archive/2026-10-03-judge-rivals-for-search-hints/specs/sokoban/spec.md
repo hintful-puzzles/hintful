@@ -1,12 +1,4 @@
-# sokoban Specification
-
-## Purpose
-Sokoban, the puzzle of pushing, never pulling, every barrel onto a target, where
-no barrel can be pushed into a wall or another barrel. This capability specifies
-its port to the TS engine: movement and pushing, completion, reproducible
-generation that is solvable by construction, and rendering.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Sokoban game implements the Game interface
 
@@ -32,90 +24,6 @@ position is a dead end instead.
 - **THEN** the same width and height are recovered, and a bare single number is read
   as a square board
 
-### Requirement: Sokoban descriptions use the upstream run-length encoding
-
-A Sokoban description SHALL encode the grid in row-major order as a run-length
-sequence: a cell character optionally followed by a decimal repeat count. The
-character alphabet SHALL cover space, wall, target, barrel, barrel-on-target, pit,
-deep pit, player and player-on-target, and additionally labeled capital-letter
-barrels and their on-target forms, so that hand-authored level descriptions are
-fully supported even though the random generator emits only a subset.
-
-Validation SHALL reject a description whose decoded cell count does not equal the
-board area, distinguishing "too much data" from "too little", SHALL reject a
-description with no player or with more than one player, and SHALL reject unknown
-characters.
-
-#### Scenario: A generated description round-trips
-
-- **WHEN** a description is generated and then decoded into a state and re-encoded
-- **THEN** the resulting description is identical
-
-#### Scenario: A description of the wrong length is rejected
-
-- **WHEN** a description whose decoded area differs from the board area is validated
-- **THEN** it is rejected with a message distinguishing too much from too little data
-
-#### Scenario: A description with no player is rejected
-
-- **WHEN** a description containing no player cell is validated
-- **THEN** it is rejected
-
-### Requirement: Sokoban movement, pushing and completion
-
-Sokoban SHALL be played by moving the player one cell at a time via the cursor keys,
-the bare number keys for the eight directions, or a click whose direction is taken
-relative to the player's cell. Orthogonal moves into a barrel SHALL push it when the
-square beyond can accept a barrel; diagonal input SHALL move the player only, never
-push, and only when one of the two cells shared between source and destination is
-free (the NetHack rule). An illegal move SHALL produce no state change and no
-history entry.
-
-Pushing a barrel onto a target SHALL mark it filled; pushing a barrel into a pit
-SHALL consume the barrel and fill the pit to a space; pushing a barrel into a deep
-pit SHALL consume the barrel while the deep pit remains. Undo and redo SHALL be
-provided by the engine with no game-specific state.
-
-Completion SHALL be reached when the board cannot become any more complete — either
-no barrel remains off a target, or no free target remains (no pit, no deep pit and
-no empty target square) — so that levels with spare barrels or pits still complete.
-
-#### Scenario: Pushing a barrel onto its target
-
-- **WHEN** the player moves orthogonally into a barrel whose far side is a target
-- **THEN** the barrel moves onto the target and is shown as filled, and the player
-  advances into the vacated square
-
-#### Scenario: A push blocked by a wall is rejected
-
-- **WHEN** the player moves orthogonally into a barrel whose far side is a wall or
-  another barrel
-- **THEN** no move is made
-
-#### Scenario: The last barrel onto a target completes the level
-
-- **WHEN** a move places the final off-target barrel onto a target so no free target
-  and no free barrel remain
-- **THEN** the game is reported solved and flashes
-
-### Requirement: Sokoban rendering
-
-Sokoban SHALL render each cell as its content — walls with a beveled face, targets,
-pits, deep pits, the player and barrels as discs, and labeled barrels with their
-letter — over grid lines drawn once, on the ground the midend lays. Moves SHALL be
-applied instantly (there is no walk or push animation), and the board SHALL flash on
-completion.
-
-#### Scenario: A completed board flashes
-
-- **WHEN** a move transitions the board from not-completed to completed
-- **THEN** the board flashes for the completion flash duration and then settles
-
-#### Scenario: A labeled barrel shows its letter
-
-- **WHEN** the board contains a capital-letter barrel
-- **THEN** that barrel is drawn with its letter label
-
 ### Requirement: Sokoban generation is deterministic
 
 Sokoban generation SHALL use a reverse-move generator over the shared seeded RNG,
@@ -129,6 +37,8 @@ refuses a board as dealt.
 
 - **WHEN** the same size and seed are used twice to generate a game
 - **THEN** both runs produce the identical description
+
+## ADDED Requirements
 
 ### Requirement: Sokoban's hint offers one push, set against the barrel's other pushes
 
