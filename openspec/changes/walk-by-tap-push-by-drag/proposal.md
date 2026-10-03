@@ -54,3 +54,17 @@ step move and its saves are unchanged.
 - **A ghost barrel** marks the square an aimed push stops on, a barrel-sized
   ring in the aim color: a one-square arrow was too short to notice under a
   finger.
+
+## Open question: reading a drag under a finger
+
+Owner, 2026-10-03, after the ghost barrel: *"definitely helps, but I'm not sure
+it's enough. Let's leave it be for now, and I might come back to it later."*
+Ask before archiving whether to take it further. Considered so far:
+
+- **An on-screen D-pad** in the app's keypad panel, sending the arrow keys the
+  game already answers (a step at a time, pushing). Declined as a replacement
+  for the drag, since it cannot push a barrel to a far square, which the owner
+  likes; still open as an addition beside it. Costs: screen space, and the
+  panel's place on a phone, not yet seen on a real device.
+- Not yet explored: an offset aim (the barrel's stop trailing the finger so it
+  is never under it), or a larger ghost that shows around a fingertip.
