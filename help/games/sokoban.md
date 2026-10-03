@@ -47,10 +47,29 @@ stripes that push and shows one that keeps the barrel free.
 Otherwise, when the search has checked the barrel's other pushes, the
 hint says what it found: it draws an arrow on each way the barrel can
 still be pushed and finish, the suggested one among them, and says when
-no other way can. When nothing it checked is worth saying, it says
-what the push does that you can see: that it puts the barrel on a
-target, or that it lets you out when barrels have shut you into a
-small part of the board.
+no other way can.
+
+Most of the skill in Sokoban is the order the barrels go home in, so
+that is what the hint says next, where it applies:
+
+- **Fill that one first.** Pushing a barrel onto a target takes a
+  square to push it from and a square to stand on. When a barrel on
+  another target would take up one of those, the hint outlines that
+  other target and fills the ringed one first. Two targets at the end
+  of a corridor are the usual case: the far one first.
+- **This barrel keeps the outlined barrel from reaching a target.** As
+  the board stands, the outlined barrel can't be pushed to any empty
+  target, whether because the ringed barrel is on its path or because
+  it is where you would have to stand. Once the ringed barrel is
+  pushed, the outlined one can be taken to a target without moving
+  anything else.
+- **Two pushes put this barrel on a target.** When the search's line
+  pushes one barrel several times running and ends with it on a
+  target, the hint counts the pushes and shows them one after another.
+
+When none of that applies, it says what the push does that you can
+see: that it puts the barrel on a target, or that it lets you out when
+barrels have shut you into a small part of the board.
 
 The hint refuses when there is nothing to search for: if a barrel off
 its target is already stuck, it outlines that barrel and asks you to

@@ -159,10 +159,11 @@ const SEARCH_REACH: Record<string, string> = {
     "Finds a line of pushes by a best-first search from both ends, and every " +
     "dealt board is one it finishes from the opening; a position the player " +
     "reaches can still be past it, and the search's congested endgames are " +
-    "(`judge-rivals-for-search-hints` design D1). Each hinted push shortens " +
-    "the line the " +
-    "search finds, so a walk following the hint cannot cycle. Largest board " +
-    "on every commit: this walk, which the gate does not slice for Sokoban.",
+    "(`judge-rivals-for-search-hints` design D1). A hinted push shortens the " +
+    "plan wherever some push does, which is all but about one push in three " +
+    "hundred (`teach-sokoban-push-order` design D1), so a cycle here would be " +
+    "a defect in that rule and not the search's reach. Largest board on every " +
+    "commit: this walk, which the gate does not slice for Sokoban.",
   netslide:
     "Plans by searching for an arrangement that powers the grid. Has not been " +
     "seen refusing — its finish condition is weak, so its distances are short — " +

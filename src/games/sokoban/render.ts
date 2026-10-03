@@ -32,7 +32,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { BARREL, PUSH } from "./hint-text.ts";
+import { BARREL, GOAL, PUSH } from "./hint-text.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
 import {
@@ -290,7 +290,10 @@ export function redraw(
   const into = (p: Push) => p.barrel + DIRS[p.dir].dy * w + DIRS[p.dir].dx;
   const across = (p: Push) => [p.barrel, into(p)];
   const ringed = new Set(marks.of("ring", PUSH).flatMap(across));
-  const outlined = new Set(marks.of("outline", BARREL));
+  const outlined = new Set([
+    ...marks.of("outline", BARREL),
+    ...marks.of("outline", GOAL),
+  ]);
   const striped = new Set(marks.of("stripes", PUSH).flatMap(across));
   const arrowsAt = new Map<number, Push[]>();
   for (const p of marks.of("outline", PUSH))

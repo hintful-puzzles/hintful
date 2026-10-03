@@ -3556,9 +3556,29 @@ lessons:
   the plan and adds a check: offer a push only if the line the search finds
   after it is shorter than the one it finds now, else the rival whose line is
   shortest. The search is deterministic and its budget only truncates, so the
-  line's length is a function of the position and every hinted push lowers it.
-  A rival the judging found finishing already has its line's length, so the
-  check is usually free.
+  line's length is a function of the position. A rival the judging found
+  finishing already has its line's length, so the check is usually free.
+- **A potential holds only where some move lowers it, so count where none
+  does.** The rule above was written up as "every hinted push lowers it", on
+  36 boards. Over 57 boards one position in about three hundred had no push
+  that shortens the line, the hint fell back on the plan's first push, and on
+  one board that walked a barrel right and back left for ever
+  (`teach-sokoban-push-order` design D1). The line found after a push had come
+  straight back through the position it was pushed from, so its remainder was
+  a shorter line from there that the search had not found: the hint now takes
+  it. That removes the cycle found and proves nothing about the rest. A search
+  that is not shortest has no potential a rule this local can complete, so say
+  "measured" where that is what it is.
+- **Order is what a push game's hint has to teach, and it is checkable.**
+  Which push to make next is rarely the hard part of Sokoban; which barrel
+  goes first is. Three claims a search hint can check without searching the
+  whole board: a goal that filling another first would wall off (take the
+  other as a wall and ask whether anything can still be pushed in); a piece
+  that keeps another from any goal (search the pushes of that one piece with
+  the rest standing still, before the move, with the mover lifted off, and
+  after); and a run of one piece to its goal, told as one journey. The middle
+  one needs all three searches: "no way before, a way after" alone fired on
+  every move that merely let the player out.
 - **The walk is part of the step.** A push needs the player behind the barrel.
   The step's move is the push itself (walk there, then push, which
   `executeMove` applies, so the cross-game walks recompute once per push), its

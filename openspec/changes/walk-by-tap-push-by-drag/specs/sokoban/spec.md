@@ -67,14 +67,18 @@ Sokoban's hint SHALL search for a line of pushes that finishes and offer one pus
 move being that push with the walk to it, played by a gesture that drags the barrel the way it
 goes.
 Walking SHALL keep the step; the push SHALL complete it; any other push SHALL drop it. The
-offered push SHALL be one after which the line the search finds is shorter than the one it finds
-before it, so following the hint cannot return to a position.
+offered push SHALL be one after which the line the search finds is shorter than the plan,
+wherever some push is, and the plan SHALL be the search's line from the position, or the
+remainder of the line it finds after that line's first push where that line comes straight back
+through the position and its remainder is the shorter.
 
 A step SHALL lead with another push of the same barrel that would leave a barrel stuck for good
 (in a corner, where no push can bring it to a target, or unable ever to move), striped. Otherwise
 it SHALL judge the barrel's other pushes through `judgeRivals` and say only what the judging
 settled: that no other push of the barrel can finish, or that it can finish only along the
-arrows drawn on it, or along them but not every way. Otherwise it SHALL say whether the push
+arrows drawn on it, or along them but not every way. Otherwise it SHALL say what the push does
+to the order the barrels go home in, as the requirement on order sets out. Otherwise it SHALL
+say whether the push
 puts the barrel on a target, or else whether it lets the player out, which it SHALL say only
 where the push opens at least four times as many squares to the player as they could walk to. The hint SHALL refuse, outlining the barrel, when a barrel off its
 target is already stuck for good, and SHALL refuse with `NO_SOLUTION_FROM_HERE` when the search
@@ -90,6 +94,12 @@ proves no line finishes and with `SEARCH_OUT_OF_REACH` past its reach.
 
 - **WHEN** the hint is asked, its push made, and the hint asked again, until the board is solved
 - **THEN** no position repeats, on a board where offering the plan's first push alone cycles
+
+#### Scenario: A line that comes straight back does not send the barrel back
+
+- **WHEN** the hint is asked on a position where the line the search finds after its own first
+  push is longer and opens by undoing that push
+- **THEN** following the hint from there reaches the solved board without repeating a position
 
 #### Scenario: A stuck barrel is outlined as the reason to undo
 

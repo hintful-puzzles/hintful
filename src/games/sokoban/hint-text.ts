@@ -29,12 +29,15 @@ export const PUSH: MarkKind<Push> = {
   key: (p) => `${p.barrel}>${p.dir}`,
 };
 
+/** A target, by its grid index. */
+export const GOAL: MarkKind<number> = { name: "target", key: String };
+
 /** What each mark means here, as the help's list of marks gives it. */
 export const HINT_MARKS: HintMarkLegend = {
   roles: {
     ring: "the push to make: the barrel, and the square it is pushed into.",
     outline:
-      "a barrel that can never reach a target (*the outlined barrel*); or, as arrows from the ringed barrel, the ways it can be pushed and still finish (*the arrows*).",
+      "a barrel that can never reach a target, or one the ringed barrel keeps from reaching a target (*the outlined barrel*); a target to leave empty until the ringed one is filled (*the outlined target*); or, as arrows from the ringed barrel, the ways it can be pushed and still finish (*the arrows*).",
     stripes:
       "another way to push the ringed barrel that would leave a barrel stuck for good (*the striped push*).",
   },
@@ -46,6 +49,10 @@ export const HINT_MARKS: HintMarkLegend = {
 export type Stuck = "corner" | "dead" | "frozen";
 
 const WAY = ["left", "up", "right", "down"] as const;
+
+/** How many pushes a run takes, in words; a run is told only this far. */
+const COUNT: Record<number, string> = { 2: "Two", 3: "Three", 4: "Four", 5: "Five" };
+export const LONGEST_RUN = 5;
 
 const thisBarrel = (p: Push): Narration => mark.this("ring", PUSH, [p], "barrel");
 /** The move, mid-sentence. */
@@ -112,6 +119,55 @@ export const say = {
       look: phrase`${thisBarrel(m)} can still finish along ${arrows([m, ...goods])}, but not every way`,
       move: phrase`push it ${WAY[m.dir]}`,
       relation,
+    }),
+
+  /**
+   * The push fills a target that a barrel on the target `later` would shut
+   * off: with one standing there, no barrel could be pushed onto this one from
+   * any square (`hint.ts`'s `shutBy`). Every target has to be filled, so this
+   * one goes first.
+   */
+  fillFirst: (m: Push, later: number): Sentence =>
+    sentence({
+      look: phrase`A barrel on ${mark.the("outline", GOAL, [later], "target")} would wall off ${mark.the("ring", PUSH, [m], "one")}`,
+      move: pushIt(m),
+      relation: { kind: "answers", how: "Fill that one first" },
+    }),
+
+  /**
+   * `blocked` cannot be pushed to a target while the other barrels stand
+   * where they are, could with this barrel gone, and can once it is pushed
+   * (`hint.ts`'s `clearedBy`). This barrel may stand on the other's path or
+   * where the player must stand to push it, so the words say neither.
+   */
+  clearsWay: (m: Push, blocked: number): Sentence =>
+    sentence({
+      look: phrase`${thisBarrel(m)} keeps ${theVictim(blocked)} from reaching a target`,
+      move: phrase`push it ${WAY[m.dir]}`,
+      relation: { kind: "effect", effect: phrase`that opens a way` },
+    }),
+
+  /** The first of `n` pushes of one barrel that end with it on a target. */
+  runFirst: (m: Push, n: number): Sentence =>
+    sentence({
+      look: phrase`${COUNT[n]} pushes put ${thisBarrel(m)} on a target`,
+      move: phrase`push it ${WAY[m.dir]}`,
+      relation: { kind: "sequence", at: "first" },
+    }),
+
+  /** A push inside such a run. */
+  runNext: (m: Push): Sentence =>
+    sentence({ move: pushIt(m), relation: { kind: "sequence", at: "next" } }),
+
+  /** The push that ends the run on a target. */
+  runLast: (m: Push): Sentence =>
+    sentence({
+      move: pushIt(m),
+      relation: {
+        kind: "sequence",
+        at: "last",
+        effect: phrase`that puts it on a target`,
+      },
     }),
 
   /** The push puts its barrel on a target. */

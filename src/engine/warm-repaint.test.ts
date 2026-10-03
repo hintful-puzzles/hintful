@@ -77,6 +77,8 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
   sokoban: [
     // Arrows on the ways a barrel can still finish.
     "10x12:w11fs2f2w5fs2ws3fw2s7w4s2usbs2w2tbsfs2bsw2tbswst2bw4s2ws2tw3tbsws2fw6f2s2w8s2w11",
+    // An outlined target, the one to leave empty until the ringed one is filled.
+    "10x12:w11tbtbs2btw3s4btw4fws2bstw3s3fs3w2tbs4tbw2s2tsfbstw2sb2susf2w2fsts5w2s2fs4fw3fs3w14",
   ],
   // The number just placed, outlined, and a ringed note.
   seismic: ["4x4dh:1b3a2babaa1,i1f"],

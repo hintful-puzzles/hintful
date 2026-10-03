@@ -128,12 +128,13 @@ export class SokobanBoard {
   /**
    * Pushes for a barrel alone on the board, between `c` and every square:
    * `"to"` counts the pushes from each square to `c`, `"from"` from `c` to
-   * each square; -1 where none can be made.
+   * each square; -1 where none can be made. `shut` is a square taken as a wall.
    */
-  pushDistances(c: number, way: "to" | "from"): Int32Array {
+  pushDistances(c: number, way: "to" | "from", shut = -1): Int32Array {
     const dist = new Int32Array(this.n).fill(-1);
     dist[c] = 0;
     const queue = [c];
+    const open = (q: number) => q !== shut && this.open(q);
     for (let q = 0; q < queue.length; q++) {
       const x = queue[q];
       for (let d = 0; d < 4; d++) {
@@ -142,7 +143,7 @@ export class SokobanBoard {
         // square behind `x`.
         const next = this.step(x, d);
         const stand = way === "to" ? this.step(next, d) : this.step(x, (d + 2) % 4);
-        if (!this.open(next) || !this.open(stand) || dist[next] >= 0) continue;
+        if (!open(next) || !open(stand) || dist[next] >= 0) continue;
         dist[next] = dist[x] + 1;
         queue.push(next);
       }
@@ -252,6 +253,34 @@ export class SokobanBoard {
       barrels[t] = 1;
     }
     return { barrels, terrain, player: push.barrel };
+  }
+
+  /**
+   * The squares the barrel at `c` can be pushed to while every other barrel
+   * stands where it is, the player starting where `p` has them: the pushes of
+   * that one barrel, searched to the end.
+   */
+  routes(p: Position, c: number): Uint8Array {
+    const reached = new Uint8Array(this.n);
+    reached[c] = 1;
+    const seen = new Set<number>();
+    const todo: { at: number; p: Position }[] = [{ at: c, p }];
+    for (let cur = todo.pop(); cur; cur = todo.pop()) {
+      const { at, p: pos } = cur;
+      const { least } = this.flood(pos);
+      const stamp = this.stamp;
+      if (seen.has(at * this.n + least)) continue;
+      seen.add(at * this.n + least);
+      for (let d = 0; d < 4; d++) {
+        const stand = this.step(at, (d + 2) % 4);
+        const t = this.step(at, d);
+        if (stand < 0 || this.seen[stand] !== stamp) continue;
+        if (t < 0 || pos.barrels[t] || pos.terrain[t] !== FLOOR) continue;
+        reached[t] = 1;
+        todo.push({ at: t, p: this.apply(pos, { barrel: at, dir: d }) });
+      }
+    }
+    return reached;
   }
 
   /** Whether `p` is finished, by the game's own rule: no barrel off a

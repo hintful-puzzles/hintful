@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { isDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -16,10 +17,18 @@ import {
 } from "../../engine/testing/hint-binding.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { hint, hintKeepTrack, pushMove } from "./hint.ts";
-import { BARREL, PUSH } from "./hint-text.ts";
+import { BARREL, GOAL, PUSH } from "./hint-text.ts";
 import { executeMove, sokobanGame } from "./index.ts";
-import { SokobanBoard, search, searchFrom } from "./solver.ts";
-import { encodeBoard, type SokobanState, status } from "./state.ts";
+import { DIRS, SokobanBoard, search, searchFrom } from "./solver.ts";
+import {
+  encodeBoard,
+  isBarrel,
+  isOnTarget,
+  type SokobanMove,
+  type SokobanState,
+  status,
+  WALL,
+} from "./state.ts";
 
 const G = sokobanGame;
 
@@ -51,10 +60,32 @@ const PINNED = {
    * them out (owner, 2026-10-03). */
   freesYou:
     "10x12:w11tubstst2w2bsbsbsbfw2sfs5tw2tsts2bstw2bts2btb2w2sbs2bs3w2st2bs2fsw2sbstbs3w2s2bsfsftw3ts4ftw11",
-  /** Nothing settled worth saying, and the push lands on floor. */
+  /** Nothing settled worth saying, the push lands on floor, and the plan
+   * moves another barrel next. */
   plain:
-    "10x12:w11vbs2tst2w2bsbsbsbfw2sfs5tw2tsts2bstw2bts2btb2w2sbs2bs3w2st2bs2fsw2sbstbs3w2s2bsfsftw3ts4ftw11",
+    "10x12:w11tbtbs2btw3s4btw4fws4tw3s3tbs2w2tbs2bstbw2s2tstbstw2sb2sbsf2w2futs5w2s2fs4fw3fs3w14",
+  /** The push fills a target at the end of a corridor, which a barrel on the
+   * target before it would shut off. */
+  fillFirst:
+    "10x12:w11tbtbs2btw3s4btw4fws2bstw3s3fs3w2tbs4tbw2s2tsfbstw2sb2susf2w2fsts5w2s2fs4fw3fs3w14",
+  /** Another barrel cannot be pushed to a target until this one moves. */
+  clearsWay:
+    "10x12:w11tbtbs2btw3s4btw4fws4tw3s3tbs2w2tbs2bstbw2s2tstbstw2sb2sbsf2w2tbts5w2s2fus3fw3fs3w14",
+  /** The plan pushes one barrel twice or more, onto a target. */
+  run: "10x12:w11tbtbs2btw3s4btw4fws4tw3s3tbs2w2tbs2bstbw2s2tstbstw2sb2sbsf2w2tbtsbs3w2s2ts3ufw3fs3w14",
 };
+
+/** A board as dealt, whose walk by hints says each of the three things the
+ * hint says about order (2026-10-04). */
+const DEALT =
+  "10x12:w11tbtsbubtw3s4btw4fws4tw3s3tbs2w2tbs2bstbw2s2tstbstw2sb2sbsf2w2tbtsbs3w2s2ts3btw3tsbsw14";
+
+/** One push from here the line the search finds is a push longer, and it
+ * opens by undoing that push: following first pushes alone, a barrel went
+ * right and then back left for ever (found 2026-10-04, seven pushes from the
+ * end of a dealt 10×12 board). */
+const CYCLED_BACK =
+  "10x12:w11f2s2fs3w2fs6fw2s3fs4w2fs7w2f3sfsfsw2sbs3fufw2tfs6w2s6fsw2s3fs3fw2fs3fs2w12";
 
 /** Pushing first pushes alone, a barrel here went up and then back down for
  * ever (`judge-rivals-for-search-hints` design D3). */
@@ -66,6 +97,37 @@ const CORNERED = "5x4:w6bsuw2stsw6";
 /** Two barrels side by side under a wall, the left one a push from its target
  * on an empty board: each holds the other still. */
 const FROZEN = "6x4:w7tb2uw2s2tsw7";
+
+/**
+ * Whether pushing only the barrel at `barrel` can bring it to an empty target,
+ * by the game's own moves: every board a key's push of that barrel reaches,
+ * the player walking wherever a tap would take them.
+ */
+function pushedHome(start: SokobanState, barrel: number): boolean {
+  const seen = new Set<string>();
+  const todo = [{ s: start, at: barrel }];
+  for (let cur = todo.pop(); cur; cur = todo.pop()) {
+    const { s, at } = cur;
+    const x = at % s.w;
+    const y = Math.floor(at / s.w);
+    for (const { dx, dy } of DIRS) {
+      const move = { type: "push", x, y, dx, dy, n: 1 } as const;
+      let next: SokobanState;
+      try {
+        next = executeMove(s, move);
+      } catch {
+        continue;
+      }
+      const to = (y + dy) * s.w + x + dx;
+      if (isOnTarget(next.grid[to])) return true;
+      const key = encodeBoard(next);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      todo.push({ s: next, at: to });
+    }
+  }
+  return false;
+}
 
 function step(id: string) {
   const s = load(id);
@@ -99,6 +161,18 @@ describe("the hint's sentences", () => {
     ["onTarget", /^Push this barrel \w+: that puts it on a target\.$/],
     ["freesYou", /^Barrels box you in\. Push this barrel \w+: that lets you out\.$/],
     ["plain", /^Push this barrel \w+\.$/],
+    [
+      "fillFirst",
+      /^A barrel on the outlined target would wall off the ringed one\. Fill that one first: push this barrel \w+\.$/,
+    ],
+    [
+      "clearsWay",
+      /^This barrel keeps the outlined barrel from reaching a target\. Push it \w+: that opens a way\.$/,
+    ],
+    [
+      "run",
+      /^(Two|Three|Four|Five) pushes put this barrel on a target\. First, push it \w+\.$/,
+    ],
   ];
   for (const [name, words] of cases) {
     it(`${name}: says what it checked, and draws what it says`, () => {
@@ -129,6 +203,125 @@ describe("the hint's sentences", () => {
     const before = board.region(board.positionOf(s)).length;
     const after = board.region(board.apply(board.positionOf(s), ringed)).length;
     expect(after).toBeGreaterThanOrEqual(4 * before);
+  });
+
+  /** What "would wall off the ringed one" claims, read off the grid. */
+  function expectWalledOff(s: SokobanState, st: HintStep<SokobanMove>) {
+    const marks = stepMarks(st);
+    const [ringed] = marks.of("ring", PUSH);
+    const [later] = marks.of("outline", GOAL);
+    const { dx, dy } = DIRS[ringed.dir];
+    const at = (x: number, y: number) =>
+      x < 0 || y < 0 || x >= s.w || y >= s.h ? -1 : y * s.w + x;
+    const tx = (ringed.barrel % s.w) + dx;
+    const ty = Math.floor(ringed.barrel / s.w) + dy;
+    expect(isOnTarget(s.grid[at(tx, ty)])).toBe(true);
+    expect(isOnTarget(s.grid[later])).toBe(true);
+    expect(isBarrel(s.grid[later])).toBe(false);
+    // A push onto the target comes from the square beside it, the player on
+    // the square beyond: from every side one of the two is a wall, off the
+    // board, or the outlined target.
+    const shut = (c: number) => c < 0 || s.grid[c] === WALL || c === later;
+    let viaLater = 0;
+    for (const d of DIRS) {
+      const from = at(tx - d.dx, ty - d.dy);
+      const stand = at(tx - 2 * d.dx, ty - 2 * d.dy);
+      expect(shut(from) || shut(stand)).toBe(true);
+      if (from === later || stand === later) viaLater++;
+    }
+    expect(viaLater).toBeGreaterThan(0);
+  }
+
+  /** What "keeps the outlined barrel from reaching a target" and "that opens
+   * a way" claim. */
+  function expectWayOpened(s: SokobanState, st: HintStep<SokobanMove>) {
+    const marks = stepMarks(st);
+    const [ringed] = marks.of("ring", PUSH);
+    const [blocked] = marks.of("outline", BARREL);
+    const board = new SokobanBoard(s);
+    const here = board.positionOf(s);
+    const home = (p: typeof here) =>
+      board
+        .routes(p, blocked)
+        .some((r, c) => r === 1 && board.target[c] && !p.barrels[c]);
+    expect(home(here)).toBe(false);
+    expect(home(board.apply(here, ringed))).toBe(true);
+    // And the player can do it: pushing only that barrel from the board the
+    // hinted push leaves, some line of its pushes ends with it on a target.
+    expect(pushedHome(G.executeMove(s, st.move), blocked)).toBe(true);
+    expect(pushedHome(s, blocked)).toBe(false);
+  }
+
+  it("outlines a target whose barrel would leave no way to push one onto the ringed target", () => {
+    const { s, step: st } = step(PINNED.fillFirst);
+    expectWalledOff(s, st);
+  });
+
+  it("outlines a barrel that only this push lets reach a target", () => {
+    const { s, step: st } = step(PINNED.clearsWay);
+    expectWayOpened(s, st);
+  });
+
+  it("claims nothing about the order that does not hold, along a dealt board", () => {
+    let s = load(DEALT);
+    const said = { walledOff: 0, wayOpened: 0, runs: 0 };
+    while (status(s) !== "solved") {
+      const r = hint(s);
+      if (!r.ok) throw new Error(r.error);
+      const [st] = r.steps;
+      if (/wall off/.test(st.explanation)) {
+        expectWalledOff(s, st);
+        said.walledOff++;
+      } else if (/from reaching a target/.test(st.explanation)) {
+        expectWayOpened(s, st);
+        said.wayOpened++;
+      } else if (r.steps.length > 1) {
+        // Every leg is a push the board takes, and the last one lands.
+        let end = s;
+        for (const leg of r.steps) end = executeMove(end, leg.move);
+        const m = r.steps[r.steps.length - 1].move;
+        if (m.type !== "push") throw new Error("a hint step is a push");
+        expect(isOnTarget(end.grid[(m.y + m.dy) * s.w + m.x + m.dx])).toBe(true);
+        said.runs++;
+      }
+      s = executeMove(s, st.move);
+    }
+    expect(said.walledOff).toBeGreaterThan(0);
+    expect(said.wayOpened).toBeGreaterThan(0);
+    expect(said.runs).toBeGreaterThan(0);
+  });
+
+  it("tells a barrel's run to a target as one journey, each leg its own push", () => {
+    const s0 = load(PINNED.run);
+    const r = hint(s0);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.steps.length).toBeGreaterThan(1);
+    expect(r.steps[0].explanation).toMatch(
+      new RegExp(`^${["", "", "Two", "Three", "Four", "Five"][r.steps.length]} pushes`),
+    );
+    let s = s0;
+    let barrel = -1;
+    r.steps.forEach((st, i) => {
+      expect(st.continuesPrevious === true).toBe(i > 0);
+      expect(bindingDefects(G, s, G.newUi(s), st)).toEqual([]);
+      const m = st.move;
+      if (m.type !== "push") throw new Error("a hint step is a push");
+      // One barrel, pushed on from where the last leg left it.
+      if (i > 0) expect(m.y * s.w + m.x).toBe(barrel);
+      barrel = (m.y + m.dy) * s.w + m.x + m.dx;
+      expect(hintKeepTrack(m, st, s)).toBe("completed");
+      const last = i === r.steps.length - 1;
+      expect(st.explanation).toMatch(
+        i === 0
+          ? /First, push it \w+\.$/
+          : last
+            ? /^Last, push this barrel \w+: that puts it on a target\.$/
+            : /^Next, push this barrel \w+\.$/,
+      );
+      expect(isOnTarget(s.grid[barrel])).toBe(last);
+      s = G.executeMove(s, m);
+    });
+    expect(isBarrel(s.grid[barrel]) && isOnTarget(s.grid[barrel])).toBe(true);
   });
 
   it("draws arrows on the ringed barrel's pushes that finish, its own among them", () => {
@@ -181,6 +374,35 @@ describe("following the hint", () => {
       pushes++;
     }
     expect(pushes).toBeGreaterThan(20);
+  });
+
+  it("walks on where the line found after a push comes straight back", () => {
+    let s = load(CYCLED_BACK);
+    // The trap is here: the search's line after its own first push is longer,
+    // and opens by undoing it.
+    const board = new SokobanBoard(s);
+    const here = board.positionOf(s);
+    const line = searchFrom(board, here, 100_000, { left: Infinity });
+    if (line.kind !== "found") throw new Error("the pinned board has a line");
+    const pushed = board.apply(here, line.pushes[0]);
+    const back = searchFrom(board, pushed, 100_000, { left: Infinity });
+    if (back.kind !== "found") throw new Error("and one after its first push");
+    expect(back.pushes.length).toBeGreaterThan(line.pushes.length);
+    expect(board.key(board.apply(pushed, back.pushes[0]))).toBe(board.key(here));
+
+    const seen = new Set<string>();
+    let pushes = 0;
+    while (status(s) !== "solved") {
+      const key = encodeBoard(s);
+      expect(seen.has(key), `back at a position after ${pushes} pushes`).toBe(false);
+      if (seen.has(key)) return;
+      seen.add(key);
+      const r = hint(s);
+      if (!r.ok) throw new Error(`refused after ${pushes} pushes: ${r.error}`);
+      s = executeMove(s, r.steps[0].move);
+      pushes++;
+    }
+    expect(pushes).toBeGreaterThan(3);
   });
 
   it("keeps the step while the player walks, completes on its push, drops any other", () => {
@@ -277,6 +499,19 @@ describe("rendering the marks (tier 2.5)", () => {
     expect(rings(recording.ops, COL_HINT)).toBe(4);
     expect(recording.ops.filter((o) => o.op === "hatch").length).toBe(2);
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("outlines the target to leave empty, and the barrel kept from one", () => {
+    for (const [id, kind] of [
+      [PINNED.fillFirst, GOAL],
+      [PINNED.clearsWay, BARREL],
+    ] as const) {
+      const { recording, hint: st } = renderScenario({ game: G, id, showHint: true });
+      expect(st ? stepMarks(st).of("outline", kind).length : 0).toBe(1);
+      // Two strokes per ring: the push's two squares, and the one outline.
+      expect(rings(recording.ops, COL_HINT)).toBe(4);
+      expect(rings(recording.ops, COL_HINT_EVIDENCE)).toBe(2);
+    }
   });
 
   it("draws an arrow for each push that finishes", () => {
