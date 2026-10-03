@@ -121,6 +121,15 @@ export const say = {
       relation: { kind: "effect", effect: phrase`that puts it on a target` },
     }),
 
+  /** The player can walk to little of the board, and this push opens much of
+   * it: four times the squares or more (`hint.ts`). */
+  freesYou: (m: Push): Sentence =>
+    sentence({
+      look: phrase`Barrels box you in`,
+      move: pushIt(m),
+      relation: { kind: "effect", effect: phrase`that lets you out` },
+    }),
+
   /** Nothing settled about the rivals worth saying. That this push can still
    * finish goes without saying: the hint offers no other kind. */
   plain: (m: Push): Sentence =>

@@ -47,6 +47,10 @@ const PINNED = {
   /** Nothing settled worth saying; the push lands on a target. */
   onTarget:
     "10x12:w11tsbstst2w2bsub2sbfw2sfs5tw2tsts2bstw2bts2btb2w2sbs2bs3w2st2bs2fsw2sbstbs3w2s2bsfsftw3ts4ftw11",
+  /** Barrels shut the player into a corner of the board, and this push lets
+   * them out (owner, 2026-10-03). */
+  freesYou:
+    "10x12:w11tubstst2w2bsbsbsbfw2sfs5tw2tsts2bstw2bts2btb2w2sbs2bs3w2st2bs2fsw2sbstbs3w2s2bsfsftw3ts4ftw11",
   /** Nothing settled worth saying, and the push lands on floor. */
   plain:
     "10x12:w11vbs2tst2w2bsbsbsbfw2sfs5tw2tsts2bstw2bts2btb2w2sbs2bs3w2st2bs2fsw2sbstbs3w2s2bsfsftw3ts4ftw11",
@@ -93,6 +97,7 @@ describe("the hint's sentences", () => {
       /^This barrel can still finish only along the arrows\. One of them: push it \w+\.$/,
     ],
     ["onTarget", /^Push this barrel \w+: that puts it on a target\.$/],
+    ["freesYou", /^Barrels box you in\. Push this barrel \w+: that lets you out\.$/],
     ["plain", /^Push this barrel \w+\.$/],
   ];
   for (const [name, words] of cases) {
@@ -115,6 +120,15 @@ describe("the hint's sentences", () => {
     const board = new SokobanBoard(s);
     const after = board.apply(board.positionOf(s), striped);
     expect(board.stuckBarrels(after)).not.toEqual([]);
+  });
+
+  it("says a push lets the player out only where it opens far more of the board", () => {
+    const { s, step: st } = step(PINNED.freesYou);
+    const board = new SokobanBoard(s);
+    const [ringed] = stepMarks(st).of("ring", PUSH);
+    const before = board.region(board.positionOf(s)).length;
+    const after = board.region(board.apply(board.positionOf(s), ringed)).length;
+    expect(after).toBeGreaterThanOrEqual(4 * before);
   });
 
   it("draws arrows on the ringed barrel's pushes that finish, its own among them", () => {

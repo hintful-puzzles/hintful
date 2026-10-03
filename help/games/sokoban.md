@@ -47,7 +47,9 @@ Otherwise, when the search has checked the barrel's other pushes, the
 hint says what it found: it draws an arrow on each way the barrel can
 still be pushed and finish, the suggested one among them, and says when
 no other way can. When nothing it checked is worth saying, it says
-whether the push puts the barrel on a target.
+what the push does that you can see: that it puts the barrel on a
+target, or that it lets you out when barrels have shut you into a
+small part of the board.
 
 The hint refuses when there is nothing to search for: if a barrel off
 its target is already stuck, it outlines that barrel and asks you to

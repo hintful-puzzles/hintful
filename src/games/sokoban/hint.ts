@@ -59,6 +59,11 @@ type Step = HintStep<SokobanMove>;
 const ALLOWANCE = 200_000;
 const RIVAL_PROOF = 20_000;
 
+/** How many times more of the board a push must open to the player for the
+ * hint to say it lets them out: enough that "boxed in" is plainly true of where
+ * they were. */
+const FREED = 4;
+
 const same = (a: Push, b: Push) => a.barrel === b.barrel && a.dir === b.dir;
 const keyOf = (p: Push) => `${p.barrel}>${p.dir}`;
 
@@ -171,8 +176,14 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
     if (c.kind === "onlyThese") return say.onlyThese(m, c.goods, c.relation);
     if (c.kind === "alsoThese") return say.alsoThese(m, c.goods, c.relation);
     // With nothing settled to contrast, what the push does, where the board
-    // shows it.
-    return board.target[into(board, m)] ? say.onTarget(m) : say.plain(m);
+    // shows it: a barrel onto a target, or a player let out of a corner of the
+    // board barrels had shut them into (owner, 2026-10-03, on a push the hint
+    // offered with no reason given).
+    if (board.target[into(board, m)]) return say.onTarget(m);
+    const before = board.region(here).length;
+    const after = board.region(board.apply(here, m)).length;
+    if (after >= FREED * before) return say.freesYou(m);
+    return say.plain(m);
   };
 
   const w = words();

@@ -39,3 +39,15 @@ step move and its saves are unchanged.
   barrel with the player once it is behind it, an undo backward. About 0.06 s
   a square, at least 0.1 s and at most 0.45 s a move, so a long walk does not
   hold up play. Solve still changes the board at once.
+
+## From the owner's phone screenshot (2026-10-03)
+
+- **Dark-mode walls** stood 0.03 of lightness off the floor and could not be
+  told apart. `wallColor` (Sokoban's and Inertia's) now authors its dark value,
+  0.11 darker than the floor, held by `wall-contrast.test.ts`. The same
+  collapse in other games' colors is `keep-colors-apart-in-dark-mode`.
+- **A push that frees the player** was offered with no reason. Where it opens
+  at least four times as much of the board to the player, the step says
+  "Barrels box you in. Push this barrel right: that lets you out." Measured
+  over hint-guided play: 17 of 796 steps, a tenth of those that gave no
+  reason.

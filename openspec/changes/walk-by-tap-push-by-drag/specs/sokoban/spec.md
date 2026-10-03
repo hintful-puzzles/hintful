@@ -75,7 +75,8 @@ A step SHALL lead with another push of the same barrel that would leave a barrel
 it SHALL judge the barrel's other pushes through `judgeRivals` and say only what the judging
 settled: that no other push of the barrel can finish, or that it can finish only along the
 arrows drawn on it, or along them but not every way. Otherwise it SHALL say whether the push
-puts the barrel on a target. The hint SHALL refuse, outlining the barrel, when a barrel off its
+puts the barrel on a target, or else whether it lets the player out, which it SHALL say only
+where the push opens at least four times as many squares to the player as they could walk to. The hint SHALL refuse, outlining the barrel, when a barrel off its
 target is already stuck for good, and SHALL refuse with `NO_SOLUTION_FROM_HERE` when the search
 proves no line finishes and with `SEARCH_OUT_OF_REACH` past its reach.
 

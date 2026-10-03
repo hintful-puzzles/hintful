@@ -363,8 +363,15 @@ export function clueDoneColor(background: Color): Color {
  * means: "not quite the floor, in the direction the bevel already goes". Deriving
  * it from a fixed gray instead would break the moment either game's background
  * changes.
+ *
+ * **The dark value is authored**: derivation keeps the light scheme's step,
+ * inverted, and in the dark scheme that left the wall at lightness 0.32 on a
+ * 0.355 floor, which a player on a phone could not tell apart (owner,
+ * 2026-10-03). The light scheme's white bevel carries the wall's shape; the
+ * dark scheme's dimmer bevel cannot, so the face itself has to step well clear
+ * of the floor, and darker keeps the direction derivation gave it.
  */
 export function wallColor(background: Color, highlight: Color): Color {
   const mix = (i: number): number => (3 * background[i] + highlight[i]) / 4;
-  return [mix(0), mix(1), mix(2)];
+  return token([mix(0), mix(1), mix(2)], [0.13, 0.13, 0.13]);
 }
