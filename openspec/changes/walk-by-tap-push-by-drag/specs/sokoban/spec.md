@@ -5,10 +5,12 @@
 Sokoban SHALL be played by moving the player one cell at a time via the cursor keys or
 the bare number keys for the eight directions, by a tap or click on a square the player
 can reach, which walks there by any way round as one move and never pushes, and by a
-drag held from the player toward an orthogonally adjacent barrel, which previews the
-push and on release pushes the barrel one square for each tile the drag reached, no
-further than a wall, another barrel or a pit stops it, as one move. A drag let go back
-on the player or off the board SHALL make no move. Orthogonal key moves into a barrel
+drag, which previews the push and on release makes it as one move: held from the player
+toward an orthogonally adjacent barrel, or held from a barrel the way it should go, which
+walks the player round behind it first and aims only where the player can get there.
+The barrel SHALL go one square for each tile the drag reached, no further than a wall,
+another barrel or a pit stops it. A drag let go back where it started or off the board
+SHALL make no move. Orthogonal key moves into a barrel
 SHALL push it when the square beyond can accept a barrel; diagonal input SHALL move the
 player only, never push, and only when one of the two cells shared between source and
 destination is free (the NetHack rule). An illegal move SHALL produce no state change
@@ -53,11 +55,17 @@ no empty target square) — so that levels with spare barrels or pits still comp
   out, with room beyond the barrel
 - **THEN** an arrow shows the barrel stopping two squares on, and letting go pushes it there
 
+#### Scenario: A drag from a barrel walks round and pushes
+
+- **WHEN** the player drags a barrel they are not beside two squares the way it should go
+- **THEN** letting go walks the player behind it and pushes it two squares, as one move
+- **AND** a drag of a barrel the player cannot get behind shows no arrow and makes no move
+
 ### Requirement: Sokoban's hint offers one push, set against the barrel's other pushes
 
 Sokoban's hint SHALL search for a line of pushes that finishes and offer one push, its step's
-move being that push with the walk to it, played by a gesture that taps the square behind the
-barrel when the player is not already there and then drags from the player onto the barrel.
+move being that push with the walk to it, played by a gesture that drags the barrel the way it
+goes.
 Walking SHALL keep the step; the push SHALL complete it; any other push SHALL drop it. The
 offered push SHALL be one after which the line the search finds is shorter than the one it finds
 before it, so following the hint cannot return to a position.
@@ -86,3 +94,29 @@ proves no line finishes and with `SEARCH_OUT_OF_REACH` past its reach.
 
 - **WHEN** the hint is asked with a barrel off its target in a corner
 - **THEN** it refuses as a dead end, outlining that barrel
+
+### Requirement: Sokoban rendering
+
+Sokoban SHALL render each cell as its content — walls with a beveled face, targets,
+pits, deep pits, the player and barrels as discs, and labeled barrels with their
+letter — over grid lines drawn once, on the ground the midend lays. A move SHALL
+animate: the player along the route it walks, square by square, and a pushed barrel
+with it once the player is behind it, briefly, so that a long walk does not hold up
+play; an undo SHALL play the motion backward. A change that moves more than one
+barrel (Solve's) SHALL be shown at once. The board SHALL flash on completion.
+
+#### Scenario: A completed board flashes
+
+- **WHEN** a move transitions the board from not-completed to completed
+- **THEN** the board flashes for the completion flash duration and then settles
+
+#### Scenario: A labeled barrel shows its letter
+
+- **WHEN** the board contains a capital-letter barrel
+- **THEN** that barrel is drawn with its letter label
+
+#### Scenario: A push animates the walk to it, then the push
+
+- **WHEN** a drag pushes a barrel the player first has to walk round to
+- **THEN** the player is drawn moving along the walk, then the player and the barrel
+  together, and the settled frame leaves nothing of the motion behind

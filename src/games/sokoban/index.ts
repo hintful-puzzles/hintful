@@ -5,12 +5,12 @@
  * A movement puzzle: every reachable position is legal, so there is no
  * wrong-but-legal state to flag. Upstream has no solver (Sokoban solving is
  * PSPACE-complete); the hint and Solve search within a budget (`solver.ts`,
- * `hint.ts`). Moves are instant, as upstream's `game_anim_length` is 0.
+ * `hint.ts`). Moves animate (`motion.ts`), where upstream's were instant.
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
-import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
+import { drag } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -27,6 +27,7 @@ import type { Point } from "../../engine/types.ts";
 import { newSokobanDesc } from "./generator.ts";
 import { hint, hintKeepTrack, pushMove } from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
+import { motionFor, motionLength } from "./motion.ts";
 import {
   colors,
   computeSize,
@@ -87,25 +88,38 @@ const DIGIT_DIRECTIONS: Record<string, { dx: number; dy: number }> = {
 };
 
 /**
- * The push a drag held from the player and now at `p` would make: toward the
- * barrel beside the player along the drag's main axis, one square for each
- * tile the drag reaches past the player, no further than the barrel can go.
- * Null while the drag is still on the player, points at no barrel, or has left
- * the board, which is where a pointer that leaves the canvas is reported.
+ * The push a drag held from `grab` and now at `p` would make, along the
+ * drag's main axis, one square for each tile the drag reaches past where it
+ * started, no further than the barrel can go. Held from the player, it pushes
+ * the barrel beside the player that way; held from a barrel, it pushes that
+ * barrel, walking round behind it first, and only where the player can get
+ * there. Null while the drag is still on the square it started from, aims at
+ * no push, or has left the board, which is where a pointer that leaves the
+ * canvas is reported.
  */
-function aimAt(s: SokobanState, ts: number, p: Point): SokobanPush | null {
-  const { w, h, px, py } = s;
+function aimAt(
+  s: SokobanState,
+  ts: number,
+  grab: { x: number; y: number },
+  p: Point,
+): SokobanPush | null {
+  const { w, h } = s;
   if (p.x < 0 || p.y < 0 || p.x >= w * ts || p.y >= h * ts) return null;
-  const center = tileCenter(px, py, ts);
+  const center = tileCenter(grab.x, grab.y, ts);
   const ox = p.x - center.x;
   const oy = p.y - center.y;
   const along = Math.max(Math.abs(ox), Math.abs(oy));
   if (along < ts / 2) return null;
   const dx = Math.abs(ox) >= Math.abs(oy) ? Math.sign(ox) : 0;
   const dy = dx === 0 ? Math.sign(oy) : 0;
-  const bx = px + dx;
-  const by = py + dy;
+  const fromPlayer = grab.x === s.px && grab.y === s.py;
+  const bx = fromPlayer ? s.px + dx : grab.x;
+  const by = fromPlayer ? s.py + dy : grab.y;
   if (bx < 0 || bx >= w || by < 0 || by >= h || !isBarrel(s.grid[by * w + bx]))
+    return null;
+  const sx = bx - dx;
+  const sy = by - dy;
+  if (!fromPlayer && (sx < 0 || sx >= w || sy < 0 || sy >= h || !canWalkTo(s, sx, sy)))
     return null;
   const reach = pushReach(s, bx, by, dx, dy);
   if (reach === 0) return null;
@@ -121,9 +135,10 @@ function aimAt(s: SokobanState, ts: number, p: Point): SokobanPush | null {
 
 /**
  * A tap walks the player to any square they can reach and never pushes. A
- * push is a drag held from the player out toward a barrel, previewed until it
- * is let go; let go back on the player, it is called off. The keyboard steps
- * one square at a time, pushing what it walks into, as upstream does.
+ * push is a drag held from the player toward a barrel, or from the barrel the
+ * way it should go, previewed until it is let go; let go back where it
+ * started, it is called off. The keyboard steps one square at a time, pushing
+ * what it walks into, as upstream does.
  */
 function interpretMove(
   state: SokobanState,
@@ -136,27 +151,30 @@ function interpretMove(
   const ts = ds.tileSize;
 
   if (button === LEFT_BUTTON) {
-    // A press on the player is a drag starting, so it must be claimed for the
-    // drag to arrive; anywhere else only the release decides, and a press that
-    // slides off before it lifts still taps where it started
+    // A press on the player or a barrel is a drag starting, so it must be
+    // claimed for the drag to arrive; anywhere else only the release decides,
+    // and a press that slides off before it lifts still taps where it started
     // (docs/games/input.md § "A press you do not act on must still be consumed").
-    if (Math.floor(p.x / ts) !== state.px || Math.floor(p.y / ts) !== state.py)
-      return null;
-    ui.aiming = true;
+    const x = Math.floor(p.x / ts);
+    const y = Math.floor(p.y / ts);
+    const inside = x >= 0 && x < state.w && y >= 0 && y < state.h;
+    const onPlayer = x === state.px && y === state.py;
+    if (!inside || (!onPlayer && !isBarrel(state.grid[y * state.w + x]))) return null;
+    ui.grab = { x, y };
     ui.aim = null;
     return UI_UPDATE;
   }
   if (button === LEFT_DRAG) {
-    if (!ui.aiming) return null;
-    const aim = aimAt(state, ts, p);
+    if (!ui.grab) return null;
+    const aim = aimAt(state, ts, ui.grab, p);
     if (JSON.stringify(aim) === JSON.stringify(ui.aim)) return null;
     ui.aim = aim;
     return UI_UPDATE;
   }
   if (button === LEFT_RELEASE) {
-    if (ui.aiming) {
+    if (ui.grab) {
       const aim = ui.aim;
-      ui.aiming = false;
+      ui.grab = null;
       ui.aim = null;
       return aim ?? UI_UPDATE;
     }
@@ -174,14 +192,14 @@ function interpretMove(
   return { type: "move", dx, dy };
 }
 
-/** A drag held when the board changes under it, by an undo or a hint, aims
- * from a player who may no longer be there, so it does not survive one. */
+/** A drag held when the board changes under it, by an undo or a hint, holds a
+ * square the player or the barrel may have left, so it does not survive one. */
 function changedState(
   ui: SokobanUi,
   _old: SokobanState | null,
   _next: SokobanState,
 ): void {
-  ui.aiming = false;
+  ui.grab = null;
   ui.aim = null;
 }
 
@@ -316,7 +334,7 @@ export const sokobanGame: Game<
 
   newDesc: newSokobanDesc,
   newState,
-  newUi: () => ({ aiming: false, aim: null }),
+  newUi: () => ({ grab: null, aim: null }),
 
   changedState,
   interpretMove,
@@ -334,22 +352,17 @@ export const sokobanGame: Game<
   hintKeepTrack,
   // The walk a player makes to the barrel, a tap toward each square on the
   // way, then the tap that pushes it.
-  // What a player does: tap the square behind the barrel, unless already
-  // there, then drag from the player onto the barrel.
-  hintGesture(s, _ui, ds, m) {
+  // What a player does: drag the barrel the way it goes, which walks round
+  // behind it first.
+  hintGesture(_s, _ui, ds, m) {
     if (m.type !== "push") return [];
     const ts = ds.tileSize;
-    const stand = { x: m.x - m.dx, y: m.y - m.dy };
-    const out: PointerAction[] = [];
-    if (stand.x !== s.px || stand.y !== s.py)
-      out.push(click(tileCenter(stand.x, stand.y, ts)));
-    out.push(
+    return [
       drag(
-        tileCenter(stand.x, stand.y, ts),
-        tileCenter(m.x + (m.n - 1) * m.dx, m.y + (m.n - 1) * m.dy, ts),
+        tileCenter(m.x, m.y, ts),
+        tileCenter(m.x + m.n * m.dx, m.y + m.n * m.dy, ts),
       ),
-    );
-    return out;
+    ];
   },
 
   colors,
@@ -358,7 +371,10 @@ export const sokobanGame: Game<
   newDrawState,
   redraw,
 
-  animLength: () => 0,
+  animLength(a, b, dir) {
+    const m = motionFor(a, b, dir);
+    return m ? motionLength(m) : 0;
+  },
   solvedFlash: () => FLASH_LENGTH,
 };
 

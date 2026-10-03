@@ -3562,7 +3562,8 @@ lessons:
 - **The walk is part of the step.** A push needs the player behind the barrel.
   The step's move is the push itself (walk there, then push, which
   `executeMove` applies, so the cross-game walks recompute once per push), its
-  gesture taps every square of the walk and then the push, and
+  gesture is the one a player makes (a drag of the barrel, which walks round
+  behind it; once a tap per square, before the game had that drag), and
   `hintKeepTrack` answers `"onTrack"` to any walk, since walking changes no
   barrel and so nothing the step said.
 - **Deal what the hint can see through.** A third of the largest preset's

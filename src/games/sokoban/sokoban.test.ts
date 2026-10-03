@@ -43,6 +43,7 @@ import {
   BARRELTARGET,
   DEEP_PIT,
   decodeParams,
+  encodeBoard,
   encodeParams,
   moveType,
   newState,
@@ -364,7 +365,7 @@ describe("Sokoban interpretMove", () => {
     const push = sokobanGame.interpretMove(long, ui, ds, at(5, 1), LEFT_RELEASE);
     expect(push).toEqual({ type: "push", x: 2, y: 1, dx: 1, dy: 0, n: 3 });
     expect(status(executeMove(long, push as SokobanMove))).toBe("solved");
-    expect(ui.aiming).toBe(false);
+    expect(ui.grab).toBeNull();
   });
 
   it("calls a drag off back on the player, or off the board", () => {
@@ -377,6 +378,33 @@ describe("Sokoban interpretMove", () => {
       ]);
       expect(out[3]).toBe(UI_UPDATE);
     }
+  });
+
+  it("pushes by a drag from the barrel, walking round behind it first", () => {
+    // Player (1,2) below; barrel (2,1) with floor, floor and a target right.
+    const board = stateFromRows(["wwwwwww", "wsbsstw", "wusssww", "wwwwwww"]);
+    const { out } = gesture(board, [
+      [LEFT_BUTTON, at(2, 1)],
+      [LEFT_DRAG, at(4, 1)],
+      [LEFT_RELEASE, at(4, 1)],
+    ]);
+    expect(out[2]).toEqual({ type: "push", x: 2, y: 1, dx: 1, dy: 0, n: 2 });
+    const after = executeMove(board, out[2] as SokobanMove);
+    expect(after).toMatchObject({ px: 3, py: 1 });
+    // Pushed down, the player would have to stand above it, in the wall: no aim.
+    const down = gesture(board, [
+      [LEFT_BUTTON, at(2, 1)],
+      [LEFT_DRAG, at(2, 2)],
+      [LEFT_RELEASE, at(2, 2)],
+    ]);
+    expect(down.out[2]).toBe(UI_UPDATE);
+    // A tap on a barrel is a drag that never left it: no move.
+    expect(
+      gesture(board, [
+        [LEFT_BUTTON, at(2, 1)],
+        [LEFT_RELEASE, at(2, 1)],
+      ]).out[1],
+    ).toBe(UI_UPDATE);
   });
 
   it("returns null for an illegal move (into a wall)", () => {
@@ -489,6 +517,65 @@ describe("Sokoban render", () => {
     // Each of those squares repainted, so no stale piece of arrow is left.
     const repainted = after.filter((o) => o.op === "clip").length;
     expect(repainted).toBeGreaterThanOrEqual(3);
+  });
+
+  it("animates a push along the walk to it, and leaves no trail", () => {
+    // Player (1,2) below; barrel (2,1), floor, floor, target. Dragging the
+    // barrel two squares walks the player up-left round behind it, then
+    // pushes: three squares of motion.
+    const id = "7x4:w8sbs2tw2us3w9";
+    const me = new Midend(sokobanGame);
+    expect(me.newGameFromId(id)).toBeNull();
+    const pushed = executeMove(newState({ w: 7, h: 4 }, id.slice(4)), {
+      type: "push",
+      x: 2,
+      y: 1,
+      dx: 1,
+      dy: 0,
+      n: 2,
+    });
+    renderOps(me);
+    me.processInput(2 * 32 + 16, 48, LEFT_BUTTON);
+    me.processInput(4 * 32 + 16, 48, LEFT_DRAG);
+    me.processInput(4 * 32 + 16, 48, LEFT_RELEASE);
+    const COL_PLAYER = 5;
+    const COL_BARREL = 4;
+    const at = (ops: ReturnType<typeof renderOps>, fill: number) =>
+      ops.flatMap((o) => (o.op === "circle" && o.fill === fill ? [o.cx] : []));
+    // A third of the way: the player has reached the square behind the barrel,
+    // and the barrel has not moved.
+    me.timer(0.06);
+    const third = renderOps(me);
+    expect(at(third, COL_BARREL)).toContain(2 * 32 + 16);
+    // Halfway: both are between squares.
+    me.timer(0.03);
+    const two = renderOps(me);
+    expect(at(two, COL_PLAYER).some((x) => (x - 16) % 32 !== 0)).toBe(true);
+    expect(at(two, COL_BARREL).some((x) => (x - 16) % 32 !== 0)).toBe(true);
+    // Settled, the warm frame is the fresh one: nothing in motion left behind.
+    me.timer(1);
+    const warm = new RecordingDrawing(sokobanGame.colors(DEFAULT_BACKGROUND));
+    me.redraw(warm);
+    const fresh = new Midend(sokobanGame);
+    expect(fresh.newGameFromId(`7x4:${encodeBoard(pushed)}`)).toBeNull();
+    const ref = renderOps(fresh);
+    const circles = (ops: ReturnType<typeof renderOps>) =>
+      ops.flatMap((o) => (o.op === "circle" ? [`${o.cx},${o.cy},${o.fill}`] : []));
+    expect(circles(warm.ops).length).toBeGreaterThan(0);
+    for (const c of circles(warm.ops)) expect(circles(ref)).toContain(c);
+  });
+
+  it("plays an undo's motion backward, and moves several barrels at once", () => {
+    const a = newState({ w: 7, h: 4 }, "w8sbs2tw2us3w9");
+    const b = executeMove(a, { type: "push", x: 2, y: 1, dx: 1, dy: 0, n: 2 });
+    const ui = sokobanGame.newUi(a);
+    const forward = sokobanGame.animLength?.(a, b, 1, ui) ?? 0;
+    expect(forward).toBeGreaterThan(0);
+    expect(sokobanGame.animLength?.(b, a, -1, ui)).toBe(forward);
+    // Two barrels changed at once is Solve's kind of change: no motion.
+    const two = stateFromRows(["wwwwwww", "wubstbw", "wsssstw", "wwwwwww"]);
+    const both = stateFromRows(["wwwwwww", "wusbfsw", "wssssfw", "wwwwwww"]);
+    expect(sokobanGame.animLength?.(two, both, 1, ui)).toBe(0);
   });
 
   it("renders the frame after a winning push", () => {

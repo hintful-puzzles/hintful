@@ -14,6 +14,13 @@
 - [x] 2.3 The aim arrow in `DRAG_ADD`, on each square from the barrel to where
       it stops, in the tile cache key.
 
+## 2b. After the owner's first play
+
+- [x] 2b.1 A drag from a barrel, walking round behind it; the hint's gesture
+      becomes that drag.
+- [x] 2b.2 Motion for every move (`motion.ts`), drawn by each tile a moving
+      piece crosses; undo plays it backward.
+
 ## 3. Docs and acceptance
 
 - [x] 3.1 The help page's Controls.

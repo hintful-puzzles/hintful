@@ -8,11 +8,13 @@ be pushed up, down, left or right, but not into another barrel or the wall.
 Tap or click any square you can reach to walk there, the shortest
 way round. Walking never pushes a barrel.
 
-To push, press on your character and drag toward a barrel beside
-you. An arrow shows where the barrel will stop: one square further
-for each square you drag, as far as it can go before a wall or
-another barrel. Let go to push. Drag back onto your character before
-letting go to change your mind.
+To push, drag a barrel the way you want it to go, and you walk round
+behind it first; or press on your character and drag toward a barrel
+beside you. An arrow shows where the barrel will stop: one square
+further for each square you drag, as far as it can go before a wall
+or another barrel. A barrel you can't get behind shows no arrow. Let
+go to push. Drag back to where you started before letting go to
+change your mind.
 
 With a keyboard, use the arrow keys or the numeric keypad. Each press
 takes one step, and walking into a barrel pushes it. The digit keys

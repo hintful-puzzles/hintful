@@ -116,10 +116,12 @@ export interface SokobanState {
   readonly py: number;
 }
 
-/** A push being aimed: the player is held, and the pointer has been dragged
- * out toward a barrel. */
+/** A push being aimed: the player or a barrel is held, and the pointer may
+ * have been dragged out from it. */
 export interface SokobanUi {
-  aiming: boolean;
+  /** The square pressed to start the drag, the player's or a barrel's; null
+   * when nothing is held. */
+  grab: { x: number; y: number } | null;
   /** The push the drag would make on release, or null while it aims at
    * nothing a barrel can do. */
   aim: SokobanPush | null;

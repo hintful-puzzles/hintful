@@ -783,7 +783,8 @@ that never had one).
 
 **An aim drag can aim a distance as well as a direction.** Sokoban's push
 ([`sokoban/index.ts`](../../src/games/sokoban/index.ts), `aimAt`) takes its
-direction from the drag's main axis off the player, and its length from how
+direction from the drag's main axis off the square it started on (the player,
+or a barrel, which walks the player round behind it), and its length from how
 many tiles the drag reaches, clamped to how far the barrel can go, so one drag
 makes a long straight push. Two things it needed that Inertia's swipe did not:
 
@@ -792,8 +793,9 @@ makes a long straight push. Two things it needed that Inertia's swipe did not:
   offset from the player, that is a long push up and to the left, made the
   moment the pointer slipped off. Anything outside the board clears the aim.
 - **Split the meanings by where the press lands, not by how far it travels.**
-  A press on the player is only ever a drag, so it is claimed; a press anywhere
-  else is only ever a tap, so it is declined and the tap acts on the release
+  A press on the player or a barrel is only ever a drag, so it is claimed; a
+  press anywhere else is only ever a tap, so it is declined and the tap acts on
+  the release
   (§ "A press you do not act on must still be consumed"). A tap there walks,
   which is why walking and pushing can share the primary button at all: the
   two meanings never meet on one press.

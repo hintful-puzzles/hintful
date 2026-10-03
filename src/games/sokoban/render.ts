@@ -33,10 +33,12 @@ import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { BARREL, PUSH } from "./hint-text.ts";
+import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
 import {
   barrelLabel,
   DEEP_PIT,
+  detargetize,
   INITIAL,
   isBarrel,
   isOnTarget,
@@ -47,6 +49,7 @@ import {
   type SokobanMove,
   type SokobanState,
   type SokobanUi,
+  SPACE,
   TARGET,
   WALL,
 } from "./state.ts";
@@ -152,6 +155,14 @@ const NO_MARKS: TileMarks = {
   aim: null,
 };
 
+/** A piece in motion, at its pixel center: the player, or a barrel by its
+ * cell value. */
+interface Sprite {
+  readonly x: number;
+  readonly y: number;
+  readonly v: number;
+}
+
 function drawTile(
   dr: GameDrawing,
   ds: SokobanDrawState,
@@ -160,6 +171,7 @@ function drawTile(
   v: number,
   flash: boolean,
   marks: TileMarks,
+  sprites: readonly Sprite[] = [],
 ): void {
   const ts = ds.tileSize;
   const tx = x * ts;
@@ -199,23 +211,29 @@ function drawTile(
     disc(floorDisc, COL_PIT);
   } else if (v === DEEP_PIT) {
     disc(floorDisc, COL_DEEP_PIT);
-  } else {
-    if (isOnTarget(v)) disc(floorDisc, COL_TARGET);
-    if (isPlayer(v)) {
-      disc(pieceDisc, COL_PLAYER);
-    } else if (isBarrel(v)) {
-      disc(pieceDisc, COL_BARREL);
-      const label = barrelLabel(v);
+  } else if (isOnTarget(v)) {
+    disc(floorDisc, COL_TARGET);
+  }
+  // The player or a barrel standing here, then any crossing it in motion,
+  // each painted under this tile's clip.
+  const piece = (at: Point, kind: number) => {
+    if (isPlayer(kind)) {
+      dr.drawCircle(at, pieceDisc, COL_PLAYER, COL_OUTLINE);
+    } else if (isBarrel(kind)) {
+      dr.drawCircle(at, pieceDisc, COL_BARREL, COL_OUTLINE);
+      const label = barrelLabel(kind);
       if (label) {
         dr.drawText(
-          center,
+          at,
           glyphFont(Math.floor(ts / 2)),
           COL_TEXT,
           String.fromCharCode(label),
         );
       }
     }
-  }
+  };
+  if (v !== WALL && v !== PIT && v !== DEEP_PIT) piece(center, v);
+  for (const s of sprites) piece({ x: s.x, y: s.y }, s.v);
 
   // The rings sit in the margin round a piece, so they read on the barrel's
   // brown; an outline inside a ring when one square carries both.
@@ -238,11 +256,11 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: SokobanDrawState,
-  _prev: SokobanState | null,
+  prev: SokobanState | null,
   state: SokobanState,
-  _dir: number,
+  dir: number,
   ui: SokobanUi,
-  _animTime: number,
+  animTime: number,
   flashTime: number,
   hint?: HintStep<SokobanMove, unknown>,
   _mistakes?: readonly unknown[],
@@ -275,19 +293,57 @@ export function redraw(
   // The aimed push's squares, from the barrel to where it stops.
   const aimed = new Set<number>();
   let aim: readonly [Point, Point] | null = null;
-  if (ui.aiming && ui.aim) {
+  if (ui.grab && ui.aim) {
     const { x, y, dx, dy, n } = ui.aim;
     for (let k = 0; k <= n; k++) aimed.add((y + k * dy) * w + x + k * dx);
     aim = [tileCenter(x, y, ts), tileCenter(x + n * dx, y + n * dy, ts)];
   }
 
+  // A move in motion: the board under it is the earlier one with the moving
+  // barrel lifted off, and the player and that barrel are drawn where they
+  // are by now, by every tile they overlap. An undo plays the motion back.
+  const motion = prev && animTime > 0 ? motionFor(prev, state, dir) : null;
+  let grid = state.grid;
+  const sprites: Sprite[] = [];
+  if (prev && motion) {
+    const earlier = dir < 0 ? state : prev;
+    const t = Math.min(animTime / motionLength(motion), 1);
+    const at = motionAt(motion, w, dir < 0 ? 1 - t : t);
+    const half = Math.floor(ts / 2);
+    const px = (p: { x: number; y: number }) => ({
+      x: Math.round(p.x * ts) + half,
+      y: Math.round(p.y * ts) + half,
+    });
+    grid = earlier.grid.slice();
+    if (motion.barrel && at.barrel) {
+      const v = earlier.grid[motion.barrel.from];
+      grid[motion.barrel.from] = isOnTarget(v) ? TARGET : SPACE;
+      sprites.push({ ...px(at.barrel), v: isOnTarget(v) ? detargetize(v) : v });
+    }
+    sprites.push({ ...px(at.player), v: PLAYER });
+  }
+  const spritesAt = new Map<number, Sprite[]>();
+  const reach = Math.floor(ts / 3) + 1;
+  for (const s of sprites) {
+    const x0 = Math.floor((s.x - reach) / ts);
+    const x1 = Math.floor((s.x + reach) / ts);
+    const y0 = Math.floor((s.y - reach) / ts);
+    const y1 = Math.floor((s.y + reach) / ts);
+    for (let y = Math.max(y0, 0); y <= Math.min(y1, h - 1); y++)
+      for (let x = Math.max(x0, 0); x <= Math.min(x1, w - 1); x++) {
+        const i = y * w + x;
+        spritesAt.set(i, [...(spritesAt.get(i) ?? []), s]);
+      }
+  }
+
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      let v = state.grid[i];
-      if (y === state.py && x === state.px) {
+      let v = grid[i];
+      if (!motion && y === state.py && x === state.px) {
         v = v === TARGET ? PLAYERTARGET : PLAYER;
       }
+      const here = spritesAt.get(i) ?? [];
       // A hand-typed desc may carry generation's INITIAL; it draws as a wall.
       if (v === INITIAL) v = WALL;
       const arrows = arrowsAt.get(i) ?? [];
@@ -315,9 +371,10 @@ export function redraw(
         tile.striped ? "s" : "",
         arrows.map(PUSH.key).join(","),
         tile.aim ? JSON.stringify(ui.aim) : "",
+        here.map((s) => `${s.v}@${s.x},${s.y}`).join(","),
       ].join(":");
       if (ds.tiles[i] !== key) {
-        drawTile(dr, ds, x, y, v, flash, tile);
+        drawTile(dr, ds, x, y, v, flash, tile, here);
         ds.tiles[i] = key;
       }
     }

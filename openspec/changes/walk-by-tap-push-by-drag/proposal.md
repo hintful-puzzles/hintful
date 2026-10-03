@@ -29,3 +29,13 @@ Owner's design (2026-10-03), with a push that can go several squares:
 
 Two move kinds are added, `walk` and a `push` that carries its length; the
 step move and its saves are unchanged.
+
+## After the owner's first play (2026-10-03)
+
+- **A drag can start from a barrel too**, the way it should go. Letting go
+  walks the player round behind it first, and a barrel the player cannot get
+  behind shows no arrow. The hint's step becomes one such drag.
+- **Every move animates**: the player along the route it walks, a pushed
+  barrel with the player once it is behind it, an undo backward. About 0.06 s
+  a square, at least 0.1 s and at most 0.45 s a move, so a long walk does not
+  hold up play. Solve still changes the board at once.
