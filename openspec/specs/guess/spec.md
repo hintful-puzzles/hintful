@@ -12,15 +12,16 @@ answer row the player keeps rule-out marks in, and the hint that fills it.
 ### Requirement: Guess game implements the Game interface
 
 The engine SHALL provide a registered `guess` game implementing
-`Game<GuessParams, GuessState, GuessMove, GuessUi, GuessDrawState>`: a Mastermind
-clone in which the player deduces a hidden combination of `npegs` color pegs
-drawn from `ncolors` colors within `nguesses` guess rows. Params SHALL be
-`ncolors`, `npegs`, `nguesses`, `allowBlank`, and `allowMultiple`, encoded
+`Game<GuessParams, GuessState, GuessMove, GuessUi, GuessDrawState, GuessMistake>`:
+a Mastermind clone in which the player deduces a hidden combination of `npegs`
+color pegs drawn from `ncolors` colors within `nguesses` guess rows. Params SHALL
+be `ncolors`, `npegs`, `nguesses`, `allowBlank`, and `allowMultiple`, encoded
 `c{ncolors}p{npegs}g{nguesses}{b|B}{m|M}` with lenient decode (unknown letters
 ignored). The two upstream presets — **Standard** (`6,4,10,false,true`) and
 **Super** (`8,5,12,false,true`) — SHALL be offered. `validateParams` SHALL reject
 `ncolors < 2` or `npegs < 2`, `ncolors > 10`, `nguesses < 1`, and
-`allowMultiple = false` with `ncolors < npegs`. The game SHALL provide `statusbarText` and `solve`, and SHALL NOT provide `textFormat` or `findMistakes`.
+`allowMultiple = false` with `ncolors < npegs`. The game SHALL provide
+`statusbarText`, `solve` and `findMistakes`, and SHALL NOT provide `textFormat`.
 
 #### Scenario: Params round-trip and lenient decode
 
@@ -483,3 +484,28 @@ a mark the rows do not justify is a hypothesis.
 - **WHEN** the answer row is drawn on a fresh Standard board
 - **THEN** there is one block per color per slot, each under half a tile across,
   and a slot with a color ruled out draws one block fewer
+
+### Requirement: Guess checks the answer row's rule-outs against the code
+
+Guess's `findMistakes` SHALL report each answer slot whose rule-out marks include
+the code's color in that slot, as the slot alone, never the color, and nothing
+once the game is over. It SHALL NOT read the guess rows, scored or in progress.
+The mistake SHALL be drawn as a frame in the error color in the margin round the
+slot's well, held in the slot's cache key so it repaints when it comes and goes.
+
+#### Scenario: A rule-out of the code's own color
+
+- **WHEN** the player rules out of a slot the color the code has there, and runs
+  Check & Save
+- **THEN** that slot is framed as a mistake and the board is not saved
+
+#### Scenario: Every color ruled out
+
+- **WHEN** every color is ruled out of a slot
+- **THEN** that slot is reported, since one of those colors is the code's
+
+#### Scenario: A guess that is not the code
+
+- **WHEN** the player has submitted rows that are not the code, and no slot rules
+  out its own color
+- **THEN** `findMistakes` reports nothing
