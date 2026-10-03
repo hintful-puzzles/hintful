@@ -60,15 +60,14 @@ describe("capability surface", () => {
     // set (`docs/games/testing.md` § "How a cross-game guard finds its
     // population"). If a converted game empties its `Ui`, this fails; if Cube
     // ever gains state, the stale entry fails too.
-    // Both entries are games whose every gesture is a bare direction relative
-    // to a position already in `State`, so there is nothing to carry between
-    // moves — and both say so in their own types, as `Record<string, never>`.
-    // The ledger was written with one entry and the derivation returned two,
-    // which is the argument for deriving in miniature.
+    // An entry is a game whose every gesture is a bare direction relative to a
+    // position already in `State`, so there is nothing to carry between moves,
+    // and it says so in its own type, as `Record<string, never>`. The ledger
+    // was written with one entry and the derivation returned two, which is the
+    // argument for deriving in miniature; Sokoban left when its push became a
+    // drag held from the player (`walk-by-tap-push-by-drag`).
     const NO_UI_STATE: Record<string, string> = {
       cube: "Rolls a solid across a fixed grid; a move is a direction from where the solid already is. `CubeUi` is `Record<string, never>`.",
-      sokoban:
-        "Pushes crates by walking; a move is a direction from the player's own cell, which lives in `State`. `SokobanUi` is `Record<string, never>`.",
     };
     const empty = capabilitySets()
       .filter((c) => c.ui.length === 0)

@@ -116,32 +116,69 @@ export interface SokobanState {
   readonly py: number;
 }
 
-/** Sokoban has no persistent UI state (upstream `new_ui` returns NULL). */
-export type SokobanUi = Record<string, never>;
+/** A push being aimed: the player is held, and the pointer has been dragged
+ * out toward a barrel. */
+export interface SokobanUi {
+  aiming: boolean;
+  /** The push the drag would make on release, or null while it aims at
+   * nothing a barrel can do. */
+  aim: SokobanPush | null;
+}
 
 /**
  * A single step: move the player by (dx, dy). Whether it is a walk or a push
  * is *derived* from the board by {@link moveType}, as the C decides in both
- * `interpret_move` and `execute_move`, so the move never carries it. Plain
- * JSON data, so the default move codec serves.
+ * `interpret_move` and `execute_move`, so the move never carries it. The
+ * keyboard's move. Plain JSON data, so the default move codec serves.
  */
 export type SokobanStep = { type: "move"; dx: number; dy: number };
 
-/** The hint's move: walk to the square behind the barrel at `(x, y)`, then
- * push it by `(dx, dy)`. No input makes it; a hint step plays it as the taps
- * that walk there and push (`hintGesture`). */
+/** A tap's move: walk to square `(x, y)` by any way there, pushing nothing. */
+export type SokobanWalk = { type: "walk"; x: number; y: number };
+
+/** A drag's move: walk to the square behind the barrel at `(x, y)` if not
+ * already there, then push it `n` squares along `(dx, dy)`. A drag makes it
+ * from beside the barrel; a hint step names its push this way, walk included. */
 export type SokobanPush = {
   type: "push";
   x: number;
   y: number;
   dx: number;
   dy: number;
+  n: number;
 };
 
 /** Solve's move: the finished board, written as a game ID writes a board. */
 export type SokobanSolve = { type: "solve"; board: string };
 
-export type SokobanMove = SokobanStep | SokobanPush | SokobanSolve;
+export type SokobanMove = SokobanStep | SokobanWalk | SokobanPush | SokobanSolve;
+
+/** How many squares the barrel at `(bx, by)` can be pushed along `(dx, dy)`
+ * in a row: up to the first wall or barrel in its way, and no further than
+ * a pit, which takes it. */
+export function pushReach(
+  s: SokobanState,
+  bx: number,
+  by: number,
+  dx: number,
+  dy: number,
+): number {
+  const { w, h, grid } = s;
+  let n = 0;
+  for (
+    let x = bx + dx, y = by + dy;
+    x >= 0 && x < w && y >= 0 && y < h;
+    x += dx, y += dy
+  ) {
+    const v = grid[y * w + x];
+    if (v === SPACE || v === TARGET) n++;
+    else {
+      if (v === PIT || v === DEEP_PIT) n++;
+      break;
+    }
+  }
+  return n;
+}
 
 /** Whether the player in `s` can walk to square `(x, y)`: through floor and
  * targets, never through a barrel, a wall or a pit. Orthogonal steps reach

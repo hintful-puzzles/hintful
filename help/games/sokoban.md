@@ -5,14 +5,20 @@ be pushed up, down, left or right, but not into another barrel or the wall.
 
 ## Controls
 
-Use the arrow keys or numeric keypad to move. Alternatively,
-click on the grid to move toward where you clicked.
+Tap or click any square you can reach to walk there, the shortest
+way round. Walking never pushes a barrel.
 
-The digit keys work like the numeric keypad even without one: 8 is
-up, 2 down, 4 left and 6 right, and 7, 9, 1 and 3 step diagonally.
-A diagonal step only walks, and only past a corner with room to go
-round it; it never pushes a barrel. Each press, or each click, takes
-one step.
+To push, press on your character and drag toward a barrel beside
+you. An arrow shows where the barrel will stop: one square further
+for each square you drag, as far as it can go before a wall or
+another barrel. Let go to push. Drag back onto your character before
+letting go to change your mind.
+
+With a keyboard, use the arrow keys or the numeric keypad. Each press
+takes one step, and walking into a barrel pushes it. The digit keys
+work like the numeric keypad even without one: 8 is up, 2 down, 4
+left and 6 right, and 7, 9, 1 and 3 step diagonally. A diagonal step
+only walks, and only past a corner with room to go round it.
 
 ## Hints
 

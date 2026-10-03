@@ -18,9 +18,15 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/desc-error.ts";
-import { Midend } from "../../engine/index.ts";
+import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
-import { CURSOR_DOWN, CURSOR_RIGHT, LEFT_BUTTON } from "../../engine/pointer.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_RIGHT,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -273,7 +279,7 @@ describe("Sokoban interpretMove", () => {
     expect(
       sokobanGame.interpretMove(
         s,
-        {},
+        sokobanGame.newUi(s),
         preferredDrawState(sokobanGame, s),
         { x: 0, y: 0 },
         CURSOR_RIGHT,
@@ -282,7 +288,7 @@ describe("Sokoban interpretMove", () => {
     expect(
       sokobanGame.interpretMove(
         s,
-        {},
+        sokobanGame.newUi(s),
         preferredDrawState(sokobanGame, s),
         { x: 0, y: 0 },
         CURSOR_DOWN,
@@ -292,7 +298,7 @@ describe("Sokoban interpretMove", () => {
     expect(
       sokobanGame.interpretMove(
         s,
-        {},
+        sokobanGame.newUi(s),
         preferredDrawState(sokobanGame, s),
         { x: 0, y: 0 },
         "3".charCodeAt(0),
@@ -302,7 +308,7 @@ describe("Sokoban interpretMove", () => {
     expect(
       sokobanGame.interpretMove(
         s,
-        {},
+        sokobanGame.newUi(s),
         preferredDrawState(sokobanGame, s),
         { x: 0, y: 0 },
         "5".charCodeAt(0),
@@ -310,19 +316,67 @@ describe("Sokoban interpretMove", () => {
     ).toBeNull();
   });
 
-  it("computes a click direction relative to the player cell", () => {
-    // Player is at cell (1,1); a click well to its right (cell 3) → move right.
-    const ts = 32;
-    const click = { x: 3 * ts + ts / 2, y: 1 * ts + ts / 2 };
-    expect(
-      sokobanGame.interpretMove(
-        s,
-        {},
-        preferredDrawState(sokobanGame, s),
-        click,
-        LEFT_BUTTON,
-      ),
-    ).toEqual(move(1, 0));
+  /** The square `(x, y)`'s center, at the preferred tile size. */
+  const at = (x: number, y: number) => ({ x: x * 32 + 16, y: y * 32 + 16 });
+
+  /** Send `buttons` at `points` through one Ui, as the frontend does. */
+  function gesture(board: SokobanState, steps: [number, { x: number; y: number }][]) {
+    const ui = sokobanGame.newUi(board);
+    const ds = preferredDrawState(sokobanGame, board);
+    const out = steps.map(([b, p]) => sokobanGame.interpretMove(board, ui, ds, p, b));
+    return { out, ui };
+  }
+
+  it("walks a tap to any square the player can reach, as one move", () => {
+    // A tap's press is declined, so the release lands where it was pressed.
+    const { out } = gesture(s, [
+      [LEFT_BUTTON, at(3, 3)],
+      [LEFT_RELEASE, at(3, 3)],
+    ]);
+    expect(out).toEqual([null, { type: "walk", x: 3, y: 3 }]);
+    expect(executeMove(s, { type: "walk", x: 3, y: 3 })).toMatchObject({
+      px: 3,
+      py: 3,
+    });
+  });
+
+  it("never pushes on a tap, nor walks where it cannot reach", () => {
+    // The barrel, a wall, and the player's own square.
+    for (const p of [at(2, 1), at(0, 0), at(1, 1)])
+      expect(gesture(s, [[LEFT_RELEASE, p]]).out).toEqual([null]);
+    const walled = stateFromRows(["wwwww", "wubtw", "wwwww", "wsssw", "wwwww"]);
+    expect(gesture(walled, [[LEFT_RELEASE, at(2, 3)]]).out).toEqual([null]);
+    expect(() => executeMove(walled, { type: "walk", x: 2, y: 3 })).toThrow();
+  });
+
+  it("pushes by a drag from the player, as far as the drag reaches", () => {
+    const long = stateFromRows(["wwwwwww", "wubsstw", "wwwwwww"]);
+    const { out, ui } = gesture(long, [
+      [LEFT_BUTTON, at(1, 1)],
+      [LEFT_DRAG, at(2, 1)],
+      [LEFT_DRAG, at(4, 1)],
+    ]);
+    expect(out).toEqual([UI_UPDATE, UI_UPDATE, UI_UPDATE]);
+    // The preview is the push the release will make: three squares, onto the
+    // target, as far as the barrel can go.
+    expect(ui.aim).toEqual({ type: "push", x: 2, y: 1, dx: 1, dy: 0, n: 3 });
+    const ds = preferredDrawState(sokobanGame, long);
+    const push = sokobanGame.interpretMove(long, ui, ds, at(5, 1), LEFT_RELEASE);
+    expect(push).toEqual({ type: "push", x: 2, y: 1, dx: 1, dy: 0, n: 3 });
+    expect(status(executeMove(long, push as SokobanMove))).toBe("solved");
+    expect(ui.aiming).toBe(false);
+  });
+
+  it("calls a drag off back on the player, or off the board", () => {
+    for (const end of [at(1, 1), { x: -100, y: -100 }]) {
+      const { out } = gesture(s, [
+        [LEFT_BUTTON, at(1, 1)],
+        [LEFT_DRAG, at(2, 1)],
+        [LEFT_DRAG, end],
+        [LEFT_RELEASE, end],
+      ]);
+      expect(out[3]).toBe(UI_UPDATE);
+    }
   });
 
   it("returns null for an illegal move (into a wall)", () => {
@@ -330,7 +384,7 @@ describe("Sokoban interpretMove", () => {
     expect(
       sokobanGame.interpretMove(
         s,
-        {},
+        sokobanGame.newUi(s),
         preferredDrawState(sokobanGame, s),
         { x: 0, y: 0 },
         "4".charCodeAt(0),
@@ -373,8 +427,11 @@ describe("Sokoban midend lifecycle", () => {
     const h = harness();
     expect(h.m.newGameFromId("5x5:w6ubtw2s3w2s3w6")).toBeNull();
     expect(h.status()).toBe("ongoing");
-    // A left-click to the player's right issues the push.
-    expect(h.m.processInput(3 * 32 + 16, 1 * 32 + 16, LEFT_BUTTON)).toBe(true);
+    // A drag from the player onto the barrel pushes it.
+    expect(h.m.processInput(1 * 32 + 16, 1 * 32 + 16, LEFT_BUTTON)).toBe(true);
+    h.m.processInput(2 * 32 + 16, 1 * 32 + 16, LEFT_DRAG);
+    expect(h.status()).toBe("ongoing");
+    expect(h.m.processInput(2 * 32 + 16, 1 * 32 + 16, LEFT_RELEASE)).toBe(true);
     expect(h.status()).toBe("solved");
   });
 
@@ -409,6 +466,29 @@ describe("Sokoban render", () => {
     // The player is a green disc — a circle with a fill color.
     expect(ops.some((o) => o.op === "circle")).toBe(true);
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("previews an aimed push across its squares, and clears it once let go", () => {
+    // Through a real midend, so the warm frame is the app's: press on the
+    // player, drag two squares out, then let go back on the player.
+    const me = new Midend(sokobanGame);
+    // Player (1,1), barrel (2,1), then floor, floor and a target.
+    expect(me.newGameFromId("7x4:w8ubs2tw15")).toBeNull();
+    renderOps(me);
+    me.processInput(48, 48, LEFT_BUTTON);
+    me.processInput(48 + 64, 48, LEFT_DRAG);
+    const COL_AIM = 15;
+    const heads = (ops: ReturnType<typeof renderOps>) =>
+      ops.filter((o) => o.op === "polygon" && o.fill === COL_AIM).length;
+    // The barrel's square, the one it passes and the one it stops on.
+    expect(heads(renderOps(me))).toBe(3);
+    me.processInput(48, 48, LEFT_DRAG);
+    me.processInput(48, 48, LEFT_RELEASE);
+    const after = renderOps(me);
+    expect(heads(after)).toBe(0);
+    // Each of those squares repainted, so no stale piece of arrow is left.
+    const repainted = after.filter((o) => o.op === "clip").length;
+    expect(repainted).toBeGreaterThanOrEqual(3);
   });
 
   it("renders the frame after a winning push", () => {

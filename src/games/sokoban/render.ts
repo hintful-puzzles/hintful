@@ -11,6 +11,7 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BROWN, GREEN } from "../../engine/color/colors.ts";
 import {
+  DRAG_ADD,
   FLASH,
   GRID_MID,
   HINT_ACTION,
@@ -45,6 +46,7 @@ import {
   PLAYERTARGET,
   type SokobanMove,
   type SokobanState,
+  type SokobanUi,
   TARGET,
   WALL,
 } from "./state.ts";
@@ -73,7 +75,9 @@ const COL_FLASH = 12;
 /** The hint's marks, appended for the same reason. */
 const COL_HINT = 13;
 const COL_HINT_EVIDENCE = 14;
-const NCOLORS = 15;
+/** A drag's aimed push, as Inertia's aimed slide. */
+const COL_AIM = 15;
+const NCOLORS = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -94,6 +98,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_AIM] = DRAG_ADD;
   return out;
 }
 
@@ -134,6 +139,9 @@ interface TileMarks {
   /** Each arrow as the pixel centers of the barrel and the square it goes
    * into. */
   readonly arrows: readonly (readonly [Point, Point])[];
+  /** The push a drag is aiming, from the barrel to where it will stop: let go
+   * and this happens. */
+  readonly aim: readonly [Point, Point] | null;
 }
 
 const NO_MARKS: TileMarks = {
@@ -141,6 +149,7 @@ const NO_MARKS: TileMarks = {
   outlined: false,
   striped: false,
   arrows: [],
+  aim: null,
 };
 
 function drawTile(
@@ -218,6 +227,7 @@ function drawTile(
   if (marks.ringed) ring(outer, COL_HINT);
   if (marks.outlined) ring(marks.ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
   for (const [a, b] of marks.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
+  if (marks.aim) drawMoveArrow(dr, ts, marks.aim[0], marks.aim[1], COL_AIM);
 
   dr.unclip();
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
@@ -231,7 +241,7 @@ export function redraw(
   _prev: SokobanState | null,
   state: SokobanState,
   _dir: number,
-  _ui: unknown,
+  ui: SokobanUi,
   _animTime: number,
   flashTime: number,
   hint?: HintStep<SokobanMove, unknown>,
@@ -262,6 +272,14 @@ export function redraw(
   for (const p of marks.of("outline", PUSH))
     for (const c of across(p)) arrowsAt.set(c, [...(arrowsAt.get(c) ?? []), p]);
   const centerOf = (c: number) => tileCenter(c % w, Math.floor(c / w), ts);
+  // The aimed push's squares, from the barrel to where it stops.
+  const aimed = new Set<number>();
+  let aim: readonly [Point, Point] | null = null;
+  if (ui.aiming && ui.aim) {
+    const { x, y, dx, dy, n } = ui.aim;
+    for (let k = 0; k <= n; k++) aimed.add((y + k * dy) * w + x + k * dx);
+    aim = [tileCenter(x, y, ts), tileCenter(x + n * dx, y + n * dy, ts)];
+  }
 
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -274,7 +292,11 @@ export function redraw(
       if (v === INITIAL) v = WALL;
       const arrows = arrowsAt.get(i) ?? [];
       const tile: TileMarks =
-        ringed.has(i) || outlined.has(i) || striped.has(i) || arrows.length > 0
+        ringed.has(i) ||
+        outlined.has(i) ||
+        striped.has(i) ||
+        arrows.length > 0 ||
+        aimed.has(i)
           ? {
               ringed: ringed.has(i),
               outlined: outlined.has(i),
@@ -282,6 +304,7 @@ export function redraw(
               arrows: arrows.map(
                 (p) => [centerOf(p.barrel), centerOf(into(p))] as const,
               ),
+              aim: aimed.has(i) ? aim : null,
             }
           : NO_MARKS;
       const key = [
@@ -291,6 +314,7 @@ export function redraw(
         tile.outlined ? "o" : "",
         tile.striped ? "s" : "",
         arrows.map(PUSH.key).join(","),
+        tile.aim ? JSON.stringify(ui.aim) : "",
       ].join(":");
       if (ds.tiles[i] !== key) {
         drawTile(dr, ds, x, y, v, flash, tile);

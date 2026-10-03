@@ -1673,6 +1673,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "sokoban",
     "members": [
       "animLength",
+      "changedState",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1685,7 +1686,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solvedFlash",
       "transposeParams",
     ],
-    "ui": [],
+    "ui": [
+      "aim",
+      "aiming",
+    ],
   },
   {
     "drawState": [

@@ -15,7 +15,7 @@ import {
   deadEndBindingDefects,
 } from "../../engine/testing/hint-binding.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { hint, hintKeepTrack, pushMove, routeTo } from "./hint.ts";
+import { hint, hintKeepTrack, pushMove } from "./hint.ts";
 import { BARREL, PUSH } from "./hint-text.ts";
 import { executeMove, sokobanGame } from "./index.ts";
 import { SokobanBoard, search, searchFrom } from "./solver.ts";
@@ -173,18 +173,49 @@ describe("following the hint", () => {
     const { s, step: st } = step(PINNED.plain);
     const want = st.move;
     if (want.type !== "push") throw new Error("a hint step is a push");
-    const route = routeTo(s, want);
-    let at = s;
-    for (const m of route.slice(0, -1)) {
-      expect(hintKeepTrack(m, st, at)).toBe("onTrack");
-      at = executeMove(at, m);
-    }
-    expect(hintKeepTrack(route[route.length - 1], st, at)).toBe("completed");
-    // The walked route and the hint's own move reach the same board.
-    expect(encodeBoard(executeMove(at, route[route.length - 1]))).toBe(
-      encodeBoard(executeMove(s, want)),
-    );
+    // A tap walks behind the barrel; a key's push then completes the step, as
+    // the drag's own push does.
+    const walk = { type: "walk", x: want.x - want.dx, y: want.y - want.dy } as const;
+    expect(hintKeepTrack(walk, st, s)).toBe("onTrack");
+    const at = executeMove(s, walk);
+    const key = { type: "move", dx: want.dx, dy: want.dy } as const;
+    expect(hintKeepTrack(key, st, at)).toBe("completed");
+    expect(hintKeepTrack(want, st, at)).toBe("completed");
+    // The walk and the hint's own move reach the same board.
+    expect(encodeBoard(executeMove(at, key))).toBe(encodeBoard(executeMove(s, want)));
+    // A longer push of the same barrel was never judged.
+    expect(hintKeepTrack({ ...want, n: 2 }, st, at)).toBe("off");
   });
+});
+
+describe("levels with pits, which only a hand-typed ID has", () => {
+  // A barrel that fills a pit is gone, so these boards' deadlocks are not
+  // the generated boards' (`SokobanBoard.tight` is false), and nothing else
+  // here walks one.
+  const LEVELS = [
+    // Two barrels, a pit and a target: fill both.
+    "7x4:w8ubspsw2s2bstw8",
+    // A deep pit swallows a barrel and stays.
+    "7x4:w8ubsdsw2s2bstw8",
+  ];
+  for (const id of LEVELS) {
+    it(`${id}: the hint walks it to the end, and Solve finishes it`, () => {
+      let s = load(id);
+      const start = s;
+      let pushes = 0;
+      while (status(s) !== "solved") {
+        const r = hint(s);
+        if (!r.ok) throw new Error(`refused after ${pushes} pushes: ${r.error}`);
+        expect(bindingDefects(G, s, G.newUi(s), r.steps[0])).toEqual([]);
+        s = executeMove(s, r.steps[0].move);
+        expect(++pushes).toBeLessThan(50);
+      }
+      expect(pushes).toBeGreaterThan(0);
+      const solved = G.solve?.(start, start);
+      expect(solved?.ok).toBe(true);
+      if (solved?.ok) expect(status(executeMove(start, solved.move))).toBe("solved");
+    });
+  }
 });
 
 describe("Solve", () => {

@@ -10,15 +10,22 @@
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
+import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import { cursorDelta, LEFT_BUTTON, stripModifiers } from "../../engine/pointer.ts";
+import {
+  cursorDelta,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  stripModifiers,
+} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSokobanDesc } from "./generator.ts";
-import { hint, hintKeepTrack, pushMove, routeTo } from "./hint.ts";
+import { hint, hintKeepTrack, pushMove } from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
 import {
   colors,
@@ -39,14 +46,17 @@ import {
   detargetize,
   encodeBoard,
   encodeParams,
+  isBarrel,
   isOnTarget,
   moveType,
   newState,
   PIT,
   paramConfig,
   presets,
+  pushReach,
   type SokobanMove,
   type SokobanParams,
+  type SokobanPush,
   type SokobanState,
   type SokobanUi,
   SPACE,
@@ -76,50 +86,138 @@ const DIGIT_DIRECTIONS: Record<string, { dx: number; dy: number }> = {
   "3": { dx: 1, dy: 1 },
 };
 
+/**
+ * The push a drag held from the player and now at `p` would make: toward the
+ * barrel beside the player along the drag's main axis, one square for each
+ * tile the drag reaches past the player, no further than the barrel can go.
+ * Null while the drag is still on the player, points at no barrel, or has left
+ * the board, which is where a pointer that leaves the canvas is reported.
+ */
+function aimAt(s: SokobanState, ts: number, p: Point): SokobanPush | null {
+  const { w, h, px, py } = s;
+  if (p.x < 0 || p.y < 0 || p.x >= w * ts || p.y >= h * ts) return null;
+  const center = tileCenter(px, py, ts);
+  const ox = p.x - center.x;
+  const oy = p.y - center.y;
+  const along = Math.max(Math.abs(ox), Math.abs(oy));
+  if (along < ts / 2) return null;
+  const dx = Math.abs(ox) >= Math.abs(oy) ? Math.sign(ox) : 0;
+  const dy = dx === 0 ? Math.sign(oy) : 0;
+  const bx = px + dx;
+  const by = py + dy;
+  if (bx < 0 || bx >= w || by < 0 || by >= h || !isBarrel(s.grid[by * w + bx]))
+    return null;
+  const reach = pushReach(s, bx, by, dx, dy);
+  if (reach === 0) return null;
+  return {
+    type: "push",
+    x: bx,
+    y: by,
+    dx,
+    dy,
+    n: Math.min(Math.round(along / ts), reach),
+  };
+}
+
+/**
+ * A tap walks the player to any square they can reach and never pushes. A
+ * push is a drag held from the player out toward a barrel, previewed until it
+ * is let go; let go back on the player, it is called off. The keyboard steps
+ * one square at a time, pushing what it walks into, as upstream does.
+ */
 function interpretMove(
   state: SokobanState,
-  _ui: SokobanUi,
+  ui: SokobanUi,
   ds: SokobanDrawState,
   p: Point,
   rawButton: number,
-): SokobanMove | null {
+): SokobanMove | null | UiUpdate {
   const button = stripModifiers(rawButton);
-  let dx = 0;
-  let dy = 0;
+  const ts = ds.tileSize;
 
   if (button === LEFT_BUTTON) {
-    // Toward the click from the player's cell, diagonally when off both axes.
-    const ts = ds.tileSize;
-    if (p.x < state.px * ts) dx = -1;
-    else if (p.x > (state.px + 1) * ts) dx = 1;
-    if (p.y < state.py * ts) dy = -1;
-    else if (p.y > (state.py + 1) * ts) dy = 1;
-  } else {
-    const dir = cursorDelta(button) ?? DIGIT_DIRECTIONS[String.fromCharCode(button)];
-    if (!dir) return null;
-    dx = dir.dx;
-    dy = dir.dy;
+    // A press on the player is a drag starting, so it must be claimed for the
+    // drag to arrive; anywhere else only the release decides, and a press that
+    // slides off before it lifts still taps where it started
+    // (docs/games/input.md § "A press you do not act on must still be consumed").
+    if (Math.floor(p.x / ts) !== state.px || Math.floor(p.y / ts) !== state.py)
+      return null;
+    ui.aiming = true;
+    ui.aim = null;
+    return UI_UPDATE;
+  }
+  if (button === LEFT_DRAG) {
+    if (!ui.aiming) return null;
+    const aim = aimAt(state, ts, p);
+    if (JSON.stringify(aim) === JSON.stringify(ui.aim)) return null;
+    ui.aim = aim;
+    return UI_UPDATE;
+  }
+  if (button === LEFT_RELEASE) {
+    if (ui.aiming) {
+      const aim = ui.aim;
+      ui.aiming = false;
+      ui.aim = null;
+      return aim ?? UI_UPDATE;
+    }
+    const x = Math.floor(p.x / ts);
+    const y = Math.floor(p.y / ts);
+    if (x < 0 || x >= state.w || y < 0 || y >= state.h) return null;
+    if (x === state.px && y === state.py) return null;
+    return canWalkTo(state, x, y) ? { type: "walk", x, y } : null;
   }
 
-  if (dx === 0 && dy === 0) return null;
+  const dir = cursorDelta(button) ?? DIGIT_DIRECTIONS[String.fromCharCode(button)];
+  if (!dir) return null;
+  const { dx, dy } = dir;
   if (moveType(state, dx, dy) === "illegal") return null;
   return { type: "move", dx, dy };
+}
+
+/** A drag held when the board changes under it, by an undo or a hint, aims
+ * from a player who may no longer be there, so it does not survive one. */
+function changedState(
+  ui: SokobanUi,
+  _old: SokobanState | null,
+  _next: SokobanState,
+): void {
+  ui.aiming = false;
+  ui.aim = null;
 }
 
 // --- move execution ---------------------------------------------------
 
 export function executeMove(state: SokobanState, move: SokobanMove): SokobanState {
   if (move.type === "solve") return solvedBoard(state, move.board);
-  if (move.type === "push") {
-    const { x, y, dx, dy } = move;
-    if (![x, y, dx, dy].every(Number.isInteger) || Math.abs(dx) + Math.abs(dy) !== 1)
+  if (move.type === "walk") {
+    const { x, y } = move;
+    if (!Number.isInteger(x) || !Number.isInteger(y))
       rejectMove(move, "sokoban: executeMove");
-    const sx = move.x - move.dx;
-    const sy = move.y - move.dy;
+    const inside = x >= 0 && x < state.w && y >= 0 && y < state.h;
+    if (!inside || !canWalkTo(state, x, y))
+      throw new Error("sokoban: a walk to a square the player cannot reach");
+    return { ...state, px: x, py: y };
+  }
+  if (move.type === "push") {
+    const { x, y, dx, dy, n } = move;
+    if (
+      ![x, y, dx, dy, n].every(Number.isInteger) ||
+      Math.abs(dx) + Math.abs(dy) !== 1 ||
+      n < 1
+    )
+      rejectMove(move, "sokoban: executeMove");
+    const sx = x - dx;
+    const sy = y - dy;
     const at = { ...state, px: sx, py: sy };
-    if (!canWalkTo(state, sx, sy) || moveType(at, move.dx, move.dy) !== "push")
+    if (
+      !canWalkTo(state, sx, sy) ||
+      moveType(at, dx, dy) !== "push" ||
+      n > pushReach(state, x, y, dx, dy)
+    )
       throw new Error("sokoban: a push the player cannot walk to and make");
-    return executeMove(at, { type: "move", dx: move.dx, dy: move.dy });
+    let next: SokobanState = at;
+    for (let i = 0; i < n; i++) next = executeMove(next, { type: "move", dx, dy });
+    return next;
   }
   // Check the fields the dispatch reads. A move with no step would reach
   // `moveType` as (NaN, NaN), read the grid out of bounds and come back a
@@ -218,8 +316,9 @@ export const sokobanGame: Game<
 
   newDesc: newSokobanDesc,
   newState,
-  newUi: () => ({}),
+  newUi: () => ({ aiming: false, aim: null }),
 
+  changedState,
   interpretMove,
   executeMove,
   status,
@@ -235,15 +334,22 @@ export const sokobanGame: Game<
   hintKeepTrack,
   // The walk a player makes to the barrel, a tap toward each square on the
   // way, then the tap that pushes it.
+  // What a player does: tap the square behind the barrel, unless already
+  // there, then drag from the player onto the barrel.
   hintGesture(s, _ui, ds, m) {
     if (m.type !== "push") return [];
-    const taps: PointerAction[] = [];
-    let at = s;
-    for (const step of routeTo(s, m)) {
-      taps.push(click(tileCenter(at.px + step.dx, at.py + step.dy, ds.tileSize)));
-      at = { ...at, px: at.px + step.dx, py: at.py + step.dy };
-    }
-    return taps;
+    const ts = ds.tileSize;
+    const stand = { x: m.x - m.dx, y: m.y - m.dy };
+    const out: PointerAction[] = [];
+    if (stand.x !== s.px || stand.y !== s.py)
+      out.push(click(tileCenter(stand.x, stand.y, ts)));
+    out.push(
+      drag(
+        tileCenter(stand.x, stand.y, ts),
+        tileCenter(m.x + (m.n - 1) * m.dx, m.y + (m.n - 1) * m.dy, ts),
+      ),
+    );
+    return out;
   },
 
   colors,

@@ -49,7 +49,6 @@ import {
   type SokobanMove,
   type SokobanPush,
   type SokobanState,
-  type SokobanStep,
 } from "./state.ts";
 
 type Step = HintStep<SokobanMove>;
@@ -185,59 +184,21 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
 
 /** A solver's push as the game's move. */
 export function pushMove(w: number, p: Push): SokobanPush {
-  return { type: "push", x: p.barrel % w, y: Math.floor(p.barrel / w), ...DIRS[p.dir] };
-}
-
-// --- walking to the push ---------------------------------------------------
-
-/** The steps that walk the player from where `s` has them to the square behind
- * `push`'s barrel, fewest first, diagonals included, then the push. */
-export function routeTo(s: SokobanState, push: SokobanPush): SokobanStep[] {
-  const { w, h } = s;
-  const { dx, dy } = push;
-  const stand = (push.y - dy) * w + (push.x - dx);
-  const start = s.py * w + s.px;
-  const prev = new Int32Array(w * h).fill(-1);
-  const step = new Array<SokobanStep | null>(w * h).fill(null);
-  prev[start] = start;
-  const queue = [start];
-  // Orthogonal steps first, so a route takes a diagonal only where it saves
-  // one.
-  const moves = [
-    [-1, 0],
-    [0, -1],
-    [1, 0],
-    [0, 1],
-    [-1, -1],
-    [1, -1],
-    [-1, 1],
-    [1, 1],
-  ];
-  for (let q = 0; q < queue.length && prev[stand] < 0; q++) {
-    const c = queue[q];
-    const at = { ...s, px: c % w, py: Math.floor(c / w) };
-    for (const [mx, my] of moves) {
-      if (moveType(at, mx, my) !== "walk") continue;
-      const nc = (at.py + my) * w + at.px + mx;
-      if (prev[nc] >= 0) continue;
-      prev[nc] = c;
-      step[nc] = { type: "move", dx: mx, dy: my };
-      queue.push(nc);
-    }
-  }
-  if (prev[stand] < 0)
-    throw new Error("sokoban: a hinted push the player cannot walk to");
-  const route: SokobanStep[] = [];
-  for (let c = stand; c !== start; c = prev[c]) route.push(step[c] as SokobanStep);
-  route.reverse();
-  route.push({ type: "move", dx, dy });
-  return route;
+  return {
+    type: "push",
+    x: p.barrel % w,
+    y: Math.floor(p.barrel / w),
+    ...DIRS[p.dir],
+    n: 1,
+  };
 }
 
 /**
  * Walking keeps the step, since it changes no barrel and so neither the push
- * nor what was said about its rivals. The push itself completes it; any other
- * push drops it.
+ * nor what was said about its rivals: a tap's walk, or a key's step that
+ * pushes nothing. The push itself completes it, made by a drag or by a key;
+ * any other push drops it, a longer one included, since the step was judged
+ * one square at a time.
  */
 export function hintKeepTrack(
   m: SokobanMove,
@@ -245,14 +206,25 @@ export function hintKeepTrack(
   s: SokobanState,
 ): HintTrackVerdict {
   const want = step.move;
-  if (want.type !== "push" || m.type !== "move") return "off";
+  if (want.type !== "push") return "off";
+  if (m.type === "walk") return "onTrack";
+  if (m.type === "push") {
+    const same =
+      m.x === want.x &&
+      m.y === want.y &&
+      m.dx === want.dx &&
+      m.dy === want.dy &&
+      m.n === want.n;
+    return same ? "completed" : "off";
+  }
+  if (m.type !== "move") return "off";
   const kind = moveType(s, m.dx, m.dy);
   if (kind === "walk") return "onTrack";
   if (kind !== "push") return "off";
-  return s.px + m.dx === want.x &&
+  const same =
+    s.px + m.dx === want.x &&
     s.py + m.dy === want.y &&
     m.dx === want.dx &&
-    m.dy === want.dy
-    ? "completed"
-    : "off";
+    m.dy === want.dy;
+  return same && want.n === 1 ? "completed" : "off";
 }
