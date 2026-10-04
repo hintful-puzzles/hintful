@@ -7,6 +7,7 @@
  */
 import { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { fillSquare, SOLVE_UNIQUE, SolverScratch, slantSolve } from "./solver.ts";
 import { DIFF_EASY, encodeClues, type SlantParams, vertexDegree } from "./state.ts";
@@ -71,7 +72,9 @@ export function newDesc(
   let clues: Int8Array;
   const sc = new SolverScratch(w, h);
 
+  const attempt = retryLimit("slant: a board at its difficulty");
   do {
+    attempt();
     slantGenerate(w, h, soln, rs);
     clues = deriveClues(w, h, soln);
 

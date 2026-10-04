@@ -114,7 +114,7 @@ describe("pegs solver", () => {
       let s = G.newState(params, desc);
       const finish = findFinish(s);
       if (finish.kind !== "found") throw new Error(`${G.encodeParams(params, true)}`);
-      for (const j of finish.jumps) {
+      for (const j of finish.line) {
         s = G.executeMove(s, {
           type: "jump",
           sx: j.from % s.w,

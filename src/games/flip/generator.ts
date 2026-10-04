@@ -9,6 +9,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { SortedMultiset } from "../../engine/sorted-multiset.ts";
 
 // --- RANDOM matrix generator ------------------------------------------
@@ -65,7 +66,9 @@ function sizeOrder(a: Candidate, b: Candidate): number {
 export function genRandomMatrix(w: number, h: number, rng: RandomState): Uint8Array {
   const wh = w * h;
   const matrix = new Uint8Array(wh * wh);
+  const attempt = retryLimit("flip: a matrix with no two rows alike");
   for (;;) {
+    attempt();
     const pick = new SortedMultiset(pickOrder);
     const cov = new SortedMultiset(coverageOrder);
     const osize = new SortedMultiset(sizeOrder);

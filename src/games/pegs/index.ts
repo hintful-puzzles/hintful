@@ -15,7 +15,6 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import type { SolveResult } from "../../engine/game.ts";
 import { drag } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   type Game,
   registerGame,
@@ -31,7 +30,7 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/pointer.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { hint, hintKeepTrack } from "./hint.ts";
@@ -247,17 +246,10 @@ function changedState(ui: PegsUi, _old: PegsState | null, _next: PegsState): voi
  * sends the player here (`add-pegs-hint` design D3).
  */
 function solve(orig: PegsState, curr: PegsState): SolveResult<PegsMove> {
-  let lost = false;
-  for (const s of [curr, orig]) {
-    const finish = findFinish(s);
-    if (finish.kind === "found") {
-      const last = finish.jumps[finish.jumps.length - 1];
-      const only = s.grid.indexOf(GRID_PEG);
-      return { ok: true, move: { type: "solve", finish: last ? last.to : only } };
-    }
-    lost = finish.kind === "lost";
-  }
-  return { ok: false, error: lost ? NO_SOLUTION : PUZZLE_NOT_REASONABLE };
+  return solveBySearch(orig, curr, findFinish, (s, line) => {
+    const last = line[line.length - 1];
+    return { type: "solve", finish: last ? last.to : s.grid.indexOf(GRID_PEG) };
+  });
 }
 
 // --- register --------------------------------------------------------

@@ -8,6 +8,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { SortedMultiset } from "../../engine/sorted-multiset.ts";
 import {
   GRID_HOLE,
@@ -120,7 +121,9 @@ function genMoves(grid: Uint8Array, w: number, h: number, rng: RandomState): voi
  * Upstream's `pegs_generate`.
  */
 function generate(grid: Uint8Array, w: number, h: number, rng: RandomState): void {
+  const attempt = retryLimit("pegs: a board that touches all four edges");
   while (true) {
+    attempt();
     grid.fill(GRID_OBST);
     grid[Math.floor(h / 2) * w + Math.floor(w / 2)] = GRID_PEG;
     genMoves(grid, w, h, rng);

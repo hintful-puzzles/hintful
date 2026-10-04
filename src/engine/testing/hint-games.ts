@@ -48,7 +48,8 @@ export const SEARCH_PLANNING_GAMES: readonly string[] =
 /**
  * The games whose hint can say `SEARCH_OUT_OF_REACH`, the one refusal that
  * admits a search ran out rather than claiming anything about the board —
- * derived from each game's own code naming it, never declared.
+ * derived from each game's own code naming it, or handing a search's outcome
+ * to `searchRefusal`, which names it for them; never declared.
  *
  * `hint-resume.test.ts` excuses exactly these its walk's completion promise,
  * with a ledger saying why each has a reach. It was derived from calling the
@@ -56,8 +57,13 @@ export const SEARCH_PLANNING_GAMES: readonly string[] =
  * gave this refusal from its own enumeration and was not excused, and Pegs'
  * beam-and-proof search would not have been either.
  */
-export const SEARCH_REACH_GAMES: readonly string[] =
-  membersMentioning("SEARCH_OUT_OF_REACH");
+export const SEARCH_REACH_GAMES: readonly string[] = HINT_GAMES.map(
+  ([id]) => id,
+).filter(
+  (id) =>
+    membersMentioning("SEARCH_OUT_OF_REACH").includes(id) ||
+    membersMentioning("searchRefusal(").includes(id),
+);
 
 /** The hinted games whose comment-stripped code contains `marker`. */
 function membersMentioning(marker: string): string[] {

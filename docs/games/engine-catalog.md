@@ -576,6 +576,20 @@ is settled stay the game's. Take the population with
 `npm run refs -- src/engine/rival-judging.ts judgeRivals`. See
 [`hints.md`](./hints.md) § "Judge the rivals of a searched move".
 
+### `search-outcome.ts` — what a budgeted search for a line established
+
+`SearchOutcome<Step>` is the three answers a game that can be lost has about a
+position when it is solved by searching: a line that finishes, a proof that
+none does, or neither once the budget ran out. What each means to a player is the same in every such game:
+`searchRefusal` is the hint's refusal for the two without a line,
+`searchVerdict` is the verdict on a rival move for `judgeRivals`, and
+`solveBySearch(orig, curr, find, finish)` is Solve, from the player's position
+if a line is found there and else from the board as dealt. The search, its
+budgets (counted in positions) and the move Solve makes stay the game's. A game
+that hands its outcome to `searchRefusal` is in `SEARCH_REACH_GAMES`
+(`testing/hint-games.ts`). Take the population with
+`npm run refs -- src/engine/search-outcome.ts solveBySearch`.
+
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
 The pure helpers for pencil-notes games: the naked singles, the recorded

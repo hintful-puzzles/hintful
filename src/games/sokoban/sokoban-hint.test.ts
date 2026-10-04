@@ -386,11 +386,11 @@ describe("following the hint", () => {
     const here = board.positionOf(s);
     const line = searchFrom(board, here, 100_000, { left: Infinity });
     if (line.kind !== "found") throw new Error("the pinned board has a line");
-    const pushed = board.apply(here, line.pushes[0]);
+    const pushed = board.apply(here, line.line[0]);
     const back = searchFrom(board, pushed, 100_000, { left: Infinity });
     if (back.kind !== "found") throw new Error("and one after its first push");
-    expect(back.pushes.length).toBeGreaterThan(line.pushes.length);
-    expect(board.key(board.apply(pushed, back.pushes[0]))).toBe(board.key(here));
+    expect(back.line.length).toBeGreaterThan(line.line.length);
+    expect(board.key(board.apply(pushed, back.line[0]))).toBe(board.key(here));
 
     const seen = new Set<string>();
     let pushes = 0;

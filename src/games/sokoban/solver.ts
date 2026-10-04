@@ -28,6 +28,7 @@
  */
 
 import type { Allowance } from "../../engine/rival-judging.ts";
+import type { SearchOutcome } from "../../engine/search-outcome.ts";
 import {
   DEEP_PIT,
   isBarrel,
@@ -725,10 +726,7 @@ interface Side {
 export const PLAN_BUDGET = 100_000;
 
 /** What a search established about a position. */
-export type Finish =
-  | { readonly kind: "found"; readonly pushes: readonly Push[] }
-  | { readonly kind: "lost" }
-  | { readonly kind: "out-of-reach" };
+export type Finish = SearchOutcome<Push>;
 
 /**
  * A line of pushes from `s` that finishes, a proof that none does, or
@@ -751,7 +749,7 @@ export function searchFrom(
   allowance: Allowance,
   whole = true,
 ): Finish {
-  if (board.solved(start)) return { kind: "found", pushes: [] };
+  if (board.solved(start)) return { kind: "found", line: [] };
   if (board.stuck(start) >= 0) return { kind: "lost" };
   // The finished board is known and this is the board itself, not a few of
   // its barrels: what the back side and the ranking by distance both need.
@@ -782,7 +780,7 @@ export function searchFrom(
     for (let m: Node | null = f; m?.push; m = m.parent) pushes.push(m.push);
     pushes.reverse();
     for (let m: Node | null = b; m?.push; m = m.parent) pushes.push(m.push);
-    return { kind: "found", pushes };
+    return { kind: "found", line: pushes };
   };
 
   let work = 0;

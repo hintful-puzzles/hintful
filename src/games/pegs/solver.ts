@@ -10,6 +10,7 @@
  */
 
 import type { Allowance, Verdict } from "../../engine/rival-judging.ts";
+import type { SearchOutcome } from "../../engine/search-outcome.ts";
 import { GRID_OBST, GRID_PEG, type PegsState } from "./state.ts";
 
 /** A jump as three grid indices: the peg that jumps, the peg it takes, and the
@@ -256,10 +257,7 @@ function exhaust(
 }
 
 /** What a search established about a position. */
-export type Finish =
-  | { readonly kind: "found"; readonly jumps: readonly Jump[] }
-  | { readonly kind: "lost" }
-  | { readonly kind: "out-of-reach" };
+export type Finish = SearchOutcome<Jump>;
 
 /** How many positions the proof of loss may visit: about half a second here,
  * measured 2026-10-02. */
@@ -272,7 +270,7 @@ export function findFinish(s: PegsState, proofBudget = PROOF_BUDGET): Finish {
   const pegs = board.pegsOf(s);
   const found = (path: readonly number[]): Finish => ({
     kind: "found",
-    jumps: path.map((k) => board.jumpAt(k)),
+    line: path.map((k) => board.jumpAt(k)),
   });
   for (const width of [300, 3000]) {
     const path = beam(board, pegs, width);

@@ -11,7 +11,6 @@
 import { rejectMove } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import { drag } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -22,7 +21,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSokobanDesc } from "./generator.ts";
 import { hint, hintKeepTrack, pushMove } from "./hint.ts";
@@ -299,17 +298,16 @@ function solvedBoard(state: SokobanState, board: string): SokobanState {
  * it sends the player here.
  */
 function solve(orig: SokobanState, curr: SokobanState): SolveResult<SokobanMove> {
-  let lost = false;
-  for (const s of [curr, orig]) {
-    const finish = search(s, PLAN_BUDGET);
-    if (finish.kind === "found") {
+  return solveBySearch(
+    orig,
+    curr,
+    (s) => search(s, PLAN_BUDGET),
+    (s, line) => {
       let end = s;
-      for (const p of finish.pushes) end = executeMove(end, pushMove(s.w, p));
-      return { ok: true, move: { type: "solve", board: encodeBoard(end) } };
-    }
-    lost = finish.kind === "lost";
-  }
-  return { ok: false, error: lost ? NO_SOLUTION : PUZZLE_NOT_REASONABLE };
+      for (const p of line) end = executeMove(end, pushMove(s.w, p));
+      return { type: "solve", board: encodeBoard(end) };
+    },
+  );
 }
 
 // --- Game object ------------------------------------------------------

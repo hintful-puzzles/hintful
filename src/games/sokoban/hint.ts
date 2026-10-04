@@ -44,10 +44,14 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { markedDeadEnd, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { markedDeadEnd } from "../../engine/hint-refusal.ts";
 import { phrase, type Sentence } from "../../engine/hint-words.ts";
 import { judgeRivals, type Verdict } from "../../engine/rival-judging.ts";
-import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
+import {
+  searchRefusal,
+  searchVerdict,
+  type Unfinished,
+} from "../../engine/search-outcome.ts";
 import { LONGEST_RUN, type Stuck, say, stuckBarrel } from "./hint-text.ts";
 import {
   DIRS,
@@ -106,21 +110,23 @@ function planFrom(board: SokobanBoard, p: Position): Finish {
 function planAt(
   board: SokobanBoard,
   here: Position,
-): Finish | { kind: "plan"; line: readonly Push[]; next: Finish } {
+): Unfinished | { kind: "plan"; line: readonly Push[]; next: Finish } {
   const found = planFrom(board, here);
-  if (found.kind !== "found" || found.pushes.length === 0) return found;
+  if (found.kind !== "found") return found;
+  // A finished board has no push to plan; the midend never asks about one.
+  if (found.line.length === 0) return { kind: "out-of-reach" };
   const home = board.key(here);
-  let line = found.pushes;
+  let line = found.line;
   for (;;) {
     const after = board.apply(here, line[0]);
     const next = planFrom(board, after);
     const back =
       next.kind === "found" &&
-      next.pushes.length > 1 &&
-      next.pushes.length - 1 < line.length &&
-      board.key(board.apply(after, next.pushes[0])) === home;
+      next.line.length > 1 &&
+      next.line.length - 1 < line.length &&
+      board.key(board.apply(after, next.line[0])) === home;
     if (!back) return { kind: "plan", line, next };
-    line = next.pushes.slice(1);
+    line = next.line.slice(1);
   }
 }
 
@@ -148,8 +154,7 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
   }
 
   const plan = planAt(board, here);
-  if (plan.kind === "lost") return { ok: false, error: NO_SOLUTION_FROM_HERE };
-  if (plan.kind !== "plan") return { ok: false, error: SEARCH_OUT_OF_REACH };
+  if (plan.kind !== "plan") return searchRefusal(plan);
   const length = plan.line.length;
   const pushes = board.pushes(here);
 
@@ -168,8 +173,8 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
     if (board.stuck(after, into(board, r)) >= 0) v = "lost";
     else {
       const res = searchFrom(board, after, budget, allowance);
-      if (res.kind === "found") lengths.set(keyOf(r), res.pushes.length);
-      v = res.kind === "found" ? "finishes" : res.kind === "lost" ? "lost" : "unknown";
+      if (res.kind === "found") lengths.set(keyOf(r), res.line.length);
+      v = searchVerdict(res);
     }
     verdicts.set(keyOf(r), v);
     return v;
@@ -185,7 +190,7 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
   // that, and the whole allowance spent on nothing.
   let offered = plan.line[0];
   const { next } = plan;
-  if (length > 1 && (next.kind !== "found" || next.pushes.length >= length)) {
+  if (length > 1 && (next.kind !== "found" || next.line.length >= length)) {
     const allowance = { left: ALLOWANCE };
     const planned = new Map<string, number>();
     plan.line.forEach((p, i) => {
@@ -338,8 +343,8 @@ function runHome(
     p = board.apply(p, line[i]);
     at = into(board, line[i]);
     const found = i === 0 ? next : planFrom(board, p);
-    if (found.kind !== "found" || found.pushes.length >= length) return null;
-    length = found.pushes.length;
+    if (found.kind !== "found" || found.line.length >= length) return null;
+    length = found.line.length;
     if (board.target[at]) return i > 0 ? line.slice(0, i + 1) : null;
   }
   return null;

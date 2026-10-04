@@ -9,6 +9,7 @@ import {
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- types ------------------------------------------------------------
@@ -148,7 +149,9 @@ function genGrid(w: number, h: number, nc: number, rng: RandomState): number[] {
   const grid2 = new Array<number>(wh).fill(0);
   const list = new Array<number>(wh + w).fill(0);
 
+  const attempt = retryLimit("samegame: a grid with every cell filled");
   for (;;) {
+    attempt();
     // Start with two or three squares (parity of w*h) of a random color.
     grid.fill(0);
     const j = 2 + (wh % 2);

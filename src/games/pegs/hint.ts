@@ -22,10 +22,10 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { markedDeadEnd, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { markedDeadEnd } from "../../engine/hint-refusal.ts";
 import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
-import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
+import { searchRefusal } from "../../engine/search-outcome.ts";
 import { type Marked, type Package, PEG, say } from "./hint-text.ts";
 import { findFinish, frozenPegs, type Jump, judge, legalJumps } from "./solver.ts";
 import {
@@ -135,10 +135,9 @@ export function hint(state: PegsState): HintResult<PegsMove> {
   }
 
   const finish = findFinish(state);
-  if (finish.kind === "lost") return { ok: false, error: NO_SOLUTION_FROM_HERE };
-  if (finish.kind === "out-of-reach") return { ok: false, error: SEARCH_OUT_OF_REACH };
+  if (finish.kind !== "found") return searchRefusal(finish);
 
-  const plan = finish.jumps;
+  const plan = finish.line;
   const j = plan[0];
   if (plan.length === 1) return { ok: true, steps: [step(state, j, say.last(j))] };
   const rivals = legalJumps(state).filter((r) => !same(r, j));

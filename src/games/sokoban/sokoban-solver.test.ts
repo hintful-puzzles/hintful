@@ -127,7 +127,7 @@ describe("the search's verdicts", () => {
         if (found.kind === "found") {
           // The line is the board's to play, and finishes it.
           let end = p;
-          for (const push of found.pushes) {
+          for (const push of found.line) {
             expect(board.pushes(end)).toContainEqual(push);
             end = board.apply(end, push);
           }
