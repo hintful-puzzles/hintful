@@ -251,8 +251,6 @@ export interface PaletteScheme {
    * highlight used as a cursor or a selection is not a bevel and stays out.
    */
   darkSwaps: readonly (readonly [number, number])[];
-  /** A factor on the dark-scheme lightness of a color. */
-  darkLightness: Readonly<Record<number, number>>;
 }
 
 /**

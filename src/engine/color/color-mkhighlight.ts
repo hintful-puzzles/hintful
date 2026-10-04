@@ -108,7 +108,7 @@ export function resolvePalette(
 export function paletteSchemeOf(game: {
   readonly paletteScheme?: Partial<PaletteScheme>;
 }): PaletteScheme {
-  return { board: 0, darkSwaps: [], darkLightness: {}, ...game.paletteScheme };
+  return { board: 0, darkSwaps: [], ...game.paletteScheme };
 }
 
 /**

@@ -17,7 +17,7 @@ const ATTRS: PuzzleStaticAttributes = {
   canMarkAll: false,
   ignoresSecondaryButton: false,
   wantsStatusbar: false,
-  paletteScheme: { board: 0, darkSwaps: [], darkLightness: {} },
+  paletteScheme: { board: 0, darkSwaps: [] },
 };
 
 /** A Puzzle around a stub worker: `notifyChange` touches only its own signals,

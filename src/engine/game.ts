@@ -670,9 +670,8 @@ export interface Game<
    * `frontend_default_colour`). */
   colors(defaultBackground: Color): Color[];
   /** Where this palette departs from the collection's handling of the color
-   * schemes: a board that is not color 0, the bevels dark mode exchanges, a
-   * color whose dark lightness is scaled. Written with the game's own color
-   * constants. */
+   * schemes: a board that is not color 0, and the bevels dark mode exchanges.
+   * It names palette slots with the game's own constants, never a color. */
   readonly paletteScheme?: Partial<PaletteScheme>;
   /** Upstream's `preferred_tilesize`; the size baseline. Default 32. */
   readonly preferredTileSize?: number;

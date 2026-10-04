@@ -1183,7 +1183,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintGesture",
       "hintKeepTrack",
       "hintMarks",
-      "paletteScheme",
       "paramConfig",
       "preferredTileSize",
       "prefs",

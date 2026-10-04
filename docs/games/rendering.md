@@ -882,15 +882,15 @@ so it is preserved (an inverted peg tells the player it is the other color).
 **Every named color authors both schemes; a derivation authors neither.**
 The dark value rides on the array as an own property, so `[...BLACK]` is the
 right color with its scheme decision silently removed — and no test can
-catch that in general. A `darkLightness` factor (below) on a color that
-carries an *authored* dark value is not correcting a calculation, it is
-fighting a decision; author the value you want instead.
+catch that in general.
 
 ### Declare the scheme beside the palette
 
 **What your palette needs from the color schemes beyond its tokens is
 `Game.paletteScheme`, written with your own `COL_*` constants.** Most games
-declare nothing. The three things it can say:
+declare nothing. It names slots and never a color: a color that is wrong in
+the dark scheme is fixed by authoring the dark value on its token. The two
+things it can say:
 
 - `darkSwaps` — the pairs dark mode exchanges. Inverting lightness turns an
   emboss into an inset, so a bevel drawn from `mkhighlight` lists its
@@ -901,12 +901,10 @@ declare nothing. The three things it can say:
 - `board` — the color the board is painted in, when it is not color 0
   (Untangle, whose color 0 is the dead space around the play area). The page
   around the canvas takes it.
-- `darkLightness` — a factor on one color's dark lightness (Pearl's board).
 
 Nothing outside your game addresses its palette by number, so the order of
 your `COL_*` constants is yours: insert, drop or reorder freely. Exemplars:
-[`slide/render.ts`](../../src/games/slide/render.ts) for swaps,
-[`pearl/render.ts`](../../src/games/pearl/render.ts) for a factor.
+[`slide/render.ts`](../../src/games/slide/render.ts).
 
 ### Every board is one tone
 

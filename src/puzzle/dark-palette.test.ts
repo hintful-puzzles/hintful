@@ -94,14 +94,8 @@ describe("dark-mode palette swaps", () => {
     // describe would be testing the calculation and not the swap.
     const [id, a, b] = PAIRS[0];
     const { light } = schemes(id);
-    const none = { darkSwaps: [], darkLightness: {} };
-    const withSwap = darkModePalette(
-      light,
-      { ...none, darkSwaps: [[a, b]] },
-      {},
-      DARK_BG_L,
-    );
-    const without = darkModePalette(light, none, {}, DARK_BG_L);
+    const withSwap = darkModePalette(light, { darkSwaps: [[a, b]] }, {}, DARK_BG_L);
+    const without = darkModePalette(light, { darkSwaps: [] }, {}, DARK_BG_L);
     expect(withSwap[a]).toEqual(without[b]);
     expect(withSwap[b]).toEqual(without[a]);
   });
@@ -113,15 +107,6 @@ describe("dark-mode palette swaps", () => {
     expect(Math.sign(dark[a][0] - dark[b][0])).toBe(
       Math.sign(light[a][0] - light[b][0]),
     );
-  });
-
-  it("scales a color's dark lightness by the factor the game declares", () => {
-    const { light } = schemes("pearl");
-    const { board, darkLightness } = schemeOf("pearl");
-    expect(darkLightness[board]).toBeGreaterThan(1);
-    const scaled = darkModePalette(light, { darkSwaps: [], darkLightness }, {}, 0.2);
-    const plain = darkModePalette(light, { darkSwaps: [], darkLightness: {} }, {}, 0.2);
-    expect(scaled[board][0]).toBeCloseTo(plain[board][0] * darkLightness[board], 9);
   });
 });
 

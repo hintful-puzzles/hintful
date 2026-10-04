@@ -51,7 +51,6 @@ import {
   newDrawState,
   type PearlDrawState,
   PREFERRED_TILE_SIZE,
-  paletteScheme,
   redraw,
 } from "./render.ts";
 import { pearlSolve } from "./solver.ts";
@@ -418,7 +417,6 @@ export const pearlGame: Game<
   prefs,
 
   colors,
-  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,
