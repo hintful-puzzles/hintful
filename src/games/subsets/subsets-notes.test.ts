@@ -17,6 +17,7 @@ import {
   newCursor,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -379,6 +380,20 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
   expect(subsetsGame.status(board)).toBe("solved");
 }
 
+const pinned = describeHintPins({
+  game: subsetsGame,
+  params: [{ w: 4, h: 4, n: 4, diff: DIFF_TRICKY }],
+  kinds: { ruleOut: (step) => step.move.kind === "rule" },
+  pins: {
+    /** Held on 140 of 668 positions walked. */
+    ruleOut: {
+      id: "4x4n4dt:14D,7R,_,_DL,_,_,_UD,_,1,6,_,15UDL,13U,10,_URL,_",
+      moves:
+        '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":2,"bit":3},{"kind":"set","type":"known","pos":14,"bit":1},{"kind":"set","type":"known","pos":14,"bit":3},{"kind":"set","type":"known","pos":5,"bit":3}]',
+    },
+  },
+});
+
 describe("the hint places the rule-outs it rests on", () => {
   for (const [name, diff] of [
     ["Easy", DIFF_EASY],
@@ -418,25 +433,13 @@ describe("the hint places the rule-outs it rests on", () => {
   });
 
   it("the rule-out hint frame boxes the set and the neighbor's sets, and frames the cell", () => {
-    // Walk a seed to its first rule-out step.
-    let found = false;
-    for (let seed = 0; seed < 20 && !found; seed++) {
-      const id = `4x4n4dt#notes-frame-${seed}`;
-      const probe = renderScenario({
-        game: subsetsGame,
-        id,
-        showHint: true,
-        hintUntil: (st) => st.move.kind === "rule",
-      });
-      const st = probe.hint as Step | undefined;
-      if (!st || st.move.kind !== "rule") continue;
-      found = true;
-      const ops = probe.recording.ops;
-      const rects = ops.filter((o) => o.op === "rect");
-      expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
-      expect(rects.some((o) => o.color === COL_HINT_CELL)).toBe(true);
-      expect(ops).toMatchSnapshot();
-    }
-    expect(found).toBe(true);
+    const { id, moves, step } = pinned("ruleOut");
+    const frame = renderScenario({ game: subsetsGame, id, moves, showHint: true });
+    expect(frame.hint?.explanation).toBe(step.explanation);
+    const ops = frame.recording.ops;
+    const rects = ops.filter((o) => o.op === "rect");
+    expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
+    expect(rects.some((o) => o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops).toMatchSnapshot();
   });
 });

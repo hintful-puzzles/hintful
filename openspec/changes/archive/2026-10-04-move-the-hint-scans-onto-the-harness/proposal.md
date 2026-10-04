@@ -1,6 +1,6 @@
 # move-the-hint-scans-onto-the-harness
 
-**Status: scaffolded, not started (2026-10-04).** A follow-up from
+**Status: implemented (2026-10-04); `design.md` says what was found.** A follow-up from
 `share-the-hint-position-scan`, which built `describeHintPins`
 (`src/engine/testing/hint-positions.ts`) and moved Flip, Sokoban and Light Up
 onto it.

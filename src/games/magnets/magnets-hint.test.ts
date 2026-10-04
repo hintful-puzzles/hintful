@@ -10,6 +10,7 @@ import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import {
   type MagnetsHighlights,
@@ -86,6 +87,37 @@ function boardsOf(
 
 const CORPUS = boardsOf(3);
 
+/** The legs the following tests press through, each pinned on a position whose
+ * hint opens with one. */
+const pinned = describeHintPins({
+  game: magnetsGame,
+  params: (presets().submenu ?? []).flatMap((entry) =>
+    "params" in entry ? [entry.params as MagnetsParams] : [],
+  ),
+  seeds: 3,
+  kinds: {
+    placement: (s) => s.move.type === "set",
+    minus: (s) => s.move.type === "set" && s.move.which === NEGATIVE,
+    mark: (s) => s.move.type === "flag" && s.move.mode === "notneutral",
+  },
+  pins: {
+    /** Held on 440 of 1022 positions walked. */
+    placement: {
+      id: "5x6dt:22311,111222,13212,211131,TTLRTBBTTBLRBBTLRLRBTLRLRBLRLR",
+      moves:
+        '[{"type":"flag","idx":20,"mode":"notneutral"},{"type":"flag","idx":21,"mode":"notneutral"},{"type":"flag","idx":23,"mode":"notneutral"}]',
+    },
+    /** Held on 228 of 1022 positions walked. */
+    minus: {
+      id: "5x6dt:22311,111222,13212,211131,TTLRTBBTTBLRBBTLRLRBTLRLRBLRLR",
+      moves:
+        '[{"type":"flag","idx":20,"mode":"notneutral"},{"type":"flag","idx":21,"mode":"notneutral"},{"type":"flag","idx":23,"mode":"notneutral"}]',
+    },
+    /** Held on 365 of 1022 positions walked. */
+    mark: "5x6de:23322,213222,23232,212322,TTLRTBBLRBTLRTTBTTBBTBBLRBLRLR",
+  },
+});
+
 /** Every premise the solver names, so adding one breaks compilation here until
  * the census below accounts for it. */
 const KINDS: Record<MagnetsReason["kind"], true> = {
@@ -149,29 +181,22 @@ describe("magnets hint", () => {
   });
 
   it("does not re-mark a `?` the player already made", () => {
-    // Find a board whose plan opens by marking magnets, make the first mark
-    // ourselves, and ask again.
-    for (const { label, state } of CORPUS) {
-      const res = hint(state);
-      if (!res.ok) continue;
-      const first = res.steps[0].move;
-      if (first.type !== "flag" || first.mode !== "notneutral") continue;
-      const marked = executeMove(state, first);
-      expect(marked.flags[first.idx] & GS_NOTNEUTRAL).not.toBe(0);
-      const again = hint(marked);
-      expect(again.ok, label).toBe(true);
-      if (!again.ok) return;
-      const remarks = again.steps.filter(
-        (s) =>
-          s.move.type === "flag" &&
-          s.move.mode === "notneutral" &&
-          (s.move.idx === first.idx ||
-            s.move.idx === marked.common.dominoes[first.idx]),
-      );
-      expect(remarks).toEqual([]);
-      return;
-    }
-    throw new Error("no board in the corpus opens with a `?`");
+    // A plan that opens by marking magnets: make the first mark ourselves, and
+    // ask again.
+    const { state, step } = pinned("mark");
+    const first = step.move;
+    if (first.type !== "flag") throw new Error("unreachable");
+    const marked = executeMove(state, first);
+    expect(marked.flags[first.idx] & GS_NOTNEUTRAL).not.toBe(0);
+    const again = hint(marked);
+    if (!again.ok) throw new Error(again.error);
+    const remarks = again.steps.filter(
+      (s) =>
+        s.move.type === "flag" &&
+        s.move.mode === "notneutral" &&
+        (s.move.idx === first.idx || s.move.idx === marked.common.dominoes[first.idx]),
+    );
+    expect(remarks).toEqual([]);
   });
 
   it("calls a `?` on a neutral domino a mistake, so the midend refuses to hint past it", () => {
@@ -193,24 +218,10 @@ describe("magnets hint", () => {
 });
 
 describe("magnets hint: following a leg", () => {
-  /** The first leg of the plan on some board matching `want`, and the board. */
-  function legWhere(want: (m: MagnetsMove) => boolean) {
-    for (const { state } of CORPUS) {
-      const res = hint(state);
-      if (!res.ok) continue;
-      let s = state;
-      for (const step of res.steps) {
-        if (want(step.move)) return { state: s, step };
-        s = executeMove(s, step.move);
-      }
-    }
-    throw new Error("no such leg in the corpus");
-  }
-
   const partner = (s: MagnetsState, i: number) => s.common.dominoes[i];
 
   it("takes a − through the + on the way, or one press on the other end", () => {
-    const { state, step } = legWhere((m) => m.type === "set" && m.which === NEGATIVE);
+    const { state, step } = pinned("minus");
     const move = step.move as MagnetsMove & { type: "set" };
     const plus: MagnetsMove = { type: "set", idx: move.idx, which: POSITIVE };
     expect(magnetsKeepTrack(plus, step, state)).toBe("onTrack");
@@ -224,9 +235,7 @@ describe("magnets hint: following a leg", () => {
   });
 
   it("takes a `?` through neutral on the way", () => {
-    const { state, step } = legWhere(
-      (m) => m.type === "flag" && m.mode === "notneutral",
-    );
+    const { state, step } = pinned("mark");
     const idx = (step.move as MagnetsMove & { type: "flag" }).idx;
     const neutral: MagnetsMove = { type: "flag", idx, mode: "neutral" };
     expect(magnetsKeepTrack(neutral, step, state)).toBe("onTrack");
@@ -236,7 +245,7 @@ describe("magnets hint: following a leg", () => {
   });
 
   it("holds the leg through a clue's done-gray, and drops it for another domino", () => {
-    const { state, step } = legWhere((m) => m.type === "set");
+    const { state, step } = pinned("placement");
     const idx = (step.move as MagnetsMove & { type: "set" }).idx;
     expect(magnetsKeepTrack({ type: "clue", clue: 0 }, step, state)).toBe("onTrack");
     const elsewhere = [...Array(state.wh).keys()].find(

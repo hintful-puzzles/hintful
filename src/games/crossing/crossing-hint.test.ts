@@ -19,6 +19,7 @@ import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -148,26 +149,70 @@ describe("crossing hint — soundness", () => {
   });
 });
 
-describe("crossing hint — techniques and narration", () => {
-  /** Collect one firing of each technique by scanning generated boards. */
-  const found = new Map<string, { f: CrossingFiring; state: CrossingState }>();
-  for (const p of [crossingPresets[0], crossingPresets[2], crossingPresets[4]]) {
-    for (let s = 0; s < 8; s++) {
-      const state = board(p, `hint-tech-${p.w}-${s}`);
-      walk(state, (f, before) => {
-        if (!found.has(f.technique)) found.set(f.technique, { f, state: before });
-      });
-    }
-  }
+const PLACEMENTS = ["onlyNumber", "sharedDigit", "crossRuns"] as const;
 
-  it("reaches all three placement techniques on generated boards", () => {
-    const placements = [...found.keys()].filter((k) => !k.startsWith("note"));
-    expect(placements.sort()).toEqual(["crossRuns", "onlyNumber", "sharedDigit"]);
-  });
+const opensWith =
+  (technique: CrossingFiring["technique"]) =>
+  (_step: unknown, state: CrossingState): boolean =>
+    deduceCrossingPlan(state).firings[0]?.technique === technique;
+
+/** A whole-run placement forced one particular way. */
+const opensBecause =
+  (because: "length" | "digits" | "used") =>
+  (_step: unknown, state: CrossingState): boolean => {
+    const [f] = deduceCrossingPlan(state).firings;
+    return f?.technique === "onlyNumber" && f.because === because;
+  };
+
+/** A position for each placement technique, found as the firing the plan
+ * opens with there. */
+const pinned = describeHintPins({
+  game: crossingGame,
+  params: [crossingPresets[0], crossingPresets[2], crossingPresets[4]],
+  kinds: {
+    onlyNumber: opensWith("onlyNumber"),
+    sharedDigit: opensWith("sharedDigit"),
+    crossRuns: opensWith("crossRuns"),
+    becauseLength: opensBecause("length"),
+    becauseDigits: opensBecause("digits"),
+    becauseUsed: opensBecause("used"),
+  },
+  pins: {
+    /** Held on 866 of 991 positions walked. */
+    onlyNumber: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
+    /** Held on 61 of 991 positions walked. */
+    sharedDigit: "5x5:a1a2a2a3a3c6,14,23,27,53,257,265,43339,53639",
+    /** Held on 57 of 991 positions walked. */
+    crossRuns: "5x5:2a3b1a5a1a1a5,25,76,218,496,56426,79132,84915",
+    /** Held on 40 of 991 positions walked. */
+    becauseLength: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
+    /** Held on 783 of 991 positions walked. */
+    becauseDigits: {
+      id: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
+      moves: [{ kind: "place", run: 5, number: 2 }],
+    },
+    /** Held on 42 of 991 positions walked. */
+    becauseUsed: {
+      id: "5x5:2a3b1a5a1a1a5,25,76,218,496,56426,79132,84915",
+      moves: [
+        { x: 0, y: 0, kind: "set", digit: 2 },
+        { kind: "place", run: 0, number: 0 },
+      ],
+    },
+  },
+});
+
+describe("crossing hint — techniques and narration", () => {
+  /** One firing of each placement technique, with the board it fires on. */
+  const found = () =>
+    PLACEMENTS.map((k) => {
+      const { state } = pinned(k);
+      const [f] = deduceCrossingPlan(state).firings;
+      return [k, { f, state }] as const;
+    });
 
   it("a whole-run placement is one step covering the whole run", () => {
-    const hit = found.get("onlyNumber");
-    if (!hit) throw new Error("no onlyNumber firing");
+    const hit = pinned("onlyNumber");
     const steps = crossingGame.hint?.(hit.state);
     expect(steps?.ok).toBe(true);
     if (!steps?.ok) return;
@@ -184,36 +229,26 @@ describe("crossing hint — techniques and narration", () => {
     // fresh-board opener must not claim to match "the digits already in this
     // run" — on an empty run there are none, so the premise is both vacuous
     // and visibly false.
-    const seen = new Set<string>();
-    for (let s = 0; s < 12 && seen.size < 3; s++) {
-      const state = board(crossingPresets[0], `hint-because-${s}`);
-      walk(state, (f, before) => {
-        if (f.technique !== "onlyNumber" || seen.has(f.because)) return;
-        seen.add(f.because);
-        const text = narrateCrossing(before.puzzle, f).text;
-        if (f.because === "digits") {
-          expect(text).toMatch(/matches the digits already in this run/);
-        } else {
-          expect(text, `${f.because}: cites digits that are not there`).not.toContain(
-            "already in this run",
-          );
-        }
-        if (f.because === "length") {
-          expect(text).toMatch(/^This run is \d+ squares long, and only one number/);
-        }
-        if (f.because === "used") {
-          expect(text).toMatch(/^Every other \d+-digit number is already on the board/);
-        }
-      });
-    }
-    // "length" opens a fresh board and "digits" carries the mid-solve steps;
-    // both must be exercised for the assertions above to mean anything.
-    expect([...seen].sort()).toEqual(["digits", "length", "used"]);
+    const textOf = (kind: Parameters<typeof pinned>[0]): string => {
+      const { state } = pinned(kind);
+      return narrateCrossing(state.puzzle, deduceCrossingPlan(state).firings[0]).text;
+    };
+    expect(textOf("becauseDigits")).toMatch(/matches the digits already in this run/);
+    const length = textOf("becauseLength");
+    expect(length, "length: cites digits that are not there").not.toContain(
+      "already in this run",
+    );
+    expect(length).toMatch(/^This run is \d+ squares long, and only one number/);
+    const used = textOf("becauseUsed");
+    expect(used, "used: cites digits that are not there").not.toContain(
+      "already in this run",
+    );
+    expect(used).toMatch(/^Every other \d+-digit number is already on the board/);
   });
 
   it("narrates each technique in the necessity voice, naming its premise", () => {
     const texts = new Map<string, string>();
-    for (const [k, { f, state }] of found) {
+    for (const [k, { f, state }] of found()) {
       texts.set(k, narrateCrossing(state.puzzle, f).text);
     }
     expect(texts.get("onlyNumber")).toMatch(/so it must be \d+\.$/);
@@ -232,7 +267,7 @@ describe("crossing hint — techniques and narration", () => {
   });
 
   it("keeps every narration terse enough to read in the banner", () => {
-    for (const [, { f, state }] of found) {
+    for (const [, { f, state }] of found()) {
       expect(narrateCrossing(state.puzzle, f).text.length).toBeLessThanOrEqual(300);
     }
   });

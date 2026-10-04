@@ -11,10 +11,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { groupGame } from "./index.ts";
-import type { GroupHint } from "./render.ts";
 import { type HintReason, recordGroupDeductions } from "./solver.ts";
 import {
   DIFF_EXTREME,
@@ -52,6 +51,59 @@ function walk(
   return { texts, solved: groupGame.status(state) === "solved", states };
 }
 
+/** The steps the narration and keep-track tests below are asserted on. */
+const pinned = describeHintPins({
+  game: groupGame,
+  params: [NORMAL, HARD_HIDDEN],
+  kinds: {
+    associativity: /In any group/,
+    identityElim: /if (\w) were the identity, so we must cross out \1's identity marks/,
+    placement: (step) => (step.move as GroupMove).type === "set",
+    // A strike whose first mark the board still shows.
+    liveStrike: (step, state) => {
+      const mv = step.move as GroupMove;
+      if (mv.type !== "pencilStrike") return false;
+      const k = mv.marks[0];
+      return (state.pencil[k.y * state.w + k.x] & (1 << k.n)) !== 0;
+    },
+  },
+  pins: {
+    /** Held on 357 of 1324 positions walked. */
+    associativity: "6dn:1_2_3_4_5_6_2e3b6b4d2_5a4b1_6e",
+    /** Held on 48 of 1324 positions walked. */
+    identityElim: {
+      id: "8dhi:a7a2a8b4p1e2m3q6",
+      moves:
+        '[{"type":"set","cells":[{"x":0,"y":6}],"n":2},{"type":"set","cells":[{"x":7,"y":1}],"n":7},{"type":"set","cells":[{"x":6,"y":1}],"n":1},{"type":"set","cells":[{"x":5,"y":3}],"n":7},{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":7},{"x":0,"y":2,"n":8}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5},{"x":2,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":5},{"x":0,"y":4,"n":6},{"x":0,"y":4,"n":7},{"x":0,"y":4,"n":8}]},{"type":"pencilAdd","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3},{"x":4,"y":0,"n":4},{"x":4,"y":0,"n":5},{"x":4,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":5,"n":1},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8}]},{"type":"pencilAdd","marks":[{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":7},{"x":0,"y":7,"n":8}]}]',
+    },
+    /** Held on 927 of 1324 positions walked. */
+    placement: "6dn:1_2_3_4_5_6_2e3b6b4d2_5a4b1_6e",
+    /** Held on 60 of 1324 positions walked. */
+    liveStrike: {
+      id: "8dhi:a7a2a8b4p1e2m3q6",
+      moves:
+        '[{"type":"set","cells":[{"x":0,"y":6}],"n":2},{"type":"set","cells":[{"x":7,"y":1}],"n":7},{"type":"set","cells":[{"x":6,"y":1}],"n":1},{"type":"set","cells":[{"x":5,"y":3}],"n":7},{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":7},{"x":0,"y":2,"n":8}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5},{"x":2,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":5},{"x":0,"y":4,"n":6},{"x":0,"y":4,"n":7},{"x":0,"y":4,"n":8}]},{"type":"pencilAdd","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3},{"x":4,"y":0,"n":4},{"x":4,"y":0,"n":5},{"x":4,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":5,"n":1},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8}]},{"type":"pencilAdd","marks":[{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":7},{"x":0,"y":7,"n":8}]}]',
+    },
+  },
+});
+
+/** A populate step, which only the reading that has one gives. */
+const pinnedPopulate = describeHintPins({
+  game: groupGame,
+  params: [HARD_HIDDEN],
+  ui: (state) => ({ ...newUi(state), candidateReading: "populate" }),
+  kinds: {
+    populate: (step) => (step.move as GroupMove).type === "pencilAll",
+  },
+  pins: {
+    /** Held on 12 of 766 positions walked. */
+    populate: {
+      id: "8dhi:j1_8e1f6o4_5c7m2d",
+      moves: [{ type: "set", cells: [{ x: 2, y: 4 }], n: 4 }],
+    },
+  },
+});
+
 describe("group hint — recorded deductions", () => {
   it("records each Group technique across generated boards", () => {
     const kinds = new Set<string>();
@@ -77,15 +129,8 @@ describe("group hint — recorded deductions", () => {
   });
 
   it("an associativity record names its triple and the forced fourth product", () => {
-    // Find any board whose plan surfaces an associativity step, and assert the
-    // narration states the law with concrete element letters.
-    let text: string | null = null;
-    for (const seed of ["a1", "a2", "a3", "a4", "a5", "a6"]) {
-      const { texts } = walk(NORMAL, seed);
-      text = texts.find((t) => /In any group/.test(t)) ?? null;
-      if (text) break;
-    }
-    expect(text).not.toBeNull();
+    // The narration states the law with concrete element letters.
+    const text = pinned("associativity").step.explanation;
     // "…In any group, (a·b)·c = a·(b·c), so <fourth> must also be <v>."
     expect(text).toMatch(/The grid shows .+·.+ = .+, .+·.+ = .+ and/);
     expect(text).toMatch(/In any group, \(.+·.+\)·.+ = .+·\(.+·.+\), so /);
@@ -102,23 +147,14 @@ describe("group hint — plan solves boards", () => {
   it("solves an identity-hidden Tricky board, teaching an identity-mark elimination", () => {
     // The identity-hidden `DIFF_HARD` (Tricky) tier is the one that exercises
     // solverHard, which the shared first-leaf resume never reaches.
-    let sawElim = false;
-    let anySolved = false;
-    for (const seed of ["h1", "h2", "h3", "h4", "h5", "h6"]) {
-      const { texts, solved } = walk(HARD_HIDDEN, seed);
-      if (solved) anySolved = true;
-      if (
-        texts.some((t) =>
-          /if (\w) were the identity, so we must cross out \1's identity marks/.test(t),
-        ) &&
-        solved
-      ) {
-        sawElim = true;
-        break;
-      }
+    let { state } = pinned("identityElim");
+    expect(state.id, "the elimination is an identity-hidden board's").toBe(false);
+    for (let i = 0; i < 500 && groupGame.status(state) === "ongoing"; i++) {
+      const res = groupGame.hint?.(state, undefined);
+      if (!res?.ok) break;
+      state = groupGame.executeMove(state, res.steps[0].move);
     }
-    expect(anySolved).toBe(true);
-    expect(sawElim).toBe(true);
+    expect(groupGame.status(state)).toBe("solved");
   });
 
   it("a hint resumes from a self-played mid-game position (identity-hidden)", () => {
@@ -247,14 +283,7 @@ describe("group hint — boards the midend refuses", () => {
 
 describe("group hint — keepTrack", () => {
   it("a placement move completes a set step; a wrong one drops the plan", () => {
-    const state = board(NORMAL, "kt-place");
-    const res = groupGame.hint?.(state, undefined);
-    expect(res?.ok).toBe(true);
-    if (!res?.ok) return;
-    // Find the first placement step in the plan.
-    const step = res.steps.find((s) => (s.move as GroupMove).type === "set");
-    expect(step).toBeDefined();
-    if (!step) return;
+    const { state, step } = pinned("placement");
     const m = step.move as Extract<GroupMove, { type: "set" }>;
     const cell = m.cells[0];
     expect(
@@ -275,28 +304,9 @@ describe("group hint — keepTrack", () => {
   });
 
   it("a pencil toggle clearing a strike mark tracks the plan", () => {
-    // Reach a pencilStrike step on an identity-hidden Tricky board whose first
-    // mark is live against the current board, then follow it with a toggle.
-    let found: { state: GroupState; step: HintStep<GroupMove, GroupHint> } | null =
-      null;
-    for (const seed of ["h1", "h2", "h3", "h4", "h5"]) {
-      let s = board(HARD_HIDDEN, seed);
-      for (let i = 0; i < 500 && groupGame.status(s) === "ongoing" && !found; i++) {
-        const res = groupGame.hint?.(s, undefined);
-        if (!res?.ok) break;
-        const strike = res.steps.find((st) => {
-          const mv = st.move as GroupMove;
-          if (mv.type !== "pencilStrike") return false;
-          const k = mv.marks[0];
-          return (s.pencil[k.y * s.w + k.x] & (1 << k.n)) !== 0;
-        });
-        if (strike) found = { state: s, step: strike };
-        else s = groupGame.executeMove(s, res.steps[0].move);
-      }
-      if (found) break;
-    }
-    expect(found).not.toBeNull();
-    if (!found) return;
+    // A strike whose first mark is live against the board, followed with a
+    // toggle.
+    const found = pinned("liveStrike");
     const mv = found.step.move as Extract<GroupMove, { type: "pencilStrike" }>;
     const k = mv.marks[0];
     const verdict = groupGame.hintKeepTrack?.(
@@ -309,33 +319,10 @@ describe("group hint — keepTrack", () => {
   });
 
   it("a Mark-all completes a populate step", () => {
-    // Force a populate step by taking an identity-hidden Tricky plan that needs
-    // it, under the reading that has one.
-    for (const seed of ["h1", "h2", "h3", "h4", "h5"]) {
-      let s = board(HARD_HIDDEN, seed);
-      for (let i = 0; i < 500 && groupGame.status(s) === "ongoing"; i++) {
-        const res = groupGame.hint?.(s, undefined, {
-          ...newUi(s),
-          candidateReading: "populate",
-        });
-        if (!res?.ok) break;
-        const pop = res.steps.find((st) => (st.move as GroupMove).type === "pencilAll");
-        if (pop) {
-          expect(groupGame.hintKeepTrack?.({ type: "pencilAll" }, pop, s)).toBe(
-            "completed",
-          );
-          expect(
-            groupGame.hintKeepTrack?.(
-              { type: "set", cells: [{ x: 0, y: 0 }], n: 1 },
-              pop,
-              s,
-            ),
-          ).toBe("off");
-          return;
-        }
-        s = groupGame.executeMove(s, res.steps[0].move);
-      }
-    }
-    throw new Error("no populate step reached on any identity-hidden Tricky seed");
+    const { state: s, step: pop } = pinnedPopulate("populate");
+    expect(groupGame.hintKeepTrack?.({ type: "pencilAll" }, pop, s)).toBe("completed");
+    expect(
+      groupGame.hintKeepTrack?.({ type: "set", cells: [{ x: 0, y: 0 }], n: 1 }, pop, s),
+    ).toBe("off");
   });
 });

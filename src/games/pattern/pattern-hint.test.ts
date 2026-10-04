@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type PatternHint, patternGame } from "./index.ts";
 import { deduceHintPlan, solveState } from "./solver.ts";
 import {
@@ -27,6 +28,33 @@ function freshBoard(seed: string): PatternState {
   const { desc } = patternGame.newDesc(P, randomNew(seed));
   return patternGame.newState(P, desc);
 }
+
+/** The steps the tests below read, each pinned on a position whose hint opens
+ * with one. The 30x30 boards are for the bottom rung, which only fires on
+ * larger boards. */
+const pinned = describeHintPins({
+  game: patternGame,
+  params: [P, { w: 30, h: 30 }],
+  seeds: 4,
+  kinds: {
+    severalCells: (step) => (step.highlights as PatternHint).cells.length > 1,
+    // The hint's steps are the solver's firings in order, so the step a plan
+    // opens with is the first firing.
+    intersection: (_, state) =>
+      deduceHintPlan(state)[0]?.reason.kind === "intersection",
+  },
+  pins: {
+    /** Held on 593 of 1826 positions walked. */
+    severalCells:
+      "10x10:1.1.1.1/6.3/6.2/6.1/6.1/2.2/6/1.2/1/1/4/4/5/4/6.2/7/2/2.1/2.3/8",
+    /** Held on 2 of 1826 positions walked. */
+    intersection: {
+      id: "30x30:4.3.5.3/2.3.3/4.4.1/4.2.4/9.4.2/8.3.5/1.3.2.3/2.1.1.2.1/5.1.5/5.1.3/3.3.3.8/3.1.1.8.3/3.8.2.5/4.11.2.5/5.5.3.3.3.1.1/8.1.1.8/2.3.3.2.1.1.5.4/2.3.1.2.9/4.4.7/4.7.5/16.1/11.1.1.1.1/7.3.2.1/7.1.1.1.2.4/2.3.1.2.2.2/2.1.4.3.3.4/2.1.7.5.3/4.3.2.6.6/2.4.8.4/1.3.2.1.3.3/5.4.5/11.4/1.4.9.1.1/6.2.4.5.2/10.4.5/1.4.9.1/2.1.4.12/1.3.1.13.4/1.4.5.1.12/1.5.5.4.2.2/1.4.2.2/1.2.8/6.5.1/4.8.1/1.1.4.3.1/2.1.1.2.4.1.1/6.2.4.2.5/7.2.1.1.3.5/1.5.2.3.1.6/2.6.3/2.1.6.3/4.4.2.3/3.4.4.2/3.5.3/1.1.4.3/1.3.3.2/2.1.2.4.1.1.4/2.2.4.4.1.1.3/3.3.3.5.4.3/4.4.1.3.3",
+      moves:
+        '[{"type":"fillCells","value":1,"cells":[313,343,373,403,433,463]},{"type":"fillCells","value":1,"cells":[104,134]},{"type":"fillCells","value":1,"cells":[284,314]},{"type":"fillCells","value":1,"cells":[166]},{"type":"fillCells","value":1,"cells":[286]},{"type":"fillCells","value":1,"cells":[616,646,676]},{"type":"fillCells","value":1,"cells":[796,826]},{"type":"fillCells","value":1,"cells":[380,410,440,470]},{"type":"fillCells","value":1,"cells":[537]},{"type":"fillCells","value":1,"cells":[747]},{"type":"fillCells","value":1,"cells":[129]},{"type":"fillCells","value":1,"cells":[198,199,200,201]},{"type":"fillCells","value":1,"cells":[230,260,290,320,350]},{"type":"fillCells","value":1,"cells":[231,261,291,321]},{"type":"fillCells","value":1,"cells":[222,223,224,225,226,227,228,229]},{"type":"fillCells","value":1,"cells":[236]},{"type":"fillCells","value":1,"cells":[245]},{"type":"fillCells","value":0,"cells":[5]},{"type":"fillCells","value":1,"cells":[250,251]},{"type":"fillCells","value":1,"cells":[258,259]},{"type":"fillCells","value":1,"cells":[262,263,264,265,266]},{"type":"fillCells","value":1,"cells":[516]},{"type":"fillCells","value":1,"cells":[535,536]},{"type":"fillCells","value":1,"cells":[856]}]',
+    },
+  },
+});
 
 /** `hint`/`solve` are optional on `Game`; assert Pattern provides them. */
 function doHint(state: PatternState) {
@@ -144,29 +172,14 @@ describe("pattern hint — narration", () => {
   });
 
   it("the intersection bottom rung narrates as an explained technique", () => {
-    // Find a board whose plan reaches the intersection bottom rung, then confirm
-    // the displayed step reads as a named necessity-voice deduction (never the
-    // misleading "only one arrangement fits").
-    let saw = false;
-    outer: for (let i = 0; i < 40 && !saw; i++) {
-      const P: PatternParams = { w: 30, h: 30 };
-      const { desc } = patternGame.newDesc(P, randomNew(`resid-30-${i}`));
-      const state = patternGame.newState(P, desc);
-      const plan = deduceHintPlan(state);
-      for (let k = 0; k < plan.length; k++) {
-        if (plan[k].reason.kind !== "intersection") continue;
-        const res = doHint(state);
-        if (!res.ok) continue;
-        const t = res.steps[k].explanation;
-        expect(t, `bad intersection narration: "${t}"`).toMatch(
-          /^Every way this (row|column)'s runs can fit (covers|leaves out) .*, so (it|they) must be (black|white)\.$/,
-        );
-        expect(t).not.toMatch(/only one arrangement/i);
-        saw = true;
-        break outer;
-      }
-    }
-    expect(saw, "expected at least one intersection bottom-rung firing").toBe(true);
+    // The step shown for an intersection firing reads as a named
+    // necessity-voice deduction (never the misleading "only one arrangement
+    // fits").
+    const t = pinned("intersection").step.explanation;
+    expect(t, `bad intersection narration: "${t}"`).toMatch(
+      /^Every way this (row|column)'s runs can fit (covers|leaves out) .*, so (it|they) must be (black|white)\.$/,
+    );
+    expect(t).not.toMatch(/only one arrangement/i);
   });
 });
 
@@ -231,14 +244,8 @@ describe("pattern hint — boards the midend refuses", () => {
 
 describe("pattern hint — keep track", () => {
   it("completes on a full follow, tracks a partial, drops a deviation", () => {
-    const state = freshBoard("ph-c");
-    const res = doHint(state);
-    expect(res.ok).toBe(true);
-    if (!res.ok) return;
-    // Find a multi-cell step to exercise the shrink path.
-    const step = res.steps.find((s) => (s.highlights as PatternHint).cells.length > 1);
-    expect(step).toBeDefined();
-    if (!step) return;
+    // A multi-cell step, to exercise the shrink path.
+    const { state, step } = pinned("severalCells");
     const h = step.highlights as PatternHint;
 
     // A partial fill of one target cell → onTrack, step shrinks to the rest.
@@ -258,18 +265,14 @@ describe("pattern hint — keep track", () => {
     if (h.cells.length === 2) expect(clone.explanation).toMatch(/\bthis cell\b/);
 
     // Filling all cells at once → completed.
-    const fresh = res.steps.find((s) => (s.highlights as PatternHint).cells.length > 1);
-    if (fresh) {
-      const fh = fresh.highlights as PatternHint;
-      const all: PatternMove = {
-        type: "fillCells",
-        value: fh.value,
-        cells: [...fh.cells],
-      };
-      expect(
-        patternGame.hintKeepTrack?.(all, { ...fresh, highlights: { ...fh } }, state),
-      ).toBe("completed");
-    }
+    const all: PatternMove = {
+      type: "fillCells",
+      value: h.value,
+      cells: [...h.cells],
+    };
+    expect(
+      patternGame.hintKeepTrack?.(all, { ...step, highlights: { ...h } }, state),
+    ).toBe("completed");
 
     // Wrong value on a target → off.
     const wrongVal: PatternMove = {

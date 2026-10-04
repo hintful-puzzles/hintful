@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
   type DrawOp,
   opsOfKind,
@@ -75,87 +76,143 @@ function hintOf(state: BoatsState) {
   return r;
 }
 
-/**
- * Where the scan below *first* finds each technique, recorded so the search can
- * start there instead of grinding through every earlier preset.
- *
- * This is a pure speed-up, not a weakening: the scan is ordered and
- * deterministic, so its first hit for a kind IS this pair — starting here
- * returns the identical firing and board. It mattered: reaching `refuted` and
- * `sharedDiagonal` (both at preset 8) meant generating and fully plan-walking
- * every board of presets 0, 1, 4 and 7 first, at ~10-14 s per narration test.
- *
- * If the generator ever moves, the pinned pair simply stops matching and the
- * full scan runs as before — correctness does not depend on this table being
- * right, only speed does. Re-record it by deleting an entry and re-running.
- */
-const FIRST_FOUND_AT: Partial<
-  Record<BoatsFiring["technique"]["kind"], readonly [preset: number, seed: number]>
-> = {
-  allWaterPlaced: [0, 0],
-  centerCount: [9, 3],
-  centerForced: [0, 1],
-  givenClue: [0, 0],
-  growTooLong: [1, 0],
-  isolated: [7, 8],
-  lineForced: [0, 0],
-  lineSatisfied: [0, 1],
-  mustExtend: [0, 2],
-  neverTouch: [0, 1],
-  onlyRunsLeft: [1, 0],
-  refuted: [8, 0],
-  runTooShort: [1, 7],
-  sharedDiagonal: [8, 0],
-};
+type Technique = BoatsFiring["technique"]["kind"];
 
-/** Scan fixed seeds for the first board whose plan contains `kind`, and return
- * that firing together with the state it fired from — the idiom for reaching a
- * specific deduction without hand-crafting a desc (docs/games/hints.md § "Verifying a hint in-process"). */
-function findFiring(
-  kind: BoatsFiring["technique"]["kind"],
-  presets: readonly number[] = [0, 1, 4, 7, 8, 9, 11],
-): { firing: BoatsFiring; state: BoatsState } {
-  const pinned = FIRST_FOUND_AT[kind];
-  if (pinned && presets.includes(pinned[0])) {
-    const hit = scan(kind, [pinned[0]], pinned[1], pinned[1] + 1);
-    if (hit) return hit;
+/** The firing the deductive plan opens with on `state`, or null when deduction
+ * has nothing to offer there. Kept per state, since every kind asks. */
+const openers = new WeakMap<BoatsState, BoatsFiring | null>();
+function openingFiring(state: BoatsState): BoatsFiring | null {
+  let firing = openers.get(state);
+  if (firing === undefined) {
+    firing = deduceBoatsPlan(state).firings[0] ?? null;
+    openers.set(state, firing);
   }
-  const hit = scan(kind, presets, 0, 12);
-  if (hit) return hit;
-  throw new Error(`no generated board reached the ${kind} technique`);
+  return firing;
 }
 
-function scan(
-  kind: BoatsFiring["technique"]["kind"],
-  presets: readonly number[],
-  from: number,
-  to: number,
-): { firing: BoatsFiring; state: BoatsState } | null {
-  for (const preset of presets) {
-    for (let s = from; s < to; s++) {
-      const start = board(preset, `find-${kind}-${preset}-${s}`, s % 2 === 0);
-      let state = start;
-      for (let guard = 0; guard < 60; guard++) {
-        const plan = deduceBoatsPlan(state);
-        if (plan.firings.length === 0) break;
-        const at = plan.firings.findIndex((f) => f.technique.kind === kind);
-        if (at >= 0) {
-          // Replay the plan's own prefix so the returned state is the board the
-          // firing actually fired from.
-          const b = boardOf(state);
-          for (let i = 0; i < at; i++) applyBoatsFiring(b, plan.firings[i]);
-          return {
-            firing: plan.firings[at],
-            state: { ...state, grid: b.grid },
-          };
-        }
-        const b = boardOf(state);
-        applyBoatsFiring(b, plan.firings[0]);
-        state = { ...state, grid: b.grid };
-      }
-    }
-  }
-  return null;
+const opensWith =
+  (kind: Technique) =>
+  (_step: unknown, state: BoatsState): boolean =>
+    openingFiring(state)?.technique.kind === kind;
+
+/** A position for each technique, found as the firing the plan opens with
+ * there. Both strip settings, since a strip board starts from fewer givens. */
+const pinnedFiring = describeHintPins({
+  game: boatsGame,
+  params: [0, 1, 4, 7, 8, 9, 11].flatMap((preset) => [
+    { ...presetParams(preset), strip: true },
+    { ...presetParams(preset), strip: false },
+  ]),
+  kinds: {
+    allWaterPlaced: opensWith("allWaterPlaced"),
+    centerCount: opensWith("centerCount"),
+    centerForced: opensWith("centerForced"),
+    givenClue: opensWith("givenClue"),
+    growTooLong: opensWith("growTooLong"),
+    isolated: opensWith("isolated"),
+    lineForced: opensWith("lineForced"),
+    lineSatisfied: opensWith("lineSatisfied"),
+    mustExtend: opensWith("mustExtend"),
+    neverTouch: opensWith("neverTouch"),
+    onlyRunsLeft: opensWith("onlyRunsLeft"),
+    refuted: opensWith("refuted"),
+    runTooShort: opensWith("runTooShort"),
+    sharedDiagonal: opensWith("sharedDiagonal"),
+    // A line whose water fill decides more than one square.
+    lineSatisfiedOfSeveral: (_step, state) => {
+      const firing = openingFiring(state);
+      return firing?.technique.kind === "lineSatisfied" && firing.squares.length > 1;
+    },
+  },
+  pins: {
+    /** Held on 15 of 6925 positions walked. */
+    allWaterPlaced: {
+      id: "6x6f3deS,3,2,1:3,0,2,-,-,-,-,0,0,-,2,2,xWcT",
+      moves:
+        '[{"kind":"fill","x0":4,"y0":5,"x1":4,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":4,"y0":3,"x1":4,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":3,"x1":3,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":3,"x1":5,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":5,"x1":5,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":4,"x1":5,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":4,"x1":2,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":1,"x1":5,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":2,"x1":5,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":2,"y0":5,"x1":2,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":3,"x1":2,"y1":3,"from":"-","to":"B"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"}]',
+    },
+    /** Held on 6 of 6925 positions walked. */
+    centerCount: {
+      id: "8x8f4dn,4,3,2,1:1,4,1,1,3,3,2,5,3,2,4,0,2,3,0,6,iCkLlWwW",
+      moves:
+        '[{"kind":"fill","x0":6,"y0":2,"x1":6,"y1":2,"from":"-","to":"B"},{"kind":"fill","x0":4,"y0":2,"x1":4,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":2,"x1":0,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":2,"x1":2,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":1,"x1":4,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":1,"x1":6,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":3,"x1":4,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":3,"x1":6,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":1,"x1":5,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":1,"x1":7,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":3,"x1":7,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":3,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":6,"x1":7,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":0,"x1":7,"y1":7,"from":"-","to":"B"},{"kind":"fill","x0":6,"y0":5,"x1":6,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":4,"x1":6,"y1":4,"from":"-","to":"W"}]',
+    },
+    /** Held on 77 of 6925 positions walked. */
+    centerForced: {
+      id: "6x6f3deS,3,2,1:-,-,4,1,0,2,1,-,3,2,1,-,nCiWgL",
+      moves:
+        '[{"kind":"fill","x0":3,"y0":5,"x1":3,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":1,"y0":5,"x1":1,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":1,"x1":3,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":3,"x1":1,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":3,"x1":3,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":4,"x1":1,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":4,"x1":3,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":4,"x1":4,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":4,"x1":5,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":4,"y0":3,"x1":4,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":2,"from":"-","to":"W"}]',
+    },
+    /** Held on 1008 of 6925 positions walked. */
+    givenClue: "6x6f3deS,3,2,1:2,2,1,1,0,4,1,-,3,1,-,1,WaWWgTLqWaW",
+    /** Held on 40 of 6925 positions walked. */
+    growTooLong: {
+      id: "6x6f3dn,3,2,1:1,2,0,5,0,2,2,2,1,1,1,3,kWkWfL",
+      moves:
+        '[{"kind":"fill","x0":1,"y0":5,"x1":1,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":1,"y0":4,"x1":1,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":4,"x1":2,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":1,"x1":3,"y1":1,"from":"-","to":"B"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":0,"x1":5,"y1":0,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":3,"x1":3,"y1":3,"from":"-","to":"B"}]',
+    },
+    /** Held on 24 of 6925 positions walked. */
+    isolated: {
+      id: "6x6f3dnS,3,2,1:-,-,1,2,3,-,-,2,1,-,1,2,fTqSiW",
+      moves:
+        '[{"kind":"fill","x0":0,"y0":2,"x1":0,"y1":2,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":4,"x1":1,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":0,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":2,"x1":1,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":5,"x1":1,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":2,"x1":5,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":4,"x1":5,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":3,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":1,"x1":5,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":0,"x1":5,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":3,"x1":3,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":2,"y0":1,"x1":2,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":5,"x1":2,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":5,"x1":5,"y1":5,"from":"-","to":"B"}]',
+    },
+    /** Held on 1034 of 6925 positions walked. */
+    lineForced: {
+      id: "8x8f4dn,4,3,2,1:2,4,3,3,2,0,2,4,4,2,3,0,4,2,2,3,cWfWfWaWWaWtW",
+      moves: [{ kind: "fill", x0: 5, y0: 0, x1: 5, y1: 7, from: "-", to: "W" }],
+    },
+    /** Held on 1100 of 6925 positions walked. */
+    lineSatisfied: "6x6f3deS,3,2,1:0,4,0,3,1,2,-,1,0,3,-,3,uW",
+    /** Held on 32 of 6925 positions walked. */
+    mustExtend: {
+      id: "6x6f3deS,3,2,1:4,-,-,2,0,3,3,-,-,1,2,0,eSWz",
+      moves:
+        '[{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":1,"x1":5,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":1,"x1":4,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":2,"x1":4,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":5,"x1":5,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":3,"x1":1,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":2,"x1":1,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":3,"x1":5,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":2,"x1":5,"y1":4,"from":"-","to":"B"}]',
+    },
+    /** Held on 3087 of 6925 positions walked. */
+    neverTouch: {
+      id: "6x6f3deS,3,2,1:-,2,1,-,-,-,2,-,1,0,-,0,aWiR",
+      moves: [{ kind: "fill", x0: 4, y0: 1, x1: 4, y1: 1, from: "-", to: "B" }],
+    },
+    /** Held on 60 of 6925 positions walked. */
+    onlyRunsLeft: {
+      id: "10x10f4dt,4,3,2,1:0,3,0,3,1,1,3,2,6,1,1,3,4,3,1,1,2,0,1,4,pWrWrWaWfWzcWWbB",
+      moves:
+        '[{"kind":"fill","x0":7,"y0":8,"x1":7,"y1":8,"from":"-","to":"B"},{"kind":"fill","x0":6,"y0":7,"x1":6,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":7,"x1":8,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":9,"x1":8,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":8,"x1":8,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":9,"x1":9,"y1":9,"from":"-","to":"B"},{"kind":"fill","x0":4,"y0":8,"x1":4,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":0,"x1":5,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":0,"x1":7,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":0,"x1":9,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":7,"x1":4,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":8,"x1":3,"y1":8,"from":"-","to":"W"}]',
+    },
+    /** Held on 169 of 6925 positions walked. */
+    refuted: {
+      id: "10x10f4dhS,4,3,2,1:2,-,-,5,-,3,-,0,-,8,3,3,2,2,3,1,1,2,1,2,mBaWWzzkB",
+      moves:
+        '[{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":0,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":2,"x1":3,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":7,"x1":0,"y1":7,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":9,"x1":0,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":1,"x1":4,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":2,"x1":4,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":6,"x1":1,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":8,"x1":1,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":7,"x1":1,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":0,"x1":7,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":8,"x1":9,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":1,"x1":8,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":1,"x1":9,"y1":1,"from":"-","to":"B"},{"kind":"fill","x0":8,"y0":0,"x1":8,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":3,"x1":8,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":4,"x1":8,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":5,"x1":8,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":6,"x1":8,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":7,"x1":8,"y1":7,"from":"-","to":"W"}]',
+    },
+    /** Held on 44 of 6925 positions walked. */
+    runTooShort: {
+      id: "6x6f3dn,3,2,1:1,3,2,3,0,1,2,0,3,0,3,2,aWvW",
+      moves:
+        '[{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":1,"x1":5,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":5,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":2,"x1":1,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":5,"x1":2,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":4,"x1":2,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":2,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":4,"x1":5,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":5,"y0":0,"x1":5,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":5,"x1":3,"y1":5,"from":"-","to":"B"}]',
+    },
+    /** Held on 229 of 6925 positions walked. */
+    sharedDiagonal: {
+      id: "10x10f4dhS,4,3,2,1:2,-,-,5,-,3,-,0,-,8,3,3,2,2,3,1,1,2,1,2,mBaWWzzkB",
+      moves:
+        '[{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":0,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":2,"x1":3,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":7,"x1":0,"y1":7,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":9,"x1":0,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":1,"x1":4,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":2,"x1":4,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":6,"x1":1,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":8,"x1":1,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":7,"x1":1,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":0,"x1":7,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":8,"x1":9,"y1":8,"from":"-","to":"W"}]',
+    },
+    /** Held on 875 of 6925 positions walked. */
+    lineSatisfiedOfSeveral: "6x6f3deS,3,2,1:0,4,0,3,1,2,-,1,0,3,-,3,uW",
+  },
+});
+
+/** A pinned position and the firing its plan opens with. */
+function findFiring(kind: Parameters<typeof pinnedFiring>[0]): {
+  firing: BoatsFiring;
+  state: BoatsState;
+} {
+  const { state } = pinnedFiring(kind);
+  const firing = openingFiring(state);
+  if (!firing) throw new Error(`${kind}: deduction has nothing to offer here`);
+  return { firing, state };
 }
 
 describe("boats hint — soundness", () => {
@@ -270,7 +327,7 @@ describe("boats hint — convergence", () => {
 describe("boats hint — narration", () => {
   /** Every technique the deduction reaches on generated boards, with the phrase
    * that proves the narration explains *why* rather than only *what*. */
-  const NARRATIONS: [BoatsFiring["technique"]["kind"], RegExp][] = [
+  const NARRATIONS: [Parameters<typeof pinnedFiring>[0], RegExp][] = [
     ["givenClue", /boat's (top|bottom|left|right) end|one-square boat/],
     ["neverTouch", /Boats never touch, not even at a corner/],
     [
@@ -297,15 +354,15 @@ describe("boats hint — narration", () => {
     const { firing, state } = findFiring(kind);
     const r = hintOf(state);
     expect(r.ok).toBe(true);
-    if (!r.ok) return;
-    // The scan's firing is somewhere in this state's plan; find the step for it.
+    if (!r.ok) throw new Error(r.error);
+    // The firing is somewhere in this state's plan; find the step for it.
     const step = r.steps.find((s) => phrase.test(s.explanation));
     expect(step, `no step narrated the ${kind} firing`).toBeDefined();
     expect(firing.technique.kind).toBe(kind);
   });
 
   it("states a refutation's rule rather than asserting the square is forced", () => {
-    const { state } = findFiring("refuted", [9, 11]);
+    const { state } = findFiring("refuted");
     const r = hintOf(state);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -374,7 +431,7 @@ describe("boats hint — one deduction is one hint", () => {
   });
 
   it("fills a whole deduced line with a single move where it can", () => {
-    const { firing, state } = findFiring("lineSatisfied");
+    const { firing, state } = findFiring("lineSatisfiedOfSeveral");
     expect(firing.squares.length).toBeGreaterThan(1);
     const r = hintOf(state);
     expect(r.ok).toBe(true);
@@ -575,6 +632,18 @@ function usesColor(ops: readonly DrawOp[], index: number): boolean {
   );
 }
 
+const pinned = describeHintPins({
+  game: boatsGame,
+  params: TIERS.map(([preset]) => presetParams(preset)),
+  kinds: {
+    evidence: (step) => (step.highlights as BoatsHint).evidence.length > 0,
+  },
+  pins: {
+    /** Held on 1151 of 1819 positions walked. */
+    evidence: "6x6f3de,3,2,1:2,2,1,1,0,4,1,1,3,1,3,1,WaWWgTLqWaW",
+  },
+});
+
 describe("boats hint — rendering", () => {
   function frame(preset: number, showHint: boolean) {
     const p = presetParams(preset);
@@ -596,16 +665,12 @@ describe("boats hint — rendering", () => {
   });
 
   it("shades or rings the evidence the deduction reasons over", () => {
-    // Find a tier whose opening hint actually carries evidence; `allWaterPlaced`
-    // is the one honestly-global technique and declares none.
-    for (const [preset] of TIERS) {
-      const result = frame(preset, true);
-      const hl = result.hint?.highlights as BoatsHint | undefined;
-      if (!hl || hl.evidence.length === 0) continue;
-      expect(usesColor(result.recording.ops, COL_HINT_CELL)).toBe(true);
-      return;
-    }
-    throw new Error("no tier's opening hint carried evidence");
+    // `allWaterPlaced` is the one honestly-global technique and declares none,
+    // so the frame is a step that carries some.
+    const { id, moves, step } = pinned("evidence");
+    const result = renderScenario({ game: boatsGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    expect(usesColor(result.recording.ops, COL_HINT_CELL)).toBe(true);
   });
 
   it.each([

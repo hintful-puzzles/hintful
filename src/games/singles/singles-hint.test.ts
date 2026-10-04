@@ -14,6 +14,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -44,6 +45,86 @@ function fromSeed(p: SinglesParams, seed: string): SinglesState {
   const { desc } = singlesGame.newDesc(p, randomNew(seed));
   return newState(p, desc);
 }
+
+type Step = HintStep<SinglesMove, SinglesHint>;
+
+const stripes = (step: Step): number => stepMarks(step).of("stripes", CELL).length;
+
+/** The rules a crafted board does not reach, each named for the reason the
+ * recorder gives it and found by the sentence only it says. */
+const RULE_SENTENCES = {
+  adjBlack: /touch(?:es)? a black square/,
+  // boxedIn also cites an outlined white square, so this is the phrase only
+  // sameLine says.
+  sameLine: /shares? (?:a line|this row|this column) with/,
+  boxedIn: /last neighbor that isn't black/,
+  split: /would cut some of/,
+  offset: /black next to each other/,
+} as const satisfies Record<string, RegExp>;
+
+const pinned = describeHintPins({
+  game: singlesGame,
+  params: [{ w: 6, h: 6, diff: "tricky" }],
+  kinds: {
+    ...RULE_SENTENCES,
+    oneCell: (step: Step) => step.move.sets.length === 1,
+    // Several rules (offset, corner-4) force two cells in one firing.
+    twoCells: (step: Step) => step.move.sets.length === 2,
+    touchingPairLine: (step: Step) =>
+      /touch, so one of them stays white/.test(step.explanation) && stripes(step) > 0,
+    sharedLine: (step: Step) =>
+      /shares? (?:this row|this column) with/.test(step.explanation) &&
+      stripes(step) > 0,
+  },
+  pins: {
+    /** Held on 92 of 272 positions walked. */
+    adjBlack: {
+      id: "6x6dk:146214162623436526534361613462465334",
+      moves:
+        '[{"sets":[{"x":2,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"black"}]}]',
+    },
+    /** Held on 99 of 272 positions walked. */
+    sameLine: {
+      id: "6x6dk:146214162623436526534361613462465334",
+      moves: [{ sets: [{ x: 2, y: 1, value: "circle" }] }],
+    },
+    /** Held on 29 of 272 positions walked. */
+    boxedIn: {
+      id: "6x6dk:146214162623436526534361613462465334",
+      moves:
+        '[{"sets":[{"x":2,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"black"}]},{"sets":[{"x":3,"y":1,"value":"circle"},{"x":5,"y":1,"value":"circle"},{"x":4,"y":0,"value":"circle"},{"x":4,"y":2,"value":"circle"}]},{"sets":[{"x":0,"y":0,"value":"black"}]},{"sets":[{"x":1,"y":0,"value":"circle"},{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":5,"y":0,"value":"black"}]},{"sets":[{"x":1,"y":1,"value":"black"}]},{"sets":[{"x":1,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":3,"value":"black"}]},{"sets":[{"x":0,"y":3,"value":"circle"},{"x":2,"y":3,"value":"circle"},{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":5,"value":"black"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]}]',
+    },
+    /** Held on 8 of 272 positions walked. */
+    split: {
+      id: "6x6dk:231635324553435412511344463361362544",
+      moves:
+        '[{"sets":[{"x":0,"y":3,"value":"circle"}]},{"sets":[{"x":1,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":4,"value":"circle"}]},{"sets":[{"x":1,"y":4,"value":"black"}]},{"sets":[{"x":0,"y":4,"value":"circle"},{"x":2,"y":4,"value":"circle"},{"x":1,"y":3,"value":"circle"},{"x":1,"y":5,"value":"circle"}]},{"sets":[{"x":2,"y":3,"value":"black"}]},{"sets":[{"x":3,"y":3,"value":"circle"},{"x":2,"y":2,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"black"}]},{"sets":[{"x":0,"y":2,"value":"black"}]},{"sets":[{"x":1,"y":2,"value":"circle"},{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":5,"y":1,"value":"black"},{"x":0,"y":5,"value":"black"}]},{"sets":[{"x":4,"y":1,"value":"circle"},{"x":5,"y":0,"value":"circle"},{"x":5,"y":2,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"black"}]},{"sets":[{"x":2,"y":1,"value":"circle"},{"x":3,"y":0,"value":"circle"},{"x":3,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":0,"value":"black"}]},{"sets":[{"x":0,"y":0,"value":"circle"},{"x":2,"y":0,"value":"circle"}]},{"sets":[{"x":3,"y":5,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":0,"value":"circle"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]}]',
+    },
+    /** Held on 4 of 272 positions walked. */
+    offset: {
+      id: "6x6dk:122513631454336424114662242615325532",
+      moves:
+        '[{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":2,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]}]',
+    },
+    /** Held on 190 of 272 positions walked. */
+    oneCell: "6x6dk:146214162623436526534361613462465334",
+    /** Held on 49 of 272 positions walked. */
+    twoCells: {
+      id: "6x6dk:614262562311433246423351441133651123",
+      moves: [{ sets: [{ x: 0, y: 3, value: "circle" }] }],
+    },
+    /** Held on 3 of 272 positions walked. */
+    touchingPairLine: {
+      id: "6x6dk:445642432165334561225311213556453244",
+      moves: [{ sets: [{ x: 3, y: 3, value: "circle" }] }],
+    },
+    /** Held on 88 of 272 positions walked. */
+    sharedLine: {
+      id: "6x6dk:146214162623436526534361613462465334",
+      moves: [{ sets: [{ x: 2, y: 1, value: "circle" }] }],
+    },
+  },
+});
 
 describe("deduceHintPlan records the deduction reason", () => {
   it("sandwich: two equal numbers one apart force the middle white", () => {
@@ -106,13 +187,9 @@ describe("deduceHintPlan records the deduction reason", () => {
   });
 
   it("covers the cascade / connectivity / offset rules on generated boards", () => {
-    const kinds = new Set<string>();
-    for (const seed of ["sh-1", "sh-2", "sh-3", "sh-4"]) {
-      const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
-      for (const m of deduceHintPlan(s)) kinds.add(m.reason.kind);
-    }
-    for (const k of ["adjBlack", "sameLine", "boxedIn", "split", "offset"]) {
-      expect(kinds.has(k)).toBe(true);
+    for (const k of Object.keys(RULE_SENTENCES) as (keyof typeof RULE_SENTENCES)[]) {
+      // The step a hint opens with is the recorder's first firing.
+      expect(deduceHintPlan(pinned(k).state)[0].reason.kind).toBe(k);
     }
   });
 });
@@ -132,22 +209,9 @@ describe("hint", () => {
   });
 
   it("emits a two-cell firing (offset / corner-4) as a single step", () => {
-    // Several rules force more than one cell per firing; a tricky board
-    // reliably has one.
-    let found = false;
-    for (const seed of ["hint-plan", "sh-1", "sh-2", "sh-3", "two-cell"]) {
-      const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
-      const res = singlesGame.hint?.(s);
-      if (!res?.ok) continue;
-      const multi = res.steps.find((st) => st.move.sets.length > 1);
-      if (multi) {
-        // Every cell carries its forced value, in the one step's move.
-        expect((multi.highlights as SinglesHint).targets).toEqual(multi.move.sets);
-        found = true;
-        break;
-      }
-    }
-    expect(found).toBe(true);
+    const { step } = pinned("twoCells");
+    // Every cell carries its forced value, in the one step's move.
+    expect((step.highlights as SinglesHint).targets).toEqual(step.move.sets);
   });
 
   it("a hint always makes progress from any partial position (resumable solve)", () => {
@@ -172,27 +236,14 @@ describe("hint", () => {
   });
 
   it("offset: narration names the pair values and walks the contradiction arc", () => {
-    let found = false;
-    for (const seed of ["sh-1", "sh-2", "sh-3", "sh-4", "hint-plan"]) {
-      const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
-      const res = singlesGame.hint?.(s);
-      if (!res?.ok) continue;
-      const step = res.steps.find((st) =>
-        st.explanation.includes("black next to each other"),
-      );
-      if (step) {
-        expect(step.explanation).toMatch(/\d/); // concrete value(s)
-        expect(step.explanation).toContain("can't touch");
-        expect(step.explanation).not.toContain("across from it");
-        // "overlap" was geometrically false — the pairs can span a whole line.
-        expect(step.explanation).not.toContain("overlap");
-        // Leads with the indication — names the spotted pattern first.
-        expect(step.explanation).toMatch(/^There's a pair of \d+s in one (column|row)/);
-        found = true;
-        break;
-      }
-    }
-    expect(found).toBe(true);
+    const { step } = pinned("offset");
+    expect(step.explanation).toMatch(/\d/); // concrete value(s)
+    expect(step.explanation).toContain("can't touch");
+    expect(step.explanation).not.toContain("across from it");
+    // "overlap" was geometrically false — the pairs can span a whole line.
+    expect(step.explanation).not.toContain("overlap");
+    // Leads with the indication — names the spotted pattern first.
+    expect(step.explanation).toMatch(/^There's a pair of \d+s in one (column|row)/);
   });
 
   it("gives every step visible evidence (an area to shade or a premise to ring)", () => {
@@ -272,12 +323,8 @@ describe("hint", () => {
 
 describe("hintKeepTrack", () => {
   it("completes on the hinted move, offs on a deviation", () => {
-    const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, "hint-track");
-    const res = singlesGame.hint?.(s);
-    if (!res?.ok) throw new Error("expected a plan");
-    // Use a single-cell step (the common case).
-    const step = res.steps.find((st) => st.move.sets.length === 1);
-    if (!step) throw new Error("expected a single-cell step");
+    // A single-cell step (the common case).
+    const { step, state: s } = pinned("oneCell");
     const t = (step.highlights as SinglesHint).targets[0];
 
     const right: SinglesMove = { sets: [{ x: t.x, y: t.y, value: t.value }] };
@@ -302,20 +349,7 @@ describe("hintKeepTrack", () => {
   });
 
   it("onTracks a multi-cell step filled one cell at a time, then completes", () => {
-    let step: HintStep<SinglesMove, SinglesHint> | null = null;
-    let state: SinglesState | null = null;
-    for (const seed of ["hint-plan", "sh-1", "sh-2", "sh-3", "two-cell"]) {
-      const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
-      const res = singlesGame.hint?.(s);
-      if (!res?.ok) continue;
-      const multi = res.steps.find((st) => st.move.sets.length === 2);
-      if (multi) {
-        step = multi;
-        state = s;
-        break;
-      }
-    }
-    if (!step || !state) throw new Error("expected a two-cell step");
+    const { step, state } = pinned("twoCells");
     const [a, b] = (step.highlights as SinglesHint).targets;
 
     // Fill the first cell only → onTrack, step shrinks to the second.
@@ -347,52 +381,40 @@ describe("hintKeepTrack", () => {
   });
 });
 
+/** The frame a pinned position's hint draws, through a real `Midend`. */
+function hintFrame(kind: Parameters<typeof pinned>[0]) {
+  const { id, moves, step } = pinned(kind);
+  const result = renderScenario({ game: singlesGame, id, moves, showHint: true });
+  expect(result.hint?.explanation).toBe(step.explanation);
+  return { ...result, step };
+}
+
 describe("singles hint: the line a sentence names", () => {
   it.each([
-    ["a touching pair", /touch, so one of them stays white/],
-    [
-      "a number sharing a line with an outlined white one",
-      /shares? (?:this row|this column) with/,
-    ],
-  ])("%s hatches the one row or column it names", (_, sentence) => {
-    let checked = 0;
-    for (let s = 0; s < 12 && checked === 0; s++) {
-      const { recording, hint } = renderScenario({
-        game: singlesGame,
-        id: `6x6dk#line-${s}`,
-        showHint: true,
-        hintUntil: (step) =>
-          sentence.test(step.explanation) &&
-          stepMarks(step).of("stripes", CELL).length > 0,
-      });
-      const line = stepMarks(hint).of("stripes", CELL);
-      if (!hint || !sentence.test(hint.explanation) || !line.length) continue;
-      // One whole row or column, through every target.
-      const row = line.every((c) => c.y === line[0].y);
-      expect(line).toHaveLength(6);
-      for (const t of (hint.highlights as SinglesHint).targets) {
-        expect(line.some((c) => c.x === t.x && c.y === t.y)).toBe(true);
-      }
-      const hatches = opsOfKind(recording.ops, "hatch");
-      expect(hatches).toHaveLength(6);
-      expect(new Set(hatches.map((h) => (row ? h.y : h.x))).size).toBe(1);
-      checked++;
+    ["a touching pair", "touchingPairLine"],
+    ["a number sharing a line with an outlined white one", "sharedLine"],
+  ] as const)("%s hatches the one row or column it names", (_, kind) => {
+    const { recording, step } = hintFrame(kind);
+    const line = stepMarks(step).of("stripes", CELL);
+    // One whole row or column, through every target.
+    const row = line.every((c) => c.y === line[0].y);
+    expect(line).toHaveLength(6);
+    for (const t of (step.highlights as SinglesHint).targets) {
+      expect(line.some((c) => c.x === t.x && c.y === t.y)).toBe(true);
     }
-    expect(checked).toBe(1);
+    const hatches = opsOfKind(recording.ops, "hatch");
+    expect(hatches).toHaveLength(6);
+    expect(new Set(hatches.map((h) => (row ? h.y : h.x))).size).toBe(1);
   });
 });
 
 describe("singles hint render", () => {
   it("rings the hint target, with evidence and numbers", () => {
-    const { recording, hint } = renderScenario({
-      game: singlesGame,
-      id: "6x6dk#hint-render",
-      showHint: true,
-    });
+    const { recording, step } = hintFrame("oneCell");
     const ops = recording.ops;
     // Every Singles cell carries a number, so the target is **ringed**, never
     // filled — four thin rects and no solid one.
-    const forced = (hint?.highlights as SinglesHint | undefined)?.targets ?? [];
+    const forced = (step.highlights as SinglesHint).targets;
     expectRing(ops, COL_HINT, forced.length);
     expect(
       markSides(ops, COL_HINT_CELL).length > 0 ||
@@ -406,15 +428,10 @@ describe("singles hint render", () => {
   });
 
   it("rings a cited shaded square in COL_HINT_BLACKREF, distinct from the blue target", () => {
-    // Walk to an adjBlack frame: a decided black square forces a neighbor
-    // white. The black premise must ring in the black-ref legend color, not
-    // the same blue as the forced cell.
-    const { recording } = renderScenario({
-      game: singlesGame,
-      id: "6x6dk#scan-0",
-      showHint: true,
-      hintUntil: (s) => /touch(?:es)? a black square/.test(s.explanation),
-    });
+    // An adjBlack frame: a decided black square forces a neighbor white. The
+    // black premise must ring in the black-ref legend color, not the same blue
+    // as the forced cell.
+    const { recording } = hintFrame("adjBlack");
     const ops = recording.ops;
     const color = (c: number) => ops.some((o) => "color" in o && o.color === c);
     expect(color(COL_HINT_BLACKREF)).toBe(true); // cited black premise ring
@@ -423,17 +440,9 @@ describe("singles hint render", () => {
   });
 
   it("outlines a cited circled square in COL_HINT_WHITEREF", () => {
-    // Walk to a sameLine frame: a circled white square forces line-mates
-    // shaded. The white premise is outlined in the white-ref legend color.
-    const { recording } = renderScenario({
-      game: singlesGame,
-      id: "6x6dk#scan-0",
-      showHint: true,
-      // "share(s) … with" is unique to sameLine (boxedIn also cites an
-      // "outlined white square", so predicate on the sameLine-only phrase).
-      hintUntil: (s) =>
-        /shares? (?:a line|this row|this column) with/.test(s.explanation),
-    });
+    // A sameLine frame: a circled white square forces line-mates shaded. The
+    // white premise is outlined in the white-ref legend color.
+    const { recording } = hintFrame("sameLine");
     const ops = recording.ops;
     expect(ops.some((o) => "color" in o && o.color === COL_HINT_WHITEREF)).toBe(true);
   });

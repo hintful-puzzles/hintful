@@ -17,6 +17,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
@@ -220,22 +221,31 @@ describe("separate hint mechanics", () => {
   });
 });
 
+/** A step that names two regions: a two-region or region-and-letter step. */
+const namesTwo = (s: HintStep<unknown>): boolean => {
+  const m = stepMarks(s);
+  return m.of("stripes", CELL).length > 0 && m.of("outline", CELL).length > 0;
+};
+
+const pinned = describeHintPins({
+  game: separateGame,
+  params: [PRESETS[1]],
+  kinds: { namesTwo },
+  pins: {
+    /** Held on 119 of 437 positions walked. */
+    namesTwo: {
+      id: "5x5n5:ECBDAEEAEABECDCADCBDDCABB",
+      moves:
+        '[{"type":"edges","edits":[{"x":0,"y":0,"flag":4},{"x":0,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":4,"y":0,"flag":4},{"x":4,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":2},{"x":1,"y":1,"flag":8}]},{"type":"edges","edits":[{"x":1,"y":1,"flag":4},{"x":1,"y":2,"flag":1}]},{"type":"edges","edits":[{"x":2,"y":2,"flag":4},{"x":2,"y":3,"flag":1}]},{"type":"edges","edits":[{"x":3,"y":3,"flag":4},{"x":3,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":2},{"x":4,"y":4,"flag":8}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":32},{"x":1,"y":0,"flag":128}]}]',
+    },
+  },
+});
+
 describe("separate hint frame", () => {
   it("paints the edges blue, hatches one region and outlines the other", () => {
-    // A frame that names two regions: the first two-region or region-and-letter
-    // step on a fixed board, reached through the real midend.
-    const namesTwo = (s: HintStep<unknown>): boolean => {
-      const m = stepMarks(s);
-      return m.of("stripes", CELL).length > 0 && m.of("outline", CELL).length > 0;
-    };
-    const id = `5x5n5:${newSeparateDesc(PRESETS[1], randomNew("separate-hint-frame")).desc}`;
-    const result = renderScenario({
-      game: separateGame,
-      id,
-      showHint: true,
-      hintUntil: namesTwo,
-    });
-    expect(namesTwo(result.hint as HintStep<unknown>)).toBe(true);
+    const { id, moves, step } = pinned("namesTwo");
+    const result = renderScenario({ game: separateGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
 
     const ops = result.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);

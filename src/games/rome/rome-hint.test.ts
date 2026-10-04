@@ -21,6 +21,7 @@ import type { CandidatePlanPrefs } from "../../engine/candidate-hint.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -44,7 +45,6 @@ import {
   DIFFCOUNT,
   dirBit,
   EMPTY,
-  encodeParams,
   FM_ARROWMASK,
   FM_LEFT,
   legalDirs,
@@ -351,25 +351,30 @@ describe("rome hint plan", () => {
  * square would fold into what it leaves. */
 const MARK_ALL: RomeMove[] = [{ kind: "pencilAll" }];
 
-/** Scan seeds for a board whose hint reaches a step matching `pred`, so a frame
- * is deterministic without a hand-written desc (docs/games/testing.md). */
-function frameFor(p: RomeParams, pred: (e: string) => boolean): string {
-  for (let s = 0; s < 40; s++) {
-    const seed = `frame-${p.w}-${s}`;
-    const { st } = gen(p, seed);
-    const noted = romeGame.executeMove(st, MARK_ALL[0]);
-    if (buildSteps(noted, POPULATE).some((step) => pred(step.explanation)))
-      return `${encodeParams(p, true)}#${seed}`;
-  }
-  throw new Error(`no matching frame for ${encodeParams(p, true)}`);
-}
+/** A position whose hint opens with a loop strike. */
+const pinned = describeHintPins({
+  game: romeGame,
+  params: [NORMAL, TRICKY],
+  opening: () => MARK_ALL,
+  kinds: { loop: /^Following the arrows/ },
+  pins: {
+    /** Held on 738 of 1823 positions walked. */
+    loop: {
+      id: "6x6dn:abaaa1a1a4a1ca7a1a2aa1a2a2a1,aRcDbUdUaDcDULDUXbDbRe",
+      moves:
+        '[{"kind":"pencilAll"},{"kind":"pencilStrike","marks":[{"x":0,"y":0,"n":4},{"x":0,"y":1,"n":1},{"x":1,"y":1,"n":1},{"x":3,"y":1,"n":1},{"x":4,"y":1,"n":2},{"x":5,"y":1,"n":2},{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2},{"x":4,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":1,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":4,"y":4,"n":1},{"x":5,"y":4,"n":1},{"x":1,"y":5,"n":4},{"x":2,"y":5,"n":4}]},{"kind":"place","x":0,"y":0,"dir":8}]',
+    },
+  },
+});
 
 describe("rome hint render", () => {
   it("rings the square, hatches its area, and crosses the marks it rules out", () => {
+    // A walk down one plan on a fixed board, not a pin: the sentence follows a
+    // placement inside a plan and opened none of 1823 hints asked afresh.
     const pred = (e: string): boolean => /^This area now has/.test(e);
     const { recording, hint } = renderScenario({
       game: romeGame,
-      id: frameFor(NORMAL, pred),
+      id: "6x6dn:3a3aa1a8aab1b1a1c1a2da5a,RaLcRhLUUaDRXaLUaDaLDaUd",
       defaultBackground: DEFAULT_BACKGROUND,
       moves: MARK_ALL,
       showHint: true,
@@ -398,16 +403,15 @@ describe("rome hint render", () => {
    * claim the player has to be able to walk.
    */
   it("numbers the arrow chain a loop deduction walks", () => {
-    const pred = (e: string): boolean => /^Following the arrows/.test(e);
+    const { id, moves, step } = pinned("loop");
     const { recording, hint } = renderScenario({
       game: romeGame,
-      id: frameFor(TRICKY, pred),
+      id,
       defaultBackground: DEFAULT_BACKGROUND,
-      moves: MARK_ALL,
+      moves,
       showHint: true,
-      hintUntil: (s) => pred(s.explanation),
     });
-    expect(hint?.explanation).toMatch(/^Following the arrows/);
+    expect(hint?.explanation).toBe(step.explanation);
     const area = (hint?.highlights as { area: { order?: number }[] }).area;
     expect(area.length).toBeGreaterThanOrEqual(2);
     // Every evidence square carries its place in the walk, numbered from the

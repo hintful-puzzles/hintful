@@ -11,6 +11,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_SELECT, CURSOR_UP } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
   expectPieceRing,
   expectRing,
@@ -126,29 +127,51 @@ describe("magnets render scenarios", () => {
       .of("outline", CLUE)
       .filter((c) => !s.highlights?.reasonClues.includes(c));
 
-  /** The first hint frame, over a few boards, whose step `want` picks. */
-  function hintFrame(want: (s: HintStep<MagnetsMove, MagnetsHighlights>) => boolean) {
-    for (let seed = 0; seed < 20; seed++) {
-      const { id } = board(P, `mrs-hint-${seed}`);
-      const result = renderScenario({
-        game: magnetsGame,
-        id,
-        showHint: true,
-        hintUntil: (s) => want(s as HintStep<MagnetsMove, MagnetsHighlights>),
-      });
-      const step = result.hint as HintStep<MagnetsMove, MagnetsHighlights> | undefined;
-      if (step && want(step)) return { ...result, step };
-    }
-    throw new Error("no board shows such a step");
-  }
-
-  it("a placement rings the one square it decides and marks its evidence beside it", () => {
-    const { recording } = hintFrame(
-      (s) =>
+  /** The shapes of step whose frames are asserted below, each pinned on a
+   * position whose hint opens with one. */
+  const pinned = describeHintPins({
+    game: magnetsGame,
+    params: [P],
+    kinds: {
+      placementWithEvidence: (s) =>
         s.move.type === "set" &&
         stepMarks(s).of("ring", SQUARE).length === 1 &&
         stepMarks(s).of("outline", SQUARE).length > 0,
-    );
+      markCountingClues: (s) =>
+        s.move.type === "flag" &&
+        s.move.mode === "notneutral" &&
+        stepMarks(s).of("ring", SQUARE).length === 2 &&
+        countedClues(s).length > 0,
+      countedLine: (s) => stepMarks(s).of("stripes", LINE).length > 0,
+    },
+    pins: {
+      /** Held on 115 of 307 positions walked. */
+      placementWithEvidence: {
+        id: "6x5de:212212,13132,122203,12223,LRLRLRLRLRTTLRLRBBLRTTTTLRBBBB",
+        moves:
+          '[{"type":"flag","idx":10,"mode":"neutral"},{"type":"flag","idx":22,"mode":"neutral"},{"type":"flag","idx":4,"mode":"notneutral"},{"type":"set","idx":4,"which":1},{"type":"flag","idx":11,"mode":"notneutral"}]',
+      },
+      /** Held on 63 of 307 positions walked. */
+      markCountingClues: {
+        id: "6x5de:131223,32322,312222,32331,LRLRLRLRTLRTLRBTTBLRTBBTLRBLRB",
+        moves:
+          '[{"type":"flag","idx":4,"mode":"notneutral"},{"type":"flag","idx":11,"mode":"notneutral"}]',
+      },
+      /** Held on 201 of 307 positions walked. */
+      countedLine: "6x5de:131223,32322,312222,32331,LRLRLRLRTLRTLRBTTBLRTBBTLRBLRB",
+    },
+  });
+
+  /** The frame a pinned position's hint draws, through a real `Midend`. */
+  function hintFrame(kind: Parameters<typeof pinned>[0]) {
+    const { id, moves, step } = pinned(kind);
+    const result = renderScenario({ game: magnetsGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    return { ...result, step };
+  }
+
+  it("a placement rings the one square it decides and marks its evidence beside it", () => {
+    const { recording } = hintFrame("placementWithEvidence");
     // Four thin sides, none solid: the square keeps its own content.
     expectRing(recording.ops, COL_HINT, 1);
     const evidence = markSides(recording.ops, COL_HINT_CELL);
@@ -158,13 +181,7 @@ describe("magnets render scenarios", () => {
   });
 
   it("a `?` step rings the domino as one shape and recolors the line's clues", () => {
-    const { recording, step } = hintFrame(
-      (s) =>
-        s.move.type === "flag" &&
-        s.move.mode === "notneutral" &&
-        stepMarks(s).of("ring", SQUARE).length === 2 &&
-        countedClues(s).length > 0,
-    );
+    const { recording, step } = hintFrame("markCountingClues");
     // One ring around both ends, not a ring per square.
     expectPieceRing(recording.ops, COL_HINT);
     const hinted = recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT);
@@ -173,9 +190,7 @@ describe("magnets render scenarios", () => {
   });
 
   it("hatches the line a step counts, clue slots included, and nothing else", () => {
-    const { recording, step } = hintFrame(
-      (s) => stepMarks(s).of("stripes", LINE).length > 0,
-    );
+    const { recording, step } = hintFrame("countedLine");
     const [line] = stepMarks(step).of("stripes", LINE);
     if (!line) throw new Error("the picked step names no line");
     const hatches = opsOfKind(recording.ops, "hatch");

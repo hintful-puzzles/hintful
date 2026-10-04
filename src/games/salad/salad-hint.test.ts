@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { narrate, premise, type SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";
 import { recordSaladDeductions, saladSolution } from "./solver.ts";
@@ -74,57 +75,78 @@ function walk(
   return { texts, steps, solved: saladGame.status(state) === "solved" };
 }
 
-describe("salad hint — the three signature techniques", () => {
-  it("narrates a border clue by what it sees and how far its symbol can reach", () => {
-    const texts = ["b1", "b2", "b3"].flatMap((s) => walk(LETTERS, s).texts);
+type Step = HintStep<SaladMove, SaladHint>;
+
+const isMarker = (step: Step): boolean =>
+  step.move.type === "set" && typeof step.move.value === "string";
+const ghostOf = (step: Step) => (step.highlights as SaladHint).ghost;
+
+/**
+ * The three signature techniques, each arm pinned on a position whose hint
+ * opens with its sentence, and the entries a step previews. A sentence that
+ * names letters holds only on a letters board, and one that names numbers only
+ * on a numbers board.
+ */
+const pinned = describeHintPins({
+  game: saladGame,
+  params: [LETTERS, NUMBERS],
+  kinds: {
     // Near the clue: the first square that could hold anything must hold the
     // clue's symbol, so every other symbol is crossed out of it.
-    expect(
-      texts.some((t) =>
-        /sees [A-C] first.*leaves only [A-C] for this square, so we must cross out/.test(
-          t,
-        ),
-      ),
-    ).toBe(true);
+    borderNear:
+      /sees [A-C] first.*leaves only [A-C] for this square, so we must cross out/,
     // Past its reach: bounded by how many empty squares the line may hold.
-    expect(
-      texts.some((t) =>
-        /sees [A-C] first, so every square before its [A-C] must be empty\. This (row|column) has room for only \d+ empty squares?/.test(
-          t,
-        ),
-      ),
-    ).toBe(true);
-  });
+    borderFar:
+      /sees [A-C] first, so every square before its [A-C] must be empty\. This (row|column) has room for only \d+ empty squares?/,
+    // A line's hole and symbol counts, each from its own side.
+    holesPlaced:
+      /already has (its one empty square|both of its empty squares|all \d+ of its empty squares), so this square and the rest of it must hold a number/,
+    numbersPlaced:
+      /(All \d+ numbers of this (row|column) are already placed|We already know which \d+ squares of this (row|column) hold its numbers), so this square and the rest of it must be empty/,
+    // The hole/symbol synchronization, as a note collapse.
+    noteCollapse:
+      /Every letter is ruled out here, so the empty-square mark is the only one left: this square must be empty\./,
+    // A marker step previews the entry it asks for, a placement its symbol.
+    marker: (step) => isMarker(step),
+    previewsCross: (step) => ghostOf(step) === "cross",
+    previewsCircle: (step) => ghostOf(step) === "circle",
+    previewsNumber: (step) => typeof ghostOf(step) === "number",
+  },
+  pins: {
+    /** Held on 124 of 1249 positions walked. */
+    borderNear: { id: "5n3Lde:AbCAbCbBaAAaBd,y", moves: [{ type: "pencilAll" }] },
+    /** Held on 105 of 1249 positions walked. */
+    borderFar: {
+      id: "5n3Lde:AbCAbCbBaAAaBd,y",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3}]}]',
+    },
+    /** Held on 103 of 1249 positions walked. */
+    holesPlaced: "5n3Bde:dXbXb2a1aX1bOb3c",
+    /** Held on 54 of 1249 positions walked. */
+    numbersPlaced: "5n3Bde:bXc1ObOg2113Ob",
+    /** Held on 81 of 1249 positions walked. */
+    noteCollapse: {
+      id: "5n3Lde:aBaAbAaBcCaCBd,y",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":0,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":3}]}]',
+    },
+    /** Held on 440 of 1249 positions walked. */
+    marker: "5n3Bde:dXbXb2a1aX1bOb3c",
+    /** Held on 213 of 1249 positions walked. */
+    previewsCross: "5n3Bde:bXc1ObOg2113Ob",
+    /** Held on 227 of 1249 positions walked. */
+    previewsCircle: "5n3Bde:dXbXb2a1aX1bOb3c",
+    /** Held on 308 of 1249 positions walked. */
+    previewsNumber: {
+      id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
+    },
+  },
+});
 
-  it("narrates a line's hole and symbol counts from their own side", () => {
-    const texts = ["c1", "c2", "c3"].flatMap((s) => walk(NUMBERS, s).texts);
-    expect(
-      texts.some((t) =>
-        /already has (its one empty square|both of its empty squares|all \d+ of its empty squares), so this square and the rest of it must hold a number/.test(
-          t,
-        ),
-      ),
-    ).toBe(true);
-    expect(
-      texts.some((t) =>
-        /(All \d+ numbers of this (row|column) are already placed|We already know which \d+ squares of this (row|column) hold its numbers), so this square and the rest of it must be empty/.test(
-          t,
-        ),
-      ),
-    ).toBe(true);
-  });
-
-  it("narrates the hole/symbol synchronization as a note collapse", () => {
-    const texts = ["s1", "s2"].flatMap((s) => walk(LETTERS, s).texts);
-    expect(
-      texts.some((t) =>
-        /Every letter is ruled out here, so the empty-square mark is the only one left: this square must be empty\./.test(
-          t,
-        ),
-      ),
-    ).toBe(true);
-  });
-
+describe("salad hint — the three signature techniques", () => {
   it("never emits a step it cannot name a technique for", () => {
     // The standing bar: no "just because" fallback (docs/games/solver-and-generator.md § "Guess-free generation"). Every
     // narration must match one of the arms the game knows how to say.
@@ -207,20 +229,6 @@ describe("salad hint — journeys and highlights", () => {
     }
     expect(near).toBeGreaterThan(0);
     expect(far).toBeGreaterThan(0);
-  });
-
-  it("a marker step previews the entry it asks for, a placement its symbol", () => {
-    const seen = new Set<unknown>();
-    for (const seed of ["g1", "g2"]) {
-      for (const step of walk(NUMBERS, seed).steps) {
-        const hl = step.highlights as SaladHint;
-        if (hl.ghost !== undefined)
-          seen.add(typeof hl.ghost === "number" ? "num" : hl.ghost);
-      }
-    }
-    expect(seen.has("cross")).toBe(true);
-    expect(seen.has("circle")).toBe(true);
-    expect(seen.has("num")).toBe(true);
   });
 });
 
@@ -551,22 +559,7 @@ describe("salad hint — the strike move", () => {
   });
 
   it("a marker step is judged followed once the square carries that marker", () => {
-    const state = board(NUMBERS, "m2");
-    let plan = saladGame.hint?.(state);
-    let step: HintStep<unknown, SaladHint> | null = null;
-    for (let i = 0; i < 40 && !step; i++) {
-      if (!plan?.ok) break;
-      step =
-        (plan.steps.find(
-          (s) =>
-            (s.move as { type: string; value?: unknown }).type === "set" &&
-            typeof (s.move as { value?: unknown }).value === "string",
-        ) as HintStep<unknown, SaladHint> | undefined) ?? null;
-      if (step) break;
-      plan = saladGame.hint?.(saladGame.executeMove(state, plan.steps[0].move));
-    }
-    expect(step, "no marker step in any early plan").not.toBeNull();
-    if (!step) return;
+    const { state, step } = pinned("marker");
     const move = step.move as {
       type: "set";
       x: number;

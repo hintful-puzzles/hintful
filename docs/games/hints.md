@@ -2449,7 +2449,11 @@ tile's bottom-right corner in `HINT_ORDER`. Three things to know:
 - **Wire it in your renderer.** The mechanism is shared but the wiring is not —
   your tile painter has to take `ds.hint.order[i]` and pass it on. Forgetting
   gives you a shaded chain, a sentence citing "cell 3", and no numbers at all.
-  `hint-ordinal.test.ts` guards this for every enrolled game.
+  `hint-ordinal.test.ts` guards this on one pinned position a game. A game
+  whose hint starts numbering a chain is told to add its pin by
+  `hint-quality.test.ts`, whose walk fails on a numbered chain from a game
+  with no entry in `testing/hint-chain-pins.ts`; run
+  `HINT_SCAN=1 npx vitest run src/engine/hint-ordinal.test.ts` to find one.
 
 **An ordinal, never an arrow.** The obvious drawing is a path through the chain,
 and it was prototyped and rejected on measurement: an arrow claims *this link

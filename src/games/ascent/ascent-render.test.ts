@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { PATH, SQUARE } from "./hint-text.ts";
@@ -101,38 +102,121 @@ describe("ascent render", () => {
   });
 });
 
-describe("ascent hint frames", () => {
-  /** The squares a step's words name, by role, and a whole run's route. */
-  const hl = (step?: HintStep<AscentMove>) => {
-    if (!step) return null;
-    const marks = stepMarks(step);
-    return {
-      targets: [...marks.of("ring", SQUARE)],
-      area: [...marks.of("outline", SQUARE)],
-      hatch: [...marks.of("stripes", SQUARE)],
-      route: [...marks.of("ring", PATH)],
-    };
+/** The squares a step's words name, by role, and a whole run's route. */
+const hl = (step: HintStep<AscentMove>) => {
+  const marks = stepMarks(step);
+  return {
+    targets: [...marks.of("ring", SQUARE)],
+    area: [...marks.of("outline", SQUARE)],
+    hatch: [...marks.of("stripes", SQUARE)],
+    route: [...marks.of("ring", PATH)],
   };
+};
+
+/** The striped sentences: "Only the run between …" and "Only 12, between …". */
+const STRIPED = /^Only (the run|\d+, between)/;
+
+/** The steps whose frames are asserted below. Each kind names its mode, since
+ * a frame's stroke counts are a mode's. */
+const pinned = describeHintPins({
+  game: ascentGame,
+  params: [
+    RECT,
+    { ...RECT, diff: 2 },
+    { ...RECT, w: 6, h: 7, diff: 2 },
+    { ...HEXAGON, w: 7, h: 7, diff: 2 },
+    EDGES,
+    { ...EDGES, diff: 3 },
+  ],
+  kinds: {
+    rectBetween: (s, state) =>
+      state.mode === MODE_RECT && s.move.kind === "place" && hl(s).area.length === 2,
+    rectRun: (s, state) => state.mode === MODE_RECT && STRIPED.test(s.explanation),
+    hexagonRun: (s, state) =>
+      state.mode === MODE_HEXAGON && STRIPED.test(s.explanation),
+    fill: (s, state) =>
+      state.mode === MODE_RECT &&
+      /^(?:No other run (?:comes close to|can reach)|The run [^,]* (?:is too far from|can't fill)) this square/.test(
+        s.explanation,
+      ),
+    wholeRun: (s, state) =>
+      state.mode === MODE_RECT &&
+      / only one route| the one route that does/.test(s.explanation),
+    edgesLine: (s, state) =>
+      state.mode === MODE_EDGES &&
+      hl(s).hatch.length > 0 &&
+      /, on its (row|column|diagonal)\./.test(s.explanation),
+    edgesLines: (s, state) =>
+      state.mode === MODE_EDGES &&
+      / must be on its (row|column|diagonal), within /.test(s.explanation),
+    edgesPointers: (s, state) =>
+      state.mode === MODE_EDGES &&
+      /^Of the missing numbers, only \d+(, \d+)* and \d+ point here\. /.test(
+        s.explanation,
+      ),
+  },
+  pins: {
+    /** Held on 173 of 796 positions walked. */
+    rectBetween: "5x5mRdn:c10a21_22_25_12b19_15_13_7c4b1c",
+    /** Held on 7 of 796 positions walked. */
+    rectRun: {
+      id: "5x5mRdt:25_1a4b24_2_8_6_22d12a15a17c19a",
+      moves:
+        '[{"kind":"place","cell":2,"n":2},{"kind":"place","cell":4,"n":4},{"kind":"places","cells":[{"cell":22,"n":19},{"cell":16,"n":20}]}]',
+    },
+    /** Held on 1 of 796 positions walked. */
+    hexagonRun: {
+      id: "7x7mHdt:C24_26_29aBeA21d37a18_16_14_12hAc1aB7a4aC",
+      moves:
+        '[{"kind":"place","cell":10,"n":24},{"kind":"places","cells":[{"cell":16,"n":21},{"cell":9,"n":22}]},{"kind":"place","cell":29,"n":16},{"kind":"places","cells":[{"cell":28,"n":18},{"cell":21,"n":19}]},{"kind":"places","cells":[{"cell":11,"n":26},{"cell":12,"n":27}]},{"kind":"places","cells":[{"cell":6,"n":29},{"cell":13,"n":30},{"cell":19,"n":31},{"cell":26,"n":32},{"cell":32,"n":33},{"cell":33,"n":34},{"cell":27,"n":35}]}]',
+    },
+    /** Held on 14 of 796 positions walked. */
+    fill: {
+      id: "5x5mRdt:22a25_4_1a24a3b15d17a9_8a13c",
+      moves: [
+        { kind: "place", cell: 9, n: 1 },
+        { kind: "place", cell: 7, n: 4 },
+      ],
+    },
+    /** Held on 145 of 796 positions walked. */
+    wholeRun: "5x5mRdn:25c6a1_3_8_7_22_16a11e12b18_14a",
+    /** Held on 62 of 796 positions walked. */
+    edgesLine:
+      "5x5mEEdn:1_10_23_3_17_15_19_25d18_21_24e20_5e4_14e8_12e9_11_7_6_22_2_16_13",
+    /** Held on 66 of 796 positions walked. */
+    edgesLines:
+      "5x5mEEdn:13_4_3_10_1_14_18_5e2_9e16_15e7_20_25d23_22e12_24_6_8_21_19_17_11",
+    /** Held on 17 of 796 positions walked. */
+    edgesPointers: {
+      id: "5x5mEEdh:5_13_9_23_19_4_21_24e22_20e15_12e17_1_10d3_7e6_8_25_11_16_2_18_14",
+      moves:
+        '[{"kind":"place","cell":25,"n":16},{"kind":"place","cell":9,"n":23},{"kind":"place","cell":24,"n":15}]',
+    },
+  },
+});
+
+/** The frame a pinned position's hint draws, through a real `Midend`. */
+function hintFrame(kind: Parameters<typeof pinned>[0]) {
+  const { id, moves, step } = pinned(kind);
+  const result = renderScenario({ game: ascentGame, id, moves, showHint: true });
+  expect(result.hint?.explanation).toBe(step.explanation);
+  return { recording: result.recording, hint: step, marks: hl(step) };
+}
+
+describe("ascent hint frames", () => {
   const strokes = (ops: DrawOp[], color: number) =>
     ops.filter((o) => o.op === "line" && o.color === color);
 
   it("Rectangle: rings the square to fill and outlines the numbers it sits between", () => {
-    const { recording, hint } = renderScenario({
-      game: ascentGame,
-      id: id(RECT, "render-hint-rect"),
-      showHint: true,
-      hintUntil: (s) => s.move.kind === "place" && (hl(s)?.area.length ?? 0) === 2,
-    });
-    const marks = hl(hint);
-    expect(marks?.area).toHaveLength(2);
+    const { recording, hint, marks } = hintFrame("rectBetween");
+    expect(marks.area).toHaveLength(2);
     const ops = recording.ops;
     // A ring is one stroke per side of the cell, and no fill: four for a square.
     expect(strokes(ops, COL_HINT)).toHaveLength(4);
     expect(strokes(ops, COL_HINT_CELL)).toHaveLength(4 * 2);
     // Highlight, never perform: the number the step places is not drawn as a
-    // placed number. The previous step was played by its taps, so the square
-    // may show the selection's gray offer of it, as it would to the player.
-    const n = hint?.move.kind === "place" ? hint.move.n : -1;
+    // placed number.
+    const n = hint.move.kind === "place" ? hint.move.n : -1;
     expect(
       ops.some(
         (o) => o.op === "text" && o.text === String(n + 1) && o.color !== COL_LOWLIGHT,
@@ -144,7 +228,7 @@ describe("ascent hint frames", () => {
   it("Hexagon: the ring follows the hexagon", () => {
     const { recording } = renderScenario({
       game: ascentGame,
-      id: id(HEXAGON, "render-hint-hex"),
+      id: "5x5mHdn:B6bAb10d11_19dA1_15_17B",
       showHint: true,
     });
     expect(strokes(recording.ops, COL_HINT)).toHaveLength(6);
@@ -152,145 +236,74 @@ describe("ascent hint frames", () => {
   });
 
   it("stripes the reach of the one run that can fill a square, square or hexagon", () => {
-    for (const [p, perCell] of [
-      [{ ...RECT, diff: 2 }, 1],
-      [{ ...HEXAGON, w: 7, h: 7, diff: 2 }, 7],
+    for (const [kind, perCell] of [
+      ["rectRun", 1],
+      ["hexagonRun", 7],
     ] as const) {
-      // The striped sentences: "Only the run between …" and "Only 12, between …".
-      const striped = /^Only (the run|\d+, between)/;
-      let found = false;
-      for (let seed = 0; seed < 80 && !found; seed++) {
-        const { recording, hint } = renderScenario({
-          game: ascentGame,
-          id: id(p, `render-run-${seed}`),
-          showHint: true,
-          hintUntil: (s) => striped.test(s.explanation),
-        });
-        if (!hint || !striped.test(hint.explanation)) continue;
-        found = true;
-        const marks = hl(hint);
-        for (const t of marks?.targets ?? []) expect(marks?.hatch).toContain(t);
-        // Every striped cell is hatched, a hexagon on rects that stay inside it.
-        const hatches = recording.ops.filter(
-          (o) => o.op === "hatch" && o.color === COL_HINT,
-        );
-        expect(hatches).toHaveLength((marks?.hatch.length ?? -1) * perCell);
-        expect(recording.ops).toMatchSnapshot();
-      }
-      expect(found, `no run step on ${ascentGame.encodeParams(p, true)}`).toBe(true);
+      const { recording, marks } = hintFrame(kind);
+      for (const t of marks.targets) expect(marks.hatch).toContain(t);
+      // Every striped cell is hatched, a hexagon on rects that stay inside it.
+      const hatches = recording.ops.filter(
+        (o) => o.op === "hatch" && o.color === COL_HINT,
+      );
+      expect(marks.hatch.length).toBeGreaterThan(0);
+      expect(hatches).toHaveLength(marks.hatch.length * perCell);
+      expect(recording.ops).toMatchSnapshot();
     }
   });
 
   it("outlines the rival and the ends a fill step counts from, and stripes nothing", () => {
-    const isFill = (s: HintStep<AscentMove>) =>
-      /^(?:No other run (?:comes close to|can reach)|The run [^,]* (?:is too far from|can't fill)) this square/.test(
-        s.explanation,
-      );
-    for (let seed = 0; seed < 80; seed++) {
-      const { recording, hint } = renderScenario({
-        game: ascentGame,
-        id: id({ ...RECT, diff: 2 }, `render-fill-${seed}`),
-        showHint: true,
-        hintUntil: isFill,
-      });
-      if (!hint || !isFill(hint)) continue;
-      const marks = hl(hint);
-      expect(marks?.hatch).toEqual([]);
-      expect(recording.ops.some((o) => o.op === "hatch")).toBe(false);
-      expect(strokes(recording.ops, COL_HINT_CELL)).toHaveLength(
-        4 * (marks?.area.length ?? -1),
-      );
-      expect(recording.ops).toMatchSnapshot();
-      return;
-    }
-    throw new Error("no fill step in 80 seeds");
+    const { recording, marks } = hintFrame("fill");
+    expect(marks.hatch).toEqual([]);
+    expect(recording.ops.some((o) => o.op === "hatch")).toBe(false);
+    expect(marks.area.length).toBeGreaterThan(0);
+    expect(strokes(recording.ops, COL_HINT_CELL)).toHaveLength(4 * marks.area.length);
+    expect(recording.ops).toMatchSnapshot();
   });
 
   it("draws a whole run's route as a path line in the hint's color, ringing its squares", () => {
-    const whole = (s: HintStep<AscentMove>) =>
-      / only one route| the one route that does/.test(s.explanation);
-    for (let seed = 0; seed < 40; seed++) {
-      const { recording, hint } = renderScenario({
-        game: ascentGame,
-        id: `${ascentGame.encodeParams({ ...RECT, w: 6, h: 7, diff: 2 }, true)}#whole-${seed}`,
-        showHint: true,
-        hintUntil: whole,
-      });
-      if (!hint || !whole(hint)) continue;
-      const marks = hl(hint);
-      const route = marks?.route ?? [];
-      expect(hint.move.kind).toBe("places");
-      expect(route.length).toBeGreaterThan(2);
-      // One half-segment from each end of every link, and a four-sided ring on
-      // every square the step fills.
-      const rings = 4 * (hint.move.kind === "places" ? hint.move.cells.length : 0);
-      expect(strokes(recording.ops, COL_HINT)).toHaveLength(
-        2 * (route.length - 1) + rings,
-      );
-      expect(recording.ops).toMatchSnapshot();
-      return;
-    }
-    throw new Error("no whole-run step in 40 seeds");
+    const { recording, hint, marks } = hintFrame("wholeRun");
+    const route = marks.route;
+    expect(hint.move.kind).toBe("places");
+    expect(route.length).toBeGreaterThan(2);
+    // One half-segment from each end of every link, and a four-sided ring on
+    // every square the step fills.
+    const rings = 4 * (hint.move.kind === "places" ? hint.move.cells.length : 0);
+    expect(strokes(recording.ops, COL_HINT)).toHaveLength(
+      2 * (route.length - 1) + rings,
+    );
+    expect(recording.ops).toMatchSnapshot();
   });
 
   it("Edges: stripes the line an arrow points along when the sentence names it", () => {
-    const { recording, hint } = renderScenario({
-      game: ascentGame,
-      id: id(EDGES, "render-hint-edges"),
-      showHint: true,
-      hintUntil: (s) => (hl(s)?.hatch.length ?? 0) > 0,
-    });
-    const marks = hl(hint);
-    expect(marks?.hatch.length).toBeGreaterThan(0);
-    expect(hint?.explanation).toMatch(/, on its (row|column|diagonal)\./);
+    const { recording, marks } = hintFrame("edgesLine");
+    expect(marks.hatch.length).toBeGreaterThan(0);
     const hatches = recording.ops.filter(
       (o) => o.op === "hatch" && o.color === COL_HINT,
     );
-    expect(hatches).toHaveLength(marks?.hatch.length ?? -1);
+    expect(hatches).toHaveLength(marks.hatch.length);
     expect(recording.ops).toMatchSnapshot();
   });
 
   it("Edges: a lines step stripes the lines it must be near and outlines their arrows", () => {
-    const { recording, hint } = renderScenario({
-      game: ascentGame,
-      id: id(EDGES, "render-hint-edges"),
-      showHint: true,
-      hintUntil: (s) =>
-        / must be on its (row|column|diagonal), within /.test(s.explanation),
-    });
-    const marks = hl(hint);
-    expect(hint?.explanation).toMatch(/'s (row|column|diagonal)\b/);
-    expect(marks?.hatch.length).toBeGreaterThan(0);
+    const { recording, hint, marks } = hintFrame("edgesLines");
+    expect(hint.explanation).toMatch(/'s (row|column|diagonal)\b/);
+    expect(marks.hatch.length).toBeGreaterThan(0);
     // Its own arrow and each arrow named: outlined, never striped.
-    expect(marks?.area.length).toBeGreaterThanOrEqual(2);
-    for (const a of marks?.area ?? []) expect(marks?.hatch).not.toContain(a);
+    expect(marks.area.length).toBeGreaterThanOrEqual(2);
+    for (const a of marks.area) expect(marks.hatch).not.toContain(a);
     const hatches = recording.ops.filter(
       (o) => o.op === "hatch" && o.color === COL_HINT,
     );
-    expect(hatches).toHaveLength(marks?.hatch.length ?? -1);
+    expect(hatches).toHaveLength(marks.hatch.length);
     expect(recording.ops).toMatchSnapshot();
   });
 
   it("Edges: a pointers step outlines every missing number's arrow pointing at the square", () => {
-    const pointers = (s: HintStep<AscentMove>) =>
-      /^Of the missing numbers, only \d+(, \d+)* and \d+ point here\. /.test(
-        s.explanation,
-      );
-    for (let seed = 0; seed < 40; seed++) {
-      const { recording, hint } = renderScenario({
-        game: ascentGame,
-        id: id({ ...EDGES, diff: 3 }, `render-pointers-${seed}`),
-        showHint: true,
-        hintUntil: pointers,
-      });
-      if (!hint || !pointers(hint)) continue;
-      const marks = hl(hint);
-      // Two or more arrows point here: the rival's and the one placed.
-      expect(marks?.area.length).toBeGreaterThanOrEqual(2);
-      expect(marks?.hatch.length).toBeGreaterThan(0);
-      expect(recording.ops).toMatchSnapshot();
-      return;
-    }
-    throw new Error("no pointers step in 40 seeds");
+    const { recording, marks } = hintFrame("edgesPointers");
+    // Two or more arrows point here: the rival's and the one placed.
+    expect(marks.area.length).toBeGreaterThanOrEqual(2);
+    expect(marks.hatch.length).toBeGreaterThan(0);
+    expect(recording.ops).toMatchSnapshot();
   });
 });

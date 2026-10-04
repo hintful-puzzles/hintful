@@ -68,15 +68,57 @@ to paste, each under how many of the positions walked it held on. Copy that
 count beside the pin: it is the power argument the pin owes (AGENTS.md
 § "Method"), and a kind that held on 5 of 937 is the one to watch. A game whose
 mid-game board is itself a desc passes `descOf`, and its pins are bare
-`params:desc` strings; otherwise a pin is a board and the moves played on it.
+`params:desc` strings; otherwise a pin is a board and the moves played on it,
+which the scan writes as their JSON in one string once there are more than a
+few. Of the positions a kind holds on, the scan reports the one fewest moves
+in. A deep pin is long, because a ladder's late rung opens a plan only once
+every earlier one is spent: read a file of pins through `cut -c1-200`.
 
-What the scan does not do, each because nothing has asked for it yet: stray
-from the hint's line (Pegs' trap and lost positions were found with random
-play mixed in, since hint-guided play keeps to winning lines), pin a refusal,
-or scan a solver's firings where no step says them. Exemplars:
-`flip-hint.test.ts` (written against it), `sokoban-hint.test.ts` (eleven pins
-moved onto it), `lightup-hint.test.ts` (a predicate kind, moved from a scan
-that ran on every run).
+What a scan can be told:
+
+- **`opening`**: moves played on a fresh board before the first hint, for a
+  game whose deductions want a mark-all or whose board is dealt by the first
+  click (`keen-hint.test.ts`, `mines-hint.test.ts`). Give the callback its
+  return type (`(): SoloMove[] => [{ type: "pencilAll" }]`): a bare literal
+  widens to `{ type: string }` and every kind then fails to typecheck.
+- **`ui`**: the `Ui` the hint is asked under, for a kind a candidate reading
+  decides (`group-hint.test.ts`).
+- **`stray`**: a second line of play on every board, steered by the game. A
+  hint keeps to lines that finish, so a sentence about a jump that would not is
+  spoken only off them (`pegs-hint.test.ts`, which follows the hint on even
+  turns and takes any legal jump on odd ones).
+- **A kind may read the board and ignore the step.** A test that wants the
+  board on which a solver rung fires, where no step says so, asks the solver
+  in the predicate: `(_step, state) => firstFiring(state)?.kind === "…"`.
+  Whether a rung fires at all on a corpus is `describeLadderCensus`'s
+  question, not this one's.
+
+**Call `pinned(kind)` inside a test, never in a `describe` body.** A
+`describe` body runs while tests are collected, before a new kind has a pin,
+and the scan then reports nothing with no error. And **a kind is what a plan
+opens with**: a sentence that is only ever a plan's second step, because the
+recompute after the first explains it another way, holds on no position. State
+the kind as "the opening firing has a leg that says it" (`tents-hint.test.ts`),
+or keep that one frame as a `hintUntil` on a fixed desc with the count at the
+site (`rome-hint.test.ts`, `slant-hint.test.ts`).
+
+What it does not do: **pin a refusal.** A refusal has no step for a loader to
+return, so a test that wants a lost board keeps the desc by hand and says why
+beside it (`pegs-hint.test.ts`'s `LOST`). And a pin does not keep `aux`: the
+scan asks the hint with none, as a board loaded from `params:desc` has none, so
+a kind that needs the generator's answer to fire is not one a pin can hold.
+
+**A cross-game guard pins too.** `hint-ordinal.test.ts` used to search every
+hinted game for a numbered chain on every run, 58 s of test time under load
+(2026-10-04) of which most was games that have none. It reads one pinned
+position a game from `testing/hint-chain-pins.ts`, and `hint-quality.test.ts`,
+whose walk was already paid for, fails on a numbered chain from a game with no
+pin there. The search runs when a pin is made, and membership is still derived.
+
+Exemplars: `flip-hint.test.ts` (written against it), `sokoban-hint.test.ts`
+(eleven pins moved onto it), `galaxies-hint.test.ts` (sentences and step shapes,
+pinned mid-game) with `galaxies-hint-render.test.ts` (a frame from a pin:
+`renderScenario({ game, id, moves, showHint: true })`).
 
 **A game's own directory is not its coverage.** Its input paths, save
 round-trip, params codec and even its source text (color literals, hint

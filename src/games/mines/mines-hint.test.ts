@@ -12,6 +12,7 @@ import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
 import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { DEAD_BOARD, type MinesHint } from "./hint.ts";
 import { minesGame } from "./index.ts";
@@ -51,6 +52,54 @@ function scattered(seed: string): string {
 const open = (x: number, y: number): MinesMove => ({
   type: "ops",
   ops: [{ op: "O", x, y }],
+});
+
+const flagged = (b: MinesState): number => b.grid.filter((v) => v === FLAG).length;
+
+/** The steps the following and render tests read, each pinned on a position
+ * whose hint opens with one. A board is laid out by its first click, so every
+ * pin starts with the opening click in the middle. */
+const pinned = describeHintPins({
+  game: minesGame,
+  params: [params(9, 9, 10), params(9, 9, 35)],
+  opening: (): MinesMove[] => [open(4, 4)],
+  kinds: {
+    open: (step) => step.highlights?.kind === "open",
+    severalFlags: (step) =>
+      step.highlights?.kind === "flag" && step.highlights.targets.length > 1,
+    // The plan never proves some of the board's mines, so the open that wins
+    // leaves them covered and the win flags them.
+    winningOpenFlagsTheRest: (step, state) => {
+      if (step.highlights?.kind !== "open") return false;
+      const end = minesGame.executeMove(state, step.move);
+      return minesGame.status(end) === "solved" && flagged(end) > flagged(state);
+    },
+    twoNumbers: / allows at most \d+ in the striped squares/,
+  },
+  pins: {
+    /** Held on 351 of 632 positions walked. */
+    open: {
+      id: "9x9n10:r10,u,b5985f51ca0b0d130793b461c08d151bc905c2a2c3557702ac6e69f4a8be9a3fa9e10ca1eb20535440bf0cdd18db91fff447b724ed9a7c0ddbbf56ee02",
+      moves:
+        '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]}]',
+    },
+    /** Held on 103 of 632 positions walked. */
+    severalFlags: {
+      id: "9x9n10:r10,u,33c21e9a927d75aecf9e760f2d2c50656c6416164cb8fb65f1693562b902dedd1a9b0a5147240437f3fd8e3dfcb7f38d77ed22bf940754d980af7b1602",
+      moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+    },
+    /** Held on 14 of 632 positions walked. */
+    winningOpenFlagsTheRest: {
+      id: "9x9n10:r10,u,b5985f51ca0b0d130793b461c08d151bc905c2a2c3557702ac6e69f4a8be9a3fa9e10ca1eb20535440bf0cdd18db91fff447b724ed9a7c0ddbbf56ee02",
+      moves:
+        '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]},{"type":"ops","ops":[{"op":"O","x":2,"y":0},{"op":"O","x":3,"y":0},{"op":"O","x":4,"y":0}]},{"type":"ops","ops":[{"op":"O","x":1,"y":0},{"op":"O","x":1,"y":1}]},{"type":"ops","ops":[{"op":"F","x":5,"y":0}]},{"type":"ops","ops":[{"op":"F","x":1,"y":6}]},{"type":"ops","ops":[{"op":"O","x":0,"y":4},{"op":"O","x":0,"y":5},{"op":"O","x":0,"y":6}]},{"type":"ops","ops":[{"op":"F","x":0,"y":3}]},{"type":"ops","ops":[{"op":"O","x":0,"y":1},{"op":"O","x":0,"y":2}]},{"type":"ops","ops":[{"op":"F","x":0,"y":0}]},{"type":"ops","ops":[{"op":"F","x":6,"y":4}]},{"type":"ops","ops":[{"op":"O","x":6,"y":2},{"op":"O","x":6,"y":3}]},{"type":"ops","ops":[{"op":"F","x":6,"y":1}]},{"type":"ops","ops":[{"op":"O","x":6,"y":0}]},{"type":"ops","ops":[{"op":"O","x":7,"y":0},{"op":"O","x":7,"y":1}]},{"type":"ops","ops":[{"op":"O","x":8,"y":0}]},{"type":"ops","ops":[{"op":"F","x":8,"y":6}]},{"type":"ops","ops":[{"op":"O","x":0,"y":7}]}]',
+    },
+    /** Held on 15 of 632 positions walked. */
+    twoNumbers: {
+      id: "9x9n35:r35,u,a0dba5e4ea00f0ab2d03b97355b4d34d6029eea9369f6d2f2b9a27d1bb251d2f93ab9d8bef2299dfd7cb11725e11f8be919d1d1b2af9c8422ce571b402",
+      moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+    },
+  },
 });
 
 function plan(s: MinesState): Step[] {
@@ -187,9 +236,8 @@ describe("Mines hint: a flag is a premise only once proved", () => {
 
 describe("Mines hint: following a step", () => {
   it("keeps an open step on track through a flood, and drops it for a flag", () => {
-    const s1 = minesGame.executeMove(fresh(9, 9, 10, "track"), open(4, 4));
-    const step = plan(s1).find((st) => st.highlights?.kind === "open");
-    if (!step?.highlights) throw new Error("the plan opens nothing");
+    const { state: s1, step } = pinned("open");
+    if (!step.highlights) throw new Error("unreachable");
     const t = step.highlights.targets[0];
     const copy = (): Step => ({ ...step, move: structuredClone(step.move) });
     expect(minesGame.hintKeepTrack?.(open(t.x, t.y), copy(), s1)).not.toBe("off");
@@ -197,28 +245,19 @@ describe("Mines hint: following a step", () => {
     expect(minesGame.hintKeepTrack?.(flag, copy(), s1)).toBe("off");
   });
 
-  // The plan never proves some of this board's mines, so the open that wins
-  // leaves them covered and the win flags them. Judged "off", the step that
-  // finished the board could not be played.
+  // Judged "off", the step that finished the board could not be played.
   it("keeps the winning open on track while the win flags the mines left", () => {
-    const p = minesGame.defaultParams();
-    const s0 = minesGame.newState(p, minesGame.newDesc(p, randomNew("census-2")).desc);
-    const { steps, end } = walk(s0);
+    const { state: s, step: last } = pinned("winningOpenFlagsTheRest");
+    const end = minesGame.executeMove(s, last.move);
     expect(minesGame.status(end)).toBe("solved");
-    const [s, last] = steps[steps.length - 1];
-    const flagged = (b: MinesState) => b.grid.filter((v) => v === FLAG).length;
-    expect(last.highlights?.kind).toBe("open");
     expect(flagged(end)).toBeGreaterThan(flagged(s));
     const copy: Step = { ...last, move: structuredClone(last.move) };
     expect(minesGame.hintKeepTrack?.(last.move, copy, s)).toBe("completed");
   });
 
   it("drops the targets the board already shows done", () => {
-    const s1 = minesGame.executeMove(fresh(9, 9, 35, "refresh"), open(4, 4));
-    const step = plan(s1).find(
-      (st) => st.highlights?.kind === "flag" && st.highlights.targets.length > 1,
-    );
-    if (!step?.highlights) return expect.unreachable("no multi-square flag step");
+    const { state: s1, step } = pinned("severalFlags");
+    if (!step.highlights) throw new Error("unreachable");
     const [first, ...rest] = step.highlights.targets;
     const after = minesGame.executeMove(s1, {
       type: "ops",
@@ -277,19 +316,9 @@ describe("Mines hint: a board that needs a guess", () => {
 
 describe("Mines hint: render (tier 2.5)", () => {
   it("rings what a two-number step decides, outlines the numbers and stripes the shared squares", () => {
-    let found: ReturnType<typeof renderScenario> | null = null;
-    for (let k = 0; k < 40 && found === null; k++) {
-      const r = renderScenario({
-        game: minesGame,
-        id: `9x9n35#pair-${k}`,
-        moves: [open(4, 4)],
-        showHint: true,
-        hintUntil: (step) =>
-          / allows at most \d+ in the striped squares/.test(step.explanation),
-      });
-      if (r.hint && / allows at most/.test(r.hint.explanation)) found = r;
-    }
-    if (found === null) return expect.unreachable("no two-number step in 40 boards");
+    const { id, moves, step } = pinned("twoNumbers");
+    const found = renderScenario({ game: minesGame, id, moves, showHint: true });
+    expect(found.hint?.explanation).toBe(step.explanation);
     const ops = found.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_EVIDENCE)).toBe(

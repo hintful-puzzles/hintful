@@ -5,6 +5,7 @@
  */
 import { describe, expect, test } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newDesc } from "./generator.ts";
 import type { SlantHint } from "./hint.ts";
 import { slantGame } from "./index.ts";
@@ -32,6 +33,35 @@ function applyPlan(state: SlantState): SlantState {
   for (const step of res.steps) s = executeMove(s, step.move);
   return s;
 }
+
+/** Whether a plan's second step is a square continuing its first square's
+ * firing. A firing's first leg continues the marks placed for it, so only a
+ * square after a square is a clue's continuation. */
+function secondSquareContinues(state: SlantState): boolean {
+  const res = slantGame.hint?.(state);
+  if (!res?.ok || res.steps.length < 2) return false;
+  const [first, second] = res.steps;
+  return (
+    second.continuesPrevious === true &&
+    second.move.type === "set" &&
+    first.move.type === "set"
+  );
+}
+
+const pinned = describeHintPins({
+  game: slantGame,
+  params: [{ w: 8, h: 8, diff: DIFF_HARD }],
+  kinds: {
+    clue: /^(This \d clue|A [04] clue)/,
+    clueWithSecondSquare: (_step, state) => secondSquareContinues(state),
+  },
+  pins: {
+    /** Held on 779 of 856 positions walked. */
+    clue: "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
+    /** Held on 270 of 856 positions walked. */
+    clueWithSecondSquare: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
+  },
+});
 
 describe("slant hint", () => {
   test("counts the board its plan finishes as solved, so the midend refuses it", () => {
@@ -97,61 +127,41 @@ describe("slant hint", () => {
   });
 
   test("clue firings lead with the indication and group as one journey", () => {
-    // Scan for a clue-fill/empty opener across seeds.
-    let sawClue = false;
-    let sawGroupedJourney = false;
-    for (let seed = 0; seed < 20 && !(sawClue && sawGroupedJourney); seed++) {
-      const s = freshState(8, 8, DIFF_HARD, `clue-${seed}`);
-      const res = slantGame.hint?.(s);
-      if (!res?.ok) continue;
-      for (let i = 0; i < res.steps.length; i++) {
-        const e = res.steps[i].explanation;
-        if (/^(This \d clue|A [04] clue)/.test(e)) {
-          sawClue = true;
-          const hl = res.steps[i].highlights as SlantHint;
-          expect(hl.clues?.length).toBe(1);
-        }
-        // A firing's first leg continues the marks placed for it, so only a
-        // square after a square is a clue's continuation.
-        if (
-          res.steps[i].continuesPrevious &&
-          res.steps[i].move.type === "set" &&
-          res.steps[i - 1].move.type === "set"
-        ) {
-          sawGroupedJourney = true;
-          expect(res.steps[i].explanation).toMatch(
-            /^…and (?:this square|these squares) must slant (?:away|toward it) too, for the same clue(?: and the outlined squares?)?\.$/,
-          );
-        }
-      }
-    }
-    expect(sawClue).toBe(true);
-    expect(sawGroupedJourney).toBe(true);
+    const clue = pinned("clue").step;
+    expect((clue.highlights as SlantHint).clues?.length).toBe(1);
+
+    const journey = pinned("clueWithSecondSquare").steps;
+    expect(journey[1].explanation).toMatch(
+      /^…and (?:this square|these squares) must slant (?:away|toward it) too, for the same clue(?: and the outlined squares?)?\.$/,
+    );
   });
 
   test("loop / dead-end / equivalence firings each get their narration", () => {
+    // Whole plans are read here because the equivalence sentence cannot be
+    // pinned: it opened 0 of 2456 hints. It is always a plan's second step,
+    // and the recompute after the first explains the square by another rung.
     const seen = new Set<string>();
-    for (let seed = 0; seed < 40 && seen.size < 5; seed++) {
-      const s = freshState(12, 10, DIFF_HARD, `adv-${seed}`);
-      const res = slantGame.hint?.(s);
-      if (!res?.ok) continue;
-      for (const step of res.steps) {
-        const e = step.explanation;
-        if (/join two corners/.test(e)) seen.add("loop");
-        if (/one way out each/.test(e)) seen.add("deadend");
-        if (/links? this square to the outlined square/.test(e)) {
-          seen.add("equiv");
-          const hl = step.highlights as SlantHint;
-          expect(hl.ref).toBeDefined();
-          expect(hl.marks?.length).toBeGreaterThan(0);
-        }
-        if (step.move.type === "alike") {
-          seen.add(/^This \d clue/.test(e) ? "mark-clue" : "mark-v");
-        }
+    const s = newState(
+      { w: 12, h: 10, diff: DIFF_HARD },
+      "i1d321a11a1b2b1b31b22a2c231a2a21a1113b121a22a1b11b2b3a2a1c2f3211b2a11a33a2c33b22c3b4a2a3a3a33a1i1c",
+    );
+    const res = slantGame.hint?.(s);
+    if (!res?.ok) throw new Error("expected a plan");
+    for (const step of res.steps) {
+      const e = step.explanation;
+      if (/join two corners/.test(e)) seen.add("loop");
+      if (/one way out each/.test(e)) seen.add("deadend");
+      if (/links? this square to the outlined square/.test(e)) {
+        seen.add("equiv");
+        const hl = step.highlights as SlantHint;
+        expect(hl.ref).toBeDefined();
+        expect(hl.marks?.length).toBeGreaterThan(0);
+      }
+      if (step.move.type === "alike") {
+        seen.add(/^This \d clue/.test(e) ? "mark-clue" : "mark-v");
       }
     }
-    // Loop and dead-end are common; equivalence appears on most large boards,
-    // and so do both kinds of mark.
+    // This board's plan says all five.
     expect([...seen].sort()).toEqual([
       "deadend",
       "equiv",

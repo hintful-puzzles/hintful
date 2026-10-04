@@ -15,6 +15,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -132,6 +133,76 @@ const marksOf = (step: Step): Marked => {
 /** The lines a move sets; a note move sets none. */
 const opsOf = (move: LoopyMove): readonly { edge: number; state: LineState }[] =>
   move.kind === "set" ? move.ops : [];
+
+/** The shapes of step the following, refreshing and frame tests read, each
+ * pinned on a position whose hint opens with one. */
+const pinned = describeHintPins({
+  game: loopyGame,
+  params: [{ w: 7, h: 7, diff: DIFF_HARD, type: 0 }],
+  kinds: {
+    severalEdges: (s) => opsOf(s.move).length >= 2,
+    cornerNote: (s) =>
+      s.move.kind === "corner" && (s.move.bits === 2 || s.move.bits === 3),
+    pairNote: (s) => s.move.kind === "pair",
+    oneLine: (s) =>
+      marksOf(s).targets.length === 1 && /must be a line\.$/.test(s.explanation),
+    oneRuledOut: (s) =>
+      marksOf(s).targets.length === 1 && /can't be a line\.$/.test(s.explanation),
+    pairCitingPairs: (s) => s.move.kind === "pair" && marksOf(s).pairs.length > 0,
+    oneFace: (s) => marksOf(s).faces.length === 1,
+    cornerCitingCorners: (s) =>
+      s.move.kind === "corner" && marksOf(s).corners.length > 0,
+    blockedPair: /both outlined dots/i,
+  },
+  pins: {
+    /** Held on 233 of 1459 positions walked. */
+    severalEdges: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
+    /** Held on 195 of 1459 positions walked. */
+    cornerNote: {
+      id: "7x7t0dh:21a21b2d2321a1b3c1a2b2a22232b3a2a2b2a22",
+      moves: [{ kind: "corner", dline: 179, bits: 1 }],
+    },
+    /** Held on 111 of 1459 positions walked. */
+    pairNote: {
+      id: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+      moves:
+        '[{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]}]',
+    },
+    /** Held on 360 of 1459 positions walked. */
+    oneLine: {
+      id: "7x7t0dh:b3a31c1a3222b2d3f1b203a2c1a33a222a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":64,"state":2},{"edge":78,"state":2},{"edge":79,"state":2},{"edge":76,"state":2}]},{"kind":"set","ops":[{"edge":66,"state":0},{"edge":80,"state":0},{"edge":81,"state":0}]}]',
+    },
+    /** Held on 341 of 1459 positions walked. */
+    oneRuledOut: {
+      id: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":10,"state":2},{"edge":11,"state":2},{"edge":12,"state":2},{"edge":8,"state":2}]},{"kind":"set","ops":[{"edge":62,"state":2},{"edge":76,"state":2},{"edge":77,"state":2},{"edge":74,"state":2}]}]',
+    },
+    /** Held on 57 of 1459 positions walked. */
+    pairCitingPairs: {
+      id: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+      moves:
+        '[{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]},{"kind":"pair","a":19,"b":20,"relation":"match"}]',
+    },
+    /** Held on 546 of 1459 positions walked. */
+    oneFace: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+    /** Held on 144 of 1459 positions walked. */
+    cornerCitingCorners: {
+      id: "7x7t0dh:21a21b2d2321a1b3c1a2b2a22232b3a2a2b2a22",
+      moves: [{ kind: "corner", dline: 179, bits: 1 }],
+    },
+    /** Held on 8 of 1459 positions walked. */
+    blockedPair: {
+      id: "7x7t0dh:b2a2a23b2a11b20a1a32a013a2c2a23222b22b1c",
+      moves:
+        '[{"kind":"set","ops":[{"edge":30,"state":2},{"edge":44,"state":2},{"edge":45,"state":2},{"edge":42,"state":2}]},{"kind":"set","ops":[{"edge":59,"state":2},{"edge":60,"state":2},{"edge":57,"state":2}]},{"kind":"set","ops":[{"edge":43,"state":2}]},{"kind":"set","ops":[{"edge":28,"state":0},{"edge":40,"state":0}]},{"kind":"set","ops":[{"edge":26,"state":2},{"edge":25,"state":2}]},{"kind":"set","ops":[{"edge":27,"state":0}]},{"kind":"set","ops":[{"edge":47,"state":2}]},{"kind":"corner","dline":59,"bits":1},{"kind":"corner","dline":59,"bits":3},{"kind":"corner","dline":22,"bits":2},{"kind":"corner","dline":29,"bits":1},{"kind":"corner","dline":22,"bits":3},{"kind":"corner","dline":29,"bits":3},{"kind":"set","ops":[{"edge":16,"state":0}]},{"kind":"corner","dline":39,"bits":3},{"kind":"corner","dline":43,"bits":2},{"kind":"corner","dline":43,"bits":3},{"kind":"set","ops":[{"edge":35,"state":0}]},{"kind":"set","ops":[{"edge":21,"state":2},{"edge":36,"state":2},{"edge":33,"state":2}]},{"kind":"set","ops":[{"edge":20,"state":0}]},{"kind":"set","ops":[{"edge":19,"state":0}]},{"kind":"set","ops":[{"edge":17,"state":2}]},{"kind":"set","ops":[{"edge":18,"state":2}]},{"kind":"set","ops":[{"edge":50,"state":0}]},{"kind":"corner","dline":97,"bits":2},{"kind":"set","ops":[{"edge":48,"state":2},{"edge":34,"state":2}]},{"kind":"set","ops":[{"edge":31,"state":0}]},{"kind":"corner","dline":31,"bits":3},{"kind":"corner","dline":27,"bits":2},{"kind":"corner","dline":27,"bits":3},{"kind":"set","ops":[{"edge":10,"state":0}]},{"kind":"corner","dline":17,"bits":3},{"kind":"corner","dline":10,"bits":2},{"kind":"corner","dline":10,"bits":3},{"kind":"set","ops":[{"edge":6,"state":0}]},{"kind":"set","ops":[{"edge":23,"state":0},{"edge":24,"state":0}]},{"kind":"set","ops":[{"edge":39,"state":2}]},{"kind":"corner","dline":45,"bits":1},{"kind":"corner","dline":2,"bits":2},{"kind":"set","ops":[{"edge":1,"state":2}]},{"kind":"corner","dline":76,"bits":1},{"kind":"set","ops":[{"edge":38,"state":0},{"edge":54,"state":0}]},{"kind":"corner","dline":92,"bits":2},{"kind":"corner","dline":92,"bits":3},{"kind":"set","ops":[{"edge":61,"state":0}]},{"kind":"set","ops":[{"edge":62,"state":2}]},{"kind":"set","ops":[{"edge":74,"state":2}]},{"kind":"set","ops":[{"edge":76,"state":0},{"edge":77,"state":0}]},{"kind":"set","ops":[{"edge":64,"state":2}]},{"kind":"set","ops":[{"edge":49,"state":0},{"edge":63,"state":0}]},{"kind":"set","ops":[{"edge":46,"state":2}]},{"kind":"set","ops":[{"edge":32,"state":0}]},{"kind":"set","ops":[{"edge":29,"state":0}]},{"kind":"set","ops":[{"edge":12,"state":2}]},{"kind":"set","ops":[{"edge":51,"state":2}]},{"kind":"set","ops":[{"edge":65,"state":0}]},{"kind":"set","ops":[{"edge":91,"state":2},{"edge":79,"state":2}]},{"kind":"set","ops":[{"edge":15,"state":2}]}]',
+    },
+  },
+});
+
+type PinKind = Parameters<typeof pinned>[0];
 
 /** Every step of every corpus plan, with the board it is shown on. */
 function* walk(): Generator<{ b: Board; step: Step; state: LoopyState; i: number }> {
@@ -764,14 +835,8 @@ describe("Loopy hint: the words and the marks agree", () => {
 });
 
 describe("Loopy hint: following and refreshing a step", () => {
-  /** The first step satisfying `want`, with the board it applies to. */
-  const first = (want: (s: Step) => boolean): { state: LoopyState; step: Step } => {
-    for (const { step, state } of walk()) if (want(step)) return { state, step };
-    throw new Error("no such step in the corpus");
-  };
-
   it("a line step completes on every edge set, tracks a subset, and drops anything else", () => {
-    const { state, step } = first((s) => opsOf(s.move).length >= 2);
+    const { state, step } = pinned("severalEdges");
     const stepOps = opsOf(step.move);
     const [one, two] = stepOps;
     const set = (ops: { edge: number; state: LineState }[]): LoopyMove => ({
@@ -807,9 +872,7 @@ describe("Loopy hint: following and refreshing a step", () => {
   });
 
   it("a corner step completes once the note holds it, tracks a tap on the same corner, and drops anything else", () => {
-    const { state, step } = first(
-      (s) => s.move.kind === "corner" && (s.move.bits === 2 || s.move.bits === 3),
-    );
+    const { state, step } = pinned("cornerNote");
     const move = step.move;
     if (move.kind !== "corner") throw new Error("unreachable");
     const corner = (dline: number, bits: number): LoopyMove => ({
@@ -826,7 +889,7 @@ describe("Loopy hint: following and refreshing a step", () => {
   });
 
   it("a pair step completes on its relation, tracks the same pair, and drops another", () => {
-    const { state, step } = first((s) => s.move.kind === "pair");
+    const { state, step } = pinned("pairNote");
     const move = step.move;
     if (move.kind !== "pair") throw new Error("unreachable");
     const other = move.relation === "match" ? "opposite" : "match";
@@ -930,30 +993,17 @@ describe("Loopy mistakes", () => {
 });
 
 describe("Loopy hint frames", () => {
-  /** The first step on a fixed-seed Hard board satisfying `want`. */
-  function frame(want: (step: Step) => boolean) {
-    for (let seed = 0; seed < 20; seed++) {
-      const id = `${encodeParams({ w: 7, h: 7, diff: DIFF_HARD, type: 0 }, true)}#frame-${seed}`;
-      const result = renderScenario({
-        game: loopyGame,
-        id,
-        showHint: true,
-        hintUntil: want,
-      });
-      const step = result.hint;
-      if (step && want(step)) return { result, step };
-    }
-    throw new Error("no such step in 20 seeds");
+  /** The frame a pinned position's hint draws, through a real `Midend`. */
+  function frame(kind: PinKind) {
+    const { id, moves, step } = pinned(kind);
+    const result = renderScenario({ game: loopyGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    return { result, step };
   }
 
   it("bands the edges a step sets: solid for a line, broken for an edge that can't be one", () => {
-    const line = frame(
-      (s) => marksOf(s).targets.length === 1 && /must be a line\.$/.test(s.explanation),
-    );
-    const empty = frame(
-      (s) =>
-        marksOf(s).targets.length === 1 && /can't be a line\.$/.test(s.explanation),
-    );
+    const line = frame("oneLine");
+    const empty = frame("oneRuledOut");
     const bands = (ops: typeof line.result.recording.ops) =>
       ops.filter((o) => o.op === "line" && o.color === COL_HINT);
     expect(bands(line.result.recording.ops)).toHaveLength(1);
@@ -961,9 +1011,7 @@ describe("Loopy hint frames", () => {
   });
 
   it("draws the pair a step places in the action color, and the pairs it cites in the evidence color", () => {
-    const { result, step } = frame(
-      (s) => s.move.kind === "pair" && marksOf(s).pairs.length > 0,
-    );
+    const { result, step } = frame("pairCitingPairs");
     const ops = result.recording.ops;
     const signs = (color: number) =>
       ops.filter((o) => o.op === "text" && o.color === color && /^[=≠]$/.test(o.text));
@@ -973,7 +1021,7 @@ describe("Loopy hint frames", () => {
   });
 
   it("outlines the clue a step counts inside its face", () => {
-    const { result } = frame((s) => marksOf(s).faces.length === 1);
+    const { result } = frame("oneFace");
     const ops = result.recording.ops;
     const outline = ops.filter((o) => o.op === "line" && o.color === COL_HINT_CELL);
     // One stroke per side of the face, and every face has three at least; a loop
@@ -984,9 +1032,7 @@ describe("Loopy hint frames", () => {
   });
 
   it("draws the corner a step places in the action color, over the corner it cites", () => {
-    const { result, step } = frame(
-      (s) => s.move.kind === "corner" && marksOf(s).corners.length > 0,
-    );
+    const { result, step } = frame("cornerCitingCorners");
     const ops = result.recording.ops;
     const move = step.move;
     if (move.kind !== "corner") throw new Error("unreachable");
@@ -1079,34 +1125,22 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
     // The sentence says "both outlined dots"; with one ring the reader cannot tell
     // which pair of edges is meant to be blocked. Judged on where the pixels
     // land rather than on the marks the step carries.
-    let found = false;
-    for (let seed = 0; seed < 20 && !found; seed++) {
-      const id = `${encodeParams({ w: 7, h: 7, diff: DIFF_HARD, type: 0 }, true)}#blocked-pair-${seed}`;
-      const want = (s: Step): boolean => /both outlined dots/i.test(s.explanation);
-      const result = renderScenario({
-        game: loopyGame,
-        id,
-        showHint: true,
-        hintUntil: want,
-      });
-      const step = result.hint;
-      if (!step || !want(step)) continue;
-      found = true;
+    const { id, moves, step } = pinned("blockedPair");
+    const result = renderScenario({ game: loopyGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
 
-      const rings = result.recording.ops.filter(
-        (o) =>
-          o.op === "circle" && o.fill === COL_HINT_CELL && o.outline === COL_HINT_CELL,
-      );
-      expect(rings, "one ring per dot the sentence names").toHaveLength(2);
-      // The step settles every edge of the face that was still open: exactly one
-      // ruled out — the edge between the two dots — and the rest drawn. The face
-      // may already have carried a line, so the count is not the face's order.
-      const ops = opsOf(step.move);
-      expect(ops.filter((o) => o.state === LINE_NO)).toHaveLength(1);
-      expect(ops.filter((o) => o.state === LINE_YES).length).toBeGreaterThan(1);
-      expect(marksOf(step).targets).toEqual(ops.map((o) => o.edge));
-    }
-    expect(found, "no long-way step in 20 seeds of 7x7 Hard").toBe(true);
+    const rings = result.recording.ops.filter(
+      (o) =>
+        o.op === "circle" && o.fill === COL_HINT_CELL && o.outline === COL_HINT_CELL,
+    );
+    expect(rings, "one ring per dot the sentence names").toHaveLength(2);
+    // The step settles every edge of the face that was still open: exactly one
+    // ruled out — the edge between the two dots — and the rest drawn. The face
+    // may already have carried a line, so the count is not the face's order.
+    const ops = opsOf(step.move);
+    expect(ops.filter((o) => o.state === LINE_NO)).toHaveLength(1);
+    expect(ops.filter((o) => o.state === LINE_YES).length).toBeGreaterThan(1);
+    expect(marksOf(step).targets).toEqual(ops.map((o) => o.edge));
   });
 
   it("names the clue, and says the same thing with a different digit", () => {

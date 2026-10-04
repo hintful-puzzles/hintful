@@ -1,9 +1,8 @@
 /**
  * Pegs' solver, Solve and hint (`add-pegs-hint`).
  *
- * Each sentence the hint can say is pinned by a position it fires on, found by
- * a fixed-seed scan over hint-guided and random play on 5×5 Random and 7×7
- * Random boards (2026-10-02), so a change to the generator cannot quietly stop
+ * Each sentence the hint can say is pinned by a position it fires on, through
+ * `testing/hint-positions.ts`, so a change to the generator cannot quietly stop
  * a branch being exercised.
  */
 
@@ -17,6 +16,7 @@ import {
   bindingDefects,
   deadEndBindingDefects,
 } from "../../engine/testing/hint-binding.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -53,56 +53,130 @@ const asMarked = (s: PegsState, m: PegsMove): Marked => {
 
 const same = (a: Marked, b: Marked) => a.from === b.from && a.to === b.to;
 
-const PINNED = {
+const jumpMove = (s: PegsState, j: Marked): PegsMove => ({
+  type: "jump",
+  sx: j.from % s.w,
+  sy: Math.floor(j.from / s.w),
+  tx: j.to % s.w,
+  ty: Math.floor(j.to / s.w),
+});
+
+/** The sentences a plan can open with. */
+const SENTENCES = {
   /** A rival cuts a peg off at once. */
-  trap: "5x5:OOOOPHHHHHOHHHPOHHPPOOHPO",
+  trap: /^This peg's striped jump would cut off the outlined peg\. One way to save it: jump into the ringed hole\.$/,
   /** After a rival, every next jump cuts off the same peg. */
-  trapSoon: "5x5:OOPPPOOPHOOHPPPHHHPPOOHHO",
+  trapSoon:
+    /^After the striped jump, any next jump cuts off the outlined peg\. One way to save it: jump/,
   /** The plan opens by clearing a row, a column, or a block of six. */
-  row: "5x5:PPHPPPOPPOPPPPPPPHPPOOPOO",
-  column: "5x5:OHOOOHHPHOHHPHHPPPHHPHPPO",
-  block: "5x5:OPPPPPPPPPPPHPPPPPPOPPPOO",
+  row: /clear the striped row and change nothing else\. First/,
+  column: /clear the striped column and change nothing else\. First/,
+  block: /clear the striped block and change nothing else\. First/,
   /** Every rival loses. */
-  only: "5x5:OOPPPOOPHOOPPHPHHPPPOOPHO",
+  only: /^No other jump can still finish, so jump/,
   /** Every rival settled: some finish, some lose. */
-  onlyThese: "5x5:OOOOPPHPHHOHHPPOPPPPOOPPO",
+  onlyThese: /^Only the jumps with arrows can still finish\. One of them: jump/,
   /** Some finish, some lose, and some were past the search. */
-  alsoThese: "7x7:PPHHOOOOPPHHOHOOHPHHHOHPPPPPOOPHHPPOHHPPPPOOOHOOO",
+  alsoThese:
+    /^The jumps with arrows can still finish; some others cannot\. One of them: jump/,
   /** Every jump can finish. */
-  anyJump: "5x5:OOOOPPPPPPOPPPPOPPHPOOPPO",
+  anyJump: /^Every jump can still finish with one peg\. One of them: jump/,
   /** The jump that leaves one peg. */
-  last: "5x5:OOOOHHHHHHOHHPPOHHHHOOHHO",
-  /** The rest of the link variants: a different peg's trap, this peg's
-   * trap a jump later, and a jump that would strand a peg, by this peg and by
-   * another (found by a further scan, 2026-10-02). */
-  trapOther: "5x5:OHPPHHOHPPHPHHPHOOPOHOOOO",
-  trapSoonOwn: "5x5:OOOOHOPPHPPPHPHPHHOHPHPOO",
-  strandOwn: "7x7:OOOOOOHOHOOOOHHHOOPPPHPPPHPPHPPHPPHPHPHHPPOOHOHPO",
-  strandOther: "7x7:OHPPHHOOHOPOOOPPPPPPOOPPPPPOOPPPHPOHHPPPPPOOPPPOO",
-  /** A peg alone now, which the offered jump lands beside: the owner's
-   * playtest position (2026-10-02). */
-  joins: "7x7:OOPHHOOOOHHPOOHPPHHHPHHPPPPPHHPPPPPOOPPPOOOOPPPOO",
-  /** Lost, with no peg frozen: only the exhaustive search can say so. */
-  lost: "5x5:POPPPPHPOOPHHHHPPHOOHOOOO",
-} as const;
+  last: /: that finishes with one peg\.$/,
+  /** The rest of the link variants: a different peg's trap, this peg's trap a
+   * jump later, and a jump that would strand a peg, by this peg and by
+   * another. */
+  trapOther:
+    /^The striped jump would cut off the outlined peg\. One way to save it: jump/,
+  trapSoonOwn:
+    /^After this peg's striped jump, any next jump cuts off the outlined peg\. One way to save it: jump into the ringed hole\.$/,
+  strandOwn:
+    /^This peg's striped jump would strand the outlined peg\. One way to keep a peg beside it: jump into the ringed hole\.$/,
+  strandOther:
+    /^The striped jump would strand the outlined peg\. One way to keep a peg beside it: jump/,
+  /** A peg alone now, which the offered jump lands beside. */
+  joins:
+    /^The outlined peg is stranded, with no peg beside it\. One way to save it: go back for it\.$/,
+};
+type Sentence = keyof typeof SENTENCES;
+const SENTENCE_NAMES = Object.keys(SENTENCES) as Sentence[];
+
+/**
+ * Each sentence pinned on a position that opens with it. The scan strays from
+ * the hint on every other turn, because a hint keeps to lines that finish and
+ * most of these sentences are about a jump that would not.
+ */
+const pinned = describeHintPins({
+  game: G,
+  params: [G.decodeParams("5x5random"), G.decodeParams("7x7random")],
+  seeds: 40,
+  descOf: (s: PegsState) =>
+    Array.from(s.grid, (v) =>
+      v === GRID_PEG ? "P" : v === GRID_HOLE ? "H" : "O",
+    ).join(""),
+  stray: (s, turn, hinted) => {
+    if (turn % 2 === 0 && hinted) return hinted;
+    const jumps = legalJumps(s);
+    return jumps.length > 0 ? jumpMove(s, jumps[turn % jumps.length]) : null;
+  },
+  kinds: SENTENCES,
+  // The boards are the ones first found (2026-10-02); each count is from this
+  // scan, 2,475 positions walked on 80 boards.
+  pins: {
+    /** Held on 8 of 2475 positions walked. */
+    trap: "5x5:OOOOPHHHHHOHHHPOHHPPOOHPO",
+    /** Held on 23 of 2475 positions walked. */
+    trapSoon: "5x5:OOPPPOOPHOOHPPPHHHPPOOHHO",
+    /** Held on 22 of 2475 positions walked. */
+    row: "5x5:PPHPPPOPPOPPPPPPPHPPOOPOO",
+    /** Held on 25 of 2475 positions walked. */
+    column: "5x5:OHOOOHHPHOHHPHHPPPHHPHPPO",
+    /** Held on 4 of 2475 positions walked. */
+    block: "5x5:OPPPPPPPPPPPHPPPPPPOPPPOO",
+    /** Held on 6 of 2475 positions walked. */
+    only: "5x5:OOPPPOOPHOOPPHPHHPPPOOPHO",
+    /** Held on 574 of 2475 positions walked. */
+    onlyThese: "5x5:OOOOPPHPHHOHHPPOPPPPOOPPO",
+    /** Held on 14 of 2475 positions walked. */
+    alsoThese: "7x7:PPHHOOOOPPHHOHOOHPHHHOHPPPPPOOPHHPPOHHPPPPOOOHOOO",
+    /** Held on 1230 of 2475 positions walked. */
+    anyJump: "5x5:OOOOPPPPPPOPPPPOPPHPOOPPO",
+    /** Held on 87 of 2475 positions walked. */
+    last: "5x5:OOOOHHHHHHOHHPPOHHHHOOHHO",
+    /** Held on 245 of 2475 positions walked. */
+    trapOther: "5x5:OHPPHHOHPPHPHHPHOOPOHOOOO",
+    /** Held on 0 of 2475 positions walked, and on 0 of 12,689 at 200 seeds a
+     * size: this scan does not reach it, and the board is from an earlier one
+     * that was not kept. Losing this pin means a different line of play, not
+     * a rerun. */
+    trapSoonOwn: "5x5:OOOOHOPPHPPPHPHPHHOHPHPOO",
+    /** Held on 7 of 2475 positions walked. */
+    strandOwn: "7x7:OOOOOOHOHOOOOHHHOOPPPHPPPHPPHPPHPPHPHPHHPPOOHOHPO",
+    /** Held on 80 of 2475 positions walked. */
+    strandOther: "7x7:OHPPHHOOHOPOOOPPPPPPOOPPPPPOOPPPHPOHHPPPPPOOPPPOO",
+    /** Held on 120 of 2475 positions walked. The owner's playtest position
+     * (2026-10-02). */
+    joins: "7x7:OOPHHOOOOHHPOOHPPHHHPHHPPPPPHHPPPPPOOPPPOOOOPPPOO",
+  },
+});
+
+/** Lost, with no peg frozen: only the exhaustive search can say so. A refusal
+ * has no step to open with, so it is kept by hand and not among the pins. */
+const LOST = "5x5:POPPPPHPOOPHHHHPPHOOHOOOO";
 
 /** Two pegs, each beyond any other's reach. */
 const TWO_CUT_OFF = "5x1:PHHHP";
 /** A pair that can still jump, and a peg walled off from it. */
 const ONE_CUT_OFF = "7x1:PPHOHHP";
 
-/** The hint at `id`, which must offer a plan, with its first step's text
- * checked against `text`. */
-function planAt(
-  id: string,
-  text: RegExp,
-): { s: PegsState; steps: HintStep<PegsMove>[] } {
-  const s = load(id);
-  const r = hint(s);
-  if (!r.ok) throw new Error(r.error);
-  expect(r.steps[0].explanation).toMatch(text);
-  for (const step of r.steps) expect(step.explanation.length).toBeLessThanOrEqual(120);
-  return { s, steps: r.steps };
+/** The plan at a sentence's pinned position. */
+function planAt(kind: Sentence): {
+  s: PegsState;
+  steps: readonly HintStep<PegsMove>[];
+} {
+  const { state, steps } = pinned(kind);
+  for (const step of steps) expect(step.explanation.length).toBeLessThanOrEqual(120);
+  return { s: state, steps };
 }
 
 describe("pegs solver", () => {
@@ -156,10 +230,10 @@ describe("pegs solver", () => {
   });
 
   it("proves the pinned lost position lost, with no peg frozen", () => {
-    const s = load(PINNED.lost);
+    const s = load(LOST);
     expect(frozenPegs(s)).toEqual([]);
     expect(provedLost(s, 100_000)).toBe(true);
-    expect(provedLost(load(PINNED.only), 100_000)).toBe(false);
+    expect(provedLost(pinned("only").state, 100_000)).toBe(false);
   });
 
   it("does not call a finished board's last peg frozen", () => {
@@ -210,17 +284,14 @@ describe("pegs hint", () => {
   });
 
   it("refuses a lost board with nothing frozen as one no solution leaves", () => {
-    expect(hint(load(PINNED.lost))).toEqual({
+    expect(hint(load(LOST))).toEqual({
       ok: false,
       error: NO_SOLUTION_FROM_HERE,
     });
   });
 
   it("stripes a rival that cuts a peg off at once, and outlines that peg", () => {
-    const { s, steps } = planAt(
-      PINNED.trap,
-      /^This peg's striped jump would cut off the outlined peg\. One way to save it: jump into the ringed hole\.$/,
-    );
+    const { s, steps } = planAt("trap");
     const marks = stepMarks(steps[0]);
     const [rival] = marks.of("stripes", JUMP);
     const [victim] = marks.of("outline", PEG);
@@ -234,10 +305,7 @@ describe("pegs hint", () => {
   });
 
   it("names a rival after which every jump cuts the outlined peg off", () => {
-    const { s, steps } = planAt(
-      PINNED.trapSoon,
-      /^After the striped jump, any next jump cuts off the outlined peg\. One way to save it: jump/,
-    );
+    const { s, steps } = planAt("trapSoon");
     const marks = stepMarks(steps[0]);
     const [rival] = marks.of("stripes", JUMP);
     const [victim] = marks.of("outline", PEG);
@@ -259,10 +327,7 @@ describe("pegs hint", () => {
     ["block", 6],
   ] as const) {
     it(`walks the clearing of a ${name} as one journey`, () => {
-      const { s, steps } = planAt(
-        PINNED[name],
-        new RegExp(`clear the striped ${name} and change nothing else\\. First`),
-      );
+      const { s, steps } = planAt(name);
       expect(steps).toHaveLength(n);
       expect(steps.slice(1).every((st) => st.continuesPrevious)).toBe(true);
       expect(steps[0].continuesPrevious).toBeUndefined();
@@ -277,10 +342,7 @@ describe("pegs hint", () => {
   }
 
   it("says a jump is the only one only where every rival is proved lost", () => {
-    const { s, steps } = planAt(
-      PINNED.only,
-      /^No other jump can still finish, so jump/,
-    );
+    const { s, steps } = planAt("only");
     const j = asMarked(s, steps[0].move);
     const rivals = legalJumps(s).filter((r) => !same(r, j));
     expect(rivals.length).toBeGreaterThan(0);
@@ -288,10 +350,7 @@ describe("pegs hint", () => {
   });
 
   it("draws the arrows on exactly the jumps that can still finish", () => {
-    const { s, steps } = planAt(
-      PINNED.onlyThese,
-      /^Only the jumps with arrows can still finish\. One of them: jump/,
-    );
+    const { s, steps } = planAt("onlyThese");
     const j = asMarked(s, steps[0].move);
     const arrows = stepMarks(steps[0]).of("outline", JUMP);
     // The offered jump is one of them, and carries its arrow under the rings.
@@ -305,10 +364,7 @@ describe("pegs hint", () => {
   });
 
   it("claims nothing about an undrawn rival the search could not settle", () => {
-    const { s, steps } = planAt(
-      PINNED.alsoThese,
-      /^The jumps with arrows can still finish; some others cannot\. One of them: jump/,
-    );
+    const { s, steps } = planAt("alsoThese");
     const j = asMarked(s, steps[0].move);
     const arrows = stepMarks(steps[0]).of("outline", JUMP);
     expect(arrows.some((a) => same(a, j))).toBe(true);
@@ -320,10 +376,7 @@ describe("pegs hint", () => {
   });
 
   it("says every jump can finish only where each one can", () => {
-    const { s } = planAt(
-      PINNED.anyJump,
-      /^Every jump can still finish with one peg\. One of them: jump/,
-    );
+    const { s } = planAt("anyJump");
     for (const r of legalJumps(s)) expect(findFinish(played(s, r)).kind).toBe("found");
   });
 
@@ -342,34 +395,14 @@ describe("pegs hint", () => {
       );
     });
 
-  for (const [name, text, own, danger] of [
-    [
-      "trapOther",
-      /^The striped jump would cut off the outlined peg\. One way to save it: jump/,
-      false,
-      "cut",
-    ],
-    [
-      "trapSoonOwn",
-      /^After this peg's striped jump, any next jump cuts off the outlined peg\. One way to save it: jump into the ringed hole\.$/,
-      true,
-      "soon",
-    ],
-    [
-      "strandOwn",
-      /^This peg's striped jump would strand the outlined peg\. One way to keep a peg beside it: jump into the ringed hole\.$/,
-      true,
-      "strand",
-    ],
-    [
-      "strandOther",
-      /^The striped jump would strand the outlined peg\. One way to keep a peg beside it: jump/,
-      false,
-      "strand",
-    ],
+  for (const [name, own, danger] of [
+    ["trapOther", false, "cut"],
+    ["trapSoonOwn", true, "soon"],
+    ["strandOwn", true, "strand"],
+    ["strandOther", false, "strand"],
   ] as const) {
     it(`links the move to the danger it answers (${name})`, () => {
-      const { s, steps } = planAt(PINNED[name], text);
+      const { s, steps } = planAt(name);
       const marks = stepMarks(steps[0]);
       const [rival] = marks.of("stripes", JUMP);
       const [victim] = marks.of("outline", PEG);
@@ -390,10 +423,7 @@ describe("pegs hint", () => {
   }
 
   it("goes back for a stranded peg", () => {
-    const { s, steps } = planAt(
-      PINNED.joins,
-      /^The outlined peg is stranded, with no peg beside it\. One way to save it: go back for it\.$/,
-    );
+    const { s, steps } = planAt("joins");
     const [lone] = stepMarks(steps[0]).of("outline", PEG);
     const j = asMarked(s, steps[0].move);
     const beside = (a: number, b: number) =>
@@ -413,19 +443,17 @@ describe("pegs hint", () => {
   });
 
   it("names the jump that leaves one peg", () => {
-    const { s, steps } = planAt(PINNED.last, /: that finishes with one peg\.$/);
+    const { s, steps } = planAt("last");
     expect(status(G.executeMove(s, steps[0].move))).toBe("solved");
   });
 
   it("binds every pinned step's words to what it draws", () => {
     let checked = 0;
-    for (const id of Object.values(PINNED)) {
-      if (id === PINNED.lost) continue;
-      let s = load(id);
-      const r = hint(s);
-      if (!r.ok) throw new Error(`${id}: ${r.error}`);
-      for (const step of r.steps) {
-        expect(bindingDefects(G, s, G.newUi(s), step), id).toEqual([]);
+    for (const kind of SENTENCE_NAMES) {
+      const { state, steps } = pinned(kind);
+      let s = state;
+      for (const step of steps) {
+        expect(bindingDefects(G, s, G.newUi(s), step), kind).toEqual([]);
         s = G.executeMove(s, step.move);
         checked++;
       }
@@ -463,21 +491,11 @@ describe("pegs hint", () => {
   });
 
   it("drops the plan on any other jump", () => {
-    const s = load(PINNED.trap);
-    const r = hint(s);
-    if (!r.ok) throw new Error(r.error);
-    const step = r.steps[0];
+    const { state: s, step } = pinned("trap");
     const want = asMarked(s, step.move);
     const other = legalJumps(s).find((j) => !same(j, want));
     if (!other) throw new Error("expected a rival jump");
-    const m: PegsMove = {
-      type: "jump",
-      sx: other.from % s.w,
-      sy: Math.floor(other.from / s.w),
-      tx: other.to % s.w,
-      ty: Math.floor(other.to / s.w),
-    };
-    expect(hintKeepTrack(m, step, s)).toBe("off");
+    expect(hintKeepTrack(jumpMove(s, other), step, s)).toBe("off");
   });
 
   // COL_HINT and COL_HINT_EVIDENCE.
@@ -485,7 +503,11 @@ describe("pegs hint", () => {
   const COL_HINT_EVIDENCE = 7;
 
   it("draws a trap's rings, outline and stripes (tier 2.5)", () => {
-    const { recording } = renderScenario({ game: G, id: PINNED.trap, showHint: true });
+    const { recording } = renderScenario({
+      game: G,
+      id: pinned("trap").id,
+      showHint: true,
+    });
     const rings = (color: number) =>
       recording.ops.filter(
         (o) => o.op === "circle" && o.fill === -1 && o.outline === color,
@@ -499,15 +521,9 @@ describe("pegs hint", () => {
   });
 
   it("draws an arrow per rival that can still finish (tier 2.5)", () => {
-    const s = load(PINNED.onlyThese);
-    const r = hint(s);
-    if (!r.ok) throw new Error(r.error);
-    const arrows = stepMarks(r.steps[0]).of("outline", JUMP);
-    const { recording } = renderScenario({
-      game: G,
-      id: PINNED.onlyThese,
-      showHint: true,
-    });
+    const { id, step } = pinned("onlyThese");
+    const arrows = stepMarks(step).of("outline", JUMP);
+    const { recording } = renderScenario({ game: G, id, showHint: true });
     // An arrowhead is drawn once, by the square holding the hole it points at,
     // and clipped away in the other two.
     const heads = recording.ops.filter(
@@ -526,9 +542,10 @@ describe("pegs solve", () => {
   };
 
   it("finishes from the player's position when it can", () => {
-    const r = solveOf(PINNED.only, PINNED.only);
+    const only = pinned("only").id;
+    const r = solveOf(only, only);
     if (!r.ok) throw new Error(r.error);
-    const done = G.executeMove(load(PINNED.only), r.move);
+    const done = G.executeMove(load(only), r.move);
     expect(status(done)).toBe("solved");
   });
 

@@ -22,6 +22,7 @@ import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { palisadeGame } from "./index.ts";
 import { deduceForcedEdges, newDesc, solver, solveToBorders } from "./solver.ts";
 import {
@@ -34,6 +35,7 @@ import {
   type PalisadeHint,
   type PalisadeMove,
   type PalisadeParams,
+  type PalisadeState,
 } from "./state.ts";
 
 const PRESETS: PalisadeParams[] = [
@@ -282,6 +284,40 @@ describe("palisade hint", () => {
     return lo * 2 + (Math.max(i, j) - lo === 1 ? 0 : 1);
   };
 
+  /** Whether the plan from `state` opens a journey: a first leg with a
+   * continuation after it. */
+  const opensJourney = (state: PalisadeState): boolean => {
+    const r = palisadeGame.hint?.(state);
+    return r?.ok === true && r.steps[1]?.continuesPrevious === true;
+  };
+
+  /** The steps the tests below read, each pinned on a position whose hint
+   * opens with one. */
+  const pinned = describeHintPins({
+    game: palisadeGame,
+    params: [P, { w: 8, h: 6, k: 6 }],
+    kinds: {
+      journey: (_, state) => opensJourney(state),
+      // equivalentEdges is about "the same region" (hatched, where
+      // numberExhausted outlines a single clue cell) and pairs two edges into
+      // one journey.
+      sharedFate: (step, state) => marksOf(step).hatch > 1 && opensJourney(state),
+      noWall: (step) => hlOf(step).kind === "nowall",
+    },
+    pins: {
+      /** Held on 286 of 1307 positions walked. */
+      journey: "5x5n5:g0g2b2b2b2",
+      /** Held on 56 of 1307 positions walked. */
+      sharedFate: {
+        id: "5x5n5:c2d2d22a13b222",
+        moves:
+          '[{"type":"edges","edits":[{"x":0,"y":4,"flag":16},{"x":0,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]}]',
+      },
+      /** Held on 654 of 1307 positions walked. */
+      noWall: "5x5n5:g0g2b2b2b2",
+    },
+  });
+
   it("deduces a chain whose moves solve the board", () => {
     const s0 = newState(P, newDesc(P, randomNew("palisade-hint-chain")).desc);
     const r = palisadeGame.hint?.(s0);
@@ -325,29 +361,8 @@ describe("palisade hint", () => {
     }
   });
 
-  // Scan deterministic boards for the first whose full hint plan contains a
-  // step matching `pred`; returns that plan. Fixed-seed, so it resolves to
-  // the same board every run (the idiom used by the render-scenario seed).
-  const scanPlan = (
-    pred: (steps: HintStep<PalisadeMove>[]) => boolean,
-  ): HintStep<PalisadeMove>[] | null => {
-    for (const [preset, count] of [
-      [P, 250],
-      [{ w: 8, h: 6, k: 6 }, 40],
-    ] as const) {
-      for (let i = 0; i < count; i++) {
-        const desc = newDesc(preset, randomNew(`pal-scan-${preset.w}-${i}`)).desc;
-        const r = palisadeGame.hint?.(newState(preset, desc));
-        if (r?.ok && pred(r.steps)) return r.steps;
-      }
-    }
-    return null;
-  };
-
   it("groups a multi-edge deduction into one continuesPrevious journey", () => {
-    const steps = scanPlan((ss) => ss.some((s) => s.continuesPrevious));
-    expect(steps).not.toBeNull();
-    if (!steps) return;
+    const { steps } = pinned("journey");
     // A plan never opens on a continuation, and every continuation leg is
     // preceded by the unflagged start of its journey, which surfaces its
     // still-to-do edges as siblings (so leg 0 shows the whole set).
@@ -365,27 +380,10 @@ describe("palisade hint", () => {
   });
 
   it("equivalentEdges opens a journey stating the shared-fate coupling", () => {
-    // equivalentEdges is about "the same region" (hatched, where
-    // numberExhausted outlines a single clue cell) and pairs two edges into
-    // one journey; its opener leg must spell out the shared-fate coupling.
-    const steps = scanPlan((ss) =>
-      ss.some(
-        (s, k) =>
-          !s.continuesPrevious &&
-          ss[k + 1]?.continuesPrevious === true &&
-          marksOf(s).hatch > 1,
-      ),
-    );
-    expect(steps).not.toBeNull();
-    if (!steps) return;
-    const opener = steps.find(
-      (s, k) =>
-        !s.continuesPrevious &&
-        steps[k + 1]?.continuesPrevious === true &&
-        marksOf(s).hatch > 1,
-    );
-    expect(opener).toBeDefined();
-    if (!opener) return;
+    // Its opener leg must spell out the shared-fate coupling.
+    const { step: opener, steps } = pinned("sharedFate");
+    expect(opener.continuesPrevious).toBeUndefined();
+    expect(steps[1]?.continuesPrevious).toBe(true);
     expect(opener.explanation).toMatch(/share a fate/);
     expect(marksOf(opener).siblings).toBeGreaterThan(0);
     expect(marksOf(opener).hatch).toBeGreaterThan(1);
@@ -393,19 +391,14 @@ describe("palisade hint", () => {
   });
 
   it("does not re-hint an edge the player already marked no-wall", () => {
-    const s0 = newState(P, newDesc(P, randomNew("palisade-hint-mark")).desc);
-    const r = palisadeGame.hint?.(s0);
-    if (!r?.ok) throw new Error("no hint on a fresh board");
-    const nowall = r.steps.find((s) => hlOf(s).kind === "nowall");
-    expect(nowall).toBeDefined();
-    if (!nowall) return;
-    const target = physicalEdge(hlOf(nowall), P.w);
+    const { state: s0, step: nowall } = pinned("noWall");
+    const target = physicalEdge(hlOf(nowall), s0.w);
 
     const s1 = palisadeGame.executeMove(s0, nowall.move);
     const r2 = palisadeGame.hint?.(s1);
     expect(r2?.ok).toBe(true);
     if (!r2?.ok) return;
-    expect(r2.steps.some((s) => physicalEdge(hlOf(s), P.w) === target)).toBe(false);
+    expect(r2.steps.some((s) => physicalEdge(hlOf(s), s0.w) === target)).toBe(false);
   });
 
   it("counts a solved board as finished, so the midend refuses it", () => {

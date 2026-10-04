@@ -15,12 +15,8 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
-import {
-  type GalaxiesHint,
-  galaxiesHintPlan,
-  galaxiesHintSteps,
-  narrate,
-} from "./hint.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { type GalaxiesHint, galaxiesHintPlan, narrate } from "./hint.ts";
 import { type GalaxiesMove, galaxiesGame } from "./index.ts";
 import { clearForSolve, GalaxiesDiff, solverState } from "./solver.ts";
 import {
@@ -48,62 +44,131 @@ function hintOf(s: GalaxiesState): Step[] {
   return res.steps as Step[];
 }
 
-/**
- * Walk a board step by step until one matches, or deduction runs out. A
- * fixed-seed scan, so it lands on the same frame every run.
- *
- * Deliberately walks `galaxiesHintSteps` rather than `hint()`: the public
- * entry point re-runs `findMistakes` — a whole solve — on every call, which is
- * the right thing for a player pressing a button and an order of magnitude of
- * wasted work for a scan whose boards are mistake-free by construction.
- * Every returned `(step, state)` pair is still one the player could see, since
- * the state is the board that step applies to.
- */
-function firstStepMatching(
-  params: typeof NORMAL_7,
-  seeds: string[],
-  match: (step: Step, s: GalaxiesState) => boolean,
-): { step: Step; state: GalaxiesState } | null {
-  for (const seed of seeds) {
-    let s = board(params, seed);
-    for (let batch = 0; batch < 60 && galaxiesGame.status(s) === "ongoing"; batch++) {
-      const steps = galaxiesHintSteps(s);
-      if (steps.length === 0) break;
-      for (const step of steps) {
-        if (match(step, s)) return { step, state: s };
-        s = galaxiesGame.executeMove(s, step.move);
-      }
-    }
-  }
-  return null;
-}
+/** A sentence the hint says, as a kind. Only the dot's color is normalized,
+ * since which dot a position has is incidental. */
+const says =
+  (wording: string) =>
+  (step: Step): boolean =>
+    step.explanation.replace("black dot", "white dot") === wording;
+
+const targets = (step: Step): number => step.highlights?.targets.length ?? 0;
 
 /**
- * The same scan over two board shapes. The rare rungs (a cell with one way
- * out, a detached piece) fire on well under 1% of steps, so finding them wants
- * a *bigger* board rather than more seeds of a small one: one 15x15 walk is
- * ~300 steps where a 7x7 is ~60.
+ * Every sentence the hint says on a found board, each pinned on a position
+ * that opens with it, and the shapes of step the follow tests need.
  *
- * Both tiers, because *where a rung sits in the ladder* decides which boards
- * can reach it: mirroring a wall is last, so it fires only once the five
- * direct rungs are spent, and an Easy board is by definition one where they
- * never all are. Nothing is exclusive to a tier by rule — only by how far down
- * the ladder that tier's boards force the hint to go.
+ * Wording is byte-exact: the narration is the product, so a silent edit should
+ * be a red pin. Both tiers and two sizes are scanned, because where a rung
+ * sits in the ladder decides which boards reach it: mirroring a wall is last,
+ * so it fires only once the direct rungs are spent.
  */
-function anyBoardSays(match: (step: Step, s: GalaxiesState) => boolean) {
-  for (const params of [
+const pinned = describeHintPins({
+  game: galaxiesGame,
+  params: [
     NORMAL_7,
     { w: 15, h: 15, diff: GalaxiesDiff.Normal },
     UNREASONABLE_7,
     { w: 15, h: 15, diff: GalaxiesDiff.Unreasonable },
-  ]) {
-    const found = firstStepMatching(params, SCAN_SEEDS, match);
-    if (found) return found;
-  }
-  return null;
-}
-
-const SCAN_SEEDS = Array.from({ length: 12 }, (_, i) => `gh-scan-${i}`);
+  ],
+  kinds: {
+    // A dot sitting *inside* a cell needs no arrow: the game refuses to draw
+    // one there, so that firing is never shown and has no sentence here. A dot
+    // on an edge owns two cells, a dot on a corner four.
+    dotBetweenTwo: says(
+      "A galaxy covers the cells its dot sits on, so both these cells must belong to the white dot between them.",
+    ),
+    dotAtCorner: says(
+      "A galaxy covers the cells its dot sits on, so these 4 cells must belong to the white dot at their shared corner.",
+    ),
+    wallBetweenGalaxies: says(
+      "These two cells point at different dots, so they belong to different galaxies: a wall must run between them.",
+    ),
+    onlyDot: says(
+      "Any other dot mirrors this cell off the board or onto a dot, so it and its partner must belong to the ringed white dot.",
+    ),
+    reachLimit: says(
+      "No other galaxy reaches this cell, so it and its partner must join the ringed white dot, whose reach the stripes show.",
+    ),
+    wallMirrored: says(
+      "The outlined cells are partners across the white dot, so the outlined wall must be mirrored by this wall.",
+    ),
+    wallMirroredOffEdge: says(
+      "The outlined cells are partners across the white dot; one meets the board's edge, so this wall must match it.",
+    ),
+    wallMirroredAboutOwnCell: says(
+      "The outlined cell is its own partner across the white dot, so the outlined wall must be mirrored by this wall.",
+    ),
+    // Two ways out, three or four: one wording, since the walled sides are
+    // drawn on the board. One way out is a second wording no scan reaches;
+    // see the constructed firing below.
+    everyWayOut: says(
+      "Every way out of this cell leads into the striped galaxy, so it and its partner must belong to the ringed white dot.",
+    ),
+    detachedPiece: says(
+      "The striped cells can reach their ringed dot only through this cell, so it and its partner must be that dot's too.",
+    ),
+    association: (step) => targets(step) > 0 && step.highlights?.targetDot != null,
+    severalCells: (step) => targets(step) > 1 && step.highlights?.targetDot != null,
+  },
+  pins: {
+    /** Held on 612 of 7067 positions walked. */
+    dotBetweenTwo: "7x7dn:cgqkdqdzcjdptkdb",
+    /** Held on 246 of 7067 positions walked. */
+    dotAtCorner: "7x7dn:ajhrekfsrijvkk",
+    /** Held on 3096 of 7067 positions walked. */
+    wallBetweenGalaxies: {
+      id: "7x7dn:ajhrekfsrijvkk",
+      moves:
+        '[{"ops":[{"kind":"assoc","x":6,"y":2,"ax":6,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":4,"ax":3,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":6,"ax":13,"ay":6}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":8,"ax":5,"ay":8}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":12,"ax":5,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":2}],"solving":false}]',
+    },
+    /** Held on 550 of 7067 positions walked. */
+    onlyDot: {
+      id: "7x7du:pgddzgtguvfth",
+      moves:
+        '[{"ops":[{"kind":"assoc","x":3,"y":2,"ax":3,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":10,"y":2,"ax":10,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":12,"y":7,"ax":12,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":12}],"solving":false}]',
+    },
+    /** Held on 750 of 7067 positions walked. */
+    reachLimit: {
+      id: "7x7du:pgddzgtguvfth",
+      moves:
+        '[{"ops":[{"kind":"assoc","x":3,"y":2,"ax":3,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":10,"y":2,"ax":10,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":12,"y":7,"ax":12,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":12}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":1,"ax":1,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":1}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":1,"ax":5,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":6}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":3,"ax":10,"ay":2}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":5,"ax":5,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":5}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":11,"ax":3,"ay":11}],"solving":false}]',
+    },
+    /** Held on 287 of 7067 positions walked. */
+    wallMirrored: {
+      id: "7x7du:mkibeyrzadbdkzb",
+      moves:
+        '[{"ops":[{"kind":"assoc","x":11,"y":2,"ax":11,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":4,"ax":1,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":2,"y":10,"ax":2,"ay":10}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":10,"ax":13,"ay":10}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":8}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":12}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":3,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":3,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":11}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":5,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":9}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":7,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":8}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":13,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":1,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":7,"ax":11,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":13,"y":2}],"solving":false}]',
+    },
+    /** Held on 191 of 7067 positions walked. */
+    wallMirroredOffEdge: {
+      id: "7x7du:mkibeyrzadbdkzb",
+      moves:
+        '[{"ops":[{"kind":"assoc","x":11,"y":2,"ax":11,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":4,"ax":1,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":2,"y":10,"ax":2,"ay":10}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":10,"ax":13,"ay":10}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":8}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":12}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":3,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":3,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":11}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":5,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":9}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":7,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":8}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":13,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":1,"ax":5,"ay":7}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":7,"ax":11,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":11}],"solving":false}]',
+    },
+    /** Held on 74 of 7067 positions walked. */
+    wallMirroredAboutOwnCell: {
+      id: "7x7du:devsbnpzdugpd",
+      moves:
+        '[{"ops":[{"kind":"assoc","x":4,"y":1,"ax":4,"ay":1}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":4,"ax":11,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":4,"ax":13,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":6,"ax":1,"ay":6}],"solving":false},{"ops":[{"kind":"assoc","x":4,"y":7,"ax":4,"ay":7}],"solving":false},{"ops":[{"kind":"assoc","x":2,"y":11,"ax":2,"ay":11}],"solving":false},{"ops":[{"kind":"assoc","x":12,"y":12,"ax":12,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":7}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":12}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":3,"ax":5,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":2}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":3,"ax":5,"ay":3}],"solving":false},{"ops":[{"kind":"edge","x":9,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":4}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":7,"ax":7,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":7}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":11}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":7,"ax":11,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":1}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":7,"ax":13,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":7}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":7,"ax":7,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":7}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":8}],"solving":false},{"ops":[{"kind":"edge","x":13,"y":8}],"solving":false}]',
+    },
+    /** Held on 20 of 7067 positions walked. */
+    everyWayOut: {
+      id: "7x7dn:ajhrekfsrijvkk",
+      moves:
+        '[{"ops":[{"kind":"assoc","x":6,"y":2,"ax":6,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":4,"ax":3,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":6,"ax":13,"ay":6}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":8,"ax":5,"ay":8}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":12,"ax":5,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":13}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":1,"ax":11,"ay":1}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":1}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":5,"ax":11,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":5}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":7,"ax":5,"ay":8}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":9}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":7,"ax":11,"ay":9}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":7}],"solving":false}]',
+    },
+    /** Held on 3 of 7067 positions walked. */
+    detachedPiece: {
+      id: "15x15dn:elgebzzsjklbssbzztjwhizalgnzhrdzyfecgzglijgzjzkefcjvzzkpuozkqd",
+      moves:
+        '[{"ops":[{"kind":"assoc","x":24,"y":1,"ax":24,"ay":1}],"solving":false},{"ops":[{"kind":"assoc","x":2,"y":2,"ax":2,"ay":2}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":4,"ax":13,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":23,"y":4,"ax":23,"ay":4}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":6,"ax":9,"ay":6}],"solving":false},{"ops":[{"kind":"assoc","x":28,"y":6,"ax":28,"ay":6}],"solving":false},{"ops":[{"kind":"assoc","x":17,"y":10,"ax":17,"ay":10}],"solving":false},{"ops":[{"kind":"assoc","x":25,"y":10,"ax":25,"ay":10}],"solving":false},{"ops":[{"kind":"assoc","x":2,"y":12,"ax":2,"ay":12}],"solving":false},{"ops":[{"kind":"assoc","x":14,"y":12,"ax":14,"ay":12}],"solving":false},{"ops":[{"kind":"assoc","x":21,"y":12,"ax":21,"ay":12}],"solving":false},{"ops":[{"kind":"assoc","x":6,"y":13,"ax":6,"ay":13}],"solving":false},{"ops":[{"kind":"assoc","x":10,"y":14,"ax":10,"ay":14}],"solving":false},{"ops":[{"kind":"assoc","x":28,"y":14,"ax":28,"ay":14}],"solving":false},{"ops":[{"kind":"assoc","x":24,"y":16,"ax":24,"ay":16}],"solving":false},{"ops":[{"kind":"assoc","x":6,"y":17,"ax":6,"ay":17}],"solving":false},{"ops":[{"kind":"assoc","x":16,"y":17,"ax":16,"ay":17}],"solving":false},{"ops":[{"kind":"assoc","x":19,"y":18,"ax":19,"ay":18}],"solving":false},{"ops":[{"kind":"assoc","x":2,"y":19,"ax":2,"ay":19}],"solving":false},{"ops":[{"kind":"assoc","x":28,"y":19,"ax":28,"ay":19}],"solving":false},{"ops":[{"kind":"assoc","x":12,"y":22,"ax":12,"ay":22}],"solving":false},{"ops":[{"kind":"assoc","x":17,"y":22,"ax":17,"ay":22}],"solving":false},{"ops":[{"kind":"assoc","x":23,"y":22,"ax":23,"ay":22}],"solving":false},{"ops":[{"kind":"assoc","x":26,"y":22,"ax":26,"ay":22}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":26,"ax":3,"ay":26}],"solving":false},{"ops":[{"kind":"assoc","x":19,"y":26,"ax":19,"ay":26}],"solving":false},{"ops":[{"kind":"assoc","x":26,"y":27,"ax":26,"ay":27}],"solving":false},{"ops":[{"kind":"assoc","x":4,"y":29,"ax":4,"ay":29}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":23,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":24,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":13,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":12}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":13}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":13}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":13}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":14}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":15}],"solving":false},{"ops":[{"kind":"edge","x":9,"y":16}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":17}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":17}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":18}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":20}],"solving":false},{"ops":[{"kind":"edge","x":27,"y":20}],"solving":false},{"ops":[{"kind":"edge","x":24,"y":21}],"solving":false},{"ops":[{"kind":"edge","x":24,"y":23}],"solving":false},{"ops":[{"kind":"edge","x":28,"y":23}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":28}],"solving":false},{"ops":[{"kind":"edge","x":25,"y":28}],"solving":false},{"ops":[{"kind":"assoc","x":25,"y":3,"ax":23,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":25,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":5}],"solving":false},{"ops":[{"kind":"assoc","x":27,"y":3,"ax":28,"ay":6}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":29,"y":3,"ax":28,"ay":6}],"solving":false},{"ops":[{"kind":"edge","x":29,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":9}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":5,"ax":1,"ay":7}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":10}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":5,"ax":5,"ay":5}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":5}],"solving":false},{"ops":[{"kind":"assoc","x":25,"y":5,"ax":23,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":5}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":7,"ax":5,"ay":5}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":7}],"solving":false},{"ops":[{"kind":"assoc","x":27,"y":11,"ax":28,"ay":14}],"solving":false},{"ops":[{"kind":"edge","x":27,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":29,"y":18}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":15,"ax":6,"ay":17}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":14}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":15}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":20}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":17,"ax":2,"ay":19}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":16}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":17}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":17}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":21,"ax":5,"ay":21}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":20}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":21}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":22}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":23,"ax":5,"ay":21}],"solving":false},{"ops":[{"kind":"edge","x":9,"y":18}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":22}],"solving":false},{"ops":[{"kind":"assoc","x":3,"y":23,"ax":5,"ay":21}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":18}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":24}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":25,"ax":3,"ay":26}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":24}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":28}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":25,"ax":11,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":13,"y":24}],"solving":false},{"ops":[{"kind":"assoc","x":27,"y":25,"ax":26,"ay":22}],"solving":false},{"ops":[{"kind":"edge","x":25,"y":18}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":27,"y":26}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":27,"ax":3,"ay":26}],"solving":false},{"ops":[{"kind":"assoc","x":21,"y":27,"ax":19,"ay":26}],"solving":false},{"ops":[{"kind":"edge","x":17,"y":24}],"solving":false},{"ops":[{"kind":"edge","x":21,"y":28}],"solving":false},{"ops":[{"kind":"assoc","x":29,"y":27,"ax":26,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":27}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":29,"ax":11,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":24}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":29,"ax":11,"ay":27}],"solving":false},{"ops":[{"kind":"assoc","x":15,"y":29,"ax":11,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":24}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":25}],"solving":false},{"ops":[{"kind":"assoc","x":29,"y":29,"ax":26,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":23,"y":24}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":3,"ax":5,"ay":5}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":3,"ax":9,"ay":6}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":7,"ax":13,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":7}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":1,"ax":13,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":13,"y":8}],"solving":false},{"ops":[{"kind":"assoc","x":23,"y":13,"ax":21,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":23,"y":14}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":7,"ax":9,"ay":6}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":5}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":7}],"solving":false},{"ops":[{"kind":"assoc","x":13,"y":15,"ax":14,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":14,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":15}],"solving":false},{"ops":[{"kind":"assoc","x":19,"y":1,"ax":19,"ay":5}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":19,"y":10}],"solving":false},{"ops":[{"kind":"assoc","x":5,"y":9,"ax":10,"ay":14}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":8}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":15,"y":18}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":9,"ax":14,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":8}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":17,"y":16}],"solving":false},{"ops":[{"kind":"assoc","x":21,"y":9,"ax":21,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":15}],"solving":false},{"ops":[{"kind":"assoc","x":15,"y":15,"ax":16,"ay":17}],"solving":false},{"ops":[{"kind":"edge","x":15,"y":14}],"solving":false},{"ops":[{"kind":"edge","x":14,"y":15}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":15}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":17,"y":20}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":21,"ax":12,"ay":22}],"solving":false},{"ops":[{"kind":"edge","x":9,"y":20}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":21}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":23}],"solving":false},{"ops":[{"kind":"assoc","x":19,"y":21,"ax":19,"ay":18}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":15}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":15}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":21}],"solving":false},{"ops":[{"kind":"assoc","x":21,"y":21,"ax":21,"ay":19}],"solving":false},{"ops":[{"kind":"edge","x":21,"y":16}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":17}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":17}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":21}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":21}],"solving":false},{"ops":[{"kind":"assoc","x":21,"y":7,"ax":19,"ay":5}],"solving":false},{"ops":[{"kind":"edge","x":17,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":17,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":21,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":21,"y":8}],"solving":false},{"ops":[{"kind":"assoc","x":15,"y":3,"ax":19,"ay":5}],"solving":false},{"ops":[{"kind":"edge","x":15,"y":2}],"solving":false},{"ops":[{"kind":"edge","x":14,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":23,"y":6}],"solving":false},{"ops":[{"kind":"edge","x":23,"y":8}],"solving":false},{"ops":[{"kind":"assoc","x":19,"y":3,"ax":19,"ay":5}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":3}],"solving":false},{"ops":[{"kind":"assoc","x":23,"y":11,"ax":21,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":23,"y":10}],"solving":false},{"ops":[{"kind":"edge","x":24,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":19,"y":14}],"solving":false},{"ops":[{"kind":"assoc","x":21,"y":23,"ax":19,"ay":26}],"solving":false},{"ops":[{"kind":"edge","x":21,"y":22}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":23}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":29}],"solving":false},{"ops":[{"kind":"assoc","x":15,"y":25,"ax":11,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":15,"y":24}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":25}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":29}],"solving":false},{"ops":[{"kind":"assoc","x":21,"y":25,"ax":19,"ay":26}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":25}],"solving":false},{"ops":[{"kind":"assoc","x":25,"y":25,"ax":26,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":25,"y":24}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":25}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":29}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":27,"ax":11,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":27}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":27}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":27,"ax":11,"ay":27}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":29,"ax":3,"ay":26}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":22}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":23}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":23}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":29}],"solving":false},{"ops":[{"kind":"assoc","x":9,"y":23,"ax":12,"ay":22}],"solving":false},{"ops":[{"kind":"edge","x":15,"y":20}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":21}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":23}],"solving":false},{"ops":[{"kind":"edge","x":9,"y":24}],"solving":false},{"ops":[{"kind":"assoc","x":19,"y":23,"ax":19,"ay":26}],"solving":false},{"ops":[{"kind":"edge","x":19,"y":22}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":23}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":29}],"solving":false},{"ops":[{"kind":"assoc","x":23,"y":29,"ax":26,"ay":27}],"solving":false},{"ops":[{"kind":"edge","x":29,"y":24}],"solving":false},{"ops":[{"kind":"edge","x":28,"y":25}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":29}],"solving":false},{"ops":[{"kind":"edge","x":24,"y":29}],"solving":false},{"ops":[{"kind":"assoc","x":23,"y":19,"ax":24,"ay":16}],"solving":false},{"ops":[{"kind":"edge","x":25,"y":12}],"solving":false},{"ops":[{"kind":"edge","x":24,"y":13}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":13}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":24,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":23,"y":20}],"solving":false},{"ops":[{"kind":"assoc","x":29,"y":21,"ax":28,"ay":19}],"solving":false},{"ops":[{"kind":"edge","x":27,"y":16}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":17}],"solving":false},{"ops":[{"kind":"edge","x":28,"y":17}],"solving":false},{"ops":[{"kind":"edge","x":28,"y":21}],"solving":false},{"ops":[{"kind":"edge","x":29,"y":22}],"solving":false},{"ops":[{"kind":"assoc","x":25,"y":7,"ax":23,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":20,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":22,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":24,"y":7}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":7}],"solving":false},{"ops":[{"kind":"edge","x":25,"y":8}],"solving":false},{"ops":[{"kind":"assoc","x":27,"y":1,"ax":28,"ay":6}],"solving":false},{"ops":[{"kind":"edge","x":26,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":28,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":28,"y":11}],"solving":false},{"ops":[{"kind":"edge","x":29,"y":12}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":11,"ax":14,"ay":12}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":12}],"solving":false},{"ops":[{"kind":"edge","x":17,"y":12}],"solving":false},{"ops":[{"kind":"edge","x":18,"y":13}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":1,"ax":5,"ay":5}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":1}],"solving":false},{"ops":[{"kind":"edge","x":2,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":4,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":3,"y":10}],"solving":false},{"ops":[{"kind":"assoc","x":1,"y":15,"ax":3,"ay":15}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":14}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":14}],"solving":false},{"ops":[{"kind":"edge","x":6,"y":15}],"solving":false},{"ops":[{"kind":"edge","x":1,"y":16}],"solving":false},{"ops":[{"kind":"edge","x":5,"y":16}],"solving":false},{"ops":[{"kind":"assoc","x":7,"y":9,"ax":10,"ay":14}],"solving":false},{"ops":[{"kind":"edge","x":7,"y":8}],"solving":false},{"ops":[{"kind":"edge","x":8,"y":9}],"solving":false},{"ops":[{"kind":"edge","x":12,"y":19}],"solving":false},{"ops":[{"kind":"edge","x":13,"y":20}],"solving":false},{"ops":[{"kind":"assoc","x":11,"y":3,"ax":13,"ay":4}],"solving":false},{"ops":[{"kind":"edge","x":10,"y":3}],"solving":false},{"ops":[{"kind":"edge","x":11,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":15,"y":4}],"solving":false},{"ops":[{"kind":"edge","x":16,"y":5}],"solving":false}]',
+    },
+    /** Held on 2192 of 7067 positions walked. */
+    association: "7x7dn:cgqkdqdzcjdptkdb",
+    /** Held on 2192 of 7067 positions walked. */
+    severalCells: "7x7dn:cgqkdqdzcjdptkdb",
+  },
+});
 
 /** The canonical solution's dot for every tile — the board the hint's every
  * claim is measured against. */
@@ -168,75 +233,6 @@ describe("the plan is sound: every step agrees with the unique solution", () => 
 });
 
 describe("each deduction is narrated in its own vocabulary", () => {
-  // Wording is asserted byte-exactly: the narration *is* the product, so a
-  // silent edit should be a visible test diff. The seed scan reaches each
-  // rung deterministically (docs/games/hints.md § "Verifying a hint
-  // in-process").
-  // Each case is one sentence the hint can utter, asserted by *finding* it:
-  // a scan that never reaches the exact string means either the rule stopped
-  // firing or its wording drifted, and both are worth a red test. Only the
-  // dot's color is normalized, since which dot a scan lands on is incidental.
-  const cases: [string, string][] = [
-    // A dot sitting *inside* a cell needs no arrow — the game refuses to draw
-    // one there, so that firing is never shown and the singular wording is not
-    // among the sentences below. A dot on an edge owns two cells, a dot on a
-    // corner four, and those are the two the player is ever told about.
-    [
-      "the pair of cells a dot sits between",
-      "A galaxy covers the cells its dot sits on, so both these cells must belong to the white dot between them.",
-    ],
-    [
-      "the four cells a dot's corner touches",
-      "A galaxy covers the cells its dot sits on, so these 4 cells must belong to the white dot at their shared corner.",
-    ],
-    [
-      "a wall between two galaxies",
-      "These two cells point at different dots, so they belong to different galaxies: a wall must run between them.",
-    ],
-    [
-      "the only dot that could own a cell",
-      "Any other dot mirrors this cell off the board or onto a dot, so it and its partner must belong to the ringed white dot.",
-    ],
-    [
-      "the limit of a galaxy's reach",
-      "No other galaxy reaches this cell, so it and its partner must join the ringed white dot, whose reach the stripes show.",
-    ],
-    [
-      "a wall mirrored about the dot",
-      "The outlined cells are partners across the white dot, so the outlined wall must be mirrored by this wall.",
-    ],
-    [
-      "a wall mirrored off the board's edge",
-      "The outlined cells are partners across the white dot; one meets the board's edge, so this wall must match it.",
-    ],
-    [
-      "a wall mirrored about the dot a cell is centered on",
-      "The outlined cell is its own partner across the white dot, so the outlined wall must be mirrored by this wall.",
-    ],
-    // Two ways out, three or four: one wording now, since the walled sides are
-    // drawn on the board rather than recited. (One way out is a second wording
-    // the scan never reaches — see the branch test below.)
-    [
-      "a cell whose every way out leads into one galaxy",
-      "Every way out of this cell leads into the striped galaxy, so it and its partner must belong to the ringed white dot.",
-    ],
-    [
-      "a detached piece of a galaxy",
-      "The striped cells can reach their ringed dot only through this cell, so it and its partner must be that dot's too.",
-    ],
-  ];
-
-  for (const [what, wording] of cases) {
-    it(`${what}`, () => {
-      const says = (s: Step) =>
-        s.explanation.replace("black dot", "white dot") === wording;
-      expect(
-        anyBoardSays(says),
-        `no board in the scan said it: ${what}`,
-      ).not.toBeNull();
-    });
-  }
-
   it("a cell with a single way out reads in the singular", () => {
     // The one wording asserted on a *constructed* firing rather than a found
     // one: 48 board-walks produce this rung 25 times and never with one
@@ -436,7 +432,7 @@ describe("the picture carries the argument", () => {
       },
     ];
     const checked = [0, 0];
-    for (const seed of SCAN_SEEDS.slice(0, 4)) {
+    for (const seed of ["gh-scan-0", "gh-scan-1", "gh-scan-2", "gh-scan-3"]) {
       let s = board(UNREASONABLE_7, seed);
       for (let i = 0; i < 400 && galaxiesGame.status(s) === "ongoing"; i++) {
         const res = galaxiesGame.hint?.(s);
@@ -524,22 +520,10 @@ describe("refusals", () => {
 });
 
 describe("following the plan", () => {
-  /** The first association step of a fresh board. */
-  function firstAssociation(seed: string): { step: Step; state: GalaxiesState } {
-    const found = firstStepMatching(
-      NORMAL_7,
-      [seed],
-      (s) => (s.highlights?.targets.length ?? 0) > 0,
-    );
-    if (!found) throw new Error("no association step");
-    return found;
-  }
-
   it("counts the association as completed however the player draws it", () => {
-    const { step, state } = firstAssociation("follow-a");
+    const { step, state } = pinned("association");
     const hl = step.highlights;
-    expect(hl?.targetDot).toBeDefined();
-    if (!hl?.targetDot) return;
+    if (!hl?.targetDot) throw new Error("an association goes to a dot");
     const target = hl.targets[0];
     const dot = hl.targetDot;
     // Dragging from the dot, dragging from the cell and the keyboard all end
@@ -556,15 +540,9 @@ describe("following the plan", () => {
   });
 
   it("holds a multi-cell step on track until its last cell lands", () => {
-    const found = firstStepMatching(
-      NORMAL_7,
-      SCAN_SEEDS,
-      (s) => (s.highlights?.targets.length ?? 0) > 1,
-    );
-    expect(found, "no multi-cell association in the scan").not.toBeNull();
-    if (!found) return;
+    const found = pinned("severalCells");
     const hl = found.step.highlights;
-    if (!hl?.targetDot) return;
+    if (!hl?.targetDot) throw new Error("an association goes to a dot");
     const one: GalaxiesMove = {
       ops: [
         {
@@ -587,13 +565,7 @@ describe("following the plan", () => {
     // A dot on a corner owns four cells, and one arrow commits a cell with its
     // partner, so the player's own arrow leaves two: the step shrinks, and its
     // sentence and its dot ring follow.
-    const found = firstStepMatching(
-      NORMAL_7,
-      SCAN_SEEDS,
-      (s) => (s.highlights?.targets.length ?? 0) === 4,
-    );
-    expect(found, "no corner dot in the scan").not.toBeNull();
-    if (!found) return;
+    const found = pinned("dotAtCorner");
     const hl = found.step.highlights;
     if (!hl?.targetDot) throw new Error("a dot's cells go to the dot");
     const [t] = hl.targets;
@@ -609,7 +581,7 @@ describe("following the plan", () => {
   });
 
   it("drops the plan when the player goes their own way", () => {
-    const { step, state } = firstAssociation("follow-b");
+    const { step, state } = pinned("association");
     // An unrelated wall somewhere the step never mentions.
     let elsewhere: GalaxiesMove | null = null;
     for (let y = 1; y < state.sy - 1 && !elsewhere; y++) {
@@ -627,7 +599,7 @@ describe("following the plan", () => {
   });
 
   it("refreshes a step away once the board already shows it", () => {
-    const { step, state } = firstAssociation("follow-c");
+    const { step, state } = pinned("association");
     expect(galaxiesGame.refreshHintStep?.(step, state)).toBe(step);
     const after = galaxiesGame.executeMove(state, step.move);
     expect(galaxiesGame.refreshHintStep?.(step, after)).toBeNull();

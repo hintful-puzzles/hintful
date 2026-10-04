@@ -13,6 +13,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -49,6 +50,31 @@ function applyPlan(st: UndeadState, steps: HintStep<UndeadMove>[]): UndeadState 
   for (const step of steps) s = undeadGame.executeMove(s, step.move);
   return s;
 }
+
+const pinned = describeHintPins({
+  game: undeadGame,
+  params: [{ w: 5, h: 5, diff: "normal" }],
+  kinds: {
+    populate: (step) => step.move.type === "markAll",
+    strike: (step) => step.move.type === "pencilStrike",
+    sightlineStrike: (step) =>
+      step.move.type === "pencilStrike" && /^This sightline's/.test(step.explanation),
+  },
+  pins: {
+    /** Held on 12 of 398 positions walked. */
+    populate: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
+    /** Held on 190 of 398 positions walked. */
+    strike: {
+      id: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
+      moves: [{ type: "markAll" }],
+    },
+    /** Held on 168 of 398 positions walked. */
+    sightlineStrike: {
+      id: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
+      moves: [{ type: "markAll" }],
+    },
+  },
+});
 
 describe("undead recording solver", () => {
   it("records each deduction kind across generated boards", () => {
@@ -235,30 +261,8 @@ describe("undead boards the midend refuses a hint on", () => {
 });
 
 describe("undead hintKeepTrack", () => {
-  function firstStepOfType(
-    st: UndeadState,
-    type: UndeadMove["type"],
-  ): HintStep<UndeadMove, UndeadHint> {
-    // Walk the plan, applying steps, until we reach one of the requested type.
-    let s = st;
-    for (let guard = 0; guard < 200; guard++) {
-      const steps = fullPlan(s);
-      const idx = steps.findIndex((x) => x.move.type === type);
-      if (idx === 0) return steps[0];
-      if (idx > 0) {
-        // advance to just before it
-        for (let k = 0; k < idx; k++) s = undeadGame.executeMove(s, steps[k].move);
-        return fullPlan(s)[0];
-      }
-      s = undeadGame.executeMove(s, steps[0].move);
-    }
-    throw new Error(`no ${type} step found`);
-  }
-
   it("a matching markAll / set / pencil completes its step; a mismatch is off", () => {
-    const st = gen({ w: 5, h: 5, diff: "normal" }, "track-1");
-
-    const populate = firstStepOfType(st, "markAll");
+    const { state: st, step: populate } = pinned("populate");
     expect(undeadGame.hintKeepTrack?.({ type: "markAll" }, populate, st)).toBe(
       "completed",
     );
@@ -272,40 +276,31 @@ describe("undead hintKeepTrack", () => {
   });
 
   it("a pencil toggle clearing a strike mark tracks the step", () => {
-    let s = gen({ w: 5, h: 5, diff: "normal" }, "track-2");
-    // Reach a pencilStrike step, with the board in the pre-move state it expects.
-    for (let guard = 0; guard < 200; guard++) {
-      const steps = fullPlan(s);
-      const strike = steps[0].move.type === "pencilStrike" ? steps[0] : null;
-      if (strike && strike.move.type === "pencilStrike") {
-        const strikeMarks = strike.move.marks;
-        const mark = strikeMarks[0];
-        // The candidate is present (pre-move) → a toggle clears it → on plan.
-        expect(s.pencil[mark.cell] & mark.monster).toBeTruthy();
-        const v = undeadGame.hintKeepTrack?.(
-          { type: "pencil", cell: mark.cell, monster: mark.monster },
-          strike,
-          s,
-        );
-        expect(v === "onTrack" || v === "completed").toBe(true);
-        // a non-target candidate is off-plan
-        const other = [MON_GHOST, MON_VAMPIRE, MON_ZOMBIE].find(
-          (b) => !strikeMarks.some((m) => m.cell === mark.cell && m.monster === b),
-        );
-        if (other !== undefined) {
-          expect(
-            undeadGame.hintKeepTrack?.(
-              { type: "pencil", cell: mark.cell, monster: other },
-              strike,
-              s,
-            ),
-          ).toBe("off");
-        }
-        return;
-      }
-      s = undeadGame.executeMove(s, steps[0].move);
-    }
-    throw new Error("no pencilStrike step reached");
+    // A pencilStrike step, with the board in the pre-move state it expects.
+    const { state: s, step: strike } = pinned("strike");
+    if (strike.move.type !== "pencilStrike") throw new Error("not a strike step");
+    const strikeMarks = strike.move.marks;
+    const mark = strikeMarks[0];
+    // The candidate is present (pre-move) → a toggle clears it → on plan.
+    expect(s.pencil[mark.cell] & mark.monster).toBeTruthy();
+    const v = undeadGame.hintKeepTrack?.(
+      { type: "pencil", cell: mark.cell, monster: mark.monster },
+      strike,
+      s,
+    );
+    expect(v === "onTrack" || v === "completed").toBe(true);
+    // a non-target candidate is off-plan
+    const other = [MON_GHOST, MON_VAMPIRE, MON_ZOMBIE].find(
+      (b) => !strikeMarks.some((m) => m.cell === mark.cell && m.monster === b),
+    );
+    if (other === undefined) throw new Error("the pin strikes every candidate");
+    expect(
+      undeadGame.hintKeepTrack?.(
+        { type: "pencil", cell: mark.cell, monster: other },
+        strike,
+        s,
+      ),
+    ).toBe("off");
   });
 });
 
@@ -355,15 +350,15 @@ describe("undead hint resume (per tier)", () => {
 
 describe("undead hint render (tier 2.5)", () => {
   it("a sightline-elimination frame outlines the path, struck candidate, clues drawn", () => {
+    const { id, moves, step } = pinned("sightlineStrike");
     const { recording, hint } = renderScenario({
       game: undeadGame,
-      id: "5x5dn#hint-render",
+      id,
+      moves,
       showHint: true,
-      hintUntil: (s) =>
-        s.move.type === "pencilStrike" && /^This sightline's/.test(s.explanation),
       defaultBackground: DEFAULT_BACKGROUND,
     });
-    expect(hint).toBeDefined();
+    expect(hint?.explanation).toBe(step.explanation);
     const ops = recording.ops;
     // The sightline's bounce path is **outlined** COL_HINT_CELL, not shaded —
     // the cells on it carry penciled monsters the player has to read.

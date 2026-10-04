@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { HINT_EVIDENCE } from "../../engine/color/palette.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
@@ -43,54 +44,113 @@ type Arm = keyof typeof ARMS;
 /** The regions a step's words outline, with their chain numbers. */
 const evidenceOf = (step: MapHintStep) => stepMarks(step).of("outline", REGION);
 
-/**
- * The boards each arm fires on from a fresh board, pinned as the desc the rung
- * reads and never as a seed: a seed reaches a rung only through the generator,
- * which is free to stop producing the board while a census still reads health.
- * Found by a sweep of 240 boards, 40 per preset of the two sizes at the three
- * teachable tiers, which counted (firings on boards): touches 7178 on 240,
- * deadDots 156 on 87, pairPlace 466 on 156, pairMark 74 on 50, chainPlace 44 on
- * 37, chainStrike 5 on 5, chainMark 99 on 69.
- */
-const CHAIN_BOARD =
-  "15x20n30dh:echdkaebkheaaaaaiacaaabcbbabaacbhadbcacacegabaababacbaacbbdbachadaacjabbcaababgaaaaaaaaabdabbcabhadakabahccbdbecaahaibdbbbcdabbbacadeaaceccbbaaabbcacbdbdadabacfaaaaaaaalaaaadaaecabbadaaaibcccdcaadcdfdacza,a213c0a2e0a21d2b1a20";
+/** The arms hint-guided play on a dealt board reaches. */
+const DEALT = {
+  touches: ARMS.touches,
+  deadDots: ARMS.deadDots,
+  pairPlace: ARMS.pairPlace,
+  pairDot: ARMS.pairDot,
+  pairMark: ARMS.pairMark,
+  chainPlace: ARMS.chainPlace,
+  chainStrike: ARMS.chainStrike,
+  chainMark: ARMS.chainMark,
+  chainDot: ARMS.chainDot,
+  chainWalk: ARMS.chainWalk,
+  chainAlternates: ARMS.chainAlternates,
+  chainLongWalk: ARMS.chainLongWalk,
+} satisfies Partial<Record<Arm, RegExp>>;
+type DealtArm = keyof typeof DEALT;
 
-const PAIR_BOARD =
-  "15x20n30dn:jchajdgabaaacaaacbdaaabbiabcaahdabccaebabacabcbahacccabbaamaaaacbabeaacacadbaeaagbbacadbgciebacbbatagegaiebcagbdhcabgbbeadfbbcdaababhbbabcjadcaaacbdbaabbbkbgacbfaaaabibabaaaabaaabaeaiaababdddbf,3f00c0a3b32b3b0a1323";
+/** A position each dealt arm opens the hint on, at the three teachable tiers. */
+const pinned = describeHintPins({
+  game: mapGame,
+  params: [0, 1, 2].map((diff): MapParams => ({ w: 15, h: 20, n: 30, diff })),
+  seeds: 40,
+  kinds: DEALT,
+  pins: {
+    /** Held on 1547 of 2480 positions walked. */
+    touches:
+      "15x20n30de:gaabgbaadaeabadccafbccecgacagbhaacgcamaacadacbacaaaagadamaaacbaaibbaabbdibdaccdbaicaabiclaaaddbdlagdvaedbhfabcaacagagaccdacabaabcjaeadcadacakaaaldaabafabbbaaadababaaabcmbbcgbdbbabc,23a2e03d2b3b2a01b3a0",
+    /** Held on 358 of 2480 positions walked. */
+    deadDots: {
+      id: "15x20n30dh:nafahabcgceaaaaafabaaaaaaceagaccgckacbcadaabeaacbabccacabceccblaaadccdbcbabadbgacabadddbgaabbfbbcalbjccbbcebbafabaaababagacbeaaaccjaaabbbagciaeagbdjbceacecbfabaaaafabeaebbcbeaabaadabbadcbagbaar,b13d0e2c32f32a1",
+      moves:
+        '[{"ops":[{"op":"pencil","region":9,"bit":0},{"op":"pencil","region":9,"bit":1}]},{"ops":[{"op":"pencil","region":20,"bit":0},{"op":"pencil","region":20,"bit":1}]},{"ops":[{"op":"pencil","region":13,"bit":2},{"op":"pencil","region":13,"bit":3}]},{"ops":[{"op":"pencil","region":16,"bit":0},{"op":"pencil","region":16,"bit":1}]},{"ops":[{"op":"color","region":17,"color":2}]}]',
+    },
+    /** Held on 141 of 2480 positions walked. */
+    pairPlace: {
+      id: "15x20n30dn:kadeeacalbaadbaddacaaaacedabcdaacadbaaaababbdabaabdbddaaadiaaaaabaabaacaaabaaaabadaaabfcacbacafbbacaccbaebbaeaccbadaacebcahabaaababaaagbaaccaaiccbcefblcabaaabcaabeaaebbabeaadaaaaeadbdbaaaahaabaaabgaabgbadaaaaecbacaaadaaaeaaaaciacdgadacah,0a1f302c3c01d21a3a",
+      moves:
+        '[{"ops":[{"op":"pencil","region":3,"bit":1},{"op":"pencil","region":3,"bit":2}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]}]',
+    },
+    /** Held on 217 of 2480 positions walked. */
+    pairDot:
+      "15x20n30dn:kadeeacalbaadbaddacaaaacedabcdaacadbaaaababbdabaabdbddaaadiaaaaabaabaacaaabaaaabadaaabfcacbacafbbacaccbaebbaeaccbadaacebcahabaaababaaagbaaccaaiccbcefblcabaaabcaabeaaebbabeaadaaaaeadbdbaaaahaabaaabgaabgbadaaaaecbacaaadaaaeaaaaciacdgadacah,0a1f302c3c01d21a3a",
+    /** Held on 21 of 2480 positions walked. */
+    pairMark: {
+      id: "15x20n30dh:nafahabcgceaaaaafabaaaaaaceagaccgckacbcadaabeaacbabccacabceccblaaadccdbcbabadbgacabadddbgaabbfbbcalbjccbbcebbafabaaababagacbeaaaccjaaabbbagciaeagbdjbceacecbfabaaaafabeaebbcbeaabaadabbadcbagbaar,b13d0e2c32f32a1",
+      moves:
+        '[{"ops":[{"op":"pencil","region":9,"bit":0},{"op":"pencil","region":9,"bit":1}]},{"ops":[{"op":"pencil","region":20,"bit":0},{"op":"pencil","region":20,"bit":1}]}]',
+    },
+    /** Held on 27 of 2480 positions walked. */
+    chainPlace: {
+      id: "15x20n30dh:dbcacasbbaaacagbacabgcabbeabhccadafebaiaacjacaaafadafcbaaaafaibahalbdbebbbabfheaaabdbadacabaaaaclaeaacmaaaaafacaeaecbcdaecbbaddbdaaaabacabcdaaaabcaabacabadabaaccaabaadaaaacabadakabeababbdcbbaabccbcaaabahageo,1021a0a1c20d0c01c2b3",
+      moves:
+        '[{"ops":[{"op":"pencil","region":8,"bit":2},{"op":"pencil","region":8,"bit":3}]},{"ops":[{"op":"pencil","region":14,"bit":2},{"op":"pencil","region":14,"bit":3}]},{"ops":[{"op":"color","region":15,"color":1}]},{"ops":[{"op":"pencil","region":23,"bit":2},{"op":"pencil","region":23,"bit":3}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":25,"bit":0},{"op":"pencil","region":25,"bit":3}]},{"ops":[{"op":"pencil","region":18,"bit":0},{"op":"pencil","region":18,"bit":3}]}]',
+    },
+    /** Held on 2 of 2480 positions walked. */
+    chainStrike: {
+      id: "15x20n30dh:baiahalfgbfbeabbbahbbbaeaafaaeffcaaaabaedaabbacabacaabafaabaaacabbfabdfbaaacaabaebcbaacabbbdbbabbbcchaababhagfbajadaccbccdbcaaabbahacbabhabdcbabcbcabaaelababbaahbbbaadaaaccaacadaaajadacbacdaaaabacbamaaaabjbcaaahbbacae,10101e0i1a3a212011",
+      moves:
+        '[{"ops":[{"op":"color","region":18,"color":1}]},{"ops":[{"op":"color","region":19,"color":2}]},{"ops":[{"op":"color","region":23,"color":0}]},{"ops":[{"op":"color","region":17,"color":1}]},{"ops":[{"op":"color","region":14,"color":3}]},{"ops":[{"op":"pencil","region":5,"bit":2},{"op":"pencil","region":5,"bit":3}]},{"ops":[{"op":"pencil","region":9,"bit":2},{"op":"pencil","region":9,"bit":3}]},{"ops":[{"op":"pencil","region":8,"bit":0},{"op":"pencil","region":8,"bit":1}]},{"ops":[{"op":"pencil","region":12,"bit":1},{"op":"pencil","region":12,"bit":2}]},{"ops":[{"op":"pencil","region":11,"bit":0},{"op":"pencil","region":11,"bit":2}]},{"ops":[{"op":"pencil","region":6,"bit":0},{"op":"pencil","region":6,"bit":3}]},{"ops":[{"op":"pencil","region":7,"bit":0},{"op":"pencil","region":7,"bit":1},{"op":"pencil","region":7,"bit":3}]}]',
+    },
+    /** Held on 37 of 2480 positions walked. */
+    chainMark: {
+      id: "15x20n30dh:dbfaabsbaacabahbbcfafafbbcablbadabbabaaadbacicccadcaabacddcaacgasbaadbdabaebbcdbdbbahbhbabbabasdtbjaebdfabibccfabadbdaaakcbcacaaaadagbfadbbceacdbbaaaagaabhacaabaabdabaabaaacadcbdicadace,203a2b0b3c0a3a1d3a32201",
+      moves:
+        '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":5,"bit":1},{"op":"pencil","region":5,"bit":3}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]},{"ops":[{"op":"pencil","region":17,"bit":2},{"op":"pencil","region":17,"bit":3}]}]',
+    },
+    /** Held on 128 of 2480 positions walked. */
+    chainDot: {
+      id: "15x20n30dh:dbfaabsbaacabahbbcfafafbbcablbadabbabaaadbacicccadcaabacddcaacgasbaadbdabaebbcdbdbbahbhbabbabasdtbjaebdfabibccfabadbdaaakcbcacaaaadagbfadbbceacdbbaaaagaabhacaabaabdabaabaaacadcbdicadace,203a2b0b3c0a3a1d3a32201",
+      moves:
+        '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]}]',
+    },
+    /** Held on 50 of 2480 positions walked. */
+    chainWalk: {
+      id: "15x20n30dh:dbfaabsbaacabahbbcfafafbbcablbadabbabaaadbacicccadcaabacddcaacgasbaadbdabaebbcdbdbbahbhbabbabasdtbjaebdfabibccfabadbdaaakcbcacaaaadagbfadbbceacdbbaaaagaabhacaabaabdabaabaaacadcbdicadace,203a2b0b3c0a3a1d3a32201",
+      moves:
+        '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":5,"bit":1},{"op":"pencil","region":5,"bit":3}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]},{"ops":[{"op":"pencil","region":17,"bit":2},{"op":"pencil","region":17,"bit":3}]}]',
+    },
+    /** Held on 11 of 2480 positions walked. */
+    chainAlternates: {
+      id: "15x20n30dh:dbcacasbbaaacagbacabgcabbeabhccadafebaiaacjacaaafadafcbaaaafaibahalbdbebbbabfheaaabdbadacabaaaaclaeaacmaaaaafacaeaecbcdaecbbaddbdaaaabacabcdaaaabcaabacabadabaaccaabaadaaaacabadakabeababbdcbbaabccbcaaabahageo,1021a0a1c20d0c01c2b3",
+      moves:
+        '[{"ops":[{"op":"pencil","region":8,"bit":2},{"op":"pencil","region":8,"bit":3}]},{"ops":[{"op":"pencil","region":14,"bit":2},{"op":"pencil","region":14,"bit":3}]},{"ops":[{"op":"color","region":15,"color":1}]},{"ops":[{"op":"pencil","region":23,"bit":2},{"op":"pencil","region":23,"bit":3}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":25,"bit":0},{"op":"pencil","region":25,"bit":3}]},{"ops":[{"op":"pencil","region":18,"bit":0},{"op":"pencil","region":18,"bit":3}]}]',
+    },
+    /** Held on 5 of 2480 positions walked. */
+    chainLongWalk: {
+      id: "15x20n30dh:fadcceaamabbiaabbacdbaacaccbcagbbccceacaabbbbacaiaacabgacbbacbbaaacebabacaiejasbabgcbceacdbabaaacacababcbbcafchcffaabaadcafebabcabcbaadaacddebjaacbahaabbaaebcaaaeacdahdcceadbaabacebaeabakbobiacafaa,1a2d0013g03a3a103b12",
+      moves:
+        '[{"ops":[{"op":"color","region":1,"color":3}]},{"ops":[{"op":"color","region":27,"color":2}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":20,"color":2}]},{"ops":[{"op":"color","region":26,"color":3}]},{"ops":[{"op":"pencil","region":4,"bit":0},{"op":"pencil","region":4,"bit":2}]},{"ops":[{"op":"pencil","region":5,"bit":1},{"op":"pencil","region":5,"bit":2}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]},{"ops":[{"op":"pencil","region":13,"bit":1},{"op":"pencil","region":13,"bit":2}]},{"ops":[{"op":"pencil","region":17,"bit":0},{"op":"pencil","region":17,"bit":1}]},{"ops":[{"op":"pencil","region":11,"bit":2},{"op":"pencil","region":11,"bit":3}]},{"ops":[{"op":"pencil","region":15,"bit":0},{"op":"pencil","region":15,"bit":3}]}]',
+    },
+  },
+});
 
-const PINNED: Partial<Record<Arm, string>> = {
-  touches:
-    "15x20n30de:ddbaganckacadacaaaeacaaaaaabdacacabacacagcfaeabaabaaaahabaaaccbaaabaacfaaccacdabdaabdabdaaaadacaaaaafdbaabdahbacbbbabbhaebaceaabcbabfaabdaacebabacfagaaafeabdeacdabcajhegaabbbeceabceacceaaaabaddafaaaacgaababmbbbabdaeacaabcaca,b02c3232a2g0312a203a2",
-  deadDots:
-    "15x20n30dn:lacbaacbehaabcbacciaaadbfahadacadaaccffahfhaaaaadaaabaaaahabcaaaaaaabbbbcbfbcbabaafaacdaebfaaaaccaeaaabaabgahbcacbdbecaaaadbbbeababcdaaabbabciaeacdaebhadbcadbddkadcbaddabcaaabbabgbcaaabcbabbaacbbbebcacaabcakaaaaacbcaiaaae,3a12a1200c0g00310a3b1",
-  pairPlace: PAIR_BOARD,
-  pairDot: PAIR_BOARD,
-  pairMark:
-    "15x20n30dn:lacbaacbehaabcbacciaaadbfahadacadaaccffahfhaaaaadaaabaaaahabcaaaaaaabbbbcbfbcbabaafaacdaebfaaaaccaeaaabaabgahbcacbdbecaaaadbbbeababcdaaabbabciaeacdaebhadbcadbddkadcbaddabcaaabbabgbcaaabcbabbaacbbbebcacaabcakaaaaacbcaiaaae,3a12a1200c0g00310a3b1",
-  chainPlace:
-    "15x20n30dh:caachabacccagbadadabbacaebcacababaaaaabbdccbmdhcbaadcbdakacbccdchcbaccfcifabjcdadbbabbfatdabdancpbbbahedaaabdbbafbcahbacbebaabcaaeaababbgaaagabafbbaaabaaabcbaccabcacahafbfaaaedecaalbcamd,1b0a1b1b3a02c2b2b13120a",
-  chainStrike:
-    "15x20n30dh:baccbaaagabacadcaadaaacbaaadfacceaaafaibcahbabhcaabbdbfbaagabbcbcbaabaeadaabadeababacbebaaacbaafcbcafabaacebbadbdabaaacaaaeccbgbaebckbbcabhacgaabaaaabcaabcadaacacbaaabcebcabbaabbbadabadacaabbbacfaabacfcbaabaabaibaadbhahaaaffcadbjbba,a230a3i13a2f1a3a2",
-  chainMark: CHAIN_BOARD,
-  chainDot: CHAIN_BOARD,
-  chainWalk: CHAIN_BOARD,
-  // An eight-region chain every region of which has a yellow dot; the walk
-  // shape measured 75 chain steps to this one's 19 over 60 Tricky boards.
-  chainAlternates:
-    "15x20n30dh:dbcaoaabdbaaaakbadddbadacadaabcacbabgadcaadbcaabbdccabaafacabcbadceeaadbbadgnababdcbbaabaacbcfaccaaacaecqaeadbdbdakdbaacdabbbdaaaaabdabbcabacaaabbccabaaccabcbabbccbcbebeaeabbebbafbicbbbcdbdaaagababacbcbdaecaajcbag,2a0b02g023g02a121",
-  // A six-region chain: 13 steps over 120 Tricky boards of both sizes.
-  chainLongWalk:
-    "15x20n30dh:bamancbabebacaabhcfaeaaahadaaebdachafbcaaaacebaaaakcaabgiachbaibbabhaaaagaccbddabbcbacbbbeaabcfabbbbcadaaaebebhbaahcaadaabaccdacacfbdacaeaeahcceacdafadbbagbaafbdbdadbcaebbbdaaabccaaaaabbaafcbabbbaaapae,3a0c2a02b3b33b2d0b113",
-};
+/** The boards the pins sit on, each from its fresh state: the corpus the
+ * whole-plan checks below walk. */
+const pinnedBoards = (): string[] => [
+  ...new Set((Object.keys(DEALT) as DealtArm[]).map((arm) => pinned(arm).id)),
+];
 
 /**
  * The arms no fresh board reaches, each with why and with the board built by
  * hand below. All rest on dots the *player* made: the plan itself never leaves
  * a region with one dot (it colors it instead), and it dots a region only when
  * narrowing it, after which the same region is rarely a pair's target again (0
- * of the 240 boards above).
+ * of 240 dealt boards, 40 per preset of the two sizes at these tiers).
  */
-const BUILT: Record<Exclude<Arm, keyof typeof PINNED>, string> = {
+const BUILT: Record<Exclude<Arm, DealtArm>, string> = {
   lastDot: "a region the player dotted with its answer alone",
   pairStrike: "a pair's target the player had already dotted",
   chainTrim: "a chain's region the player dotted with a color a neighbor shows",
@@ -145,20 +205,14 @@ function walk(
 
 describe("map hint arms", () => {
   it("accounts for every arm exactly once", () => {
-    const pinned = Object.keys(PINNED);
+    const dealt = Object.keys(DEALT);
     const built = Object.keys(BUILT);
-    expect([...pinned, ...built].sort()).toEqual(Object.keys(ARMS).sort());
-    expect(pinned.filter((a) => built.includes(a))).toEqual([]);
+    expect([...dealt, ...built].sort()).toEqual(Object.keys(ARMS).sort());
+    expect(dealt.filter((a) => built.includes(a))).toEqual([]);
   });
 
-  for (const [arm, id] of Object.entries(PINNED) as [Arm, string][])
-    it(`${arm} fires on its pinned board`, () => {
-      const steps = plan(stateOf(id));
-      expect(steps.some((s) => armOf(s.explanation).includes(arm))).toBe(true);
-    });
-
   it("lastDot: a region dotted with its answer alone is placed by that dot", () => {
-    const start = stateOf(PINNED.touches as string);
+    const start = stateOf(pinned("touches").id);
     const solved = walk(start, plan(start), () => {});
     const r = [...start.coloring.keys()].find((i) => start.coloring[i] < 0) as number;
     const dotted = mapGame.executeMove(start, {
@@ -169,11 +223,8 @@ describe("map hint arms", () => {
   });
 
   it("chainTrim: a chain region carrying a dead dot loses it before the chain", () => {
-    const start = stateOf(CHAIN_BOARD);
-    const steps = plan(start);
-    const at = steps.findIndex((s) => ARMS.chainDot.test(s.explanation));
-    const before = walk(start, steps.slice(0, at), () => {});
-    const r = steps[at].highlights?.targets[0] as number;
+    const { state: before, step } = pinned("chainDot");
+    const r = step.highlights?.targets[0] as number;
     // Dot every color on it, as a player marking "anything" would.
     const dotted = [0, 1, 2, 3].reduce(
       (s, bit) => mapGame.executeMove(s, { ops: [{ op: "pencil", region: r, bit }] }),
@@ -186,11 +237,8 @@ describe("map hint arms", () => {
   });
 
   it("pairTrim: a pair region carrying a dead dot loses it before the pair", () => {
-    const start = stateOf(PINNED.pairDot as string);
-    const steps = plan(start);
-    const at = steps.findIndex((s) => ARMS.pairDot.test(s.explanation));
-    const before = walk(start, steps.slice(0, at), () => {});
-    const r = steps[at].highlights?.targets[0] as number;
+    const { state: before, step } = pinned("pairDot");
+    const r = step.highlights?.targets[0] as number;
     const dotted = [0, 1, 2, 3].reduce(
       (s, bit) => mapGame.executeMove(s, { ops: [{ op: "pencil", region: r, bit }] }),
       before,
@@ -202,11 +250,8 @@ describe("map hint arms", () => {
   });
 
   it("pairStrike: a pair's dotted target loses exactly the pair's dots", () => {
-    const start = stateOf(PINNED.pairMark as string);
-    const steps = plan(start);
-    const at = steps.findIndex((s) => ARMS.pairMark.test(s.explanation));
-    const before = walk(start, steps.slice(0, at), () => {});
-    const k = steps[at].highlights?.targets[0] as number;
+    const { state: before, step } = pinned("pairMark");
+    const k = step.highlights?.targets[0] as number;
     // Dot every color on the target, as a player marking "anything" would.
     const dotted = [0, 1, 2, 3].reduce(
       (s, bit) => mapGame.executeMove(s, { ops: [{ op: "pencil", region: k, bit }] }),
@@ -228,7 +273,7 @@ describe("map hint arms", () => {
 describe("map hint claims hold on the board they are spoken over", () => {
   it("every sentence's premise is what the board shows", () => {
     let checked = 0;
-    for (const id of new Set(Object.values(PINNED)))
+    for (const id of pinnedBoards())
       walk(stateOf(id), plan(stateOf(id)), (s, step) => {
         const hl = step.highlights as MapHint;
         const [t] = hl.targets;
@@ -338,7 +383,7 @@ describe("map hint claims hold on the board they are spoken over", () => {
       );
     const seen = { pair: 0, chain: 0 };
     const boards = [
-      ...new Set(Object.values(PINNED)),
+      ...pinnedBoards(),
       ...[0, 1, 2].flatMap((diff) =>
         [0, 1].map((s) => {
           const p: MapParams = { w: 15, h: 20, n: 30, diff };
@@ -368,7 +413,7 @@ describe("map hint continuity", () => {
     // The frontier's promise in Map's terms, read off the plan from outside:
     // `plan-continuity.ts` measures square grids, so Map holds its own.
     let checked = 0;
-    for (const id of new Set(Object.values(PINNED))) {
+    for (const id of pinnedBoards()) {
       const steps = plan(stateOf(id));
       // The last firing, as the frontier sees it: every leg of one journey,
       // and the board before its first leg.
@@ -420,11 +465,7 @@ describe("map hint continuity", () => {
 
 describe("map hint bookkeeping", () => {
   it("dots a player makes toward a step keep the plan, and a stray one drops it", () => {
-    const start = stateOf(PINNED.pairMark as string);
-    const steps = plan(start);
-    const at = steps.findIndex((s) => ARMS.pairMark.test(s.explanation));
-    const s = walk(start, steps.slice(0, at), () => {});
-    const step = steps[at];
+    const { state: s, step } = pinned("pairMark");
     const want = (step.highlights as MapHint).want as { dots: number };
     const k = step.highlights?.targets[0] as number;
     const wanted = [0, 1, 2, 3].filter((c) => want.dots & (1 << c));
@@ -444,7 +485,7 @@ describe("map hint bookkeeping", () => {
   });
 
   it("a dot set without a region's answer is a mistake", () => {
-    const start = stateOf(PINNED.touches as string);
+    const start = stateOf(pinned("touches").id);
     const solved = walk(start, plan(start), () => {});
     const r = [...start.coloring.keys()].find((i) => start.coloring[i] < 0) as number;
     const wrong = (solved.coloring[r] + 1) % 4;
@@ -457,12 +498,14 @@ describe("map hint bookkeeping", () => {
 
 describe("map hint rendering", () => {
   it("a chain's regions carry their numbers, and the target its band", () => {
+    const { id, moves, step } = pinned("chainMark");
     const { recording, hint } = renderScenario({
       game: mapGame,
-      id: PINNED.chainMark as string,
+      id,
+      moves,
       showHint: true,
-      hintUntil: (step) => ARMS.chainMark.test(step.explanation),
     });
+    expect(hint?.explanation).toBe(step.explanation);
     const rgb = (c: readonly number[]) =>
       `rgb(${c.map((v) => Math.round(v * 255)).join(", ")})`;
     const numbers = new Set(
@@ -528,7 +571,7 @@ describe("map's Mark-all press and the populate reading", () => {
   };
 
   it("fills all four colors, then leaves each region what its neighbors do", () => {
-    const start = stateOf(PINNED.touches as string);
+    const start = stateOf(pinned("touches").id);
     expect(blank(start).length).toBeGreaterThan(10);
     const filled = press(start) as MapState;
     for (const r of blank(start)) expect(filled.pencil[r], `region ${r}`).toBe(0xf);
@@ -542,7 +585,7 @@ describe("map's Mark-all press and the populate reading", () => {
   });
 
   it("opens the populate plan with the press, fill and clean as one journey", () => {
-    const start = stateOf(PINNED.touches as string);
+    const start = stateOf(pinned("touches").id);
     const [fill, clean, next] = populatePlan(start);
     expect(fill.explanation).toMatch(/^Start by dotting all four colors/);
     expect(clean.explanation).toMatch(/^Now clear the easy ones/);
@@ -558,7 +601,7 @@ describe("map's Mark-all press and the populate reading", () => {
   });
 
   it("a clean done dot by dot keeps the plan, and a finished one drops the step", () => {
-    const filled = press(stateOf(PINNED.touches as string)) as MapState;
+    const filled = press(stateOf(pinned("touches").id)) as MapState;
     const clean = populatePlan(filled)[0];
     expect(clean.explanation).toMatch(/^Now clear the easy ones/);
     const [first, ...rest] = clean.move.ops;

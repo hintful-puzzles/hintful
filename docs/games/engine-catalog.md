@@ -1341,7 +1341,10 @@ on the pre-commit hook; `code-lines.ts` is their shared stripper),
 tested on**: one pin a kind, the test that each still fires, and the scan that
 finds them again under `HINT_SCAN=1`, reporting the count each rests on; do not
 write a seed scan for a hint test, see [`testing.md`](./testing.md)
-§ "Pinning a hint's positions"), `slow.ts` (the
+§ "Pinning a hint's positions"), `hint-chain-pins.ts` (the pinned position of
+each game whose hint numbers a chain, read by `hint-ordinal.test.ts`, and
+`declaredOrder`, by which `hint-quality.test.ts` tells a game that owes one),
+`slow.ts` (the
 once-per-refactoring-round expensive tier), and two deliberately-independent
 yardsticks (`oklch.ts`, `polygon-yardstick.ts` — each exists so a test cannot
 vacuously agree with the implementation it measures; never import the

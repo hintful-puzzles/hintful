@@ -16,6 +16,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { CURSOR_DOWN, LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSubsetsDesc } from "./generator.ts";
@@ -39,13 +40,7 @@ import {
   subsetsValidate,
   whyCantPlace,
 } from "./solver.ts";
-import {
-  cloneState,
-  DIFF_EASY,
-  newState,
-  type SubsetsMove,
-  type SubsetsState,
-} from "./state.ts";
+import { cloneState, DIFF_EASY, newState, type SubsetsState } from "./state.ts";
 
 const P = { w: 4, h: 4, n: 4, diff: DIFF_EASY };
 
@@ -78,21 +73,78 @@ function applyFiring(state: SubsetsState, d: SubsetsDeduction): SubsetsState {
   return next;
 }
 
-/** Scan seeds × walked positions for the first firing matching `pred`. */
-function findFiring(
-  pred: (d: SubsetsDeduction, state: SubsetsState) => boolean,
-): { state: SubsetsState; d: SubsetsDeduction } | null {
-  for (let s = 0; s < 30; s++) {
-    let state = gen(`find-${s}`);
-    for (let step = 0; step < 200; step++) {
-      const plan = deduceHintPlan(state);
-      if (plan.deductions.length === 0) break;
-      const d = plan.deductions[0];
-      if (pred(d, state)) return { state, d };
-      state = applyFiring(state, d);
-    }
-  }
-  return null;
+/** A kind by the firing the deduction opens with on the board: the one a hint
+ * there narrates. */
+const opensWith =
+  (pred: (d: SubsetsDeduction) => boolean) =>
+  (_step: unknown, state: SubsetsState): boolean => {
+    const [d] = deduceHintPlan(state).deductions;
+    return d !== undefined && pred(d);
+  };
+
+const pinned = describeHintPins({
+  game: subsetsGame,
+  params: [P],
+  seeds: 60,
+  kinds: {
+    arrowKnown: opensWith((d) => d.reason.kind === "arrowKnown"),
+    arrowMask: opensWith((d) => d.reason.kind === "arrowMask"),
+    collapse: opensWith((d) => d.reason.kind === "collapse"),
+    hiddenSingle: opensWith((d) => d.reason.kind === "hiddenSingle"),
+    // The cube finds a set with one cell left that the board does not show.
+    cubeLastPlace: opensWith(
+      (d) => d.reason.kind === "hiddenSingle" && d.marks.length > 0,
+    ),
+    severalLetters: opensWith((d) => d.sets.length > 1),
+    // A collapse with a competitor set a visible rule blocks, which the
+    // sentence can then point at.
+    collapseWithCompetitor: (_step, state) => {
+      const [d] = deduceHintPlan(state).deductions;
+      return (
+        d !== undefined &&
+        d.reason.kind === "collapse" &&
+        pickExclusion(withMarks(state, d), d.pos, d.reason.survivors) !== null
+      );
+    },
+  },
+  pins: {
+    /** Held on 373 of 2659 positions walked. */
+    arrowKnown: "4x4n4de:4,_RDL,9,_D,_D,_,_UDL,10,_D,_,_D,_D,_,_URL,8,_",
+    /** Held on 400 of 2659 positions walked. */
+    arrowMask: "4x4n4de:_R,_,11RL,_,5,_U,_,_UDL,_,_RDL,8,_,10,_,_RL,4",
+    /** Held on 854 of 2659 positions walked. */
+    collapse: {
+      id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
+      moves:
+        '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":4,"bit":1},{"kind":"set","type":"known","pos":3,"bit":1},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":2},{"kind":"set","type":"known","pos":11,"bit":1}]',
+    },
+    /** Held on 1032 of 2659 positions walked. */
+    hiddenSingle: {
+      id: "4x4n4de:3,12,_RDL,8,_,_R,_,_L,11,_,_UDL,_U,5,_UR,_R,_",
+      moves:
+        '[{"kind":"set","type":"known","pos":2,"bit":3},{"kind":"set","type":"known","pos":2,"bit":2}]',
+    },
+    /** Held on 2 of 2659 positions walked. */
+    cubeLastPlace: {
+      id: "4x4n4de:_,_RL,_,_,3,_D,9D,6,10,_R,_,13L,12,_UR,1U,_UL",
+      moves:
+        '[{"kind":"set","type":"cleared","pos":10,"bit":1},{"kind":"set","type":"cleared","pos":10,"bit":2},{"kind":"set","type":"known","pos":13,"bit":0},{"kind":"set","type":"cleared","pos":10,"bit":3},{"kind":"set","type":"known","pos":15,"bit":0},{"kind":"set","type":"known","pos":15,"bit":2},{"kind":"set","type":"known","pos":15,"bit":3},{"kind":"set","type":"cleared","pos":10,"bit":0},{"kind":"set","type":"known","pos":15,"bit":1},{"kind":"set","type":"known","pos":5,"bit":2},{"kind":"set","type":"known","pos":9,"bit":2},{"kind":"set","type":"known","pos":13,"bit":2},{"kind":"set","type":"cleared","pos":9,"bit":3},{"kind":"set","type":"cleared","pos":13,"bit":3}]',
+    },
+    /** Held on 1245 of 2659 positions walked. */
+    severalLetters: "4x4n4de:4,_RDL,9,_D,_D,_,_UDL,10,_D,_,_D,_D,_,_URL,8,_",
+    /** Held on 836 of 2659 positions walked. */
+    collapseWithCompetitor: {
+      id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
+      moves:
+        '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":4,"bit":1},{"kind":"set","type":"known","pos":3,"bit":1},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":2},{"kind":"set","type":"known","pos":11,"bit":1}]',
+    },
+  },
+});
+
+/** A pinned position and the firing the deduction opens with there. */
+function firingAt(kind: Parameters<typeof pinned>[0]) {
+  const { state } = pinned(kind);
+  return { state, d: deduceHintPlan(state).deductions[0] };
 }
 
 describe("deduceHintPlan", () => {
@@ -137,11 +189,9 @@ describe("deduceHintPlan", () => {
   });
 
   it("an arrowKnown firing propagates the subset's marked letters up the arrow", () => {
-    const hit = findFiring((d) => d.reason.kind === "arrowKnown");
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = firingAt("arrowKnown");
     const r = hit.d.reason;
-    if (r.kind !== "arrowKnown") return;
+    if (r.kind !== "arrowKnown") throw new Error("the pin opens with another firing");
     expect(hit.d.pos).toBe(r.from); // the superset gains the letters
     // The arrow really points from -> to, and every gained letter is confirmed
     // in the subset `to`.
@@ -156,11 +206,9 @@ describe("deduceHintPlan", () => {
   });
 
   it("an arrowMask firing propagates the superset's exclusions down the arrow", () => {
-    const hit = findFiring((d) => d.reason.kind === "arrowMask");
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = firingAt("arrowMask");
     const r = hit.d.reason;
-    if (r.kind !== "arrowMask") return;
+    if (r.kind !== "arrowMask") throw new Error("the pin opens with another firing");
     expect(hit.d.pos).toBe(r.to); // the subset loses the letters
     for (const set of hit.d.sets) {
       expect(set.type).toBe("cleared");
@@ -170,11 +218,9 @@ describe("deduceHintPlan", () => {
   });
 
   it("a collapse firing's survivors really agree on every decided letter", () => {
-    const hit = findFiring((d) => d.reason.kind === "collapse");
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = firingAt("collapse");
     const r = hit.d.reason;
-    if (r.kind !== "collapse") return;
+    if (r.kind !== "collapse") throw new Error("the pin opens with another firing");
     expect(r.survivors.length).toBeGreaterThan(0);
     for (const set of hit.d.sets) {
       const b = 1 << set.bit;
@@ -189,11 +235,9 @@ describe("deduceHintPlan", () => {
   });
 
   it("a hidden single places a set whose only candidate cell is the target", () => {
-    const hit = findFiring((d) => d.reason.kind === "hiddenSingle");
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = firingAt("hiddenSingle");
     const r = hit.d.reason;
-    if (r.kind !== "hiddenSingle") return;
+    if (r.kind !== "hiddenSingle") throw new Error("the pin opens with another firing");
     // The set can go in exactly one cell — the target — per the shallow aid.
     const cells = candidateCells(withMarks(hit.state, hit.d), r.value);
     expect(cells).toEqual([hit.d.pos]);
@@ -206,13 +250,9 @@ describe("deduceHintPlan", () => {
   it("the cube's last-place firing is a hidden single once its rule-outs are marked", () => {
     // The cube finds a set with one cell left that the board does not show; the
     // rule-outs it places are what make the aid show it.
-    const hit = findFiring(
-      (d) => d.reason.kind === "hiddenSingle" && d.marks.length > 0,
-    );
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = firingAt("cubeLastPlace");
     const r = hit.d.reason;
-    if (r.kind !== "hiddenSingle") return;
+    if (r.kind !== "hiddenSingle") throw new Error("the pin opens with another firing");
     expect(candidateCells(hit.state, r.value).length).toBeGreaterThan(1);
     expect(candidateCells(withMarks(hit.state, hit.d), r.value)).toEqual([hit.d.pos]);
   });
@@ -322,25 +362,20 @@ describe("hint", () => {
   });
 
   it("groups a multi-letter firing into one continuesPrevious journey", () => {
-    // Find a firing that decides >1 letter, then check hint emits it as a lead
-    // + continuation legs on one cell, each ringing its own letter.
-    const hit = findFiring((d) => d.sets.length > 1);
-    expect(hit).not.toBeNull();
-    if (!hit) return;
-    const res = subsetsGame.hint?.(hit.state);
-    expect(res?.ok).toBe(true);
-    if (!res?.ok) return;
+    // A firing that decides >1 letter is emitted as a lead + continuation legs
+    // on one cell, each ringing its own letter.
+    const { state, steps } = pinned("severalLetters");
     // The opening firing is the first one hint emits; its legs 2+ are flagged.
-    const firstLen = deduceHintPlan(hit.state).deductions[0].sets.length;
+    const firstLen = deduceHintPlan(state).deductions[0].sets.length;
     for (let k = 1; k < firstLen; k++) {
-      expect(res.steps[k].continuesPrevious).toBe(true);
-      const [slot] = stepMarks(res.steps[k]).of("ring", SLOT);
-      const [leadSlot] = stepMarks(res.steps[0]).of("ring", SLOT);
-      const move = res.steps[k].move;
+      expect(steps[k].continuesPrevious).toBe(true);
+      const [slot] = stepMarks(steps[k]).of("ring", SLOT);
+      const [leadSlot] = stepMarks(steps[0]).of("ring", SLOT);
+      const move = steps[k].move;
       expect({ x: slot.x, y: slot.y }).toEqual({ x: leadSlot.x, y: leadSlot.y });
       expect(move.kind === "set" && slot.bit === move.bit).toBe(true);
     }
-    expect(res.steps[0].continuesPrevious).toBeUndefined();
+    expect(steps[0].continuesPrevious).toBeUndefined();
   });
 
   it("counts a solved board as finished, so the midend refuses it", () => {
@@ -436,36 +471,21 @@ describe("hintKeepTrack", () => {
 
 describe("highlights", () => {
   it("arrows point at a neighbor cell; a collapse points at tally sets", () => {
-    const arrow = findFiring((d) => d.reason.kind === "arrowKnown");
-    const collapse = findFiring((d) => d.reason.kind === "collapse");
-    expect(arrow).not.toBeNull();
-    expect(collapse).not.toBeNull();
-    if (!arrow || !collapse) return;
-    const aHl = subsetsGame.hint?.(arrow.state);
-    const cHl = subsetsGame.hint?.(collapse.state);
-    if (aHl?.ok) {
-      const marks = stepMarks(aHl.steps[0]);
-      expect(marks.of("outline", CELL).length).toBeGreaterThan(0);
-      expect(marks.of("outline", TALLY_SET).length).toBe(0);
-      expect(marks.of("stripes", CELL).length).toBe(0);
-    }
-    if (cHl?.ok) {
-      const marks = stepMarks(cHl.steps[0]);
-      expect(marks.of("outline", TALLY_SET).length).toBeGreaterThan(0);
-      // A collapse points at the surviving sets in the tally, plus at most one
-      // grid cell — the excluded competitor's blocker.
-      expect(marks.of("outline", CELL).length).toBeLessThanOrEqual(1);
-      expect(marks.of("stripes", CELL).length).toBe(0);
-    }
+    const arrow = stepMarks(pinned("arrowKnown").step);
+    expect(arrow.of("outline", CELL).length).toBeGreaterThan(0);
+    expect(arrow.of("outline", TALLY_SET).length).toBe(0);
+    expect(arrow.of("stripes", CELL).length).toBe(0);
+
+    const collapse = stepMarks(pinned("collapse").step);
+    expect(collapse.of("outline", TALLY_SET).length).toBeGreaterThan(0);
+    // A collapse points at the surviving sets in the tally, plus at most one
+    // grid cell — the excluded competitor's blocker.
+    expect(collapse.of("outline", CELL).length).toBeLessThanOrEqual(1);
+    expect(collapse.of("stripes", CELL).length).toBe(0);
   });
 
   it("a hidden single spotlights its set's one candidate cell (the target)", () => {
-    const hit = findFiring((d) => d.reason.kind === "hiddenSingle");
-    expect(hit).not.toBeNull();
-    if (!hit) return;
-    const res = subsetsGame.hint?.(hit.state);
-    if (!res?.ok) return;
-    const marks = stepMarks(res.steps[0]);
+    const marks = stepMarks(pinned("hiddenSingle").step);
     const [slot] = marks.of("ring", SLOT);
     // The spotlight is the set's single home, which is the acted cell.
     expect(marks.of("stripes", CELL)).toEqual([{ x: slot.x, y: slot.y }]);
@@ -590,73 +610,31 @@ describe("subgoal continuation narration", () => {
 
 describe("collapse exclusion (#2 — why not X)", () => {
   it("a collapse hint explains why a competitor set can't go there", () => {
-    // Walk to a collapse whose competitor set is illustrable.
-    let found = false;
-    for (let s = 0; s < 60 && !found; s++) {
-      let state = gen(`whynot-${s}`);
-      for (let step = 0; step < 200; step++) {
-        const plan = deduceHintPlan(state);
-        const d = plan.deductions[0];
-        if (!d) break;
-        if (
-          d.reason.kind === "collapse" &&
-          pickExclusion(withMarks(state, d), d.pos, d.reason.survivors)
-        ) {
-          const res = subsetsGame.hint?.(state);
-          if (res?.ok) {
-            // The firing's lead letter comes after the rule-outs it rests on.
-            const lead = res.steps[d.marks.length];
-            expect(lead.explanation).toMatch(
-              /For instance, .* (can't go here|already placed)/,
-            );
-            // The blocker cell is outlined so the clause has a referent, and
-            // only on the leg that says the clause.
-            expect(stepMarks(lead).of("outline", CELL).length).toBeGreaterThan(0);
-            const next = res.steps[d.marks.length + 1];
-            if (next?.continuesPrevious)
-              expect(stepMarks(next).of("outline", CELL)).toEqual([]);
-            found = true;
-          }
-          break;
-        }
-        state = applyFiring(state, d);
-      }
-    }
-    expect(found).toBe(true);
+    const { state, steps } = pinned("collapseWithCompetitor");
+    const [d] = deduceHintPlan(state).deductions;
+    // The firing's lead letter comes after the rule-outs it rests on.
+    const lead = steps[d.marks.length];
+    expect(lead.explanation).toMatch(/For instance, .* (can't go here|already placed)/);
+    // The blocker cell is outlined so the clause has a referent, and only on
+    // the leg that says the clause.
+    expect(stepMarks(lead).of("outline", CELL).length).toBeGreaterThan(0);
+    const next = steps[d.marks.length + 1];
+    if (next?.continuesPrevious)
+      expect(stepMarks(next).of("outline", CELL)).toEqual([]);
   });
 });
 
 describe("hint rendering (tier 2.5)", () => {
-  /** Build the moves that walk a seed's plan to the first firing of `kind`. */
-  function movesToKind(seed: string, kind: string): SubsetsMove[] | null {
-    let state = gen(seed);
-    const moves: SubsetsMove[] = [];
-    for (let step = 0; step < 60; step++) {
-      const d = deduceHintPlan(state).deductions[0];
-      if (!d) return null;
-      if (d.reason.kind === kind) return moves;
-      for (const set of d.sets)
-        moves.push({ kind: "set", type: set.type, pos: d.pos, bit: set.bit });
-      state = applyFiring(state, d);
-    }
-    return null;
+  /** The frame a pinned position's hint draws, through a real `Midend`. */
+  function hintFrame(kind: Parameters<typeof pinned>[0]) {
+    const { id, moves, step } = pinned(kind);
+    const result = renderScenario({ game: subsetsGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    return result;
   }
 
   it("an arrow hint frame paints the COL_HINT target slot and the COL_HINT_CELL neighbor", () => {
-    let seed: string | null = null;
-    for (let s = 0; s < 40 && !seed; s++) {
-      const d = deduceHintPlan(gen(`render-${s}`)).deductions[0];
-      if (d && (d.reason.kind === "arrowKnown" || d.reason.kind === "arrowMask"))
-        seed = `render-${s}`;
-    }
-    expect(seed).not.toBeNull();
-    if (!seed) return;
-    const result = renderScenario({
-      game: subsetsGame,
-      id: `4x4n4#${seed}`,
-      showHint: true,
-    });
-    expect(result.hint).toBeDefined();
+    const result = hintFrame("arrowKnown");
     const ops = result.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
@@ -664,25 +642,7 @@ describe("hint rendering (tier 2.5)", () => {
   });
 
   it("a collapse hint frame boxes the highlighted set in the tally band", () => {
-    // Reach a collapse frame by replaying prior firings, then show the hint.
-    let seed: string | null = null;
-    let moves: SubsetsMove[] | null = null;
-    for (let s = 0; s < 60 && !moves; s++) {
-      const m = movesToKind(`tally-${s}`, "collapse");
-      if (m) {
-        seed = `tally-${s}`;
-        moves = m;
-      }
-    }
-    expect(moves).not.toBeNull();
-    if (!seed || !moves) return;
-    const result = renderScenario({
-      game: subsetsGame,
-      id: `4x4n4#${seed}`,
-      moves,
-      showHint: true,
-    });
-    expect(result.hint).toBeDefined();
+    const result = hintFrame("collapse");
     // A collapse boxes the surviving sets in the tally (COL_HINT_CELL), and may
     // also frame one blocker cell for the "why not X" clause. A box rather
     // than a tint: the label's own color carries the state (error red, used-up
@@ -695,24 +655,7 @@ describe("hint rendering (tier 2.5)", () => {
   });
 
   it("a hidden-single hint frame hatches the set's one candidate cell", () => {
-    let seed: string | null = null;
-    let moves: SubsetsMove[] | null = null;
-    for (let s = 0; s < 60 && !moves; s++) {
-      const m = movesToKind(`hs-render-${s}`, "hiddenSingle");
-      if (m) {
-        seed = `hs-render-${s}`;
-        moves = m;
-      }
-    }
-    expect(moves).not.toBeNull();
-    if (!seed || !moves) return;
-    const result = renderScenario({
-      game: subsetsGame,
-      id: `4x4n4#${seed}`,
-      moves,
-      showHint: true,
-    });
-    expect(result.hint).toBeDefined();
+    const result = hintFrame("hiddenSingle");
     expect(stepMarks(result.hint).of("stripes", CELL)).toHaveLength(1);
     const ops = result.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);

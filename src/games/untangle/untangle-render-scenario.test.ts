@@ -99,8 +99,8 @@ describe("Untangle render scenarios", () => {
   });
 
   it("hint frame: a COL_HINT line + destination marker are drawn", () => {
-    const n = 10;
-    const id = fixedBoard(n, "untangle-render-hint");
+    const id =
+      "10:0-4,0-5,0-7,0-8,1-2,1-3,1-8,1-9,2-4,2-6,2-9,3-5,3-6,3-9,4-7,4-8,5-7,6-9";
     const { recording, hint } = renderScenario({
       game: untangleGame,
       id,
@@ -131,7 +131,9 @@ describe("Untangle render scenarios", () => {
   });
 
   it("journey frame: the marked points still to move are ringed", () => {
-    // The owner's board, followed by hint until a plan is a journey.
+    // The owner's board, followed by hint until a plan is a journey. Named by
+    // seed because the hint here needs the generator's `aux`, which a desc
+    // does not carry.
     const seed = "343769d2db4f418cccd3b79e00c975d0";
     const { desc, aux } = untangleGame.newDesc({ n: 20 }, randomNew(seed));
     let s = untangleGame.newState({ n: 20 }, desc);

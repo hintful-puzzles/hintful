@@ -21,6 +21,7 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { boardOf, type PearlHint, pearlKeepTrack } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
@@ -239,16 +240,25 @@ describe("every narratable premise the corpus reaches is reached", () => {
 });
 
 describe("following one step at a time", () => {
-  /** A fresh board's first step that decides two lines (a white pearl's). */
-  function twoLineStep(): { state: PearlState; step: Step } {
-    for (const { p, seed } of CORPUS) {
-      const state = deal(p, seed);
-      for (const step of hintSteps(state).slice(0, 1))
-        if (step.highlights?.targets.filter((t) => t.line).length === 2)
-          return { state, step };
-    }
-    throw new Error("no opener decides two lines");
-  }
+  /** A position whose hint opens with a step that decides two lines (a white
+   * pearl's). */
+  const pinned = describeHintPins({
+    game: pearlGame,
+    params: SHAPES,
+    seeds: 3,
+    kinds: {
+      twoLines: (step) =>
+        (step.highlights as PearlHint).targets.filter((t) => t.line).length === 2,
+    },
+    pins: {
+      /** Held on 137 of 462 positions walked. */
+      twoLines: "6x6de:cWaBfBcWbWWaWbWiB",
+    },
+  });
+  const twoLineStep = (): { state: PearlState; step: Step } => {
+    const { state, step } = pinned("twoLines");
+    return { state, step: step as Step };
+  };
 
   /** The click that draws line `t`: a reciprocal flip, as the game makes it. */
   function click(state: PearlState, t: { sq: number; dir: number }): PearlMove {

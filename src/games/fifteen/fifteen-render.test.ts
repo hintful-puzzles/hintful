@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { raisedBevelWidth } from "../../engine/draw.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { TILE } from "./hint-text.ts";
@@ -92,6 +92,18 @@ describe("Fifteen rendering", () => {
   });
 });
 
+const pinned = describeHintPins({
+  game: fifteenGame,
+  params: [{ w: 4, h: 4 }],
+  kinds: {
+    slide: (step) => step.move.type === "move",
+  },
+  pins: {
+    /** Held on 1292 of 1292 positions walked. */
+    slide: "4x4:8,2,13,4,0,12,3,15,9,14,7,10,5,11,1,6",
+  },
+});
+
 describe("the hint mark while the hinted slide animates", () => {
   // Netslide's defect class: a hint mark on a *moving tile* must ride the
   // slide — the midend advances the plan only at
@@ -101,55 +113,42 @@ describe("the hint mark while the hinted slide animates", () => {
   // tile's own background in the interpolated animation pass. This test pins
   // that down at an actual mid-slide frame.
   it("rides the moving tile, and nothing marks the cell it set off from", () => {
-    const params = { w: 4, h: 4 };
-    for (let i = 0; i < 20; i++) {
-      const rng = randomNew(`hint-anim-${i}`);
-      const { desc } = fifteenGame.newDesc(params, rng);
-      const state = newState(params, desc);
-      const res = fifteenGame.hint?.(state);
-      if (!res?.ok) continue;
-      const step = res.steps[0];
-      const [tile] = stepMarks(step).of("ring", TILE);
-      const after = executeMove(state, step.move);
-      const from = state.tiles.indexOf(tile);
-      const to = after.tiles.indexOf(tile);
+    const { state, step } = pinned("slide");
+    const [tile] = stepMarks(step).of("ring", TILE);
+    const after = executeMove(state, step.move);
+    const from = state.tiles.indexOf(tile);
+    const to = after.tiles.indexOf(tile);
 
-      const ds = freshDs(state);
-      // Warm the cache with the still pre-move frame, hint displayed.
-      redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, 0, step);
+    const ds = freshDs(state);
+    // Warm the cache with the still pre-move frame, hint displayed.
+    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, 0, step);
 
-      // Halfway through the slide into the gap.
-      const anim = fifteenGame.animLength?.(state, after, 1, UI) ?? 0;
-      const { dr, ops } = recordingDrawing();
-      redraw(dr, ds, state, after, 1, UI, anim / 2, 0, step);
+    // Halfway through the slide into the gap.
+    const anim = fifteenGame.animLength?.(state, after, 1, UI) ?? 0;
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, ds, state, after, 1, UI, anim / 2, 0, step);
 
-      // The hint fill is drawTile's center rect, inset by the shared bevel
-      // width, drawn at the tile's interpolated position — half a cell from its
-      // origin toward the gap it slides into. The inset is read from the
-      // shared helper so it follows the collection's bevel width.
-      const hw = raisedBevelWidth(TS);
-      const x0 = coord(from % 4);
-      const y0 = coord(Math.floor(from / 4));
-      const x1 = coord(to % 4);
-      const y1 = coord(Math.floor(to / 4));
-      const ex = x0 + Math.floor(0.5 * (x1 - x0)) + hw;
-      const ey = y0 + Math.floor(0.5 * (y1 - y0)) + hw;
+    // The hint fill is drawTile's center rect, inset by the shared bevel
+    // width, drawn at the tile's interpolated position — half a cell from its
+    // origin toward the gap it slides into. The inset is read from the
+    // shared helper so it follows the collection's bevel width.
+    const hw = raisedBevelWidth(TS);
+    const x0 = coord(from % 4);
+    const y0 = coord(Math.floor(from / 4));
+    const x1 = coord(to % 4);
+    const y1 = coord(Math.floor(to / 4));
+    const ex = x0 + Math.floor(0.5 * (x1 - x0)) + hw;
+    const ey = y0 + Math.floor(0.5 * (y1 - y0)) + hw;
 
-      const fills = opsOfKind(ops, "rect").filter(
-        (o) =>
-          o.op === "rect" &&
-          o.color === 4 &&
-          o.w === TS - 2 * hw &&
-          o.h === TS - 2 * hw,
-      );
-      // Exactly one hint fill on the frame, and it is mid-flight — in
-      // particular not at the origin cell, where marking the step's own
-      // pre-move index would have painted it.
-      expect(fills).toHaveLength(1);
-      expect({ x: fills[0].x, y: fills[0].y }).toEqual({ x: ex, y: ey });
-      return;
-    }
-    throw new Error("no seed in 20 produced a board with an ok hint");
+    const fills = opsOfKind(ops, "rect").filter(
+      (o) =>
+        o.op === "rect" && o.color === 4 && o.w === TS - 2 * hw && o.h === TS - 2 * hw,
+    );
+    // Exactly one hint fill on the frame, and it is mid-flight — in
+    // particular not at the origin cell, where marking the step's own
+    // pre-move index would have painted it.
+    expect(fills).toHaveLength(1);
+    expect({ x: fills[0].x, y: fills[0].y }).toEqual({ x: ex, y: ey });
   });
 });
 

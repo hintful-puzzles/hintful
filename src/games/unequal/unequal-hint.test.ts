@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectContour, expectRing } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -23,7 +24,6 @@ import { type HintReason, recordUnequalDeductions } from "./solver.ts";
 import {
   DIFF_EXTREME,
   diffToLevel,
-  encodeParams,
   newState,
   newUi,
   status,
@@ -279,16 +279,8 @@ describe("unequal hintKeepTrack", () => {
   });
 
   it("shrinks then finishes a multi-mark strike journey", () => {
-    const { st } = gen(UNEQ, "kt-strike");
-    const populated = unequalGame.executeMove(st, { type: "pencilAll" });
-    const res = unequalGame.hint?.(populated);
-    if (!res?.ok) throw new Error("hint refused");
-    const step = res.steps.find(
-      (s) =>
-        (s.move as UnequalMove).type === "pencilStrike" &&
-        (s.move as { type: "pencilStrike"; marks: unknown[] }).marks.length >= 2,
-    ) as AnyStep | undefined;
-    if (!step) throw new Error("no multi-mark strike step");
+    const { state: populated, step: pinnedStep } = pinned("multiMarkStrike");
+    const step = pinnedStep as AnyStep;
 
     const marks = [...step.move.marks] as { x: number; y: number; n: number }[];
     // Clear the first mark via a pencil toggle (the production strike path).
@@ -349,38 +341,58 @@ describe("unequal hint resumes to solved", () => {
 
 // --- tier 2.5: render ------------------------------------------------------
 
-/** Scan seeds for an id whose hint, after populating, reaches a clue-strike step
- * matching `pred` — so the render frame is deterministic without a known desc. */
-function clueStrikeFrame(p: UnequalParams, pred: (s: string) => boolean): string {
-  for (let s = 0; s < 30; s++) {
-    const seed = `frame-${p.mode}-${s}`;
-    const { st } = gen(p, seed);
-    const populated = unequalGame.executeMove(st, { type: "pencilAll" });
-    const res = unequalGame.hint?.(populated);
-    if (!res?.ok) continue;
-    if (
-      res.steps.some(
-        (step) =>
-          (step.move as UnequalMove).type === "pencilStrike" && pred(step.explanation),
-      )
-    )
-      return `${encodeParams(p, true)}#${seed}`;
-  }
-  throw new Error(`no clue-strike frame found for ${p.mode}`);
+const strikes = (step: AnyStep): number =>
+  step.move.type === "pencilStrike" ? step.move.marks.length : 0;
+
+/** Positions on a board with every candidate penciled in first, each mode's
+ * clue strike among them. */
+const pinned = describeHintPins({
+  game: unequalGame,
+  params: [UNEQ, ADJ],
+  opening: (): UnequalMove[] => [{ type: "pencilAll" }],
+  kinds: {
+    multiMarkStrike: (step) => strikes(step) >= 2,
+    greaterThanStrike: (step) =>
+      strikes(step) > 0 && /greater-than sign/.test(step.explanation),
+    barStrike: (step) => strikes(step) > 0 && /bar/.test(step.explanation),
+  },
+  pins: {
+    /** Held on 461 of 1506 positions walked. */
+    multiMarkStrike: {
+      id: "5dk:0,0,0R,0R,0,0,0U,0,0,0U,1,0D,0U,0R,0,5,0R,0,0,0U,0,0L,0,0L,0,",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 254 of 1506 positions walked. */
+    greaterThanStrike: {
+      id: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 286 of 1506 positions walked. */
+    barStrike: {
+      id: "5adk:0D,0RD,0DL,0,5,0UD,0U,0UR,0L,0,0UD,0D,1,0RD,0DL,0U,0URD,0L,0UR,0UL,0,0UR,0L,0,0,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":5},{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":5},{"x":3,"y":0,"n":5},{"x":2,"y":1,"n":1},{"x":4,"y":1,"n":5},{"x":0,"y":2,"n":1},{"x":1,"y":2,"n":1},{"x":3,"y":2,"n":1},{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":5},{"x":2,"y":3,"n":1},{"x":4,"y":3,"n":5},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":5}]}]',
+    },
+  },
+});
+
+/** The frame a pinned position's hint draws, through a real `Midend`. */
+function hintFrame(kind: Parameters<typeof pinned>[0]) {
+  const { id, moves, step } = pinned(kind);
+  const result = renderScenario({
+    game: unequalGame,
+    id,
+    defaultBackground: DEFAULT_BACKGROUND,
+    moves,
+    showHint: true,
+  });
+  expect(result.hint?.explanation).toBe(step.explanation);
+  return result;
 }
 
 describe("unequal hint render", () => {
   it("an Unequal-mode link elimination outlines the pair and strikes the candidate", () => {
-    const id = clueStrikeFrame(UNEQ, (e) => /greater-than sign/.test(e));
-    const { recording, hint } = renderScenario({
-      game: unequalGame,
-      id,
-      defaultBackground: DEFAULT_BACKGROUND,
-      moves: [{ type: "pencilAll" }],
-      showHint: true,
-      hintUntil: (s) => /greater-than sign/.test(s.explanation),
-    });
-    expect(hint?.explanation).toMatch(/greater-than sign/);
+    const { recording, hint } = hintFrame("greaterThanStrike");
     // The two clue cells are **outlined** COL_HINT_CELL evidence: the pair is
     // adjacent (a greater-than sign joins them), so the contour is one two-cell
     // ring of `2·2 + 2` sides, not two four-sided ones.
@@ -402,16 +414,7 @@ describe("unequal hint render", () => {
   });
 
   it("an Adjacent-mode elimination outlines the pair and strikes the candidate", () => {
-    const id = clueStrikeFrame(ADJ, (e) => /bar/.test(e));
-    const { recording, hint } = renderScenario({
-      game: unequalGame,
-      id,
-      defaultBackground: DEFAULT_BACKGROUND,
-      moves: [{ type: "pencilAll" }],
-      showHint: true,
-      hintUntil: (s) => /bar/.test(s.explanation),
-    });
-    expect(hint?.explanation).toMatch(/bar/);
+    const { recording } = hintFrame("barStrike");
     expectContour(recording.ops, COL_HINT_CELL, 2);
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,

@@ -11,11 +11,9 @@ import { describe, expect, it } from "vitest";
 import { type CandidateReading, nakedSingles } from "../../engine/candidate-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
-import {
-  opsOfKind,
-  type RecordingDrawing,
-} from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import {
   areasOf,
@@ -408,6 +406,36 @@ describe.each(
 
 // --- the player's own board -------------------------------------------------
 
+/** The steps the following and frame tests read, each pinned on a position
+ * whose hint opens with one. */
+const pinned = describeHintPins({
+  game: seismicGame,
+  params: SHAPES,
+  seeds: 3,
+  kinds: {
+    severalNotes: (step) =>
+      step.move.type === "pencilStrike" && step.move.marks.length >= 2,
+    placement: (step) => step.move.type === "set",
+    starvedArea: (step) => isStarve(step) && step.move.type === "pencilStrike",
+  },
+  pins: {
+    /** Held on 158 of 1434 positions walked. */
+    severalNotes: {
+      id: "6x6Tdh:2ab1a1a4a3ad2aabbc1bda2a,e43d5f2e5k",
+      moves:
+        '[{"type":"set","x":0,"y":0,"n":1,"pencil":false},{"type":"set","x":5,"y":5,"n":1,"pencil":false},{"type":"set","x":0,"y":2,"n":1,"pencil":false},{"type":"pencilAdd","marks":[{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":2,"y":1,"n":3},{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":5}]}]',
+    },
+    /** Held on 821 of 1434 positions walked. */
+    placement: "6x6de:1ca2b2b2ba1a1c1aa1a2f3ac1a,a51a2g43i5k2",
+    /** Held on 80 of 1434 positions walked. */
+    starvedArea: {
+      id: "8x5dh:b2ba4a2aa1aa1ba1aeb1a1aaac1a2aa,g2r3a5k",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":2}]},{"type":"pencilAdd","marks":[{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2}]},{"type":"pencilAdd","marks":[{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":3}]}]',
+    },
+  },
+});
+
 function boardWhere(pred: (b: Board) => boolean): Board {
   const found = boards().find(pred);
   if (!found) throw new Error("no such board in the corpus");
@@ -459,16 +487,8 @@ describe("the player's own board", () => {
   });
 
   it("follows a strike note by note, and refreshes a stored one to what is left", () => {
-    const { label, state: start } = boardWhere((b) => b.params.diff === DIFF_NORMAL);
-    let state = start;
-    const steps = planOf(label, start, "populate");
-    const at = steps.findIndex(
-      (s) => s.move.type === "pencilStrike" && s.move.marks.length >= 2,
-    );
-    expect(at, "no multi-note strike in the plan").toBeGreaterThanOrEqual(0);
-    for (const s of steps.slice(0, at)) state = seismicGame.executeMove(state, s.move);
-
-    const original = steps[at];
+    const { state, step } = pinned("severalNotes");
+    const original = step as Step;
     if (original.move.type !== "pencilStrike") throw new Error("unreachable");
     const [first, ...rest] = original.move.marks;
     const toggle: SeismicMove = { type: "set", ...first, pencil: true };
@@ -492,9 +512,8 @@ describe("the player's own board", () => {
   });
 
   it("completes a placement only with the number it names", () => {
-    const { label, state } = boardWhere((b) => b.params.mode === MODE_TECTONIC);
-    const step = planOf(label, state).find((s) => s.move.type === "set");
-    if (!step || step.move.type !== "set") throw new Error("no placement in the plan");
+    const { state, step } = pinned("placement");
+    if (step.move.type !== "set") throw new Error("unreachable");
     const other = step.move.n === 1 ? 2 : 1;
     expect(hintKeepTrack({ ...step.move }, step, state)).toBe("completed");
     expect(hintKeepTrack({ ...step.move, n: other }, step, state)).toBe("off");
@@ -562,20 +581,10 @@ describe("the sentences at their extremes", () => {
 
 describe("the frames a hint draws", () => {
   it("rings each struck cell, hatches the starved area, and strikes each note through", () => {
-    const params: SeismicParams = { w: 6, h: 6, diff: DIFF_NORMAL, mode: MODE_SEISMIC };
-    let found: { hint?: HintStep<SeismicMove>; recording: RecordingDrawing } | null =
-      null;
-    for (let s = 0; s < 20 && !found; s++) {
-      const r = renderScenario({
-        game: seismicGame,
-        id: `${seismicGame.encodeParams(params, true)}#starve-${s}`,
-        showHint: true,
-        hintUntil: (step) => isStarve(step) && step.move.type === "pencilStrike",
-      });
-      if (r.hint && isStarve(r.hint) && r.hint.move.type === "pencilStrike") found = r;
-    }
-    if (!found?.hint) throw new Error("no seed reached a starved-area step");
-    const hl = found.hint.highlights as SeismicHint;
+    const { id, moves, step } = pinned("starvedArea");
+    const found = renderScenario({ game: seismicGame, id, moves, showHint: true });
+    expect(found.hint?.explanation).toBe(step.explanation);
+    const hl = step.highlights as SeismicHint;
     const ops = found.recording.ops;
 
     expectRing(ops, COL_HINT, hl.targets.length);

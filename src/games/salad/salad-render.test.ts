@@ -10,6 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { newCursor } from "../../engine/pointer.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -177,22 +178,65 @@ describe("salad render scenarios", () => {
   });
 });
 
+const hlOf = (step: { highlights?: unknown }): SaladHint =>
+  step.highlights as SaladHint;
+
+/** The steps whose frames are asserted below, each pinned on a position whose
+ * hint opens with one. The letters board has one empty square per line. */
+const pinned = describeHintPins({
+  game: saladGame,
+  params: [LETTERS_P, NUMBERS_P],
+  kinds: {
+    // The far arm, over a run of more than one square.
+    confinedRun: (step) =>
+      /has room for only \d+ empty square/.test(step.explanation) &&
+      hlOf(step).area.length > 1,
+    // The near arm where the run is a single square.
+    nearestSquare: (step) =>
+      /leaves only [A-C] for this square/.test(step.explanation) &&
+      /and this square is nearest to it/.test(step.explanation),
+    emptyMarker: (step, state) =>
+      state.mode === GAMEMODE_NUMBERS &&
+      /and the rest of it must be empty|must be empty\.$/.test(step.explanation),
+    symbolMarker: /must hold a number|holds a number/,
+    placement: /it can only be \d/,
+  },
+  pins: {
+    /** Held on 53 of 966 positions walked. */
+    confinedRun: {
+      id: "4n3Lde:bBcAAaBf,p",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":3}]}]',
+    },
+    /** Held on 56 of 966 positions walked. */
+    nearestSquare: { id: "4n3Lde:bBcAAaBf,p", moves: [{ type: "pencilAll" }] },
+    /** Held on 93 of 966 positions walked. */
+    emptyMarker: "5n3Bde:bXc1ObOg2113Ob",
+    /** Held on 103 of 966 positions walked. */
+    symbolMarker: "5n3Bde:dXbXb2a1aX1bOb3c",
+    /** Held on 127 of 966 positions walked. */
+    placement: {
+      id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
+    },
+  },
+});
+
 describe("salad hint frames", () => {
-  /** Reach the first plan step whose narration matches, leaving it displayed but
-   * not applied. */
-  const hintFrame = (id: string, re: RegExp) =>
-    renderScenario({
-      game: saladGame,
-      id,
-      showHint: true,
-      hintUntil: (step) => re.test(step.explanation),
-    });
+  /** The frame a pinned position's hint draws, through a real `Midend`. */
+  const hintFrame = (kind: Parameters<typeof pinned>[0]) => {
+    const { id, moves, step } = pinned(kind);
+    const result = renderScenario({ game: saladGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    return result;
+  };
 
   it("outlines the run a clue's symbol is confined to, and lights the clue", () => {
     // The far arm: the clue's own symbol can sit only within the line's hole
     // budget of the clue, so the squares beyond it lose that candidate. The
     // outlined run is where it *can* be — the premise as an area, not one cell.
-    const { recording, hint } = hintFrame(LETTERS_ID, /has room for only/);
+    const { recording, hint } = hintFrame("confinedRun");
     expect(hint?.explanation).toMatch(/has room for only \d+ empty square/);
     // The run is a **contour**: a side wherever the neighbor across it is not
     // also evidence, so a contiguous run of `n` squares comes out as `2n + 2`
@@ -220,10 +264,7 @@ describe("salad hint frames", () => {
     // a single square, and saying so is honest rather than a missing area. One
     // square's contour is a ring — four sides, which is what the neighbor rule
     // gives when nothing beside it is evidence.
-    const { recording, hint } = hintFrame(
-      LETTERS_ID,
-      /leaves only [A-C] for this square/,
-    );
+    const { recording, hint } = hintFrame("nearestSquare");
     expect(hint?.explanation).toMatch(/and this square is nearest to it/);
     expectRing(recording.ops, COL_HINT_CELL);
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
@@ -232,10 +273,7 @@ describe("salad hint frames", () => {
   });
 
   it("previews an empty-square marker as a cross in the hint color", () => {
-    const { recording, hint } = hintFrame(
-      NUMBERS_ID,
-      /and the rest of it must be empty|must be empty\.$/,
-    );
+    const { recording, hint } = hintFrame("emptyMarker");
     expect(hint?.explanation).toMatch(/must be empty/);
     // Salad writes three shapes, so the hint echoes the one it is asking for —
     // here the two strokes of a cross, in COL_HINT.
@@ -247,10 +285,7 @@ describe("salad hint frames", () => {
   });
 
   it("previews a holds-a-symbol marker as a ball in the hint color", () => {
-    const { recording, hint } = hintFrame(
-      NUMBERS_ID,
-      /must hold a number|holds a number/,
-    );
+    const { recording, hint } = hintFrame("symbolMarker");
     expect(hint?.explanation).toMatch(/hold a number|holds a number/);
     expect(recording.ops.some((o) => o.op === "circle" && o.outline === COL_HINT)).toBe(
       true,
@@ -259,7 +294,7 @@ describe("salad hint frames", () => {
   });
 
   it("previews a placement as its own symbol, and strikes what it rules out", () => {
-    const { recording, hint } = hintFrame(NUMBERS_ID, /it can only be \d/);
+    const { recording, hint } = hintFrame("placement");
     const want = hint?.explanation.match(/it can only be (\d)/)?.[1];
     expect(want).toBeDefined();
     expect(
@@ -273,7 +308,14 @@ describe("salad hint frames", () => {
   it("crosses a struck candidate through, keeping the note itself legible", () => {
     // The Towers convention: the struck note keeps COL_PENCIL (so it still reads
     // as a real note) and gains a strikethrough in the same color.
-    const { recording } = hintFrame(NUMBERS_ID, /The \d just placed /);
+    // A walk down one plan on a fixed board, not a pin: the strike follows a
+    // placement inside a plan and opened none of 966 hints asked afresh.
+    const { recording } = renderScenario({
+      game: saladGame,
+      id: NUMBERS_ID,
+      showHint: true,
+      hintUntil: (step) => /The \d just placed /.test(step.explanation),
+    });
     const notes = recording.ops.filter(
       (o) => o.op === "text" && o.color === COL_PENCIL,
     );

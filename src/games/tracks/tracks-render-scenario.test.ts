@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT2 } from "../../engine/pointer.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { LINE, PIECE } from "./hint-text.ts";
@@ -29,30 +30,43 @@ const layTrack = (x: number, y: number): TracksMove => ({
   ops: [{ kind: "square", x, y, track: true, set: true }],
 });
 
+const pinned = describeHintPins({
+  game: tracksGame,
+  params: [P],
+  kinds: {
+    namesLine: /^This (row|column)/,
+    // Half of several Tracks deductions lives in the margin rather than on the
+    // grid, so the clue has to be part of the picture (docs/games/hints.md
+    // § "Off-board evidence").
+    countsWithClue: (step) => cluesOf(step).length > 0,
+  },
+  pins: {
+    /** Held on 104 of 317 positions walked. */
+    namesLine: "6x6de:qCl6dC,5,1,3,6,5,S6,3,6,5,4,4,S4",
+    /** Held on 104 of 317 positions walked. */
+    countsWithClue: "6x6de:qCl6dC,5,1,3,6,5,S6,3,6,5,4,4,S4",
+  },
+});
+
+/** The frame a pinned position's hint draws, through a real `Midend`. */
+function hintFrame(kind: Parameters<typeof pinned>[0]) {
+  const { id, moves, step } = pinned(kind);
+  const result = renderScenario({ game: tracksGame, id, moves, showHint: true });
+  expect(result.hint?.explanation).toBe(step.explanation);
+  return { ...result, step };
+}
+
 describe("Tracks hint: the line a sentence names", () => {
   it("hatches the line and its clue, and keeps the counted squares outlined", () => {
-    // Walk the plan on a few boards to a step that names a line.
-    let checked = 0;
-    for (let s = 0; s < 8 && checked === 0; s++) {
-      const id = `${tracksGame.encodeParams(P, true)}#line-${s}`;
-      const { recording, hint } = renderScenario({
-        game: tracksGame,
-        id,
-        showHint: true,
-        hintUntil: (step) => /^This (row|column)/.test(step.explanation),
-      });
-      if (!hint || !/^This (row|column)/.test(hint.explanation)) continue;
-      const lines = stepMarks(hint).of("stripes", LINE);
-      expect(lines).toHaveLength(1);
-      const isColumn = /^This column/.test(hint.explanation);
-      expect(lines[0] < P.w).toBe(isColumn);
-      const hatches = opsOfKind(recording.ops, "hatch");
-      // Every square of the line, and the clue slot at its end.
-      expect(hatches).toHaveLength((isColumn ? P.h : P.w) + 1);
-      for (const op of hatches) expect(op.color).toBe(COL_HINT);
-      checked++;
-    }
-    expect(checked).toBe(1);
+    const { recording, step } = hintFrame("namesLine");
+    const lines = stepMarks(step).of("stripes", LINE);
+    expect(lines).toHaveLength(1);
+    const isColumn = /^This column/.test(step.explanation);
+    expect(lines[0] < P.w).toBe(isColumn);
+    const hatches = opsOfKind(recording.ops, "hatch");
+    // Every square of the line, and the clue slot at its end.
+    expect(hatches).toHaveLength((isColumn ? P.h : P.w) + 1);
+    for (const op of hatches) expect(op.color).toBe(COL_HINT);
   });
 });
 
@@ -120,17 +134,8 @@ describe("Tracks render scenarios", () => {
   });
 
   it("a step that counts with a clue recolors that clue's digit", () => {
-    // Half of several Tracks deductions lives in the margin rather than on the
-    // grid, so the clue has to be part of the picture (docs/games/hints.md
-    // § "Off-board evidence"). Walk the plan to the first step that cites one.
-    const { recording, hint } = renderScenario({
-      game: tracksGame,
-      id: ID,
-      showHint: true,
-      hintUntil: (s) => cluesOf(s).length > 0,
-    });
-    const clues = cluesOf(hint);
-    expect(clues.length, "no step in the plan counts with a clue").toBeGreaterThan(0);
+    const { recording, step } = hintFrame("countsWithClue");
+    const clues = cluesOf(step);
     const hinted = recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT);
     expect(hinted.length, "the cited clue's digit is not in the hint color").toBe(
       clues.length,

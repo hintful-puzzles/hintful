@@ -20,6 +20,7 @@ import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { CELL, mark, phrase, stepMarks, unshaped } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -58,36 +59,84 @@ function generate(seed: string): ClustersState {
   return newState(P, desc);
 }
 
-/** Walk a board's plan, calling `visit` with each deduction and the grid it
- * fired on (deductions applied up to but not including it). */
-function walkPlan(
-  state: ClustersState,
-  visit: (d: ClustersDeduction, grid: Uint8Array) => void,
-): void {
-  const plan = deduceHintPlan(state.grid, state.w, state.h);
-  const grid = state.grid.slice();
-  for (const d of plan.deductions) {
-    visit(d, grid);
-    grid[d.index] = d.fill;
-  }
+/** The deduction the plan opens with on `state`, or null when it has none. */
+function openingDeduction(state: ClustersState): ClustersDeduction | null {
+  return deduceHintPlan(state.grid, state.w, state.h).deductions[0] ?? null;
 }
 
-/** Fixed-seed scan for the first deduction matching `pred`, with the board it
- * fired on. Deterministic; widen SCAN_SEEDS if a solver change strands one. */
-const SCAN_SEEDS = Array.from({ length: 40 }, (_, i) => `ch-scan-${i}`);
-function findDeduction(
-  pred: (d: ClustersDeduction) => boolean,
-): { d: ClustersDeduction; grid: Uint8Array; state: ClustersState } | null {
-  for (const seed of SCAN_SEEDS) {
-    const state = generate(seed);
-    let found: { d: ClustersDeduction; grid: Uint8Array } | null = null;
-    walkPlan(state, (d, grid) => {
-      if (!found && pred(d)) found = { d, grid: grid.slice() };
-    });
-    if (found)
-      return { ...(found as { d: ClustersDeduction; grid: Uint8Array }), state };
-  }
-  return null;
+const opensWith =
+  (pred: (d: ClustersDeduction) => boolean) =>
+  (_step: unknown, state: ClustersState): boolean => {
+    const d = openingDeduction(state);
+    return d !== null && pred(d);
+  };
+
+/** A position for each shape of deduction, found as the one the plan opens
+ * with there, and the chain step whose frame is asserted below. */
+const pinned = describeHintPins({
+  game: clustersGame,
+  params: [P],
+  kinds: {
+    direct: opensWith((d) => d.reason.kind === "direct"),
+    surroundedAtTarget: opensWith(
+      (d) =>
+        d.reason.kind === "direct" &&
+        d.reason.at.kind === "surrounded" &&
+        d.reason.at.cell === d.index,
+    ),
+    reachTwoAtTarget: opensWith(
+      (d) =>
+        d.reason.kind === "direct" &&
+        d.reason.at.kind === "reachTwo" &&
+        d.reason.at.cell === d.index,
+    ),
+    dotOvercount: opensWith(
+      (d) => d.reason.kind === "direct" && d.reason.at.kind === "dotOvercount",
+    ),
+    chain: opensWith((d) => d.reason.kind === "chain"),
+    // A what-if step that ends at a contradiction the frame can ring.
+    chainWithDanger: (step) =>
+      step.explanation.startsWith("Suppose") &&
+      Boolean((step.highlights as ClustersHintHighlights).danger),
+  },
+  pins: {
+    /** Held on 417 of 433 positions walked. */
+    direct: "7x7dt:cGadAadGgKbb",
+    /** Held on 12 of 433 positions walked. */
+    surroundedAtTarget: "7x7dt:bcAbeICacDCIaca",
+    /** Held on 134 of 433 positions walked. */
+    reachTwoAtTarget: "7x7dt:cGadAadGgKbb",
+    /** Held on 128 of 433 positions walked. */
+    dotOvercount: {
+      id: "7x7dt:cGadAadGgKbb",
+      moves: [{ kind: "paint", cells: [{ index: 3, fill: 1 }] }],
+    },
+    /** Held on 16 of 433 positions walked. */
+    chain: {
+      id: "7x7dt:aBaCEjcAlEabAc",
+      moves:
+        '[{"kind":"paint","cells":[{"index":35,"fill":2}]},{"kind":"paint","cells":[{"index":44,"fill":1}]},{"kind":"paint","cells":[{"index":30,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":2}]},{"kind":"paint","cells":[{"index":29,"fill":2}]},{"kind":"paint","cells":[{"index":28,"fill":2}]},{"kind":"paint","cells":[{"index":38,"fill":2}]},{"kind":"paint","cells":[{"index":31,"fill":2}]},{"kind":"paint","cells":[{"index":39,"fill":2}]},{"kind":"paint","cells":[{"index":32,"fill":2}]},{"kind":"paint","cells":[{"index":18,"fill":1}]},{"kind":"paint","cells":[{"index":17,"fill":1}]},{"kind":"paint","cells":[{"index":19,"fill":1}]},{"kind":"paint","cells":[{"index":23,"fill":2}]},{"kind":"paint","cells":[{"index":26,"fill":1}]},{"kind":"paint","cells":[{"index":47,"fill":1}]},{"kind":"paint","cells":[{"index":40,"fill":1}]},{"kind":"paint","cells":[{"index":48,"fill":1}]},{"kind":"paint","cells":[{"index":41,"fill":1}]}]',
+    },
+    /** Held on 14 of 433 positions walked. */
+    chainWithDanger: {
+      id: "7x7dt:bcAbeICacDCIaca",
+      moves:
+        '[{"kind":"paint","cells":[{"index":0,"fill":1}]},{"kind":"paint","cells":[{"index":2,"fill":2}]},{"kind":"paint","cells":[{"index":3,"fill":2}]},{"kind":"paint","cells":[{"index":6,"fill":2}]},{"kind":"paint","cells":[{"index":8,"fill":2}]},{"kind":"paint","cells":[{"index":9,"fill":2}]},{"kind":"paint","cells":[{"index":10,"fill":2}]},{"kind":"paint","cells":[{"index":11,"fill":1}]},{"kind":"paint","cells":[{"index":13,"fill":2}]},{"kind":"paint","cells":[{"index":14,"fill":2}]},{"kind":"paint","cells":[{"index":15,"fill":2}]},{"kind":"paint","cells":[{"index":19,"fill":2}]},{"kind":"paint","cells":[{"index":20,"fill":2}]},{"kind":"paint","cells":[{"index":22,"fill":1}]},{"kind":"paint","cells":[{"index":23,"fill":1}]},{"kind":"paint","cells":[{"index":29,"fill":1}]},{"kind":"paint","cells":[{"index":42,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":1}]},{"kind":"paint","cells":[{"index":43,"fill":2}]},{"kind":"paint","cells":[{"index":37,"fill":1}]},{"kind":"paint","cells":[{"index":30,"fill":1}]}]',
+    },
+  },
+});
+
+/** A pinned position, the deduction its plan opens with, and the grid it
+ * fires on. */
+function findDeduction(kind: Parameters<typeof pinned>[0]): {
+  d: ClustersDeduction;
+  grid: Uint8Array;
+  state: ClustersState;
+} {
+  const { state } = pinned(kind);
+  const d = openingDeduction(state);
+  if (!d) throw new Error(`${kind}: the plan has no deduction here`);
+  return { d, grid: state.grid, state };
 }
 
 const neighborsOf = (i: number, w: number, h: number): number[] => {
@@ -132,28 +181,14 @@ describe("deduceHintPlan", () => {
   });
 
   it("a surrounded-at-target firing really has every neighbor the forced color", () => {
-    const hit = findDeduction(
-      (d) =>
-        d.reason.kind === "direct" &&
-        d.reason.at.kind === "surrounded" &&
-        d.reason.at.cell === d.index,
-    );
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = findDeduction("surroundedAtTarget");
     for (const n of neighborsOf(hit.d.index, P.w, P.h)) {
       expect(hit.grid[n] & COLMASK).toBe(hit.d.fill);
     }
   });
 
   it("a reachTwo-at-target firing: the refuted color really cannot reach two", () => {
-    const hit = findDeduction(
-      (d) =>
-        d.reason.kind === "direct" &&
-        d.reason.at.kind === "reachTwo" &&
-        d.reason.at.cell === d.index,
-    );
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = findDeduction("reachTwoAtTarget");
     // At most one neighbor could ever share the refuted color.
     const friendly = neighborsOf(hit.d.index, P.w, P.h).filter(
       (n) => hit.grid[n] === 0 || (hit.grid[n] & COLMASK) === hit.d.refuted,
@@ -162,11 +197,8 @@ describe("deduceHintPlan", () => {
   });
 
   it("a dotOvercount firing: the danger dot is adjacent and already has its one", () => {
-    const hit = findDeduction(
-      (d) => d.reason.kind === "direct" && d.reason.at.kind === "dotOvercount",
-    );
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = findDeduction("dotOvercount");
+    if (hit.d.reason.kind !== "direct") throw new Error("not a direct firing");
     const dot = hit.d.reason.at.cell;
     expect(neighborsOf(hit.d.index, P.w, P.h)).toContain(dot);
     expect(hit.grid[dot] & F_SINGLE).toBeTruthy();
@@ -175,9 +207,8 @@ describe("deduceHintPlan", () => {
   });
 
   it("a chain firing: what-if cells are empty, distinct, and the end is adjacent to the last mark", () => {
-    const hit = findDeduction((d) => d.reason.kind === "chain");
-    expect(hit).not.toBeNull();
-    if (!hit || hit.d.reason.kind !== "chain") return;
+    const hit = findDeduction("chain");
+    if (hit.d.reason.kind !== "chain") throw new Error("not a chain firing");
     const { steps, at } = hit.d.reason;
     expect(steps.length).toBeGreaterThan(0);
     const indices = steps.map((s) => s.index);
@@ -250,9 +281,7 @@ describe("hint", () => {
   it("flags a rule-violating board, so the midend refuses it", () => {
     // Painting the refuted color of a *direct* firing trips the rule
     // immediately, so findMistakes flags it.
-    const hit = findDeduction((d) => d.reason.kind === "direct");
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = findDeduction("direct");
     // The firing's board, with the refuted move made for real.
     const grid = hit.grid.slice();
     grid[hit.d.index] = hit.d.refuted;
@@ -266,9 +295,7 @@ describe("hint", () => {
     // contradiction needs the lookahead), so findMistakes stays empty — but
     // the plan runs into the contradiction and the hint must say so, not
     // deduce onward from a doomed position.
-    const hit = findDeduction((d) => d.reason.kind === "chain");
-    expect(hit).not.toBeNull();
-    if (!hit) return;
+    const hit = findDeduction("chain");
     const grid = hit.grid.slice();
     grid[hit.d.index] = hit.d.refuted;
     const wrong: ClustersState = { ...hit.state, grid };
@@ -380,25 +407,10 @@ describe("hint rendering (tier 2.5)", () => {
   });
 
   it("a chain frame paints the what-if marks and the danger double ring", () => {
-    // Fixed-seed scan for a board whose plan holds a chain step, then walk
-    // the displayed hint to it.
-    let result: ReturnType<typeof renderScenario> | null = null;
-    for (let i = 0; i < 40 && !result; i++) {
-      const id = `${ID}#chain-frame-${i}`;
-      const state = generate(`chain-frame-${i}`);
-      const plan = deduceHintPlan(state.grid, P.w, P.h);
-      if (!plan.deductions.some((d) => d.reason.kind === "chain")) continue;
-      // renderScenario generates from the id-seed; keep them in step.
-      result = renderScenario({
-        game: clustersGame,
-        id,
-        showHint: true,
-        hintUntil: (step) => step.explanation.startsWith("Suppose"),
-      });
-    }
-    expect(result).not.toBeNull();
-    if (!result) return;
-    const hl = result.hint?.highlights as ClustersHintHighlights;
+    const { id, moves, step } = pinned("chainWithDanger");
+    const result = renderScenario({ game: clustersGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    const hl = step.highlights as ClustersHintHighlights;
     expect(hl.chain.length).toBeGreaterThan(0);
     const ops = result.recording.ops;
     // Every what-if cell shades COL_HINT_CELL and carries its small mark in
@@ -407,11 +419,7 @@ describe("hint rendering (tier 2.5)", () => {
     expect(
       ops.some((o) => o.op === "rect" && (o.color === COL_0 || o.color === COL_1)),
     ).toBe(true);
-    if (hl.danger) {
-      expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_DANGER)).toBe(
-        true,
-      );
-    }
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_DANGER)).toBe(true);
 
     // …and each carries its **ordinal**: an unordered set of shaded cells
     // cannot be checked against a narration that says they fall one after

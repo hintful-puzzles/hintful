@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { answerCount } from "./answer.ts";
@@ -16,7 +17,6 @@ import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import {
   BALL_CORRECT,
   BALL_GUESS,
-  type BlackboxMove,
   type BlackboxParams,
   type BlackboxState,
   gridGet,
@@ -38,21 +38,105 @@ function next(s: BlackboxState) {
   return res.steps[0];
 }
 
-/** Follow the hint's first step until the board is won, or until `until`
- * holds of the step about to be taken. */
-function follow(
-  s: BlackboxState,
-  until: (explanation: string) => boolean = () => false,
-): { state: BlackboxState; said: string[] } {
+/** Follow the hint's first step until the board is won. */
+function follow(s: BlackboxState): { state: BlackboxState; said: string[] } {
   const said: string[] = [];
   for (let i = 0; i < 500 && game.status(s) !== "solved"; i++) {
     const step = next(s);
-    if (until(step.explanation)) break;
     said.push(step.explanation);
     s = game.executeMove(s, step.move);
   }
   return { state: s, said };
 }
+
+/** Each sentence the hint says, and the positions the tests below start from,
+ * pinned on a position whose hint opens with it. */
+const pinned = describeHintPins({
+  game,
+  params: [P8],
+  kinds: {
+    raysEndsEmpty:
+      /^The two \d+s are one ray's ends, but with a ball here no ray could run between them, so this square must be empty\.$/,
+    raysEndsBall:
+      /^The two \d+s are one ray's ends, but with this square empty no ray could run between them, so it must hold a ball\.$/,
+    hitEmpty:
+      /^The ray marked H hit a ball, but with a ball here it would (?:come straight back|leave the box), so this square must be empty\.$/,
+    hitBall:
+      /^The ray marked H hit a ball, but with this square empty it would (?:come straight back|leave the box), so it must hold a ball\.$/,
+    reflectedEmpty:
+      /^The ray marked R came straight back, but with a ball here it would (?:stop dead|come out elsewhere), so this square must be empty\.$/,
+    fireAnother:
+      /^The lasers fired so far settle no other square\. Fire this laser: nothing settled yet decides where it goes\.$/,
+    settles: /, so (?:this square|it) must /,
+    check: /^Check your answer/,
+  },
+  pins: {
+    /** Held on 516 of 966 positions walked. */
+    raysEndsEmpty: {
+      id: "w8h8m5M5:df9dadb86021bc4da15414a4",
+      moves: [{ type: "fire", rangeno: 0 }],
+    },
+    /** Held on 26 of 966 positions walked. */
+    raysEndsBall: {
+      id: "w8h8m5M5:2d1775dc7ab2e71fa58b5abc",
+      moves:
+        '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"toggleLock","x":2,"y":2},{"type":"fire","rangeno":2},{"type":"fire","rangeno":4},{"type":"toggleLock","x":6,"y":1},{"type":"fire","rangeno":5},{"type":"toggleLock","x":7,"y":1},{"type":"fire","rangeno":6},{"type":"toggleLock","x":8,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":3,"y":2},{"type":"toggleLock","x":7,"y":2},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":2,"y":3},{"type":"toggleLock","x":4,"y":3},{"type":"toggleLock","x":6,"y":2}]',
+    },
+    /** Held on 87 of 966 positions walked. */
+    hitEmpty: {
+      id: "w8h8m5M5:bd040b071f206344ffd98bfe",
+      moves:
+        '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":1,"y":1}]',
+    },
+    /** Held on 9 of 966 positions walked. */
+    hitBall: {
+      id: "w8h8m5M5:df9dadb86021bc4da15414a4",
+      moves:
+        '[{"type":"fire","rangeno":0},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":1,"y":3},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":2,"y":2},{"type":"toggleLock","x":1,"y":4},{"type":"toggleLock","x":2,"y":3},{"type":"fire","rangeno":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":3,"y":2},{"type":"toggleLock","x":3,"y":3},{"type":"fire","rangeno":2},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"toggleLock","x":4,"y":3},{"type":"fire","rangeno":3},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":5,"y":3},{"type":"fire","rangeno":4},{"type":"toggleLock","x":8,"y":6},{"type":"toggleLock","x":6,"y":1},{"type":"toggleLock","x":8,"y":7},{"type":"toggleLock","x":6,"y":2},{"type":"toggleLock","x":8,"y":5},{"type":"toggleLock","x":6,"y":3},{"type":"toggleLock","x":7,"y":6},{"type":"toggleLock","x":5,"y":4},{"type":"fire","rangeno":5},{"type":"toggleLock","x":6,"y":8},{"type":"toggleLock","x":7,"y":1},{"type":"toggleLock","x":5,"y":8},{"type":"toggleLock","x":7,"y":2},{"type":"toggleLock","x":7,"y":8},{"type":"toggleLock","x":7,"y":3},{"type":"toggleLock","x":6,"y":7},{"type":"toggleLock","x":6,"y":4},{"type":"fire","rangeno":6},{"type":"fire","rangeno":7},{"type":"fire","rangeno":8},{"type":"fire","rangeno":9},{"type":"toggleLock","x":8,"y":2}]',
+    },
+    /** Held on 41 of 966 positions walked. */
+    reflectedEmpty: {
+      id: "w8h8m5M5:e917e8b670559bd382ddf3ba",
+      moves: [{ type: "fire", rangeno: 0 }],
+    },
+    /** Held on 238 of 966 positions walked. */
+    fireAnother: {
+      id: "w8h8m5M5:a4b5528a1a7e455ed81b288b",
+      moves: [{ type: "fire", rangeno: 0 }],
+    },
+    /** Held on 684 of 966 positions walked. */
+    settles: {
+      id: "w8h8m5M5:df9dadb86021bc4da15414a4",
+      moves: [{ type: "fire", rangeno: 0 }],
+    },
+    /** Held on 12 of 966 positions walked. */
+    check: {
+      id: "w8h8m5M5:2d1775dc7ab2e71fa58b5abc",
+      moves:
+        '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"toggleLock","x":2,"y":2},{"type":"fire","rangeno":2},{"type":"fire","rangeno":4},{"type":"toggleLock","x":6,"y":1},{"type":"fire","rangeno":5},{"type":"toggleLock","x":7,"y":1},{"type":"fire","rangeno":6},{"type":"toggleLock","x":8,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":3,"y":2},{"type":"toggleLock","x":7,"y":2},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":2,"y":3},{"type":"toggleLock","x":4,"y":3},{"type":"toggleLock","x":6,"y":2},{"type":"toggleBall","x":8,"y":2},{"type":"fire","rangeno":10},{"type":"toggleLock","x":8,"y":3},{"type":"fire","rangeno":11},{"type":"toggleLock","x":8,"y":4},{"type":"toggleLock","x":6,"y":8},{"type":"toggleLock","x":8,"y":5},{"type":"toggleLock","x":5,"y":8},{"type":"toggleLock","x":7,"y":4},{"type":"toggleLock","x":7,"y":8},{"type":"toggleLock","x":6,"y":7},{"type":"fire","rangeno":12},{"type":"toggleLock","x":1,"y":5},{"type":"toggleLock","x":8,"y":6},{"type":"toggleLock","x":1,"y":4},{"type":"toggleLock","x":7,"y":5},{"type":"toggleLock","x":1,"y":6},{"type":"toggleLock","x":2,"y":5},{"type":"fire","rangeno":13},{"type":"toggleLock","x":8,"y":7},{"type":"toggleLock","x":1,"y":7},{"type":"toggleLock","x":7,"y":6},{"type":"toggleLock","x":2,"y":6},{"type":"toggleLock","x":6,"y":5},{"type":"fire","rangeno":14},{"type":"fire","rangeno":15},{"type":"fire","rangeno":16},{"type":"fire","rangeno":17},{"type":"fire","rangeno":19},{"type":"toggleLock","x":4,"y":8},{"type":"fire","rangeno":20},{"type":"toggleLock","x":3,"y":8},{"type":"fire","rangeno":21},{"type":"fire","rangeno":22},{"type":"fire","rangeno":23},{"type":"toggleLock","x":1,"y":8},{"type":"fire","rangeno":24},{"type":"fire","rangeno":25},{"type":"fire","rangeno":28},{"type":"fire","rangeno":29},{"type":"fire","rangeno":30},{"type":"toggleBall","x":1,"y":3},{"type":"toggleBall","x":5,"y":3},{"type":"toggleBall","x":2,"y":8},{"type":"toggleBall","x":8,"y":8}]',
+    },
+  },
+});
+
+/** A ball on the one square no laser reaches, which the count of five fills. */
+const pinnedHidden = describeHintPins({
+  game,
+  params: [P8],
+  seeds: 400,
+  kinds: {
+    hiddenBall:
+      /^Every laser's way is settled, and 1 more ball hides on squares no laser reaches\. One of them: put a ball on this square\.$/,
+  },
+  pins: {
+    /** Held on 0 of 32561 positions walked. The board is one an earlier scan
+     * of 400 deals found, pasted by hand with the hint's own moves to here. */
+    hiddenBall: {
+      id: "w8h8m5M5:4fa6ab5019c09e710317f3c0",
+      moves:
+        '[{"type":"fire","rangeno":0},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":1,"y":4},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":1,"y":3},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":1,"y":5},{"type":"toggleLock","x":2,"y":2},{"type":"toggleLock","x":2,"y":4},{"type":"toggleLock","x":2,"y":3},{"type":"fire","rangeno":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":3,"y":2},{"type":"fire","rangeno":2},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"fire","rangeno":3},{"type":"toggleLock","x":8,"y":2},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":8,"y":3},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":8,"y":1},{"type":"toggleLock","x":4,"y":3},{"type":"toggleLock","x":7,"y":2},{"type":"fire","rangeno":4},{"type":"toggleLock","x":6,"y":1},{"type":"toggleLock","x":8,"y":4},{"type":"toggleLock","x":6,"y":2},{"type":"toggleLock","x":7,"y":3},{"type":"toggleLock","x":5,"y":3},{"type":"fire","rangeno":5},{"type":"toggleLock","x":7,"y":1},{"type":"toggleLock","x":6,"y":3},{"type":"toggleLock","x":7,"y":4},{"type":"toggleBall","x":3,"y":3},{"type":"toggleLock","x":5,"y":4},{"type":"toggleLock","x":6,"y":4},{"type":"toggleBall","x":4,"y":4},{"type":"fire","rangeno":6},{"type":"toggleLock","x":8,"y":5},{"type":"toggleLock","x":7,"y":5},{"type":"fire","rangeno":7},{"type":"toggleLock","x":8,"y":8},{"type":"toggleLock","x":7,"y":8},{"type":"toggleLock","x":8,"y":6},{"type":"toggleLock","x":8,"y":7},{"type":"toggleLock","x":7,"y":6},{"type":"toggleLock","x":7,"y":7},{"type":"fire","rangeno":12},{"type":"fire","rangeno":13},{"type":"toggleLock","x":6,"y":8},{"type":"toggleLock","x":6,"y":6},{"type":"toggleLock","x":6,"y":7},{"type":"toggleBall","x":6,"y":5},{"type":"fire","rangeno":14},{"type":"toggleLock","x":1,"y":7},{"type":"toggleLock","x":1,"y":6},{"type":"toggleLock","x":5,"y":7},{"type":"toggleLock","x":1,"y":8},{"type":"toggleLock","x":2,"y":7},{"type":"fire","rangeno":15},{"type":"toggleLock","x":5,"y":8},{"type":"toggleLock","x":2,"y":8},{"type":"toggleLock","x":4,"y":8},{"type":"toggleLock","x":3,"y":8},{"type":"toggleLock","x":5,"y":6},{"type":"toggleLock","x":2,"y":6},{"type":"toggleLock","x":4,"y":7},{"type":"toggleLock","x":3,"y":7},{"type":"toggleBall","x":2,"y":5},{"type":"toggleLock","x":4,"y":6},{"type":"toggleLock","x":3,"y":6},{"type":"fire","rangeno":19},{"type":"toggleLock","x":5,"y":5},{"type":"toggleLock","x":3,"y":5},{"type":"toggleLock","x":4,"y":5}]',
+    },
+  },
+});
 
 /** Where `laser` goes on a board with `grid`'s hidden balls and nothing fired. */
 function goes(s: BlackboxState, grid: Int32Array, laser: number): number {
@@ -141,40 +225,10 @@ describe("Black Box's hint", () => {
           expect(gridGet(state, x, y) & BALL_GUESS, `${x},${y}`).toBeTruthy();
   });
 
-  it("narrates each kind of deduction by the laser's marks and what the refuted square would do", () => {
-    const all = new Set<string>();
-    for (const seed of ["a", "b", "c", "d", "e", "f", "g", "h"])
-      for (const t of follow(deal(P8, `bbh-words-${seed}`).state).said) all.add(t);
-    const shapes = [
-      /^The two \d+s are one ray's ends, but with a ball here no ray could run between them, so this square must be empty\.$/,
-      /^The two \d+s are one ray's ends, but with this square empty no ray could run between them, so it must hold a ball\.$/,
-      /^The ray marked H hit a ball, but with a ball here it would (?:come straight back|leave the box), so this square must be empty\.$/,
-      /^The ray marked H hit a ball, but with this square empty it would (?:come straight back|leave the box), so it must hold a ball\.$/,
-      /^The ray marked R came straight back, but with a ball here it would (?:stop dead|come out elsewhere), so this square must be empty\.$/,
-      /^The lasers fired so far settle no other square\. Fire this laser: nothing settled yet decides where it goes\.$/,
-    ];
-    for (const shape of shapes)
-      expect(
-        [...all].some((t) => shape.test(t)),
-        String(shape),
-      ).toBe(true);
-  });
-
   it("rings the square it settles and outlines the laser's ends", () => {
-    const { desc, state } = deal(P8, "bbh-render");
-    const moves: BlackboxMove[] = [];
-    let s = state;
-    for (let step = next(s); step.move.type === "fire"; step = next(s)) {
-      moves.push(step.move);
-      s = game.executeMove(s, step.move);
-    }
-    const { hint, recording } = renderScenario({
-      game,
-      id: `${game.encodeParams(P8, true)}:${desc}`,
-      moves,
-      showHint: true,
-    });
-    expect(hint?.explanation).toMatch(/, so (?:this square|it) must /);
+    const { id, moves, step } = pinned("settles");
+    const { hint, recording } = renderScenario({ game, id, moves, showHint: true });
+    expect(hint?.explanation).toBe(step.explanation);
     const rects = recording.ops.filter((o) => o.op === "rect");
     expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
     expect(rects.some((o) => o.color === COL_HINT_EVIDENCE)).toBe(true);
@@ -182,27 +236,18 @@ describe("Black Box's hint", () => {
   });
 });
 
-/** Pinned as a board, found in 400 deals: one of its five balls sits on the
- * one square no laser reaches, which the count of five fills. */
-const HIDDEN_BALL = "4fa6ab5019c09e710317f3c0";
-
 describe("the end of the box", () => {
   it("puts a ball where no laser can tell, when the board must hold more", () => {
-    const s = game.newState(P8, HIDDEN_BALL);
-    expect(answerCount(s)).toBe(1);
-    const { state, said } = follow(s);
-    expect(said).toContain(
-      "Every laser's way is settled, and 1 more ball hides on squares no laser reaches. One of them: put a ball on this square.",
-    );
-    expect(game.status(state)).toBe("solved");
+    const { id, state: s } = pinnedHidden("hiddenBall");
+    expect(answerCount(game.newState(P8, id.slice(id.indexOf(":") + 1)))).toBe(1);
+    expect(game.status(follow(s).state)).toBe("solved");
   });
 
   // The board has one answer, so the count fills the squares no laser reaches,
   // and a known mark on one of them is a mark no finish could keep: the check
   // finds it, and the midend refuses a hint until it comes off.
   it("finds a known mark on the square the count fills", () => {
-    let s = game.newState(P8, HIDDEN_BALL);
-    s = follow(s, (t) => t.includes("more ball hides")).state;
+    const { state: s } = pinnedHidden("hiddenBall");
     expect(game.findMistakes?.(s)).toEqual([]);
     const hidden = [...deduce(s).known.squares()].filter(
       ({ at, holds }) => holds === null && gridGet(s, at.x, at.y) & BALL_CORRECT,
@@ -214,8 +259,7 @@ describe("the end of the box", () => {
   });
 
   it("finds a ball beyond the real ones, wherever no laser could tell", () => {
-    const { state } = deal(P8, "bbh-extra");
-    const s = follow(state, (t) => t.startsWith("Check your answer")).state;
+    const { state: s } = pinned("check");
     expect(game.findMistakes?.(s)).toEqual([]);
     const empty = [...deduce(s).known.squares()].find(
       ({ at }) => !(gridGet(s, at.x, at.y) & (BALL_CORRECT | BALL_GUESS)),

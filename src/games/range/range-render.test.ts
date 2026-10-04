@@ -131,7 +131,10 @@ describe("white dot", () => {
 
 describe("render scenario snapshot", () => {
   it("draws a generated board with grid outline, clues and background", () => {
-    const result = renderScenario({ game: rangeGame, id: "9x6#range-render" });
+    const result = renderScenario({
+      game: rangeGame,
+      id: "9x6:d11a12h7b10e11d7e4b9h5a2d",
+    });
     const ops = result.recording.ops;
     // Background + grid lines + clue text are all present.
     expect(ops.some((o) => o.op === "rect")).toBe(true);
@@ -143,7 +146,7 @@ describe("render scenario snapshot", () => {
   it("rings the hint target and marks the premise on the first hint step", () => {
     const result = renderScenario({
       game: rangeGame,
-      id: "9x6#range-render",
+      id: "9x6:d11a12h7b10e11d7e4b9h5a2d",
       showHint: true,
     });
     expect(result.hint).toBeDefined();

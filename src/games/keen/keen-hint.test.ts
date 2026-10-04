@@ -10,6 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -23,7 +24,6 @@ import { type HintReason, recordKeenDeductions } from "./solver.ts";
 import {
   DIFF_EXTREME,
   diffToLevel,
-  encodeParams,
   type KeenMove,
   type KeenParams,
   type KeenState,
@@ -48,6 +48,86 @@ type AnyStep = any;
 
 const NORMAL: KeenParams = { w: 6, diff: "normal", multiplicationOnly: false };
 const HARD: KeenParams = { w: 6, diff: "hard", multiplicationOnly: false };
+
+const SMALL: KeenParams = { w: 4, diff: "easy", multiplicationOnly: false };
+
+const HIDDEN_SINGLE = /rules out \d, so this cell must be/;
+
+/** Steps a hint gives on a board as dealt, each kind on the size its test
+ * reads. */
+const pinnedFresh = describeHintPins({
+  game: keenGame,
+  params: [NORMAL, SMALL],
+  kinds: {
+    populate: (step) => (step.move as KeenMove).type === "pencilAll",
+    hiddenSingle: (step, state) =>
+      state.params.w === NORMAL.w && HIDDEN_SINGLE.test(step.explanation),
+    // On the board's first row or column, where every cell's hatch starts at
+    // the board's edge: an inner line's cells start a pixel apart wherever a
+    // cage wall thickens, and the frame test reads the line as one strip.
+    hiddenSingleSmall: (step, state) => {
+      const hatch = ((step as AnyStep).highlights?.hatch ?? []) as {
+        x: number;
+        y: number;
+      }[];
+      return (
+        state.params.w === SMALL.w &&
+        HIDDEN_SINGLE.test(step.explanation) &&
+        (hatch.every((c) => c.x === 0) || hatch.every((c) => c.y === 0))
+      );
+    },
+  },
+  pins: {
+    /** Held on 24 of 1630 positions walked. */
+    populate: "6dn:aac_b_12b_a_3a_3a__a4__a_3aa,d2m6m15a12d2a6a5d3s2s4m24s4s3d2m36a8s3",
+    /** Held on 87 of 1630 positions walked. */
+    hiddenSingle: {
+      id: "6dn:_3a_3aa_a3_3a__a3__b_a3_9a4,a5m6d3s1s1m3d2m60s2m6a11a6s1d3a5s3d3",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":5},{"x":0,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":2},{"x":3,"y":1,"n":4},{"x":3,"y":1,"n":5},{"x":3,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":5},{"x":4,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":4,"y":3,"n":3},{"x":4,"y":3,"n":6}]},{"type":"pencilStrike","marks":[{"x":4,"y":4,"n":3},{"x":4,"y":4,"n":6}]}]',
+    },
+    /** Held on 10 of 1630 positions walked. */
+    hiddenSingleSmall: {
+      id: "4de:_a_3abb__aa_a__,d2m36m4a7s1s1d2",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":2},{"x":3,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":3}]}]',
+    },
+  },
+});
+
+/** Steps a hint gives once the player has marked every candidate. */
+const pinnedMarked = describeHintPins({
+  game: keenGame,
+  params: [NORMAL],
+  opening: () => [{ type: "pencilAll" }],
+  kinds: {
+    cage: /this cage/,
+    cageRuledOut: (step) =>
+      (step.move as KeenMove).type === "pencilStrike" &&
+      /No way to make this cage/.test(step.explanation),
+    strikeOfSeveral: (step) => {
+      const move = step.move as KeenMove;
+      return move.type === "pencilStrike" && move.marks.length >= 2;
+    },
+  },
+  pins: {
+    /** Held on 459 of 1171 positions walked. */
+    cage: {
+      id: "6dn:aac_b_12b_a_3a_3a__a4__a_3aa,d2m6m15a12d2a6a5d3s2s4m24s4s3d2m36a8s3",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 459 of 1171 positions walked. */
+    cageRuledOut: {
+      id: "6dn:aac_b_12b_a_3a_3a__a4__a_3aa,d2m6m15a12d2a6a5d3s2s4m24s4s3d2m36a8s3",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 469 of 1171 positions walked. */
+    strikeOfSeveral: {
+      id: "6dn:a3_a_16a__a3_aa__aa_aba4_,a8s2m2s2a7m15a7s4s1d2d3m20d2d3d2m80a8",
+      moves: [{ type: "pencilAll" }],
+    },
+  },
+});
 
 // --- tier 1: recording solver ----------------------------------------------
 
@@ -155,15 +235,9 @@ describe("keen hint", () => {
   });
 
   it("names the cage by its arithmetic clue", () => {
-    const { st } = gen(NORMAL, "clue-name");
-    const populated = keenGame.executeMove(st, { type: "pencilAll" });
-    const res = keenGame.hint?.(populated);
-    expect(res?.ok).toBe(true);
-    if (!res?.ok) return;
-    const cageStep = res.steps.find((s) => /this cage/.test(s.explanation));
-    expect(cageStep).toBeDefined();
+    const { step: cageStep } = pinnedMarked("cage");
     // Every cage narration names a concrete goal (one of the four operations).
-    expect(cageStep?.explanation).toMatch(/sum to|multiply to|differ by|ratio of/);
+    expect(cageStep.explanation).toMatch(/sum to|multiply to|differ by|ratio of/);
   });
 
   it("a cage-strike step's marks all lie in one cell (no bleed across the cage)", () => {
@@ -210,39 +284,23 @@ describe("keen hint", () => {
     // A hidden single (a cell still showing several candidates, but the placed
     // digit fits nowhere else in its row/column) must NOT be narrated as a naked
     // single ("every other number ruled out in this cell"); it names the line and
-    // hatches it. Walk boards by hints to reach one.
-    let checked = 0;
-    for (const seed of ["hs0", "hs1", "hs2", "hs3", "hs4", "hs5"]) {
-      const { st } = gen(NORMAL, seed);
-      let state: KeenState = st;
-      const w = st.params.w;
-      for (let i = 0; i < 3000 && status(state) !== "solved"; i++) {
-        const res = keenGame.hint?.(state);
-        if (!res?.ok) break;
-        const step = res.steps.find((s) =>
-          /rules out \d, so this cell must be/.test(s.explanation),
-        ) as AnyStep | undefined;
-        if (step) {
-          const m = step.move as { type: string; x: number; y: number; n: number };
-          // The narration is a placement, never the naked-single phrasing.
-          expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
-          expect(step.explanation).toMatch(/in this (row|column) rules out/);
-          // The hatch is exactly one full line (w cells) through the target.
-          const area = (step.highlights?.hatch ?? []) as { x: number; y: number }[];
-          expect(area.length).toBe(w);
-          const isRow = /in this row/.test(step.explanation);
-          for (const a of area) {
-            if (isRow) expect(a.y).toBe(m.y);
-            else expect(a.x).toBe(m.x);
-          }
-          expect(area.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
-          checked++;
-          break;
-        }
-        state = keenGame.executeMove(state, res.steps[0].move);
-      }
+    // hatches it.
+    const found = pinnedFresh("hiddenSingle");
+    const step = found.step as AnyStep;
+    const w = found.state.params.w;
+    const m = step.move as { type: string; x: number; y: number; n: number };
+    // The narration is a placement, never the naked-single phrasing.
+    expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
+    expect(step.explanation).toMatch(/in this (row|column) rules out/);
+    // The hatch is exactly one full line (w cells) through the target.
+    const area = (step.highlights?.hatch ?? []) as { x: number; y: number }[];
+    expect(area.length).toBe(w);
+    const isRow = /in this row/.test(step.explanation);
+    for (const a of area) {
+      if (isRow) expect(a.y).toBe(m.y);
+      else expect(a.x).toBe(m.x);
     }
-    expect(checked).toBeGreaterThan(0);
+    expect(area.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
   });
 
   it("counts a solved board as finished and flags a wrong entry, the boards the midend refuses", () => {
@@ -270,11 +328,7 @@ describe("keen hint", () => {
 
 describe("keen hintKeepTrack", () => {
   it("matches a populate step, rejects anything else", () => {
-    const { st } = gen(NORMAL, "kt-pop");
-    const res = keenGame.hint?.(st);
-    if (!res?.ok) throw new Error("refused");
-    const step = res.steps.find((s) => (s.move as KeenMove).type === "pencilAll");
-    if (!step) throw new Error("no populate step");
+    const { state: st, step } = pinnedFresh("populate");
     expect(keenGame.hintKeepTrack?.({ type: "pencilAll" }, step, st)).toBe("completed");
     expect(
       keenGame.hintKeepTrack?.(
@@ -286,16 +340,9 @@ describe("keen hintKeepTrack", () => {
   });
 
   it("shrinks then finishes a multi-mark strike journey", () => {
-    const { st } = gen(NORMAL, "kt-strike");
-    const populated = keenGame.executeMove(st, { type: "pencilAll" });
-    const res = keenGame.hint?.(populated);
-    if (!res?.ok) throw new Error("hint refused");
-    const step = res.steps.find(
-      (s) =>
-        (s.move as KeenMove).type === "pencilStrike" &&
-        (s.move as { type: "pencilStrike"; marks: unknown[] }).marks.length >= 2,
-    ) as AnyStep | undefined;
-    if (!step) throw new Error("no multi-mark strike step");
+    const found = pinnedMarked("strikeOfSeveral");
+    const populated = found.state;
+    const step = found.step as AnyStep;
 
     const marks = [...step.move.marks] as { x: number; y: number; n: number }[];
     const first = marks[0];
@@ -352,56 +399,17 @@ describe("keen hint resumes to solved", () => {
 
 // --- tier 2.5: render ------------------------------------------------------
 
-/** Scan seeds for an id whose hint, after populating, reaches a cage-strike step
- * matching `pred` — so the render frame is deterministic without a known desc. */
-function cageStrikeFrame(p: KeenParams, pred: (s: string) => boolean): string {
-  for (let s = 0; s < 30; s++) {
-    const seed = `frame-${p.diff}-${s}`;
-    const { st } = gen(p, seed);
-    const populated = keenGame.executeMove(st, { type: "pencilAll" });
-    const res = keenGame.hint?.(populated);
-    if (!res?.ok) continue;
-    if (
-      res.steps.some(
-        (step) =>
-          (step.move as KeenMove).type === "pencilStrike" && pred(step.explanation),
-      )
-    )
-      return `${encodeParams(p, true)}#${seed}`;
-  }
-  throw new Error(`no cage-strike frame found for ${p.diff}`);
-}
-
-/** Scan seeds for an id whose from-empty plan contains a hidden-single placement
- * step (so the render frame — reached by walking the plan — is deterministic). */
-function hiddenSingleFrame(p: KeenParams): string {
-  for (let s = 0; s < 60; s++) {
-    const seed = `hsf-${p.diff}-${s}`;
-    const { st } = gen(p, seed);
-    const res = keenGame.hint?.(st);
-    if (!res?.ok) continue;
-    if (
-      res.steps.some((step) =>
-        /rules out \d, so this cell must be/.test(step.explanation),
-      )
-    )
-      return `${encodeParams(p, true)}#${seed}`;
-  }
-  throw new Error(`no hidden-single frame found for ${p.diff}`);
-}
-
 describe("keen hint render", () => {
   it("a cage elimination hatches the cage and strikes the candidate", () => {
-    const id = cageStrikeFrame(NORMAL, (e) => /No way to make this cage/.test(e));
+    const { id, moves, step } = pinnedMarked("cageRuledOut");
     const { recording, hint } = renderScenario({
       game: keenGame,
       id,
       defaultBackground: DEFAULT_BACKGROUND,
-      moves: [{ type: "pencilAll" }],
+      moves,
       showHint: true,
-      hintUntil: (s) => /No way to make this cage/.test(s.explanation),
     });
-    expect(hint?.explanation).toMatch(/this cage/);
+    expect(hint?.explanation).toBe(step.explanation);
     // "This cage" is hatched, one hatch per cell of it, and nothing in it is
     // outlined: the cage is the region, not a particular cell.
     const cage = (hint?.highlights as { hatch?: unknown[] }).hatch ?? [];
@@ -424,20 +432,20 @@ describe("keen hint render", () => {
   });
 
   it("a hidden-single placement hatches the whole line and rings the target", () => {
-    const small: KeenParams = { w: 4, diff: "easy", multiplicationOnly: false };
-    const id = hiddenSingleFrame(small);
+    const { id, moves, step } = pinnedFresh("hiddenSingleSmall");
     const { recording, hint } = renderScenario({
       game: keenGame,
       id,
       defaultBackground: DEFAULT_BACKGROUND,
+      moves,
       showHint: true,
-      hintUntil: (s) => /rules out \d, so this cell must be/.test(s.explanation),
     });
+    expect(hint?.explanation).toBe(step.explanation);
     expect(hint?.explanation).toMatch(/in this (row|column) rules out/);
     // One hatch per cell of the line, all in one strip, and no outline: the
     // line is the hatch, and nothing in it is a particular reason.
     const hatches = opsOfKind(recording.ops, "hatch");
-    expect(hatches).toHaveLength(small.w);
+    expect(hatches).toHaveLength(SMALL.w);
     for (const h of hatches) expect(h.color).toBe(COL_HINT);
     const isRow = /in this row/.test(hint?.explanation ?? "");
     expect(new Set(hatches.map((h) => (isRow ? h.y : h.x))).size).toBe(1);

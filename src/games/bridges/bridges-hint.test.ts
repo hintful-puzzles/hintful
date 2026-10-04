@@ -17,6 +17,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { observeMidend } from "../../engine/testing/drive-midend.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { type BridgesHighlights, narrate } from "./hint.ts";
 import { say } from "./hint-text.ts";
@@ -416,24 +417,29 @@ describe("what the plan shows, and what it keeps to itself", () => {
   });
 });
 
+const pinned = describeHintPins({
+  game: bridgesGame,
+  params: [BRIDGES_PRESETS[2]],
+  kinds: {
+    severalBridges: (step) => step.move.ops.filter((op) => op.op === "L").length > 1,
+  },
+  pins: {
+    /** Held on 34 of 145 positions walked. */
+    severalBridges: "7x7i30e10m2d2:3a3a2a2n2l3g2a4a5a4",
+  },
+});
+
 describe("following a step", () => {
   const params = BRIDGES_PRESETS[2];
   const start = makeBoard(params, "bh-a");
   const ui = bridgesGame.newUi(start);
 
   it("shrinks in place while the player draws, then completes", () => {
-    const r = bridgesGame.hint?.(start, undefined, ui);
-    expect(r?.ok).toBe(true);
-    if (!r?.ok) return;
     // A step whose one premise forces more than one bridge is the interesting
-    // case, and it is what every board this generator makes opens with.
-    const step = r.steps.find(
-      (s) => s.move.ops.filter((op) => op.op === "L").length > 1,
-    );
-    expect(step, "no multi-bridge step in the opening plan").toBeDefined();
-    if (!step) return;
+    // case.
+    const { step, state: from } = pinned("severalBridges");
 
-    let state = start;
+    let state = from;
     let verdict: string | null = null;
     let legs = 0;
     while (legs < 20) {

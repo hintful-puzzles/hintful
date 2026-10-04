@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type Cell, EMPTY as E, ONE as O, ZERO as Z } from "./constants.ts";
 import { newDesc } from "./generator.ts";
 import { type UnrulyHint, unrulyGame } from "./index.ts";
@@ -42,6 +43,20 @@ const padTo6 = (top: Cell[][]): Cell[][] => {
   return rows;
 };
 
+const pinned = describeHintPins({
+  game: unrulyGame,
+  params: [{ w2: 14, h2: 14, unique: false, diff: 2 }],
+  kinds: {
+    // A board whose plan holds a firing that forces several cells.
+    groupedPlan: (_step, state) =>
+      deduceHintPlan(state).some((m) => m.continuesPrevious),
+  },
+  pins: {
+    /** Held on 1611 of 1804 positions walked. */
+    groupedPlan: "14x14dn:bbadAfCAcDmfcccDFCceFEBDdBbOBbabamabGAJjbgbACJAc",
+  },
+});
+
 describe("deduceHintPlan — per-technique reasons", () => {
   it("threes: two same-color cells force the third opposite", () => {
     const plan = deduceHintPlan(craft(padTo6([[O, O, E, E, E, E]])));
@@ -55,36 +70,30 @@ describe("deduceHintPlan — per-technique reasons", () => {
 
   it("groups one firing (a line-fill) into one journey, per-cell techniques apart", () => {
     // On a real board the same firing forces several cells (a completed count
-    // or a near-complete remainder); they must read as one journey. Find a
-    // grouped plan and check every continuation shares its predecessor's
-    // firing (same technique + line); the per-cell techniques never continue.
+    // or a near-complete remainder); they must read as one journey. In a
+    // grouped plan every continuation shares its predecessor's firing (same
+    // technique + line); the per-cell techniques never continue.
+    const plan = deduceHintPlan(pinned("groupedPlan").state);
     let found = false;
-    for (let s = 0; s < 12 && !found; s++) {
-      const st = fromSeed(
-        { w2: 14, h2: 14, unique: false, diff: 2 },
-        `unruly-group-${s}`,
-      );
-      const plan = deduceHintPlan(st);
-      for (let i = 1; i < plan.length; i++) {
-        if (!plan[i].continuesPrevious) continue;
-        found = true;
-        const a = plan[i - 1].reason;
-        const b = plan[i].reason;
-        expect(b.kind).toBe(a.kind);
-        expect(b.kind === "complete" || b.kind === "nearcomplete").toBe(true);
-        if (
-          (a.kind === "complete" || a.kind === "nearcomplete") &&
-          (b.kind === "complete" || b.kind === "nearcomplete")
-        ) {
-          expect(b.line).toBe(a.line);
-          expect(b.horizontal).toBe(a.horizontal);
-        }
+    for (let i = 1; i < plan.length; i++) {
+      if (!plan[i].continuesPrevious) continue;
+      found = true;
+      const a = plan[i - 1].reason;
+      const b = plan[i].reason;
+      expect(b.kind).toBe(a.kind);
+      expect(b.kind === "complete" || b.kind === "nearcomplete").toBe(true);
+      if (
+        (a.kind === "complete" || a.kind === "nearcomplete") &&
+        (b.kind === "complete" || b.kind === "nearcomplete")
+      ) {
+        expect(b.line).toBe(a.line);
+        expect(b.horizontal).toBe(a.horizontal);
       }
-      // A threes/unique move (per-cell) is never a continuation.
-      for (let i = 0; i < plan.length; i++) {
-        if (plan[i].reason.kind === "threes" || plan[i].reason.kind === "unique") {
-          expect(plan[i].continuesPrevious).toBe(false);
-        }
+    }
+    // A threes/unique move (per-cell) is never a continuation.
+    for (let i = 0; i < plan.length; i++) {
+      if (plan[i].reason.kind === "threes" || plan[i].reason.kind === "unique") {
+        expect(plan[i].continuesPrevious).toBe(false);
       }
     }
     expect(found).toBe(true);

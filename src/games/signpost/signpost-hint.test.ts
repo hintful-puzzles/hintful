@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -96,19 +97,22 @@ describe("signpost hint keep-track", () => {
   });
 });
 
+const pinned = describeHintPins({
+  game: signpostGame,
+  params: [SIZES[1]],
+  kinds: { onlyNext: (s) => arm(s as Step) === "onlyNext" },
+  pins: {
+    /** Held on 134 of 246 positions walked. */
+    onlyNext: "5x5:degffe1egegb4eccacbbagca25aah",
+  },
+});
+
 describe("signpost hint frame", () => {
   it("draws the arrow in the hint color, rings its target and stripes the line", () => {
-    const p = SIZES[1];
-    const { desc } = newSignpostDesc(p, randomNew("signpost-hint-frame"));
-    const result = renderScenario({
-      game: signpostGame,
-      id: `5x5:${desc}`,
-      showHint: true,
-      hintUntil: (s) => arm(s as Step) === "onlyNext",
-    });
-    const hint = result.hint as Step | null;
-    expect(hint && arm(hint)).toBe("onlyNext");
-    const h = hint?.highlights as SignpostHint;
+    const { id, moves, step } = pinned("onlyNext");
+    const result = renderScenario({ game: signpostGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    const h = step.highlights as SignpostHint;
     const ops = result.recording.ops;
 
     // The arrow the link leaves by is the one polygon in the hint color.

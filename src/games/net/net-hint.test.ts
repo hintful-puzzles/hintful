@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { anticlockwise, clockwise } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
@@ -47,6 +48,32 @@ const plan = (s: NetState) => {
   return r.steps;
 };
 
+const W5: NetParams = { w: 5, h: 5, wrapping: true, barrierProbability: 0 };
+
+/** The steps the tests below read, each pinned on a position whose hint opens
+ * with one. */
+const pinned = describeHintPins({
+  game: netGame,
+  params: [{ w: 5, h: 5, wrapping: false, barrierProbability: 0 }, W5],
+  seeds: 40,
+  kinds: {
+    turn: (step) => step.highlights?.kind === "turn",
+    // A square's turnings read off the loops they would close as well as off
+    // its sides.
+    loopOnTheWay: /however they turn without closing a loop/,
+  },
+  pins: {
+    /** Held on 1454 of 3618 positions walked. */
+    turn: "5x5:2a5e482a79d77eb51aa568818",
+    /** Held on 2 of 3618 positions walked. */
+    loopOnTheWay: {
+      id: "5x5w:473d4acd331eb98138cc37198",
+      moves:
+        '[{"type":"rotate","op":"A","x":0,"y":1},{"type":"lock","x":0,"y":1},{"type":"note","x":1,"y":1,"dir":1,"note":2},{"type":"rotate","op":"A","x":2,"y":1},{"type":"lock","x":2,"y":1},{"type":"note","x":3,"y":1,"dir":1,"note":2},{"type":"lock","x":0,"y":2},{"type":"note","x":4,"y":0,"dir":1,"note":2},{"type":"note","x":4,"y":4,"dir":8,"note":2},{"type":"note","x":2,"y":3,"dir":8,"note":2},{"type":"note","x":4,"y":3,"dir":1,"note":2},{"type":"note","x":3,"y":3,"dir":1,"note":1},{"type":"note","x":0,"y":4,"dir":1,"note":1},{"type":"note","x":4,"y":4,"dir":1,"note":2}]',
+    },
+  },
+});
+
 describe("the plan", () => {
   for (const item of presetMenu(netGame).submenu ?? []) {
     it(`${item.title}: finishes the board, every step agreeing with the solution`, () => {
@@ -68,8 +95,6 @@ describe("the plan", () => {
 });
 
 describe("boards the solver settles", () => {
-  const W5: NetParams = { w: 5, h: 5, wrapping: true, barrierProbability: 0 };
-
   /** The plan's sentences on `desc`, each step checked against the solver's
    * answer, and the board it leaves. */
   function follow(p: NetParams, desc: string) {
@@ -95,7 +120,8 @@ describe("boards the solver settles", () => {
   it("follows a wire through squares not settled yet", () => {
     // Upstream's board for the seed "net-trace-4". A dead end, two straights
     // and a dead end stand in one column: upright, the straight joins all
-    // four and nothing else, though no wire between them is known.
+    // four and nothing else, though no wire between them is known. No pin: the
+    // sentence opened none of 3618 hints over 80 boards dealt today.
     const { said, solved } = follow(W5, "19d7aaae8449d5636cad43c44");
     expect(solved).toBe(true);
     expect(said).toContain(
@@ -106,7 +132,8 @@ describe("boards the solver settles", () => {
   it("counts out a turning that would close a loop on the way", () => {
     // A board the hint finishes only by reading a square's turnings off the
     // loops they would close as well as off its sides.
-    const { said, solved } = follow(W5, "8792436dbc43da835b68849b3");
+    const { id } = pinned("loopOnTheWay");
+    const { said, solved } = follow(W5, id.slice(id.indexOf(":") + 1));
     expect(solved).toBe(true);
     expect(
       said.some((t) => t.includes("however they turn without closing a loop")),
@@ -115,28 +142,8 @@ describe("boards the solver settles", () => {
 });
 
 describe("keep-track", () => {
-  const P: NetParams = {
-    w: 5,
-    h: 5,
-    wrapping: false,
-    barrierProbability: 0,
-  };
-  /** The first step that turns a square, and the state it is shown on. */
-  function firstTurn() {
-    for (let k = 0; k < 20; k++) {
-      const { state } = board(P, `net-track-${k}`);
-      const steps = plan(state);
-      let s = state;
-      for (const step of steps) {
-        if (step.highlights?.kind === "turn") return { s, step };
-        s = netGame.executeMove(s, step.move);
-      }
-    }
-    throw new Error("no turn step in 20 boards");
-  }
-
   it("a turn the other way round is on track, and the step asks for the rest", () => {
-    const { s, step } = firstTurn();
+    const { state: s, step } = pinned("turn");
     const h = step.highlights as TurnHint;
     const now = s.tiles[h.at.y * s.w + h.at.x] & 0xf;
     const wrongWay: NetMove =
@@ -159,7 +166,7 @@ describe("keep-track", () => {
   });
 
   it("the step's own move completes it; a move elsewhere drops the plan", () => {
-    const { s, step } = firstTurn();
+    const { state: s, step } = pinned("turn");
     expect(netGame.hintKeepTrack?.(step.move, step, s)).toBe("completed");
     const h = step.highlights as TurnHint;
     const elsewhere: NetMove = { type: "lock", x: (h.at.x + 1) % s.w, y: h.at.y };
@@ -190,8 +197,11 @@ describe("refusal and marks", () => {
   });
 
   it("rings the square a step turns and locks, in the hint color", () => {
-    const { id } = board(P, "net-marks");
-    const r = renderScenario({ game: netGame, id, showHint: true });
+    const r = renderScenario({
+      game: netGame,
+      id: "5x5:299511de1166b536dbb1861b2",
+      showHint: true,
+    });
     expect(r.hint).toBeDefined();
     expect(r.recording.ops.some((o) => "color" in o && o.color === COL_HINT)).toBe(
       true,

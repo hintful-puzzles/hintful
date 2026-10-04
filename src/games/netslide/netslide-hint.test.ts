@@ -8,6 +8,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
@@ -55,6 +56,69 @@ function board(params: NetslideParams, seed: string) {
   const { desc, aux } = netslideGame.newDesc(params, randomNew(seed));
   return { desc, aux, state: netslideGame.newState(params, desc) };
 }
+
+const marksOf = (step: { highlights?: unknown }): NetslideHint =>
+  step.highlights as NetslideHint;
+
+/** Whether `cell` lies on the line a slide moves. */
+const onSlidLine = (
+  state: NetslideState,
+  slide: NetslideMove & { type: "slide" },
+  cell: number,
+): boolean =>
+  slide.axis === "row"
+    ? Math.floor(cell / state.w) === slide.index
+    : cell % state.w === slide.index;
+
+/** The steps the narration and animation tests read, each pinned on a position
+ * whose hint opens with one. A plan here is a search, so the scan follows only
+ * the first few hints of each board. */
+const pinned = describeHintPins({
+  game: netslideGame,
+  params: [EVEN_4X4, HARD_5X5],
+  seeds: 8,
+  maxSteps: 8,
+  kinds: {
+    // A tile sitting in the source's row can only be shifted by its column,
+    // and the other way about.
+    offFrozenRow: (step, state) =>
+      step.move.type === "slide" &&
+      step.move.axis === "col" &&
+      Math.floor(marksOf(step).tile / state.w) === state.cy,
+    offFrozenColumn: (step, state) =>
+      step.move.type === "slide" &&
+      step.move.axis === "row" &&
+      marksOf(step).tile % state.w === state.cx,
+    // Selected on the sentence, not on the marks: a tile on the source's own
+    // row or column can also belong beside it, but the frozen-line branch
+    // takes precedence and narrates it differently.
+    besideSource: /belongs beside the source/,
+    // A tile that needs more than one slide to get home: the opening step's
+    // plan has a continuation leg straight after it.
+    journey: (_, state) => {
+      const res = netslideGame.hint?.(state);
+      return res?.ok === true && res.steps[1]?.continuesPrevious === true;
+    },
+    // A step that moves a tile and aims at a cell on the line being slid, the
+    // only case where a cell mark riding the shift would be visible.
+    aimsAlongItsSlide: (step, state) =>
+      step.move.type === "slide" &&
+      onSlidLine(state, step.move, marksOf(step).destination) &&
+      marksOf(step).landing !== marksOf(step).tile,
+  },
+  pins: {
+    /** Held on 15 of 128 positions walked. */
+    offFrozenRow: "5x5w:767822c589d47adb629595514",
+    /** Held on 15 of 128 positions walked. */
+    offFrozenColumn: "4x4b1:chb4h2h8v9v43h1ah7h457dv5",
+    /** Held on 17 of 128 positions walked. */
+    besideSource: "4x4b1:1h8v9eh4v7h4v83hcvb1h3c67",
+    /** Held on 20 of 128 positions walked. */
+    journey: "4x4b1:6v97h4hd5hbvh382d4h8vbv24",
+    /** Held on 81 of 128 positions walked. */
+    aimsAlongItsSlide: "4x4b1:1h1v7hdch6h26h9d7h1cv2v1c",
+  },
+});
 
 function hintOf(state: NetslideState, aux?: string) {
   const res = netslideGame.hint?.(state, aux);
@@ -320,43 +384,18 @@ describe("netslide hint narration", () => {
     // The line is "this row", striped, never a number (the board draws none) and
     // never "the center row", false on an even-sized board, where the source
     // sits at ⌊w/2⌋ and the player can see it.
-    let seen = false;
-    for (let i = 0; i < 40 && !seen; i++) {
-      const { state, aux } = board(HARD_5X5, `frozen-${i}`);
-      const res = hintOf(state, aux);
-      if (!res.ok) continue;
-      for (const step of res.steps) {
-        const marks = step.highlights as NetslideHint;
-        const row = Math.floor(marks.tile / state.w);
-        const col = marks.tile % state.w;
-        if (step.continuesPrevious) continue;
-        if (
-          row === state.cy &&
-          step.move.type === "slide" &&
-          step.move.axis === "col"
-        ) {
-          expect(step.explanation).toContain("This row never slides");
-          expect(step.explanation).toContain("only a column move shifts");
-          expect(marks.line).toEqual(
-            Array.from({ length: state.w }, (_, x) => state.cy * state.w + x),
-          );
-          seen = true;
-        }
-        if (
-          col === state.cx &&
-          step.move.type === "slide" &&
-          step.move.axis === "row"
-        ) {
-          expect(step.explanation).toContain("This column never slides");
-          expect(step.explanation).toContain("only a row move shifts");
-          expect(marks.line).toEqual(
-            Array.from({ length: state.h }, (_, y) => y * state.w + state.cx),
-          );
-          seen = true;
-        }
-      }
-    }
-    expect(seen, "no plan in 40 boards ever moved a tile off a frozen line").toBe(true);
+    const row = pinned("offFrozenRow");
+    expect(row.step.explanation).toContain("This row never slides");
+    expect(row.step.explanation).toContain("only a column move shifts");
+    expect(marksOf(row.step).line).toEqual(
+      Array.from({ length: row.state.w }, (_, x) => row.state.cy * row.state.w + x),
+    );
+    const col = pinned("offFrozenColumn");
+    expect(col.step.explanation).toContain("This column never slides");
+    expect(col.step.explanation).toContain("only a row move shifts");
+    expect(marksOf(col.step).line).toEqual(
+      Array.from({ length: col.state.h }, (_, y) => y * col.state.w + col.state.cx),
+    );
   });
 
   it("never calls the source the center, and never says a tile belongs twice", () => {
@@ -384,53 +423,28 @@ describe("netslide hint narration", () => {
   });
 
   it("states plainly that a tile belongs beside the source, without a preamble", () => {
-    let seen = false;
-    for (let i = 0; i < 40 && !seen; i++) {
-      const { state, aux } = board(EVEN_4X4, `beside-${i}`);
-      const res = hintOf(state, aux);
-      if (!res.ok) continue;
-      for (const step of res.steps) {
-        // Select on the **sentence**, not on the marks: a tile on the source's
-        // own row or column can also belong beside it, but the frozen-line
-        // branch takes precedence and narrates it differently.
-        if (!step.explanation.includes("belongs beside the source")) continue;
-        // No preamble: the sentence opens on the tile or on the imperative,
-        // never on a lecture about what the source can and cannot do.
-        expect(step.explanation).toMatch(/^(This|Take this) /);
-        // …and the claim it makes is true of the step it is attached to.
-        const marks = step.highlights as NetslideHint;
-        const dx = Math.abs((marks.destination % state.w) - state.cx);
-        const dy = Math.abs(Math.floor(marks.destination / state.w) - state.cy);
-        expect(marks.belongs).toBe(true);
-        expect(dx + dy).toBe(1);
-        seen = true;
-      }
-    }
-    expect(seen, "no plan in 40 boards ever placed a tile beside the source").toBe(
-      true,
-    );
+    const { state, step } = pinned("besideSource");
+    // No preamble: the sentence opens on the tile or on the imperative,
+    // never on a lecture about what the source can and cannot do.
+    expect(step.explanation).toMatch(/^(This|Take this) /);
+    // …and the claim it makes is true of the step it is attached to.
+    const marks = marksOf(step);
+    const dx = Math.abs((marks.destination % state.w) - state.cx);
+    const dy = Math.abs(Math.floor(marks.destination / state.w) - state.cy);
+    expect(marks.belongs).toBe(true);
+    expect(dx + dy).toBe(1);
   });
 
   it("groups a tile's several slides into one journey", () => {
     // A tile that needs more than one slide to get home is one hint, not several:
     // the continuation legs are flagged, so the midend keeps them on screen and
     // auto-play runs them back to back.
-    let seen = false;
-    for (let i = 0; i < 30 && !seen; i++) {
-      const { state, aux } = board(HARD_5X5, `journey-${i}`);
-      const res = hintOf(state, aux);
-      if (!res.ok) continue;
-      for (let k = 1; k < res.steps.length; k++) {
-        if (!res.steps[k].continuesPrevious) continue;
-        seen = true;
-        // A continuation leg works the same tile the leg before it did, and it
-        // does not re-explain itself.
-        expect(res.steps[k].explanation).toMatch(
-          /^Working on this [-a-zA-Z ]+: take it on to/,
-        );
-      }
-    }
-    expect(seen, "no plan in 30 boards ever needed a multi-slide journey").toBe(true);
+    const legs = pinned("journey").steps.filter((s) => s.continuesPrevious);
+    expect(legs.length).toBeGreaterThan(0);
+    // A continuation leg works the same tile the leg before it did, and it
+    // does not re-explain itself.
+    for (const leg of legs)
+      expect(leg.explanation).toMatch(/^Working on this [-a-zA-Z ]+: take it on to/);
   });
 });
 
@@ -588,12 +602,11 @@ describe("netslide hint rendering", () => {
   });
 
   it("marks the tile, its destination and the arrow to press", () => {
-    // A seeded id, not a descriptive one: only a *generated* game carries the
-    // `aux` the hint plans against (a `params:desc` id is exactly the case the
-    // hint refuses).
+    // A `params:desc` id carries no `aux`, so the hint plans against the
+    // solution it reconstructs from the board.
     const result = renderScenario({
       game: netslideGame,
-      id: "3x3b1#scenario-1",
+      id: "3x3b1:2h2he2d19vcv5",
       showHint: true,
     });
 
@@ -660,50 +673,29 @@ describe("the hint marks while the hinted slide animates", () => {
     );
   }
 
-  /** A mid-slide frame of the hinted move, on the first board whose hint step both
-   * moves a tile and aims at a cell on the line being slid — the only case where a
-   * cell mark riding the shift would be visible. */
+  /** A mid-slide frame of a hinted move that both moves a tile and aims at a
+   * cell on the line being slid. */
   function animatingFrame() {
-    for (let i = 0; i < 40; i++) {
-      const { state, aux } = board(EVEN_4X4, `anim-${i}`);
-      const res = hintOf(state, aux);
-      if (!res.ok) continue;
-      const step = res.steps[0] as HintStep<NetslideMove, NetslideHint>;
-      const marks = step.highlights as NetslideHint;
-      if (step.move.type !== "slide") continue;
-      const slide = step.move;
-      const onLine = (cell: number) =>
-        slide.axis === "row"
-          ? Math.floor(cell / state.w) === slide.index
-          : cell % state.w === slide.index;
-      if (!onLine(marks.destination)) continue;
-      if (marks.landing === marks.tile) continue;
+    const pin = pinned("aimsAlongItsSlide");
+    const { state } = pin;
+    const step = pin.step as HintStep<NetslideMove, NetslideHint>;
+    const marks = marksOf(step);
+    if (step.move.type !== "slide") throw new Error("unreachable");
+    const slide = step.move;
 
-      const after = netslideGame.executeMove(state, step.move);
-      const ds = newDrawState(after, TS);
-      const palette = colors([1, 1, 1]);
+    const after = netslideGame.executeMove(state, step.move);
+    const ds = newDrawState(after, TS);
+    const palette = colors([1, 1, 1]);
 
-      // Paint the pre-move frame first, so the draw state's cache is warm exactly as
-      // it is in the app when the slide begins.
-      redraw(
-        new RecordingDrawing(palette),
-        ds,
-        null,
-        state,
-        0,
-        newUi(state),
-        0,
-        0,
-        step,
-      );
+    // Paint the pre-move frame first, so the draw state's cache is warm exactly as
+    // it is in the app when the slide begins.
+    redraw(new RecordingDrawing(palette), ds, null, state, 0, newUi(state), 0, 0, step);
 
-      // Halfway through the slide: the line is drawn half a tile back along its
-      // direction of travel.
-      const rec = new RecordingDrawing(palette);
-      redraw(rec, ds, state, after, 0, newUi(after), ANIM_TIME / 2, 0, step);
-      return { state, after, slide, marks, rec };
-    }
-    throw new Error("no board in 40 aimed a hint at a cell on the line it slides");
+    // Halfway through the slide: the line is drawn half a tile back along its
+    // direction of travel.
+    const rec = new RecordingDrawing(palette);
+    redraw(rec, ds, state, after, 0, newUi(after), ANIM_TIME / 2, 0, step);
+    return { state, after, slide, marks, rec };
   }
 
   it("carries the tile mark along with the tile it is marking", () => {

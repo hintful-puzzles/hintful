@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -33,7 +34,6 @@ import {
   DIFF_SET,
   DIFF_SIMPLE,
   defaultParams,
-  encodeParams,
   newState,
   newUi,
   type SoloMove,
@@ -71,6 +71,70 @@ const KILLER: SoloParams = {
   xtype: false,
   killer: true,
 };
+
+const HIDDEN_SINGLE =
+  /^Every other cell in this \w+ rules out \w, so this cell must be/;
+const EXTRA_CAGE = /^This (row|column|block) must total (\d+);/;
+const LOCKED_PATTERN = /^Their columns fit (\S+) only in the outlined cells/;
+/** A deductive elimination that names the region it rests on. */
+const REGION_STRIKE = /cross out the \w from the rest of it|already accounts? for/;
+
+const strikes = (step: AnyStep): number =>
+  step.move.type === "pencilStrike" ? step.move.marks.length : 0;
+
+/** Positions on the default reading, where nothing is penciled in first. */
+const pinned = describeHintPins({
+  game: soloGame,
+  params: [ADV, XADV, KILLER, EXTREME],
+  kinds: {
+    hiddenSingle: HIDDEN_SINGLE,
+    diagonal: /diagonal/,
+    extraCage: EXTRA_CAGE,
+    lockedPattern: LOCKED_PATTERN,
+  },
+  pins: {
+    /** Held on 625 of 5839 positions walked. */
+    hiddenSingle: "3x3da:5_9a2e1a8e2c8_1b5d6d4a7_4c5_9a3d5d1b6_7c9e6a7e4a1_8",
+    /** Held on 235 of 5839 positions walked. */
+    diagonal: "3x3xda:5e2_9a2a4d5n1_7_3e8_6_5e1_9_3n1d6a9a4_9e7",
+    /** Held on 67 of 5839 positions walked. */
+    extraCage: {
+      id: "3x3ka:zzzc,__a_aaaa____a______a__________________a_____a______a__aaa_baaaa__aa____aa__babaa___aa____aa_baaabaaa_,7_10_17a16_10a15f7_5_11a6_16a12_9c9a12c15_17_12a12_7_12a6c7c9a10a10a15_7_8a10a15a15c15_5b11a14c11d",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":4},{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6},{"x":0,"y":0,"n":7},{"x":0,"y":0,"n":8},{"x":0,"y":0,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":2},{"x":0,"y":1,"n":3},{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5},{"x":0,"y":1,"n":6},{"x":0,"y":1,"n":7},{"x":0,"y":1,"n":8},{"x":0,"y":1,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":7},{"x":0,"y":2,"n":8},{"x":0,"y":2,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":5},{"x":0,"y":3,"n":6},{"x":0,"y":3,"n":7},{"x":0,"y":3,"n":8},{"x":0,"y":3,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":4},{"x":0,"y":4,"n":5},{"x":0,"y":4,"n":6},{"x":0,"y":4,"n":7},{"x":0,"y":4,"n":8},{"x":0,"y":4,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":5,"n":1},{"x":0,"y":5,"n":2},{"x":0,"y":5,"n":3},{"x":0,"y":5,"n":4},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8},{"x":0,"y":5,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":6,"n":1},{"x":0,"y":6,"n":2},{"x":0,"y":6,"n":3},{"x":0,"y":6,"n":4},{"x":0,"y":6,"n":5},{"x":0,"y":6,"n":6},{"x":0,"y":6,"n":7},{"x":0,"y":6,"n":8},{"x":0,"y":6,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":2},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":4},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":6},{"x":0,"y":7,"n":7},{"x":0,"y":7,"n":8},{"x":0,"y":7,"n":9}]}]',
+    },
+    /** Held on 6 of 5839 positions walked. */
+    lockedPattern: {
+      id: "3x3de:a7a9c4a3a1e8c3b1_7_6e1_4b1a2c7a9b8_4e2_1_9b5c7e2a1a8c9a3a",
+      moves:
+        '[{"type":"set","x":4,"y":0,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":4,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":3,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":5,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":8,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":8,"n":2,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":7,"n":9,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":1,"n":9,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":6,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":6,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":6,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":8,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":8,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":0,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":5,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":6,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":6,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":5,"y":4,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":7,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":7,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":5},{"x":4,"y":2,"n":8}]},{"type":"pencilAdd","marks":[{"x":5,"y":2,"n":2},{"x":5,"y":2,"n":4},{"x":5,"y":2,"n":8}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":4},{"x":5,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":5},{"x":3,"y":3,"n":6},{"x":3,"y":3,"n":8}]},{"type":"pencilAdd","marks":[{"x":4,"y":3,"n":5},{"x":4,"y":3,"n":6},{"x":4,"y":3,"n":8},{"x":4,"y":3,"n":9}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":6},{"x":4,"y":3,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6},{"x":0,"y":0,"n":8}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":8},{"x":0,"y":2,"n":9}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":0,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":5,"y":1,"n":2},{"x":5,"y":1,"n":4},{"x":5,"y":1,"n":6},{"x":5,"y":1,"n":7}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":7}]},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":2},{"x":5,"y":1,"n":6}]},{"type":"pencilAdd","marks":[{"x":3,"y":1,"n":2},{"x":3,"y":1,"n":5},{"x":3,"y":1,"n":6}]},{"type":"pencilAdd","marks":[{"x":7,"y":1,"n":2},{"x":7,"y":1,"n":5}]},{"type":"pencilAdd","marks":[{"x":7,"y":3,"n":2},{"x":7,"y":3,"n":5},{"x":7,"y":3,"n":8}]}]',
+    },
+  },
+});
+
+/** Positions a player reaches with every candidate penciled in first. */
+const pinnedPopulated = describeHintPins({
+  game: soloGame,
+  params: [ADV],
+  opening: (): SoloMove[] => [{ type: "pencilAll" }],
+  kinds: {
+    multiMarkStrike: (step) => strikes(step) >= 2,
+    regionStrike: (step) => strikes(step) > 0 && REGION_STRIKE.test(step.explanation),
+  },
+  pins: {
+    /** Held on 275 of 991 positions walked. */
+    multiMarkStrike: {
+      id: "3x3da:a1_9d7c5_7f3b2c9_3b2_9b5c8_6a4_1c6b5_7b2_4c6b2f3_7c5d9_3a",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 69 of 991 positions walked. */
+    regionStrike: {
+      id: "3x3da:b6_7_2f8_5c4_6d4a2b8b2b3b9c1c4b4b5b7b7a5d6_1c3_4f7_2_9b",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":6},{"x":0,"y":0,"n":7},{"x":0,"y":0,"n":8},{"x":0,"y":0,"n":9},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":1,"y":0,"n":6},{"x":1,"y":0,"n":7},{"x":1,"y":0,"n":8},{"x":5,"y":0,"n":2},{"x":5,"y":0,"n":3},{"x":5,"y":0,"n":4},{"x":5,"y":0,"n":5},{"x":5,"y":0,"n":6},{"x":5,"y":0,"n":7},{"x":6,"y":0,"n":2},{"x":6,"y":0,"n":3},{"x":6,"y":0,"n":4},{"x":6,"y":0,"n":6},{"x":6,"y":0,"n":7},{"x":6,"y":0,"n":9},{"x":7,"y":0,"n":2},{"x":7,"y":0,"n":4},{"x":7,"y":0,"n":6},{"x":7,"y":0,"n":7},{"x":8,"y":0,"n":2},{"x":8,"y":0,"n":4},{"x":8,"y":0,"n":6},{"x":8,"y":0,"n":7},{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5},{"x":0,"y":1,"n":6},{"x":0,"y":1,"n":8},{"x":0,"y":1,"n":9},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5},{"x":1,"y":1,"n":6},{"x":1,"y":1,"n":8},{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":5},{"x":4,"y":1,"n":6},{"x":4,"y":1,"n":7},{"x":4,"y":1,"n":8},{"x":5,"y":1,"n":2},{"x":5,"y":1,"n":3},{"x":5,"y":1,"n":4},{"x":5,"y":1,"n":5},{"x":5,"y":1,"n":6},{"x":5,"y":1,"n":7},{"x":5,"y":1,"n":8},{"x":6,"y":1,"n":2},{"x":6,"y":1,"n":3},{"x":6,"y":1,"n":4},{"x":6,"y":1,"n":5},{"x":6,"y":1,"n":6},{"x":6,"y":1,"n":8},{"x":6,"y":1,"n":9},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":8},{"x":0,"y":2,"n":9},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":6},{"x":1,"y":2,"n":8},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":6},{"x":2,"y":2,"n":7},{"x":2,"y":2,"n":8},{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":4},{"x":3,"y":2,"n":5},{"x":3,"y":2,"n":7},{"x":5,"y":2,"n":2},{"x":5,"y":2,"n":3},{"x":5,"y":2,"n":4},{"x":5,"y":2,"n":5},{"x":5,"y":2,"n":7},{"x":7,"y":2,"n":2},{"x":7,"y":2,"n":4},{"x":7,"y":2,"n":6},{"x":8,"y":2,"n":2},{"x":8,"y":2,"n":4},{"x":8,"y":2,"n":6},{"x":8,"y":2,"n":7},{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":2},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":4},{"x":1,"y":3,"n":8},{"x":1,"y":3,"n":9},{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":6},{"x":2,"y":3,"n":7},{"x":2,"y":3,"n":8},{"x":2,"y":3,"n":9},{"x":4,"y":3,"n":1},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":3},{"x":4,"y":3,"n":4},{"x":4,"y":3,"n":5},{"x":4,"y":3,"n":7},{"x":4,"y":3,"n":8},{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":2},{"x":5,"y":3,"n":3},{"x":5,"y":3,"n":5},{"x":5,"y":3,"n":8},{"x":7,"y":3,"n":2},{"x":7,"y":3,"n":3},{"x":7,"y":3,"n":4},{"x":7,"y":3,"n":7},{"x":7,"y":3,"n":8},{"x":8,"y":3,"n":2},{"x":8,"y":3,"n":3},{"x":8,"y":3,"n":4},{"x":8,"y":3,"n":6},{"x":8,"y":3,"n":7},{"x":8,"y":3,"n":8},{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":8},{"x":1,"y":4,"n":9},{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":4},{"x":2,"y":4,"n":6},{"x":2,"y":4,"n":7},{"x":2,"y":4,"n":8},{"x":2,"y":4,"n":9},{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":4},{"x":3,"y":4,"n":5},{"x":3,"y":4,"n":7},{"x":3,"y":4,"n":9},{"x":5,"y":4,"n":1},{"x":5,"y":4,"n":2},{"x":5,"y":4,"n":3},{"x":5,"y":4,"n":4},{"x":5,"y":4,"n":5},{"x":5,"y":4,"n":9},{"x":6,"y":4,"n":1},{"x":6,"y":4,"n":2},{"x":6,"y":4,"n":3},{"x":6,"y":4,"n":4},{"x":6,"y":4,"n":7},{"x":6,"y":4,"n":9},{"x":7,"y":4,"n":1},{"x":7,"y":4,"n":3},{"x":7,"y":4,"n":4},{"x":7,"y":4,"n":7},{"x":7,"y":4,"n":9},{"x":0,"y":5,"n":4},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8},{"x":0,"y":5,"n":9},{"x":1,"y":5,"n":1},{"x":1,"y":5,"n":4},{"x":1,"y":5,"n":5},{"x":1,"y":5,"n":7},{"x":1,"y":5,"n":8},{"x":1,"y":5,"n":9},{"x":3,"y":5,"n":1},{"x":3,"y":5,"n":2},{"x":3,"y":5,"n":4},{"x":3,"y":5,"n":5},{"x":3,"y":5,"n":7},{"x":4,"y":5,"n":1},{"x":4,"y":5,"n":2},{"x":4,"y":5,"n":4},{"x":4,"y":5,"n":5},{"x":4,"y":5,"n":7},{"x":6,"y":5,"n":2},{"x":6,"y":5,"n":3},{"x":6,"y":5,"n":4},{"x":6,"y":5,"n":5},{"x":6,"y":5,"n":7},{"x":6,"y":5,"n":9},{"x":7,"y":5,"n":3},{"x":7,"y":5,"n":4},{"x":7,"y":5,"n":5},{"x":7,"y":5,"n":7},{"x":0,"y":6,"n":1},{"x":0,"y":6,"n":5},{"x":0,"y":6,"n":6},{"x":0,"y":6,"n":7},{"x":0,"y":6,"n":8},{"x":0,"y":6,"n":9},{"x":1,"y":6,"n":1},{"x":1,"y":6,"n":5},{"x":1,"y":6,"n":6},{"x":1,"y":6,"n":7},{"x":3,"y":6,"n":2},{"x":3,"y":6,"n":3},{"x":3,"y":6,"n":5},{"x":3,"y":6,"n":7},{"x":5,"y":6,"n":2},{"x":5,"y":6,"n":3},{"x":5,"y":6,"n":5},{"x":5,"y":6,"n":7},{"x":6,"y":6,"n":2},{"x":6,"y":6,"n":3},{"x":6,"y":6,"n":4},{"x":6,"y":6,"n":5},{"x":6,"y":6,"n":7},{"x":6,"y":6,"n":9},{"x":7,"y":6,"n":4},{"x":7,"y":6,"n":5},{"x":7,"y":6,"n":7},{"x":7,"y":6,"n":9},{"x":8,"y":6,"n":4},{"x":8,"y":6,"n":5},{"x":8,"y":6,"n":6},{"x":8,"y":6,"n":7},{"x":8,"y":6,"n":9},{"x":2,"y":7,"n":1},{"x":2,"y":7,"n":3},{"x":2,"y":7,"n":4},{"x":2,"y":7,"n":6},{"x":2,"y":7,"n":7},{"x":2,"y":7,"n":8},{"x":3,"y":7,"n":1},{"x":3,"y":7,"n":2},{"x":3,"y":7,"n":3},{"x":3,"y":7,"n":4},{"x":3,"y":7,"n":5},{"x":3,"y":7,"n":6},{"x":3,"y":7,"n":7},{"x":4,"y":7,"n":1},{"x":4,"y":7,"n":2},{"x":4,"y":7,"n":3},{"x":4,"y":7,"n":4},{"x":4,"y":7,"n":5},{"x":4,"y":7,"n":6},{"x":4,"y":7,"n":7},{"x":7,"y":7,"n":1},{"x":7,"y":7,"n":3},{"x":7,"y":7,"n":4},{"x":7,"y":7,"n":6},{"x":7,"y":7,"n":9},{"x":8,"y":7,"n":1},{"x":8,"y":7,"n":3},{"x":8,"y":7,"n":4},{"x":8,"y":7,"n":6},{"x":8,"y":7,"n":7},{"x":8,"y":7,"n":9},{"x":0,"y":8,"n":1},{"x":0,"y":8,"n":2},{"x":0,"y":8,"n":6},{"x":0,"y":8,"n":7},{"x":0,"y":8,"n":8},{"x":0,"y":8,"n":9},{"x":1,"y":8,"n":1},{"x":1,"y":8,"n":2},{"x":1,"y":8,"n":6},{"x":1,"y":8,"n":7},{"x":1,"y":8,"n":9},{"x":2,"y":8,"n":1},{"x":2,"y":8,"n":2},{"x":2,"y":8,"n":4},{"x":2,"y":8,"n":6},{"x":2,"y":8,"n":7},{"x":2,"y":8,"n":8},{"x":2,"y":8,"n":9},{"x":3,"y":8,"n":2},{"x":3,"y":8,"n":3},{"x":3,"y":8,"n":5},{"x":3,"y":8,"n":7},{"x":3,"y":8,"n":9},{"x":7,"y":8,"n":2},{"x":7,"y":8,"n":4},{"x":7,"y":8,"n":7},{"x":7,"y":8,"n":9},{"x":8,"y":8,"n":2},{"x":8,"y":8,"n":4},{"x":8,"y":8,"n":6},{"x":8,"y":8,"n":7},{"x":8,"y":8,"n":9}]}]',
+    },
+  },
+});
 
 // --- tier 1: recording solver ----------------------------------------------
 
@@ -368,37 +432,18 @@ describe("solo hint", () => {
   });
 
   it("narrates a hidden single by its region, never as a naked single", () => {
-    let checked = 0;
-    for (const seed of ["hs0", "hs1", "hs2", "hs3", "hs4", "hs5"]) {
-      const { st, aux } = gen(ADV, seed);
-      let state: SoloState = st;
-      for (let i = 0; i < 3000 && soloStatus(state) !== "solved"; i++) {
-        const res = soloGame.hint?.(state, aux);
-        if (!res?.ok) break;
-        const step = res.steps.find((s) =>
-          /^Every other cell in this \w+ rules out \w, so this cell must be/.test(
-            s.explanation,
-          ),
-        ) as AnyStep | undefined;
-        if (step) {
-          const m = step.move as { type: string; x: number; y: number; n: number };
-          expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
-          expect(step.explanation).toMatch(/in this (row|column|block|diagonal)/);
-          // The region it names contains the target: hatched when it is a line,
-          // outlined when it is a block.
-          const isBlock = /in this block/.test(step.explanation);
-          const region = (isBlock ? step.highlights?.area : step.highlights?.hatch) as {
-            x: number;
-            y: number;
-          }[];
-          expect(region.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
-          checked++;
-          break;
-        }
-        state = soloGame.executeMove(state, res.steps[0].move);
-      }
-    }
-    expect(checked).toBeGreaterThan(0);
+    const step = pinned("hiddenSingle").step as AnyStep;
+    const m = step.move as { type: string; x: number; y: number; n: number };
+    expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
+    expect(step.explanation).toMatch(/in this (row|column|block|diagonal)/);
+    // The region it names contains the target: hatched when it is a line,
+    // outlined when it is a block.
+    const isBlock = /in this block/.test(step.explanation);
+    const region = (isBlock ? step.highlights?.area : step.highlights?.hatch) as {
+      x: number;
+      y: number;
+    }[];
+    expect(region.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
   });
 
   it("a naked-single narration only ever appears on a genuine one-candidate cell", () => {
@@ -431,21 +476,9 @@ describe("solo hint", () => {
   });
 
   it("teaches an X-diagonal deduction on an X board", () => {
-    let found = false;
-    for (let s = 0; s < 30 && !found; s++) {
-      const { st, aux } = gen(XADV, `xd-${s}`);
-      let state: SoloState = st;
-      for (let i = 0; i < 2000 && soloStatus(state) === "ongoing"; i++) {
-        const res = soloGame.hint?.(state, aux);
-        if (!res?.ok) break;
-        if (res.steps.some((step) => /diagonal/.test(step.explanation))) {
-          found = true;
-          break;
-        }
-        state = soloGame.executeMove(state, res.steps[0].move);
-      }
-    }
-    expect(found).toBe(true);
+    const { state, step } = pinned("diagonal");
+    expect(state.params.xtype).toBe(true);
+    expect(step.explanation).toMatch(/diagonal/);
   });
 
   // Both rungs used to name cells the frame never marked — "these cells must
@@ -454,91 +487,58 @@ describe("solo hint", () => {
   // player can see it against, so each test asserts the marks *are* what the
   // words point at, not merely that the words appear.
   it("shows the region a deduced extra-cage counted", () => {
-    let checked = 0;
-    for (let s = 0; s < 8 && checked === 0; s++) {
-      const { st, aux } = gen(KILLER, `killer-${s}`);
-      const res = soloGame.hint?.(st, aux);
-      if (!res?.ok) continue;
-      const solved = soloGame.solve?.(st, st);
-      if (!solved?.ok) throw new Error("solve failed");
-      const sol = (solved.move as { type: "solve"; grid: number[] }).grid;
-      const cr = st.cr;
-      for (const step of res.steps as AnyStep[]) {
-        const said = /^This (row|column|block) must total (\d+);/.exec(
-          step.explanation,
-        );
-        if (said === null) continue;
-        checked++;
-        expect(
-          Number(said[2]),
-          "the total named is the region's, not the residual",
-        ).toBe((cr * (cr + 1)) / 2);
-        const [target] = step.highlights.targets as { x: number; y: number }[];
-        const area = step.highlights.hatch as { x: number; y: number }[];
-        // The cells hatched are the cells of the region the sentence names.
-        const want =
-          said[1] === "row"
-            ? area.every((c) => c.y === target.y)
-            : said[1] === "column"
-              ? area.every((c) => c.x === target.x)
-              : area.every(
-                  (c) =>
-                    ((c.x / st.params.c) | 0) === ((target.x / st.params.c) | 0) &&
-                    ((c.y / st.params.r) | 0) === ((target.y / st.params.r) | 0),
-                );
-        expect(want, `hatched cells outside the ${said[1]} the sentence names`).toBe(
-          true,
-        );
-        expect(area).toHaveLength(cr);
-        expect(area).toContainEqual({ x: target.x, y: target.y });
-        // The arithmetic the sentence teaches is the arithmetic the board does.
-        expect(area.reduce((t, c) => t + sol[c.y * cr + c.x], 0)).toBe(
-          (cr * (cr + 1)) / 2,
-        );
-        break;
-      }
-    }
-    expect(checked, "no extra-cage firing reached").toBeGreaterThan(0);
+    const { state: st, step: pinnedStep } = pinned("extraCage");
+    const step = pinnedStep as AnyStep;
+    const solved = soloGame.solve?.(st, st);
+    if (!solved?.ok) throw new Error("solve failed");
+    const sol = (solved.move as { type: "solve"; grid: number[] }).grid;
+    const cr = st.cr;
+    const said = EXTRA_CAGE.exec(step.explanation);
+    if (said === null) throw new Error("the pin does not say an extra-cage total");
+    expect(Number(said[2]), "the total named is the region's, not the residual").toBe(
+      (cr * (cr + 1)) / 2,
+    );
+    const [target] = step.highlights.targets as { x: number; y: number }[];
+    const area = step.highlights.hatch as { x: number; y: number }[];
+    // The cells hatched are the cells of the region the sentence names.
+    const want =
+      said[1] === "row"
+        ? area.every((c) => c.y === target.y)
+        : said[1] === "column"
+          ? area.every((c) => c.x === target.x)
+          : area.every(
+              (c) =>
+                ((c.x / st.params.c) | 0) === ((target.x / st.params.c) | 0) &&
+                ((c.y / st.params.r) | 0) === ((target.y / st.params.r) | 0),
+            );
+    expect(want, `hatched cells outside the ${said[1]} the sentence names`).toBe(true);
+    expect(area).toHaveLength(cr);
+    expect(area).toContainEqual({ x: target.x, y: target.y });
+    // The arithmetic the sentence teaches is the arithmetic the board does.
+    expect(area.reduce((t, c) => t + sol[c.y * cr + c.x], 0)).toBe((cr * (cr + 1)) / 2);
   });
 
   it("shows the cells a locked pattern is locked into", () => {
-    let checked = 0;
-    for (let s = 0; s < 16 && checked === 0; s++) {
-      const { st, aux } = gen(EXTREME, `extreme-${s}`);
-      const res = soloGame.hint?.(st, aux);
-      if (!res?.ok) continue;
-      for (const step of res.steps as AnyStep[]) {
-        const said = /^Their columns fit (\S+) only in the outlined cells/.exec(
-          step.explanation,
-        );
-        if (said === null) continue;
-        checked++;
-        const area = step.highlights.area as { x: number; y: number }[];
-        const marks = step.highlights.marks as { x: number; y: number; n: number }[];
-        expect(
-          area.length,
-          "'the outlined cells' with nothing outlined",
-        ).toBeGreaterThan(3);
-        const rows = new Set(area.map((c) => c.y));
-        const cols = new Set(area.map((c) => c.x));
-        expect(rows.size, "a locked pattern spans as many rows as columns").toBe(
-          cols.size,
-        );
-        for (const m of marks) {
-          // What the sentence claims: the strike is in a pattern row, and it is
-          // outside the columns the pattern uses up.
-          expect(rows.has(m.y), "struck a cell outside the pattern's rows").toBe(true);
-          expect(cols.has(m.x), "struck a cell inside the pattern's own columns").toBe(
-            false,
-          );
-          expect(digitChar(m.n), "struck a digit the sentence does not name").toBe(
-            said[1],
-          );
-        }
-        break;
-      }
+    const step = pinned("lockedPattern").step as AnyStep;
+    const said = LOCKED_PATTERN.exec(step.explanation);
+    if (said === null) throw new Error("the pin does not say a locked pattern");
+    const area = step.highlights.area as { x: number; y: number }[];
+    const marks = step.highlights.marks as { x: number; y: number; n: number }[];
+    expect(area.length, "'the outlined cells' with nothing outlined").toBeGreaterThan(
+      3,
+    );
+    const rows = new Set(area.map((c) => c.y));
+    const cols = new Set(area.map((c) => c.x));
+    expect(rows.size, "a locked pattern spans as many rows as columns").toBe(cols.size);
+    for (const m of marks) {
+      // What the sentence claims: the strike is in a pattern row, and it is
+      // outside the columns the pattern uses up.
+      expect(rows.has(m.y), "struck a cell outside the pattern's rows").toBe(true);
+      expect(cols.has(m.x), "struck a cell inside the pattern's own columns").toBe(
+        false,
+      );
+      expect(digitChar(m.n), "struck a digit the sentence does not name").toBe(said[1]);
     }
-    expect(checked, "no locked-pattern firing reached").toBeGreaterThan(0);
   });
 
   it("counts a solved board as finished and flags a wrong digit, the boards the midend refuses", () => {
@@ -787,16 +787,8 @@ describe("solo hintKeepTrack", () => {
   });
 
   it("shrinks then finishes a multi-mark strike journey", () => {
-    const { st } = gen(ADV, "kt-strike");
-    const populated = soloGame.executeMove(st, { type: "pencilAll" });
-    const res = soloGame.hint?.(populated);
-    if (!res?.ok) throw new Error("hint refused");
-    const step = res.steps.find(
-      (s) =>
-        (s.move as SoloMove).type === "pencilStrike" &&
-        (s.move as { type: "pencilStrike"; marks: unknown[] }).marks.length >= 2,
-    ) as AnyStep | undefined;
-    if (!step) throw new Error("no multi-mark strike step");
+    const { state: populated, step: pinnedStep } = pinnedPopulated("multiMarkStrike");
+    const step = pinnedStep as AnyStep;
 
     const marks = [...step.move.marks] as { x: number; y: number; n: number }[];
     let cur = populated;
@@ -821,43 +813,20 @@ describe("solo hintKeepTrack", () => {
 
 // --- tier 2.5: render ------------------------------------------------------
 
-/** Scan seeds for an id whose from-populated plan reaches a deductive strike step
- * matching `pred` — so the render frame is deterministic without a known desc. */
-function strikeFrame(p: SoloParams, pred: (s: string) => boolean): string {
-  for (let s = 0; s < 40; s++) {
-    const seed = `frame-${p.diff}-${s}`;
-    const { st } = gen(p, seed);
-    const populated = soloGame.executeMove(st, { type: "pencilAll" });
-    const res = soloGame.hint?.(populated);
-    if (!res?.ok) continue;
-    if (
-      res.steps.some(
-        (step) =>
-          (step.move as SoloMove).type === "pencilStrike" && pred(step.explanation),
-      )
-    )
-      return `${encodeParams(p, true)}#${seed}`;
-  }
-  throw new Error(`no strike frame found for ${p.diff}`);
-}
-
 describe("solo hint render", () => {
   it("a deductive elimination hatches its region and strikes the candidate", () => {
-    const pred = (e: string) =>
-      /cross out the \w from the rest of it|already accounts? for/.test(e);
-    const id = strikeFrame(ADV, pred);
+    const { id, moves, step } = pinnedPopulated("regionStrike");
     const { recording, hint } = renderScenario({
       game: soloGame,
       id,
       defaultBackground: DEFAULT_BACKGROUND,
-      moves: [{ type: "pencilAll" }],
+      moves,
       showHint: true,
-      hintUntil: (s) => pred(s.explanation),
     });
-    expect(pred(hint?.explanation ?? "")).toBe(true);
+    expect(hint?.explanation).toBe(step.explanation);
     // The region the sentence names ("in this block", "in this row") is
     // hatched, one hatch per cell of it.
-    const region = (hint?.highlights as { hatch?: unknown[] }).hatch ?? [];
+    const region = (step.highlights as { hatch?: unknown[] }).hatch ?? [];
     expect(region.length).toBeGreaterThan(0);
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(region.length);

@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -17,16 +17,30 @@ import { deduceHintPlan } from "./solver.ts";
 
 const P = { w: 10, h: 10 };
 
-function boardId(seed: string): string {
-  const { desc } = patternGame.newDesc(P, randomNew(seed));
-  return `10x10:${desc}`;
-}
+/** A position whose hint opens with a step citing a black mark on the board.
+ * The hint's steps are the solver's firings in order, so the step a plan opens
+ * with is the first firing. */
+const pinned = describeHintPins({
+  game: patternGame,
+  params: [P],
+  kinds: {
+    citesBlack: (_, state) => (deduceHintPlan(state)[0]?.blackRefs.length ?? 0) > 0,
+  },
+  pins: {
+    /** Held on 215 of 736 positions walked. */
+    citesBlack: {
+      id: "10x10:3.4/3.3/3.3/1.1.1.1/7/3.2/3.1/4/3/3.1/3.3/3.4/4.5/4/3.1/1/5/3.1/6/1.3",
+      moves:
+        '[{"type":"fillCells","value":1,"cells":[20]},{"type":"fillCells","value":1,"cells":[60,70]},{"type":"fillCells","value":1,"cells":[34,44,54,64]},{"type":"fillCells","value":1,"cells":[12]}]',
+    },
+  },
+});
 
 describe("Pattern hint render scenarios", () => {
   it("opener frame: a ringed COL_HINT target on a hatched line, clues intact", () => {
     const { recording, hint, size } = renderScenario({
       game: patternGame,
-      id: boardId("pattern-hint-opener"),
+      id: "10x10:1.3/2.3/7/7.2/7.2/1.1.1.2/1.1.1.1/1/1.1/4/6/4/5/3/5/5/5.1.2/2.1/7/3.1",
       showHint: true,
     });
 
@@ -62,20 +76,18 @@ describe("Pattern hint render scenarios", () => {
   });
 
   it("ringed-premise frame: a cited black mark rings COL_HINT_BLACKREF", () => {
-    // Walk the plan to the first step that cites an already-placed black mark
-    // (an overlap anchored by an earlier deduction), and assert the teal ring.
-    const id = boardId("pattern-hint-ring");
-    const plan = deduceHintPlan(patternGame.newState(P, id.slice(id.indexOf(":") + 1)));
-    const cited = plan.find((m) => m.blackRefs.length > 0);
-    if (!cited) throw new Error("no step cites a black mark");
+    // A step that cites an already-placed black mark (an overlap anchored by
+    // an earlier deduction) rings it teal.
+    const { id, moves, state, step } = pinned("citesBlack");
+    const [cited] = deduceHintPlan(state);
     const { recording, hint } = renderScenario({
       game: patternGame,
       id,
+      moves,
       showHint: true,
-      hintUntil: (step) =>
-        (step.highlights as PatternHint).cells.join() === cited.cells.join(),
     });
 
+    expect(hint?.explanation).toBe(step.explanation);
     expect((hint?.highlights as PatternHint).cells).toEqual(cited.cells);
     expect(stepMarks(hint).of("outline", CELL)).toEqual(
       expect.arrayContaining(cited.blackRefs.map((i) => cellAt(i, P.w))),

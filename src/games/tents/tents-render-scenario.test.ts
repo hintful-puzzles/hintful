@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { tentsPlan } from "./hint.ts";
@@ -20,12 +21,12 @@ import {
   DIFF_EASY,
   DIFF_TRICKY,
   encodeParams,
-  executeMove,
   newState,
   R,
   TENT,
   type TentsMove,
   type TentsParams,
+  type TentsState,
   TREE,
 } from "./state.ts";
 
@@ -36,6 +37,43 @@ function board(p: TentsParams, seed: string) {
   const { soln, links } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_TRICKY);
   return { id: `${encodeParams(p, true)}:${desc}`, state, soln, links };
 }
+
+const rests =
+  (kind: TentsReason["kind"]) =>
+  (_step: unknown, state: TentsState): boolean =>
+    tentsPlan(state).plan[0]?.firing.reason.kind === kind;
+
+/** A Tricky position for each premise whose frame is asserted below: the
+ * firing a plan opens with there rests on it. */
+const pinned = describeHintPins({
+  game: tentsGame,
+  params: [{ w: 10, h: 10, diff: DIFF_TRICKY }],
+  kinds: {
+    lineCount: rests("lineCount"),
+    lineNeighbors: rests("lineNeighbors"),
+    tentLink: rests("tentLink"),
+  },
+  pins: {
+    /** Held on 112 of 482 positions walked. */
+    lineCount: {
+      id: "10x10dt:agaa_aidlcldbdbcadcbd,3,1,2,2,2,1,4,1,1,3,1,4,1,3,1,3,1,1,4,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":8,"y":1,"v":3},{"x":0,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":8,"y":2,"v":3},{"x":9,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":9,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":6,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":2,"y":5,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":7,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":6,"y":8,"v":3},{"x":0,"y":9,"v":3},{"x":7,"y":9,"v":3},{"x":9,"y":9,"v":3}]}]',
+    },
+    /** Held on 26 of 482 positions walked. */
+    lineNeighbors: {
+      id: "10x10dt:cbcbb_aijdabakdffdbg_,3,1,2,3,1,2,1,2,2,3,4,1,2,2,3,1,2,2,1,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":8,"y":0,"v":3},{"x":1,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":1,"y":3,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":8,"y":3,"v":3},{"x":3,"y":4,"v":3},{"x":9,"y":4,"v":3},{"x":6,"y":5,"v":3},{"x":8,"y":5,"v":3},{"x":1,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":0,"y":8,"v":3},{"x":5,"y":8,"v":3},{"x":4,"y":9,"v":3},{"x":5,"y":9,"v":3},{"x":6,"y":9,"v":3},{"x":7,"y":9,"v":3}]}]',
+    },
+    /** Held on 4 of 482 positions walked. */
+    tentLink: {
+      id: "10x10dt:cea_ccbcqgfbd_jg_abac,4,1,1,3,2,2,1,2,1,3,3,1,2,2,1,3,0,3,1,4",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":4,"y":1,"v":3},{"x":8,"y":1,"v":3},{"x":5,"y":2,"v":3},{"x":9,"y":2,"v":3},{"x":1,"y":3,"v":3},{"x":2,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":8,"y":3,"v":3},{"x":9,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":1,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":8,"y":4,"v":3},{"x":9,"y":4,"v":3},{"x":1,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":7,"y":5,"v":3},{"x":5,"y":6,"v":3},{"x":6,"y":6,"v":3},{"x":1,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":4,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3},{"x":2,"y":8,"v":3},{"x":3,"y":8,"v":3},{"x":5,"y":8,"v":3}]},{"type":"cells","cells":[{"x":1,"y":6,"v":3},{"x":2,"y":6,"v":3},{"x":4,"y":6,"v":3},{"x":7,"y":6,"v":3}]},{"type":"link","x":3,"y":7,"d":1,"on":true},{"type":"cells","cells":[{"x":4,"y":8,"v":3}]},{"type":"cells","cells":[{"x":0,"y":7,"v":2}]},{"type":"cells","cells":[{"x":1,"y":8,"v":3}]},{"type":"cells","cells":[{"x":1,"y":2,"v":3}]},{"type":"cells","cells":[{"x":1,"y":0,"v":2}]},{"type":"cells","cells":[{"x":2,"y":0,"v":3},{"x":0,"y":1,"v":3}]},{"type":"link","x":0,"y":3,"d":1,"on":true},{"type":"cells","cells":[{"x":0,"y":5,"v":2},{"x":0,"y":9,"v":2}]}]',
+    },
+  },
+});
 
 describe("tents render scenarios", () => {
   it("opener frame: grid lines, a tree, edge numbers", () => {
@@ -85,34 +123,12 @@ describe("tents render scenarios", () => {
     );
   });
 
-  /**
-   * The moves that reach the first firing of `kind` on some Tricky board, by
-   * following the hint: the frame then shows that firing as its first step.
-   */
-  function reach(kind: TentsReason["kind"]): { id: string; moves: TentsMove[] } {
-    for (let s = 0; s < 40; s++) {
-      const p = { w: 10, h: 10, diff: DIFF_TRICKY };
-      const { id, state: start } = board(p, `trs-${kind}-${s}`);
-      let state = start;
-      const moves: TentsMove[] = [];
-      for (let asks = 0; asks < 100 && tentsGame.status(state) !== "solved"; asks++) {
-        const { plan } = tentsPlan(state);
-        if (plan.length === 0) break;
-        for (const { firing, steps } of plan) {
-          if (firing.reason.kind === kind) return { id, moves };
-          for (const step of steps) {
-            moves.push(step.move);
-            state = executeMove(state, step.move);
-          }
-        }
-      }
-    }
-    throw new Error(`no ${kind} firing within 40 boards`);
-  }
-
-  const frame = (kind: TentsReason["kind"]) => {
-    const { id, moves } = reach(kind);
-    return renderScenario({ game: tentsGame, id, moves, showHint: true });
+  /** The frame a pinned position's hint draws, through a real `Midend`. */
+  const frame = (kind: Parameters<typeof pinned>[0]) => {
+    const { id, moves, step } = pinned(kind);
+    const result = renderScenario({ game: tentsGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    return result;
   };
 
   it("line-count frame: the line hatched, its clue in the action color, targets ringed", () => {

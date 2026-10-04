@@ -3,16 +3,15 @@
  * deals only boards the rungs finish, keep-track, and the frame a step paints.
  */
 import { describe, expect, it } from "vitest";
-import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
 import {
   moveOf,
   nextFiring,
   type RectFiring,
-  type RectHint,
   rectHint,
   rectKeepTrack,
   rungsFinish,
@@ -29,71 +28,74 @@ const params = (w: number, h: number, expandfactor = 0): RectParams => ({
 });
 const P7 = params(7, 7);
 
-/** The first firing of `kind` on the plan from the board `desc` sets up. */
-function firstOf(p: RectParams, desc: string, kind: RectFiring["kind"]) {
-  let s = newState(p, desc);
-  for (let k = 0; k < 500 && !isSolved(s); k++) {
-    const f = nextFiring(s);
-    if (!f) break;
-    if (f.kind === kind) return { s, f };
-    s = executeMove(s, moveOf(f));
-  }
-  return null;
-}
+/** The sentence each rung says, and the rung the solver fires where it is
+ * said. A line has two: the fit across the edge is out for one of two
+ * reasons. */
+const RUNGS = {
+  fit: [/^Elsewhere the \d+ would .*, so only this rectangle fits\.$/, "fit"],
+  reach: [/^No other clue can reach the outlined square/, "reach"],
+  overlap: [/^Wherever the outlined \d+ goes, it covers the striped square/, "overlap"],
+  starve: [/^Anywhere else, the \d+ would leave the outlined/, "starve"],
+  lineTakes: [
+    /^Only the outlined \d+ could cross this edge, and it would take the striped square, which the outlined \d+ covers wherever it goes, so the edge must be a line\.$/,
+    "line",
+  ],
+  lineMisses: [
+    /^Only the outlined \d+ could cross this edge, and it would miss the outlined square, which no other clue reaches, so the edge must be a line\.$/,
+    "line",
+  ],
+} satisfies Record<string, [RegExp, RectFiring["kind"]]>;
+type Rung = keyof typeof RUNGS;
+
+/** Each rung's sentence and the shapes of step the keep-track and frame tests
+ * read, each pinned on a position whose hint opens with one. */
+const pinned = describeHintPins({
+  game: rectGame,
+  params: [P7, params(9, 9), params(10, 10, 0.5)],
+  seeds: 400,
+  kinds: {
+    fit: RUNGS.fit[0],
+    reach: RUNGS.reach[0],
+    overlap: RUNGS.overlap[0],
+    starve: RUNGS.starve[0],
+    lineTakes: RUNGS.lineTakes[0],
+    lineMisses: RUNGS.lineMisses[0],
+    rectangle: (step) => step.move.type === "rect" && step.move.w * step.move.h > 1,
+    blockedByClue: (step) =>
+      step.move.type === "rect" && /take in the outlined clue/.test(step.explanation),
+  },
+  pins: {
+    /** Held on 10916 of 14936 positions walked. */
+    fit: "7x7:c4b3a2a3c6e4k4a4_3_4a4a3e5b",
+    /** Held on 3814 of 14936 positions walked. */
+    reach: "7x7:e4a4a3g3_3_2a3b8d3d4d4c6c2a",
+    /** Held on 117 of 14936 positions walked. */
+    overlap: "10x10e0.5:h6b12e3f6f18h8m18b15za7h7e",
+    /** Held on 78 of 14936 positions walked. */
+    starve: "7x7:b8b2f3c4d4a2a2a5_3b3d2a2_4d3c2",
+    /** Held on 2 of 14936 positions walked. */
+    lineTakes: {
+      id: "9x9:e8c6b4d2b2c5d2e4b2c6c8l8a2_3_3a8b8l",
+      moves:
+        '[{"type":"rect","erasing":false,"x":0,"y":6,"w":1,"h":3},{"type":"edge","edge":"h","x":4,"y":2}]',
+    },
+    /** Held on 2 of 14936 positions walked. */
+    lineMisses: {
+      id: "10x10e0.5:o4c2a6_10k5c24j6c9u6h6f14d8c",
+      moves:
+        '[{"type":"rect","erasing":false,"x":0,"y":0,"w":2,"h":3},{"type":"rect","erasing":false,"x":6,"y":0,"w":3,"h":8},{"type":"rect","erasing":false,"x":9,"y":0,"w":1,"h":2},{"type":"rect","erasing":false,"x":9,"y":2,"w":1,"h":6},{"type":"rect","erasing":false,"x":0,"y":3,"w":2,"h":7},{"type":"edge","edge":"v","x":4,"y":1}]',
+    },
+    /** Held on 14925 of 14936 positions walked. */
+    rectangle: "7x7:c4b3a2a3c6e4k4a4_3_4a4a3e5b",
+    /** Held on 9533 of 14936 positions walked. */
+    blockedByClue: "7x7:c4b3a2a3c6e4k4a4_3_4a4a3e5b",
+  },
+});
 
 describe("rect hint rungs", () => {
-  // Each desc is the input the rung consumes, found by a seed scan and pinned
-  // as a board rather than a seed, so a generator change cannot quietly stop
-  // producing it.
-  const pins: [RectFiring["kind"], RectParams, string, RegExp][] = [
-    [
-      "fit",
-      P7,
-      "2j8_4b2b4a4d3b6j6b6b2b2",
-      /^Elsewhere the \d+ would .*, so only this rectangle fits\.$/,
-    ],
-    [
-      "reach",
-      P7,
-      "b2_2a2f4a6b3b2c6c2_2b6_2a3d2c3b2a",
-      /^No other clue can reach the outlined square/,
-    ],
-    [
-      "overlap",
-      P7,
-      "5e2a4b2a2e5a2b4a6a2_2j5_2a3c3a",
-      /^Wherever the outlined \d+ goes, it covers the striped square/,
-    ],
-    [
-      "starve",
-      P7,
-      "b6f4d3_2_2_2d2c4c3d3_3b3e4_2a6",
-      /^Anywhere else, the \d+ would leave the outlined/,
-    ],
-    [
-      // Upstream's board for 10x10e0.5 (`rect-differential.test.ts`), which the
-      // rungs finish only through this line.
-      "line",
-      params(10, 10, 0.5),
-      "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c",
-      /^Only the outlined 4 could cross this edge, and it would take the striped square, which the outlined 21 covers wherever it goes, so the edge must be a line\.$/,
-    ],
-    [
-      // The other reason a fit across the edge is out.
-      "line",
-      params(9, 9),
-      "c5i5b2e3a2b8_8k12g6d6b6c6f3b6b3g",
-      /^Only the outlined 5 could cross this edge, and it would miss the outlined square, which no other clue reaches, so the edge must be a line\.$/,
-    ],
-  ];
-  for (const [kind, p, desc, words] of pins)
-    it(`${kind} fires and says why, ${p.w}x${p.h}`, () => {
-      const hit = firstOf(p, desc, kind);
-      expect(hit, `${kind} never fires on ${desc}`).not.toBeNull();
-      if (!hit) return;
-      const res = rectHint(hit.s);
-      if (!res.ok) throw new Error(res.error);
-      expect(res.steps[0].explanation).toMatch(words);
+  for (const rung of Object.keys(RUNGS) as Rung[])
+    it(`${rung} is said where the solver fires ${RUNGS[rung][1]}`, () => {
+      expect(nextFiring(pinned(rung).state)?.kind).toBe(RUNGS[rung][1]);
     });
 
   it("several clues across one edge share a clause", () => {
@@ -115,12 +117,12 @@ describe("rect hint rungs", () => {
   it("a line cuts a fit: every fit across the edge it draws is gone after it", () => {
     // A line no fit crosses would change nothing a later step reads, so the
     // rung leaves such an edge alone.
-    const p = params(10, 10, 0.5);
-    const hit = firstOf(p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c", "line");
-    if (hit?.f.kind !== "line") throw new Error("no line");
-    expect(hit.f.across.length).toBeGreaterThan(0);
-    const before = rectHint(hit.s);
-    const after = rectHint(executeMove(hit.s, moveOf(hit.f)));
+    const { state } = pinned("lineTakes");
+    const f = nextFiring(state);
+    if (f?.kind !== "line") throw new Error("no line");
+    expect(f.across.length).toBeGreaterThan(0);
+    const before = rectHint(state);
+    const after = rectHint(executeMove(state, moveOf(f)));
     if (!before.ok || !after.ok) throw new Error("no plan");
     expect(after.steps.length).toBe(before.steps.length - 1);
   });
@@ -169,18 +171,20 @@ describe("rect hint plan", () => {
 });
 
 describe("rect hint keep-track", () => {
-  const s = newState(P7, "2j8_4b2b4a4d3b6j6b6b2b2");
-  const res = rectHint(s);
-  if (!res.ok) throw new Error(res.error);
-  const step = res.steps.find((t) => t.move.type === "rect" && t.move.w * t.move.h > 1);
-  if (!step || step.move.type !== "rect") throw new Error("no rectangle step");
-  const r = step.move;
+  /** The pinned rectangle step, its board and its move. */
+  const rectangle = () => {
+    const { state: s, step } = pinned("rectangle");
+    if (step.move.type !== "rect") throw new Error("unreachable");
+    return { s, step, r: step.move };
+  };
 
   it("drawing the rectangle completes the step", () => {
+    const { s, step, r } = rectangle();
     expect(rectKeepTrack({ ...r }, step, s)).toBe("completed");
   });
 
   it("drawing one of its sides is on track", () => {
+    const { s, step, r } = rectangle();
     const side: RectMove =
       r.x > 0
         ? { type: "edge", edge: "v", x: r.x, y: r.y }
@@ -193,6 +197,7 @@ describe("rect hint keep-track", () => {
   });
 
   it("drawn a side at a time, the last side completes it", () => {
+    const { s, step } = rectangle();
     const planned = executeMove(s, step.move);
     const sides: RectMove[] = [];
     for (let y = 0; y < s.h; y++)
@@ -214,6 +219,7 @@ describe("rect hint keep-track", () => {
   });
 
   it("a line inside it goes off the plan", () => {
+    const { s, step, r } = rectangle();
     const inside: RectMove =
       r.w > 1
         ? { type: "edge", edge: "v", x: r.x + 1, y: r.y }
@@ -224,17 +230,10 @@ describe("rect hint keep-track", () => {
 
 describe("rect hint frame", () => {
   it("rings the rectangle as one contour and outlines the clue that blocks it", () => {
-    const hintUntil = (t: HintStep<RectMove>) =>
-      /take in the outlined clue/.test(t.explanation);
-    const result = renderScenario({
-      game: rectGame,
-      id: `7x7:2j8_4b2b4a4d3b6j6b6b2b2`,
-      showHint: true,
-      hintUntil,
-    });
-    const step = result.hint as HintStep<RectMove, RectHint> | undefined;
-    expect(step && hintUntil(step)).toBe(true);
-    if (!step || step.move.type !== "rect") throw new Error("not a rectangle step");
+    const { id, moves, step } = pinned("blockedByClue");
+    const result = renderScenario({ game: rectGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    if (step.move.type !== "rect") throw new Error("unreachable");
     const { w, h } = step.move;
     const ops = result.recording.ops;
     // One side per square on the rectangle's edge: 2(w + h), not a ring per
@@ -246,16 +245,10 @@ describe("rect hint frame", () => {
   });
 
   it("stripes the squares another clue is sure to cover, one hatch per square", () => {
-    const hintUntil = (t: HintStep<RectMove>) => /^Wherever/.test(t.explanation);
-    const result = renderScenario({
-      game: rectGame,
-      id: "7x7:5e2a4b2a2e5a2b4a6a2_2j5_2a3c3a",
-      showHint: true,
-      hintUntil,
-    });
-    const step = result.hint;
-    expect(step && hintUntil(step)).toBe(true);
-    const striped = step ? stepMarks(step).of("stripes", CELL) : [];
+    const { id, moves, step } = pinned("overlap");
+    const result = renderScenario({ game: rectGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    const striped = stepMarks(step).of("stripes", CELL);
     expect(striped.length).toBeGreaterThan(0);
     const hatches = result.recording.ops.filter((o) => o.op === "hatch");
     expect(hatches.length).toBe(striped.length);

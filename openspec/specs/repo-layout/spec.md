@@ -2101,10 +2101,18 @@ opens with a step of its kind, and SHALL fail a pin that does not with the
 command that finds another.
 
 That command SHALL walk hint-guided play over fixed seeds, taking each plan's
-first step and asking again, and SHALL report for every kind the first
-position it held on and how many of the positions walked it held on. A pin
-SHALL be recorded with that count. A hint test SHALL NOT pin a position found
-by a scan that is not in the tree.
+first step and asking again, and SHALL report for every kind how many of the
+positions walked it held on and the one of them that is fewest moves in. Where
+a test says so, it SHALL play moves before the first hint, ask the hint under
+a `Ui` the test names, and walk a second line of play that the test steers,
+for a kind hint-guided play does not meet. A pin SHALL be recorded with that
+count. A hint test SHALL NOT pin a position found by a scan that is not in the
+tree, unless the scan in the tree was run and did not reach the kind, which
+the pin SHALL say with the count walked.
+
+A hint test SHALL NOT walk seeds to find the position it asserts on. A test
+that asserts a property of every board or step it walks is a sweep and not a
+scan for a position, and is not covered by this requirement.
 
 #### Scenario: A pin stops firing
 
@@ -2116,8 +2124,8 @@ by a scan that is not in the tree.
 #### Scenario: Scanning again
 
 - **WHEN** a hint test file is run with `HINT_SCAN` set
-- **THEN** it walks its boards and fails with every kind's first position, as
-  pins to paste
+- **THEN** it walks its boards and fails with a position for every kind, the
+  one fewest moves in, as pins to paste
 - **AND** each is reported with how many of the positions walked it held on,
   and a kind that held on none is reported as not found
 
@@ -2125,3 +2133,33 @@ by a scan that is not in the tree.
 
 - **WHEN** a test names a kind and pins no position for it
 - **THEN** the file does not typecheck
+
+#### Scenario: A sentence spoken only off the hint's line
+
+- **WHEN** a hint keeps to lines that finish, and a sentence is about a move
+  that would not
+- **THEN** the test gives the scan a second line of play, naming the move
+  played at each turn from the board and the move the hint offers
+- **AND** the kinds are counted over both lines
+
+#### Scenario: A board on which a solver rung fires
+
+- **WHEN** a test wants the board a rung fires on, and no step says the rung
+- **THEN** the kind is a predicate that asks the solver about the board the
+  hint is asked from, and the pin is that board
+
+#### Scenario: A refusal
+
+- **WHEN** a test wants a board the hint refuses
+- **THEN** it keeps the board by hand and says why beside it, because a
+  refusal has no step for a pin's loader to return
+
+#### Scenario: A cross-game guard needs a frame only some games produce
+
+- **WHEN** a guard over every hinted game checks a frame that only some
+  games' hints produce, as a numbered chain is
+- **THEN** it pins one position for each such game and searches for none on a
+  normal run
+- **AND** a walk another guard already makes fails on such a step from a game
+  with no pin, so which games are checked stays derived from what their hints
+  do

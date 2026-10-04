@@ -13,6 +13,7 @@
 
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
@@ -30,7 +31,6 @@ import {
 import {
   clearBoard,
   cloneBoard,
-  cloneState,
   DIFF_EASY,
   DIFF_HARD,
   DIFF_TRICKY,
@@ -82,64 +82,86 @@ function solutionOf(state: SpokesState) {
   return b;
 }
 
-/**
- * Drive a generated board with the deductive plan until the first firing of
- * `kind` is what the hint would offer next, and return that mid-game state plus
- * the firing. Scans seeds until one is found (every board is fully deducible,
- * so a kind that a difficulty uses turns up quickly).
- */
-function findFiring(
-  preset: SpokesParams,
-  kind: SpokesFiringKind,
-  maxSeeds = 250,
-): { state: SpokesState; firing: SpokesFiring } | null {
-  for (let seed = 0; seed < maxSeeds; seed++) {
-    const { desc } = newSpokesDesc(
-      preset,
-      randomNew(`hint-${preset.diff}-${kind}-${seed}`),
-    );
-    const base = newState(preset, desc);
-    const board = cloneBoard(base);
-    for (let guard = 0; guard < 600; guard++) {
-      const plan = deduceSpokesPlan(board);
-      if (plan.length === 0) break;
-      const f = plan[0];
-      if (f.kind === kind) {
-        const state = cloneState(base);
-        state.spokes.set(board.spokes);
-        return { state, firing: f };
-      }
-      applyForced(board, f.forced);
-    }
-  }
-  return null;
+/** The firing the deductive plan opens with on `state`: the one a hint there
+ * narrates. */
+function firingAt(state: SpokesState): SpokesFiring {
+  const [firing] = deduceSpokesPlan(cloneBoard(state));
+  if (!firing) throw new Error("deduction has nothing to offer here");
+  return firing;
 }
 
-/** `hint()` steps for a state, asserting it did not refuse. */
-function hintSteps(state: SpokesState) {
-  const res = spokesGame.hint?.(state);
-  if (!res?.ok)
-    throw new Error(`hint refused: ${res && !res.ok ? res.error : "no hint"}`);
-  return res.steps;
-}
+const opensWith =
+  (kind: SpokesFiringKind) =>
+  (_step: unknown, state: SpokesState): boolean =>
+    deduceSpokesPlan(cloneBoard(state))[0]?.kind === kind;
+
+const lit = (step: { highlights?: unknown }): SpokesHint | null =>
+  (step.highlights as SpokesHint | undefined) ?? null;
+
+/** A forced line on a diagonal (dir 1 = BOTRIGHT, 3 = BOTLEFT). */
+const isDiagLine = (h: SpokesHint | null): boolean =>
+  h?.spokes?.some((s) => s.state === SPOKE_LINE && (s.dir === 1 || s.dir === 3)) ??
+  false;
+const isRuleOut = (h: SpokesHint | null): boolean =>
+  h?.spokes?.some((s) => s.state === SPOKE_MARKED) ?? false;
+
+/** A position for each rung, found as the firing the plan opens with there,
+ * and for each shape of step whose frame is asserted below. */
+const pinned = describeHintPins({
+  game: spokesGame,
+  params: [EASY, TRICKY, UNREASONABLE],
+  kinds: {
+    twoOnes: opensWith("twoOnes"),
+    saturation: opensWith("saturation"),
+    exhaustion: opensWith("exhaustion"),
+    contradiction: opensWith("contradiction"),
+    // A saturation firing forcing more than one spoke.
+    saturationOfSeveral: (_step, state) => {
+      const [f] = deduceSpokesPlan(cloneBoard(state));
+      return f?.kind === "saturation" && f.forced.length > 1;
+    },
+    // The corner-invalidation case.
+    diagonalLine: (step) => isDiagLine(lit(step)),
+    ruleOut: (step) => isRuleOut(lit(step)),
+  },
+  pins: {
+    /** Held on 117 of 1046 positions walked. */
+    twoOnes: "4x4dt:1442456446431112",
+    /** Held on 453 of 1046 positions walked. */
+    saturation: "4x4de:1511455143121112",
+    /** Held on 267 of 1046 positions walked. */
+    exhaustion: {
+      id: "4x4de:3341313212131431",
+      moves:
+        '[{"kind":"set","index":0,"dir":0,"state":2},{"kind":"set","index":0,"dir":1,"state":2},{"kind":"set","index":0,"dir":2,"state":2},{"kind":"set","index":8,"dir":2,"state":3},{"kind":"set","index":10,"dir":1,"state":3}]',
+    },
+    /** Held on 209 of 1046 positions walked. */
+    contradiction: {
+      id: "4x4dh:1321231446531321",
+      moves: [{ kind: "set", index: 3, dir: 3, state: 3 }],
+    },
+    /** Held on 249 of 1046 positions walked. */
+    saturationOfSeveral: "4x4de:1511455143121112",
+    /** Held on 198 of 1046 positions walked. */
+    diagonalLine: "4x4de:1511455143121112",
+    /** Held on 476 of 1046 positions walked. */
+    ruleOut: "4x4dt:1442456446431112",
+  },
+});
 
 // --- each rung's forced move agrees with the unique solution ----------------
 
 describe("each rung forces the move the solution agrees with", () => {
-  const cases: [SpokesFiringKind, SpokesParams][] = [
-    ["twoOnes", EASY],
-    ["saturation", EASY],
-    ["exhaustion", EASY],
-    ["contradiction", UNREASONABLE],
-  ];
-
-  for (const [kind, preset] of cases) {
+  for (const kind of [
+    "twoOnes",
+    "saturation",
+    "exhaustion",
+    "contradiction",
+  ] as const) {
     it(`${kind}: every forced spoke matches the solution`, () => {
-      const found = findFiring(preset, kind);
-      expect(found, `no ${kind} firing found`).not.toBeNull();
-      if (!found) return;
-      const solution = solutionOf(found.state);
-      for (const sp of found.firing.forced) {
+      const { state } = pinned(kind);
+      const solution = solutionOf(state);
+      for (const sp of firingAt(state).forced) {
         const inSolution = getSpoke(solution.spokes[sp.index], sp.dir);
         // A forced LINE must be a line in the solution; a forced MARK must not.
         if (sp.state === SPOKE_LINE) {
@@ -156,10 +178,7 @@ describe("each rung forces the move the solution agrees with", () => {
 
 describe("narration states the premise, in the necessity voice", () => {
   it("two-ones names the isolation it prevents, tersely", () => {
-    const found = findFiring(EASY, "twoOnes");
-    expect(found).not.toBeNull();
-    if (!found) return;
-    const text = hintSteps(found.state)[0].explanation;
+    const text = pinned("twoOnes").step.explanation;
     expect(text).toMatch(/outlined 1-hubs/);
     expect(text).toMatch(/strand/);
     expect(text).toMatch(/rule out this spoke/);
@@ -167,35 +186,26 @@ describe("narration states the premise, in the necessity voice", () => {
   });
 
   it("saturation cites the count that forces the free spokes to lines", () => {
-    const found = findFiring(EASY, "saturation");
-    expect(found).not.toBeNull();
-    if (!found) return;
-    const text = hintSteps(found.state)[0].explanation;
+    const text = pinned("saturation").step.explanation;
     expect(text).toMatch(/free spoke/);
     expect(text).toMatch(/must (?:be a line|all be lines)/);
     expect(text.length).toBeLessThan(120);
   });
 
   it("exhaustion says the hub is done and rules out the rest", () => {
-    const found = findFiring(EASY, "exhaustion");
-    expect(found).not.toBeNull();
-    if (!found) return;
-    const text = hintSteps(found.state)[0].explanation;
+    const text = pinned("exhaustion").step.explanation;
     expect(text).toMatch(/already has all its lines/);
     expect(text).toMatch(/: rule out (?:this spoke|these spokes)\.$/);
     expect(text.length).toBeLessThan(120);
   });
 
   it("contradiction states the hypothesis and the break it reaches", () => {
-    const found = findFiring(UNREASONABLE, "contradiction");
-    expect(found).not.toBeNull();
-    if (!found) return;
-    const step = hintSteps(found.state)[0];
+    const { state, step } = pinned("contradiction");
     expect(step.explanation).toMatch(/^(?:Drawing this line|Ruling this spoke out)/);
     expect(step.explanation).toMatch(/(?:over-fill|force the diagonals|strand)/);
     expect(step.explanation).toMatch(/(?:rule it out|must be a line)/);
     // The break it names is outlined as evidence (words and picture agree).
-    expect(found.firing.breakKind).toBeDefined();
+    expect(firingAt(state).breakKind).toBeDefined();
     expect((step.highlights as SpokesHint).evidence.length).toBeGreaterThan(0);
     expect(step.explanation.length).toBeLessThan(120);
   });
@@ -259,30 +269,8 @@ describe("hints only rule out a spoke when it helps a hub still needing lines", 
 
 describe("a saturated hub is one multi-leg journey, one color", () => {
   it("emits every forced spoke as continuation legs sharing one highlight", () => {
-    // A saturation firing forcing more than one spoke.
-    let found: { state: SpokesState; firing: SpokesFiring } | null = null;
-    for (let seed = 0; seed < 250 && !found; seed++) {
-      const { desc } = newSpokesDesc(EASY, randomNew(`multileg-${seed}`));
-      const base = newState(EASY, desc);
-      const board = cloneBoard(base);
-      for (let guard = 0; guard < 600; guard++) {
-        const plan = deduceSpokesPlan(board);
-        if (plan.length === 0) break;
-        const f = plan[0];
-        if (f.kind === "saturation" && f.forced.length > 1) {
-          const state = cloneState(base);
-          state.spokes.set(board.spokes);
-          found = { state, firing: f };
-          break;
-        }
-        applyForced(board, f.forced);
-      }
-    }
-    expect(found, "no multi-spoke saturation firing found").not.toBeNull();
-    if (!found) return;
-
-    const k = found.firing.forced.length;
-    const steps = hintSteps(found.state);
+    const { state, steps } = pinned("saturationOfSeveral");
+    const k = firingAt(state).forced.length;
     const legs = steps.slice(0, k);
 
     // Leg 0 opens the journey; the rest continue it.
@@ -351,55 +339,28 @@ describe("boards the midend refuses a hint on", () => {
 // --- tier-2.5 render frame --------------------------------------------------
 
 describe("the hint frame paints the overlay", () => {
-  /** A descriptive id whose deductive plan reaches a forced *diagonal* line —
-   * the corner-invalidation case — found by scanning seeds. */
-  function diagonalHintId(): string | null {
-    for (let seed = 0; seed < 250; seed++) {
-      const { desc } = newSpokesDesc(TRICKY, randomNew(`diag-frame-${seed}`));
-      const base = newState(TRICKY, desc);
-      const board = cloneBoard(base);
-      for (let guard = 0; guard < 600; guard++) {
-        const plan = deduceSpokesPlan(board);
-        if (plan.length === 0) break;
-        const f = plan[0];
-        // A forced LINE on a diagonal (dir 1 = BOTRIGHT, 3 = BOTLEFT).
-        if (
-          f.forced.some((s) => s.state === SPOKE_LINE && (s.dir === 1 || s.dir === 3))
-        ) {
-          return `${spokesGame.encodeParams(TRICKY, true)}:${desc}`;
-        }
-        applyForced(board, f.forced);
-      }
-    }
-    return null;
-  }
-
-  it("draws a COL_HINT spoke and a COL_HINT_CELL evidence ring, incl. a diagonal", () => {
-    const id = diagonalHintId();
-    expect(id, "no diagonal hint board found").not.toBeNull();
-    if (!id) return;
-
-    const isDiagLine = (h?: SpokesHint): boolean =>
-      h?.spokes?.some((s) => s.state === SPOKE_LINE && (s.dir === 1 || s.dir === 3)) ??
-      false;
-
+  /** The frame a pinned position's hint draws, through a real `Midend`. */
+  function hintFrame(kind: Parameters<typeof pinned>[0]) {
+    const { id, moves, step } = pinned(kind);
     const result = renderScenario({
       game: spokesGame,
       id,
+      moves,
       showHint: true,
-      hintUntil: (step) => isDiagLine(step.highlights as SpokesHint | undefined),
       defaultBackground: DEFAULT_BACKGROUND,
     });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    return result;
+  }
 
-    const ops = result.recording.ops;
+  it("draws a COL_HINT spoke and a COL_HINT_CELL evidence ring, incl. a diagonal", () => {
+    const ops = hintFrame("diagonalLine").recording.ops;
     // The forced diagonal line at hint color — completed across the grid
     // corner, so both a plus-shape half and a corner-box half
     // come out COL_HINT.
     expect(ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(true);
     // The evidence ring behind a hub.
     expect(ops.some((o) => o.op === "circle" && o.fill === COL_HINT_CELL)).toBe(true);
-    // The displayed step really carries a diagonal line spoke.
-    expect(isDiagLine(result.hint?.highlights as SpokesHint | undefined)).toBe(true);
 
     expect(ops).toMatchSnapshot();
   });
@@ -407,17 +368,7 @@ describe("the hint frame paints the overlay", () => {
   it("rings a spoke to rule out rather than drawing it already marked", () => {
     // A filled COL_HINT dot is exactly how a marked spoke looks, so the step
     // read as already done.
-    const isRuleOut = (h?: SpokesHint): boolean =>
-      h?.spokes?.some((s) => s.state === SPOKE_MARKED) ?? false;
-    const result = renderScenario({
-      game: spokesGame,
-      id: `${spokesGame.encodeParams(TRICKY, true)}#rule-out-frame`,
-      showHint: true,
-      hintUntil: (step) => isRuleOut(step.highlights as SpokesHint | undefined),
-      defaultBackground: DEFAULT_BACKGROUND,
-    });
-    expect(isRuleOut(result.hint?.highlights as SpokesHint | undefined)).toBe(true);
-    const circles = result.recording.ops.filter((o) => o.op === "circle");
+    const circles = hintFrame("ruleOut").recording.ops.filter((o) => o.op === "circle");
     expect(circles.some((o) => o.outline === COL_HINT && o.fill === -1)).toBe(true);
     expect(circles.filter((o) => o.fill === COL_HINT)).toEqual([]);
   });

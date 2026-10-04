@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSticksDesc } from "./generator.ts";
@@ -59,22 +60,47 @@ const PHRASE: Record<SticksReason["kind"], RegExp> = {
   starved: /needs (?:all \d+|both) of its open sides|has one open side left/,
 };
 
-/** The first fixed seed whose opening plan contains each kind. Scanned once. */
-const SEED_FOR: Record<SticksReason["kind"], number> = (() => {
-  const found: Record<string, number> = {};
-  for (let seed = 0; seed < 40 && Object.keys(found).length < KINDS.length; seed++) {
-    const plan = deduceSticksPlan(board(seed).state).flat();
-    for (const f of plan) if (!(f.reason.kind in found)) found[f.reason.kind] = seed;
-  }
-  return found as Record<SticksReason["kind"], number>;
-})();
+/** A position for each kind, found by the sentence its step says, and one
+ * whose plan opens with a firing that decides more than one square. */
+const pinned = describeHintPins({
+  game: sticksGame,
+  params: [PARAMS],
+  kinds: {
+    ...PHRASE,
+    journey: (_step, state) => deduceSticksPlan(state)[0].length > 1,
+  },
+  pins: {
+    /** Held on 129 of 485 positions walked. */
+    tooLong: {
+      id: "7x7b20s2:1b2a1_1B_1aB3a2aBB1bB1b1d5_1bBa2B1Ba1aB3bB0_1_2b1b",
+      moves:
+        '[{"kind":"set","changes":[{"index":3,"line":"hor"}]},{"kind":"set","changes":[{"index":9,"line":"hor"}]}]',
+    },
+    /** Held on 187 of 485 positions walked. */
+    unreachable: "7x7b20s2:a4cB3a2c3b1c2aB2aB1_1bB2aB3b4a2_1b2b1bB2a1_2a2",
+    /** Held on 38 of 485 positions walked. */
+    twoClues: {
+      id: "7x7b20s2:B1a1_1_2aB_1a2_1a2Bb6f1B2a3a1_1_3_1a1aB1c1bB1c3aB2",
+      moves:
+        '[{"kind":"set","changes":[{"index":9,"line":"hor"}]},{"kind":"set","changes":[{"index":8,"line":"hor"}]}]',
+    },
+    /** Held on 64 of 485 positions walked. */
+    overConnected: "7x7b20s2:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
+    /** Held on 67 of 485 positions walked. */
+    starved: "7x7b20s2:aB2aB1B_1a1_2_1B2b1e3B1_1a2c1B2a1_1_3a2a3aB3c2aBB1aB1_1",
+    /** Held on 102 of 485 positions walked. */
+    journey: "7x7b20s2:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
+  },
+});
 
 describe("sticks hint — technique coverage", () => {
   it("every one of the five contradiction kinds fires on generated boards", () => {
     // A rung that never fires is a rung nothing tests. Sticks' five
     // are the whole of `sticksValidate`'s vocabulary, so this is also the
-    // check that the classifier is total.
-    expect(Object.keys(SEED_FOR).sort()).toEqual([...KINDS].sort());
+    // check that the classifier is total: the sentence a pin opens with is
+    // the one for the reason the solver recorded there.
+    for (const kind of KINDS)
+      expect(deduceSticksPlan(pinned(kind).state)[0][0].reason.kind).toBe(kind);
   });
 
   it("the deduction narrates every board to completion — no un-narrated residue", () => {
@@ -97,9 +123,7 @@ describe("sticks hint — narration", () => {
 
   it("states its conclusion in the necessity voice, naming the orientation", () => {
     for (const kind of KINDS) {
-      const s = stepsFor(SEED_FOR[kind]).find((x) => PHRASE[kind].test(x.explanation));
-      expect(s, kind).toBeDefined();
-      expect(s?.explanation, kind).toMatch(
+      expect(pinned(kind).step.explanation, kind).toMatch(
         /, so this \w+ must be (horizontal|vertical)\.$/,
       );
     }
@@ -235,20 +259,17 @@ describe("sticks hint — evidence counts out against the words", () => {
 
 describe("sticks hint — grouping", () => {
   it("groups one firing into one journey, on a generated board", () => {
-    // Validated by scanning seeds, not by reading the solver:
     // ~a fifth of firings decide more than one square, and a black clue that
     // has run out of lines is the commonest.
     let journeys = 0;
-    for (let seed = 0; seed < 12 && journeys === 0; seed++) {
-      for (const group of deduceSticksPlan(board(seed).state)) {
-        if (group.length < 2) continue;
-        journeys++;
-        const first = group[0].reason;
-        for (const f of group) {
-          expect(f.reason.kind).toBe(first.kind);
-          if (f.reason.kind !== "twoClues" && first.kind !== "twoClues")
-            expect(f.reason.clue).toBe(first.clue);
-        }
+    for (const group of deduceSticksPlan(pinned("journey").state)) {
+      if (group.length < 2) continue;
+      journeys++;
+      const first = group[0].reason;
+      for (const f of group) {
+        expect(f.reason.kind).toBe(first.kind);
+        if (f.reason.kind !== "twoClues" && first.kind !== "twoClues")
+          expect(f.reason.clue).toBe(first.clue);
       }
     }
     expect(journeys).toBeGreaterThan(0);
@@ -368,14 +389,9 @@ describe("sticks hint — recording stays off the solve path", () => {
 describe("sticks hint — render frames (tier 2.5)", () => {
   for (const kind of KINDS) {
     it(`draws the forced line and its evidence for a ${kind} deduction`, () => {
-      const { id } = board(SEED_FOR[kind]);
-      const result = renderScenario({
-        game: sticksGame,
-        id,
-        showHint: true,
-        hintUntil: (step) => PHRASE[kind].test(step.explanation),
-      });
-      expect(result.hint?.explanation).toMatch(PHRASE[kind]);
+      const { id, moves, step } = pinned(kind);
+      const result = renderScenario({ game: sticksGame, id, moves, showHint: true });
+      expect(result.hint?.explanation).toBe(step.explanation);
       const ops = result.recording.ops;
       // The forced square is drawn as a bar in the hint color — the game's own
       // line shape, which a plain tint could not give an orientation.
@@ -401,7 +417,7 @@ describe("sticks hint — render frames (tier 2.5)", () => {
   it("never draws the forced line in the placed-line color", () => {
     // The hint shows where and which, it does not perform the move. On a
     // fresh board no line is placed, so any COL_LINE bar would be a preview.
-    const { id } = board(SEED_FOR.tooLong);
+    const id = `${PARAM_STR}:3dB2aB1_1bB3_3b2a1_2a1B2_2dB2c3d1B1b1B_1B2_1_2_1_2a`;
     const result = renderScenario({ game: sticksGame, id, showHint: true });
     expect(
       result.recording.ops.some((o) => o.op === "rect" && o.color === COL_LINE),

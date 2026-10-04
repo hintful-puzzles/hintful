@@ -46,6 +46,7 @@ import type { HintStep } from "./game.ts";
 import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
+import { CHAIN_PINS, declaredOrder } from "./testing/hint-chain-pins.ts";
 import {
   type AnyGame,
   declaresNoMarks,
@@ -1105,6 +1106,13 @@ describe("hint narration stays readable at a glance", () => {
               const text = step.explanation;
               linted++;
               lintedPerGame.set(name, (lintedPerGame.get(name) ?? 0) + 1);
+              // Which games `hint-ordinal.test.ts` owes a rendered frame: any
+              // whose step numbers a chain. Held here because this is the
+              // widest walk of hints there is, and it is already paid for.
+              expect(
+                declaredOrder(step.highlights) === null || name in CHAIN_PINS,
+                `${name} ${label}/${seed}: "${text}" numbers a chain, and no board of ${name}'s is pinned to check the numbers are drawn. Add ${name} to CHAIN_PINS in testing/hint-chain-pins.ts.`,
+              ).toBe(true);
               expect(
                 text.length,
                 `${name} ${label}/${seed}: "${text}" is over the hard ceiling of ${MAX_NARRATION_CHARS}`,

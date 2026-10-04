@@ -12,6 +12,7 @@ import type { HintStep } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
   opsOfKind,
   paintsWith,
@@ -1202,6 +1203,44 @@ describe("Sixteen hint track and direction fixes", () => {
   });
 });
 
+const pinned = describeHintPins({
+  game: sixteenGame,
+  params: [defaultParams()],
+  // The hint plans by searching, so the scan stays short.
+  seeds: 6,
+  maxSteps: 8,
+  kinds: {
+    straightSlideAlongItsLine: (step, state) => {
+      if (step.move.type !== "slide") return false;
+      const m = step.move;
+      const hl = step.highlights as SixteenHintHighlights;
+      // The solid target border, drawn only for a journey of one leg.
+      if (hl.ultimatePos !== null) return false;
+      const after = executeMove(state, m);
+      const w = state.w;
+      const from = state.tiles.indexOf(hl.tile);
+      const to = after.tiles.indexOf(hl.tile);
+      // The hinted tile must move without wrapping round the torus, so the
+      // expected mid-slide position is closed-form.
+      const straight =
+        m.axis === "row"
+          ? Math.floor(to / w) === Math.floor(from / w) &&
+            (to % w) - (from % w) === m.delta
+          : to % w === from % w &&
+            Math.floor(to / w) - Math.floor(from / w) === m.delta;
+      const onLine =
+        m.axis === "row"
+          ? Math.floor(hl.targetPos / w) === m.index
+          : hl.targetPos % w === m.index;
+      return straight && onLine;
+    },
+  },
+  pins: {
+    /** Held on 36 of 48 positions walked. */
+    straightSlideAlongItsLine: "4x4:5,9,2,14,4,13,3,16,10,15,8,11,6,12,1,7",
+  },
+});
+
 describe("the hint marks while the hinted slide animates", () => {
   // Netslide's defect class: once the hinted slide starts animating, a mark on
   // the *moving tile* must ride the slide and a mark on a *fixed cell* must
@@ -1217,58 +1256,30 @@ describe("the hint marks while the hinted slide animates", () => {
   const HW = raisedBevelWidth(TS); // read from the helper, so it cannot go stale
   const px = (cell: number) => cell * TS + BORDER;
 
-  /** A mid-slide frame of the hinted move, on the first board whose hint step
-   * slides its tile one straight (unwrapped) cell and aims the target border
-   * at a cell on the line being slid — the only case where a border wrongly
-   * painted in the shifted tile pass would visibly move. */
+  /** A mid-slide frame of the hinted move, on a board whose hint step slides
+   * its tile straight (unwrapped) and aims the target border at a cell on the
+   * line being slid — the only case where a border wrongly painted in the
+   * shifted tile pass would visibly move. */
   function animatingFrame() {
-    for (let i = 0; i < 60; i++) {
-      const rng = randomNew(`hint-anim-${i}`);
-      const params = defaultParams();
-      const { desc } = newDesc(params, rng);
-      const state = newState(params, desc);
-      const res = sixteenGame.hint?.(state);
-      if (!res?.ok) continue;
-      const step = res.steps[0];
-      if (step.move.type !== "slide") continue;
-      const m = step.move;
-      const hl = step.highlights as SixteenHintHighlights;
-      if (hl.ultimatePos !== null) continue; // want the solid target border
-      const after = executeMove(state, m);
-      const w = state.w;
-      const from = state.tiles.indexOf(hl.tile);
-      const to = after.tiles.indexOf(hl.tile);
-      // The hinted tile must move without wrapping round the torus, so the
-      // expected mid-slide position is closed-form.
-      const straight =
-        m.axis === "row"
-          ? Math.floor(to / w) === Math.floor(from / w) &&
-            (to % w) - (from % w) === m.delta
-          : to % w === from % w &&
-            Math.floor(to / w) - Math.floor(from / w) === m.delta;
-      if (!straight) continue;
-      const onLine =
-        m.axis === "row"
-          ? Math.floor(hl.targetPos / w) === m.index
-          : hl.targetPos % w === m.index;
-      if (!onLine) continue;
+    const { state, step } = pinned("straightSlideAlongItsLine");
+    if (step.move.type !== "slide") throw new Error("not a slide step");
+    const m = step.move;
+    const hl = step.highlights as SixteenHintHighlights;
+    const after = executeMove(state, m);
+    const from = state.tiles.indexOf(hl.tile);
 
-      const ds = sixteenGame.newDrawState(state, TS);
-      const ui = sixteenGame.newUi(state);
+    const ds = sixteenGame.newDrawState(state, TS);
+    const ui = sixteenGame.newUi(state);
 
-      // Paint the still pre-move frame first, so the cache is warm exactly
-      // as in the app when the hinted slide begins.
-      sixteenGame.redraw?.(recordingDrawing().dr, ds, null, state, 1, ui, 0, 0, step);
+    // Paint the still pre-move frame first, so the cache is warm exactly
+    // as in the app when the hinted slide begins.
+    sixteenGame.redraw?.(recordingDrawing().dr, ds, null, state, 1, ui, 0, 0, step);
 
-      // Halfway through the slide.
-      const anim = sixteenGame.animLength?.(state, after, 1, ui) ?? 0;
-      const { dr, ops } = recordingDrawing();
-      sixteenGame.redraw?.(dr, ds, state, after, 1, ui, anim / 2, 0, step);
-      return { state, after, m, hl, from, ops };
-    }
-    throw new Error(
-      "no board in 60 gave a straight hinted slide aimed along its own line",
-    );
+    // Halfway through the slide.
+    const anim = sixteenGame.animLength?.(state, after, 1, ui) ?? 0;
+    const { dr, ops } = recordingDrawing();
+    sixteenGame.redraw?.(dr, ds, state, after, 1, ui, anim / 2, 0, step);
+    return { state, after, m, hl, from, ops };
   }
 
   it("carries the tile mark along with the tile it is marking", () => {

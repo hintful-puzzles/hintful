@@ -11,12 +11,11 @@ import { describe, expect, it } from "vitest";
 import { EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { palisadeGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
-import { newDesc } from "./solver.ts";
 
 // The equivalentEdges frame: a sibling edge AND a hatched *region* (more than
 // one cell). numberExhausted journeys carry siblings too, but outline a single
@@ -25,48 +24,29 @@ const isEquivalentEdgesFrame = (step?: HintStep<unknown>): boolean =>
   stepMarks(step).of("ring", EDGE).length > 1 &&
   stepMarks(step).of("stripes", CELL).length > 1;
 
-/**
- * Deterministically find a board whose hint plan reaches an
- * `equivalentEdges` deduction (the one carrying a sibling edge), and
- * return the frame with that step displayed. The scan is fixed-seed, so
- * it resolves to the same board every run; it only re-resolves (and the
- * snapshot/board churns, healthily) if the generator or solver changes.
- */
-function equivalentEdgesFrame() {
-  // A board with no opening deduction (or any other per-board oddity)
-  // is not what we're hunting; skip a throwing scenario rather than
-  // failing the whole scan.
-  const tryScenario = (id: string) => {
-    try {
-      return renderScenario({
-        game: palisadeGame,
-        id,
-        showHint: true,
-        hintUntil: (step) => isEquivalentEdgesFrame(step),
-      });
-    } catch {
-      return null;
-    }
-  };
-
-  for (const preset of ["5x5n5", "8x6n6"]) {
-    for (let i = 0; i < 200; i++) {
-      const id = `${preset}#eq-${i}`;
-      const result = tryScenario(id);
-      if (result && isEquivalentEdgesFrame(result.hint)) {
-        return { id, result };
-      }
-    }
-  }
-  throw new Error(
-    "no equivalentEdges board found in the scan range — the rule may no " +
-      "longer fire, or the generator changed; widen the scan or pick a seed",
-  );
-}
+/** A position whose hint opens with an `equivalentEdges` deduction. */
+const pinned = describeHintPins({
+  game: palisadeGame,
+  params: [
+    { w: 5, h: 5, k: 5 },
+    { w: 8, h: 6, k: 6 },
+  ],
+  kinds: { equivalentEdges: (step) => isEquivalentEdgesFrame(step) },
+  pins: {
+    /** Held on 56 of 1307 positions walked. */
+    equivalentEdges: {
+      id: "5x5n5:c2d2d22a13b222",
+      moves:
+        '[{"type":"edges","edits":[{"x":0,"y":4,"flag":16},{"x":0,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]}]',
+    },
+  },
+});
 
 describe("Palisade render scenarios", () => {
   it("reaches the equivalentEdges hint frame in-process and paints it", () => {
-    const { result } = equivalentEdgesFrame();
+    const { id, moves, step } = pinned("equivalentEdges");
+    const result = renderScenario({ game: palisadeGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
     const ops = result.recording.ops;
     const rectsOf = (color: number): number =>
       ops.filter((o) => o.op === "rect" && o.color === color).length;
@@ -94,11 +74,9 @@ describe("Palisade render scenarios", () => {
     // rule than equivalentEdges. Its opening deduction forces more than one
     // edge, so the first leg paints the firing's other edges in COL_HINT
     // alongside the action edge: the grouped-journey rendering.
-    const P = { w: 5, h: 5, k: 5 };
-    const id = `5x5n5:${newDesc(P, randomNew("palisade-render-opener")).desc}`;
     const { recording, hint } = renderScenario({
       game: palisadeGame,
-      id,
+      id: "5x5n5:e21c2a31e222a1",
       showHint: true,
     });
 

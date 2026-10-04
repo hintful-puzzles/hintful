@@ -10,6 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -33,6 +34,32 @@ function rects(ops: readonly { op: string }[]) {
     h: number;
   }[];
 }
+
+const areaOf = (step: { highlights?: unknown }): { x: number; y: number }[] =>
+  (step.highlights as { area: { x: number; y: number }[] }).area;
+
+const pinned = describeHintPins({
+  game: groupGame,
+  params: [groupGame.decodeParams("6dn")],
+  kinds: {
+    // Three premises, exactly two of them side by side: the shape whose
+    // contour the frame's side count is read against.
+    associativityPairAndOne: (step) => {
+      if (!/In any group/.test(step.explanation)) return false;
+      const area = areaOf(step);
+      const touching = area.flatMap((a, i) =>
+        area
+          .slice(i + 1)
+          .filter((b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1),
+      );
+      return area.length === 3 && touching.length === 1;
+    },
+  },
+  pins: {
+    /** Held on 21 of 253 positions walked. */
+    associativityPairAndOne: "6dn:1_2_3_4_5_6_2e3e4c1a5c6a6_1d",
+  },
+});
 
 describe("group render scenarios", () => {
   it("opener frame draws the legend, the shaded diagonal, and digits", () => {
@@ -70,46 +97,20 @@ describe("group render scenarios", () => {
   });
 
   it("an associativity hint frame rings the target and shades the known products", () => {
-    // Scan Normal (identity-shown) seeds for a plan that reaches an associativity
-    // step, walking the plan to it (the fixed-seed scan + hintUntil idiom). The
-    // step must have two premises side by side, which is what the contour
-    // assertion below is about.
-    const isAssoc = (step: { explanation: string; highlights?: unknown }) => {
-      if (!/In any group/.test(step.explanation)) return false;
-      const area = (step.highlights as { area: { x: number; y: number }[] }).area;
-      return area.some((a) =>
-        area.some((b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1),
-      );
-    };
-    let frame: ReturnType<typeof renderScenario> | null = null;
-    for (let n = 0; n < 40 && !frame; n++) {
-      const r = renderScenario({
-        game: groupGame,
-        id: `6dn#assoc-${n}`,
-        showHint: true,
-        hintUntil: isAssoc,
-      });
-      if (r.hint && isAssoc(r.hint)) frame = r;
-    }
-    expect(frame, "no associativity frame found in 40 seeds").not.toBeNull();
-    if (!frame) return;
+    const { id, moves, step } = pinned("associativityPairAndOne");
+    const frame = renderScenario({ game: groupGame, id, moves, showHint: true });
+    expect(frame.hint?.explanation).toBe(step.explanation);
 
     // The forced cell is **ringed** COL_HINT — four thin rects, no fill — and
     // the three known products are outlined COL_HINT_CELL as evidence.
     //
     // The side count is the assertion, because it is what distinguishes one
-    // contour from a ring per cell. This frame's premises are (1,1), (2,1) and
-    // (4,1): an adjacent pair, which the neighbor rule joins into a 6-sided
-    // contour, plus a separate cell at 4 — **10**, where a per-cell renderer
-    // would give 12 and one that dropped a premise 6.
+    // contour from a ring per cell. The kind's premises are an adjacent pair,
+    // which the neighbor rule joins into a 6-sided contour, plus a separate
+    // cell — **10**, where a per-cell renderer would give 12 and one that
+    // dropped a premise 6.
     expectRing(frame.recording.ops, COL_HINT);
-    expect(frame.hint?.highlights).toMatchObject({
-      area: [
-        { x: 1, y: 1 },
-        { x: 2, y: 1 },
-        { x: 4, y: 1 },
-      ],
-    });
+    expect(areaOf(step)).toHaveLength(3);
     const evidence = markSides(frame.recording.ops, COL_HINT_CELL);
     expect(evidence.length).toBe(10);
     for (const s of evidence) expect(isThin(s)).toBe(true);

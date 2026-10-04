@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -177,29 +178,34 @@ describe("hintKeepTrack", () => {
   });
 });
 
+const pinned = describeHintPins({
+  game: fillingGame,
+  params: [decodeParams("9x7")],
+  kinds: {
+    stripedRegion: /^The striped region of \d+/,
+  },
+  pins: {
+    /** Held on 298 of 310 positions walked. */
+    stripedRegion: "9x7:c2c2b6a5d53663a27a4c3a7a4b773a7c7b22324b6d2b",
+  },
+});
+
 describe("filling hint render scenario", () => {
   it("rings the target(s) and hatches the region the sentence names", () => {
-    let result: ReturnType<typeof renderScenario> | null = null;
-    for (let s = 0; s < 20; s++) {
-      const r = renderScenario({
-        game: fillingGame,
-        id: `9x7#filling-render-${s}`,
-        showHint: true,
-      });
-      if (stepMarks(r.hint).of("stripes", CELL).length > 0) {
-        result = r;
-        break;
-      }
-    }
-    if (!result) throw new Error("no seed produced a region-naming first hint");
-
-    const { recording } = result;
-    const marks = stepMarks(result.hint);
+    const { id, moves, step } = pinned("stripedRegion");
+    const { recording, hint } = renderScenario({
+      game: fillingGame,
+      id,
+      moves,
+      showHint: true,
+    });
+    expect(hint?.explanation).toBe(step.explanation);
+    const marks = stepMarks(step);
+    expect(marks.of("stripes", CELL).length).toBeGreaterThan(0);
     expectRing(recording.ops, COL_HINT, marks.of("ring", CELL).length);
     // "The striped region of N": every cell of it hatched, the digits drawn
     // over the stripes, and no outline, since the region is not a particular
     // cell the reason rests on.
-    expect(result.hint?.explanation).toMatch(/^The striped region of \d+/);
     expect(marks.of("outline", CELL)).toEqual([]);
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(

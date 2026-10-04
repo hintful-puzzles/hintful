@@ -10,6 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -307,18 +308,47 @@ describe("towers hint", () => {
 
 // --- tier 1: keep-track -----------------------------------------------------
 
-/** Find the first hint step of a given move type (after populating). */
-function stepOfType(
-  st: TowersState,
-  type: TowersMove["type"],
-): { step: AnyStep; state: TowersState } {
-  const populated = towersGame.executeMove(st, { type: "pencilAll" });
-  const res = towersGame.hint?.(populated);
-  if (!res?.ok) throw new Error("hint refused");
-  const step = res.steps.find((s) => (s.move as TowersMove).type === type);
-  if (!step) throw new Error(`no ${type} step`);
-  return { step, state: populated };
-}
+const strikes = (step: AnyStep): number =>
+  step.move.type === "pencilStrike" ? step.move.marks.length : 0;
+
+/** Positions on a board with every candidate penciled in first. */
+const pinned = describeHintPins({
+  game: towersGame,
+  params: [{ w: 5, diff: "easy" }],
+  opening: (): TowersMove[] => [{ type: "pencilAll" }],
+  kinds: {
+    strike: (step) => strikes(step) > 0,
+    multiMarkStrike: (step) => strikes(step) >= 2,
+    placement: (step) => step.move.type === "set",
+    // A clue lower-bound elimination, which shades a line of sight.
+    lowerBound: /sees exactly/,
+  },
+  pins: {
+    /** Held on 300 of 600 positions walked. */
+    strike: {
+      id: "5de:4/3/1/2/2/1/2/2/3/2/3/3/2/4/1/2/2/2/1/3",
+      moves:
+        '[{"type":"pencilAll"},{"type":"set","x":2,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":3,"n":5,"pencil":false,"autoElim":false}]',
+    },
+    /** Held on 122 of 600 positions walked. */
+    multiMarkStrike: {
+      id: "5de:4/3/1/2/2/1/2/2/3/2/3/3/2/4/1/2/2/2/1/3",
+      moves:
+        '[{"type":"pencilAll"},{"type":"set","x":2,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":3,"n":5,"pencil":false,"autoElim":false}]',
+    },
+    /** Held on 300 of 600 positions walked. */
+    placement: {
+      id: "5de:2/2/1/5/3/2/2/3/1/3/3/1/3/2/2/2/2/1/3/2",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 81 of 600 positions walked. */
+    lowerBound: {
+      id: "5de:4/3/1/2/2/1/2/2/3/2/3/3/2/4/1/2/2/2/1/3",
+      moves:
+        '[{"type":"pencilAll"},{"type":"set","x":2,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":3,"n":5,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":5},{"x":3,"y":0,"n":5},{"x":4,"y":0,"n":5},{"x":0,"y":1,"n":5},{"x":2,"y":1,"n":5},{"x":4,"y":1,"n":5},{"x":0,"y":2,"n":5},{"x":2,"y":2,"n":5},{"x":4,"y":2,"n":5},{"x":0,"y":3,"n":5},{"x":1,"y":3,"n":5},{"x":2,"y":3,"n":5},{"x":3,"y":3,"n":5},{"x":1,"y":4,"n":5},{"x":2,"y":4,"n":5},{"x":3,"y":4,"n":5},{"x":4,"y":4,"n":5}]}]',
+    },
+  },
+});
 
 describe("towers hintKeepTrack", () => {
   it("matches a populate step", () => {
@@ -340,17 +370,8 @@ describe("towers hintKeepTrack", () => {
   });
 
   it("shrinks then finishes a multi-mark strike journey", () => {
-    const { st } = gen(5, "easy", "kt-strike");
-    // Find a strike step with more than one mark so we can exercise onTrack.
-    const populated = towersGame.executeMove(st, { type: "pencilAll" });
-    const res = towersGame.hint?.(populated);
-    if (!res?.ok) throw new Error("hint refused");
-    const step = res.steps.find(
-      (s) =>
-        (s.move as TowersMove).type === "pencilStrike" &&
-        (s.move as Extract<TowersMove, { type: "pencilStrike" }>).marks.length >= 2,
-    ) as AnyStep;
-    expect(step).toBeDefined();
+    // A strike step with more than one mark, to exercise onTrack.
+    const { state: populated, step } = pinned("multiMarkStrike");
 
     const total = (step.move as Extract<TowersMove, { type: "pencilStrike" }>).marks
       .length;
@@ -374,8 +395,7 @@ describe("towers hintKeepTrack", () => {
   });
 
   it("a strike step rejects a non-target candidate and a re-add", () => {
-    const { st } = gen(5, "easy", "kt-strike-off");
-    const { step, state } = stepOfType(st, "pencilStrike");
+    const { step, state } = pinned("strike");
     const m = (step.move as Extract<TowersMove, { type: "pencilStrike" }>).marks[0];
     // A toggle on a cell/candidate the step doesn't target is off-plan.
     const otherN = (m.n % 5) + 1;
@@ -399,8 +419,7 @@ describe("towers hintKeepTrack", () => {
   });
 
   it("a placement step matches the entered height", () => {
-    const { st } = gen(5, "easy", "kt-place");
-    const { step, state } = stepOfType(st, "set");
+    const { step, state } = pinned("placement");
     const move = step.move as Extract<TowersMove, { type: "set" }>;
     expect(towersGame.hintKeepTrack?.(move, step, state)).toBe("completed");
     expect(
@@ -444,51 +463,23 @@ describe("towers hintKeepTrack", () => {
 
 // --- tier 2.5: render scenario ----------------------------------------------
 
-/** Scan seeds for a 5×5 easy board whose populated hint plan reaches a
- * clue lower-bound elimination frame (one with a shaded line of sight). */
-function lowerBoundFrame() {
-  for (let i = 0; i < 40; i++) {
-    const seed = `lb-${i}`;
-    const { desc } = gen(5, "easy", seed);
-    const id = `5de:${desc}`;
-    const st = newState({ w: 5, diff: "easy" }, desc);
-    const pop = towersGame.executeMove(st, { type: "pencilAll" });
-    const res = towersGame.hint?.(pop);
-    if (!res?.ok) continue;
-    if (res.steps.some((s) => /sees exactly/.test(s.explanation))) return id;
-  }
-  throw new Error("no lower-bound frame found in the scanned seeds");
-}
-
-/** Scan seeds for a 5×5 easy board whose populated hint plan contains a `set`
- * placement step (a facing/forced placement). */
-function facingPlacementFrame() {
-  for (let i = 0; i < 40; i++) {
-    const seed = `fp-${i}`;
-    const { desc } = gen(5, "easy", seed);
-    const id = `5de:${desc}`;
-    const st = newState({ w: 5, diff: "easy" }, desc);
-    const pop = towersGame.executeMove(st, { type: "pencilAll" });
-    const res = towersGame.hint?.(pop);
-    if (!res?.ok) continue;
-    if (res.steps.some((s) => (s.move as TowersMove).type === "set")) return id;
-  }
-  throw new Error("no placement frame found in the scanned seeds");
+/** The frame a pinned position's hint draws, through a real `Midend`. */
+function hintFrame(kind: Parameters<typeof pinned>[0]) {
+  const { id, moves, step } = pinned(kind);
+  const result = renderScenario({
+    game: towersGame,
+    id,
+    defaultBackground: DEFAULT_BACKGROUND,
+    moves,
+    showHint: true,
+  });
+  expect(result.hint?.explanation).toBe(step.explanation);
+  return result;
 }
 
 describe("towers hint render", () => {
   it("a clue-elimination journey hatches the line of sight and strikes candidates", () => {
-    const id = lowerBoundFrame();
-    const { recording, hint } = renderScenario({
-      game: towersGame,
-      id,
-      defaultBackground: DEFAULT_BACKGROUND,
-      moves: [{ type: "pencilAll" }],
-      showHint: true,
-      hintUntil: (s) => /sees exactly/.test(s.explanation),
-    });
-    expect(hint).toBeDefined();
-    expect(hint?.explanation).toMatch(/sees exactly/);
+    const { recording, hint } = hintFrame("lowerBound");
 
     // The line of sight is hatched through both clue slots, in one strip; the
     // clue it is read from is the one cell outlined, COL_HINT_CELL.
@@ -535,16 +526,7 @@ describe("towers hint render", () => {
   });
 
   it("a placement step rings its target cell COL_HINT", () => {
-    const id = facingPlacementFrame();
-    const { recording, hint } = renderScenario({
-      game: towersGame,
-      id,
-      defaultBackground: DEFAULT_BACKGROUND,
-      moves: [{ type: "pencilAll" }],
-      showHint: true,
-      hintUntil: (s) => (s.move as TowersMove).type === "set",
-    });
-    expect((hint?.move as TowersMove)?.type).toBe("set");
+    const { recording, hint } = hintFrame("placement");
     // A placement target is ringed COL_HINT, and carries no struck digit/line.
     expectRing(recording.ops, COL_HINT, (hint?.highlights as AnyStep)?.targets.length);
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(

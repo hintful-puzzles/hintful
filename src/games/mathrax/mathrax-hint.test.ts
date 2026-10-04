@@ -13,6 +13,7 @@
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -46,6 +47,42 @@ type AnyStep = any;
 
 const NORMAL: MathraxParams = { o: 5, diff: "normal", options: 63 };
 const TRICKY: MathraxParams = { o: 6, diff: "tricky", options: 63 };
+
+const strikes = (move: MathraxMove): number =>
+  move.type === "pencilStrike" ? move.marks.length : 0;
+
+/** The strikes the journey and frame tests read, each pinned on a position
+ * whose hint opens with one. Every board is marked in full first, as a player
+ * about to strike candidates has it. */
+const pinned = describeHintPins({
+  game: mathraxGame,
+  params: [NORMAL, TRICKY],
+  opening: (): MathraxMove[] => [{ type: "pencilAll" }],
+  kinds: {
+    severalMarks: (s) => strikes(s.move) >= 2,
+    arithmeticClue: (s) =>
+      strikes(s.move) > 0 &&
+      / clue/.test(s.explanation) &&
+      !/all four numbers/.test(s.explanation),
+    parityClue: (s) =>
+      strikes(s.move) > 0 && /all four numbers around it/.test(s.explanation),
+  },
+  pins: {
+    /** Held on 723 of 1777 positions walked. */
+    severalMarks: { id: "5dn:n4f3c,A5S2eS1A6dS2b", moves: [{ type: "pencilAll" }] },
+    /** Held on 526 of 1777 positions walked. */
+    arithmeticClue: {
+      id: "6dt:zj,A6eS1cA6aD2S1eA10aS1bS3",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 26 of 1777 positions walked. */
+    parityClue: {
+      id: "5dn:m3k,aS1bS3cOA7bA6c",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":3},{"x":3,"y":1,"n":3},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":3,"y":3,"n":3},{"x":3,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":1}]}]',
+    },
+  },
+});
 
 const givens = (s: MathraxState): Uint8Array =>
   s.grid.map((d, i) => (s.flags[i] & F_IMMUTABLE ? d : 0));
@@ -347,19 +384,11 @@ describe("mathrax hintKeepTrack", () => {
   });
 
   it("shrinks then finishes a multi-mark strike journey", () => {
-    const { st } = gen(NORMAL, "kt-strike");
-    const populated = mathraxGame.executeMove(st, { type: "pencilAll" });
-    const res = mathraxGame.hint?.(populated);
-    if (!res?.ok) throw new Error("hint refused");
-    const step = res.steps.find(
-      (s) =>
-        (s.move as MathraxMove).type === "pencilStrike" &&
-        (s.move as { type: "pencilStrike"; marks: unknown[] }).marks.length >= 2,
-    ) as AnyStep | undefined;
-    if (!step) throw new Error("no multi-mark strike step");
+    const { state, step } = pinned("severalMarks");
+    if (step.move.type !== "pencilStrike") throw new Error("unreachable");
 
-    const marks = [...step.move.marks] as { x: number; y: number; n: number }[];
-    let cur = populated;
+    const marks = [...step.move.marks];
+    let cur = state;
     for (let k = 0; k < marks.length; k++) {
       const mk = marks[k];
       const toggle: MathraxMove = {
@@ -397,38 +426,17 @@ describe("mathrax hint resumes to solved", () => {
 
 // --- tier 2.5: render ------------------------------------------------------
 
-/** Scan seeds for an id whose hint, after populating, reaches a clue strike
- * matching `pred` — so the frame is deterministic without a known desc. */
-function clueStrikeFrame(p: MathraxParams, pred: (s: string) => boolean): string {
-  for (let s = 0; s < 40; s++) {
-    const seed = `frame-${p.o}-${s}`;
-    const { st } = gen(p, seed);
-    const populated = mathraxGame.executeMove(st, { type: "pencilAll" });
-    const res = mathraxGame.hint?.(populated);
-    if (!res?.ok) continue;
-    if (
-      res.steps.some(
-        (step) =>
-          (step.move as MathraxMove).type === "pencilStrike" && pred(step.explanation),
-      )
-    )
-      return `${encodeParams(p, true)}#${seed}`;
-  }
-  throw new Error(`no clue-strike frame found for ${encodeParams(p, true)}`);
-}
-
 describe("mathrax hint render", () => {
   it("an arithmetic clue rings its diagonal pair and strikes the candidate", () => {
-    const pred = (e: string) => / clue/.test(e) && !/all four numbers/.test(e);
-    const id = clueStrikeFrame(NORMAL, pred);
+    const { id, moves, step } = pinned("arithmeticClue");
     const { recording, hint } = renderScenario({
       game: mathraxGame,
       id,
       defaultBackground: DEFAULT_BACKGROUND,
-      moves: [{ type: "pencilAll" }],
+      moves,
       showHint: true,
-      hintUntil: (s) => pred(s.explanation),
     });
+    expect(hint?.explanation).toBe(step.explanation);
     expect(hint?.explanation).toMatch(/ clue/);
     // Two **separate** rings, not one contour: the pair is diagonal, so the two
     // cells share no edge and joining them would outline board the clue does not
@@ -446,16 +454,15 @@ describe("mathrax hint render", () => {
   });
 
   it("an even/odd clue outlines the block of four it constrains", () => {
-    const pred = (e: string) => /all four numbers around it/.test(e);
-    const id = clueStrikeFrame(TRICKY, pred);
+    const { id, moves, step } = pinned("parityClue");
     const { recording, hint } = renderScenario({
       game: mathraxGame,
       id,
       defaultBackground: DEFAULT_BACKGROUND,
-      moves: [{ type: "pencilAll" }],
+      moves,
       showHint: true,
-      hintUntil: (s) => pred(s.explanation),
     });
+    expect(hint?.explanation).toBe(step.explanation);
     expect(hint?.explanation).toMatch(/all four numbers around it are (even|odd)/);
     // A 2x2 block's contour is its eight outer sides — four per-cell rings would
     // be sixteen, so the count still tells the two apart.

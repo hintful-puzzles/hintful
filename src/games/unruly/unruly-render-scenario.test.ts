@@ -80,14 +80,12 @@ describe("Unruly render scenarios", () => {
   });
 
   it("hint frame: drives a real Midend to a displayed hint and renders it", () => {
-    // A fixed generated board → a deterministic first hint. The harness
-    // computes the hint through a real Midend and passes the step to redraw,
-    // exactly as the app does.
-    const P = { w2: 6, h2: 6, unique: false, diff: 0 };
-    const desc = newDesc(P, randomNew("unruly-hint-frame")).desc;
+    // A fixed board → a deterministic first hint. The harness computes the
+    // hint through a real Midend and passes the step to redraw, exactly as
+    // the app does.
     const { recording, hint } = renderScenario({
       game: unrulyGame,
-      id: `6x6dt:${desc}`,
+      id: "6x6dt:AFAFACEBfDb",
       showHint: true,
     });
 

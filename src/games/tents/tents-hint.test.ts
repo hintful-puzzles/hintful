@@ -23,6 +23,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { boardOf, tentsKeepTrack, tentsPlan } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { tentsGame } from "./index.ts";
@@ -178,40 +179,164 @@ describe("a link is drawn only for a step that rests on it", () => {
   });
 });
 
-describe("every premise the corpus reaches is reached", () => {
-  const KINDS: Record<TentsReason["kind"], true> = {
-    noTree: true,
-    treesDone: true,
-    nextToTent: true,
-    treeSingle: true,
-    treeDiagonal: true,
-    lineCount: true,
-    lineNeighbors: true,
-    tentLink: true,
-    treeLink: true,
-  };
-  /** The sentences a line count speaks, told apart by their opening words. */
-  const LINE_CASES = {
-    countMet: /already has|number is 0/,
-    allOpen: /has only \d+ open/,
-    noSpareRoom: /have room for only/,
-    betweenThem: /, for tents never touch\.$/,
+/** The premise of the firing a plan opens with on `state`. */
+const premiseAt = (state: TentsState): TentsReason["kind"] | null =>
+  tentsPlan(state).plan[0]?.firing.reason.kind ?? null;
+
+const rests =
+  (kind: TentsReason["kind"]) =>
+  (_step: unknown, state: TentsState): boolean =>
+    premiseAt(state) === kind;
+
+/** A line count's sentence, told apart by its opening words. Any leg of the
+ * firing may say it: the square between two tents is a later leg, and is
+ * another premise's once the tents beside it are placed. */
+const lineCase =
+  (sentence: RegExp) =>
+  (_step: unknown, state: TentsState): boolean => {
+    const [opening] = tentsPlan(state).plan;
+    return (
+      opening?.firing.reason.kind === "lineCount" &&
+      opening.steps.some((s) => sentence.test(s.explanation))
+    );
   };
 
-  it("reaches every kind of premise and every line case", () => {
-    const kinds = new Set<string>();
-    const cases = new Set<string>();
-    for (const { p, seed } of CORPUS) {
-      walk(deal(p, seed), ({ firing, steps }) => {
-        kinds.add(firing.reason.kind);
-        if (firing.reason.kind !== "lineCount") return;
-        for (const s of steps)
-          for (const [name, re] of Object.entries(LINE_CASES))
-            if (re.test(s.explanation)) cases.add(name);
-      });
-    }
-    expect([...kinds].sort()).toEqual(Object.keys(KINDS).sort());
-    expect([...cases].sort()).toEqual(Object.keys(LINE_CASES).sort());
+/** A step deciding at least `n` grass squares. */
+const grass =
+  (n: number) =>
+  (step: Step): boolean =>
+    step.move.type === "cells" &&
+    step.move.cells.length >= n &&
+    step.move.cells[0].v === NONTENT;
+
+/** A position for every kind of premise and every line case, and for the
+ * shapes of step the keep-track tests follow by hand. */
+const pinned = describeHintPins({
+  game: tentsGame,
+  params: SHAPES,
+  kinds: {
+    noTree: rests("noTree"),
+    treesDone: rests("treesDone"),
+    nextToTent: rests("nextToTent"),
+    treeSingle: rests("treeSingle"),
+    treeDiagonal: rests("treeDiagonal"),
+    lineCount: rests("lineCount"),
+    lineNeighbors: rests("lineNeighbors"),
+    tentLink: rests("tentLink"),
+    treeLink: rests("treeLink"),
+    countMet: lineCase(/already has|number is 0/),
+    allOpen: lineCase(/has only \d+ open/),
+    noSpareRoom: lineCase(/have room for only/),
+    betweenThem: lineCase(/, for tents never touch\.$/),
+    grass: grass(1),
+    grassOfSeveral: grass(2),
+    link: (step: Step) => step.move.type === "link",
+  },
+  pins: {
+    /** Held on 60 of 2560 positions walked. */
+    noTree: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+    /** Held on 330 of 2560 positions walked. */
+    treesDone: {
+      id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":0,"y":2,"v":2},{"x":0,"y":4,"v":2},{"x":0,"y":6,"v":2}]}]',
+    },
+    /** Held on 655 of 2560 positions walked. */
+    nextToTent: {
+      id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"link","x":7,"y":2,"d":4,"on":true}]',
+    },
+    /** Held on 628 of 2560 positions walked. */
+    treeSingle: {
+      id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+    /** Held on 112 of 2560 positions walked. */
+    treeDiagonal: {
+      id: "8x8de:hfbad_ibdbacj,2,1,1,2,1,2,1,2,1,3,0,3,1,2,1,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":6,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":6,"y":2,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":2,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":4,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+    /** Held on 657 of 2560 positions walked. */
+    lineCount: {
+      id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+    /** Held on 83 of 2560 positions walked. */
+    lineNeighbors: {
+      id: "10x10dt:cbcbb_aijdabakdffdbg_,3,1,2,3,1,2,1,2,2,3,4,1,2,2,3,1,2,2,1,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":8,"y":0,"v":3},{"x":1,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":1,"y":3,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":8,"y":3,"v":3},{"x":3,"y":4,"v":3},{"x":9,"y":4,"v":3},{"x":6,"y":5,"v":3},{"x":8,"y":5,"v":3},{"x":1,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":0,"y":8,"v":3},{"x":5,"y":8,"v":3},{"x":4,"y":9,"v":3},{"x":5,"y":9,"v":3},{"x":6,"y":9,"v":3},{"x":7,"y":9,"v":3}]}]',
+    },
+    /** Held on 31 of 2560 positions walked. */
+    tentLink: {
+      id: "8x8de:hcabfehj_adbb,3,1,1,1,1,1,1,3,1,1,2,1,1,3,0,3",
+      moves:
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":7,"y":2,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":1,"y":5,"v":3},{"x":4,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":0,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":0,"y":0,"v":2},{"x":0,"y":2,"v":2},{"x":0,"y":4,"v":2}]},{"type":"cells","cells":[{"x":1,"y":1,"v":3}]},{"type":"cells","cells":[{"x":1,"y":3,"v":3}]}]',
+    },
+    /** Held on 4 of 2560 positions walked. */
+    treeLink: {
+      id: "10x10dt:agaa_aidlcldbdbcadcbd,3,1,2,2,2,1,4,1,1,3,1,4,1,3,1,3,1,1,4,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":8,"y":1,"v":3},{"x":0,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":8,"y":2,"v":3},{"x":9,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":9,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":6,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":2,"y":5,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":7,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":6,"y":8,"v":3},{"x":0,"y":9,"v":3},{"x":7,"y":9,"v":3},{"x":9,"y":9,"v":3}]},{"type":"cells","cells":[{"x":9,"y":1,"v":2}]},{"type":"cells","cells":[{"x":8,"y":0,"v":3}]},{"type":"cells","cells":[{"x":1,"y":7,"v":3}]},{"type":"cells","cells":[{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":5,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":5,"y":8,"v":3},{"x":7,"y":8,"v":3}]},{"type":"cells","cells":[{"x":0,"y":8,"v":2},{"x":2,"y":8,"v":2},{"x":4,"y":8,"v":2},{"x":9,"y":8,"v":2}]},{"type":"cells","cells":[{"x":8,"y":9,"v":3}]},{"type":"cells","cells":[{"x":3,"y":7,"v":3},{"x":1,"y":9,"v":3},{"x":3,"y":9,"v":3}]},{"type":"cells","cells":[{"x":5,"y":7,"v":3},{"x":4,"y":9,"v":3}]},{"type":"cells","cells":[{"x":8,"y":7,"v":3},{"x":9,"y":7,"v":3}]},{"type":"link","x":6,"y":7,"d":3,"on":true},{"type":"link","x":6,"y":5,"d":4,"on":true},{"type":"link","x":6,"y":9,"d":2,"on":true},{"type":"cells","cells":[{"x":8,"y":5,"v":3}]}]',
+    },
+    /** Held on 206 of 2560 positions walked. */
+    countMet: {
+      id: "8x8de:_adra_fecbhac,1,2,0,4,0,3,0,2,1,2,1,2,1,3,0,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":1,"y":1,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":6,"y":1,"v":3},{"x":0,"y":2,"v":3},{"x":1,"y":2,"v":3},{"x":3,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":7,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":1,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":5,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+    /** Held on 341 of 2560 positions walked. */
+    allOpen: {
+      id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+    /** Held on 110 of 2560 positions walked. */
+    noSpareRoom: {
+      id: "8x8de:hdfb_eh_abmba,1,2,1,2,0,2,1,3,1,2,1,3,0,2,1,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":6,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":1,"v":3},{"x":1,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":1,"y":6,"v":3},{"x":4,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3}]}]',
+    },
+    /** Held on 12 of 2560 positions walked. */
+    betweenThem: {
+      id: "8x8de:_adra_fecbhac,1,2,0,4,0,3,0,2,1,2,1,2,1,3,0,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":1,"y":1,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":6,"y":1,"v":3},{"x":0,"y":2,"v":3},{"x":1,"y":2,"v":3},{"x":3,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":7,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":1,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":5,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":2,"y":1,"v":3},{"x":2,"y":2,"v":3},{"x":2,"y":4,"v":3},{"x":2,"y":6,"v":3}]}]',
+    },
+    /** Held on 1446 of 2560 positions walked. */
+    grass: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+    /** Held on 468 of 2560 positions walked. */
+    grassOfSeveral: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+    /** Held on 663 of 2560 positions walked. */
+    link: {
+      id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+  },
+});
+
+describe("every premise the corpus reaches is reached", () => {
+  it("a pin stands for every kind of premise", () => {
+    // The record is exhaustive over the solver's reasons, so a reason added
+    // there without a pinned position fails to compile here.
+    const kinds: Record<TentsReason["kind"], Parameters<typeof pinned>[0]> = {
+      noTree: "noTree",
+      treesDone: "treesDone",
+      nextToTent: "nextToTent",
+      treeSingle: "treeSingle",
+      treeDiagonal: "treeDiagonal",
+      lineCount: "lineCount",
+      lineNeighbors: "lineNeighbors",
+      tentLink: "tentLink",
+      treeLink: "treeLink",
+    };
+    for (const [reason, kind] of Object.entries(kinds))
+      expect(premiseAt(pinned(kind).state)).toBe(reason);
   });
 
   it("says a line's count from the clue, singular and plural", () => {
@@ -334,25 +459,14 @@ describe("following a step by hand", () => {
     move: structuredClone(s.move),
   });
 
-  /** The first step in the corpus deciding at least `n` grass squares. */
-  function grassStep(n: number): { state: TentsState; step: Step } {
-    for (const { p, seed } of CORPUS) {
-      const state = deal(p, seed);
-      const res = tentsGame.hint?.(state);
-      if (!res?.ok) continue;
-      const step = (res.steps as Step[]).find(
-        (s) =>
-          s.move.type === "cells" &&
-          s.move.cells.length >= n &&
-          s.move.cells[0].v === NONTENT,
-      );
-      if (step && step === res.steps[0]) return { state, step: copy(step) };
-    }
-    throw new Error("no opening grass step");
+  /** A pinned position and its own copy of the step a hint opens with there. */
+  function stepAt(kind: Parameters<typeof pinned>[0]) {
+    const { state, step } = pinned(kind);
+    return { state, step: copy(step) };
   }
 
   it("shrinks a step square by square, and completes on the last", () => {
-    const { state, step } = grassStep(2);
+    const { state, step } = stepAt("grassOfSeveral");
     if (step.move.type !== "cells") throw new Error("not a cells step");
     const [first, ...rest] = step.move.cells;
     const one: TentsMove = { type: "cells", cells: [first] };
@@ -369,7 +483,7 @@ describe("following a step by hand", () => {
   });
 
   it("goes off a step for a square it does not ask for, or a tent where it asks grass", () => {
-    const { state, step } = grassStep(1);
+    const { state, step } = stepAt("grass");
     if (step.move.type !== "cells") throw new Error("not a cells step");
     const target = step.move.cells[0];
     const tent: TentsMove = { type: "cells", cells: [{ ...target, v: TENT }] };
@@ -391,52 +505,31 @@ describe("following a step by hand", () => {
   });
 
   it("takes a tree's tent placed by a click as progress, and the link as the rest", () => {
-    for (const { p, seed } of CORPUS) {
-      let found: { state: TentsState; step: Step } | null = null;
-      walk(deal(p, seed), ({ firing, steps }, state) => {
-        if (!found && firing.reason.kind === "treeSingle")
-          found = { state, step: steps[0] };
-      });
-      if (!found) continue;
-      const { state, step } = found as { state: TentsState; step: Step };
-      if (step.move.type !== "link")
-        throw new Error("a tree's tent is placed by a link");
-      const { x, y } = step.move;
-      expect(state.grid[y * p.w + x]).toBe(0);
-      const click: TentsMove = { type: "cells", cells: [{ x, y, v: TENT }] };
-      const followed = copy(step);
-      expect(tentsKeepTrack(click, followed, state)).toBe("onTrack");
-      const placed = executeMove(state, click);
-      expect(tentsKeepTrack(followed.move, followed, placed)).toBe("completed");
-      // The combined move itself completes it at once.
-      expect(tentsKeepTrack(step.move, copy(step), state)).toBe("completed");
-      return;
-    }
-    throw new Error("no opening tree-single step in the corpus");
+    const { state, step } = pinned("treeSingle");
+    if (step.move.type !== "link") throw new Error("a tree's tent is placed by a link");
+    const { x, y } = step.move;
+    expect(state.grid[y * state.w + x]).toBe(0);
+    const click: TentsMove = { type: "cells", cells: [{ x, y, v: TENT }] };
+    const followed = copy(step);
+    expect(tentsKeepTrack(click, followed, state)).toBe("onTrack");
+    const placed = executeMove(state, click);
+    expect(tentsKeepTrack(followed.move, followed, placed)).toBe("completed");
+    // The combined move itself completes it at once.
+    expect(tentsKeepTrack(step.move, copy(step), state)).toBe("completed");
   });
 
   it("completes a link step by the link, from either end", () => {
-    for (const { p, seed } of CORPUS) {
-      let found: { state: TentsState; step: Step } | null = null;
-      walk(deal(p, seed), ({ steps }, state) => {
-        const s = steps[0];
-        if (!found && s.move.type === "link") found = { state, step: s };
-      });
-      if (!found) continue;
-      const { state, step } = found as { state: TentsState; step: Step };
-      if (step.move.type !== "link") throw new Error("not a link step");
-      const { x, y, d } = step.move;
-      // The same link spelled from the tree's end.
-      const fromTree: TentsMove = {
-        type: "link",
-        x: x + DX(d),
-        y: y + DY(d),
-        d: FLIP(d),
-        on: true,
-      };
-      expect(tentsKeepTrack(fromTree, copy(step), state)).toBe("completed");
-      return;
-    }
-    throw new Error("no link step in the corpus");
+    const { state, step } = pinned("link");
+    if (step.move.type !== "link") throw new Error("not a link step");
+    const { x, y, d } = step.move;
+    // The same link spelled from the tree's end.
+    const fromTree: TentsMove = {
+      type: "link",
+      x: x + DX(d),
+      y: y + DY(d),
+      d: FLIP(d),
+      on: true,
+    };
+    expect(tentsKeepTrack(fromTree, copy(step), state)).toBe("completed");
   });
 });

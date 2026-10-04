@@ -11,11 +11,9 @@ import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
-import {
-  opsOfKind,
-  type RecordingDrawing,
-} from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type AbcdHint, hintKeepTrack, packedLines, refreshHintStep } from "./hint.ts";
 import { type LineMarks, say } from "./hint-text.ts";
@@ -71,6 +69,31 @@ function planOf(label: string, state: AbcdState, reading?: CandidateReading): St
   if (!r?.ok) throw new Error(`${label}: hint refused: ${r?.error}`);
   return r.steps as Step[];
 }
+
+/** The steps the keep-track and frame tests below are asserted on. */
+const RUNS_PARAMS: AbcdParams = { w: 5, h: 5, n: 4, diag: false, removenums: true };
+const pinned = describeHintPins({
+  game: abcdGame,
+  params: [RUNS_PARAMS],
+  kinds: {
+    runs: /fit only/,
+    multiNoteStrike: (step) =>
+      step.move.type === "pencilStrike" && step.move.marks.length >= 2,
+  },
+  pins: {
+    /** Held on 51 of 594 positions walked. */
+    runs: {
+      id: "5x5n4R:1,-,-,-,1,-,2,0,2,2,-,-,1,1,1,-,3,-,1,-,3,-,1,-,-,-,1,2,2,-,-,-,2,1,1,-,-,-,-,-,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":1,"letter":3},{"x":1,"y":1,"letter":3},{"x":2,"y":1,"letter":3},{"x":3,"y":1,"letter":3},{"x":4,"y":1,"letter":3}]}]',
+    },
+    /** Held on 173 of 594 positions walked. */
+    multiNoteStrike: {
+      id: "5x5n4R:-,0,-,2,2,-,1,-,-,2,-,2,1,-,-,2,-,1,-,0,1,-,1,-,-,0,3,-,-,0,-,2,0,-,-,-,-,1,-,2,",
+      moves: [{ type: "pencilAll" }],
+    },
+  },
+});
 
 // --- the counting argument --------------------------------------------------
 
@@ -293,16 +316,7 @@ describe("the player's own board", () => {
   });
 
   it("follows a strike note by note, in the game's own letters", () => {
-    const { label, state: start } = firstBoard((b) => b.params.removenums);
-    let state = start;
-    const steps = planOf(label, start, "populate");
-    const at = steps.findIndex(
-      (s) => s.move.type === "pencilStrike" && s.move.marks.length >= 2,
-    );
-    expect(at, "no multi-note strike in the plan").toBeGreaterThanOrEqual(0);
-    for (const s of steps.slice(0, at)) state = abcdGame.executeMove(state, s.move);
-
-    const original = steps[at];
+    const { state, step: original } = pinned("multiNoteStrike");
     if (original.move.type !== "pencilStrike") throw new Error("unreachable");
     const [first, ...rest] = original.move.marks;
     const toggle: AbcdMove = { type: "pencil", ...first };
@@ -412,27 +426,18 @@ describe("the sentences at their extremes", () => {
 
 describe("the frames a hint draws", () => {
   it("hatches the runs line, outlines its stretches, rings the cell and colors the count", () => {
-    const params: AbcdParams = { w: 5, h: 5, n: 4, diag: false, removenums: true };
-    let found: { hint?: HintStep<AbcdMove>; recording: RecordingDrawing } | null = null;
-    for (let s = 0; s < 20 && !found; s++) {
-      const r = renderScenario({
-        game: abcdGame,
-        id: `${abcdGame.encodeParams(params, true)}#runs-${s}`,
-        showHint: true,
-        hintUntil: (step) => step.explanation.includes("fit only"),
-      });
-      if (r.hint?.explanation.includes("fit only")) found = r;
-    }
-    if (!found?.hint) throw new Error("no seed reached a runs step");
-    const hl = found.hint.highlights as AbcdHint;
-    const ops = found.recording.ops;
+    const { id, moves, step } = pinned("runs");
+    const result = renderScenario({ game: abcdGame, id, moves, showHint: true });
+    expect(result.hint?.explanation).toBe(step.explanation);
+    const hl = step.highlights as AbcdHint;
+    const ops = result.recording.ops;
 
     expectRing(ops, COL_HINT, 1);
     // The line the sentence names is hatched, cell by cell and on through its
     // clue slots: one slot per letter.
     const line = hl.hatch ?? [];
     expect(line.length).toBe(5);
-    expect(opsOfKind(ops, "hatch")).toHaveLength(5 + params.n);
+    expect(opsOfKind(ops, "hatch")).toHaveLength(5 + RUNS_PARAMS.n);
     // The count the sentence reads is drawn in the action color.
     expect(ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(true);
     // The stretches the sentence counts are outlined.

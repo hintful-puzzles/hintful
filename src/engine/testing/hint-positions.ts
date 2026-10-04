@@ -28,10 +28,20 @@ const env = (globalThis as { process?: { env?: Record<string, string | undefined
 const SCANNING = Boolean(env?.["HINT_SCAN"]);
 
 /** A position: a board as `params:desc`, and the moves played on it. A bare
- * string is a board with no moves played. */
+ * string is a board with no moves played. The moves may be their JSON, which
+ * is how the scan writes more than a few: a formatter leaves a string on one
+ * line, where the same moves as a literal run to hundreds. */
 export type HintPin<Move> =
   | string
-  | { readonly id: string; readonly moves: readonly Move[] };
+  | { readonly id: string; readonly moves: readonly Move[] | string };
+
+/** A pin as the source text the scan reports. */
+function pinSource<M>(pin: HintPin<M>): string {
+  if (typeof pin === "string") return JSON.stringify(pin);
+  const moves = JSON.stringify(pin.moves);
+  const written = moves.length > 80 ? `'${moves}'` : moves;
+  return `{ id: ${JSON.stringify(pin.id)}, moves: ${written} }`;
+}
 
 /** What makes a step of a kind: the sentence it says, or anything else about
  * the step and the board it is asked from. */
@@ -70,17 +80,46 @@ export interface HintPositionScan<
   /** A position's own desc, for a game whose board mid-game is one a desc can
    * write. The scan then reports a position as a board, with no moves. */
   descOf?: (state: State) => string;
+  /** Moves the scan plays on a fresh board before it asks for a hint: a
+   * mark-all, an opening click. A pin keeps them with the rest of its moves. */
+  opening?: (state: State) => readonly Move[];
+  /** The `Ui` a hint is asked under, where the kinds want one that `newUi`
+   * does not give: a candidate reading. */
+  ui?: (state: State) => Ui;
+  /** A second line of play on every board, for kinds that following the hint
+   * never meets: a hint keeps to winning lines, so the sentences about a
+   * losing move are spoken only off them. It names the move played at each
+   * turn, given the one the hint offers (null where it refuses), and ends the
+   * line with null. */
+  stray?: (state: State, turn: number, hinted: Move | null) => Move | null;
 }
 
 interface HintPositionReport<Move, Kind extends string> {
   /** Positions a hint was asked from. */
   walked: number;
   boards: number;
-  kinds: Record<Kind, { held: number; first: HintPin<Move> | null }>;
+  kinds: Record<Kind, { held: number; pin: HintPin<Move> | null; depth: number }>;
 }
 
-/** Walk hint-guided play on the scan's boards, and say where each kind first
- * held and on how many positions. */
+/** The board a pin names, and the plan a hint gives there. */
+function loadPosition<P, S, M, U, D, H, K extends string>(
+  scan: HintPositionScan<P, S, M, U, D, H, K>,
+  id: string,
+  moves: readonly M[],
+) {
+  const { game } = scan;
+  const colon = id.indexOf(":");
+  const params = game.decodeParams(id.slice(0, colon));
+  let state = game.newState(params, id.slice(colon + 1));
+  for (const m of moves) state = game.executeMove(state, m);
+  const ui = scan.ui?.(state) ?? game.newUi(state);
+  const plan = game.hint?.(state, undefined, ui) ?? null;
+  const step = plan?.ok ? (plan.steps[0] as HintStep<M, H>) : null;
+  return { state, plan, step };
+}
+
+/** Walk hint-guided play on the scan's boards, and say how many positions each
+ * kind held on and which of them took the fewest moves to reach. */
 function scanHintPositions<P, S, M, U, D, H, K extends string>(
   scan: HintPositionScan<P, S, M, U, D, H, K>,
 ): HintPositionReport<M, K> {
@@ -89,37 +128,49 @@ function scanHintPositions<P, S, M, U, D, H, K extends string>(
   if (!hint) throw new Error(`${game.id} has no hint to scan`);
   const names = Object.keys(scan.kinds) as K[];
   const kinds = Object.fromEntries(
-    names.map((k) => [k, { held: 0, first: null }]),
+    names.map((k) => [k, { held: 0, pin: null, depth: 0 }]),
   ) as HintPositionReport<M, K>["kinds"];
   let walked = 0;
   let boards = 0;
   for (const params of scan.params) {
     const encoded = game.encodeParams(params, true);
     for (let n = 0; n < (scan.seeds ?? 12); n++) {
-      const { desc, aux } = game.newDesc(params, randomNew(`hint-scan-${n}`));
+      const { desc } = game.newDesc(params, randomNew(`hint-scan-${n}`));
       const id = `${encoded}:${desc}`;
-      let state = game.newState(params, desc);
-      const ui = game.newUi(state);
-      const moves: M[] = [];
       boards++;
-      for (let k = 0; k < (scan.maxSteps ?? 400); k++) {
-        if (game.status(state) !== "ongoing") break;
-        const plan = hint(state, aux, ui);
-        if (!plan.ok) break;
-        const step = plan.steps[0] as HintStep<M, H>;
-        walked++;
-        for (const name of names) {
-          if (!isOfKind(scan.kinds[name], step, state)) continue;
-          const kind = kinds[name];
-          kind.held++;
-          kind.first ??= descOf
-            ? `${encoded}:${descOf(state)}`
-            : moves.length > 0
-              ? { id, moves: [...moves] }
-              : id;
+      // One line of play following the hint, and one the game steers.
+      for (const stray of scan.stray ? [null, scan.stray] : [null]) {
+        let state = game.newState(params, desc);
+        const moves: M[] = [...(scan.opening?.(state) ?? [])];
+        for (const m of moves) state = game.executeMove(state, m);
+        const ui = scan.ui?.(state) ?? game.newUi(state);
+        for (let k = 0; k < (scan.maxSteps ?? 400); k++) {
+          if (game.status(state) !== "ongoing") break;
+          // With no `aux`, as a pin is loaded: a `params:desc` carries none.
+          const plan = hint(state, undefined, ui);
+          const step = plan.ok ? (plan.steps[0] as HintStep<M, H>) : null;
+          if (step) walked++;
+          for (const name of step ? names : []) {
+            if (!step || !isOfKind(scan.kinds[name], step, state)) continue;
+            const kind = kinds[name];
+            kind.held++;
+            // The fewest moves of any position holding the kind: the shortest
+            // pin to keep, and the least play for a later change to disturb.
+            if (kind.pin !== null && moves.length >= kind.depth) continue;
+            kind.depth = moves.length;
+            kind.pin = descOf
+              ? `${encoded}:${descOf(state)}`
+              : moves.length > 0
+                ? { id, moves: [...moves] }
+                : id;
+          }
+          const next = stray
+            ? stray(state, k, step?.move ?? null)
+            : (step?.move ?? null);
+          if (next === null) break;
+          state = game.executeMove(state, next);
+          moves.push(next);
         }
-        state = game.executeMove(state, step.move);
-        moves.push(step.move);
       }
     }
   }
@@ -142,9 +193,9 @@ function pinsLiteral<M, K extends string>(
   ][]) {
     lines.push(`  /** Held on ${kind.held} of ${report.walked} positions walked. */`);
     lines.push(
-      kind.first === null
+      kind.pin === null
         ? `  // ${name}: not found`
-        : `  ${name}: ${JSON.stringify(kind.first)},`,
+        : `  ${name}: ${pinSource(kind.pin)},`,
     );
   }
   return lines.join("\n");
@@ -179,15 +230,18 @@ export function describeHintPins<P, S, M, U, D, H, K extends string>(
     return `HINT_SCAN=1 npx vitest run ${path.slice(path.indexOf("src/"))}`;
   };
 
+  // A pin is loaded once: its hint may be a search, and every test that reads
+  // it would otherwise pay for the plan again.
+  const loaded = new Map<K, PinnedPosition<S, M, H>>();
   const at = (kind: K): PinnedPosition<S, M, H> => {
+    const held = loaded.get(kind);
+    if (held) return held;
     const pin = spec.pins[kind];
-    const [id, moves] = typeof pin === "string" ? [pin, []] : [pin.id, pin.moves];
-    const colon = id.indexOf(":");
-    const params = game.decodeParams(id.slice(0, colon));
-    let state = game.newState(params, id.slice(colon + 1));
-    for (const m of moves) state = game.executeMove(state, m);
-    const plan = game.hint?.(state, undefined, game.newUi(state));
-    const step = plan?.ok ? (plan.steps[0] as HintStep<M, H>) : null;
+    const id = typeof pin === "string" ? pin : pin.id;
+    const played = typeof pin === "string" ? [] : pin.moves;
+    const moves: readonly M[] =
+      typeof played === "string" ? (JSON.parse(played) as M[]) : played;
+    const { state, plan, step } = loadPosition(spec, id, moves);
     if (!plan?.ok || !step || !isOfKind(spec.kinds[kind], step, state)) {
       const said = plan?.ok
         ? `"${plan.steps[0].explanation}"`
@@ -196,7 +250,15 @@ export function describeHintPins<P, S, M, U, D, H, K extends string>(
         `${game.id}: the position pinned for "${kind}" no longer fires it (the hint there: ${said}). Find one that does:\n  ${again()}`,
       );
     }
-    return { id, moves, state, step, steps: plan.steps as readonly HintStep<M, H>[] };
+    const position = {
+      id,
+      moves,
+      state,
+      step,
+      steps: plan.steps as readonly HintStep<M, H>[],
+    };
+    loaded.set(kind, position);
+    return position;
   };
 
   describe(`${game.id}: pinned hint positions`, () => {

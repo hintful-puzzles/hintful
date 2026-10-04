@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectPieceRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDominosaDesc } from "./generator.ts";
@@ -16,13 +17,46 @@ import {
   DIFF_TRIVIAL,
   DIFFCOUNT,
   type DominosaState,
-  encodeParams,
   newState,
 } from "./state.ts";
 
 function freshState(n: number, diff: number, seed: string): DominosaState {
   const { desc } = newDominosaDesc({ n, diff, tall: false }, randomNew(seed));
   return newState({ n, diff, tall: false }, desc);
+}
+
+const P = { n: 4, diff: DIFF_TRIVIAL, tall: false };
+
+/** The placements the narration and frame tests below are asserted on. */
+const pinned = describeHintPins({
+  game: dominosaGame,
+  params: [P],
+  kinds: {
+    placement: (step) => step.move.type === "domino",
+    placementOnEdge: (step, state) => {
+      const { w, h } = state;
+      const onEdge = (i: number): boolean =>
+        i % w === 0 || i % w === w - 1 || i < w || i >= w * (h - 1);
+      return (
+        (step.highlights as DominosaHint | undefined)?.kind === "place" &&
+        stepMarks(step).of("ring", SPOT).flat().some(onEdge)
+      );
+    },
+  },
+  pins: {
+    /** Held on 180 of 180 positions walked. */
+    placement: "4dt:401110342210234030414234130223",
+    /** Held on 124 of 180 positions walked. */
+    placementOnEdge: "4dt:132224034333014012440411302210",
+  },
+});
+
+/** The frame a pinned position's hint draws, through a real `Midend`. */
+function hintFrame(kind: Parameters<typeof pinned>[0]) {
+  const { id, moves, step } = pinned(kind);
+  const result = renderScenario({ game: dominosaGame, id, moves, showHint: true });
+  expect(result.hint?.explanation).toBe(step.explanation);
+  return { recording: result.recording, size: result.size, hint: step };
 }
 
 describe("dominosa hint — refusal", () => {
@@ -67,16 +101,11 @@ describe("dominosa hint — refusal", () => {
 
 describe("dominosa hint — narration + plan", () => {
   it("a placement step names the domino and uses the necessity voice", () => {
-    const state = freshState(4, DIFF_TRIVIAL, "hint-narr");
-    const res = dominosaGame.hint?.(state);
-    expect(res?.ok).toBe(true);
-    if (!res?.ok) return;
-    const place = res.steps.find((s) => s.move.type === "domino");
-    expect(place).toBeDefined();
+    const { step: place } = pinned("placement");
     // Necessity voice: forced move.
-    expect(place?.explanation).toMatch(/must go here/);
+    expect(place.explanation).toMatch(/must go here/);
     // Names a domino value (e.g. "3–4").
-    expect(place?.explanation).toMatch(/\d[–-]\d/);
+    expect(place.explanation).toMatch(/\d[–-]\d/);
   });
 
   it("the plan solves a Tricky board from empty, one recomputed step at a time", () => {
@@ -99,23 +128,17 @@ describe("dominosa hint — narration + plan", () => {
 
 describe("dominosa hint — render", () => {
   it("rings the forced domino as one shape in COL_HINT", () => {
-    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
-    const { desc } = newDominosaDesc(p, randomNew("hint-render"));
-    const { recording, hint } = renderScenario({
-      game: dominosaGame,
-      id: `${encodeParams(p, true)}:${desc}`,
-      showHint: true,
-    });
+    const { recording, hint } = hintFrame("placement");
     const hintRects = recording.ops.flatMap((o) =>
       o.op === "rect" && o.color === COL_HINT ? [o] : [],
     );
     // Six sides around the domino, not a box per square with a double bar
     // across its middle.
-    expect((hint?.highlights as DominosaHint | undefined)?.kind).toBe("place");
+    expect((hint.highlights as DominosaHint | undefined)?.kind).toBe("place");
     expectPieceRing(recording.ops, COL_HINT);
     // Every mark lies inside one of the step's two target squares.
     const ts = PREFERRED_TILE_SIZE;
-    const w = p.n + 2;
+    const w = P.n + 2;
     const targets = stepMarks(hint).of("ring", SPOT).flat();
     expect(targets).toHaveLength(2);
     for (const r of hintRects) {
@@ -130,40 +153,15 @@ describe("dominosa hint — render", () => {
 
   it("rings a domino on the board's edge whole, on the canvas", () => {
     // The outer squares' gutters bleed off the canvas, so a band laid in them
-    // draws sides nobody sees. A fixed-seed scan for a placement touching the
-    // edge; every side of its ring must land on the canvas.
-    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
-    const { w, h } = { w: p.n + 2, h: p.n + 1 };
-    const onEdge = (i: number): boolean =>
-      i % w === 0 || i % w === w - 1 || i < w || i >= w * (h - 1);
-    for (let seed = 0; seed < 20; seed++) {
-      const { desc } = newDominosaDesc(p, randomNew(`hint-edge-${seed}`));
-      const { recording, hint, size } = renderScenario({
-        game: dominosaGame,
-        id: `${encodeParams(p, true)}:${desc}`,
-        showHint: true,
-        hintUntil: (s) => {
-          const hl = s.highlights as DominosaHint | undefined;
-          return (
-            hl?.kind === "place" && stepMarks(s).of("ring", SPOT).flat().some(onEdge)
-          );
-        },
-      });
-      const hl = hint?.highlights as DominosaHint | undefined;
-      if (
-        !(hl?.kind === "place" && stepMarks(hint).of("ring", SPOT).flat().some(onEdge))
-      )
-        continue;
-      expectPieceRing(recording.ops, COL_HINT);
-      for (const r of recording.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_HINT ? [o] : [],
-      ))
-        expect(
-          r.x >= 0 && r.y >= 0 && r.x + r.w <= size.w && r.y + r.h <= size.h,
-          `ring side at ${r.x},${r.y} ${r.w}x${r.h} is off the ${size.w}x${size.h} canvas`,
-        ).toBe(true);
-      return;
-    }
-    throw new Error("no board shows a placement on the edge");
+    // draws sides nobody sees. Every side of the ring must land on the canvas.
+    const { recording, size } = hintFrame("placementOnEdge");
+    expectPieceRing(recording.ops, COL_HINT);
+    for (const r of recording.ops.flatMap((o) =>
+      o.op === "rect" && o.color === COL_HINT ? [o] : [],
+    ))
+      expect(
+        r.x >= 0 && r.y >= 0 && r.x + r.w <= size.w && r.y + r.h <= size.h,
+        `ring side at ${r.x},${r.y} ${r.w}x${r.h} is off the ${size.w}x${size.h} canvas`,
+      ).toBe(true);
   });
 });

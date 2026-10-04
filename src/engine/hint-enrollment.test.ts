@@ -202,10 +202,11 @@ const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
     "presets. A Custom-dialog combination is a board a player can sit in front " +
     "of, and the ledger's rot half would read a live listing as dead without it.",
   "src/engine/hint-ordinal.test.ts":
-    "`chainBoards` walks the slice AND every tier of the smallest preset, " +
-    "because a two-candidate chain needs a small grid at a hard tier and a menu " +
-    "never pairs those. Measured: Keen emits an ordered chain on none of its " +
-    "ten presets at eight seeds each, and readily on 4x4 at Hard.",
+    "`chainBoards`, the boards its scan for a pin deals, are the slice AND every " +
+    "tier of the smallest preset, because a two-candidate chain needs a small " +
+    "grid at a hard tier and a menu never pairs those. Measured: Keen emits an " +
+    "ordered chain on none of its ten presets at eight seeds each, and readily " +
+    "on 4x4 at Hard.",
   "src/engine/difficulty-contract.test.ts":
     "Its three cases generate no board at all — they ask whether `withTier` " +
     "writes a field `tierOf` and the codec read back, which is arithmetic on a " +
