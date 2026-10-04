@@ -3,7 +3,7 @@ import { TEN } from "../../engine/color/colors.ts";
 import { INK, PAPER } from "../../engine/color/palette.ts";
 import { drawRecessedBorder } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
 import type { SamegameState, SamegameUi } from "./state.ts";
 
 // --- tile-size metrics ------------------------------------------------
@@ -37,6 +37,9 @@ const COL_IMPOSSIBLE = 10;
 const COL_SEL = 11;
 const COL_HIGHLIGHT = 12;
 const COL_LOWLIGHT = 13;
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
+};
 const NCOLORS = 14;
 
 export function colors(defaultBackground: Color): Color[] {

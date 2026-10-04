@@ -17,7 +17,7 @@ import { blackboxCover, blackboxLock } from "../../engine/color/palette-games.ts
 import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Point, Rect, Size } from "../../engine/types.ts";
 import { BUTTON, LASER } from "./hint-text.ts";
 import {
   BALL_GUESS,
@@ -38,8 +38,7 @@ import {
   range2grid,
 } from "./state.ts";
 
-// --- color indices (upstream's order; augmentation.ts swaps 5 and 6,
-//     highlight and lowlight, in dark mode) ------------------------------
+// --- color indices (upstream's order) ------------------------------------
 
 export const COL_BACKGROUND = 0;
 export const COL_COVER = 1;
@@ -48,6 +47,9 @@ const COL_TEXT = 3;
 const COL_FLASHTEXT = 4;
 const COL_HIGHLIGHT = 5;
 const COL_LOWLIGHT = 6;
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
+};
 const COL_GRID = 7;
 const COL_BALL = 8;
 export const COL_WRONG = 9;

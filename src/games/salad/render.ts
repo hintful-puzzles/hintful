@@ -91,9 +91,7 @@ export const COL_G_HOLE = 13;
 export const COL_E_BORDERCLUE = 14; // live rule errors
 export const COL_E_NUM = 15;
 export const COL_E_HOLE = 16;
-/** Fork addition: the Check & Save overlay outline. Appended past the upstream
- * enum, which is safe because `augmentation.ts` gives Salad no dark-mode
- * `paletteOverrides` keyed by index. */
+/** Fork addition: the Check & Save overlay outline. */
 export const COL_MISTAKE = 17;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 18;

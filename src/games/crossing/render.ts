@@ -80,7 +80,13 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  PaletteScheme,
+  Point,
+  Size,
+} from "../../engine/types.ts";
 import { LISTED } from "./hint-text.ts";
 import type { CrossingMistake } from "./solver.ts";
 import {
@@ -110,8 +116,7 @@ export const COL_ERROR = 5;
 export const COL_WALL_L = 6;
 export const COL_WALL_M = 7;
 export const COL_WALL_H = 8;
-/** Fork additions, appended past the upstream enum. Crossing
- * declares no dark-mode `paletteOverrides`, so appending is safe. */
+/** Fork additions, appended past the upstream enum. */
 export const COL_PENCIL = 9;
 export const COL_PENCIL_BODY = 10;
 /** The preview of a held clue number, ghosted into the runs it still fits. */
@@ -166,7 +171,16 @@ export const COL_RUNTEXT = 19;
  * an error.
  */
 export const COL_SELECTED = 20;
-export const NCOLORS = 21;
+/** A placed digit's bevel. Its own pair, because `COL_HIGHLIGHT` and
+ * `COL_LOWLIGHT` are also tints (the flash, the cursor's corners, a struck
+ * clue), and a tint must not trade dark values the way a bevel does. */
+export const COL_TILE_HIGH = 21;
+export const COL_TILE_LOW = 22;
+export const NCOLORS = 23;
+
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_TILE_HIGH, COL_TILE_LOW]],
+};
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = new Array(NCOLORS);
@@ -175,6 +189,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_INNERBG] = background;
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
+  out[COL_TILE_HIGH] = highlight;
+  out[COL_TILE_LOW] = lowlight;
   out[COL_GRID] = INK;
   out[COL_ERROR] = ERROR;
 
@@ -562,8 +578,8 @@ function drawCell(
           : (x + y + 2) % 3 === flash
             ? COL_LOWLIGHT
             : COL_INNERBG;
-    const low = selected ? COL_HIGHLIGHT : COL_LOWLIGHT;
-    const high = selected ? COL_LOWLIGHT : COL_HIGHLIGHT;
+    const low = selected ? COL_TILE_HIGH : COL_TILE_LOW;
+    const high = selected ? COL_TILE_LOW : COL_TILE_HIGH;
     drawBevelTile(dr, ts, tx, ty, low, mid, high);
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
     dr.drawText(

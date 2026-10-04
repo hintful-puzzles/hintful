@@ -75,6 +75,7 @@ import {
   newDrawState,
   numberAtPoint,
   PREFERRED_TILE_SIZE,
+  paletteScheme,
   redraw,
   tileOrigin,
 } from "./render.ts";
@@ -771,6 +772,7 @@ export const crossingGame: Game<
   ],
 
   colors,
+  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

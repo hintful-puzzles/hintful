@@ -28,7 +28,7 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
 import type { PearlHint } from "./hint.ts";
 import { EDGE, SQUARE } from "./hint-text.ts";
 import { interpretUiDrag } from "./moves.ts";
@@ -66,8 +66,7 @@ export const COL_DRAGON = 8;
 export const COL_DRAGOFF = 9;
 export const COL_MISTAKE = 10; // appended past the C enum (findMistakes overlay)
 /** The keyboard cursor's cell fill — upstream aliased it to `COL_LOWLIGHT`, a
- * tint of the board. Appended; Pearl's dark-mode `paletteOverrides` touch only
- * index 0. */
+ * tint of the board. */
 export const COL_CURSOR_BACKGROUND = 11;
 /** The player's edge crosses. Their own slot rather than upstream's pearl
  * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
@@ -76,6 +75,11 @@ export const COL_RULED_OUT = 12;
 export const COL_HINT = 13;
 /** The squares a hint step reasons from, outlined. */
 export const COL_HINT_CELL = 14;
+
+/** A lighter board in the dark scheme, under pearls that stay black. */
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkLightness: { [COL_BACKGROUND]: 1.15 },
+};
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);

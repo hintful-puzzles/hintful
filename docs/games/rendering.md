@@ -876,29 +876,37 @@ which keep upstream's *operation*.
 dark mode — which is exactly why it gets missed. `INK` is maximum contrast
 against the surface, so it inverts; a piece's black is the piece's identity,
 so it is preserved (an inverted peg tells the player it is the other color).
-A game that wants its black *lifted* rather than preserved (Light Up's wall,
-invisible if left pure black) says so in
-[`augmentation.ts`](../../src/puzzle/augmentation.ts), which wins over the
-token.
 
 ### Assign the color, never a copy
 
 **Every named color authors both schemes; a derivation authors neither.**
 The dark value rides on the array as an own property, so `[...BLACK]` is the
 right color with its scheme decision silently removed — and no test can
-catch that in general. Consequence for `augmentation.ts`: a
-`paletteOverrides` entry aimed at an index that now carries an *authored*
-dark value is no longer correcting a calculation, it is fighting a decision;
-four such entries were retired when the palette was authored — check yours is
-not the fifth.
+catch that in general. A `darkLightness` factor (below) on a color that
+carries an *authored* dark value is not correcting a calculation, it is
+fighting a decision; author the value you want instead.
 
-### Keep the C's color-enum indices
+### Declare the scheme beside the palette
 
-**Mirror the C color-enum indices when the game has dark-mode overrides.**
-`augmentation.ts` may carry `paletteOverrides` keyed by **color index**
-(Unruly preserves its tiles + bevels under dark mode); a port that reindexes
-silently mis-targets them. Keep `colors()` index-for-index with the upstream
-enum. Exemplar: [`unruly/render.ts`](../../src/games/unruly/render.ts).
+**What your palette needs from the color schemes beyond its tokens is
+`Game.paletteScheme`, written with your own `COL_*` constants.** Most games
+declare nothing. The three things it can say:
+
+- `darkSwaps` — the pairs dark mode exchanges. Inverting lightness turns an
+  emboss into an inset, so a bevel drawn from `mkhighlight` lists its
+  `[COL_HIGHLIGHT, COL_LOWLIGHT]` to stay lit from one side. A highlight you
+  use as a cursor or a selection is not a bevel and stays out. A bevel built
+  with `mkhighlightSpecific` from a base that authors its dark value needs no
+  swap, because the trio is derived again from the dark base (Unruly).
+- `board` — the color the board is painted in, when it is not color 0
+  (Untangle, whose color 0 is the dead space around the play area). The page
+  around the canvas takes it.
+- `darkLightness` — a factor on one color's dark lightness (Pearl's board).
+
+Nothing outside your game addresses its palette by number, so the order of
+your `COL_*` constants is yours: insert, drop or reorder freely. Exemplars:
+[`slide/render.ts`](../../src/games/slide/render.ts) for swaps,
+[`pearl/render.ts`](../../src/games/pearl/render.ts) for a factor.
 
 ### Every board is one tone
 
@@ -973,7 +981,7 @@ and prioritize it below flash/hint fills. Exemplars:
 never sees a dark background: `view.ts` passes pure white precisely because
 puzzles multiply the background down, then adapts the whole returned palette
 in OKLCH — a token's authored dark value first, calculation otherwise, with
-per-puzzle overrides from `augmentation.ts` on top. A luminance test in a
+the game's `paletteScheme` on top. A luminance test in a
 game is dead code, and a second adaptation fights the layer that owns the
 concern. Derive exactly as upstream does, and when the derived dark value is
 wrong (Loopy's undecided edge inverted to near-invisible), **author the dark
@@ -995,8 +1003,8 @@ every must-stay-distinguishable set in both schemes;
 `palette.test.ts` checks no meaning has quietly become a color of its own
 (meanings are references, checked by identity).
 
-Two guards hold the dark scheme, and both read your game without being told
-about it.
+Two guards hold the dark scheme, and both read your game's frames without
+being told about it.
 [`neighbor-contrast.test.ts`](../../src/puzzle/neighbor-contrast.test.ts)
 paints your frames into palette indices, takes every pair that ends up side by
 side, and fails when two areas stand closer than its floor in the dark scheme
@@ -1006,10 +1014,19 @@ pair that is close on purpose goes in its ledger with what it is, and a pair
 that is not gets an authored dark value on the shared role. It reads the deal
 and one frame some hint steps in, so a color only input brings out is not
 covered by it.
-[`palette-swap-names.test.ts`](../../src/palette-swap-names.test.ts) reads
-each `paletteSwaps` pair back through your `COL_*` constants and fails unless
-the two are a `…HIGHLIGHT` and its `…LOWLIGHT`, which is what catches a pair
-left pointing at old indices after a color was added or dropped above it.
+[`bevel-order.test.ts`](../../src/puzzle/bevel-order.test.ts) finds the bevels
+on the same frames by shape (two polygons in a row splitting one box along its
+diagonal, which is what `drawRaisedBevel` and `drawRecessedBorder` emit) and
+fails when a bevel's lighter color is not the lighter one in both schemes. So
+a bevel whose `darkSwaps` pair you forgot fails without being listed anywhere.
+A bevel drawn another way (Slide's piece parts, Twiddle's trapezoids, Black
+Box's) is not seen by it; draw through the helpers where the shape allows.
+
+**If a bevel's two colors are also tints, give the bevel its own pair of
+slots.** A swap changes the dark value of every use of the slot, and a tint
+wants the opposite of what a bevel wants. Crossing's placed digit is the case:
+`COL_TILE_HIGH` and `COL_TILE_LOW` hold the same colors as `COL_HIGHLIGHT` and
+`COL_LOWLIGHT` and are the only ones swapped.
 
 **A color your words name is a piece's color, and a piece's color is pinned.**
 If the help page, a hint or a parameter label calls something black, white,

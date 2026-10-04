@@ -72,8 +72,7 @@ export const COL_ERROR = 4;
 export const COL_PENCIL = 5;
 export const COL_DONE = 6;
 // Fork addition: the yellow body of the pencil-mode indicator glyph (a classic
-// #2 school pencil). Appended past the upstream enum; Towers has no dark-mode
-// paletteOverrides, so the extra indices are safe.
+// #2 school pencil). Appended past the upstream enum.
 export const COL_PENCIL_BODY = 7;
 // Fork additions: the explained-hint legend (see docs/games/hints.md § "The element-type color legend").
 export const COL_HINT = 8; // the acted-on cell's ring (drawn once per frame in redraw)

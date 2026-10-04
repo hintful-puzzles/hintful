@@ -1540,30 +1540,6 @@ nothing objecting.
 - **THEN** the suite fails, naming the game and the color
 - **AND** it passes once the color is either mapped to a role or declared game-local
 
-### Requirement: A game's palette index order is stable
-
-A game's palette SHALL keep its color indices stable: the app's per-puzzle dark-mode
-adjustments (`paletteOverrides` and `paletteSwaps`) are keyed by **color index**, so
-reordering a palette silently re-targets them — the game then renders correctly in one
-color scheme and incorrectly in the other, with nothing failing.
-
-A game that needs an additional color SHALL **append** it past the indices its
-upstream color enum defines, rather than inserting or reordering. Changing a color's
-*value* is permitted; changing its *position* is not.
-
-#### Scenario: Adopting a shared role does not move a color
-
-- **WHEN** a game replaces a literal color with a shared role
-- **THEN** that color keeps the palette index it had
-- **AND** any per-puzzle dark-mode adjustment for that index continues to apply to the
-  same color
-
-#### Scenario: A new color is appended
-
-- **WHEN** a game needs a color its upstream enum does not define
-- **THEN** it is appended past the upstream indices, leaving every existing index
-  untouched
-
 ### Requirement: A game contains no color value
 
 A game SHALL NOT contain a color value. Every color a game shows SHALL be a named
@@ -1880,31 +1856,27 @@ light value stays green through a dark-scheme collapse.
 
 ### Requirement: A dark-scheme palette swap keeps its bevel lit from one side
 
-For every bevel trio a game exchanges via `paletteSwaps`, the highlight SHALL be
-lighter than the surface it sits on and the lowlight darker, **in both schemes**.
+For every bevel trio a game exchanges via `darkSwaps`, the highlight SHALL be lighter than the surface it sits on and the lowlight darker, **in both schemes**.
 
-`paletteSwaps` exists because inverting every color's lightness turns an emboss
-into an inset. It is hand-maintained and keyed by raw color index, so a wrong
-pair leaves every color present, every test green, and one game lit from the
-wrong side in one scheme only.
+A swap exists because inverting every color's lightness turns an emboss into an inset. For every declared pair, whatever its two colors are, the lighter of the two in the light scheme SHALL be the lighter of the two in the dark scheme.
 
-The requirement above is a relationship to that *surface* and not to the board, so
-a measurement of a swapped index against the background does not state it and MUST
-NOT be read as though it did: the two indices of a pair denote different roles in
-the two schemes, so such a measurement compares a highlight with a lowlight.
+The requirement above is a relationship to that *surface* and not to the board, so a measurement of a swapped index against the background does not state it and MUST NOT be read as though it did: the two indices of a pair denote different roles in the two schemes, so such a measurement compares a highlight with a lowlight.
 
 #### Scenario: A bevel survives the scheme flip
 
-- **WHEN** a game's bevel trio is resolved for the light scheme and for the dark
-  scheme
-- **THEN** in each scheme its highlight is lighter than its base and its lowlight
-  is darker
+- **WHEN** a game's bevel trio is resolved for the light scheme and for the dark scheme
+- **THEN** in each scheme its highlight is lighter than its base and its lowlight is darker
 
 #### Scenario: A swap names two distinct colors
 
-- **WHEN** a game declares a `paletteSwaps` pair
-- **THEN** both indices exist in that game's palette, they differ in lightness,
-  and no index is named by more than one pair
+- **WHEN** a game declares a `darkSwaps` pair
+- **THEN** both indices exist in that game's palette, they differ in lightness, and no index is named by more than one pair
+
+#### Scenario: A pair keeps its order across the schemes
+
+- **WHEN** a declared pair is resolved for the light scheme and for the dark scheme
+- **THEN** the color that is lighter in one is lighter in the other
+- **AND** the check fails for every declared pair when the exchange is not applied
 
 ### Requirement: Param validation distinguishes generating a board from loading one
 
@@ -3165,62 +3137,6 @@ thinning.
 - **THEN** the set is empty
 - **AND** the scan reports how many sources it read, so it cannot pass by
   matching nothing
-
-### Requirement: A comment naming a palette-override index is checked against the declaration
-
-A game's render module SHALL NOT state, in prose, which dark-mode
-`paletteOverrides` indices the app applies to that game unless
-`src/puzzle/augmentation.ts` actually declares them, and a test SHALL hold the
-two together.
-
-Such a comment is a claim about another file, and it is usually stated as the
-*reason* appending a palette index past the upstream `COL_*` enum is safe. When
-the declaration is deleted the comment keeps reading as verified, because its
-conclusion stays true for a different reason — no overrides at all makes any
-append safe — so nothing fails and nobody looks. Six such comments across four
-games survived the deletion of every override but one.
-
-The guard SHALL find its population by **shape** — *every* `paletteOverrides`
-mention in any game's render module, whatever the game and however the sentence
-is phrased — never from a roster of games, and SHALL assert the number of files
-scanned and mentions matched so that a scan matching nothing cannot report
-health.
-
-It SHALL **classify** what that shape catches rather than filter it, into the
-two forms a claim can take — "this game declares none", and "this game's
-overrides are indices *n*, *m*" — and a mention fitting neither SHALL fail. An
-unclassifiable claim is precisely the one nothing can check: the sixth stale
-comment named no index at all, saying only that the overrides "apply
-unchanged", and a guard that skipped what it could not parse would have skipped
-it.
-
-The declaration side SHALL be read from the module, not from a parse of its
-text, so there is no second reading of it to drift.
-
-#### Scenario: A game's comment names an override index that is not declared
-
-- **WHEN** a render module's comment names a `paletteOverrides` index for its
-  game
-- **AND** `src/puzzle/augmentation.ts` declares no such override for that game
-- **THEN** the guard fails, naming the file, the claimed index and the actual
-  declaration
-
-#### Scenario: The declaration moves
-
-- **WHEN** an override's index changes in `src/puzzle/augmentation.ts`
-- **THEN** the guard fails for every comment still naming the old index
-
-#### Scenario: A comment states a claim the guard cannot check
-
-- **WHEN** a render module mentions `paletteOverrides` without either declaring
-  the game has none or naming the indices
-- **THEN** the guard fails, asking for one of the two checkable phrasings
-
-#### Scenario: The scan matches nothing
-
-- **WHEN** the scan finds no render modules, or no `paletteOverrides` mentions
-- **THEN** the guard fails on its own input count rather than passing over an
-  empty population
 
 ### Requirement: The midend reports where a displayed hint sits in its journey
 
@@ -8105,19 +8021,6 @@ whose pair is no longer close SHALL fail.
   the game stops painting the pair
 - **THEN** the guard fails until the entry is removed
 
-### Requirement: A dark-mode swap names a bevel's highlight and its lowlight
-
-Each `paletteSwaps` pair SHALL address two palette indices whose `COL_*`
-constants in the game are a highlight and the lowlight of the same name, unless
-the pair is recorded as exchanging something else, with what it exchanges.
-
-#### Scenario: A pair left behind by a moved index fails
-
-- **WHEN** a color is added or dropped above a game's bevel so that its indices
-  move
-- **AND** the game's `paletteSwaps` pair still names the old indices
-- **THEN** a test fails and names the two constants the pair now addresses
-
 ### Requirement: A lightness a help page names is pinned in the game's palette
 
 A game whose help page calls something black, shaded, white or lit SHALL hold in
@@ -8139,3 +8042,48 @@ a record for a page that no longer uses the word SHALL fail.
   red
 - **THEN** the game is recorded as using the word for something other than a
   piece's color, with what it is
+
+### Requirement: A game declares its palette's scheme handling with its own color constants
+
+What a game's palette needs from the color schemes beyond its tokens SHALL be declared on the game, as `Game.paletteScheme`, in terms of the game's own color constants: the color the board is painted in when it is not color 0, the pairs whose dark values are exchanged, and a factor on a color's dark lightness.
+
+The app SHALL read that declaration from the game, through the static attributes the midend reports, and SHALL hold no table of its own that addresses a game's palette by index. A game that declares nothing SHALL get color 0 as its board, no exchanged pairs and no factors.
+
+#### Scenario: A moved color takes its swap with it
+
+- **WHEN** a color is added or dropped above a game's bevel so that the bevel's indices move
+- **THEN** the dark scheme still exchanges the bevel's highlight and lowlight, with no edit outside the game's palette
+
+#### Scenario: A game that declares nothing
+
+- **WHEN** a game has no `paletteScheme`
+- **THEN** the app paints the page around its canvas in color 0, and adapts its palette to the dark scheme with no exchange and no factor
+
+#### Scenario: A board that is not color 0
+
+- **WHEN** a game declares a board color other than color 0
+- **THEN** the page around its canvas takes that color, and the guards that measure against the board measure against it
+
+### Requirement: A bevel a game draws is lit from one side in both schemes
+
+For every bevel on a game's frames, the lighter of its two colors in the light scheme SHALL be the lighter of the two in the dark scheme, as the app paints them.
+
+The bevels SHALL be read off the game's own draw record by shape, two polygons drawn one after the other that split one box along its diagonal, so that a game is covered by drawing a bevel and not by declaring one. Two shapes drawn one over the other SHALL NOT be read as a bevel.
+
+A bevel whose two colors are also used as tints SHALL take palette slots of its own, since exchanging a slot's dark value changes every use of it.
+
+#### Scenario: A bevel with no declared swap fails
+
+- **WHEN** a game draws a raised bevel in two colors derived from the board
+- **AND** it declares no exchange for them
+- **THEN** the cross-game guard fails and names the game and the pair
+
+#### Scenario: A new game is covered without being listed
+
+- **WHEN** a game that draws a bevel is added to the catalog
+- **THEN** its bevel is checked by the same guard with no edit to the guard
+
+#### Scenario: The guard reads something
+
+- **WHEN** the guard runs
+- **THEN** it finds a bevel in a game that draws through each shared helper and in a game that draws its own, and fails if it finds none

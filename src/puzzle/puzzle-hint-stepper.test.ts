@@ -19,6 +19,7 @@ const ATTRS: PuzzleStaticAttributes = {
   canMarkAll: false,
   ignoresSecondaryButton: false,
   wantsStatusbar: true,
+  paletteScheme: { board: 0, darkSwaps: [], darkLightness: {} },
 };
 
 /** Build a Puzzle around a stub worker that records hint/executeHint calls.

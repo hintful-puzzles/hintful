@@ -18,7 +18,7 @@ import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { MOVE, stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import {
   GRID_HOLE,
@@ -53,6 +53,11 @@ const COL_CURSOR = 4;
 const COL_HELD = 5;
 const COL_HINT = 6;
 const COL_HINT_EVIDENCE = 7;
+
+/** The board's relief. */
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
+};
 
 // --- flash timing ----------------------------------------------------
 

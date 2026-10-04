@@ -1236,9 +1236,7 @@ cache key however convenient that corner looks: every game repaints it after its
 tile loop, through `repaintPencilIndicator`. Towers packed it into tile `w + 1`
 while the position was Towers' own to choose, and gave that up with the choice.
 
-The glyph's body color is a palette index appended past the game's C-era
-enum — safe only when the game has no dark-mode `paletteOverrides` touching
-that index (check `augmentation.ts`).
+The glyph's body color is a palette index of the game's own.
 
 ### `pencil-prefs.ts` — shared pencil `GamePref` declarations
 

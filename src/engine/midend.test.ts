@@ -574,6 +574,17 @@ describe("Midend palette + teardown (adapter-facing)", () => {
     expect(Object.hasOwn(dark, "2")).toBe(false);
   });
 
+  it("reports the game's palette scheme, filling in what it left out", () => {
+    const plain = new Midend(withPalette).getStaticProperties().paletteScheme;
+    expect(plain).toEqual({ board: 0, darkSwaps: [], darkLightness: {} });
+    const declaring: typeof withPalette = {
+      ...withPalette,
+      paletteScheme: { darkSwaps: [[1, 2]] },
+    };
+    const declared = new Midend(declaring).getStaticProperties().paletteScheme;
+    expect(declared).toEqual({ board: 0, darkSwaps: [[1, 2]], darkLightness: {} });
+  });
+
   it("delete drops the callbacks so a torn-down midend emits nothing", () => {
     const h = harness();
     h.m.newGame();

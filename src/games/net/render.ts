@@ -76,8 +76,7 @@ export const COL_ENDPOINT = 4;
 export const COL_POWERED = 5;
 export const COL_BARRIER = 6;
 export const COL_ERR = 7;
-/** Appended past the C enum (Net has no dark-mode `paletteOverrides`, so nothing
- * addresses a slot by number): the keyboard cursor's ring. Upstream drew it in
+/** Appended past the C enum: the keyboard cursor's ring. Upstream drew it in
  * the locked tint, or the board on a locked tile — a tint of the board either
  * way, which is the one thing a cursor must not be. */
 export const COL_CURSOR = 8;

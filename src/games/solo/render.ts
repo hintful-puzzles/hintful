@@ -85,8 +85,7 @@ export const COL_HIGHLIGHT = 5;
 export const COL_ERROR = 6;
 export const COL_PENCIL = 7;
 export const COL_KILLER = 8;
-// Fork additions, appended past the upstream enum (NCOLORS = 9). Nothing in
-// augmentation.ts addresses Solo's colors by index, so a plain append is safe.
+// Fork additions, appended past the upstream enum (NCOLORS = 9).
 export const COL_PENCIL_BODY = 9; // the yellow body of the pencil-mode indicator
 export const COL_HINT = 10; // the acted-on cell's ring (drawn in redraw's last block)
 /** The driving region's outline (same block), **and** a forcing chain's ordinal —

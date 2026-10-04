@@ -97,8 +97,7 @@ export const COL_NUM_PENCIL = 7;
  * renderer never reads it (a distance error is drawn in `COL_NUM_ERROR`, which
  * is the same red). */
 export const COL_ERRORDIST = 8;
-/** Fork addition, appended past the upstream enum (Seismic declares no dark-mode
- * `paletteOverrides`, so appending is safe): the pencil indicator's body. */
+/** Fork addition, appended past the upstream enum: the pencil indicator's body. */
 export const COL_PENCIL_BODY = 9;
 /** Fork additions: the explained hint's two marks (docs/games/hints.md § "Shade vs
  * ring"), the ring on the cell a step acts on and the outline of what it reasons

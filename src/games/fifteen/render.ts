@@ -17,7 +17,7 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
 import { TILE } from "./hint-text.ts";
 import type { FifteenMove, FifteenParams, FifteenState, FifteenUi } from "./state.ts";
 
@@ -33,6 +33,9 @@ const COL_BACKGROUND = 0;
 const COL_TEXT = 1;
 const COL_HIGHLIGHT = 2;
 const COL_LOWLIGHT = 3;
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
+};
 const COL_HINT = 4;
 
 // --- coordinate helpers -----------------------------------------------

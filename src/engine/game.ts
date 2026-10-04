@@ -27,6 +27,7 @@ import type {
   DrawTextOptions,
   GameStatus,
   KeyLabel,
+  PaletteScheme,
   Point,
   Rect,
   ReferenceModel,
@@ -668,6 +669,11 @@ export interface Game<
    * derive its palette from the host (upstream's
    * `frontend_default_colour`). */
   colors(defaultBackground: Color): Color[];
+  /** Where this palette departs from the collection's handling of the color
+   * schemes: a board that is not color 0, the bevels dark mode exchanges, a
+   * color whose dark lightness is scaled. Written with the game's own color
+   * constants. */
+  readonly paletteScheme?: Partial<PaletteScheme>;
   /** Upstream's `preferred_tilesize`; the size baseline. Default 32. */
   readonly preferredTileSize?: number;
   computeSize(p: Params, tileSize: number): Size;

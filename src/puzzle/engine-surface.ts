@@ -95,9 +95,8 @@ export interface PuzzleEngineSurface {
   redraw(): void;
   getColorPalette(defaultBackground: Color): Color[];
   /**
-   * Per-index dark-mode decisions carried by the palette itself, in the same
-   * vocabulary as `augmentation.ts`'s `paletteOverrides` (`false` = "do not
-   * adapt this index"). Empty when the palette states nothing of its own.
+   * The authored dark-mode value of each palette index whose token states one.
+   * Empty when the palette states nothing of its own.
    */
   darkPalette(defaultBackground: Color): Record<number, Color>;
   size(maxSize: Size): Size;

@@ -29,9 +29,7 @@
  * unchanged (the frame after the move that drew it).
  *
  * Palette indices are **index-for-index with the upstream `COL_*` enum**, so a
- * reader can check this table against upstream's slot by slot. Boats has no
- * dark-mode `paletteOverrides`, so nothing addresses a slot by number
- * (docs/games/rendering.md § "The palette: three layers, meaning first").
+ * reader can check this table against upstream's slot by slot.
  */
 
 import { BLUE_WASH, GRAY_BOLD, GREEN } from "../../engine/color/colors.ts";
@@ -106,11 +104,8 @@ export const COL_COUNT = 11;
 export const COL_COUNT_ERROR = 12;
 export const COL_COLLISION_ERROR = 13;
 export const COL_COLLISION_TEXT = 14;
-/**
- * The hint colors are appended **past** the upstream enum, keeping the indices
- * above index-for-index with it. Boats has no dark-mode `paletteOverrides`, so
- * an appended index cannot collide with one.
- */
+/** The hint colors are appended **past** the upstream enum, keeping the indices
+ * above index-for-index with it. */
 export const COL_HINT = 15;
 export const COL_HINT_CELL = 16;
 

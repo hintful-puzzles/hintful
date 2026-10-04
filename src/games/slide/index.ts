@@ -57,6 +57,7 @@ import {
   FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
+  paletteScheme,
   redraw,
   type SlideDrawState,
 } from "./render.ts";
@@ -347,6 +348,7 @@ export const slideGame: Game<
   statusbarText,
 
   colors,
+  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

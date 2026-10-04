@@ -51,7 +51,7 @@ import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newUntangleDesc } from "./generator.ts";
 import { deduceUntangleHintPlan, untangleKeepTrack } from "./hint.ts";
-import { FLASH_TIME, redrawUntangle } from "./render.ts";
+import { COL_BACKGROUND, FLASH_TIME, redrawUntangle } from "./render.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
   buildEdges,
@@ -441,6 +441,8 @@ export const untangleGame: Game<
   ],
 
   // --- rendering -----------------------------------------------------
+  // Color 0 is the dead space around the play area.
+  paletteScheme: { board: COL_BACKGROUND },
   colors: (defaultBackground: Color): Color[] => {
     const { background, lowlight } = mkhighlight(defaultBackground);
     // Index-for-index with the upstream COL_* enum (untangle.c:57) up to the

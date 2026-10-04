@@ -8,8 +8,7 @@
  * completion flash is a 3-phase background blink.
  *
  * The palette stays index-for-index with the upstream color enum, and the
- * fork's hint colors are appended past it. Light Up has no dark-mode
- * `paletteOverrides`, so nothing addresses a slot by number.
+ * fork's hint colors are appended past it.
  */
 
 import { BLACK, WHITE, YELLOW_WASH } from "../../engine/color/colors.ts";

@@ -26,6 +26,10 @@ import {
   animLength,
   border,
   buildColors,
+  COL_HIGHLIGHT,
+  COL_HIGHLIGHT_GENTLE,
+  COL_LOWLIGHT,
+  COL_LOWLIGHT_GENTLE,
   computeSize,
   FLASH_FRAME,
   newDrawState,
@@ -288,6 +292,13 @@ export const twiddleGame: Game<
   statusbarText,
 
   colors,
+  // The two cursor slots hold one flat color, so they are not a bevel.
+  paletteScheme: {
+    darkSwaps: [
+      [COL_HIGHLIGHT, COL_LOWLIGHT],
+      [COL_HIGHLIGHT_GENTLE, COL_LOWLIGHT_GENTLE],
+    ],
+  },
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

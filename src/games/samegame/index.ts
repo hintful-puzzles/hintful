@@ -19,6 +19,7 @@ import {
   FLASH_FRAME,
   newDrawState,
   PREFERRED_TILE_SIZE,
+  paletteScheme,
   redraw,
   type SamegameDrawState,
 } from "./render.ts";
@@ -238,6 +239,7 @@ export const samegameGame: Game<
   statusbarText,
 
   colors,
+  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

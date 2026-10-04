@@ -20,10 +20,9 @@ import {
   paintedNeighbors,
 } from "../engine/testing/painted-neighbors.ts";
 import { type DrawOp, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
-import type { Color, PuzzleId, Size } from "../engine/types.ts";
+import type { Color, Size } from "../engine/types.ts";
 import { colorToOKLCH, isGrayChroma } from "../utils/color.ts";
-import { puzzleAugmentations } from "./augmentation.ts";
-import { schemePalettes } from "./scheme-palettes.ts";
+import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
 
 /** The seed the frames are dealt from. Any fixed one; it names which roles
  * happen to be on the board, so changing it moves the measured population. */
@@ -89,9 +88,7 @@ export function sampleFrames(id: string): { frames: DrawOp[][]; size: Size } {
  * distance in each scheme. */
 export function schemeNeighbors(id: string): SchemeNeighbor[] {
   const { light, dark } = schemePalettes(id);
-  const augmentations = puzzleAugmentations[id as PuzzleId];
-  const background = augmentations?.paletteBgIndex ?? 0;
-  const swaps = augmentations?.darkMode?.paletteSwaps ?? [];
+  const { board: background, darkSwaps: swaps } = schemeOf(id);
   const lightRole = (index: number): number => {
     for (const [x, y] of swaps) {
       if (index === x) return y;

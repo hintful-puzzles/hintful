@@ -31,7 +31,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
 import { BARREL, GOAL, PUSH } from "./hint-text.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
@@ -57,8 +57,7 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_LENGTH = 0.3;
 
-// --- palette (upstream's enum order: augmentation.ts keys its dark-mode swap
-// of the bevel colors, 9 and 10, by index) -------------------------------
+// --- palette ------------------------------------------------------------
 
 const COL_BACKGROUND = 0;
 const COL_TARGET = 1;
@@ -71,6 +70,9 @@ const COL_GRID = 7;
 const COL_OUTLINE = 8;
 const COL_HIGHLIGHT = 9;
 const COL_LOWLIGHT = 10;
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
+};
 const COL_WALL = 11;
 /** Appended past the upstream enum, which flashed the floor to its own bevel
  * highlight; the index-keyed swap above never reaches it. */

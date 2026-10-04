@@ -24,8 +24,8 @@ called `puzzle`.
 - **`contexts.ts`** — the `@lit/context` token for the `Puzzle` object. It lives
   at the root rather than under `components/` because dialogs and panels outside
   this directory consume it too.
-- **`augmentation.ts`, `canvas-sizing.ts`, `icon-capture.ts`,
-  `quick-save-actions.ts`, `engine-surface.ts`** — supporting runtime pieces.
+- **`canvas-sizing.ts`, `icon-capture.ts`, `quick-save-actions.ts`,
+  `engine-surface.ts`** — supporting runtime pieces.
 
 ## `src/puzzle/components/` — the puzzle-specific Lit components
 

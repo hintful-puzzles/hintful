@@ -18,7 +18,7 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
 import { SQUARE, TILE } from "./hint-text.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";
 
@@ -34,6 +34,9 @@ const COL_BACKGROUND = 0;
 const COL_TEXT = 1;
 const COL_HIGHLIGHT = 2;
 const COL_LOWLIGHT = 3;
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
+};
 const COL_HINT = 4;
 
 // --- hint highlights --------------------------------------------------

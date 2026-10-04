@@ -26,12 +26,8 @@
  *
  * Every material is a base/highlight/lowlight trio at three *consecutive*
  * indices, because `drawTile` derives the bevel from a base as `cc+1`/`cc+2`
- * (the C: "Do not break this, or draw_tile() will get confused"). Upstream's
- * enum order is kept and new entries are appended, because
- * `src/puzzle/augmentation.ts` keys Slide's dark-mode `paletteSwaps` by **color
- * index** — so a new material adds a swap pair there as well as a color here,
- * and reindexing would silently mis-target them
- * (docs/games/rendering.md § "The palette: three layers, meaning first").
+ * (the C: "Do not break this, or draw_tile() will get confused"). A new
+ * material adds its bevel to {@link paletteScheme} as well as its trio here.
  *
  * `draw_piecepart` is the one place this port stays a close transcription
  * rather than a rewrite. Its own author wrote "there's a lot of very fiddly
@@ -58,7 +54,7 @@ import { drawRectCorners } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { coord as gridCoord } from "../../engine/geometry.ts";
-import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Point, Rect, Size } from "../../engine/types.ts";
 import { movePiece } from "./moves.ts";
 import {
   cursorPos,
@@ -87,17 +83,26 @@ export const COL_MAIN_GRABBED_LOWLIGHT = 11;
 export const COL_TARGET = 12;
 export const COL_TARGET_HIGHLIGHT = 13;
 export const COL_TARGET_LOWLIGHT = 14;
-// Appended past upstream's enum, because a game's palette index order is stable
-// (`ts-engine` spec); each trio adds a `paletteSwaps` pair.
 export const COL_WALL = 15;
 export const COL_WALL_HIGHLIGHT = 16;
 export const COL_WALL_LOWLIGHT = 17;
 export const COL_BLOCK = 18;
 export const COL_BLOCK_HIGHLIGHT = 19;
 export const COL_BLOCK_LOWLIGHT = 20;
-/** The keyboard cursor. Flat, so it needs no bevel trio and no `paletteSwaps`
- * pair — the token carries its own dark value. */
+/** The keyboard cursor. Flat, so it needs no bevel trio and no swap: the token
+ * carries its own dark value. */
 export const COL_CURSOR = 21;
+/** Every material's bevel but the exit's. */
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [
+    [COL_HIGHLIGHT, COL_LOWLIGHT],
+    [COL_GRABBED_HIGHLIGHT, COL_GRABBED_LOWLIGHT],
+    [COL_MAIN_HIGHLIGHT, COL_MAIN_LOWLIGHT],
+    [COL_MAIN_GRABBED_HIGHLIGHT, COL_MAIN_GRABBED_LOWLIGHT],
+    [COL_WALL_HIGHLIGHT, COL_WALL_LOWLIGHT],
+    [COL_BLOCK_HIGHLIGHT, COL_BLOCK_LOWLIGHT],
+  ],
+};
 export const NCOLORS = 22;
 
 /** Upstream `raise_colour`: two parts `src` to one part `limit`. */

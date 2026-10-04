@@ -72,8 +72,7 @@ export const COL_ERROR = 5;
 export const COL_HINT = 6; // every edge the deduction forces this step (blue)
 export const COL_HINT_CELL = 7; // referenced-cell outline, inset inside the cell
 export const COL_CORRECT = 8; // a completed, correct region (shared gray shade)
-/** The keyboard cursor's box, which upstream drew in the grid's own ink. Appended
- * past the C enum; Palisade has no dark-mode `paletteOverrides`. */
+/** The keyboard cursor's box, which upstream drew in the grid's own ink. */
 export const COL_CURSOR = 9;
 
 export function colors(defaultBackground: Color): Color[] {

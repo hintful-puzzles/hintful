@@ -6,10 +6,9 @@
  * highlight/lowlight.
  *
  * The palette mirrors the C color enum index-for-index, so a reader can
- * check it against upstream's slot by slot. Unruly has no dark-mode
- * `paletteOverrides`: the two tile bases author their own dark values and
- * `mkhighlightSpecific` hands those to each bevel trio, so nothing addresses a
- * slot by number.
+ * check it against upstream's slot by slot. The two tile bases author their
+ * own dark values and `mkhighlightSpecific` hands those to each bevel trio, so
+ * Unruly declares no `paletteScheme`.
  */
 
 import { mkhighlightSpecific } from "../../engine/color/color-mkhighlight.ts";

@@ -16,7 +16,7 @@
  *   drawn.
  *
  * A pair is two indices in **one** frame, so it is compared within a scheme.
- * That matters because dark mode exchanges some indices (`paletteSwaps`), and
+ * That matters because dark mode exchanges some indices (`darkSwaps`), and
  * one index's light and dark values need not be one role.
  *
  * A faithful-enough painter, not a renderer: no antialiasing, a glyph is a
@@ -182,7 +182,7 @@ function glyphMiddle(op: Extract<DrawOp, { op: "text" }>): [number, number] {
 /**
  * Every pair of palette indices the frame paints next to each other.
  *
- * `background` is the index of the board (`paletteBgIndex`), which is what a
+ * `background` is the index of the board (`PaletteScheme.board`), which is what a
  * pixel nothing drew on shows.
  */
 export function paintedNeighbors(

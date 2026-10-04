@@ -3,7 +3,7 @@ import { BLACK, TEN, TEN_NAMES } from "../../engine/color/colors.ts";
 import { drawRecessedBorder as drawBevel, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
 import { completed, fill } from "./solver.ts";
 import {
   FILLX,
@@ -35,6 +35,9 @@ const COL_SEPARATOR = 1;
 const COL_1 = 2; // COL_1..COL_10 are 2..11
 const COL_HIGHLIGHT = 12;
 const COL_LOWLIGHT = 13;
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
+};
 
 /**
  * The ten tiles, as the hint says them: *"Fill with orange"*. Re-exported from

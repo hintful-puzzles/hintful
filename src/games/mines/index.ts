@@ -567,6 +567,15 @@ export const minesGame: Game<
     return 2 * FLASH_FRAME;
   },
 
+  paletteScheme: {
+    darkSwaps: [
+      // An opened square and a covered one are a tone apart, and the tone has
+      // to step the same way off the board in both schemes.
+      [COL_BACKGROUND, COL_BACKGROUND2],
+      [COL_HIGHLIGHT, COL_LOWLIGHT],
+    ],
+  },
+
   colors(defaultBackground: Color): Color[] {
     const bg = defaultBackground;
     const ret: Color[] = new Array(NCOLORS);

@@ -236,6 +236,26 @@ export enum PuzzleButton {
 }
 
 /**
+ * Where a game's palette departs from the collection's handling of the color
+ * schemes, by palette index. A game states it with its own `COL_*` constants
+ * (`Game.paletteScheme`).
+ */
+export interface PaletteScheme {
+  /** The color the board is painted in. The page around the canvas takes it. */
+  board: number;
+  /**
+   * Pairs whose dark-scheme values are exchanged.
+   *
+   * Inverting lightness turns an emboss into an inset, so a bevel's highlight
+   * and lowlight trade values to keep the light coming from one side. A
+   * highlight used as a cursor or a selection is not a bevel and stays out.
+   */
+  darkSwaps: readonly (readonly [number, number])[];
+  /** A factor on the dark-scheme lightness of a color. */
+  darkLightness: Readonly<Record<number, number>>;
+}
+
+/**
  * What the app learns about a game once, at construction, and never asks again.
  *
  * Every field is produced by `Midend.getStaticProperties` and relayed, under
@@ -264,6 +284,8 @@ export interface PuzzleStaticAttributes {
    * `Game.ignoresSecondaryButton`. */
   ignoresSecondaryButton: boolean;
   wantsStatusbar: boolean;
+  /** `Game.paletteScheme`, with what the game left out filled in. */
+  paletteScheme: PaletteScheme;
 }
 
 /** One entry in a game's reference aid: a piece from the puzzle's fixed

@@ -95,8 +95,7 @@ export const COL_GHOST = 6;
 export const COL_ZOMBIE = 7;
 export const COL_VAMPIRE = 8;
 export const COL_DONE = 9;
-// Fork additions, appended past the upstream enum; Undead has no dark-mode
-// paletteOverrides, so a plain append is safe.
+// Fork additions, appended past the upstream enum.
 export const COL_PENCIL_BODY = 10;
 // The explained-hint legend (docs/games/hints.md § "The element-type color legend").
 export const COL_HINT = 11; // the cell(s)/candidate(s) the deduction acts on

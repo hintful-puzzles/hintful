@@ -75,8 +75,7 @@ export const COL_USER = 2;
 export const COL_HIGHLIGHT = 3;
 export const COL_ERROR = 4;
 export const COL_PENCIL = 5;
-// Fork additions, appended past the upstream enum; Keen has no dark-mode
-// paletteOverrides, so a plain append is safe.
+// Fork additions, appended past the upstream enum.
 export const COL_PENCIL_BODY = 6; // the yellow body of the pencil-mode indicator
 export const COL_HINT = 7; // the acted-on cell's ring (drawn in redraw's last block)
 /** The driving cage's outline (same block), **and** a forcing chain's ordinal —

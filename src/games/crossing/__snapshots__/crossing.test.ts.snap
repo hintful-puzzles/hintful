@@ -2014,10 +2014,10 @@ exports[`crossing rendering > frames a full-but-unlisted run in red 1`] = `
     "y": 27,
   },
   {
-    "fill": 1,
+    "fill": 22,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 1,
+    "outline": 22,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -2035,10 +2035,10 @@ exports[`crossing rendering > frames a full-but-unlisted run in red 1`] = `
     ],
   },
   {
-    "fill": 3,
+    "fill": 21,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 3,
+    "outline": 21,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -2182,10 +2182,10 @@ exports[`crossing rendering > frames a full-but-unlisted run in red 1`] = `
     "y": 27,
   },
   {
-    "fill": 1,
+    "fill": 22,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 1,
+    "outline": 22,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -2203,10 +2203,10 @@ exports[`crossing rendering > frames a full-but-unlisted run in red 1`] = `
     ],
   },
   {
-    "fill": 3,
+    "fill": 21,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 3,
+    "outline": 21,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [

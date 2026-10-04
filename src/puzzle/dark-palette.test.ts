@@ -1,7 +1,6 @@
 /**
- * The dark-scheme pass, and in particular **`paletteSwaps`** — the one part of
- * the pipeline that is hand-maintained, keyed by raw color index, and silent
- * when it is wrong.
+ * The dark-scheme pass, and in particular the **swaps** a game declares
+ * (`Game.paletteScheme.darkSwaps`).
  *
  * A swap exists because inverting lightness turns an emboss into an inset: a
  * game built on `game_mkhighlight` draws each surface with a lighter band on the
@@ -11,10 +10,10 @@
  *
  * That is a claim about *roles*, and it is the claim these tests make: whatever
  * the pipeline does to the numbers, a bevel highlight has to stay lighter than
- * the surface it sits on and a lowlight darker, **in both schemes**. A swap
- * naming the wrong index — `[16, 18]` for `[16, 17]`
- * — leaves every test green, every color in the palette, and one game's blocks
- * lit from the wrong side in dark mode only.
+ * the surface it sits on and a lowlight darker, **in both schemes**. A bevel
+ * whose swap is missing, or a swap naming two colors that are not a bevel,
+ * leaves every color in the palette and one game's blocks lit from the wrong
+ * side in dark mode only.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -23,7 +22,7 @@ import {
 } from "../engine/color/color-mkhighlight.ts";
 import { darkValue } from "../engine/color/color-token.ts";
 import { correctRegionColor, lineNoColor } from "../engine/color/palette.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame, registeredGameIds } from "../engine/registry.ts";
 import type { Color, PuzzleId } from "../engine/types.ts";
 import {
   colorToOKLCH,
@@ -31,8 +30,8 @@ import {
   type OKLCH,
   oklchToColor,
 } from "../utils/color.ts";
-import { puzzleAugmentations } from "./augmentation.ts";
 import { darkModePalette } from "./dark-palette.ts";
+import { schemeOf } from "./scheme-palettes.ts";
 import "../games/index.ts";
 
 /** The lightness a dark-mode board background sits at, per `utils/color.ts`. */
@@ -53,16 +52,12 @@ function schemes(id: PuzzleId): { light: OKLCH[]; dark: OKLCH[] } {
     const d = c && darkValue(c);
     if (d) authored[i] = [...d];
   });
-  const { darkMode } = puzzleAugmentations[id] ?? {};
-  return { light, dark: darkModePalette(light, darkMode, authored, DARK_BG_L) };
+  return { light, dark: darkModePalette(light, schemeOf(id), authored, DARK_BG_L) };
 }
 
-/** Every `paletteSwaps` pair in the collection, with its game. */
-const PAIRS: [PuzzleId, number, number][] = Object.entries(puzzleAugmentations).flatMap(
-  ([id, aug]) =>
-    (aug?.darkMode?.paletteSwaps ?? []).map(
-      ([a, b]) => [id as PuzzleId, a, b] as [PuzzleId, number, number],
-    ),
+/** Every declared swap in the collection, with its game. */
+const PAIRS: [PuzzleId, number, number][] = registeredGameIds().flatMap((id) =>
+  schemeOf(id).darkSwaps.map(([a, b]): [PuzzleId, number, number] => [id, a, b]),
 );
 
 describe("dark-mode palette swaps", () => {
@@ -99,10 +94,34 @@ describe("dark-mode palette swaps", () => {
     // describe would be testing the calculation and not the swap.
     const [id, a, b] = PAIRS[0];
     const { light } = schemes(id);
-    const withSwap = darkModePalette(light, { paletteSwaps: [[a, b]] }, {}, DARK_BG_L);
-    const without = darkModePalette(light, {}, {}, DARK_BG_L);
+    const none = { darkSwaps: [], darkLightness: {} };
+    const withSwap = darkModePalette(
+      light,
+      { ...none, darkSwaps: [[a, b]] },
+      {},
+      DARK_BG_L,
+    );
+    const without = darkModePalette(light, none, {}, DARK_BG_L);
     expect(withSwap[a]).toEqual(without[b]);
     expect(withSwap[b]).toEqual(without[a]);
+  });
+
+  it.each(PAIRS)("%s keeps %i and %i in one order in both schemes", (id, a, b) => {
+    // What a swap is for, whatever the two colors are: the lighter of the pair
+    // in the light scheme is the lighter of it in the dark one.
+    const { light, dark } = schemes(id);
+    expect(Math.sign(dark[a][0] - dark[b][0])).toBe(
+      Math.sign(light[a][0] - light[b][0]),
+    );
+  });
+
+  it("scales a color's dark lightness by the factor the game declares", () => {
+    const { light } = schemes("pearl");
+    const { board, darkLightness } = schemeOf("pearl");
+    expect(darkLightness[board]).toBeGreaterThan(1);
+    const scaled = darkModePalette(light, { darkSwaps: [], darkLightness }, {}, 0.2);
+    const plain = darkModePalette(light, { darkSwaps: [], darkLightness: {} }, {}, 0.2);
+    expect(scaled[board][0]).toBeCloseTo(plain[board][0] * darkLightness[board], 9);
   });
 });
 

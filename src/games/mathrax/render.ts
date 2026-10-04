@@ -89,8 +89,8 @@ export const COL_GUESS = 4;
 export const COL_PENCIL = 5;
 export const COL_ERROR = 6;
 export const COL_ERRORBG = 7;
-/** Fork addition, appended past the upstream enum (Mathrax has no dark-mode
- * `paletteOverrides`, so appending is safe): the pencil-mode indicator's body. */
+/** Fork addition, appended past the upstream enum: the pencil-mode indicator's
+ * body. */
 export const COL_PENCIL_BODY = 8;
 /** Fork additions, likewise appended: the solved flash's cell fill and the
  * highlight's wash, in both its full-cell and its corner form. Upstream drew

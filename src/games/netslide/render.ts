@@ -69,9 +69,7 @@ export const COL_LOWLIGHT = 7;
 export const COL_TEXT = 8;
 
 /** The hint's colors, appended *past* upstream's enum so the palette above stays
- * index-for-index with it. Safe to append here because Netslide declares no
- * dark-mode `paletteOverrides` — nothing addresses a palette slot by number
- * (docs/games/rendering.md § "The palette: three layers, meaning first"). */
+ * index-for-index with it. */
 export const COL_HINT = 9;
 /** Likewise appended: the keyboard cursor's gutter arrow, which upstream drew
  * in the powered-wire color. */

@@ -85,8 +85,7 @@ export const COL_ERROR = 6;
 export const COL_PENCIL = 7;
 export const COL_HIGHLIGHT = 8;
 export const COL_LOWLIGHT = 9;
-// Fork addition, appended past the upstream enum (ABCD has no dark-mode
-// paletteOverrides, so a plain append is safe): the yellow body of the shared
+// Fork addition, appended past the upstream enum: the yellow body of the shared
 // pencil-mode indicator glyph.
 export const COL_PENCIL_BODY = 10;
 /** The highlight's wash, in both its full-cell and its corner form. Upstream

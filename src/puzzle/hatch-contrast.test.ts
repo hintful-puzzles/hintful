@@ -17,8 +17,7 @@ import { opsOfKind, RecordingDrawing } from "../engine/testing/recording-drawing
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import type { Color } from "../engine/types.ts";
 import * as magnets from "../games/magnets/render.ts";
-import { puzzleAugmentations } from "./augmentation.ts";
-import { schemePalettes } from "./scheme-palettes.ts";
+import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
 
 const relLum = (c: Color): number => {
   const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
@@ -86,7 +85,7 @@ describe("the hint's line hatch", () => {
     const color = hatchColor(id);
     expect(color, `${id} calls drawHatch but no hint frame drew one`).not.toBeNull();
     if (color === null) return;
-    const bgIndex = puzzleAugmentations[id]?.paletteBgIndex ?? 0;
+    const bgIndex = schemeOf(id).board;
     const { light, dark } = schemePalettes(id);
     for (const [scheme, palette] of [
       ["light", light],

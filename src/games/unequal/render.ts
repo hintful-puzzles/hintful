@@ -83,8 +83,7 @@ export const COL_PENCIL = 5;
 export const COL_HIGHLIGHT = 6;
 export const COL_LOWLIGHT = 7;
 export const COL_SPENT = COL_LOWLIGHT;
-// Fork additions, appended past the upstream enum; Unequal has no dark-mode
-// paletteOverrides, so a plain append is safe.
+// Fork additions, appended past the upstream enum.
 export const COL_PENCIL_BODY = 8; // the yellow body of the pencil-mode indicator
 export const COL_HINT = 9; // the acted-on cell's ring (drawn in redraw's last block)
 /** The driving clue's cells, outlined (same block), **and** a forcing chain's

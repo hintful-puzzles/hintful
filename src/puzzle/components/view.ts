@@ -16,7 +16,6 @@ import {
   tintGrays,
 } from "../../utils/color.ts";
 import { throttle } from "../../utils/timing.ts";
-import { puzzleAugmentations } from "../augmentation.ts";
 import { computeAvailableCanvasSize } from "../canvas-sizing.ts";
 import { puzzleContext } from "../contexts.ts";
 import { darkModePalette } from "../dark-palette.ts";
@@ -365,8 +364,7 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     // (Access reactive data before any async calls)
     const isDarkMode = currentColorScheme.get() === "dark";
 
-    const { paletteBgIndex = 0, darkMode } =
-      puzzleAugmentations[this.puzzle.puzzleId] ?? {};
+    const scheme = this.puzzle.paletteScheme;
 
     // Get our content's (original) CSS background and foreground colors
     this.contentPart.style.removeProperty("--background-color");
@@ -395,7 +393,7 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     // rule and for why it is a module rather than a block here.
     if (isDarkMode) {
       const authored = await this.puzzle.darkPalette(defaultBackgroundColor);
-      palette = darkModePalette(palette, darkMode, authored, bgl);
+      palette = darkModePalette(palette, scheme, authored, bgl);
     }
 
     // Shift palette grays to the original background hue
@@ -408,10 +406,7 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     await this.puzzle.setDrawingPalette(cssPalette);
 
     // Update our own CSS background color to match (for any padding area).
-    this.contentPart.style.setProperty(
-      "--background-color",
-      cssPalette[paletteBgIndex],
-    );
+    this.contentPart.style.setProperty("--background-color", cssPalette[scheme.board]);
   }
 
   //

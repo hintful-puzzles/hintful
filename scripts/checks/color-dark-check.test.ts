@@ -26,10 +26,10 @@ import { writeFileSync } from "node:fs";
 import { it } from "vitest";
 import { darkValue } from "../../src/engine/color/color-token.ts";
 import { getTsGame } from "../../src/engine/registry.ts";
-import type { Color, PuzzleId } from "../../src/engine/types.ts";
-import { puzzleAugmentations } from "../../src/puzzle/augmentation.ts";
+import type { Color } from "../../src/engine/types.ts";
 import { puzzleIds } from "../../src/puzzle/catalog.ts";
 import { darkModePalette } from "../../src/puzzle/dark-palette.ts";
+import { schemeOf } from "../../src/puzzle/scheme-palettes.ts";
 import {
   colorToOKLCH,
   isGrayChroma,
@@ -61,7 +61,7 @@ function darkPalette(id: string, palette: Color[]): OKLCH[] {
   });
   return darkModePalette(
     palette.map((c) => colorToOKLCH(c)),
-    puzzleAugmentations[id as PuzzleId]?.darkMode,
+    schemeOf(id),
     authored,
     DARK_BG_L,
   );
@@ -70,8 +70,7 @@ function darkPalette(id: string, palette: Color[]): OKLCH[] {
 /** The indices a game exchanges between schemes. An entry here does **not**
  * denote the same role in both, so a light-vs-dark comparison of one such index
  * is comparing a highlight with a lowlight — see the note in the report. */
-const swapped = (id: string): Set<number> =>
-  new Set((puzzleAugmentations[id as PuzzleId]?.darkMode?.paletteSwaps ?? []).flat());
+const swapped = (id: string): Set<number> => new Set(schemeOf(id).darkSwaps.flat());
 
 /** OKLCH distance, chroma/hue as a plane so a hue difference at low chroma counts
  * for little — which is how the eye treats it. */
@@ -130,7 +129,7 @@ it("measures dark mode", () => {
     "A color within 0.15 lightness of the board in light mode should stay close",
     "to it in dark mode, and one far from it should stay far. Listed: every entry",
     "whose distance-from-background moves by more than 0.25.\n",
-    "A row marked **swap** is one of a `paletteSwaps` pair, and for those this",
+    "A row marked **swap** is one of a `darkSwaps` pair, and for those this",
     "measurement does not mean what it means elsewhere: the two indices exchange",
     "**roles** between schemes, so the light and dark values compared here belong",
     "to a bevel's highlight and its lowlight. What such a pair owes the player is",
@@ -149,7 +148,7 @@ it("measures dark mode", () => {
     const light = lightPal.map((c) => (c ? colorToOKLCH(c) : null));
     const dark = darkPalette(id, game.colors(darkInput));
     const swaps = swapped(id);
-    const bgIndex = puzzleAugmentations[id as PuzzleId]?.paletteBgIndex ?? 0;
+    const bgIndex = schemeOf(id).board;
     const lbg = light[bgIndex]?.[0] ?? LIGHT_BG_L;
     const dbg = dark[bgIndex]?.[0] ?? DARK_BG_L;
     light.forEach((lch, i) => {

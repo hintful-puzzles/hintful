@@ -26,7 +26,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
 import { ARROW, GEM as GEM_MARK } from "./hint-text.ts";
 import {
   BLANK,
@@ -49,6 +49,9 @@ export const COL_BACKGROUND = 0;
 export const COL_OUTLINE = 1;
 export const COL_HIGHLIGHT = 2;
 export const COL_LOWLIGHT = 3;
+export const paletteScheme: Partial<PaletteScheme> = {
+  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
+};
 export const COL_PLAYER = 4;
 export const COL_DEAD_PLAYER = 5;
 export const COL_MINE = 6;
@@ -61,10 +64,7 @@ export const COL_HINT = 9;
 export const COL_AIM = 10;
 /** Appended: the ring round the gem a hint is going for. The hint's two roles
  * get two cues (docs/games/hints.md § "The element-type color legend"): the
- * direction is the hint's blue *arrow*, the subgoal gem a violet *ring*.
- * Appending past the C enum is safe: the app addresses Inertia's palette by
- * number only through `paletteSwaps`, which pair indices 2 and 3 (the 3D
- * bevel), and Inertia has no dark-mode `paletteOverrides` at all. */
+ * direction is the hint's blue *arrow*, the subgoal gem a violet *ring*. */
 export const COL_HINT_GOAL = 11;
 /** Appended: the solved flash's tile fill. Its own slot because `COL_HIGHLIGHT`
  * is also the wall bevel and the mine's glint, which do not flash. */

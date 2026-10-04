@@ -13,6 +13,7 @@ import type {
   FontInfo,
   GameStatus,
   KeyLabel,
+  PaletteScheme,
   Point,
   PresetMenuEntry,
   PuzzleStaticAttributes,
@@ -149,6 +150,7 @@ export class Puzzle {
       canMarkAll,
       ignoresSecondaryButton,
       wantsStatusbar,
+      paletteScheme,
     }: PuzzleStaticAttributes,
   ) {
     // The catalog is the only place a display name lives.
@@ -163,6 +165,7 @@ export class Puzzle {
     this.canMarkAll = canMarkAll;
     this.ignoresSecondaryButton = ignoresSecondaryButton;
     this.wantsStatusbar = wantsStatusbar;
+    this.paletteScheme = paletteScheme;
   }
 
   private async initialize(): Promise<void> {
@@ -267,6 +270,7 @@ export class Puzzle {
   public readonly canMarkAll: boolean;
   public readonly ignoresSecondaryButton: boolean;
   public readonly wantsStatusbar: boolean;
+  public readonly paletteScheme: PaletteScheme;
 
   // Reactive properties
   private _status = signal<GameStatus>("ongoing");

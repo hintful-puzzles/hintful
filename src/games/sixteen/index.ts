@@ -45,6 +45,7 @@ import {
   fromCoord,
   newDrawState,
   PREFERRED_TILE_SIZE,
+  paletteScheme,
   redraw,
   type SixteenDrawState,
   type SixteenHintHighlights,
@@ -768,6 +769,7 @@ export const sixteenGame: Game<
   statusbarText,
 
   colors,
+  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

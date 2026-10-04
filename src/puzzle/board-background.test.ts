@@ -14,12 +14,12 @@
 import { describe, expect, it } from "vitest";
 import {
   mkhighlightBackground,
+  paletteSchemeOf,
   resolvePalette,
 } from "../engine/color/color-mkhighlight.ts";
 import { getTsGame, registeredGameIds } from "../engine/registry.ts";
-import type { Color, PuzzleId } from "../engine/types.ts";
+import type { Color } from "../engine/types.ts";
 import { oklchToColor } from "../utils/color.ts";
-import { puzzleAugmentations } from "./augmentation.ts";
 import "../games/index.ts";
 
 /** What `components/view.ts` hands the engine in dark mode. */
@@ -33,7 +33,7 @@ const board = (host: Color): Color => mkhighlightBackground(host);
 function boardOf(id: string, host: Color): Color {
   const game = getTsGame(id);
   if (!game) throw new Error(`${id} is not registered`);
-  const index = puzzleAugmentations[id as PuzzleId]?.paletteBgIndex ?? 0;
+  const index = paletteSchemeOf(game).board;
   const color = resolvePalette(game, host)[index];
   if (!color) throw new Error(`${id} has no color at its board index ${index}`);
   return color;

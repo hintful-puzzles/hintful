@@ -12,7 +12,7 @@
  * never need to erase generics (no `any`).
  */
 
-import { resolvePalette } from "./color/color-mkhighlight.ts";
+import { paletteSchemeOf, resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
 import { completionStatus } from "./completion-status.ts";
 import { DESC_MALFORMED, loadDesc, loadVerdict } from "./desc-error.ts";
@@ -349,6 +349,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       canMarkAll: this.game.canMarkAll ?? false,
       ignoresSecondaryButton: this.game.ignoresSecondaryButton ?? false,
       wantsStatusbar: this.game.statusbarText !== undefined,
+      paletteScheme: paletteSchemeOf(this.game),
     };
   }
 
@@ -1542,10 +1543,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * An index that is **absent** has no authored dark value and is adapted by
    * `utils/color.ts`'s calculation, which lets a scheme be authored token by
    * token.
-   *
-   * A per-puzzle entry in `augmentation.ts` wins over this: it is the more
-   * specific statement, and a game that wants its black *lifted* rather than
-   * preserved (Light Up's wall) says so there.
    */
   darkPalette(defaultBackground: Color): Record<number, Color> {
     const out: Record<number, Color> = {};

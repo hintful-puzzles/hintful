@@ -8,7 +8,7 @@
  * `COL_BACKGROUND === COL_WHITEBG`, and a closed white region disappears into
  * the page. {@link resolvePalette} applies it once, for every game.
  */
-import type { Color } from "../types.ts";
+import type { Color, PaletteScheme } from "../types.ts";
 import { darkValue, token } from "./color-token.ts";
 
 const K = Math.sqrt(3) / 6;
@@ -102,6 +102,13 @@ export function resolvePalette(
   hostBackground: Color,
 ): Color[] {
   return game.colors(mkhighlightBackground(hostBackground));
+}
+
+/** A game's {@link PaletteScheme}, with what it left out filled in. */
+export function paletteSchemeOf(game: {
+  readonly paletteScheme?: Partial<PaletteScheme>;
+}): PaletteScheme {
+  return { board: 0, darkSwaps: [], darkLightness: {}, ...game.paletteScheme };
 }
 
 /**

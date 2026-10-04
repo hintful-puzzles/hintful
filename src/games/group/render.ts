@@ -81,9 +81,7 @@ export const COL_HINT = 8;
  * known products, an identity fill's revealing cell), **and** a forcing chain's
  * ordinal — one index, because the number indexes the evidence. */
 export const COL_HINT_CELL = 9;
-/** The yellow body of the pencil-mode indicator glyph. Appended past the
- * upstream enum, which is safe because `puzzle/augmentation.ts` gives Group no
- * dark-mode `paletteOverrides` keyed by index. */
+/** The yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 10;
 
 export function colors(defaultBackground: Color): Color[] {
