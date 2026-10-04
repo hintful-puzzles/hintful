@@ -51,6 +51,12 @@ To be designed: `hint()`, `hintGesture` and `hintMarks` for Flip, a `## Hints`
 section on its help page, and its hint tests. Flip leaves
 `hintless-games-in-reserve`.
 
+## What it assesses
+
+`share-the-hint-position-scan` names Flip as its hint to pull in: Flip's hint
+test finds the board each sentence fires on through that harness and writes no
+scan of its own, which is how the harness gets judged.
+
 ## Acceptance
 
 The owner's: whether the hint explains anything.
