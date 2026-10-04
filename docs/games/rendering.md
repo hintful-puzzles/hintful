@@ -1011,6 +1011,18 @@ each `paletteSwaps` pair back through your `COL_*` constants and fails unless
 the two are a `…HIGHLIGHT` and its `…LOWLIGHT`, which is what catches a pair
 left pointing at old indices after a color was added or dropped above it.
 
+**A color your words name is a piece's color, and a piece's color is pinned.**
+If the help page, a hint or a parameter label calls something black, white,
+shaded or lit, paint it in `BLACK` or `WHITE` (`colors.ts`), not in `INK`,
+`PAPER` or a bevel's highlight, which all invert with the scheme: Flip's page
+said "light up all the squares" while the dark scheme drew a lit square black.
+A digit on a pinned cell is pinned with it, and a grid between pinned-white
+cells is `GRID_DARK`, since ink would be white on white. Where the thing really
+is ink (a blocked square beside ink digits), fix the word instead.
+[`help-lightness-words.test.ts`](../../src/help-lightness-words.test.ts) holds
+the help page to this; it checks that the palette holds such a color, not where
+it is painted, so look at the dark frame too.
+
 To see a change to the palette across the collection, run the contact sheet
 (`npx vitest run -c scripts/checks/diff.vitest.config.mts contact-sheet`): every
 game in both schemes on one page, with the close pairs listed beside it. Its

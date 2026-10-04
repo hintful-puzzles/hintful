@@ -31,7 +31,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 1,
     "y": 1,
@@ -41,7 +41,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         0,
@@ -64,7 +64,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -97,7 +97,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         48,
@@ -141,7 +141,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         96,
@@ -185,7 +185,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         144,
@@ -219,7 +219,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 193,
     "y": 1,
@@ -229,7 +229,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         192,
@@ -252,7 +252,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -275,7 +275,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 241,
     "y": 1,
@@ -285,7 +285,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         240,
@@ -308,7 +308,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -350,7 +350,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         288,
@@ -403,7 +403,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         24,
@@ -447,7 +447,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         72,
@@ -481,7 +481,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 121,
     "y": 49,
@@ -491,7 +491,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         120,
@@ -514,7 +514,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -547,7 +547,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         168,
@@ -591,7 +591,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         216,
@@ -635,7 +635,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         264,
@@ -678,7 +678,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 313,
     "y": 49,
@@ -688,7 +688,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         312,
@@ -711,7 +711,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -743,7 +743,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 1,
     "y": 97,
@@ -753,7 +753,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         0,
@@ -776,7 +776,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -809,7 +809,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         48,
@@ -853,7 +853,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         96,
@@ -897,7 +897,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         144,
@@ -941,7 +941,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         192,
@@ -985,7 +985,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         240,
@@ -1038,7 +1038,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         288,
@@ -1091,7 +1091,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         24,
@@ -1135,7 +1135,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         72,
@@ -1169,7 +1169,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 121,
     "y": 145,
@@ -1179,7 +1179,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         120,
@@ -1202,7 +1202,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1225,7 +1225,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 169,
     "y": 145,
@@ -1235,7 +1235,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         168,
@@ -1258,7 +1258,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1291,7 +1291,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         216,
@@ -1325,7 +1325,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 265,
     "y": 145,
@@ -1335,7 +1335,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         264,
@@ -1358,7 +1358,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1400,7 +1400,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         312,
@@ -1443,7 +1443,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 1,
     "y": 193,
@@ -1453,7 +1453,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         0,
@@ -1476,7 +1476,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1509,7 +1509,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         48,
@@ -1553,7 +1553,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         96,
@@ -1597,7 +1597,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         144,
@@ -1641,7 +1641,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         192,
@@ -1685,7 +1685,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         240,
@@ -1738,7 +1738,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         288,
@@ -1791,7 +1791,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         24,
@@ -1835,7 +1835,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         72,
@@ -1869,7 +1869,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 121,
     "y": 241,
@@ -1879,7 +1879,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         120,
@@ -1902,7 +1902,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1935,7 +1935,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         168,
@@ -1969,7 +1969,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 217,
     "y": 241,
@@ -1979,7 +1979,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         216,
@@ -2002,7 +2002,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2035,7 +2035,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         264,
@@ -2078,7 +2078,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "color": 2,
     "h": 47,
     "op": "rect",
-    "rgb": "rgb(253, 253, 253)",
+    "rgb": "rgb(255, 255, 255)",
     "w": 47,
     "x": 313,
     "y": 241,
@@ -2088,7 +2088,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
         312,
@@ -2111,7 +2111,7 @@ exports[`bricks rendering (tier 2.5) > draws the opening frame with clue numbers
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
+    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

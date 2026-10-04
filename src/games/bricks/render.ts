@@ -16,13 +16,13 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLACK } from "../../engine/color/colors.ts";
+import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   ERROR,
+  GRID_DARK,
   HINT_ACTION,
   HINT_EVIDENCE,
-  INK,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -66,14 +66,23 @@ export const COL_CURSOR = 6;
 // Fork additions (beyond upstream's COL_* enum): the explained hint.
 export const COL_HINT = 7; // the forced cell — ringed on its own border
 export const COL_HINT_CELL = 8; // the deduction's evidence — an inset ring
+/** The digit on a numbered cell, which sits on {@link COL_HIGHLIGHT}'s pinned
+ * white and so is pinned black. */
+export const COL_NUMBER = 9;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
+  const { background, lowlight } = mkhighlight(defaultBackground);
   const out: Color[] = [];
   out[COL_MIDLIGHT] = background;
   out[COL_LOWLIGHT] = lowlight;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_BORDER] = INK;
+  // A cell that stays clear *is* white and a shaded one *is* black: pieces, so
+  // both are pinned. The bevel's highlight inverts with the scheme, and in the
+  // dark one it put a clear cell a step from a shaded one.
+  out[COL_HIGHLIGHT] = WHITE;
+  out[COL_NUMBER] = BLACK;
+  // Not ink, which is white in the dark scheme and would close a run of clear
+  // cells into one bar.
+  out[COL_BORDER] = GRID_DARK;
   out[COL_SHADE] = BLACK;
   out[COL_ERROR] = ERROR;
   out[COL_CURSOR] = CURSOR;
@@ -223,7 +232,7 @@ function drawTile(
     dr.drawText(
       { x: cx, y: cy },
       glyphFont(ts >> 1),
-      n & FE_ERROR ? COL_ERROR : COL_BORDER,
+      n & FE_ERROR ? COL_ERROR : COL_NUMBER,
       num === 7 ? "?" : String(num),
     );
   } else if (n & FE_ERROR) {

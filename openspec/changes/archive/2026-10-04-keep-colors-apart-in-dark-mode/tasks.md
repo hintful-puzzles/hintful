@@ -15,5 +15,5 @@
 
 ## 3. Acceptance
 
-- [ ] 3.1 The owner looks at Mines, Range and Unruly on a phone in the dark
-      scheme.
+- [x] 3.1 The owner looks at Mines, Range and Unruly on a phone in the dark
+      scheme. Accepted on the deployment, 2026-10-04.

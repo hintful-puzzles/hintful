@@ -3,7 +3,8 @@
  * neighbors a click will flip, the cursor ring and the win flash.
  */
 
-import { CURSOR, GRID_MID, PAPER } from "../../engine/color/palette.ts";
+import { WHITE } from "../../engine/color/colors.ts";
+import { CURSOR, GRID_MID } from "../../engine/color/palette.ts";
 import { flipWrongFace } from "../../engine/color/palette-games.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
@@ -52,7 +53,8 @@ export function colors(defaultBackground: Color): Color[] {
   const ret: Color[] = new Array(NCOLORS);
   ret[COL_BACKGROUND] = bg;
   ret[COL_WRONG] = flipWrongFace(bg);
-  ret[COL_RIGHT] = PAPER;
+  // A lit square *is* light, in either scheme: the goal is to light them all.
+  ret[COL_RIGHT] = WHITE;
   // The mid step, not the dark one: the diagonal marks sit on both the
   // paper face and the dark face, and only a mid gray shows on each.
   ret[COL_GRID] = GRID_MID;

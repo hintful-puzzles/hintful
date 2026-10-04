@@ -17,14 +17,8 @@
  * meet the outer grid line.
  */
 
-import { GREEN, PURPLE } from "../../engine/color/colors.ts";
-import {
-  ERROR,
-  HINT_ACTION,
-  HINT_EVIDENCE,
-  INK,
-  PAPER,
-} from "../../engine/color/palette.ts";
+import { BLACK, GREEN, PURPLE, WHITE } from "../../engine/color/colors.ts";
+import { ERROR, HINT_ACTION, HINT_EVIDENCE, INK } from "../../engine/color/palette.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
@@ -59,6 +53,9 @@ export const COL_CURSOR = 5;
 // Fork additions beyond upstream's COL_* enum: the explained hint.
 export const COL_HINT = 6; // the forced square's line, in the game's own bar shape
 export const COL_HINT_CELL = 7; // the deduction's evidence — an inset ring
+/** A black cell. A piece, not ink: the help, the hint and the Custom dialog all
+ * call it black, so it stays black in the dark scheme. */
+export const COL_BLOCK = 8;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -67,7 +64,9 @@ export function colors(defaultBackground: Color): Color[] {
   // A placed stick is a bar filling a fifth of its cell — a piece, not a glyph,
   // so the named green rather than the entry green a digit takes.
   out[COL_LINE] = GREEN;
-  out[COL_NUMBER] = PAPER;
+  // The digit on a black cell, pinned with the cell it sits on.
+  out[COL_NUMBER] = WHITE;
+  out[COL_BLOCK] = BLACK;
   out[COL_ERROR] = ERROR;
   // Purple, because Sticks has spent the usual two: its lines are green and the
   // hint's forced square is blue. Upstream's cursor was that blue, which would
@@ -151,7 +150,7 @@ function drawTile(
   // carries the clue the deduction counts with, and often a line.
   dr.drawRect(
     { x: px, y: py, w: ts - 1, h: ts - 1 },
-    black ? COL_GRID : COL_BACKGROUND,
+    black ? COL_BLOCK : COL_BACKGROUND,
   );
 
   const bar = (bits: number, color: number): void => {

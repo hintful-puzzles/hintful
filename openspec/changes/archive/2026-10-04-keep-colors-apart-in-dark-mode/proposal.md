@@ -1,7 +1,7 @@
 # keep-colors-apart-in-dark-mode
 
-**Status: implemented 2026-10-04; the owner's look on a phone (task 3.1) is
-what remains.** Owner, on Sokoban's dark walls: *"please fix this in the engine
+**Status: implemented 2026-10-04, and accepted by the owner on the deployment
+the same day.** Owner, on Sokoban's dark walls: *"please fix this in the engine
 colors across all games."*
 
 ## Why

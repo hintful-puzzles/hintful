@@ -3,7 +3,7 @@
 Slide the grid squares around so that they all join up into a single
 connected network with no loops.
 
-One square is the *source*: the black box the power comes from. It
+One square is the *source*: the solid box the power comes from. It
 never moves — the row and the column it sits in cannot be slid, which is why
 no arrows are drawn beside them. So a square sharing the source's row can
 only be shifted by sliding its column, and vice versa, and the network has to

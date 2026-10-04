@@ -96,7 +96,7 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 4,
   },
   {
-    "color": 1,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -330,7 +330,7 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 148,
   },
   {
-    "color": 1,
+    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
