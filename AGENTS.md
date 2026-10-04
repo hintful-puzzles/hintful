@@ -350,6 +350,17 @@ typed-out value or source read through a `?raw` glob, and **"who references
 `Game.hint`" is not "who has a hint"** — the references include tests naming
 hintless games; the population is the implementations, or `HINT_GAMES`.
 
+**Our own code is keyed on a reference, a type or an id, and on a regex over
+prose only when there is nothing else** (owner, 2026-10-04: *"we really should
+avoid regexes as much as possible in favor of passing the actual object
+references or types, or at the very least id's"*). A regex over a sentence the
+code itself wrote is the name-keyed scan above, aimed at our own output: a
+rewording empties it in silence, and nothing can say which cases it never
+matched. Where a check has to know which deduction a hint step is, the step
+should say so in a value; `name-the-rung-a-hint-step-speaks` is the change
+that gives it one. A regex stays right where the wording is the thing under
+test.
+
 **And a spec delta is a claim about code that is still moving.** A delta
 written mid-change states the signature the code had *that morning*;
 `openspec validate` checks a delta's shape and never its truth, so a stale one
