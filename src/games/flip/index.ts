@@ -263,7 +263,8 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     roles: {
       ring: "the square to press.",
       outline:
-        "the dark squares that press is the last chance to light: no square after it in reading order flips them.",
+        "the dark squares the press is for: the ones only it can still light, no square further on flipping them, or on the last press every dark square left.",
+      stripes: "the other squares that press flips, dark or lit.",
     },
   },
   hintKeepTrack,

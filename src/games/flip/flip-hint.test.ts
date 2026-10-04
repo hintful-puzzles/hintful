@@ -25,6 +25,7 @@ const G = flipGame;
 const PRESETS = leafPresets(G).map((e) => e.params);
 
 const outlined = (step: HintStep<FlipMove>) => stepMarks(step).of("outline", CELL);
+const striped = (step: HintStep<FlipMove>) => stepMarks(step).of("stripes", CELL);
 
 /** Every sentence the hint says, each pinned on a position that opens with it. */
 const pinned = describeHintPins({
@@ -34,24 +35,39 @@ const pinned = describeHintPins({
     `${encodeBitmap(s.matrix, s.matrix.length)},${encodeBitmap(s.grid, s.grid.length)}`,
   kinds: {
     lastChance:
-      /^No later square flips the outlined dark square, so this square must be pressed\.$/,
+      /^Row by row, only this square can still light the outlined square, so it must be pressed\. It flips the striped ones? too\.$/,
     lastChanceOfTwo:
-      /^No later square flips the outlined dark squares, so this square must be pressed\.$/,
+      /^Row by row, only this square can still light the outlined squares, so it must be pressed\. It flips the striped ones? too\.$/,
+    lastChanceFlippingNoMore:
+      /^Row by row, only this square can still light the outlined squares?, so it must be pressed\.$/,
     fromOnlyAnswer:
-      /^Whatever this square flips can still be flipped later, so no one square decides it\. The only answer presses it\.$/,
+      /^There is only one way to light the whole board, and it takes \d+ presses\. One of them: press this square\.$/,
     fromShortestAnswer:
-      /^Whatever this square flips can still be flipped later, so no one square decides it\. A shortest answer presses it\.$/,
+      /^The whole board can be lit in \d+ presses, and no fewer\. One of them: press this square\.$/,
+    lastPress:
+      /^Press this square: that lights the outlined squares? and finishes the board\.$/,
+    lastPressOfItself: /^Press this square: that finishes the board\.$/,
   },
   pins: {
-    /** Held on 231 of 494 positions walked. */
+    /** Held on 211 of 494 positions walked. */
     lastChance: "3x3c:d074191345d1644c17058,f68",
-    /** Held on 123 of 494 positions walked. */
+    /** Held on 57 of 494 positions walked. */
     lastChanceOfTwo: "3x3c:d074191345d1644c17058,0e0",
+    /** Held on 2 of 494 positions walked: only a Random board has a square
+     * whose every flip is a dark square's last. */
+    lastChanceFlippingNoMore:
+      "4x4r:c800e000710032008cc0c600131033000cc80ce801370031008c004e00070033,33f4",
     /** Held on 43 of 494 positions walked. */
     fromOnlyAnswer: "3x3c:d074191345d1644c17058,1e8",
-    /** Held on 97 of 494 positions walked. */
+    /** Held on 109 of 494 positions walked. */
     fromShortestAnswer:
       "4x4c:c800e400720031008c804e402720131008c804e402720131008c004e00270013,f1a1",
+    /** Held on 72 of 494 positions walked: once a board. */
+    lastPress: "3x3c:d074191345d1644c17058,058",
+    /** Held on 0 of 494 positions walked: it takes a square that flips only
+     * itself, so the board is built by hand, each square flipping itself
+     * alone and the first one dark. */
+    lastPressOfItself: "3x3r:802008020080200802008,800",
   },
 });
 
@@ -59,8 +75,11 @@ describe("Flip hint sentences", () => {
   for (const kind of [
     "lastChance",
     "lastChanceOfTwo",
+    "lastChanceFlippingNoMore",
     "fromOnlyAnswer",
     "fromShortestAnswer",
+    "lastPress",
+    "lastPressOfItself",
   ] as const) {
     it(`${kind}: draws what it says`, () => {
       const { state, step } = pinned(kind);
@@ -119,6 +138,8 @@ describe("Flip hint plan", () => {
   it("every step's claim holds, and the plan is the same plan after each press", () => {
     let forced = 0;
     let supplied = 0;
+    let finishing = 0;
+    let striping = 0;
     for (const params of PRESETS) {
       for (let n = 0; n < 6; n++) {
         const { desc } = G.newDesc(params, randomNew(`flip-plan-${n}`));
@@ -132,18 +153,41 @@ describe("Flip hint plan", () => {
           const [step, ...rest] = plan;
           if (step.move.kind !== "flip") throw new Error("a hint only presses");
           const at = step.move.y * s.w + step.move.x;
-          const owed = outlined(step).map((p) => p.y * s.w + p.x);
-          if (owed.length > 0) {
+          const width = s.w;
+          const cells = (ps: readonly { x: number; y: number }[]): number[] =>
+            ps.map((p) => p.y * width + p.x).sort((a, b) => a - b);
+          const owed = cells(outlined(step));
+          const also = cells(striped(step));
+          const others = flippedBy(s, at).filter((j) => j !== at);
+          if (rest.length === 0) {
+            finishing++;
+            // The last press: the outline is every dark square but its own,
+            // and it flips them all.
+            expect(step.explanation).toMatch(/finishes the board\.$/);
+            const dark = [...s.grid.keys()].filter((j) => s.grid[j] && j !== at);
+            expect(owed).toEqual(dark);
+            for (const j of owed) expect(others).toContain(j);
+            expect(also).toEqual([]);
+          } else if (owed.length > 0) {
             forced++;
             // Dark, and nothing after this square flips them.
             for (const j of owed) {
               expect(s.grid[j]).toBe(1);
               expect(last[j]).toBe(at);
             }
+            // Every square the press flips is marked: outlined, striped, or
+            // the ringed square itself.
+            if (also.length > 0) striping++;
+            expect(also).toEqual(others.filter((j) => !owed.includes(j)));
           } else {
             supplied++;
+            expect(step.explanation).toMatch(/One of them: press/);
             // Every square it flips has a later square that flips it too.
             for (const j of flippedBy(s, at)) expect(last[j]).toBeGreaterThan(at);
+            // The count it says is the presses left, which the walk's end
+            // holds to solving the board.
+            expect(step.explanation).toContain(` ${plan.length} presses`);
+            expect(also).toEqual([]);
           }
           s = G.executeMove(s, step.move);
           if (rest.length === 0) break;
@@ -157,9 +201,11 @@ describe("Flip hint plan", () => {
         expect(G.status(s)).toBe("solved");
       }
     }
-    // Vacuity: both kinds of step were walked.
+    // Vacuity: every kind of step was walked.
     expect(forced).toBeGreaterThan(50);
+    expect(striping).toBeGreaterThan(50);
     expect(supplied).toBeGreaterThan(20);
+    expect(finishing).toBe(PRESETS.length * 6);
   });
 
   it("keeps a plan only through the press it asks for", () => {
@@ -183,7 +229,7 @@ describe("Flip hint plan", () => {
 });
 
 describe("Flip hint frame", () => {
-  it("rings the square to press and outlines the dark squares it answers for", () => {
+  it("rings the square to press, outlines the dark squares it is for and stripes the rest it flips", () => {
     const { id, step } = pinned("lastChanceOfTwo");
     const result = renderScenario({ game: G, id, showHint: true });
     expect(result.hint?.explanation).toBe(step.explanation);
@@ -193,6 +239,11 @@ describe("Flip hint frame", () => {
     const sides = markSides(ops, COL_HINT_CELL).length;
     expect(sides).toBeGreaterThanOrEqual(6);
     expect(sides).toBeLessThanOrEqual(8);
+    // One hatch a striped square, in the press's color.
+    const hatched = ops.filter((o) => o.op === "hatch");
+    expect(striped(step).length).toBeGreaterThan(0);
+    expect(hatched.length).toBe(striped(step).length);
+    expect(hatched.every((o) => o.color === COL_HINT)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 

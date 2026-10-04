@@ -3399,17 +3399,38 @@ the player can check it against the diagrams
 that it also holds on a Random board, where "the square below" is not the rule
 and "the last square that flips it" is.
 
-What the order cannot decide it says it cannot. A press whose every square a
-later press also flips has no reason of that kind, so its step is a `setup`:
-it says why nothing decides it, and that the answer presses it ("the only
-answer" when there is no other, which the elimination knows). Three things to
-take from it:
+What the order cannot decide, the step does not pretend to. A press whose every
+square a later press also flips has no reason of that kind, so its step offers
+it (`oneOf`) with the one fact the solver has that a player can count: *"The
+whole board can be lit in 5 presses, and no fewer. One of them: press this
+square."*, or "There is only one way to light the whole board" when the
+elimination knows there is no other. Its first wording explained the method
+instead (*"Whatever this square flips can still be flipped later, so no one
+square decides it. A shortest answer presses it."*) and the owner, meeting it
+as a board's first hint, found it extremely confusing: a sentence about why
+the method is silent is about the method, not the board. The last press says
+it is the last, whichever kind it is ("…and finishes the board"). Five things
+to take from it:
 
+- **Say the order on the step when the claim is false without it.** "Only this
+  square can still light the outlined squares" needs "row by row" in front of
+  it, because a player reads the hint before the help page. Three words of
+  convention is not the rulebook (§ "Rules belong in the help"); a definition
+  of "later" the sentence leans on and never gives is a missing premise.
+- **Mark everything the move changes, or the unmarked part reads as a
+  mistake.** The first cut outlined only the dark squares the press was the
+  last chance for, and the owner saw a third dark square, lit by the same
+  press, left bare. It is not part of the reason, so it could not join the
+  outline without making the sentence false. It is striped, with the other
+  squares the press flips, and the sentence says so ("It flips the striped
+  ones too."). Evidence and side effects take different roles; neither goes
+  unmarked.
 - **Look for the convention that makes a search's answer a chain.** The plan is
   still the solver's shortest set; only the order and the words are the
   hint's. Ask it of any game whose moves commute.
-- **The convention belongs in the help**, once (§ "Rules belong in the help").
-  A step says "no later square", and the page says what later means.
+- **The method belongs in the help**, once (§ "Rules belong in the help"): why
+  an order makes a press forced, and that Crosses is solved by getting the top
+  row right. The step carries only the order's name.
 - **Stability is argued from the solver, then walked.** Pressing a square of
   the chosen answer leaves the rest of it chosen, because the press moves
   every remaining answer's place in the solver's enumeration the same way

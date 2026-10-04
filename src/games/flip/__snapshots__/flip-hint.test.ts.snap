@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Flip hint frame > rings the square to press and outlines the dark squares it answers for 1`] = `
+exports[`Flip hint frame > rings the square to press, outlines the dark squares it is for and stripes the rest it flips 1`] = `
 [
   {
     "color": 0,
@@ -1315,6 +1315,16 @@ exports[`Flip hint frame > rings the square to press and outlines the dark squar
     "h": 47,
     "op": "rect",
     "rgb": "rgb(255, 255, 255)",
+    "w": 47,
+    "x": 121,
+    "y": 121,
+  },
+  {
+    "color": 6,
+    "h": 47,
+    "op": "hatch",
+    "period": 16,
+    "rgb": "rgb(21, 113, 233)",
     "w": 47,
     "x": 121,
     "y": 121,

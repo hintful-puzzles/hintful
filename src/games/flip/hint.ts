@@ -3,9 +3,10 @@
  *
  * Nothing on a Flip board forces a press by itself, but an order does. Once
  * the squares before a square are left alone for good, a dark square that no
- * later square flips can only be lit by this one. So each step is one of two
+ * later square flips can only be lit by this one. So a step is one of two
  * kinds: a press that is some dark square's last chance, which is a deduction,
- * and a press nothing in the sweep decides, which the answer supplies.
+ * and a press nothing in the sweep decides, which is offered as one of the
+ * fewest presses the board takes. The last press is said as what it is.
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
@@ -43,14 +44,28 @@ export function hint(state: FlipState): HintResult<FlipMove> {
   // the presses before it leave.
   const grid = state.grid.slice();
   const steps: HintStep<FlipMove>[] = [];
+  // The presses the board a step is shown on still takes: the answer is the
+  // shortest, and what is left of it is the shortest for the board it leaves.
+  let left = answer.presses.reduce((n, p) => n + p, 0);
   for (let i = 0; i < wh; i++) {
     if (!answer.presses[i]) continue;
     const owed: Point[] = [];
-    for (let j = 0; j < wh; j++) if (last[j] === i && grid[j]) owed.push(at(j));
+    const also: Point[] = [];
+    const dark: Point[] = [];
+    for (let j = 0; j < wh; j++) {
+      if (j !== i && grid[j]) dark.push(at(j));
+      if (last[j] === i && grid[j]) owed.push(at(j));
+      else if (j !== i && matrix[i * wh + j]) also.push(at(j));
+    }
+    // The last press says it finishes the board, whichever kind it is: every
+    // square still dark is one it flips.
     const words =
-      owed.length > 0
-        ? say.lastChance(at(i), owed)
-        : say.fromTheAnswer(at(i), answer.only);
+      left === 1
+        ? say.lastPress(at(i), dark)
+        : owed.length > 0
+          ? say.lastChance(at(i), owed, also)
+          : say.fromTheAnswer(at(i), left, answer.only);
+    left--;
     steps.push({ move: { kind: "flip", ...at(i) }, explanation: words.text, words });
     for (let j = 0; j < wh; j++) grid[j] ^= matrix[i * wh + j];
   }

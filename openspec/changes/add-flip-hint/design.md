@@ -13,28 +13,72 @@ as "the last square that flips it" so it holds on a Random board too, where
 "the square below" is not the rule.
 
 So the hint presses the solver's shortest answer in reading order, and each
-step is one of two kinds:
+step before the last is one of two kinds:
 
 - **Last chance** (a deduction, `so`): the press is the last square in reading
-  order that flips some dark square. *"No later square flips the outlined dark
-  square, so this square must be pressed."* The ring is the press, the outline
-  the dark squares it answers for. The player can check it against the
-  diagrams.
-- **From the answer** (`setup`): every square the press flips is flipped by a
-  later square too, so the order gives no reason. The step says that, and that
-  the answer presses it: "the only answer" when the elimination has no free
-  square, "a shortest answer" otherwise. With Crosses these are the top row.
+  order that flips some dark square. *"Row by row, only this square can still
+  light the outlined squares, so it must be pressed. It flips the striped ones
+  too."* The ring is the press, the outline the dark squares it answers for,
+  and the stripes every other square it flips. The player can check it against
+  the diagrams.
+- **From the answer** (`oneOf`): every square the press flips is flipped by a
+  later square too, so the order gives no reason. The step does not say that.
+  It says what the solver knows and the player can count: *"The whole board
+  can be lit in 5 presses, and no fewer. One of them: press this square."*
+  When the elimination has no free square it says *"There is only one way to
+  light the whole board, and it takes 5 presses."* instead. With Crosses these
+  are the top row.
 
-On the 494 positions the pin scan walked across the six presets, 354 opened
-with a last-chance step and 140 with one from the answer.
+**The last press** says so, whichever kind it would have been (`effect`):
+*"Press this square: that lights the outlined squares and finishes the
+board."* The outline is every dark square but the ringed one, which is every
+other square the press flips (owner, on a playtest's last step: the hint
+should say the move finishes the board).
+
+On the 494 positions the pin scan walked across the six presets, 270 opened
+with a last-chance step, 152 with one from the answer and 72 with a last
+press.
+
+**Why the stripes.** The first cut outlined only the dark squares the press
+was the last chance for. On a 5×5 Crosses board the owner saw a ringed square
+with two dark neighbors outlined and a third, just as dark and just as plainly
+lit by the press, unmarked, and read it as an omission: "when highlighting
+some squares, please highlight all relevant ones and not just some". The third
+is not part of the reason (a later square flips it too), so it does not join
+the outline, which would make "only this square can still light" false. It is
+striped, and the sentence says the press flips the striped ones too. A step
+therefore marks every square its press changes: the ring, the outline and the
+stripes are together exactly the squares the ringed one flips, which
+`flip-hint.test.ts` holds.
+
+**Why the from-the-answer step stripes nothing.** It reasons from no square,
+so there is no partial marking to complete, and its sentence is the one a
+board opens with, which the count already fills.
 
 **Why not narrate what a press lights and darkens.** It is checkable and it
 teaches nothing: the diagram on the square already says it.
 
-**Why "must be pressed" holds.** It is conditional on the order, and the help
-page states the order once. Within it the claim is exact: the squares before
-the ringed one are not in the plan, and no square after it flips the outlined
-ones.
+**Why the from-the-answer step does not explain the order's silence.** Its
+first wording did: *"Whatever this square flips can still be flipped later, so
+no one square decides it. A shortest answer presses it."* The owner met it as
+the first hint of a playtest and found it extremely confusing. It describes
+the method's bookkeeping, about squares the step does not mark, in words
+("later", "decides", "answer") only the help page defines, and it is the
+sentence a Crosses board opens with. The count is a fact about the board, it
+falls by one with each press, and "one of them" is the relation the engine
+already has words for.
+
+**Why "must be pressed" holds.** It is conditional on the order, which the
+step names in its opening words ("row by row"), since "can still" is false
+without it and the hint is read before the help page is. Three words are what
+the 120 characters leave once the stripes are named; the help page gives the
+order in full. Within the order the claim is exact:
+the squares before the ringed one are not in the plan, and no square after it
+flips the outlined ones.
+
+**Why the count holds.** The answer is the shortest, and what is left of it
+after a press is the shortest for the board that press leaves (D2), so each
+step's count is the fewest presses for the board the step is shown on.
 
 ## D2. Stability, checked and then argued
 
@@ -65,7 +109,9 @@ answer.
 
 Ring and outline through `engine/hint-mark.ts`, as a band inside the tile's
 own edge, clear of the diagram in the middle; the tile cache keys on the
-marks' sides. The words are the player's: a square to be lit is "dark". The
+marks' sides. Stripes are the engine's hatch (`engine/hatch.ts`) in the
+press's color, laid on the tile's face under the diagram, with a cache bit of
+their own. The words are the player's: a square to be lit is "dark". The
 state's own comments said "lit" for it and now say "dark". The gesture is one
 tap, through `verbClicks`.
 
