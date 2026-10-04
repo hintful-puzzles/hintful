@@ -60,6 +60,7 @@ import {
   R,
   U,
 } from "../../engine/wires.ts";
+import { finishes } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
 import { type NetHint, netHint, netHintKeepTrack } from "./hint.ts";
 import { findMistakes, type NetMistake } from "./mistakes.ts";
@@ -757,8 +758,8 @@ export const netGame: Game<
 
   solve,
   findMistakes,
-  // The solver's verdict. The generator asks more (`finishes` in deduce.ts),
-  // so that the hint finishes every board it deals.
+  // The solver's verdict, and the hint's: a board loads when its hint can
+  // finish it, which is what the generator asks of a board it deals.
   finishesByDeduction: (s) =>
     netSolver(
       s.w,
@@ -766,7 +767,7 @@ export const netGame: Game<
       Uint8Array.from(s.tiles, (t) => t & 0xf),
       s.barriers,
       s.wrapping,
-    ) === SOLVER_UNIQUE,
+    ) === SOLVER_UNIQUE && finishes(s),
   hint: (s, _aux, ui) => netHint(s, targetVerbs, ui ?? newUi(s)),
   hintMarks: {
     roles: {

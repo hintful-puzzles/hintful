@@ -2481,6 +2481,18 @@ with `DEDUCTION_EXHAUSTED` rather than teaching reasoning the player cannot reco
 (§ "The forcing boundary", and `solver-and-generator.md` § "Check, Tactic,
 Search"). Try the notation first; say what made it unmanageable when you fall back.
 
+**A mark the game already has may be the notation (Rectangles).** The solver
+keeps a list of each clue's placements and strikes them one at a time; the
+player has lines. A line across a ruled-out placement records it, because every
+later step rereads the lines (`nextFiring` in
+[`rect/hint.ts`](../../src/games/rect/hint.ts), the `line` rung). Two things
+follow. **A step that leaves nothing a later step reads is not a step**:
+Rectangles once drew a line wherever no fit crossed an edge, which cut no fit,
+so it fired only where the plan was already stuck. And **the notation's reach
+is the hint's reach**: a placement whose every inner edge some live fit still
+crosses cannot be recorded, and that is where the rungs stop short of the
+solver.
+
 **How to check a game against it.** `apply-markable-facts-rule` audited every
 hinting game this way, and its `audit.md` has the verdicts. Read what each sentence
 *cites*, not the words it uses, and ask whether an **earlier** deduction found

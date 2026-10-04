@@ -35,28 +35,7 @@ interface NetFixture {
   aux: string;
 }
 
-/**
- * Seeds where Net deliberately leaves upstream: the generator keeps only boards
- * its hint can finish (`add-net-hint`), and upstream's board for these is not
- * one, so the TS generator deals another. Each is asserted to be exactly that
- * case below, so an entry cannot outlive its reason.
- */
-const DIVERGED = new Set(["net-trace-4"]);
-
-const FIXTURES: readonly NetFixture[] = reference.fixtures.filter(
-  (f) => !DIVERGED.has(f.seed),
-);
-
-describe("net differential: where Net leaves upstream", () => {
-  for (const f of reference.fixtures.filter((f) => DIVERGED.has(f.seed)))
-    it(`${f.seed}: upstream's board is one the hint cannot finish, so it is dealt anew`, () => {
-      const p = paramsOf(f);
-      expect(finishes(newState(p, f.desc))).toBe(false);
-      const { desc } = newDesc(p, randomNew(f.seed));
-      expect(desc).not.toBe(f.desc);
-      expect(finishes(newState(p, desc))).toBe(true);
-    });
-});
+const FIXTURES: readonly NetFixture[] = reference.fixtures;
 
 const paramsOf = (f: NetFixture): NetParams => ({
   w: f.w,
@@ -73,6 +52,9 @@ describeDescDifferential<NetFixture, NetParams>({
   newDesc,
   extra: (f, p) => {
     expect(validateDesc(netGame, p, f.desc)).toBeNull();
+    // The generator keeps only boards the hint finishes, so the byte-match
+    // holds exactly while the hint finishes upstream's board for the seed.
+    expect(finishes(newState(p, f.desc))).toBe(true);
   },
 });
 

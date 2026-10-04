@@ -15,10 +15,11 @@
  *   5. Choose barrier locations from the candidates.
  *   6. If `unique`, keep the board only if the hint's engine (`deduce.ts`)
  *      finishes it from the opening position, and otherwise start again with
- *      the RNG where it is. Upstream's solver settles boards the hint cannot
- *      teach (some wrapping ones, whose reasoning runs through bounds on how
- *      many tiles lie behind a side), and a board the hint cannot finish is one
- *      its player could be left stuck on (`add-net-hint`'s design).
+ *      the RNG where it is. A board the hint cannot finish is one its player
+ *      could be left stuck on, and nothing proves the engine keeps up with the
+ *      solver on every board: `Reach` in `deduce.ts` reads a tile's turnings
+ *      off its sides and the loops they would close, where the solver also
+ *      drops the ones it has found to seal a group.
  *
  * Barriers are chosen *after* the shuffle so that raising the barrier rate on a
  * fixed seed extends the previous barrier set rather than replacing it.

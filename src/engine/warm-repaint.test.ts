@@ -68,9 +68,11 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
   ],
   // A ringed note.
   mathrax: ["5dn:m1g1c,aS2cS1S3dS0d"],
-  // A striped core two clues overlap on.
   rect: [
+    // A striped core two clues overlap on.
     "17x17:e6a14a4c2b3c5a2zb2a9b5f45v6a2m4g3c4c2c4_6j11e2h3_3d5a2f18h3m4_2h20m4b5i2q14d18b8a4c15a2k5_5i6g",
+    // A ringed line.
+    "10x10e0.5:a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c",
   ],
   // A striped row or column.
   rome: ["4x4dn:1a3aa5aba2,gUaLRUcX"],
@@ -106,13 +108,6 @@ const UNREACHED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   crossing: {
     "outline|cell":
       "the shared HintSidecar reads outlined cells, and Crossing's hint outlines only listed numbers",
-  },
-  rect: {
-    // Measured 2026-10-02: the walk of 6,000 deals fired the other rungs
-    // 37,785 times and this one never; it fired on 3 of 315 boards built
-    // with the generator's checks off, which the rungs then did not finish.
-    "ring|line":
-      "the last rung has fired only on boards the rungs do not finish, which the generator does not deal",
   },
 };
 

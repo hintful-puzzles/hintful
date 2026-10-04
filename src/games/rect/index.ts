@@ -41,7 +41,13 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { type RectHint, rectHint, rectKeepTrack, rectRefreshStep } from "./hint.ts";
+import {
+  type RectHint,
+  rectHint,
+  rectKeepTrack,
+  rectRefreshStep,
+  rungsFinish,
+} from "./hint.ts";
 import {
   executeMove,
   gridDrawRect,
@@ -429,17 +435,18 @@ export const rectGame: Game<
 
   solve,
   findMistakes,
-  // The solver's verdict, which is also the answer `findMistakes` compares
-  // against. The generator asks more (`rungsFinish`), so that the hint finishes
-  // every board it deals.
-  finishesByDeduction: (s) => solveFromNumbers(s).verdict === SOLVE_UNIQUE,
+  // The solver's verdict, which is the answer `findMistakes` compares against,
+  // and the hint's: a board loads when its hint can finish it, which is what
+  // the generator asks of a board it deals.
+  finishesByDeduction: (s) =>
+    solveFromNumbers(s).verdict === SOLVE_UNIQUE && rungsFinish(s),
 
   hint: rectHint,
   hintMarks: {
     roles: {
       ring: "what the step draws: the rectangle it decides, or the one edge it makes a line.",
       outline:
-        "what the step reasons from: a clue that blocks another rectangle, or a square only one clue can reach.",
+        "what the step reasons from: a clue that blocks another rectangle, a clue that could cross the ringed edge, or a square only one clue can reach.",
       stripes:
         "the squares another clue covers wherever its rectangle goes, which no other rectangle can use.",
     },

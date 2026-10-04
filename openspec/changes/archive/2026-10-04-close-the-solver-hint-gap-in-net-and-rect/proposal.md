@@ -1,8 +1,10 @@
 # close-the-solver-hint-gap-in-net-and-rect
 
-**Status: scaffolded, not started (2026-10-04).** Found by
-`retire-the-unchecked-board-options`, while deciding what its load check may
-ask.
+**Status: implemented (2026-10-04).** Found by `retire-the-unchecked-board-options`, while deciding what its
+load check may ask. `design.md` has what was found and built: Net's gap is
+closed on every board sampled, and Rectangles' is down from 20 boards in 2,260
+to 3, and both games now refuse at load a board their hint cannot finish
+(owner, 2026-10-04).
 
 ## Why
 

@@ -363,16 +363,28 @@ Upstream's own generator fails this in one place: its Mathrax Recursive tier
 accepts a board with several answers, and all three such fixtures are refused
 (`upstream-descs.test.ts`).
 
-**What `finishesByDeduction` asks is the solver, which can be more than the
-hint knows.** Net's and Rectangles' generators deal only boards their *hint*
-finishes (`finishes`, `rungsFinish`), and their solvers are stronger than their
-hints, so a board upstream dealt with its checks on can load here and still
-strand the hint: 62 of 261 solver-unique wrapping 5×5 Net boards, 2 of 84
-Rectangles 9×9 boards at expansion 0.5 (measured 2026-10-04). Refusing those at
-load would break IDs upstream's generator writes, which is the owner's call
-(`close-the-solver-hint-gap-in-net-and-rect`). The fix that needs no break is
-the doctrine above: one deduction engine, so the hint knows what the solver
-does.
+**What `finishesByDeduction` asks has to include the hint, because a solver
+can be more than the hint knows.** Net's and Rectangles' generators deal only boards their *hint*
+finishes (`finishes`, `rungsFinish`), and a solver can settle a board its hint
+cannot, so a board upstream dealt with its checks on can load here and still
+strand the hint. The fix that needs no break is the doctrine above: one
+deduction engine, so the hint knows what the solver does.
+`close-the-solver-hint-gap-in-net-and-rect` took that route and measured it on
+boards the solver settles (2026-10-04). Net's hint left 150 of 1,510 unfinished
+and now leaves none of 23,100, once its seal rule followed a wire through tiles
+not settled yet. Rectangles' left 20 of 2,260 and now leaves 3, once a line
+recorded a placement that is ruled out; the three need placements ruled out
+that no line can record. For what is left, both games' `finishesByDeduction`
+ask the hint as well as the solver, so such a board is refused at load instead
+of running its hint out mid-game (owner, 2026-10-04). That refuses about one
+Rectangles ID in 750 that upstream's generator writes, and no Net ID found.
+
+**Find the gap by tracing, and size the sample before calling it closed.** Log
+every elimination the solver makes, then ask the hint's engine, at the state
+where it stalled, whether it still holds what the solver just dropped: the
+first disagreement is the missing deduction. And a first sample of 1,510 Net
+boards read as a clean zero while one board in about 700 still stalled, which
+only 22,600 showed (`AGENTS.md` § "Method", on a census that finds zero).
 
 ### Check, Tactic, Search
 

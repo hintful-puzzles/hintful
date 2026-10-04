@@ -44,9 +44,11 @@ are the ideas the hint teaches, from the plainest up:
   number covers the same squares, no other number can use them.
 * **Leaving no room.** A fit that would leave another number nowhere to
   go, or leave a square that no rectangle could cover, is ruled out.
-* **A line no rectangle can cross.** When no fit of any number covers
-  both squares beside an edge, those squares are in different rectangles,
-  so the edge must be a line.
+* **A line no rectangle can cross.** When the only fits across an edge
+  are ruled out, for taking a square another number is sure to cover or
+  for missing a square no other number can reach, the squares beside it
+  are in different rectangles, so the edge must be a line. Drawing it
+  keeps what you worked out: a fit that crosses a line no longer counts.
 
 ## Rectangles parameters
 

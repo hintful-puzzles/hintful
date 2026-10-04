@@ -15,10 +15,9 @@
  * - **side**: it contradicts a wall, a note, or a locked neighbor;
  * - **loop**: its new wires join two tiles the noted and locked wires already
  *   join, which would close a loop;
- * - **sealed**: it closes a group off from the rest of the grid. The group is
- *   the tile, whatever the known wires join to it, and whatever its new wires
- *   reach; it is sealed when no tile in it has a wire to spare that could
- *   still lead out.
+ * - **sealed**: it closes a group off from the rest of the grid. Each of its
+ *   wires runs out after some tiles, whichever way the tiles it passes can
+ *   still turn (`Reach`), and together they reach fewer tiles than there are.
  *
  * `add-net-hint`'s design measures what these reach. The hint projects this
  * engine one step at a time, simplest first; the generator projects it whole,
@@ -26,13 +25,7 @@
  */
 
 import { Dsf } from "../../engine/dsf.ts";
-import {
-  anticlockwise,
-  DIRECTIONS,
-  offset,
-  opposite,
-  wireCount,
-} from "../../engine/wires.ts";
+import { anticlockwise, DIRECTIONS, offset, opposite } from "../../engine/wires.ts";
 import {
   LOCKED,
   type NetState,
@@ -65,6 +58,8 @@ export class Facts {
   /** Per tile, its wire mask (orientation irrelevant until locked). */
   readonly wires: Uint8Array;
   readonly locked: Uint8Array;
+  /** How many tiles carry a wire: the size of the whole network. */
+  readonly area: number;
   /** Per tile and direction (`i * 16 + dir`), what is known of that side. */
   private readonly known: Uint8Array;
   private readonly source: SideSource[];
@@ -75,6 +70,7 @@ export class Facts {
     this.h = s.h;
     this.wires = Uint8Array.from(s.tiles, (t) => t & 0xf);
     this.locked = Uint8Array.from(s.tiles, (t) => (t & LOCKED ? 1 : 0));
+    this.area = this.wires.reduce((a, t) => a + (t ? 1 : 0), 0);
     this.known = new Uint8Array(n * 16);
     this.source = new Array(n * 16);
     for (let i = 0; i < n; i++)
@@ -142,8 +138,15 @@ export type Why =
       readonly dirs: readonly number[];
       readonly path: readonly number[];
     }
-  /** It would close `group` off from the rest of the grid. */
-  | { readonly kind: "sealed"; readonly group: readonly number[] };
+  /** It would close `group` off from the rest of the grid. `runsOn` when its
+   * wires get there through tiles whose turning is still open; `barLoops`
+   * when one of those could lead on only by closing a loop. */
+  | {
+      readonly kind: "sealed";
+      readonly group: readonly number[];
+      readonly runsOn: boolean;
+      readonly barLoops: boolean;
+    };
 
 interface Survey {
   readonly alive: readonly number[];
@@ -182,44 +185,111 @@ function wiredPath(f: Facts, a: number, b: number): number[] {
   return out.reverse();
 }
 
-function sealedBy(f: Facts, i: number, wires: number, comps: Dsf): number[] | null {
-  const n = f.w * f.h;
-  const group = new Set<number>();
-  const addComponent = (t: number) => {
-    const c = comps.canonify(t);
-    for (let u = 0; u < n; u++) if (comps.canonify(u) === c) group.add(u);
-  };
-  addComponent(i);
-  for (const d of DIRECTIONS)
-    if (wires & d && f.get(i, d) === NOTE_UNKNOWN) addComponent(f.neighbor(i, d));
-  if (group.size >= n) return null;
-  for (const t of group) {
-    if (t === i) {
-      for (const d of DIRECTIONS)
-        if (wires & d && !group.has(f.neighbor(t, d))) return null;
-      continue;
-    }
-    // The wires it still has to place, beyond those the group already takes.
-    let used = 0;
-    for (const d of DIRECTIONS) {
-      if (!group.has(f.neighbor(t, d))) continue;
-      if (f.get(t, d) === NOTE_WIRE) used++;
-      else if (
-        f.neighbor(t, d) === i &&
-        wires & opposite(d) &&
-        f.get(t, d) === NOTE_UNKNOWN
-      )
-        used++;
-    }
-    if (wireCount(f.wires[t]) - used <= 0) continue;
-    for (const d of DIRECTIONS)
-      if (f.get(t, d) !== NOTE_NONE && !group.has(f.neighbor(t, d))) return null;
+/** A bound standing for "no bound": the wire could lead on to the rest. */
+const UNBOUNDED = Number.POSITIVE_INFINITY;
+
+/** Whether turning tile `i` to `w` joins, across a side not yet known, two
+ * tiles the known wires already join. */
+function closesLoop(f: Facts, i: number, w: number, comps: Dsf): boolean {
+  const seen = [comps.canonify(i)];
+  for (const d of DIRECTIONS) {
+    if (!(w & d) || f.get(i, d) !== NOTE_UNKNOWN) continue;
+    const c = comps.canonify(f.neighbor(i, d));
+    if (seen.includes(c)) return true;
+    seen.push(c);
   }
-  return [...group];
+  return false;
+}
+
+/**
+ * How far a wire could run. `beyond(t, d)` is the most tiles a wire leaving
+ * tile `t` across side `d` could reach, whichever way the tiles past it turn
+ * among the ways that fit their known sides and close no loop; `UNBOUNDED`
+ * when some way lets it lead on. A tile's bound waits on the bounds past it,
+ * so a wire that could come back round is unbounded.
+ */
+class Reach {
+  private readonly memo = new Map<number, number>();
+  private readonly ways = new Map<number, { open: number[]; looping: boolean }>();
+
+  constructor(
+    private readonly f: Facts,
+    private readonly comps: Dsf,
+  ) {}
+
+  /** The ways tile `u` can turn, and whether a loop is what rules one out. */
+  private fits(u: number): { open: number[]; looping: boolean } {
+    let out = this.ways.get(u);
+    if (!out) {
+      const f = this.f;
+      const fitting = turnings(f.wires[u]).filter((w) =>
+        DIRECTIONS.every((d) => {
+          const k = f.get(u, d);
+          return k === NOTE_UNKNOWN || (k === NOTE_WIRE) === ((w & d) !== 0);
+        }),
+      );
+      const open = fitting.filter((w) => !closesLoop(f, u, w, this.comps));
+      out = { open, looping: open.length < fitting.length };
+      this.ways.set(u, out);
+    }
+    return out;
+  }
+
+  beyond(t: number, d: number): number {
+    const key = t * 16 + d;
+    const known = this.memo.get(key);
+    if (known !== undefined) return known;
+    this.memo.set(key, UNBOUNDED);
+    const u = this.f.neighbor(t, d);
+    const e = opposite(d);
+    const ways = this.fits(u).open.filter((w) => w & e);
+    // A side no way of the tile past it reaches is that tile's to note.
+    let most = ways.length === 0 ? UNBOUNDED : 0;
+    for (const w of ways) {
+      let total = 1;
+      for (const d2 of DIRECTIONS) if (w & d2 && d2 !== e) total += this.beyond(u, d2);
+      most = Math.max(most, total);
+    }
+    this.memo.set(key, most);
+    return most;
+  }
+
+  /** Add the tiles a bounded wire across side `d` of `t` could reach to
+   * `into.group`, and say how it gets to them. */
+  gather(t: number, d: number, into: Sealed): void {
+    const u = this.f.neighbor(t, d);
+    const e = opposite(d);
+    const { open, looping } = this.fits(u);
+    into.group.add(u);
+    if (looping) into.barLoops = true;
+    for (const w of open)
+      for (const d2 of DIRECTIONS) {
+        if (!(w & e) || !(w & d2) || d2 === e) continue;
+        if (this.f.get(u, d2) !== NOTE_WIRE) into.runsOn = true;
+        this.gather(u, d2, into);
+      }
+  }
+}
+
+interface Sealed {
+  group: Set<number>;
+  runsOn: boolean;
+  barLoops: boolean;
+}
+
+/** What turning `i` to `wires` would close off from the rest, when every wire
+ * of it runs out before reaching the whole grid. */
+function sealedBy(f: Facts, i: number, wires: number, reach: Reach): Sealed | null {
+  let total = 1;
+  for (const d of DIRECTIONS) if (wires & d) total += reach.beyond(i, d);
+  if (total >= f.area) return null;
+  const sealed: Sealed = { group: new Set([i]), runsOn: false, barLoops: false };
+  for (const d of DIRECTIONS) if (wires & d) reach.gather(i, d, sealed);
+  return sealed;
 }
 
 /** Every way tile `i` could turn, and why each ruled-out one is. */
-function survey(f: Facts, i: number, comps: Dsf = wiredComponents(f)): Survey {
+function survey(f: Facts, i: number, comps: Dsf, reach: Reach): Survey {
   const alive: number[] = [];
   const ruledOut: { wires: number; why: Why }[] = [];
   for (const w of turnings(f.wires[i])) {
@@ -256,20 +326,25 @@ function survey(f: Facts, i: number, comps: Dsf = wiredComponents(f)): Survey {
       ruledOut.push({ wires: w, why: loop });
       continue;
     }
-    const group = sealedBy(f, i, w, comps);
-    if (group) ruledOut.push({ wires: w, why: { kind: "sealed", group } });
+    const sealed = sealedBy(f, i, w, reach);
+    if (sealed)
+      ruledOut.push({
+        wires: w,
+        why: { kind: "sealed", ...sealed, group: [...sealed.group] },
+      });
     else alive.push(w);
   }
   return { alive, ruledOut };
 }
 
 /** How hard a step is to see, by the hardest reason it cites: walls alone,
- * then notes and locks, then a loop, then a sealed group. */
+ * then notes and locks, then a loop, then a sealed group, then one a wire
+ * reaches only through tiles still open. */
 function difficulty(whys: readonly Why[], f: Facts): number {
   let d = 0;
   for (const why of whys) {
     if (why.kind === "loop") d = Math.max(d, 2);
-    else if (why.kind === "sealed") d = Math.max(d, 3);
+    else if (why.kind === "sealed") d = Math.max(d, why.runsOn || why.barLoops ? 4 : 3);
     else if (why.sides.some((s) => f.from(s.at, s.dir).kind !== "wall"))
       d = Math.max(d, 1);
   }
@@ -302,6 +377,7 @@ export type Step =
 export function nextStep(f: Facts): Step | null {
   const n = f.w * f.h;
   const comps = wiredComponents(f);
+  const reach = new Reach(f, comps);
   let best: Step | null = null;
   let bestRank = Number.POSITIVE_INFINITY;
   const consider = (step: Step, rank: number) => {
@@ -312,7 +388,7 @@ export function nextStep(f: Facts): Step | null {
   };
   for (let i = 0; i < n; i++) {
     if (f.locked[i]) continue;
-    const r = survey(f, i, comps);
+    const r = survey(f, i, comps, reach);
     if (r.alive.length === 1) {
       const because = r.ruledOut;
       consider(

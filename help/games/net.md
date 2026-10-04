@@ -69,7 +69,9 @@ The ideas it teaches:
 * **Nothing sealed off.** A way of turning that would close a group of
   squares off, with no wire left to lead anywhere else, cannot be right
   unless the group is the whole grid: two dead ends facing each other are
-  the smallest case.
+  the smallest case. The wire need not be drawn yet. A way of turning
+  that leads only into squares where the wire must stop, however they turn
+  without closing a loop, seals them off just the same.
 
 When a square has to turn before it can be locked, the hint turns it and
 then locks it, as one step.

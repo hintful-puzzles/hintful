@@ -65,6 +65,8 @@ function premisesOf(f: Facts, step: Step): Premises {
   const trapping: number[] = [];
   let loop = false;
   let seal = false;
+  let runsOn = false;
+  let barLoops = false;
   const striped = new Map<number, Point>();
   const stripe = (t: number) => {
     if (t !== step.at) striped.set(t, pointOf(f, t));
@@ -87,6 +89,8 @@ function premisesOf(f: Facts, step: Step): Premises {
       for (const t of why.path) stripe(t);
     } else {
       seal = true;
+      if (why.runsOn) runsOn = true;
+      if (why.barLoops) barLoops = true;
       for (const t of why.group) stripe(t);
     }
   }
@@ -111,6 +115,8 @@ function premisesOf(f: Facts, step: Step): Premises {
     deadEnds:
       striped.size > 0 && [...striped.keys()].every((t) => wireCount(f.wires[t]) === 1),
     acrossEdge,
+    runsOn: runsOn || barLoops,
+    barLoops,
     only: trapping.length === 1 ? trapping[0] : null,
   };
 }

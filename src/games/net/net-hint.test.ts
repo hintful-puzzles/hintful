@@ -18,6 +18,7 @@ import { newDesc } from "./generator.ts";
 import type { NetHint } from "./hint.ts";
 import { netGame } from "./index.ts";
 import { COL_HINT } from "./render.ts";
+import { netSolver, SOLVER_UNIQUE } from "./solver.ts";
 import {
   LOCKED,
   type NetMove,
@@ -64,6 +65,53 @@ describe("the plan", () => {
       expect(netGame.status(s)).toBe("solved");
     });
   }
+});
+
+describe("boards the solver settles", () => {
+  const W5: NetParams = { w: 5, h: 5, wrapping: true, barrierProbability: 0 };
+
+  /** The plan's sentences on `desc`, each step checked against the solver's
+   * answer, and the board it leaves. */
+  function follow(p: NetParams, desc: string) {
+    const state = newState(p, desc);
+    const solution = Uint8Array.from(state.tiles, (t) => t & 0xf);
+    expect(netSolver(p.w, p.h, solution, state.barriers, p.wrapping)).toBe(
+      SOLVER_UNIQUE,
+    );
+    let s = state;
+    const said: string[] = [];
+    for (const step of plan(state)) {
+      const m = step.move;
+      said.push(step.explanation);
+      if (m.type === "note")
+        expect((solution[m.y * p.w + m.x] & m.dir) !== 0).toBe(m.note === NOTE_WIRE);
+      s = netGame.executeMove(s, m);
+      if (m.type === "lock")
+        expect(s.tiles[m.y * p.w + m.x] & 0xf).toBe(solution[m.y * p.w + m.x] & 0xf);
+    }
+    return { said, solved: netGame.status(s) === "solved" };
+  }
+
+  it("follows a wire through squares not settled yet", () => {
+    // Upstream's board for the seed "net-trace-4". A dead end, two straights
+    // and a dead end stand in one column: upright, the straight joins all
+    // four and nothing else, though no wire between them is known.
+    const { said, solved } = follow(W5, "19d7aaae8449d5636cad43c44");
+    expect(solved).toBe(true);
+    expect(said).toContain(
+      "Standing upright, this straight would lead only into the striped squares, where its wire must stop however they turn, sealing them off from the rest, so it must stay across: lock it.",
+    );
+  });
+
+  it("counts out a turning that would close a loop on the way", () => {
+    // A board the hint finishes only by reading a square's turnings off the
+    // loops they would close as well as off its sides.
+    const { said, solved } = follow(W5, "8792436dbc43da835b68849b3");
+    expect(solved).toBe(true);
+    expect(
+      said.some((t) => t.includes("however they turn without closing a loop")),
+    ).toBe(true);
+  });
 });
 
 describe("keep-track", () => {

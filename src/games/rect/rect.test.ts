@@ -24,6 +24,7 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
+import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { cloneRectState, executeMove, newState, status } from "./moves.ts";
 import { BORDER, COL_MISTAKE, newDrawState, redraw } from "./render.ts";
@@ -420,11 +421,29 @@ describe("rect loading", () => {
     );
   });
 
-  it("loads a board the solver finishes, though the hint's rungs do not", () => {
-    // Upstream's board for 10x10e0.5 (`rect-hint.test.ts` pins it as one the
-    // generator's gate turns away). Its one answer is what loading asks for.
+  it("refuses a board the solver finishes and the hint's rungs do not", () => {
+    // `rect-hint.test.ts` pins it as one the generator's gate turns away. A
+    // board that loaded and then ran its hint out would have no tier to
+    // excuse the refusal.
+    const p = P({ w: 9, h: 9 });
+    expect(loadVerdict(rectGame, p, "c4c5b9c12b2h2k12e2f2_3c12a8l3d5d")).toBe(
+      DESC_NOT_DEDUCIBLE,
+    );
+  });
+
+  it("loads upstream's 10x10 board, which the hint finishes through a line", () => {
     const p = P({ w: 10, h: 10, expandfactor: 0.5 });
     expect(loadVerdict(rectGame, p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c")).toBeNull();
+  });
+
+  it("refuses a board only the hint's rungs finish", () => {
+    // The rungs look one fit ahead (`starve`), which the solver does not, so
+    // they finish this board and the solver stalls on it. The answer
+    // `findMistakes` compares against is the solver's, so there is none here.
+    expect(loadVerdict(rectGame, P(), "b4c2b3a2_2a2b3c4a4b3_6b6h4e2a2a")).toBe(
+      DESC_NOT_DEDUCIBLE,
+    );
+    expect(rungsFinish(newState(P(), "b4c2b3a2_2a2b3c4a4b3_6b6h4e2a2a"))).toBe(true);
   });
 });
 

@@ -148,10 +148,9 @@ describe("loading", () => {
     );
   });
 
-  it("loads a board the solver settles, though the hint cannot finish it", () => {
-    // Upstream's board for the one seed `net-differential.test.ts` lists as
-    // diverged, where the generator deals again. Its one answer is what
-    // loading asks.
+  it("loads a wrapping board upstream dealt", () => {
+    // Upstream's board for the seed "net-trace-4", whose one answer is what
+    // loading asks. `net-hint.test.ts` pins that the hint finishes it.
     const p: NetParams = { w: 5, h: 5, wrapping: true, barrierProbability: 0 };
     expect(loadVerdict(netGame, p, "19d7aaae8449d5636cad43c44")).toBeNull();
   });

@@ -16,10 +16,10 @@
  *
  * The generator deals only boards the hint's rungs finish (`rungsFinish`), and
  * deals again where C would return one they do not, so a seed whose C board is
- * one of those diverges from C there on purpose. The one fixture that was
- * (10x10e0.5, the seed ending "10-e") is retired; its desc is pinned in
- * `rect-hint.test.ts` as the board the gate turns away. The two fixtures C
- * dealt with "Ensure unique solution" off are retired with the option.
+ * one of those diverges from C there on purpose. No fixture here is such a
+ * board; `rect-hint.test.ts` pins one as the board the gate turns away. The two
+ * fixtures C dealt with "Ensure unique solution" off are retired with the
+ * option.
  */
 
 import { describe, expect, it } from "vitest";

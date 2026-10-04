@@ -71,16 +71,23 @@ describe("rect hint rungs", () => {
       /^Anywhere else, the \d+ would leave the outlined/,
     ],
     [
-      // A board the rungs do not finish: no board the generator deals has
-      // fired this rung (0 of 6,000, 2026-10-02).
+      // Upstream's board for 10x10e0.5 (`rect-differential.test.ts`), which the
+      // rungs finish only through this line.
       "line",
-      P7,
-      "a2c3a2_2b2f5_2_3b3a4b2_3h3b6_4c3b",
-      /^No rectangle can cover both the outlined squares, so this edge between them must be a line\.$/,
+      params(10, 10, 0.5),
+      "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c",
+      /^Only the outlined 4 could cross this edge, and it would take the striped square, which the outlined 21 covers wherever it goes, so the edge must be a line\.$/,
+    ],
+    [
+      // The other reason a fit across the edge is out.
+      "line",
+      params(9, 9),
+      "c5i5b2e3a2b8_8k12g6d6b6c6f3b6b3g",
+      /^Only the outlined 5 could cross this edge, and it would miss the outlined square, which no other clue reaches, so the edge must be a line\.$/,
     ],
   ];
   for (const [kind, p, desc, words] of pins)
-    it(`${kind} fires and says why`, () => {
+    it(`${kind} fires and says why, ${p.w}x${p.h}`, () => {
       const hit = firstOf(p, desc, kind);
       expect(hit, `${kind} never fires on ${desc}`).not.toBeNull();
       if (!hit) return;
@@ -88,6 +95,35 @@ describe("rect hint rungs", () => {
       if (!res.ok) throw new Error(res.error);
       expect(res.steps[0].explanation).toMatch(words);
     });
+
+  it("several clues across one edge share a clause", () => {
+    const p = params(15, 15, 1);
+    let s = newState(p, "h12e8d15zc6a12k40d24e10zk24ze24k20zl10t20h");
+    let f = nextFiring(s);
+    while (f && !(f.kind === "line" && f.across.length > 1)) {
+      s = executeMove(s, moveOf(f));
+      f = nextFiring(s);
+    }
+    expect(f?.kind).toBe("line");
+    const res = rectHint(s);
+    if (!res.ok) throw new Error(res.error);
+    expect(res.steps[0].explanation).toBe(
+      "Only the outlined 12, 24 and 24 could cross this edge, and each would take a striped square, which another outlined clue covers wherever it goes, so the edge must be a line.",
+    );
+  });
+
+  it("a line cuts a fit: every fit across the edge it draws is gone after it", () => {
+    // A line no fit crosses would change nothing a later step reads, so the
+    // rung leaves such an edge alone.
+    const p = params(10, 10, 0.5);
+    const hit = firstOf(p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c", "line");
+    if (hit?.f.kind !== "line") throw new Error("no line");
+    expect(hit.f.across.length).toBeGreaterThan(0);
+    const before = rectHint(hit.s);
+    const after = rectHint(executeMove(hit.s, moveOf(hit.f)));
+    if (!before.ok || !after.ok) throw new Error("no plan");
+    expect(after.steps.length).toBe(before.steps.length - 1);
+  });
 
   it("a 1 is its own rectangle", () => {
     const p = params(2, 1);
@@ -117,13 +153,18 @@ describe("rect hint plan", () => {
   });
 
   it("the gate turns away a board the rungs cannot finish", () => {
-    // The retired C fixture at 10x10e0.5 (rect-differential.test.ts): uniquely solvable,
-    // but past the rungs, so the generator deals again instead.
-    const p = params(10, 10, 0.5);
-    expect(rungsFinish(newState(p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c"))).toBe(
-      false,
-    );
+    // A board the solver settles (`rect.test.ts` pins that loading refuses
+    // it) by ruling
+    // fits out over several rounds, none of which leaves an edge no fit
+    // crosses, so no line can record them and the generator deals again.
+    const p = params(9, 9);
+    expect(rungsFinish(newState(p, "c4c5b9c12b2h2k12e2f2_3c12a8l3d5d"))).toBe(false);
     expect(rungsFinish(newState(P7, "2j8_4b2b4a4d3b6j6b6b2b2"))).toBe(true);
+  });
+
+  it("finishes upstream's 10x10 board, which needs a line", () => {
+    const p = params(10, 10, 0.5);
+    expect(rungsFinish(newState(p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c"))).toBe(true);
   });
 });
 

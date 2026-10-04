@@ -4,8 +4,8 @@
  * Every rung reads only what the player can see: the clues and the lines
  * drawn. A clue's **fits** are the rectangles of its area that contain it, stay
  * on the board, take in no other clue and cross no drawn line; a step draws a
- * clue's rectangle when one fit is left, or draws a line no rectangle can
- * straddle. Nothing a step concludes needs a notation the game lacks: the
+ * clue's rectangle when one fit is left, or draws a line where the only
+ * rectangles that could cross an edge are ruled out. Nothing a step concludes needs a notation the game lacks: the
  * rectangle and the line it draws are the player's own marks, and every later
  * step rereads the board.
  *
@@ -18,7 +18,13 @@
  *   clue has one fit left that avoids them.
  * - **starve**: every fit but one would leave another clue no room, or leave a
  *   square that no rectangle could cover.
- * - **line**: no fit of any clue covers both squares beside an edge.
+ * - **line**: the fits across an edge are each out at a glance, for taking a
+ *   square another clue covers wherever it goes, or for leaving out a square
+ *   no other clue reaches.
+ *
+ * A line is the one notation the game has for "this placement is out", which
+ * is what the solver keeps in its lists (`rectSolver`) and what lets the rungs
+ * follow it: every later step rereads the lines.
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
@@ -46,7 +52,19 @@ export type RectFiring =
   | { kind: "reach"; clue: number; rect: Rect; square: number }
   | { kind: "overlap"; clue: number; rect: Rect; other: number; core: number[] }
   | { kind: "starve"; clue: number; rect: Rect; starved: number[]; stranded: number[] }
-  | { kind: "line"; edge: RectEdge; squares: [number, number] };
+  | { kind: "line"; edge: RectEdge; across: Crossing[] };
+
+/**
+ * A clue with fits across an edge, and why none of them stands: each takes a
+ * square (`takes`) that another clue (`owners`) covers wherever it goes, or
+ * leaves out a square (`misses`) that no other clue reaches.
+ */
+export interface Crossing {
+  clue: number;
+  takes: number[];
+  owners: number[];
+  misses: number[];
+}
 
 /** A step's highlights: nothing but the move's own data, which keep-track and
  * refresh compare against. The marks are the words' (`stepMarks`). */
@@ -213,18 +231,63 @@ export function nextFiring(s: RectState): RectFiring | null {
       };
   }
 
-  const all = clues.flatMap(fitsFor);
-  const apart = (a: number, b: number): boolean =>
-    !all.some((r) => covers(r, a, w) && covers(r, b, w));
+  // A fit is out at a glance when it takes a square another clue is sure of,
+  // or leaves out one that only its own clue reaches. An edge is a line when
+  // every fit across it is out, and the line is how the player keeps that. An
+  // edge no fit crosses is left alone: a line there would cut no fit, so no
+  // later step could tell it had been drawn.
+  const all = clues.flatMap((clue) => fitsFor(clue).map((rect) => ({ clue, rect })));
+  const sure = new Map(clues.map((c) => [c, common(fitsFor(c))]));
+  const sole = cellsOf({ x: 0, y: 0, w, h }, w).map((i) => {
+    const who = clues.filter((c) => fitsFor(c).some((r) => covers(r, i, w)));
+    return who.length === 1 ? who[0] : -1;
+  });
+  const crossing = (a: number, b: number): Crossing[] | null => {
+    const by = new Map<number, Crossing>();
+    for (const { clue, rect } of all) {
+      if (!covers(rect, a, w) || !covers(rect, b, w)) continue;
+      const c = by.get(clue) ?? { clue, takes: [], owners: [], misses: [] };
+      by.set(clue, c);
+      const owner = clues.find((o) => {
+        const core = sure.get(o);
+        return o !== clue && core && overlap(core, rect);
+      });
+      if (owner !== undefined) {
+        const core = sure.get(owner) as Rect;
+        for (const i of cellsOf(core, w))
+          if (covers(rect, i, w) && !c.takes.includes(i)) c.takes.push(i);
+        if (!c.owners.includes(owner)) c.owners.push(owner);
+        continue;
+      }
+      const missed = sole.findIndex((who, i) => who === clue && !covers(rect, i, w));
+      if (missed < 0) return null;
+      if (!c.misses.includes(missed)) c.misses.push(missed);
+    }
+    return [...by.values()];
+  };
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      if (vrange(w, h, x, y) && !s.vedge[i] && apart(i - 1, i))
-        return { kind: "line", edge: { edge: "v", x, y }, squares: [i - 1, i] };
-      if (hrange(w, h, x, y) && !s.hedge[i] && apart(i - w, i))
-        return { kind: "line", edge: { edge: "h", x, y }, squares: [i - w, i] };
+      const edges: [boolean, RectEdge, number][] = [
+        [vrange(w, h, x, y) && !s.vedge[i], { edge: "v", x, y }, i - 1],
+        [hrange(w, h, x, y) && !s.hedge[i], { edge: "h", x, y }, i - w],
+      ];
+      for (const [open, edge, j] of edges) {
+        const across = open ? crossing(j, i) : null;
+        if (across && across.length > 0) return { kind: "line", edge, across };
+      }
     }
   return null;
+}
+
+/** The squares every one of `fits` covers, or null when there are none. */
+function common(fits: readonly Rect[]): Rect | null {
+  if (fits.length === 0) return null;
+  const x = Math.max(...fits.map((r) => r.x));
+  const y = Math.max(...fits.map((r) => r.y));
+  const x2 = Math.min(...fits.map((r) => r.x + r.w));
+  const y2 = Math.min(...fits.map((r) => r.y + r.h));
+  return x2 > x && y2 > y ? { x, y, w: x2 - x, h: y2 - y } : null;
 }
 
 /** Whether the rungs alone finish `s`. The generator deals only boards they

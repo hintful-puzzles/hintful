@@ -330,7 +330,7 @@ export function newDesc(
     const desc = encodeNumbers(numbers, pw * ph);
     // A board the hint could not finish would leave a player it had helped
     // stranded with a refusal that blames the board's difficulty, which this
-    // game has no tier to excuse. About one board in a hundred; deal again.
+    // game has no tier to excuse. Deal again.
     if (!rungsFinish(newState(params, desc))) continue;
     return { desc, aux };
   }
