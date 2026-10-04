@@ -30,7 +30,8 @@ export interface SaveEnvelope {
   pos: number;
   /** Accumulated timer seconds. */
   timerElapsed: number;
-  /** Present once a hint was shown on this board. */
+  /** Present once the board was helped short of the solver (`Midend.helped`).
+   * The key says `hinted` because saves players hold are written with it. */
   hinted?: boolean;
   /** Whether the solver was used on this board (drives "solved-with-help"):
    * the midend's record, since no game's state keeps one. `v: 1` saves called

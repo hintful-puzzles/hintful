@@ -370,8 +370,11 @@ is final: undoing afterwards will not restart it. If you lose (in Mines, say),
 the clock waits while the board stays lost and carries on if you undo.
 
 When you solve the board, the time appears in the message that congratulates
-you. If you used a hint or the solver on that board, the message says so
-beside the time.
+you. If the app helped on that board, the message says so beside the time. A
+hint counts as help, and so does the solver, and so does a
+[check](#checking) that found something: a mistake, or a position there is no
+way on from. A check that finds nothing wrong does not count, so saving a sound
+board is always free.
 
 ## Autosave {#autosave}
 

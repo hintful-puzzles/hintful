@@ -160,8 +160,9 @@ export type ConfigValues = Record<string, string | boolean | number>;
 /**
  * The solve timer as the player sees it: `null` while this game's timer is
  * switched off (the `show-timer` preference), otherwise the whole seconds
- * elapsed and whether help was taken on this board — a hint shown or the
- * solver used — so a time is never presented as unassisted when it was not.
+ * elapsed and whether help was taken on this board — a hint shown, a check
+ * that found something, or the solver used — so a time is never presented as
+ * unassisted when it was not.
  *
  * Sent only when one of those changes, which is at most once a second: the
  * midend ticks at the animation rate, and the chrome has no use for the rest.

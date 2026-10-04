@@ -7605,7 +7605,16 @@ solved board the player breaks, or undoes out of, SHALL count again (owner,
 app the clock follows). A new board SHALL reset the time. The midend SHALL
 report the timer as a `timer-change` notification carrying either `null` (the
 timer is off) or the whole seconds elapsed and whether help was taken on the
-board (a hint shown, or the solver used), sent only when that readout changes.
+board, sent only when that readout changes.
+
+Help is the app doing some of the solving, and the midend SHALL count as help:
+a hint step shown, the solver used, and the app finding something wrong with
+the position, which is mistakes highlighted or a dead end named (owner,
+2026-10-04: a check that finds something saves the player the time of finding
+it). The last SHALL count alike whether Check, Check & save or the Hint button
+asked, and in every game: it is one rule in the midend and no game declares
+anything about it. A check that finds nothing, and a refusal that is not a dead
+end, SHALL NOT count, so saving a sound board never marks it.
 
 #### Scenario: A game that does not ask for a timer offers one
 
@@ -7637,6 +7646,16 @@ board (a hint shown, or the solver used), sent only when that readout changes.
 
 - **WHEN** a hint is shown on a timed board
 - **THEN** the timer's readout reports the board as assisted, until a new board is dealt
+
+#### Scenario: A check that finds something is help
+
+- **WHEN** a check, or a press of Hint, highlights mistakes or names a dead end
+- **THEN** the timer's readout reports the board as assisted
+
+#### Scenario: A check that finds nothing is not
+
+- **WHEN** a check passes a board, or cannot settle it past the search's reach
+- **THEN** the readout does not report the board as assisted on that account
 
 ### Requirement: A game reads its description once
 

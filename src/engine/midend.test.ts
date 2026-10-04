@@ -729,6 +729,16 @@ describe("Midend timer", () => {
     expect(readout(h)).toEqual({ seconds: 0, assisted: false });
   });
 
+  it("says a time was helped once a check finds a mistake, and not before", () => {
+    const h = harness({ ...fakeGame, findMistakes: (s) => (s.count < 0 ? ["x"] : []) });
+    h.m.newGame();
+    expect(h.m.check()).toEqual({ kind: "sound", mistakesChecked: true });
+    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
+    dec(h);
+    expect(h.m.check()).toEqual({ kind: "mistakes", count: 1 });
+    expect(readout(h)).toEqual({ seconds: 0, assisted: true });
+  });
+
   it("waits on a board the game says holds it, and resumes when it no longer does", () => {
     // A Mines death in miniature: below zero the board is "dead" but ongoing.
     const h = harness({ ...fakeGame, timerHolds: (s) => s.count < 0 });

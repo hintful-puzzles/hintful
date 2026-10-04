@@ -14,6 +14,7 @@ import {
 } from "./hint-refusal.ts";
 import { CELL, mark, phrase } from "./hint-words.ts";
 import { Midend } from "./midend.ts";
+import { decodeSave } from "./save.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 /** What the hint says at each count below the target; a plan anywhere else. */
@@ -101,6 +102,47 @@ describe("the check behind Check & save", () => {
     m.playMoves(["dec"]);
     expect(m.check()).toEqual({ kind: "sound", mistakesChecked: true });
     expect(paint()).toBeNull();
+  });
+
+  // Owner, 2026-10-04: a check that finds something saves the player the time
+  // of finding it, which is the app doing some of the solving; one that finds
+  // nothing does not.
+  describe("counts as help exactly when it finds something", () => {
+    const helped = (m: { saveGame(): Uint8Array }) =>
+      decodeSave(m.saveGame()).hinted === true;
+
+    it("on mistakes, from Check and from the Hint button alike", () => {
+      for (const press of ["check", "hint"] as const) {
+        const { m, at } = checkedGame();
+        at(-9);
+        expect(helped(m)).toBe(false);
+        m[press]();
+        expect(helped(m), press).toBe(true);
+      }
+    });
+
+    it("on a dead end, marked or not, from either button", () => {
+      for (const count of [-1, -2]) {
+        for (const press of ["check", "hint"] as const) {
+          const { m, at } = checkedGame();
+          at(count);
+          m[press]();
+          expect(helped(m), `${press} at ${count}`).toBe(true);
+        }
+      }
+    });
+
+    it("not on a sound board, nor on one the hint can settle nothing about", () => {
+      const { m, at } = checkedGame();
+      expect(m.check()).toEqual({ kind: "sound", mistakesChecked: true });
+      expect(helped(m)).toBe(false);
+      at(-3);
+      expect(m.check()).toEqual({ kind: "out-of-reach" });
+      expect(m.hint()).toBe(SEARCH_OUT_OF_REACH);
+      m.playMoves(["dec"]);
+      expect(m.check()).toEqual({ kind: "sound", mistakesChecked: true });
+      expect(helped(m)).toBe(false);
+    });
   });
 
   it("shows no hint, and takes a stored plan as its answer", () => {

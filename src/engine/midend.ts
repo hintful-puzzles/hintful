@@ -304,9 +304,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private readonly statuses = new WeakMap<object, GameStatus>();
   /** The next transition is the Solve command's, which does not celebrate. */
   private pendingSolve = false;
-  /** A hint has been shown on this board. With `cheated`, what makes a time
-   * read as assisted; saved alongside it. */
-  private hinted = false;
+  /** The app has told the player something about this board that they had not
+   * worked out: a hint shown, mistakes found, or a dead end named. A check
+   * that finds nothing tells them only to carry on, and does not count. With
+   * `cheated`, what makes a time read as assisted; saved alongside it. */
+  private helped = false;
   /** The last `timer-change` sent, as a comparable key, so the per-frame tick
    * reports only when the readout changes. */
   private lastTimerKey: string | null = null;
@@ -513,7 +515,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.clearHint();
     this.clearOverlays();
     this.timerElapsed = 0;
-    this.hinted = false;
+    this.helped = false;
     this.clearAnimation();
     this.emitIdChange();
     this.emitParamsChange();
@@ -849,7 +851,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const mistakes = this.game.findMistakes(this.state);
     this.activeMistakes = mistakes.length > 0 ? mistakes : null;
     this.requestRedraw();
+    if (mistakes.length > 0) this.markHelped();
     return mistakes.length;
+  }
+
+  private markHelped(): void {
+    this.helped = true;
+    this.emitTimer();
   }
 
   /**
@@ -878,9 +886,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return { kind: "dead-end", reason: result.error };
   }
 
-  /** Mark a dead end's cause, when its words name one. */
+  /** Take a refusal as the hint's word on this position: a dead end counts as
+   * help, and its cause is marked when its words name one. */
   private showDeadEnd(result: HintResult<Move>): void {
-    if (result.ok || !result.words) return;
+    if (result.ok) return;
+    if (isDeadEnd(result.error)) this.markHelped();
+    if (!result.words) return;
     this.activeDeadEnd = result;
     this.requestRedraw();
   }
@@ -948,12 +959,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // because a finished board is not a wrong one. The second promises a
     // highlight, so it is said only once the mistakes are on the overlay.
     if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;
-    const mistakes = this.game.findMistakes?.(this.state) ?? [];
-    if (mistakes.length > 0) {
-      this.activeMistakes = mistakes;
-      this.requestRedraw();
-      return FIX_MISTAKES_FIRST;
-    }
+    if (this.findMistakes() > 0) return FIX_MISTAKES_FIRST;
     const result = this.game.hint(this.state, this.aux, this.ui);
     if (!result.ok && result.error === DEDUCTION_EXHAUSTED) {
       // The refusal tells the player the tier allows positions that need trial
@@ -981,9 +987,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.advanceHintOnAnimationEnd = false;
     this.hintDisplayed = true;
     // Every displayed step comes from a plan made here, so this is the one
-    // place a board can first be helped by a hint.
-    this.hinted = true;
-    this.emitTimer();
+    // place a board can first be helped by a hint's step.
+    this.markHelped();
     return null;
   }
 
@@ -1619,7 +1624,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       moves: this.moveLog.map(serMove),
       pos: this.pos,
       timerElapsed: this.timerElapsed,
-      ...(this.hinted ? { hinted: true } : {}),
+      ...(this.helped ? { hinted: true } : {}),
       cheated: this.cheated,
       ...(this.game.encodeUi ? { ui: this.game.encodeUi(this.ui) } : {}),
     };
@@ -1695,7 +1700,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.pos = Math.min(env.pos, this.history.length - 1);
     this.cheated = env.cheated;
     this.timerElapsed = env.timerElapsed;
-    this.hinted = env.hinted === true;
+    this.helped = env.hinted === true;
     // Restore Ui state the move log cannot reconstruct (Mines' death counter /
     // completion flag), after the replay above — replay goes through
     // `executeMove`, never `interpretMove`, so a death removed from the log by
@@ -1751,7 +1756,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const timer: TimerReadout | null = this.showTimer
       ? {
           seconds: Math.floor(this.timerElapsed),
-          assisted: this.hinted || this.cheated,
+          assisted: this.helped || this.cheated,
         }
       : null;
     const key = timer === null ? "" : `${timer.seconds}:${timer.assisted}`;

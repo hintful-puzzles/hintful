@@ -208,14 +208,14 @@ export const MODULES = [
         // board it knows is wrong.
         within: "Midend.computeHintPlan",
         why: "a hint deduces from a board with known mistakes instead of refusing",
-        find: "    if (mistakes.length > 0) {",
-        replace: "    if (false) {",
+        find: "    if (this.findMistakes() > 0) return FIX_MISTAKES_FIRST;",
+        replace: "    this.findMistakes();",
       },
       {
         within: "Midend.computeHintPlan",
         why: "a finished board is handed to the game's hint instead of refused",
-        find: '    if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;\n    const mistakes',
-        replace: "    const mistakes",
+        find: '    if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;\n    if (this.findMistakes',
+        replace: "    if (this.findMistakes",
       },
       {
         within: "Midend.newGameFromId",

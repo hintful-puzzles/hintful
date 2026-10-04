@@ -122,7 +122,7 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
 
   /**
    * The solve time, for a player who has the timer on. **Help is said beside
-   * it**: a time reached with a hint or the solver is still the player's time,
+   * it**: a time reached with the app's help is still the player's time,
    * but presenting it bare would claim something it is not.
    */
   private renderTime() {
