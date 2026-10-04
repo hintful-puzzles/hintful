@@ -50,7 +50,6 @@ function state3x3(desc: string, params?: Partial<SamegameParams>): SamegameState
     h: 3,
     ncols: 3,
     scoresub: 2,
-    soluble: true,
     ...params,
   };
   return newState(p, desc);
@@ -58,15 +57,12 @@ function state3x3(desc: string, params?: Partial<SamegameParams>): SamegameState
 
 describe("Same Game params", () => {
   it("round-trips and decodes leniently", () => {
-    const p: SamegameParams = { w: 15, h: 10, ncols: 4, scoresub: 2, soluble: true };
+    const p: SamegameParams = { w: 15, h: 10, ncols: 4, scoresub: 2 };
     expect(encodeParams(p, true)).toBe("15x10c4s2");
     expect(decodeParams("15x10c4s2")).toEqual(p);
 
-    const r: SamegameParams = { w: 15, h: 10, ncols: 4, scoresub: 2, soluble: false };
-    expect(encodeParams(r, true)).toBe("15x10c4s2r");
-    expect(decodeParams("15x10c4s2r")).toEqual(r);
-    // `r` only appears with full encoding.
-    expect(encodeParams(r, false)).toBe("15x10c4s2");
+    // Upstream's `r` asks for a grid nothing promises can be cleared.
+    expect(decodeParams("15x10c4s2r")).toEqual(p);
 
     // Lenient: a bare width yields a square board with the defaults.
     expect(decodeParams("5")).toEqual({
@@ -74,22 +70,24 @@ describe("Same Game params", () => {
       h: 5,
       ncols: 3,
       scoresub: 2,
-      soluble: true,
     });
   });
 
-  it("validates the soluble and random branches", () => {
+  it("validates colors, area and scoring", () => {
     const valid = (p: SamegameParams) => paramsError(samegameGame, p, true);
-    expect(valid({ w: 5, h: 5, ncols: 3, scoresub: 2, soluble: true })).toBeNull();
-    // soluble needs ≥ 3 colors.
-    expect(valid({ w: 5, h: 5, ncols: 2, scoresub: 2, soluble: true })).not.toBeNull();
-    // random needs area ≥ 2·ncols.
-    expect(valid({ w: 2, h: 2, ncols: 3, scoresub: 2, soluble: false })).not.toBeNull();
+    expect(valid({ w: 5, h: 5, ncols: 3, scoresub: 2 })).toBeNull();
+    // A grid built to be cleared needs ≥ 3 colors and more than one square.
+    expect(valid({ w: 5, h: 5, ncols: 2, scoresub: 2 })).toBe(
+      "Number of colors must be at least three.",
+    );
+    expect(valid({ w: 1, h: 1, ncols: 3, scoresub: 2 })).toBe(
+      "Grid area must be greater than one.",
+    );
     // scoring system must be 1 or 2.
-    expect(valid({ w: 5, h: 5, ncols: 3, scoresub: 3, soluble: true })).toBe(
+    expect(valid({ w: 5, h: 5, ncols: 3, scoresub: 3 })).toBe(
       "Scoring system must be one of (n-1)², (n-2)².",
     );
-    expect(valid({ w: 5, h: 5, ncols: 10, scoresub: 2, soluble: true })).toBe(
+    expect(valid({ w: 5, h: 5, ncols: 10, scoresub: 2 })).toBe(
       "No. of colors must be at most 9.",
     );
   });
@@ -101,7 +99,6 @@ describe("Same Game params", () => {
         h: 5,
         ncols: 3,
         scoresub: 2,
-        soluble: true,
       }),
     ).toBe("5x5, 3 colors");
     expect(
@@ -110,9 +107,8 @@ describe("Same Game params", () => {
         h: 5,
         ncols: 3,
         scoresub: 1,
-        soluble: false,
       }),
-    ).toBe("5x5, 3 colors, alt. scoring, ambiguous");
+    ).toBe("5x5, 3 colors, alt. scoring");
   });
 });
 
@@ -128,7 +124,7 @@ describe("Same Game scoring", () => {
 
 describe("Same Game desc", () => {
   it("round-trips through validate/newState", () => {
-    const p: SamegameParams = { w: 3, h: 1, ncols: 3, scoresub: 2, soluble: true };
+    const p: SamegameParams = { w: 3, h: 1, ncols: 3, scoresub: 2 };
     expect(validateDesc(samegameGame, p, "1,2,3")).toBeNull();
     expect(newState(p, "1,2,3").tiles).toEqual([1, 2, 3]);
     // Wrong count / out-of-range color are rejected.
@@ -137,12 +133,12 @@ describe("Same Game desc", () => {
   });
 
   it("refuses an empty cell, which no generated board has", () => {
-    const p: SamegameParams = { w: 3, h: 1, ncols: 3, scoresub: 2, soluble: true };
+    const p: SamegameParams = { w: 3, h: 1, ncols: 3, scoresub: 2 };
     expect(validateDesc(samegameGame, p, "1,0,3")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("a generated soluble board validates and decodes", () => {
-    const p: SamegameParams = { w: 5, h: 5, ncols: 3, scoresub: 2, soluble: true };
+    const p: SamegameParams = { w: 5, h: 5, ncols: 3, scoresub: 2 };
     const { desc } = newDesc(p, randomNew("samegame-unit-a"));
     expect(validateDesc(samegameGame, p, desc)).toBeNull();
     expect(newState(p, desc).tiles.length).toBe(25);
@@ -226,7 +222,7 @@ describe("Same Game selection + execution", () => {
   });
 
   it("clearing the last tiles wins (status solved)", () => {
-    const p: SamegameParams = { w: 2, h: 1, ncols: 3, scoresub: 2, soluble: true };
+    const p: SamegameParams = { w: 2, h: 1, ncols: 3, scoresub: 2 };
     const s = newState(p, "1,1");
     const ui = freshUi(s);
     click(s, ui, 0, 0); // select the pair

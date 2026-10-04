@@ -36,6 +36,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { fleetFits, newBoatsDesc } from "./generator.ts";
@@ -755,30 +756,37 @@ describe("boats rendering", () => {
   });
 
   it("draws the collision diamond between two boats that touch diagonally", () => {
-    // A clue-less board, so every square is the player's to fill.
+    // A clue-less board, so every square is the player's to fill. It has many
+    // answers and so does not load through the midend: drawn directly.
     const p = params();
-    const id = `${encodeParams(p, true)}:1,1,1,1,1,1,1,1,1,1,1,1,`;
-    const result = renderScenario({
-      game: boatsGame,
-      id,
-      moves: [
-        { kind: "fill", x0: 1, y0: 1, x1: 1, y1: 1, from: "-", to: "B" },
-        { kind: "fill", x0: 2, y0: 2, x1: 2, y1: 2, from: "-", to: "B" },
-      ],
-    });
+    const moves: BoatsMove[] = [
+      { kind: "fill", x0: 1, y0: 1, x1: 1, y1: 1, from: "-", to: "B" },
+      { kind: "fill", x0: 2, y0: 2, x1: 2, y1: 2, from: "-", to: "B" },
+    ];
+    const state = moves.reduce(
+      (s, m) => boatsGame.executeMove(s, m),
+      newState(p, "1,1,1,1,1,1,1,1,1,1,1,1,"),
+    );
+    const rec = new RecordingDrawing(boatsGame.colors([1, 1, 1]));
+    boatsGame.redraw(
+      rec,
+      preferredDrawState(boatsGame, state),
+      null,
+      state,
+      1,
+      boatsGame.newUi(state),
+      0,
+      0,
+    );
 
     // The diamond is a polygon filled COL_COLLISION_ERROR outlined COL_GRID,
     // with the exclamation mark in COL_COLLISION_TEXT on top.
     expect(
-      result.recording.ops.some(
-        (o) => o.op === "polygon" && o.fill === COL_COLLISION_ERROR,
-      ),
+      rec.ops.some((o) => o.op === "polygon" && o.fill === COL_COLLISION_ERROR),
     ).toBe(true);
-    expect(
-      result.recording.ops.some(
-        (o) => o.op === "rect" && o.color === COL_COLLISION_TEXT,
-      ),
-    ).toBe(true);
+    expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_COLLISION_TEXT)).toBe(
+      true,
+    );
   });
 
   it("hides the boats on the flashing half of the completion flash", () => {

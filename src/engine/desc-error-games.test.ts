@@ -135,10 +135,13 @@ describe("a near-miss game ID", () => {
   // (`read-descs-through-one-cursor`), since a near miss a strict parser refuses
   // never reaches `newState`. It was 2,629 once loading asked a board for its
   // one answer (`play-only-boards-with-one-answer`): one edit to a puzzle with
-  // one answer usually leaves it with several or none.
+  // one answer usually leaves it with several or none. It was 1,270 once
+  // loading asked whether deduction finishes the board
+  // (`retire-the-unchecked-board-options`): a solver that gives up proves
+  // neither, and such a board used to load.
   itOverWholeSweep("loaded enough accepted near misses to mean something", () => {
     expect(accepted.size).toBe(REGISTERED_GAME_COUNT);
     const total = [...accepted.values()].reduce((a, b) => a + b, 0);
-    expect(total).toBeGreaterThanOrEqual(2300);
+    expect(total).toBeGreaterThanOrEqual(1100);
   });
 });

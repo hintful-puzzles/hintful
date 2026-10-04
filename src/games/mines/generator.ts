@@ -1,6 +1,6 @@
 /**
  * Mine-layout generator (`minegen` + `mineperturb`, mines.c:1447/1863), which
- * drives {@link minesolve} to guarantee a `unique` board is deducible without
+ * drives {@link minesolve} to guarantee a board is deducible without
  * guessing — the mechanism behind this fork's guess-free policy for every
  * preset.
  *
@@ -306,9 +306,9 @@ function mineperturb(
 
 /**
  * Generate a mine layout of `n` mines on a `w × h` grid, none within one square
- * of the first click (x, y). When `unique`, run the solve-and-perturb loop
- * until the board is deducible without guessing (upstream `minegen`,
- * mines.c:1863). Returns the mine bitmap (1 = mine).
+ * of the first click (x, y), running the solve-and-perturb loop until the board
+ * is deducible without guessing (upstream `minegen`, mines.c:1863, with its
+ * `unique` always on). Returns the mine bitmap (1 = mine).
  */
 export function minegen(
   w: number,
@@ -316,7 +316,6 @@ export function minegen(
   n: number,
   x: number,
   y: number,
-  unique: boolean,
   rs: RandomState,
 ): Int8Array {
   const ret = new Int8Array(w * h);
@@ -349,42 +348,38 @@ export function minegen(
       }
     }
 
-    if (unique) {
-      const ctx: MineCtx = {
-        grid: ret,
-        opened: new Int8Array(w * h),
-        w,
-        h,
-        sx: x,
-        sy: y,
-        allowBigPerturbs: ntries > 100,
-        nperturbsSinceLastNewOpen: 0,
-        rs,
-      };
-      const open: OpenCb = (ox, oy) => mineopen(ctx, ox, oy);
-      const perturb: PerturbCb = (g, sx, sy, m) => mineperturb(ctx, g, sx, sy, m);
+    const ctx: MineCtx = {
+      grid: ret,
+      opened: new Int8Array(w * h),
+      w,
+      h,
+      sx: x,
+      sy: y,
+      allowBigPerturbs: ntries > 100,
+      nperturbsSinceLastNewOpen: 0,
+      rs,
+    };
+    const open: OpenCb = (ox, oy) => mineopen(ctx, ox, oy);
+    const perturb: PerturbCb = (g, sx, sy, m) => mineperturb(ctx, g, sx, sy, m);
 
-      const solvegrid = new Int8Array(w * h);
-      // Only a full solve (0) or an unsolvable board (-1) ends this loop.
-      // Upstream (mines.c:1940) also gives up once the perturb count stops
-      // falling, but compares against a `prevret` it never assigns, so that
-      // never fires; honoring it would move the give-up point and diverge the
-      // byte-match desc. Hence a guard of its own.
-      const round = retryLimit("mines: solve/perturb", MAX_SOLVE_ROUNDS);
-      while (true) {
-        round();
+    const solvegrid = new Int8Array(w * h);
+    // Only a full solve (0) or an unsolvable board (-1) ends this loop.
+    // Upstream (mines.c:1940) also gives up once the perturb count stops
+    // falling, but compares against a `prevret` it never assigns, so that
+    // never fires; honoring it would move the give-up point and diverge the
+    // byte-match desc. Hence a guard of its own.
+    const round = retryLimit("mines: solve/perturb", MAX_SOLVE_ROUNDS);
+    while (true) {
+      round();
 
-        solvegrid.fill(-2);
-        solvegrid[y * w + x] = mineopen(ctx, x, y); // 0 by deliberate arrangement
+      solvegrid.fill(-2);
+      solvegrid[y * w + x] = mineopen(ctx, x, y); // 0 by deliberate arrangement
 
-        const solveret = minesolve(w, h, n, solvegrid, open, perturb, rs);
-        if (solveret <= 0) {
-          success = solveret === 0;
-          break;
-        }
+      const solveret = minesolve(w, h, n, solvegrid, open, perturb, rs);
+      if (solveret <= 0) {
+        success = solveret === 0;
+        break;
       }
-    } else {
-      success = true;
     }
   } while (!success);
 
@@ -405,6 +400,6 @@ export function newGameDescBatch(p: MinesParams, rs: RandomState): string {
   const y0 = randomUpto(rs, p.h);
   const x = p.firstClickX >= 0 ? p.firstClickX : x0;
   const y = p.firstClickY >= 0 ? p.firstClickY : y0;
-  const mines = minegen(p.w, p.h, p.n, x, y, p.unique, rs);
+  const mines = minegen(p.w, p.h, p.n, x, y, rs);
   return `${x},${y},m${encodeLayoutHex(mines, p.w * p.h)}`;
 }

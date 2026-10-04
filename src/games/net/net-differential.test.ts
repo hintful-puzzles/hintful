@@ -29,7 +29,6 @@ interface NetFixture {
   w: number;
   h: number;
   wrapping: boolean;
-  unique: boolean;
   barrierProbability: number;
   seed: string;
   desc: string;
@@ -63,7 +62,6 @@ const paramsOf = (f: NetFixture): NetParams => ({
   w: f.w,
   h: f.h,
   wrapping: f.wrapping,
-  unique: f.unique,
   barrierProbability: f.barrierProbability,
 });
 
@@ -71,8 +69,7 @@ describeDescDifferential<NetFixture, NetParams>({
   title: "net differential (vs C reference)",
   fixtures: FIXTURES,
   params: paramsOf,
-  label: (f) =>
-    `${f.w}x${f.h}${f.wrapping ? "w" : ""}${f.unique ? "" : "a"} b=${f.barrierProbability}`,
+  label: (f) => `${f.w}x${f.h}${f.wrapping ? "w" : ""} b=${f.barrierProbability}`,
   newDesc,
   extra: (f, p) => {
     expect(validateDesc(netGame, p, f.desc)).toBeNull();

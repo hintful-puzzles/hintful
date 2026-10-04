@@ -22,11 +22,10 @@ import { executeMove, isSolved, newState } from "./moves.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import type { RectMove, RectParams, RectState } from "./state.ts";
 
-const params = (w: number, h: number, unique = true, expandfactor = 0): RectParams => ({
+const params = (w: number, h: number, expandfactor = 0): RectParams => ({
   w,
   h,
   expandfactor,
-  unique,
 });
 const P7 = params(7, 7);
 
@@ -72,8 +71,10 @@ describe("rect hint rungs", () => {
       /^Anywhere else, the \d+ would leave the outlined/,
     ],
     [
+      // A board the rungs do not finish: no board the generator deals has
+      // fired this rung (0 of 6,000, 2026-10-02).
       "line",
-      params(7, 7, false),
+      P7,
       "a2c3a2_2b2f5_2_3b3a4b2_3h3b6_4c3b",
       /^No rectangle can cover both the outlined squares, so this edge between them must be a line\.$/,
     ],
@@ -118,7 +119,7 @@ describe("rect hint plan", () => {
   it("the gate turns away a board the rungs cannot finish", () => {
     // The retired C fixture at 10x10e0.5 (rect-differential.test.ts): uniquely solvable,
     // but past the rungs, so the generator deals again instead.
-    const p = params(10, 10, true, 0.5);
+    const p = params(10, 10, 0.5);
     expect(rungsFinish(newState(p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c"))).toBe(
       false,
     );

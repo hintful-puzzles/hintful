@@ -15,7 +15,7 @@
 import { resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
 import { completionStatus } from "./completion-status.ts";
-import { DESC_MALFORMED, loadDesc, validateDesc } from "./desc-error.ts";
+import { DESC_MALFORMED, loadDesc, loadVerdict } from "./desc-error.ts";
 import {
   cappedSolveFor,
   difficultyTiers,
@@ -464,8 +464,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * needs, and every rule that tier allows still applies to the board.
    *
    * A tier that allows search, or that promises no unique solution, is taken
-   * as stated: its solver owes no verdict. When no cap solves the board, the
-   * decoded params stand.
+   * as stated: its solver owes no verdict. A board no cap solves has been
+   * turned away by `loadDesc` before this is asked, except in a game with a
+   * tier that promises no unique solution, where the decoded params stand.
    */
   private withBoardTier(paramsStr: string, params: Params, desc: string): Params {
     const contract = this.game.difficulty;
@@ -1653,9 +1654,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // it, not the layout-only one, is what the game *is* (and what the id names);
     // the replay's own `applySupersede` will agree with it. Both must still
     // load: a parser made stricter since the save was written refuses it here
-    // rather than throwing, and a restart rebuilds from the public one.
+    // rather than throwing, and a restart rebuilds from the public one. The
+    // public desc is the one that says where play began, so it is the one
+    // asked whether its board can be finished.
     const stateDesc = env.privDesc ?? env.desc;
-    const refused = validateDesc(this.game, params, env.desc);
+    const refused =
+      env.privDesc === undefined ? null : loadVerdict(this.game, params, env.desc);
     if (refused !== null) return `Could not restore this saved game: ${refused}`;
     const loaded = loadDesc(this.game, params, stateDesc);
     if (!loaded.ok) return `Could not restore this saved game: ${loaded.error}`;

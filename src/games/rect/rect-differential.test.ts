@@ -18,7 +18,8 @@
  * deals again where C would return one they do not, so a seed whose C board is
  * one of those diverges from C there on purpose. The one fixture that was
  * (10x10e0.5, the seed ending "10-e") is retired; its desc is pinned in
- * `rect-hint.test.ts` as the board the gate turns away.
+ * `rect-hint.test.ts` as the board the gate turns away. The two fixtures C
+ * dealt with "Ensure unique solution" off are retired with the option.
  */
 
 import { describe, expect, it } from "vitest";
@@ -33,7 +34,6 @@ interface RectFixture {
   w: number;
   h: number;
   expandfactor: number;
-  unique: boolean;
   seed: string;
   desc: string;
   aux: string;
@@ -45,14 +45,11 @@ const paramsOf = (f: RectFixture): RectParams => ({
   w: f.w,
   h: f.h,
   expandfactor: f.expandfactor,
-  unique: f.unique,
 });
 
 describe("rect differential (vs C reference)", () => {
   for (const f of FIXTURES) {
-    const label = `${f.w}x${f.h}${f.expandfactor ? `e${f.expandfactor}` : ""}${
-      f.unique ? "" : "a"
-    } seed=${f.seed}`;
+    const label = `${f.w}x${f.h}${f.expandfactor ? `e${f.expandfactor}` : ""} seed=${f.seed}`;
     it(`reproduces the C desc + aux byte for byte — ${label}`, () => {
       const p = paramsOf(f);
       const { desc, aux } = newDesc(p, randomNew(f.seed));

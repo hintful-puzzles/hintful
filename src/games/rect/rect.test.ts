@@ -4,7 +4,11 @@
  * completion, `findMistakes`, and the mistake render overlay.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import {
+  DESC_NOT_DEDUCIBLE,
+  loadVerdict,
+  validateDesc,
+} from "../../engine/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -35,7 +39,6 @@ const P = (over: Partial<RectParams> = {}): RectParams => ({
   w: 7,
   h: 7,
   expandfactor: 0,
-  unique: true,
   ...over,
 });
 
@@ -61,13 +64,12 @@ function boardWithWrongWall(): { st: RectState; wrong: { x: number; y: number } 
 }
 
 describe("rect params codec", () => {
-  it("round-trips full params including e/a suffixes", () => {
+  it("round-trips full params including the e suffix", () => {
     for (const p of [
       P(),
       P({ w: 9, h: 7 }),
-      P({ unique: false }),
       P({ w: 8, h: 8, expandfactor: Math.fround(0.3) }),
-      P({ w: 10, h: 10, expandfactor: Math.fround(0.5), unique: false }),
+      P({ w: 10, h: 10, expandfactor: Math.fround(0.5) }),
     ]) {
       const s = encodeParams(p, true);
       expect(decodeParams(s)).toEqual(p);
@@ -75,9 +77,16 @@ describe("rect params codec", () => {
   });
 
   it("encodes the expected strings", () => {
-    expect(encodeParams(P({ w: 9, h: 7, unique: false }), true)).toBe("9x7a");
+    expect(encodeParams(P({ w: 9, h: 7 }), true)).toBe("9x7");
     expect(encodeParams(P(), true)).toBe("7x7");
-    expect(encodeParams(P({ unique: false }), false)).toBe("7x7"); // non-full drops suffixes
+    expect(encodeParams(P({ expandfactor: 0.5 }), false)).toBe("7x7"); // non-full drops suffixes
+  });
+
+  it("reads past upstream's `a`, which asks for a board with no promised answer", () => {
+    expect(decodeParams("9x7a")).toEqual(P({ w: 9, h: 7 }));
+    expect(decodeParams("10x10e0.5a")).toEqual(
+      P({ w: 10, h: 10, expandfactor: Math.fround(0.5) }),
+    );
   });
 
   it("rejects invalid params", () => {
@@ -88,10 +97,10 @@ describe("rect params codec", () => {
     expect(error(P())).toBeNull();
   });
 
-  it("labels a custom grid with its expansion and ambiguity", () => {
-    expect(
-      describeParams(rectGame, P({ w: 9, h: 7, expandfactor: 0.5, unique: false })),
-    ).toBe("9x7, 50% expansion, ambiguous");
+  it("labels a custom grid with its expansion", () => {
+    expect(describeParams(rectGame, P({ w: 9, h: 7, expandfactor: 0.5 }))).toBe(
+      "9x7, 50% expansion",
+    );
     expect(presetMenu(rectGame).submenu?.[0]?.title).toBe("7x7");
   });
 });
@@ -396,6 +405,26 @@ describe("rect findMistakes", () => {
     if (!solveMove?.ok) throw new Error("unsolvable");
     const solved = executeMove(st, solveMove.move);
     expect(rectGame.findMistakes?.(solved) ?? []).toEqual([]);
+  });
+});
+
+describe("rect loading", () => {
+  it("refuses a board the solver cannot finish", () => {
+    // A board upstream dealt with "Ensure unique solution" off, and one built
+    // here the same way.
+    expect(loadVerdict(rectGame, P(), "c2f2a6a8e5c2b3_4c6d3d2b4a2a")).toBe(
+      DESC_NOT_DEDUCIBLE,
+    );
+    expect(loadVerdict(rectGame, P({ w: 4, h: 4 }), "2b2_2a2b2b2a2_2")).toBe(
+      DESC_NOT_DEDUCIBLE,
+    );
+  });
+
+  it("loads a board the solver finishes, though the hint's rungs do not", () => {
+    // Upstream's board for 10x10e0.5 (`rect-hint.test.ts` pins it as one the
+    // generator's gate turns away). Its one answer is what loading asks for.
+    const p = P({ w: 10, h: 10, expandfactor: 0.5 });
+    expect(loadVerdict(rectGame, p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c")).toBeNull();
   });
 });
 

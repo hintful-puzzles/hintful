@@ -70,6 +70,20 @@ const TRANSLATED: Readonly<Record<string, Record<string, (v: unknown) => Fields>
   galaxies: { diff: (v) => ({ diff: "nu".indexOf(String(v)) }) },
 };
 
+/**
+ * Upstream options that switch a generator's checks off, with the value that
+ * leaves them on. No game here has the option: every board is dealt checked.
+ * So a fixture names the option only at this value, and one dealt at the other
+ * is a board upstream promises nothing about, which need not load.
+ */
+const CHECKS_ON: Readonly<Record<string, Record<string, boolean>>> = {
+  mines: { unique: true },
+  net: { unique: true },
+  pearl: { nosolve: false },
+  rect: { unique: true },
+  samegame: { soluble: true },
+};
+
 type Game = (typeof REGISTERED_GAMES)[number][1];
 
 /** The params key that holds `game`'s tier, or `null` for an untiered game. */
@@ -93,6 +107,11 @@ function paramsFor(
   const tiered = tierKey(game, defaults);
   for (const [field, value] of Object.entries(f)) {
     if (ABOUT_THE_FIXTURE.has(field)) continue;
+    const checked = CHECKS_ON[id]?.[field];
+    if (checked !== undefined) {
+      if (value !== checked) unplaced.push(`${id}.${field}: dealt unchecked`);
+      continue;
+    }
     const translate = TRANSLATED[id]?.[field];
     if (field === tiered && typeof value === "number" && !translate) {
       params = withTier(game, params, value) as Fields;

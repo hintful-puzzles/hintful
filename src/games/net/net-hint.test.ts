@@ -71,7 +71,6 @@ describe("keep-track", () => {
     w: 5,
     h: 5,
     wrapping: false,
-    unique: true,
     barrierProbability: 0,
   };
   /** The first step that turns a square, and the state it is shown on. */
@@ -125,7 +124,6 @@ describe("refusal and marks", () => {
     w: 5,
     h: 5,
     wrapping: false,
-    unique: true,
     barrierProbability: 0,
   };
 

@@ -196,32 +196,30 @@ function newClues(
         }
       }
 
-    if (!params.nosolve) {
-      // See if we can solve the puzzle just like this, and that it isn't too
-      // easy; otherwise go round and try again.
-      if (pearlSolve(w, h, clues, gridOut, diff, false) !== 1) continue;
-      if (diff > DIFF_EASY && pearlSolve(w, h, clues, gridOut, diff - 1, false) === 1)
-        continue;
+    // See if we can solve the puzzle just like this, and that it isn't too
+    // easy; otherwise go round and try again.
+    if (pearlSolve(w, h, clues, gridOut, diff, false) !== 1) continue;
+    if (diff > DIFF_EASY && pearlSolve(w, h, clues, gridOut, diff - 1, false) === 1)
+      continue;
 
-      // Shuffle the clues and remove them one at a time, keeping each removal
-      // that leaves the puzzle soluble. Upstream meant to remove whichever clue
-      // type is more numerous, but fills its `corners` array from STRAIGHT
-      // positions too: corner clues are never removed and every straight is
-      // tried twice. Reproduced, the second shuffle's RNG draws included,
-      // because the frozen differential checks the desc byte for byte.
-      const straights: number[] = [];
-      for (let i = 0; i < w * h; i++) if (clues[i] === STRAIGHT) straights.push(i);
-      shuffle(straights, rng);
-      shuffle(straights.slice(), rng); // upstream's `corners` shuffle; only its draws matter
+    // Shuffle the clues and remove them one at a time, keeping each removal
+    // that leaves the puzzle soluble. Upstream meant to remove whichever clue
+    // type is more numerous, but fills its `corners` array from STRAIGHT
+    // positions too: corner clues are never removed and every straight is
+    // tried twice. Reproduced, the second shuffle's RNG draws included,
+    // because the frozen differential checks the desc byte for byte.
+    const straights: number[] = [];
+    for (let i = 0; i < w * h; i++) if (clues[i] === STRAIGHT) straights.push(i);
+    shuffle(straights, rng);
+    shuffle(straights.slice(), rng); // upstream's `corners` shuffle; only its draws matter
 
-      for (let pass = 0; pass < 2; pass++)
-        for (let k = straights.length - 1; k >= 0; k--) {
-          const i = straights[k];
-          const clue = clues[i];
-          clues[i] = NOCLUE; // try removing this clue
-          if (pearlSolve(w, h, clues, gridOut, diff, false) !== 1) clues[i] = clue; // oops, put it back
-        }
-    }
+    for (let pass = 0; pass < 2; pass++)
+      for (let k = straights.length - 1; k >= 0; k--) {
+        const i = straights[k];
+        const clue = clues[i];
+        clues[i] = NOCLUE; // try removing this clue
+        if (pearlSolve(w, h, clues, gridOut, diff, false) !== 1) clues[i] = clue; // oops, put it back
+      }
 
     break; // got it
   }

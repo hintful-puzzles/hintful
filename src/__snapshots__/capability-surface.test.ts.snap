@@ -959,6 +959,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "decodeUi",
       "encodeUi",
       "findMistakes",
+      "finishesByDeduction",
       "flashLength",
       "hint",
       "hintGesture",
@@ -1035,6 +1036,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "decodeUi",
       "encodeUi",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1272,6 +1274,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "rect",
     "members": [
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",

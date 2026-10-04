@@ -108,11 +108,11 @@ const UNREACHED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
       "the shared HintSidecar reads outlined cells, and Crossing's hint outlines only listed numbers",
   },
   rect: {
-    // Measured 2026-10-02: the walk of 6,000 unique deals fired the other
-    // rungs 37,785 times and this one never; 3 of 315 deals without
-    // uniqueness fired it, and on those the hint then throws.
+    // Measured 2026-10-02: the walk of 6,000 deals fired the other rungs
+    // 37,785 times and this one never; it fired on 3 of 315 boards built
+    // with the generator's checks off, which the rungs then did not finish.
     "ring|line":
-      "the last rung fires only on boards dealt without a unique solution, whose hint crashes until let-a-board-waive-the-deduction-promise",
+      "the last rung has fired only on boards the rungs do not finish, which the generator does not deal",
   },
 };
 

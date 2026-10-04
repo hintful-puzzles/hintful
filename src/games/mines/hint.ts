@@ -301,7 +301,8 @@ export function minesHint(
       board = execute(board, step.move);
     });
   }
-  // Only a board dealt without "Ensure solubility" runs out of deductions.
+  // Reached only on a board these rungs cannot finish, which loading turns
+  // away (`finishesByDeduction`) and no measured deal has been (deduce.ts).
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps };
 }

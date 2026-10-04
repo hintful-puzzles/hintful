@@ -333,6 +333,40 @@ it's revealing the answer.
   and Untangle's narrated objective with a solution fallback is the sanctioned
   non-deductive form.
 
+### No option switches the generator's checks off
+
+**The only way a board may need trial and error is a tier named Unreasonable,
+and no board may be unsolvable.** Upstream offers a checkbox in five games that
+deals a board nothing has checked (Mines' and Same Game's "Ensure solubility",
+Net's and Rectangles' "Ensure unique solution", Pearl's "Allow unsoluble"). A
+port does not carry such an option: the generator always applies its checks,
+and the params codec reads past the letter upstream writes for it, so an ID
+that asks for an unchecked board deals a checked one. The reason is not only
+the hint. A board with several answers has no mistake check (§ "One answer,
+even when it is hidden"), and most boards dealt unchecked have several: with
+the box off, the hint ran out on 103 of 150 Rectangles 4×4 boards and 67 of 80
+Pearl 6×6 boards (measured 2026-10-04).
+
+**Loading holds a board to the same promise.** `loadDesc` refuses a board
+deduction cannot finish (`DESC_NOT_DEDUCIBLE`) unless its tier permits search:
+
+- a tiered game is asked through its difficulty contract, and the board loads
+  when some cap solves it, whatever tier its ID states;
+- an untiered deductive game declares `Game.finishesByDeduction(state)`;
+- a game with a `nonUniqueTiers` tier is not asked, since a shared ID does not
+  say which tier dealt its board.
+
+**What `finishesByDeduction` asks is the solver, which can be more than the
+hint knows.** Net's and Rectangles' generators deal only boards their *hint*
+finishes (`finishes`, `rungsFinish`), and their solvers are stronger than their
+hints, so a board upstream dealt with its checks on can load here and still
+strand the hint: 62 of 261 solver-unique wrapping 5×5 Net boards, 2 of 84
+Rectangles 9×9 boards at expansion 0.5 (measured 2026-10-04). Refusing those at
+load would break IDs upstream's generator writes, which is the owner's call
+(`close-the-solver-hint-gap-in-net-and-rect`). The fix that needs no break is
+the doctrine above: one deduction engine, so the hint knows what the solver
+does.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

@@ -75,7 +75,7 @@ import {
   ROTATE_TIME,
   redraw,
 } from "./render.ts";
-import { netSolver, SOLVER_INCONSISTENT } from "./solver.ts";
+import { netSolver, SOLVER_INCONSISTENT, SOLVER_UNIQUE } from "./solver.ts";
 import {
   computeActive,
   decodeParams,
@@ -103,16 +103,16 @@ import {
  * build leaves out (the web build showed them).
  */
 const PRESETS: NetParams[] = [
-  { w: 5, h: 5, wrapping: false, unique: true, barrierProbability: 0 },
-  { w: 7, h: 7, wrapping: false, unique: true, barrierProbability: 0 },
-  { w: 9, h: 9, wrapping: false, unique: true, barrierProbability: 0 },
-  { w: 11, h: 11, wrapping: false, unique: true, barrierProbability: 0 },
-  { w: 11, h: 13, wrapping: false, unique: true, barrierProbability: 0 },
-  { w: 5, h: 5, wrapping: true, unique: true, barrierProbability: 0 },
-  { w: 7, h: 7, wrapping: true, unique: true, barrierProbability: 0 },
-  { w: 9, h: 9, wrapping: true, unique: true, barrierProbability: 0 },
-  { w: 11, h: 11, wrapping: true, unique: true, barrierProbability: 0 },
-  { w: 11, h: 13, wrapping: true, unique: true, barrierProbability: 0 },
+  { w: 5, h: 5, wrapping: false, barrierProbability: 0 },
+  { w: 7, h: 7, wrapping: false, barrierProbability: 0 },
+  { w: 9, h: 9, wrapping: false, barrierProbability: 0 },
+  { w: 11, h: 11, wrapping: false, barrierProbability: 0 },
+  { w: 11, h: 13, wrapping: false, barrierProbability: 0 },
+  { w: 5, h: 5, wrapping: true, barrierProbability: 0 },
+  { w: 7, h: 7, wrapping: true, barrierProbability: 0 },
+  { w: 9, h: 9, wrapping: true, barrierProbability: 0 },
+  { w: 11, h: 11, wrapping: true, barrierProbability: 0 },
+  { w: 11, h: 13, wrapping: true, barrierProbability: 0 },
 ];
 
 /* ----------------------------------------------------------------------
@@ -713,7 +713,7 @@ export const netGame: Game<
       kw: "walls-wrap-around",
       name: "Walls wrap around",
       type: "boolean",
-      doc: "When on, the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall.",
+      doc: "When on, the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall. The grid cannot then be exactly 2 squares wide or high, since such a grid can never have just one solution.",
       label: { slot: "kind", words: (p) => (p.wrapping ? "wrapping" : null) },
       get: (p) => p.wrapping,
       set: (p, v) => {
@@ -738,17 +738,6 @@ export const netGame: Game<
         p.barrierProbability = Math.fround(atof(v));
       },
     },
-    {
-      kw: "ensure-unique-solution",
-      name: "Ensure unique solution",
-      type: "boolean",
-      doc: "When on, the puzzle has exactly one solution. When off, it may have several, and any of them counts. A wrapping grid 2 squares wide or high can never have just one solution, so it needs this off.",
-      label: { slot: "tail", words: (p) => (p.unique ? null : "ambiguous") },
-      get: (p) => p.unique,
-      set: (p, v) => {
-        p.unique = v;
-      },
-    },
   ],
 
   newDesc,
@@ -768,6 +757,16 @@ export const netGame: Game<
 
   solve,
   findMistakes,
+  // The solver's verdict. The generator asks more (`finishes` in deduce.ts),
+  // so that the hint finishes every board it deals.
+  finishesByDeduction: (s) =>
+    netSolver(
+      s.w,
+      s.h,
+      Uint8Array.from(s.tiles, (t) => t & 0xf),
+      s.barriers,
+      s.wrapping,
+    ) === SOLVER_UNIQUE,
   hint: (s, _aux, ui) => netHint(s, targetVerbs, ui ?? newUi(s)),
   hintMarks: {
     roles: {

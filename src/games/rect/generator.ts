@@ -11,8 +11,8 @@
  *     dropping a 3×3 over it).
  *  3. Stretch the base grid to full size in two passes — expand rows, transpose,
  *     expand rows again, transpose back — distributing the extra rows randomly.
- *  4. Enumerate the rectangles, and (when `unique`) run the solver to winnow the
- *     number placements to a unique solution; place one number per rectangle.
+ *  4. Enumerate the rectangles, and run the solver to winnow the number
+ *     placements to a unique solution; place one number per rectangle.
  *  5. Encode `aux` (the solution edges) and the run-length desc.
  *
  * The grid holds, per cell, the flat top-left index of the rectangle covering it
@@ -127,7 +127,7 @@ export function newDesc(
   params: RectParams,
   rs: RandomState,
 ): { desc: string; aux: string } {
-  const { expandfactor, unique } = params;
+  const { expandfactor } = params;
   let { w: pw, h: ph } = params;
 
   for (;;) {
@@ -309,8 +309,8 @@ export function newDesc(
       }
     }
 
-    const ret = unique ? rectSolver(pw, ph, nd, null, null, rs) : SOLVE_UNIQUE;
-    if (ret !== SOLVE_UNIQUE) continue; // give up and go round again
+    // give up and go round again
+    if (rectSolver(pw, ph, nd, null, null, rs) !== SOLVE_UNIQUE) continue;
 
     const numbers = new Int32Array(pw * ph);
     for (const { area, npoints, points } of nd) {
@@ -331,7 +331,7 @@ export function newDesc(
     // A board the hint could not finish would leave a player it had helped
     // stranded with a refusal that blames the board's difficulty, which this
     // game has no tier to excuse. About one board in a hundred; deal again.
-    if (unique && !rungsFinish(newState(params, desc))) continue;
+    if (!rungsFinish(newState(params, desc))) continue;
     return { desc, aux };
   }
 }

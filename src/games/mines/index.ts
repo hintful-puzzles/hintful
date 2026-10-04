@@ -137,15 +137,7 @@ function openSquare(state: MinesState, x: number, y: number): void {
     // deterministic function of the desc's RNG state and this click, so
     // replaying the move log reproduces it exactly. The engine then pulls the
     // new desc from `supersededDesc`; the game never pushes into the midend.
-    layout.mines = minegen(
-      w,
-      h,
-      layout.n,
-      x,
-      y,
-      layout.unique,
-      layout.rs as RandomState,
-    );
+    layout.mines = minegen(w, h, layout.n, x, y, layout.rs as RandomState);
     layout.startx = x;
     layout.starty = y;
     layout.rs = null;
@@ -313,7 +305,7 @@ export const minesGame: Game<
   }),
   paramConfig: [
     ...dimensionParamConfig<MinesParams>({
-      doc: "Size of the grid in squares.",
+      doc: "Size of the grid in squares, more than 2 in each direction: a narrower grid cannot be laid out so that it is solved without guessing.",
       // Upstream's `SHRT_MAX`.
       bounds: { min: 1, max: 32767 },
     }),
@@ -332,17 +324,6 @@ export const minesGame: Game<
         p.n = v.includes("%") ? Math.floor((n * (p.w * p.h)) / 100) : n;
       },
     },
-    {
-      kw: "ensure-solubility",
-      name: "Ensure solubility",
-      type: "boolean",
-      doc: "When this is on, the grid is laid out so that it can be solved by deduction from your first click onwards, without any guessing. It needs a grid more than 2 squares in each direction. When it is off, the mines are placed at random, and you may have to guess.",
-      label: { slot: "tail", words: (p) => (p.unique ? null : "risky") },
-      get: (p) => p.unique,
-      set: (p, v) => {
-        p.unique = v;
-      },
-    },
   ],
 
   newDesc(p: MinesParams, rng: RandomState): { desc: string } {
@@ -351,7 +332,7 @@ export const minesGame: Game<
     // reproduce.
     randomUpto(rng, p.w);
     randomUpto(rng, p.h);
-    return { desc: `r${p.n},${p.unique ? "u" : "a"},${randomStateEncode(rng)}` };
+    return { desc: `r${p.n},u,${randomStateEncode(rng)}` };
   },
   newState(p: MinesParams, desc: string): MinesState {
     const { layout, openXY } = decodeDesc(p, desc);
@@ -624,6 +605,18 @@ export const minesGame: Game<
   newDrawState,
   redraw,
 
+  // The hint's own plan, played to its end. A layout with no square opened
+  // has no first click to reason from, so there is nothing to judge yet.
+  finishesByDeduction(s: MinesState): boolean {
+    if (!s.layout.mines || s.clickedAt === null) return true;
+    const plan = minesHint(s, minesGame.executeMove);
+    if (!plan.ok) return false;
+    const end = plan.steps.reduce(
+      (board, step) => minesGame.executeMove(board, step.move),
+      s,
+    );
+    return isWon(end);
+  },
   hint: (s) => minesHint(s, minesGame.executeMove),
   hintMarks: {
     roles: {

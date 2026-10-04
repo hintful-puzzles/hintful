@@ -14,10 +14,10 @@ import { pearlWorkspace } from "./solver.ts";
 import { DIFF_EASY, DIFF_TRICKY, newState, type PearlParams } from "./state.ts";
 
 const SHAPES: PearlParams[] = [
-  { w: 6, h: 6, difficulty: DIFF_EASY, nosolve: false },
-  { w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false },
-  { w: 7, h: 7, difficulty: DIFF_TRICKY, nosolve: false },
-  { w: 8, h: 6, difficulty: DIFF_TRICKY, nosolve: false },
+  { w: 6, h: 6, difficulty: DIFF_EASY },
+  { w: 6, h: 6, difficulty: DIFF_TRICKY },
+  { w: 7, h: 7, difficulty: DIFF_TRICKY },
+  { w: 8, h: 6, difficulty: DIFF_TRICKY },
 ];
 
 const SEEDS = ["lad-a", "lad-b", "lad-c"];

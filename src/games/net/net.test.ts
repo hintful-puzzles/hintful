@@ -8,7 +8,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import {
+  DESC_NOT_DEDUCIBLE,
+  loadVerdict,
+  validateDesc,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -52,7 +56,7 @@ function generate(p: NetParams, seed: string) {
 }
 
 describe("params codec", () => {
-  const cases = ["5x5", "7x7", "13x11", "5x5w", "9x9b0.5", "5x5a", "11x11wb0.25a"];
+  const cases = ["5x5", "7x7", "13x11", "5x5w", "9x9b0.5", "11x11wb0.25"];
   for (const s of cases) {
     it(`round-trips ${s}`, () => {
       const p = decodeParams(s);
@@ -65,12 +69,21 @@ describe("params codec", () => {
       w: 7,
       h: 7,
       wrapping: false,
-      unique: true,
       barrierProbability: 0,
     });
   });
 
-  it("rejects a 1x1 grid and a degenerate wrapping-2 unique grid", () => {
+  it("reads past upstream's `a`, which asks for a board with no promised answer", () => {
+    expect(decodeParams("7x9wb0.25a")).toEqual({
+      w: 7,
+      h: 9,
+      wrapping: true,
+      barrierProbability: 0.25,
+    });
+    expect(decodeParams("5a")).toEqual(defaultParams());
+  });
+
+  it("rejects a 1x1 grid and a degenerate wrapping-2 grid", () => {
     expect(
       paramsError(netGame, { ...defaultParams(), w: 1, h: 1 }, true),
     ).not.toBeNull();
@@ -78,11 +91,7 @@ describe("params codec", () => {
       "Width must be at least 1.",
     );
     expect(
-      paramsError(
-        netGame,
-        { w: 2, h: 5, wrapping: true, unique: true, barrierProbability: 0 },
-        true,
-      ),
+      paramsError(netGame, { w: 2, h: 5, wrapping: true, barrierProbability: 0 }, true),
     ).toMatch(/unique solution/);
     // A 1×n grid is allowed (only *both* dims ≤ 1 is rejected).
     expect(paramsError(netGame, { ...defaultParams(), w: 1, h: 5 }, true)).toBeNull();
@@ -94,10 +103,9 @@ describe("params codec", () => {
         w: 7,
         h: 9,
         wrapping: true,
-        unique: false,
         barrierProbability: 0.25,
       }),
-    ).toBe("7x9 wrapping, 25% barriers, ambiguous");
+    ).toBe("7x9 wrapping, 25% barriers");
   });
 });
 
@@ -107,7 +115,6 @@ describe("desc codec + wrapping re-derivation", () => {
       w: 5,
       h: 5,
       wrapping: false,
-      unique: true,
       barrierProbability: 0,
     };
     const { desc, state } = generate(p, "codec-seed");
@@ -123,7 +130,6 @@ describe("desc codec + wrapping re-derivation", () => {
       w: 3,
       h: 3,
       wrapping: true,
-      unique: false,
       barrierProbability: 0,
     };
     const desc = "000v000v0h0h0vh";
@@ -132,12 +138,31 @@ describe("desc codec + wrapping re-derivation", () => {
   });
 });
 
+describe("loading", () => {
+  const P5: NetParams = { w: 5, h: 5, wrapping: false, barrierProbability: 0 };
+
+  it("refuses a board the solver cannot settle", () => {
+    // A board built as upstream builds one with "Ensure unique solution" off.
+    expect(loadVerdict(netGame, P5, "142c49b8aa4de5acd7b749286")).toBe(
+      DESC_NOT_DEDUCIBLE,
+    );
+  });
+
+  it("loads a board the solver settles, though the hint cannot finish it", () => {
+    // Upstream's board for the one seed `net-differential.test.ts` lists as
+    // diverged, where the generator deals again. Its one answer is what
+    // loading asks.
+    const p: NetParams = { w: 5, h: 5, wrapping: true, barrierProbability: 0 };
+    expect(loadVerdict(netGame, p, "19d7aaae8449d5636cad43c44")).toBeNull();
+  });
+});
+
 describe("generator", () => {
   const presets: NetParams[] = [
-    { w: 5, h: 5, wrapping: false, unique: true, barrierProbability: 0 },
-    { w: 7, h: 7, wrapping: false, unique: true, barrierProbability: 0 },
-    { w: 5, h: 5, wrapping: true, unique: true, barrierProbability: 0 },
-    { w: 6, h: 4, wrapping: false, unique: true, barrierProbability: 1 },
+    { w: 5, h: 5, wrapping: false, barrierProbability: 0 },
+    { w: 7, h: 7, wrapping: false, barrierProbability: 0 },
+    { w: 5, h: 5, wrapping: true, barrierProbability: 0 },
+    { w: 6, h: 4, wrapping: false, barrierProbability: 1 },
   ];
 
   for (const p of presets) {
@@ -166,7 +191,6 @@ describe("generator", () => {
       w: 7,
       h: 7,
       wrapping: false,
-      unique: true,
       barrierProbability: 0.3,
     };
     const seed = "barrier-superset";
@@ -183,7 +207,6 @@ describe("generator", () => {
       w: 6,
       h: 6,
       wrapping: false,
-      unique: true,
       barrierProbability: 0,
     };
     for (let seed = 0; seed < 4; seed++) {
@@ -200,7 +223,6 @@ describe("moves", () => {
     w: 5,
     h: 5,
     wrapping: false,
-    unique: true,
     barrierProbability: 0,
   };
   const base = () => generate(p, "moves-seed").state;
@@ -316,7 +338,6 @@ describe("moves", () => {
       w: 5,
       h: 5,
       wrapping: true,
-      unique: true,
       barrierProbability: 0,
     };
     const { state } = generate(p2, "ui-seed");

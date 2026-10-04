@@ -16,7 +16,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
+import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 
@@ -86,20 +86,18 @@ export interface PearlParams {
   w: number;
   h: number;
   difficulty: number;
-  /** Allow an unsoluble board (upstream `nosolve`, default false). */
-  nosolve: boolean;
 }
 
 const DEFAULT_PRESET = 3;
 const PEARL_PRESETS: readonly PearlParams[] = [
-  { w: 6, h: 6, difficulty: DIFF_EASY, nosolve: false },
-  { w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false },
-  { w: 8, h: 8, difficulty: DIFF_EASY, nosolve: false },
-  { w: 8, h: 8, difficulty: DIFF_TRICKY, nosolve: false },
-  { w: 10, h: 10, difficulty: DIFF_EASY, nosolve: false },
-  { w: 10, h: 10, difficulty: DIFF_TRICKY, nosolve: false },
-  { w: 8, h: 12, difficulty: DIFF_EASY, nosolve: false },
-  { w: 8, h: 12, difficulty: DIFF_TRICKY, nosolve: false },
+  { w: 6, h: 6, difficulty: DIFF_EASY },
+  { w: 6, h: 6, difficulty: DIFF_TRICKY },
+  { w: 8, h: 8, difficulty: DIFF_EASY },
+  { w: 8, h: 8, difficulty: DIFF_TRICKY },
+  { w: 10, h: 10, difficulty: DIFF_EASY },
+  { w: 10, h: 10, difficulty: DIFF_TRICKY },
+  { w: 8, h: 12, difficulty: DIFF_EASY },
+  { w: 8, h: 12, difficulty: DIFF_TRICKY },
 ];
 
 export function defaultParams(): PearlParams {
@@ -120,28 +118,17 @@ export const paramConfig: ParamConfigItem<PearlParams>[] = [
     bounds: { min: 5 },
   }),
   difficultyItem(DIFF_NAMES, "difficulty"),
-  {
-    kw: "allow-unsoluble",
-    name: "Allow unsoluble",
-    type: "boolean",
-    doc: "Skip checking the puzzle at all: every pearl the generated loop allows is kept, and nothing makes sure the puzzle has only one solution or can be solved by reasoning. Such a board may have more than one loop that fits, and the difficulty setting has no effect on it.",
-    label: { slot: "tail", words: (p) => (p.nosolve ? "ambiguous" : null) },
-    get: (p) => p.nosolve,
-    set: (p, v) => {
-      p.nosolve = v;
-    },
-  },
 ];
 
-/** `WxH`, then the generator-only difficulty letter and `n` for unsoluble. A
- * string without a difficulty letter is Easy, as upstream reads it, rather
- * than the default preset's tier. */
+/** `WxH`, then the generator-only difficulty letter. A string without a
+ * difficulty letter is Easy, as upstream reads it, rather than the default
+ * preset's tier. Upstream's trailing `n` asks for a board nothing has checked;
+ * every board dealt here is checked, so the codec leaves the letter unread. */
 export const { encodeParams, decodeParams } = paramsCodec(
   () => ({ ...defaultParams(), difficulty: DIFF_EASY }),
   [
     dims(paramConfig),
     choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
-    flag(paramConfig, "n", "allow-unsoluble", { full: true }),
   ],
 );
 

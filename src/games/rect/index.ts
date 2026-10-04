@@ -417,17 +417,6 @@ export const rectGame: Game<
         p.expandfactor = Math.fround(atof(v));
       },
     },
-    {
-      kw: "ensure-unique-solution",
-      name: "Ensure unique solution",
-      type: "boolean",
-      doc: "When enabled, the numbers are placed so the puzzle has exactly one solution. When disabled, the puzzle may have several, and any division that satisfies the numbers counts.",
-      label: { slot: "tail", words: (p) => (p.unique ? null : "ambiguous") },
-      get: (p) => p.unique,
-      set: (p, v) => {
-        p.unique = v;
-      },
-    },
   ],
 
   newDesc,
@@ -440,6 +429,10 @@ export const rectGame: Game<
 
   solve,
   findMistakes,
+  // The solver's verdict, which is also the answer `findMistakes` compares
+  // against. The generator asks more (`rungsFinish`), so that the hint finishes
+  // every board it deals.
+  finishesByDeduction: (s) => solveFromNumbers(s).verdict === SOLVE_UNIQUE,
 
   hint: rectHint,
   hintMarks: {

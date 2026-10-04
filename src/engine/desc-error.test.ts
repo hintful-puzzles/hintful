@@ -25,14 +25,17 @@ import { describe, expect, it } from "vitest";
 import {
   DESC_CONTRADICTORY,
   DESC_MALFORMED,
+  DESC_NOT_DEDUCIBLE,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descValue,
+  descVerdict,
   loadDesc,
   validateDesc,
 } from "./desc-error.ts";
+import { difficultyItem, tierNames } from "./difficulty.ts";
 
 const sources = {
   ...import.meta.glob<string>("../games/**/*.ts", {
@@ -171,5 +174,61 @@ describe("the engine's verdict on a desc", () => {
 
   it("lets anything but a refusal propagate, since it is a bug", () => {
     expect(() => loadDesc(game, null, "bug")).toThrow(TypeError);
+  });
+});
+
+describe("a board deduction cannot finish", () => {
+  interface P {
+    tier: number;
+  }
+  // A desc names the lowest cap that solves its board, or "never".
+  const tiered = (tiers: readonly string[], nonUniqueTiers?: readonly number[]) => ({
+    newState: (_p: P, desc: string) => desc,
+    paramConfig: [difficultyItem<P>(tiers, "tier")],
+    difficulty: {
+      ...(nonUniqueTiers ? { nonUniqueTiers } : {}),
+      solveAtCap: (_p: P, desc: string, cap: number) =>
+        desc !== "never" && cap >= Number(desc)
+          ? ("solved" as const)
+          : ("unsolved" as const),
+    },
+  });
+  const verdict = (game: ReturnType<typeof tiered>, tier: number, desc: string) =>
+    descVerdict(loadDesc(game, { tier }, desc));
+
+  it("does not load where no cap of a tiered game solves it", () => {
+    const game = tiered(tierNames(3));
+    expect(verdict(game, 0, "0")).toBeNull();
+    expect(verdict(game, 0, "never")).toBe(DESC_NOT_DEDUCIBLE);
+    expect(verdict(game, 2, "never")).toBe(DESC_NOT_DEDUCIBLE);
+  });
+
+  it("loads where a cap above the stated tier solves it", () => {
+    // A shared ID does not state its tier, so the board is asked, not the ID.
+    expect(verdict(tiered(tierNames(3)), 0, "2")).toBeNull();
+  });
+
+  it("loads on a tier that allows trial and error, and only there", () => {
+    const game = tiered(tierNames(3, { search: true }));
+    expect(verdict(game, 2, "never")).toBeNull();
+    expect(verdict(game, 0, "never")).toBe(DESC_NOT_DEDUCIBLE);
+  });
+
+  it("is not asked of a game with a tier that promises no single answer", () => {
+    expect(verdict(tiered(["Easy", "Ambiguous"], [1]), 0, "never")).toBeNull();
+  });
+
+  it("is asked of an untiered game through finishesByDeduction", () => {
+    const untiered = (finishesByDeduction?: (s: string) => boolean) => ({
+      newState: (_p: null, desc: string) => desc,
+      ...(finishesByDeduction ? { finishesByDeduction } : {}),
+    });
+    const finishes = (s: string) => s === "fine";
+    expect(descVerdict(loadDesc(untiered(finishes), null, "fine"))).toBeNull();
+    expect(descVerdict(loadDesc(untiered(finishes), null, "stuck"))).toBe(
+      DESC_NOT_DEDUCIBLE,
+    );
+    // A game that makes no such promise (a sliding puzzle) loads any board.
+    expect(descVerdict(loadDesc(untiered(), null, "stuck"))).toBeNull();
   });
 });

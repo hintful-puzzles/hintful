@@ -44,10 +44,10 @@ import {
 } from "./state.ts";
 
 const SHAPES: PearlParams[] = [
-  { w: 6, h: 6, difficulty: DIFF_EASY, nosolve: false },
-  { w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false },
-  { w: 8, h: 8, difficulty: DIFF_EASY, nosolve: false },
-  { w: 8, h: 8, difficulty: DIFF_TRICKY, nosolve: false },
+  { w: 6, h: 6, difficulty: DIFF_EASY },
+  { w: 6, h: 6, difficulty: DIFF_TRICKY },
+  { w: 8, h: 8, difficulty: DIFF_EASY },
+  { w: 8, h: 8, difficulty: DIFF_TRICKY },
 ];
 const SEEDS = ["ph-a", "ph-b", "ph-c"];
 

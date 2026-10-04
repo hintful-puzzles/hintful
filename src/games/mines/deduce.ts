@@ -27,8 +27,7 @@
  *     other unopened square is safe, and when the squares outside hold exactly
  *     the rest, they are all mines.
  *
- * Measured on 980 boards across every preset with "Ensure solubility" on
- * (2026-10-01, `derive-completion-from-the-position`'s design.md § "Mines'
+ * Measured on 980 boards across every preset (2026-10-01, `derive-completion-from-the-position`'s design.md § "Mines'
  * hint"): these rungs never stalled, where the generator's solver had
  * certified each board. That is a sample, not a proof: upstream's solver can
  * chain regions without limit, and a board needing a deeper chain would end the
@@ -162,7 +161,7 @@ function pairFiring(heavy: Side, light: Side): Firing | null {
  * board needed more than five (design.md § "Mines' hint"). */
 const COUNT_SIZE = 5;
 /** The most candidates rung 4 searches among, which bounds its cost on a
- * board stuck mid-game (a board dealt without "Ensure solubility"). */
+ * board stuck mid-game. */
 const COUNT_CANDIDATES = 40;
 
 /** The first deduction the board supports, or `null` when none of the rungs

@@ -5,8 +5,8 @@
  * reproduces the C desc **and** the aux solution byte-for-byte (a faithful
  * generator over the bit-identical `random.ts`, reproducing the loopgen RNG
  * order, the `corners`-array quirk and the solver-gated minimization), and
- * (2) the TS solver grades the C board at the recorded difficulty (and, for a
- * soluble board, one rung easier fails to solve it).
+ * (2) the TS solver grades the C board at the recorded difficulty (and one rung
+ * easier fails to solve it).
  *
  * The desc byte-match is the strongest bar here because it depends on the
  * grid geometry, every RNG draw in loopgen, the bias score, and every solver
@@ -26,7 +26,6 @@ interface Fixture {
   w: number;
   h: number;
   difficulty: number;
-  nosolve: boolean;
   seed: string;
   desc: string;
   aux: string;
@@ -37,18 +36,17 @@ const paramsOf = (f: Fixture): PearlParams => ({
   w: f.w,
   h: f.h,
   difficulty: f.difficulty,
-  nosolve: f.nosolve,
 });
 
 /** `pearl-4` (10x10, Easy) alone costs **27 s** — 7% of the whole suite, and more
  * than the 12x8 fixture beside it. Easy is asserted on every commit by the 6x6,
- * 7x7 and 8x8 fixtures (and the 6x6 `nosolve` variant), so what the 10x10 adds is
+ * 7x7 and 8x8 fixtures, so what the 10x10 adds is
  * board size over the same generator/solver path: `npm run test:slow`. */
 const isSlow = (f: Fixture) => f.seed === "pearl-4";
 
 describe("pearl generator differential (byte-match vs C)", () => {
   for (const f of fixtures.fixtures as Fixture[]) {
-    const tag = `${f.seed} (${f.w}x${f.h} d=${f.difficulty}${f.nosolve ? "n" : ""})`;
+    const tag = `${f.seed} (${f.w}x${f.h} d=${f.difficulty})`;
     const maybeIt = isSlow(f) ? itSlow : it;
 
     maybeIt(`${tag}: TS desc + aux match C byte-for-byte`, () => {
@@ -57,18 +55,16 @@ describe("pearl generator differential (byte-match vs C)", () => {
       expect(aux).toBe(f.aux);
     });
 
-    if (!f.nosolve) {
-      it(`${tag}: TS solver grades the C board at difficulty ${f.grade}`, () => {
-        const state = newState(paramsOf(f), f.desc);
-        expect(gradePearl(f.w, f.h, state.clues)).toBe(f.grade);
-        if (f.grade > 0) {
-          const easier = new Uint8Array(f.w * f.h);
-          // One rung easier cannot solve it uniquely.
-          expect(
-            pearlSolve(f.w, f.h, state.clues, easier, f.grade - 1, false),
-          ).not.toBe(1);
-        }
-      });
-    }
+    it(`${tag}: TS solver grades the C board at difficulty ${f.grade}`, () => {
+      const state = newState(paramsOf(f), f.desc);
+      expect(gradePearl(f.w, f.h, state.clues)).toBe(f.grade);
+      if (f.grade > 0) {
+        const easier = new Uint8Array(f.w * f.h);
+        // One rung easier cannot solve it uniquely.
+        expect(pearlSolve(f.w, f.h, state.clues, easier, f.grade - 1, false)).not.toBe(
+          1,
+        );
+      }
+    });
   }
 });

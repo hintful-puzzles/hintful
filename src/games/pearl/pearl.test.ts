@@ -5,9 +5,11 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_NOT_DEDUCIBLE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  loadVerdict,
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
@@ -36,7 +38,7 @@ import {
   U,
 } from "./state.ts";
 
-const EASY_6 = { w: 6, h: 6, difficulty: DIFF_EASY, nosolve: false };
+const EASY_6 = { w: 6, h: 6, difficulty: DIFF_EASY };
 
 function generate(p: PearlParams, seed: string): PearlState {
   const { desc } = newDesc(p, randomNew(seed));
@@ -51,41 +53,41 @@ function solutionLines(state: PearlState): Uint8Array {
 }
 
 describe("pearl params", () => {
-  it("round-trips full params including d/n suffixes", () => {
+  it("round-trips full params including the d suffix", () => {
     for (const p of [
-      { w: 10, h: 10, difficulty: DIFF_TRICKY, nosolve: false },
-      { w: 6, h: 8, difficulty: DIFF_EASY, nosolve: true },
-      { w: 12, h: 8, difficulty: DIFF_TRICKY, nosolve: true },
+      { w: 10, h: 10, difficulty: DIFF_TRICKY },
+      { w: 6, h: 8, difficulty: DIFF_EASY },
+      { w: 12, h: 8, difficulty: DIFF_TRICKY },
     ]) {
       expect(decodeParams(encodeParams(p, true))).toEqual(p);
     }
   });
 
+  it("leaves upstream's `n` unread, which asks for a board nothing has checked", () => {
+    expect(decodeParams("12x8dtn")).toEqual({ w: 12, h: 8, difficulty: DIFF_TRICKY });
+  });
+
   it("encodes a square size once", () => {
-    expect(
-      encodeParams({ w: 7, h: 7, difficulty: DIFF_EASY, nosolve: false }, false),
-    ).toBe("7x7");
+    expect(encodeParams({ w: 7, h: 7, difficulty: DIFF_EASY }, false)).toBe("7x7");
   });
 
   it("rejects too-small boards and small Normal boards", () => {
     const error = (p: PearlParams) => paramsError(pearlGame, p, true);
-    expect(error({ w: 4, h: 6, difficulty: DIFF_EASY, nosolve: false })).toBe(
+    expect(error({ w: 4, h: 6, difficulty: DIFF_EASY })).toBe(
       "Width must be at least 5.",
     );
-    expect(error({ w: 6, h: 4, difficulty: DIFF_EASY, nosolve: false })).toBe(
+    expect(error({ w: 6, h: 4, difficulty: DIFF_EASY })).toBe(
       "Height must be at least 5.",
     );
     // w + h < 11 at Normal is rejected.
-    expect(
-      error({ w: 5, h: 5, difficulty: DIFF_TRICKY, nosolve: false }),
-    ).not.toBeNull();
-    expect(error({ w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false })).toBeNull();
+    expect(error({ w: 5, h: 5, difficulty: DIFF_TRICKY })).not.toBeNull();
+    expect(error({ w: 6, h: 6, difficulty: DIFF_TRICKY })).toBeNull();
   });
 
-  it("labels an unsoluble board ambiguous", () => {
-    expect(
-      describeParams(pearlGame, { w: 8, h: 8, difficulty: DIFF_TRICKY, nosolve: true }),
-    ).toBe(`8x8 ${DIFF_NAMES[DIFF_TRICKY]}, ambiguous`);
+  it("labels a custom board with its size and tier", () => {
+    expect(describeParams(pearlGame, { w: 8, h: 8, difficulty: DIFF_TRICKY })).toBe(
+      `8x8 ${DIFF_NAMES[DIFF_TRICKY]}`,
+    );
   });
 });
 
@@ -110,8 +112,8 @@ describe("pearl solver", () => {
   it("solves generated boards uniquely at their difficulty", () => {
     for (const [seed, p] of [
       ["e0", EASY_6],
-      ["e1", { w: 8, h: 8, difficulty: DIFF_EASY, nosolve: false }],
-      ["t0", { w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false }],
+      ["e1", { w: 8, h: 8, difficulty: DIFF_EASY }],
+      ["t0", { w: 6, h: 6, difficulty: DIFF_TRICKY }],
     ] as const) {
       const state = generate(p, seed);
       const out = new Uint8Array(p.w * p.h);
@@ -121,7 +123,7 @@ describe("pearl solver", () => {
 
   it("a Normal board is not solvable with only Easy deductions", () => {
     // Find a Normal board that genuinely needs the Normal rung.
-    const p = { w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false };
+    const p = { w: 6, h: 6, difficulty: DIFF_TRICKY };
     const state = generate(p, "tricky-needs-rung");
     const out = new Uint8Array(p.w * p.h);
     expect(pearlSolve(p.w, p.h, state.clues, out, DIFF_EASY, false)).not.toBe(1);
@@ -252,26 +254,28 @@ describe("pearl findMistakes", () => {
     ).toBe(true);
   });
 
-  it("returns nothing on a non-uniquely-solvable (nosolve) board", () => {
-    const p = { w: 6, h: 6, difficulty: DIFF_EASY, nosolve: true };
-    // Generate until we get one that isn't uniquely solvable (most nosolve
-    // boards are ambiguous).
-    for (const seed of ["ns0", "ns1", "ns2", "ns3", "ns4"]) {
-      const state = generate(p, seed);
-      const out = new Uint8Array(p.w * p.h);
-      if (pearlSolve(p.w, p.h, state.clues, out, DIFF_COUNT, false) !== 1) {
-        // lay a random segment then check no mistakes are reported
-        const wrong = executeMove(state, {
-          ops: [
-            { kind: "flip", l: R, x: 0, y: 0 },
-            { kind: "flip", l: L, x: 1, y: 0 },
-          ],
-        });
-        expect(pearlGame.findMistakes?.(wrong)).toEqual([]);
-        return;
-      }
-    }
-    throw new Error("no seed produced a non-uniquely-solvable board");
+  // The board upstream dealt for seed `pearl-7` with "Allow unsoluble" on: no
+  // tier's rules finish it.
+  const UNCHECKED = "BWdWbWWeWbWbWbWaWWg";
+
+  it("does not load a board no tier solves", () => {
+    for (const difficulty of [DIFF_EASY, DIFF_TRICKY])
+      expect(loadVerdict(pearlGame, { w: 6, h: 6, difficulty }, UNCHECKED)).toBe(
+        DESC_NOT_DEDUCIBLE,
+      );
+  });
+
+  it("returns nothing on a board the solver cannot finish", () => {
+    const state = newState(EASY_6, UNCHECKED);
+    const out = new Uint8Array(36);
+    expect(pearlSolve(6, 6, state.clues, out, DIFF_COUNT, false)).not.toBe(1);
+    const wrong = executeMove(state, {
+      ops: [
+        { kind: "flip", l: R, x: 0, y: 0 },
+        { kind: "flip", l: L, x: 1, y: 0 },
+      ],
+    });
+    expect(pearlGame.findMistakes?.(wrong)).toEqual([]);
   });
 });
 

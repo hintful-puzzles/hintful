@@ -89,11 +89,11 @@ describe("mines params", () => {
     expect(decodeParams("10x10").n).toBe(10);
   });
 
-  it("parses the non-unique flag and forced first click", () => {
+  it("parses a forced first click, and reads past upstream's `a`", () => {
+    // `a` asks upstream for a board that may need a guess.
     const p = decodeParams("16x16n40aX3Y4");
-    expect(p.unique).toBe(false);
-    expect(p.firstClickX).toBe(3);
-    expect(p.firstClickY).toBe(4);
+    expect(p).toEqual({ w: 16, h: 16, n: 40, firstClickX: 3, firstClickY: 4 });
+    expect(encodeParams(p, true)).toBe("16x16n40X3Y4");
   });
 
   it("validates size and mine-count bounds", () => {
@@ -106,15 +106,15 @@ describe("mines params", () => {
     expect(
       paramsError(
         minesGame,
-        { w: 3, h: 3, n: 5, unique: true, firstClickX: -1, firstClickY: -1 },
+        { w: 3, h: 3, n: 5, firstClickX: -1, firstClickY: -1 },
         true,
       ),
     ).toBe("There must be at least 9 more squares than mines.");
-    // unique requires > 2 in each dimension.
+    // A deducible layout needs > 2 in each dimension.
     expect(
       paramsError(
         minesGame,
-        { w: 2, h: 9, n: 3, unique: true, firstClickX: -1, firstClickY: -1 },
+        { w: 2, h: 9, n: 3, firstClickX: -1, firstClickY: -1 },
         true,
       ),
     ).toMatch(/greater than two/);
@@ -138,8 +138,13 @@ describe("mines desc", () => {
     const { layout, openXY } = decodeDesc(p, desc);
     expect(layout.mines).toBeNull();
     expect(layout.n).toBe(10);
-    expect(layout.unique).toBe(true);
     expect(openXY).toBeNull();
+  });
+
+  it("reads upstream's r-form for a board that may need a guess", () => {
+    const p = decodeParams("9x9n10");
+    const { desc } = minesGame.newDesc(p, randomNew("desc-seed"));
+    expect(validateDesc(minesGame, p, desc.replace(",u,", ",a,"))).toBeNull();
   });
 
   it("round-trips public and private layout descs (unmasked)", () => {
@@ -206,13 +211,13 @@ describe("mines desc", () => {
 // --- solver ------------------------------------------------------------
 
 describe("mines solver", () => {
-  it("fully solves a generated unique board without guessing", () => {
+  it("fully solves a generated board without guessing", () => {
     const w = 9;
     const h = 9;
     const n = 10;
     const x = 4;
     const y = 4;
-    const mines = minegen(w, h, n, x, y, true, randomNew("solve"));
+    const mines = minegen(w, h, n, x, y, randomNew("solve"));
     const open = (ox: number, oy: number) => {
       if (mines[oy * w + ox]) return -1;
       let c = 0;
@@ -257,7 +262,7 @@ describe("mines generator", () => {
     const x = 4;
     const y = 4;
     for (let s = 0; s < 4; s++) {
-      const mines = minegen(w, h, n, x, y, true, randomNew(`gen${s}`));
+      const mines = minegen(w, h, n, x, y, randomNew(`gen${s}`));
       expect(Array.from(mines).reduce((a, b) => a + b, 0)).toBe(n);
       // 3x3 around the first click is clear.
       for (let dy = -1; dy <= 1; dy++)

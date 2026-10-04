@@ -6,7 +6,7 @@ import {
   dimensionParamConfig,
   numberItem,
 } from "../../engine/params.ts";
-import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
+import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -19,8 +19,6 @@ export interface SamegameParams {
   ncols: number;
   /** 1 or 2: score a removal of `n` tiles as `(n-1)²` or `(n-2)²`. */
   scoresub: number;
-  /** Choose the generation algorithm: guaranteed-soluble vs legacy random. */
-  soluble: boolean;
 }
 
 export interface SamegameState {
@@ -66,7 +64,7 @@ export function npoints(scoresub: number, nsel: number): number {
 // --- params -----------------------------------------------------------
 
 export function defaultParams(): SamegameParams {
-  return { w: 5, h: 5, ncols: 3, scoresub: 2, soluble: true };
+  return { w: 5, h: 5, ncols: 3, scoresub: 2 };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
@@ -76,7 +74,7 @@ export const paramConfig: ParamConfigItem<SamegameParams>[] = [
     bounds: { min: 1 },
   }),
   numberItem<SamegameParams>("no-of-colors", "No. of colors", "ncols", {
-    doc: "How many different colors the squares come in; at least 3 when Ensure solubility is on. Fewer colors make bigger groups.",
+    doc: "How many different colors the squares come in; at least 3. Fewer colors make bigger groups.",
     bounds: { max: 9 },
     label: { slot: "tail", words: (p) => `${p.ncols} colors` },
   }),
@@ -93,22 +91,12 @@ export const paramConfig: ParamConfigItem<SamegameParams>[] = [
       p.scoresub = v + 1;
     },
   },
-  {
-    kw: "ensure-solubility",
-    name: "Ensure solubility",
-    type: "boolean",
-    doc: "When enabled, the grid is built by playing the game backwards, so it can always be cleared completely. When disabled, the colors are scattered at random and there is no guarantee.",
-    label: { slot: "tail", words: (p) => (p.soluble ? null : "ambiguous") },
-    get: (p) => p.soluble,
-    set: (p, v) => {
-      p.soluble = v;
-    },
-  },
 ];
 
 /** Upstream's `W[xH][cN][sS][r]`. The scoring system is written as `scoresub`
- * itself, not as its choice index; `r` selects the not-guaranteed-soluble
- * generator, and its absence means soluble. */
+ * itself, not as its choice index. Upstream's `r` asks for colors scattered at
+ * random, with no promise the grid can be cleared; every board dealt here can
+ * be, so the codec leaves the letter unread. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   num(paramConfig, "c", "no-of-colors"),
@@ -118,20 +106,12 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
       p.scoresub = v;
     },
   }),
-  flag(paramConfig, "r", "ensure-solubility", { means: false, full: true }),
 ]);
 
 export function validateParams(p: SamegameParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) return AREA_TOO_LARGE;
-  if (p.soluble) {
-    if (p.ncols < 3) return "Number of colors must be at least three.";
-    if (p.w * p.h <= 1) return "Grid area must be greater than one.";
-  } else {
-    if (p.ncols < 2) return "Number of colors must be at least two.";
-    // Need at least two of each color for theoretical solubility.
-    if (p.w * p.h < p.ncols * 2)
-      return "The grid must have at least two squares for each color.";
-  }
+  if (p.ncols < 3) return "Number of colors must be at least three.";
+  if (p.w * p.h <= 1) return "Grid area must be greater than one.";
   return null;
 }
 
@@ -139,7 +119,7 @@ export function validateParams(p: SamegameParams, _full: boolean): string | null
 
 export function presets() {
   const p = (w: number, h: number, ncols: number): { params: SamegameParams } => ({
-    params: { w, h, ncols, scoresub: 2, soluble: true },
+    params: { w, h, ncols, scoresub: 2 },
   });
   return {
     title: "Type",
@@ -147,7 +127,7 @@ export function presets() {
   };
 }
 
-// --- guaranteed-soluble generator -------------------------------------
+// --- generator ---------------------------------------------------------
 
 /**
  * Upstream `gen_grid`: build a soluble board by playing the game backwards,
@@ -381,35 +361,10 @@ function genGrid(w: number, h: number, nc: number, rng: RandomState): number[] {
   return grid;
 }
 
-// --- legacy random generator ------------------------------------------
-
-/** Faithful port of `gen_grid_random`: place two of each color at random
- * empty cells, then fill the rest at random. Not guaranteed soluble. */
-function genGridRandom(w: number, h: number, nc: number, rng: RandomState): number[] {
-  const n = w * h;
-  const grid = new Array<number>(n).fill(0);
-  for (let c = 1; c <= nc; c++) {
-    for (let jj = 0; jj < 2; jj++) {
-      let i: number;
-      do {
-        i = randomUpto(rng, n);
-      } while (grid[i] !== 0);
-      grid[i] = c;
-    }
-  }
-  for (let i = 0; i < n; i++) {
-    if (grid[i] === 0) grid[i] = randomUpto(rng, nc) + 1;
-  }
-  return grid;
-}
-
 // --- desc -------------------------------------------------------------
 
 export function newDesc(p: SamegameParams, rng: RandomState): { desc: string } {
-  const tiles = p.soluble
-    ? genGrid(p.w, p.h, p.ncols, rng)
-    : genGridRandom(p.w, p.h, p.ncols, rng);
-  return { desc: tiles.join(",") };
+  return { desc: genGrid(p.w, p.h, p.ncols, rng).join(",") };
 }
 
 /** The colors in reading order, comma-separated. A generated board is full, so

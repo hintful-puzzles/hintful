@@ -45,7 +45,6 @@ const P: NetParams = {
   w: 5,
   h: 5,
   wrapping: false,
-  unique: true,
   barrierProbability: 0,
 };
 const PW: NetParams = { ...P, wrapping: true };

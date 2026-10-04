@@ -343,7 +343,6 @@ preset:Mines/16x30, 170 mines  full=16x30n170  brief=16x30
 bump:w  full=10x9n10  brief=10x9
 bump:h  full=9x10n10  brief=9x10
 bump:n  full=9x9n11  brief=9x9
-flip:unique  full=9x9n10a  brief=9x9
 bump:firstClickX  full=9x9n10X0  brief=9x9
 bump:firstClickY  full=9x9n10Y0  brief=9x9"
 `;
@@ -373,7 +372,6 @@ preset:Net/11x11 wrapping  full=11x11w
 preset:Net/11x13 wrapping  full=11x13w
 bump:w  full=6x5
 bump:h  full=5x6
-flip:unique  full=5x5a  brief=5x5
 bump:barrierProbability  full=5x5b1  brief=5x5"
 `;
 
@@ -424,8 +422,7 @@ preset:Pearl/10x10 Normal  full=10x10dt  brief=10x10
 preset:Pearl/8x12 Easy  full=8x12de  brief=8x12
 preset:Pearl/8x12 Normal  full=8x12dt  brief=8x12
 bump:w  full=9x8dt  brief=9x8
-bump:h  full=8x9dt  brief=8x9
-flip:nosolve  full=8x8dtn  brief=8x8"
+bump:h  full=8x9dt  brief=8x9"
 `;
 
 exports[`encoded params are byte-stable > pegs 1`] = `
@@ -461,8 +458,7 @@ preset:Rectangles/17x17  full=17x17
 preset:Rectangles/19x19  full=19x19
 bump:w  full=8x7
 bump:h  full=7x8
-bump:expandfactor  full=7x7e1  brief=7x7
-flip:unique  full=7x7a  brief=7x7"
+bump:expandfactor  full=7x7e1  brief=7x7"
 `;
 
 exports[`encoded params are byte-stable > rome 1`] = `
@@ -508,8 +504,7 @@ preset:Type/15x20, 4 colors  full=15x20c4s2
 bump:w  full=6x5c3s2
 bump:h  full=5x6c3s2
 bump:ncols  full=5x5c4s2
-bump:scoresub  full=5x5c3s3
-flip:soluble  full=5x5c3s2r  brief=5x5c3s2"
+bump:scoresub  full=5x5c3s3"
 `;
 
 exports[`encoded params are byte-stable > seismic 1`] = `

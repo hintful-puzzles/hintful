@@ -969,7 +969,9 @@ describe("Midend: deduction runs out only on an Unreasonable tier", () => {
     const g: typeof tiered = {
       ...tiered,
       paramConfig: [difficultyItem<TieredParams>(["Easy", "Unreasonable"], "diff")],
-      difficulty: { solveAtCap: () => "unsolved" },
+      // A solver that finishes what the hint cannot: the board loads at any
+      // tier (`loadDesc`), and the hint still runs out.
+      difficulty: { solveAtCap: () => "solved" },
       hint: () => ({ ok: false, error: DEDUCTION_EXHAUSTED }),
     };
     return g as unknown as typeof fakeGame;

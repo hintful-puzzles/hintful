@@ -39,14 +39,12 @@ const P5: NetParams = {
   w: 5,
   h: 5,
   wrapping: false,
-  unique: true,
   barrierProbability: 0,
 };
 const P5B: NetParams = {
   w: 5,
   h: 5,
   wrapping: false,
-  unique: true,
   barrierProbability: 1,
 };
 

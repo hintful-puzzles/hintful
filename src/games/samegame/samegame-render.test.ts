@@ -31,7 +31,7 @@ function freshDs(state: SamegameState): SamegameDrawState {
 }
 
 function mkState(desc: string, p?: Partial<SamegameParams>): SamegameState {
-  return newState({ w: 2, h: 1, ncols: 3, scoresub: 2, soluble: true, ...p }, desc);
+  return newState({ w: 2, h: 1, ncols: 3, scoresub: 2, ...p }, desc);
 }
 
 function emptyUi(state: SamegameState): SamegameUi {

@@ -943,7 +943,7 @@ wrapper is `clueChar`.
 
 A parse fails with a `DescError`, a branded string only this module makes:
 `DESC_TOO_SHORT`, `DESC_TOO_LONG`, `DESC_OUT_OF_RANGE`, `DESC_REPEATED`,
-`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `DESC_NOT_UNIQUE`, `descBadCharacter(ch)` (pass the
+`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `DESC_NOT_UNIQUE`, `DESC_NOT_DEDUCIBLE`, `descBadCharacter(ch)` (pass the
 character when the parser has it), and `descNeedsOne(noun, found)` for a board
 that must have exactly one of something (a starting square, a main piece). A helper on the desc path returns
 `DescError | null` too, so the brand reaches the message where it is written.
@@ -974,6 +974,14 @@ nothing for this beyond a `solve` that says `MULTIPLE_SOLUTIONS` or
 `NO_SOLUTION` only when it has proved it
 ([solver-and-generator.md](./solver-and-generator.md) § "One answer, even when it
 is hidden").
+
+**And whether deduction finishes it.** Outside a tier that permits search,
+`loadDesc` refuses a board no cap of the game's difficulty contract solves, or
+that an untiered game's `finishesByDeduction` turns away
+(`DESC_NOT_DEDUCIBLE`). A tiered game supplies nothing new; an untiered
+deductive game supplies that one method
+([solver-and-generator.md](./solver-and-generator.md) § "No option switches the
+generator's checks off").
 
 ### `desc-reader.ts` — the cursor a desc parser drives
 

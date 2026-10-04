@@ -66,7 +66,7 @@ export function newDesc(p: NetParams, rs: RandomState): { desc: string; aux: str
   for (;;) {
     attempt();
     const board = generate(p, rs);
-    if (!p.unique || finishes(newState(p, board.desc))) return board;
+    if (finishes(newState(p, board.desc))) return board;
   }
 }
 
@@ -89,42 +89,40 @@ function generate(p: NetParams, rs: RandomState): { desc: string; aux: string } 
 
     growSpanningTree(tiles, w, h, p.wrapping, cx, cy, rs);
 
-    if (p.unique) {
-      let prevn = -1;
-      // The solver marks determined tiles LOCKED; the boundary between locked
-      // and unlocked tiles bounds an ambiguous region, which `perturb` rewires.
-      while (netSolver(w, h, tiles, null, p.wrapping) !== SOLVER_UNIQUE) {
-        let n = 0;
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            if (x + 1 < w && (tiles[y * w + x] ^ tiles[y * w + x + 1]) & LOCKED) {
-              n++;
-              if (tiles[y * w + x] & LOCKED) {
-                perturb(w, h, tiles, p.wrapping, rs, x + 1, y, L);
-              } else {
-                perturb(w, h, tiles, p.wrapping, rs, x, y, R);
-              }
+    let prevn = -1;
+    // The solver marks determined tiles LOCKED; the boundary between locked
+    // and unlocked tiles bounds an ambiguous region, which `perturb` rewires.
+    while (netSolver(w, h, tiles, null, p.wrapping) !== SOLVER_UNIQUE) {
+      let n = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (x + 1 < w && (tiles[y * w + x] ^ tiles[y * w + x + 1]) & LOCKED) {
+            n++;
+            if (tiles[y * w + x] & LOCKED) {
+              perturb(w, h, tiles, p.wrapping, rs, x + 1, y, L);
+            } else {
+              perturb(w, h, tiles, p.wrapping, rs, x, y, R);
             }
-            if (y + 1 < h && (tiles[y * w + x] ^ tiles[(y + 1) * w + x]) & LOCKED) {
-              n++;
-              if (tiles[y * w + x] & LOCKED) {
-                perturb(w, h, tiles, p.wrapping, rs, x, y + 1, U);
-              } else {
-                perturb(w, h, tiles, p.wrapping, rs, x, y, D);
-              }
+          }
+          if (y + 1 < h && (tiles[y * w + x] ^ tiles[(y + 1) * w + x]) & LOCKED) {
+            n++;
+            if (tiles[y * w + x] & LOCKED) {
+              perturb(w, h, tiles, p.wrapping, rs, x, y + 1, U);
+            } else {
+              perturb(w, h, tiles, p.wrapping, rs, x, y, D);
             }
           }
         }
-
-        // If we couldn't reduce the number of ambiguous sections, give up and
-        // regenerate the whole grid.
-        if (prevn !== -1 && prevn <= n) continue beginGeneration;
-        prevn = n;
       }
 
-      // The solver left LOCKED bits everywhere; clear them.
-      for (let i = 0; i < wh; i++) tiles[i] &= ~LOCKED;
+      // If we couldn't reduce the number of ambiguous sections, give up and
+      // regenerate the whole grid.
+      if (prevn !== -1 && prevn <= n) continue beginGeneration;
+      prevn = n;
     }
+
+    // The solver left LOCKED bits everywhere; clear them.
+    for (let i = 0; i < wh; i++) tiles[i] &= ~LOCKED;
 
     break;
   }

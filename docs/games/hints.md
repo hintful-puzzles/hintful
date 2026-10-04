@@ -1419,7 +1419,10 @@ search-permitting tier.
 
 **The midend holds the same rule at runtime**, because the walk sees only boards
 the generators dealt, and those are tiered correctly by construction. A board
-can still arrive at the wrong tier: from an id that pins one, or from a save.
+that arrives from an id or a save is held to the same promise when it loads
+(`loadDesc`, [solver-and-generator.md](./solver-and-generator.md) § "No option
+switches the generator's checks off"), but loading asks the solver, and a hint
+weaker than its game's solver can still run out on a board that loaded.
 When `hint()` returns `DEDUCTION_EXHAUSTED` and `difficulty.ts`'s
 `permitsSearch` says the board's tier does not allow search, `Midend` throws
 with the game, the tier and the full id. The player gets the crash dialog

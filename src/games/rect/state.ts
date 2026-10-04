@@ -26,8 +26,6 @@ export interface RectParams {
    * stretched. Default 0 (all presets). A byte-match float hazard, so encoded
    * `%g` and decoded `atof`. */
   expandfactor: number;
-  /** Generate a uniquely-solvable board (default) vs. any placement. */
-  unique: boolean;
 }
 
 /** A player action; upstream's move strings `R x,y,w,h` / `E x,y,w,h` /
@@ -97,7 +95,7 @@ export interface RectMistake {
  */
 
 export function defaultParams(): RectParams {
-  return { w: 7, h: 7, expandfactor: 0, unique: true };
+  return { w: 7, h: 7, expandfactor: 0 };
 }
 
 const PRESET_SIZES = [7, 9, 11, 13, 15, 17, 19];
@@ -106,7 +104,7 @@ export function presets(): PresetMenu<RectParams> {
   return {
     title: "Rectangles",
     submenu: PRESET_SIZES.map((n) => ({
-      params: { w: n, h: n, expandfactor: 0, unique: true },
+      params: { w: n, h: n, expandfactor: 0 },
     })),
   };
 }
@@ -114,7 +112,6 @@ export function presets(): PresetMenu<RectParams> {
 export function encodeParams(p: RectParams, full: boolean): string {
   let s = `${p.w}x${p.h}`;
   if (full && p.expandfactor) s += `e${formatG(p.expandfactor)}`;
-  if (full && !p.unique) s += "a";
   return s;
 }
 
@@ -135,9 +132,8 @@ export function decodeParams(s: string): RectParams {
     // Stored as a C `float`, so round to single precision.
     p.expandfactor = Math.fround(atof(s.slice(start, i)));
   }
-  if (s[i] === "a") {
-    p.unique = false;
-  }
+  // Upstream's trailing `a` asks for a board with no promised single answer.
+  // Every board dealt here has one, so the letter is read past.
   return p;
 }
 

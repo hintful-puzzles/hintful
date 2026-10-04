@@ -323,6 +323,11 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     anchor: "difficulty",
     why: "what a tier name promises — `Unreasonable` above all",
   },
+  finishesByDeduction: {
+    kind: "features",
+    anchor: "difficulty",
+    why: "the same promise for a game with no tiers: every board is finished by reasoning",
+  },
   canMarkAll: {
     kind: "features",
     anchor: "mark-all",

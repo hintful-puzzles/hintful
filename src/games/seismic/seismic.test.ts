@@ -1062,12 +1062,12 @@ describe("seismic rendering", () => {
     );
     expect(move).toEqual({ type: "set", x: 0, y: 0, n: 9, pencil: true });
 
-    const r = renderScenario({
-      game: seismicGame,
-      id: `${encodeParams(p, true)}:${desc}`,
-      moves: [move as SeismicMove],
-    });
-    const penciled = r.recording.ops.filter(
+    // Drawn directly: a board with no clues has many answers, so it does not
+    // load through the midend.
+    const marked = seismicGame.executeMove(state, move as SeismicMove);
+    const dr = new RecordingDrawing(seismicGame.colors([1, 1, 1]));
+    redraw(dr, newDrawState(marked, TILE), null, marked, 1, newUi(marked), 0, 0);
+    const penciled = dr.ops.filter(
       (o) => o.op === "text" && o.color === COL_NUM_PENCIL,
     );
     expect(penciled).toHaveLength(1);

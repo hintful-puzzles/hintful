@@ -4,9 +4,12 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DESC_NOT_DEDUCIBLE, loadVerdict } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { Midend } from "../../engine/index.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { decodeSave, encodeSave } from "../../engine/save.ts";
 import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -17,23 +20,32 @@ import { FLAG, type MinesMove, type MinesState } from "./state.ts";
 
 type Step = HintStep<MinesMove, MinesHint>;
 
-const params = (w: number, h: number, n: number, unique = true) => ({
+const params = (w: number, h: number, n: number) => ({
   ...minesGame.defaultParams(),
   w,
   h,
   n,
-  unique,
 });
 
-function fresh(
-  w: number,
-  h: number,
-  n: number,
-  seed: string,
-  unique = true,
-): MinesState {
-  const p = params(w, h, n, unique);
+function fresh(w: number, h: number, n: number, seed: string): MinesState {
+  const p = params(w, h, n);
   return minesGame.newState(p, minesGame.newDesc(p, randomNew(seed)).desc);
+}
+
+/** The public desc of a 16x16 board with 60 mines scattered at random around a
+ * first click at (8, 8), as upstream lays one out with "Ensure solubility"
+ * off: nothing makes it deducible. Written unmasked (`u`). */
+function scattered(seed: string): string {
+  const rs = randomNew(seed);
+  const free: number[] = [];
+  for (let i = 0; i < 256; i++)
+    if (Math.abs((i >> 4) - 8) > 1 || Math.abs((i & 15) - 8) > 1) free.push(i);
+  const nibbles = new Array<number>(64).fill(0);
+  for (let n = 0; n < 60; n++) {
+    const [i] = free.splice(randomUpto(rs, free.length), 1);
+    nibbles[i >> 2] |= 8 >> (i & 3);
+  }
+  return `8,8,u${nibbles.map((v) => v.toString(16)).join("")}`;
 }
 
 const open = (x: number, y: number): MinesMove => ({
@@ -218,20 +230,48 @@ describe("Mines hint: following a step", () => {
   });
 });
 
-describe("Mines hint: a board dealt without Ensure solubility", () => {
-  it("says deduction has run out where it does", () => {
+describe("Mines hint: a board that needs a guess", () => {
+  it("does not load, and its hint says deduction has run out where it does", () => {
+    const p = params(16, 16, 60);
     let refused = 0;
     for (let k = 0; k < 10; k++) {
-      const s = minesGame.executeMove(
-        fresh(16, 16, 60, `risky-${k}`, false),
-        open(8, 8),
-      );
-      const { end } = walk(s);
-      if (minesGame.status(end) === "solved" || end.dead) continue;
+      const desc = scattered(`risky-${k}`);
+      const { end } = walk(minesGame.newState(p, desc));
+      if (minesGame.status(end) === "solved") {
+        expect(loadVerdict(minesGame, p, desc)).toBeNull();
+        continue;
+      }
       expect(minesGame.hint?.(end)).toEqual({ ok: false, error: DEDUCTION_EXHAUSTED });
+      expect(loadVerdict(minesGame, p, desc)).toBe(DESC_NOT_DEDUCIBLE);
       refused++;
     }
     expect(refused).toBeGreaterThan(0);
+  });
+
+  it("is not restored from a save either", () => {
+    // A save rebuilds from the private desc, which names no first click, so
+    // the midend asks the public one.
+    const m = new Midend(minesGame);
+    expect(m.newGameFromId("16x16n60#save")).toBeNull();
+    m.playMoves([open(8, 8)]);
+    const save = decodeSave(m.saveGame());
+    const p = params(16, 16, 60);
+    const desc = Array.from({ length: 10 }, (_, k) => scattered(`risky-${k}`)).find(
+      (d) => loadVerdict(minesGame, p, d) !== null,
+    );
+    if (desc === undefined) return expect.unreachable("no board needing a guess");
+    const risky = encodeSave({ ...save, desc, privDesc: desc.slice("8,8,".length) });
+    expect(new Midend(minesGame).loadGame(encodeSave(save))).toBeNull();
+    expect(new Midend(minesGame).loadGame(risky)).toBe(
+      `Could not restore this saved game: ${DESC_NOT_DEDUCIBLE}`,
+    );
+  });
+
+  it("is not what the generator lays out", () => {
+    for (let k = 0; k < 4; k++) {
+      const s = minesGame.executeMove(fresh(16, 16, 60, `sound-${k}`), open(8, 8));
+      expect(minesGame.finishesByDeduction?.(s)).toBe(true);
+    }
   });
 });
 

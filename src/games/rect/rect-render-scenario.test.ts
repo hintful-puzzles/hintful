@@ -14,7 +14,7 @@ import { newState } from "./moves.ts";
 import { COL_CORRECT, COL_MISTAKE } from "./render.ts";
 import type { RectMove, RectParams } from "./state.ts";
 
-const P: RectParams = { w: 7, h: 7, expandfactor: 0, unique: true };
+const P: RectParams = { w: 7, h: 7, expandfactor: 0 };
 const ID = `${rectGame.encodeParams(P, true)}#rect-scenario`;
 
 describe("rect render scenarios", () => {

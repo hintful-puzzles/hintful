@@ -59,7 +59,6 @@ export interface MinesParams {
   w: number;
   h: number;
   n: number;
-  unique: boolean;
   /** A forced first click for batch generation (the `X`/`Y` param letters,
    * read by `newGameDescBatch`); -1 = unset. The running game never sets them. */
   firstClickX: number;
@@ -74,7 +73,6 @@ export interface MineLayout {
   mines: Int8Array | null;
   /** Mine count, used before the bitmap exists (for the status bar's total). */
   n: number;
-  unique: boolean;
   /** The generator RNG, decoded from the preliminary desc; consumed (and
    * nulled) when the layout is generated on the first click. */
   rs: RandomState | null;
@@ -122,11 +120,13 @@ export type MinesMove = { type: "solve" } | { type: "ops"; ops: MineOp[] };
 // --- params codec ------------------------------------------------------
 
 export function defaultParams(): MinesParams {
-  return { w: 9, h: 9, n: 10, unique: true, firstClickX: -1, firstClickY: -1 };
+  return { w: 9, h: 9, n: 10, firstClickX: -1, firstClickY: -1 };
 }
 
 /** Upstream's `decode_params` (mines.c:168): `WxH`, optional `nN` mine count
- * (defaulting to area/10), then `a`/`X`/`Y` flags. */
+ * (defaulting to area/10), then `X`/`Y` flags. Upstream's `a` asks for a board
+ * that may need a guess; every board laid out here is deducible, so the letter
+ * is skipped with the rest of the gunk. */
 export function decodeParams(s: string): MinesParams {
   const p = defaultParams();
   const w = parseLeadingInt(s, 0);
@@ -148,8 +148,7 @@ export function decodeParams(s: string): MinesParams {
   }
   while (i < s.length) {
     const c = s[i++];
-    if (c === "a") p.unique = false;
-    else if (c === "X") {
+    if (c === "X") {
       const x = parseLeadingInt(s, i);
       p.firstClickX = x.value;
       i = x.next;
@@ -163,12 +162,11 @@ export function decodeParams(s: string): MinesParams {
   return p;
 }
 
-/** Upstream's `encode_params` (mines.c:208). The mine count and the `a`/`X`/`Y`
+/** Upstream's `encode_params` (mines.c:208). The mine count and the `X`/`Y`
  * flags are generation-time (`full`) parameters only. */
 export function encodeParams(p: MinesParams, full: boolean): string {
   let s = `${p.w}x${p.h}`;
   if (full) s += `n${p.n}`;
-  if (full && !p.unique) s += "a";
   if (full && p.firstClickX >= 0) s += `X${p.firstClickX}`;
   if (full && p.firstClickY >= 0) s += `Y${p.firstClickY}`;
   return s;
@@ -176,7 +174,7 @@ export function encodeParams(p: MinesParams, full: boolean): string {
 
 /** Upstream's `validate_params` (mines.c:279). */
 export function validateParams(p: MinesParams, full: boolean): string | null {
-  if (full && p.unique && (p.w <= 2 || p.h <= 2))
+  if (full && (p.w <= 2 || p.h <= 2))
     return "Width and height must both be greater than two.";
   if (p.w > Math.floor((2 ** 28 - 1) / p.h)) return AREA_TOO_LARGE;
   if (p.n > p.w * p.h - 9) return "There must be at least 9 more squares than mines.";
@@ -259,7 +257,6 @@ function parseDesc(p: MinesParams, desc: string): DescParse<DecodedDesc> {
     const layout: MineLayout = {
       mines: null,
       n: p.n,
-      unique: p.unique,
       rs: null,
       startx: -1,
       starty: -1,
@@ -275,7 +272,8 @@ function parseDesc(p: MinesParams, desc: string): DescParse<DecodedDesc> {
         );
       }
       r.expect(",");
-      layout.unique = r.char((c) => c === "u" || c === "a") === "u";
+      // `u` or upstream's `a`: either way the layout is made deducible.
+      r.char((c) => c === "u" || c === "a");
       r.expect(",");
       layout.rs = readRandomState(r);
       return { layout, openXY: null };

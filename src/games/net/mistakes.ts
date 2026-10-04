@@ -1,8 +1,7 @@
 /**
  * What Net's Check & Save flags: a lock or a side note the solution
  * contradicts. A tile turned wrong but not locked is not a mistake — it is the
- * player still working — and neither is a note on a side the solution does not
- * settle, which a board dealt without "Ensure unique solution" can leave.
+ * player still working.
  */
 
 import { D, R } from "../../engine/wires.ts";

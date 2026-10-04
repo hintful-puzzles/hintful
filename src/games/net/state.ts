@@ -40,21 +40,18 @@ export interface NetParams {
   h: number;
   /** Walls wrap around: the grid is a torus with no border barriers. */
   wrapping: boolean;
-  /** Generate a puzzle with a guaranteed unique solution (guess-free). */
-  unique: boolean;
   /** Fraction of the candidate wall sites that become barriers, in [0, 1]. */
   barrierProbability: number;
 }
 
 export function defaultParams(): NetParams {
-  return { w: 5, h: 5, wrapping: false, unique: true, barrierProbability: 0 };
+  return { w: 5, h: 5, wrapping: false, barrierProbability: 0 };
 }
 
 export function encodeParams(p: NetParams, full: boolean): string {
   let s = `${p.w}x${p.h}`;
   if (p.wrapping) s += "w";
   if (full && p.barrierProbability) s += `b${formatG(p.barrierProbability)}`;
-  if (full && !p.unique) s += "a";
   return s;
 }
 
@@ -85,11 +82,11 @@ export function decodeParams(s: string): NetParams {
       while (i < s.length && (/[0-9]/.test(s[i]) || s[i] === ".")) i++;
       // The C stores this as a `float`, so round to single precision now.
       p.barrierProbability = Math.fround(atof(s.slice(start, i)));
-    } else if (s[i] === "a") {
-      p.unique = false;
-      i++;
     } else {
-      i++; // skip any other gunk, as upstream
+      // Any other gunk is skipped, as upstream. That takes in upstream's `a`,
+      // which asks for a board with no promised single answer: every board
+      // dealt here has one.
+      i++;
     }
   }
   return p;
@@ -101,7 +98,7 @@ export function validateParams(p: NetParams, full: boolean): string | null {
   if (p.w * p.h > 1_000_000) return AREA_TOO_LARGE;
   // A wrapping grid with a dimension of 2 provably cannot have a unique
   // solution (net.c carries the 40-line proof); reject it up front.
-  if (full && p.unique && p.wrapping && (p.w === 2 || p.h === 2))
+  if (full && p.wrapping && (p.w === 2 || p.h === 2))
     return "No wrapping puzzle with a width or height of 2 can have a unique solution.";
   return null;
 }

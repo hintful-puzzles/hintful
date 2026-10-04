@@ -3,9 +3,9 @@
 Try to expose every square in the grid that is not one of the hidden
 mines, without opening any square that is a mine.
 
-The first square you open is guaranteed to be safe, and (by default)
-you are guaranteed to be able to solve the whole grid by deduction
-rather than guesswork. (Deductions may require you to think about
+The first square you open is guaranteed to be safe, and you are
+guaranteed to be able to solve the whole grid by deduction rather than
+guesswork. (Deductions may require you to think about
 the total number of mines.)
 
 If you think you've found a grid which can't be solved without
@@ -40,7 +40,7 @@ A few ideas are worth learning by name:
 * **A number inside another.** When every unopened square around one number also touches a second, the second's other squares hold exactly the difference between what the two need.
 * **Counting the mines left.** Near the end, numbers whose squares do not overlap may account for every mine still to find, so every other unopened square is safe.
 
-The first step of a new board opens a square in the middle: no mine is ever laid in the first square you open or beside it. On a board dealt without "Ensure solubility" the hint may stop and say that nothing further follows by deduction.
+The first step of a new board opens a square in the middle: no mine is ever laid in the first square you open or beside it.
 
 ## Mines parameters
 
