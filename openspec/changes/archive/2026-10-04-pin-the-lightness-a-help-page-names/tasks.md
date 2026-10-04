@@ -12,4 +12,5 @@
 
 ## 3. Acceptance
 
-- [ ] 3.1 The owner looks at Flip, Sticks and Bricks in the dark scheme.
+- [x] 3.1 The owner looks at Flip, Sticks and Bricks in the dark scheme.
+      Accepted, 2026-10-04.

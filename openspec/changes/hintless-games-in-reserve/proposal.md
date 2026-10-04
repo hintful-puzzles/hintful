@@ -33,7 +33,7 @@ checks them best:
 
 ## The reserve
 
-Every other hintless game: Cube, Flip, Same Game, Slide and Twiddle. Same Game
+Every other hintless game: Cube, Same Game, Slide and Twiddle. Same Game
 came back when `judge-rivals-for-search-hints` took Sokoban instead. Flip and
 Slide each had a Solve that showed the way rather than the finished board (the
 squares to press, a route to step through) until
@@ -42,7 +42,8 @@ step-by-step aid. No phase claims them. A game leaves the reserve
 when a framework change (open or yet to be proposed) turns out to press on it
 harder than its named game does, or when the decision point below says so.
 Rect has left: `draw-hint-marks-from-roles` wrote its hint (archived
-2026-09-29).
+2026-09-29). Flip has left: the owner asked for its hint by name, and
+`add-flip-hint` holds it (2026-10-04).
 Re-take the population from the registry (games without `hint`, as
 `HINT_GAMES` derives the hinted ones) rather than trusting this list.
 
