@@ -107,8 +107,21 @@ const MAX_NARRATION_CHARS = 300;
  * walk be the evidence; the floors in "ledgers only listings that still need
  * the room" are what stop a walk that examined nothing from reading as a
  * collection of dead listings.
+ *
+ * **A sentence the walk cannot be relied on to hear names a board that speaks
+ * it** (`spokenOn`, a `params:desc` per game). Rect's is the case: its line
+ * sentence fires on few boards, and three seeds a preset missed all of them,
+ * so the listing read as dead on every push while a probe heard the sentence
+ * 131 times on one preset. A pinned board is an input, where a wider walk
+ * would be a bigger sample of the same kind, and it is checked on every commit
+ * rather than at push: "every pinned board still speaks its sentence".
  */
-const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
+const LONG_NARRATIONS: {
+  games: string[];
+  match: RegExp;
+  why: string;
+  spokenOn?: Record<string, string>;
+}[] = [
   {
     // Not Mathrax, though its solver records `forcing`: measured over all nine
     // presets × 3 seeds × both auto-pencil settings, 100,249 plan steps spoke
@@ -307,6 +320,8 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   {
     games: ["rect"],
     match: /^Only the outlined [\d, and]+ could cross this edge, and /,
+    // Upstream's 10x10 board, which `rect-hint.test.ts` pins for this rung.
+    spokenOn: { rect: "10x10e0.5:a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c" },
     why:
       "A line drawn because every rectangle across the edge is ruled out rests " +
       "on two premises: which clues could cross it at all, and why none of " +
@@ -1048,6 +1063,26 @@ const ledgerUsed = new Set<string>();
 const lintedPerGame = new Map<string, number>();
 let linted = 0;
 
+/** Whether `game`'s hints, followed from the board `id` as the length walk
+ * follows them, speak a sentence `match` accepts that is over the limit. */
+function speaksOn(name: string, id: string, match: RegExp): boolean {
+  const game = HINT_GAMES.find(([g]) => g === name)?.[1];
+  if (!game) return false;
+  const colon = id.indexOf(":");
+  let state = game.newState(game.decodeParams(id.slice(0, colon)), id.slice(colon + 1));
+  for (let round = 0; round < LINT_ROUNDS; round++) {
+    if (game.status(state) === "solved") break;
+    const res = game.hint?.(state);
+    if (!res?.ok) break;
+    for (const step of res.steps) {
+      const text = step.explanation;
+      if (text.length > NARRATION_LIMIT && match.test(text)) return true;
+    }
+    for (const step of res.steps) state = game.executeMove(state, step.move);
+  }
+  return false;
+}
+
 describe("hint narration stays readable at a glance", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: every step within ${NARRATION_LIMIT} characters, or ledgered`, () => {
@@ -1104,6 +1139,24 @@ describe("hint narration stays readable at a glance", () => {
     }
   });
 
+  it("every pinned board still speaks its listing's sentence over the limit", () => {
+    let pinned = 0;
+    for (const e of LONG_NARRATIONS) {
+      for (const [g, id] of Object.entries(e.spokenOn ?? {})) {
+        pinned++;
+        expect(e.games, `${g} is pinned on ${e.match} without being listed`).toContain(
+          g,
+        );
+        expect(
+          speaksOn(g, id, e.match),
+          `${g}: the board pinned for ${e.match} no longer speaks it over ${NARRATION_LIMIT} characters. Pin a board that does, or delete the listing.`,
+        ).toBe(true);
+      }
+    }
+    // Vacuity: the loop above asserts nothing over a ledger with no pin.
+    expect(pinned).toBeGreaterThan(0);
+  });
+
   // Skipped rather than weakened in the per-commit hook, so a deferred check is
   // **reported** instead of passing over a walk that could not see its subject.
   it.skipIf(!CORNER_WALKED)("ledgers only listings that still need the room", () => {
@@ -1129,8 +1182,10 @@ describe("hint narration stays readable at a glance", () => {
     // queue of reruns, and this one's whole job is to be read as a census.
     const dead: string[] = [];
     LONG_NARRATIONS.forEach((e, i) => {
+      // A pinned listing is held by the case above, on its board.
       for (const g of e.games)
-        if (!ledgerUsed.has(`${i}:${g}`)) dead.push(`${g} on ${e.match}`);
+        if (!ledgerUsed.has(`${i}:${g}`) && !e.spokenOn?.[g])
+          dead.push(`${g} on ${e.match}`);
     });
     expect(
       dead,

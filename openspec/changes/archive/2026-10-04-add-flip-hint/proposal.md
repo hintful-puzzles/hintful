@@ -1,6 +1,6 @@
 # add-flip-hint
 
-**Status: built, awaiting the owner's play (2026-10-04).** What was decided is
+**Status: built and accepted by the owner (2026-10-04).** What was decided is
 `design.md`. Owner, after accepting Flip's
 dark-scheme fix: *"please scaffold a change for us to add a hint to it soon."*
 

@@ -16,4 +16,7 @@
 
 ## 3. Acceptance
 
-- [ ] 3.1 The owner plays it.
+- [x] 3.1 The owner plays it. Two rounds on 2026-10-04: the first wording was
+      rejected as confusing and rewritten (design D1), marks were widened to
+      every square a press flips, and the last press says it finishes. The
+      rewrite was accepted.

@@ -678,6 +678,14 @@ tier, both auto-pencil settings where the game has them — and make the wider
 walk the deletion's evidence, recorded beside the entry so the next reader can
 re-run it rather than re-derive it.
 
+**A sentence only a few boards speak pins one of them.** A listing may carry
+`spokenOn`, a `params:desc` for a game, and a case that runs on every commit
+holds that board to speaking the sentence over the limit; the reverse half
+then leaves that listing to its pin. Rect's line sentence is the case: three
+seeds a preset heard it on none, so the listing read as dead on every push
+while the sentence was live. Reach for a pin before a wider walk, since a
+wider walk is a bigger sample and a pin is an input.
+
 **If you are reading a red from that half, you are not in the pre-commit hook**
 — it is skipped there and reported as skipped, so the run that flagged it was
 CI or `npm run gate`, and the corner walk did happen.
