@@ -19,7 +19,7 @@
  * contradictory.
  */
 import { expect, it } from "vitest";
-import { loadVerdict } from "./desc-error.ts";
+import { DESC_NO_SINGLE_ANSWER, loadVerdict } from "./desc-error.ts";
 import { difficultyTiers, withTier } from "./difficulty.ts";
 import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 
@@ -27,6 +27,7 @@ interface Fields {
   desc?: unknown;
   params?: unknown;
   fixtures?: unknown;
+  verdict?: unknown;
   [field: string]: unknown;
 }
 
@@ -84,6 +85,24 @@ const CHECKS_ON: Readonly<Record<string, Record<string, boolean>>> = {
   samegame: { soluble: true },
 };
 
+/**
+ * A param upstream has no word for, at the value its boards have. Dominosa's
+ * default here is the tall board, and every board upstream wrote is wide: laid
+ * over the default, each fixture's numbers were read onto the wrong grid.
+ */
+const UPSTREAM_SHAPE: Readonly<Record<string, Fields>> = {
+  dominosa: { tall: false },
+};
+
+/**
+ * Whether a fixture records that upstream's own solver found several answers
+ * on the board. Upstream's Mathrax generator accepts such a board at its
+ * Recursive tier (`mathrax/generator.ts`), and a board with several answers is
+ * not played here, so these are refused rather than loaded.
+ */
+const severalAnswers = (id: string, f: Fields): boolean =>
+  id === "mathrax" && f.verdict === 2;
+
 type Game = (typeof REGISTERED_GAMES)[number][1];
 
 /** The params key that holds `game`'s tier, or `null` for an untiered game. */
@@ -136,6 +155,7 @@ it("every desc upstream's generator wrote loads", () => {
   const unplaced = new Set<string>();
   let files = 0;
   let descs = 0;
+  let several = 0;
   for (const [path, data] of Object.entries(fixtures)) {
     files++;
     const id = path.split("/")[2] as string;
@@ -148,7 +168,8 @@ it("every desc upstream's generator wrote loads", () => {
       let params: unknown;
       if (typeof f.params === "string") params = game.decodeParams(f.params);
       else {
-        const placed = paramsFor(id, game, f, game.defaultParams() as Fields);
+        const defaults = { ...(game.defaultParams() as Fields), ...UPSTREAM_SHAPE[id] };
+        const placed = paramsFor(id, game, f, defaults);
         if (Array.isArray(placed)) {
           for (const u of placed) unplaced.add(u);
           continue;
@@ -156,9 +177,13 @@ it("every desc upstream's generator wrote loads", () => {
         params = placed;
       }
       const err = loadVerdict(game, params, f.desc);
-      if (err !== null) refused.push(`${id} ${f.desc}: ${err}`);
+      if (severalAnswers(id, f)) {
+        several++;
+        if (err !== DESC_NO_SINGLE_ANSWER) refused.push(`${id} ${f.desc}: ${err}`);
+      } else if (err !== null) refused.push(`${id} ${f.desc}: ${err}`);
     }
   }
+  expect(several).toBe(3);
   // 48 fixture files and 747 descs when written.
   expect(files).toBeGreaterThanOrEqual(40);
   expect(descs).toBeGreaterThanOrEqual(600);

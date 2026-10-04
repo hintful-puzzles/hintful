@@ -23,7 +23,7 @@ import {
   type DifficultyContract,
   difficultyTiers,
   lowestSolvingCap,
-  permitsSearch,
+  offersSearch,
   tierOf,
 } from "./difficulty.ts";
 import type { ParamConfigItem } from "./game.ts";
@@ -129,10 +129,17 @@ export const DESC_NOT_UNIQUE = descError(
   "This game ID's puzzle has more than one solution, and only puzzles with exactly one can be played here.",
 );
 
-/** The puzzle needs trial and error, in a game or at a tier that promises
- * deduction finishes every board ({@link loadDesc}). */
+/** The puzzle needs trial and error, in a game that promises deduction
+ * finishes every board ({@link loadDesc}). */
 export const DESC_NOT_DEDUCIBLE = descError(
   "This game ID's puzzle needs trial and error, and only puzzles that deduction alone solves can be played here.",
+);
+
+/** No tier's solver solves the puzzle, in a game whose hardest tier allows
+ * trial and error: as far as the game can tell it has several solutions or
+ * none ({@link loadDesc}). */
+export const DESC_NO_SINGLE_ANSWER = descError(
+  "This game ID's puzzle has no single solution that can be found, and only puzzles with exactly one can be played here.",
 );
 
 /** What {@link loadDesc} reads off a game: how to build a board, and, for the
@@ -171,39 +178,42 @@ function readBoard<P, S>(
  * saved board can always be finished; on a board with two answers it would call
  * a mark that fits the other one a mistake. So where the game's own `solve`
  * proves a board has several answers or none, the board does not load, whoever
- * wrote it. A tier the game declares `nonUniqueTiers` promises no single answer
- * and is not asked.
+ * wrote it.
  *
- * **A board deduction cannot finish loads only where a tier says so.** A hint
- * that runs out of deduction is honest only on a tier named Unreasonable
- * (`permitsSearch`), so everywhere else the board is held to the test the
- * game's generator deals by: some cap of a tiered game's solver solves it, or
- * an untiered game's `finishesByDeduction` says its deductions do.
+ * **A board loads only if the game's own solver solves it.** That is the test
+ * every generator deals by: some cap of a tiered game's solver solves the
+ * board, whatever tier its ID states, or an untiered game's
+ * `finishesByDeduction` says its deductions finish it. A tier named
+ * Unreasonable is a cap like any other, so a board that needs trial and error
+ * loads exactly where the game has such a tier.
  */
 export function loadDesc<P, S>(game: Loadable<P, S>, p: P, desc: string): DescParse<S> {
   const read = readBoard(game, p, desc);
   if (!read.ok) return read;
   const refusal =
-    answerVerdict(game, p, read.value) ??
-    (deducible(game, p, desc, read.value) ? null : DESC_NOT_DEDUCIBLE);
+    answerVerdict(game, read.value) ?? solverVerdict(game, p, desc, read.value);
   return refusal === null ? read : { ok: false, error: refusal };
 }
 
-function deducible<P, S>(game: Loadable<P, S>, p: P, desc: string, state: S): boolean {
+function solverVerdict<P, S>(
+  game: Loadable<P, S>,
+  p: P,
+  desc: string,
+  state: S,
+): DescError | null {
   const contract = game.difficulty;
-  if (contract === undefined) return game.finishesByDeduction?.(state) ?? true;
-  // A shared ID does not say which tier dealt its board, so a game with a tier
-  // that promises no single answer cannot be asked about any of its boards.
-  if (contract.nonUniqueTiers !== undefined || permitsSearch(game, p)) return true;
+  if (contract === undefined)
+    return (game.finishesByDeduction?.(state) ?? true) ? null : DESC_NOT_DEDUCIBLE;
   const solve = cappedSolveFor(contract, p, desc);
-  if (solve(tierOf(game, p)) === "solved") return true;
-  return lowestSolvingCap(solve, difficultyTiers(game)?.length ?? 0) !== null;
+  if (solve(tierOf(game, p)) === "solved") return null;
+  const tiers = difficultyTiers(game) ?? [];
+  if (lowestSolvingCap(solve, tiers.length) !== null) return null;
+  // With a tier that allows trial and error, needing it is not what is wrong.
+  return offersSearch(game) ? DESC_NO_SINGLE_ANSWER : DESC_NOT_DEDUCIBLE;
 }
 
-function answerVerdict<P, S>(game: Loadable<P, S>, p: P, state: S): DescError | null {
+function answerVerdict<P, S>(game: Loadable<P, S>, state: S): DescError | null {
   if (game.findMistakes === undefined || game.solve === undefined) return null;
-  const relaxed = game.difficulty?.nonUniqueTiers;
-  if (relaxed?.includes(tierOf(game, p))) return null;
   const solved = game.solve(state, state);
   if (solved.ok) return null;
   if (solved.error === MULTIPLE_SOLUTIONS) return DESC_NOT_UNIQUE;

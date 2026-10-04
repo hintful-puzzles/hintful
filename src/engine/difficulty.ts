@@ -76,24 +76,6 @@ export interface DifficultyContract<Params> {
   solveAtCap(p: Params, desc: string, cap: number): DifficultyVerdict;
 
   /**
-   * Tier indices that deliberately do **not** promise a uniquely-solvable
-   * board, so "solvable at some cap" is the wrong question to ask of them.
-   *
-   * Dominosa is the sole case: the fifth entry in its difficulty menu is
-   * **"Ambiguous"**, and its generator branches on it to skip the uniqueness
-   * search entirely (`if (diff === DIFF_AMBIGUOUS) as.trivial(rng)`). So a tier
-   * is not always a rung of the deduction ladder — it can instead be a
-   * *relaxation of what the puzzle promises*, and a board generated there is
-   * meant to have several solutions.
-   *
-   * Declaring the tier **swaps** the guard rather than skipping it: the board
-   * must actually come out non-unique. If a future change made Ambiguous
-   * generate unique boards, the tier would have stopped meaning what it says,
-   * and that is worth failing over.
-   */
-  readonly nonUniqueTiers?: readonly number[];
-
-  /**
    * Declared only by a game whose solver is known **not** to be monotone in its
    * cap, alongside the spec requirement that records why. Boats is the sole
    * case: its `checkDsf` rung, which runs from Normal upward, counts an
@@ -134,11 +116,9 @@ export interface DifficultyContract<Params> {
  *    handed.
  * 3. **A tier is not always a rung.** Towers/Keen/Group/Unequal/Mathrax put
  *    their top tier on `latinSolverRecurse`, outside the fixpoint entirely;
- *    Dominosa's "Ambiguous" is a relaxation of what the puzzle promises
- *    ({@link DifficultyContract.nonUniqueTiers}); Undead's only ladder on the
- *    shared runner is its *hint recorder*, whose two techniques both sit on
- *    tier 0 while the game offers three tiers. A ladder-derived list would be
- *    short for all of them.
+ *    Undead's only ladder on the shared runner is its *hint recorder*, whose
+ *    two techniques both sit on tier 0 while the game offers three tiers. A
+ *    ladder-derived list would be short for all of them.
  */
 export function difficultyTiers<Params>(game: {
   paramConfig?: readonly ParamConfigItem<Params>[];
@@ -256,6 +236,13 @@ export function permitsSearch<Params>(
   return tierNameOf(game, params) === SEARCH_TIER;
 }
 
+/** Does the game have a tier that allows trial and error at all? */
+export function offersSearch<Params>(game: {
+  paramConfig?: readonly ParamConfigItem<Params>[];
+}): boolean {
+  return difficultyTiers(game)?.includes(SEARCH_TIER) ?? false;
+}
+
 /** The game's {@link difficultyItem}, whole, or `null` for a game without
  * tiers. */
 export function difficultyChoiceItem<Params>(game: {
@@ -305,11 +292,8 @@ const SEARCH_TIER = "Unreasonable";
  * would publish the promise `features.md` § "Difficulty" makes to players and
  * break it.
  *
- * **Override by writing the array instead**, and say why in the change. Dominosa
- * is the standing case: its fifth entry is "Ambiguous", a relaxation of what the
- * puzzle promises rather than a difficulty, and it declares that already through
- * {@link DifficultyContract.nonUniqueTiers} — so the guard checks its first four
- * against the convention and leaves the fifth alone, with no list to maintain.
+ * **Override by writing the array instead**, and say why in the change. No game
+ * does, and `difficulty-contract.test.ts` holds every tier list to this scale.
  */
 export function tierNames(count: number, opts?: { search?: boolean }): string[] {
   const room = TIER_SCALE.length + (opts?.search ? 1 : 0);

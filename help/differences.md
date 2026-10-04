@@ -36,11 +36,13 @@ work, but they are likely to change in a future update, and might be removed.
 
 ## In particular puzzles
 
-* **Mines, Net, Pearl, Rectangles and Same Game**: the original lets you switch
-  off the check that a new board can be finished (*Ensure solubility*, *Ensure
-  unique solution*, *Allow unsoluble*). This app has no such switch. Every board
-  it deals can be solved, and outside a level named *Unreasonable*, solved by
-  reasoning alone. A game ID for a board that needs a guess does not open here.
+* **Dominosa, Mines, Net, Pearl, Rectangles and Same Game**: the original lets
+  you switch off the check that a new board can be finished (*Ensure
+  solubility*, *Ensure unique solution*, *Allow unsoluble*, and Dominosa's
+  *Ambiguous* difficulty). This app has no such switch. Every board it deals
+  has one solution, and outside a level named *Unreasonable*, one you can reach
+  by reasoning alone. A game ID for a board that needs a guess, or that has
+  several solutions, does not open here.
 
 * **Light Up**: the difficulty the original calls *Hard* is named
   *Unreasonable* here, because those boards require trial and error by

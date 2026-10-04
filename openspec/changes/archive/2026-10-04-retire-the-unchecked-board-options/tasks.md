@@ -56,5 +56,5 @@
 - [x] 5.1 Scaffold `close-the-solver-hint-gap-in-net-and-rect`.
 - [x] 5.2 Run the app: the five Custom dialogs show no such field, and
       `rect?id=4x4a:2b2_2a2b2b2a2_2` is refused with the new sentence.
-- [ ] 5.3 Owner acceptance of `DESC_NOT_DEDUCIBLE`'s sentence and the
-      differences entry.
+- [x] 5.3 Owner acceptance of `DESC_NOT_DEDUCIBLE`'s sentence and the
+      differences entry (2026-10-04: *"Excellent work, accepted."*).

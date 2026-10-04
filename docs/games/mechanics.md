@@ -369,8 +369,7 @@ third rung in every game that has one — which is the whole point: before
 `adopt-conventional-tier-names` the 29 tiered games had picked twelve different
 words, and the six three-tier games used six different vocabularies. Override by
 writing the array, and say why in the change; `difficulty-contract.test.ts`
-fails a game that drifts back, naming the fix. A tier declared in
-`nonUniqueTiers` is exempt without listing it anywhere (Dominosa's "Ambiguous").
+fails a game that drifts back, naming the fix. No game overrides today.
 
 **`DIFF_*` constant names are solver rung labels, not tier names.** They were
 never reliably the same — Solo declares eight and offers six — and since the

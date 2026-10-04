@@ -12,7 +12,6 @@ import { type DominosaHint, dominosaGame } from "./index.ts";
 import { border, COL_HINT, PREFERRED_TILE_SIZE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
-  DIFF_AMBIGUOUS,
   DIFF_HARD,
   DIFF_TRIVIAL,
   DIFFCOUNT,
@@ -36,15 +35,14 @@ describe("dominosa hint — refusal", () => {
     expect(dominosaGame.status(s)).toBe("solved");
   });
 
-  it("refuses on an Ambiguous (non-unique) board", () => {
-    const state = freshState(6, DIFF_AMBIGUOUS, "hint-ambig");
-    // Ambiguous usually is genuinely non-unique — asserted rather than skipped,
-    // because a seed that happened to be unique would pass this test without
-    // ever calling `hint`.
-    expect(
-      solveNumbers(state.params, state.numbers, DIFFCOUNT).result,
-      "the Ambiguous seed generated a unique board",
-    ).not.toBe(1);
+  it("refuses on a board with several solutions", () => {
+    // The board upstream dealt at Ambiguous for the seed `dominosa-a6`. It
+    // does not load (`dominosa.test.ts`), so it is built directly.
+    const state = newState(
+      { n: 6, diff: DIFF_TRIVIAL, tall: false },
+      "25655326346361502346651410062120443426101135023020554413",
+    );
+    expect(solveNumbers(state.params, state.numbers, DIFFCOUNT).result).not.toBe(1);
     const res = dominosaGame.hint?.(state);
     expect(res?.ok).toBe(false);
   });

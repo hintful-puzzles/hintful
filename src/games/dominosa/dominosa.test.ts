@@ -4,10 +4,12 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_NO_SINGLE_ANSWER,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  loadVerdict,
   puzzleDescError,
   validateDesc,
 } from "../../engine/desc-error.ts";
@@ -55,7 +57,7 @@ describe("dominosa params", () => {
     // Every encoding the params snapshot recorded before `tall` existed: shared
     // ids carry these, and their descs are laid out n+2 wide.
     const recorded = ["6db", "3dt", "4dt", "5dt", "6dt", "4db", "5db", "7db"];
-    for (const s of [...recorded, "8db", "9db", "6dh", "6de", "6da"]) {
+    for (const s of [...recorded, "8db", "9db", "6dh", "6de"]) {
       const p = decodeParams(s);
       expect(`${s}:${p.tall}`).toBe(`${s}:false`);
       expect(encodeParams(p, true)).toBe(s);
@@ -63,8 +65,23 @@ describe("dominosa params", () => {
     expect(decodeParams("6tdb")).toEqual({ n: 6, diff: DIFF_BASIC, tall: true });
   });
 
-  it("decodes the legacy 'a' suffix as Ambiguous", () => {
-    expect(decodeParams("6a").diff).toBe(4);
+  it("reads upstream's Ambiguous letters as no tier, so the default stands", () => {
+    // `da`, and the older bare `a`, ask for a board not checked for a unique
+    // solution.
+    const dealt = { n: 6, diff: DIFF_BASIC, tall: false };
+    expect(decodeParams("6da")).toEqual(dealt);
+    expect(decodeParams("6a")).toEqual(dealt);
+    expect(decodeParams("6tda")).toEqual({ ...dealt, tall: true });
+    expect(paramsError(dominosaGame, decodeParams("6da"), true)).toBeNull();
+  });
+
+  it("does not load a board with several solutions", () => {
+    // The board upstream dealt at Ambiguous for the seed `dominosa-a6`.
+    const desc = "25655326346361502346651410062120443426101135023020554413";
+    for (const id of ["6da", "6db", "6de"])
+      expect(loadVerdict(dominosaGame, decodeParams(id), desc)).toBe(
+        DESC_NO_SINGLE_ANSWER,
+      );
   });
 
   it("rejects n < 1", () => {
@@ -156,13 +173,6 @@ describe("dominosa solver / generator", () => {
         }
       });
     }
-
-  it("generates an Ambiguous board (no difficulty guarantee, valid desc)", () => {
-    const p = { n: 6, diff: 4, tall: false };
-    const { desc, aux } = newDominosaDesc(p, randomNew("ambig"));
-    expect(validateDesc(dominosaGame, p, desc)).toBeNull();
-    expect(aux.length).toBe((p.n + 2) * (p.n + 1));
-  });
 });
 
 /** Two disjoint horizontal placements showing the same domino, or null. */

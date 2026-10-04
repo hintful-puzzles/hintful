@@ -943,7 +943,7 @@ wrapper is `clueChar`.
 
 A parse fails with a `DescError`, a branded string only this module makes:
 `DESC_TOO_SHORT`, `DESC_TOO_LONG`, `DESC_OUT_OF_RANGE`, `DESC_REPEATED`,
-`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `DESC_NOT_UNIQUE`, `DESC_NOT_DEDUCIBLE`, `descBadCharacter(ch)` (pass the
+`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `DESC_NOT_UNIQUE`, `DESC_NOT_DEDUCIBLE`, `DESC_NO_SINGLE_ANSWER`, `descBadCharacter(ch)` (pass the
 character when the parser has it), and `descNeedsOne(noun, found)` for a board
 that must have exactly one of something (a starting square, a main piece). A helper on the desc path returns
 `DescError | null` too, so the brand reaches the message where it is written.
@@ -969,15 +969,16 @@ thrown after `descValue` is a bug, not a refusal, and propagates.
 **The verdict also asks how many answers the board has**, for a game with
 `findMistakes`: `loadDesc` calls the game's `solve` on the board it built, and
 refuses one the solver proves has several (`DESC_NOT_UNIQUE`) or none
-(`DESC_CONTRADICTORY`), except at a `nonUniqueTiers` tier. A game supplies
+(`DESC_CONTRADICTORY`). A game supplies
 nothing for this beyond a `solve` that says `MULTIPLE_SOLUTIONS` or
 `NO_SOLUTION` only when it has proved it
 ([solver-and-generator.md](./solver-and-generator.md) § "One answer, even when it
 is hidden").
 
-**And whether deduction finishes it.** Outside a tier that permits search,
-`loadDesc` refuses a board no cap of the game's difficulty contract solves, or
-that an untiered game's `finishesByDeduction` turns away
+**And whether the game's solver solves it.** `loadDesc` refuses a board no cap
+of the game's difficulty contract solves (`DESC_NO_SINGLE_ANSWER` in a game
+with an Unreasonable tier, `DESC_NOT_DEDUCIBLE` in one without), or that an
+untiered game's `finishesByDeduction` turns away
 (`DESC_NOT_DEDUCIBLE`). A tiered game supplies nothing new; an untiered
 deductive game supplies that one method
 ([solver-and-generator.md](./solver-and-generator.md) § "No option switches the

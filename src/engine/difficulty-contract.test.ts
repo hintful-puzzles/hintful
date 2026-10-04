@@ -152,11 +152,9 @@ for (const { id, game, contract, tiers } of tiered) {
       // means the same rung in every game, and this is what stops it drifting
       // back one port at a time.
       //
-      // **A tier a game declares non-unique is exempt, and needs no list.**
-      // Dominosa's "Ambiguous" is not a difficulty but a relaxation of what the
-      // puzzle promises, and it already says so through `nonUniqueTiers` — so the
-      // exemption is derived from a declaration the game makes for its own
-      // reasons, rather than from a roster this file would have to maintain.
+      // **No game is exempt.** A game that came to need a name off the scale
+      // would earn the exemption from a declaration it makes for its own
+      // reasons, never from a roster here.
       //
       // **What this deliberately does NOT check**, stated rather than implied:
       // `search` is read off the game's own top name, so this cannot tell a game
@@ -166,14 +164,12 @@ for (const { id, game, contract, tiers } of tiered) {
       // mechanically — "this rung is a Search" is a judgment about the code. So
       // the guard covers the shape of the list and not the promise its last word
       // makes; do not read a pass here as the promise being kept.
-      const exempt = new Set(contract.nonUniqueTiers ?? []);
-      const conventional = tiers.filter((_t, i) => !exempt.has(i));
-      const search = conventional.at(-1) === "Unreasonable";
+      const search = tiers.at(-1) === "Unreasonable";
       expect(
-        conventional,
-        `${id}: tier names are not the conventional ${conventional.length}-tier list. ` +
+        tiers,
+        `${id}: tier names are not the conventional ${tiers.length}-tier list. ` +
           "Use tierNames(n) — or declare an override in the change that needs one.",
-      ).toEqual(tierNames(conventional.length, { search }));
+      ).toEqual(tierNames(tiers.length, { search }));
     });
 
     it("never names a tier in a preset title that is not that preset's tier", () => {
@@ -299,18 +295,6 @@ for (const { id, game, contract, tiers } of tiered) {
             const lowest = lowestSolvingCap(solve, tiers.length);
             checked++;
 
-            if (contract.nonUniqueTiers?.includes(tier)) {
-              // Dominosa's "Ambiguous". The tier promises the *opposite* of unique
-              // solvability, so the guard swaps rather than skips: the board must
-              // genuinely come out non-unique. If it started solving uniquely, the
-              // tier would have stopped meaning what its menu entry says.
-              expect(
-                lowest,
-                `${id}: tier ${tier} ("${tiers[tier]}") is declared non-unique but the board solves at cap ${lowest}`,
-              ).toBeNull();
-              continue;
-            }
-
             expect(
               lowest,
               `${id}: a board generated at tier ${tier} ("${tiers[tier]}", seed ${seed}) solves at no cap`,
@@ -393,12 +377,6 @@ for (const { id, game, contract, tiers } of tiered) {
 
       for (const { title, params } of walked) {
         const tier = tierOf(game, params);
-        // A tier the game declares non-unique promises the opposite of unique
-        // solvability, so "the lowest cap that solves it" is not a thing it has —
-        // the same declaration that exempts it from the sweep above, read here for
-        // the same reason. Exemptions are derived from what the game already says;
-        // there is no roster.
-        if (contract.nonUniqueTiers?.includes(tier)) continue;
         // Boats: its solver fails at a higher cap what it solves at a lower one,
         // so there is no well-defined lowest cap to compare against.
         if (contract.nonMonotone) continue;

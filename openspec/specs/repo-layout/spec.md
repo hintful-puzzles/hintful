@@ -582,7 +582,7 @@ mechanisms SHALL keep this from degrading the machine:
 
 - **WHEN** a game generator's retry loop is given an input for which it never
   reaches success (a porting divergence, or params that admit no puzzle — `net`
-  with a wrapping dimension of 2 and `unique` set, which is provably impossible)
+  with a wrapping dimension of 2, which provably has no unique solution)
 - **THEN** it throws `RetryLimitExceeded`, naming the loop, after a finite number
   of attempts rather than looping forever, so the worker returns control (and can
   be torn down) instead of becoming an uninterruptible orphan

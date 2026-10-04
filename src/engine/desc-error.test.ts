@@ -25,6 +25,7 @@ import { describe, expect, it } from "vitest";
 import {
   DESC_CONTRADICTORY,
   DESC_MALFORMED,
+  DESC_NO_SINGLE_ANSWER,
   DESC_NOT_DEDUCIBLE,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -177,16 +178,15 @@ describe("the engine's verdict on a desc", () => {
   });
 });
 
-describe("a board deduction cannot finish", () => {
+describe("a board the game's solver cannot solve", () => {
   interface P {
     tier: number;
   }
   // A desc names the lowest cap that solves its board, or "never".
-  const tiered = (tiers: readonly string[], nonUniqueTiers?: readonly number[]) => ({
+  const tiered = (tiers: readonly string[]) => ({
     newState: (_p: P, desc: string) => desc,
     paramConfig: [difficultyItem<P>(tiers, "tier")],
     difficulty: {
-      ...(nonUniqueTiers ? { nonUniqueTiers } : {}),
       solveAtCap: (_p: P, desc: string, cap: number) =>
         desc !== "never" && cap >= Number(desc)
           ? ("solved" as const)
@@ -208,14 +208,19 @@ describe("a board deduction cannot finish", () => {
     expect(verdict(tiered(tierNames(3)), 0, "2")).toBeNull();
   });
 
-  it("loads on a tier that allows trial and error, and only there", () => {
+  it("loads a board that needs trial and error where a tier allows it", () => {
+    // Cap 2 is Unreasonable: the board is solved there, so it loads under any
+    // tier's params.
     const game = tiered(tierNames(3, { search: true }));
-    expect(verdict(game, 2, "never")).toBeNull();
-    expect(verdict(game, 0, "never")).toBe(DESC_NOT_DEDUCIBLE);
+    expect(verdict(game, 2, "2")).toBeNull();
+    expect(verdict(game, 0, "2")).toBeNull();
   });
 
-  it("is not asked of a game with a tier that promises no single answer", () => {
-    expect(verdict(tiered(["Easy", "Ambiguous"], [1]), 0, "never")).toBeNull();
+  it("does not load a board even that tier cannot solve, and words it apart", () => {
+    // Trial and error is allowed there, so it is not what is wrong.
+    const game = tiered(tierNames(3, { search: true }));
+    expect(verdict(game, 2, "never")).toBe(DESC_NO_SINGLE_ANSWER);
+    expect(verdict(game, 0, "never")).toBe(DESC_NO_SINGLE_ANSWER);
   });
 
   it("is asked of an untiered game through finishesByDeduction", () => {

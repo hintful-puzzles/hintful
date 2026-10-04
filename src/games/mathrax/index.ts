@@ -308,9 +308,7 @@ const givens = (s: MathraxState): Uint8Array =>
  * `requireUnique` separates the two callers. `findMistakes` needs a *unique*
  * answer: with several solutions, a cell differing from the one we happened to
  * find is not a mistake. `solve` does not — any complete valid grid is a
- * legitimate answer to show, which keeps Solve working on the ambiguous boards
- * an upstream-generated `Recursive` game ID still describes (see the
- * divergence note in `generator.ts`).
+ * legitimate answer to show.
  */
 function solveFromGivens(
   state: MathraxState,

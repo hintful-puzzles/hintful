@@ -19,7 +19,6 @@ import { DominosaSolver } from "./solver.ts";
 import {
   boardSize,
   DCOUNT,
-  DIFF_AMBIGUOUS,
   DIFF_BASIC,
   DIFF_HARD,
   DIFF_TRIVIAL,
@@ -118,18 +117,6 @@ class AllocScratch {
       this.layout[np0] === np1 &&
       (this.numbers[np0] === val.hi || this.numbers[np1] === val.lo)
     );
-  }
-
-  trivial(rng: RandomState): void {
-    const order = Array.from({ length: this.dc }, (_, i) => i);
-    shuffle(order, rng);
-    for (let i = 0; i < this.dc; i++) {
-      const val = this.vals[order[i]];
-      const loc = this.locs[i];
-      const whichLo = randomUpto(rng, 2);
-      this.numbers[loc[whichLo]] = val.lo;
-      this.numbers[loc[1 - whichLo]] = val.hi;
-    }
   }
 
   tryUnique(rng: RandomState): boolean {
@@ -309,10 +296,8 @@ export function newDominosaDesc(
 
   // Cap the difficulty for tiny puzzles that would otherwise be impossible to
   // generate (upstream's OMIT_DIFFICULTY_CAP guard).
-  if (diff !== DIFF_AMBIGUOUS) {
-    if (n === 1 && diff > DIFF_TRIVIAL) diff = DIFF_TRIVIAL;
-    if (n === 2 && diff > DIFF_BASIC) diff = DIFF_BASIC;
-  }
+  if (n === 1 && diff > DIFF_TRIVIAL) diff = DIFF_TRIVIAL;
+  if (n === 2 && diff > DIFF_BASIC) diff = DIFF_BASIC;
 
   const sc = new DominosaSolver(p);
   const as = new AllocScratch(p);
@@ -323,9 +308,7 @@ export function newDominosaDesc(
 
     as.makeLayout(rng);
 
-    if (diff === DIFF_AMBIGUOUS) {
-      as.trivial(rng);
-    } else if (diff < DIFF_HARD) {
+    if (diff < DIFF_HARD) {
       if (!as.tryUnique(rng)) continue;
     } else {
       // Tricky and up want no easy toehold: reject a board the Normal solver
@@ -336,12 +319,10 @@ export function newDominosaDesc(
       if (sc.dominoes.some((d) => d.nplacements <= 1)) continue;
     }
 
-    if (diff !== DIFF_AMBIGUOUS) {
-      sc.setupGrid(as.numbers);
-      const result = sc.runSolver(diff);
-      if (result > 1) continue; // not solvable at this difficulty
-      if (sc.maxDiffUsed < diff) continue; // solvable at an easier difficulty
-    }
+    sc.setupGrid(as.numbers);
+    const result = sc.runSolver(diff);
+    if (result > 1) continue; // not solvable at this difficulty
+    if (sc.maxDiffUsed < diff) continue; // solvable at an easier difficulty
 
     break;
   }

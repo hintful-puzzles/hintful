@@ -23,7 +23,7 @@ import reference from "./__fixtures__/dominosa-c-reference.json" with { type: "j
 import { newDominosaDesc } from "./generator.ts";
 import { dominosaGame } from "./index.ts";
 import { solveNumbers } from "./solver.ts";
-import { DIFF_AMBIGUOUS, DIFFCOUNT, newState } from "./state.ts";
+import { DIFFCOUNT, newState } from "./state.ts";
 
 interface DominosaFixture extends DescFixture {
   name: string;
@@ -40,16 +40,15 @@ describeDescDifferential<DominosaFixture, { n: number; diff: number; tall: boole
   params: (f) => ({ n: f.n, diff: f.diff, tall: false }),
   newDesc: (p, rng) => newDominosaDesc(p, rng),
   extra: (f, p) => {
-    // The C board decodes validly and (for graded difficulties) solves uniquely
-    // at exactly its recorded difficulty under the TS solver.
+    // The C board decodes validly and solves uniquely at exactly its recorded
+    // difficulty under the TS solver. The fixture C dealt at Ambiguous is
+    // retired with the tier.
     expect(validateDesc(dominosaGame, p, f.desc)).toBeNull();
-    if (p.diff !== DIFF_AMBIGUOUS) {
-      const state = newState(p, f.desc);
-      const full = solveNumbers(p, state.numbers, DIFFCOUNT);
-      expect(full.result).toBe(1);
-      const graded = solveNumbers(p, state.numbers, p.diff);
-      expect(graded.result).toBe(1);
-      expect(graded.maxDiffUsed).toBe(p.diff);
-    }
+    const state = newState(p, f.desc);
+    const full = solveNumbers(p, state.numbers, DIFFCOUNT);
+    expect(full.result).toBe(1);
+    const graded = solveNumbers(p, state.numbers, p.diff);
+    expect(graded.result).toBe(1);
+    expect(graded.maxDiffUsed).toBe(p.diff);
   },
 });

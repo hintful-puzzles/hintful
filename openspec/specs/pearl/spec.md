@@ -36,12 +36,12 @@ The game SHALL compute completion and always-on error marks by
 `check_completion`'s rules — a union-find loop classification flagging squares of degree
 greater than two, non-reciprocal links, and clue contradictions — and SHALL report
 the board solved exactly while the lines form one closed loop satisfying every clue.
-Because boards are uniquely solvable by default, the game SHALL implement
+Because boards are uniquely solvable, the game SHALL implement
 `findMistakes`: re-solve from the clues to the unique solution's line grid and
 return every line segment the player has drawn that the solution does not contain,
 and every no-line cross the player has placed on an edge the solution does contain
 (each a definite mistake); a *missing* solution segment is not a mistake, and a board
-that is not uniquely solvable (a `nosolve` board) yields no mistakes. Check & Save
+the solver cannot finish yields no mistakes. Check & Save
 depends on this hook and SHALL refuse to save while any mistake is present. The
 always-on error marks and the `findMistakes` overlay are distinct signals; the
 overlay SHALL draw a wrong cross in the mistake color.
@@ -97,9 +97,10 @@ The engine SHALL provide a registered `pearl` game implementing
 draw a single closed loop through grid cells so that it turns a right angle at
 every black pearl (and goes straight through at least one cell on each side of
 it) and passes straight through every white pearl (turning immediately before or
-after). Params SHALL be `w`, `h`, `difficulty` (Easy or Normal) and `nosolve`
-(allow an unsoluble board, default false), encoded `{w}x{h}` with a full-form
-`d{char}` difficulty suffix and an `n` suffix when `nosolve` is set.
+after). Params SHALL be `w`, `h` and `difficulty` (Easy or Normal), encoded
+`{w}x{h}` with a full-form `d{char}` difficulty suffix. Decoding SHALL leave
+upstream's trailing `n` unread, which asks for a board nothing has checked, and
+encoding SHALL never write it.
 `validateParams` SHALL enforce `w ≥ 5`, `h ≥ 5`, that width×height does not
 overflow, and that a Normal board has `w + h ≥ 11`. Eight presets
 (6×6, 8×8, 10×10, 8×12 each at Easy and Normal; upstream's 12×8 turned to draw
@@ -110,7 +111,7 @@ preference (default traditional).
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 10, h: 10, difficulty: DIFF_TRICKY, nosolve: false }` (the
+- **WHEN** params `{ w: 10, h: 10, difficulty: DIFF_TRICKY }` (the
   Normal tier) are encoded in full
 - **THEN** decoding the result round-trips the params
 
@@ -119,6 +120,11 @@ preference (default traditional).
 - **WHEN** `validateParams` is given a Normal board with `w + h < 11`, or any
   board with `w < 5` or `h < 5`
 - **THEN** it returns a non-null error string
+
+#### Scenario: Upstream's unchecked-board letter
+
+- **WHEN** `12x8dtn` is decoded
+- **THEN** the params are those of `12x8dt`
 
 ### Requirement: Pearl ports the deductive solver and solver-gated generator
 
@@ -130,14 +136,14 @@ premature-short-loop rules. It SHALL return the three-valued verdict
 (inconsistent / unique / ambiguous), and a grading routine SHALL return the
 easiest difficulty that yields a unique solution. The generator SHALL build a
 random loop via the shared `generateLoop` (biased toward black-pearl corners),
-derive a maximal clue set, gate on the solver finding a unique solution at the
+derive a maximal clue set, gate every board on the solver finding a unique solution at the
 requested difficulty (and failing one tier easier), then greedily minimize the
 clues, generating a 5×5 Normal request at Easy. `solve` SHALL return
 the generator's aux when present, else re-solve from the clues.
 
 #### Scenario: Generated boards are uniquely solvable at their difficulty
 
-- **WHEN** a board is generated with `nosolve = false` and graded by the TS solver
+- **WHEN** a board is generated and graded by the TS solver
 - **THEN** the grading is a unique solution at exactly the requested difficulty
 
 ### Requirement: Pearl's solver is a certified deduction ladder

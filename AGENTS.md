@@ -124,13 +124,15 @@ flexible — a parameter, a variant, a family of shapes. **Only when it genuinel
 cannot does the game take the override**, which is then first-class: the game
 writes the explicit form and says why in its change. What a convention must
 never become is a contortion — game-specific logic is never bent to fit a
-contract, and an exemplar hint never loses a word to an abstraction. Two
-conventions in the tree show the shape to copy: a tier a game declares
-`nonUniqueTiers` is exempt from the tier-name guard *automatically*, because the
-game already declared it for its own reasons; and `nonMonotone` **swaps** a
-guard rather than skipping it. **Derive the exception from a declaration the game
-already makes** — an exemption roster rots exactly as quietly as the membership
-roster it replaced.
+contract, and an exemplar hint never loses a word to an abstraction. One
+convention in the tree shows the shape to copy: `nonMonotone` **swaps** a
+guard rather than skipping it, and the game declares it for its own reasons.
+**Derive the exception from a declaration the game already makes** — an
+exemption roster rots exactly as quietly as the membership roster it replaced.
+**And ask first whether the exception should exist.** Dominosa's "Ambiguous"
+tier held a first-class override for a year, with a guard swapped to match,
+and what it excused was a board with several answers; the fix was to stop
+dealing one.
 
 **A consistent idiom is not the finish line; the framework owning it is**
 (owner, 2026-09-19: *"whenever possible, please refactor away from just

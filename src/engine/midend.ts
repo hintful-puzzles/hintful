@@ -463,10 +463,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * never lowered — a hand-written id may name a harder tier than its board
    * needs, and every rule that tier allows still applies to the board.
    *
-   * A tier that allows search, or that promises no unique solution, is taken
-   * as stated: its solver owes no verdict. A board no cap solves has been
-   * turned away by `loadDesc` before this is asked, except in a game with a
-   * tier that promises no unique solution, where the decoded params stand.
+   * A tier that allows search is taken as stated. A board no cap solves has
+   * been turned away by `loadDesc` before this is asked.
    */
   private withBoardTier(paramsStr: string, params: Params, desc: string): Params {
     const contract = this.game.difficulty;
@@ -482,7 +480,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (ambiguous.length < 2) {
       const stated = tierOf(this.game, params);
       if (permitsSearch(this.game, params)) return params;
-      if (contract.nonUniqueTiers?.includes(stated)) return params;
       if (solve(stated) === "solved") return params;
       floor = stated + 1;
     }

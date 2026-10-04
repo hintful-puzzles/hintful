@@ -48,26 +48,21 @@ export const DIFF_TRIVIAL = 0;
 export const DIFF_BASIC = 1;
 export const DIFF_HARD = 2;
 export const DIFF_EXTREME = 3;
-export const DIFF_AMBIGUOUS = 4;
-export const DIFFCOUNT = 5;
+export const DIFFCOUNT = 4;
 
 /**
- * Tier names in enum order: four conventional tiers plus **Ambiguous**.
+ * Tier names in enum order.
  *
  * The fourth is `Unreasonable` where upstream says `Extreme`: its
  * `deduceForcingChain` rung follows an implication closure until a chain
  * repeats a domino, a conclusion reached by propagating rather than by looking,
- * and the collection reserves that word for a tier that may require it. It is
- * the top *difficulty* even though Ambiguous sits after it, because Ambiguous is
- * not a harder rung but a relaxation of what the puzzle promises (the generator
- * skips the uniqueness search). The difficulty contract's `nonUniqueTiers`
- * declares that, which is also what exempts it from the tier-name guard.
+ * and the collection reserves that word for a tier that may require it.
  *
  * Only the names differ from upstream; the encoding chars are upstream's.
  */
-export const DIFF_NAMES = [...tierNames(4, { search: true }), "Ambiguous"];
-/** Encoding chars in enum order (upstream `dominosa_diffchars`). */
-const DIFF_CHARS = "tbhea";
+export const DIFF_NAMES = tierNames(4, { search: true });
+/** Encoding chars in enum order (upstream `dominosa_diffchars`, less its `a`). */
+const DIFF_CHARS = "tbhe";
 
 // --- params -----------------------------------------------------------------
 
@@ -130,11 +125,13 @@ export function decodeParams(str: string): DominosaParams {
     const c = str[i++];
     if (c === "t") {
       tall = true;
-    } else if (c === "a") {
-      // Legacy encoding from before the difficulty system.
-      diff = DIFF_AMBIGUOUS;
     } else if (c === "d") {
-      diff = DIFFCOUNT + 1; // ...which is invalid, unless a known char follows
+      // Upstream's `da` asks for a board not checked for a unique solution,
+      // as its older bare `a` does, which this loop passes over like any
+      // letter it does not know. Every board dealt here is checked, so `da`
+      // names no tier and the default stands.
+      const named = str[i] !== "a";
+      if (named) diff = DIFFCOUNT + 1; // ...which is invalid, unless a known char follows
       if (i < str.length) {
         const idx = DIFF_CHARS.indexOf(str[i]);
         if (idx >= 0) diff = idx;

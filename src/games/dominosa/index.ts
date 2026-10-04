@@ -58,7 +58,6 @@ import { DominosaSolver, solveNumbers } from "./solver.ts";
 import {
   cloneState,
   DCOUNT,
-  DIFF_AMBIGUOUS,
   DIFF_NAMES,
   DIFFCOUNT,
   DINDEX,
@@ -379,7 +378,7 @@ function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
   const n = params.n;
   const wh = numbers.length;
 
-  // A hint teaches a *forced* deduction; an Ambiguous board has none.
+  // A hint teaches a *forced* deduction; a board with several answers has none.
   if (solveNumbers(params, numbers, DIFFCOUNT).result !== 1)
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
 
@@ -621,14 +620,8 @@ function selectReference(ui: DominosaUi, key: string | null): boolean {
 
 /** Dominosa's difficulty contract (`engine/difficulty.ts`). A `solveNumbers`
  * result of 2 (ambiguous, or too hard for the cap) is `"unsolved"`: at this
- * cap the board is not deducible, which is the question being asked.
- *
- * **Its last tier is not a deduction rung.** The generator skips the uniqueness
- * search for Ambiguous, so a board generated there is *meant* to have several
- * solutions and no cap solves it. Declaring it in `nonUniqueTiers` points the
- * cross-game guard at what the tier actually promises. */
+ * cap the board is not deducible, which is the question being asked. */
 const difficulty: DifficultyContract<DominosaParams> = {
-  nonUniqueTiers: [DIFF_AMBIGUOUS],
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const { result } = solveNumbers(p, s.numbers, cap);
@@ -665,7 +658,7 @@ export const dominosaGame: Game<
       },
     ),
     difficultyItem(DIFF_NAMES, "diff", {
-      doc: "Ambiguous is this game's own extra setting: the board is not checked for a unique solution, so it may have several, and any tiling that uses every domino once counts as solved. On the smallest sets (a maximum of 1 or 2) the harder settings are capped at what that set can support.",
+      doc: "On the smallest sets (a maximum of 1 or 2) the harder settings are capped at what that set can support.",
     }),
   ],
 

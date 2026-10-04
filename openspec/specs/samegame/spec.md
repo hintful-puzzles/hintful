@@ -14,33 +14,31 @@ The engine SHALL provide a registered `samegame` game implementing
 `Game<SamegameParams, SamegameState, SamegameMove, SamegameUi,
 SamegameDrawState>`: a block-clearing puzzle on a `w×h` grid of colored tiles
 (colors `1..ncols`, `0` = empty) in which the player removes
-orthogonally-connected groups of one color. Params SHALL be `w`, `h`, `ncols`,
-`scoresub` (1 or 2), and `soluble`, encoded `{w}x{h}c{ncols}s{scoresub}[r]`
-(the trailing `r` present only when `full` and not `soluble`) with lenient
-decode. Five presets — `5×5`, `5×10`, `10×15` (all 3 colors), `10×15` and
-`15×20` (4 colors), all `scoresub = 2`, soluble — SHALL be offered: upstream's
+orthogonally-connected groups of one color. Params SHALL be `w`, `h`, `ncols`
+and `scoresub` (1 or 2), encoded `{w}x{h}c{ncols}s{scoresub}` with lenient
+decode. Decoding SHALL leave upstream's trailing `r` unread, which asks for
+colors scattered at random with no promise the grid can be cleared, and
+encoding SHALL never write it. Five presets — `5×5`, `5×10`, `10×15` (all 3 colors), `10×15` and
+`15×20` (4 colors), all `scoresub = 2` — SHALL be offered: upstream's
 sizes, turned to draw taller than wide. Tiles fall down and emptied columns
 close leftward, so a board of Same Game SHALL NOT declare `transposeParams`: a
 tall board is a different game from a wide one, not the same one turned.
-`validateParams` SHALL require `w ≥ 1`, `h ≥ 1`, `ncols ≤ 9`, `scoresub ∈ {1,2}`,
-and — when soluble — `ncols ≥ 3` and `w·h > 1`, or — when not soluble —
-`ncols ≥ 2` and `w·h ≥ 2·ncols`. The game SHALL provide `statusbarText` and `textFormat`, and SHALL NOT provide `solve`, `hint`, or `findMistakes`.
+`validateParams` SHALL require `w ≥ 1`, `h ≥ 1`, `3 ≤ ncols ≤ 9`,
+`scoresub ∈ {1,2}` and `w·h > 1`. The game SHALL provide `statusbarText` and `textFormat`, and SHALL NOT provide `solve`, `hint`, or `findMistakes`.
 
 #### Scenario: Params round-trip and lenient decode
 
-- **WHEN** params `{ w: 15, h: 10, ncols: 4, scoresub: 2, soluble: true }` are
+- **WHEN** params `{ w: 15, h: 10, ncols: 4, scoresub: 2 }` are
   encoded with `full = true`
 - **THEN** the result is `15x10c4s2`
 - **AND** decoding `15x10c4s2` round-trips those params
-- **AND** encoding the same params with `soluble: false` and `full = true`
-  yields `15x10c4s2r`, which round-trips with `soluble: false`
+- **AND** decoding `15x10c4s2r` yields the same params
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** `validateParams` is called with `{ soluble: true, ncols: 2 }`
+- **WHEN** `validateParams` is called with `ncols: 2`
 - **THEN** it returns a non-null error string
-- **AND** `{ soluble: false, w: 2, h: 2, ncols: 3 }` (area `4 < 2·ncols`) also
-  returns a non-null error string
+- **AND** a `1×1` grid also returns a non-null error string
 
 ### Requirement: Same Game removes connected groups, scores, and compacts
 
@@ -107,21 +105,20 @@ selected, the engine's completion words followed by `"Score: N"` when complete
 - **WHEN** a `remove` move is applied
 - **THEN** `changedState` leaves the Ui with no active selection
 
-### Requirement: Same Game generates soluble and random boards
+### Requirement: Same Game generates boards that can be cleared
 
 `newDesc` SHALL produce the board as a comma-separated list of `w·h` color
-integers in row-major order. When `soluble` is true it SHALL use the
-inverse-move generator (repeatedly inserting a verified connected blob whose
-removal reproduces the prior grid, so the board is clearable); when `soluble` is
-false it SHALL use the legacy random generator (at least two tiles of every
-color, the remainder filled at random).
+integers in row-major order, using the inverse-move generator (repeatedly
+inserting a verified connected blob whose removal reproduces the prior grid, so
+the board is clearable). No parameter SHALL deal a grid that may not be
+clearable.
 `validateDesc` SHALL reject a desc without exactly `w·h` comma-separated
 integers, or any integer outside `0..ncols`. `newState` SHALL parse the desc into
 the tile grid with score 0 and the complete/impossible flags clear.
 
-#### Scenario: A soluble description is well-formed
+#### Scenario: A generated description is well-formed
 
-- **WHEN** `newDesc` runs for a soluble preset with a fixed seed
+- **WHEN** `newDesc` runs for a preset with a fixed seed
 - **THEN** `validateDesc` accepts it and `newState` parses `w·h` tiles
 
 #### Scenario: A malformed description is rejected

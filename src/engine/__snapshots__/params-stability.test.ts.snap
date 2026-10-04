@@ -146,7 +146,6 @@ preset:Dominosa/Order 8 Normal  full=8tdb  brief=8t
 preset:Dominosa/Order 9 Normal  full=9tdb  brief=9t
 preset:Dominosa/Order 6 Tricky  full=6tdh  brief=6t
 preset:Dominosa/Order 6 Unreasonable  full=6tde  brief=6t
-tier:4  full=6tda  brief=6t
 flip:tall  full=6db  brief=6"
 `;
 

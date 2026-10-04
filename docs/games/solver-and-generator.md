@@ -338,7 +338,8 @@ it's revealing the answer.
 **The only way a board may need trial and error is a tier named Unreasonable,
 and no board may be unsolvable.** Upstream offers a checkbox in five games that
 deals a board nothing has checked (Mines' and Same Game's "Ensure solubility",
-Net's and Rectangles' "Ensure unique solution", Pearl's "Allow unsoluble"). A
+Net's and Rectangles' "Ensure unique solution", Pearl's "Allow unsoluble"), and
+a tier in a sixth that does the same (Dominosa's "Ambiguous"). A
 port does not carry such an option: the generator always applies its checks,
 and the params codec reads past the letter upstream writes for it, so an ID
 that asks for an unchecked board deals a checked one. The reason is not only
@@ -347,14 +348,20 @@ even when it is hidden"), and most boards dealt unchecked have several: with
 the box off, the hint ran out on 103 of 150 Rectangles 4×4 boards and 67 of 80
 Pearl 6×6 boards (measured 2026-10-04).
 
-**Loading holds a board to the same promise.** `loadDesc` refuses a board
-deduction cannot finish (`DESC_NOT_DEDUCIBLE`) unless its tier permits search:
+**Loading holds a board to the same promise.** `loadDesc` refuses a board the
+game's own solver cannot solve:
 
 - a tiered game is asked through its difficulty contract, and the board loads
-  when some cap solves it, whatever tier its ID states;
-- an untiered deductive game declares `Game.finishesByDeduction(state)`;
-- a game with a `nonUniqueTiers` tier is not asked, since a shared ID does not
-  say which tier dealt its board.
+  when some cap solves it, whatever tier its ID states. Unreasonable is a cap
+  like any other, so a board that needs trial and error loads exactly in a game
+  with such a tier. A board no cap solves is refused with
+  `DESC_NO_SINGLE_ANSWER` where the game has that tier and `DESC_NOT_DEDUCIBLE`
+  where it does not, since only there is trial and error what is wrong;
+- an untiered deductive game declares `Game.finishesByDeduction(state)`.
+
+Upstream's own generator fails this in one place: its Mathrax Recursive tier
+accepts a board with several answers, and all three such fixtures are refused
+(`upstream-descs.test.ts`).
 
 **What `finishesByDeduction` asks is the solver, which can be more than the
 hint knows.** Net's and Rectangles' generators deal only boards their *hint*
@@ -569,8 +576,7 @@ is *names*; `runDeductionFixpoint` **receives** `maxTier`, and every ladder in
 the collection is an array literal built inside a solve from board state, so
 there is nothing to ask at module load; and a tier is often not a rung at all —
 five latin games put their top tier on `latinSolverRecurse` outside the fixpoint,
-Dominosa's "Ambiguous" relaxes what the puzzle promises, and Undead's only
-shared-runner ladder is its hint recorder, two techniques on tier 0 against three
+and Undead's only shared-runner ladder is its hint recorder, two techniques on tier 0 against three
 offered tiers.
 
 **`solveAtCap` stays per-game, and that was measured.** Across all 29 adapters
@@ -682,16 +688,14 @@ solving fine at Easy.
   check by hand — declaring `Game.difficulty` runs it for every tiered game
   at once.
 
-### Tiers that promise ambiguity
+### No tier promises ambiguity
 
-**A tier is not always a rung of the deduction ladder — it can be a
-relaxation of what the puzzle promises.** Dominosa's fifth menu entry is
-literally "Ambiguous", and its generator branches on it to skip the
-uniqueness search entirely. The contract's `nonUniqueTiers` declares this,
-and declaring it **swaps** the guard: the board must actually come out
-non-unique, so if a change ever made Ambiguous generate unique boards the
-tier would have stopped meaning what it says — worth failing over. (Found by
-the contract's own guards, not anticipated.)
+**Every tier's boards have one answer, and the game's solver finds it at that
+tier's cap.** Upstream's Dominosa has a fifth menu entry, "Ambiguous", whose
+generator skips the uniqueness search; it is not offered here, for the reason
+no game offers a checkbox that does the same (§ "No option switches the
+generator's checks off"). A port that meets such a tier drops it and reads past
+its letter in the params codec.
 
 ## Divergence and what it costs
 
@@ -982,8 +986,9 @@ own `solve` about every board it loads, and refuses one the solver proves has
 several answers (`DESC_NOT_UNIQUE`) or none (`DESC_CONTRADICTORY`), whoever wrote
 the desc ([`engine/desc-error.ts`](../../src/engine/desc-error.ts)). A game joins
 by having a `solve` that says `MULTIPLE_SOLUTIONS` or `NO_SOLUTION` when it has
-proved it; a solver that merely gave up says neither, and the board loads. A tier
-declared in `nonUniqueTiers` is not asked. The generator's half is the game's:
+proved it; a solver that merely gave up says neither, and that verdict passes
+(the board is then asked whether the solver solves it at all, § "No option
+switches the generator's checks off"). The generator's half is the game's:
 deal only boards the same count calls unique, and hold it with a test against an
 answer count that has no search in it.
 

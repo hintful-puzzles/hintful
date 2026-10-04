@@ -35,7 +35,7 @@ A few ideas are worth learning by name:
 * **Every remaining spot overlaps.** If every spot left for some domino covers the same square, that square is taken, and no other domino can go there.
 * On harder boards, **odd regions**: a domino that would cut the empty squares into regions with an odd number of squares can't go there, because dominoes can't fill them.
 
-On an Unreasonable board the hint may stop and say that nothing further follows by deduction. On an Ambiguous board, which has more than one solution, it says the solution can't be determined, and gives no hint.
+On an Unreasonable board the hint may stop and say that nothing further follows by deduction.
 
 ## Dominosa parameters
 

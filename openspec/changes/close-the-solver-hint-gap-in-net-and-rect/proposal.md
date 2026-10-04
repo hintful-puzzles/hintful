@@ -36,7 +36,13 @@ boards were finished by the rungs and not by the solver.
 
 ## What
 
-Two ways to close it, and they are not exclusive:
+**Direction: strengthen the hints.** That was the recommendation put to the
+owner with these measurements, and `retire-the-unchecked-board-options` was
+accepted with it standing (2026-10-04); the owner then asked for this change
+to be scaffolded. It is a recommendation not objected to, not a separate
+ruling. Refusing at load stays available and is the owner's call.
+
+The two ways to close it, which are not exclusive:
 
 - **Strengthen the hint to the solver** (`docs/games/solver-and-generator.md`
   § "One engine, two projections"). Find what `net_solver` deduces on a wrapping
