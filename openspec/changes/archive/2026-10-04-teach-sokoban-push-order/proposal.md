@@ -1,7 +1,6 @@
 # teach-sokoban-push-order
 
-**Status: implemented (2026-10-04), awaiting the owner's reading of the
-hints.** A follow-up from `judge-rivals-for-search-hints`. All three
+**Status: implemented and accepted by the owner (2026-10-04).** A follow-up from `judge-rivals-for-search-hints`. All three
 candidates below were kept, and the measuring walk found a cycle in the hint
 that is fixed here too (`design.md`).
 

@@ -16,4 +16,4 @@
 
 ## 2. Acceptance
 
-- [ ] 2.1 The owner reads a few games' hints out loud.
+- [x] 2.1 The owner reads a few games' hints out loud (accepted 2026-10-04).
