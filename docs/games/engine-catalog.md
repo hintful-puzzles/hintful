@@ -1336,7 +1336,12 @@ and never by being listed; see [`testing.md`](./testing.md) § "How a cross-game
 guard finds its population"), `engine-source.ts` and `test-source.ts` (the
 engine's and the suite's own comment-stripped code, each in a module of its own
 because importing one reads that whole tree, which makes the importer run whole
-on the pre-commit hook; `code-lines.ts` is their shared stripper), `slow.ts` (the
+on the pre-commit hook; `code-lines.ts` is their shared stripper),
+`hint-positions.ts` (`describeHintPins` — **the position each hint sentence is
+tested on**: one pin a kind, the test that each still fires, and the scan that
+finds them again under `HINT_SCAN=1`, reporting the count each rests on; do not
+write a seed scan for a hint test, see [`testing.md`](./testing.md)
+§ "Pinning a hint's positions"), `slow.ts` (the
 once-per-refactoring-round expensive tier), and two deliberately-independent
 yardsticks (`oklch.ts`, `polygon-yardstick.ts` — each exists so a test cannot
 vacuously agree with the implementation it measures; never import the

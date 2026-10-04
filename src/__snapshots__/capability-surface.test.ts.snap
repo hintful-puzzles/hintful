@@ -463,6 +463,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "flip",
     "members": [
       "animLength",
+      "hint",
+      "hintGesture",
+      "hintKeepTrack",
+      "hintMarks",
       "ignoresSecondaryButton",
       "notApplicable",
       "paramConfig",

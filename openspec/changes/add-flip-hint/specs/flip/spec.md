@@ -1,0 +1,47 @@
+## ADDED Requirements
+
+### Requirement: Flip's hint presses the shortest answer in reading order and says what forces each press
+
+Flip's hint SHALL plan the presses of the solver's shortest answer in reading
+order, one step a press, and SHALL say of each press which of two kinds it is.
+Where the press is the last square in reading order that flips some dark
+square, the step SHALL say so as a deduction, ring the square to press and
+outline those dark squares. Where every square the press flips is also flipped
+by a later square, the step SHALL say that no one square decides it and that
+the answer presses it, calling the answer the only one when no other set of
+presses lights the board. A step SHALL claim nothing the code has not checked
+on the board the step is shown on.
+
+The plan SHALL be the same plan after each of its presses: a hint asked again
+once a step's square is pressed SHALL give the steps that were left, with the
+same words. A board no set of presses lights SHALL be refused as a puzzle
+whose solution cannot be determined.
+
+#### Scenario: A press that is a dark square's last chance
+
+- **WHEN** the hint's next press is the last square in reading order that
+  flips a dark square
+- **THEN** the step says no later square flips the outlined dark square, so
+  the ringed square must be pressed
+- **AND** every outlined square is dark and is flipped by no square after the
+  ringed one
+
+#### Scenario: A press the order does not decide
+
+- **WHEN** every square the hint's next press flips is also flipped by a later
+  square
+- **THEN** the step outlines nothing, says no one square decides the press,
+  and says the answer presses it
+- **AND** it says "the only answer" exactly when the board has one answer
+
+#### Scenario: Following the hint
+
+- **WHEN** the player presses the square a step rings and asks again
+- **THEN** the hint gives the steps that were left, unchanged
+- **AND** following every step leaves the board solved in as few presses as
+  any set of presses takes
+
+#### Scenario: A hand-entered board with no answer
+
+- **WHEN** a hint is asked on a board no set of presses lights
+- **THEN** it refuses, saying the puzzle's solution cannot be determined

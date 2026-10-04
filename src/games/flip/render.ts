@@ -1,25 +1,37 @@
 /**
  * Flip's renderer: the two-faced tiles, the diagonal marks that show which
- * neighbors a click will flip, the cursor ring and the win flash.
+ * neighbors a click will flip, the cursor ring, the win flash and the hint's
+ * two marks.
  */
 
 import { WHITE } from "../../engine/color/colors.ts";
-import { CURSOR, GRID_MID } from "../../engine/color/palette.ts";
+import {
+  CURSOR,
+  GRID_MID,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+} from "../../engine/color/palette.ts";
 import { flipWrongFace } from "../../engine/color/palette-games.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { drawMarkSides, type MarkBand, MarkOutlines } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import type { FlipParams, FlipState, FlipUi } from "./state.ts";
+import type { FlipMove, FlipParams, FlipState, FlipUi } from "./state.ts";
 
 export interface FlipDrawState {
   started: boolean;
   tileSize: number;
   /** Per-cell render cache: the bits `drawTile` last drew (the grid's, plus 4
-   * for the cursor); -1 = never drawn, {@link ANIMATING} mid-flip. */
-  tiles: Int16Array;
+   * for the cursor, and the hint marks' sides from {@link MARK_SHIFT} up); -1 =
+   * never drawn, {@link ANIMATING} mid-flip. */
+  tiles: Int32Array;
 }
 
 /** The cache entry of a tile mid-flip, which repaints on every frame. */
 const ANIMATING = 255;
+/** Where a tile's hint mark sides (`MarkOutlines.packed`) sit in its cache
+ * entry, above {@link ANIMATING}. */
+const MARK_SHIFT = 8;
 
 // Color palette indices (upstream's enum).
 const COL_BACKGROUND = 0;
@@ -28,7 +40,9 @@ const COL_RIGHT = 2;
 const COL_GRID = 3;
 const COL_DIAG = 4;
 const COL_CURSOR = 5;
-const NCOLORS = 6;
+export const COL_HINT = 6; // the square to press: ringed
+export const COL_HINT_CELL = 7; // the dark squares the press answers for: outlined
+const NCOLORS = 8;
 
 export const PREFERRED_TILE_SIZE = 48;
 export const ANIM_TIME = 0.25;
@@ -44,7 +58,7 @@ export function newDrawState(s: FlipState, tileSize: number): FlipDrawState {
   return {
     started: false,
     tileSize,
-    tiles: new Int16Array(s.w * s.h).fill(-1),
+    tiles: new Int32Array(s.w * s.h).fill(-1),
   };
 }
 
@@ -60,6 +74,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_GRID] = GRID_MID;
   ret[COL_DIAG] = ret[COL_GRID];
   ret[COL_CURSOR] = CURSOR;
+  ret[COL_HINT] = HINT_ACTION;
+  ret[COL_HINT_CELL] = HINT_EVIDENCE;
   return ret;
 }
 
@@ -80,6 +96,7 @@ export function redraw(
   ui: FlipUi,
   animTime: number,
   flashTime: number,
+  hint?: HintStep<FlipMove>,
 ): void {
   const { w, h } = s;
   const wh = w * h;
@@ -112,6 +129,9 @@ export function redraw(
   // frame; with animTime 0 the final state is drawn and `prev` is irrelevant.
   const animating = animTime > 0 && prev != null;
 
+  const named = stepMarks(hint);
+  const marks = new MarkOutlines(named.of("ring", CELL), named.of("outline", CELL), {});
+
   for (let i = 0; i < wh; i++) {
     const x = i % w;
     const y = (i / w) | 0;
@@ -125,9 +145,10 @@ export function redraw(
     }
     if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) v |= 4;
 
-    const drawn = animating && prev && s.grid[i] !== prev.grid[i] ? ANIMATING : v;
-    if (ds.tiles[i] === ANIMATING || drawn === ANIMATING || ds.tiles[i] !== drawn) {
-      drawTile(dr, ds, s, x, y, v, drawn === ANIMATING, progress);
+    const flipping = animating && prev !== null && s.grid[i] !== prev.grid[i];
+    const drawn = (marks.packed(x, y) << MARK_SHIFT) | (flipping ? ANIMATING : v);
+    if (flipping || ds.tiles[i] !== drawn) {
+      drawTile(dr, ds, s, x, y, v, flipping, progress, marks);
       ds.tiles[i] = drawn;
     }
   }
@@ -142,6 +163,7 @@ function drawTile(
   v: number,
   anim: boolean,
   progress: number,
+  marks: MarkOutlines,
 ): void {
   const { w, h } = s;
   const wh = w * h;
@@ -197,6 +219,16 @@ function drawTile(
       }
     }
   }
+
+  // The hint's marks, on the tile's own edge and clear of the diagram in its
+  // middle. The ring last, so it wins a square that is both.
+  const band: MarkBand = {
+    box: { x: bx + 1, y: by + 1, w: ts - 1, h: ts - 1 },
+    outer: 0,
+    inner: Math.max(2, ts >> 4),
+  };
+  drawMarkSides(dr, band, marks.evidenceSides(x, y), COL_HINT_CELL);
+  drawMarkSides(dr, band, marks.targetSides(x, y), COL_HINT);
 
   dr.unclip();
   dr.drawUpdate({ x: bx + 1, y: by + 1, w: ts - 1, h: ts - 1 });

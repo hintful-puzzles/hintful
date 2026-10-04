@@ -1,6 +1,6 @@
 /**
- * Flip: clicking a cell toggles a set of lights, given by a per-cell matrix
- * over GF(2); the puzzle is won when every light is off. Upstream's `flip.c`,
+ * Flip: pressing a square flips a set of squares, given by a per-square matrix
+ * over GF(2); the puzzle is won when every square is lit. Upstream's `flip.c`,
  * ported idiomatically rather than line for line.
  */
 
@@ -24,9 +24,11 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { genCrossesMatrix, genRandomMatrix } from "./generator.ts";
+import { hint, hintKeepTrack } from "./hint.ts";
 import {
   ANIM_TIME,
   border,
@@ -38,6 +40,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
+import { shortestAnswer } from "./solver.ts";
 import {
   encodeBitmap,
   type FlipMove,
@@ -117,6 +120,31 @@ function parseDesc(
     r.end();
     return { matrix, grid };
   });
+}
+
+function executeMove(from: FlipState, move: FlipMove): FlipState {
+  const { w, h } = from;
+  const wh = w * h;
+  if (move.kind === "solution") {
+    const grid = from.grid.slice();
+    let moves = from.moves;
+    for (let i = 0; i < wh; i++) {
+      if (!move.mask[i]) continue;
+      for (let j = 0; j < wh; j++) grid[j] ^= from.matrix[i * wh + j];
+      moves++;
+    }
+    return { ...from, grid, moves };
+  }
+  if (move.kind !== "flip") return assertNever(move, "flip: executeMove");
+
+  const { x, y } = move;
+  if (x < 0 || x >= w || y < 0 || y >= h) {
+    throw new Error(`Flip: move out of range (${x},${y})`);
+  }
+  const grid = from.grid.slice();
+  const i = y * w + x;
+  for (let j = 0; j < wh; j++) grid[j] ^= from.matrix[i * wh + j];
+  return { ...from, grid, moves: from.moves + 1 };
 }
 
 // --- the Game -------------------------------------------------------
@@ -212,32 +240,9 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     return interpretTargetVerbs(targetVerbs, s, ui, ds, point, button);
   },
 
-  executeMove(from, move): FlipState {
-    const { w, h } = from;
-    const wh = w * h;
-    if (move.kind === "solution") {
-      const grid = from.grid.slice();
-      let moves = from.moves;
-      for (let i = 0; i < wh; i++) {
-        if (!move.mask[i]) continue;
-        for (let j = 0; j < wh; j++) grid[j] ^= from.matrix[i * wh + j];
-        moves++;
-      }
-      return { ...from, grid, moves };
-    }
-    if (move.kind !== "flip") return assertNever(move, "flip: executeMove");
+  executeMove,
 
-    const { x, y } = move;
-    if (x < 0 || x >= w || y < 0 || y >= h) {
-      throw new Error(`Flip: move out of range (${x},${y})`);
-    }
-    const grid = from.grid.slice();
-    const i = y * w + x;
-    for (let j = 0; j < wh; j++) grid[j] ^= from.matrix[i * wh + j];
-    return { ...from, grid, moves: from.moves + 1 };
-  },
-
-  /** Every light is off. */
+  /** Every square is lit. */
   status(s) {
     return s.grid.every((v) => v === 0) ? "solved" : "ongoing";
   },
@@ -248,82 +253,25 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   },
 
   solve(_orig, curr): SolveResult<FlipMove> {
-    const wh = curr.w * curr.h;
-    // equations[i] : wh coefficients + 1 value, over GF(2).
-    const stride = wh + 1;
-    const eq = new Uint8Array(stride * wh);
-    for (let i = 0; i < wh; i++) {
-      for (let j = 0; j < wh; j++) {
-        eq[i * stride + j] = curr.matrix[j * wh + i];
-      }
-      eq[i * stride + wh] = curr.grid[i] & 1;
-    }
+    const answer = shortestAnswer(curr);
+    if (!answer) return { ok: false, error: NO_SOLUTION };
+    return { ok: true, move: { kind: "solution", mask: Array.from(answer.presses) } };
+  },
 
-    const rowXor = (r1: number, r2: number) => {
-      for (let c = 0; c < stride; c++) eq[r1 * stride + c] ^= eq[r2 * stride + c];
-    };
-
-    let rowsDone = 0;
-    let colsDone = 0;
-    const und: number[] = [];
-    for (;;) {
-      let i = colsDone;
-      let j = -1;
-      for (; i < wh; i++) {
-        for (j = rowsDone; j < wh; j++) {
-          if (eq[j * stride + i]) break;
-        }
-        if (j < wh) break;
-        und.push(i); // free variable
-      }
-      if (i === wh) {
-        // Remaining equations are 0 = const; any 1 means insoluble.
-        for (let r = rowsDone; r < wh; r++) {
-          if (eq[r * stride + wh]) {
-            return { ok: false, error: NO_SOLUTION };
-          }
-        }
-        break;
-      }
-      if (j > rowsDone) rowXor(rowsDone, j);
-      for (let r = rowsDone + 1; r < wh; r++) {
-        if (eq[r * stride + i]) rowXor(r, rowsDone);
-      }
-      rowsDone++;
-      colsDone = i + 1;
-      if (rowsDone >= wh) break;
-    }
-
-    // Enumerate all solutions (free vars as a binary counter); keep the
-    // one with the fewest flips.
-    const solution = new Uint8Array(wh);
-    let shortest = new Uint8Array(wh);
-    let bestLen = wh + 1;
-    for (;;) {
-      for (let r = rowsDone - 1; r >= 0; r--) {
-        let lead = 0;
-        while (lead < wh && !eq[r * stride + lead]) lead++;
-        let v = eq[r * stride + wh];
-        for (let k = lead + 1; k < wh; k++) {
-          if (eq[r * stride + k]) v ^= solution[k];
-        }
-        solution[lead] = v;
-      }
-      let len = 0;
-      for (let i = 0; i < wh; i++) if (solution[i]) len++;
-      if (len < bestLen) {
-        bestLen = len;
-        shortest = solution.slice();
-      }
-      let i = 0;
-      for (; i < und.length; i++) {
-        solution[und[i]] = solution[und[i]] ? 0 : 1;
-        if (solution[und[i]]) break;
-      }
-      if (i === und.length) break;
-    }
-
-    return { ok: true, move: { kind: "solution", mask: Array.from(shortest) } };
+  hint,
+  hintMarks: {
+    roles: {
+      ring: "the square to press.",
+      outline:
+        "the dark squares that press is the last chance to light: no square after it in reading order flips them.",
+    },
+  },
+  hintKeepTrack,
+  hintGesture: (s, ui, ds, m, step) => {
+    if (m.kind !== "flip") throw new Error("flip: a hint only presses a square");
+    return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, [
+      { x: m.x, y: m.y },
+    ]);
   },
 
   textFormat(s): string {

@@ -1,7 +1,7 @@
 # share-the-hint-position-scan
 
-**Status: scaffolded, not started (2026-10-04).** A follow-up from
-`strengthen-the-sokoban-solver`.
+**Status: built (2026-10-04).** What was found and decided is `design.md`. A
+follow-up from `strengthen-the-sokoban-solver`.
 
 ## Why
 

@@ -1,6 +1,7 @@
 # add-flip-hint
 
-**Status: scaffolded, not started (2026-10-04).** Owner, after accepting Flip's
+**Status: built, awaiting the owner's play (2026-10-04).** What was decided is
+`design.md`. Owner, after accepting Flip's
 dark-scheme fix: *"please scaffold a change for us to add a hint to it soon."*
 
 ## Why
@@ -47,8 +48,11 @@ can check, and say that.
 
 ## What Changes
 
-To be designed: `hint()`, `hintGesture` and `hintMarks` for Flip, a `## Hints`
-section on its help page, and its hint tests. Flip leaves
+`hint()`, `hintGesture` and `hintMarks` for Flip, a `## Hints` section on its
+help page, and its hint tests. The hint presses the shortest answer in reading
+order and says of each press whether the order forces it (it is a dark
+square's last chance) or the answer supplies it. The solver moves out of
+`solve` into `solver.ts`, which both read. Flip leaves
 `hintless-games-in-reserve`.
 
 ## What it assesses

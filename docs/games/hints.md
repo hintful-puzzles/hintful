@@ -3387,6 +3387,35 @@ when it speaks, it is right. It powers both the best narration in the game and
 an honest refusal ("a gem can no longer be reached — undo") in place of the
 solver's shrug.
 
+### An order turns a free move into a forced one (Flip)
+
+Flip's presses commute and undo themselves, so nothing on the board forces any
+one of them, and a hint that recites the solver's set teaches nothing. **Fixing
+an order makes most of the set a deduction.** Work through the squares in
+reading order and never return to one: a dark square whose every other flipper
+has been passed can only be lit by the one left, so that press is forced, and
+the player can check it against the diagrams
+([`flip/hint.ts`](../../src/games/flip/hint.ts)). It is light chasing, said so
+that it also holds on a Random board, where "the square below" is not the rule
+and "the last square that flips it" is.
+
+What the order cannot decide it says it cannot. A press whose every square a
+later press also flips has no reason of that kind, so its step is a `setup`:
+it says why nothing decides it, and that the answer presses it ("the only
+answer" when there is no other, which the elimination knows). Three things to
+take from it:
+
+- **Look for the convention that makes a search's answer a chain.** The plan is
+  still the solver's shortest set; only the order and the words are the
+  hint's. Ask it of any game whose moves commute.
+- **The convention belongs in the help**, once (§ "Rules belong in the help").
+  A step says "no later square", and the page says what later means.
+- **Stability is argued from the solver, then walked.** Pressing a square of
+  the chosen answer leaves the rest of it chosen, because the press moves
+  every remaining answer's place in the solver's enumeration the same way
+  (`flip/solver.ts`). A tie-break added to make that true was removed when a
+  plant showed the walk green without it and the argument showed why.
+
 ### Hold a stable subgoal
 
 Narrate every move by **the goal it serves**, and hold that goal *stable*
@@ -4006,10 +4035,15 @@ Use the tier-2.5 render-scenario harness
 `Midend` to the hint frame (walk a multi-step plan with `hintUntil`), then
 assert targeted ops (`COL_HINT` present, clues still drawn) **plus**
 `toMatchSnapshot`. Seed: `palisade-render-scenario.test.ts` reaches the
-`equivalentEdges` frame the browser harness couldn't. To reach a specific
-deduction without its desc, do a fixed-seed scan (loop ids, keep the first
-whose `result.hint` matches). See [`testing.md`](./testing.md) for the tier
-definitions.
+`equivalentEdges` frame the browser harness couldn't. See
+[`testing.md`](./testing.md) for the tier definitions.
+
+**Pin a position for every sentence, through `describeHintPins`**
+([`testing/hint-positions.ts`](../../src/engine/testing/hint-positions.ts)):
+name each sentence as a kind, run the file once with `HINT_SCAN=1`, and paste
+the pins it reports with their counts. Do not write a scan of your own; the
+followable form is [`testing.md`](./testing.md) § "Pinning a hint's
+positions".
 
 Two testing gotchas worth internalizing:
 

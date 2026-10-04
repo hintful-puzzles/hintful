@@ -52,6 +52,32 @@ scanning further.** The idiom for reaching a specific deduction or board state
 without knowing its desc is a fixed-seed scan — loop ids, keep the first whose
 state matches — pinned by a recorded first-hit (see "Right-sizing the gate").
 
+### Pinning a hint's positions
+
+**For a hint's sentences the scan is shared, and it stays in the tree.**
+`describeHintPins` ([`testing/hint-positions.ts`](../../src/engine/testing/hint-positions.ts))
+takes a game's kinds, each the sentence a hint opens with (a regex) or a
+predicate over the opening step and its board, and one pinned position a kind.
+It declares the test that every pin still opens with its kind, and returns the
+loader the game's own tests read the pins through (`pinned("trapCorner")` gives
+the board, the step, and the `id` and `moves` a `renderScenario` takes). A pin
+that stops firing fails with the command that finds another:
+`HINT_SCAN=1 npx vitest run <the test file>` walks hint-guided play over fixed
+seeds, taking each plan's first step and asking again, and fails with the pins
+to paste, each under how many of the positions walked it held on. Copy that
+count beside the pin: it is the power argument the pin owes (AGENTS.md
+§ "Method"), and a kind that held on 5 of 937 is the one to watch. A game whose
+mid-game board is itself a desc passes `descOf`, and its pins are bare
+`params:desc` strings; otherwise a pin is a board and the moves played on it.
+
+What the scan does not do, each because nothing has asked for it yet: stray
+from the hint's line (Pegs' trap and lost positions were found with random
+play mixed in, since hint-guided play keeps to winning lines), pin a refusal,
+or scan a solver's firings where no step says them. Exemplars:
+`flip-hint.test.ts` (written against it), `sokoban-hint.test.ts` (eleven pins
+moved onto it), `lightup-hint.test.ts` (a predicate kind, moved from a scan
+that ran on every run).
+
 **A game's own directory is not its coverage.** Its input paths, save
 round-trip, params codec and even its source text (color literals, hint
 wording, note vocabulary) are checked by cross-game guards that live outside

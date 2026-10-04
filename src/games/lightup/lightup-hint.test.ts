@@ -12,6 +12,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type LightupHint, lightupGame } from "./index.ts";
 import { deduceHintPlan, solveUnique } from "./solver.ts";
 import {
@@ -264,26 +265,23 @@ describe("refusals", () => {
   });
 });
 
-describe("hintKeepTrack", () => {
-  /** First multi-cell step of a plan, with the state it fires from. */
-  function multiCellStep(): { state: LightupState; step: Step } {
-    for (const seed of ["lh-kt-a", "lh-kt-b", "lh-kt-c", "lh-kt-d"]) {
-      let state = freshState(EASY, seed);
-      for (let guard = 0; guard < 200; guard++) {
-        const steps = planSteps(state);
-        const step = steps[0];
-        if (step.highlights && step.highlights.targets.length > 1) {
-          return { state, step };
-        }
-        state = lightupGame.executeMove(state, step.move);
-        if (lightupGame.status(state) === "solved") break;
-      }
-    }
-    throw new Error("no multi-cell step found in scanned seeds");
-  }
+/** A step that decides several squares at once, with the board it is asked
+ * from. */
+const pinned = describeHintPins({
+  game: lightupGame,
+  params: [EASY],
+  kinds: {
+    multiCell: (step) => (step.highlights?.targets.length ?? 0) > 1,
+  },
+  pins: {
+    /** Held on 42 of 112 positions walked. */
+    multiCell: "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
+  },
+});
 
+describe("hintKeepTrack", () => {
   it("a single mark on one target shrinks the step in place (onTrack)", () => {
-    const { state, step } = multiCellStep();
+    const { state, step } = pinned("multiCell");
     const hl = step.highlights;
     if (!hl) throw new Error("no highlights");
     const before = hl.targets.length;
@@ -299,7 +297,7 @@ describe("hintKeepTrack", () => {
   });
 
   it("covering the last remaining target completes; a stray move is off", () => {
-    const { state, step } = multiCellStep();
+    const { state, step } = pinned("multiCell");
     const hl = step.highlights;
     if (!hl) throw new Error("no highlights");
     // Whole step in one grouped move → completed.
