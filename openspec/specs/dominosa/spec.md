@@ -17,15 +17,14 @@ partition an `(n+1) × (n+2)` grid (or, when `tall` is false, upstream's
 that the placed dominoes are exactly the `DCOUNT(n) = (n+1)(n+2)/2` distinct
 number-pairs `0-0 … n-n`, one of each, with every domino's two numbers matching
 the underlying clues. Params SHALL be `n` (maximum face number, default 6),
-`diff` (Easy / Normal / Tricky / `Unreasonable` / Ambiguous) and `tall`, encoded
-`"{n}"`, then `"t"` when `tall`, with a full-form `"d{t|b|h|e|a}"` difficulty
+`diff` (Easy / Normal / Tricky / `Unreasonable`) and `tall`, encoded
+`"{n}"`, then `"t"` when `tall`, with a full-form `"d{t|b|h|e}"` difficulty
 suffix; an encoding without the `"t"` SHALL decode as the wide board, so every id
-written before `tall` existed names the board its desc was laid out for; a legacy bare `"a"` suffix SHALL
-decode to Ambiguous. The fourth tier is named `Unreasonable` rather than
+written before `tall` existed names the board its desc was laid out for; upstream's `"da"` and its
+older bare `"a"`, which ask for a board not checked for a unique solution, SHALL
+name no tier, so the default tier stands. The fourth tier is named `Unreasonable` rather than
 upstream's `Extreme` because its forcing-chain deduction is a search over a
-closure of all placements, and it is the last tier that is a difficulty —
-`Ambiguous` follows it in the list but relaxes the puzzle's promise rather than
-deepening its ladder. All 12 upstream presets SHALL be offered, dealt tall. `validateParams`
+closure of all placements. All 12 upstream presets SHALL be offered, dealt tall. `validateParams`
 SHALL enforce `n ≥ 1`, a valid difficulty, and the upstream overflow bound. The game SHALL provide `solve` and `textFormat` (for `n < 1000`).
 
 #### Scenario: Params round-trip
@@ -139,8 +138,8 @@ quality bar):
 
 A hint SHALL be refused when the board is already solved or contains a mistake
 (lighting the `findMistakes` overlay), by the midend before it asks the game, and
-`hint()` SHALL refuse (`{ ok: false, error }`) on an Ambiguous (not uniquely
-solvable) board with no forced deduction to teach. The
+`hint()` SHALL refuse (`{ ok: false, error }`) on a board that is not uniquely
+solvable, with no forced deduction to teach. The
 recorder SHALL be gated so the generator's `runSolver` path is unchanged.
 
 #### Scenario: A hint refuses on a solved board
@@ -156,7 +155,7 @@ recorder SHALL be gated so the generator's `runSolver` path is unchanged.
 
 #### Scenario: The plan solves the board from any mid-game position
 
-- **WHEN** a non-mistaken, non-Ambiguous board is advanced by applying one
+- **WHEN** a non-mistaken board is advanced by applying one
   freshly-recomputed hint step at a time
 - **THEN** every step makes progress and the board reaches solved
 

@@ -31,5 +31,6 @@
 - [x] 4.2 Run the app: the type menu and Custom dialog offer four tiers, a
       `?type=6tda` link deals at Normal, and upstream's Ambiguous board is
       refused under `6de` with the new sentence.
-- [ ] 4.3 Owner acceptance of `DESC_NO_SINGLE_ANSWER`'s sentence and of
-      upstream's Mathrax Recursive IDs no longer loading.
+- [x] 4.3 Owner acceptance of `DESC_NO_SINGLE_ANSWER`'s sentence and of
+      upstream's Mathrax Recursive IDs no longer loading (2026-10-04:
+      *"Regarding Dominosa and Mathrax, I'm happy with both"*).

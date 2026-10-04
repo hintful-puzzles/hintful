@@ -1784,13 +1784,9 @@ description-carrying game ID may request it and `solveAtCap` must be able to
 answer. Its refusal SHALL come from `validateParams` with a human-readable
 reason, never from silent failure.
 
-A tier that deliberately does **not** promise a uniquely-solvable board SHALL
-declare itself, so that the cross-game guard asserts what that tier actually
-promises rather than the opposite. Dominosa is the case, and it was found by the
-guards rather than anticipated: the last entry in its difficulty menu is
-"Ambiguous", and its generator branches on it to skip the uniqueness search
-entirely — so a tier is not always a rung of the deduction ladder, it can instead
-be a relaxation of what the puzzle promises.
+No tier SHALL promise anything but a board with one solution that the game's
+solver finds at that tier's cap. A tier whose generator skips the uniqueness
+search is not offered, and the contract has no way to declare one.
 
 Because generation is already uniform through `Game.newDesc(params, rng)`, the
 contract SHALL NOT add a separate "generate at tier" entry point —
@@ -2771,8 +2767,7 @@ so asking that ladder for its tiers returns the cap it was handed.
 their top tier on `latinSolverRecurse`, outside the fixpoint entirely — and the
 latin ladder still synthesizes a rung for it that can never fire, because no
 built-in technique maps to that level and the game's `usersolvers` slot is
-`null`. Dominosa's "Ambiguous" is a relaxation of what the puzzle promises rather
-than a technique. Undead's only ladder on the shared runner is its *hint
+`null`. Undead's only ladder on the shared runner is its *hint
 recorder*, whose two techniques both sit on tier 0 while the game offers three
 tiers. A ladder-derived list is short for every one of them.
 
@@ -2823,13 +2818,10 @@ short list. A truncated list would leave a game with fewer names than tiers, and
 every cross-game guard iterates the names — so the shortfall would surface as
 guards quietly covering fewer tiers, not as an error.
 
-**An override SHALL remain first-class**, declared in the change that needs it. A
-tier already declared in `nonUniqueTiers` is exempt automatically and SHALL NOT
-be listed anywhere else: Dominosa's "Ambiguous" is a relaxation of what the
-puzzle promises rather than a difficulty, and it already says so for its own
-reasons. Deriving the exemption from that declaration rather than from a roster
-keeps the guard's exception list from going stale as quietly as a membership list
-would.
+**An override SHALL remain first-class**, declared in the change that needs it,
+and its exemption from the guard SHALL be derived from a declaration the game
+makes for its own reasons rather than from a roster, which would go stale as
+quietly as a membership list. No game overrides the scale.
 
 Adopting the convention SHALL NOT change any board, any tier index, any params
 encoding, or any generated puzzle. `DIFF_CHARS` maps a tier *index* to a
@@ -3398,10 +3390,8 @@ way reported ten violations across four games where there were three across one.
 the tier in it.
 
 **Exceptions SHALL be derived from a declaration the game already makes**, never
-from a roster. A tier listed in `nonUniqueTiers` promises the opposite of unique
-solvability and is exempt automatically; a contract declaring `nonMonotone` has
-no well-defined lowest cap and is exempt for the same reason it is exempt from
-the monotonicity sweep. A game that genuinely cannot generate a declared tier at
+from a roster. A contract declaring `nonMonotone` has no well-defined lowest
+cap and is exempt for the same reason it is exempt from the monotonicity sweep. A game that genuinely cannot generate a declared tier at
 a given size SHALL refuse it from `validateParams` with a reason — the shape
 already required by "either generates every declared tier, or refuses it with a
 reason" — rather than being added to an exemption list.
@@ -7985,9 +7975,8 @@ implements `findMistakes` and the game's own `solve`, asked about the board it
 builds, proves the board has more than one solution (refused with
 `DESC_NOT_UNIQUE`) or none (refused with `DESC_CONTRADICTORY`). The verdict
 SHALL be part of `loadDesc`, so a pasted game ID, a shared link and a save are
-judged alike. A board at a tier the game declares in `nonUniqueTiers` SHALL NOT
-be asked, and a solver that gives up without proving either SHALL leave the
-board loading. A game's `findMistakes` SHALL compare the player's marks with
+judged alike. A solver that gives up without proving either SHALL leave this
+verdict passing. A game's `findMistakes` SHALL compare the player's marks with
 that one answer, including where the answer is hidden from the player; a hidden
 answer SHALL NOT be a reason in `notApplicable.findMistakes`.
 
@@ -8035,21 +8024,23 @@ game chooses to judge, and what a step says when nothing is settled SHALL stay t
 - **WHEN** the judging of the first rivals uses up the allowance
 - **THEN** the rivals after them are judged with what is left, which is nothing
 
-### Requirement: A board deduction cannot finish loads only on a tier that permits search
+### Requirement: A board loads only if the game's own solver solves it
 
-The engine SHALL refuse to load a description, whoever wrote it, when deduction
-alone cannot finish its board and the params it loads under do not state a tier
-named Unreasonable (refused with `DESC_NOT_DEDUCIBLE`). The verdict SHALL be
-part of `loadDesc`. For a game with a difficulty contract, the board SHALL load
-when the contract's solver solves it at some cap, whatever tier its params
-state. For a game without one, the board SHALL load unless the game implements
-`finishesByDeduction` and that returns false for the board's opening state. A
-game that declares `nonUniqueTiers` SHALL NOT be asked. Where a save carries a
-private description, the midend SHALL ask the public one.
+The engine SHALL refuse to load a description, whoever wrote it, when the
+game's own solver does not solve its board. The verdict SHALL be part of
+`loadDesc`. For a game with a difficulty contract, the board SHALL load
+exactly when the contract's solver solves it at some cap, whatever tier its
+params state; a tier named Unreasonable is a cap like any other. A board no
+cap solves SHALL be refused with `DESC_NO_SINGLE_ANSWER` in a game that has a
+tier named Unreasonable, and with `DESC_NOT_DEDUCIBLE` in a game that has
+none. For a game without a difficulty contract, the board SHALL load unless
+the game implements `finishesByDeduction` and that returns false for the
+board's opening state, which is refused with `DESC_NOT_DEDUCIBLE`. Where a
+save carries a private description, the midend SHALL ask the public one.
 
-No game SHALL offer a parameter that switches its generator's checks off: a
-board that needs trial and error is dealt only at a tier named Unreasonable,
-and no board is dealt that cannot be solved.
+No game SHALL offer a parameter or a tier that switches its generator's checks
+off: a board that needs trial and error is dealt only at a tier named
+Unreasonable, and every board dealt has one solution.
 
 #### Scenario: A board no tier solves
 
@@ -8063,11 +8054,11 @@ and no board is dealt that cannot be solved.
   params stating its first tier
 - **THEN** it loads
 
-#### Scenario: A board on a tier that permits search
+#### Scenario: A board with several solutions under an Unreasonable ID
 
-- **WHEN** a board no cap solves is loaded under params stating a tier named
-  Unreasonable
-- **THEN** it loads
+- **WHEN** the board upstream's Dominosa dealt at its Ambiguous tier is loaded
+  under params stating Unreasonable
+- **THEN** it is refused with `DESC_NO_SINGLE_ANSWER`
 
 #### Scenario: An untiered game's board that needs a guess
 
@@ -8079,5 +8070,6 @@ and no board is dealt that cannot be solved.
 
 - **WHEN** a desc from a frozen upstream fixture is loaded under the params its
   fixture states
-- **THEN** it loads, and a fixture naming an option that switches a generator's
-  checks off names it at the value that leaves them on
+- **THEN** it loads, unless the fixture records that upstream's own solver
+  found several answers on it, and a fixture naming an option that switches a
+  generator's checks off names it at the value that leaves them on
