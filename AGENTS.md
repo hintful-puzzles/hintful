@@ -811,6 +811,14 @@ Update `/help` when adding features that diverge from upstream.
 ## Git
 
 - Main branch: `main`.
+- **Push when a task is done and you have no particular concern about it**
+  (owner, 2026-10-04: *"I have trust in our precommits and CI gate, and there's
+  really no other good way for me to evaluate some of the changes without a
+  deployment"*). A push to `main` deploys, and the deployment is how the owner
+  looks at player-visible work, so finished work that sits unpushed cannot be
+  accepted. Don't ask first. Hold the push, and say why, only when there is a
+  specific concern: something you could not verify, a change that breaks data a
+  player already has, or a commit you know to be incomplete.
 - **This is the one place the gate's steps are written out.** `scripts/gate.sh` is the executable definition — `.husky/pre-commit` and `npm run gate` both run it, so they cannot drift — and this list exists because the *rationale* per step is worth reading. Everywhere else in the tree says "the gate" and links here. It was five transcriptions once, no two agreeing, all five naming a compiler the gate had stopped running a month earlier (`state-the-gate-steps-once`); a sequence with one executable definition does not get five prose ones.
 
   In order, blocking on any failure — `npm run gate` runs the lot, `npm run typecheck` runs just the two `tsgo` passes:
