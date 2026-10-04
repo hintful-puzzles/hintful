@@ -64,7 +64,7 @@ export const puzzleAugmentations: Partial<Record<PuzzleId, PuzzleAugmentations>>
     darkMode: {
       paletteSwaps: [
         [0, 1], // cleared/uncleared background
-        [16, 17], // 3D edges
+        [15, 16], // 3D edges
       ],
     },
   },

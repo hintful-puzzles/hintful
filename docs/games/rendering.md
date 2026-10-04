@@ -994,3 +994,25 @@ size). [`colors.test.ts`](../../src/engine/color/colors.test.ts) measures
 every must-stay-distinguishable set in both schemes;
 `palette.test.ts` checks no meaning has quietly become a color of its own
 (meanings are references, checked by identity).
+
+Two guards hold the dark scheme, and both read your game without being told
+about it.
+[`neighbor-contrast.test.ts`](../../src/puzzle/neighbor-contrast.test.ts)
+paints your frames into palette indices, takes every pair that ends up side by
+side, and fails when two areas stand closer than its floor in the dark scheme
+(or a mark does, where the light scheme gave it twice the distance). If it
+names a pair of yours, look at the game in the dark scheme before deciding: a
+pair that is close on purpose goes in its ledger with what it is, and a pair
+that is not gets an authored dark value on the shared role. It reads the deal
+and one frame some hint steps in, so a color only input brings out is not
+covered by it.
+[`palette-swap-names.test.ts`](../../src/palette-swap-names.test.ts) reads
+each `paletteSwaps` pair back through your `COL_*` constants and fails unless
+the two are a `…HIGHLIGHT` and its `…LOWLIGHT`, which is what catches a pair
+left pointing at old indices after a color was added or dropped above it.
+
+To see a change to the palette across the collection, run the contact sheet
+(`npx vitest run -c scripts/checks/diff.vitest.config.mts contact-sheet`): every
+game in both schemes on one page, with the close pairs listed beside it. Its
+`repaint` paints a recorded frame through any palette, which is how to mock up
+a restyle without touching a game.

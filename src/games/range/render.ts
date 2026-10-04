@@ -18,10 +18,10 @@ import {
   CURSOR,
   ERROR,
   FLASH,
+  GRID_DARK,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE,
-  INK,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -49,9 +49,9 @@ export const FLASH_TIME = 0.7;
 // --- palette (upstream COL_* enum) -----------------------------------------
 
 export const COL_BACKGROUND = 0; // an undecided (EMPTY) cell — a soft gray
-/** Grid lines, and the ink of a glyph on an undecided cell. Upstream aliases
- * COL_BLACK, COL_TEXT and COL_USER onto this slot; the black square is split
- * off into {@link COL_BLACK} because it is a *piece*, not ink. */
+/** Grid lines, and a glyph on the flash fill. Upstream aliases COL_BLACK,
+ * COL_TEXT and COL_USER onto this slot; the black square is split off into
+ * {@link COL_BLACK} because it is a *piece*, not ink. */
 export const COL_GRID = 1;
 export const COL_ERROR = 2;
 export const COL_FLASH = 3; // upstream's COL_LOWLIGHT slot: the solved flash
@@ -69,7 +69,9 @@ export function colors(defaultBackground: Color): Color[] {
   const { background } = mkhighlight(defaultBackground);
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
-  out[COL_GRID] = INK;
+  // Not ink: a clue counts the white cells it can see, and ink is white in the
+  // dark scheme, where a run of pinned-white cells would close into one bar.
+  out[COL_GRID] = GRID_DARK;
   out[COL_ERROR] = ERROR;
   out[COL_FLASH] = FLASH;
   out[COL_HINT] = HINT_ACTION;

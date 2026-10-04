@@ -365,7 +365,13 @@ export const undeadVampire = (background: Color): Color => [
  * The requirement is structural rather than chromatic: it belongs with the
  * bevel, which is [`color-mkhighlight.ts`](./color-mkhighlight.ts)'s business,
  * not with a color anybody names.
+ *
+ * The black base's dark value is lower than its light one because the dark
+ * board is itself near-black: at 0.2 the tile sat 0.03 of lightness off the
+ * board and 0.12 off an undecided cell. `mkhighlightSpecific` lifts a base this
+ * close to black to the lowest one that still has a lowlight, which is the
+ * darkest tile the bevel allows.
  */
-export const UNRULY_BLACK = token([0.2, 0.2, 0.2], [0.2, 0.2, 0.2]);
+export const UNRULY_BLACK = token([0.2, 0.2, 0.2], [0.1, 0.1, 0.1]);
 /** @see UNRULY_BLACK */
 export const UNRULY_WHITE = token([0.95, 0.95, 0.95], [0.95, 0.95, 0.95]);

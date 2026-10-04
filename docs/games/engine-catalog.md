@@ -1302,6 +1302,11 @@ whether any primitive paints in a color, reading a polygon's or circle's fill
 and outline as well as a `color`; `dr.updates` holds the
 `drawUpdate` rects, kept off `ops` so they are assertable without a line in
 every snapshot),
+`painted-neighbors.ts` (`paintedNeighbors(ops, size, background)` — a draw
+record painted into palette indices and read for **which indices sit side by
+side**, as two areas, a mark on an area, or a glyph on what is under it; reach
+for it when a question is about two colors a player has to tell apart, which a
+list of palette entries cannot answer),
 `drive-midend.ts` (`driveMidend(game)` / `observeMidend(midend)` — **what a
 midend told the app**: the notifications, `last(type)` typed by its argument,
 `timerActive()` and `redraws()`. Every test that asks what a midend reported

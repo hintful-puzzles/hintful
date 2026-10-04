@@ -3,7 +3,7 @@
 // default config, include `src/**`) never runs these — they are slow, or they
 // report rather than assert. That exclusion is by construction rather than by
 // luck: the gate's include is `src/**/*.test.ts`, and nothing here is under
-// `src/`, which is the whole reason these four files sit in `scripts/checks/`
+// `src/`, which is the whole reason the files below sit in `scripts/checks/`
 // instead of beside the tests they resemble. Usage:
 //   npm run diff                                                          # all
 //   npx vitest run -c scripts/checks/diff.vitest.config.mts -t collide    # one
@@ -23,6 +23,7 @@ export default defineConfig({
       "scripts/checks/color-inventory.test.ts",
       "scripts/checks/color-dark-check.test.ts",
       "scripts/checks/color-collide.test.ts",
+      "scripts/checks/contact-sheet.test.ts",
       "scripts/checks/hint-deixis.test.ts",
     ],
     environment: "node",
