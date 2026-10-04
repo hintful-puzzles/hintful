@@ -21,12 +21,7 @@ import {
   wallColor,
 } from "../../engine/color/palette.ts";
 import { sokobanPit } from "../../engine/color/palette-games.ts";
-import {
-  drawMoveArrow,
-  drawRaisedBevel,
-  glyphFont,
-  raisedBevelWidth,
-} from "../../engine/draw.ts";
+import { drawMoveArrow, drawRaisedTile, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
@@ -200,18 +195,14 @@ function drawTile(
     );
 
   if (v === WALL) {
-    const hw = raisedBevelWidth(ts);
-    // Bevel, then the wall-colored inner square. The tile body is inset by one
-    // to leave the grid line showing, so the bevel follows that rect.
-    drawRaisedBevel(
+    // A beveled block, on the tile inside its grid line.
+    drawRaisedTile(
       dr,
-      { left: tx + 1, top: ty + 1, right: tx + ts, bottom: ty + ts },
+      { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
+      ts,
+      COL_WALL,
       COL_HIGHLIGHT,
       COL_LOWLIGHT,
-    );
-    dr.drawRect(
-      { x: tx + 1 + hw, y: ty + 1 + hw, w: ts - 2 * hw, h: ts - 2 * hw },
-      COL_WALL,
     );
   } else if (v === PIT) {
     disc(floorDisc, COL_PIT);

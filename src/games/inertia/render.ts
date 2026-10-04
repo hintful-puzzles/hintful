@@ -21,7 +21,7 @@ import {
   INK,
   wallColor,
 } from "../../engine/color/palette.ts";
-import { drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
+import { drawRaisedTile } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
@@ -152,23 +152,19 @@ function drawTile(dr: GameDrawing, ts: number, x: number, y: number, v: number):
   const bg =
     v & FLASH_DEAD ? COL_DEAD_PLAYER : v & FLASH_WIN ? COL_FLASH : COL_BACKGROUND;
   const cell = v & ~(FLASH_DEAD | FLASH_WIN | HINT_GOAL);
-  const hw = raisedBevelWidth(ts);
 
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
   dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, bg);
 
   if (cell === WALL) {
-    // A beveled block: lit from the top left. The tile body is inset by one to
-    // leave the grid line showing, so the bevel follows that rect.
-    drawRaisedBevel(
+    // A beveled block, on the tile inside its grid line.
+    drawRaisedTile(
       dr,
-      { left: tx + 1, top: ty + 1, right: tx + ts, bottom: ty + ts },
+      { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
+      ts,
+      COL_WALL,
       COL_HIGHLIGHT,
       COL_LOWLIGHT,
-    );
-    dr.drawRect(
-      { x: tx + 1 + hw, y: ty + 1 + hw, w: ts - 2 * hw, h: ts - 2 * hw },
-      COL_WALL,
     );
   } else if (cell === MINE) {
     const cx = tx + Math.floor(ts / 2);

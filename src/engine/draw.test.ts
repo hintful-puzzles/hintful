@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   type BevelBounds,
+  drawRaisedTile,
   drawRecessedBorder,
   drawRectOutline,
   drawThickRectOutline,
+  raisedBevelWidth,
   strokeScaledPolygon,
 } from "./draw.ts";
 import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
@@ -58,6 +60,51 @@ describe("drawRecessedBorder", () => {
     expect(hi).toContainEqual([30, 90]);
     expect(lo).toContainEqual([90, 30]);
     expect(lo).toContainEqual([30, 90]);
+  });
+});
+
+describe("drawRaisedTile", () => {
+  const FACE = 3;
+  const HI = 1;
+  const LO = 2;
+
+  it("draws the lowlight half, the highlight half, then the face", () => {
+    const { dr, ops } = recordingDrawing();
+    drawRaisedTile(dr, { x: 10, y: 20, w: 32, h: 32 }, 32, FACE, HI, LO);
+    expect(ops.map((o) => o.op)).toEqual(["polygon", "polygon", "rect"]);
+    const [low, high] = opsOfKind(ops, "polygon");
+    expect(low).toMatchObject({ fill: LO });
+    expect(low.points).toContainEqual([41, 51]);
+    expect(high).toMatchObject({ fill: HI });
+    expect(high.points).toContainEqual([10, 20]);
+    expect(ops[2]).toMatchObject({ color: FACE });
+  });
+
+  it("leaves the same border on all four sides, never none", () => {
+    // The body of a tile that keeps a grid line is one short of the tile size,
+    // which is the case that lost its right and bottom border.
+    for (let ts = 6; ts <= 80; ts++)
+      for (const inset of [0, 1]) {
+        const { dr, ops } = recordingDrawing();
+        const body = { x: 7 + inset, y: 9 + inset, w: ts - inset, h: ts - inset };
+        drawRaisedTile(dr, body, ts, FACE, HI, LO);
+        const xs = opsOfKind(ops, "polygon").flatMap((p) => p.points.map(([x]) => x));
+        const ys = opsOfKind(ops, "polygon").flatMap((p) => p.points.map(([, y]) => y));
+        const [face] = opsOfKind(ops, "rect");
+        const borders = [
+          face.x - Math.min(...xs),
+          face.y - Math.min(...ys),
+          Math.max(...xs) - (face.x + face.w - 1),
+          Math.max(...ys) - (face.y + face.h - 1),
+        ];
+        const hw = raisedBevelWidth(ts);
+        expect(hw).toBeGreaterThanOrEqual(1);
+        expect({ ts, inset, borders }).toEqual({
+          ts,
+          inset,
+          borders: [hw, hw, hw, hw],
+        });
+      }
   });
 });
 

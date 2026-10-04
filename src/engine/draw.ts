@@ -1,6 +1,6 @@
 /** Shared `GameDrawing` primitives. */
 import type { GameDrawing } from "./game.ts";
-import type { DrawTextOptions, Point } from "./types.ts";
+import type { DrawTextOptions, Point, Rect } from "./types.ts";
 
 /**
  * The text options for a glyph centered in a tile — the digit in a Sudoku
@@ -77,27 +77,52 @@ export function drawRecessedBorder(
  * so the same visual idiom has the same border in every game that draws it.
  *
  * **The `max(1, …)` is not optional.** Without it the width reaches 0 at small
- * tile sizes, at which point the caller's inner rect covers both triangles
- * completely and the bevel *disappears* rather than thinning.
+ * tile sizes, at which point the inner rect covers both triangles completely
+ * and the bevel *disappears* rather than thinning.
  */
 export function raisedBevelWidth(tileSize: number): number {
   return Math.max(1, Math.floor(tileSize / 16));
 }
 
 /**
- * The raised block: a `lowlight` triangle over the bottom-right half and a
- * `highlight` triangle over the top-left, which a caller then covers with its
- * own inner rect so both show as a border. {@link drawRecessedBorder}'s
- * sibling, in the opposite direction.
+ * A raised tile: the bevel around `body`, then `face` over its middle, leaving
+ * a border of {@link raisedBevelWidth} on all four sides.
  *
- * **Takes bounds rather than a tile**, because each game's tile body differs
- * for a real reason and a rect keeps that the caller's fact: Fifteen, Sixteen
- * and Mines bevel `(x, y) … (x+ts−1, y+ts−1)`, while Inertia and Sokoban inset
- * by one to leave a grid line and bevel `(x+1, y+1) … (x+ts, y+ts)`.
+ * **`body` is the pixels the tile covers and nothing else.** A game that keeps
+ * a grid line at the tile's top and left passes the box inside it,
+ * `{ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }`. Beveling the whole tile
+ * and clipping the line off instead takes a pixel from the right and bottom
+ * borders only, and at a width of one they are gone.
  *
- * **The inner fill stays with the caller**, which is why no highlight width is
- * passed: the two triangles do not depend on it, and each game covers them with
- * its own color and its own inset.
+ * The width comes from `tileSize` and not from the body, so a tile with a grid
+ * line and one without have the same border at the same tile size. Pass
+ * `highlight` and `lowlight` the other way round for a tile that is pressed in.
+ */
+export function drawRaisedTile(
+  dr: GameDrawing,
+  body: Rect,
+  tileSize: number,
+  face: number,
+  highlight: number,
+  lowlight: number,
+): void {
+  const { x, y, w, h } = body;
+  const hw = raisedBevelWidth(tileSize);
+  drawRaisedBevel(
+    dr,
+    { left: x, top: y, right: x + w - 1, bottom: y + h - 1 },
+    highlight,
+    lowlight,
+  );
+  dr.drawRect({ x: x + hw, y: y + hw, w: w - 2 * hw, h: h - 2 * hw }, face);
+}
+
+/**
+ * The raised block alone: a `lowlight` triangle over the bottom-right half and
+ * a `highlight` triangle over the top-left. {@link drawRecessedBorder}'s
+ * sibling, in the opposite direction. A tile with a face over its middle is
+ * {@link drawRaisedTile}; this is for a relief that is not one, which is
+ * Pegs' board.
  *
  * Lowlight is drawn first, then highlight. The two share their diagonal, so the
  * order decides a hairline, fixed here so it is one decision.

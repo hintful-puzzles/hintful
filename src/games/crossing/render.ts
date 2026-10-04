@@ -48,6 +48,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { crossingGhost } from "../../engine/color/palette-games.ts";
 import {
+  drawRaisedTile,
   drawRectCorners,
   drawRectOutline,
   drawThickRectOutline,
@@ -379,46 +380,6 @@ const textOpts = (
   fontType: DrawTextOptions["fontType"] = "variable",
 ): DrawTextOptions => ({ align, baseline, fontType, size });
 
-/** Upstream `draw_tile`: a beveled square. Passing `(low, mid, high)` draws it
- * outdented, `(high, mid, low)` indented. */
-function drawBevelTile(
-  dr: GameDrawing,
-  ts: number,
-  tx: number,
-  ty: number,
-  low: number,
-  mid: number,
-  high: number,
-): void {
-  const bevel = Math.floor(ts / 10);
-  dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
-  dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, mid);
-  dr.drawPolygon(
-    [
-      { x: tx + ts, y: ty + ts },
-      { x: tx + ts, y: ty + 1 },
-      { x: tx + 1, y: ty + ts },
-    ],
-    low,
-    low,
-  );
-  dr.drawPolygon(
-    [
-      { x: tx + 1, y: ty + 1 },
-      { x: tx + ts, y: ty + 1 },
-      { x: tx + 1, y: ty + ts },
-    ],
-    high,
-    high,
-  );
-  dr.drawRect(
-    { x: tx + 1 + bevel, y: ty + 1 + bevel, w: ts - 2 * bevel, h: ts - 2 * bevel },
-    mid,
-  );
-  dr.unclip();
-  dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
-}
-
 /**
  * Upstream `draw_err_rectangle`: one tile's slice of the thick red frame drawn
  * around an erroneous run. The caller deliberately passes a rectangle that
@@ -558,8 +519,11 @@ function drawCell(
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
   }
 
+  // A tile's body: the square inside the grid lines `drawRectOutline` ends with.
+  const body = { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 };
   if (walls[i]) {
-    drawBevelTile(dr, ts, tx, ty, COL_WALL_H, COL_WALL_M, COL_WALL_L);
+    // Pressed in: the lowlight takes the top and left.
+    drawRaisedTile(dr, body, ts, COL_WALL_M, COL_WALL_L, COL_WALL_H);
   } else if (digit) {
     // An entered digit is a raised neutral tile: the bevel is what says
     // "placed", and the digit is plain black on it. Upstream painted each digit
@@ -580,7 +544,7 @@ function drawCell(
             : COL_INNERBG;
     const low = selected ? COL_TILE_HIGH : COL_TILE_LOW;
     const high = selected ? COL_TILE_LOW : COL_TILE_HIGH;
-    drawBevelTile(dr, ts, tx, ty, low, mid, high);
+    drawRaisedTile(dr, body, ts, mid, high, low);
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
     dr.drawText(
       { x: tileCenter(x, ts), y: tileCenter(y, ts) },

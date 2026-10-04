@@ -1125,8 +1125,10 @@ game's size limit from the constant rather than writing a number beside it.
 
 ### `draw.ts` — shared drawing primitives
 
-`drawRecessedBorder` (the two-pentagon playfield bevel), `drawRaisedBevel` + its
-companion `raisedBevelWidth` (the raised *tile* — its opposite number),
+`drawRecessedBorder` (the two-pentagon playfield bevel), `drawRaisedTile` (the
+raised *tile*, its opposite number: bevel and face in one call, on the pixels
+the tile covers) with `raisedBevelWidth` (its border) and `drawRaisedBevel` (the
+two triangles alone, for a relief with no face, which is Pegs' board),
 `drawRectOutline` (upstream `draw_rect_outline`), `drawThickRectOutline` (the
 "this is wrong" frame, four filled bands), `drawRectCorners` (the four corner
 brackets marking a keyboard cursor — promoted from **seven** byte-identical
@@ -1150,7 +1152,8 @@ its own options, which eight sites do.
 games**, which is the pattern to notice rather than the individual helpers: if
 you are writing vertex arithmetic for a shape that any other game also draws, or
 an options object for text every other game also draws, look here first. The reverse direction is guarded —
-`raised-bevel.test.ts` fails if a game re-derives the two triangles.
+`src/puzzle/bevels.test.ts` fails if a game's frames hold a bevel that no call
+to these helpers drew.
 
 **Sizing belongs here too, not only shape.** `raisedBevelWidth(ts)` exists
 because the six raised-tile games had four thickness formulas between them, so

@@ -117,9 +117,11 @@ unique solution and flag every placed digit that contradicts it and every empty
 cell whose pencil notes have crossed out its solution digit, returning nothing
 when the board is not yet uniquely determined. The game SHALL be reported complete
 when every run matches exactly one clue number and each clue number is used once,
-and SHALL flash on that completion. Rendering SHALL draw walls and placed digits as
-beveled tiles with per-digit colors, pencil marks, the run-error highlights, and
-a number-list panel below the grid colored by how many times each clue is placed.
+and SHALL flash on that completion. Rendering SHALL draw a wall as a pressed-in
+tile and a placed digit as a raised one, both through the engine's
+`drawRaisedTile`, with the digit in one ink on a neutral face; and SHALL draw
+pencil marks, the run-error highlights, and a number-list panel below the grid
+colored by how many times each clue is placed.
 
 #### Scenario: Entering the wrong digit is caught by Check & Save
 

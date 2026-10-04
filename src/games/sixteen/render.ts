@@ -11,7 +11,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { HINT_ACTION, INK } from "../../engine/color/palette.ts";
 import {
   drawRecessedBorder as drawBevel,
-  drawRaisedBevel,
+  drawRaisedTile,
   glyphFont,
   raisedBevelWidth,
 } from "../../engine/draw.ts";
@@ -394,14 +394,14 @@ export function redraw(
       if (hintTile !== null && t === hintTile) {
         tileBg = COL_HINT;
       }
-      drawTile(dr, ts, hw, drawX, drawY, t, tileBg);
+      drawTile(dr, ts, drawX, drawY, t, tileBg);
 
       if (drawX2 !== -1 || drawY2 !== -1) {
         let wrapBg = bgcolor;
         if (hintTile !== null && t === hintTile) {
           wrapBg = COL_HINT;
         }
-        drawTile(dr, ts, hw, drawX2, drawY2, t, wrapBg);
+        drawTile(dr, ts, drawX2, drawY2, t, wrapBg);
       }
     }
     ds.tiles[i] = t0;
@@ -433,19 +433,12 @@ function tileCursor(i: number, state: SixteenState, cx: number, cy: number): boo
 function drawTile(
   dr: GameDrawing,
   ts: number,
-  hw: number,
   x: number,
   y: number,
   tile: number,
   bgColor: number,
 ): void {
-  drawRaisedBevel(
-    dr,
-    { left: x, top: y, right: x + ts - 1, bottom: y + ts - 1 },
-    COL_HIGHLIGHT,
-    COL_LOWLIGHT,
-  );
-  dr.drawRect({ x: x + hw, y: y + hw, w: ts - 2 * hw, h: ts - 2 * hw }, bgColor);
+  drawRaisedTile(dr, { x, y, w: ts, h: ts }, ts, bgColor, COL_HIGHLIGHT, COL_LOWLIGHT);
   dr.drawText(
     { x: x + ts / 2, y: y + ts / 2 },
     glyphFont(ts / 3),

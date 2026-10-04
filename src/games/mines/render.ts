@@ -12,12 +12,7 @@
  * paint-twice test in `mines.test.ts` guards that.
  */
 
-import {
-  drawRaisedBevel,
-  drawRecessedBorder,
-  glyphFont,
-  raisedBevelWidth,
-} from "../../engine/draw.ts";
+import { drawRaisedTile, drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -185,7 +180,6 @@ function drawTile(
   bg: number,
   marks: number,
 ): void {
-  const hw = raisedBevelWidth(ts);
   if (v < 0) {
     const coords: number[] = [];
     if (v === -22 || v === -23 || v === -24) {
@@ -195,14 +189,8 @@ function drawTile(
       dr.drawLine({ x, y }, { x: x + ts - 1, y }, COL_LOWLIGHT, 1);
       dr.drawLine({ x, y }, { x, y: y + ts - 1 }, COL_LOWLIGHT, 1);
     } else {
-      // Raised (covered) tile: two bevel triangles + inner bg rect.
-      drawRaisedBevel(
-        dr,
-        { left: x, top: y, right: x + ts - 1, bottom: y + ts - 1 },
-        COL_HIGHLIGHT,
-        COL_LOWLIGHT,
-      );
-      dr.drawRect({ x: x + hw, y: y + hw, w: ts - 2 * hw, h: ts - 2 * hw }, bg);
+      // Raised (covered) tile.
+      drawRaisedTile(dr, { x, y, w: ts, h: ts }, ts, bg, COL_HIGHLIGHT, COL_LOWLIGHT);
     }
     drawStripes(dr, ts, x, y, marks);
 

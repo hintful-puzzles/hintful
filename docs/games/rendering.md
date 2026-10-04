@@ -587,7 +587,7 @@ seven and eight games had each written the vertex arithmetic out. **A shape any
 other game also draws belongs there**, and unlike a mechanic it needs no
 callback and no shared cache key: it takes a rect and colors and draws.
 
-Three things learned promoting the last two
+Learned promoting the last two
 (`unify-the-raised-tile-bevel`, `promote-the-thick-rect-outline`):
 
 - **Check whether the *dimensions* were drifting too, not only the shape.** The
@@ -596,6 +596,14 @@ Three things learned promoting the last two
   beside `drawRaisedBevel` for that reason. Splitting the extraction (no pixels
   move) from the sizing fix (pixels move) into two commits is what makes the
   second one reviewable.
+- **If every caller follows the helper with the same next call, the helper
+  stopped one call short.** `drawRaisedBevel` left the face to the caller, and
+  three games that keep a grid line each inset it from the unclipped tile, which
+  left the right and bottom borders a pixel thinner than the left and top, and
+  absent at a width of one. `drawRaisedTile` draws the face too
+  (`draw-crossings-tile-through-the-bevel-helper`). Pass it the pixels the tile
+  covers, which for a tile inside a grid line is
+  `{ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }`.
 - **A byte-clean snapshot is only evidence if something is watching.** Deleting
   a whole side of the error frame, with the helper wired into eight games,
   failed **one** test in the collection. Break the helper deliberately and see
@@ -1012,11 +1020,14 @@ pair that is close on purpose goes in its ledger with what it is, and a pair
 that is not gets an authored dark value on the shared role. It reads the deal
 and one frame some hint steps in, so a color only input brings out is not
 covered by it.
-[`bevel-order.test.ts`](../../src/puzzle/bevel-order.test.ts) finds the bevels
+[`bevels.test.ts`](../../src/puzzle/bevels.test.ts) finds the bevels
 on the same frames by shape (two polygons in a row splitting one box along its
-diagonal, which is what `drawRaisedBevel` and `drawRecessedBorder` emit) and
-fails when a bevel's lighter color is not the lighter one in both schemes. So
-a bevel whose `darkSwaps` pair you forgot fails without being listed anywhere.
+diagonal, which is what `drawRaisedTile`, `drawRaisedBevel` and
+`drawRecessedBorder` emit) and fails when a bevel's lighter color is not the
+lighter one in both schemes. So a bevel whose `darkSwaps` pair you forgot fails
+without being listed anywhere. The same file counts each game's calls to those
+helpers while the frames are drawn, and fails a game that draws a bevel of that
+shape itself.
 A bevel drawn another way (Slide's piece parts, Twiddle's trapezoids, Black
 Box's) is not seen by it; draw through the helpers where the shape allows.
 

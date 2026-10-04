@@ -3093,33 +3093,46 @@ tautology. The question that survives is whether the flag matches what the game
 
 ### Requirement: The engine provides a shared raised-bevel drawing helper
 
-The engine SHALL provide `drawRaisedBevel(dr, bounds, highlight, lowlight)` in
-`src/engine/draw.ts`, where `bounds` is the tile body's pixel box
-(`{ left, top, right, bottom }`, edges inclusive) and `highlight`/`lowlight` are
-the two palette colors. It SHALL draw the raised block — a bottom-right lowlight
-triangle and a top-left highlight triangle, lowlight first — in one canonical
-winding. Games that draw a raised tile SHALL call this helper, each supplying
-its own tile body, instead of re-deriving the triangles locally. The inner fill
-that covers the triangles' middle SHALL remain at the call site, because its
-color and inset are the game's own.
+The engine SHALL provide `drawRaisedTile(dr, body, tileSize, face, highlight, lowlight)` in
+`src/engine/draw.ts`, where `body` is the rectangle of pixels the tile covers.
+It SHALL draw the raised block over `body` — a bottom-right lowlight triangle
+and a top-left highlight triangle, lowlight first, in one canonical winding —
+and then `face` over the middle, inset by `raisedBevelWidth(tileSize)` on all
+four sides. Games that draw a raised tile SHALL call this helper instead of
+re-deriving the triangles or the inset locally. A game whose tile keeps a grid
+line SHALL pass the box inside the line as `body`, so the border is the same
+width on every side.
 
-The engine SHALL also provide `raisedBevelWidth(tileSize)`, returning
-`max(1, floor(tileSize / 16))`, and games drawing a raised tile SHALL size their
-inner fill's inset from it rather than from a private divisor. The `max(1, …)`
-floor is normative: without it the inset reaches zero at small tile sizes and
-the inner fill covers both triangles, so the bevel disappears rather than
-thinning.
+The engine SHALL provide `raisedBevelWidth(tileSize)`, returning
+`max(1, floor(tileSize / 16))`. The `max(1, …)` floor is normative: without it
+the inset reaches zero at small tile sizes and the face covers both triangles,
+so the bevel disappears rather than thinning.
+
+The engine SHALL also provide `drawRaisedBevel(dr, bounds, highlight, lowlight)`,
+the two triangles alone over a pixel box (`{ left, top, right, bottom }`, edges
+inclusive), for a relief that has no face of its own.
 
 #### Scenario: A raised-tile game draws its bevel through the helper
 
 - **WHEN** a game with a raised tile (e.g. Fifteen, Sixteen, Mines, Inertia,
-  Sokoban, Pegs) draws a tile
-- **THEN** it calls `drawRaisedBevel` with that tile's own bounds and its
-  highlight/lowlight colors
-- **AND** it insets its own inner fill by `raisedBevelWidth(tileSize)`
-- **AND** the two filled triangles cover the same pixels the game's prior
-  private copy did (a filled triangle is winding-independent, so traversal order
-  does not change the filled region)
+  Sokoban, Crossing) draws a tile
+- **THEN** it calls `drawRaisedTile` with that tile's own body, its face color
+  and its highlight/lowlight colors
+- **AND** it computes no bevel width or inner rectangle of its own
+
+#### Scenario: A tile inside a grid line has a border on every side
+
+- **WHEN** `drawRaisedTile` is called with a body one pixel short of the tile
+  size in each direction, at any tile size
+- **THEN** the face leaves `raisedBevelWidth(tileSize)` pixels of bevel on the
+  left, top, right and bottom alike
+- **AND** that width is at least one
+
+#### Scenario: A pressed-in tile swaps the two colors
+
+- **WHEN** a game draws a tile that reads as pressed in (Crossing's walls, and
+  its selected digit)
+- **THEN** it calls the same helper with the highlight and lowlight exchanged
 
 #### Scenario: A game whose bevel is not two triangles keeps its own
 
@@ -3131,12 +3144,16 @@ thinning.
 
 #### Scenario: No game re-derives the bevel
 
-- **WHEN** the collection's game sources are scanned for an adjacent pair of
-  `drawPolygon` calls filled with the bare `COL_LOWLIGHT` and `COL_HIGHLIGHT`
-  constants
-- **THEN** the set is empty
-- **AND** the scan reports how many sources it read, so it cannot pass by
-  matching nothing
+- **WHEN** each game's sample frames are read for a bevel by shape — two
+  polygons drawn one after the other that split one box along its diagonal —
+  and the game's calls to the shared helpers are counted while those frames
+  are drawn
+- **THEN** every game draws exactly as many two-triangle bevels as it made
+  calls to `drawRaisedTile` and `drawRaisedBevel`
+- **AND** exactly as many two-pentagon bevels as it made calls to
+  `drawRecessedBorder`
+- **AND** the guard fails if it found no game drawing a bevel or no call to a
+  helper, so it cannot pass by reading nothing
 
 ### Requirement: The midend reports where a displayed hint sits in its journey
 

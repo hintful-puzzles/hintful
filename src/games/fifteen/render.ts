@@ -9,7 +9,7 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { HINT_ACTION, INK } from "../../engine/color/palette.ts";
 import {
-  drawRaisedBevel,
+  drawRaisedTile,
   drawRecessedBorder,
   glyphFont,
   raisedBevelWidth,
@@ -99,7 +99,6 @@ export function colors(defaultBackground: Color): Color[] {
 function drawTile(
   dr: GameDrawing,
   ts: number,
-  hw: number,
   x: number,
   y: number,
   tile: number,
@@ -108,13 +107,14 @@ function drawTile(
   if (tile === 0) {
     dr.drawRect({ x, y, w: ts, h: ts }, bgColor);
   } else {
-    drawRaisedBevel(
+    drawRaisedTile(
       dr,
-      { left: x, top: y, right: x + ts - 1, bottom: y + ts - 1 },
+      { x, y, w: ts, h: ts },
+      ts,
+      bgColor,
       COL_HIGHLIGHT,
       COL_LOWLIGHT,
     );
-    dr.drawRect({ x: x + hw, y: y + hw, w: ts - 2 * hw, h: ts - 2 * hw }, bgColor);
     dr.drawText(
       { x: x + Math.floor(ts / 2), y: y + Math.floor(ts / 2) },
       glyphFont(ts / 3),
@@ -223,7 +223,7 @@ export function redraw(
         }
 
         const cellBg = t !== 0 && t === hintTile ? COL_HINT : bgcolor;
-        drawTile(dr, ts, hw, x, y, t, cellBg);
+        drawTile(dr, ts, x, y, t, cellBg);
       }
       ds.tiles[i] = t0;
     }
