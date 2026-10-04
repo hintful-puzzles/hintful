@@ -7,11 +7,24 @@
  * pushing; the other searches back from the finished board, pulling, which is
  * how the generator built the level. Each expands the position whose barrels
  * lie fewest pushes from where that side is going, and the line is found
- * where the two meet. Measured on generated levels
- * (`judge-rivals-for-search-hints` design D1), each side alone solved openings the other could not.
+ * where the two meet. Each side alone leaves openings unsolved that the two
+ * solve together.
  *
- * Both sides prune only positions that are lost for good, so a side that runs
- * out of positions has proved the board lost.
+ * What made the search reach the larger boards is how it ranks two positions
+ * the estimate cannot tell apart. Both sides come within a few pushes of
+ * done quickly and stall there: a barrel that went home early stands in the
+ * way of the last ones, so the estimate has to rise before it can fall, and
+ * with sixty barrels nearly every push raises it by one. The pushes that
+ * matter are beside the barrels and targets still out of place, so a push
+ * ranks behind the others by its distance from the nearest of those
+ * (`farFrom`).
+ *
+ * Both sides leave out only positions that are lost for good, and pushes
+ * that some line can do without (`searchPushes`), so a side that runs out of
+ * positions has proved the board lost. The ranking only orders them.
+ *
+ * What was measured, and what was tried and dropped, is
+ * `strengthen-the-sokoban-solver`'s design.
  */
 
 import type { Allowance } from "../../engine/rival-judging.ts";
@@ -210,6 +223,123 @@ export class SokobanBoard {
     // The flood's order depends on where the player stands, and the search
     // must not.
     return out.sort((a, b) => a.barrel - b.barrel || a.dir - b.dir);
+  }
+
+  /**
+   * The pushes worth searching from `p`: all of them, or only those into one
+   * corral where the board has one that must be opened first.
+   *
+   * A corral is floor the player cannot walk to, with the barrels around it.
+   * Where each push those barrels could ever be given either goes into the
+   * corral and can be made now, or waits on another of them moving, nothing
+   * done outside can change them, and the first push to touch one goes in.
+   * Any line that finishes can make that push first and the rest after, in
+   * the same order, so the others need not be searched from here. A corral
+   * has to be opened where one of its barrels is off a target or, with
+   * `fill`, where a target inside it is empty; one that has to be opened and
+   * has no push into it leaves no pushes at all, the position being lost.
+   */
+  searchPushes(p: Position, fill: boolean): Push[] {
+    const all = this.pushes(p);
+    if (!this.tight) return all;
+    const reach = this.stamp;
+    const { seen, n } = this;
+    const { barrels, terrain } = p;
+    // The floor the player cannot reach, by connected piece.
+    const piece = new Int32Array(n);
+    const pieces: number[][] = [[]];
+    for (let c = 0; c < n; c++) {
+      if (piece[c] || barrels[c] || terrain[c] !== FLOOR || seen[c] === reach) continue;
+      const squares = [c];
+      piece[c] = pieces.length;
+      for (let i = 0; i < squares.length; i++) {
+        for (let d = 0; d < 4; d++) {
+          const q = this.step(squares[i], d);
+          if (q < 0 || piece[q] || barrels[q] || terrain[q] !== FLOOR) continue;
+          piece[q] = pieces.length;
+          squares.push(q);
+        }
+      }
+      pieces.push(squares);
+    }
+    let best: Push[] | null = null;
+    for (let k = 1; k < pieces.length; k++) {
+      const inside = new Uint8Array(pieces.length);
+      const fence = new Uint8Array(n);
+      const fenceList: number[] = [];
+      let needed = false;
+      const enclose = (b: number) => {
+        if (fence[b]) return;
+        fence[b] = 1;
+        fenceList.push(b);
+        if (!this.target[b]) needed = true;
+      };
+      const take = (j: number) => {
+        if (inside[j]) return;
+        inside[j] = 1;
+        for (const c of pieces[j]) {
+          if (fill && this.target[c]) needed = true;
+          for (let d = 0; d < 4; d++) {
+            const q = this.step(c, d);
+            if (q >= 0 && barrels[q]) enclose(q);
+          }
+        }
+      };
+      take(k);
+      const into: Push[] = [];
+      let shut = true;
+      for (let i = 0; i < fenceList.length && shut; i++) {
+        const b = fenceList[i];
+        for (let d = 0; d < 4; d++) {
+          const stand = this.step(b, (d + 2) % 4);
+          const dest = this.step(b, d);
+          // Never a push: a wall on either side, or a square no barrel
+          // comes back from.
+          if (!this.open(stand) || !this.open(dest) || this.dist[dest] < 0) continue;
+          // Waiting on a barrel, which joins the fence.
+          if (barrels[stand]) enclose(stand);
+          else if (barrels[dest]) enclose(dest);
+          // Waiting on the player getting inside.
+          else if (seen[stand] !== reach) take(piece[stand]);
+          else if (seen[dest] === reach) {
+            // A push the player can make that stays outside.
+            shut = false;
+            break;
+          } else {
+            take(piece[dest]);
+            into.push({ barrel: b, dir: d });
+          }
+        }
+      }
+      if (!shut || !needed) continue;
+      if (best === null || into.length < best.length) best = into;
+      if (into.length === 0) break;
+    }
+    if (best === null) return all;
+    return best.sort((a, b) => a.barrel - b.barrel || a.dir - b.dir);
+  }
+
+  /** Steps from each square to the nearest one where `barrels` and `home`
+   * differ, walls ignored. */
+  farFrom(barrels: Uint8Array, home: Uint8Array): Int32Array {
+    const far = new Int32Array(this.n).fill(-1);
+    const queue = this.queue;
+    let size = 0;
+    for (let c = 0; c < this.n; c++) {
+      if (!barrels[c] !== !home[c]) {
+        far[c] = 0;
+        queue[size++] = c;
+      }
+    }
+    for (let i = 0; i < size; i++) {
+      for (let d = 0; d < 4; d++) {
+        const q = this.step(queue[i], d);
+        if (q < 0 || far[q] >= 0) continue;
+        far[q] = far[queue[i]] + 1;
+        queue[size++] = q;
+      }
+    }
+    return far;
   }
 
   /**
@@ -449,27 +579,9 @@ export class SokobanBoard {
         return sum;
       };
     }
-    const maps = this.toTargets ?? [];
-    const near = nearestLists(this.n, maps);
-    return (p) => greedyPairing(near, p.barrels, this.n);
+    const pair = pairing(this.n, this.toTargets ?? []);
+    return (p) => pair(p.barrels);
   }
-}
-
-/**
- * For each square, the goals a barrel there can be pushed to, nearest first,
- * packed as `distance * 1024 + goal`. `maps[g][c]` is the pushes from `c` to
- * goal `g`, -1 where it cannot get there.
- */
-function nearestLists(n: number, maps: readonly Int32Array[]): Int32Array[] {
-  const out: Int32Array[] = [];
-  for (let c = 0; c < n; c++) {
-    const list: number[] = [];
-    maps.forEach((m, g) => {
-      if (m[c] >= 0) list.push(m[c] * 1024 + g);
-    });
-    out.push(Int32Array.from(list.sort((a, b) => a - b)));
-  }
-  return out;
 }
 
 /** The most barrels a fence may have for {@link SokobanBoard.fenced} to
@@ -483,40 +595,62 @@ const UNPAIRED = 20;
 /**
  * Barrels paired with goals greedily, the nearest pair first, summing their
  * distances, so two barrels are not both counted toward one goal.
+ * `maps[g][c]` is the pushes from `c` to goal `g`, -1 where it cannot get
+ * there.
  */
-function greedyPairing(
-  near: readonly Int32Array[],
-  barrels: Uint8Array,
+function pairing(
   n: number,
-): number {
-  const bs: number[] = [];
-  for (let c = 0; c < n; c++) if (barrels[c]) bs.push(c);
-  const ptr = new Int32Array(bs.length);
-  const done = new Uint8Array(bs.length);
-  const taken = new Uint8Array(1024);
-  let left = bs.length;
-  let sum = 0;
-  for (let v = 0; left > 0; v++) {
-    for (let i = 0; i < bs.length; i++) {
-      if (done[i]) continue;
-      const list = near[bs[i]];
-      while (ptr[i] < list.length && taken[list[ptr[i]] & 1023]) ptr[i]++;
-      if (ptr[i] >= list.length) {
-        done[i] = 1;
-        left--;
-        sum += UNPAIRED;
-        continue;
-      }
-      const k = list[ptr[i]];
-      if (k >> 10 <= v) {
-        taken[k & 1023] = 1;
-        done[i] = 1;
-        left--;
-        sum += k >> 10;
+  maps: readonly Int32Array[],
+): (barrels: Uint8Array) => number {
+  // For each square, the goals a barrel there can reach, nearest first, and
+  // how far each is.
+  const goals: Int32Array[] = [];
+  const dists: Int32Array[] = [];
+  for (let c = 0; c < n; c++) {
+    const reach: number[] = [];
+    maps.forEach((m, g) => {
+      if (m[c] >= 0) reach.push(g);
+    });
+    reach.sort((a, b) => maps[a][c] - maps[b][c] || a - b);
+    goals.push(Int32Array.from(reach));
+    dists.push(Int32Array.from(reach, (g) => maps[g][c]));
+  }
+  // Every position the search generates is paired, so nothing is allocated
+  // per call.
+  const at = new Int32Array(n);
+  const ptr = new Int32Array(n);
+  const done = new Uint8Array(n);
+  const taken = new Uint8Array(maps.length);
+  return (barrels) => {
+    let count = 0;
+    for (let c = 0; c < n; c++) if (barrels[c]) at[count++] = c;
+    ptr.fill(0, 0, count);
+    done.fill(0, 0, count);
+    taken.fill(0);
+    let left = count;
+    let sum = 0;
+    for (let v = 0; left > 0; v++) {
+      for (let i = 0; i < count; i++) {
+        if (done[i]) continue;
+        const list = goals[at[i]];
+        while (ptr[i] < list.length && taken[list[ptr[i]]]) ptr[i]++;
+        if (ptr[i] >= list.length) {
+          done[i] = 1;
+          left--;
+          sum += UNPAIRED;
+          continue;
+        }
+        const far = dists[at[i]][ptr[i]];
+        if (far <= v) {
+          taken[list[ptr[i]]] = 1;
+          done[i] = 1;
+          left--;
+          sum += far;
+        }
       }
     }
-  }
-  return sum;
+    return sum;
+  };
 }
 
 /** A binary heap, least priority first, then first in. */
@@ -575,13 +709,19 @@ interface Side {
   readonly frontier: Frontier<Node>;
   readonly moves: (p: Position) => { push: Push; next: Position }[];
   readonly estimate: (p: Position) => number;
-  /** Whether the position a move made is lost for good. */
+  /** Where this side is taking the barrels: a square that holds one there. */
+  readonly home: Uint8Array;
+  /** Whether the position a move made is lost for good, by a check cheap
+   * enough to make of every position. */
   readonly lost: (next: Position, push: Push) => boolean;
+  /** The same, by a check made only of a position about to be expanded,
+   * which is one in some fifty of those generated. */
+  readonly doomed: (p: Position, push: Push) => boolean;
 }
 
 /** Positions the search for a line may generate: the reach of the hint and of
- * Solve. Measured on the presets' generated boards
- * (`judge-rivals-for-search-hints` design D1). */
+ * Solve, and the most one search can keep a player waiting. Measured on the
+ * presets' generated boards (`strengthen-the-sokoban-solver` design D8). */
 export const PLAN_BUDGET = 100_000;
 
 /** What a search established about a position. */
@@ -613,22 +753,27 @@ export function searchFrom(
 ): Finish {
   if (board.solved(start)) return { kind: "found", pushes: [] };
   if (board.stuck(start) >= 0) return { kind: "lost" };
+  // The finished board is known and this is the board itself, not a few of
+  // its barrels: what the back side and the ranking by distance both need.
+  const ranked = whole && board.exact;
 
   const forward: Side = {
     seen: new Map(),
     frontier: new Frontier(),
-    moves: (p) => board.pushes(p).map((push) => ({ push, next: board.apply(p, push) })),
+    moves: (p) =>
+      board
+        .searchPushes(p, ranked)
+        .map((push) => ({ push, next: board.apply(p, push) })),
     estimate: board.forwardEstimate(),
-    lost: (next, push) => {
-      const at = board.step(push.barrel, push.dir);
-      return board.stuck(next, at) >= 0 || (whole && board.fenced(next, at));
-    },
+    home: board.target,
+    lost: (next, push) => board.stuck(next, board.step(push.barrel, push.dir)) >= 0,
+    doomed: (p, push) => whole && board.fenced(p, board.step(push.barrel, push.dir)),
   };
   const root: Node = { p: start, parent: null, push: null };
   forward.seen.set(board.key(start), root);
   forward.frontier.push(0, root);
   const sides = [forward];
-  if (whole && board.exact) sides.push(backSide(board, start));
+  if (ranked) sides.push(backSide(board, start));
 
   /** The pushes from the start to forward node `f`, then on from back node
    * `b`'s position to the finish. */
@@ -650,6 +795,8 @@ export function searchFrom(
       const node = side.frontier.pop();
       const here = node.p as Position;
       node.p = null;
+      if (node.push && side.doomed(here, node.push)) continue;
+      const far = ranked ? board.farFrom(here.barrels, side.home) : null;
       for (const { push, next } of side.moves(here)) {
         if (++work > budget || --allowance.left < 0) return { kind: "out-of-reach" };
         if (side.lost(next, push)) continue;
@@ -665,7 +812,11 @@ export function searchFrom(
           if (meet) return stitch(meet, child);
         }
         side.seen.set(key, child);
-        side.frontier.push(side.estimate(next), child);
+        // A push far from every barrel and target still out of place seldom
+        // matters to them, and near the end almost every push is one: the
+        // estimate counts for twice the steps between.
+        const rank = far ? far[push.barrel] : 0;
+        side.frontier.push(2 * side.estimate(next) + rank, child);
       }
     }
   }
@@ -682,7 +833,7 @@ function backSide(board: SokobanBoard, start: Position): Side {
   const homes: number[] = [];
   for (let c = 0; c < n; c++) if (start.barrels[c]) homes.push(c);
   const maps = homes.map((c) => board.pushDistances(c, "from"));
-  const near = nearestLists(n, maps);
+  const pair = pairing(n, maps);
   const reachable = new Uint8Array(n);
   for (const m of maps) {
     m.forEach((d, c) => {
@@ -693,8 +844,10 @@ function backSide(board: SokobanBoard, start: Position): Side {
     seen: new Map(),
     frontier: new Frontier(),
     moves: (p) => board.pulls(p),
-    estimate: (p) => greedyPairing(near, p.barrels, n),
+    estimate: (p) => pair(p.barrels),
+    home: start.barrels,
     lost: (next, push) => !reachable[push.barrel] && next.barrels[push.barrel] === 1,
+    doomed: () => false,
   };
   const finished = board.target.slice();
   const covered = new Uint8Array(n);

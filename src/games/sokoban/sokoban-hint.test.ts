@@ -2,9 +2,11 @@
  * Sokoban's solver, Solve and hint (`judge-rivals-for-search-hints`).
  *
  * Each sentence the hint says on generated boards is pinned by a position it
- * fires on, found by a fixed-seed scan over hint-guided play on 10×12 boards
- * (2026-10-03), so a change to the generator cannot quietly stop a branch
- * being exercised. The refusals are small boards built by hand.
+ * fires on, found by a fixed-seed scan over hint-guided play on 10×12 boards,
+ * so a change to the generator cannot quietly stop a branch being exercised.
+ * Which push the hint offers follows the line the search finds, so a change
+ * to the search moves these: scan again and pin what it finds. The refusals
+ * are small boards built by hand.
  */
 
 import { describe, expect, it } from "vitest";
@@ -38,9 +40,9 @@ function load(id: string): SokobanState {
 }
 
 const PINNED = {
-  /** This barrel's other push would jam it against a barrel and a wall. */
+  /** This barrel's other push would jam it where it can never move. */
   trapFrozen:
-    "10x12:w11fs3tstfw2us3bsbfw2sfsbs3tw2tsts3btw2bts2btb2w2sbs2bs3w2st2s3fsw2sbsfbs3w2s4tbt2w3fs4f2w11",
+    "10x12:w12s3twf2w3b2s5w2stsfs4w2bs2btsbsw2t2st2stbw2sb2sbs2tw2s3fs4w2bs4fsfw2t2sbus3w3tbs5w11",
   /** This barrel's other push would freeze a barrel beside it. */
   trapVictim:
     "10x12:w11fs4fs2w2stwbsusbw2sbwtbtstw2s3tbs2w3fw3s4w2fs4fs2w2s5fwfw2s2fs3wfw2fws6w3fs2w2s2w11",
@@ -50,20 +52,20 @@ const PINNED = {
   /** This barrel's other push would leave it where no target can be reached. */
   trapDead:
     "10x12:w11f3sfs2fw2s2fs4fw2f2s4fsw2sfsfs4w2s4fs3w2s3fs4w2s2f2sfsfw2f2s3us2w2tbs2ftbsw2s8w11",
-  /** Every other push of this barrel settled: one more finishes, one cannot. */
+  /** Every other push of this barrel settled, and more than one finishes. */
   onlyThese:
-    "10x12:w11fs2f2w5fs2ws3fw2s7w4s2usbs2w2tbsfs2bsw2tbswst2bw4s2ws2tw3tbsws2fw6f2s2w8s2w11",
+    "10x12:w11s2fsfs2fw2s5fs2w2s2fsfs2fw2us2ts2btw2fs2bs4w2fbt2sbt2w2tsb2tbsbw2ts4tbsw2bs2bs4w2s3tsfs2w11",
   /** Nothing settled worth saying; the push lands on a target. */
   onTarget:
-    "10x12:w11tsbstst2w2bsub2sbfw2sfs5tw2tsts2bstw2bts2btb2w2sbs2bs3w2st2bs2fsw2sbstbs3w2s2bsfsftw3ts4ftw11",
+    "10x12:w11s2tsfs2fw2sbs3fs2w2s2fstbufw2bs2ts2btw2ts2bsbs2w2fbt2s2t2w2ts2btbsbw2tsbs2tbsw2sbsbsbs2w2s3tsts2w11",
   /** Barrels shut the player into a corner of the board, and this push lets
    * them out (owner, 2026-10-03). */
   freesYou:
-    "10x12:w11tubstst2w2bsbsbsbfw2sfs5tw2tsts2bstw2bts2btb2w2sbs2bs3w2st2bs2fsw2sbstbs3w2s2bsfsftw3ts4ftw11",
-  /** Nothing settled worth saying, the push lands on floor, and the plan
-   * moves another barrel next. */
+    "10x12:w12s3twt2w3b2s2bsbw2stsfs4w2bs3tsbsw2t2sftstbw2sb2ubs2tw2s3fs4w2bs4fsfw2t2s3bs2w3tbs5w11",
+  /** Nothing settled worth saying, the push lands on floor, and no run to a
+   * target opens with it. */
   plain:
-    "10x12:w11tbtbs2btw3s4btw4fws4tw3s3tbs2w2tbs2bstbw2s2tstbstw2sb2sbsf2w2futs5w2s2fs4fw3fs3w14",
+    "10x12:w11s2fsfs2fw2s5fs2w2s2fsfs2fw2s3fs3fw2fs2us4w2fbt2sbt2w2tsb2tbsbw2ts4tbsw2bs2bs4w2s3tsfs2w11",
   /** The push fills a target at the end of a corridor, which a barrel on the
    * target before it would shut off. */
   fillFirst:
@@ -82,10 +84,10 @@ const DEALT =
 
 /** One push from here the line the search finds is a push longer, and it
  * opens by undoing that push: following first pushes alone, a barrel went
- * right and then back left for ever (found 2026-10-04, seven pushes from the
- * end of a dealt 10×12 board). */
+ * right and then back left for ever (2026-10-04). Four positions in 1,366 of
+ * hint-guided play on 10×12 boards were of this kind when this one was found. */
 const CYCLED_BACK =
-  "10x12:w11f2s2fs3w2fs6fw2s3fs4w2fs7w2f3sfsfsw2sbs3fufw2tfs6w2s6fsw2s3fs3fw2fs3fs2w12";
+  "10x12:w11s2fs2ts2w2sbusbsfbw2tbsbs3tw2tbs2ts3w2tfs3tstw2s4fsb2w2s2b2st3w2bt2sbsbsw2sbs3tsfw2s3tsbs2w11";
 
 /** Pushing first pushes alone, a barrel here went up and then back down for
  * ever (`judge-rivals-for-search-hints` design D3). */

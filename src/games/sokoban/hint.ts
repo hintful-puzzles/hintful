@@ -37,9 +37,10 @@
  * any push is: the plan's length is then a potential the hinted push lowers.
  * And a line found after a push that comes straight back through this
  * position hands this position its remainder (`planAt`), which is what the
- * second cycle was. Where no push lowers the plan's length the plan's own
- * first push is offered, and nothing proves the walk from there: it has been
- * measured, not shown (`sokoban-hint.test.ts`, "following the hint").
+ * second cycle was. Where no push is found to lower the plan's length within
+ * the allowance, the plan's own first push is offered, and nothing proves the
+ * walk from there: it has been measured, not shown (`sokoban-hint.test.ts`,
+ * "following the hint").
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
@@ -67,8 +68,8 @@ import {
 type Step = HintStep<SokobanMove>;
 
 /** Positions the rivals' searches of one request may generate between them,
- * and one rival's alone. Past either a rival is unsettled and the step claims
- * nothing about it. */
+ * and one rival's alone where the step is to say what it found. Past either
+ * a rival is unsettled and the step claims nothing about it. */
 const ALLOWANCE = 200_000;
 const RIVAL_PROOF = 20_000;
 
@@ -155,14 +156,18 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
   // What judging a rival found, by push, and how long the line after it is.
   const verdicts = new Map<string, Verdict>();
   const lengths = new Map<string, number>();
-  const judge = (r: Push, allowance: { left: number }): Verdict => {
+  const judge = (
+    r: Push,
+    allowance: { left: number },
+    budget = RIVAL_PROOF,
+  ): Verdict => {
     const known = verdicts.get(keyOf(r));
     if (known) return known;
     const after = board.apply(here, r);
     let v: Verdict;
     if (board.stuck(after, into(board, r)) >= 0) v = "lost";
     else {
-      const res = searchFrom(board, after, RIVAL_PROOF, allowance);
+      const res = searchFrom(board, after, budget, allowance);
       if (res.kind === "found") lengths.set(keyOf(r), res.pushes.length);
       v = res.kind === "found" ? "finishes" : res.kind === "lost" ? "lost" : "unknown";
     }
@@ -172,19 +177,29 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
   const rivalsOf = (m: Push) => pushes.filter((r) => !same(r, m));
 
   // The offered push lowers the potential: the plan's own first push where the
-  // line after it is shorter, else the rival with the shortest such line.
+  // line after it is shorter, else the first rival found with such a line.
+  // The pushes the plan goes on to make are tried first, in its order, since
+  // one that can be made now mostly leaves the rest of the plan standing.
+  // Each is searched to the plan's own budget: a position whose plan took
+  // more than a rival's proof is allowed leaves every rival unsettled at
+  // that, and the whole allowance spent on nothing.
   let offered = plan.line[0];
   const { next } = plan;
   if (length > 1 && (next.kind !== "found" || next.pushes.length >= length)) {
     const allowance = { left: ALLOWANCE };
-    for (const r of rivalsOf(offered)) judge(r, allowance);
-    const better = rivalsOf(offered)
-      .filter((r) => (lengths.get(keyOf(r)) ?? length) < length)
-      .sort((a, b) => (lengths.get(keyOf(a)) ?? 0) - (lengths.get(keyOf(b)) ?? 0))[0];
-    if (better) {
+    const planned = new Map<string, number>();
+    plan.line.forEach((p, i) => {
+      if (!planned.has(keyOf(p))) planned.set(keyOf(p), i);
+    });
+    const turn = (r: Push) => planned.get(keyOf(r)) ?? plan.line.length;
+    for (const r of rivalsOf(offered).sort((a, b) => turn(a) - turn(b))) {
+      if (allowance.left <= 0) break;
+      judge(r, allowance, PLAN_BUDGET);
+      if ((lengths.get(keyOf(r)) ?? length) >= length) continue;
       // The plan's own first push still finishes, by the rest of the plan.
       verdicts.set(keyOf(offered), "finishes");
-      offered = better;
+      offered = r;
+      break;
     }
   }
 

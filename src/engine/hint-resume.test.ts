@@ -158,8 +158,9 @@ const SEARCH_REACH: Record<string, string> = {
   sokoban:
     "Finds a line of pushes by a best-first search from both ends, and every " +
     "dealt board is one it finishes from the opening; a position the player " +
-    "reaches can still be past it, and the search's congested endgames are " +
-    "(`judge-rivals-for-search-hints` design D1). A hinted push shortens the " +
+    "reaches can still be past it, since a found line costs every push of " +
+    "every position on the way (`strengthen-the-sokoban-solver` design D9). " +
+    "A hinted push shortens the " +
     "plan wherever some push does, which is all but about one push in three " +
     "hundred (`teach-sokoban-push-order` design D1), so a cycle here would be " +
     "a defect in that rule and not the search's reach. Largest board on every " +

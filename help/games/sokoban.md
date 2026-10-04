@@ -76,8 +76,9 @@ its target is already stuck, it outlines that barrel and asks you to
 undo, and it asks the same when the search proves no line of pushes from
 here can finish. A position can also be too tangled for the search to
 settle, and the hint says so; *Show solution…* then shows the finished
-board, from the board as it was dealt if not from yours. Every board is
-dealt so that the hint can see it through from the start.
+board, from the board as it was dealt if not from yours. Boards are dealt
+so that the hint can see them through from the start; only a custom board
+much larger than the ones on the Type menu may be past it.
 
 **Check & save** asks the same question, since Sokoban has no single
 answer to check your pushes against: it won't save a position the hint

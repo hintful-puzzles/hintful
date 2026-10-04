@@ -200,8 +200,17 @@ function sokobanGenerate(w: number, h: number, rs: RandomState): Uint8Array {
 /** Positions the search may generate on a level about to be dealt. Below the
  * hint's `PLAN_BUDGET`, since a level it rejects costs the whole budget
  * and another level is cheap; a line found within it is within the hint's
- * reach too, the search being the same. */
-const DEAL_BUDGET = 30_000;
+ * reach too, the search being the same. The levels that take the search
+ * longest from the opening are the ones whose every hint is slowest, so the
+ * budget is also what keeps a dealt board's hints quick
+ * (`strengthen-the-sokoban-solver` design D8). */
+const DEAL_BUDGET = 20_000;
+
+/** Levels a deal may generate. At 16×20 the search finishes about three
+ * levels in four, so the last is dealt unchecked about once in 35,000 deals;
+ * a Custom board of 40×40 finishes about one in 85, and without the bound its
+ * deal ran for minutes. */
+const DEAL_TRIES = 8;
 
 /** A level as upstream generates it, unchecked: what the frozen C reference
  * pins (`sokoban-differential.test.ts`). */
@@ -216,15 +225,26 @@ export function sokobanLevel(p: SokobanParams, rng: RandomState): SokobanState {
 
 /**
  * A level the hint can see through from its first push: generated as upstream
- * does, and generated again where the search finds no line within the
- * hint's reach. Every level can be solved, being made by playing backwards,
- * but some are past the search, and a board the hint refuses from its opening
- * is one whose hint never helps (`judge-rivals-for-search-hints` design D5).
+ * does, and generated again where the search finds no line within `budget`.
+ * Every level can be solved, being made by playing backwards, but some are
+ * past the search, and a board the hint refuses from its opening is one whose
+ * hint never helps (`judge-rivals-for-search-hints` design D5). After
+ * `DEAL_TRIES` levels the last is dealt as it is, since it can still be
+ * solved and a deal has to end.
  */
-export function newSokobanDesc(p: SokobanParams, rng: RandomState): { desc: string } {
-  for (;;) {
-    const state = sokobanLevel(p, rng);
-    if (search(state, DEAL_BUDGET).kind === "found")
-      return { desc: encodeBoard(state) };
+export function dealtLevel(
+  p: SokobanParams,
+  rng: RandomState,
+  budget = DEAL_BUDGET,
+): SokobanState {
+  let state = sokobanLevel(p, rng);
+  for (let tries = 1; tries < DEAL_TRIES; tries++) {
+    if (search(state, budget).kind === "found") break;
+    state = sokobanLevel(p, rng);
   }
+  return state;
+}
+
+export function newSokobanDesc(p: SokobanParams, rng: RandomState): { desc: string } {
+  return { desc: encodeBoard(dealtLevel(p, rng)) };
 }

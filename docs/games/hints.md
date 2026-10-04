@@ -3569,10 +3569,28 @@ lessons:
   back down, for ever: best-first search is not shortest, so the line found
   after a push need not be the rest of the line found before it. The fix keeps
   the plan and adds a check: offer a push only if the line the search finds
-  after it is shorter than the one it finds now, else the rival whose line is
-  shortest. The search is deterministic and its budget only truncates, so the
-  line's length is a function of the position. A rival the judging found
-  finishing already has its line's length, so the check is usually free.
+  after it is shorter than the one it finds now, else the first rival found
+  whose line is. The search is deterministic and its budget only truncates, so
+  the line's length is a function of the position.
+- **Give a rival's search the budget its question needs, and stop when it is
+  answered.** That check first searched every rival to a proof's budget and
+  took the shortest line. On the slowest requests the plan itself had cost
+  more than a proof allows, so 175 of 180 rivals came back unsettled and
+  200,000 positions bought nothing; and where rivals did settle, any shorter
+  line would have done. It now tries the plan's own later pushes first, each
+  to the plan's budget, and stops at the first that is shorter
+  (`strengthen-the-sokoban-solver` design D7). A budget below what the thing
+  being proved costs is a miss that still pays in full.
+- **Look at where the search stalls before naming the cure.** Sokoban's search
+  was thought to drown in lost positions it could not recognize. Its trace
+  showed both sides a few pushes from done, on a position that was not lost:
+  a barrel sent home early had to come off its target again, and every other
+  push on a board of sixty barrels raised the estimate by as much. Ranking a
+  push by its distance from the nearest barrel or target still out of place
+  took the largest preset from 8 of 30 openings in budget to 27, where the
+  pruning it was scoped for took it to 10 (design D2 to D4). In a game with
+  many pieces, most moves are beside the point, and an estimate that cannot
+  say which needs telling where the unfinished part of the board is.
 - **A potential holds only where some move lowers it, so count where none
   does.** The rule above was written up as "every hinted push lowers it", on
   36 boards. Over 57 boards one position in about three hundred had no push
