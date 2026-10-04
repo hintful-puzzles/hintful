@@ -63,13 +63,19 @@ characters.
 
 ### Requirement: Sokoban movement, pushing and completion
 
-Sokoban SHALL be played by moving the player one cell at a time via the cursor keys,
-the bare number keys for the eight directions, or a click whose direction is taken
-relative to the player's cell. Orthogonal moves into a barrel SHALL push it when the
-square beyond can accept a barrel; diagonal input SHALL move the player only, never
-push, and only when one of the two cells shared between source and destination is
-free (the NetHack rule). An illegal move SHALL produce no state change and no
-history entry.
+Sokoban SHALL be played by moving the player one cell at a time via the cursor keys or
+the bare number keys for the eight directions, by a tap or click on a square the player
+can reach, which walks there by any way round as one move and never pushes, and by a
+drag, which previews the push and on release makes it as one move: held from the player
+toward an orthogonally adjacent barrel, or held from a barrel the way it should go, which
+walks the player round behind it first and aims only where the player can get there.
+The barrel SHALL go one square for each tile the drag reached, no further than a wall,
+another barrel or a pit stops it. A drag let go back where it started or off the board
+SHALL make no move. Orthogonal key moves into a barrel
+SHALL push it when the square beyond can accept a barrel; diagonal input SHALL move the
+player only, never push, and only when one of the two cells shared between source and
+destination is free (the NetHack rule). An illegal move SHALL produce no state change
+and no history entry.
 
 Pushing a barrel onto a target SHALL mark it filled; pushing a barrel into a pit
 SHALL consume the barrel and fill the pit to a space; pushing a barrel into a deep
@@ -98,13 +104,33 @@ no empty target square) — so that levels with spare barrels or pits still comp
   and no free barrel remain
 - **THEN** the game is reported solved and flashes
 
+#### Scenario: A tap walks and never pushes
+
+- **WHEN** the player taps a square they can reach
+- **THEN** the player walks there as one move
+- **AND** a tap on a barrel, a wall or a square out of reach makes no move
+
+#### Scenario: A drag from the player pushes as far as it reaches
+
+- **WHEN** the player drags from their square toward a barrel beside them, two tiles
+  out, with room beyond the barrel
+- **THEN** an arrow shows the barrel stopping two squares on, and letting go pushes it there
+
+#### Scenario: A drag from a barrel walks round and pushes
+
+- **WHEN** the player drags a barrel they are not beside two squares the way it should go
+- **THEN** letting go walks the player behind it and pushes it two squares, as one move
+- **AND** a drag of a barrel the player cannot get behind shows no arrow and makes no move
+
 ### Requirement: Sokoban rendering
 
 Sokoban SHALL render each cell as its content — walls with a beveled face, targets,
 pits, deep pits, the player and barrels as discs, and labeled barrels with their
-letter — over grid lines drawn once, on the ground the midend lays. Moves SHALL be
-applied instantly (there is no walk or push animation), and the board SHALL flash on
-completion.
+letter — over grid lines drawn once, on the ground the midend lays. A move SHALL
+animate: the player along the route it walks, square by square, and a pushed barrel
+with it once the player is behind it, briefly, so that a long walk does not hold up
+play; an undo SHALL play the motion backward. A change that moves more than one
+barrel (Solve's) SHALL be shown at once. The board SHALL flash on completion.
 
 #### Scenario: A completed board flashes
 
@@ -115,6 +141,12 @@ completion.
 
 - **WHEN** the board contains a capital-letter barrel
 - **THEN** that barrel is drawn with its letter label
+
+#### Scenario: A push animates the walk to it, then the push
+
+- **WHEN** a drag pushes a barrel the player first has to walk round to
+- **THEN** the player is drawn moving along the walk, then the player and the barrel
+  together, and the settled frame leaves nothing of the motion behind
 
 ### Requirement: Sokoban generation is deterministic
 

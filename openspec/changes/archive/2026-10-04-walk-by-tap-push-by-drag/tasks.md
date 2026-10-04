@@ -27,4 +27,4 @@
 
 - [x] 3.1 The help page's Controls.
 - [x] 3.2 docs/games/input.md § "Drag models".
-- [ ] 3.3 The owner plays it on a real device.
+- [x] 3.3 The owner plays it on a real device (accepted 2026-10-04).

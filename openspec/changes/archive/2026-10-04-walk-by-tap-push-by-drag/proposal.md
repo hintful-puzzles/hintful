@@ -1,6 +1,6 @@
 # walk-by-tap-push-by-drag
 
-**Status: implemented (2026-10-03), awaiting the owner's play on a real device.**
+**Status: implemented (2026-10-03), played on a real device and accepted by the owner (2026-10-04).**
 
 ## Why
 
@@ -59,7 +59,9 @@ step move and its saves are unchanged.
 
 Owner, 2026-10-03, after the ghost barrel: *"definitely helps, but I'm not sure
 it's enough. Let's leave it be for now, and I might come back to it later."*
-Ask before archiving whether to take it further. Considered so far:
+Asked at archiving (2026-10-04): the owner accepted the drag as it stands, and
+the question is carried by `read-a-sokoban-drag-under-a-finger`. Considered so
+far:
 
 - **An on-screen D-pad** in the app's keypad panel, sending the arrow keys the
   game already answers (a step at a time, pushing). Declined as a replacement
