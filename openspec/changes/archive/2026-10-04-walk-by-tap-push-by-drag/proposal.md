@@ -59,9 +59,8 @@ step move and its saves are unchanged.
 
 Owner, 2026-10-03, after the ghost barrel: *"definitely helps, but I'm not sure
 it's enough. Let's leave it be for now, and I might come back to it later."*
-Asked at archiving (2026-10-04): the owner accepted the drag as it stands, and
-the question is carried by `read-a-sokoban-drag-under-a-finger`. Considered so
-far:
+Asked at archiving (2026-10-04): the owner accepted the drag as it stands, good
+enough for now, and will say if it needs more. Considered so far:
 
 - **An on-screen D-pad** in the app's keypad panel, sending the arrow keys the
   game already answers (a step at a time, pushing). Declined as a replacement
