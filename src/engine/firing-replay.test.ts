@@ -268,10 +268,7 @@ const RECORDS_NOTHING: Record<string, string> = {
  * premise was set by the same rung, which re-derives it before reaching the
  * firing ({@link PremiseAudit.kept}).
  */
-const UNTESTED: Record<string, string> = {
-  salad:
-    "every firing is its one clue rung's, and each line's clues are the line's own, so the rung puts every other line back first",
-};
+const UNTESTED: Record<string, string> = {};
 
 /** Each preset's board, generated once for both readings: generation, not the
  * audit, is most of what this sweep costs (Solo's 2×3 Hard alone). */

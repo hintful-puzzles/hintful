@@ -913,6 +913,17 @@ and blind to the rest:
 | one per tier | a board at each difficulty | every preset of an **untiered** game after the first — Sixteen's cycling 5×5 |
 | tier + first/last | that, plus the size ends | every **mode**: Solo's Killer/X/jigsaw, Unequal's Adjacent, Seismic's Tectonic, 17 of Loopy's 18 tilings, 10 of Salad's 11 presets |
 
+**And the slice is blind to what the menu does not offer.** It walks one preset
+per value *the presets vary*, so a value the Custom dialog offers and no preset
+holds is dealt by no cross-game guard at all. Salad's Normal tier was one: all
+eleven of its presets were Easy, and its hint threw on 71 of 1,195 Normal
+boards with every guard green (`fix-salad-number-ball-hint-throw`). Salad has
+Normal presets now, and `walk-every-choice-the-dialog-offers` holds the other
+values this leaves out, a tier among them in four more games. Until that lands,
+**a game whose menu stops short of something its dialog offers owes that value
+a test of its own**, and the cheap one is the game's rung scan:
+`describeHintPins`'s `params` takes any params, offered or not.
+
 **Why `paramConfig` is the right source**, and not the params object's keys: it
 is a value a mechanism *consumes* (the Custom dialog is built from it), so it is
 a declaration of the healthy kind rather than a manifest; `custom-params.test.ts`

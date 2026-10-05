@@ -19,6 +19,26 @@ docs/games/solver-and-generator.md § "Bound a generator by its tail, not its
 median" gives the method, game by game; nothing runs it across the
 collection.
 
+**A second game, found 2026-10-05 by `fix-salad-number-ball-hint-throw`, and
+at a small size, not a large one.** Salad's Number Ball at Normal is a
+rejection loop behind a tier gate, and how thin the tier is depends on the
+shape. Dealt from fixed seeds on a loaded machine, a minute a shape:
+
+- 4x4 with 3 numbers: **6 of 21 seeds ran to the 50,000-attempt bound and
+  threw**, about ten seconds each. The other 15 dealt.
+- 5x5 with 3: 21 boards in the minute, about 3 s each.
+- 6x6 with 3: 39 in the minute. 6x6 with 4: 66. 7x7 with 4: 39.
+- 5x5 with 4: 150 boards in under 3 s. Letters at Normal, every shape from
+  4x4 to 7x7: under half a second a board.
+
+So the diagnostic below should deal *every* shape a dialog allows, the small
+ones too, and at every tier: a size is not the only field a deal's cost
+follows. For Salad the question is whether 4x4 Number Ball has a Normal tier
+worth offering at all, which is a params refusal or a generator that finds
+those boards directly, and either is the owner's to weigh
+(`salad/generator.ts`'s header says a better generator for the mode is still
+unwritten).
+
 ## What Changes
 
 - A diagnostic, never a gate: for each game, deal a few boards at sizes past

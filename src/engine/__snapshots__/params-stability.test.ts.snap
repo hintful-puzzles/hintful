@@ -489,6 +489,10 @@ preset:Salad/Letters: 7x7 A~D Easy  full=7n4Lde  brief=7n4L
 preset:Salad/Numbers: 7x7 1~4 Easy  full=7n4Bde  brief=7n4B
 preset:Salad/Letters: 8x8 A~E Easy  full=8n5Lde  brief=8n5L
 preset:Salad/Numbers: 8x8 1~5 Easy  full=8n5Bde  brief=8n5B
+preset:Salad/Letters: 5x5 A~C Normal  full=5n3Ldx  brief=5n3L
+preset:Salad/Letters: 5x5 A~D Normal  full=5n4Ldx  brief=5n4L
+preset:Salad/Numbers: 5x5 1~4 Normal  full=5n4Bdx  brief=5n4B
+preset:Salad/Letters: 6x6 A~D Normal  full=6n4Ldx  brief=6n4L
 tier:1  full=4n3Ldx  brief=4n3L
 bump:nums  full=4n4Lde  brief=4n4L
 bump:mode  full=4n3Bde  brief=4n3B"

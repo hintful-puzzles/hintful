@@ -10,6 +10,7 @@ exports[`salad: pinned hint positions > says, at each pin 1`] = `
   "countLettersDone": "We already know which 3 squares of this row hold its numbers, so this square and the rest of it must be empty.",
   "crossNaked": "Every letter is ruled out here, so the empty-square mark is the only one left: this square must be empty.",
   "dup": "The A just placed can't repeat in its row and column, so we must cross out the A from the other squares there.",
+  "forcing": "Square 1 is 2 or 3, and every numbered square has just two numbers left, so each forces the next. If square 1 is 2, this square's row already has it; if 3, square 4 is driven to 2, in line with this square. Either way, 2 is ruled out here, so we must cross out the 2.",
   "hiddenSingle": "Every other square in this row rules out 1, so this square must be 1.",
   "marker": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",
   "populate": "Start by penciling every candidate letter into each empty square that has none yet, so there is something to cross out.",
@@ -18,5 +19,6 @@ exports[`salad: pinned hint positions > says, at each pin 1`] = `
   "previewsNumber": "Every other number has been ruled out in this square, so it can only be 3.",
   "set": "The outlined squares already account for A between them, so we must cross out the A.",
   "single": "Every other number has been ruled out in this square, so it can only be 3.",
+  "xNoteGone": "This square's pencil marks have no empty-square mark among them, so it must hold a number.",
 }
 `;

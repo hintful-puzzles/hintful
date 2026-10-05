@@ -138,10 +138,11 @@ function setReason(cells: CellList, reads: CellList): LatinSetReason {
  * ruled out of the rest of the line — the multiplicity analog of `dup`, which
  * names one placement where here it is the count that forces. Kept apart from
  * {@link LatinReason} so the Latin-square games, whose narrations switch over
- * that union exhaustively, are not asked to narrate a case they cannot meet; a
- * repeats consumer adds it to its own reason union.
+ * that union exhaustively, are not asked to narrate a case they cannot meet. A
+ * repeats consumer adds it to its own reason union, or drops the record where
+ * a deduction of its own says the same.
  */
-export interface LatinRepeatReason {
+interface LatinRepeatReason {
   kind: "repeatFull";
   n: number;
   line: "row" | "col";
@@ -370,7 +371,13 @@ export class LatinSolver {
           x: cx,
           y: cy,
           n,
-          reason: { kind: "repeatFull", n, line, index, times: this.times },
+          reason: {
+            kind: "repeatFull",
+            n,
+            line,
+            index,
+            times: this.times,
+          } satisfies LatinRepeatReason,
           group: this.group,
         });
       }

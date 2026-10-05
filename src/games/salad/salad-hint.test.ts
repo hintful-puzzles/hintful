@@ -90,15 +90,16 @@ const ghostOf = (step: Step) => (step.highlights as SaladHint).ghost;
  */
 const pinned = describeHintPins({
   game: saladGame,
-  params: [LETTERS, NUMBERS, { ...LETTERS, diff: DIFF_HARD }],
+  params: [
+    LETTERS,
+    NUMBERS,
+    { ...LETTERS, diff: DIFF_HARD },
+    { ...NUMBERS, diff: DIFF_HARD },
+  ],
   unreached: {
     note: "it is the implicit reading's step, and Salad's plan sets its notes up itself and always walks the populate reading (`buildSteps`'s `setUp`)",
     regionsFull:
-      "it is how a single reads on a square with no notes; held on 0 of 2117 positions walked on these 36 boards, where every single follows the populate step",
-    forcing:
-      "held on 0 of 2914 positions walked on 40 letters boards at the solver's forcing tier (5x5, three letters, `DIFF_HARD`); the numbers boards at that tier were not walked through, because the hint throws on one of them",
-    repeatFull:
-      "it is a strike of the hole symbol, and `buildSteps`'s `record` drops every such strike before the walk sees it",
+      "it is how a single reads on a square with no notes; held on 0 of 2570 positions walked on these 48 boards, where every single follows the populate step",
   },
   kinds: {
     // A marker step previews the entry it asks for, a placement its symbol.
@@ -108,61 +109,77 @@ const pinned = describeHintPins({
     previewsNumber: (step) => typeof ghostOf(step) === "number",
   },
   pins: {
-    /** Held on 693 of 2117 positions walked. */
+    /** Held on 876 of 2570 positions walked. */
     marker: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 333 of 2117 positions walked. */
+    /** Held on 410 of 2570 positions walked. */
     previewsCross: "5n3Bde:bXc1ObOg2113Ob",
-    /** Held on 360 of 2117 positions walked. */
+    /** Held on 466 of 2570 positions walked. */
     previewsCircle: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 488 of 2117 positions walked. */
+    /** Held on 621 of 2570 positions walked. */
     previewsNumber: {
       id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
     },
-    /** Held on 85 of 2117 positions walked. */
+    /** Held on 144 of 2570 positions walked. */
     populate: "5n3Lde:AbCAbCbBaAAaBd,y",
-    /** Held on 439 of 2117 positions walked. */
+    /** Held on 599 of 2570 positions walked. */
     clean: { id: "5n3Bde:Oa2b1bOd3b1Xc2bO", moves: [{ type: "pencilAll" }] },
-    /** Held on 1945 of 2117 positions walked. */
+    /** Held on 2354 of 2570 positions walked. */
     dup: "5n3Lde:AbCAbCbBaAAaBd,y",
-    /** Held on 2117 of 2117 positions walked. */
+    /** Held on 2570 of 2570 positions walked. */
     single: {
       id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
     },
-    /** Held on 1226 of 2117 positions walked. */
+    /** Held on 1342 of 2570 positions walked. */
     hiddenSingle: {
       id: "5n3Bde:bOa21a3b3cOaOf3a",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":3},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":3},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":3},{"x":3,"y":2,"n":3},{"x":4,"y":2,"n":2},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":3},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":2},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":3},{"x":2,"y":4,"n":3},{"x":4,"y":4,"n":2},{"x":4,"y":4,"n":3}]},{"type":"set","x":2,"y":0,"value":1},{"type":"set","x":4,"y":2,"value":1},{"type":"set","x":0,"y":0,"value":"cross"},{"type":"set","x":4,"y":1,"value":"cross"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":3,"y":0,"n":1},{"x":1,"y":2,"n":1},{"x":2,"y":2,"n":1},{"x":3,"y":2,"n":1},{"x":2,"y":3,"n":1},{"x":4,"y":3,"n":1},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":1}]},{"type":"set","x":3,"y":0,"value":"cross"},{"type":"set","x":1,"y":0,"value":"circle"},{"type":"set","x":4,"y":4,"value":"cross"},{"type":"set","x":4,"y":3,"value":"circle"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":4,"y":3,"n":4}]},{"type":"set","x":1,"y":0,"value":3},{"type":"set","x":4,"y":3,"value":3},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":3}]}]',
     },
-    /** Held on 331 of 2117 positions walked. */
+    /** Held on 440 of 2570 positions walked. */
     set: {
       id: "5n3Ldx:bCAbBBCbAdCCBa,y",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":2},{"x":4,"y":1,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":2},{"x":1,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":0,"n":1}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":3},{"x":2,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":2,"n":2},{"x":4,"y":2,"n":2}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":4,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":2}]}]',
     },
-    /** Held on 981 of 2117 positions walked. */
+    /** Held on 981 of 2570 positions walked. */
     borderNear: { id: "5n3Lde:AbCAbCbBaAAaBd,y", moves: [{ type: "pencilAll" }] },
-    /** Held on 984 of 2117 positions walked. */
+    /** Held on 984 of 2570 positions walked. */
     borderFar: {
       id: "5n3Lde:AbCAbCbBaAAaBd,y",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3}]}]',
     },
-    /** Held on 1889 of 2117 positions walked. */
+    /** Held on 2228 of 2570 positions walked. */
     countHolesDone: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 1875 of 2117 positions walked. */
+    /** Held on 2211 of 2570 positions walked. */
     countLettersDone: "5n3Bde:bXc1ObOg2113Ob",
-    /** Held on 1708 of 2117 positions walked. */
+    /** Held on 1976 of 2570 positions walked. */
     crossNaked: {
       id: "5n3Lde:aBaAbAaBcCaCBd,y",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":0,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":3}]}]',
     },
-    /** Held on 1944 of 2117 positions walked. */
+    /** Held on 12 of 2570 positions walked. */
+    forcing: {
+      id: "5n3Bdx:2dXOa1aXa2XbObX1aXb",
+      moves:
+        '[{"type":"set","x":1,"y":2,"value":"circle"},{"type":"set","x":4,"y":2,"value":"circle"},{"type":"set","x":0,"y":3,"value":"circle"},{"type":"set","x":1,"y":0,"value":"cross"},{"type":"set","x":1,"y":4,"value":"cross"},{"type":"set","x":3,"y":4,"value":"circle"},{"type":"set","x":4,"y":4,"value":"circle"},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":2},{"x":3,"y":0,"n":1},{"x":3,"y":0,"n":2},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":4,"y":1,"n":1},{"x":1,"y":2,"n":2},{"x":4,"y":2,"n":2},{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2},{"x":2,"y":3,"n":2},{"x":3,"y":3,"n":1},{"x":3,"y":4,"n":1},{"x":4,"y":4,"n":1}]},{"type":"set","x":0,"y":3,"value":3},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":3},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":3}]}]',
+    },
+    /**
+     * Kept by hand: held on 0 of 2570 positions walked. A set crosses an
+     * empty-square mark out on this board, and the last move before this
+     * position is that strike.
+     */
+    xNoteGone: {
+      id: "5n3Bdx:c2b1aOXbXb3c1OOc",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":2},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2},{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3},{"x":2,"y":1,"n":1},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":3,"y":2,"n":2},{"x":4,"y":2,"n":1},{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":3},{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":3},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":1},{"x":3,"y":4,"n":2},{"x":4,"y":4,"n":1}]},{"type":"set","x":3,"y":1,"value":3},{"type":"set","x":3,"y":3,"value":"cross"},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":3},{"x":3,"y":2,"n":3},{"x":3,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":4}]}]',
+    },
+    /** Held on 2301 of 2570 positions walked. */
     circleXNote: {
       id: "5n3Bde:Xb3aXb2c1b2Xd2bO",
       moves:
@@ -414,6 +431,96 @@ describe("salad hint — refusals and resumption", () => {
     ]);
     expect(played.first).toMatch(/This square is now known to hold/);
     expect(played.solved).toBe(true);
+  });
+});
+
+describe("salad hint — a square a set rules out as empty", () => {
+  // The three outlined squares of column 2 can hold only a 2 and the column's
+  // two empty squares, so its other squares hold numbers, and the 1 of row 0
+  // has one square left only once that is on the board. No count says it.
+  const BOARD = "5n3Bdx:c2b1aOXbXb3c1OOc";
+
+  it("crosses the empty-square mark out, then marks the ball", () => {
+    const { state, step } = pinned("xNoteGone");
+    expect(step.move).toEqual({ type: "set", x: 2, y: 0, value: "circle" });
+    // The mark is gone from the square's notes, and its symbols are not.
+    const notes = state.pencil[2];
+    expect(notes & (1 << state.nums)).toBe(0);
+    expect(notes).not.toBe(0);
+    expect(step.explanation).toBe(
+      "This square's pencil marks have no empty-square mark among them, so it must hold a number.",
+    );
+  });
+
+  it("names the line whose empty squares the set holds", () => {
+    const walked = descWalk(BOARD);
+    expect(walked.solved).toBe(true);
+    expect(walked.texts).toContain(
+      "The outlined squares account for both empty squares of their column, so we must cross out the X here.",
+    );
+  });
+
+  it("names the symbols a set strikes with the mark", () => {
+    const t = premise(
+      {
+        kind: "set",
+        cells: [
+          { x: 2, y: 1 },
+          { x: 2, y: 2 },
+          { x: 2, y: 3 },
+        ],
+      },
+      [
+        { x: 2, y: 4, n: 2 },
+        { x: 2, y: 4, n: 4 },
+      ],
+      { mode: GAMEMODE_NUMBERS, order: 5, nums: 3 },
+    );
+    expect(t.premise.text).toBe(
+      "The outlined squares account for 2 and both empty squares of their column",
+    );
+    expect(t.struck).toBe("2 and the X here");
+  });
+
+  it("names the lines of a set that spans several", () => {
+    // The empty squares of rows 0 and 3 lie in columns 1 and 4 alone, so those
+    // columns' empty squares are all in the four outlined squares.
+    const t = premise(
+      {
+        kind: "set",
+        cells: [
+          { x: 1, y: 0 },
+          { x: 4, y: 0 },
+          { x: 1, y: 3 },
+          { x: 4, y: 3 },
+        ],
+      },
+      [{ x: 1, y: 2, n: 4 }],
+      { mode: GAMEMODE_NUMBERS, order: 5, nums: 3 },
+    );
+    expect(t.premise.text).toBe(
+      "The outlined squares account for both empty squares of each of their columns",
+    );
+  });
+
+  it("prints the empty-square mark as the X it is penciled as", () => {
+    // Where a line has one empty square the mark is an ordinary candidate, and
+    // a chain may run through it.
+    const t = premise(
+      {
+        kind: "forcing",
+        chain: [
+          { x: 0, y: 0, n: 1 },
+          { x: 0, y: 2, n: 4 },
+        ],
+        shares: "row",
+      },
+      [{ x: 3, y: 0, n: 4 }],
+      { mode: GAMEMODE_LETTERS, order: 4, nums: 3 },
+    );
+    expect(t.premise.text).toBe(
+      "Square 1 is X or A, and every numbered square has just two pencil marks left, so each forces the next. If square 1 is X, this square's row already has it; if A, square 2 is driven to X, in line with this square. Either way, X is ruled out here",
+    );
   });
 });
 

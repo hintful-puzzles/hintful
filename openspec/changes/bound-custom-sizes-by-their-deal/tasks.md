@@ -9,6 +9,9 @@
 
 - [ ] 2.1 Sokoban's size, from 1.2.
 - [ ] 2.2 Each other game 1.2 convicts, one bound and one measurement each.
+- [ ] 2.2a Salad's 4x4 Number Ball at Normal, where one seed in three or four
+      runs the generator to its bound: refuse the shape, or deal it another
+      way. The owner's call.
 - [ ] 2.3 Ask the owner before a bound that would refuse a size a saved game
       or shared ID may already hold.
 

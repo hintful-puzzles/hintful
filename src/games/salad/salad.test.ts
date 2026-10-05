@@ -30,6 +30,7 @@ import {
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { axisSlice, leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { newSaladDesc } from "./generator.ts";
@@ -68,6 +69,13 @@ const NUMBERS: { p: SaladParams; desc: string } = {
   p: { order: 5, nums: 3, mode: GAMEMODE_NUMBERS, diff: DIFF_EASY },
   desc: "d1cO32b3aXa1d2b",
 };
+/** Each shape the menu offers, once: a preset's size, symbols and mode, which
+ * the tests below take at both tiers whichever the menu offers it at. */
+const SHAPES: readonly SaladParams[] = [
+  ...new Map(
+    PRESETS.map((p) => [`${p.order}/${p.nums}/${p.mode}`, { ...p, diff: DIFF_EASY }]),
+  ).values(),
+];
 const LETTERS_ID = `${encodeParams(LETTERS.p, true)}:${LETTERS.desc}`;
 const NUMBERS_ID = `${encodeParams(NUMBERS.p, true)}:${NUMBERS.desc}`;
 
@@ -86,8 +94,8 @@ function play(id: string): SaladMidend {
 // --- tier 1: params --------------------------------------------------------
 
 describe("salad params codec", () => {
-  it("round-trips every preset at both difficulties", () => {
-    for (const p of PRESETS) {
+  it("round-trips every preset's shape at both difficulties", () => {
+    for (const p of SHAPES) {
       for (const diff of [DIFF_EASY, DIFF_HARD]) {
         const full = { ...p, diff };
         expect(decodeParams(encodeParams(full, true))).toEqual(full);
@@ -110,6 +118,22 @@ describe("salad params codec", () => {
     const titles = presetMenu(saladGame).submenu?.map((m) => m.title);
     expect(titles?.[0]).toBe("Letters: 4x4 A~C Easy");
     expect(titles?.[2]).toBe("Numbers: 5x5 1~3 Easy");
+    // Both tiers are on the menu, Easy first.
+    expect(titles?.filter((t) => t.endsWith(" Normal"))).toEqual([
+      "Letters: 5x5 A~C Normal",
+      "Letters: 5x5 A~D Normal",
+      "Numbers: 5x5 1~4 Normal",
+      "Letters: 6x6 A~D Normal",
+    ]);
+    expect(titles?.slice(-4).every((t) => t.endsWith(" Normal"))).toBe(true);
+  });
+
+  it("varies difficulty across its presets, so a sliced sweep deals Normal", () => {
+    // A cross-game guard deals one preset per value of every field the presets
+    // vary. A tier no preset holds is a tier none of them deals.
+    const sliced = axisSlice(saladGame, leafPresets(saladGame));
+    expect(sliced.some((e) => e.params.diff === DIFF_HARD)).toBe(true);
+    expect(sliced.some((e) => e.params.diff === DIFF_EASY)).toBe(true);
   });
 
   it("refuses symbol counts the size cannot hold", () => {
@@ -255,7 +279,7 @@ describe("salad generator", () => {
     );
   });
 
-  for (const preset of PRESETS) {
+  for (const preset of SHAPES) {
     for (const diff of [DIFF_EASY, DIFF_HARD]) {
       const p = { ...preset, diff };
       it(`generates a solvable ${describeParams(saladGame, p)}`, () => {
@@ -273,7 +297,7 @@ describe("salad generator", () => {
   // The tier gate. Upstream has none, so its Extreme (our Normal) is mostly its
   // Normal (our Easy): 12 of its 13 frozen Extreme fixtures, and 71 of 80
   // freshly generated boards, fall to the Easy solver.
-  for (const preset of PRESETS) {
+  for (const preset of SHAPES) {
     const p = { ...preset, diff: DIFF_HARD };
     it(`generates a ${describeParams(saladGame, p)} that Easy cannot solve`, () => {
       const { desc } = newSaladDesc(

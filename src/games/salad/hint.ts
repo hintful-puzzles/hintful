@@ -8,16 +8,14 @@
  * empty" X mark and, once settled, an empty-square marker rather than an entry.
  * The consequences run through this whole file, so they are worth stating once:
  *
- * 1. **A square's emptiness is taught as a marker, not as a note strike.** The
- *    cube does place the hole symbol, and does strike it — but the player
- *    settles a square with a cross or a ball, so a cross/ball is emitted as a
- *    marker step whose *why* is re-derived from the board the player can see:
- *    a line's counts first, then a note collapse, and only then the honest
- *    weaker "taking this row and column
- *    together" arm, which is the cube's own verdict read back as markers. The
- *    cube's eliminations *of* the hole symbol are dropped from the strike walk
- *    for the same reason: teaching one fact twice, as an X-mark strike and then
- *    as the marker it amounts to, would be noise.
+ * 1. **A square is settled by a marker, whose why is read off the board.** The
+ *    cube places the hole symbol and strikes it, but the player settles a
+ *    square with a cross or a ball, so each is a marker step whose *why* is
+ *    re-derived from what the player can see: a line's counts first, then the
+ *    square's own notes (only the X left, or the X gone). The cube's strike of
+ *    the hole symbol from a line that holds all its empties is dropped, since
+ *    the count says the same. Its other strikes of it (a set, a chain) are no
+ *    count's to say, so they are strikes of the X note like any candidate's.
  * 2. **Only the border deduction needs to be recorded.** The generic rungs
  *    record their placements and strikes through the shared solver; the
  *    recorder is threaded through the ABC End View border scan alone
@@ -70,7 +68,6 @@ import {
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { Narration, Sentence } from "../../engine/hint-words.ts";
-import type { LatinRepeatReason } from "../../engine/latin.ts";
 import {
   type ForcingLink,
   hiddenSingleLine,
@@ -114,6 +111,9 @@ export type SaladReason =
   | { kind: "countLettersDone"; line: "row" | "col"; index: number; allPlaced: boolean }
   /** The square's notes have come down to the empty-square mark alone. */
   | { kind: "crossNaked" }
+  /** The square has notes, and the empty-square mark is no longer one of
+   * them. */
+  | { kind: "xNoteGone" }
   /** Tidy-up leg: squares just settled as holding a symbol keep no
    * "might be empty" mark. */
   | { kind: "circleXNote"; count: number }
@@ -123,11 +123,7 @@ export type SaladReason =
   /** The shared solver's forcing chain, with the chain it followed — the same
    * shape `latin.ts` records, so the numbered squares and the case-split
    * narration come for free. */
-  | { kind: "forcing"; chain: ForcingLink[]; shares: "row" | "col" }
-  /** The cube's own "this line has all its empty squares" strike of the hole
-   * symbol. Recorded, and narratable, but the strike walk drops hole-symbol
-   * strikes (file header, point 1), so it is reached only if that changes. */
-  | LatinRepeatReason;
+  | { kind: "forcing"; chain: ForcingLink[]; shares: "row" | "col" };
 
 /** Every rung a Salad step can be: the Latin family's, and the kinds of
  * {@link SaladReason}. */
@@ -138,8 +134,8 @@ export const SALAD_RUNGS = [
   "countHolesDone",
   "countLettersDone",
   "crossNaked",
+  "xNoteGone",
   "circleXNote",
-  "repeatFull",
 ] as const;
 export type SaladRung = (typeof SALAD_RUNGS)[number];
 
@@ -154,6 +150,15 @@ export interface SaladHint extends CandidateHighlights {
 }
 
 type SaladOp = DeductionRecord & { reason: SaladReason };
+
+/** Whether a recorded strike of the hole symbol says only that its line already
+ * holds every empty square it may: the cube's `repeatFull`, or the `dup` of a
+ * hole placed where a line has one. `countHolesDone` teaches both, so neither
+ * is one of {@link SaladReason}'s. */
+function lineHasItsHoles(reason: unknown): boolean {
+  const kind = (reason as { kind?: string }).kind;
+  return kind === "repeatFull" || kind === "dup";
+}
 
 // --- narration -------------------------------------------------------------
 
@@ -188,13 +193,14 @@ export function narrate(
       );
     case "crossNaked":
       return text.crossNaked(at);
+    case "xNoteGone":
+      return text.xNoteGone(at);
     case "borderNear":
     case "borderFar":
     case "circleXNote":
-    case "repeatFull":
       throw new Error(`a ${reason.kind} deduction strikes`);
     default:
-      return narrateLatinReason(reason, at, order, saladVocab(mode));
+      return narrateLatinReason(reason, at, order, saladVocab(mode, nums));
   }
 }
 
@@ -233,11 +239,28 @@ export function premise(
   marks: readonly Mark[],
   state: { mode: number; order: number; nums: number },
 ): Premise {
-  const { mode, order } = state;
+  const { mode, order, nums } = state;
   const o = order;
   const text = say(mode);
   const at = marks[0];
   switch (reason.kind) {
+    case "set": {
+      // A strike is one square's (`strikeAxis`), so the marks are its notes.
+      if (!marks.some((m) => m.n > nums))
+        return latinPremise(reason, marks, saladVocab(mode, nums));
+      const also = marks.filter((m) => m.n <= nums).map((m) => m.n);
+      // A set lies along one line, or (the same symbol confined to as many
+      // rows as columns) spans several, and then the lines whose empty squares
+      // it holds are the ones the struck square shares with it.
+      const { cells } = reason;
+      const inCol = cells.every((c) => c.x === cells[0].x);
+      const inRow = cells.every((c) => c.y === cells[0].y);
+      const line = inCol || (!inRow && cells.some((c) => c.x === at.x)) ? "col" : "row";
+      return {
+        premise: text.setHoles(cells, also, line, !inCol && !inRow, o - nums),
+        struck: text.setHolesStruck(also),
+      };
+    }
     case "borderNear": {
       const line = clueLine(reason.clue, o);
       const c = { side: clueSide(reason.clue, o).side, clue: reason.clue, line };
@@ -286,22 +309,25 @@ export function premise(
         premise: text.circleXNote(cellsOf(marks)),
         struck: text.emptyMarks(reason.count),
       };
-    case "repeatFull":
-      return {
-        premise: text.repeatFull(
-          reason.line,
-          hiddenSingleLine(reason.line, reason.index, o),
-          reason.times,
-          at,
-        ),
-        struck: text.emptyMarks(1),
-      };
+    case "forcing": {
+      // Where a line has one empty square the X is a candidate a chain may run
+      // through, and a square down to an X and a letter does not have "two
+      // letters left".
+      const vocab = saladVocab(mode, nums);
+      const throughX = at.n > nums || reason.chain.some((link) => link.n > nums);
+      return latinPremise(
+        reason,
+        marks,
+        throughX ? { ...vocab, noun: "pencil mark" } : vocab,
+      );
+    }
     case "countHolesDone":
     case "countLettersDone":
     case "crossNaked":
+    case "xNoteGone":
       throw new Error(`a ${reason.kind} deduction marks a square`);
     default:
-      return latinPremise(reason, marks, saladVocab(mode));
+      return latinPremise(reason, marks, saladVocab(mode, nums));
   }
 }
 
@@ -462,6 +488,10 @@ function cheapMarkers(w: Working, o: number, nums: number): MarkerFiring[] {
     if (w.grid[i] !== 0 || w.holes[i] !== 0) continue;
     if (w.pencil[i] === xbit) {
       out.push({ mark: "cross", cells: [at(i)], reason: { kind: "crossNaked" } });
+    } else if (w.pencil[i] !== 0 && (w.pencil[i] & xbit) === 0) {
+      // And one whose notes have lost that mark: a set or a chain crossed it
+      // out, and no count says so.
+      out.push({ mark: "circle", cells: [at(i)], reason: { kind: "xNoteGone" } });
     }
   }
   return out;
@@ -696,14 +726,17 @@ function buildSteps(
     label: "salad hint plan",
     cap: o * o * (nums + 4) + 8,
     finished: () => latinholesCheck(board()),
-    // Strikes *of* the hole symbol are dropped: the same fact reaches the
-    // player as a marker step (file header, point 1), and teaching it twice
-    // would be noise. Hole *placements* are kept, because a strike whose
+    // A strike of the hole symbol because its line holds all its empty squares
+    // is dropped: a count says the same as a marker step (file header, point
+    // 1), and teaching it twice would be noise. Every other strike of it is a
+    // strike of the X note. Hole *placements* are kept, because a strike whose
     // premise reads a square the board has not settled yet still waits for it.
     record: () => {
       const rec = recordSaladDeductions(board(), state.diff);
       holes = rec.holes;
-      return (rec.ops as SaladOp[]).filter((op) => op.kind === "place" || op.n <= nums);
+      return rec.ops.filter(
+        (op) => op.kind === "place" || op.n <= nums || !lineHasItsHoles(op.reason),
+      ) as SaladOp[];
     },
     // The walk reads the outline and the stripes off the words; the clues they
     // light are Salad's, read the same way.
@@ -723,7 +756,7 @@ function buildSteps(
         : `${op.reason.kind}:${op.y * o + op.x}`,
     setUp,
     // The setup is Salad's own; the vocabulary still words the conclusions.
-    notes: { placedVerb: "placed", ...saladVocab(state.mode) },
+    notes: { placedVerb: "placed", ...saladVocab(state.mode, nums) },
     // The cheapest emptiness deductions: a line's counts, or a collapse onto
     // the empty-square mark. Both need no notes beyond what is on screen, so a
     // Number Ball board opens on them rather than on "pencil everything in".

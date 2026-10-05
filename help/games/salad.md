@@ -33,7 +33,7 @@ Press the 'M' key to fill every empty cell with all possible pencil marks.
 
 A numbered chain is read in order: the sentence says how it rules a letter out of the ringed square.
 
-The hint speaks of *squares*, and a clue *sees* the first letter along its line. The pencil-mark 'X', the note that a square might be empty, is its *empty-square mark*. Each row and column has a fixed number of empty squares, so counting them is half the game: once a line has all its empty squares, the rest must hold letters, and once it has all its letters, the rest must be empty. In Number Ball, where every symbol is a number, the hint says "number" wherever this says "letter".
+The hint speaks of *squares*, and a clue *sees* the first letter along its line. The pencil-mark 'X', the note that a square might be empty, is its *empty-square mark*, and a sentence that lists what a square can still be writes it as X. It is crossed out like any other pencil mark: a square left with only that mark must be empty, and a square that has lost it must hold a letter. Each row and column has a fixed number of empty squares, so counting them is half the game: once a line has all its empty squares, the rest must hold letters, and once it has all its letters, the rest must be empty. In Number Ball, where every symbol is a number, the hint says "number" wherever this says "letter".
 
 ## Salad parameters
 

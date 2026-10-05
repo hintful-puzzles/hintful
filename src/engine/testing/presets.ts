@@ -85,7 +85,8 @@ export interface PresetAxis<Params> {
  *
  * A field every preset holds the same value at is not an axis — the game offers
  * no way to reach a second value from the presets menu, so a slice cannot walk
- * one. Salad's `difficulty` is the standing case.
+ * one. So a value the Custom dialog offers and no preset holds is dealt by
+ * nothing built on this slice: Loopy's Tricky tier is one.
  *
  * **Takes only what it reads**, the way `difficulty.ts`'s `difficultyTiers`
  * does, so the
@@ -167,7 +168,7 @@ function wantedValues(
  * board earlier in the menu was de-duplicated away: Solo walked no X board, no
  * jigsaw board and no Killer board, Unequal walked no Adjacent board, Seismic no
  * Tectonic board, Group no identity-hidden board, Keen no multiplication-only
- * board. Salad fared worst: every preset it offers carries the *same* tier, so
+ * board. Salad fared worst: every preset it offered carried the *same* tier, so
  * eleven collapsed to one board and one of its two game modes was never walked
  * at all. That is the same collapse the untiered games had already paid for
  * once (`fix-sixteen-hint-recompute-stability`); tier was never *the* axis, it

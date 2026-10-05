@@ -8,8 +8,9 @@
 Every hinted game now pins a board for each rung its hint can speak, and a rung
 no known board fires is excused in its test's `unreached`, with the reason.
 Empty is the goal: an entry is a rung whose sentence, marks and move nothing
-checks on a real board. Twelve entries stand in seven games. The query, which
-is the list and cannot go stale as this file can:
+checks on a real board. Twelve entries stood in seven games when this was
+written, and two of Salad's have gone since. The query, which is the list and
+cannot go stale as this file can:
 
     git grep -n -A12 "unreached: {" -- 'src/games/*/*-hint.test.ts'
 
@@ -19,10 +20,10 @@ on 2026-10-05, each to be re-derived before it is acted on:
 **A rung the game's list declares and its hint cannot speak.** The entry is
 then excusing the list, not a shortfall of the scan.
 
-- Salad `repeatFull`: `buildSteps`'s `record` drops every hole-symbol strike
-  before the walk sees it. Either the plan should teach those strikes (see
-  `fix-salad-number-ball-hint-throw`, which may be the same gap) or the reason
-  should leave `SaladReason`.
+- Salad `repeatFull`: **done** in `fix-salad-number-ball-hint-throw`. It was
+  both halves: the plan now teaches the hole-symbol strikes a set or a chain
+  makes, and `repeatFull` itself left `SaladReason`, since a line count says
+  the same first on every board.
 - Salad `note` and `regionsFull`: Salad sets its notes up itself and always
   walks the populate reading, so the implicit reading's two rungs are in its
   list only because `LATIN_RUNGS` holds them and `PlanRung<Reason>` types them
@@ -47,9 +48,9 @@ then excusing the list, not a shortfall of the scan.
   `wouldFinishEarly`: each agrees with a ledger its test file already kept.
   Read those ledgers first; they may already say which of the two kinds each
   is.
-- Salad `forcing`: 0 of 2,914 on letters boards. The numbers boards at that
-  tier were not walked, because the hint throws on one
-  (`fix-salad-number-ball-hint-throw`). Rescan once that is fixed.
+- Salad `forcing`: **done** in `fix-salad-number-ball-hint-throw`. The scan
+  reaches it on Normal Number Ball boards (12 of 2,570 positions) and it is
+  pinned.
 
 **A rung the pin cannot express.**
 

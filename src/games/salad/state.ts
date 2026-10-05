@@ -98,6 +98,13 @@ export const PRESETS: readonly SaladParams[] = [
   { order: 7, nums: 4, mode: GAMEMODE_NUMBERS, diff: DIFF_EASY },
   { order: 8, nums: 5, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
   { order: 8, nums: 5, mode: GAMEMODE_NUMBERS, diff: DIFF_EASY },
+  // Normal, on the shapes its tier gate deals quickly: forty deals each took
+  // at most 0.2 s on a loaded machine. 7x7 and up reached 1.7 s or more, and
+  // every other Number Ball shape seconds (`generator.ts`, `MAX_ATTEMPTS`).
+  { order: 5, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_HARD },
+  { order: 5, nums: 4, mode: GAMEMODE_LETTERS, diff: DIFF_HARD },
+  { order: 5, nums: 4, mode: GAMEMODE_NUMBERS, diff: DIFF_HARD },
+  { order: 6, nums: 4, mode: GAMEMODE_LETTERS, diff: DIFF_HARD },
 ];
 
 export function defaultParams(): SaladParams {

@@ -26,7 +26,7 @@ exports[`an ordered hint chain carries its order to the canvas > rome: pinned hi
 
 exports[`an ordered hint chain carries its order to the canvas > salad: pinned hint positions > says, at each pin 1`] = `
 {
-  "numberedChain": "Square 1 is B or D, and every numbered square has just two letters left, so each forces the next. If square 1 is B, this square's column already has it; if D, square 4 is driven to B, in line with this square. Either way, B is ruled out here, so we must cross out the B.",
+  "numberedChain": "Square 1 is B or X, and every numbered square has just two pencil marks left, so each forces the next. If square 1 is B, this square's column already has it; if X, square 4 is driven to B, in line with this square. Either way, B is ruled out here, so we must cross out the B.",
 }
 `;
 

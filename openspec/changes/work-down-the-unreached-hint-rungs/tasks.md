@@ -10,8 +10,9 @@
 ## 2. Rungs the list should not hold
 
 - [ ] 2.1 Bricks `localBreak`: prove it dead or find its board.
-- [ ] 2.2 Salad `repeatFull`: decide with `fix-salad-number-ball-hint-throw`
-      whether the plan teaches hole-symbol strikes or the reason goes.
+- [x] 2.2 Salad `repeatFull`: decided in `fix-salad-number-ball-hint-throw`.
+      The plan teaches the hole-symbol strikes no count says, and the reason
+      went.
 - [ ] 2.3 Salad `note` and `regionsFull`: take the population of games that
       walk one reading only, then decide whether the engine should let a game
       say so.
@@ -21,7 +22,7 @@
 - [ ] 3.1 Inertia `declined`, by hand.
 - [ ] 3.2 Boats `mustGrow`: a board, or the finding that it is always shadowed.
 - [ ] 3.3 Loopy's two and Tracks' two.
-- [ ] 3.4 Salad `forcing`, after the Number Ball throw is fixed.
+- [x] 3.4 Salad `forcing`: pinned in `fix-salad-number-ball-hint-throw`.
 
 ## 4. Close
 

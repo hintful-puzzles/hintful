@@ -14,7 +14,12 @@
  * reasons from are outlined (a clue by lighting its letter, {@link CLUE}).
  */
 
-import { cleanObviousText, type LatinVocab, thisCell } from "../../engine/hint-text.ts";
+import {
+  cleanObviousText,
+  joinWith,
+  type LatinVocab,
+  thisCell,
+} from "../../engine/hint-text.ts";
 import {
   CELL,
   type MarkKind,
@@ -33,12 +38,18 @@ import { GAMEMODE_LETTERS, symbolChar } from "./state.ts";
  * its letter in the hint color. */
 export const CLUE: MarkKind<number> = { name: "clue", key: (c) => String(c) };
 
-/** Salad's value vocabulary for the shared generic-Latin narration arms — the
- * one place its two modes differ in words rather than logic. */
-export function saladVocab(mode: number): LatinVocab {
+/** What a mode calls a symbol — the one place Salad's two modes differ in words
+ * rather than logic. */
+const nounOf = (mode: number): string =>
+  mode === GAMEMODE_LETTERS ? "letter" : "number";
+
+/** Salad's value vocabulary for the shared generic-Latin narration arms. The
+ * value past the `nums` symbols is the "might be empty" note, which prints as
+ * the X the player pencils for it. */
+export function saladVocab(mode: number, nums: number): LatinVocab {
   return {
-    noun: mode === GAMEMODE_LETTERS ? "letter" : "number",
-    value: (n) => symbolChar(mode, n),
+    noun: nounOf(mode),
+    value: (n) => (n > nums ? "X" : symbolChar(mode, n)),
     cell: "square",
   };
 }
@@ -97,8 +108,7 @@ interface ClueAt {
 
 /** Salad's sentences, in the vocabulary of the mode being played. */
 export function say(mode: number) {
-  const vocab = saladVocab(mode);
-  const noun = vocab.noun;
+  const noun = nounOf(mode);
   const sym = (n: number): string => symbolChar(mode, n);
   const square = (at: Point): Narration => thisCell(at, "square");
 
@@ -224,6 +234,45 @@ export function say(mode: number) {
         move: phrase`${square(at)} must be empty`,
       }),
 
+    /** The square at `at` has notes, and the empty-square mark is not among
+     * them. */
+    xNoteGone: (at: Point): Sentence =>
+      // Not "has been crossed out": a player's own notes may never have held it.
+      so({
+        look: phrase`${square(at).capitalized()}'s pencil marks have no empty-square mark among them`,
+        move: phrase`it must hold a ${noun}`,
+      }),
+
+    /** A set that rules a square out as empty: the outlined `cells` hold all
+     * `k` empty squares of their `line` (of each of their lines, where they
+     * span `several`), and the symbols `also` struck from the square with the
+     * mark. Kept short: it names a set, a count and two kinds of mark. */
+    setHoles: (
+      cells: Squares,
+      also: readonly number[],
+      line: Line,
+      several: boolean,
+      k: number,
+    ): Narration => {
+      const symbols = also.length > 0 ? `${joinWith(also.map(sym))} and ` : "";
+      const holes =
+        k === 1
+          ? "the one empty square"
+          : k === 2
+            ? "both empty squares"
+            : `all ${k} empty squares`;
+      const where = several
+        ? `each of their ${axisName(line)}s`
+        : `their ${axisName(line)}`;
+      return phrase`${mark.the("outline", CELL, cells, "square").capitalized()} account for ${symbols}${holes} of ${where}`;
+    },
+
+    /** What a set's strike calls the notes it crosses out of one square when
+     * the empty-square mark is among them: the X it is penciled as, which is
+     * how the shared sentences print it among a square's candidates. */
+    setHolesStruck: (also: readonly number[]): string =>
+      also.length > 0 ? `${joinWith(also.map(sym))} and the X here` : "the X here",
+
     /** The squares `cells`, just settled as holding a symbol, keep no
      * empty-square mark. */
     circleXNote: (cells: Squares): Narration =>
@@ -232,10 +281,5 @@ export function say(mode: number) {
     /** What a strike of the "might be empty" note calls it, on `count` squares. */
     emptyMarks: (count: number): string =>
       count === 1 ? "its empty-square mark" : "their empty-square marks",
-
-    /** The line `cells` already has all `times` of its empty squares, so the
-     * square at `at` cannot be empty. */
-    repeatFull: (line: Line, cells: Squares, times: number, at: Point): Narration =>
-      phrase`${thisLine(line, cells).capitalized()} already has ${allItsHoles(times)}, leaving none for ${square(at)}`,
   };
 }

@@ -5119,14 +5119,28 @@ will hit:
    `grid[cell] !== 0`, which for a cross never comes.
 3. **Re-derive a marker's *why* from the visible board, cheapest first, and
    leave no weak arm to fall back on.** The plan re-derives marker conclusions
-   in order: a line's *counts* first (visible and countable), then a note
-   collapse. A marker the solver forces that neither explains rests on a
+   in order: a line's *counts* first (visible and countable), then the
+   square's own notes (only the X left is a cross; the X gone is a ball). A
+   marker the solver forces that neither explains rests on a
    strike the plan skipped, so `assertEveryMarkerExplained` throws rather
    than narrate it, in the same way the placement classifier does
    (§ "Re-derive a placement's why"). The weak `forcedCross` / `forcedCircle`
    arms that once stood there had fired zero times in every sweep, which is
    what made retiring them safe. **Do the sweep; "there is a fallback" and
    "the fallback is what the player sees" are very different situations.**
+
+   **Drop a recorded strike only for the rung that says the same thing, and
+   name that rung.** The plan once dropped *every* strike of the hole symbol,
+   on the reasoning that a marker step teaches each one. A count teaches only
+   the strike a full line makes (`repeatFull`). A set or a chain that rules a
+   square out as empty is no count's to say, and with it dropped the X stayed
+   in the notes, the row's last home for a symbol never showed as one, and the
+   classifier threw: on 71 of 1,195 boards dealt at Normal across both modes,
+   and on none at Easy, which is every preset and so every board the
+   cross-game walks deal. Those strikes are strikes of the X note now, and the
+   note's absence is what the ball rests on (`xNoteGone`). **A sweep's zero
+   covers the tiers it dealt**: the earlier sweeps were of presets, and a tier
+   only the Custom dialog offers was in none of them.
 4. **Only record the deduction whose *premise* you could not otherwise
    recover.** Salad threads the recorder through the border scan **alone** —
    the one deduction whose premise (which clue, how far its symbol reaches,
