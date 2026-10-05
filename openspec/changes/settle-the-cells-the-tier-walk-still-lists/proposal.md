@@ -90,10 +90,11 @@ solver can make.
   bridge a line at Normal; one bridge a line with loops and 100% expansion at
   Normal; 5 with two bridges a line and no loops at Tricky. The retry budget
   is islands placed, so a sparse board tries up to two million times: a 10x10
-  of 5 islands at Tricky is found once in about 100,000. And the generator
-  grades the board read back from its desc, since grading the state it grew
-  let about one board in a hundred through as Tricky that Easy solves
-  (`find-why-bridges-grades-a-grown-board-differently`).
+  of 5 islands at Tricky is found once in about 100,000. Grading the state the
+  generator grew let about one board in a hundred through as Tricky that Easy
+  solves; the cause was the solver, whose grade depended on island order, and
+  `find-why-bridges-grades-a-grown-board-differently` fixed it there, so the
+  read-back from the desc this change first added is gone again.
 - **Map.** The fifty-try drop to Easy is gone. Refused as absent: under 8
   regions, or two squares wide, or a region to every square, above Easy; 8
   regions above Normal. Refused as too rare to deal: 8 regions at Normal, 9

@@ -3,8 +3,7 @@
 - [x] 1.1 Map: the fifty-try drop removed; the absent and the rare refused
       by region count, width and density, counted; the budget in squares.
 - [x] 1.2 Bridges: the three-island boards, and the four other families the
-      island count names; the budget in islands; the board graded from its
-      desc.
+      island count names; the budget in islands.
 - [x] 1.3 Bricks: the boards of six squares or fewer.
 - [x] 1.4 Boats: the ladder removed; one boat refused above Easy; the walk
       grades it by lowest solving cap.
