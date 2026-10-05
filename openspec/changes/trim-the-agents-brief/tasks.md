@@ -21,9 +21,8 @@
       says what the paragraph said, and the root column fits the bound before
       any file is edited.
 - [ ] 2.2 The owner reads the root column and the list of owner directives
-      with each one's disposition, and says whether the existing `docs/`
-      guides are to be swept for history too (design D2c). This is the
-      acceptance step; do not build on it unread.
+      with each one's disposition. This is the acceptance step; do not build
+      on it unread.
 
 ## 3. Move
 

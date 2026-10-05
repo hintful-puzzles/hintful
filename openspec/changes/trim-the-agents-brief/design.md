@@ -127,8 +127,8 @@ who found it, when, in which game, what the number was, what a file used to
 say, which change removed a directory, and every "until" and "used to". A
 date survives only on a claim that tells the reader to re-check it. This
 applies to what this change writes or moves. The existing guides under
-`docs/` are not swept by it; whether they should be is a question for the
-owner at task 2.2, since they hold the same kind of narrative.
+`docs/` hold the same kind of narrative and are not swept by it: the owner
+said to leave `docs/` for later (2026-10-05).
 
 **D2a. What is kept goes to `README.md` and `docs/`, by audience.** What the
 project is and whose work it stands on is for anyone, and goes in
