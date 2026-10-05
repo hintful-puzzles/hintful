@@ -1,6 +1,8 @@
 # trim-the-agents-brief
 
-**Status: scaffolded, not started (2026-10-05).** Asked for by the owner:
+**Status: sorted, waiting on the owner's read (2026-10-05).** `root-draft.md`
+is the proposed root file and `directives.md` lists what happens to each owner
+directive; nothing outside this change has been edited. Asked for by the owner:
 *"AGENTS.md is almost 900 lines long! I don't think that really works well."*
 
 ## Why

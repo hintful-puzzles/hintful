@@ -41,7 +41,14 @@ Code 2.1.289): an untracked `src/games/AGENTS.md` and an untracked
 After one read under each directory, the session knew the rules-file marker
 and not the nested `AGENTS.md` marker. So the portable form of path scoping,
 a nested `AGENTS.md`, does not reach Claude in this repository. One run on
-the small model; task 1.1 repeats it.
+the small model.
+
+Repeated the same day on the session's ordinary model (task 1.1, Claude Code
+2.1.290, `claude-opus-5-5`, one headless run, the same two untracked files and
+one read under each directory): the same result. The session quoted the
+rules-file marker and said the file had loaded after the reads, not at the
+start. It did not know the nested `AGENTS.md` marker, and said it had seen
+that file only as an untracked path in the git status.
 
 **Where the words are** (`awk` over the `## ` sections, words), and where a
 home for them already exists:

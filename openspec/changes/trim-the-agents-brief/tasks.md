@@ -1,14 +1,17 @@
 ## 1. Confirm the ground
 
-- [ ] 1.1 Repeat the loading probe on the session's ordinary model: a
+- [x] 1.1 Repeat the loading probe on the session's ordinary model: a
       path-scoped rules file and a nested `AGENTS.md`, each with a marker
       word, one read under each. Verify: the result is written into
       design.md § Context.
-- [ ] 1.2 Run `/doctor prompt-audit` on `AGENTS.md` and keep its proposed
+- [x] 1.2 Run `/doctor prompt-audit` on `AGENTS.md` and keep its proposed
       cuts as input to 2.1. Verify: the list is saved in this change.
-- [ ] 1.3 Record the baseline: lines, words and bytes of `AGENTS.md`, the
+      Saved as `prompt-audit.md`, from a headless run. Its five stale
+      statements are the "stale" rows of `sort.md`.
+- [x] 1.3 Record the baseline: lines, words and bytes of `AGENTS.md`, the
       list of owner directives in it, and the list of section names cited
-      from other files with their counts.
+      from other files with their counts. In `baseline.md` and
+      `directives.md`.
 
 ## 2. Sort
 
@@ -20,9 +23,14 @@
       the table's paragraphs sum to the file, every named source exists and
       says what the paragraph said, and the root column fits the bound before
       any file is edited.
+      The table is `sort.md` and the root column is written out as
+      `root-draft.md`, 171 lines and 9,809 bytes. Two parts of the verify are
+      not done, and `sort.md` § "Not yet done" says so: a "there" row rests
+      on one search of the guide, and the normative sweep is 3.1's.
 - [ ] 2.2 The owner reads the root column and the list of owner directives
       with each one's disposition. This is the acceptance step; do not build
-      on it unread.
+      on it unread. What to read: `root-draft.md`, then `directives.md`,
+      whose § "Cut, for the owner to confirm" has seven items.
 
 ## 3. Move
 
