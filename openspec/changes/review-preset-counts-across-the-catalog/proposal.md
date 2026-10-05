@@ -34,14 +34,35 @@ question a player meets in the picker:
   ruleset (Loopy's tilings, Ascent's grids, whose "Hex" heading went when
   Edges became a ruleset and left 14 presets in one section), and a rule
   modifier (`declare-rule-modifiers`).
+  - **If a ruleset's section wants groups of its own**, the rule to relax is
+    `presetMenu`'s "a game with a ruleset lists its presets flat", to "a
+    section the game writes holds one ruleset". Ascent's hexagonal presets
+    are the case.
+  - **Whether a modifier orders or groups a menu** is open, and the owner
+    chose to leave menus alone when the modifiers were declared. Read from
+    the presets 2026-10-05: Solo, Twiddle, Net, Netslide, Group and ABCD mix
+    a modifier's values through one flat list; Unruly, Bridges and Guess
+    offer theirs from Custom alone. A game with one modifier could put its
+    boards under a heading; Solo's three combine, so its menu needs a rule
+    of its own.
 - **Which tiers a menu offers.** `walk-every-choice-the-dialog-offers` found
   a tier no preset holds in Loopy, Mathrax, Unequal and Group. A menu that
   stops short of a tier and a menu with every size at every tier are the two
   ends of one decision.
-- **A leaf's title inside a section.** Salad's entries read "Letters: 5x5 A~C
-  Easy" under a section already titled "Letters", because a title is the
-  params label (`engine/param-label.ts`) and the label does not know where it
-  is shown.
+- **A leaf's title inside a section. Take this first.** Salad's entries read
+  "Letters: 5x5 A~C Easy" under a section already titled "Letters", because a
+  title is the params label (`engine/param-label.ts`) and the label does not
+  know where it is shown. Since 2026-10-05 that is every game that calls
+  `rulesetItem`, and it is worst where a ruleset has the game's own name:
+  "Ascent: 6x7 Easy", under "Ascent", in Ascent, and the same in Seismic and
+  Unequal. It is also cheap now. The section's title and the label's first
+  word come from the one declaration, and `presetMenu` builds both, so it can
+  leave the word off a leaf inside its own section while `describeParams`
+  keeps it for the type header, which is shown with no section around it.
+  What that costs is "the menu and the header name one board one way"
+  (`ts-engine`, "One describer labels every params set"), which would become
+  "one way, less the section's word"; and every test that reads a title
+  through `presetMenu`.
 
 ## What Changes
 
