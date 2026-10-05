@@ -18,6 +18,9 @@
  * the Type menu of one game has learned where the tier is in all of them. The
  * words are each game's, and a field whose words are `null` is left out, which
  * is how a default goes unsaid.
+ *
+ * The preset menu gives each ruleset a section headed by its name, and a line
+ * inside one leaves that name off: "7x7 Easy" under "Seismic".
  */
 
 import type { ParamConfigItem, ParamLabel, PresetMenu } from "./game.ts";
@@ -52,8 +55,8 @@ export function choiceName<P>(
   return name;
 }
 
-/** The label of params `p`, composed from the game's `paramConfig`. */
-export function describeParams<P>(
+/** The label of `p` after its ruleset's name: every slot's words. */
+function describeSlots<P>(
   game: { paramConfig?: readonly ParamConfigItem<P>[] },
   p: P,
 ): string {
@@ -69,55 +72,70 @@ export function describeParams<P>(
   }
   const body = [...slots.size, ...slots.kind, ...slots.tier].join(" ");
   const tails = slots.tail.join(", ");
-  const main = body && tails ? `${body}, ${tails}` : body || tails;
+  return body && tails ? `${body}, ${tails}` : body || tails;
+}
+
+/** The label of params `p`, composed from the game's `paramConfig`. */
+export function describeParams<P>(
+  game: { paramConfig?: readonly ParamConfigItem<P>[] },
+  p: P,
+): string {
+  const slots = describeSlots(game, p);
   const ruleset = rulesetField(game);
-  return ruleset ? `${ruleset.choices[ruleset.get(p)]}: ${main}` : main;
+  return ruleset ? `${ruleset.choices[ruleset.get(p)]}: ${slots}` : slots;
 }
 
 /** A preset menu with every leaf titled. */
 export interface TitledPresetMenu<P> {
+  /** What the menu shows on this line. */
   title: string;
+  /** A leaf's name wherever no section stands around it: the type header, a
+   * test's case name. It differs from `title` only under a ruleset's section,
+   * whose heading has already said the label's first word. */
+  label?: string;
   params?: P;
   submenu?: TitledPresetMenu<P>[];
 }
 
 /**
- * The game's preset menu with each leaf titled: its own name where upstream
- * gave it one, and its params' label otherwise. What the app's Type menu shows,
- * and what a test reading a title should read.
+ * The game's preset menu with each leaf titled and labeled: its own name where
+ * upstream gave it one, and its params' label otherwise. What the app's Type
+ * menu shows.
  */
 export function presetMenu<P>(game: {
   paramConfig?: readonly ParamConfigItem<P>[];
   presets(): PresetMenu<P>;
 }): TitledPresetMenu<P> {
-  const walk = (menu: PresetMenu<P>): TitledPresetMenu<P> => {
-    if (menu.submenu)
-      return { title: menu.title ?? "", submenu: menu.submenu.map(walk) };
+  const leaf = (menu: PresetMenu<P>, sectioned: boolean): TitledPresetMenu<P> => {
     const params = menu.params as P;
-    return { title: menu.title ?? describeParams(game, params), params };
+    const label = menu.title ?? describeParams(game, params);
+    const title = sectioned ? (menu.title ?? describeSlots(game, params)) : label;
+    return { title, label, params };
   };
-  return byRuleset(game, walk(game.presets()));
-}
+  const walk = (menu: PresetMenu<P>): TitledPresetMenu<P> =>
+    menu.submenu
+      ? { title: menu.title ?? "", submenu: menu.submenu.map(walk) }
+      : leaf(menu, false);
 
-/**
- * `menu` with a section for each ruleset its presets hold, in the field's
- * order and under the ruleset's name, so two puzzles' boards are never one
- * list. The game writes its presets flat: a section of its own could mix them.
- */
-function byRuleset<P>(
-  game: { paramConfig?: readonly ParamConfigItem<P>[] },
-  menu: TitledPresetMenu<P>,
-): TitledPresetMenu<P> {
+  const root = game.presets();
   const item = rulesetField(game);
-  const leaves = menu.submenu ?? [];
-  if (item === null) return menu;
+  if (item === null) return walk(root);
+  // The game writes its presets flat: a section of its own could mix rulesets.
+  const leaves = root.submenu ?? [];
   if (leaves.some((m) => m.submenu))
     throw new Error("a game with a ruleset lists its presets flat");
   const sections = item.choices
     .map((title, i) => ({
       title,
-      submenu: leaves.filter((m) => item.get(m.params as P) === i),
+      members: leaves.filter((m) => item.get(m.params as P) === i),
     }))
-    .filter((s) => s.submenu.length > 0);
-  return sections.length > 1 ? { ...menu, submenu: sections } : menu;
+    .filter((s) => s.members.length > 0);
+  if (sections.length < 2) return walk(root);
+  return {
+    title: root.title ?? "",
+    submenu: sections.map((s) => ({
+      title: s.title,
+      submenu: s.members.map((m) => leaf(m, true)),
+    })),
+  };
 }

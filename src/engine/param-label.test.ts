@@ -95,14 +95,39 @@ describe("presetMenu gives each ruleset a section", () => {
   it("sections interleaved presets in the field's order, keeping each one's", () => {
     const menu = menuOf([fancy, base, { ...fancy, w: 9 }, { ...base, w: 9 }]);
     expect(menu.submenu?.map((s) => s.title)).toEqual(["Plain", "Fancy"]);
-    expect(menu.submenu?.[1]?.submenu?.map((m) => m.title)).toEqual([
+    expect(menu.submenu?.[1]?.submenu?.map((m) => m.label)).toEqual([
       "Fancy: 7x7 Normal, 5 things",
       "Fancy: 9x7 Normal, 5 things",
     ]);
   });
 
-  it("leaves a menu of one ruleset flat", () => {
-    expect(menuOf([base, { ...base, w: 9 }]).submenu?.[0]?.params).toEqual(base);
+  it("leaves the heading's word off the lines beneath it", () => {
+    const menu = menuOf([fancy, base, { ...fancy, w: 9 }]);
+    expect(menu.submenu?.[1]?.submenu?.map((m) => m.title)).toEqual([
+      "7x7 Normal, 5 things",
+      "9x7 Normal, 5 things",
+    ]);
+  });
+
+  it("leaves a menu of one ruleset flat, where each line names it", () => {
+    const flat = menuOf([fancy, { ...fancy, w: 9 }]).submenu ?? [];
+    expect(flat[0]?.params).toEqual(fancy);
+    expect(flat.map((m) => m.title)).toEqual(flat.map((m) => m.label));
+    expect(flat[0]?.title).toBe("Fancy: 7x7 Normal, 5 things");
+  });
+
+  it("keeps a named preset's name under a heading", () => {
+    const menu = presetMenu({
+      paramConfig: config,
+      presets: () => ({
+        title: "Type",
+        submenu: [{ params: base }, { title: "Standard", params: fancy }],
+      }),
+    });
+    expect(menu.submenu?.[1]?.submenu?.[0]).toMatchObject({
+      title: "Standard",
+      label: "Standard",
+    });
   });
 
   it("refuses a section of the game's own, which could mix them", () => {

@@ -77,6 +77,7 @@ describe("Flood params", () => {
     expect(menu.submenu).toHaveLength(7);
     expect(menu.submenu?.[0]).toEqual({
       title: "12x12 Easy",
+      label: "12x12 Easy",
       params: { w: 12, h: 12, colors: 6, leniency: 5 },
     });
     expect(menu.submenu?.[5]?.title).toBe("12x12, 3 colors");

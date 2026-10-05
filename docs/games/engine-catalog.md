@@ -1085,10 +1085,21 @@ Call it wherever you would have asked `game.validateParams`.
 unnamed preset with it. The preset menu, the type header of a custom board and
 every test that reads a title go through here, so the menu and the header
 cannot name one board two ways. A game with rulesets has its ruleset's name in
-front of the label and a section of the menu for each.
+front of the label and a section of the menu for each; a leaf's `title` is its
+line in the menu, which leaves that name off under the ruleset's heading, and
+its `label` is the whole name.
 `choiceName(config, kw, index)` is a choice's one name. Declaring:
 [`mechanics.md`](./mechanics.md) § "Params are declared once, on
 `paramConfig`".
+
+### `preset-grid.ts` — the conventional preset menu
+
+`presetGrid(paramConfig, boards, { tiers?, variants? })` is a game's
+`presets()`: each board at every tier of its difficulty item, then one board
+for each modifier or kind. `MENU_SECTION_LINES` is the most lines a section
+holds. The shape is held for every game by `preset-menu-shape.test.ts`. How to
+choose the boards: [`mechanics.md`](./mechanics.md) § "The preset menu is a
+grid".
 
 ### `ruleset.ts` — the puzzles a game plays on one board
 

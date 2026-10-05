@@ -103,13 +103,16 @@ export interface SticksHint {
 
 // --- params -----------------------------------------------------------------
 
+// Upstream's two sizes and a smaller one. A larger third was measured and
+// left out: one 13x13 deal took over seven seconds (2026-10-05, loaded).
 const PRESETS: SticksParams[] = [
+  { w: 5, h: 5, blackpc: 20, symm: SYMM_ROT2 },
   { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2 },
   { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2 },
 ];
 
 export function defaultParams(): SticksParams {
-  return { ...PRESETS[0] };
+  return { ...PRESETS[1] };
 }
 
 export function presets(): PresetMenu<SticksParams> {

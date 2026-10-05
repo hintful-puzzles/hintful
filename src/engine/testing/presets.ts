@@ -22,7 +22,8 @@ export function firstLeaf<P>(menu: PresetMenu<P>): P {
 }
 
 /**
- * Every leaf preset a game offers, with the title its menu shows.
+ * Every leaf preset a game offers, titled with its label: the name that tells
+ * it from every other preset of the game, whatever section it sits in.
  *
  * **The full population**, which the slow tier walks. A sweep that cannot
  * afford all of it slices with {@link axisSlice} rather than inventing a key of
@@ -35,7 +36,7 @@ export function leafPresets<P>(game: {
 }): { title: string; params: P }[] {
   const walk = (menu: TitledPresetMenu<P>): { title: string; params: P }[] =>
     menu.params !== undefined
-      ? [{ title: menu.title, params: menu.params }]
+      ? [{ title: menu.label ?? menu.title, params: menu.params }]
       : (menu.submenu ?? []).flatMap(walk);
   return walk(presetMenu(game));
 }

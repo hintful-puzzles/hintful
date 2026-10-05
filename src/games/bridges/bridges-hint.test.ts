@@ -61,14 +61,11 @@ const REASON_KINDS: Record<Kind, true> = {
 };
 
 /**
- * The premise no *shipped* board can reach, with its reason. Every preset
- * Bridges offers has `allowloops` on, and the loop rung is the only one that
- * asks whether they are off, so the whole ladder can be certified by
- * `bridges-ladder.test.ts` and this arm still never speak. It is covered
- * instead by the loops-forbidden shapes below, which a player reaches through
- * the Type dialog.
+ * The premises no *shipped* board can reach, with their reasons. None: the
+ * loop rung speaks only where loops are forbidden, and the menu's last board
+ * forbids them.
  */
-const UNREACHED_BY_PRESETS: Kind[] = ["wouldCloseLoop"];
+const UNREACHED_BY_PRESETS: Kind[] = [];
 
 /** Five, because the two connectivity arms are the rare ones: `mustReachOut`
  * fires on roughly one board in ten and three seeds miss it outright. */
@@ -171,11 +168,6 @@ describe("the corpus reaches every premise, and the ledger says which it cannot"
     // Exactly the ledger, in both directions: an arm that starts firing on a
     // shipped board fails here just as loudly as one that stops.
     expect(missing.sort()).toEqual([...UNREACHED_BY_PRESETS].sort());
-    // And the ledger's reason is derived rather than observed: the loop rung
-    // returns at once when loops are allowed, and every preset allows them. A
-    // preset that stopped allowing them would make the entry wrong, and this is
-    // what notices.
-    expect(BRIDGES_PRESETS.every((p) => p.allowloops)).toBe(true);
   });
 });
 

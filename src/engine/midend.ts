@@ -1360,6 +1360,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       }
       return {
         title: menu.title,
+        label: menu.label ?? menu.title,
         params: menu.params ? this.game.encodeParams(menu.params, true) : "",
       };
     };

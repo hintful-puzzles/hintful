@@ -20,7 +20,7 @@ UndeadMistake>`: a grid in which every cell is either a fixed diagonal mirror
 Ghost, Vampire, or Zombie — in every monster cell. Params SHALL be `w`, `h`, and
 `diff` (Easy, Normal, or `Unreasonable`, held as the values `"easy"`, `"normal"`
 and `"tricky"`), encoded `{w}x{h}` without `full` and `{w}x{h}d{c}` with `full`
-(`c` = `e`/`n`/`t`), with the upstream preset list. The top tier is named
+(`c` = `e`/`n`/`t`), with presets at 4×4, 5×5 and 7×7, each at every tier. The top tier is named
 `Unreasonable` rather than upstream's `Tricky` because its boards can require
 the forcing rung, which runs the deduction fixpoint from a hypothesis; its
 difficulty character stays `t`, so an existing game ID names the same board.

@@ -85,11 +85,13 @@ const presetsOfSize = (size: number): BridgesParams[] =>
     difficulty,
   }));
 
-/** Square 7, 10 and 15 boards at every tier, as upstream ships them. */
+/** Square 7, 10 and 15 boards at every tier, as upstream ships them, and one
+ * board where loops are forbidden. */
 export const BRIDGES_PRESETS: BridgesParams[] = [
   ...presetsOfSize(7),
   ...presetsOfSize(10),
   ...presetsOfSize(15),
+  { ...presetsOfSize(10)[1], allowloops: false },
 ];
 
 export function defaultParams(): BridgesParams {

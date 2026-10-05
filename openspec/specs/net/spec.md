@@ -18,8 +18,7 @@ square. The player SHALL rotate tiles until every tile is connected to the sourc
 Params SHALL be `w`, `h`, `wrapping` and `barrierProbability`, encoded
 `{w}x{h}[w][b{prob}]` (`w` = wrapping, the `b` suffix only in the full encoding). Decoding
 SHALL skip upstream's `a`, which asks for a board with no promised single answer, and
-encoding SHALL never write it. Upstream's presets SHALL be offered, its two 13×11 boards (plain and
-wrapping) turned to 11×13 so that no preset draws wider than tall. `validateParams` SHALL reject a
+encoding SHALL never write it. Upstream's five sizes SHALL be offered, its 13×11 board turned to 11×13 so that no preset draws wider than tall, and one wrapping board. `validateParams` SHALL reject a
 `wrapping` board with a side of length 2.
 
 The game SHALL provide `solve` and `statusbarText`, and SHALL NOT provide `textFormat`. It

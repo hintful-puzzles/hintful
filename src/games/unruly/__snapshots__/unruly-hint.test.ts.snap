@@ -6,6 +6,6 @@ exports[`unruly: pinned hint positions > says, at each pin 1`] = `
   "groupedPlan": "The outlined cells are already black, so this cell would make three in a row: it must be white.",
   "nearcomplete": "The last black in this column fits only in an outlined cell without making three whites, so this cell must be white.",
   "threes": "The outlined cells are already black, so this cell would make three in a row: it must be white.",
-  "unique": "This column's blacks all sit where the outlined column's do, so a black in this cell would copy that column: it must be white.",
+  "unique": "This column's blacks all sit where the outlined column's do, so a black in this cell would copy it: it must be white.",
 }
 `;

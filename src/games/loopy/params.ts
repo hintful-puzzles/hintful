@@ -186,24 +186,24 @@ const preset = (w: number, h: number, diff: number, type: number): LoopyParams =
   type,
 });
 
+const SQUARE_TIERS = [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD];
+
+// Squares as a grid of sizes by tiers, then one board of each of four other
+// tilings, which fills a section.
 const PRESETS_TOP: LoopyParams[] = [
-  preset(7, 7, DIFF_EASY, 0),
-  preset(10, 10, DIFF_EASY, 0),
-  preset(7, 7, DIFF_NORMAL, 0),
-  preset(10, 10, DIFF_NORMAL, 0),
-  preset(7, 7, DIFF_HARD, 0),
-  preset(10, 10, DIFF_HARD, 0),
+  ...SQUARE_TIERS.map((diff) => preset(7, 7, diff, 0)),
+  ...SQUARE_TIERS.map((diff) => preset(10, 10, diff, 0)),
   preset(9, 14, DIFF_HARD, 1), // Triangular
   preset(7, 7, DIFF_HARD, 3), // Snub-Square
   preset(9, 9, DIFF_HARD, 4), // Cairo
   preset(4, 6, DIFF_HARD, 7), // Kites
-  preset(10, 10, DIFF_HARD, 11), // Penrose (kite/dart)
-  preset(10, 10, DIFF_HARD, 12), // Penrose (rhombs)
 ];
 
 // A tiling that cannot turn has sizes of its own that draw taller than wide,
 // chosen to keep the drawn area of upstream's landscape preset.
 const PRESETS_MORE: LoopyParams[] = [
+  preset(10, 10, DIFF_HARD, 11), // Penrose (kite/dart)
+  preset(10, 10, DIFF_HARD, 12), // Penrose (rhombs)
   preset(10, 10, DIFF_HARD, 2), // Honeycomb
   preset(4, 5, DIFF_HARD, 5), // Great-Hexagonal
   preset(3, 6, DIFF_HARD, 14), // Kagome

@@ -18,6 +18,7 @@
  * hinting game at once, without any per-game color knowledge.
  */
 import { describe, expect, it } from "vitest";
+import { permitsSearch } from "./difficulty.ts";
 import { Midend } from "./midend.ts";
 import { declaresNoMarks, gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
@@ -45,6 +46,7 @@ const MAX_UNMARKED_OPENERS = 4;
 describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: the hint overlay survives the render cache`, () => {
+      let shown = 0;
       for (const { title, params } of gatePresets(name, game)) {
         const seed = `${name}/${title}`;
         const midend = new Midend(game);
@@ -65,7 +67,11 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
           // a cached renderer this frame's *only* difference is the
           // overlay — the exact frame the bug class makes blank.
           const hintErr = midend.hint();
+          // A board whose tier allows trial and error may have nothing to
+          // deduce, and then it has no overlay to lose.
+          if (hintErr !== null && permitsSearch(game, params)) break;
           expect(hintErr, `${seed}: hint refused on the board`).toBeNull();
+          shown++;
           const step = midend.activeHintStep();
           expect(step, `${seed}: no step on display`).not.toBeNull();
           if (!step) return;
@@ -96,6 +102,7 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
           midend.playMoves([step.move]);
         }
       }
+      expect(shown, `${name}: no board displayed a hint`).toBeGreaterThan(0);
     });
   }
 });

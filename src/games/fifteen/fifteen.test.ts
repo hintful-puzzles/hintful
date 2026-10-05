@@ -92,10 +92,12 @@ describe("Fifteen params", () => {
     expect(paramsError(fifteenGame, { w: 2, h: 2 }, true)).toBeNull();
   });
 
-  it("offers the 4x4 preset", () => {
+  it("offers three sizes, the default in the middle", () => {
     const menu = presetMenu(fifteenGame);
     expect(menu.submenu?.map((s) => [s.title, s.params])).toEqual([
+      ["3x3", { w: 3, h: 3 }],
       ["4x4", { w: 4, h: 4 }],
+      ["5x5", { w: 5, h: 5 }],
     ]);
   });
 });

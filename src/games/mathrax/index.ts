@@ -149,9 +149,12 @@ const PRESETS: MathraxParams[] = [
   { o: 5, diff: "easy", options: OPTIONSMASK },
   { o: 5, diff: "normal", options: OPTIONSMASK },
   { o: 5, diff: "tricky", options: OPTIONSMASK },
+  { o: 5, diff: "recursive", options: OPTIONSMASK },
   { o: 6, diff: "easy", options: OPTIONSMASK },
   { o: 6, diff: "normal", options: OPTIONSMASK },
   { o: 6, diff: "tricky", options: OPTIONSMASK },
+  { o: 6, diff: "recursive", options: OPTIONSMASK },
+  // The three large sizes at one tier each, which keeps the list to twelve.
   { o: 7, diff: "normal", options: OPTIONSMASK },
   { o: 8, diff: "normal", options: OPTIONSMASK },
   { o: 9, diff: "normal", options: OPTIONSMASK },

@@ -433,8 +433,8 @@ describe("Midend params + presets", () => {
   it("getPresets flattens the submenu with encoded params", () => {
     const m = new Midend(fakeGame);
     expect(m.getPresets()).toEqual([
-      { title: "Easy", params: "t2" },
-      { title: "Hard", params: "t9" },
+      { title: "Easy", label: "Easy", params: "t2" },
+      { title: "Hard", label: "Hard", params: "t9" },
     ]);
   });
 

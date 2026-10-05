@@ -58,7 +58,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 // --- presets ----------------------------------------------------------
 
 export function presets() {
-  return { title: "Type", submenu: [{ params: { w: 4, h: 4 } }] };
+  return { submenu: [3, 4, 5].map((n) => ({ params: { w: n, h: n } })) };
 }
 
 // --- completion / parity ----------------------------------------------

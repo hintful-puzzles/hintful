@@ -18,7 +18,7 @@ color pegs drawn from `ncolors` colors within `nguesses` guess rows. Params SHAL
 be `ncolors`, `npegs`, `nguesses`, `allowBlank`, and `allowMultiple`, encoded
 `c{ncolors}p{npegs}g{nguesses}{b|B}{m|M}` with lenient decode (unknown letters
 ignored). The two upstream presets — **Standard** (`6,4,10,false,true`) and
-**Super** (`8,5,12,false,true`) — SHALL be offered. `validateParams` SHALL reject
+**Super** (`8,5,12,false,true`) — SHALL be offered, and a third that is Standard with duplicates forbidden. `validateParams` SHALL reject
 `ncolors < 2` or `npegs < 2`, `ncolors > 10`, `nguesses < 1`, and
 `allowMultiple = false` with `ncolors < npegs`. The game SHALL provide
 `statusbarText`, `solve` and `findMistakes`, and SHALL NOT provide `textFormat`.

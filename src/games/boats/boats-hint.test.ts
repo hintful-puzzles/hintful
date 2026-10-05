@@ -41,23 +41,49 @@ import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { solveToGrid } from "./solver.ts";
 import {
   type BoatsMove,
+  type BoatsParams,
   type BoatsState,
   boardOf,
+  DIFF_EASY,
+  DIFF_HARD,
+  DIFF_NORMAL,
+  DIFF_TRICKY,
   decodeParams,
+  defaultFleet,
   EMPTY,
   encodeParams,
   fillOf,
   isShip,
   NO_CLUE,
   newState,
-  presetParams,
   STATUS_COMPLETE,
   STATUS_INVALID,
 } from "./state.ts";
 import { validateFullState } from "./validate.ts";
 
-// The presets, by index: 0 = 6×6 Easy, 4 = 8×8 Normal, 8 = 10×10 Tricky,
-// 9 = 10×10 Hard.
+// The boards these tests were written on, by index: 0 = 6×6 Easy, 4 = 8×8
+// Normal, 8 = 10×10 Tricky, 9 = 10×10 Hard. They are kept here by their
+// params, so a change to the menu does not move a pinned board.
+const BOARDS: readonly Omit<BoatsParams, "fleetData">[] = [
+  { w: 6, h: 6, fleet: 3, diff: DIFF_EASY, strip: false },
+  { w: 6, h: 6, fleet: 3, diff: DIFF_NORMAL, strip: false },
+  { w: 6, h: 6, fleet: 3, diff: DIFF_HARD, strip: false },
+  { w: 8, h: 8, fleet: 4, diff: DIFF_EASY, strip: false },
+  { w: 8, h: 8, fleet: 4, diff: DIFF_NORMAL, strip: false },
+  { w: 8, h: 8, fleet: 4, diff: DIFF_HARD, strip: false },
+  { w: 10, h: 10, fleet: 4, diff: DIFF_EASY, strip: false },
+  { w: 10, h: 10, fleet: 4, diff: DIFF_NORMAL, strip: false },
+  { w: 10, h: 10, fleet: 4, diff: DIFF_TRICKY, strip: false },
+  { w: 10, h: 10, fleet: 4, diff: DIFF_HARD, strip: false },
+  { w: 10, h: 12, fleet: 5, diff: DIFF_TRICKY, strip: false },
+  { w: 10, h: 12, fleet: 5, diff: DIFF_HARD, strip: false },
+];
+
+function presetParams(i: number): BoatsParams {
+  const p = BOARDS[i];
+  return { ...p, fleetData: defaultFleet(p.fleet) };
+}
+
 const TIERS = [
   [0, "Easy"],
   [4, "Normal"],

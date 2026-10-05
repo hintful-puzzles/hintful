@@ -21,8 +21,7 @@ number of towers visible from that edge (a taller tower hides every shorter one
 behind it). Params SHALL be `w` and `diff` (Easy, Normal, Tricky, or
 Unreasonable, held as the values `"easy"`, `"hard"`, `"extreme"` and
 `"unreasonable"`), encoded `{w}d{c}` when full (`c` = `e`/`h`/`x`/`u`) and `{w}`
-otherwise, with presets at 4×4 Easy, 5×5 Easy/Normal, and 6×6
-Easy/Normal/Tricky/Unreasonable. `validateParams` SHALL require `3 ≤ w ≤ 9` and
+otherwise, with presets at 4×4, 5×5 and 6×6, each at every tier. `validateParams` SHALL require `3 ≤ w ≤ 9` and
 (when full) a known difficulty. The game SHALL provide `solve` and `textFormat`, and SHALL NOT provide `statusbarText`.
 
 #### Scenario: Params round-trip

@@ -11,11 +11,10 @@ import { Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle } from "./worker.ts";
 import { TsWorkerPuzzle } from "./worker-adapter.ts";
 
-function magnetsPuzzle() {
-  const adapter = new TsWorkerPuzzle(
-    "magnets",
-    createTsEngine("magnets") as EngineCore,
-  );
+const magnetsPuzzle = () => puzzleOf("magnets");
+
+function puzzleOf(id: string) {
+  const adapter = new TsWorkerPuzzle(id, createTsEngine(id) as EngineCore);
   let board = "";
   adapter.setCallbacks(
     (n: ChangeNotification) => {
@@ -24,7 +23,7 @@ function magnetsPuzzle() {
     () => {},
   );
   const puzzle = Reflect.construct(Puzzle, [
-    "magnets",
+    id,
     {} as unknown as Worker,
     adapter as unknown as RemoteWorkerPuzzle,
     adapter.getStaticProperties() as PuzzleStaticAttributes,
@@ -59,5 +58,19 @@ describe("a board dealt to fit the screen", () => {
     const description = await puzzle.getParamsDescription("7x5dt");
     expect(description.length).toBeGreaterThan(0);
     expect(titles).not.toContain(description);
+  });
+});
+
+describe("a preset under a ruleset's heading", () => {
+  it("leaves the ruleset off its menu line and keeps it in the header", async () => {
+    const { puzzle } = puzzleOf("seismic");
+    const presets = await puzzle.getPresets(true);
+    const heading = presets.findIndex((p) => p.title === "Tectonic");
+    const first = presets[heading + 1];
+    expect(heading).toBeGreaterThan(0);
+    expect(first?.title).toBe("4x4 Easy");
+    expect(await puzzle.getParamsDescription(first?.params ?? "")).toBe(
+      "Tectonic: 4x4 Easy",
+    );
   });
 });

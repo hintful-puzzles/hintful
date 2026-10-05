@@ -254,6 +254,8 @@ export function sEClear(
 
 // --- params ---------------------------------------------------------------
 
+// Five sizes, the two non-square ones stopping a tier short: every cell
+// deals in well under a second, and the cut is what keeps the list to twelve.
 const PRESETS: TracksParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY, singleOnes: true },
   { w: 8, h: 8, diff: DIFF_TRICKY, singleOnes: true },

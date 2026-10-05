@@ -150,6 +150,7 @@ export function presets(): PresetMenu<GuessParams> {
     submenu: [
       { title: "Standard", params: standard },
       { title: "Super", params: { ...standard, ncolors: 8, npegs: 5, nguesses: 12 } },
+      { params: { ...standard, allowMultiple: false } },
     ],
   };
 }

@@ -772,7 +772,7 @@ export class Puzzle {
       presets.find((preset) => preset.params === params) ??
       presets.find((preset) => preset.params === turned);
     if (preset) {
-      return preset.title;
+      return preset.label ?? preset.title;
     }
     try {
       return await this.workerPuzzle.describeParams(params);

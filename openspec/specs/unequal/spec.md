@@ -23,7 +23,7 @@ a bar between two cells means they do not). Params SHALL be `order`, `mode`
 `Unreasonable`, held as the values `"trivial"`, `"easy"`, `"tricky"`,
 `"extreme"` and `"recursive"`), encoded `{order}` with an `a` suffix for
 Adjacent mode and a `d{c}` suffix for difficulty when full
-(`c` = `t`/`e`/`k`/`x`/`r`), with the upstream preset list. The top tier is
+(`c` = `t`/`e`/`k`/`x`/`r`), with each mode's presets a grid of sizes by tiers. The top tier is
 named `Unreasonable` rather than upstream's `Recursive` because it branches and
 backtracks, which is the one thing the collection reserves that name for; its
 difficulty character stays `r`, so an existing game ID names the same board. The

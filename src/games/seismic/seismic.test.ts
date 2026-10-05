@@ -225,8 +225,9 @@ describe("seismic params", () => {
     // what upstream's menu does.
     const [seismic, tectonic] = presetMenu(seismicGame).submenu ?? [];
     expect(seismic?.title).toBe("Seismic");
-    expect(seismic?.submenu?.[2]?.title).toBe(`Seismic: 6x6 ${DIFF_NAMES[0]}`);
-    expect(tectonic?.submenu?.[1]?.title).toBe(`Tectonic: 4x4 ${DIFF_NAMES[1]}`);
+    expect(seismic?.submenu?.[2]?.label).toBe(`Seismic: 6x6 ${DIFF_NAMES[0]}`);
+    expect(tectonic?.submenu?.[1]?.label).toBe(`Tectonic: 4x4 ${DIFF_NAMES[1]}`);
+    expect(tectonic?.submenu?.[1]?.title).toBe(`4x4 ${DIFF_NAMES[1]}`);
   });
 
   it("round-trips the custom-params form", () => {

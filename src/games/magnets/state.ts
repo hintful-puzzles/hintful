@@ -136,6 +136,7 @@ const PRESETS: MagnetsParams[] = [
   { w: 7, h: 8, diff: DIFF_EASY, stripclues: false },
   { w: 7, h: 8, diff: DIFF_TRICKY, stripclues: false },
   { w: 7, h: 8, diff: DIFF_TRICKY, stripclues: true },
+  { w: 9, h: 10, diff: DIFF_EASY, stripclues: false },
   { w: 9, h: 10, diff: DIFF_TRICKY, stripclues: false },
   { w: 9, h: 10, diff: DIFF_TRICKY, stripclues: true },
 ];

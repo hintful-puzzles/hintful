@@ -124,7 +124,11 @@ import {
   validateParams,
 } from "./state.ts";
 
-/** Upstream's `game_presets`, with its non-`SLOW_SYSTEM` entries always shown. */
+/**
+ * The 6x6 board at its first three tiers, the 9x9 at all six, then one board
+ * for each of X, Jigsaw and Killer. Twelve lines is what a section holds, so
+ * the 4x4, 12x12 and 16x16 boards upstream listed are a Custom away.
+ */
 function presets(): PresetMenu<SoloParams> {
   const P = (
     c: number,
@@ -139,30 +143,21 @@ function presets(): PresetMenu<SoloParams> {
   });
   const K = DIFF_KMINMAX;
   const submenu = [
-    P(2, 2, SYMM_ROT2, DIFF_BLOCK, K, false, false),
+    // A 6×6 has fewer places to hide a `set` deduction than a 9×9, so Hard
+    // costs its generator roughly fifty times what 3x3 Hard does, and the
+    // small board stops at Tricky.
+    P(2, 3, SYMM_ROT2, DIFF_BLOCK, K, false, false),
     P(2, 3, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
-    // Upstream offers the 6×6 board at one tier. Size and difficulty are
-    // independent axes and a player who prefers the small grid should be able
-    // to pick both; these two generate and grade honestly at this size, which
-    // was measured rather than assumed. A 6×6 has fewer places to hide a `set`
-    // deduction than a 9×9, so Hard costs the generator roughly fifty times
-    // what 3x3 Hard does — a retry count, not a defect.
     P(2, 3, SYMM_ROT2, DIFF_INTERSECT, K, false, false),
-    P(2, 3, SYMM_ROT2, DIFF_SET, K, false, false),
     P(3, 3, SYMM_ROT2, DIFF_BLOCK, K, false, false),
     P(3, 3, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_SIMPLE, K, true, false),
     P(3, 3, SYMM_ROT2, DIFF_INTERSECT, K, false, false),
     P(3, 3, SYMM_ROT2, DIFF_SET, K, false, false),
-    P(3, 3, SYMM_ROT2, DIFF_SET, K, true, false),
     P(3, 3, SYMM_ROT2, DIFF_EXTREME, K, false, false),
     P(3, 3, SYMM_ROT2, DIFF_RECURSIVE, K, false, false),
-    P(3, 3, SYMM_NONE, DIFF_BLOCK, DIFF_KINTERSECT, false, true),
+    P(3, 3, SYMM_ROT2, DIFF_SIMPLE, K, true, false),
     P(9, 1, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
-    P(9, 1, SYMM_ROT2, DIFF_SIMPLE, K, true, false),
-    P(9, 1, SYMM_ROT2, DIFF_SET, K, false, false),
-    P(3, 4, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
-    P(4, 4, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
+    P(3, 3, SYMM_NONE, DIFF_BLOCK, DIFF_KINTERSECT, false, true),
   ];
   return { title: "Solo", submenu };
 }

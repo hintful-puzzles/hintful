@@ -218,17 +218,13 @@ const MAIN_PRESETS: AscentParams[] = [
   mk(8, 10, 3, MODE_RECT, false, false),
 ];
 
-// One size of each hexagonal shape: the larger ones are a Custom away. The
-// honeycomb is not the square preset transposed, as a honeycomb cannot be
+// One board of each hexagonal shape: other sizes and tiers are a Custom away.
+// The honeycomb is not the square preset transposed, as a honeycomb cannot be
 // turned on its side; 6x8 is the nearest size to upstream's 7x6 that draws
 // taller than wide.
 const HEX_PRESETS: AscentParams[] = [
   mk(6, 8, 1, MODE_HONEYCOMB, false, false),
-  mk(6, 8, 2, MODE_HONEYCOMB, false, false),
-  mk(6, 8, 3, MODE_HONEYCOMB, false, false),
   mk(7, 7, 1, MODE_HEXAGON, false, false),
-  mk(7, 7, 2, MODE_HEXAGON, false, false),
-  mk(7, 7, 3, MODE_HEXAGON, false, false),
 ];
 
 // Edges is 1to25 more than Hidato, so it has a heading of its own.

@@ -126,7 +126,7 @@ describe("salad params codec", () => {
     ]);
   });
 
-  it("gives each mode a section of the menu, Easy before Normal", () => {
+  it("gives each mode a section of the menu, each shape's tiers together", () => {
     const sections = presetMenu(saladGame).submenu ?? [];
     expect(sections.map((s) => s.title)).toEqual(["Letters", "Numbers"]);
     const total = sections.reduce((n, s) => n + (s.submenu?.length ?? 0), 0);
@@ -134,9 +134,9 @@ describe("salad params codec", () => {
     for (const s of sections) {
       const entries = s.submenu ?? [];
       expect(entries.length).toBeGreaterThan(0);
-      for (const e of entries) expect(e.title.startsWith(`${s.title}: `)).toBe(true);
-      const tiers = entries.map((e) => e.params?.diff ?? -1);
-      expect(tiers).toEqual([...tiers].sort((a, b) => a - b));
+      for (const e of entries) expect(e.label).toBe(`${s.title}: ${e.title}`);
+      const sizes = entries.map((e) => e.params?.order ?? -1);
+      expect(sizes).toEqual([...sizes].sort((a, b) => a - b));
     }
   });
 

@@ -68,6 +68,7 @@ import {
   moveCursor,
   stripModifiers,
 } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
@@ -130,21 +131,11 @@ export interface TowersMistake {
   y: number;
 }
 
-const PRESETS: TowersParams[] = [
-  { w: 4, diff: "easy" },
-  { w: 5, diff: "easy" },
-  { w: 5, diff: "hard" },
-  { w: 6, diff: "easy" },
-  { w: 6, diff: "hard" },
-  { w: 6, diff: "extreme" },
-  { w: 6, diff: "unreasonable" },
-];
-
 function presets(): PresetMenu<TowersParams> {
-  return {
-    title: "Towers",
-    submenu: PRESETS.map((p) => ({ params: p })),
-  };
+  return presetGrid(
+    paramConfig,
+    [4, 5, 6].map((w): TowersParams => ({ w, diff: "easy" })),
+  );
 }
 
 function inGrid(w: number, x: number, y: number): boolean {

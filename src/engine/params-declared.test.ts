@@ -29,8 +29,15 @@ function leaves(menu: PresetMenu<unknown>): { name: string | null; params: unkno
   return [{ name: menu.title ?? null, params: menu.params }];
 }
 
-function titles(menu: TitledPresetMenu<unknown>): string[] {
-  return menu.submenu ? menu.submenu.flatMap(titles) : [menu.title];
+function labels(menu: TitledPresetMenu<unknown>): string[] {
+  return menu.submenu ? menu.submenu.flatMap(labels) : [menu.label ?? ""];
+}
+
+/** Each section's lines, as the menu shows them. */
+function sections(menu: TitledPresetMenu<unknown>): string[][] {
+  const subs = menu.submenu ?? [];
+  const lines = subs.filter((m) => !m.submenu).map((m) => m.title);
+  return [lines, ...subs.filter((m) => m.submenu).flatMap(sections)];
 }
 
 describe("every paramConfig item says what it means", () => {
@@ -88,8 +95,8 @@ describe("one describer labels every params set", () => {
   it.each(ids)("%s: every preset is valid and has a label of its own", (id) => {
     const g = game(id);
     const menu = presetMenu(g);
-    const all = titles(menu);
-    for (const title of all) {
+    const all = labels(menu);
+    for (const title of [...all, ...sections(menu).flat()]) {
       expect(title, `${id}: an empty label`).not.toBe("");
       expect(/NaN|undefined|null/.test(title), `${id}: "${title}"`).toBe(false);
     }
@@ -98,6 +105,10 @@ describe("one describer labels every params set", () => {
       expect(seen.has(title), `${id}: two presets are both "${title}"`).toBe(false);
       seen.add(title);
     }
+    // A line may be shorter than its label, never so short that two lines
+    // under one heading read the same.
+    for (const lines of sections(menu))
+      expect(new Set(lines).size, `${id}: ${lines.join(" | ")}`).toBe(lines.length);
     for (const leaf of leaves(g.presets())) {
       labeled++;
       expect(paramsError(g, leaf.params, true), `${id}: preset refused`).toBeNull();

@@ -1,6 +1,7 @@
 # review-preset-counts-across-the-catalog
 
-**Status: scaffolded, not started (2026-10-05).** Asked for by the owner on
+**Status: decided and applied (2026-10-05).** The measurements are
+`census.md` and what each menu became is `menus.md`. Asked for by the owner on
 seeing Salad's menu after `offer-salad-normal-presets`: *"it has really a lot
 now. Can you please scaffold a change for us to review the number of presets
 across all games, and to arrive at something more consistent catalog-wide?"*
@@ -49,38 +50,30 @@ question a player meets in the picker:
   a tier no preset holds in Loopy, Mathrax, Unequal and Group. A menu that
   stops short of a tier and a menu with every size at every tier are the two
   ends of one decision.
-- **A leaf's title inside a section. Take this first.** Salad's entries read
-  "Letters: 5x5 A~C Easy" under a section already titled "Letters", because a
-  title is the params label (`engine/param-label.ts`) and the label does not
-  know where it is shown. Since 2026-10-05 that is every game that calls
-  `rulesetItem`, and it is worst where a ruleset has the game's own name:
-  "Ascent: 6x7 Easy", under "Ascent", in Ascent, and the same in Seismic and
-  Unequal. It is also cheap now. The section's title and the label's first
-  word come from the one declaration, and `presetMenu` builds both, so it can
-  leave the word off a leaf inside its own section while `describeParams`
-  keeps it for the type header, which is shown with no section around it.
-  What that costs is "the menu and the header name one board one way"
-  (`ts-engine`, "One describer labels every params set"), which would become
-  "one way, less the section's word"; and every test that reads a title
-  through `presetMenu`.
+- **A leaf's title inside a section. Done 2026-10-05**
+  (`leave-the-headings-word-off-a-preset`): a line under a ruleset's heading
+  leaves the ruleset's name off, and the type header keeps it.
 
 ## What Changes
 
-To be decided with the owner; this proposal claims only the measurements.
-The shape it should arrive at is a **convention** (AGENTS.md § "Convention
-over configuration"): a rule a new game follows without choosing, with a
-game that needs otherwise saying why. Candidates to weigh:
+Decided with the owner, 2026-10-05, from `census.md`:
 
-- a target range for a menu's length, and what a game past it does (sections,
-  or fewer sizes);
-- when a mode is a section, when it is a word in each title, and whether a
-  title drops the word its section already says;
-- whether a menu is a grid of sizes by tiers, a ladder (each step up is
-  larger *and* harder), or the author's pick, and which of those the catalog
-  wants by default;
-- whether the menu is derived from a smaller declaration (sizes, tiers,
-  modes) instead of written out, which is what would make the rule hold by
-  construction.
+- **A menu is a grid**: each board at every tier, in the order the game lists
+  its boards. Twenty-six of the tiered games were already that or that with
+  corners cut.
+- **A section holds at most twelve lines.** The cap is on lines, not on
+  sizes: a game trades sizes against tiers to fit, and a board may stop short
+  of a tier to do it.
+- **A rule modifier has one line**, after the grid, so a player can see it
+  exists. A second kind of board (Ascent's hexagonal grids) is treated the
+  same way.
+- **A game with a size offers at least three boards.**
+- Asked for in the same sitting: Unruly gains 6x6 boards.
+
+The convention is `docs/games/mechanics.md` § "The preset menu is a grid",
+`presetGrid` (`engine/preset-grid.ts`) builds it, and
+`preset-menu-shape.test.ts` holds every menu to it by its shape. What each
+menu became is `menus.md`.
 
 **The deal's cost bounds the answer.** A preset that takes seconds to deal is
 a worse offer than none (`offer-salad-normal-presets` chose its four that

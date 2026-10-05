@@ -15,8 +15,7 @@ The engine SHALL provide a registered `fifteen` game implementing
 `Game<FifteenParams, FifteenState, FifteenMove, FifteenUi, FifteenDrawState>`:
 an `w×h` grid of numbered tiles with one empty gap, solved when the tiles read
 `1..n-1` in row-major order with the gap last. Params SHALL be `w`, `h`,
-encoded `WxH` with lenient decode (a bare `W` yields a square `W×W` board). The
-single upstream preset (`4x4`) SHALL be offered, and `validateParams` SHALL
+encoded `WxH` with lenient decode (a bare `W` yields a square `W×W` board). Presets of `3x3`, `4x4` and `5x5` SHALL be offered, and `validateParams` SHALL
 reject `w < 2` or `h < 2`. The game SHALL provide `statusbarText`, `solve` and `textFormat`. It SHALL
 NOT provide a `findMistakes` hook (every reachable position is legal).
 

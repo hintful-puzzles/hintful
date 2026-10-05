@@ -115,14 +115,13 @@ describe("Twiddle params", () => {
 });
 
 describe("Twiddle presets", () => {
-  it("offers the eight upstream presets, all valid", () => {
+  it("offers upstream's presets with one orientable board, all valid", () => {
     const menu = presetMenu(twiddleGame);
     expect(menu.submenu?.map((item) => item.title)).toEqual([
       "3x3 rows only",
       "3x3",
       "3x3 orientable",
       "4x4",
-      "4x4 orientable",
       "4x4, rotating 3x3 blocks",
       "5x5, rotating 3x3 blocks",
       "6x6, rotating 4x4 blocks",

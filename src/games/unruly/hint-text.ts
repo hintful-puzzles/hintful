@@ -56,7 +56,7 @@ export const say = {
   unique: (reason: R<"unique">, m: Marked): Sentence =>
     so({
       look: phrase`${thisLine(m, reason.horizontal)}'s ${oppositeName(reason.fill)}s all sit where ${mark.the("outline", whole(CELL), m.evidence, lineName(reason.horizontal))}'s do`,
-      follows: phrase`a ${oppositeName(reason.fill)} in ${thisCell(m)} would copy that ${lineName(reason.horizontal)}`,
+      follows: phrase`a ${oppositeName(reason.fill)} in ${thisCell(m)} would copy it`,
       move: phrase`it must be ${colorName(reason.fill)}`,
     }),
 

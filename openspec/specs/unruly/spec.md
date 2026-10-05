@@ -21,8 +21,7 @@ color; an optional `unique` variant additionally forbids two identical rows or
 two identical columns. Params SHALL be `w2`, `h2` (both even and at least 6),
 `unique` (boolean), and `diff` (Easy / Normal / Tricky), encoded `{w2}x{h2}`
 with an optional `u` for the unique variant and, when `full`, `d{c}` for the
-difficulty char. The 7 upstream presets (8×8, 10×10, 14×14 across the offered
-difficulties) SHALL be offered. `validateParams` SHALL reject an odd or
+difficulty char. The presets SHALL be 6×6, 8×8, 10×10 and 14×14 boards across the offered difficulties, and one board in the unique variant. `validateParams` SHALL reject an odd or
 below-6 dimension, an unreasonably large `w2·h2`, a `unique`-mode grid too tall
 or too long for any valid set of distinct rows (the A177790 bound), and an
 unknown difficulty. The game SHALL provide `solve` and `textFormat`, and SHALL NOT provide `statusbarText`.

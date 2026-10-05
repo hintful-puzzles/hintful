@@ -46,12 +46,13 @@ export interface ParamsCase {
   readonly params: AnyParams;
 }
 
-/** Walk a preset menu to its leaves, labeling each by its title path. */
+/** Walk a preset menu to its leaves, labeling each by its section titles and
+ * its own label. */
 function presetCases(
   menu: TitledPresetMenu<AnyParams>,
   path: string[] = [],
 ): ParamsCase[] {
-  const here = [...path, menu.title].filter((t) => t.length > 0);
+  const here = [...path, menu.label ?? menu.title].filter((t) => t.length > 0);
   if (menu.params !== undefined) {
     return [{ label: `preset:${here.join("/")}`, params: { ...menu.params } }];
   }

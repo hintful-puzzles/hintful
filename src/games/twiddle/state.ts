@@ -124,7 +124,6 @@ export function presets(): PresetMenu<TwiddleParams> {
       preset(3, 3, 2, false, false),
       preset(3, 3, 2, false, true),
       preset(4, 4, 2, false, false),
-      preset(4, 4, 2, false, true),
       preset(4, 4, 3, false, false),
       preset(5, 5, 3, false, false),
       preset(6, 6, 4, false, false),

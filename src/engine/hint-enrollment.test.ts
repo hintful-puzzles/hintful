@@ -217,6 +217,11 @@ const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
     "Exercises `withTier` against a hand-written difficulty item rather than a " +
     "game, the way `hint-games.test.ts` exercises the slicing rule against a " +
     "hand-written menu: there is no presets menu in it to read.",
+  "src/engine/preset-menu-shape.test.ts":
+    "Deals no board. It writes a tier onto a preset to ask two things about the " +
+    "menu itself: which of its lines are one board (the params with the tier " +
+    "set aside), and whether a tier the menu leaves out is one any of its " +
+    "boards would accept.",
   "src/engine/params-declared.test.ts":
     "Labels the default params at every tier and deals no board: what it " +
     "checks is the words, which no board can change.",

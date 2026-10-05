@@ -19,6 +19,9 @@ export interface Modifier {
   /** The rule, as its line of the help's list says it after the words
    * (markdown, starting lower-case, ending in a full stop). */
   readonly rule: string;
+  /** For a checkbox, the value at which the rule applies. A choice bounds its
+   * rule at every value and has none. */
+  readonly when?: boolean;
 }
 
 type Slot = ParamLabel<unknown>["slot"];
@@ -83,7 +86,7 @@ export function modifierItem<P>(
     kw,
     name,
     type: "boolean",
-    modifier,
+    modifier: { ...modifier, when },
     doc: `When ${when ? "on" : "off"}, ${rule}${note}`,
     ...(slot === null
       ? {}

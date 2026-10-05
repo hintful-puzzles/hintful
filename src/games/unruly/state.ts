@@ -15,6 +15,7 @@ import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import {
   type Cell,
@@ -22,7 +23,6 @@ import {
   DIFF_COUNT,
   DIFF_EASY,
   DIFF_NAMES,
-  DIFF_NORMAL,
   DIFF_TRIVIAL,
   ONE,
   ZERO,
@@ -72,25 +72,24 @@ export interface UnrulyMistake {
 
 // --- params --------------------------------------------------------------
 
-const PRESETS: UnrulyParams[] = [
-  { w2: 8, h2: 8, unique: false, diff: DIFF_TRIVIAL },
-  { w2: 8, h2: 8, unique: false, diff: DIFF_EASY },
-  { w2: 8, h2: 8, unique: false, diff: DIFF_NORMAL },
-  { w2: 10, h2: 10, unique: false, diff: DIFF_EASY },
-  { w2: 10, h2: 10, unique: false, diff: DIFF_NORMAL },
-  { w2: 14, h2: 14, unique: false, diff: DIFF_EASY },
-  { w2: 14, h2: 14, unique: false, diff: DIFF_NORMAL },
-];
+const board = (size: number): UnrulyParams => ({
+  w2: size,
+  h2: size,
+  unique: false,
+  diff: DIFF_TRIVIAL,
+});
 
 export function defaultParams(): UnrulyParams {
-  return { ...PRESETS[0] };
+  return board(8);
 }
 
 export function presets(): PresetMenu<UnrulyParams> {
-  return {
-    title: "Size",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
+  return presetGrid(paramConfig, [6, 8, 10, 14].map(board), {
+    // The smallest board stops a tier short, which is the line the unique
+    // board takes in a section of twelve.
+    tiers: (p) => (p.w2 === 6 ? [DIFF_TRIVIAL, DIFF_EASY] : null),
+    variants: [{ ...board(8), unique: true, diff: DIFF_EASY }],
+  });
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

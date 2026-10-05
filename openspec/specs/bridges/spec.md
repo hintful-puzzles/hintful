@@ -20,7 +20,7 @@ bridges so that each island carries exactly its number of bridge-ends, at most
 directly in line and never cross an island or another bridge, and all islands
 form a single connected group. Params SHALL be `w`, `h`, `maxb`, `islands`
 (percentage island density), `expansion` (percentage), `allowloops` (boolean)
-and `difficulty` (Easy / Normal / Tricky). All 9 upstream presets SHALL be offered
+and `difficulty` (Easy / Normal / Tricky). One board that is 10×10 Normal with `allowloops = false` SHALL be offered, after all 9 upstream presets
 (7×7, 10×10, 15×15 × Easy/Normal/Tricky, each `maxb = 2`, `islands = 30`,
 `expansion = 10`, `allowloops = true`). The game SHALL provide `solve` and `textFormat`.
 

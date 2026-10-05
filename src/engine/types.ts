@@ -57,7 +57,11 @@ export type KeyLabel = {
 /** One entry in the game-type preset menu; `submenu` makes it a nested group
  * rather than a selectable preset. */
 export type PresetMenuEntry = {
+  /** The menu's line. */
   title: string;
+  /** A preset's name outside the menu, where no section heading stands over
+   * it. */
+  label?: string;
   params: string;
   submenu?: PresetMenuEntry[];
 };

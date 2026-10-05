@@ -88,15 +88,21 @@ export interface GroupParams {
   id: boolean;
 }
 
-/** Upstream `group_presets`. */
+/** A group of `w` elements at each tier up to `last`, its identity shown. */
+const upTo = (w: number, last: number): GroupParams[] =>
+  DIFF_NAMES.slice(0, last + 1).map((_, diff) => ({ w, diff, id: true }));
+
+/**
+ * Each size at the tiers its boards need, and one board with its identity
+ * hidden. Measured 2026-10-05, three deals a cell: a 6x6 dealt above Normal
+ * and an 8x8 dealt at Hard came out needing a tier less than asked, and a
+ * 12x12 took up to two seconds at Tricky and eleven at Hard.
+ */
 export const PRESETS: readonly GroupParams[] = [
-  { w: 6, diff: DIFF_NORMAL, id: true },
-  { w: 6, diff: DIFF_NORMAL, id: false },
-  { w: 8, diff: DIFF_NORMAL, id: true },
-  { w: 8, diff: DIFF_NORMAL, id: false },
-  { w: 8, diff: DIFF_HARD, id: true },
-  { w: 8, diff: DIFF_HARD, id: false },
+  ...upTo(6, DIFF_NORMAL),
+  ...upTo(8, DIFF_HARD),
   { w: 12, diff: DIFF_NORMAL, id: true },
+  { w: 8, diff: DIFF_NORMAL, id: false },
 ];
 
 export function defaultParams(): GroupParams {

@@ -83,6 +83,12 @@ const NOT_COLORS: Record<string, { snippet: string; why: string }[]> = {
   "cube/render.ts": [
     { snippet: "const t = [0, 0, 0];", why: "a 3-vector in the solid's transform" },
   ],
+  "fifteen/state.ts": [
+    { snippet: "[3, 4, 5].map((n) =>", why: "the three sizes of its preset menu" },
+  ],
+  "towers/index.ts": [
+    { snippet: "[4, 5, 6].map((w)", why: "the three sizes of its preset menu" },
+  ],
   "undead/render.ts": [
     { snippet: "const placed = [0, 0, 0];", why: "a per-monster-type tally" },
   ],

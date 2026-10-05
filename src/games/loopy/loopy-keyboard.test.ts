@@ -1,11 +1,11 @@
 /**
  * Loopy's keyboard, which upstream does not have. Three kinds of guarantee:
  *
- * 1. **A coverage proof over all 23 presets.** A plain arrow *walks* the
+ * 1. **A coverage proof over every preset.** A plain arrow *walks* the
  *    cursor along an edge, which becomes the chosen one, so an edge no walk
  *    ever takes is unselectable; Shift+arrow *aims* without moving, as the
  *    fallback. The claim is that the walk alone
- *    covers every edge of 22 presets and walk plus aim covers the 23rd
+ *    covers every edge of all presets but one and walk plus aim covers that one
  *    (Penrose kite/dart), and that is walked mechanically here per tiling
  *    rather than argued — the triangular case exhibits the tie the opposite-
  *    sense tie-break exists for, and the Penrose case pins the residue so it
@@ -40,6 +40,7 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import {
   type DrawOp,
   RecordingDrawing,
@@ -145,8 +146,9 @@ function walkCoverage(grid: Grid): { edges: Set<number>; dots: Set<number> } {
 describe("walking covers every edge, and aiming covers the rest (design D5)", () => {
   const presetList = allPresets();
 
-  it("sees all 23 presets", () => {
-    expect(presetList).toHaveLength(23);
+  it("sees every preset", () => {
+    expect(presetList).toHaveLength(leafPresets(loopyGame).length);
+    expect(presetList.length).toBeGreaterThan(20);
   });
 
   for (const [i, p] of presetList.entries()) {

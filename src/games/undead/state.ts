@@ -93,7 +93,7 @@ export interface UndeadParams {
   diff: Difficulty;
 }
 
-/** Upstream `undead_presets`. */
+/** Upstream's three sizes, each at every tier. */
 export const PRESETS: UndeadParams[] = [
   { w: 4, h: 4, diff: "easy" },
   { w: 4, h: 4, diff: "normal" },
@@ -103,6 +103,7 @@ export const PRESETS: UndeadParams[] = [
   { w: 5, h: 5, diff: "tricky" },
   { w: 7, h: 7, diff: "easy" },
   { w: 7, h: 7, diff: "normal" },
+  { w: 7, h: 7, diff: "tricky" },
 ];
 
 /** upstream DEFAULT_PRESET = 1 (4x4 Normal). */

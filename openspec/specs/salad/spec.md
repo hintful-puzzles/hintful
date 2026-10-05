@@ -309,13 +309,13 @@ A sentence that names the "might be empty" mark among a square's candidates SHAL
 
 ### Requirement: Salad's menu offers both of its difficulties
 
-Salad's presets SHALL include boards at each difficulty the game deals, so a player reaches Normal from the menu and every cross-game guard that deals from a game's presets deals a Normal Salad board. The Normal presets SHALL be shapes whose deal stays well under a second. The menu SHALL hold one section for each game mode, and within a section the Normal presets SHALL follow the Easy ones.
+Salad's presets SHALL include boards at each difficulty the game deals, so a player reaches Normal from the menu and every cross-game guard that deals from a game's presets deals a Normal Salad board. The Normal presets SHALL be shapes whose deal stays well under a second. The menu SHALL hold one section for each game mode, and within a section each shape's Normal preset SHALL follow its Easy one.
 
 #### Scenario: Normal is on the menu
 
 - **WHEN** Salad's preset menu is read
 - **THEN** it holds presets titled Normal as well as Easy, in both game modes,
-  and within each mode's section the Normal ones come last
+  and a shape offered at both has its Normal line straight after its Easy one
 
 #### Scenario: A cross-game guard deals a Normal board
 

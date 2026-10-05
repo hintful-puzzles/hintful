@@ -107,8 +107,8 @@ import {
 } from "./state.ts";
 
 /* ----------------------------------------------------------------------
- * Presets: upstream's ten, including the two 13×11 ones its `SMALL_SCREEN`
- * build leaves out (the web build showed them).
+ * Presets: upstream's five sizes, and one wrapping board. The other sizes
+ * wrap from the Custom dialog.
  */
 const PRESETS: NetParams[] = [
   { w: 5, h: 5, wrapping: false, barrierProbability: 0 },
@@ -116,11 +116,7 @@ const PRESETS: NetParams[] = [
   { w: 9, h: 9, wrapping: false, barrierProbability: 0 },
   { w: 11, h: 11, wrapping: false, barrierProbability: 0 },
   { w: 11, h: 13, wrapping: false, barrierProbability: 0 },
-  { w: 5, h: 5, wrapping: true, barrierProbability: 0 },
   { w: 7, h: 7, wrapping: true, barrierProbability: 0 },
-  { w: 9, h: 9, wrapping: true, barrierProbability: 0 },
-  { w: 11, h: 11, wrapping: true, barrierProbability: 0 },
-  { w: 11, h: 13, wrapping: true, barrierProbability: 0 },
 ];
 
 /* ----------------------------------------------------------------------

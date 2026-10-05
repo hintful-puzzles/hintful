@@ -294,7 +294,12 @@ params label ("Tectonic: 7x7 Easy"), **a section of the Type menu for each
 ruleset**, and the list of rules where the help page writes `{{rulesets}}`. So
 the game lists its presets flat, two puzzles' boards never share a list, and a
 ruleset game that writes a section of its own is refused. No label slot puts a
-word in front of a title; only a ruleset does. A field that only changes the
+word in front of a title; only a ruleset does. **A line under a ruleset's
+heading leaves the ruleset's name off** ("7x7 Easy" under "Tectonic"), and the
+type header, shown with no heading over it, keeps it: a leaf of
+`presetMenu(game)` has a `title`, the menu's line, and a `label`, the board's
+name anywhere else. A test naming a preset reads the `label`, which is what
+`leafPresets` returns. A field that only changes the
 board's shape or look (Loopy's tilings, Cube's solids) is a `kind`, not a
 ruleset. **A ruleset need not be a params field of its own**: Ascent keeps one
 `mode` in which Edges is a fifth value beside four grids, and its ruleset and
@@ -326,8 +331,63 @@ game's own name and the tier names are outside that check.
 label, so the menu and the header of the same board cannot disagree. A leaf
 keeps a `title` only when upstream gave it a name no field says (Guess's
 "Standard", Flood's allowance names); `params-declared.test.ts` refuses a name
-that merely repeats the label, and two presets with one label. **Read titles
-through `presetMenu(game)`**, never `game.presets()`, which leaves them unset.
+that merely repeats the label, and two presets with one label. **Read a
+preset's name as the `label` of its leaf in `presetMenu(game)`**, never from
+`game.presets()`, which leaves it unset.
+
+### The preset menu is a grid
+
+**A menu is the game's boards, each at every tier, and then one board for each
+thing that is neither a size nor a tier.** A player who wants a small hard
+board or a large easy one finds it in the list, and the menu of one game reads
+like the menu of the next. `presetGrid(paramConfig, boards, opts)`
+([`engine/preset-grid.ts`](../../src/engine/preset-grid.ts)) builds it: the
+game names its boards, smallest first, and the builder writes each one's tiers
+in order. A game without tiers lists its boards. What the game decides is which
+boards, and that is about the puzzle; the shape is not.
+
+[`preset-menu-shape.test.ts`](../../src/engine/preset-menu-shape.test.ts) reads
+the shape off every game's menu, whether or not the game calls the builder:
+
+- **A section holds at most twelve lines** (`MENU_SECTION_LINES`). A game
+  trades sizes against tiers to fit: three sizes at four tiers, or four at
+  three. A section with one line for each kind of board (Loopy's tilings,
+  Cube's solids) is as long as the kinds are many.
+- **A board's tiers are one run of lines, easiest first, with no gap.** A board
+  may stop short of the hard tiers or start above the easy ones
+  (`opts.tiers`), for a deal that takes seconds, a tier that means nothing at
+  that size, or the twelve lines. Write which at the menu.
+- **Every tier is on the menu somewhere, in each ruleset**, unless every board
+  refuses it. A tier left off for another reason goes in the test's
+  `TIERS_NOT_OFFERED` with that reason.
+- **A rule modifier has exactly one line**, after the grid
+  (`opts.variants`), so a player can see that it exists; every other board it
+  applies to is reached through the Custom dialog. The same goes for a second
+  kind of board, as Ascent's Honeycomb and Hexagon.
+- **A game with a size offers at least three boards.**
+
+**Measure a deal before offering it.** A preset that takes seconds to deal is
+a worse offer than none, and a tier's cost follows the size: Group's 12x12
+deals in a blink at Normal and takes eleven seconds at Hard. Time three deals
+of each new cell, on the machine as it is, and cut the row where the tail
+leaves a second. **Then ask whether the board needs its tier**, because a
+fast deal is not an honest one: a Group 6x6 dealt at Tricky comes back in
+under a millisecond and needs only Normal. `difficulty-contract.test.ts`
+asks it of every preset (`lowestSolvingCap`), on the gate for the first
+preset of each tier and on the slow tier for all of them, so run it with the
+slow tier on for a game whose menu you change.
+
+**Three sizes written as `[4, 5, 6]` read as a color** to
+`palette-source.test.ts`, which takes any three-number array in a game's
+source for an RGB triple. Add the line to its `NOT_COLORS` with the reason.
+
+**The first line is where a new player starts** (`puzzle-screen.ts` deals the
+first preset to a player who has never chosen), so the smallest board at the
+easiest tier goes first.
+
+**A test that needs a particular board names its params**, not an index into
+the menu: Boats' hint tests keep their own list, so the menu can change
+without moving a pinned board.
 
 ### The Custom dialog
 

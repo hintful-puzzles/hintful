@@ -123,24 +123,30 @@ export interface UnequalParams {
   diff: Difficulty;
 }
 
-/** Upstream `unequal_presets`. */
+/** One size of one mode, from tier `first` to tier `last`. */
+const row = (order: number, mode: Mode, first: Difficulty, last: Difficulty) =>
+  DIFFS.slice(DIFFS.indexOf(first), DIFFS.indexOf(last) + 1).map(
+    (diff): UnequalParams => ({ order, mode, diff }),
+  );
+
+/**
+ * Each mode as a grid of sizes by tiers. Every cell deals in a fraction of a
+ * second, so Unequal's corners are cut only to keep its section to twelve
+ * lines. Adjacent's small sizes stop a tier sooner: measured 2026-10-05, two
+ * of three 5x5 and 6x6 boards dealt at the fourth tier needed only the third.
+ */
 export const PRESETS: UnequalParams[] = [
-  { order: 4, mode: "unequal", diff: "easy" },
-  { order: 5, mode: "unequal", diff: "easy" },
-  { order: 5, mode: "unequal", diff: "tricky" },
-  { order: 5, mode: "adjacent", diff: "tricky" },
-  { order: 5, mode: "unequal", diff: "extreme" },
-  { order: 6, mode: "unequal", diff: "easy" },
-  { order: 6, mode: "unequal", diff: "tricky" },
-  { order: 6, mode: "adjacent", diff: "tricky" },
-  { order: 6, mode: "unequal", diff: "extreme" },
-  { order: 7, mode: "unequal", diff: "tricky" },
-  { order: 7, mode: "adjacent", diff: "tricky" },
-  { order: 7, mode: "unequal", diff: "extreme" },
+  ...row(4, "unequal", "trivial", "trivial"),
+  ...row(5, "unequal", "trivial", "extreme"),
+  ...row(6, "unequal", "trivial", "extreme"),
+  ...row(7, "unequal", "tricky", "recursive"),
+  ...row(5, "adjacent", "trivial", "tricky"),
+  ...row(6, "adjacent", "trivial", "tricky"),
+  ...row(7, "adjacent", "tricky", "recursive"),
 ];
 
 export function defaultParams(): UnequalParams {
-  return { ...PRESETS[0] };
+  return { order: 4, mode: "unequal", diff: "easy" };
 }
 
 export function encodeParams(p: UnequalParams, full: boolean): string {

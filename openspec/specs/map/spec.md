@@ -19,8 +19,7 @@ of regions) and `diff` (one of Easy, Normal, Tricky, Unreasonable), encoded
 `{w}x{h}n{n}` with a full-form `d{char}` difficulty suffix (chars `e`/`n`/`h`/`u`).
 `decodeParams` SHALL be lenient: an omitted `xH` defaults height to width, an
 omitted `nN` defaults `n` to `w*h/8`, a `.` in the region count is tolerated
-(truncated), and an unknown difficulty char is ignored. Six presets (15×20 with
-30 regions at each difficulty, and 25×30 with 75 regions at Normal and Tricky),
+(truncated), and an unknown difficulty char is ignored. Eight presets (15×20 with 30 regions and 25×30 with 75 regions, each at every difficulty),
 upstream's landscape sizes turned to draw taller than wide, SHALL be offered. `validateParams` SHALL enforce `w ≥ 2`,
 `h ≥ 2`, `n ≥ 5`, `n ≤ w*h`, and the width×height overflow guard. The game SHALL provide `solve` and `textFormat`, and SHALL drive a
 completion flash suppressed after Solve.

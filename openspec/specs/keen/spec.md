@@ -22,8 +22,7 @@ subtraction and division cages always have area 2. Params SHALL be `w`, `diff`
 `"easy"`, `"normal"`, `"hard"`, `"extreme"`, `"unreasonable"`, so the Tricky
 tier is `"hard"`), and `multiplicationOnly`,
 encoded `{w}` without `full` and `{w}d{c}{m?}` with `full` (`c` =
-`e`/`n`/`h`/`x`/`u`; a trailing `m` for multiplication-only), with the upstream
-preset list. `validateParams` SHALL require `3 ≤ w ≤ 9` and a known difficulty.
+`e`/`n`/`h`/`x`/`u`; a trailing `m` for multiplication-only), with presets laid out as the `ts-engine` requirement "The preset menu is a grid" says. `validateParams` SHALL require `3 ≤ w ≤ 9` and a known difficulty.
 The game SHALL provide `solve`, SHALL NOT provide `statusbarText` or `textFormat`, and SHALL report `canMarkAll = true`.
 
 #### Scenario: Params round-trip

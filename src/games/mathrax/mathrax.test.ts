@@ -183,9 +183,10 @@ describe("mathrax params", () => {
 
   it("exposes every preset through the menu", () => {
     const submenu = presetMenu(mathraxGame).submenu ?? [];
-    expect(submenu).toHaveLength(9);
+    expect(submenu).toHaveLength(11);
     expect(submenu[0]).toMatchObject({ title: "5x5 Easy" });
-    expect(submenu[8]).toMatchObject({ title: "9x9 Normal" });
+    expect(submenu[3]).toMatchObject({ title: "5x5 Unreasonable" });
+    expect(submenu[10]).toMatchObject({ title: "9x9 Normal" });
   });
 
   it("labels a custom clue set by the shorter of what is on and off", () => {
