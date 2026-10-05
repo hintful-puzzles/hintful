@@ -90,6 +90,36 @@ predicate and will not grow one**: it would be indistinguishable from returning
 `0` and would exist only to document, which is how a runner becomes a
 configuration language.
 
+### A fixpoint is order-independent only if every rule is monotone
+
+Running the ladder until nothing fires does not by itself make the verdict a
+function of the board. It does so when every rule is **monotone**: a rule that
+fires on some position still fires, or has nothing left to say, on every
+position with more decided. One rule that stops applying as the board fills is
+enough for two visiting orders to end in different places, and the grade then
+depends on how the state was built.
+
+Bridges had one. An island's room along a span was the least of the span's
+capacity, what the island still needed, and the span's limit less the bridges
+on it, so the bridges came off the limit and not off the capacity. A 7 beside
+a 4, a 2 and a 2 had room for exactly the six it needed while one bridge was
+drawn, and room for five against a need of four once the corner 2 had filled
+first; "room for exactly what it needs" then never fired again. The generator
+grows its islands in placement order and a player's board lists them in
+reading order, so about one sparse board in a hundred at three and four
+bridges a line was dealt as Tricky and solved at Easy once loaded.
+
+**The quantity to read is the rule's slack as the board fills.** If drawing a
+bridge can raise it, the rule is not monotone. Bridges' was the sum of each
+span's room less what the island needs, which rose with every bridge drawn on
+a span that had capacity to spare.
+
+**The instrument is a shuffle**: rebuild a board with its population listed in
+another order and compare the verdict at every cap
+(`bridges.test.ts`, "the grade does not depend on island order"). Pin the
+boards that split as descs; a census over dealt boards beside them saw the
+defect at one size in five of 150 deals each, so it cannot be the guard alone.
+
 Converged call sites to read as exemplars, easiest first:
 
 | Read this for | Where |
@@ -748,12 +778,11 @@ show; it says the tier may be rare or absent, since a run-out cannot tell. So
 refuse what you have counted and can name, and let the rest run out. Never
 catch the run-out in the game to deal something else.
 
-**Grade the board as it will be dealt.** Bridges graded the state its
-generator grew, whose islands sit in the order they were placed, and about one
-sparse board in a hundred at three and four bridges a line passed as Tricky
-and solved at Easy once loaded from its desc. Its gate now reads the desc
-back first. Where a generator's working state is not what `newState` builds,
-the gate measures a neighbor of the board.
+**Grade the board as it will be dealt.** Where a generator's working state is
+not what `newState` builds, the gate measures a neighbor of the board. Bridges
+grades the state its generator grew, whose islands sit in the order they were
+placed, and that is safe only because its solver's verdict does not depend on
+the order: § "A fixpoint is order-independent only if every rule is monotone".
 
 **The instrument is the tier walk**, `scripts/checks/tier-walk.test.ts`: every
 tiered game, every numeric field from its declared minimum to the menu's

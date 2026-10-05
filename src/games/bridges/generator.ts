@@ -19,7 +19,6 @@ import {
   G_LINEV,
   type Island,
   islandTarget,
-  newStateFromDesc,
 } from "./state.ts";
 
 const MAX_NEWISLAND_TRIES = 50;
@@ -162,18 +161,16 @@ export function newBridgesDesc(
     st.mapCount();
     st.mapFindOrthogonal();
 
-    // Graded as it will be dealt, from its desc. The state grown above lists
-    // its islands in the order they were placed, and the solver's verdict was
-    // seen to differ from the one it gives the same board read back: about a
-    // board in a hundred, at three and four bridges a line, passed here as
-    // Tricky and solved at Easy once loaded.
-    const desc = encodeGame(st);
-    const dealt = newStateFromDesc(p, desc);
+    // `st` lists its islands in the order they were placed, where the board a
+    // player loads lists them in reading order. The verdict is the same either
+    // way: "the grade does not depend on island order" in `bridges.test.ts`.
+    // `solveFromScratch` clears the bridges and keeps the clues the desc is
+    // written from.
     // Reject if solvable one difficulty easier (too easy).
-    if (p.difficulty > 0 && solveFromScratch(dealt, p.difficulty - 1) > 0) continue;
+    if (p.difficulty > 0 && solveFromScratch(st, p.difficulty - 1) > 0) continue;
     // Reject if not solvable at the target difficulty (too hard).
-    if (solveFromScratch(dealt, p.difficulty) === 0) continue;
+    if (solveFromScratch(st, p.difficulty) === 0) continue;
 
-    return { desc };
+    return { desc: encodeGame(st) };
   }
 }

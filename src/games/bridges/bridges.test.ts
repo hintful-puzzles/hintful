@@ -19,7 +19,8 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { type RandomState, randomNew } from "../../engine/random/index.ts";
+import { shuffle } from "../../engine/shuffle.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -29,11 +30,12 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
 import { COL_MARK, newDrawState } from "./render.ts";
+import { solveFromScratch } from "./solver.ts";
 import {
   BRIDGES_PRESETS,
   type BridgesMove,
   type BridgesOp,
-  type BridgesState,
+  BridgesState,
   decodeParams,
   encodeGame,
   encodeParams,
@@ -98,10 +100,81 @@ describe("bridges params codec", () => {
   // takes microseconds, so the retry budget has to be that long.
   describeDealtTiers(bridgesGame, ["9x9i5e10m4d1", "10x10i5e10m2d2", "4x4i30e10m2d1"]);
 
-  // The generator grades a board from its desc. Grading the state it grew
-  // passed about one board in a hundred here that Easy solves once loaded,
-  // and the 78th of these was one.
+  // The generator grades the state it grew, whose islands are in the order
+  // they were placed. While the grade depended on that order, about one board
+  // in a hundred dealt here as Tricky was solved by Easy once loaded, and the
+  // 78th of these was one.
   describeDealtTiers(bridgesGame, ["11x11i5e10m4d2"], { deals: 80 });
+});
+
+describe("the grade does not depend on island order", () => {
+  /** Which of Easy, Normal and Tricky solve the board, as three digits. */
+  const verdict = (st: BridgesState): string =>
+    [0, 1, 2].map((d) => solveFromScratch(st.workingCopy(), d)).join("");
+
+  /** The board of `loaded`, its islands listed in `order`. */
+  const reordered = (loaded: BridgesState, order: readonly number[]): BridgesState => {
+    const st = BridgesState.empty(loaded.params);
+    for (const i of order) {
+      const is = loaded.islands[i];
+      st.islandAdd(is.x, is.y, is.count);
+    }
+    st.mapFindOrthogonal();
+    st.mapUpdatePossibles();
+    return st;
+  };
+
+  const shuffledOrder = (n: number, rng: RandomState): number[] => {
+    const order = Array.from({ length: n }, (_, i) => i);
+    shuffle(order, rng);
+    return order;
+  };
+
+  // Each was dealt as Tricky from the state the generator grew, and Easy
+  // solves it in reading order.
+  it.each([
+    "5x5i30e10m4d2:5aAa3i2b3b4c5",
+    "11x11i5e10m3d2:4b7f2zzf2zn3b2g",
+    "11x11i5e10m3d2:2i1zg4d7d2zzh2e",
+    "11x11i5e10m4d2:5dAd3v4zzx3d3e",
+  ])("%s is Easy in every order", (id) => {
+    const [params, desc] = id.split(":");
+    const loaded = newStateFromDesc(decodeParams(params), desc);
+    const rng = randomNew(`island-order-${id}`);
+    const verdicts = new Set<string>();
+    for (let k = 0; k < 720; k++) {
+      const order = shuffledOrder(loaded.islands.length, rng);
+      verdicts.add(verdict(reordered(loaded, order)));
+    }
+    expect([...verdicts]).toEqual(["111"]);
+  });
+
+  // The boards above are the guard; this reaches ones nobody chose. With the
+  // room on a span counted the old way it fails here, and passed at four
+  // other sizes of the same 150 deals, so it is kept to the size it sees at.
+  it.each([
+    "11x11i5e10m3d2",
+  ])("%s: a dealt board has one grade however its islands are listed", (params) => {
+    const p = decodeParams(params);
+    const rng = randomNew(`island-order-${params}`);
+    const split: string[] = [];
+    let boards = 0;
+    for (let seed = 0; seed < 150; seed++) {
+      const { desc } = newBridgesDesc(p, randomNew(`${params}-${seed}`));
+      const loaded = newStateFromDesc(p, desc);
+      const want = verdict(loaded);
+      boards++;
+      for (let k = 0; k < 12; k++) {
+        const order = shuffledOrder(loaded.islands.length, rng);
+        if (verdict(reordered(loaded, order)) !== want) {
+          split.push(desc);
+          break;
+        }
+      }
+    }
+    expect(boards).toBe(150);
+    expect(split).toEqual([]);
+  });
 });
 
 describe("bridges desc codec", () => {

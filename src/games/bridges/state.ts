@@ -579,11 +579,15 @@ export class BridgesState {
       const mline = pt.dx ? G_MARKH : G_MARKV;
       if (this.gridAt(pt.x, pt.y) & mline) return 0;
     }
-    return Math.min(
+    // The bridges already on the span come off its whole capacity, the clues
+    // at its ends included, and not off its limit alone. An island's room then
+    // never grows as its bridges are drawn, which is what keeps the grade from
+    // depending on the order the islands are visited in.
+    const cap = Math.min(
       this.possibles(pt.dx, pt.x, pt.y),
-      missing,
-      this.maximum(pt.dx, pt.x, pt.y) - this.gridCount(pt.x, pt.y, gline),
+      this.maximum(pt.dx, pt.x, pt.y),
     );
+    return Math.max(0, Math.min(missing, cap - this.gridCount(pt.x, pt.y, gline)));
   }
 
   islandCountspaces(is: Island, marks: boolean): number {
