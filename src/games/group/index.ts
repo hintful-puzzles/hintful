@@ -766,7 +766,7 @@ export const groupGame: Game<
   validateParams,
   paramConfig: [
     numberItem<GroupParams>("size", "Grid size", "w", {
-      doc: "How many elements the group has, which is also the width and height of the grid.",
+      doc: "How many elements the group has, which is also the width and height of the grid. Small grids have fewer difficulties: nothing under 6x6 is Hard and nothing under 5x5 is Unreasonable. With the identity shown, a 6x6 is dealt at Easy, Normal and Unreasonable only, an 8x8 at every difficulty but Hard, and smaller grids at fewer still.",
       // One letter per element.
       bounds: { min: 3, max: 26 },
       label: { slot: "size", words: squareSize("w") },

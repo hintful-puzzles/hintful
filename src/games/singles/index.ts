@@ -78,6 +78,7 @@ import {
   type SinglesState,
   type SinglesUi,
   textFormat,
+  validateParams,
 } from "./state.ts";
 
 /** A cell whose mark contradicts the unique solution (Check & Save). */
@@ -498,6 +499,7 @@ export const singlesGame: Game<
   presets,
   encodeParams,
   decodeParams,
+  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
 

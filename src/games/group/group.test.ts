@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
+import { cappedSolveFor, lowestSolvingCap } from "../../engine/difficulty.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -17,6 +18,7 @@ import {
   MOD_SHFT,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
@@ -24,7 +26,9 @@ import { colors, coord, newDrawState, PREFERRED_TILE_SIZE, redraw } from "./rend
 import { solveGroup } from "./solver.ts";
 import {
   cloneState,
+  DIFF_EXTREME,
   DIFF_HARD,
+  DIFF_NAMES,
   DIFF_NORMAL,
   DIFF_UNREASONABLE,
   decodeParams,
@@ -56,9 +60,11 @@ function newUiAt(s: GroupState, pos: number) {
  * ever dropped): if one goes missing, this fails immediately and says which.
  * None of the three reads `this`, so calling them unbound is safe.
  */
-const { solve, solvedFlash, findMistakes } = groupGame;
-if (!solve || !solvedFlash || !findMistakes) {
-  throw new Error("group: expected the solve / solvedFlash / findMistakes hooks");
+const { solve, solvedFlash, findMistakes, difficulty } = groupGame;
+if (!solve || !solvedFlash || !findMistakes || !difficulty) {
+  throw new Error(
+    "group: expected the solve / solvedFlash / findMistakes / difficulty hooks",
+  );
 }
 
 /** A completed grid is a valid group table iff Latin + associative. */
@@ -111,13 +117,69 @@ describe("params codec", () => {
   });
 });
 
+describe("a size with no board at a tier", () => {
+  const refusal = (p: GroupParams) => paramsError(groupGame, p, true);
+
+  /** Every cell from 3x3 to 9x9 whose refusal starts with `words`. */
+  const refusedWith = (words: RegExp): GroupParams[] => {
+    const cells: GroupParams[] = [];
+    for (let w = 3; w <= 9; w++) {
+      for (const id of [true, false]) {
+        for (let diff = 0; diff < DIFF_NAMES.length; diff++) {
+          if (words.test(refusal(P(w, diff, id)) ?? "")) cells.push(P(w, diff, id));
+        }
+      }
+    }
+    return cells;
+  };
+  const absent = refusedWith(/^No /);
+  const rare = refusedWith(/too rare/);
+  const labels = (cells: GroupParams[]) => cells.map((p) => encodeParams(p, true));
+
+  it("is refused, naming the size and the tier", () => {
+    expect(refusal(P(5, DIFF_HARD, true))).toBe(
+      "No 5x5 puzzle that shows its identity is Tricky.",
+    );
+    expect(refusal(P(5, DIFF_EXTREME, false))).toBe("No 5x5 puzzle is Hard.");
+    expect(refusal(P(4, DIFF_UNREASONABLE, true))).toBe(
+      "No 4x4 puzzle is Unreasonable.",
+    );
+    expect(labels(absent)).toEqual(
+      "3dn 3dh 3dx 3du 4dn 4dh 4dx 4du 4dxi 4dui 5dh 5dx 5dxi".split(" "),
+    );
+  });
+
+  it("is refused where its boards are too rare to deal", () => {
+    expect(refusal(P(6, DIFF_HARD, true))).toBe(
+      "Tricky 6x6 puzzles that show their identity are too rare to deal.",
+    );
+    expect(labels(rare)).toEqual(["6dh", "6dx", "8dx"]);
+  });
+
+  it("still loads a rare board that arrives with its desc", () => {
+    for (const p of rare) expect(paramsError(groupGame, p, false)).toBeNull();
+  });
+
+  // The rare cells are not held to the run-out: a 6x6 at Tricky is found once
+  // in 48,000 tries, so it would pass most of the time and prove nothing.
+  describeAbsentTiers(groupGame, labels(absent));
+});
+
 describe("generation", () => {
-  // A small, fast matrix across sizes / difficulties / both identity modes.
+  // A small, fast matrix across sizes / difficulties / both identity modes,
+  // and every cell that stands beside one `validateParams` refuses.
   const cases: GroupParams[] = [
-    P(4, DIFF_NORMAL, true),
+    P(4, DIFF_NORMAL, false),
+    P(4, DIFF_HARD, false),
+    P(5, DIFF_HARD, false),
+    P(5, DIFF_NORMAL, true),
+    P(5, DIFF_UNREASONABLE, true),
     P(6, DIFF_NORMAL, true),
     P(6, DIFF_NORMAL, false),
     P(6, DIFF_HARD, false),
+    P(6, DIFF_EXTREME, false),
+    P(6, DIFF_UNREASONABLE, true),
+    P(7, DIFF_HARD, true),
     P(8, DIFF_HARD, true),
     P(8, DIFF_HARD, false),
   ];
@@ -132,8 +194,12 @@ describe("generation", () => {
       const state = newState(p, desc);
       expect(encodeGrid(state.grid, p.w * p.w)).toBe(desc);
 
-      // The generated board is uniquely solvable at the (possibly downgraded)
-      // difficulty, and the solution is a genuine group table.
+      // The board needs the tier it was dealt at.
+      expect(
+        lowestSolvingCap(cappedSolveFor(difficulty, p, desc), DIFF_NAMES.length),
+      ).toBe(p.diff);
+
+      // It is uniquely solvable, and the solution is a genuine group table.
       const soln = state.grid.slice();
       const ret = solveGroup(soln, p.w, DIFF_UNREASONABLE);
       expect(ret).not.toBe(DIFF_IMPOSSIBLE);

@@ -668,7 +668,7 @@ export const dominosaGame: Game<
       },
     ),
     difficultyItem(DIFF_NAMES, "diff", {
-      doc: "On the smallest sets (a maximum of 1 or 2) the harder settings are capped at what that set can support.",
+      doc: "The smallest sets have no harder boards: a maximum of 1 is always Easy, and a maximum of 2 is Easy or Normal.",
     }),
   ],
 

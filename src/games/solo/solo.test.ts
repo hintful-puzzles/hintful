@@ -12,6 +12,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -21,6 +22,15 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import cReference from "./__fixtures__/solo-c-reference.json" with { type: "json" };
 import { soloGame } from "./index.ts";
+
+// The three smallest grids above Easy. The generator's retry bound is 50,000
+// tries, so one run of it is the search.
+describeAbsentTiers(
+  soloGame,
+  ["2j", "3j", "2x2"].flatMap((size) => [..."biaeu"].map((d) => `${size}d${d}`)),
+  { budgets: 1 },
+);
+
 import {
   COL_KILLER,
   COL_XDIAGONALS,

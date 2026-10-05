@@ -25,7 +25,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -285,7 +285,7 @@ export function presets(): PresetMenu<TracksParams> {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<TracksParams>[] = [
   ...dimensionParamConfig<TracksParams>({
-    doc: "Size of the grid in squares.",
+    doc: "Size of the grid in squares. A 4x4 has only Easy puzzles.",
     // Generating anything under 4x4 runs into trouble (upstream).
     bounds: { min: 4 },
   }),
@@ -318,10 +318,13 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   }),
 ]);
 
-export function validateParams(p: TracksParams, _full: boolean): string | null {
+export function validateParams(p: TracksParams, full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
     return AREA_TOO_LARGE;
   }
+  // Measured 2026-10-05: none in 50,000 boards built at each tier above Easy.
+  if (full && p.w === 4 && p.h === 4 && p.diff > DIFF_EASY)
+    return noSuchTier("4x4 puzzle", DIFF_NAMES[p.diff]);
   return null;
 }
 

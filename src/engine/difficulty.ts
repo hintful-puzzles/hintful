@@ -321,6 +321,16 @@ export function cappedSolveFor<Params>(
 }
 
 /**
+ * The refusal for a size none of whose boards needs the tier asked for, as a
+ * game's `validateParams` returns it when a board is to be dealt:
+ * `noSuchTier("3x3 puzzle", "Tricky")`. `what` names the boards the way the
+ * game's menu does, with whatever else about them makes the tier absent.
+ */
+export function noSuchTier(what: string, tier: string): string {
+  return `No ${what} is ${tier}.`;
+}
+
+/**
  * Does this board genuinely need tier `tier` — solvable there, and *not* at the
  * tier below it?
  *

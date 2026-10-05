@@ -5,7 +5,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -102,7 +102,7 @@ const MAX_DIM = DESC_ALPHABET_SIZE - 1;
  * the codec never has to know how a tier is represented. */
 export const paramConfig: ParamConfigItem<SinglesParams>[] = [
   ...dimensionParamConfig<SinglesParams>({
-    doc: "Size of the grid in squares.",
+    doc: "Size of the grid in squares. A grid under 4 squares both ways has only Easy puzzles.",
     bounds: { min: 2, max: MAX_DIM },
   }),
   difficultyItem(DIFF_NAMES, {
@@ -112,6 +112,15 @@ export const paramConfig: ParamConfigItem<SinglesParams>[] = [
     },
   }),
 ];
+
+export function validateParams(p: SinglesParams, full: boolean): string | null {
+  // Measured 2026-10-05: none in 50,000 boards built at each of 2x2, 2x3, 3x2
+  // and 3x3. A board 4 long either way deals Normal at once, which upstream's
+  // rule (under 4 in either direction is Easy) had hidden.
+  if (full && p.w < 4 && p.h < 4 && p.diff === "tricky")
+    return noSuchTier(`${p.w}x${p.h} puzzle`, DIFF_NAMES[DIFF_TRICKY]);
+  return null;
+}
 
 /** `WxH`, plus the generator-only difficulty letter. An unknown letter leaves
  * the default tier. */

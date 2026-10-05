@@ -155,11 +155,8 @@ function newClues(
 ): void {
   const w = params.w;
   const h = params.h;
-  let diff = params.difficulty;
+  const diff = params.difficulty;
   const g = gridNewSquare(w - 1, h - 1);
-
-  // 5x5 Normal is not generable (spins forever), so fudge it to Easy.
-  if (w === 5 && h === 5 && diff > DIFF_EASY) diff = DIFF_EASY;
 
   const attempt = retryLimit("pearl: newClues");
   while (true) {

@@ -51,7 +51,7 @@ function kindItems(g: AnyGame): Item[] {
  */
 const TIERS_NOT_OFFERED: Record<string, Record<string, string>> = {
   group: {
-    Hard: "no size deals it well: an 8x8 dealt at Hard needs only Tricky, and a 12x12 takes eleven seconds",
+    Hard: "the menu's 6x6 and 8x8 refuse it with the identity shown, and a 12x12 takes eleven seconds",
     Unreasonable:
       "6x6 and 8x8 deal it, and it would stand a tier apart from the rest of either board's run",
   },

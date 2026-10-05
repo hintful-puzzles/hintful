@@ -675,7 +675,7 @@ export const soloGame: Game<
   // unchecking jigsaw leaves c/r as they are, as upstream does.
   paramConfig: [
     numberItem<SoloParams>("columns-of-sub-blocks", "Columns of sub-blocks", "c", {
-      doc: "How many blocks the grid has across and down. Their product is the width and height of the grid, and the largest number in it: 3 and 3 make the usual 9×9 grid of 3×3 blocks, while 2 and 3 make a 6×6 grid of blocks 3 wide and 2 high. The grid can hold at most 31 numbers.",
+      doc: "How many blocks the grid has across and down. Their product is the width and height of the grid, and the largest number in it: 3 and 3 make the usual 9×9 grid of 3×3 blocks, while 2 and 3 make a 6×6 grid of blocks 3 wide and 2 high. The grid can hold at most 31 numbers. The three smallest grids, a 2 or 3 Jigsaw and a 2x2, have only Easy puzzles.",
       bounds: { min: 2, max: ORDER_MAX },
       label: {
         slot: "size",

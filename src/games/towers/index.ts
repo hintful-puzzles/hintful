@@ -118,6 +118,7 @@ import {
   type TowersState,
   type TowersUi,
   textFormat,
+  validateParams,
 } from "./state.ts";
 
 /** A player marking that contradicts the unique solution:
@@ -580,6 +581,7 @@ export const towersGame: Game<
   presets,
   encodeParams,
   decodeParams,
+  validateParams,
   paramConfig,
 
   newDesc: newTowersDesc,

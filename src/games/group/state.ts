@@ -25,7 +25,7 @@ import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -94,9 +94,9 @@ const upTo = (w: number, last: number): GroupParams[] =>
 
 /**
  * Each size at the tiers its boards need, and one board with its identity
- * hidden. Measured 2026-10-05, three deals a cell: a 6x6 dealt above Normal
- * and an 8x8 dealt at Hard came out needing a tier less than asked, and a
- * 12x12 took up to two seconds at Tricky and eleven at Hard.
+ * hidden. A 6x6 above Normal and an 8x8 at Hard are refused
+ * ({@link validateParams}), and a 12x12 took up to two seconds at Tricky and
+ * eleven at Hard, measured 2026-10-05 over three deals each.
  */
 export const PRESETS: readonly GroupParams[] = [
   ...upTo(6, DIFF_NORMAL),
@@ -143,7 +143,7 @@ export function decodeParams(s: string): GroupParams {
   return p;
 }
 
-export function validateParams(p: GroupParams, _full: boolean): string | null {
+export function validateParams(p: GroupParams, full: boolean): string | null {
   if (!p.id && p.diff === DIFF_TRIVIAL) {
     // Identityless puzzles always have two entirely-blank rows and columns, and
     // no Latin-square deduction can distinguish them — so an Easy (Latin-only)
@@ -156,7 +156,53 @@ export function validateParams(p: GroupParams, _full: boolean): string | null {
     // as above — Easy puzzles can't lack an identity.
     return "3x3 puzzles must have an identity.";
   }
+  if (full && sizeLacksTier(p)) {
+    // Where hiding the identity brings the tier back, say so.
+    const shown = p.id && !sizeLacksTier({ ...p, id: false });
+    return noSuchTier(
+      `${p.w}x${p.w} puzzle${shown ? " that shows its identity" : ""}`,
+      DIFF_NAMES[p.diff],
+    );
+  }
+  if (full && tierTooRare(p)) {
+    return `${DIFF_NAMES[p.diff]} ${p.w}x${p.w} puzzles that show their identity are too rare to deal.`;
+  }
   return null;
+}
+
+/**
+ * Whether no board of this size needs the tier asked for: every one solvable
+ * there is solvable a tier below. Measured 2026-10-05 by running the generator
+ * with nothing to stop it, a quarter of a million tries a cell and more.
+ * `group.test.ts` runs it out again at each cell, in the slow tier, and deals
+ * the cells beside them.
+ *
+ * Upstream had most of this table and dealt the tier below in silence. It was
+ * wrong about three cells: a 4x4 and a 5x5 hiding the identity deal a Tricky
+ * board at once, and a 5x5 has no Hard one, where its generator never ends.
+ */
+function sizeLacksTier({ w, diff, id }: GroupParams): boolean {
+  if (diff === DIFF_UNREASONABLE) return w < 5;
+  if (diff === DIFF_EXTREME) return w < 6;
+  if (diff === DIFF_HARD) return w < 4 || (w < 6 && id);
+  if (diff === DIFF_NORMAL) return w < 4 || (w === 4 && id);
+  return false;
+}
+
+/**
+ * Whether boards of this size at this tier are too few to find: refused by
+ * the owner's decision, 2026-10-05, where the spec would have a rare tier
+ * dealt by retrying. Measured that day over 75 seconds a cell, the identity
+ * shown: a 6x6 at Tricky took 48,000 tries a board, ten seconds on average and
+ * 28 at worst; an 8x8 at Hard took 6,400 tries, nine seconds and 17 at worst;
+ * and a 6x6 at Hard gave none in 290,000.
+ */
+function tierTooRare({ w, diff, id }: GroupParams): boolean {
+  if (!id) return false;
+  return (
+    (w === 6 && (diff === DIFF_HARD || diff === DIFF_EXTREME)) ||
+    (w === 8 && diff === DIFF_EXTREME)
+  );
 }
 
 // --- move model --------------------------------------------------------------

@@ -20,9 +20,14 @@ import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSinglesDesc } from "./generator.ts";
 import { type SinglesMistake, singlesGame } from "./index.ts";
+
+// Under 4 squares both ways, at Normal.
+describeAbsentTiers(singlesGame, ["2x2dk", "2x3dk", "3x2dk", "3x3dk"]);
+
 import { COL_ERROR, COL_GRID } from "./render.ts";
 import { solveSpecific } from "./solver.ts";
 import {

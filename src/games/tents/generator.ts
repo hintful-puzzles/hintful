@@ -18,7 +18,6 @@ import { retryLimit } from "../../engine/retry-limit.ts";
 import { tentsSolve } from "./solver.ts";
 import {
   BLANK,
-  DIFF_EASY,
   DX,
   DY,
   encodeDesc,
@@ -34,8 +33,7 @@ export function newTentsDesc(
 ): { desc: string; aux: string } {
   const { w, h } = params;
   const ntrees = Math.floor((w * h) / 5);
-  // Downgrade tiny grids to prevent a tight loop.
-  const diff = w <= 4 && h <= 4 ? DIFF_EASY : params.diff;
+  const diff = params.diff;
 
   const grid = new Int8Array(w * h);
   const order = new Int32Array(w * h);

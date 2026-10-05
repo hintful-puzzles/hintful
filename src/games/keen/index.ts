@@ -111,6 +111,7 @@ import {
   newState,
   newUi,
   status,
+  validateParams,
 } from "./state.ts";
 
 /** A player marking that contradicts the unique solution:
@@ -415,9 +416,10 @@ export const keenGame: Game<
   presets,
   encodeParams,
   decodeParams,
+  validateParams,
   paramConfig: [
     numberItem<KeenParams>("grid-size", "Grid size", "w", {
-      doc: "Width and height of the grid, which is also the largest number in it.",
+      doc: "Width and height of the grid, which is also the largest number in it. A 3x3 has no puzzles above Normal.",
       // One digit per cell.
       bounds: { min: 3, max: 9 },
       label: { slot: "size", words: squareSize("w") },

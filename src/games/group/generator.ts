@@ -18,15 +18,7 @@ import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { GROUP_DATA, GROUPS } from "./groupdata.ts";
 import { solveGroup } from "./solver.ts";
-import {
-  DIFF_EXTREME,
-  DIFF_HARD,
-  DIFF_NORMAL,
-  DIFF_UNREASONABLE,
-  encodeGrid,
-  type GroupParams,
-  toChar,
-} from "./state.ts";
+import { encodeGrid, type GroupParams, toChar } from "./state.ts";
 
 /** Shuffle `arr[start..]` in place, with C's `shuffle(arr + start, …)` draw
  * order. */
@@ -43,14 +35,7 @@ export function newGameDesc(
   const w = p.w;
   const a = w * w;
 
-  // Difficulty exceptions: some size/difficulty combinations cannot be met
-  // because every puzzle of at most that difficulty is actually even easier.
-  // Port the four guards verbatim — they change which puzzles generate.
-  let diff = p.diff;
-  if (w < 5 && diff === DIFF_UNREASONABLE) diff--;
-  if ((w < 5 || ((w === 6 || w === 8) && p.id)) && diff === DIFF_EXTREME) diff--;
-  if ((w < 6 || (w === 6 && p.id)) && diff === DIFF_HARD) diff--;
-  if ((w < 4 || (w === 4 && p.id)) && diff === DIFF_NORMAL) diff--;
+  const diff = p.diff;
 
   const grid = new Uint8Array(a); // the puzzle grid being carved down
   const soln = new Uint8Array(a); // canonical table, then the full solution

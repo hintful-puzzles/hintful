@@ -668,6 +668,70 @@ fifteen exhausted `retryLimit` (`deal-every-tracks-board`). Ask "does it solve a
 `t − 1`?" as `solvableAtExactlyTier` does, or check `ret > 0` before reading the
 grade.
 
+### A size that cannot carry a tier
+
+**A generator never settles for a lower tier than it was asked for.** Where a
+size has no board that needs the tier, `validateParams` refuses the pair when
+a board is to be dealt, and the generator trusts that (`ts-migration` spec,
+"An unbindable tier is refused, not silently downgraded"). Upstream wrote the
+other answer three ways, and each has been found here: a table of sizes that
+deals the tier below (`if (w === 3 && diff > NORMAL) diff = NORMAL`), a count
+of tries after which the tier drops (`MAXTRIES`), and a tier gate that small
+boards skip (`spaces > 6 &&`). All three hand the player a board under a label
+it does not need.
+
+The followable form:
+
+1. **Refuse only when dealing.** The check sits behind `full`, since boards
+   dealt under the old label are in saved games and shared IDs, and a board
+   that arrives with its desc is graded by what it needs, whatever its ID says.
+2. **Say it with [`noSuchTier`](../../src/engine/difficulty.ts)**, so the
+   sentence is the same in every game: *"No 3x3 puzzle is Tricky."* Name the
+   boards as the menu does, and add whatever else about them makes the tier
+   absent (Group: *"that shows its identity"*, where hiding it brings the tier
+   back).
+3. **Say it in the size field's `doc`**, which is the help page's Parameters
+   section.
+4. **Pin the cells** with
+   [`describeAbsentTiers`](../../src/engine/testing/absent-tiers.ts): refused
+   when dealing, accepted with a desc, and in the slow tier the generator run
+   out at each.
+
+**A refusal is a claim of absence, so measure it by running the generator
+with nothing to stop it, and count the tries.** Group is why. Upstream's table
+named sixteen cells from 3x3 to 8x8. Run out, eleven had no board in up to a
+million tries; two dealt a board at once (a 4x4 and a 5x5 hiding the identity,
+at Tricky); three were rare; and a 5x5 at Hard, which the table lacked, had
+none either, so upstream's generator never ended there. A 6x6 at Tricky showing its identity is found
+once in 48,000 tries, so a run of the 10,000-try bound comes back empty four
+times in five, and a test that ran it once passed. The count that found it was
+380,000. Take a count that large before writing the refusal, and state the
+power of whatever keeps it true: `e^(-tries/n)` is the chance of missing a
+tier found once in `n`.
+
+**Rare is not absent, and it gets a different sentence.** The spec has a rare
+tier dealt by retrying, which is right where the retry is quick: Unequal's
+rarest cell takes 119 tries and a hundredth of a second. Where the retry is
+ten seconds a board with a tail past twenty, the owner's call (2026-10-05) is
+to refuse it and say so: *"Tricky 6x6 puzzles that show their identity are too
+rare to deal."* Never `noSuchTier` for one of these: the board exists.
+
+**The instrument is the tier walk**, `scripts/checks/tier-walk.test.ts`: every
+tiered game, every numeric field from its declared minimum to the menu's
+largest, every tier, a few deals a cell, each board's lowest solving cap beside
+the tier asked. `difficulty-contract.test.ts` holds the presets to that and
+deliberately not a tier written onto a small size; the walk is the half it
+leaves out. It is a report, minutes long, and not a gate:
+
+    TIER_WALK_GAMES=group,unequal npx vitest run \
+      -c scripts/checks/diff.vitest.config.mts tier-walk
+
+A cell it lists as **below** is this section's defect. One that **gave up** is
+a tier absent or too rare for the retry bound, which throws where it should
+refuse. A cell it does not list was dealt at its tier three times, which
+convicts nothing and clears little: raise `TIER_WALK_SEEDS` for a cell that
+matters.
+
 ### Cap-monotonicity, and the game that broke it
 
 **A difficulty-capped solver must be monotone in its cap: a board solvable at

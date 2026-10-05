@@ -14,13 +14,7 @@ import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { solveTowers } from "./solver.ts";
-import {
-  DIFF_EASY,
-  DIFF_HARD,
-  diffToLevel,
-  lineCells,
-  type TowersParams,
-} from "./state.ts";
+import { DIFF_EASY, diffToLevel, lineCells, type TowersParams } from "./state.ts";
 
 export function newTowersDesc(
   p: TowersParams,
@@ -28,11 +22,7 @@ export function newTowersDesc(
 ): { desc: string; aux: string } {
   const w = p.w;
   const a = w * w;
-  let diff = diffToLevel(p.diff);
-
-  // Some size/difficulty combinations can't be satisfied (all such puzzles are
-  // actually easier); fall back, exactly as upstream.
-  if (diff > DIFF_HARD && w <= 3) diff = DIFF_HARD;
+  const diff = diffToLevel(p.diff);
 
   const clues = new Int32Array(4 * w);
   const grid = new Uint8Array(a);

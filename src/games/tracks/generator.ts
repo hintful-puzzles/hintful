@@ -15,7 +15,6 @@ import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
   type Board,
   blankBoard,
-  DIFF_EASY,
   DIRS,
   DX,
   DY,
@@ -177,9 +176,7 @@ export function newDesc(
   rs: RandomState,
 ): { desc: string; aux?: string } {
   const { w, h } = p;
-  // A 4x4 board cannot be generated above the easiest tier.
-  let diff = p.diff;
-  if (w === 4 && h === 4 && diff > DIFF_EASY) diff = DIFF_EASY;
+  const diff = p.diff;
 
   const b = blankBoard(w, h);
   const attempt = retryLimit("tracks: generation");

@@ -55,9 +55,7 @@ export function newKeenDesc(
 ): { desc: string; aux: string } {
   const w = p.w;
   const a = w * w;
-  // 3×3 puzzles above Normal are not generable — dial down (faithful).
-  let diff = diffToLevel(p.diff);
-  if (w === 3 && diff > DIFF_NORMAL) diff = DIFF_NORMAL;
+  const diff = diffToLevel(p.diff);
 
   const order: number[] = new Array(a);
   const revorder = new Int32Array(a);

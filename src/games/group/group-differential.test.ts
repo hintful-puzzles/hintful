@@ -35,7 +35,10 @@ interface Fixture {
 
 const FIXTURES = reference.fixtures as Fixture[];
 
-const params = (f: Fixture): GroupParams => ({ w: f.w, diff: f.diff, id: f.id });
+/** Two fixtures were recorded at a tier their size lacks (`4d1`, `5d2`), where
+ * upstream dealt the tier below, which is `solverDiff`. Every other fixture's
+ * `solverDiff` is its `diff`. */
+const params = (f: Fixture): GroupParams => ({ w: f.w, diff: f.solverDiff, id: f.id });
 
 describe("group differential (byte-match + solver agreement)", () => {
   for (const f of FIXTURES) {

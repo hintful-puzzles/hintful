@@ -8,7 +8,8 @@
  * Adjacent mode every adjacency flag implied by the solution is present from the
  * start, so only number givens are added/removed. RNG-faithful to upstream over
  * the bit-identical `random.ts`, so the emitted desc matches C byte-for-byte for
- * the same seed.
+ * the same seed, except where upstream gave up on the tier: after fifty boards
+ * the tier below could solve it dealt at that tier, and this keeps looking.
  */
 
 import {
@@ -34,7 +35,6 @@ import {
   type UnequalParams,
 } from "./state.ts";
 
-const MAXTRIES = 50;
 /** The board being assembled: number givens, adjacency flags, and the solver's
  * last candidate cube (`state->hints`). */
 interface GenState {
@@ -221,7 +221,7 @@ export function newUnequalDesc(
 ): { desc: string; aux: string } {
   const o = p.order;
   const o2 = o * o;
-  let diff = diffToLevel(p.diff);
+  const diff = diffToLevel(p.diff);
 
   // Clue codes, randomized later. Numbers (which == 4) come before the
   // inequalities (which 0..3), in `(i%o2)*5 + 4 - (i/o2)` order.
@@ -229,8 +229,9 @@ export function newUnequalDesc(
   for (let i = 0; i < scratch.length; i++)
     scratch[i] = (i % o2) * 5 + 4 - ((i / o2) | 0);
 
-  let ntries = 1;
-  const attempt = retryLimit(`unequal: generation (${o}${p.mode})`, 2000);
+  // The rarest tier measured (2026-10-05, twenty deals a cell, orders 3 to 7 in
+  // both modes) was a 3x3 at Hard: 119 tries at the median and 877 at worst.
+  const attempt = retryLimit(`unequal: generation (${o}${p.mode})`);
   while (true) {
     attempt();
 
@@ -246,14 +247,9 @@ export function newUnequalDesc(
     gameAssemble(state, scratch, sq, diff);
     gameStrip(state, scratch, sq, diff);
 
-    if (diff > 0 && solverState(cloneGen(state), diff - 1) > 0) {
-      // Too easy — try again, then drop a level after MAXTRIES (faithful).
-      if (ntries < MAXTRIES) {
-        ntries++;
-        continue;
-      }
-      diff--;
-    }
+    // Too easy when the tier below solves it. A tier no board of this size
+    // needs never gets here: `validateParams` refuses it.
+    if (diff > 0 && solverState(cloneGen(state), diff - 1) > 0) continue;
 
     return { desc: encodeDesc(state), aux: encodeAux(sq, o) };
   }

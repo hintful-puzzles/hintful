@@ -21,7 +21,6 @@ import {
   DCOUNT,
   DIFF_BASIC,
   DIFF_HARD,
-  DIFF_TRIVIAL,
   DINDEX,
   type DominosaParams,
   type DominosaShape,
@@ -291,13 +290,7 @@ export function newDominosaDesc(
   p: DominosaParams,
   rng: RandomState,
 ): { desc: string; aux: string } {
-  const n = p.n;
-  let diff = p.diff;
-
-  // Cap the difficulty for tiny puzzles that would otherwise be impossible to
-  // generate (upstream's OMIT_DIFFICULTY_CAP guard).
-  if (n === 1 && diff > DIFF_TRIVIAL) diff = DIFF_TRIVIAL;
-  if (n === 2 && diff > DIFF_BASIC) diff = DIFF_BASIC;
+  const diff = p.diff;
 
   const sc = new DominosaSolver(p);
   const as = new AllocScratch(p);

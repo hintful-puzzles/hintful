@@ -549,7 +549,7 @@ export const unequalGame: Game<
       },
     }),
     numberItem<UnequalParams>("size", "Size", "order", {
-      doc: `Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. ${RULESETS[1].name} puzzles at Tricky or above need a size of at least 5.`,
+      doc: `Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. ${RULESETS[1].name} puzzles at Tricky or above need a size of at least 5. A 3x3 has no Tricky or Unreasonable puzzles.`,
       // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
       bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
       label: { slot: "size", words: squareSize("order") },

@@ -21,7 +21,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import {
   digitOf,
   type GridCursor,
@@ -131,17 +131,15 @@ const row = (order: number, mode: Mode, first: Difficulty, last: Difficulty) =>
 
 /**
  * Each mode as a grid of sizes by tiers. Every cell deals in a fraction of a
- * second, so Unequal's corners are cut only to keep its section to twelve
- * lines. Adjacent's small sizes stop a tier sooner: measured 2026-10-05, two
- * of three 5x5 and 6x6 boards dealt at the fourth tier needed only the third.
+ * second, so the corners are cut only to keep a section to twelve lines.
  */
 export const PRESETS: UnequalParams[] = [
   ...row(4, "unequal", "trivial", "trivial"),
   ...row(5, "unequal", "trivial", "extreme"),
   ...row(6, "unequal", "trivial", "extreme"),
   ...row(7, "unequal", "tricky", "recursive"),
-  ...row(5, "adjacent", "trivial", "tricky"),
-  ...row(6, "adjacent", "trivial", "tricky"),
+  ...row(5, "adjacent", "trivial", "extreme"),
+  ...row(6, "adjacent", "trivial", "extreme"),
   ...row(7, "adjacent", "tricky", "recursive"),
 ];
 
@@ -175,9 +173,14 @@ export function decodeParams(s: string): UnequalParams {
   return p;
 }
 
-export function validateParams(p: UnequalParams, _full: boolean): string | null {
-  if (p.order < 5 && p.mode === "adjacent" && diffToLevel(p.diff) >= DIFF_SET)
+export function validateParams(p: UnequalParams, full: boolean): string | null {
+  const level = diffToLevel(p.diff);
+  if (p.order < 5 && p.mode === "adjacent" && level >= DIFF_SET)
     return `Size must be at least 5 for ${ADJACENT} puzzles of this difficulty.`;
+  // Measured 2026-10-05: of 400,000 boards the generator built at each of
+  // these two tiers, the tier below solved every one. A 3x3 at Hard deals.
+  if (full && p.order === 3 && (level === DIFF_SET || level === DIFF_RECURSIVE))
+    return noSuchTier("3x3 puzzle", DIFF_NAMES[level]);
   return null;
 }
 

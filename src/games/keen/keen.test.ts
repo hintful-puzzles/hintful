@@ -20,6 +20,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -29,6 +30,10 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
+
+// A 3x3 above Normal, with every operation and with multiplication alone.
+describeAbsentTiers(keenGame, ["3dh", "3dx", "3du", "3dhm", "3dxm", "3dum"]);
+
 import {
   COL_ERROR,
   COL_PENCIL_BODY,

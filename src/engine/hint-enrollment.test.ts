@@ -196,6 +196,11 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
  * below means neither can rot.
  */
 const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
+  "scripts/checks/tier-walk.test.ts":
+    "Its question is the one a menu cannot be asked: whether a size the menu " +
+    "does not offer can carry the tier written onto it. So it writes every tier " +
+    "onto every size from a field's minimum up, which is the form a sweep of " +
+    "the menu must not take, and it is a report outside the gate.",
   "src/engine/hint-quality.test.ts":
     "`lintCases` deliberately walks one corner the presets menu does not offer " +
     "— the last preset at the hardest teachable tier — because Group speaks the " +

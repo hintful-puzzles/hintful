@@ -21,7 +21,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
@@ -144,11 +144,16 @@ export function decodeParams(str: string): DominosaParams {
   return { n, diff, tall };
 }
 
-export function validateParams(p: DominosaParams, _full: boolean): string | null {
+export function validateParams(p: DominosaParams, full: boolean): string | null {
   // Mirror upstream's overflow guard against a huge grid.
   const INT_MAX = 0x7fffffff;
   if (p.n > INT_MAX - 2 || p.n + 2 > Math.floor(INT_MAX / (p.n + 1)))
     return "Maximum number on dominoes must not be unreasonably large.";
+  // Measured 2026-10-05: none in a million boards built at each tier above
+  // these two sets' highest.
+  const highest = p.n === 1 ? DIFF_TRIVIAL : p.n === 2 ? DIFF_BASIC : p.diff;
+  if (full && p.diff > highest)
+    return noSuchTier(`Order ${p.n} puzzle`, DIFF_NAMES[p.diff]);
   return null;
 }
 

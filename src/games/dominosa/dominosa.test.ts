@@ -17,10 +17,18 @@ import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { dominosaGame } from "./index.ts";
+
+// A set up to 1 above Easy and a set up to 2 above Normal. The generator's
+// retry bound is 200,000 tries, so one run of it is the search.
+describeAbsentTiers(dominosaGame, ["1db", "1dh", "1de", "2dh", "2de"], {
+  budgets: 1,
+});
+
 import { COL_DOMINOCLASH, COL_REFERENCE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {

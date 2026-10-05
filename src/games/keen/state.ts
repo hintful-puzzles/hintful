@@ -25,7 +25,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -99,6 +99,15 @@ export function defaultParams(): KeenParams {
 export function encodeParams(p: KeenParams, full: boolean): string {
   if (!full) return `${p.w}`;
   return `${p.w}d${diffChar(p.diff)}${p.multiplicationOnly ? "m" : ""}`;
+}
+
+export function validateParams(p: KeenParams, full: boolean): string | null {
+  const level = diffToLevel(p.diff);
+  // Measured 2026-10-05: none in 50,000 boards built at each tier above
+  // Normal, with every operation and with multiplication alone.
+  if (full && p.w === 3 && level > DIFF_NORMAL)
+    return noSuchTier("3x3 puzzle", DIFF_NAMES[level]);
+  return null;
 }
 
 export function decodeParams(s: string): KeenParams {

@@ -753,9 +753,11 @@ preset:Unequal/Unequal/Unequal: 7x7 Unreasonable  full=7dr  brief=7
 preset:Unequal/Adjacent/Adjacent: 5x5 Easy  full=5adt  brief=5a
 preset:Unequal/Adjacent/Adjacent: 5x5 Normal  full=5ade  brief=5a
 preset:Unequal/Adjacent/Adjacent: 5x5 Tricky  full=5adk  brief=5a
+preset:Unequal/Adjacent/Adjacent: 5x5 Hard  full=5adx  brief=5a
 preset:Unequal/Adjacent/Adjacent: 6x6 Easy  full=6adt  brief=6a
 preset:Unequal/Adjacent/Adjacent: 6x6 Normal  full=6ade  brief=6a
 preset:Unequal/Adjacent/Adjacent: 6x6 Tricky  full=6adk  brief=6a
+preset:Unequal/Adjacent/Adjacent: 6x6 Hard  full=6adx  brief=6a
 preset:Unequal/Adjacent/Adjacent: 7x7 Tricky  full=7adk  brief=7a
 preset:Unequal/Adjacent/Adjacent: 7x7 Hard  full=7adx  brief=7a
 preset:Unequal/Adjacent/Adjacent: 7x7 Unreasonable  full=7adr  brief=7a

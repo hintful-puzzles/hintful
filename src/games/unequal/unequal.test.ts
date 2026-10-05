@@ -10,10 +10,12 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/desc-error.ts";
+import { cappedSolveFor, lowestSolvingCap } from "../../engine/difficulty.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -47,6 +49,13 @@ function gen(
   const p: UnequalParams = { order, mode, diff };
   const { desc, aux } = newUnequalDesc(p, randomNew(seed));
   return { p, desc, aux, st: newState(p, desc) };
+}
+
+/** The lowest tier whose deductions solve a board, by the game's own contract. */
+function lowestCap(p: UnequalParams, desc: string): number | null {
+  const { difficulty } = unequalGame;
+  if (!difficulty) throw new Error("unequal: expected a difficulty contract");
+  return lowestSolvingCap(cappedSolveFor(difficulty, p, desc), 5);
 }
 
 /** The unique solution of a board, derived from its givens only. */
@@ -135,14 +144,35 @@ describe("unequal generator", () => {
     const want = diffToLevel(diff);
     const soln = Uint8Array.from(st.immutable);
     expect(solveUnequal(order, mode, st.clueFlags, soln, want)).toBe(want);
-    // Not solvable below the target (a real deduction is needed).
-    if (want > 0) {
-      const easier = Uint8Array.from(st.immutable);
-      expect(solveUnequal(order, mode, st.clueFlags, easier, want - 1)).not.toBe(
-        want - 1,
-      );
+    expect(lowestCap(p, desc)).toBe(want);
+  });
+
+  // The cells where a board of the tier is rare: most deals take more than
+  // fifty tries, which is where the generator used to hand back the tier below.
+  it.each([
+    [3, "unequal", "extreme"],
+    [4, "unequal", "tricky"],
+    [5, "adjacent", "extreme"],
+    [6, "adjacent", "extreme"],
+  ] as const)("deals a rare tier at its tier: %s %s %s", (order, mode, diff) => {
+    for (let seed = 0; seed < 4; seed++) {
+      const { p, desc } = gen(order, mode, diff, `rare-${order}-${mode}-${seed}`);
+      expect(lowestCap(p, desc), `seed ${seed}`).toBe(diffToLevel(diff));
     }
   });
+});
+
+describe("a 3x3's tiers", () => {
+  it("are refused by name, and the tier between them deals", () => {
+    const refusal = (diff: UnequalParams["diff"]) =>
+      paramsError(unequalGame, { order: 3, mode: "unequal", diff }, true);
+    expect(refusal("tricky")).toBe("No 3x3 puzzle is Tricky.");
+    expect(refusal("recursive")).toBe("No 3x3 puzzle is Unreasonable.");
+    // Dealt in "deals a rare tier" above.
+    expect(refusal("extreme")).toBeNull();
+  });
+
+  describeAbsentTiers(unequalGame, ["3dk", "3dr"]);
 });
 
 // --- moves -----------------------------------------------------------------

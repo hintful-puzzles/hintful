@@ -1,0 +1,259 @@
+/**
+ * **Does a Custom size deal the tier it asks for?** For each tiered game, deal
+ * boards at sizes below the menu's largest, at every tier, and compare the
+ * tier asked with the lowest cap that solves the board.
+ *
+ * `difficulty-contract.test.ts` holds every *preset* to that, and deliberately
+ * not a tier written onto a small size, because whether a size can carry a tier
+ * is the question and not a premise. This asks the question. A cell comes out
+ * one of five ways:
+ *
+ * - **at tier** on every deal;
+ * - **below**: a board dealt under a tier it does not need, which is the defect
+ *   this exists to find;
+ * - **above**: the generator's acceptance is wider than the contract's cap;
+ * - **gave up**: the generator threw, so the tier is absent at that size or
+ *   too rare for its retry bound, and `validateParams` should say which;
+ * - **refused**, with the sentence a player is shown.
+ *
+ * **The sizes are a sample, and the report says which.** Every numeric field
+ * with a declared lower bound runs from that bound up to the largest value a
+ * preset holds, once with the fields stepped together (4x4, 5x5, …) and once
+ * each alone on every menu shape. Sizes past the largest preset are
+ * `bound-custom-sizes-by-their-deal`'s question, and so is a deal that is
+ * slow: once a tier takes longer than `TIER_WALK_SLOW_MS` on a shape, the
+ * larger sizes of that shape are left out at that tier and listed as such.
+ *
+ * **A cell that passes is not cleared.** A few deals convict a cell that fails
+ * and say little about one that does not: a tier a generator misses one time
+ * in ten passes three deals most of the time. Raise `TIER_WALK_SEEDS` for a
+ * cell that matters.
+ *
+ * A report and not a gate: the whole walk is many minutes. Run it for the
+ * games a change could have moved, and read `metrics/tier-walk.md`, which is
+ * rewritten after every cell:
+ *
+ *     TIER_WALK_GAMES=group,unequal npx vitest run \
+ *       -c scripts/checks/diff.vitest.config.mts tier-walk
+ */
+import { mkdirSync, writeFileSync } from "node:fs";
+import { expect, it } from "vitest";
+import "../../src/games/index.ts";
+import {
+  cappedSolveFor,
+  type DifficultyContract,
+  difficultyChoiceItem,
+  lowestSolvingCap,
+  withTier,
+} from "../../src/engine/difficulty.ts";
+import type { Game, ParamConfigItem } from "../../src/engine/game.ts";
+import { paramsError } from "../../src/engine/params.ts";
+import { randomNew } from "../../src/engine/random/index.ts";
+import { getTsGame, registeredGameIds } from "../../src/engine/registry.ts";
+import { leafPresets } from "../../src/engine/testing/presets.ts";
+
+const OUT = "metrics/tier-walk.md";
+
+const ONLY = process.env["TIER_WALK_GAMES"]?.split(",") ?? null;
+const SEEDS = Number(process.env["TIER_WALK_SEEDS"] ?? 3);
+const SLOW_MS = Number(process.env["TIER_WALK_SLOW_MS"] ?? 3000);
+
+// biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
+type AnyGame = Game<any, any, any, any, any, any>;
+type Params = Record<string, unknown>;
+type NumericItem = Extract<ParamConfigItem<Params>, { type: "string" }>;
+
+interface Cell {
+  label: string;
+  tier: number;
+  refusal: string | null;
+  /** Left out because a smaller size of its shape was slow at this tier. */
+  skipped: boolean;
+  /** The lowest solving cap of each board dealt, `null` where no cap solves. */
+  caps: (number | null)[];
+  gaveUp: number;
+  /** The slowest deal, in milliseconds. */
+  slowest: number;
+}
+
+interface Section {
+  id: string;
+  tiers: readonly string[];
+  cells: Cell[];
+}
+
+/** Every params record the walk deals for `game`, before tiers are applied,
+ * each with the index of the menu shape it was built on. */
+function sizesToWalk(game: AnyGame): { shape: number; params: Params }[] {
+  const tierItem = difficultyChoiceItem<Params>(game);
+  const presets = leafPresets(game).map((e) => e.params as Params);
+  const numeric = (game.paramConfig ?? []).filter(
+    (item: ParamConfigItem<Params>): item is NumericItem =>
+      item.type === "string" &&
+      item.bounds?.min !== undefined &&
+      presets.every((p) => Number.isInteger(Number(item.get(p)))),
+  );
+  const range = numeric.map((item) => ({
+    item,
+    lo: item.bounds?.min ?? 0,
+    hi: Math.max(...presets.map((p) => Number(item.get(p)))),
+  }));
+
+  const seen = new Set<string>();
+  const out: { shape: number; params: Params }[] = [];
+  const add = (shape: number, params: Params): void => {
+    const key = game.encodeParams(tierItem ? withTier(game, params, 0) : params, true);
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ shape, params });
+  };
+
+  presets.forEach((base, shape) => {
+    // The fields stepped together, each stopping at its own largest.
+    const steps = Math.max(0, ...range.map((r) => r.hi - r.lo));
+    for (let k = 0; k <= steps; k++) {
+      const p = { ...base };
+      for (const r of range) r.item.set(p, String(Math.min(r.lo + k, r.hi)));
+      add(shape, p);
+    }
+    // Each field alone, the others as the preset has them.
+    for (const r of range) {
+      for (let v = r.lo; v <= r.hi; v++) {
+        const p = { ...base };
+        r.item.set(p, String(v));
+        add(shape, p);
+      }
+    }
+  });
+  return out;
+}
+
+function walk(section: Section, game: AnyGame, report: () => void): void {
+  const { id, tiers } = section;
+  const contract = game.difficulty as DifficultyContract<Params>;
+  const slow = new Set<string>();
+  for (const { shape, params } of sizesToWalk(game)) {
+    for (let tier = 0; tier < tiers.length; tier++) {
+      const p = withTier(game, params, tier);
+      const label = game.encodeParams(p, true);
+      const cell: Cell = {
+        label,
+        tier,
+        refusal: paramsError(game, p, true),
+        skipped: false,
+        caps: [],
+        gaveUp: 0,
+        slowest: 0,
+      };
+      section.cells.push(cell);
+      if (cell.refusal !== null) continue;
+      if (slow.has(`${shape}:${tier}`)) {
+        cell.skipped = true;
+        continue;
+      }
+      for (let seed = 0; seed < SEEDS; seed++) {
+        const started = performance.now();
+        let desc: string | null = null;
+        try {
+          desc = game.newDesc(p, randomNew(`tier-walk-${id}-${label}-${seed}`)).desc;
+        } catch {
+          cell.gaveUp++;
+        }
+        cell.slowest = Math.max(cell.slowest, performance.now() - started);
+        if (desc !== null) {
+          cell.caps.push(
+            lowestSolvingCap(cappedSolveFor(contract, p, desc), tiers.length),
+          );
+        }
+        if (cell.slowest > SLOW_MS) {
+          slow.add(`${shape}:${tier}`);
+          break;
+        }
+      }
+      report();
+    }
+  }
+}
+
+const isBelow = (cell: Cell): boolean =>
+  cell.caps.some((cap) => cap !== null && cap < cell.tier);
+
+/** What a cell did, in the words of the header's outcomes, or `null` where
+ * every deal came out at its tier. */
+function finding(cell: Cell, tiers: readonly string[]): string | null {
+  const name = (cap: number | null): string =>
+    cap === null ? "no cap" : (tiers[cap] ?? String(cap));
+  const off = cell.caps.filter((cap) => cap !== cell.tier);
+  const parts: string[] = [];
+  if (off.length > 0) {
+    parts.push(`${isBelow(cell) ? "BELOW" : "above"}: ${off.map(name).join(", ")}`);
+  }
+  if (cell.gaveUp > 0) parts.push(`gave up on ${cell.gaveUp}`);
+  if (cell.slowest > SLOW_MS) parts.push(`${(cell.slowest / 1000).toFixed(1)} s`);
+  return parts.length > 0 ? parts.join("; ") : null;
+}
+
+function render(sections: readonly Section[], unwalked: readonly string[]): string {
+  const lines: string[] = [
+    "# Tier walk",
+    "",
+    `${SEEDS} deals a cell. A cell not listed dealt every board at its tier.`,
+    "",
+  ];
+  for (const { id, tiers, cells } of sections) {
+    const dealt = cells.filter((c) => c.refusal === null && !c.skipped);
+    const skipped = cells.filter((c) => c.skipped);
+    const refused = cells.filter((c) => c.refusal !== null);
+    lines.push(`## ${id}`, "");
+    lines.push(
+      `${dealt.length} cells dealt, ${refused.length} refused, ` +
+        `${skipped.length} left out as slow.`,
+      "",
+    );
+    for (const cell of dealt) {
+      const found = finding(cell, tiers);
+      if (found !== null) {
+        lines.push(`- \`${cell.label}\` asked ${tiers[cell.tier]}: ${found}`);
+      }
+    }
+    for (const cell of refused) {
+      lines.push(`- \`${cell.label}\` refused: ${cell.refusal}`);
+    }
+    if (skipped.length > 0) {
+      lines.push(`- left out: ${skipped.map((c) => `\`${c.label}\``).join(" ")}`);
+    }
+    lines.push("");
+  }
+  for (const id of unwalked) {
+    lines.push(`## ${id}`, "", "Not walked: no lowest cap to compare.", "");
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+it("walks every tier at sizes below the menu's largest", () => {
+  const sections: Section[] = [];
+  const unwalked: string[] = [];
+  mkdirSync("metrics", { recursive: true });
+  const report = (): void => writeFileSync(OUT, render(sections, unwalked));
+
+  for (const id of registeredGameIds().sort()) {
+    if (ONLY !== null && !ONLY.includes(id)) continue;
+    const game = getTsGame(id) as AnyGame;
+    const tiers = difficultyChoiceItem<Params>(game)?.choices ?? null;
+    if (tiers === null || !game.difficulty) continue;
+    if (game.difficulty.nonMonotone) {
+      unwalked.push(id);
+      continue;
+    }
+    const section: Section = { id, tiers, cells: [] };
+    sections.push(section);
+    walk(section, game, report);
+  }
+  report();
+
+  // A filter that names no tiered game, or a walk that found no size to deal,
+  // would otherwise write an empty report that reads as a clean one.
+  const boards = sections.flatMap((s) => s.cells).flatMap((c) => c.caps);
+  expect(sections.length, "no tiered game was walked").toBeGreaterThan(0);
+  expect(boards.length, "no board was dealt").toBeGreaterThan(0);
+});

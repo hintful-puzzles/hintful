@@ -485,6 +485,11 @@ Details: [`mechanics.md`](./mechanics.md) (declaring) and
 check and `hint-resume.test.ts`'s walk both use it to decide whether a board may
 run out of deduction, so reach for it rather than comparing names yourself.
 
+`noSuchTier(what, tier)` is the sentence `validateParams` returns for a size
+none of whose boards needs the tier asked for. Use it rather than wording a
+refusal of your own; [`solver-and-generator.md`](./solver-and-generator.md)
+§ "A size that cannot carry a tier" has when, and what the claim owes.
+
 ### `sections.ts` — contract sections and the draft label
 
 `sectionState(game, section)` reads whether `hint`, `findMistakes`, `solve` or
@@ -1358,6 +1363,9 @@ midend told the app**: the notifications, `last(type)` typed by its argument,
 `timerActive()` and `redraws()`. Every test that asks what a midend reported
 goes through it; do not hand-roll a `setCallbacks` recorder, and do not set
 all-no-op callbacks, which the midend does not need),
+`absent-tiers.ts` (`describeAbsentTiers` — the cells a game refuses because no
+board of that size needs the tier: refused when dealing, accepted with a desc,
+and in the slow tier the generator run out at each),
 `differential.ts` (`describeDescDifferential`, the byte-for-byte desc shape +
 the one statement that fixtures are frozen and unregenerable),
 `enrollment.ts` + `hint-games.ts` (**how a cross-game guard finds its

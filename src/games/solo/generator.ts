@@ -35,7 +35,6 @@ import { type Difficulty, runSolver } from "./solver.ts";
 import {
   type BlockStructure,
   blocksFromDsf,
-  DIFF_BLOCK,
   DIFF_KSINGLE,
   encodeBlockStructureDesc,
   encodeGrid,
@@ -390,7 +389,7 @@ export function newSoloDesc(
   const area = cr * cr;
 
   // Cap the difficulty for sizes that can only ever be trivial.
-  const maxdiff = (c === 2 && r === 2) || (r === 1 && c < 4) ? DIFF_BLOCK : p.diff;
+  const maxdiff = p.diff;
   const maxkdiff = p.kdiff;
   const dlev: Difficulty = { maxdiff, maxkdiff, diff: 0, kdiff: 0 };
 

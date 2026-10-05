@@ -24,10 +24,15 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { newDesc } from "./generator.ts";
 import { tracksGame } from "./index.ts";
+
+// A 4x4 above Easy.
+describeAbsentTiers(tracksGame, ["4x4dt", "4x4dh"]);
+
 import { executeMove, uiCanFlipSquare } from "./moves.ts";
 import {
   COL_ERROR,

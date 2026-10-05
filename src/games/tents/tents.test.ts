@@ -24,11 +24,16 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsGame } from "./index.ts";
+
+// A 4x4 above Easy.
+describeAbsentTiers(tentsGame, ["4x4dt"]);
+
 import { COL_MISTAKE, computeSize, dragXform, newDrawState, redraw } from "./render.ts";
 import { tentsSolve } from "./solver.ts";
 import {
