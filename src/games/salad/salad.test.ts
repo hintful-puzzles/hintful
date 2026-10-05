@@ -115,17 +115,29 @@ describe("salad params codec", () => {
   });
 
   it("labels presets by mode, size, symbol range and tier", () => {
-    const titles = presetMenu(saladGame).submenu?.map((m) => m.title);
-    expect(titles?.[0]).toBe("Letters: 4x4 A~C Easy");
-    expect(titles?.[2]).toBe("Numbers: 5x5 1~3 Easy");
-    // Both tiers are on the menu, Easy first.
-    expect(titles?.filter((t) => t.endsWith(" Normal"))).toEqual([
+    const titles = leafPresets(saladGame).map((e) => e.title);
+    expect(titles[0]).toBe("Letters: 4x4 A~C Easy");
+    expect(titles).toContain("Numbers: 5x5 1~3 Easy");
+    expect(titles.filter((t) => t.endsWith(" Normal"))).toEqual([
       "Letters: 5x5 A~C Normal",
       "Letters: 5x5 A~D Normal",
-      "Numbers: 5x5 1~4 Normal",
       "Letters: 6x6 A~D Normal",
+      "Numbers: 5x5 1~4 Normal",
     ]);
-    expect(titles?.slice(-4).every((t) => t.endsWith(" Normal"))).toBe(true);
+  });
+
+  it("gives each mode a section of the menu, Easy before Normal", () => {
+    const sections = presetMenu(saladGame).submenu ?? [];
+    expect(sections.map((s) => s.title)).toEqual(["Letters", "Numbers"]);
+    const total = sections.reduce((n, s) => n + (s.submenu?.length ?? 0), 0);
+    expect(total).toBe(PRESETS.length);
+    for (const s of sections) {
+      const entries = s.submenu ?? [];
+      expect(entries.length).toBeGreaterThan(0);
+      for (const e of entries) expect(e.title.startsWith(`${s.title}: `)).toBe(true);
+      const tiers = entries.map((e) => e.params?.diff ?? -1);
+      expect(tiers).toEqual([...tiers].sort((a, b) => a - b));
+    }
   });
 
   it("varies difficulty across its presets, so a sliced sweep deals Normal", () => {

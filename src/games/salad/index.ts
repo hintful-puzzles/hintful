@@ -84,6 +84,8 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
+  GAMEMODE_LETTERS,
+  GAMEMODE_NUMBERS,
   isComplete,
   KEY_CIRCLE,
   KEY_CROSS,
@@ -110,9 +112,17 @@ import {
 export type { SaladMistake } from "./solver.ts";
 
 function presets(): PresetMenu<SaladParams> {
+  // The two modes are two games on one board, so each has a section.
+  const section = (title: string, mode: number): PresetMenu<SaladParams> => ({
+    title,
+    submenu: PRESETS.filter((p) => p.mode === mode).map((p) => ({ params: { ...p } })),
+  });
   return {
     title: "Salad",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
+    submenu: [
+      section("Letters", GAMEMODE_LETTERS),
+      section("Numbers", GAMEMODE_NUMBERS),
+    ],
   };
 }
 

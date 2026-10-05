@@ -2,10 +2,10 @@
 
 You have a square grid; each square may contain a character from A (or 1) to a given maximum. Your objective is to put characters in some of the squares, so each character appears exactly once in each row and column.
 
-The rules vary depending on the game mode:
+The rules vary depending on the game mode, and the Type menu has a section for each:
 
-* ABC End View mode: Letters on the edge show which letter appears first when 'looking' into the grid.
-* Number Ball mode: Squares with a ball must contain a number. Squares with a cross must remain empty.
+* Letters, the puzzle called ABC End View: Letters on the edge show which letter appears first when 'looking' into the grid.
+* Numbers, the puzzle called Number Ball: Squares with a ball must contain a number. Squares with a cross must remain empty.
 
 Number Ball was invented by Inaba Naoki. The original puzzles are available here: http://www.janko.at/Raetsel/Nanbaboru/index.htm
 
