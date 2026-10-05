@@ -488,13 +488,18 @@ export class Puzzle {
   }
 
   // Methods
-  public async newGame(): Promise<void> {
+  /** Deal a new board. Resolves to the sentence to show where the generator
+   * found none; the board on screen is then the one that was there. */
+  public async newGame(): Promise<string | null> {
     this.stopAutoHint("");
     this.setHelpMessage("");
     this._activeHintExplanation.set("");
     this._generatingGame.set(true);
-    await this.workerPuzzle.newGame(this.boardArea ?? undefined);
-    this._generatingGame.set(false);
+    try {
+      return await this.workerPuzzle.newGame(this.boardArea ?? undefined);
+    } finally {
+      this._generatingGame.set(false);
+    }
   }
 
   /** The space the board is drawn in, as `<puzzle-view>` last measured it.

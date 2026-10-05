@@ -42,7 +42,11 @@ describe("map differential (frozen C reference)", () => {
     const p: MapParams = { w: f.w, h: f.h, n: f.n, diff: f.diff };
     const label = `${f.w}x${f.h}n${f.n}d${f.diff} seed=${f.seed}`;
 
-    it(`${label}: TS desc + aux match C byte-for-byte`, () => {
+    // Upstream dealt an Easy board under the tier's name after fifty tries,
+    // and one fixture records that. The generator here does not, so that
+    // fixture keeps only its solver half.
+    const dealtBelowTier = f.solverDiff < f.diff;
+    it.skipIf(dealtBelowTier)(`${label}: TS desc + aux match C byte-for-byte`, () => {
       const { desc, aux } = newMapDesc(p, randomNew(f.seed));
       expect(desc).toBe(f.desc);
       expect(aux).toBe(f.aux);

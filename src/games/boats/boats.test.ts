@@ -36,6 +36,11 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -331,6 +336,26 @@ describe("boats solver", () => {
 // --- generator -------------------------------------------------------------
 
 describe("boats generator", () => {
+  // Normal with every number shown is the tier found least often, and the one
+  // a thousand-try count used to hand over as Easy.
+  describeDealtTiers(boatsGame, [
+    "5x5f2dn,2,1",
+    "7x7f3dn,3,2,1",
+    "6x6f3dhS,3,2,1",
+    "6x6f1dt,4",
+  ]);
+
+  describeAbsentTiers(boatsGame, ["3x3f1dn,1", "6x6f1dh,1"]);
+
+  // Two single boats on a 3x3 have nothing to deduce past Easy either, and no
+  // line through fleets says which do: the generator runs out, and the midend
+  // says so.
+  it("gives up where a fleet has no board at the tier, and deals no other", () => {
+    const p = boatsGame.decodeParams("3x3f1dn,2");
+    expect(paramsError(boatsGame, p, true)).toBeNull();
+    expect(() => newBoatsDesc(p, randomNew("one-boat"))).toThrow(RetryLimitExceeded);
+  });
+
   it("is deterministic for a seed", () => {
     const p = params();
     const a = newBoatsDesc(p, randomNew("boats-determinism")).desc;

@@ -25,7 +25,7 @@ import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -165,7 +165,10 @@ export function validateParams(p: GroupParams, full: boolean): string | null {
     );
   }
   if (full && tierTooRare(p)) {
-    return `${DIFF_NAMES[p.diff]} ${p.w}x${p.w} puzzles that show their identity are too rare to deal.`;
+    return tooRareToDeal(
+      `${p.w}x${p.w} puzzles that show their identity`,
+      DIFF_NAMES[p.diff],
+    );
   }
   return null;
 }

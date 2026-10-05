@@ -136,7 +136,8 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
           throw new Error(`Invalid puzzle-view gameid="${this.gameId}": ${error}`);
         }
       } else {
-        await this._puzzle.newGame();
+        const refusal = await this._puzzle.newGame();
+        if (refusal) throw new Error(`puzzle-view could not deal: ${refusal}`);
       }
     }
   }

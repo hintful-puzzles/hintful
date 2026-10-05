@@ -677,7 +677,7 @@ export const boatsGame: Game<
       kw: "fleet-configuration",
       name: "Fleet configuration",
       type: "string",
-      doc: "Customize the fleet by entering a list of numbers. Each number indicates how many times a boat of a specific size appears. For example, the configuration <code>3,2,1</code> represents 3 boats of size 1, 2 boats of size 2, and 1 boat of size 3.",
+      doc: "Customize the fleet by entering a list of numbers. Each number indicates how many times a boat of a specific size appears. For example, the configuration <code>3,2,1</code> represents 3 boats of size 1, 2 boats of size 2, and 1 boat of size 3. A fleet of one boat has only Easy puzzles.",
       label: {
         slot: "tail",
         words: (p) => (fleetConfigString(p) ? `fleet ${fleetConfigString(p)}` : null),

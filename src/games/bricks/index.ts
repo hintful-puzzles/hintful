@@ -104,6 +104,7 @@ import {
   paramConfig,
   presets,
   textFormat,
+  validateParams,
 } from "./state.ts";
 
 // Numpad-flagged keys (the web frontend sets MOD_NUM_KEYPAD for the numpad).
@@ -555,6 +556,7 @@ export const bricksGame: Game<
   encodeParams,
   decodeParams,
   paramConfig,
+  validateParams,
 
   newDesc: newBricksDesc,
   newState,

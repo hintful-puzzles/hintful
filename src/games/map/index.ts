@@ -529,11 +529,11 @@ export const mapGame: Game<
   transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<MapParams>({
-      doc: "Size of the grid the map is drawn on, in squares.",
+      doc: "Size of the grid the map is drawn on, in squares. A map two squares wide has only Easy puzzles, and Tricky ones are too rare to deal at three.",
       bounds: { min: 2 },
     }),
     numberItem<MapParams>("regions", "Regions", "n", {
-      doc: "How many regions the map is divided into, which can be no more than the grid has squares.",
+      doc: "How many regions the map is divided into, which can be no more than the grid has squares. A map of fewer than 8 regions, or with a region to every square, has only Easy puzzles. Normal ones are too rare to deal at 8 regions, and Tricky and Unreasonable ones below 11.",
       bounds: { min: 5 },
       label: { slot: "tail", words: (p) => `${p.n} regions` },
     }),

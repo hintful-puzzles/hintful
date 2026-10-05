@@ -423,9 +423,10 @@ function makeLoadPuzzle(opts: { rejectId?: (id: string) => string | null } = {})
       { title: "4x4 Easy", params: "4x4n4d0" },
       { title: "5x5 Normal", params: "5x5n4d1" },
     ]),
-    newGame: vi.fn(async () => {
+    newGame: vi.fn(async (): Promise<string | null> => {
       dealt += 1;
       puzzle.currentGameId = `5x5n4d1:fresh-${dealt}`;
+      return null;
     }),
     newGameFromId: vi.fn(async (id: string) => {
       const error = opts.rejectId?.(id);
@@ -547,6 +548,20 @@ describe("which board a puzzle page opens with", () => {
     expect(second.newGame).toHaveBeenCalled();
   });
 
+  it("says so and starts on the first preset when the remembered type deals nothing", async () => {
+    const puzzle = makeLoadPuzzle();
+    await settings.setParams(puzzle.puzzleId, "9x9n4d3");
+    puzzle.newGame.mockImplementationOnce(async () => "No Hard puzzle was found.");
+    await load(puzzle);
+
+    expect(showAlert).toHaveBeenCalledOnce();
+    expect(showAlert.mock.calls[0]?.[0]).toMatchObject({
+      message: "No Hard puzzle was found.",
+    });
+    expect(puzzle.setParams).toHaveBeenLastCalledWith("4x4n4d0");
+    expect(puzzle.newGame).toHaveBeenCalledTimes(2);
+  });
+
   it("drops a remembered board this build cannot deal, quietly", async () => {
     const first = makeLoadPuzzle();
     await load(first);
@@ -600,6 +615,7 @@ describe("which board a puzzle page opens with", () => {
     let rendersBeforeDeal = -1;
     puzzle.newGame.mockImplementationOnce(async () => {
       rendersBeforeDeal = requestUpdate.mock.calls.length;
+      return null;
     });
     const loaded = (
       screen as unknown as { handlePuzzleLoaded: (e: unknown) => Promise<void> }

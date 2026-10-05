@@ -18,6 +18,7 @@ import { completionStatus } from "./completion-status.ts";
 import { DESC_MALFORMED, loadDesc, loadVerdict } from "./desc-error.ts";
 import {
   cappedSolveFor,
+  dealGaveUp,
   difficultyTiers,
   lowestSolvingCap,
   permitsSearch,
@@ -56,7 +57,8 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "./pointer.ts";
-import { randomNew } from "./random/index.ts";
+import { type RandomState, randomNew } from "./random/index.ts";
+import { RetryLimitExceeded } from "./retry-limit.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import type {
   ChangeNotification,
@@ -104,8 +106,10 @@ export interface EngineCore {
   ): void;
   /** Deal a new board at the chosen params, turned on its side when the game
    * can turn them and the turned board draws at a larger tile in `fitTo`, the
-   * board area. Without `fitTo` the chosen orientation is dealt as it stands. */
-  newGame(fitTo?: Size): void;
+   * board area. Without `fitTo` the chosen orientation is dealt as it stands.
+   * Returns the sentence to show where the generator gave up, with the board
+   * on screen left as it was. */
+  newGame(fitTo?: Size): string | null;
   newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;
@@ -365,11 +369,36 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.notifyRedraw = notifyRedraw;
   }
 
-  newGame(fitTo?: Size): void {
-    const rng = randomNew(freshSeed());
+  newGame(fitTo?: Size): string | null {
     const params = fitTo ? this.paramsToFit(fitTo) : this.params;
-    const { desc, aux } = this.game.newDesc(params, rng);
+    return this.deal(params, randomNew(freshSeed()), this.params);
+  }
+
+  /**
+   * Deal a board at `params` and begin play on it. A generator that runs its
+   * retry budget out has found no board, which is an answer and not a fault:
+   * the tier may be rare at this size, or absent where nobody has counted. The
+   * board on screen stays, and the type chosen goes back to that board's, so
+   * the menu does not name a type the player is not looking at. `chosen` is
+   * what the next New game deals at once this one has dealt, which is not
+   * `params` where the board was turned to fit.
+   */
+  private deal(params: Params, rng: RandomState, chosen: Params): string | null {
+    let dealt: { desc: string; aux?: string };
+    try {
+      dealt = this.game.newDesc(params, rng);
+    } catch (e) {
+      if (!(e instanceof RetryLimitExceeded)) throw e;
+      if (this.history.length > 0) {
+        this.params = this.boardParams;
+        this.emitParamsChange();
+      }
+      return dealGaveUp(tierNameOf(this.game, params));
+    }
+    this.params = chosen;
+    const { desc, aux } = dealt;
     this.startFrom(params, desc, this.game.newState(params, desc), aux);
+    return null;
   }
 
   /** The chosen params, or the same board turned on its side when that draws
@@ -417,13 +446,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const pErr = paramsError(this.game, params, generating);
     if (pErr) return pErr;
 
-    if (generating) {
-      const rng = randomNew(rest);
-      const { desc, aux } = this.game.newDesc(params, rng);
-      this.params = params;
-      this.startFrom(params, desc, this.game.newState(params, desc), aux);
-      return null;
-    }
+    if (generating) return this.deal(params, randomNew(rest), params);
     const loaded = loadDesc(this.game, params, rest);
     if (!loaded.ok) return loaded.error;
     this.params = this.withBoardTier(paramsStr, params, rest);

@@ -3,7 +3,7 @@ import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
 import { token } from "./color/color-token.ts";
 import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
 import { DESC_MALFORMED } from "./desc-error.ts";
-import { difficultyItem } from "./difficulty.ts";
+import { dealGaveUp, difficultyItem } from "./difficulty.ts";
 import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
@@ -17,6 +17,7 @@ import {
 } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON } from "./pointer.ts";
+import { RetryLimitExceeded } from "./retry-limit.ts";
 import { decodeSave, encodeSave } from "./save.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
@@ -970,6 +971,57 @@ describe("Midend newGame requests a redraw (deterministic boards may produce the
     expect(h.redraws()).toBeGreaterThan(0);
     const types = new Set(h.notes.map((n) => n.type));
     expect(types).toContain("game-id-change");
+  });
+});
+
+describe("Midend: a generator that gives up is an answer, not a fault", () => {
+  /** fakeGame, except that a target of 7 has no board. */
+  const rare: typeof fakeGame = {
+    ...fakeGame,
+    newDesc: (p, rng) => {
+      if (p.target === 7) throw new RetryLimitExceeded("fake: generation", 10);
+      return fakeGame.newDesc(p, rng);
+    },
+  };
+
+  it("keeps the board on screen and the type it was dealt at", () => {
+    const { m, sent } = harness(rare);
+    const board = () => sent("game-id-change").currentGameId;
+    expect(m.setParams("t4")).toBeNull();
+    expect(m.newGame()).toBeNull();
+    const dealt = board();
+    expect(dealt.startsWith("t4:")).toBe(true);
+
+    expect(m.setParams("t7")).toBeNull();
+    expect(m.newGame()).toBe(dealGaveUp(null));
+    expect(board()).toBe(dealt);
+    expect(m.getParams()).toBe("t4");
+    // And the next deal is at the type that works.
+    expect(m.newGame()).toBeNull();
+  });
+
+  it("answers a seed id the same way", () => {
+    const { m, sent } = harness(rare);
+    m.newGame();
+    const dealt = sent("game-id-change").currentGameId;
+    expect(m.newGameFromId("t7#any")).toBe(dealGaveUp(null));
+    expect(sent("game-id-change").currentGameId).toBe(dealt);
+  });
+
+  it("lets any other error through", () => {
+    const m = new Midend({
+      ...fakeGame,
+      newDesc: () => {
+        throw new Error("a bug");
+      },
+    });
+    expect(() => m.newGame()).toThrow("a bug");
+  });
+
+  it("names the tier where the game has one", () => {
+    expect(dealGaveUp("Tricky")).toBe(
+      "No Tricky puzzle of this type was found. It may be too rare to deal, or there may be none: try again, or choose another type.",
+    );
   });
 });
 

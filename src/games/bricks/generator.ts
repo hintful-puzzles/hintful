@@ -152,7 +152,6 @@ export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string 
     // whatever the tier requested, which was vacuous above Normal.
     if (
       p.diff > DIFF_EASY &&
-      spaces > 6 &&
       solveGame(grid, w, h, p.diff - 1, true, true) === "complete"
     ) {
       continue;

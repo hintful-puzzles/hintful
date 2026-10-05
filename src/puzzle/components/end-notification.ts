@@ -7,6 +7,7 @@ import { animateWithClass } from "../../utils/animation.ts";
 import { cssWATweaks } from "../../utils/css.ts";
 import { sleep } from "../../utils/timing.ts";
 import { puzzleContext } from "../contexts.ts";
+import { dealNewGame } from "../deal-actions.ts";
 import type { Puzzle } from "../puzzle.ts";
 import { formatElapsed } from "../timer.ts";
 
@@ -215,7 +216,7 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
 
   private async newGame() {
     await this.hide();
-    await this.puzzle?.newGame();
+    if (this.puzzle) await dealNewGame(this.puzzle);
   }
 
   private async undo() {

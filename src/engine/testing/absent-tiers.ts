@@ -25,6 +25,13 @@
  * Dev/test-only; never imported by production code.
  */
 import { describe, expect, it } from "vitest";
+import {
+  cappedSolveFor,
+  type DifficultyContract,
+  difficultyTiers,
+  lowestSolvingCap,
+  tierOf,
+} from "../difficulty.ts";
 import type { ParamConfigItem } from "../game.ts";
 import { paramsError } from "../params.ts";
 import { type RandomState, randomNew } from "../random/index.ts";
@@ -36,6 +43,35 @@ interface DealingGame<Params> {
   validateParams?(p: Params, full: boolean): string | null;
   decodeParams(s: string): Params;
   newDesc(p: Params, rng: RandomState): { desc: string };
+}
+
+/**
+ * Hold each of `cells` to dealing a board that needs the tier it asks for:
+ * the lowest cap that solves it is that tier. For the cells beside a refusal,
+ * and for a tier rare enough at its size that the retry bound was sized to it.
+ * `deals` boards a cell, from fixed seeds.
+ */
+export function describeDealtTiers<Params>(
+  game: DealingGame<Params> & { difficulty?: DifficultyContract<Params> },
+  cells: readonly string[],
+  opts: { readonly deals?: number } = {},
+): void {
+  const deals = opts.deals ?? 3;
+  describe("a size that carries its tier", () => {
+    it.each(cells)(`%s deals ${deals} boards that need it`, (cell) => {
+      const { difficulty } = game;
+      if (!difficulty) throw new Error("expected a difficulty contract");
+      const p = game.decodeParams(cell);
+      const tiers = difficultyTiers(game)?.length ?? 0;
+      expect(paramsError(game, p, true)).toBeNull();
+      for (let seed = 0; seed < deals; seed++) {
+        const { desc } = game.newDesc(p, randomNew(`dealt-${cell}-${seed}`));
+        expect(lowestSolvingCap(cappedSolveFor(difficulty, p, desc), tiers)).toBe(
+          tierOf(game, p),
+        );
+      }
+    });
+  });
 }
 
 /**

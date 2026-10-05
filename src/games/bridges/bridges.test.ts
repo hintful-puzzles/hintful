@@ -20,6 +20,10 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newBridgesDesc } from "./generator.ts";
@@ -63,6 +67,41 @@ describe("bridges params codec", () => {
     );
     expect(paramsError(bridgesGame, BRIDGES_PRESETS[0], true)).toBeNull();
   });
+
+  // One cell of each family `sparseRefusal` names. A run-out here is a
+  // million boards and more, so two budgets and not five.
+  describeAbsentTiers(
+    bridgesGame,
+    [
+      "3x3i30e10m2d1",
+      "4x4i30e10m2d2",
+      "5x5i20e10m2Ld2",
+      "5x5i20e10m1d1",
+      "7x7i30e100m1d1",
+    ],
+    { budgets: 2 },
+  );
+
+  it("names the islands a refused board would have", () => {
+    const refusal = (id: string): string | null =>
+      paramsError(bridgesGame, decodeParams(id), true);
+    expect(refusal("8x8i5e10m2d1")).toBe("No puzzle of 3 islands is Normal.");
+    expect(refusal("9x9i5e10m2d2")).toBe("No puzzle of 4 islands is Tricky.");
+    expect(refusal("9x9i5e10m2d1")).toBeNull();
+    expect(refusal("10x10i5e10m2d2")).toBeNull();
+    expect(refusal("10x10i5e10m3Ld2")).toBeNull();
+    expect(refusal("4x6i30e10m1d1")).toBeNull();
+    expect(refusal("7x7i30e100m1Ld1")).toBeNull();
+  });
+
+  // Rare and quick: found once in tens of thousands of boards, each of which
+  // takes microseconds, so the retry budget has to be that long.
+  describeDealtTiers(bridgesGame, ["9x9i5e10m4d1", "10x10i5e10m2d2", "4x4i30e10m2d1"]);
+
+  // The generator grades a board from its desc. Grading the state it grew
+  // passed about one board in a hundred here that Easy solves once loaded,
+  // and the 78th of these was one.
+  describeDealtTiers(bridgesGame, ["11x11i5e10m4d2"], { deals: 80 });
 });
 
 describe("bridges desc codec", () => {

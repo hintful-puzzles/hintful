@@ -8,7 +8,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
+import { MAX_REGENERATE, retryLimit } from "../../engine/retry-limit.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
   type BridgesParams,
@@ -18,20 +18,27 @@ import {
   G_LINEH,
   G_LINEV,
   type Island,
+  islandTarget,
+  newStateFromDesc,
 } from "./state.ts";
 
 const MAX_NEWISLAND_TRIES = 50;
-const MIN_SENSIBLE_ISLANDS = 3;
+const ISLAND_BUDGET = 6_000_000;
 
 export function newBridgesDesc(
   p: BridgesParams,
   rng: RandomState,
 ): { desc: string; aux?: string } {
-  const wh = p.w * p.h;
-  const target = Math.max(Math.floor((p.islands * wh) / 100), MIN_SENSIBLE_ISLANDS);
+  const target = islandTarget(p);
 
-  // `generate:` — full restart on any rejection.
-  const attempt = retryLimit(`bridges: generation (${p.w}x${p.h})`);
+  // `generate:` — full restart on any rejection. The budget is islands placed
+  // and not boards built: a board of few islands takes microseconds and
+  // rarely needs its tier (a 10x10 of 5 islands at Tricky is found once in
+  // about 100,000), where a large one takes longer and is found at once.
+  const attempt = retryLimit(
+    `bridges: generation (${p.w}x${p.h})`,
+    Math.max(MAX_REGENERATE, Math.floor(ISLAND_BUDGET / target)),
+  );
   while (true) {
     attempt();
 
@@ -155,19 +162,18 @@ export function newBridgesDesc(
     st.mapCount();
     st.mapFindOrthogonal();
 
-    // Reject if solvable one difficulty easier (too easy). `solveFromScratch`
-    // map_clears + solves in place; island counts survive so encode is stable.
-    if (p.difficulty > 0) {
-      if (
-        st.islands.length > MIN_SENSIBLE_ISLANDS &&
-        solveFromScratch(st, p.difficulty - 1) > 0
-      ) {
-        continue;
-      }
-    }
+    // Graded as it will be dealt, from its desc. The state grown above lists
+    // its islands in the order they were placed, and the solver's verdict was
+    // seen to differ from the one it gives the same board read back: about a
+    // board in a hundred, at three and four bridges a line, passed here as
+    // Tricky and solved at Easy once loaded.
+    const desc = encodeGame(st);
+    const dealt = newStateFromDesc(p, desc);
+    // Reject if solvable one difficulty easier (too easy).
+    if (p.difficulty > 0 && solveFromScratch(dealt, p.difficulty - 1) > 0) continue;
     // Reject if not solvable at the target difficulty (too hard).
-    if (solveFromScratch(st, p.difficulty) === 0) continue;
+    if (solveFromScratch(dealt, p.difficulty) === 0) continue;
 
-    return { desc: encodeGame(st) };
+    return { desc };
   }
 }

@@ -74,8 +74,8 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     return this.engine.getStaticProperties();
   }
 
-  newGame(fitTo?: Size): void {
-    this.engine.newGame(fitTo);
+  newGame(fitTo?: Size): string | null {
+    return this.engine.newGame(fitTo);
   }
   newGameFromId(id: string): string | null {
     return this.engine.newGameFromId(id);

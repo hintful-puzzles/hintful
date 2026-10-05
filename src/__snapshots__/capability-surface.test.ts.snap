@@ -217,6 +217,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solvedFlash",
       "targetVerbs",
       "textFormat",
+      "validateParams",
     ],
     "ui": [
       "cursor",

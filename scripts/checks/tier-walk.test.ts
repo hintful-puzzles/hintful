@@ -1,7 +1,9 @@
 /**
  * **Does a Custom size deal the tier it asks for?** For each tiered game, deal
  * boards at sizes below the menu's largest, at every tier, and compare the
- * tier asked with the lowest cap that solves the board.
+ * tier asked with the lowest cap that solves the board. That comparison holds
+ * for a solver that is not monotone in its cap too (Boats): a board some lower
+ * cap solves was dealt below its tier, whatever the caps above it do.
  *
  * `difficulty-contract.test.ts` holds every *preset* to that, and deliberately
  * not a tier written onto a small size, because whether a size can carry a tier
@@ -193,7 +195,7 @@ function finding(cell: Cell, tiers: readonly string[]): string | null {
   return parts.length > 0 ? parts.join("; ") : null;
 }
 
-function render(sections: readonly Section[], unwalked: readonly string[]): string {
+function render(sections: readonly Section[]): string {
   const lines: string[] = [
     "# Tier walk",
     "",
@@ -224,27 +226,19 @@ function render(sections: readonly Section[], unwalked: readonly string[]): stri
     }
     lines.push("");
   }
-  for (const id of unwalked) {
-    lines.push(`## ${id}`, "", "Not walked: no lowest cap to compare.", "");
-  }
   return `${lines.join("\n")}\n`;
 }
 
 it("walks every tier at sizes below the menu's largest", () => {
   const sections: Section[] = [];
-  const unwalked: string[] = [];
   mkdirSync("metrics", { recursive: true });
-  const report = (): void => writeFileSync(OUT, render(sections, unwalked));
+  const report = (): void => writeFileSync(OUT, render(sections));
 
   for (const id of registeredGameIds().sort()) {
     if (ONLY !== null && !ONLY.includes(id)) continue;
     const game = getTsGame(id) as AnyGame;
     const tiers = difficultyChoiceItem<Params>(game)?.choices ?? null;
     if (tiers === null || !game.difficulty) continue;
-    if (game.difficulty.nonMonotone) {
-      unwalked.push(id);
-      continue;
-    }
     const section: Section = { id, tiers, cells: [] };
     sections.push(section);
     walk(section, game, report);

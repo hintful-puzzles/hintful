@@ -489,6 +489,11 @@ run out of deduction, so reach for it rather than comparing names yourself.
 none of whose boards needs the tier asked for. Use it rather than wording a
 refusal of your own; [`solver-and-generator.md`](./solver-and-generator.md)
 § "A size that cannot carry a tier" has when, and what the claim owes.
+`tooRareToDeal(what, tier)` is the sentence for a tier that exists and
+takes seconds to find. `dealGaveUp(tier)` is their counterpart for what
+nobody counted: the sentence
+the midend returns when a generator runs its retry bound out. A game never
+calls it.
 
 ### `sections.ts` — contract sections and the draft label
 
@@ -1365,7 +1370,8 @@ goes through it; do not hand-roll a `setCallbacks` recorder, and do not set
 all-no-op callbacks, which the midend does not need),
 `absent-tiers.ts` (`describeAbsentTiers` — the cells a game refuses because no
 board of that size needs the tier: refused when dealing, accepted with a desc,
-and in the slow tier the generator run out at each),
+and in the slow tier the generator run out at each; and `describeDealtTiers`,
+the cells that deal boards whose lowest solving cap is the tier asked for),
 `differential.ts` (`describeDescDifferential`, the byte-for-byte desc shape +
 the one statement that fixtures are frozen and unregenerable),
 `enrollment.ts` + `hint-games.ts` (**how a cross-game guard finds its

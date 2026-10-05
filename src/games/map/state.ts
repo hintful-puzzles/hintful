@@ -13,7 +13,7 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE } from "../../engine/params.ts";
@@ -115,9 +115,39 @@ export function decodeParams(s: string): MapParams {
   return p;
 }
 
-export function validateParams(p: MapParams, _full: boolean): string | null {
+export function validateParams(p: MapParams, full: boolean): string | null {
   if (p.w > Math.floor(2147483647 / 2 / p.h)) return AREA_TOO_LARGE;
   if (p.n > p.w * p.h) return "There must be no more regions than squares.";
+  return full && p.diff > DIFF_EASY ? tierRefusal(p) : null;
+}
+
+/**
+ * The maps with no board at the tier asked for, and those where one is found
+ * too seldom to wait for. Measured 2026-10-05 by running the generator out
+ * over several sizes: the count beside each absence is maps built with none
+ * found, and beside each rarity how many it took to find one.
+ */
+function tierRefusal(p: MapParams): string | null {
+  const tier = DIFF_NAMES[p.diff];
+  // 5,500,000.
+  if (p.n <= 7) return noSuchTier(`map of ${p.n} regions`, tier);
+  // 7,000,000.
+  if (Math.min(p.w, p.h) === 2) return noSuchTier("map two squares wide", tier);
+  // 3,400,000, from 3x3 to 10x10.
+  if (p.n === p.w * p.h) return noSuchTier("map whose every square is a region", tier);
+  if (p.n === 8) {
+    // Normal once in 35,000 to 120,000, which is seconds; above it, 4,000,000.
+    return p.diff === DIFF_NORMAL
+      ? tooRareToDeal("maps of 8 regions", tier)
+      : noSuchTier("map of 8 regions", tier);
+  }
+  if (p.diff >= DIFF_HARD) {
+    // Once in 20,000 to 95,000: a second at 6x6 and seven at 15x20.
+    if (p.n <= 10) return tooRareToDeal(`maps of ${p.n} regions`, tier);
+    // Once in 60,000 to 335,000. Unreasonable is found within 45,000.
+    if (p.diff === DIFF_HARD && Math.min(p.w, p.h) === 3)
+      return tooRareToDeal("maps three squares wide", tier);
+  }
   return null;
 }
 

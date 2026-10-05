@@ -14,7 +14,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
@@ -145,7 +145,7 @@ export const paramConfig: ParamConfigItem<BridgesParams>[] = [
     name: "%age of island squares",
     type: "choices",
     choices: ["5%", "10%", "15%", "20%", "25%", "30%"],
-    doc: "Roughly what share of the grid's squares are islands. There are always at least three, and the generator may stop short of the target when it runs out of room.",
+    doc: "Roughly what share of the grid's squares are islands. There are always at least three, and the generator may stop short of the target when it runs out of room. A board of three islands has only Easy puzzles, and one of four has none at Tricky.",
     label: {
       slot: "tail",
       words: (p) => (p.islands === 30 ? null : `${p.islands}% islands`),
@@ -243,6 +243,49 @@ export function validateParams(p: BridgesParams, full: boolean): string | null {
     // generation-only bound, so a board already dealt this way still opens.
     if (p.maxb === 1 && p.difficulty >= 2)
       return "Tricky needs lines that can carry at least two bridges.";
+    return sparseRefusal(p);
+  }
+  return null;
+}
+
+/** The islands the generator aims for: the share of the grid asked for, and
+ * never fewer than three. */
+export function islandTarget(p: BridgesParams): number {
+  return Math.max(Math.floor((p.islands * p.w * p.h) / 100), 3);
+}
+
+/**
+ * The boards too sparse or too constrained to need the tier asked for.
+ * Measured 2026-10-05 by running the generator out at each family, over
+ * several shapes: the count beside each is boards built with none found.
+ */
+function sparseRefusal(p: BridgesParams): string | null {
+  const islands = islandTarget(p);
+  const tier = DIFFICULTY_NAMES[p.difficulty];
+  if (p.difficulty === 0) return null;
+  // 3 islands: 30,000,000.
+  if (islands === 3) return noSuchTier("puzzle of 3 islands", tier);
+  if (p.difficulty === 2) {
+    // 4 islands: 40,000,000.
+    if (islands === 4) return noSuchTier("puzzle of 4 islands", tier);
+    // 5 islands, two bridges a line and no loop: 8,000,000. With a loop it is
+    // found once in about 100,000, and with three bridges a line at once.
+    const loops = p.allowloops && p.expansion > 0;
+    if (islands === 5 && p.maxb === 2 && !loops)
+      return noSuchTier(
+        "puzzle of 5 islands with two bridges a line and no loops",
+        tier,
+      );
+  } else if (p.maxb === 1) {
+    // One bridge a line, 4 or 5 islands: 20,000,000. Six deal.
+    if (islands <= 5)
+      return noSuchTier(`puzzle of ${islands} islands with one bridge a line`, tier);
+    // One bridge a line, every join taken: 4,000,000 over eight sizes.
+    if (p.allowloops && p.expansion === 100)
+      return noSuchTier(
+        "puzzle with one bridge a line, loops and 100% expansion",
+        tier,
+      );
   }
   return null;
 }

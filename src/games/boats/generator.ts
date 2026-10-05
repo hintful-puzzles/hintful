@@ -28,6 +28,7 @@
  * (docs/games/testing.md § "Byte-match: fidelity where there is a right answer").
  */
 
+import { noSuchTier } from "../../engine/difficulty.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
@@ -37,6 +38,7 @@ import {
   type BoatsParams,
   blankBoard,
   DIFF_EASY,
+  DIFF_NAMES,
   EMPTY,
   encodeDesc,
   isShip,
@@ -46,18 +48,10 @@ import {
 } from "./state.ts";
 import { adjustShips, collectRuns } from "./validate.ts";
 
-/** Upstream `MAX_ATTEMPTS`: after this many rejected boards, relax the puzzle
- * (drop "remove numbers" first, then step the difficulty down) rather than
- * spinning for ever on parameters that cannot reach the requested grade. */
-const MAX_ATTEMPTS = 1000;
-
 /**
- * A runaway backstop over upstream's own relaxation ladder. Upstream degrades
- * at most five times (once for `strip`, then once per difficulty step) and then
- * `assert`s — which a release build compiles out, leaving a genuine infinite
- * loop. Ten thousand attempts is far past any legitimate generation (the
- * fixtures converge in tens of milliseconds), and it throws rather than
- * returning a fallback, so no seed that converges can quietly change its desc.
+ * Upstream relaxed the puzzle after a thousand rejected boards: it showed the
+ * numbers it was asked to hide, then stepped the tier down, and dealt the
+ * result under the name asked for. This deals what was asked or throws.
  */
 const MAX_GENERATE_ATTEMPTS = 10_000;
 
@@ -157,7 +151,7 @@ export function fleetFits(p: BoatsParams): boolean {
  * `paramsError` checks first. Lives here rather than with the other param code
  * because the last check, the fleet fit, *is* the generator.
  */
-export function validateParams(p: BoatsParams, _full: boolean): string | null {
+export function validateParams(p: BoatsParams, full: boolean): string | null {
   const { w, h, fleet } = p;
 
   if (fleet > w && fleet > h)
@@ -165,6 +159,12 @@ export function validateParams(p: BoatsParams, _full: boolean): string | null {
   if (!p.fleetData.slice(0, fleet).some((n) => n !== 0))
     return "Fleet must contain at least 1 boat.";
   if (!fleetFits(p)) return "The fleet does not fit into the grid.";
+  // Measured 2026-10-05: none in 3,300,000 boards built, from 2x2 to 10x10.
+  // Other small fleets lack a tier too, with no line through them to name:
+  // there the generator runs out, and the midend says so.
+  const boats = p.fleetData.slice(0, fleet).reduce((a, b) => a + b, 0);
+  if (full && boats === 1 && p.diff > DIFF_EASY)
+    return noSuchTier("puzzle with one boat", DIFF_NAMES[p.diff]);
   return null;
 }
 
@@ -174,20 +174,11 @@ export function newBoatsDesc(p: BoatsParams, rng: RandomState): { desc: string }
   const board = blankBoard(w, h, p.fleet, p.fleetData);
   const solution = new Int8Array(w * h);
 
-  let diff = p.diff;
-  let strip = p.strip;
-  let attempts = 0;
+  const { diff, strip } = p;
   const guard = retryLimit("boats: generation", MAX_GENERATE_ATTEMPTS);
 
   for (;;) {
     guard();
-    attempts++;
-    if (attempts > MAX_ATTEMPTS) {
-      attempts = 0;
-      if (strip) strip = false;
-      else diff--;
-      if (diff < 0) throw new Error("boats: no puzzle exists for these parameters");
-    }
 
     board.gridClues.fill(EMPTY);
     board.grid.fill(EMPTY);

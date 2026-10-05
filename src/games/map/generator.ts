@@ -9,7 +9,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
+import { MAX_REGENERATE, retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { gengraph, graphVertexStart } from "./graph.ts";
 import { encodeMapDesc } from "./map-data.ts";
@@ -273,6 +273,8 @@ function fourcolor(
 
 // --- main ------------------------------------------------------------
 
+const WORK_BUDGET = 80_000_000;
+
 export function newMapDesc(
   p: MapParams,
   rs: RandomState,
@@ -285,10 +287,14 @@ export function newMapDesc(
   const coloring2 = new Int32Array(n);
   const cfreq = new Int32Array(FOUR);
 
-  let mindiff = p.diff;
-  let tries = 50;
-
-  const attempt = retryLimit("map: generation");
+  // The budget is work and not maps built: a small map of few regions takes
+  // microseconds, and at some sizes a tier is found once in tens of
+  // thousands. Squares times regions tracks what a try costs: budgeted by
+  // squares alone, a 3x30 of 75 regions ran for two minutes before giving up.
+  const attempt = retryLimit(
+    "map: generation",
+    Math.max(MAX_REGENERATE, Math.floor(WORK_BUDGET / (wh * n))),
+  );
   for (;;) {
     attempt();
 
@@ -325,13 +331,9 @@ export function newMapDesc(
     }
 
     // Must be at least as hard as required (and not already solved by a solver
-    // that does nothing). Very few or very many regions may never reach the
-    // tier, so after 50 tries give up and accept Easy.
+    // that does nothing).
     coloring2.set(coloring);
-    if (mapSolver(graph, n, ngraph, coloring2, mindiff - 1) === SOLVER_UNIQUE) {
-      if (mindiff > 0 && (n < 9 || n > (2 * wh) / 3) && tries-- <= 0) mindiff = 0;
-      continue;
-    }
+    if (mapSolver(graph, n, ngraph, coloring2, p.diff - 1) === SOLVER_UNIQUE) continue;
 
     return { desc: encodeMapDesc(w, h, n, map, coloring), aux };
   }

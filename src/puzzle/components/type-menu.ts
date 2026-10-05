@@ -9,6 +9,7 @@ import type { PresetMenuEntry } from "../../engine/types.ts";
 import { cssWATweaks } from "../../utils/css.ts";
 import { closest } from "../../utils/dom.ts";
 import { puzzleContext } from "../contexts.ts";
+import { dealNewGame } from "../deal-actions.ts";
 import type { Puzzle } from "../puzzle.ts";
 import type { PuzzleCustomParamsDialog } from "./config.ts";
 
@@ -272,7 +273,7 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
           // This shouldn't happen: the presets list shouldn't include invalid params.
           throw new Error(`Error on setParams to preset "${value}": ${error}`);
         }
-        await this.puzzle.newGame();
+        await dealNewGame(this.puzzle);
       }
     }
   }
@@ -293,8 +294,8 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
       this.customDialog.addEventListener(
         "puzzle-custom-params-change",
         async (event) => {
-          if (Object.keys(event.detail.changes).length > 0) {
-            await this.puzzle?.newGame();
+          if (Object.keys(event.detail.changes).length > 0 && this.puzzle) {
+            await dealNewGame(this.puzzle);
           }
         },
       );

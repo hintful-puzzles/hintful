@@ -9,6 +9,7 @@ import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import type { PuzzleEvent } from "../puzzle/components/context.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
+import { dealNewGame } from "../puzzle/deal-actions.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 import {
   CHECK_OUT_OF_REACH,
@@ -487,7 +488,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       "copy-image": () => this.puzzle?.copyImage(),
       "enter-gameid": this.showEnterGameIDDialog,
       "load-game": this.showLoadGameDialog,
-      "new-game": () => this.puzzle?.newGame(),
+      "new-game": () => this.puzzle && dealNewGame(this.puzzle),
       redraw: () => this.shadowRoot?.querySelector("puzzle-view-interactive")?.redraw(),
       "restart-game": () => this.puzzle?.restartGame(),
       "save-game": this.showSaveGameDialog,
@@ -960,15 +961,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       // board and slower to deal (owner, 2026-09-26: "on every fresh use, we
       // have it use the easiest game type"). Every presets menu ran smallest
       // and easiest first when all of them were read on that date.
-      const first = (await puzzle.getPresets(true)).find((entry) => !entry.submenu);
-      if (first) {
-        const error = await puzzle.setParams(first.params);
-        if (error) {
-          throw new Error(
-            `${puzzle.puzzleId} rejects its own first preset "${first.params}": ${error}`,
-          );
-        }
-      }
+      await this.chooseFirstPreset(puzzle);
     }
 
     // TODO: restore custom presets from settings
@@ -1035,12 +1028,31 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       }
     }
 
-    if (!hasGame) {
-      await puzzle.newGame();
+    if (!hasGame && !(await dealNewGame(puzzle))) {
+      // The remembered type found no board, and there is none on screen to
+      // keep. The first preset always deals.
+      await this.chooseFirstPreset(puzzle);
+      const refusal = await puzzle.newGame();
+      if (refusal) {
+        throw new Error(
+          `${puzzle.puzzleId} could not deal its first preset: ${refusal}`,
+        );
+      }
     }
 
     this.puzzleLoaded = true;
     await this.shadowRoot?.querySelector("puzzle-context")?.updateComplete;
+  }
+
+  private async chooseFirstPreset(puzzle: Puzzle): Promise<void> {
+    const first = (await puzzle.getPresets(true)).find((entry) => !entry.submenu);
+    if (!first) return;
+    const error = await puzzle.setParams(first.params);
+    if (error) {
+      throw new Error(
+        `${puzzle.puzzleId} rejects its own first preset "${first.params}": ${error}`,
+      );
+    }
   }
 
   private async handlePuzzleParamsChange(event: PuzzleEvent) {

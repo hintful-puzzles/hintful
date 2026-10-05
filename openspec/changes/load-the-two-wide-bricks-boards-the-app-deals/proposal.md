@@ -37,6 +37,10 @@ wide, and a board two tall did not show it.
   which points at the codec or at how a state is rebuilt from a desc.
 - Whether the dealt board plays to a solution in the app has not been tried.
 - Only widths 2, 3 and 7 and heights 2, 7 and 10 were dealt.
+- Counted again the same day by `settle-the-cells-the-tier-walk-still-lists`,
+  a thousand deals a cell at Unreasonable: `2x4dn` 446 solved at no cap and
+  `2x5dn` 600; `2x3dn`, `4x2dn` and `5x2dn` none. So it starts at a height of
+  four.
 
 ## What Changes
 

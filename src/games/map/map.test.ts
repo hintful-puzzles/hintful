@@ -26,6 +26,10 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
+import {
   type AnyGame,
   fingerprint,
   probeBoard,
@@ -166,6 +170,32 @@ describe("map params codec", () => {
     );
     expect(error(defaultParams())).toBeNull();
   });
+
+  // One cell of each family `tierRefusal` calls absent. A run-out at these
+  // sizes is hundreds of thousands of maps, so two budgets and not five.
+  describeAbsentTiers(mapGame, ["4x4n7dn", "2x6n9dn", "3x3n9dn", "4x4n8dh"], {
+    budgets: 2,
+  });
+
+  it("says rare, and not absent, where a board exists", () => {
+    const refusal = (id: string): string | null =>
+      paramsError(mapGame, decodeParams(id), true);
+    expect(refusal("6x6n8dn")).toBe("Normal maps of 8 regions are too rare to deal.");
+    expect(refusal("6x6n10du")).toBe(
+      "Unreasonable maps of 10 regions are too rare to deal.",
+    );
+    expect(refusal("3x20n30dh")).toBe(
+      "Tricky maps three squares wide are too rare to deal.",
+    );
+    expect(refusal("3x20n30du")).toBeNull();
+    expect(refusal("6x6n8de")).toBeNull();
+    expect(paramsError(mapGame, decodeParams("6x6n8dn"), false)).toBeNull();
+  });
+
+  // Two cells beside the refusals, and two a count of fifty tries used to
+  // deal at Easy: a dense map, and one of few regions for its size. The
+  // quick ones only: an Unreasonable 3x12 takes seconds a board.
+  describeDealtTiers(mapGame, ["6x6n9dn", "6x6n11dh", "4x30n75dh", "15x20n12dn"]);
 
   it("titles a preset with its tier after the size", () => {
     expect(presetMenu(mapGame).submenu?.[0]?.title).toBe("15x20 Easy, 30 regions");

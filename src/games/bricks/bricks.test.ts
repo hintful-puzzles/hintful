@@ -17,6 +17,10 @@ import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -111,6 +115,11 @@ describe("bricks params", () => {
       "Difficulty must be one of Easy, Unreasonable.",
     );
   });
+
+  describeAbsentTiers(bricksGame, ["2x2dn"]);
+
+  // Boards of six squares, which the tier gate once skipped.
+  describeDealtTiers(bricksGame, ["2x3dn", "3x2dn"], { deals: 20 });
 });
 
 describe("bricks hex geometry", () => {

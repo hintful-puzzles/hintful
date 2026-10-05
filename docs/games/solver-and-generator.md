@@ -696,6 +696,10 @@ The followable form:
    [`describeAbsentTiers`](../../src/engine/testing/absent-tiers.ts): refused
    when dealing, accepted with a desc, and in the slow tier the generator run
    out at each.
+5. **Pin the cells beside them** with `describeDealtTiers`, in the same file:
+   each deals boards whose lowest solving cap is the tier asked for. It is
+   what goes red when a downgrade comes back, and it was seen red with Map's
+   fifty-try drop planted.
 
 **A refusal is a claim of absence, so measure it by running the generator
 with nothing to stop it, and count the tries.** Group is why. Upstream's table
@@ -714,7 +718,42 @@ tier dealt by retrying, which is right where the retry is quick: Unequal's
 rarest cell takes 119 tries and a hundredth of a second. Where the retry is
 ten seconds a board with a tail past twenty, the owner's call (2026-10-05) is
 to refuse it and say so: *"Tricky 6x6 puzzles that show their identity are too
-rare to deal."* Never `noSuchTier` for one of these: the board exists.
+rare to deal."* Say it with `tooRareToDeal`, and never `noSuchTier` for one of these: the
+board exists.
+
+**Name the line in the units the tier follows, which are often not the
+size's.** Bridges' tiers follow the number of islands, so a 10x10 at 5% and a
+5x5 at 20% are one population: `islandTarget(p)` is the one function its
+generator and its refusal both call, and the sentence is *"No puzzle of 4
+islands is Tricky."* Map's follow the number of regions. A refusal written
+against width and height there would have been a table with no end.
+
+**Size the retry bound in work, not in tries.** A try on a sparse board is
+microseconds, so a bound of 10,000 tries gives up in a twentieth of a second
+on a tier that is half a second away: a 10x10 Bridges of five islands at
+Tricky is found once in about 100,000. Bridges budgets islands placed
+(`ISLAND_BUDGET / islandTarget`) and Map squares times regions
+(`WORK_BUDGET / (wh * n)`), which keeps a run-out near ten seconds at every
+size and lets a small board try hundreds of thousands of times. **Time the
+run-out at the costliest corner before trusting the unit**: Map's first
+budget counted squares alone, and a 3x30 of 75 regions ran for two minutes.
+
+**Where no line can be named, the generator runs out and the engine says
+so.** Boats takes a fleet as a list, and which fleets lack a tier has no line
+through it: one boat never has one, two single boats on a 3x3 do not, two on
+an 8x8 do. A generator that exhausts its `retryLimit` is caught by the midend
+(`Midend.deal`), which keeps the board in play and returns
+[`dealGaveUp`](../../src/engine/difficulty.ts)'s sentence for the app to
+show; it says the tier may be rare or absent, since a run-out cannot tell. So
+refuse what you have counted and can name, and let the rest run out. Never
+catch the run-out in the game to deal something else.
+
+**Grade the board as it will be dealt.** Bridges graded the state its
+generator grew, whose islands sit in the order they were placed, and about one
+sparse board in a hundred at three and four bridges a line passed as Tricky
+and solved at Easy once loaded from its desc. Its gate now reads the desc
+back first. Where a generator's working state is not what `newState` builds,
+the gate measures a neighbor of the board.
 
 **The instrument is the tier walk**, `scripts/checks/tier-walk.test.ts`: every
 tiered game, every numeric field from its declared minimum to the menu's
@@ -727,8 +766,9 @@ leaves out. It is a report, minutes long, and not a gate:
       -c scripts/checks/diff.vitest.config.mts tier-walk
 
 A cell it lists as **below** is this section's defect. One that **gave up** is
-a tier absent or too rare for the retry bound, which throws where it should
-refuse. A cell it does not list was dealt at its tier three times, which
+a tier absent or too rare for the retry bound: refuse it where it can be
+counted and named, size the bound to it where it is rare and quick, and
+otherwise the player is told no board was found. A cell it does not list was dealt at its tier three times, which
 convicts nothing and clears little: raise `TIER_WALK_SEEDS` for a cell that
 matters.
 
