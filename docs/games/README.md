@@ -180,6 +180,9 @@ A game (or a change to one) is done when **all** of these hold:
       when there is a hint, `## <Name> parameters` last — which
       `src/help-coverage.test.ts` holds to the game's `hint()` and
       `paramConfig` ([`hints.md`](./hints.md) § "The help teaches the marks").
+      Where the page names a mode it writes `{{choice:<kw>:<index>}}`
+      ([`mechanics.md`](./mechanics.md) § "Params are declared once, on
+      `paramConfig`").
 - [ ] **Owner-accepted** full behavioral parity/quality — rendering,
       animation, input — never a green suite alone (§ "The acceptance gate").
 - [ ] The openspec change kept current and archived on acceptance

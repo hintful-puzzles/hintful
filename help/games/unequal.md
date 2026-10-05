@@ -5,11 +5,11 @@ number appears exactly once in each row and column. The clue signs
 between squares carry a further rule, and which rule depends on the
 game mode:
 
-* Unequal mode: the clues are `<` signs, and all of them must
+* {{choice:mode:0}} mode: the clues are `<` signs, and all of them must
   represent true inequalities (i.e. the number at the pointed end is
   smaller than the number at the open end). Not every true inequality
   is shown, particularly at the harder difficulties.
-* Adjacent mode: the clues are bars, and a bar means the two squares
+* {{choice:mode:1}} mode: the clues are bars, and a bar means the two squares
   it separates hold consecutive numbers — one is exactly one higher
   than the other. Every bar the solution calls for is shown, so the
   *absence* of a bar between two squares tells you their numbers are
@@ -62,7 +62,7 @@ sentence says how the chain rules a number out of the ringed cell.
 The hint calls every `<` sign a *greater-than sign*, and reasons from
 it both ways: the cell on its larger side can't hold anything as small
 as the smallest its partner could be, nor the one on its smaller side
-anything as large as the largest. In Adjacent mode it reasons from the
+anything as large as the largest. In {{choice:mode:1}} mode it reasons from the
 bars and from their absence. A number is *open* in a cell while it is
 still possible there: in the cell's pencil marks, or, in a cell with no
 marks, not yet ruled out by its row and column. So "a neighbor with

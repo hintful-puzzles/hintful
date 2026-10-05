@@ -218,6 +218,11 @@ export type ParamConfigItem<Params> =
   | (ParamItemCommon<Params> & {
       type: "choices";
       choices: string[];
+      /** A lead is the mode's name standing alone ("Tectonic: 7x7 Easy"), and a
+       * mode has one name, the choice's own, so a lead takes no `words`. */
+      label?:
+        | (ParamLabel<Params> & { slot: Exclude<ParamLabel<Params>["slot"], "lead"> })
+        | { slot: "lead"; words?: never };
       /** How many indices past `choices` an old game ID or save may still
        * carry: accepted when loading a board, refused when generating one, and
        * never offered. Bricks' retired Tricky tier (`dt`) is the case. */

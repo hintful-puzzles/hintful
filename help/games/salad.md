@@ -4,12 +4,12 @@ You have a square grid; each square may contain a character from A (or 1) to a g
 
 The rules vary depending on the game mode, and the Type menu has a section for each:
 
-* Letters, the puzzle called ABC End View: Letters on the edge show which letter appears first when 'looking' into the grid.
-* Numbers, the puzzle called Number Ball: Squares with a ball must contain a number. Squares with a cross must remain empty.
+* {{choice:game-mode:0}}: The letters on the edge show which letter appears first when 'looking' into the grid.
+* {{choice:game-mode:1}}: Squares with a ball must contain a number. Squares with a cross must remain empty.
 
-Number Ball was invented by Inaba Naoki. The original puzzles are available here: http://www.janko.at/Raetsel/Nanbaboru/index.htm
+{{choice:game-mode:1}} is the puzzle called Number Ball, invented by Inaba Naoki. The original puzzles are available here: http://www.janko.at/Raetsel/Nanbaboru/index.htm
 
-The designer of ABC End View is unknown.
+{{choice:game-mode:0}} is the puzzle called ABC End View, whose designer is unknown.
 
 ## Controls
 
@@ -33,7 +33,7 @@ Press the 'M' key to fill every empty cell with all possible pencil marks.
 
 A numbered chain is read in order: the sentence says how it rules a letter out of the ringed square.
 
-The hint speaks of *squares*, and a clue *sees* the first letter along its line. The pencil-mark 'X', the note that a square might be empty, is its *empty-square mark*, and a sentence that lists what a square can still be writes it as X. It is crossed out like any other pencil mark: a square left with only that mark must be empty, and a square that has lost it must hold a letter. Each row and column has a fixed number of empty squares, so counting them is half the game: once a line has all its empty squares, the rest must hold letters, and once it has all its letters, the rest must be empty. In Number Ball, where every symbol is a number, the hint says "number" wherever this says "letter".
+The hint speaks of *squares*, and a clue *sees* the first letter along its line. The pencil-mark 'X', the note that a square might be empty, is its *empty-square mark*, and a sentence that lists what a square can still be writes it as X. It is crossed out like any other pencil mark: a square left with only that mark must be empty, and a square that has lost it must hold a letter. Each row and column has a fixed number of empty squares, so counting them is half the game: once a line has all its empty squares, the rest must hold letters, and once it has all its letters, the rest must be empty. In {{choice:game-mode:1}}, where every symbol is a number, the hint says "number" wherever this says "letter".
 
 ## Salad parameters
 

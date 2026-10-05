@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { difficultyItem, tierNames } from "./difficulty.ts";
 import type { ParamConfigItem } from "./game.ts";
-import { parametersMarkdown } from "./param-help.ts";
+import { expandChoices, parametersMarkdown } from "./param-help.ts";
 import { describeParams, presetMenu } from "./param-label.ts";
 import { dimensionParamConfig, numberItem } from "./params.ts";
 
@@ -82,6 +82,57 @@ describe("presetMenu titles a leaf from its params unless it is named", () => {
       "Plain: 7x7 Normal, 5 things",
       "Standard",
     ]);
+  });
+});
+
+describe("presetMenu gives each ruleset a section", () => {
+  const fancy = { ...base, mode: 1 };
+  const menuOf = (presets: P[]) =>
+    presetMenu({
+      paramConfig: config,
+      presets: () => ({
+        title: "Type",
+        submenu: presets.map((params) => ({ params })),
+      }),
+    });
+
+  it("sections interleaved presets in the field's order, keeping each one's", () => {
+    const menu = menuOf([fancy, base, { ...fancy, w: 9 }, { ...base, w: 9 }]);
+    expect(menu.submenu?.map((s) => s.title)).toEqual(["Plain", "Fancy"]);
+    expect(menu.submenu?.[1]?.submenu?.map((m) => m.title)).toEqual([
+      "Fancy: 7x7 Normal, 5 things",
+      "Fancy: 9x7 Normal, 5 things",
+    ]);
+  });
+
+  it("leaves a menu of one ruleset flat", () => {
+    expect(menuOf([base, { ...base, w: 9 }]).submenu?.[0]?.params).toEqual(base);
+  });
+
+  it("refuses a section of the game's own, which could mix them", () => {
+    const nested = {
+      paramConfig: config,
+      presets: () => ({
+        title: "Type",
+        submenu: [{ title: "More", submenu: [{ params: base }, { params: fancy }] }],
+      }),
+    };
+    expect(() => presetMenu(nested)).toThrow(/flat/);
+  });
+});
+
+describe("choiceName and expandChoices say a choice in the dialog's word", () => {
+  it("expands a placeholder to the choice's name", () => {
+    expect(expandChoices(config, "In {{choice:mode:1}} mode.")).toBe("In Fancy mode.");
+  });
+
+  it.each([
+    ["{{choice:mode:2}}", /no choice 2/],
+    ["{{choice:loops:0}}", /no choices field "loops"/],
+    ["{{choice:mode:Fancy}}", /by index/],
+    ["{{choice:mode}}", /is not \{\{choice/],
+  ])("refuses %s", (source, why) => {
+    expect(() => expandChoices(config, source)).toThrow(why);
   });
 });
 

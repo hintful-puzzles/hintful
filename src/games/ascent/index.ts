@@ -63,6 +63,7 @@ import {
   MODE_EDGES,
   MODE_HEXAGON,
   MODE_HONEYCOMB,
+  MODE_ORTHOGONAL,
   MODE_RECT,
   MODECOUNT,
   NUMBER_BOUND,
@@ -236,6 +237,9 @@ const EDGES_PRESETS: AscentParams[] = [
   mk(5, 5, 3, MODE_EDGES, true, false),
 ];
 
+/** What the dialog calls the mode, for every sentence and title that names it. */
+const EDGES = ASCENT_MODENAMES[MODE_EDGES];
+
 function presets(): PresetMenu<AscentParams> {
   const entries = (ps: AscentParams[]) => ps.map((p) => ({ params: p }));
   return {
@@ -243,7 +247,7 @@ function presets(): PresetMenu<AscentParams> {
     submenu: [
       ...entries(MAIN_PRESETS),
       { title: "Hex", submenu: entries(HEX_PRESETS) },
-      { title: "Edges", submenu: entries(EDGES_PRESETS) },
+      { title: EDGES, submenu: entries(EDGES_PRESETS) },
     ],
   };
 }
@@ -305,18 +309,23 @@ function validateParams(p: AscentParams, full: boolean): string | null {
   if (p.mode === MODE_HEXAGON && w <= Math.trunc(h / 2))
     return "Width must be more than half the height for a hexagon grid.";
   if (p.mode === MODE_EDGES && w === 2 && h === 2)
-    return "Edges mode needs a grid bigger than 2x2.";
+    return `${EDGES} mode needs a grid bigger than 2x2.`;
   if (full && p.mode === MODE_EDGES && p.diff < DIFF_NORMAL)
-    return "Difficulty for Edges mode must be at least Normal.";
+    return `Difficulty for ${EDGES} mode must be at least Normal.`;
   if (full && p.symmetrical && p.mode === MODE_EDGES)
-    return "Symmetrical clues must be disabled for Edges mode.";
+    return `Symmetrical clues must be disabled for ${EDGES} mode.`;
   return null;
 }
 
 const transposeSquareGrid = transposeDimensions<AscentParams>();
 
-/** The grid type's words in a label: Rectangle is the plain board. */
-const MODE_WORDS = ["(no diagonals)", null, "Hexagon", "Honeycomb", "Edges"];
+/** The grid type's words in a label: its own name, except that Rectangle is
+ * the plain board and goes unsaid, with or without its diagonals. */
+function modeWords(p: AscentParams): string | null {
+  if (p.mode === MODE_RECT) return null;
+  if (p.mode === MODE_ORTHOGONAL) return "(no diagonals)";
+  return ASCENT_MODENAMES[p.mode] ?? null;
+}
 
 const paramConfig: ParamConfigItem<AscentParams>[] = [
   ...dimensionParamConfig<AscentParams>({
@@ -361,15 +370,15 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
     name: "Grid type",
     type: "choices",
     choices: ASCENT_MODENAMES,
-    doc: "Choose between 'Rectangle', 'Rectangle (no diagonals)', 'Hexagon', 'Honeycomb' and 'Edges' mode.",
-    label: { slot: "kind", words: (p) => MODE_WORDS[p.mode] ?? null },
+    doc: `Choose between ${ASCENT_MODENAMES.map((n) => `'${n}'`).join(", ")}.`,
+    label: { slot: "kind", words: modeWords },
     get: (p) => p.mode,
     set: (p, v) => {
       p.mode = v;
     },
   },
   difficultyItem(ASCENT_DIFFNAMES, "diff", {
-    doc: "Edges mode needs at least Normal.",
+    doc: `${EDGES} mode needs at least Normal.`,
   }),
 ];
 
@@ -518,8 +527,7 @@ export const ascentGame: Game<
   hintMarks: {
     roles: {
       ring: "the square the step fills. When the step fills a whole run at once, a line in the hint's color runs along its only route from one end to the other.",
-      outline:
-        "what the step reasons from: the numbers the new one sits between, a dead end's one way in, the squares a missing run has to step through, and in Edges mode an arrow the step reads.",
+      outline: `what the step reasons from: the numbers the new one sits between, a dead end's one way in, the squares a missing run has to step through, and in ${EDGES} mode an arrow the step reads.`,
       stripes:
         "the row, column or diagonal an arrow points along, or every square a run of missing numbers can reach.",
     },

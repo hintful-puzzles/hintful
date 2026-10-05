@@ -9,7 +9,7 @@ of them.
 
 The diagram in each square indicates which other squares will flip.
 
-Select one of the 'Random' settings from the Type menu for more
+Select one of the '{{choice:shape-type:1}}' settings from the Type menu for more
 varied puzzles.
 
 ## Hints
@@ -24,7 +24,7 @@ That order is what gives a press a reason. Once the hint has gone past
 every other square that flips some dark square, the one square left is
 the only one that can still light it, so it has to be pressed: *"Row by
 row, only this square can still light the outlined square, so it must
-be pressed. It flips the striped ones too."* With Crosses this is the
+be pressed. It flips the striped ones too."* With {{choice:shape-type:0}} this is the
 square directly below a dark one, which is the whole method: get the top
 row right and each row after it is settled by the row above.
 
@@ -33,7 +33,7 @@ row right and each row after it is settled by the row above.
 A striped square is not part of the reason. The press flips it along
 with the rest, and a square further on will set it right if it needs it.
 
-The presses that come first, the top row's with Crosses, have no reason
+The presses that come first, the top row's with {{choice:shape-type:0}}, have no reason
 of that kind: a square further on could still undo whatever they change.
 For those the hint says how many presses the board takes and that the
 ringed square is one of them: *"The whole board can be lit in 5 presses,

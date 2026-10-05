@@ -18,12 +18,13 @@
 
 import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
-import { difficultyTiers } from "./engine/difficulty.ts";
+import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
-import { PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
+import { expandChoices, PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
 import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
+import { itOverWholeSweep } from "./engine/testing/slow.ts";
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
 // reset the shared registry under `isolate: false`.
 import { registerAllGames } from "./games/index.ts";
@@ -152,6 +153,43 @@ describe("every game's page has the one skeleton", () => {
     expect(section.split(PARAMETERS_PLACEHOLDER), `help/games/${id}.md`).toHaveLength(
       2,
     );
+  });
+
+  // Where a page names a choice of one of its fields — a mode, a grid type —
+  // it writes `{{choice:kw:index}}` and the build says the dialog's word
+  // (`expandChoices`), so the name typed out is a second copy of it. The game's
+  // own name is left alone: "Seismic" is the game far more often than its mode.
+  // The tier names are too, being ordinary words ("an Easy board") that
+  // `help/features.md` explains once for every game.
+  let named = 0;
+  let expanded = 0;
+
+  it.each(puzzleIds)("%s: names a field's choice through the placeholder", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const game = getTsGame(id);
+    if (!game) throw new Error(`${id} is not registered`);
+    const config = game.paramConfig ?? [];
+    expect(() => expandChoices(config, page), `help/games/${id}.md`).not.toThrow();
+    expanded += page.split("{{choice:").length - 1;
+
+    const tiers = difficultyChoiceItem(game);
+    const typed: string[] = [];
+    for (const item of config) {
+      if (item.type !== "choices" || item === tiers) continue;
+      item.choices.forEach((name, index) => {
+        if (!/[a-z]/i.test(name) || name === puzzleDataMap[id].name) return;
+        named++;
+        const word = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        if (new RegExp(`(?<![\\w-])${word}(?![\\w-])`).test(page))
+          typed.push(`"${name}" is {{choice:${item.kw}:${index}}}`);
+      });
+    }
+    expect(typed, `help/games/${id}.md types a choice's name`).toEqual([]);
+  });
+
+  itOverWholeSweep("is not vacuous — choices were read, and pages name some", () => {
+    expect(named).toBeGreaterThan(40);
+    expect(expanded).toBeGreaterThan(15);
   });
 });
 

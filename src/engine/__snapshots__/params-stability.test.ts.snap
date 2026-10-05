@@ -513,21 +513,21 @@ bump:scoresub  full=5x5c3s3"
 
 exports[`encoded params are byte-stable > seismic 1`] = `
 "default  full=6x6de  brief=6x6
-preset:Seismic/Seismic: 4x4 Easy  full=4x4de  brief=4x4
-preset:Seismic/Tectonic: 4x4 Easy  full=4x4Tde  brief=4x4T
-preset:Seismic/Seismic: 4x4 Normal  full=4x4dh  brief=4x4
-preset:Seismic/Tectonic: 4x4 Normal  full=4x4Tdh  brief=4x4T
-preset:Seismic/Tectonic: 6x6 Easy  full=6x6Tde  brief=6x6T
-preset:Seismic/Seismic: 6x6 Normal  full=6x6dh  brief=6x6
-preset:Seismic/Tectonic: 6x6 Normal  full=6x6Tdh  brief=6x6T
-preset:Seismic/Seismic: 7x7 Easy  full=7x7de  brief=7x7
-preset:Seismic/Tectonic: 7x7 Easy  full=7x7Tde  brief=7x7T
-preset:Seismic/Seismic: 7x7 Normal  full=7x7dh  brief=7x7
-preset:Seismic/Tectonic: 7x7 Normal  full=7x7Tdh  brief=7x7T
-preset:Seismic/Seismic: 8x8 Easy  full=8x8de  brief=8x8
-preset:Seismic/Tectonic: 8x8 Easy  full=8x8Tde  brief=8x8T
-preset:Seismic/Seismic: 8x8 Normal  full=8x8dh  brief=8x8
-preset:Seismic/Tectonic: 8x8 Normal  full=8x8Tdh  brief=8x8T
+preset:Seismic/Seismic/Seismic: 4x4 Easy  full=4x4de  brief=4x4
+preset:Seismic/Seismic/Seismic: 4x4 Normal  full=4x4dh  brief=4x4
+preset:Seismic/Seismic/Seismic: 6x6 Normal  full=6x6dh  brief=6x6
+preset:Seismic/Seismic/Seismic: 7x7 Easy  full=7x7de  brief=7x7
+preset:Seismic/Seismic/Seismic: 7x7 Normal  full=7x7dh  brief=7x7
+preset:Seismic/Seismic/Seismic: 8x8 Easy  full=8x8de  brief=8x8
+preset:Seismic/Seismic/Seismic: 8x8 Normal  full=8x8dh  brief=8x8
+preset:Seismic/Tectonic/Tectonic: 4x4 Easy  full=4x4Tde  brief=4x4T
+preset:Seismic/Tectonic/Tectonic: 4x4 Normal  full=4x4Tdh  brief=4x4T
+preset:Seismic/Tectonic/Tectonic: 6x6 Easy  full=6x6Tde  brief=6x6T
+preset:Seismic/Tectonic/Tectonic: 6x6 Normal  full=6x6Tdh  brief=6x6T
+preset:Seismic/Tectonic/Tectonic: 7x7 Easy  full=7x7Tde  brief=7x7T
+preset:Seismic/Tectonic/Tectonic: 7x7 Normal  full=7x7Tdh  brief=7x7T
+preset:Seismic/Tectonic/Tectonic: 8x8 Easy  full=8x8Tde  brief=8x8T
+preset:Seismic/Tectonic/Tectonic: 8x8 Normal  full=8x8Tdh  brief=8x8T
 bump:w  full=7x6de  brief=7x6
 bump:h  full=6x7de  brief=6x7"
 `;
@@ -740,17 +740,17 @@ bump:h  full=4x5dn  brief=4x5"
 
 exports[`encoded params are byte-stable > unequal 1`] = `
 "default  full=4de  brief=4
-preset:Unequal/Unequal: 5x5 Normal  full=5de  brief=5
-preset:Unequal/Unequal: 5x5 Tricky  full=5dk  brief=5
-preset:Unequal/Adjacent: 5x5 Tricky  full=5adk  brief=5a
-preset:Unequal/Unequal: 5x5 Hard  full=5dx  brief=5
-preset:Unequal/Unequal: 6x6 Normal  full=6de  brief=6
-preset:Unequal/Unequal: 6x6 Tricky  full=6dk  brief=6
-preset:Unequal/Adjacent: 6x6 Tricky  full=6adk  brief=6a
-preset:Unequal/Unequal: 6x6 Hard  full=6dx  brief=6
-preset:Unequal/Unequal: 7x7 Tricky  full=7dk  brief=7
-preset:Unequal/Adjacent: 7x7 Tricky  full=7adk  brief=7a
-preset:Unequal/Unequal: 7x7 Hard  full=7dx  brief=7
+preset:Unequal/Unequal/Unequal: 5x5 Normal  full=5de  brief=5
+preset:Unequal/Unequal/Unequal: 5x5 Tricky  full=5dk  brief=5
+preset:Unequal/Unequal/Unequal: 5x5 Hard  full=5dx  brief=5
+preset:Unequal/Unequal/Unequal: 6x6 Normal  full=6de  brief=6
+preset:Unequal/Unequal/Unequal: 6x6 Tricky  full=6dk  brief=6
+preset:Unequal/Unequal/Unequal: 6x6 Hard  full=6dx  brief=6
+preset:Unequal/Unequal/Unequal: 7x7 Tricky  full=7dk  brief=7
+preset:Unequal/Unequal/Unequal: 7x7 Hard  full=7dx  brief=7
+preset:Unequal/Adjacent/Adjacent: 5x5 Tricky  full=5adk  brief=5a
+preset:Unequal/Adjacent/Adjacent: 6x6 Tricky  full=6adk  brief=6a
+preset:Unequal/Adjacent/Adjacent: 7x7 Tricky  full=7adk  brief=7a
 tier:0  full=4dt  brief=4
 tier:2  full=4dk  brief=4
 tier:3  full=4dx  brief=4

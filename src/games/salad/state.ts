@@ -62,6 +62,9 @@ export const DIFF_HOLESONLY = DIFF_EASY - 1;
 export const GAMEMODE_LETTERS = 0;
 export const GAMEMODE_NUMBERS = 1;
 
+/** What the dialog, a title and a menu section call each mode. */
+const MODE_NAMES = ["Letters", "Numbers"];
+
 // --- cell sentinels --------------------------------------------------------
 
 /** `LATINH_CROSS`: this square definitely holds no symbol. Upstream's `'X'`. */
@@ -124,12 +127,9 @@ export const paramConfig: ParamConfigItem<SaladParams>[] = [
     kw: "game-mode",
     name: "Game Mode",
     type: "choices",
-    choices: ["ABC End View", "Number Ball"],
-    doc: "Switch between ABC End View and Number Ball mode.",
-    label: {
-      slot: "lead",
-      words: (p) => (p.mode === GAMEMODE_LETTERS ? "Letters" : "Numbers"),
-    },
+    choices: MODE_NAMES,
+    doc: `Switch between ${MODE_NAMES[GAMEMODE_LETTERS]}, the puzzle called ABC End View, and ${MODE_NAMES[GAMEMODE_NUMBERS]}, the puzzle called Number Ball.`,
+    label: { slot: "lead" },
     get: (p) => p.mode,
     set: (p, v) => {
       p.mode = v === GAMEMODE_NUMBERS ? GAMEMODE_NUMBERS : GAMEMODE_LETTERS;
@@ -146,7 +146,7 @@ export const paramConfig: ParamConfigItem<SaladParams>[] = [
     label: { slot: "kind", words: symbolRange },
   }),
   difficultyItem(DIFF_NAMES, "diff", {
-    doc: "A Normal puzzle always needs a technique the Easy level does not have, so the setting you choose is the difficulty you get. Normal Number Ball puzzles are rare, so one can take a few seconds to appear.",
+    doc: `A Normal puzzle always needs a technique the Easy level does not have, so the setting you choose is the difficulty you get. Normal ${MODE_NAMES[GAMEMODE_NUMBERS]} puzzles are rare, so one can take a few seconds to appear.`,
   }),
 ];
 

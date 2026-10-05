@@ -122,6 +122,7 @@ import {
   F_SPENT_LEFT,
   F_SPENT_RIGHT,
   F_SPENT_UP,
+  MODE_NAMES,
   newState,
   newUi,
   PRESETS,
@@ -544,8 +545,8 @@ export const unequalGame: Game<
       kw: "mode",
       name: "Mode",
       type: "choices",
-      choices: ["Unequal", "Adjacent"],
-      doc: "Unequal, where the clues are <code>&lt;</code> signs, or Adjacent, where they are bars between consecutive numbers (both described above).",
+      choices: MODE_NAMES,
+      doc: `${MODE_NAMES[0]}, where the clues are <code>&lt;</code> signs, or ${MODE_NAMES[1]}, where they are bars between consecutive numbers (both described above).`,
       label: { slot: "lead" },
       get: (p) => (p.mode === "adjacent" ? 1 : 0),
       set: (p, v) => {
@@ -553,7 +554,7 @@ export const unequalGame: Game<
       },
     },
     numberItem<UnequalParams>("size", "Size", "order", {
-      doc: "Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. Adjacent puzzles at Tricky or above need a size of at least 5.",
+      doc: `Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. ${MODE_NAMES[1]} puzzles at Tricky or above need a size of at least 5.`,
       // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
       bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
       label: { slot: "size", words: squareSize("order") },

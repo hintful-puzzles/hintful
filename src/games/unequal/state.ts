@@ -62,6 +62,9 @@ function diffChar(d: Difficulty): string {
 
 export type Mode = "unequal" | "adjacent";
 
+/** What the dialog calls each mode, in the order its Mode field lists them. */
+export const MODE_NAMES = ["Unequal", "Adjacent"];
+
 // --- flag bits (upstream F_*) ----------------------------------------------
 
 export const F_ADJ_UP = 2;
@@ -157,7 +160,7 @@ export function decodeParams(s: string): UnequalParams {
 
 export function validateParams(p: UnequalParams, _full: boolean): string | null {
   if (p.order < 5 && p.mode === "adjacent" && diffToLevel(p.diff) >= DIFF_SET)
-    return "Size must be at least 5 for Adjacent puzzles of this difficulty.";
+    return `Size must be at least 5 for ${MODE_NAMES[1]} puzzles of this difficulty.`;
   return null;
 }
 

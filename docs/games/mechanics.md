@@ -283,6 +283,23 @@ tier accessors and the codec. Each item carries:
   game's, and `words` returning `null` leaves a default unsaid. A checkbox must
   give words; a choices field says its choice's name by default.
 
+**A choices field in the `lead` slot is the game's ruleset**
+(`rulesetItem` in `param-label.ts`): each choice is a different puzzle on the
+same board, as Seismic's Tectonic is. Declaring it buys two things. Its
+choices have **one name each**, the type refuses `words` on a lead, so the
+dialog, a title and the help say the same word. And the engine **gives each
+ruleset its own section of the Type menu**, titled with the choice, so the
+game lists its presets flat and two puzzles' boards never share a list; a
+ruleset game that writes a section of its own is refused. A field that only
+changes the board's shape or look (Ascent's grid type, Flip's shapes) is a
+`kind`, not a ruleset.
+
+**A choice's name is typed once, in `choices`.** A sentence in the game's code
+reads it from the array, and a help page writes `{{choice:<kw>:<index>}}`,
+which the help build expands (`expandChoices`) and refuses when it names no
+choice. `help-coverage.test.ts` fails a page that types the name instead. The
+game's own name and the tier names are outside that check.
+
 **Presets are params, not titles.** A leaf is `{ params }` and its title is its
 label, so the menu and the header of the same board cannot disagree. A leaf
 keeps a `title` only when upstream gave it a name no field says (Guess's

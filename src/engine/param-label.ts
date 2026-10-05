@@ -33,6 +33,23 @@ function wordsOf<P>(item: ParamConfigItem<P>, p: P): string | null {
   return null;
 }
 
+/**
+ * What choice `index` of the choices field `kw` is called: the one name a menu
+ * section's title and a help page's `{{choice:kw:index}}` both say, so neither
+ * is a typed copy of the dialog's.
+ */
+export function choiceName<P>(
+  config: readonly ParamConfigItem<P>[],
+  kw: string,
+  index: number,
+): string {
+  const item = config.find((i) => i.kw === kw);
+  if (item?.type !== "choices") throw new Error(`no choices field "${kw}"`);
+  const name = item.choices[index] ?? null;
+  if (name === null) throw new Error(`"${kw}" has no choice ${index}`);
+  return name;
+}
+
 /** The label of params `p`, composed from the game's `paramConfig`. */
 export function describeParams<P>(
   game: { paramConfig?: readonly ParamConfigItem<P>[] },
@@ -77,5 +94,42 @@ export function presetMenu<P>(game: {
     const params = menu.params as P;
     return { title: menu.title ?? describeParams(game, params), params };
   };
-  return walk(game.presets());
+  return byRuleset(game, walk(game.presets()));
+}
+
+/**
+ * The game's **ruleset** field, if it has one: the choices field whose name
+ * leads a label ("Tectonic: 7x7 Easy"). Each choice is a different puzzle on
+ * the same board, with rules of its own, which is why its name stands in front
+ * of the size instead of among the board's other properties.
+ */
+function rulesetItem<P>(game: {
+  paramConfig?: readonly ParamConfigItem<P>[];
+}): Extract<ParamConfigItem<P>, { type: "choices" }> | null {
+  for (const item of game.paramConfig ?? [])
+    if (item.type === "choices" && item.label?.slot === "lead") return item;
+  return null;
+}
+
+/**
+ * `menu` with a section for each ruleset its presets hold, in the field's
+ * order and under the choice's name, so two puzzles' boards are never one
+ * list. The game writes its presets flat: a section of its own could mix them.
+ */
+function byRuleset<P>(
+  game: { paramConfig?: readonly ParamConfigItem<P>[] },
+  menu: TitledPresetMenu<P>,
+): TitledPresetMenu<P> {
+  const item = rulesetItem(game);
+  const leaves = menu.submenu ?? [];
+  if (item === null) return menu;
+  if (leaves.some((m) => m.submenu))
+    throw new Error("a game with a ruleset lists its presets flat");
+  const sections = item.choices
+    .map((title, i) => ({
+      title,
+      submenu: leaves.filter((m) => item.get(m.params as P) === i),
+    }))
+    .filter((s) => s.submenu.length > 0);
+  return sections.length > 1 ? { ...menu, submenu: sections } : menu;
 }

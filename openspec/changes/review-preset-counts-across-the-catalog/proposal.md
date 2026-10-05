@@ -28,9 +28,13 @@ question a player meets in the picker:
 
 - **Sections.** Loopy folds its tilings under "More...", Ascent has "Hex" and
   "Edges" beside a flat main list, Salad has "Letters" and "Numbers" (added
-  2026-10-05, as an interim step the owner asked for). Seismic and Unequal
-  each vary a mode across a flat list of 16 and 12. Nothing says when a mode
-  earns a section.
+  2026-10-05, as an interim step the owner asked for). **Decided the same
+  day for rulesets** (`name-a-games-modes-from-one-place`): a choices field
+  in the `lead` slot is a ruleset and the engine gives each one a section,
+  so Salad, Seismic and Unequal are sectioned by construction. Still open:
+  a field that is not a ruleset (Loopy's tilings, Ascent's grids), and
+  whether Ascent's Edges, a different puzzle with a hand-written section,
+  should be declared one.
 - **Which tiers a menu offers.** `walk-every-choice-the-dialog-offers` found
   a tier no preset holds in Loopy, Mathrax, Unequal and Group. A menu that
   stops short of a tier and a menu with every size at every tier are the two

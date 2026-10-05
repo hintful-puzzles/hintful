@@ -1,6 +1,8 @@
 # name-a-games-modes-from-one-place
 
-**Status: scaffolded, not started (2026-10-05).** Asked for by the owner on
+**Status: implemented 2026-10-05.** § "What was measured" and § "What was
+built" are the record; the sections between are the scaffold as it was
+written, kept for what it guessed. Asked for by the owner on
 reading Salad's help beside its picker: *"the help text is not consistent
 with the category names … I wonder if we should also scaffold a change to see
 about the help text using a placeholder to get the type category rather than
@@ -62,6 +64,63 @@ To be designed; two parts, the second depending on the first.
 `help-coverage.test.ts` already holds a page to the dialog's labels in its
 parameters section. Its reach into the prose is the thing to extend: a page
 that names a mode in words the game does not use should fail.
+
+## What was measured
+
+Two readings of the registry, both over every game's `paramConfig`.
+
+**Names per choice.** For every `"choices"` and `"boolean"` item other than
+difficulty: the dialog's names, the label's words for each value, and the
+menu's section titles. Salad was the only game whose label renamed a choice.
+Seismic and Unequal say the choice's own name. Where another choices field
+has label `words` (Ascent's grid type, the symmetry fields of Light Up, Solo
+and Sticks, Bridges' three), they drop a default or phrase a tail ("no
+symmetry"), which is the name in a sentence and not a second name. A
+checkbox has no name to say, so its `words` are its only one.
+
+**Names typed into a page.** Every choice name containing a letter, sought in
+its game's page as a whole, case-matched word: 24 places in five pages.
+Ascent says "Edges" nine times, Flip "Crosses" twice and "Random" once, Salad
+its two puzzles five times, Seismic "Tectonic" twice, Unequal "Adjacent"
+twice. The other hits were the game's own name (Cube, Seismic, Unequal).
+Every hit was a page naming the choice, none an ordinary use of the word,
+which is what makes a scan of the prose a usable guard here. Loopy, Solo and
+Keen, which the scaffold named as next to read, type no choice's name.
+
+Ascent also kept a second array of three of its grid types' names for its
+labels, beside the one the dialog reads.
+
+## What was built
+
+- **Salad's modes are Letters and Numbers** (owner). The help says once each
+  that they are the puzzles called ABC End View and Number Ball.
+- **No short-and-full declaration.** With Salad on one name no game has two,
+  so the type refuses label `words` on a `lead` choices item instead.
+- **`{{choice:<kw>:<index>}}`**, keyed by index and not by name: a
+  placeholder that spelled the name would have to be edited on a rename,
+  which is the copy this change removes. The index is the value the field's
+  `get` already returns, and reordering `choices` would break the params
+  codec before it broke a page.
+- **The guard is the scan above**, in `help-coverage.test.ts`, leaving out
+  the game's own name and the tier names. Seen red three ways: Salad's page
+  before it moved, a typed name planted in Flip's, and an index past the end
+  planted in Unequal's, which the build refused too.
+- **The ruleset is an entity the engine reads** (owner, mid-change: presets
+  of different rulesets are not to be intermixed, and is that defined
+  anywhere?). It was not: the `lead` slot only placed a word. `rulesetItem`
+  names it and `presetMenu` gives each ruleset a section, so Seismic and
+  Unequal, which interleaved two puzzles in one list, are sectioned, and
+  Salad's hand-written sections are gone. The params-stability snapshot moved
+  for those two games in label and order only: the multiset of title and
+  encodings is unchanged.
+- **Sentences in the games' code** that named a mode read the array now
+  (Ascent's refusals and hint legend, the size docs of Seismic and Unequal).
+
+Left to `review-preset-counts-across-the-catalog`: a leaf inside a section
+still repeats the section's word ("Letters: 5x5 A~C Easy" under Letters).
+Ascent's Edges is a `kind` with a hand-written section; whether it is a
+ruleset is a question for that review, since making it one would put its
+word in front of every Edges title.
 
 ## Hints to pull in
 

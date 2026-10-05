@@ -223,9 +223,10 @@ describe("seismic params", () => {
     // is the collection's, by position, and a literal would be a second copy to
     // rot. What this pins is the *shape* — mode, then size, then tier — which is
     // what upstream's menu does.
-    const titles = presetMenu(seismicGame).submenu?.map((m) => m.title);
-    expect(titles?.[4]).toBe(`Seismic: 6x6 ${DIFF_NAMES[0]}`);
-    expect(titles?.[3]).toBe(`Tectonic: 4x4 ${DIFF_NAMES[1]}`);
+    const [seismic, tectonic] = presetMenu(seismicGame).submenu ?? [];
+    expect(seismic?.title).toBe("Seismic");
+    expect(seismic?.submenu?.[2]?.title).toBe(`Seismic: 6x6 ${DIFF_NAMES[0]}`);
+    expect(tectonic?.submenu?.[1]?.title).toBe(`Tectonic: 4x4 ${DIFF_NAMES[1]}`);
   });
 
   it("round-trips the custom-params form", () => {

@@ -10,6 +10,7 @@
  */
 
 import type { ParamBounds, ParamConfigItem } from "./game.ts";
+import { choiceName } from "./param-label.ts";
 
 export const PARAMETERS_PLACEHOLDER = "{{parameters}}";
 
@@ -77,4 +78,26 @@ export function parametersMarkdown<P>(config: readonly ParamConfigItem<P>[]): st
     return `\t<dt>${e.names.join(", ")}</dt>\n\t<dd>${text}</dd>`;
   });
   return `${INTRO}\n\n<dl>\n${items.join("\n")}\n</dl>`;
+}
+
+/** `{{choice:kw:index}}`, wherever a page names a choice of one of its fields. */
+const CHOICE_PLACEHOLDER = /\{\{choice:([^}]*)\}\}/g;
+
+/**
+ * `source` with each `{{choice:kw:index}}` replaced by that choice's name, so
+ * a page's prose says a mode in the dialog's word. A placeholder that names no
+ * choice of the game throws, which fails the help build.
+ */
+export function expandChoices<P>(
+  config: readonly ParamConfigItem<P>[],
+  source: string,
+): string {
+  return source.replace(CHOICE_PLACEHOLDER, (whole, spec: string) => {
+    const [kw, index, ...rest] = spec.split(":");
+    if (kw === undefined || index === undefined || rest.length > 0)
+      throw new Error(`${whole} is not {{choice:<field>:<index>}}`);
+    if (!/^\d+$/.test(index))
+      throw new Error(`${whole} names its choice by index, counting from 0`);
+    return choiceName(config, kw, Number(index));
+  });
 }

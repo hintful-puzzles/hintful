@@ -821,6 +821,17 @@ never was**: filtering sizes and tier names out of preset titles still flagged 1
 games for one real gap, because a title is a label someone composed, not the
 field it sets. Key on the field.
 
+**A mode has one name, typed once.** A game's ruleset is the choices field in
+the `lead` slot of its `paramConfig`: each choice a different puzzle on the same
+board, as Salad's Letters and Numbers are. Its names are the field's `choices`
+and nothing else: the type refuses a second word for one, the engine gives each
+ruleset its own section of the Type menu so their boards never share a list,
+and a help page that names any field's choice writes `{{choice:<kw>:<index>}}`,
+which the build expands. `help-coverage.test.ts` fails a page that types the
+name. Salad's dialog, menu and help once said one mode three ways; the how is
+[`docs/games/mechanics.md`](docs/games/mechanics.md) § "Params are declared
+once, on `paramConfig`".
+
 **A Hints section is checked for presence, not content.** It says what the hint's
 marks mean in that game, which of them are the player's own notation, and the
 words its sentences use for them; so a change to a hint's marks or words updates

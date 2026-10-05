@@ -119,7 +119,7 @@ export function defaultParams(): SeismicParams {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SeismicParams>[] = [
   ...dimensionParamConfig<SeismicParams>({
-    doc: "Size of the grid in squares. The limit depends on the mode: Tectonic goes up to 100 squares, Seismic up to 64. Seismic's keep-apart rule gets harder to satisfy the larger the board, so past that size a puzzle may never be found at all. Large boards can take several seconds to generate, which is why the ready-made types in the ‘Type’ menu stop at 8×8.",
+    doc: `Size of the grid in squares. The limit depends on the mode: ${MODE_NAMES[MODE_TECTONIC]} goes up to 100 squares, ${MODE_NAMES[MODE_SEISMIC]} up to 64. ${MODE_NAMES[MODE_SEISMIC]}'s keep-apart rule gets harder to satisfy the larger the board, so past that size a puzzle may never be found at all. Large boards can take several seconds to generate, which is why the ready-made types in the ‘Type’ menu stop at 8×8.`,
     bounds: { min: 4 },
   }),
   difficultyItem(DIFF_NAMES, "diff", {
@@ -130,7 +130,7 @@ export const paramConfig: ParamConfigItem<SeismicParams>[] = [
     name: "Game mode",
     type: "choices",
     choices: [...MODE_NAMES],
-    doc: "Switch between Seismic and Tectonic mode.",
+    doc: `Switch between ${MODE_NAMES.join(" and ")} mode.`,
     label: { slot: "lead" },
     get: (p) => p.mode,
     set: (p, v) => {

@@ -1084,14 +1084,19 @@ Call it wherever you would have asked `game.validateParams`.
 (`[lead: ]size[ kind…][ tier][, tail…]`), and `presetMenu(game)` titles every
 unnamed preset with it. The preset menu, the type header of a custom board and
 every test that reads a title go through here, so the menu and the header
-cannot name one board two ways. Declaring: [`mechanics.md`](./mechanics.md)
-§ "Params are declared once, on `paramConfig`".
+cannot name one board two ways. `rulesetItem(game)` is the choices field in
+the `lead` slot, and `presetMenu` gives each of its choices a section.
+`choiceName(config, kw, index)` is a choice's one name. Declaring:
+[`mechanics.md`](./mechanics.md) § "Params are declared once, on
+`paramConfig`".
 
 ### `param-help.ts` — the generated Parameters section
 
 `parametersMarkdown(config)` renders a game's help Parameters list from its
 items' `doc`s and `bounds`, Width and Height as one entry; the help build
 (`vite-plugins/parameters.ts`) puts it where a page writes `{{parameters}}`.
+`expandChoices(config, source)` replaces each `{{choice:<kw>:<index>}}` in a
+page with that choice's name, and throws on one that names no choice.
 
 ### `key-labels.ts` — on-screen keypad builders
 

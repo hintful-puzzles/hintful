@@ -3,6 +3,9 @@
  * writes `{{parameters}}` under its `## <Name> parameters` heading, and the
  * help build replaces it before the markdown is rendered.
  *
+ * Where a page's prose names a choice of one of those fields it writes
+ * `{{choice:kw:index}}`, which `expandChoices` replaces with the choice's name.
+ *
  * Read by importing the games themselves, as `hint-marks.ts` does, so the list
  * cannot disagree with the Custom dialog. A page without the placeholder fails
  * the build.
@@ -10,6 +13,7 @@
 
 import path from "node:path";
 import {
+  expandChoices,
   PARAMETERS_PLACEHOLDER,
   parametersMarkdown,
 } from "../src/engine/param-help.ts";
@@ -25,10 +29,15 @@ function expandParameters(id: string, source: string): string {
     throw new Error(
       `help/games/${id}.md: its parameters section writes ${PARAMETERS_PLACEHOLDER} where the generated list goes`,
     );
-  return source.replace(
-    PARAMETERS_PLACEHOLDER,
-    parametersMarkdown(game.paramConfig ?? []),
-  );
+  const config = game.paramConfig ?? [];
+  try {
+    return expandChoices(config, source).replace(
+      PARAMETERS_PLACEHOLDER,
+      parametersMarkdown(config),
+    );
+  } catch (e) {
+    throw new Error(`help/games/${id}.md: ${e instanceof Error ? e.message : e}`);
+  }
 }
 
 /** The transform: the page's game is its file's name. */
