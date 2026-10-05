@@ -3,65 +3,79 @@
 See proposal.md § Why for the size and the recommendation. What shapes the
 approach:
 
+**The owner's constraint** (2026-10-05): *"I do want to avoid over-claudifying
+it to the extent possible, and would suggest that we use the readme and docs/
+for anything that isn't inherently Claude-Specific."* So the content moves to
+files any reader or agent opens the ordinary way, and a Claude-only mechanism
+is used only where nothing else does the job.
+
+And, the same day: *"wherever possible, particularly for factual information
+that can be derived by looking at the codebase directly, I'd prefer to just
+delete it rather than relocate it, and encourage future agents to look at the
+source."* So deletion is the first choice for a fact, and moving is for what
+the source cannot say.
+
 **What the documentation says about each mechanism** (code.claude.com
 /docs/en/memory, read 2026-10-05):
 
 - Imports do not help: *"Imports help you organize a long file but don't
   reduce its context cost, because imported files also load at launch."*
-- A rules file with no `paths` list loads at launch, like the root file.
-- A rules file with `paths` loads when Claude reads, writes or edits a
-  matching file.
-- A subdirectory's `CLAUDE.md` loads when Claude reads a file there.
+- A file under `.claude/rules/` with a `paths` list loads when Claude reads,
+  writes or edits a matching file. It is Claude-specific.
 - With a `CLAUDE.md` at the root, Claude reads `CLAUDE.md` files and not
   `AGENTS.md` files, unless the user's own setting says both. `CLAUDE.md`
   here is a symlink to `AGENTS.md`, so it counts.
-- Skills are the documented home for *"a multi-step procedure"* and load on
-  demand.
 
 **What a probe showed here** (one fresh headless session, 2026-10-05, Claude
 Code 2.1.289): an untracked `src/games/AGENTS.md` and an untracked
 `.claude/rules/` file scoped to `src/engine/**` each carried a marker word.
 After one read under each directory, the session knew the rules-file marker
-and not the nested `AGENTS.md` marker. That is one run on the small model, so
-task 1.1 repeats it before anything is built on it.
+and not the nested `AGENTS.md` marker. So the portable form of path scoping,
+a nested `AGENTS.md`, does not reach Claude in this repository. One run on
+the small model; task 1.1 repeats it.
 
-**Where the words are** (`awk` over the `## ` sections, words):
+**Where the words are** (`awk` over the `## ` sections, words), and where a
+home for them already exists:
 
-| Section | Words | Applies when |
+| Section | Words | Existing home |
 | --- | ---: | --- |
-| Method | 2,145 | writing a check or taking a measurement |
-| Work management | 1,795 | touching `openspec/` |
-| Test discipline | 1,715 | writing or running tests |
-| Goal | 1,463 | every session, in a tenth of the words |
-| Git | 1,299 | touching the gate; its push rule every session |
-| Hint quality bar | 1,130 | touching `src/games/` |
-| Build commands | 748 | every session, less the deploy detail |
-| TS port style | 678 | touching `src/games/` |
-| Documentation | 619 | touching `help/` |
-| the other thirteen | 4,232 | mixed |
+| Method | 2,145 | none; `docs/test-strength.md` §7 holds part |
+| Work management | 1,795 | none |
+| Test discipline | 1,715 | `docs/games/testing.md`, `docs/test-strength.md` |
+| Goal | 1,463 | none; `README.md` states the product |
+| Git | 1,299 | none; `scripts/gate.sh` is the executable copy |
+| Hint quality bar | 1,130 | `docs/games/hints.md` |
+| Build commands | 748 | `README.md` § "Building" |
+| TS port style | 678 | `docs/games/mechanics.md`, `solver-and-generator.md` |
+| Documentation | 619 | none |
+| the other thirteen | 4,232 | `README.md` § "Structure", § "License" for several |
 
-**What reads the file by name:** `scripts/checks/change-citations.mjs` (roots
-`docs/` and `AGENTS.md`), `scripts/gate.sh`'s documentation-only pattern,
-`openspec/config.yaml`'s `context:` block, and the citations counted in the
-proposal.
+`README.md` is 174 lines and already has "Structure", "Building", "Commands",
+"Contributing / work tracking" and "License" sections, so "Repo layout",
+"Build commands", "Lineage" and "License & attribution" largely exist there
+already.
+
+**What reads `AGENTS.md` by name:** `scripts/checks/change-citations.mjs`
+(roots `docs/` and `AGENTS.md`), `scripts/gate.sh`'s documentation-only
+pattern, `openspec/config.yaml`'s `context:` block, and the citations counted
+in the proposal.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
 - The root file is inside the bound and stays there.
-- A rule still reaches the session it binds, without the session having to
-  choose to go and read it.
+- The project's rules are in files that are not addressed to one tool.
+- A session about to work on a part of the tree reads that part's guide
+  first, and this is measured, not assumed.
 - No rule and no owner directive is lost in the move.
 
 **Non-Goals:**
 
-- Rewriting the rules. A rule may lose its incident to a guide; its wording
+- Rewriting the rules. A rule may move and may lose a duplicate; its wording
   changes only where a merge with an existing guide forces it.
-- Trimming the `docs/` guides. They load on demand and have no recommended
-  size.
-- Serving agents other than Claude Code beyond what a plain file read gives
-  them (D5).
+- Bounding the `docs/` guides. They are read on demand and no recommendation
+  covers them.
 
 ## Decisions
 
@@ -71,70 +85,98 @@ bound alone is met by never pressing return. Twenty thousand bytes is 200
 lines at 100 characters. The byte figure is this change's choice, and the
 owner may move it.
 
-**D2. Scoped rules are `.claude/rules/*.md` with `paths`.** It is the one
-mechanism that both loads on its own and was seen to load here. *Alternatives
-considered:* nested `AGENTS.md` (did not load); nested `CLAUDE.md` symlinks
-(documented to load, but every directory then needs a pair of files held
-equal); imports (no saving); a link the session is trusted to follow (what
-"read the relevant guide first" is today, and the reason the rules were
-copied into the root file).
+**D2. Each paragraph is asked one question first: does the tree already say
+this?** If a reader can learn it from a file, a script or a command's output,
+it is deleted, and the cut ledger names what answers it. That takes most of
+"Repo layout", "Special files", "Build commands" and the per-step list in
+"Git" (`scripts/gate.sh` carries a comment per step). What survives the
+question is a rule, a decision, a reason, or a trap the code does not warn
+about. The test for a doubtful one is the documentation's: would removing it
+cause a mistake that reading the source would not prevent?
 
-**D3. A scoped file holds rules; the incident goes to `docs/`.** The same
-bound applies to each scoped file, or the bloat moves one directory down. A
-rule keeps one sentence of why and a link to the guide section that tells the
-story. Where `AGENTS.md` and a guide say the same thing, the guide's copy
-survives and the other is deleted.
+A deleted fact sometimes has a reason attached that the source does not
+carry, such as why the production build is in the gate. The reason is kept
+and the fact goes; where the reason belongs beside the code, it moves into a
+comment there, which the comments rule in "Code conventions" already allows.
 
-**D4. The first cut of the scopes**, to be corrected against the text in task
-2.1:
+**D2a. What is kept goes to `README.md` and `docs/`, by audience.** What the
+project is and whose work it stands on is for anyone, and goes in
+`README.md`, which already has most of it. How work is done here goes in a
+guide under `docs/`: the existing one where the subject has one, a new one
+where it does not. Where `AGENTS.md` and a guide say the same thing, the
+guide's copy survives.
 
-| Scoped file | `paths` | Takes |
-| --- | --- | --- |
-| `games.md` | `src/games/**`, `docs/games/**` | hint bar, port style, traps |
-| `tests.md` | `**/*.test.ts`, `src/engine/testing/**` | test discipline, the "Method" rules about guards |
-| `openspec.md` | `openspec/**` | the delta verbs and their hazards |
-| `gate.md` | `scripts/**`, `.husky/**`, `.github/**` | the gate's steps, deploy detail |
-| `help.md` | `help/**` | the help skeleton |
+**D3. New guides, first cut**, to be corrected against the text in task 2.1:
 
-"Method" has no natural path: half of it is about guards (tests) and half
-about measuring anything. Its one-line rules stay in the root file and the
-catalog of incidents becomes a guide under `docs/`.
+| Guide | Takes |
+| --- | --- |
+| `docs/method.md` | "Method", with its incidents |
+| `docs/work-management.md` | "Work management": openspec, the delta verbs, acceptance |
+| `docs/help-pages.md` | "Documentation": the help skeleton and its checks |
 
-**D5. The root file carries a map of the scoped files.** Five lines saying
-which file binds which part of the tree. It is what an agent that does not
-load `.claude/rules/` reads, and what a person reads.
+The gate gets no guide. Its steps are `scripts/gate.sh`, which comments each
+one, and its rules are `build-pipeline` requirements; task 2.1 checks each
+reason in "Git" against those two before cutting it, and moves into
+`gate.sh` any reason found in neither.
 
-**D6. A fast-prefix check holds the bound, and a vacuity floor holds the
-check.** It counts lines and bytes for `AGENTS.md` and every file under
-`.claude/rules/`, fails naming the file and the overage, and fails if it
-found fewer files than it expects. It runs ahead of the documentation-only
-shortcut, as the other checks that read `AGENTS.md` do.
+"Goal", "Convention over configuration" and "Nothing is sacred" are the
+project's doctrine and have no guide. Their short form stays in the root
+file and the long form goes in one guide, `docs/doctrine.md`.
 
-**D7. The move is verified by shape.** Every non-blank line removed from
+**D4. `AGENTS.md` keeps three things.** The rules whose breach is expensive
+whatever the task, in one line each (never bypass the gate, the acceptance
+bar, ask before breaking a player's data, own what you see, push when done).
+A map: for each part of the tree, the guide to read before touching it, and
+the instruction to read the source for any fact about the tree. And what is
+specific to a coding agent, which D5 covers.
+
+**D5. What is inherently Claude-specific stays in `AGENTS.md`, in one short
+section, and nowhere else.** By reading, that is: the `playwright-cli` skill,
+which language server the LSP tool runs, and the `continueInNewSession`
+handoff. The file is the one Claude loads, so they need no second location.
+No `.claude/rules/` directory is created by default.
+
+**D6. Whether the map is enough is measured, and a Claude-only trigger is
+the fallback, not the plan.** The risk in D2 is that a guide is only read if
+the session chooses to. Task 4.3 runs fresh sessions that are asked to make
+a small change in a game, in a test and in an openspec delta, and checks
+from the transcript whether the guide was read before the first edit. If a
+part of the tree fails that, it alone gets a path-scoped file under
+`.claude/rules/` holding one line that names its guide and no rule text. The
+content stays portable either way.
+
+**D7. A fast-prefix check holds the bound.** It counts lines and bytes of
+`AGENTS.md`, fails naming the overage, and fails if the file is missing or
+`CLAUDE.md` no longer resolves to it. It also takes any file under
+`.claude/rules/`, so a fallback file from D6 cannot grow into a second brief.
+It runs ahead of the documentation-only shortcut, as the other checks that
+read `AGENTS.md` do.
+
+**D8. The move is verified by shape.** Every non-blank line removed from
 `AGENTS.md` appears verbatim in a destination, or is listed in `cuts.md` in
-this change with a reason. The cuts are then swept for normative words
+this change. A cut made under D2 names the file or command that answers it,
+and that answer is checked to exist; any other cut gives its reason. The cuts
+are then swept for normative words
 (`SHALL`, `never`, `must`, `always`, `owner`) and each hit is read, which is
 what the live requirement asks before any history is removed.
 
-**D8. Loading is verified in fresh sessions, not by reading the config.** One
-probe per scoped file: a headless session reads one matching file and answers
-a question whose answer is only in that scoped file. One more answers a
-root-file question with no read at all.
-
 ## Risks / Trade-offs
 
-- **A rule that used to be in every session is now absent until a matching
-  file is read.** A session that plans a game change without opening a game
-  file has not loaded the hint bar. → The root file keeps a one-line form of
-  each rule whose breach is expensive, and D5's map names the rest.
-- **`.claude/rules/` is Claude-specific.** → D5; and the content is plain
-  markdown that any agent can be pointed at.
-- **Path matching fires on Read, Write and Edit, not on a shell command.** A
-  session that only runs `git` against `openspec/` loads nothing. → Task 3.3
-  checks whether the openspec skills read a file under `openspec/` early
-  enough, and if not, the delta hazards keep a root line.
-- **Merging into a guide can drop a nuance the `AGENTS.md` copy had.** → D7
+- **A rule that used to be in every session is now read only when the
+  session goes to its guide.** → D4 keeps the expensive ones in the root file
+  in one line, D6 measures the rest.
+- **A deleted fact was sometimes there because the source misleads.** A line
+  saying a directory no longer exists is not derivable from the tree in the
+  way a line saying one exists is. → D2's test is about mistakes, so a
+  warning the source cannot give counts as a trap and is kept, in its guide.
+- **`README.md` is a public page.** Text moved there is read by visitors to
+  the repository. → Only what D2 assigns to it goes; rules about how agents
+  work do not.
+- **Merging into a guide can drop a nuance the `AGENTS.md` copy had.** → D8
   treats a merged line as a cut unless it survives verbatim.
 - **Repointing 79 files' citations is a bulk edit.** → Every changed line in
   that diff is asserted to be a citation, and the old section names are
   searched for afterwards by what they said.
+- **The docs' numbered-section rule.** `AGENTS.md` says a `§<number>` into
+  `docs/games/` is dead on arrival and guides are cited by heading name. →
+  New guides use named headings only.

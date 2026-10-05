@@ -30,26 +30,35 @@ one, so a trim that leaves that sentence alone is undone in a month.
 
 ## What Changes
 
+The owner set two constraints on how (2026-10-05): *"I do want to avoid
+over-claudifying it to the extent possible, and would suggest that we use the
+readme and docs/ for anything that isn't inherently Claude-Specific"*, and
+*"particularly for factual information that can be derived by looking at the
+codebase directly, I'd prefer to just delete it rather than relocate it, and
+encourage future agents to look at the source."*
+
 - `AGENTS.md` comes down to what a session needs whatever it is working on,
   inside a bound of 200 lines and 20,000 bytes.
-- Rules that bind one part of the tree move to files that load when that part
-  is touched. Claude Code's path-scoped rules (`.claude/rules/*.md` with a
-  `paths` list) do this, and a probe in a fresh session confirmed they load on
-  a matching read here. A nested `AGENTS.md` does not load here, by the same
-  probe (design.md § Context).
-- The incident behind a rule moves beside the how-to it explains, in the
-  `docs/` guide that already covers the subject. Several sections of
+- **A fact the tree states is deleted, not moved.** Which directories exist,
+  what a script runs, what the gate's steps are, what a file contains: the
+  source answers each of these and cannot be out of date. `AGENTS.md` says to
+  read the source for facts, and names where to start.
+- **A rule, a decision or a reason the tree cannot state is kept**, in a file
+  that is not addressed to one tool: `README.md` for what the project is, a
+  guide under `docs/` for how work is done here. Several sections of
   `AGENTS.md` restate a guide that exists (`docs/games/hints.md`,
-  `docs/games/testing.md`), so part of the move is a merge.
-- **Nothing normative is deleted.** Every line that leaves `AGENTS.md` either
-  appears in a destination or is listed in a cut ledger in this change with
-  its reason, and every owner directive quoted today is still quoted somewhere
-  that loads when it applies.
-- The rule about where a new rule goes is rewritten: it goes in the narrowest
-  file that loads when it applies, and in `AGENTS.md` only when that is every
+  `docs/games/testing.md`), so part of this is removing a duplicate.
+- What is inherently specific to Claude Code stays in `AGENTS.md`, in one
+  short section. No Claude-only directory holds a rule of this project.
+- Every line that leaves `AGENTS.md` is accounted for: it is in a
+  destination, or it is in a cut ledger in this change saying which source
+  answers it or why it is not needed. Every owner directive quoted today is
+  still quoted somewhere.
+- The rule about where a new rule goes is rewritten: in the guide for the
+  part of the tree it binds, and in `AGENTS.md` only when it binds every
   session.
-- A check in the gate's fast prefix holds the bound, for `AGENTS.md` and for
-  each scoped file, so the file cannot regrow quietly.
+- A check in the gate's fast prefix holds the bound, so the file cannot
+  regrow quietly.
 - Every citation of an `AGENTS.md` section elsewhere in the tree is repointed
   in the same change. Outside the archive, 79 files cite the file, most often
   § "Method", § "Hint quality bar" and § "A scan that keys on a name".
@@ -66,22 +75,21 @@ None.
 
 ### Modified Capabilities
 
-- `repo-layout`: a new requirement bounds the size of the root brief and of
-  each scoped rules file, and says where a rule goes. The existing requirement
-  "Agent-facing documentation is one AGENTS.md and no tool generates a second"
-  also has to change, and its delta is written during the work, once the
-  layout is settled (tasks.md 4.1 says why it is not written now).
+- `repo-layout`: a new requirement bounds the root brief, says what it holds,
+  and says where everything else lives or that it is not written at all. The
+  existing requirement "Agent-facing documentation is one AGENTS.md and no
+  tool generates a second" also has to change, and its delta is written
+  during the work, once the layout is settled (tasks.md 4.1 says why it is
+  not written now).
 
 ## Impact
 
 - `AGENTS.md` (and `CLAUDE.md`, its symlink): rewritten.
-- `.claude/rules/`: new, tracked.
-- `docs/games/*.md`, `docs/test-strength.md`, and possibly one new guide under
-  `docs/` for the "Method" material.
-- `scripts/gate.sh`: one new fast-prefix check, and the documentation-only
-  pattern, which today does not match `.claude/`.
-- `scripts/checks/change-citations.mjs`: its roots are `docs/` and
-  `AGENTS.md`; change ids cited from the scoped files must resolve too.
+- `docs/games/*.md`, `docs/test-strength.md`, and new guides under `docs/`
+  for the material that has no home today.
+- `README.md`: small, since most of what could move there is a fact the tree
+  states and is deleted under the rule above.
+- `scripts/gate.sh`: one new fast-prefix check.
 - `openspec/config.yaml`: its `context:` block tells openspec to read
   `AGENTS.md`, and has to keep sending a planner to the rules that govern
   planning.
