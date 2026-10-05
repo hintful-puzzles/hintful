@@ -63,10 +63,20 @@ a worse offer than none (`offer-salad-normal-presets` chose its four that
 way; `bound-custom-sizes-by-their-deal` has the method), so a rule that says
 "every tier at every size" is not available to every game.
 
-**The guards read the menu.** Every cross-game sweep deals from presets
-(`engine/testing/presets.ts`), so trimming a menu removes boards from the
-suite and adding to one adds them. Say what covers a configuration a menu
-stops offering.
+**The guards read the menu, and since 2026-10-05 not only the menu.** Every
+cross-game sweep deals from presets (`engine/testing/presets.ts`), so trimming
+a menu removes boards from the suite and adding to one adds them. What a trim
+can no longer remove is a *value*: `walk-every-choice-the-dialog-offers` made
+the sweeps deal every tier, rule and mode the Custom dialog offers, on the
+first preset that accepts it, whether or not a preset holds it. So a menu does
+not need a tier or a mode for the guards' sake, and whether it offers one is a
+question about the player alone. What a trim still removes is a size, and a
+combination: a tier at the size where it is hard. Say what covers those.
+
+One menu changed there, because nothing else could reach the value: ABCD
+gained "6x6 Easy, 5 letters, no diagonal", its one board under the rule
+against diagonal touching, which needs five letters and no other preset has
+them. It is this review's to keep, move or reword.
 
 ## Compatibility
 

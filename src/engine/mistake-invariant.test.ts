@@ -30,12 +30,11 @@
  * placements, lands in this net.
  *
  * ON THE AXIS, and the number was taken rather than guessed. Every leaf preset
- * is **120 s**, which is not a per-commit cost; the slice below is the one
- * `hint-resume.test.ts` settled on for the same reason — one preset per *tier*
- * for a tiered game, first and last by *size* for an untiered one. Keying on
- * the smallest preset alone was rejected: a mis-capped solver shows on the tier
+ * was **120 s** on an idle box (2026-09-09), which is not a per-commit cost, so
+ * the gate deals a slice and the slow tier takes every preset. Keying on the
+ * smallest preset alone was rejected: a mis-capped solver shows on the tier
  * its cap is wrong for, which is the first-preset blindness
- * `refuse-honestly-at-every-tier` removed. The slow tier takes every preset.
+ * `refuse-honestly-at-every-tier` removed.
  *
  * **AND THE BOARDS ARE DEALT FROM A SEED, NOT FROM A DESC.** That is not a
  * detail: `aux` — the generator's own solution — exists only on a board the
@@ -61,12 +60,11 @@
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
-import { tierOf } from "./difficulty.ts";
 import { Midend } from "./midend.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { NOT_STARTED } from "./solve-failure.ts";
 import { capabilitySets } from "./testing/enrollment.ts";
-import { leafPresets } from "./testing/presets.ts";
+import { dealtBoards } from "./testing/presets.ts";
 import { SLOW_TESTS_ENABLED } from "./testing/slow.ts";
 
 beforeAll(registerAllGames);
@@ -92,35 +90,26 @@ function mistakeGames(): [string, AnyGame][] {
 const GAMES = mistakeGames();
 
 /**
- * The presets this guard deals, per game: **one per tier**, and the first
- * preset only for a game with no tiers. The slow tier takes every leaf preset.
+ * The boards this guard deals, per game: **every tier and mode, each on the
+ * smallest board carrying it, and no large board** (`dealtBoards` with
+ * `scalarEnds: false`). The slow tier takes every leaf preset.
  *
- * Three costs were measured on an idle box (2026-09-09) rather than guessed:
- * every leaf preset is **120 s**, `hint-resume`'s exact slice — one per tier,
- * first *and last* for an untiered game — is **~30 s**, and this slice is
- * **9.7 s**. Almost all of the difference is board **generation** at the largest
- * size (Separate alone was 8 s of the 30).
+ * **No large board is a deliberate weakening with a reason.** `hint-resume`
+ * takes both ends of a size because a hint *plan* can fail on a big board and
+ * not a small one — Sixteen's 5×5 cycled for ever where its 3×3 walked in
+ * seven moves. The defect class here is different: `findMistakes` is a second,
+ * hand-wired consumer of the game's solver, and what desynchronizes the two is
+ * a **cap or a clue structure**, which varies by tier and mode, not by board
+ * size. Measured on an idle box, 2026-09-09: of the ~30 s a slice with the
+ * large boards cost, almost all was **generation** at the largest size
+ * (Separate alone was 8 s).
  *
- * **Untiered games take one preset, and that is a deliberate weakening with a
- * reason.** `hint-resume` takes both ends because a hint *plan* can fail on a
- * big board and not a small one — Sixteen's 5×5 cycled for ever where its 3×3
- * walked in seven moves. The defect class here is different: `findMistakes` is
- * a second, hand-wired consumer of the game's solver, and what desynchronizes
- * the two is a **cap or a clue structure**, which varies by tier and mode, not
- * by board size. Paying eight seconds for Separate's largest board buys a
- * dimension this class does not live in.
+ * It keyed on tier alone until `walk-every-choice-the-dialog-offers`, so it
+ * dealt no mode: no Killer grid, no Adjacent clue set, and one board of an
+ * untiered game whatever its menu varied.
  */
 function dealtPresets(game: AnyGame): { title: string; params: unknown }[] {
-  const all = leafPresets(game);
-  if (SLOW_TESTS_ENABLED) return all;
-  if (!game.difficulty) return all.slice(0, 1);
-  const seen = new Set<unknown>();
-  return all.filter((e: { params: unknown }) => {
-    const key = tierOf(game, e.params);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return dealtBoards(game, { every: SLOW_TESTS_ENABLED, scalarEnds: false });
 }
 
 describe("a board with nothing wrong on it reports no mistakes", () => {

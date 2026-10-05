@@ -281,14 +281,25 @@ describe("the Mark-all press never resets a note the player narrowed", () => {
       // used to walk a 4x4 board of none of them.
       for (const { title, params } of gatePresets(row.name, row.game)) {
         const at = `${row.name}/${title}`;
-        const { state, ui } = board(row, params, `narrow-${at}`);
-
-        // Run the press to convergence, so every fillable cell carries notes.
-        let cur = state;
-        for (let i = 0; i < 6; i++) {
-          const next = press(row, cur, ui);
-          if (next === null) break;
-          cur = next;
+        // A board whose every blank cell is down to one candidate has nothing
+        // to narrow, and the smallest Solo under mirrored clues is often one,
+        // so deal until a board has a cell with two.
+        const twoCandidates = (v: number) => v !== 0 && (v & (v - 1)) !== 0;
+        const filledBoard = (deal: number) => {
+          const dealt = board(row, params, `narrow-${at}${deal ? `-${deal}` : ""}`);
+          // Run the press to convergence, so every fillable cell carries notes.
+          let filled = dealt.state;
+          for (let i = 0; i < 6; i++) {
+            const next = press(row, filled, dealt.ui);
+            if (next === null) break;
+            filled = next;
+          }
+          return { cur: filled, ui: dealt.ui };
+        };
+        let { cur, ui } = filledBoard(0);
+        for (let deal = 1; deal < 8; deal++) {
+          if (Array.from(notesOf(cur)).some(twoCandidates)) break;
+          ({ cur, ui } = filledBoard(deal));
         }
 
         // Reproduce the reported board: one cell **narrowed** by hand, a *different*
@@ -303,7 +314,7 @@ describe("the Mark-all press never resets a note the player narrowed", () => {
         // givens, so its clean press strikes nothing and every cell keeps its full
         // candidate set).
         const notes = notesOf(cur);
-        const narrowed = notes.findIndex((v) => v !== 0 && (v & (v - 1)) !== 0);
+        const narrowed = notes.findIndex(twoCandidates);
         expect(
           narrowed,
           `${at}: no cell had two candidates to narrow between`,

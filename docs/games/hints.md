@@ -4033,7 +4033,8 @@ fresh board to solved one *freshly-recomputed* hint at a time (apply only
 
 **It walks every preset**, not just the first — the gate slice keeps one preset
 per *value* of every axis the game varies, derived by `axisSlice` from the
-game's own `paramConfig`, and the slow tier takes them all. It walked
+game's own `paramConfig`, the slow tier takes them all, and both add a board
+for each value the Custom dialog offers that no preset holds. It walked
 `firstLeaf` alone until `refuse-honestly-at-every-tier`, i.e. by convention the
 smallest and easiest board each game offers, so the collection's strongest hint
 guarantee had never seen a Hard board, an `Unreasonable` board, or any mode

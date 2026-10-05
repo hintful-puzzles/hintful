@@ -27,9 +27,10 @@
  * thing standing between an empty derivation and a clean commit.
  */
 import { describe, expect, it } from "vitest";
-import { REGISTERED_GAME_COUNT } from "./testing/enrollment.ts";
-import { HINT_GAMES } from "./testing/hint-games.ts";
-import { axisSlice, leafPresets, presetAxes } from "./testing/presets.ts";
+import { difficultyTiers, tierOf } from "./difficulty.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
+import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
+import { axisSlice, dealtBoards, leafPresets, presetAxes } from "./testing/presets.ts";
 import { SCANNED_TEST_FILES, testCodeLinesMatching } from "./testing/test-source.ts";
 
 describe("the hint-guard enrolled set is derived, and non-vacuous", () => {
@@ -254,5 +255,108 @@ describe("a cross-game sweep takes its boards from the slice", () => {
     // is a dead exemption, and a one-word entry is not a reason.
     for (const [path, why] of Object.entries(BUILDS_ITS_OWN_BOARDS))
       expect(why.length, `${path}'s entry states no reason`).toBeGreaterThan(80);
+  });
+});
+
+/**
+ * The guard on the **fourth** instrument: what the slice cannot reach because
+ * the menu does not offer it.
+ *
+ * The slice walks one preset per value the presets vary, so a value the Custom
+ * dialog offers and no preset holds was dealt by no cross-game guard. Salad's
+ * hint threw on 71 of 1,195 Normal boards while all eleven of its presets were
+ * Easy (`fix-salad-number-ball-hint-throw`). `dealtBoards` deals each such
+ * value on the smallest preset that accepts it, and this asks whether it did.
+ *
+ * A value no preset accepts has no board, and is held to the ledger: the key
+ * is `<game>: <kw> = <the dialog's words>`, and the reason says what does deal
+ * it. **Empty, and meant to stay so.** ABCD's rule against diagonal touching
+ * needs five letters and was the one entry, until its menu gained a board
+ * with five.
+ */
+const NO_BOARD: Record<string, string> = {};
+
+describe("every choice the Custom dialog offers is dealt", () => {
+  const rows = REGISTERED_GAMES.map(([id, game]) => ({
+    id,
+    game,
+    // What a guard is handed: `gatePresets` for a hinting game, and the same
+    // function beneath it for the rest, which `desc-error-games.test.ts` calls.
+    dealt: typeof game.hint === "function" ? gatePresets(id, game) : dealtBoards(game),
+  }));
+
+  it("deals a board for every value of every closed set, or says why not", () => {
+    // Recomputed from `paramConfig` and the dealt boards alone, never through
+    // `unofferedValues`, so this fails when the derivation is wrong and not
+    // only when it disagrees with itself.
+    const undealt: string[] = [];
+    let examined = 0;
+    for (const { id, game, dealt } of rows) {
+      for (const item of game.paramConfig ?? []) {
+        if (item.type === "string") continue;
+        const held = new Set(dealt.map((e) => item.get(e.params)));
+        const offered: [boolean | number, string][] =
+          item.type === "boolean"
+            ? [
+                [false, "off"],
+                [true, "on"],
+              ]
+            : item.choices.map((words: string, i: number) => [i, words]);
+        for (const [value, words] of offered) {
+          examined++;
+          if (!held.has(value)) undealt.push(`${id}: ${item.kw} = ${words}`);
+        }
+      }
+    }
+    // How many values the loop looked at, for the reason every count here has
+    // one. 229 when written, floored well beneath it.
+    expect(examined, "no closed-set value examined").toBeGreaterThan(150);
+    expect(undealt.sort()).toEqual(Object.keys(NO_BOARD).sort());
+    for (const [key, why] of Object.entries(NO_BOARD))
+      expect(why.length, `${key}'s entry states no reason`).toBeGreaterThan(80);
+  });
+
+  it("writes onto a copy, and leaves every game's menu as it was", () => {
+    // A menu hands out the game's own preset objects, so a setter that reached
+    // one would change what every later test and every later deal reads. The
+    // copy is one level deep, which is enough while no setter writes through
+    // a field; this is what says so.
+    for (const [id, game] of REGISTERED_GAMES) {
+      const menu = () =>
+        leafPresets(game).map((e) => game.encodeParams(e.params, true));
+      const before = menu();
+      dealtBoards(game, { every: true });
+      expect(menu(), `${id}: dealing changed a preset`).toEqual(before);
+    }
+  });
+
+  it("reaches the tiers and rules no menu offered", () => {
+    // **The known positive.** The case above reads every value through the
+    // item's own `get`, so a `set` that wrote nothing and a `get` that read
+    // nothing would agree with each other. These name boards by the params
+    // they carry. Each was dealt by no cross-game guard before
+    // `walk-every-choice-the-dialog-offers`; a menu that later gains the value
+    // keeps them true.
+    const dealtFor = (id: string): Record<string, unknown>[] =>
+      (rows.find((r) => r.id === id)?.dealt ?? []).map(
+        (e) => e.params as Record<string, unknown>,
+      );
+    const tierDealt = (id: string, tier: string): boolean => {
+      const game = rows.find((r) => r.id === id)?.game;
+      const tiers = game ? difficultyTiers(game) : null;
+      if (!game || !tiers) return false;
+      return dealtFor(id).some((p) => tiers[tierOf(game, p)] === tier);
+    };
+    expect(tierDealt("loopy", "Tricky"), "no Loopy Tricky board").toBe(true);
+    expect(tierDealt("group", "Hard"), "no Group Hard board").toBe(true);
+    expect(tierDealt("unequal", "Easy"), "no Unequal Easy board").toBe(true);
+    expect(
+      dealtFor("guess").some((p) => p["allowBlank"] === true),
+      "no Guess board allowing blanks",
+    ).toBe(true);
+    expect(
+      dealtFor("abcd").some((p) => p["diag"] === true),
+      "no ABCD board without diagonal touching",
+    ).toBe(true);
   });
 });

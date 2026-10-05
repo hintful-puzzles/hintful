@@ -11,7 +11,7 @@ import { Midend } from "./midend.ts";
 import { randomNew } from "./random/index.ts";
 import { descAlphabet, descMutants } from "./testing/desc-mutants.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
-import { axisSlice, leafPresets } from "./testing/presets.ts";
+import { dealtBoards } from "./testing/presets.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { itOverWholeSweep, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
@@ -72,7 +72,8 @@ const accepted = new Map<string, number>();
  * the board's own build (`loadDesc`).
  *
  * **The cap.** One board per value of each preset axis, on the smallest board
- * offering it, and {@link MUTANTS_PER_BOARD} mutants of each. A mode changes the
+ * offering it, one per value the dialog offers and no preset holds, and
+ * {@link MUTANTS_PER_BOARD} mutants of each. A mode changes the
  * grammar; a size adds nothing a mutant does not already reach, since doubling
  * a digit writes the two-digit clue a large board would, while generating that
  * board cost Slide 30 s on its own. The uncapped run, every preset and every
@@ -81,10 +82,10 @@ const accepted = new Map<string, number>();
 describe("a near-miss game ID", () => {
   for (const [id, game] of REGISTERED_GAMES) {
     it(`${id}: is refused, or builds a board that draws`, () => {
-      const all = leafPresets(game);
-      const presets = SLOW_TESTS_ENABLED
-        ? all
-        : axisSlice(game, all, { scalarEnds: false });
+      const presets = dealtBoards(game, {
+        every: SLOW_TESTS_ENABLED,
+        scalarEnds: false,
+      });
       const boards = presets.map(({ title, params }) => ({
         title,
         params: game.encodeParams(params, true),

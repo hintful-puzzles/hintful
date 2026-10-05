@@ -74,6 +74,9 @@ export const abcdPresets: AbcdParams[] = [
   { w: 5, h: 5, n: 4, diag: false, removenums: false },
   { w: 5, h: 5, n: 4, diag: false, removenums: true },
   { w: 6, h: 6, n: 4, diag: false, removenums: false },
+  // The one board on the menu under the rule against diagonal touching, which
+  // needs five letters.
+  { w: 6, h: 6, n: 5, diag: true, removenums: false },
   { w: 7, h: 7, n: 3, diag: false, removenums: false },
   { w: 7, h: 7, n: 4, diag: false, removenums: false },
 ];

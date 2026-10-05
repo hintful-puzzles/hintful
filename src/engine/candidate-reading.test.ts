@@ -20,7 +20,7 @@ import type { Narration } from "./hint-words.ts";
 import { randomNew } from "./random/index.ts";
 import { enrolledIn } from "./testing/enrollment.ts";
 import { type AnyGame, HINT_GAMES } from "./testing/hint-games.ts";
-import { axisSlice, leafPresets } from "./testing/presets.ts";
+import { dealtBoards } from "./testing/presets.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
 const READINGS: readonly CandidateReading[] = ["implicit", "populate"];
@@ -34,8 +34,7 @@ const gameOf = (id: string): AnyGame => {
 };
 
 /** Every mode and tier, each on the smallest board offering it. */
-const presetsOf = (game: AnyGame) =>
-  axisSlice(game, leafPresets(game), { scalarEnds: false });
+const presetsOf = (game: AnyGame) => dealtBoards(game, { scalarEnds: false });
 
 const uiFor = (game: AnyGame, state: unknown, reading: CandidateReading) => ({
   ...(game.newUi(state) as object),
@@ -189,7 +188,15 @@ describe("the hint-notes preference", () => {
             const { desc, aux } = game.newDesc(params, randomNew(`reading-${title}`));
             let state = game.newState(params, desc);
             const res = game.hint?.(state, aux, uiFor(game, state, reading));
-            if (!res?.ok) throw new Error(`${title}: refused on a fresh board`);
+            if (!res?.ok) {
+              // A tier that allows trial and error may need it from the first
+              // move: Group's Unreasonable 6x6 does on most boards.
+              expect(
+                permitsSearch(game, params),
+                `${title}: refused on a fresh board`,
+              ).toBe(true);
+              return;
+            }
             const effects = new Set<Effect>();
             for (const step of res.steps) {
               // Refreshing a step against the board it is about to be shown on

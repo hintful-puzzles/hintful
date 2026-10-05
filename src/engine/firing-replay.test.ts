@@ -14,7 +14,7 @@ import {
 import { randomNew } from "./random/index.ts";
 import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
 import { type AnyGame, HINT_GAMES } from "./testing/hint-games.ts";
-import { leafPresets } from "./testing/presets.ts";
+import { dealtBoards } from "./testing/presets.ts";
 
 // --- the instrument ----------------------------------------------------------
 
@@ -345,7 +345,7 @@ describe("a recorded firing follows from the premise its steps name", () => {
         const game = gameOf(id);
         const audits: PremiseAudit[] = [];
         const boards = [
-          ...leafPresets(game).map((p) => ({
+          ...dealtBoards(game, { every: true }).map((p) => ({
             params: p.params,
             desc: descOf(id, game, p),
           })),

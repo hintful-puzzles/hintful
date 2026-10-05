@@ -884,14 +884,18 @@ so the slice **replaces** a `tiers.map(withTier(base))` loop rather than
 multiplying with it, and the board it walks a tier on is one the player can pick
 from the menu.
 
-`axisSlice` and `leafPresets` are underneath it
+`dealtBoards` is underneath it
 ([`testing/presets.ts`](../../src/engine/testing/presets.ts), which reads no
-registry), and are the right call in two cases: a sweep about the slicing rule
-itself, and a sweep that wants a board only for its **desc**.
-[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) is the
-second: it takes every mode on its smallest board (`scalarEnds: false`), because
-a large board adds no grammar its mutants do not already write, and generating
-one cost Slide 30 s.
+registry), and is the call for a sweep over games without a hint, or one that
+wants its modes and no large board (`scalarEnds: false`).
+[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) wants a
+board only for its **desc**: a large board adds no grammar its mutants do not
+already write, and generating one cost Slide 30 s.
+[`mistake-invariant.test.ts`](../../src/engine/mistake-invariant.test.ts) asks a
+solver's second consumer, which a cap or a clue structure desynchronizes and a
+size does not. `axisSlice` and `leafPresets`, beneath that, are for a sweep
+about the slicing rule itself: a sweep that calls them deals nothing the menu
+leaves out.
 
 **Calling it is the whole of the enrollment, and that is the lesson.** Every
 cross-game sweep but one used to decide this population for itself and all of
@@ -913,16 +917,41 @@ and blind to the rest:
 | one per tier | a board at each difficulty | every preset of an **untiered** game after the first — Sixteen's cycling 5×5 |
 | tier + first/last | that, plus the size ends | every **mode**: Solo's Killer/X/jigsaw, Unequal's Adjacent, Seismic's Tectonic, 17 of Loopy's 18 tilings, 10 of Salad's 11 presets |
 
-**And the slice is blind to what the menu does not offer.** It walks one preset
-per value *the presets vary*, so a value the Custom dialog offers and no preset
-holds is dealt by no cross-game guard at all. Salad's Normal tier was one: all
+**What the menu does not offer is dealt beside the slice.** The slice walks one
+preset per value *the presets vary*, so by itself it is blind to a value the
+Custom dialog offers and no preset holds. Salad's Normal tier was one: all
 eleven of its presets were Easy, and its hint threw on 71 of 1,195 Normal
-boards with every guard green (`fix-salad-number-ball-hint-throw`). Salad has
-Normal presets now, and `walk-every-choice-the-dialog-offers` holds the other
-values this leaves out, a tier among them in four more games. Until that lands,
-**a game whose menu stops short of something its dialog offers owes that value
-a test of its own**, and the cheap one is the game's rung scan:
-`describeHintPins`'s `params` takes any params, offered or not.
+boards with every guard green (`fix-salad-number-ball-hint-throw`). So
+`dealtBoards`, which `gatePresets` calls, adds every such value of a
+`"boolean"` or `"choices"` item, written onto the first preset in menu order
+that `paramsError` accepts it on (`unofferedValues`). A game is dealt on
+everything its dialog offers by having a `paramConfig`, and there is no list.
+
+Three things to know about those boards:
+
+- **This is the `with*` form rule 6 warns against, used for the one thing it
+  is right for.** The rule is about a sweep that synthesizes its boards
+  *instead of* reading the menu. These are for a value the menu has no board
+  to read, and they are dealt beside the slice.
+- **A tier written onto the smallest grid is a board the dialog deals, and it
+  may not be a hard one.** It reaches the code that tier switches on, and it is
+  not a substitute for a preset at that tier. A rung that needs a large board
+  at a hard tier still wants its pin (§ "Pinning a hint's positions").
+- **Expect a guard to meet a board its own setup never allowed for.** The 53
+  values this first dealt found no fault in a game and two in guards: one
+  threw on any refusal from a fresh board, which Group's Unreasonable tier
+  gives honestly on most of its 6x6 boards, and one needed a cell with two
+  candidates, which the smallest Solo under mirrored clues may not have. Fix
+  the guard's assumption; do not drop the board.
+- **A value no preset accepts has no board**, because the field depends on
+  another: ABCD's rule against diagonal touching needs five letters, and no
+  ABCD preset had them. `hint-enrollment.test.ts` holds such values to a
+  ledger, `NO_BOARD`, which is empty: ABCD's menu gained a board with five
+  letters. Prefer that fix. A whole rule with no board on the menu is an
+  omission a player meets too.
+
+A `"string"` item is not walked this way. A free scalar has no list of values
+to hold the menu against, and its ends are the slice's.
 
 **Why `paramConfig` is the right source**, and not the params object's keys: it
 is a value a mechanism *consumes* (the Custom dialog is built from it), so it is

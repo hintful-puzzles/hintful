@@ -9,6 +9,7 @@
  */
 import type { ParamConfigItem, PresetMenu } from "../game.ts";
 import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
+import { paramsError } from "../params.ts";
 
 /** First leaf preset's params — a small, valid board for each game. */
 export function firstLeaf<P>(menu: PresetMenu<P>): P {
@@ -85,8 +86,8 @@ export interface PresetAxis<Params> {
  *
  * A field every preset holds the same value at is not an axis — the game offers
  * no way to reach a second value from the presets menu, so a slice cannot walk
- * one. So a value the Custom dialog offers and no preset holds is dealt by
- * nothing built on this slice: Loopy's Tricky tier is one.
+ * one. A value the Custom dialog offers and no preset holds is
+ * {@link unofferedValues}', and {@link dealtBoards} deals both.
  *
  * **Takes only what it reads**, the way `difficulty.ts`'s `difficultyTiers`
  * does, so the
@@ -196,4 +197,97 @@ export function axisSlice<Params, Entry extends { params: Params }>(
     }
     return novel;
   });
+}
+
+/** What {@link unofferedValues} and {@link dealtBoards} read off a game. */
+interface OfferingGame<Params> {
+  paramConfig?: readonly ParamConfigItem<Params>[];
+  validateParams?(p: Params, full: boolean): string | null;
+}
+
+/**
+ * One value the Custom dialog offers and no preset holds.
+ */
+export interface UnofferedValue<Params> {
+  /** The `paramConfig` keyword of the field. */
+  readonly kw: string;
+  /** The value as the dialog shows it: the choice's own words, or on/off. */
+  readonly words: string;
+  /** The smallest preset that accepts the value, with that one field written,
+   * or `null` when every preset refuses it. */
+  readonly board: { title: string; params: Params } | null;
+}
+
+/**
+ * Every value of a `"boolean"` or `"choices"` item that no preset holds, each
+ * on the first preset in menu order that `paramsError` accepts it on.
+ *
+ * A menu is the list its author wrote, and a dialog is the whole of what the
+ * game deals, so the two differ by exactly the boards a slice of the menu can
+ * never reach. Salad's Normal tier was one, and its hint threw on 71 of 1,195
+ * such boards while every preset it had was Easy.
+ *
+ * **Writing one field onto a preset is the form `gatePresets`' comment warns
+ * against, and here it is the only form there is.** That warning is about a
+ * sweep that builds its boards this way *instead of* reading the menu. These
+ * are dealt beside the slice, for a value the menu has no board to read.
+ *
+ * **Menu order, so a value costs what the game's cheapest board costs.** A tier
+ * written onto a small grid is still a board the dialog deals, but it may not
+ * be a hard one, so this is no substitute for a preset at that tier.
+ *
+ * A `"string"` item is left to the slice: a free scalar has no list of values
+ * to hold a preset against.
+ */
+export function unofferedValues<Params>(
+  game: OfferingGame<Params>,
+  presets: readonly { title: string; params: Params }[],
+): UnofferedValue<Params>[] {
+  const out: UnofferedValue<Params>[] = [];
+  for (const item of game.paramConfig ?? []) {
+    if (item.type === "string") continue;
+    const held = new Set<AxisValue>(presets.map((e) => item.get(e.params)));
+    const offered: [AxisValue, string][] =
+      item.type === "boolean"
+        ? [
+            [false, "off"],
+            [true, "on"],
+          ]
+        : item.choices.map((words, i): [AxisValue, string] => [i, words]);
+    for (const [value, words] of offered) {
+      if (held.has(value)) continue;
+      let board: UnofferedValue<Params>["board"] = null;
+      for (const base of presets) {
+        const params = { ...base.params };
+        // The union's two setters share no parameter type, and `value` was
+        // built from this item's own type just above.
+        (item.set as (p: Params, v: AxisValue) => void)(params, value);
+        if (paramsError(game, params, true) !== null) continue;
+        board = { title: `${base.title}, ${item.name}: ${words}`, params };
+        break;
+      }
+      out.push({ kw: item.kw, words, board });
+    }
+  }
+  return out;
+}
+
+/**
+ * **The boards a cross-game sweep deals**: the {@link axisSlice} of the menu,
+ * or all of it with `every`, and then each of {@link unofferedValues} that has
+ * a board. A game is dealt on everything its dialog offers by having a
+ * `paramConfig`.
+ *
+ * A value with no board is not dropped in silence: `hint-enrollment.test.ts`
+ * holds those to a ledger.
+ */
+export function dealtBoards<Params>(
+  game: OfferingGame<Params> & { presets(): PresetMenu<Params> },
+  opts: SliceOptions & { readonly every?: boolean } = {},
+): { title: string; params: Params }[] {
+  const all = leafPresets(game);
+  return [
+    ...(opts.every ? all : axisSlice(game, all, opts)),
+    ...unofferedValues(game, all).flatMap((v) => (v.board ? [v.board] : [])),
+  ];
 }

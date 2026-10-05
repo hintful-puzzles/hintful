@@ -6,6 +6,7 @@ preset:ABCD/4x4 Easy, 4 letters  full=4x4n4
 preset:ABCD/4x4 Hard, 4 letters  full=4x4n4R  brief=4x4n4
 preset:ABCD/5x5 Hard, 4 letters  full=5x5n4R  brief=5x5n4
 preset:ABCD/6x6 Easy, 4 letters  full=6x6n4
+preset:ABCD/6x6 Easy, 5 letters, no diagonal  full=6x6n5D
 preset:ABCD/7x7 Easy, 3 letters  full=7x7n3
 preset:ABCD/7x7 Easy, 4 letters  full=7x7n4
 bump:w  full=6x5n4

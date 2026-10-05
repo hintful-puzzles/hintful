@@ -15,7 +15,7 @@
  * Dev/test-only; never imported by production code.
  */
 import { type AnyGame, membersNotMentioning, REGISTERED_GAMES } from "./enrollment.ts";
-import { axisSlice, leafPresets } from "./presets.ts";
+import { dealtBoards } from "./presets.ts";
 import { SLOW_TESTS_ENABLED } from "./slow.ts";
 
 export type { AnyGame };
@@ -119,7 +119,8 @@ export function markRoles(highlights: unknown): number {
 
 /**
  * **The boards a per-commit cross-game sweep walks** — every preset in the slow
- * tier, the {@link axisSlice} in the gate.
+ * tier, the `axisSlice` in the gate, and in both every value the Custom dialog
+ * offers that no preset holds (`dealtBoards`).
  *
  * This is the one place the gate's preset population is decided, because every
  * cross-game sweep but one used to decide it for itself and all of those
@@ -163,7 +164,8 @@ export function gatePresets(
   id: string,
   game: AnyGame,
 ): { title: string; params: unknown }[] {
-  const all = leafPresets(game);
-  if (SLOW_TESTS_ENABLED) return all;
-  return axisSlice(game, all, { scalarEnds: !SEARCH_PLANNING_GAMES.includes(id) });
+  return dealtBoards(game, {
+    every: SLOW_TESTS_ENABLED,
+    scalarEnds: !SEARCH_PLANNING_GAMES.includes(id),
+  });
 }
