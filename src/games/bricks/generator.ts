@@ -145,6 +145,12 @@ export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string 
     // Enforce the minimum shaded proportion (upstream's float comparison).
     if (Math.fround(total / spaces) < MINIMUM_SHADED) continue;
 
+    // Re-numbering turns each undecided brick into a clue, which can leave the
+    // brick above it resting on nothing: a board with no solution. Stripping
+    // keeps a blank only while the board still solves, so it cannot repair
+    // one. A solve that completes puts back exactly the bricks it cleared.
+    if (solveGame(grid, w, h, p.diff, true, true) !== "complete") continue;
+
     removeNumbers(grid, w, h, p.diff, rs);
 
     // The tier gate: a board the tier below already solves is not the

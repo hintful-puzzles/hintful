@@ -120,6 +120,9 @@ describe("bricks params", () => {
 
   // Boards of six squares, which the tier gate once skipped.
   describeDealtTiers(bricksGame, ["2x3dn", "3x2dn"], { deals: 20 });
+
+  // Two wide and tall, where a board once came out with no solution.
+  describeDealtTiers(bricksGame, ["2x4dn", "2x10de", "2x10dn"], { deals: 20 });
 });
 
 describe("bricks hex geometry", () => {
@@ -333,6 +336,31 @@ describe("bricks generator", () => {
       const grid = st.grid.slice();
       expect(solveGame(grid, st.w, st.h, 2, true, true)).toBe("complete");
     }
+  });
+
+  // A board two squares wide and four or more tall once came out with no
+  // solution about half the time, and its own ID was then refused.
+  describe("a board at the smallest width or height loads from its ID", () => {
+    const DEALS = 25;
+    it.each([
+      "2x2de",
+      "2x3dn",
+      "2x4de",
+      "2x4dn",
+      "2x5dn",
+      "2x7dn",
+      "2x10de",
+      "2x10dn",
+      "4x2dn",
+      "10x2de",
+    ])(`%s, ${DEALS} deals`, (cell) => {
+      const p = decodeParams(cell);
+      const { m } = harness();
+      for (let seed = 0; seed < DEALS; seed++) {
+        const { desc } = newBricksDesc(p, randomNew(`bricks-narrow-${cell}-${seed}`));
+        expect(m.newGameFromId(`${cell}:${desc}`), desc).toBeNull();
+      }
+    });
   });
 
   // The tier gate. Upstream probed at Easy whatever tier was asked for, so

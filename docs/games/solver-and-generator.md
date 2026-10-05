@@ -986,6 +986,15 @@ verdict. The lessons that stay live:
   candidate's solve left behind (often a finished board), so 31–45% of
   attempts were judged on garbage and "Hard" mostly wasn't
   ([`spokes/generator.ts`](../../src/games/spokes/generator.ts)).
+- **Tell — the unchecked start:** a stripping loop keeps a removal only while
+  the board still solves, so it preserves a solvable board and cannot make
+  one. Ask what proves the board it *starts* from solves. Bricks re-founds its
+  answer first, turning every square its Easy solve left undecided into a
+  clue, and on a board two wide that could leave a brick resting on nothing:
+  the loop then reverted every removal and wrote out a board with no solution,
+  which its own game ID refused
+  ([`bricks/generator.ts`](../../src/games/bricks/generator.ts)). Any step
+  that edits the answer after it was built owes a solve before the stripping.
 - **Tell — the mutating validator:** any C-descended `validate`/`check` that
   both returns a verdict *and* writes a flag back into the board is a hazard
   the moment a later full-byte comparison reads that byte. Clusters'

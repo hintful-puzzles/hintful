@@ -227,9 +227,6 @@
 
 63 cells dealt, 1 refused, 0 left out as slow.
 
-- `2x7dn` asked Unreasonable: above: no cap, no cap
-- `2x10de` asked Easy: above: no cap
-- `2x10dn` asked Unreasonable: above: no cap, no cap
 - `2x2dn` refused: No 2x2 puzzle is Unreasonable.
 
 ## bridges
