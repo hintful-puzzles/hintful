@@ -1,6 +1,12 @@
 
 # Notes for All Agents (also symlinked as CLAUDE.md)
 
+**Do not make this file longer unless there really is no better way.** It is
+read into every session, and every line added makes the others less likely to
+be followed. Before adding one, try each of these: write nothing, because the
+source already says it; put it in the `docs/` guide for the part of the tree it
+binds; turn it into a check; or replace a line that is here.
+
 `CLAUDE.md` is a symbolic link to this file. There is one source of truth for the project's strategic context and working conventions; both names read the same content.
 
 ## Project at a glance

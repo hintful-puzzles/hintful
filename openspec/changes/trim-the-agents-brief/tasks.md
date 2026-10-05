@@ -7,31 +7,36 @@
 - [ ] 1.2 Run `/doctor prompt-audit` on `AGENTS.md` and keep its proposed
       cuts as input to 2.1. Verify: the list is saved in this change.
 - [ ] 1.3 Record the baseline: lines, words and bytes of `AGENTS.md`, the
-      number of owner quotations in it, and the list of section names cited
+      list of owner directives in it, and the list of section names cited
       from other files with their counts.
 
 ## 2. Sort
 
 - [ ] 2.1 Classify every paragraph of `AGENTS.md` in a table in this change,
-      asking design D2's question first: deleted because the tree states it
-      (naming the file or command that does), root, `README.md`, a named
-      guide, or cut for another reason. Verify: the table's paragraphs sum to
-      the file, every named source exists and says what the paragraph said,
-      and the root column fits the bound before any file is edited.
-- [ ] 2.2 The owner reads the root column. This is the acceptance step for
-      what stays in every session; do not build on it unread.
+      asking design D2's questions in order: deleted because the tree states
+      it (naming the file or command that does), deleted as a third-party
+      tool's behavior, deleted as history (naming the rule it supported and
+      where that rule ends up), root, `README.md`, or a named guide. Verify:
+      the table's paragraphs sum to the file, every named source exists and
+      says what the paragraph said, and the root column fits the bound before
+      any file is edited.
+- [ ] 2.2 The owner reads the root column and the list of owner directives
+      with each one's disposition, and says whether the existing `docs/`
+      guides are to be swept for history too (design D2c). This is the
+      acceptance step; do not build on it unread.
 
 ## 3. Move
 
 - [ ] 3.1 Write the guide additions and the new guides, move into a code
       comment any reason whose fact was deleted and which belongs beside the
       code, then write the new `AGENTS.md` with its map, its instruction to
-      read the source for facts, and its one agent-specific section. Verify by shape (design D8): every removed line
-      is in a destination or in `cuts.md`, and the normative sweep of
-      `cuts.md` has been read hit by hit.
-- [ ] 3.2 Every owner quotation counted in 1.3 is found in the root file or
-      in the guide the map sends a session to. Verify: the count matches, by
-      search for the quoted words.
+      read the source for facts, and its one agent-specific section. Verify
+      (design D8): every row of the 2.1 table marked kept has a sentence in
+      its destination, and the normative sweep of every deleted paragraph has
+      been read hit by hit.
+- [ ] 3.2 Every owner directive listed in 1.3 is a rule in the root file or
+      in the guide the map sends a session to, or is in `cuts.md` with the
+      owner's agreement from 2.2. Verify: the list is walked, one line each.
 - [ ] 3.3 Repoint every citation of an `AGENTS.md` section, in `src/`,
       `scripts/`, `docs/`, `openspec/specs/` and the open changes. Verify:
       each old section name, searched as a string, appears only in the

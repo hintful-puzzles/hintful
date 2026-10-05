@@ -10,6 +10,12 @@ The line bound is the one the tool's documentation gives for a file read into ev
 
 A fact the tree itself states SHALL NOT be restated in `AGENTS.md`, `README.md` or a guide: which directories exist, what a script runs, what a file contains. The source answers these and cannot go stale, and `AGENTS.md` SHALL tell a reader to go to it. What is written down is what the source cannot say: a rule, a decision, a reason, or a trap the code does not warn about.
 
+How a third-party tool behaves SHALL NOT be described either, openspec included: its commands, its file formats and what its versions accept are documented by the tool and change with it. This repository states which tool it uses and what it has decided about its own workflow.
+
+History SHALL NOT be written into `AGENTS.md` or carried from it into a guide: the incident that taught a rule, when it happened, what a file used to say. What is kept from an incident is what a later session acts on, which is the rule and any concrete shape to look for. The record is the archive and the git log.
+
+`AGENTS.md` SHALL open by saying that a change which would make it longer is made only when there is no better way to achieve the same thing.
+
 Material addressed to one tool SHALL be used only for what is inherently specific to that tool, and SHALL NOT be the only place a rule of this project is written.
 
 #### Scenario: a change adds a paragraph past the bound

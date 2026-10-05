@@ -15,6 +15,15 @@ delete it rather than relocate it, and encourage future agents to look at the
 source."* So deletion is the first choice for a fact, and moving is for what
 the source cannot say.
 
+And on one tool: *"we should avoid all detail about Openspec, as that changes
+across Openspec versions, and is better documented in its own docs."* A
+third-party tool's behavior is treated as a fact with a better source than
+this repository.
+
+And on history: *"let's get rid of any and all historical discussion, except
+where it is directly actionable for future work."* This reverses the first
+draft of this design, which moved each rule's incident into a guide.
+
 **What the documentation says about each mechanism** (code.claude.com
 /docs/en/memory, read 2026-10-05):
 
@@ -68,12 +77,13 @@ in the proposal.
 - The project's rules are in files that are not addressed to one tool.
 - A session about to work on a part of the tree reads that part's guide
   first, and this is measured, not assumed.
-- No rule and no owner directive is lost in the move.
+- No rule is lost, and no owner directive is dropped without the owner
+  seeing that it was.
 
 **Non-Goals:**
 
-- Rewriting the rules. A rule may move and may lose a duplicate; its wording
-  changes only where a merge with an existing guide forces it.
+- Changing what the rules require. A rule is restated shorter, without its
+  history; what it asks of a session stays the same.
 - Bounding the `docs/` guides. They are read on demand and no recommendation
   covers them.
 
@@ -99,6 +109,27 @@ carry, such as why the production build is in the gate. The reason is kept
 and the fact goes; where the reason belongs beside the code, it moves into a
 comment there, which the comments rule in "Code conventions" already allows.
 
+**D2b. How a third-party tool behaves is not written here at all.** For
+openspec that removes, from "Work management": the four delta verbs and what
+each does at archive time, how `validate` matches scenarios and headings,
+what `archive` does with a heading that matches nothing, and the history of
+the generated instruction file. The pinned version and its floor are
+`package.json` and `scripts/checks/openspec-version.mjs`. The root file says
+only that work is tracked with openspec and reached through its installed
+skills. The same rule covers any other tool the file describes, which task
+2.1 lists as it reads.
+
+**D2c. History goes, and the test for keeping a piece of it is whether a
+session would do something differently for having read it.** Kept: the rule
+an incident taught, and a shape to search for (`x.length` compared with the
+thing that sized `x`; a `MODIFIED` heading checked as a whole line). Deleted:
+who found it, when, in which game, what the number was, what a file used to
+say, which change removed a directory, and every "until" and "used to". A
+date survives only on a claim that tells the reader to re-check it. This
+applies to what this change writes or moves. The existing guides under
+`docs/` are not swept by it; whether they should be is a question for the
+owner at task 2.2, since they hold the same kind of narrative.
+
 **D2a. What is kept goes to `README.md` and `docs/`, by audience.** What the
 project is and whose work it stands on is for anyone, and goes in
 `README.md`, which already has most of it. How work is done here goes in a
@@ -110,8 +141,8 @@ guide's copy survives.
 
 | Guide | Takes |
 | --- | --- |
-| `docs/method.md` | "Method", with its incidents |
-| `docs/work-management.md` | "Work management": openspec, the delta verbs, acceptance |
+| `docs/method.md` | the rules of "Method" and the shapes to search for |
+| `docs/work-management.md` | this project's workflow decisions from "Work management" |
 | `docs/help-pages.md` | "Documentation": the help skeleton and its checks |
 
 The gate gets no guide. Its steps are `scripts/gate.sh`, which comments each
@@ -152,13 +183,21 @@ content stays portable either way.
 It runs ahead of the documentation-only shortcut, as the other checks that
 read `AGENTS.md` do.
 
-**D8. The move is verified by shape.** Every non-blank line removed from
-`AGENTS.md` appears verbatim in a destination, or is listed in `cuts.md` in
-this change. A cut made under D2 names the file or command that answers it,
-and that answer is checked to exist; any other cut gives its reason. The cuts
-are then swept for normative words
-(`SHALL`, `never`, `must`, `always`, `owner`) and each hit is read, which is
-what the live requirement asks before any history is removed.
+**D8. The trim is verified against the table, since little survives
+verbatim.** Every paragraph of today's file has a row in task 2.1's table
+with one disposition. A row deleted under D2 names the file or command that
+answers it, and that answer is checked to exist. A row deleted as history
+names the rule it supported and where that rule now is. A kept row names its
+destination sentence. Every deleted paragraph is then swept for normative
+words (`SHALL`, `never`, `must`, `always`, `owner`) and each hit is read,
+which is what the live requirement asks before any history is removed.
+
+**D9. The file opens with its own rule about growing.** The owner asked that
+the top of `AGENTS.md` say a change that would lengthen it is made only when
+there is no better way to achieve the same thing. The sentence went in on
+2026-10-05, ahead of the trim, and the trim keeps it as the first thing
+under the title. It is the instruction; D7's check is what holds when the
+instruction is not followed.
 
 ## Risks / Trade-offs
 
@@ -169,11 +208,23 @@ what the live requirement asks before any history is removed.
   saying a directory no longer exists is not derivable from the tree in the
   way a line saying one exists is. → D2's test is about mistakes, so a
   warning the source cannot give counts as a trap and is kept, in its guide.
+- **Three of the openspec paragraphs record an archive that went wrong
+  here**, and the precaution each one taught (check a `REMOVED` heading as a
+  whole line, treat an archive warning as a failure). Deleting them accepts
+  that a later session may repeat one. → The owner's call, made; the gate
+  still runs `openspec validate --all --strict` and the version floor, and
+  the incidents stay readable in the archive and the git log.
+- **A rule without its incident is easier to argue with.** Several rules in
+  "Method" read as obvious and were still broken four to six times; the
+  stories are what made them credible. → Accepted. A rule that keeps being
+  broken is a candidate for a check, which is where this project already
+  sends such rules.
 - **`README.md` is a public page.** Text moved there is read by visitors to
   the repository. → Only what D2 assigns to it goes; rules about how agents
   work do not.
-- **Merging into a guide can drop a nuance the `AGENTS.md` copy had.** → D8
-  treats a merged line as a cut unless it survives verbatim.
+- **A reworded rule can lose a nuance the long form had.** → D8's sweep
+  reads every deleted paragraph for normative words, and the owner reads the
+  root column before anything moves.
 - **Repointing 79 files' citations is a bulk edit.** → Every changed line in
   that diff is asserted to be a citation, and the old section names are
   searched for afterwards by what they said.
