@@ -6213,3 +6213,14 @@ exports[`sticks hint — render frames (tier 2.5) > draws the forced line and it
   },
 ]
 `;
+
+exports[`sticks: pinned hint positions > says, at each pin 1`] = `
+{
+  "journey": "The black 0 takes no lines, and a vertical line here would run straight into it, so this 2 must be horizontal.",
+  "overConnected": "The black 0 takes no lines, and a vertical line here would run straight into it, so this 2 must be horizontal.",
+  "starved": "The black 1 has one open side left, and a vertical line here would close it off, so this square must be horizontal.",
+  "tooLong": "A horizontal line here would run the 1's line to 2 squares, too long for it, so this 1 must be vertical.",
+  "twoClues": "A horizontal line here would join the 1 and the 2 into one line, so this 1 must be vertical.",
+  "unreachable": "The 4 needs a longer line, and a vertical line here would leave it only 3 squares, so this 4 must be horizontal.",
+}
+`;

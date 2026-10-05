@@ -361,6 +361,15 @@ export type PatternHintReason =
   | { kind: "lineEmpty" } // white — the line has no clues at all
   | { kind: "intersection"; black: boolean }; // forced in every arrangement of the line's runs
 
+/** The rungs a hint step can be: the reasons' kinds. */
+export const PATTERN_RUNGS = [
+  "overlap",
+  "unreachable",
+  "lineEmpty",
+  "intersection",
+] as const;
+export type PatternRung = (typeof PATTERN_RUNGS)[number];
+
 /** One hint step: a contiguous set of same-value cells one line deduction
  * forces, the line reasoned over (for the line-of-sight shade + clue), the
  * reason, and the already-placed marks the deduction leans on (ringed by their

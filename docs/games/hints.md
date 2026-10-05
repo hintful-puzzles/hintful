@@ -991,7 +991,8 @@ The `Game` hooks and the `Midend` lifecycle are in
 - **`hint(state, aux?, ui?): HintResult`** — return `{ ok: false, error }` to
   refuse (board solved, or has mistakes — a hint off a contradictory board
   misleads), else `{ ok: true, steps }`. Each `HintStep` carries `move`,
-  `explanation` and `highlights` (game-specific render data). Compute the
+  `rung` (§ "Name the rung a step speaks"), `explanation` and `highlights`
+  (game-specific render data). Compute the
   **whole remaining plan** once; the midend advances steps as the player
   follows or auto-play executes them. `aux` (the generator's solution, when
   present) is there for a hint that falls back on the solution (§ "Non-deductive
@@ -1019,6 +1020,58 @@ The `Game` hooks and the `Midend` lifecycle are in
   and refreshHintStep").
 - **`hintGesture(state, ui, ds, move)`** — how the pointer makes the step's
   move (§ "Every step is a gesture"). Required of every hinted game.
+- **`hintRungs`** — every rung a step can be (§ "Name the rung a step
+  speaks"). Required of every hinted game.
+
+### Name the rung a step speaks
+
+**A step says which deduction it is in a value, `HintStep.rung`, and nothing
+reads its sentence to find out.** Everything that needs to know which deduction
+a step is keys on the id: the pins a game's tests read
+([`testing.md`](./testing.md) § "Pinning a hint's positions"), the narration
+ledger in `hint-quality.test.ts`, a `hintUntil`. So rewording a sentence moves
+only what asserts the wording, and a rung with no pinned board does not
+compile.
+
+Three things, and a game writes each once:
+
+1. **The list**, beside the hint: `export const FOO_RUNGS = [...] as const` and
+   `export type FooRung = (typeof FOO_RUNGS)[number]`.
+2. **The stamp**, where a step is built. The reason is in hand there, so it is
+   one line: `rung: reason.kind`. Type the step
+   `HintStep<FooMove, FooHint, FooRung>`, and a reason kind missing from the
+   list fails to compile at the stamp.
+3. **The declaration**: `Game<…, FooHint, FooRung>` and `hintRungs: FOO_RUNGS`.
+
+**What a rung is: the deduction, at the grain the solver or the plan already
+names it.** A game with a reason union takes its `kind`s. A game whose hint
+picks a branch (Pegs: a trap, a package, a judged rival) names the branches. The
+legs of one journey share their firing's rung. Two sentences for one deduction
+(a row or a column, one cell or several, this peg's jump or another's) are
+*not* two rungs: a test that wants one of them writes a predicate over the
+step's fields (`step.rung === "trap" && …`), which is what a kind is for. Split
+a rung only when the two halves are different reasoning.
+
+**The candidate walk stamps its own steps.** `runCandidatePlan` gives a
+placement or a strike the `kind` of the reason it narrates, and its setup steps
+and a placement's cull the engine's ids (`CANDIDATE_RUNGS`: `populate`,
+`clean`, `note`, `dup`). So a candidate game writes no stamp at all: its list
+is `[...CANDIDATE_RUNGS, …its reasons' kinds]`, and `PlanRung<Reason>` is the
+type its steps carry. Where a game's `placeWords` narrates another of its
+reasons than the one it was handed (Seismic says a one-cell area is a
+singleton whichever single the walk found), it returns that `rung` beside the
+words, so the id and the sentence cannot disagree.
+
+**A rung's pin can sit under the wrong candidate reading.** `populate` is
+spoken only under the populate reading and `note` only under the implicit one,
+and a pin is loaded under the scan's `ui`. So a candidate game's scan gives
+`ui` a rule that splits its boards between the two readings
+(`towers-hint.test.ts`).
+
+A rung id is the game's own word, as its solver already spells it (Slant's
+techniques are `clue-fill` and `deadend`), and it is not player-facing:
+no sentence, help page or save holds it, so renaming one costs its pins' keys
+and nothing else.
 
 ### Every step is a gesture
 
@@ -2453,7 +2506,7 @@ tile's bottom-right corner in `HINT_ORDER`. Three things to know:
   whose hint starts numbering a chain is told to add its pin by
   `hint-quality.test.ts`, whose walk fails on a numbered chain from a game
   with no entry in `testing/hint-chain-pins.ts`; run
-  `HINT_SCAN=1 npx vitest run src/engine/hint-ordinal.test.ts` to find one.
+  `npm run hint-scan -- src/engine/hint-ordinal.test.ts` to find one.
 
 **An ordinal, never an arrow.** The obvious drawing is a path through the chain,
 and it was prototyped and rejected on measurement: an arrow claims *this link
@@ -4071,21 +4124,19 @@ assert targeted ops (`COL_HINT` present, clues still drawn) **plus**
 `equivalentEdges` frame the browser harness couldn't. See
 [`testing.md`](./testing.md) for the tier definitions.
 
-**Pin a position for every sentence, through `describeHintPins`**
+**Pin a position for every rung, through `describeHintPins`**
 ([`testing/hint-positions.ts`](../../src/engine/testing/hint-positions.ts)):
-name each sentence as a kind, run the file once with `HINT_SCAN=1`, and paste
-the pins it reports with their counts. Do not write a scan of your own; the
-followable form is [`testing.md`](./testing.md) § "Pinning a hint's
-positions".
+it requires a pin for each of the game's `hintRungs`, and
+`npm run hint-scan -- <the test file>` finds the positions and writes them.
+Do not write a scan of your own; the followable form is
+[`testing.md`](./testing.md) § "Pinning a hint's positions".
 
 Two testing gotchas worth internalizing:
 
-- **A narration substring can match more than one deduction.** Predicating
-  `hintUntil` on a phrase is handy, but pick a phrase *unique to that
-  deduction*: several Singles narrations share generic words, so a loose
-  predicate stops on the wrong frame. Predicate on a phrase only one reason
-  uses ("can't be adjacent" for `adjBlack`). If the strings get retuned,
-  re-pick.
+- **Stop a `hintUntil` on a rung, never on a phrase.**
+  `hintUntil: (step) => step.rung === "adjBlack"`. A phrase matches more than
+  one deduction (several Singles narrations share generic words), stops on the
+  wrong frame, and goes blind when the sentence is reworded.
 - **The easiest rule pre-empts hand-crafted boards.** A solver that tries
   techniques easiest-first means a crafted board often fires a *different*
   rule than intended (an alternating Unruly row is a three-in-a-row deduction,

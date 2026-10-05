@@ -3856,3 +3856,15 @@ exports[`netslide hint rendering > marks the tile, its destination and the arrow
   },
 ]
 `;
+
+exports[`netslide: pinned hint positions > says, at each pin 1`] = `
+{
+  "aimsAlongItsSlide": "Working on this corner: take it to the two ringed squares (setting up).",
+  "besideSource": "This T-piece belongs beside the source. Take it to the two ringed squares: that sets it up.",
+  "frozenLine": "This column never slides, so only a row move shifts this loose end. Take it to the ringed square: it belongs there.",
+  "journey": "Working on this straight: take it to the two ringed squares (setting up).",
+  "offFrozenColumn": "This column never slides, so only a row move shifts this loose end. Take it to the ringed square: it belongs there.",
+  "offFrozenRow": "This row never slides, so only a column move shifts this loose end. Take it to the ringed square: it belongs there.",
+  "working": "Working on this corner: take it to the two ringed squares (setting up).",
+}
+`;

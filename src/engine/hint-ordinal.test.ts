@@ -37,7 +37,7 @@ import { difficultyTiers, withTier } from "./difficulty.ts";
 import { paramsError } from "./params.ts";
 import { CHAIN_PINS, declaredOrder } from "./testing/hint-chain-pins.ts";
 import { type AnyGame, gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
-import { describeHintPins } from "./testing/hint-positions.ts";
+import { describeHintKindPins } from "./testing/hint-positions.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "./testing/render-scenario.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
@@ -120,7 +120,7 @@ describe("an ordered hint chain carries its order to the canvas", () => {
     const pin = CHAIN_PINS[name];
     if (pin === undefined) continue;
 
-    const pinned = describeHintPins({
+    const pinned = describeHintKindPins({
       game,
       params: chainBoards(name, game),
       seeds: 3,

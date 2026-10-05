@@ -23,6 +23,8 @@ import {
 } from "../../engine/candidate-hint.ts";
 import {
   type Firing,
+  LATIN_RUNGS,
+  type PlanRung,
   type RungContext,
   runLatinCandidatePlan,
 } from "../../engine/candidate-plan.ts";
@@ -494,6 +496,16 @@ function findMistakes(state: GroupState): readonly GroupMistake[] {
  * reason is re-derived into. */
 type NarratableReason = HintReason | SingleReason;
 
+/** Every rung a Group step can be: the Latin family's, and the kinds of
+ * `GroupReason`. */
+export const GROUP_RUNGS = [
+  ...LATIN_RUNGS,
+  "associativity",
+  "identityFill",
+  "identityElim",
+] as const;
+export type GroupRung = (typeof GROUP_RUNGS)[number];
+
 /** Narrate *why* a placement is forced (docs/games/hints.md § "Writing the
  * narration"). `n` is the value placed. The generic Latin arms go to
  * `narrateLatinReason` under {@link groupVocab}; only Group's own placing
@@ -585,10 +597,10 @@ function premise(
 function buildSteps(
   state: GroupState,
   { reading }: CandidatePlanPrefs,
-): HintStep<GroupMove, GroupHint>[] {
+): HintStep<GroupMove, GroupHint, GroupRung>[] {
   const w = state.w;
   const id = state.id;
-  const steps: HintStep<GroupMove, GroupHint>[] = [];
+  const steps: HintStep<GroupMove, GroupHint, PlanRung<NarratableReason>>[] = [];
   const wGrid = Uint8Array.from(state.grid);
   const wPen = Int32Array.from(state.pencil);
   const maxdiff = Math.min(state.diff, DIFF_EXTREME);
@@ -643,7 +655,7 @@ function hint(
   state: GroupState,
   _aux?: string,
   ui?: GroupUi,
-): HintResult<GroupMove, GroupHint> {
+): HintResult<GroupMove, GroupHint, GroupRung> {
   return candidateHint(state, ui ?? newUi(state), buildSteps);
 }
 
@@ -740,7 +752,8 @@ export const groupGame: Game<
   GroupUi,
   GroupDrawState,
   GroupMistake,
-  GroupHint
+  GroupHint,
+  GroupRung
 > = {
   id: "group",
   canMarkAll: true,
@@ -784,6 +797,7 @@ export const groupGame: Game<
   solve,
   difficulty,
   hint,
+  hintRungs: GROUP_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step is about: the letter to enter there, or the pencil marks to cross out, which are shown with a line through them.",

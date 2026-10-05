@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tents: pinned hint positions > says, at each pin 1`] = `
+{
+  "allOpen": "This column needs 3 more tents and has only 3 open squares, so these squares must all be tents.",
+  "betweenThem": "This column needs 4 more tents, and its open squares have room for only 4 that don't touch, so these must be tents.",
+  "countMet": "This column's number is 0, so its open squares must be grass.",
+  "grass": "Every tent sits beside a tree, and no tree is beside these squares, so they must be grass.",
+  "grassOfSeveral": "Every tent sits beside a tree, and no tree is beside these squares, so they must be grass.",
+  "lineCount": "This column needs 3 more tents and has only 3 open squares, so these squares must all be tents.",
+  "lineNeighbors": "Wherever this column's 3 remaining tents go, one touches each of these squares beside it, so they must be grass.",
+  "link": "The outlined tree's only open square is the ringed one, so its tent must go there, joined to it.",
+  "nextToTent": "Tents never touch, even diagonally, so every open square around the outlined tent must be grass.",
+  "noSpareRoom": "This column needs 2 more tents, and its open squares have room for only 2 that don't touch, so this one must be a tent.",
+  "noTree": "Every tent sits beside a tree, and no tree is beside these squares, so they must be grass.",
+  "tentLink": "Every other tree beside the ringed tent has its tent (outlined), so it must belong to the tree to its right: join them.",
+  "treeDiagonal": "The outlined tree's tent must go in one of the two outlined squares; either touches the ringed one, so it must be grass.",
+  "treeLink": "The outlined tent belongs to another tree, so the ringed tree's tent must be the one to its right: join them.",
+  "treeSingle": "The outlined tree's only open square is the ringed one, so its tent must go there, joined to it.",
+  "treesDone": "Every tree beside these squares already has its tent (outlined), so they must be grass.",
+}
+`;

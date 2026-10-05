@@ -1423,3 +1423,18 @@ exports[`Flip hint frame > rings the square to press, outlines the dark squares 
   },
 ]
 `;
+
+exports[`flip: pinned hint positions > says, at each pin 1`] = `
+{
+  "fromOnlyAnswer": "There is only one way to light the whole board, and it takes 7 presses. One of them: press this square.",
+  "fromShortestAnswer": "The whole board can be lit in 5 presses, and no fewer. One of them: press this square.",
+  "fromTheAnswer": "There is only one way to light the whole board, and it takes 7 presses. One of them: press this square.",
+  "lastChance": "Row by row, only this square can still light the outlined square, so it must be pressed. It flips the striped ones too.",
+  "lastChanceFlippingNoMore": "Row by row, only this square can still light the outlined squares, so it must be pressed.",
+  "lastChanceOfOne": "Row by row, only this square can still light the outlined square, so it must be pressed. It flips the striped ones too.",
+  "lastChanceOfTwo": "Row by row, only this square can still light the outlined squares, so it must be pressed. It flips the striped one too.",
+  "lastPress": "Press this square: that lights the outlined squares and finishes the board.",
+  "lastPressOfItself": "Press this square: that finishes the board.",
+  "lastPressOfOthers": "Press this square: that lights the outlined squares and finishes the board.",
+}
+`;

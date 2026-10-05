@@ -429,11 +429,22 @@ function narrate(
 
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
 
-function hint(state: SticksState): HintResult<SticksMove, SticksHint> {
+/** A step's rung is the contradiction its firing rests on: `SticksReason`'s
+ * kinds. The squares one firing decides share it. */
+export const STICKS_RUNGS = [
+  "tooLong",
+  "unreachable",
+  "twoClues",
+  "overConnected",
+  "starved",
+] as const;
+type SticksRung = (typeof STICKS_RUNGS)[number];
+
+function hint(state: SticksState): HintResult<SticksMove, SticksHint, SticksRung> {
   const plan = deduceSticksPlan(state);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
-  const steps: HintStep<SticksMove, SticksHint>[] = [];
+  const steps: HintStep<SticksMove, SticksHint, SticksRung>[] = [];
   for (const group of plan) {
     // One firing = one journey: a clue that rules out several squares at once
     // is one insight, so its later squares continue the step rather than
@@ -442,6 +453,7 @@ function hint(state: SticksState): HintResult<SticksMove, SticksHint> {
       const words = narrate(f, state, leg > 0);
       steps.push({
         move: { kind: "set", changes: [{ index: f.index, line: f.to }] },
+        rung: f.reason.kind,
         explanation: words.text,
         words,
         highlights: { target: f.index, to: f.to },
@@ -504,7 +516,8 @@ export const sticksGame: Game<
   SticksUi,
   SticksDrawState,
   SticksMistake,
-  SticksHint
+  SticksHint,
+  SticksRung
 > = {
   id: "sticks",
 
@@ -528,6 +541,7 @@ export const sticksGame: Game<
   solve,
   findMistakes,
   hint,
+  hintRungs: STICKS_RUNGS,
   hintMarks: {
     roles: {
       ring: "the square the step decides, as the line it asks you to place, drawn in the hint color and running the way it must go: across for horizontal, up and down for vertical.",

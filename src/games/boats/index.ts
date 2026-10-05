@@ -74,7 +74,13 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
-import { type BoatsFiring, type BoatsSquare, deduceBoatsPlan } from "./hint-solver.ts";
+import {
+  BOATS_RUNGS,
+  type BoatsFiring,
+  type BoatsRung,
+  type BoatsSquare,
+  deduceBoatsPlan,
+} from "./hint-solver.ts";
 import { type BoatsMarks, say } from "./hint-text.ts";
 import {
   BORDER,
@@ -467,7 +473,7 @@ function stepsFor(
   f: BoatsFiring,
   w: number,
   h: number,
-): HintStep<BoatsMove, BoatsHint>[] {
+): HintStep<BoatsMove, BoatsHint, BoatsRung>[] {
   // The never-touch water a placement drags along is part of *this* step — it
   // is the rule doing its work, not a further deduction — so it is highlighted
   // and moved with the firing, and named only in a closing clause.
@@ -477,6 +483,7 @@ function stepsFor(
 
   return legMoves(f, w, targets).map((move, i) => ({
     move,
+    rung: f.technique.kind,
     explanation: words.text,
     words,
     highlights,
@@ -484,7 +491,7 @@ function stepsFor(
   }));
 }
 
-function hint(state: BoatsState): HintResult<BoatsMove, BoatsHint> {
+function hint(state: BoatsState): HintResult<BoatsMove, BoatsHint, BoatsRung> {
   // The midend asks only about a board `findMistakes` passes, and that is a
   // re-solve, so a placement that breaks no rule *yet* but appears in no
   // solution never reaches this: deducing onward from a doomed board would
@@ -633,7 +640,8 @@ export const boatsGame: Game<
   BoatsUi,
   BoatsDrawState,
   BoatsMistake,
-  BoatsHint
+  BoatsHint,
+  BoatsRung
 > = {
   id: "boats",
   // Param-dependent: `textFormat` returns undefined past 10×10.
@@ -715,6 +723,7 @@ export const boatsGame: Game<
         "the row or column whose number it counts with, and the stripes run on through that number.",
     },
   },
+  hintRungs: BOATS_RUNGS,
   hintKeepTrack,
   hintGesture,
   textFormat,

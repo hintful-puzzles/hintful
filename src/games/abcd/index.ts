@@ -49,7 +49,9 @@ import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
 import {
+  ABCD_RUNGS,
   type AbcdHint,
+  type AbcdRung,
   buildSteps,
   hintGesture,
   hintKeepTrack,
@@ -318,7 +320,8 @@ export const abcdGame: Game<
   AbcdUi,
   AbcdDrawState,
   AbcdMistake,
-  AbcdHint
+  AbcdHint,
+  AbcdRung
 > = {
   id: "abcd",
   // `textFormat` still declines a board whose clues could be two digits.
@@ -344,6 +347,7 @@ export const abcdGame: Game<
   solve,
   findMistakes,
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  hintRungs: ABCD_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step is about: the letter to enter there, or the pencil marks to cross out, which are shown with a line through them.",

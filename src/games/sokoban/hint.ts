@@ -69,7 +69,24 @@ import {
   type SokobanState,
 } from "./state.ts";
 
-type Step = HintStep<SokobanMove>;
+/** What a step rests on, by the branch of {@link hint} that chose its words.
+ * A run's pushes are one rung: one journey. */
+export const SOKOBAN_RUNGS = [
+  "trap",
+  "only",
+  "onlyThese",
+  "alsoThese",
+  "fillFirst",
+  "clearsWay",
+  "onTarget",
+  "freesYou",
+  "run",
+  "plain",
+] as const;
+export type SokobanRung = (typeof SOKOBAN_RUNGS)[number];
+
+type Step = HintStep<SokobanMove, unknown, SokobanRung>;
+type Said = { rung: SokobanRung; words: Sentence };
 
 /** Positions the rivals' searches of one request may generate between them,
  * and one rival's alone where the step is to say what it found. Past either
@@ -130,7 +147,9 @@ function planAt(
   }
 }
 
-export function hint(state: SokobanState): HintResult<SokobanMove> {
+export function hint(
+  state: SokobanState,
+): HintResult<SokobanMove, unknown, SokobanRung> {
   const board = new SokobanBoard(state);
   const here = board.positionOf(state);
 
@@ -208,7 +227,7 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
     }
   }
 
-  const words = (): Sentence | null => {
+  const said = (): Said | null => {
     const m = offered;
     // The rivals are this barrel's other pushes: which way to push it is the
     // choice the step is about. Some other barrel's bad push is on almost
@@ -227,13 +246,18 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
       .find((t) => t.why !== null);
     if (trap?.why) {
       const own = trap.victim === into(board, trap.r);
-      return say.trap(m, trap.r, trap.why, own ? null : trap.victim);
+      return {
+        rung: "trap",
+        words: say.trap(m, trap.r, trap.why, own ? null : trap.victim),
+      };
     }
 
     const c = judgeRivals(rivals, ALLOWANCE, judge).claim;
-    if (c.kind === "only") return say.only(m, c.relation);
-    if (c.kind === "onlyThese") return say.onlyThese(m, c.goods, c.relation);
-    if (c.kind === "alsoThese") return say.alsoThese(m, c.goods, c.relation);
+    if (c.kind === "only") return { rung: "only", words: say.only(m, c.relation) };
+    if (c.kind === "onlyThese")
+      return { rung: "onlyThese", words: say.onlyThese(m, c.goods, c.relation) };
+    if (c.kind === "alsoThese")
+      return { rung: "alsoThese", words: say.alsoThese(m, c.goods, c.relation) };
     // With nothing settled to contrast, what the push does to the order the
     // barrels can go home in, then what it does where the board shows it: a
     // barrel onto a target, or a player let out of a corner of the board
@@ -243,36 +267,38 @@ export function hint(state: SokobanState): HintResult<SokobanMove> {
     const after = board.apply(here, m);
     if (board.target[to]) {
       const later = shutBy(board, here, to);
-      if (later !== null) return say.fillFirst(m, later);
+      if (later !== null) return { rung: "fillFirst", words: say.fillFirst(m, later) };
     }
     const frees = board.region(after).length >= FREED * board.region(here).length;
     if (!frees) {
       const blocked = clearedBy(board, here, after, m.barrel);
-      if (blocked !== null) return say.clearsWay(m, blocked);
+      if (blocked !== null)
+        return { rung: "clearsWay", words: say.clearsWay(m, blocked) };
     }
-    if (board.target[to]) return say.onTarget(m);
-    if (frees) return say.freesYou(m);
+    if (board.target[to]) return { rung: "onTarget", words: say.onTarget(m) };
+    if (frees) return { rung: "freesYou", words: say.freesYou(m) };
     return null;
   };
 
-  const step = (p: Push, w: Sentence, continues = false): Step => ({
+  const step = (p: Push, rung: SokobanRung, w: Sentence, continues = false): Step => ({
     move: pushMove(state.w, p),
+    rung,
     explanation: w.text,
     words: w,
     ...(continues ? { continuesPrevious: true } : {}),
   });
-  const w = words();
-  if (w) return { ok: true, steps: [step(offered, w)] };
+  const w = said();
+  if (w) return { ok: true, steps: [step(offered, w.rung, w.words)] };
   // Nothing to say of the push alone. Where the plan goes on pushing this
   // barrel until it stands on a target, the run is told as one journey.
   const run = offered === plan.line[0] ? runHome(board, here, plan.line, next) : null;
-  if (!run) return { ok: true, steps: [step(offered, say.plain(offered))] };
+  if (!run) return { ok: true, steps: [step(offered, "plain", say.plain(offered))] };
   return {
     ok: true,
     steps: run.map((p, i) =>
       i === 0
-        ? step(p, say.runFirst(p, run.length))
-        : step(p, i < run.length - 1 ? say.runNext(p) : say.runLast(p), true),
+        ? step(p, "run", say.runFirst(p, run.length))
+        : step(p, "run", i < run.length - 1 ? say.runNext(p) : say.runLast(p), true),
     ),
   };
 }

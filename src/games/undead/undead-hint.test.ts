@@ -55,14 +55,10 @@ const pinned = describeHintPins({
   game: undeadGame,
   params: [{ w: 5, h: 5, diff: "normal" }],
   kinds: {
-    populate: (step) => step.move.type === "markAll",
     strike: (step) => step.move.type === "pencilStrike",
-    sightlineStrike: (step) =>
-      step.move.type === "pencilStrike" && /^This sightline's/.test(step.explanation),
+    sightlineStrike: (step) => step.rung === "sightline",
   },
   pins: {
-    /** Held on 12 of 398 positions walked. */
-    populate: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
     /** Held on 190 of 398 positions walked. */
     strike: {
       id: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
@@ -72,6 +68,27 @@ const pinned = describeHintPins({
     sightlineStrike: {
       id: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
       moves: [{ type: "markAll" }],
+    },
+    /** Held on 39 of 398 positions walked. */
+    populate: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
+    /** Held on 359 of 398 positions walked. */
+    sightline: {
+      id: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
+      moves: [{ type: "markAll" }],
+    },
+    /** Held on 352 of 398 positions walked. */
+    total: {
+      id: "5x5dn:9,4,3,aLaRRbRaRaRaRRcRf,2,0,3,0,4,4,3,0,2,2,2,0,3,2,2,2,0,2,0,3",
+      moves:
+        '[{"type":"set","cell":0,"monster":2},{"type":"set","cell":11,"monster":1},{"type":"markAll"},{"type":"pencilStrike","marks":[{"cell":1,"monster":1},{"cell":1,"monster":4}]},{"type":"set","cell":1,"monster":2},{"type":"pencilStrike","marks":[{"cell":10,"monster":1},{"cell":10,"monster":4}]},{"type":"set","cell":10,"monster":2},{"type":"pencilStrike","marks":[{"cell":15,"monster":1},{"cell":15,"monster":4}]},{"type":"set","cell":15,"monster":2}]',
+    },
+    /** Held on 66 of 398 positions walked. */
+    onlyCells: "5x5dn:10,3,6,cRfLRbRgLLa,3,1,1,3,6,5,2,2,4,4,2,3,2,4,1,0,4,2,2,0",
+    /** Held on 396 of 398 positions walked. */
+    single: {
+      id: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0",
+      moves:
+        '[{"type":"markAll"},{"type":"pencilStrike","marks":[{"cell":8,"monster":1},{"cell":8,"monster":4}]}]',
     },
   },
 });
@@ -188,8 +205,7 @@ describe("undead hint plan", () => {
     for (let i = 0; i < 12; i++) {
       const st = gen({ w: 5, h: 5, diff: "normal" }, `bleed-${i}`);
       for (const step of fullPlan(st)) {
-        if (step.move.type !== "pencilStrike") continue;
-        if (!/sightline/.test(step.explanation)) continue;
+        if (step.rung !== "sightline") continue;
         const hl = step.highlights as {
           area: { x: number; y: number }[];
           marks: { x: number; y: number }[];
@@ -204,7 +220,6 @@ describe("undead hint plan", () => {
         }
       }
     }
-    // Keyed on the word "sightline", so a rewording would empty the scan.
     expect(checked, "no step narrated a sightline strike").toBeGreaterThan(0);
   });
 
@@ -221,7 +236,7 @@ describe("undead hint plan", () => {
           expect(/can only be/.test(e), e).toBe(true);
         }
         // a sightline strike names both of its clues, and never "only N"
-        if (/^This sightline's/.test(e)) {
+        if (step.rung === "sightline" && !step.continuesPrevious) {
           expect(/^This sightline's \d+ and \d+ leave no room/.test(e), e).toBe(true);
           expect(/\bonly \d+/.test(e), e).toBe(false);
         }

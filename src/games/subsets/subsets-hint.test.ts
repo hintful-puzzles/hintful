@@ -87,10 +87,6 @@ const pinned = describeHintPins({
   params: [P],
   seeds: 60,
   kinds: {
-    arrowKnown: opensWith((d) => d.reason.kind === "arrowKnown"),
-    arrowMask: opensWith((d) => d.reason.kind === "arrowMask"),
-    collapse: opensWith((d) => d.reason.kind === "collapse"),
-    hiddenSingle: opensWith((d) => d.reason.kind === "hiddenSingle"),
     // The cube finds a set with one cell left that the board does not show.
     cubeLastPlace: opensWith(
       (d) => d.reason.kind === "hiddenSingle" && d.marks.length > 0,
@@ -108,22 +104,6 @@ const pinned = describeHintPins({
     },
   },
   pins: {
-    /** Held on 373 of 2659 positions walked. */
-    arrowKnown: "4x4n4de:4,_RDL,9,_D,_D,_,_UDL,10,_D,_,_D,_D,_,_URL,8,_",
-    /** Held on 400 of 2659 positions walked. */
-    arrowMask: "4x4n4de:_R,_,11RL,_,5,_U,_,_UDL,_,_RDL,8,_,10,_,_RL,4",
-    /** Held on 854 of 2659 positions walked. */
-    collapse: {
-      id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
-      moves:
-        '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":4,"bit":1},{"kind":"set","type":"known","pos":3,"bit":1},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":2},{"kind":"set","type":"known","pos":11,"bit":1}]',
-    },
-    /** Held on 1032 of 2659 positions walked. */
-    hiddenSingle: {
-      id: "4x4n4de:3,12,_RDL,8,_,_R,_,_L,11,_,_UDL,_U,5,_UR,_R,_",
-      moves:
-        '[{"kind":"set","type":"known","pos":2,"bit":3},{"kind":"set","type":"known","pos":2,"bit":2}]',
-    },
     /** Held on 2 of 2659 positions walked. */
     cubeLastPlace: {
       id: "4x4n4de:_,_RL,_,_,3,_D,9D,6,10,_R,_,13L,12,_UR,1U,_UL",
@@ -134,6 +114,28 @@ const pinned = describeHintPins({
     severalLetters: "4x4n4de:4,_RDL,9,_D,_D,_,_UDL,10,_D,_,_D,_D,_,_URL,8,_",
     /** Held on 836 of 2659 positions walked. */
     collapseWithCompetitor: {
+      id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
+      moves:
+        '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":4,"bit":1},{"kind":"set","type":"known","pos":3,"bit":1},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":2},{"kind":"set","type":"known","pos":11,"bit":1}]',
+    },
+    /** Held on 1281 of 2659 positions walked. */
+    ruleOut: {
+      id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
+      moves:
+        '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":4,"bit":1},{"kind":"set","type":"known","pos":3,"bit":1},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":2},{"kind":"set","type":"known","pos":11,"bit":1}]',
+    },
+    /** Held on 1492 of 2659 positions walked. */
+    arrowKnown: "4x4n4de:4,_RDL,9,_D,_D,_,_UDL,10,_D,_,_D,_D,_,_URL,8,_",
+    /** Held on 1738 of 2659 positions walked. */
+    arrowMask: "4x4n4de:_R,_,11RL,_,5,_U,_,_UDL,_,_RDL,8,_,10,_,_RL,4",
+    /** Held on 2657 of 2659 positions walked. */
+    hiddenSingle: {
+      id: "4x4n4de:3,12,_RDL,8,_,_R,_,_L,11,_,_UDL,_U,5,_UR,_R,_",
+      moves:
+        '[{"kind":"set","type":"known","pos":2,"bit":3},{"kind":"set","type":"known","pos":2,"bit":2}]',
+    },
+    /** Held on 1804 of 2659 positions walked. */
+    collapse: {
       id: "4x4n4de:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_",
       moves:
         '[{"kind":"set","type":"cleared","pos":4,"bit":0},{"kind":"set","type":"cleared","pos":4,"bit":1},{"kind":"set","type":"known","pos":3,"bit":1},{"kind":"set","type":"cleared","pos":4,"bit":3},{"kind":"set","type":"cleared","pos":4,"bit":2},{"kind":"set","type":"known","pos":11,"bit":1}]',
@@ -442,6 +444,7 @@ describe("hint", () => {
 describe("hintKeepTrack", () => {
   const step = {
     move: { kind: "set" as const, type: "known" as const, pos: 5, bit: 2 },
+    rung: "collapse" as const,
     explanation: "",
   };
   it("completes on the exact letter toggle, off otherwise", () => {
@@ -627,9 +630,9 @@ describe("collapse exclusion (#2 — why not X)", () => {
 describe("hint rendering (tier 2.5)", () => {
   /** The frame a pinned position's hint draws, through a real `Midend`. */
   function hintFrame(kind: Parameters<typeof pinned>[0]) {
-    const { id, moves, step } = pinned(kind);
+    const { id, moves, steps } = pinned(kind);
     const result = renderScenario({ game: subsetsGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    expect(result.hint?.explanation).toBe(steps[0].explanation);
     return result;
   }
 

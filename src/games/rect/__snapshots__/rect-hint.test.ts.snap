@@ -1420,3 +1420,17 @@ exports[`rect hint frame > rings the rectangle as one contour and outlines the c
   },
 ]
 `;
+
+exports[`rect: pinned hint positions > says, at each pin 1`] = `
+{
+  "blockedByClue": "Elsewhere the 3 would run off the board or take in the outlined clue, so only this rectangle fits.",
+  "fit": "Elsewhere the 3 would run off the board or take in the outlined clue, so only this rectangle fits.",
+  "line": "Only the outlined 8 and 4 could cross this edge, and each would take a striped square, which another outlined clue covers wherever it goes, so the edge must be a line.",
+  "lineMisses": "Only the outlined 4 could cross this edge, and it would miss the outlined square, which no other clue reaches, so the edge must be a line.",
+  "lineTakes": "Only the outlined 4 could cross this edge, and it would take the striped square, which the outlined 5 covers wherever it goes, so the edge must be a line.",
+  "overlap": "Wherever the outlined 18 goes, it covers the striped squares, so the 18 can't use them: it fits only this rectangle.",
+  "reach": "No other clue can reach the outlined square, so the 4 must cover it: this rectangle is the only way it can.",
+  "rectangle": "Elsewhere the 3 would run off the board or take in the outlined clue, so only this rectangle fits.",
+  "starve": "Anywhere else, the 3 would leave the outlined clues no room, so it must take this rectangle.",
+}
+`;

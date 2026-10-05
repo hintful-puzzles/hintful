@@ -1,7 +1,28 @@
 # pin-a-leg-of-the-opening-plan
 
-**Status: scaffolded, not started (2026-10-04).** A follow-up from
+**Status: scaffolded, not started (2026-10-04); most of it since done
+elsewhere (2026-10-05). Re-read before starting.** A follow-up from
 `move-the-hint-scans-onto-the-harness`.
+
+## What `name-the-rung-a-hint-step-speaks` already did
+
+A **rung's** pin is now a position whose plan holds a step of that rung at any
+leg, the scan tests every step of each plan against it, and the loader returns
+the step with its `index`. So the three sentences below are pinned as rungs
+(Rome's and Salad's `dup`, Slant's `equiv`), and the guide's workaround
+paragraph is gone. What is left of this change:
+
+- A **predicate** kind still reads only the step a plan opens with. Netslide's
+  `journey` kind still asks the hint again inside its predicate to look at
+  `steps[1]`. Check who else does (2026-10-05: not measured) before deciding
+  this is worth a harness change and not one game's predicate.
+- The loader returns the plan and the step's index, not the board as it stands
+  when that leg is shown. No test asked for it during the rung work; the
+  question below about `continuesPrevious` is still open if one does.
+
+If neither is wanted, close this change as done.
+
+## As scaffolded
 
 ## Why
 

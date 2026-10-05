@@ -432,7 +432,18 @@ function narrate(
   }
 }
 
-function hint(state: BricksState): HintResult<BricksMove, BricksHint> {
+/** Why a cell is forced, by the `kind` of the reason the solver records. */
+export const BRICKS_RUNGS = [
+  "three",
+  "unsupported",
+  "overcount",
+  "strandSupport",
+  "undercount",
+  "localBreak",
+] as const satisfies readonly BricksReason["kind"][];
+export type BricksRung = (typeof BRICKS_RUNGS)[number];
+
+function hint(state: BricksState): HintResult<BricksMove, BricksHint, BricksRung> {
   // `findMistakes` is a rule validator, blind to a mark that is wrong but breaks
   // no rule, so a board it passes can still be doomed. The re-solve below
   // answers that case with `CONTRADICTION_UNLOCALIZED`, which asks the player to
@@ -454,12 +465,13 @@ function hint(state: BricksState): HintResult<BricksMove, BricksHint> {
 
   const plan = deduceBricksPlan(grid, w, h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const steps: HintStep<BricksMove, BricksHint>[] = plan.map((m) => {
+  const steps: HintStep<BricksMove, BricksHint, BricksRung>[] = plan.map((m) => {
     const evidence = evidenceOf(m.reason).filter((c) => c !== m.index);
     const highlights: BricksHint = { target: m.index, forced: m.to };
     const words = narrate(m.reason, m.to, state, m.index, evidence);
     return {
       move: { kind: "paint", cells: [{ index: m.index, to: m.to }] },
+      rung: m.reason.kind,
       explanation: words.text,
       words,
       highlights,
@@ -533,7 +545,8 @@ export const bricksGame: Game<
   BricksUi,
   BricksDrawState,
   BricksMistake,
-  BricksHint
+  BricksHint,
+  BricksRung
 > = {
   id: "bricks",
 
@@ -559,6 +572,7 @@ export const bricksGame: Game<
   solve,
   difficulty,
   hint,
+  hintRungs: BRICKS_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step decides, on the cell's own border. The sentence says whether it must be shaded or stay clear.",

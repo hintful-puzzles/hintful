@@ -99,7 +99,23 @@ export interface AscentHighlights {
   hatch: number[];
 }
 
-type AscentStep = HintStep<AscentMove, AscentHighlights>;
+/** A step's rung is its firing's reason: {@link HintReason}'s kinds. */
+export const ASCENT_RUNGS = [
+  "touch",
+  "reach",
+  "deadEnd",
+  "onlyBeside",
+  "only",
+  "route",
+  "routeBeside",
+  "routeOnly",
+  "lines",
+  "pointers",
+  "wholeRun",
+] as const;
+export type AscentRung = (typeof ASCENT_RUNGS)[number];
+
+type AscentStep = HintStep<AscentMove, AscentHighlights, AscentRung>;
 
 /** Why a number goes where it does; the technique names are the module comment's. */
 export type HintReason =
@@ -865,6 +881,7 @@ export function stepOf(f: AscentFiring): AscentStep {
   const at = cellsOf(f);
   const step = (words: Sentence): AscentStep => ({
     move: moveOf(f),
+    rung: f.reason.kind,
     explanation: words.text,
     words,
     highlights: { hatch: [...StepMarks.of(words).of("stripes", SQUARE)] },

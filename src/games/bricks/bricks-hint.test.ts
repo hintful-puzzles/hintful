@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -57,6 +58,41 @@ const FIX_ID = `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`;
 /** The `Game` interface types hint highlights as `unknown`; the concrete game
  * carries `BricksHint`. */
 const hl = (s: HintStep<BricksMove>): BricksHint => s.highlights as BricksHint;
+
+/** Every reason, on a board whose plan speaks it. */
+describeHintPins({
+  game: bricksGame,
+  params: [
+    { w: 6, h: 7, diff: DIFF_EASY },
+    { w: 8, h: 10, diff: DIFF_EASY },
+  ],
+  seeds: 40,
+  unreached: {
+    // Held on 0 of 3649 positions walked on 80 boards (6x7 and 8x10 Easy, 40
+    // seeds each).
+    localBreak:
+      "the classifier's fallback, for a rejected one-cell trial whose errors fit none of the five shapes. `hint` answers only a board that agrees with the solution, which has no error before the trial, so every error after it is on the target, on a brick the target held up, or on a number beside it, and an earlier branch takes each.",
+  },
+  pins: {
+    /** Held on 2824 of 3649 positions walked. */
+    three: {
+      id: "6x7de:1c4a3ee4c5b3eb3_4b2e",
+      moves:
+        '[{"kind":"paint","cells":[{"index":4,"to":"shade"}]},{"kind":"paint","cells":[{"index":6,"to":"shade"}]}]',
+    },
+    /** Held on 2593 of 3649 positions walked. */
+    unsupported: "6x7de:d2aa3dfd1_0a2b4ab4b2a4d",
+    /** Held on 3094 of 3649 positions walked. */
+    overcount: "6x7de:b0_0be1_1_3dd6af3a5a5af",
+    /** Held on 3588 of 3649 positions walked. */
+    strandSupport: {
+      id: "6x7de:1a2cc1a3c1_4af2a3_2be3_2b2b",
+      moves: [{ kind: "paint", cells: [{ index: 8, to: "shade" }] }],
+    },
+    /** Held on 3519 of 3649 positions walked. */
+    undercount: "6x7de:1a2cc1a3c1_4af2a3_2be3_2b2b",
+  },
+});
 
 /** Build a raw rectangular grid (no F_BOUND — a full rectangle is a valid
  * grid for the solver) from a compact spec. `S`/`U`/`.`/digit. */
@@ -232,6 +268,7 @@ describe("bricks hint — a second mark on the board is named", () => {
         if (!r?.ok) continue;
         for (const step of r.steps) {
           checked++;
+          kinds.add(step.rung);
           if (stepMarks(step).of("outline", CELL).length === 0) continue;
           withMark++;
           expect(
@@ -239,7 +276,6 @@ describe("bricks hint — a second mark on the board is named", () => {
             `${step.explanation} — a cell is ringed but "this cell" is not tied to it`,
           ).toBe(true);
         }
-        for (const m of deduceBricksPlan(g, st.w, st.h)) kinds.add(m.reason.kind);
       }
     }
     // Vacuity guards: a sweep that examined nothing, or that reached only the

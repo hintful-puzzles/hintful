@@ -1,7 +1,8 @@
 # keep-the-pin-scan-command
 
-**Status: scaffolded, not started (2026-10-04).** A follow-up from
-`move-the-hint-scans-onto-the-harness`.
+A follow-up from `move-the-hint-scans-onto-the-harness`, implemented together
+with `name-the-rung-a-hint-step-speaks`: that change requires a pin for every
+rung of every game, which is only affordable when writing them is one command.
 
 ## Why
 
@@ -28,6 +29,8 @@ Three faults that script had, each met in use:
 `npm run hint-scan -- <test file>` runs the file's scan and writes the pins,
 each under its count, and:
 
+- leaves a pin that still fires as it is, since tests and snapshots are
+  written against its board (`--all` replaces every pin found);
 - leaves a pin in place where the scan found none, and says so;
 - finds the block wherever it sits, and a file's second block;
 - says when the file declared no scan, so an empty result is not read as

@@ -5485,3 +5485,29 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
   },
 ]
 `;
+
+exports[`unequal: pinned hint positions > says, at each pin 1`] = `
+{
+  "adjacent": "No bar joins this cell to the 1 beside it, and they can't differ by 1, so we must cross out the 2.",
+  "adjacentSet": "A bar joins this cell to a neighbor with nothing open one away from 1, so we must cross it out.",
+  "clean": "Now clear the easy ones: cross out any number already standing in each cell's row or column.",
+  "dup": "The 5 just placed can't repeat in its row and column, so we must cross out the 5 from the other cells there.",
+  "forcing": "Cell 1 is 1 or 4, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 1, this cell's row already has it; if 4, cell 3 is driven to 1, in line with this cell. Either way, 1 is ruled out here, so we must cross out the 1.",
+  "greater": "The larger side of a greater-than sign can't hold the smallest number, so we must cross out the 1.",
+  "hiddenSingle": "Every other cell in this row rules out 2, so this cell must be 2.",
+  "lesser": "The smaller side of a greater-than sign can't hold the largest number, so we must cross out the 5.",
+  "note": "Nothing in this cell's row or column rules out a number yet, so pencil in every one.",
+  "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
+  "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
+  "set": "The outlined cells already account for 4 and 5 between them, so we must cross out 4 and 5.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 2.",
+}
+`;
+
+exports[`unequal: pinned hint positions > says, at each pin 2`] = `
+{
+  "barStrike": "No bar joins this cell to the 1 beside it, and they can't differ by 1, so we must cross out the 2.",
+  "greaterThanStrike": "The larger side of a greater-than sign can't hold the smallest number, so we must cross out the 1.",
+  "multiMarkStrike": "Now clear the easy ones: cross out any number already standing in each cell's row or column.",
+}
+`;

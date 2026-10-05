@@ -167,7 +167,14 @@ function settle(starts: readonly Start[], known: Knowledge, firings: Firing[]): 
   }
 }
 
-type Step = HintStep<BlackboxMove>;
+/** What a step rests on, by the branch of {@link hint} that built it: a
+ * fired laser followed to a square, a laser to fire, a layout the search
+ * found, a ball no laser reaches, and the check. A layout's balls are one
+ * rung: one journey. */
+export const BLACKBOX_RUNGS = ["ray", "fire", "layout", "hidden", "done"] as const;
+export type BlackboxRung = (typeof BLACKBOX_RUNGS)[number];
+
+type Step = HintStep<BlackboxMove, unknown, BlackboxRung>;
 
 const guessed = (s: BlackboxState, p: Point): boolean =>
   (gridGet(s, p.x, p.y) & BALL_GUESS) !== 0;
@@ -269,9 +276,11 @@ export function layoutsUpTo2(state: BlackboxState, budget: number): number {
 }
 
 /** Black Box's hint (see the file header). */
-export function hint(state: BlackboxState): HintResult<BlackboxMove> {
+export function hint(
+  state: BlackboxState,
+): HintResult<BlackboxMove, unknown, BlackboxRung> {
   const { known, firings } = deduce(state);
-  const settled = firings.flatMap((f) => {
+  const settled = firings.flatMap((f): Step[] => {
     const move = moveTo(state, f.settled.at, f.settled.ball);
     if (move === null) return [];
     // The square's one rival is its other content, which the firing followed
@@ -279,7 +288,11 @@ export function hint(state: BlackboxState): HintResult<BlackboxMove> {
     const relation = claimRelation(judgeRivals([f.would], 0, () => "lost").claim);
     if (relation === null) throw new Error("blackbox: a firing left its rival open");
     return [
-      narratedStep({ move, words: say.ray(f.seen, f.would, f.settled, relation) }),
+      narratedStep({
+        move,
+        rung: "ray",
+        words: say.ray(f.seen, f.would, f.settled, relation),
+      }),
     ];
   });
   if (settled.length > 0) return { ok: true, steps: settled };
@@ -295,6 +308,7 @@ export function hint(state: BlackboxState): HintResult<BlackboxMove> {
       steps: [
         narratedStep({
           move: { type: "fire", rangeno: unfired[0] },
+          rung: "fire",
           words: say.fire(unfired[0], firedAny),
         }),
       ],
@@ -328,8 +342,9 @@ function layoutSteps(state: BlackboxState, known: Knowledge): Step[] | null {
   for (const { at, holds } of known.squares())
     if (holds === true && !guessed(state, at)) add.push(at);
   return add.map((at, i) =>
-    narratedStep<BlackboxMove, unknown>({
+    narratedStep<BlackboxMove, unknown, BlackboxRung>({
       move: { type: "toggleBall", x: at.x, y: at.y },
+      rung: "layout",
       words: say.layout(at, sequenceLeg(i, add.length), add),
       ...(i > 0 ? { continuesPrevious: true } : {}),
     }),
@@ -358,11 +373,12 @@ function finish(state: BlackboxState, known: Knowledge): Step[] {
     return [
       narratedStep({
         move: { type: "toggleBall", x: free.x, y: free.y },
+        rung: "hidden",
         words: say.hidden(more, free),
       }),
     ];
   }
-  return [narratedStep({ move: { type: "reveal" }, words: say.done() })];
+  return [narratedStep({ move: { type: "reveal" }, rung: "done", words: say.done() })];
 }
 
 /** A move completes the step when it is the step's move. */

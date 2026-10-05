@@ -352,7 +352,17 @@ function narrowWords(
   return { words, explanation: words.text };
 }
 
-function buildStep(f: LightupFiring): HintStep<LightupMove, LightupHint> {
+/** The solver's rules, by the `kind` of the reason each firing carries. */
+export const LIGHTUP_RUNGS = [
+  "forcedLight",
+  "clueSatisfied",
+  "clueSaturated",
+  "discountUnlit",
+  "discountClue",
+] as const satisfies readonly LightupFiring["reason"]["kind"][];
+export type LightupRung = (typeof LIGHTUP_RUNGS)[number];
+
+function buildStep(f: LightupFiring): HintStep<LightupMove, LightupHint, LightupRung> {
   // The sentence is given the marks, since a narration can only be held to
   // "say which mark you mean" if it knows which marks there are.
   const marks = buildHighlights(f);
@@ -360,13 +370,14 @@ function buildStep(f: LightupFiring): HintStep<LightupMove, LightupHint> {
   const { area: _, ...highlights } = marks;
   return {
     move: { ops: f.cells.map((c) => ({ kind: f.kind, x: c.x, y: c.y })) },
+    rung: f.reason.kind,
     explanation: words.text,
     words,
     highlights,
   };
 }
 
-function hint(state: LightupState): HintResult<LightupMove, LightupHint> {
+function hint(state: LightupState): HintResult<LightupMove, LightupHint, LightupRung> {
   const plan = deduceHintPlan(state);
   // Only reachable on an Unreasonable board (Easy/Normal boards are
   // deduction-complete by generation): refuse honestly at the guess point.
@@ -455,7 +466,8 @@ export const lightupGame: Game<
   LightupUi,
   LightupDrawState,
   LightupMistake,
-  LightupHint
+  LightupHint,
+  LightupRung
 > = {
   id: "lightup",
 
@@ -524,6 +536,7 @@ export const lightupGame: Game<
   difficulty,
 
   hint,
+  hintRungs: LIGHTUP_RUNGS,
   hintMarks: {
     roles: {
       ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a dot.',

@@ -34,6 +34,10 @@ export type FillingHintReason =
   | { kind: "lonely" }
   | { kind: "bitmap"; n: number };
 
+/** The rungs a hint step can be: the reasons' kinds. */
+export const FILLING_RUNGS = ["growth", "blocked", "lonely", "bitmap"] as const;
+export type FillingRung = (typeof FILLING_RUNGS)[number];
+
 /** One step of a hint plan: a set of cells forced to the same value, the
  * evidence cells to shade (the region the deduction reasons about, or the
  * neighbors that pin a lonely / eliminated cell), and the reason. */

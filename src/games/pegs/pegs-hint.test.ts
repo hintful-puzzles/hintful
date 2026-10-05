@@ -23,7 +23,7 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { hint, hintKeepTrack } from "./hint.ts";
+import { hint, hintKeepTrack, PEGS_RUNGS, type PegsRung } from "./hint.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import { pegsGame } from "./index.ts";
 import { findFinish, frozenPegs, legalJumps, provedLost } from "./solver.ts";
@@ -61,50 +61,46 @@ const jumpMove = (s: PegsState, j: Marked): PegsMove => ({
   ty: Math.floor(j.to / s.w),
 });
 
-/** The sentences a plan can open with. */
-const SENTENCES = {
-  /** A rival cuts a peg off at once. */
-  trap: /^This peg's striped jump would cut off the outlined peg\. One way to save it: jump into the ringed hole\.$/,
-  /** After a rival, every next jump cuts off the same peg. */
-  trapSoon:
-    /^After the striped jump, any next jump cuts off the outlined peg\. One way to save it: jump/,
-  /** The plan opens by clearing a row, a column, or a block of six. */
-  row: /clear the striped row and change nothing else\. First/,
-  column: /clear the striped column and change nothing else\. First/,
-  block: /clear the striped block and change nothing else\. First/,
-  /** Every rival loses. */
-  only: /^No other jump can still finish, so jump/,
-  /** Every rival settled: some finish, some lose. */
-  onlyThese: /^Only the jumps with arrows can still finish\. One of them: jump/,
-  /** Some finish, some lose, and some were past the search. */
-  alsoThese:
-    /^The jumps with arrows can still finish; some others cannot\. One of them: jump/,
-  /** Every jump can finish. */
-  anyJump: /^Every jump can still finish with one peg\. One of them: jump/,
-  /** The jump that leaves one peg. */
-  last: /: that finishes with one peg\.$/,
-  /** The rest of the link variants: a different peg's trap, this peg's trap a
-   * jump later, and a jump that would strand a peg, by this peg and by
-   * another. */
-  trapOther:
-    /^The striped jump would cut off the outlined peg\. One way to save it: jump/,
-  trapSoonOwn:
-    /^After this peg's striped jump, any next jump cuts off the outlined peg\. One way to save it: jump into the ringed hole\.$/,
-  strandOwn:
-    /^This peg's striped jump would strand the outlined peg\. One way to keep a peg beside it: jump into the ringed hole\.$/,
-  strandOther:
-    /^The striped jump would strand the outlined peg\. One way to keep a peg beside it: jump/,
-  /** A peg alone now, which the offered jump lands beside. */
-  joins:
-    /^The outlined peg is stranded, with no peg beside it\. One way to save it: go back for it\.$/,
+type Step = HintStep<PegsMove, unknown, PegsRung>;
+
+/** The rival jump a step stripes. */
+const rivalOf = (step: Step): Marked => stepMarks(step).of("stripes", JUMP)[0];
+/** Whether the striped rival is the hinted peg's own other jump. */
+const ownRival = (step: Step, s: PegsState): boolean =>
+  rivalOf(step).from === asMarked(s, step.move).from;
+/** The shape a package's striped pegs make. */
+function shapeOf(step: Step, s: PegsState): "row" | "column" | "block" {
+  const pegs = stepMarks(step).of("stripes", PEG);
+  if (pegs.length === 6) return "block";
+  return Math.floor(pegs[0] / s.w) === Math.floor(pegs[1] / s.w) ? "row" : "column";
+}
+
+/** The cases of a rung that read differently: whose jump the rival is, and the
+ * shape a package clears. */
+const KINDS = {
+  trapOwn: (step: Step, s: PegsState) => step.rung === "trap" && ownRival(step, s),
+  trapOther: (step: Step, s: PegsState) => step.rung === "trap" && !ownRival(step, s),
+  trapSoonOwn: (step: Step, s: PegsState) =>
+    step.rung === "trapSoon" && ownRival(step, s),
+  trapSoonOther: (step: Step, s: PegsState) =>
+    step.rung === "trapSoon" && !ownRival(step, s),
+  strandOwn: (step: Step, s: PegsState) =>
+    step.rung === "leavesAlone" && ownRival(step, s),
+  strandOther: (step: Step, s: PegsState) =>
+    step.rung === "leavesAlone" && !ownRival(step, s),
+  row: (step: Step, s: PegsState) =>
+    step.rung === "package" && shapeOf(step, s) === "row",
+  column: (step: Step, s: PegsState) =>
+    step.rung === "package" && shapeOf(step, s) === "column",
+  block: (step: Step, s: PegsState) =>
+    step.rung === "package" && shapeOf(step, s) === "block",
 };
-type Sentence = keyof typeof SENTENCES;
-const SENTENCE_NAMES = Object.keys(SENTENCES) as Sentence[];
+type Kind = PegsRung | keyof typeof KINDS;
 
 /**
- * Each sentence pinned on a position that opens with it. The scan strays from
+ * Each rung and case pinned on a position that speaks it. The scan strays from
  * the hint on every other turn, because a hint keeps to lines that finish and
- * most of these sentences are about a jump that would not.
+ * most of these rungs are about a jump that would not.
  */
 const pinned = describeHintPins({
   game: G,
@@ -119,30 +115,10 @@ const pinned = describeHintPins({
     const jumps = legalJumps(s);
     return jumps.length > 0 ? jumpMove(s, jumps[turn % jumps.length]) : null;
   },
-  kinds: SENTENCES,
-  // The boards are the ones first found (2026-10-02); each count is from this
-  // scan, 2,475 positions walked on 80 boards.
+  kinds: KINDS,
   pins: {
     /** Held on 8 of 2475 positions walked. */
-    trap: "5x5:OOOOPHHHHHOHHHPOHHPPOOHPO",
-    /** Held on 23 of 2475 positions walked. */
-    trapSoon: "5x5:OOPPPOOPHOOHPPPHHHPPOOHHO",
-    /** Held on 22 of 2475 positions walked. */
-    row: "5x5:PPHPPPOPPOPPPPPPPHPPOOPOO",
-    /** Held on 25 of 2475 positions walked. */
-    column: "5x5:OHOOOHHPHOHHPHHPPPHHPHPPO",
-    /** Held on 4 of 2475 positions walked. */
-    block: "5x5:OPPPPPPPPPPPHPPPPPPOPPPOO",
-    /** Held on 6 of 2475 positions walked. */
-    only: "5x5:OOPPPOOPHOOPPHPHHPPPOOPHO",
-    /** Held on 574 of 2475 positions walked. */
-    onlyThese: "5x5:OOOOPPHPHHOHHPPOPPPPOOPPO",
-    /** Held on 14 of 2475 positions walked. */
-    alsoThese: "7x7:PPHHOOOOPPHHOHOOHPHHHOHPPPPPOOPHHPPOHHPPPPOOOHOOO",
-    /** Held on 1230 of 2475 positions walked. */
-    anyJump: "5x5:OOOOPPPPPPOPPPPOPPHPOOPPO",
-    /** Held on 87 of 2475 positions walked. */
-    last: "5x5:OOOOHHHHHHOHHPPOHHHHOOHHO",
+    trapOwn: "5x5:OOOOPHHHHHOHHHPOHHPPOOHPO",
     /** Held on 245 of 2475 positions walked. */
     trapOther: "5x5:OHPPHHOHPPHPHHPHOOPOHOOOO",
     /** Held on 0 of 2475 positions walked, and on 0 of 12,689 at 200 seeds a
@@ -150,13 +126,41 @@ const pinned = describeHintPins({
      * that was not kept. Losing this pin means a different line of play, not
      * a rerun. */
     trapSoonOwn: "5x5:OOOOHOPPHPPPHPHPHHOHPHPOO",
+    /** Held on 23 of 2475 positions walked. */
+    trapSoonOther: "5x5:OOPPPOOPHOOHPPPHHHPPOOHHO",
     /** Held on 7 of 2475 positions walked. */
     strandOwn: "7x7:OOOOOOHOHOOOOHHHOOPPPHPPPHPPHPPHPPHPHPHHPPOOHOHPO",
     /** Held on 80 of 2475 positions walked. */
     strandOther: "7x7:OHPPHHOOHOPOOOPPPPPPOOPPPPPOOPPPHPOHHPPPPPOOPPPOO",
+    /** Held on 22 of 2475 positions walked. */
+    row: "5x5:PPHPPPOPPOPPPPPPPHPPOOPOO",
+    /** Held on 25 of 2475 positions walked. */
+    column: "5x5:OHOOOHHPHOHHPHHPPPHHPHPPO",
+    /** Held on 4 of 2475 positions walked. */
+    block: "5x5:OPPPPPPPPPPPHPPPPPPOPPPOO",
+    /** Held on 87 of 2475 positions walked. */
+    last: "5x5:OOOOHHHHHHOHHPPOHHHHOOHHO",
+    /** Held on 253 of 2475 positions walked. */
+    trap: "5x5random:OOHPOPPHPPOPPPOHHPPOOOPOO",
+    /** Held on 23 of 2475 positions walked. */
+    trapSoon: "5x5random:OHOHOOHPPOPHHPHOHHPPOPPOO",
+    /** Held on 51 of 2475 positions walked. */
+    package: "5x5random:PPPOOPPPPOPHPPOPPPOOOPPHH",
+    /** Held on 1230 of 2475 positions walked. */
+    anyJump: "5x5:OOOOPPPPPPOPPPPOPPHPOOPPO",
+    /** Held on 6 of 2475 positions walked. */
+    only: "5x5:OOPPPOOPHOOPPHPHHPPPOOPHO",
+    /** Held on 574 of 2475 positions walked. */
+    onlyThese: "5x5:OOOOPPHPHHOHHPPOPPPPOOPPO",
+    /** Held on 14 of 2475 positions walked. */
+    alsoThese: "7x7:PPHHOOOOPPHHOHOOHPHHHOHPPPPPOOPHHPPOHHPPPPOOOHOOO",
     /** Held on 120 of 2475 positions walked. The owner's playtest position
      * (2026-10-02). */
     joins: "7x7:OOPHHOOOOHHPOOHPPHHHPHHPPPPPHHPPPPPOOPPPOOOOPPPOO",
+    /** Held on 87 of 2475 positions walked. */
+    leavesAlone: "7x7random:OOOOOOHOOOPPOHOPPPHPPPPPHPOPOPPPPPHPPPPOOPOOOOPPP",
+    /** Held on 30 of 2475 positions walked. */
+    plain: "5x5random:OPOPOOPPPOHPPPPOPPPPOPPOO",
   },
 });
 
@@ -170,9 +174,9 @@ const TWO_CUT_OFF = "5x1:PHHHP";
 const ONE_CUT_OFF = "7x1:PPHOHHP";
 
 /** The plan at a sentence's pinned position. */
-function planAt(kind: Sentence): {
+function planAt(kind: Kind): {
   s: PegsState;
-  steps: readonly HintStep<PegsMove>[];
+  steps: readonly Step[];
 } {
   const { state, steps } = pinned(kind);
   for (const step of steps) expect(step.explanation.length).toBeLessThanOrEqual(120);
@@ -291,7 +295,7 @@ describe("pegs hint", () => {
   });
 
   it("stripes a rival that cuts a peg off at once, and outlines that peg", () => {
-    const { s, steps } = planAt("trap");
+    const { s, steps } = planAt("trapOwn");
     const marks = stepMarks(steps[0]);
     const [rival] = marks.of("stripes", JUMP);
     const [victim] = marks.of("outline", PEG);
@@ -305,7 +309,7 @@ describe("pegs hint", () => {
   });
 
   it("names a rival after which every jump cuts the outlined peg off", () => {
-    const { s, steps } = planAt("trapSoon");
+    const { s, steps } = planAt("trapSoonOther");
     const marks = stepMarks(steps[0]);
     const [rival] = marks.of("stripes", JUMP);
     const [victim] = marks.of("outline", PEG);
@@ -449,7 +453,8 @@ describe("pegs hint", () => {
 
   it("binds every pinned step's words to what it draws", () => {
     let checked = 0;
-    for (const kind of SENTENCE_NAMES) {
+    const kinds = [...PEGS_RUNGS, ...Object.keys(KINDS)] as Kind[];
+    for (const kind of kinds) {
       const { state, steps } = pinned(kind);
       let s = state;
       for (const step of steps) {
@@ -458,8 +463,8 @@ describe("pegs hint", () => {
         checked++;
       }
     }
-    // Fifteen plans, three of them packages of 3, 3 and 6 legs.
-    expect(checked).toBe(12 + 3 + 3 + 6);
+    // A plan a pin at least, and the packages' later legs besides.
+    expect(checked).toBeGreaterThan(kinds.length);
   });
 
   it("rings the jumping peg and the hole it lands in, and following it solves", () => {
@@ -491,7 +496,7 @@ describe("pegs hint", () => {
   });
 
   it("drops the plan on any other jump", () => {
-    const { state: s, step } = pinned("trap");
+    const { state: s, step } = pinned("trapOwn");
     const want = asMarked(s, step.move);
     const other = legalJumps(s).find((j) => !same(j, want));
     if (!other) throw new Error("expected a rival jump");
@@ -505,7 +510,7 @@ describe("pegs hint", () => {
   it("draws a trap's rings, outline and stripes (tier 2.5)", () => {
     const { recording } = renderScenario({
       game: G,
-      id: pinned("trap").id,
+      id: pinned("trapOwn").id,
       showHint: true,
     });
     const rings = (color: number) =>

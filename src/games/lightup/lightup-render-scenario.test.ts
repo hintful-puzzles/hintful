@@ -11,7 +11,7 @@
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { lightupGame } from "./index.ts";
@@ -29,7 +29,7 @@ const TRICKY: LightupParams = { ...EASY, difficulty: 1 };
 
 /** Each firing's frame, by the shape of its marks rather than its wording, so
  * a pin survives a rewording of the sentence. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: lightupGame,
   params: [EASY, TRICKY],
   kinds: {
@@ -39,7 +39,7 @@ const pinned = describeHintPins({
       step.highlights.targets.length > 1 &&
       step.highlights.clue !== undefined,
     forcedLight: (step) =>
-      /must hold a bulb/.test(step.explanation) &&
+      step.rung === "forcedLight" &&
       step.highlights?.dark !== undefined &&
       // an outlined square beside the dark one: the corridor
       stepMarks(step).of("outline", CELL).length > 1,

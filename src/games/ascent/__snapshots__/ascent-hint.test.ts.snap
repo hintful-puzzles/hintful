@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ascent: pinned hint positions > says, at each pin 1`] = `
+{
+  "deadEnd": "Only the outlined square leads into this one, so the path must end here: with 1 placed, it must be 36.",
+  "lines": "2 must be on its row, within a step of 1's column and 3's column. Only this square is, so it must be 2.",
+  "only": "No other run comes close to this square, and 8 steps from 12 and 4 from 24 rule out the rest, so it must be 20.",
+  "onlyBeside": "Only 25, between 24 and 26, can reach this square, so it must be 25.",
+  "pointers": "Of the missing numbers, only 3, 7, 10 and 14 point here, and the striped lines rule out all but one, so it must be 10.",
+  "reach": "11 must be next to 10 and within 2 steps of 13, and only this empty square is, so it must be 11.",
+  "route": "The run between 11 and 16 must step through the outlined squares, so 15 can only go here.",
+  "routeBeside": "Only 13, between 12 and 14, can step here through empty squares, so it must be 13.",
+  "routeOnly": "Only the run between 31 and 37 can step here through empty squares, and of its numbers only 34 can, so it must be 34.",
+  "touch": "14 must sit next to both 13 and 15, and this is the only empty square that does, so it must be 14.",
+  "wholeRun": "The run between 3 and 6 has only one route through the empty squares, so it must go along the line.",
+}
+`;

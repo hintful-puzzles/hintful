@@ -6932,3 +6932,28 @@ exports[`pegs hint > draws an arrow per rival that can still finish (tier 2.5) 1
   },
 ]
 `;
+
+exports[`pegs: pinned hint positions > says, at each pin 1`] = `
+{
+  "alsoThese": "The jumps with arrows can still finish; some others cannot. One of them: jump this peg into the ringed hole.",
+  "anyJump": "Every jump can still finish with one peg. One of them: jump this peg into the ringed hole.",
+  "block": "Six jumps clear the striped block and change nothing else. First, jump this peg into the ringed hole.",
+  "column": "Three jumps clear the striped column and change nothing else. First, jump this peg into the ringed hole.",
+  "joins": "The outlined peg is stranded, with no peg beside it. One way to save it: go back for it.",
+  "last": "Jump this peg into the ringed hole: that finishes with one peg.",
+  "leavesAlone": "This peg's striped jump would strand the outlined peg. One way to keep a peg beside it: jump into the ringed hole.",
+  "only": "No other jump can still finish, so jump this peg into the ringed hole.",
+  "onlyThese": "Only the jumps with arrows can still finish. One of them: jump this peg into the ringed hole.",
+  "package": "Three jumps clear the striped column and change nothing else. First, jump this peg into the ringed hole.",
+  "plain": "Jump this peg into the ringed hole.",
+  "row": "Three jumps clear the striped row and change nothing else. First, jump this peg into the ringed hole.",
+  "strandOther": "The striped jump would strand the outlined peg. One way to keep a peg beside it: jump this peg into the ringed hole.",
+  "strandOwn": "This peg's striped jump would strand the outlined peg. One way to keep a peg beside it: jump into the ringed hole.",
+  "trap": "The striped jump would cut off the outlined peg. One way to save it: jump this peg into the ringed hole.",
+  "trapOther": "The striped jump would cut off the outlined peg. One way to save it: jump this peg into the ringed hole.",
+  "trapOwn": "This peg's striped jump would cut off the outlined peg. One way to save it: jump into the ringed hole.",
+  "trapSoon": "After the striped jump, any next jump cuts off the outlined peg. One way to save it: jump this peg into the ringed hole.",
+  "trapSoonOther": "After the striped jump, any next jump cuts off the outlined peg. One way to save it: jump this peg into the ringed hole.",
+  "trapSoonOwn": "After this peg's striped jump, any next jump cuts off the outlined peg. One way to save it: jump into the ringed hole.",
+}
+`;

@@ -219,11 +219,11 @@ export interface CandidatePlanPrefs {
  * them into placements (matches the games' default-auto-pencil-off preference).
  * The reading defaults to {@link DEFAULT_CANDIDATE_READING}.
  */
-export function candidateHint<State, Move, Hint>(
+export function candidateHint<State, Move, Hint, Rung extends string = string>(
   state: State,
   ui: { autoPencil?: boolean; candidateReading?: CandidateReading } | null,
-  buildSteps: (state: State, prefs: CandidatePlanPrefs) => HintStep<Move, Hint>[],
-): HintResult<Move, Hint> {
+  buildSteps: (state: State, prefs: CandidatePlanPrefs) => HintStep<Move, Hint, Rung>[],
+): HintResult<Move, Hint, Rung> {
   const steps = buildSteps(state, {
     autoClean: ui?.autoPencil ?? false,
     reading: ui?.candidateReading ?? DEFAULT_CANDIDATE_READING,
@@ -603,15 +603,25 @@ export function impliedNotes(
   return out;
 }
 
+/** The rungs of a candidate plan's setup, the same in every game: pencil every
+ * candidate in, clear the ones a placed value already rules out, and (under the
+ * implicit reading) write one cell's candidates down. */
+export const NOTES_RUNGS = ["populate", "clean", "note"] as const;
+export type NotesRung = (typeof NOTES_RUNGS)[number];
+
 /** The populate/mark-all opener step. It deliberately declares **no board
  * marks** — the banner narration is the whole display, and the cross-game
  * guards (`hint-overlay.test.ts`, `hint-quality.test.ts`) recognize exactly
  * this shape as the one step allowed to paint nothing. Building it here keeps
  * that contract in one place. */
-export function populateStep<M, H>(move: M, explanation: string): HintStep<M, H> {
+export function populateStep<M, H>(
+  move: M,
+  explanation: string,
+): HintStep<M, H, NotesRung> {
   const words = unshaped(Narration.plain(explanation), "setup");
   return {
     move,
+    rung: "populate",
     explanation: words.text,
     words,
     highlights: { area: [], targets: [], marks: [] } as unknown as H,
@@ -885,6 +895,7 @@ export function emitObviousCleanStep<M, H>(
   const said = words(marks);
   steps.push({
     move: dialect.strike(marks),
+    rung: "clean",
     explanation: said.text,
     words: said,
     highlights: highlights as unknown as H,
@@ -973,13 +984,17 @@ export function keepCandidateHintTrack<M, H extends CandidateHighlights>(
  * cell is filled; a populate step once every empty cell already has notes.
  *
  * Generic over the game's move `M` (see {@link keepCandidateHintTrack}). */
-export function refreshCandidateHintStep<M, H extends CandidateHighlights>(
-  step: HintStep<M, H>,
+export function refreshCandidateHintStep<
+  M,
+  H extends CandidateHighlights,
+  R extends string = string,
+>(
+  step: HintStep<M, H, R>,
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
   adapter?: CandidateMoveAdapter<M>,
-): HintStep<M, H> | null {
+): HintStep<M, H, R> | null {
   const dialect = adapterOf(adapter);
   const bit = noteBitOf(dialect);
   const m = dialect.read(step.move);

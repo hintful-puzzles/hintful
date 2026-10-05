@@ -8,7 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT2 } from "../../engine/pointer.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { LINE, PIECE } from "./hint-text.ts";
@@ -30,11 +30,11 @@ const layTrack = (x: number, y: number): TracksMove => ({
   ops: [{ kind: "square", x, y, track: true, set: true }],
 });
 
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: tracksGame,
   params: [P],
   kinds: {
-    namesLine: /^This (row|column)/,
+    namesLine: (step) => stepMarks(step).of("stripes", LINE).length === 1,
     // Half of several Tracks deductions lives in the margin rather than on the
     // grid, so the clue has to be part of the picture (docs/games/hints.md
     // § "Off-board evidence").

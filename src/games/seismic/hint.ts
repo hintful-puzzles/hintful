@@ -33,8 +33,10 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
+  CANDIDATE_RUNGS,
   type CandidateRung,
   type Firing,
+  type PlanRung,
   runCandidatePlan,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
@@ -69,6 +71,18 @@ type SeismicReason =
   | { kind: "hidden"; area: readonly number[] }
   /** Every home the area has left for `n` is within reach of the struck cells. */
   | { kind: "starve"; n: number; area: readonly number[] };
+
+/** Every rung a Seismic step can be: the walk's own, and the kinds of
+ * {@link SeismicReason}. */
+export const SEISMIC_RUNGS = [
+  ...CANDIDATE_RUNGS,
+  "singleton",
+  "single",
+  "regionsFull",
+  "hidden",
+  "starve",
+] as const;
+export type SeismicRung = (typeof SEISMIC_RUNGS)[number];
 
 /** Seismic's moves already carry the shared names; only the note bit differs, and
  * a placement bakes in no auto-pencil, which Seismic does not have. */
@@ -204,7 +218,7 @@ type SeismicFiring = Firing<SeismicMove, SeismicHint, SeismicReason>;
 export function buildSteps(
   state: SeismicState,
   { autoClean, reading }: CandidatePlanPrefs,
-): HintStep<SeismicMove, SeismicHint>[] {
+): HintStep<SeismicMove, SeismicHint, SeismicRung>[] {
   const { w, dsf, mode } = state;
   const tectonic = mode === MODE_TECTONIC;
   const grid = state.grid.slice();
@@ -269,7 +283,7 @@ export function buildSteps(
 
   const cellsOf = (area: readonly number[]): Point[] =>
     area.map((j) => cellOf(state, j));
-  const steps: HintStep<SeismicMove, SeismicHint>[] = [];
+  const steps: HintStep<SeismicMove, SeismicHint, PlanRung<SeismicReason>>[] = [];
   runCandidatePlan<
     SeismicMove,
     SeismicHint,
@@ -298,7 +312,8 @@ export function buildSteps(
           : { kind: "regionsFull" },
     placeWords: (m, reason) => {
       // A whole-area cell is a 1 however the walk came to it.
-      if (dsf.size(m.y * w + m.x) === 1) return { words: say.singleton(m) };
+      if (dsf.size(m.y * w + m.x) === 1)
+        return { words: say.singleton(m), rung: "singleton" };
       switch (reason.kind) {
         case "single":
           return { words: say.naked(m, w) };
@@ -342,7 +357,7 @@ export function buildSteps(
 
 export function hintKeepTrack(
   m: SeismicMove,
-  step: HintStep<SeismicMove, SeismicHint>,
+  step: HintStep<SeismicMove, SeismicHint, SeismicRung>,
   state: SeismicState,
 ): HintTrackVerdict {
   return keepCandidateHintTrack(m, step, state.pencil, state.w, seismicCandidateMoves);
@@ -360,9 +375,9 @@ export function hintGesture(
 }
 
 export function refreshHintStep(
-  step: HintStep<SeismicMove, SeismicHint>,
+  step: HintStep<SeismicMove, SeismicHint, SeismicRung>,
   state: SeismicState,
-): HintStep<SeismicMove, SeismicHint> | null {
+): HintStep<SeismicMove, SeismicHint, SeismicRung> | null {
   return refreshCandidateHintStep(
     step,
     state.grid,

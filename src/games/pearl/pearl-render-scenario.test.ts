@@ -24,6 +24,7 @@ import {
 } from "./render.ts";
 import { pearlSolve } from "./solver.ts";
 import {
+  CORNER,
   DIFF_COUNT,
   L,
   newState,
@@ -97,9 +98,13 @@ describe("Pearl render scenarios", () => {
       game: pearlGame,
       id: ID,
       showHint: true,
+      // A black pearl read off its own edges, drawing a line.
       hintUntil: (step) =>
+        step.rung === "square" &&
         (step.highlights as PearlHint).targets.some((t) => t.line) &&
-        /black pearl must turn/.test(step.explanation),
+        stepMarks(step)
+          .of("outline", SQUARE)
+          .every((sq) => newState(P, DESC).clues[sq] === CORNER),
     });
     const hl = hint?.highlights as PearlHint | undefined;
     expect(stepMarks(hint).of("outline", SQUARE)).toHaveLength(1);

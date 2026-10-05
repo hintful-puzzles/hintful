@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { bridgesGame } from "./index.ts";
@@ -29,14 +29,13 @@ const lit = (step: HintStep<BridgesMove, unknown>): BridgesHighlights =>
   step.highlights as BridgesHighlights;
 
 /** The steps whose frames are asserted below. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: bridgesGame,
   params: [P],
   kinds: {
     citesIslands: (s) => lit(s).islands.length > 0,
     // One limit of one bridge, which is the one label the frame is read for.
     limitsSpan: (s) =>
-      /at most one can run this way/.test(s.explanation) &&
       lit(s).targets.filter((t) => t.limit !== null).length === 1 &&
       lit(s).targets.every((t) => t.limit === null || t.limit === 1),
     // A second bridge on a span that already carries one.

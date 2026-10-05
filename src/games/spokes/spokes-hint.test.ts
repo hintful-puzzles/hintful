@@ -22,12 +22,7 @@ import { seedBudget } from "../../engine/testing/slow.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { type SpokesHint, spokesGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
-import {
-  deduceSpokesPlan,
-  type SpokesFiring,
-  type SpokesFiringKind,
-  spokesSolve,
-} from "./solver.ts";
+import { deduceSpokesPlan, type SpokesFiring, spokesSolve } from "./solver.ts";
 import {
   clearBoard,
   cloneBoard,
@@ -90,11 +85,6 @@ function firingAt(state: SpokesState): SpokesFiring {
   return firing;
 }
 
-const opensWith =
-  (kind: SpokesFiringKind) =>
-  (_step: unknown, state: SpokesState): boolean =>
-    deduceSpokesPlan(cloneBoard(state))[0]?.kind === kind;
-
 const lit = (step: { highlights?: unknown }): SpokesHint | null =>
   (step.highlights as SpokesHint | undefined) ?? null;
 
@@ -105,47 +95,41 @@ const isDiagLine = (h: SpokesHint | null): boolean =>
 const isRuleOut = (h: SpokesHint | null): boolean =>
   h?.spokes?.some((s) => s.state === SPOKE_MARKED) ?? false;
 
-/** A position for each rung, found as the firing the plan opens with there,
- * and for each shape of step whose frame is asserted below. */
+/** A position for each rung, and for each shape of step whose frame is
+ * asserted below. */
 const pinned = describeHintPins({
   game: spokesGame,
   params: [EASY, TRICKY, UNREASONABLE],
   kinds: {
-    twoOnes: opensWith("twoOnes"),
-    saturation: opensWith("saturation"),
-    exhaustion: opensWith("exhaustion"),
-    contradiction: opensWith("contradiction"),
     // A saturation firing forcing more than one spoke.
-    saturationOfSeveral: (_step, state) => {
-      const [f] = deduceSpokesPlan(cloneBoard(state));
-      return f?.kind === "saturation" && f.forced.length > 1;
-    },
+    saturationOfSeveral: (step) =>
+      step.rung === "saturation" && (lit(step)?.spokes.length ?? 0) > 1,
     // The corner-invalidation case.
     diagonalLine: (step) => isDiagLine(lit(step)),
     ruleOut: (step) => isRuleOut(lit(step)),
   },
   pins: {
-    /** Held on 117 of 1046 positions walked. */
-    twoOnes: "4x4dt:1442456446431112",
-    /** Held on 453 of 1046 positions walked. */
-    saturation: "4x4de:1511455143121112",
-    /** Held on 267 of 1046 positions walked. */
-    exhaustion: {
-      id: "4x4de:3341313212131431",
-      moves:
-        '[{"kind":"set","index":0,"dir":0,"state":2},{"kind":"set","index":0,"dir":1,"state":2},{"kind":"set","index":0,"dir":2,"state":2},{"kind":"set","index":8,"dir":2,"state":3},{"kind":"set","index":10,"dir":1,"state":3}]',
-    },
-    /** Held on 209 of 1046 positions walked. */
-    contradiction: {
-      id: "4x4dh:1321231446531321",
-      moves: [{ kind: "set", index: 3, dir: 3, state: 3 }],
-    },
     /** Held on 249 of 1046 positions walked. */
     saturationOfSeveral: "4x4de:1511455143121112",
     /** Held on 198 of 1046 positions walked. */
     diagonalLine: "4x4de:1511455143121112",
     /** Held on 476 of 1046 positions walked. */
     ruleOut: "4x4dt:1442456446431112",
+    /** Held on 261 of 1046 positions walked. */
+    twoOnes: "4x4dt:1442456446431112",
+    /** Held on 951 of 1046 positions walked. */
+    saturation: "4x4de:1511455143121112",
+    /** Held on 910 of 1046 positions walked. */
+    exhaustion: {
+      id: "4x4de:3341313212131431",
+      moves:
+        '[{"kind":"set","index":0,"dir":0,"state":2},{"kind":"set","index":0,"dir":1,"state":2},{"kind":"set","index":0,"dir":2,"state":2},{"kind":"set","index":8,"dir":2,"state":3},{"kind":"set","index":10,"dir":1,"state":3}]',
+    },
+    /** Held on 521 of 1046 positions walked. */
+    contradiction: {
+      id: "4x4dh:1321231446531321",
+      moves: [{ kind: "set", index: 3, dir: 3, state: 3 }],
+    },
   },
 });
 
@@ -159,7 +143,10 @@ describe("each rung forces the move the solution agrees with", () => {
     "contradiction",
   ] as const) {
     it(`${kind}: every forced spoke matches the solution`, () => {
-      const { state } = pinned(kind);
+      const { state, index } = pinned(kind);
+      // The pin opens with the rung, so the plan's first firing is its own.
+      expect(index).toBe(0);
+      expect(firingAt(state).kind).toBe(kind);
       const solution = solutionOf(state);
       for (const sp of firingAt(state).forced) {
         const inSolution = getSpoke(solution.spokes[sp.index], sp.dir);

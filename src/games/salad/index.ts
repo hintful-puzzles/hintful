@@ -56,7 +56,9 @@ import {
   hintGesture,
   hintKeepTrack,
   refreshHintStep,
+  SALAD_RUNGS,
   type SaladHint,
+  type SaladRung,
 } from "./hint.ts";
 import {
   cellOrigin,
@@ -326,7 +328,8 @@ export const saladGame: Game<
   SaladUi,
   SaladDrawState,
   SaladMistake,
-  SaladHint
+  SaladHint,
+  SaladRung
 > = {
   id: "salad",
   // The symbol range, as upstream shows it in its non-stylus builds.
@@ -351,6 +354,7 @@ export const saladGame: Game<
   solve,
   difficulty,
   hint,
+  hintRungs: SALAD_RUNGS,
   hintMarks: {
     roles: {
       ring: "the square the step is about. What to enter there is previewed in it in the hint color: a letter or number, an X for “empty”, or a circle for “holds a letter” (or number). Pencil marks to cross out are shown with a line through them.",

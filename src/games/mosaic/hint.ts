@@ -35,7 +35,12 @@ export interface MosaicHint {
   w: number;
 }
 
-type Step = HintStep<MosaicMove, MosaicHint>;
+/** The game's two rules: a number that has its black squares, and a number
+ * that needs every square it has left. */
+export const MOSAIC_RUNGS = ["met", "needsAll"] as const;
+export type MosaicRung = (typeof MOSAIC_RUNGS)[number];
+
+type Step = HintStep<MosaicMove, MosaicHint, MosaicRung>;
 
 /** What the number at index `i` decides of its block's empty squares on
  * `grid` (each square's color, as `STATE_*`), and why; `null` when it decides
@@ -44,7 +49,7 @@ function firingAt(
   state: MosaicState,
   grid: Uint8Array,
   i: number,
-): { hint: MosaicHint; words: Sentence } | null {
+): { hint: MosaicHint; rung: MosaicRung; words: Sentence } | null {
   const { width: w, height: h, board } = state;
   const n = board.clues[i];
   if (n < 0) return null;
@@ -70,13 +75,14 @@ function firingAt(
   );
   const marked = { clue, n, cells: open };
   const hint = { cells: open.map((p) => p.y * w + p.x), mark, w };
-  return {
-    hint,
-    words: mark === STATE_BLANK ? say.met(marked) : say.needsAll(marked, size),
-  };
+  return mark === STATE_BLANK
+    ? { hint, rung: "met", words: say.met(marked) }
+    : { hint, rung: "needsAll", words: say.needsAll(marked, size) };
 }
 
-export function mosaicHint(state: MosaicState): HintResult<MosaicMove, MosaicHint> {
+export function mosaicHint(
+  state: MosaicState,
+): HintResult<MosaicMove, MosaicHint, MosaicRung> {
   // The whole plan, on a copy of the board's colors: the numbers in reading
   // order, and after each firing the numbers whose blocks it filled, since
   // only those can newly decide anything.
@@ -94,6 +100,7 @@ export function mosaicHint(state: MosaicState): HintResult<MosaicMove, MosaicHin
     steps.push(
       narratedStep({
         move: { type: "fill", cells, mark },
+        rung: f.rung,
         words: f.words,
         highlights: f.hint,
       }),
@@ -118,7 +125,7 @@ export function mosaicHint(state: MosaicState): HintResult<MosaicMove, MosaicHin
  * so a later auto-hint fills only those. */
 export function mosaicKeepTrack(
   m: MosaicMove,
-  step: Step,
+  step: HintStep<MosaicMove, MosaicHint>,
   state: MosaicState,
 ): HintTrackVerdict {
   const t = step.highlights;

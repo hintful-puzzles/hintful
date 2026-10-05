@@ -13,6 +13,8 @@ import { type DominosaHint, dominosaGame } from "./index.ts";
 import { border, COL_HINT, PREFERRED_TILE_SIZE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
+  DIFF_BASIC,
+  DIFF_EXTREME,
   DIFF_HARD,
   DIFF_TRIVIAL,
   DIFFCOUNT,
@@ -30,7 +32,13 @@ const P = { n: 4, diff: DIFF_TRIVIAL, tall: false };
 /** The placements the narration and frame tests below are asserted on. */
 const pinned = describeHintPins({
   game: dominosaGame,
-  params: [P],
+  // Every tier, since each adds techniques.
+  params: [
+    P,
+    { n: 6, diff: DIFF_BASIC, tall: false },
+    { n: 6, diff: DIFF_HARD, tall: false },
+    { n: 6, diff: DIFF_EXTREME, tall: false },
+  ],
   kinds: {
     placement: (step) => step.move.type === "domino",
     placementOnEdge: (step, state) => {
@@ -44,10 +52,36 @@ const pinned = describeHintPins({
     },
   },
   pins: {
-    /** Held on 180 of 180 positions walked. */
+    /** Held on 1174 of 1651 positions walked. */
     placement: "4dt:401110342210234030414234130223",
-    /** Held on 124 of 180 positions walked. */
+    /** Held on 691 of 1651 positions walked. */
     placementOnEdge: "4dt:132224034333014012440411302210",
+    /** Held on 1651 of 1651 positions walked. */
+    onlySpot: "4dt:401110342210234030414234130223",
+    /** Held on 1034 of 1651 positions walked. */
+    squareOnly: {
+      id: "4dt:132224034333014012440411302210",
+      moves: [{ type: "domino", d1: 6, d2: 12 }],
+    },
+    /** Held on 339 of 1651 positions walked. */
+    squareSingleDomino: "6dh:56661412240411522433566235062033553461156010541342003420",
+    /** Held on 382 of 1651 positions walked. */
+    mustOverlap: "6dh:33253306641260051434514431025160615156602241406353522420",
+    /** Held on 199 of 1651 positions walked. */
+    localDuplicate: "6de:25534400040545262363554433636216111012222566143146001305",
+    /** Held on 133 of 1651 positions walked. */
+    localDuplicate2: {
+      id: "6de:56314533060004062163042633405124211152250511623425636454",
+      moves: [{ type: "edge", d1: 39, d2: 47 }],
+    },
+    /** Held on 85 of 1651 positions walked. */
+    parity: {
+      id: "6de:54534465221330331445551316161022001643006641325222006654",
+      moves:
+        '[{"type":"edge","d1":30,"d2":38},{"type":"edge","d1":41,"d2":49},{"type":"edge","d1":9,"d2":17},{"type":"edge","d1":18,"d2":19},{"type":"edge","d1":16,"d2":17},{"type":"edge","d1":38,"d2":39},{"type":"edge","d1":29,"d2":30},{"type":"edge","d1":49,"d2":50},{"type":"domino","d1":48,"d2":49},{"type":"domino","d1":45,"d2":53},{"type":"domino","d1":23,"d2":31},{"type":"edge","d1":33,"d2":41}]',
+    },
+    /** Held on 402 of 1651 positions walked. */
+    set: "6dh:56624312536066234140503461422601054003313346141012552255",
   },
 });
 

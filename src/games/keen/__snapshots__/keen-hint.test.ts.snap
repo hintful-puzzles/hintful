@@ -5843,3 +5843,35 @@ exports[`keen hint render > a hidden-single placement hatches the whole line and
   },
 ]
 `;
+
+exports[`keen: pinned hint positions > says, at each pin 1`] = `
+{
+  "cage": "No way to make this cage sum to 7 puts 1 or 2 in this cell, so pencil in only 3 and 4.",
+  "cageLine": "This cage must multiply to 10, and every way to fill it places a 1 in its row, so we must cross out 1 and 2.",
+  "clean": "Now clear the easy ones: cross out any number already standing in each cell's row or column.",
+  "dup": "The 3 just placed can't repeat in its row and column, so we must cross out the 3 from the other cells there.",
+  "forcing": "Cell 1 is 3 or 4, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 3, this cell's row already has it; if 4, cell 5 is driven to 3, in line with this cell. Either way, 3 is ruled out here, so we must cross out the 3.",
+  "hiddenSingle": "Every other cell in this column rules out 3, so this cell must be 3.",
+  "note": "Nothing in this cell's row or column rules out a number yet, so pencil in every one.",
+  "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
+  "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
+  "set": "The outlined cells already account for 5 between them, so pencil in only 1, 2, 3, 4 and 6.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 5.",
+}
+`;
+
+exports[`keen: pinned hint positions > says, at each pin 2`] = `
+{
+  "hiddenSingle": "Every other cell in this row rules out 5, so this cell must be 5.",
+  "hiddenSingleSmall": "Every other cell in this row rules out 2, so this cell must be 2.",
+  "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
+}
+`;
+
+exports[`keen: pinned hint positions > says, at each pin 3`] = `
+{
+  "cage": "No way to make this cage have a ratio of 2 puts 5 in this cell, so we must cross it out.",
+  "cageRuledOut": "No way to make this cage have a ratio of 2 puts 5 in this cell, so we must cross it out.",
+  "strikeOfSeveral": "No way to make this cage sum to 8 puts 1 or 4 in this cell, so we must cross them out.",
+}
+`;

@@ -4757,3 +4757,9 @@ exports[`group render scenarios > opener frame draws the legend, the shaded diag
   },
 ]
 `;
+
+exports[`group: pinned hint positions > says, at each pin 1`] = `
+{
+  "associativityPairAndOne": "The grid shows c·d = e, d·d = f and (c·d)·d = d. In any group, (c·d)·d = c·(d·d), so c·(d·d) must also be d.",
+}
+`;

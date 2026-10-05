@@ -390,6 +390,16 @@ const cellAt = (puzzle: CrossingPuzzle, i: number): Point => ({
 const sameMark = (a: Mark, b: Mark): boolean =>
   a.x === b.x && a.y === b.y && a.n === b.n;
 
+/** Every rung a Crossing step can be: a firing's `technique`. */
+const CROSSING_RUNGS = [
+  "onlyNumber",
+  "sharedDigit",
+  "crossRuns",
+  "noteDigits",
+  "noteStrike",
+] as const;
+type CrossingRung = (typeof CROSSING_RUNGS)[number];
+
 /** The move a firing asks for, in the game's own vocabulary — a whole number
  * into a run, one digit, or a rule-out. */
 function hintMove(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingMove {
@@ -461,13 +471,16 @@ function hintHighlights(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingHint
  * move buys. Notes one run's fitting numbers leave in several of its squares
  * are one deduction too, but with different digits per square, so they are one
  * journey with a sentence per leg. */
-function buildSteps(state: CrossingState): HintStep<CrossingMove, CrossingHint>[] {
+function buildSteps(
+  state: CrossingState,
+): HintStep<CrossingMove, CrossingHint, CrossingRung>[] {
   const { puzzle } = state;
   const firings = deduceCrossingPlan(state).firings;
   return firings.map((f, j) => {
     const words = narrateCrossing(puzzle, f);
     return {
       move: hintMove(puzzle, f),
+      rung: f.technique,
       explanation: words.text,
       words,
       highlights: hintHighlights(puzzle, f),
@@ -492,7 +505,9 @@ function sameNoteDeduction(a: CrossingFiring, b: CrossingFiring): boolean {
   );
 }
 
-function hint(state: CrossingState): HintResult<CrossingMove, CrossingHint> {
+function hint(
+  state: CrossingState,
+): HintResult<CrossingMove, CrossingHint, CrossingRung> {
   return candidateHint(state, null, buildSteps);
 }
 
@@ -508,7 +523,7 @@ function hint(state: CrossingState): HintResult<CrossingMove, CrossingHint> {
  */
 function hintKeepTrack(
   m: CrossingMove,
-  step: HintStep<CrossingMove, CrossingHint>,
+  step: HintStep<CrossingMove, CrossingHint, CrossingRung>,
   state: CrossingState,
 ): HintTrackVerdict {
   const sm = step.move;
@@ -555,9 +570,9 @@ function hintKeepTrack(
 /** A whole-run step is resolved once the run is full, and shrinks its targets
  * to the squares still to write; everything else is the shared behavior. */
 function refreshHintStep(
-  step: HintStep<CrossingMove, CrossingHint>,
+  step: HintStep<CrossingMove, CrossingHint, CrossingRung>,
   state: CrossingState,
-): HintStep<CrossingMove, CrossingHint> | null {
+): HintStep<CrossingMove, CrossingHint, CrossingRung> | null {
   const m = step.move;
   if (m.kind === "place") {
     const cells = state.puzzle.runs[m.run].cells;
@@ -677,7 +692,8 @@ export const crossingGame: Game<
   CrossingUi,
   CrossingDrawState,
   CrossingMistake,
-  CrossingHint
+  CrossingHint,
+  CrossingRung
 > = {
   id: "crossing",
 
@@ -701,6 +717,7 @@ export const crossingGame: Game<
   solve,
   findMistakes,
   hint,
+  hintRungs: CROSSING_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides, in green: the square it fills, or every square of a run it fills with a whole number, and then the number in the list it writes in, boxed; or a line through a pencil mark, a digit it rules out of that square.",

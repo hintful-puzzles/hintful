@@ -2828,3 +2828,9 @@ exports[`Pattern hint render scenarios > opener frame: a ringed COL_HINT target 
   },
 ]
 `;
+
+exports[`pattern: pinned hint positions > says, at each pin 1`] = `
+{
+  "citesBlack": "This column's run of 3 can slide only 1 cell, given the outlined cell, so this cell must be black.",
+}
+`;

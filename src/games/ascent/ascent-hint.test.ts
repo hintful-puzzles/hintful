@@ -23,6 +23,7 @@
 import { describe, expect, it } from "vitest";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import {
   type AscentFiring,
@@ -114,6 +115,71 @@ const PINNED = [
   // sit next to 48"): without that the hint reaches for a Hard route.
   "7x7mREdt:b46_39a30a48_44c37a5_43c33c7a25_35c9g10_16_20b13c19_21",
 ];
+
+/** Each rung pinned on a position whose plan speaks it. Hidden ends, off
+ * Edges, are what the dead end and the one-run rungs want. */
+describeHintPins({
+  game: ascentGame,
+  params: [
+    custom(5, 5, 1, MODE_RECT, false),
+    custom(6, 7, 3, MODE_RECT, false),
+    custom(5, 5, 1, MODE_EDGES, true),
+    custom(5, 5, 3, MODE_EDGES, true),
+    custom(6, 6, 2, MODE_ORTHOGONAL, true),
+    custom(6, 6, 3, MODE_ORTHOGONAL, true),
+  ],
+  pins: {
+    /** Held on 718 of 864 positions walked. */
+    touch: "5x5mRdn:c10a21_22_25_12b19_15_13_7c4b1c",
+    /** Held on 105 of 864 positions walked. */
+    reach: "5x5mRdn:10a1_2_3a9_7d22b15_13_20_18e25",
+    /** Held on 36 of 864 positions walked. */
+    deadEnd: {
+      id: "6x6mOEdh:m28g7i3_2_15b",
+      moves:
+        '[{"kind":"place","cell":26,"n":0},{"kind":"places","cells":[{"cell":25,"n":3},{"cell":19,"n":4},{"cell":20,"n":5}]}]',
+    },
+    /** Held on 121 of 864 positions walked. */
+    onlyBeside: {
+      id: "6x7mRdh:a36_1i21_33a42d18c24b15_7b26_30a10_8_27c12a",
+      moves: [
+        {
+          kind: "places",
+          cells: [
+            { cell: 37, n: 27 },
+            { cell: 38, n: 28 },
+          ],
+        },
+      ],
+    },
+    /** Held on 83 of 864 positions walked. */
+    only: "6x6mOEdh:c12e7e2d24a34e29g",
+    /** Held on 35 of 864 positions walked. */
+    route: {
+      id: "6x6mOEdh:f11b32a34_10f16_19b24l",
+      moves: [{ kind: "place", cell: 10, n: 32 }],
+    },
+    /** Held on 58 of 864 positions walked. */
+    routeBeside: {
+      id: "6x7mRdh:5a8d3a14_10_12a1e18d20a29_30a34a22_25_38_36f42",
+      moves:
+        '[{"kind":"place","cell":3,"n":8},{"kind":"place","cell":5,"n":10},{"kind":"places","cells":[{"cell":22,"n":30},{"cell":17,"n":31},{"cell":23,"n":32}]}]',
+    },
+    /** Held on 12 of 864 positions walked. */
+    routeOnly: {
+      id: "6x7mRdh:28b7c29a31_1_4e2b24_11a42b23_12c37_38d19a39b",
+      moves:
+        '[{"kind":"place","cell":16,"n":2},{"kind":"places","cells":[{"cell":5,"n":4},{"cell":4,"n":5}]},{"kind":"places","cells":[{"cell":13,"n":24},{"cell":6,"n":25},{"cell":1,"n":26}]}]',
+    },
+    /** Held on 146 of 864 positions walked. */
+    lines: "5x5mEEdn:13_4_3_10_1_14_18_5e2_9e16_15e7_20_25d23_22e12_24_6_8_21_19_17_11",
+    /** Held on 77 of 864 positions walked. */
+    pointers:
+      "5x5mEEdh:18_22_15_16_3_1_9_14e10_11e13_2e12_19e6_5a24c25_8_23_21_20_7_4_17",
+    /** Held on 779 of 864 positions walked. */
+    wholeRun: "5x5mRdn:25c6a1_3_8_7_22_16a11e12b18_14a",
+  },
+});
 
 interface Board {
   label: string;
@@ -339,12 +405,13 @@ describe("every premise, restated from the board, singles out its square", () =>
       const shown = stepOf(firing);
       const { explanation, highlights } = shown;
       const at = `${board.label}: "${explanation}"`;
+      // A step that stripes nothing gives its reason in words:
       // "<Why no other run can fill this square>, and <counts>, so it must be n."
-      if (FILL.test(explanation)) {
+      if (highlights?.hatch.length === 0) {
+        expect(explanation, at).toMatch(FILL);
         fills++;
         // Every claim in it holds by straight reach, whatever the technique.
         expect(others, at).toEqual([]);
-        expect(highlights?.hatch, at).toEqual([]);
         const { w, mode } = before;
         const dist = (c: number) => stepDistance(cell, c, w, mode);
         const outlined = new Set(outlines(shown));
@@ -397,6 +464,7 @@ describe("every premise, restated from the board, singles out its square", () =>
         }
         continue;
       }
+      expect(explanation, at).not.toMatch(FILL);
       if (byRoute) continue;
       stripes++;
       // The picture: the run's reach striped, exactly, and its ends outlined.

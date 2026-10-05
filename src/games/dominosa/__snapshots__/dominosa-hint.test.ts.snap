@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`dominosa: pinned hint positions > says, at each pin 1`] = `
+{
+  "localDuplicate": "A 0–6 domino here would force a second 0–6 at the outlined square, but each domino is used once, so it can't.",
+  "localDuplicate2": "A domino here would leave both outlined squares needing one and the same domino, a duplicate, so it can't.",
+  "mustOverlap": "Every remaining spot for the outlined domino overlaps this pair, so no other domino can go there.",
+  "onlySpot": "The 3–3 domino has only one spot left where it fits, so it must go here.",
+  "parity": "A domino here would split the empty squares into odd-sized regions, which dominoes can't fill, so it can't go there.",
+  "placement": "The 3–3 domino has only one spot left where it fits, so it must go here.",
+  "placementOnEdge": "The 0–0 domino has only one spot left where it fits, so it must go here.",
+  "set": "The outlined squares can only hold one set of dominoes, which uses the 0–1, so 0–1 can't sit here as well.",
+  "squareOnly": "The outlined square has only one neighbor left to pair with, so the 1–3 domino must go here.",
+  "squareSingleDomino": "The outlined square can only be part of the 1–4 domino, so 1–4 can't sit here instead.",
+}
+`;

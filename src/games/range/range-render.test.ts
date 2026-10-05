@@ -67,6 +67,7 @@ describe("hint color legend", () => {
     });
     const step: HintStep<RangeMove, RangeHint> = {
       move: { sets: [{ r: 0, c: 1, value: "white" }] },
+      rung: "adjacency",
       explanation: words.text,
       words,
       highlights: { target: { r: 0, c: 1, value: "white" } },

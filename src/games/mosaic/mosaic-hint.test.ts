@@ -19,20 +19,15 @@ import { newState, STATE_BLANK, STATE_MARKED } from "./state.ts";
 const P = { width: 10, height: 10, aggressive: true };
 const desc = newDesc(P, randomNew("mosaic-hint")).desc;
 
-/** The two marks a step can make, each pinned on a position whose hint opens
- * with a step making it. */
+/** The two rules, each pinned on a position whose hint speaks it. */
 const pinned = describeHintPins({
   game: mosaicGame,
   params: [P],
-  kinds: {
-    white: (step) => (step.highlights as MosaicHint).mark === STATE_BLANK,
-    black: (step) => (step.highlights as MosaicHint).mark === STATE_MARKED,
-  },
   pins: {
-    /** Held on 247 of 493 positions walked. */
-    white: "10x10:0c4a5c2a3456b5a25a655b3b55a5a20a22a44b11c4a232c14a3c5f5c8d44d4b3d5c",
-    /** Held on 246 of 493 positions walked. */
-    black:
+    /** Held on 486 of 493 positions walked. */
+    met: "10x10:0c4a5c2a3456b5a25a655b3b55a5a20a22a44b11c4a232c14a3c5f5c8d44d4b3d5c",
+    /** Held on 486 of 493 positions walked. */
+    needsAll:
       "10x10:c3c4442a4a5a44b3a4a4d53b3a133b23a3b4a7a1a2a5b3c323g212a5b5a0b32a2e02e2",
   },
 });
@@ -55,10 +50,10 @@ describe("Mosaic's hint", () => {
   });
 
   it.each([
-    ["white", STATE_BLANK, /already has its|allows no/],
-    ["black", STATE_MARKED, /needs/],
-  ] as const)("a step that makes squares %s is drawn and said", (kind, mark, words) => {
-    const { id, moves, step } = pinned(kind);
+    ["white", "met", STATE_BLANK, /already has its|allows no/],
+    ["black", "needsAll", STATE_MARKED, /needs/],
+  ] as const)("a step that makes squares %s is drawn and said", (_, rung, mark, words) => {
+    const { id, moves, step } = pinned(rung);
     const { recording, hint } = renderScenario({
       game: mosaicGame,
       id,

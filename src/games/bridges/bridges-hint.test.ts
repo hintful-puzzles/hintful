@@ -419,13 +419,48 @@ describe("what the plan shows, and what it keeps to itself", () => {
 
 const pinned = describeHintPins({
   game: bridgesGame,
-  params: [BRIDGES_PRESETS[2]],
+  // The second shape forbids loops, which no preset does and `wouldCloseLoop`
+  // needs.
+  params: [BRIDGES_PRESETS[2], { ...BRIDGES_PRESETS[2], allowloops: false }],
   kinds: {
     severalBridges: (step) => step.move.ops.filter((op) => op.op === "L").length > 1,
   },
   pins: {
-    /** Held on 34 of 145 positions walked. */
+    /** Held on 52 of 294 positions walked. */
     severalBridges: "7x7i30e10m2d2:3a3a2a2n2l3g2a4a5a4",
+    /** Held on 294 of 294 positions walked. */
+    exactSpace: "7x7i30e10m2d2:4a4c2d1b4l2d3i3a4a5a2",
+    /** Held on 82 of 294 positions walked. */
+    everyNeighbor: "7x7i30e10m2d2:3a3a2a2n2l3g2a4a5a4",
+    /** Held on 29 of 294 positions walked. */
+    wouldCloseLoop: {
+      id: "7x7i30e10m2Ld2:3e2g4e4b3a4k1d3c4a2",
+      moves:
+        '[{"ops":[{"op":"L","x1":0,"y1":0,"x2":6,"y2":0,"n":1},{"op":"L","x1":0,"y1":0,"x2":0,"y2":2,"n":1}]},{"ops":[{"op":"L","x1":2,"y1":3,"x2":4,"y2":3,"n":2},{"op":"L","x1":2,"y1":3,"x2":2,"y2":5,"n":1}]},{"ops":[{"op":"L","x1":4,"y1":3,"x2":4,"y2":6,"n":2}]},{"ops":[{"op":"L","x1":0,"y1":6,"x2":4,"y2":6,"n":1},{"op":"L","x1":0,"y1":6,"x2":0,"y2":2,"n":1}]},{"ops":[{"op":"C","x1":6,"y1":2,"x2":6,"y2":0,"n":1}]},{"ops":[{"op":"L","x1":6,"y1":2,"x2":0,"y2":2,"n":1}]}]',
+    },
+    /** Held on 146 of 294 positions walked. */
+    needsThisWay: {
+      id: "7x7i30e10m2Ld2:1a2a1a1i3c3j2b3g2a4c2",
+      moves: [{ ops: [{ op: "L", x1: 3, y1: 4, x2: 6, y2: 4, n: 2 }] }],
+    },
+    /** Held on 128 of 294 positions walked. */
+    wouldSealGroup: {
+      id: "7x7i30e10m2Ld2:1a2a1a1i3c3j2b3g2a4c2",
+      moves:
+        '[{"ops":[{"op":"L","x1":3,"y1":4,"x2":6,"y2":4,"n":2}]},{"ops":[{"op":"L","x1":0,"y1":6,"x2":2,"y2":6,"n":1}]}]',
+    },
+    /** Held on 130 of 294 positions walked. */
+    wouldStarve: {
+      id: "7x7i30e10m2d2:3c4a2o3b3j1e2c2a2",
+      moves:
+        '[{"ops":[{"op":"L","x1":0,"y1":0,"x2":4,"y2":0,"n":1},{"op":"L","x1":0,"y1":0,"x2":0,"y2":6,"n":1}]},{"ops":[{"op":"L","x1":1,"y1":3,"x2":4,"y2":3,"n":2},{"op":"L","x1":1,"y1":3,"x2":1,"y2":5,"n":1}]}]',
+    },
+    /** Held on 6 of 294 positions walked. */
+    mustReachOut: {
+      id: "7x7i30e10m2Ld2:1b3b2g2b5b4e2h1b3a3c2c4",
+      moves:
+        '[{"ops":[{"op":"L","x1":5,"y1":3,"x2":5,"y2":5,"n":2}]},{"ops":[{"op":"L","x1":5,"y1":5,"x2":3,"y2":5,"n":1}]},{"ops":[{"op":"L","x1":2,"y1":6,"x2":6,"y2":6,"n":2}]},{"ops":[{"op":"L","x1":6,"y1":6,"x2":6,"y2":2,"n":2}]},{"ops":[{"op":"L","x1":3,"y1":5,"x2":3,"y2":2,"n":1}]}]',
+    },
   },
 });
 
@@ -510,6 +545,7 @@ describe("following a step", () => {
     const span = { x1: 0, y1: 0, x2: 6, y2: 0 };
     const stepTo = (op: BridgesMove["ops"][number]) => ({
       move: { ops: [op] },
+      rung: "wouldStarve" as const,
       explanation: "",
       highlights: { targets: [], focus: null, islands: [], spans: [] },
     });

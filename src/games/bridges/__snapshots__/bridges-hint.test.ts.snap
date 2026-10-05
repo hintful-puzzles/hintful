@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`bridges: pinned hint positions > says, at each pin 1`] = `
+{
+  "everyNeighbor": "This 3 needs more bridges than either neighbor could carry alone, so both must take at least one.",
+  "exactSpace": "This 4 still needs 4 more bridges and has room for exactly 4, so every one must be drawn.",
+  "mustReachOut": "Filling this 3's other links as far as they go would seal off the outlined group, so a bridge must run this way.",
+  "needsThisWay": "This 2 can take at most 1 bridge from its other neighbors, so one must run this way.",
+  "severalBridges": "This 3 needs more bridges than either neighbor could carry alone, so both must take at least one.",
+  "wouldCloseLoop": "These islands are already linked by the outlined bridges, so one more this way would close a loop: it must be blocked.",
+  "wouldSealGroup": "A bridge here would shut these 2 islands into a finished group of their own, so this way must be blocked.",
+  "wouldStarve": "Two bridges here would leave the outlined island unable to reach its own count, so at most one can run this way.",
+}
+`;

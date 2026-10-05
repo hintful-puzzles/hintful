@@ -15,8 +15,9 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { anticlockwise, clockwise } from "../../engine/wires.ts";
+import { Facts, nextStep } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
-import type { NetHint } from "./hint.ts";
+import type { NetHint, NetRung } from "./hint.ts";
 import { netGame } from "./index.ts";
 import { COL_HINT } from "./render.ts";
 import { netSolver, SOLVER_UNIQUE } from "./solver.ts";
@@ -59,8 +60,14 @@ const pinned = describeHintPins({
   kinds: {
     turn: (step) => step.highlights?.kind === "turn",
     // A square's turnings read off the loops they would close as well as off
-    // its sides.
-    loopOnTheWay: /however they turn without closing a loop/,
+    // its sides. No mark tells it from a group a wire merely runs on into, so
+    // the board's own next deduction is asked.
+    loopOnTheWay: (step, state) =>
+      step.rung === "sealed" &&
+      (nextStep(new Facts(state))?.because.some(
+        (b) => b.why.kind === "sealed" && b.why.barLoops,
+      ) ??
+        false),
   },
   pins: {
     /** Held on 1454 of 3618 positions walked. */
@@ -71,6 +78,16 @@ const pinned = describeHintPins({
       moves:
         '[{"type":"rotate","op":"A","x":0,"y":1},{"type":"lock","x":0,"y":1},{"type":"note","x":1,"y":1,"dir":1,"note":2},{"type":"rotate","op":"A","x":2,"y":1},{"type":"lock","x":2,"y":1},{"type":"note","x":3,"y":1,"dir":1,"note":2},{"type":"lock","x":0,"y":2},{"type":"note","x":4,"y":0,"dir":1,"note":2},{"type":"note","x":4,"y":4,"dir":8,"note":2},{"type":"note","x":2,"y":3,"dir":8,"note":2},{"type":"note","x":4,"y":3,"dir":1,"note":2},{"type":"note","x":3,"y":3,"dir":1,"note":1},{"type":"note","x":0,"y":4,"dir":1,"note":1},{"type":"note","x":4,"y":4,"dir":1,"note":2}]',
     },
+    /** Held on 3618 of 3618 positions walked. */
+    side: "5x5:2a5e482a79d77eb51aa568818",
+    /** Held on 423 of 3618 positions walked. */
+    loop: {
+      id: "5x5w:5ad241a7a81ebc3ce3d8c3914",
+      moves:
+        '[{"type":"rotate","op":"F","x":4,"y":0},{"type":"lock","x":4,"y":0},{"type":"lock","x":0,"y":0},{"type":"rotate","op":"A","x":1,"y":0},{"type":"lock","x":1,"y":0},{"type":"rotate","op":"A","x":1,"y":1},{"type":"lock","x":1,"y":1},{"type":"lock","x":0,"y":1},{"type":"rotate","op":"A","x":1,"y":2},{"type":"lock","x":1,"y":2},{"type":"lock","x":0,"y":2},{"type":"note","x":3,"y":2,"dir":1,"note":1},{"type":"note","x":0,"y":3,"dir":8,"note":1},{"type":"note","x":1,"y":3,"dir":8,"note":1},{"type":"rotate","op":"F","x":4,"y":4},{"type":"lock","x":4,"y":4},{"type":"rotate","op":"C","x":0,"y":4},{"type":"lock","x":0,"y":4},{"type":"lock","x":1,"y":4},{"type":"note","x":2,"y":4,"dir":1,"note":2}]',
+    },
+    /** Held on 607 of 3618 positions walked. */
+    sealed: "5x5w:3325223c386e7a755e354585a",
   },
 });
 
@@ -150,7 +167,7 @@ describe("keep-track", () => {
       anticlockwise(now) === h.wires
         ? { type: "rotate", op: "C", x: h.at.x, y: h.at.y }
         : { type: "rotate", op: "A", x: h.at.x, y: h.at.y };
-    const copy = { ...step } as HintStep<NetMove, NetHint>;
+    const copy: HintStep<NetMove, NetHint, NetRung> = { ...step };
     const turned =
       wrongWay.type === "rotate" && wrongWay.op === "A"
         ? anticlockwise(now)

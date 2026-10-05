@@ -34,7 +34,8 @@ export function declaredOrder(highlights: unknown): number[] | null {
 
 /** One position a game, keyed by game id, on which the hint opens with a
  * numbered chain. Found again by
- * `HINT_SCAN=1 npx vitest run src/engine/hint-ordinal.test.ts`. */
+ * `npm run hint-scan -- src/engine/hint-ordinal.test.ts`, which prints them:
+ * the pins are not written in the call, so they are pasted here by hand. */
 export const CHAIN_PINS: Record<string, HintPin<unknown>> = {
   /** Held on 4 of 422 positions walked, on 9 boards. */
   clusters: {

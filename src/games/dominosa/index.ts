@@ -54,7 +54,12 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { DominosaSolver, solveNumbers } from "./solver.ts";
+import {
+  DOMINOSA_RUNGS,
+  type DominosaRung,
+  DominosaSolver,
+  solveNumbers,
+} from "./solver.ts";
 import {
   cloneState,
   DCOUNT,
@@ -373,7 +378,9 @@ const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / 
 
 const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
 
-function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
+function hint(
+  state: DominosaState,
+): HintResult<DominosaMove, DominosaHint, DominosaRung> {
   const { w, numbers, grid, edges, params } = state;
   const n = params.n;
   const wh = numbers.length;
@@ -397,7 +404,7 @@ function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
     if (edges[i] & EDGE_B) seenEdges.add(edgeKey(i, i + w));
   }
 
-  const steps: HintStep<DominosaMove, DominosaHint>[] = [];
+  const steps: HintStep<DominosaMove, DominosaHint, DominosaRung>[] = [];
   const total = DCOUNT(n);
   let budget = 12 * wh + 200;
 
@@ -421,6 +428,7 @@ function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
       );
       steps.push({
         move: { type: "domino", d1: a, d2: b },
+        rung: firing.technique,
         explanation: words.text,
         words,
         highlights: { kind: "place" },
@@ -438,6 +446,7 @@ function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
             : say.barrier(firing.technique, numbers[a], numbers[b], [a, b], evidence);
         steps.push({
           move: { type: "edge", d1: a, d2: b },
+          rung: firing.technique,
           explanation: words.text,
           words,
           ...(idx > 0 ? { continuesPrevious: true } : {}),
@@ -636,7 +645,8 @@ export const dominosaGame: Game<
   DominosaUi,
   DominosaDrawState,
   DominosaMistake,
-  DominosaHint
+  DominosaHint,
+  DominosaRung
 > = {
   id: "dominosa",
 
@@ -684,6 +694,7 @@ export const dominosaGame: Game<
         "the squares the reason rests on, such as a square with only one neighbor left to pair with, or the spots left for a domino.",
     },
   },
+  hintRungs: DOMINOSA_RUNGS,
   hintKeepTrack,
   hintGesture: (s, ui, ds, m) => {
     if (m.type === "solve") throw new Error("dominosa: a hint never solves");

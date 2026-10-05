@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`range: pinned hint positions > says, at each pin 1`] = `
+{
+  "adjacency": "This cell touches the outlined black square, and no two black squares may touch, so it must be white.",
+  "connect": "Painting this cell black would cut some of the outlined cells around it off from the rest, so it must stay white.",
+  "overrun": "If this cell, just past the outlined cells, were white, this 4 would see more than 4, so it must be black.",
+  "reach": "This 4 needs more than the outlined cell, so it must see along the striped run: the ringed cell must be white.",
+  "satisfied": "This 3 already sees all 3 of its white cells (outlined), so the cell just past them must be black.",
+}
+`;

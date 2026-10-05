@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`following one step at a time > pearl: pinned hint positions > says, at each pin 1`] = `
+{
+  "blackCannotRunOn": "The outlined square has a line off to the side, so this black pearl's line can't run straight through it.",
+  "blackRunsOn": "The outlined black pearl's line runs straight through the next square, so this line must carry on out of its far side.",
+  "closesEarly": "Joining the ends of the outlined line here would close a loop that misses a pearl, so this edge can't be a line.",
+  "closesEarlyThrough": "Across, this white pearl would close the outlined line into a loop that misses a pearl, so it must run up and down. It runs straight on through the next white pearl too.",
+  "square": "This black pearl must turn, and the board's edge is opposite, so its line must run this way through the next square. It runs straight on through the next white pearl too.",
+  "twoLines": "This white pearl sits on the board's edge, so its line must run along it.",
+  "whiteCannotTurn": "Neither outlined square to its left or right can turn into this white pearl, so its line must run up and down.",
+  "whiteTurnsOpposite": "The white pearl runs straight through the outlined square, so it turns on its other side: this edge can't be a line.",
+}
+`;

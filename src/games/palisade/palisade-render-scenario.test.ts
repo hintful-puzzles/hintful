@@ -11,27 +11,27 @@ import { describe, expect, it } from "vitest";
 import { EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { palisadeGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 
-// The equivalentEdges frame: a sibling edge AND a hatched *region* (more than
-// one cell). numberExhausted journeys carry siblings too, but outline a single
-// clue cell, so the multi-cell region distinguishes the rule.
+// What an equivalentEdges frame marks: a sibling edge AND a hatched *region*
+// (more than one cell). numberExhausted journeys carry siblings too, but
+// outline a single clue cell.
 const isEquivalentEdgesFrame = (step?: HintStep<unknown>): boolean =>
   stepMarks(step).of("ring", EDGE).length > 1 &&
   stepMarks(step).of("stripes", CELL).length > 1;
 
 /** A position whose hint opens with an `equivalentEdges` deduction. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: palisadeGame,
   params: [
     { w: 5, h: 5, k: 5 },
     { w: 8, h: 6, k: 6 },
   ],
-  kinds: { equivalentEdges: (step) => isEquivalentEdgesFrame(step) },
+  kinds: { equivalentEdges: (step) => step.rung === "equivalentEdges" },
   pins: {
     /** Held on 56 of 1307 positions walked. */
     equivalentEdges: {

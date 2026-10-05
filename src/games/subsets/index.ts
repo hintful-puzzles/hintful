@@ -471,8 +471,21 @@ function solve(orig: SubsetsState): SolveResult<SubsetsMove> {
 
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
 
+/** Every rung a Subsets step can be: a rule-out a firing rests on, which is a
+ * deduction of its own across a horseshoe, and the kinds of `SubsetsReason`
+ * for the firing's letters. */
+const SUBSETS_RUNGS = [
+  "ruleOut",
+  "arrowKnown",
+  "arrowMask",
+  "hiddenSingle",
+  "collapse",
+] as const;
+type SubsetsRung = (typeof SUBSETS_RUNGS)[number];
+type Step = HintStep<SubsetsMove, unknown, SubsetsRung>;
+
 /** A rule-out step, read against `board`, the plan's board just before it. */
-function ruleOutStep(board: SubsetsState, mark: RuleOutMark): HintStep<SubsetsMove> {
+function ruleOutStep(board: SubsetsState, mark: RuleOutMark): Step {
   const target = pointOf(mark.pos, board.w);
   const via = pointOf(mark.why.via, board.w);
   // The set ruled out is the action, boxed as such even where the neighbor
@@ -481,6 +494,7 @@ function ruleOutStep(board: SubsetsState, mark: RuleOutMark): HintStep<SubsetsMo
   const words = say.ruleOut(mark, board.n, target, via, sets);
   return {
     move: { kind: "rule", pos: mark.pos, value: mark.value, on: true },
+    rung: "ruleOut",
     explanation: words.text,
     words,
   };
@@ -537,11 +551,8 @@ const blockerCell = (ex: CollapseExclusion): number =>
  * is read against `board`, the plan's board as that step is shown, which this
  * advances past the firing.
  */
-function stepsForFiring(
-  board: SubsetsState,
-  d: SubsetsDeduction,
-): HintStep<SubsetsMove>[] {
-  const steps: HintStep<SubsetsMove>[] = [];
+function stepsForFiring(board: SubsetsState, d: SubsetsDeduction): Step[] {
+  const steps: Step[] = [];
   for (const mark of d.marks) {
     steps.push(ruleOutStep(board, mark));
     board.ruledOut[mark.pos] |= 1 << mark.value;
@@ -558,6 +569,7 @@ function stepsForFiring(
     const words = say.leg(d, k, legMarks(board, d, exclusion, k), example);
     steps.push({
       move: { kind: "set", type: set.type, pos: d.pos, bit: set.bit },
+      rung: d.reason.kind,
       explanation: words.text,
       words,
     });
@@ -572,7 +584,7 @@ function stepsForFiring(
   return steps.map((step, k) => (k > 0 ? { ...step, continuesPrevious: true } : step));
 }
 
-function hint(state: SubsetsState): HintResult<SubsetsMove> {
+function hint(state: SubsetsState): HintResult<SubsetsMove, unknown, SubsetsRung> {
   // A mark can be wrong without yet breaking a local rule (a letter the unique
   // solution excludes). The solution is derivable from the givens, so compare
   // and refuse honestly rather than hint on into a doomed position.
@@ -603,7 +615,7 @@ function hint(state: SubsetsState): HintResult<SubsetsMove> {
  * anything else drops the plan to recompute. */
 function hintKeepTrack(
   m: SubsetsMove,
-  step: HintStep<SubsetsMove>,
+  step: Step,
   _state: SubsetsState,
 ): HintTrackVerdict {
   const s = step.move;
@@ -684,7 +696,9 @@ export const subsetsGame: Game<
   SubsetsMove,
   SubsetsUi,
   SubsetsDrawState,
-  SubsetsMistake
+  SubsetsMistake,
+  unknown,
+  SubsetsRung
 > = {
   id: "subsets",
   // Touching the reference aid (tally / inspect icon / cursor) dismisses a
@@ -720,6 +734,7 @@ export const subsetsGame: Game<
   solve,
   difficulty,
   hint,
+  hintRungs: SUBSETS_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides: the one letter position it marks present or clears, which the sentence names by its letter, or, when it rules a whole set out of a cell, that cell and the set's entry in the tally.",

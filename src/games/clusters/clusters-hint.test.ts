@@ -31,6 +31,8 @@ import { type ClustersHintHighlights, clustersGame } from "./index.ts";
 import { COL_0, COL_1, COL_HINT, COL_HINT_CELL, COL_HINT_DANGER } from "./render.ts";
 import {
   type ClustersDeduction,
+  type ClustersRuleKind,
+  type ClustersRung,
   COMPLETE,
   clustersStatus,
   deduceHintPlan,
@@ -64,44 +66,31 @@ function openingDeduction(state: ClustersState): ClustersDeduction | null {
   return deduceHintPlan(state.grid, state.w, state.h).deductions[0] ?? null;
 }
 
-const opensWith =
-  (pred: (d: ClustersDeduction) => boolean) =>
-  (_step: unknown, state: ClustersState): boolean => {
+/** A direct step whose refuted color breaks `rule`: at the hinted cell itself
+ * when `atTarget`, which no step field says, so the opening deduction is
+ * asked. */
+const breaks =
+  (rule: ClustersRuleKind, atTarget?: true) =>
+  (step: { rung: ClustersRung }, state: ClustersState): boolean => {
     const d = openingDeduction(state);
-    return d !== null && pred(d);
+    if (step.rung !== "direct" || d?.reason.at.kind !== rule) return false;
+    return !atTarget || d.reason.at.cell === d.index;
   };
 
-/** A position for each shape of deduction, found as the one the plan opens
- * with there, and the chain step whose frame is asserted below. */
+/** A position for each rung, for the rules a direct step's refuted color
+ * breaks, and the chain step whose frame is asserted below. */
 const pinned = describeHintPins({
   game: clustersGame,
   params: [P],
   kinds: {
-    direct: opensWith((d) => d.reason.kind === "direct"),
-    surroundedAtTarget: opensWith(
-      (d) =>
-        d.reason.kind === "direct" &&
-        d.reason.at.kind === "surrounded" &&
-        d.reason.at.cell === d.index,
-    ),
-    reachTwoAtTarget: opensWith(
-      (d) =>
-        d.reason.kind === "direct" &&
-        d.reason.at.kind === "reachTwo" &&
-        d.reason.at.cell === d.index,
-    ),
-    dotOvercount: opensWith(
-      (d) => d.reason.kind === "direct" && d.reason.at.kind === "dotOvercount",
-    ),
-    chain: opensWith((d) => d.reason.kind === "chain"),
+    surroundedAtTarget: breaks("surrounded", true),
+    reachTwoAtTarget: breaks("reachTwo", true),
+    dotOvercount: breaks("dotOvercount"),
     // A what-if step that ends at a contradiction the frame can ring.
     chainWithDanger: (step) =>
-      step.explanation.startsWith("Suppose") &&
-      Boolean((step.highlights as ClustersHintHighlights).danger),
+      step.rung === "chain" && Boolean(step.highlights?.danger),
   },
   pins: {
-    /** Held on 417 of 433 positions walked. */
-    direct: "7x7dt:cGadAadGgKbb",
     /** Held on 12 of 433 positions walked. */
     surroundedAtTarget: "7x7dt:bcAbeICacDCIaca",
     /** Held on 134 of 433 positions walked. */
@@ -111,17 +100,19 @@ const pinned = describeHintPins({
       id: "7x7dt:cGadAadGgKbb",
       moves: [{ kind: "paint", cells: [{ index: 3, fill: 1 }] }],
     },
-    /** Held on 16 of 433 positions walked. */
-    chain: {
-      id: "7x7dt:aBaCEjcAlEabAc",
-      moves:
-        '[{"kind":"paint","cells":[{"index":35,"fill":2}]},{"kind":"paint","cells":[{"index":44,"fill":1}]},{"kind":"paint","cells":[{"index":30,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":2}]},{"kind":"paint","cells":[{"index":29,"fill":2}]},{"kind":"paint","cells":[{"index":28,"fill":2}]},{"kind":"paint","cells":[{"index":38,"fill":2}]},{"kind":"paint","cells":[{"index":31,"fill":2}]},{"kind":"paint","cells":[{"index":39,"fill":2}]},{"kind":"paint","cells":[{"index":32,"fill":2}]},{"kind":"paint","cells":[{"index":18,"fill":1}]},{"kind":"paint","cells":[{"index":17,"fill":1}]},{"kind":"paint","cells":[{"index":19,"fill":1}]},{"kind":"paint","cells":[{"index":23,"fill":2}]},{"kind":"paint","cells":[{"index":26,"fill":1}]},{"kind":"paint","cells":[{"index":47,"fill":1}]},{"kind":"paint","cells":[{"index":40,"fill":1}]},{"kind":"paint","cells":[{"index":48,"fill":1}]},{"kind":"paint","cells":[{"index":41,"fill":1}]}]',
-    },
     /** Held on 14 of 433 positions walked. */
     chainWithDanger: {
       id: "7x7dt:bcAbeICacDCIaca",
       moves:
         '[{"kind":"paint","cells":[{"index":0,"fill":1}]},{"kind":"paint","cells":[{"index":2,"fill":2}]},{"kind":"paint","cells":[{"index":3,"fill":2}]},{"kind":"paint","cells":[{"index":6,"fill":2}]},{"kind":"paint","cells":[{"index":8,"fill":2}]},{"kind":"paint","cells":[{"index":9,"fill":2}]},{"kind":"paint","cells":[{"index":10,"fill":2}]},{"kind":"paint","cells":[{"index":11,"fill":1}]},{"kind":"paint","cells":[{"index":13,"fill":2}]},{"kind":"paint","cells":[{"index":14,"fill":2}]},{"kind":"paint","cells":[{"index":15,"fill":2}]},{"kind":"paint","cells":[{"index":19,"fill":2}]},{"kind":"paint","cells":[{"index":20,"fill":2}]},{"kind":"paint","cells":[{"index":22,"fill":1}]},{"kind":"paint","cells":[{"index":23,"fill":1}]},{"kind":"paint","cells":[{"index":29,"fill":1}]},{"kind":"paint","cells":[{"index":42,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":1}]},{"kind":"paint","cells":[{"index":43,"fill":2}]},{"kind":"paint","cells":[{"index":37,"fill":1}]},{"kind":"paint","cells":[{"index":30,"fill":1}]}]',
+    },
+    /** Held on 433 of 433 positions walked. */
+    direct: "7x7dt:cGadAadGgKbb",
+    /** Held on 347 of 433 positions walked. */
+    chain: {
+      id: "7x7dt:aBaCEjcAlEabAc",
+      moves:
+        '[{"kind":"paint","cells":[{"index":35,"fill":2}]},{"kind":"paint","cells":[{"index":44,"fill":1}]},{"kind":"paint","cells":[{"index":30,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":2}]},{"kind":"paint","cells":[{"index":29,"fill":2}]},{"kind":"paint","cells":[{"index":28,"fill":2}]},{"kind":"paint","cells":[{"index":38,"fill":2}]},{"kind":"paint","cells":[{"index":31,"fill":2}]},{"kind":"paint","cells":[{"index":39,"fill":2}]},{"kind":"paint","cells":[{"index":32,"fill":2}]},{"kind":"paint","cells":[{"index":18,"fill":1}]},{"kind":"paint","cells":[{"index":17,"fill":1}]},{"kind":"paint","cells":[{"index":19,"fill":1}]},{"kind":"paint","cells":[{"index":23,"fill":2}]},{"kind":"paint","cells":[{"index":26,"fill":1}]},{"kind":"paint","cells":[{"index":47,"fill":1}]},{"kind":"paint","cells":[{"index":40,"fill":1}]},{"kind":"paint","cells":[{"index":48,"fill":1}]},{"kind":"paint","cells":[{"index":41,"fill":1}]}]',
     },
   },
 });
@@ -313,6 +304,7 @@ describe("hintKeepTrack", () => {
       kind: "paint",
       cells: [{ index: 5, fill: F_COLOR_0 as ClustersFill }],
     } as ClustersMove,
+    rung: "direct" as const,
     explanation: "",
   };
   const state = {} as ClustersState;
@@ -446,6 +438,7 @@ describe("hint rendering (tier 2.5)", () => {
     const palette = clustersGame.colors(DEFAULT_BACKGROUND);
     const step = (chain: ClustersHintHighlights["chain"]) => ({
       move: { kind: "paint", cells: [] } satisfies ClustersMove,
+      rung: "chain" as const,
       explanation: "",
       words: unshaped(
         phrase`${mark.this("ring", CELL, [{ x: 0, y: 0 }], "cell")} and ${mark.the("outline", CELL, chain, "cell")}`,

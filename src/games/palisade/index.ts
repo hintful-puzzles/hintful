@@ -179,20 +179,34 @@ const BASIS_NOUN = {
   noDanglingEdges: ["corner", "corner"],
 } as const;
 
+/** The hint's rungs: the solver's deductions, by the rule that forced the
+ * edge. */
+const PALISADE_RUNGS = [
+  "cluesVersusRegionSize",
+  "numberExhausted",
+  "notTooBig",
+  "notTooSmall",
+  "noDanglingEdges",
+  "equivalentEdges",
+] as const;
+type PalisadeRung = (typeof PALISADE_RUNGS)[number];
+
 /** Compute the next deductions as a hint plan, seeded from the player's
  * current borders and no-wall marks. Refuses on a solved board or one
  * carrying a mistake, so a hint is never built on a wrong wall. Edges
  * forced by one firing (the `equivalentEdges` pair, a `numberExhausted`
  * sweep) form one multi-leg journey; distinct firings stay separate
  * hints. */
-function hint(state: PalisadeState): HintResult<PalisadeMove, PalisadeHint> {
+function hint(
+  state: PalisadeState,
+): HintResult<PalisadeMove, PalisadeHint, PalisadeRung> {
   const forced = deduceForcedEdges(paramsOf(state), state.clues, state.borders);
   if (forced.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
   // Split the flat, discovery-ordered list into contiguous runs of one
   // firing (a firing's surviving edges stay contiguous after dedup), and
   // emit one journey per run.
-  const steps: HintStep<PalisadeMove, PalisadeHint>[] = [];
+  const steps: HintStep<PalisadeMove, PalisadeHint, PalisadeRung>[] = [];
   for (let g = 0; g < forced.length; ) {
     let end = g + 1;
     while (end < forced.length && forced[end].group === forced[g].group) end++;
@@ -200,6 +214,7 @@ function hint(state: PalisadeState): HintResult<PalisadeMove, PalisadeHint> {
     const fe = group[0];
     steps.push(
       ...borderHintJourney(
+        fe.rule,
         group,
         // The one region a sentence is about is striped (docs/games/hints.md
         // § "Hatch the line the sentence names"); a clue, a corner or the two
@@ -236,7 +251,8 @@ export const palisadeGame: Game<
   PalisadeUi,
   PalisadeDrawState,
   PalisadeMistake,
-  PalisadeHint
+  PalisadeHint,
+  PalisadeRung
 > = {
   id: "palisade",
 
@@ -275,6 +291,7 @@ export const palisadeGame: Game<
         'the one region the sentence is about: "this region", or "the same region" two edges both border.',
     },
   },
+  hintRungs: PALISADE_RUNGS,
   hintKeepTrack,
   hintGesture: (s, ui, ds, m, step) => {
     if (m.type !== "edges") throw new Error("palisade: a hint only sets edges");

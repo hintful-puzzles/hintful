@@ -21,6 +21,7 @@ import {
   hintKeepTrack,
   refreshHintStep,
   type SeismicHint,
+  type SeismicRung,
   starves,
   workingBoard,
 } from "./hint.ts";
@@ -40,7 +41,7 @@ import {
   type SeismicState,
 } from "./state.ts";
 
-type Step = HintStep<SeismicMove, SeismicHint>;
+type Step = HintStep<SeismicMove, SeismicHint, SeismicRung>;
 
 const isSolved = (s: SeismicState): boolean => seismicGame.status(s) === "solved";
 
@@ -141,29 +142,36 @@ type Kind =
   | "starve"
   | "fold";
 
-const isStarve = (step: HintStep<SeismicMove>): boolean =>
-  step.explanation.startsWith("The striped area can put its");
+const isStarve = (step: Step): boolean => step.rung === "starve";
 
-/** A step's premise, read off its words and its move. */
-function kindOf(step: Step, tectonic: boolean): Kind {
-  const m = step.move;
-  const text = step.explanation;
-  if (text === say.populate) return "populate";
-  // No sentence's words depend on which cells its references carry, only on
-  // how many, so each is rebuilt at the step's own cell to be compared.
-  if (text === say.clean(tectonic)([]).text) return "clean";
-  if (isStarve(step)) return m.type === "pencilStrike" ? "starve" : "fold";
-  if (m.type === "pencilAdd") return "note";
-  if (m.type === "pencilStrike") {
-    if (text.startsWith(say.cull(m.marks[0], m.marks[0].n, tectonic).text))
+/** A step's premise, read off its rung and its move. */
+function kindOf(step: Step): Kind {
+  switch (step.rung) {
+    // A strike from a cell with no notes is folded into what it leaves there.
+    case "starve":
+      return step.move.type === "pencilStrike" ? "starve" : "fold";
+    case "dup":
       return "cull";
-  } else if (m.type === "set") {
-    if (text === say.singleton(m).text) return "singleton";
-    if (text === say.naked(m, 9).text) return "naked";
-    if (text === say.regionsFull(m, m.n, tectonic).text) return "regionsFull";
-    if (text === say.hidden([], m, m.n).text) return "hidden";
+    case "single":
+      return "naked";
+    default:
+      return step.rung;
   }
-  throw new Error(`an unclassified step: "${text}"`);
+}
+
+/** The sentence a step of `kind` speaks, where it is one sentence: no
+ * sentence's words depend on which cells its references carry, only on how
+ * many, so each is rebuilt at the step's own cell. Null for a kind whose words
+ * vary with what it reads. */
+function wordsOf(kind: Kind, m: SeismicMove, tectonic: boolean): string | null {
+  if (kind === "populate") return say.populate;
+  if (kind === "clean") return say.clean(tectonic)([]).text;
+  if (m.type !== "set") return null;
+  if (kind === "singleton") return say.singleton(m).text;
+  if (kind === "naked") return say.naked(m, 9).text;
+  if (kind === "regionsFull") return say.regionsFull(m, m.n, tectonic).text;
+  if (kind === "hidden") return say.hidden([], m, m.n).text;
+  return null;
 }
 
 /** What each reading must reach over the corpus. The populate reading writes
@@ -188,10 +196,10 @@ describe.each(READINGS)("the corpus, under the %s reading", (reading) => {
   it("finishes every board and reaches every premise", () => {
     const seen = new Set<Kind>();
     let steps = 0;
-    for (const { label, params, state: start } of boards()) {
+    for (const { label, state: start } of boards()) {
       let state = start;
       for (const step of planOf(label, start, reading)) {
-        seen.add(kindOf(step, params.mode === MODE_TECTONIC));
+        seen.add(kindOf(step));
         state = seismicGame.executeMove(state, step.move);
       }
       expect(isSolved(state), `${label} stalled`).toBe(true);
@@ -284,7 +292,9 @@ describe.each(
         const m = step.move;
         const hl = highlightsOf(step);
         const where = `${label}: "${step.explanation}"`;
-        const kind = kindOf(step, tectonic);
+        const kind = kindOf(step);
+        const words = wordsOf(kind, m, tectonic);
+        if (words !== null) expect(step.explanation, where).toBe(words);
         counted.set(kind, (counted.get(kind) ?? 0) + 1);
         const shown = shownOf(state);
         switch (kind) {
@@ -336,6 +346,8 @@ describe.each(
             // The leg after a placement strikes what `placeNumber` itself strikes.
             if (m.type !== "pencilStrike") throw new Error(where);
             const n = m.marks[0].n;
+            const premise = say.cull(m.marks[0], n, tectonic).text;
+            expect(step.explanation.slice(0, premise.length), where).toBe(premise);
             expect(step.continuesPrevious, where).toBe(true);
             expect(hl.area, where).toHaveLength(1);
             const p = cellIndex(state, hl.area[0]);
@@ -406,12 +418,18 @@ describe.each(
 
 // --- the player's own board -------------------------------------------------
 
-/** The steps the following and frame tests read, each pinned on a position
- * whose hint opens with one. */
+/** A position for every rung, and the steps the following and frame tests
+ * read, each pinned on a position whose hint opens with one. The 7x7 boards
+ * are read with the notes penciled in first, which is where a plan speaks
+ * `populate` and `clean`; the rest as the game reads them by default. */
 const pinned = describeHintPins({
   game: seismicGame,
   params: SHAPES,
   seeds: 3,
+  ui: (state) => ({
+    ...seismicGame.newUi(state),
+    ...(state.w === 7 ? { candidateReading: "populate" as const } : {}),
+  }),
   kinds: {
     severalNotes: (step) =>
       step.move.type === "pencilStrike" && step.move.marks.length >= 2,
@@ -419,19 +437,48 @@ const pinned = describeHintPins({
     starvedArea: (step) => isStarve(step) && step.move.type === "pencilStrike",
   },
   pins: {
-    /** Held on 158 of 1434 positions walked. */
+    /** Held on 215 of 1378 positions walked. */
     severalNotes: {
       id: "6x6Tdh:2ab1a1a4a3ad2aabbc1bda2a,e43d5f2e5k",
       moves:
         '[{"type":"set","x":0,"y":0,"n":1,"pencil":false},{"type":"set","x":5,"y":5,"n":1,"pencil":false},{"type":"set","x":0,"y":2,"n":1,"pencil":false},{"type":"pencilAdd","marks":[{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":2,"y":1,"n":3},{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":5}]}]',
     },
-    /** Held on 821 of 1434 positions walked. */
+    /** Held on 821 of 1378 positions walked. */
     placement: "6x6de:1ca2b2b2ba1a1c1aa1a2f3ac1a,a51a2g43i5k2",
-    /** Held on 80 of 1434 positions walked. */
+    /** Held on 110 of 1378 positions walked. */
     starvedArea: {
       id: "8x5dh:b2ba4a2aa1aa1ba1aeb1a1aaac1a2aa,g2r3a5k",
       moves:
         '[{"type":"pencilAdd","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":2}]},{"type":"pencilAdd","marks":[{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2}]},{"type":"pencilAdd","marks":[{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":3}]}]',
+    },
+    /** Held on 12 of 1378 positions walked. */
+    populate: "7x7Tdh:bda1ab1c5a1b1a1ac2aa2a2c2ab1c1bac2b,5a3a1a4i5a3e1j2j5a5",
+    /** Held on 418 of 1378 positions walked. */
+    clean: {
+      id: "7x7Tdh:bda1ab1c5a1b1a1ac2aa2a2c2ab1c1bac2b,5a3a1a4i5a3e1j2j5a5",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 346 of 1378 positions walked. */
+    note: "6x6dh:1ca2b2b2ba1a1c1aa1a2f3ac1a,a51i4j5f3d2",
+    /** Held on 1125 of 1378 positions walked. */
+    dup: "6x6dh:1ca2b2b2ba1a1c1aa1a2f3ac1a,a51i4j5f3d2",
+    /** Held on 36 of 1378 positions walked. */
+    singleton: "7x7dh:1aa4ab9b5b2abccaa2bd1ea2ca3a,n2g4z",
+    /** Held on 1189 of 1378 positions walked. */
+    single: {
+      id: "7x7Tdh:bc1a1abb1c1a2a1aaaaa2aa1b2d4a2aca1af,a34b1c5a2n3g1c2b5g",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":4},{"x":0,"y":0,"n":5},{"x":3,"y":0,"n":1},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":4},{"x":3,"y":0,"n":5},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2},{"x":6,"y":0,"n":1},{"x":6,"y":0,"n":2},{"x":0,"y":1,"n":3},{"x":1,"y":1,"n":3},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5},{"x":3,"y":1,"n":2},{"x":3,"y":1,"n":3},{"x":3,"y":1,"n":4},{"x":3,"y":1,"n":5},{"x":5,"y":1,"n":1},{"x":5,"y":1,"n":2},{"x":6,"y":1,"n":1},{"x":1,"y":2,"n":5},{"x":2,"y":2,"n":5},{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":5},{"x":4,"y":2,"n":2},{"x":4,"y":2,"n":3},{"x":5,"y":2,"n":2},{"x":5,"y":2,"n":3},{"x":6,"y":2,"n":3},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":3},{"x":6,"y":3,"n":1},{"x":6,"y":3,"n":3},{"x":6,"y":3,"n":5},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":4,"y":4,"n":2},{"x":4,"y":4,"n":3},{"x":5,"y":4,"n":1},{"x":5,"y":4,"n":3},{"x":5,"y":4,"n":5},{"x":2,"y":5,"n":2},{"x":4,"y":5,"n":2},{"x":5,"y":5,"n":1},{"x":2,"y":6,"n":2},{"x":3,"y":6,"n":2},{"x":4,"y":6,"n":2},{"x":6,"y":6,"n":1},{"x":6,"y":6,"n":5}]}]',
+    },
+    /** Held on 792 of 1378 positions walked. */
+    regionsFull: "6x6de:1ca2b2b2ba1a1c1aa1a2f3ac1a,a51a2g43i5k2",
+    /** Held on 942 of 1378 positions walked. */
+    hidden: "5x8Tdh:baac2f3baaa1e2b1a5a2abf,2b1a3a5f5d1a14g2h4",
+    /** Held on 688 of 1378 positions walked. */
+    starve: {
+      id: "8x5dh:b2ba4a2aa1aa1ba1aeb1a1aaac1a2aa,g2r3a5k",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":2}]}]',
     },
   },
 });

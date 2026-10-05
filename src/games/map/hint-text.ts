@@ -72,7 +72,7 @@ export function colorsOf(mask: number): number[] {
 const names = (mask: number): string[] => colorsOf(mask).map(colorName);
 
 /** The longest chain whose walk is listed region by region. */
-const WALK_MAX = 5;
+export const WALK_MAX = 5;
 
 /** What a narrowing step does to its region, and so how its sentence ends:
  * - `place` — one color is left, and the step colors the region with it;

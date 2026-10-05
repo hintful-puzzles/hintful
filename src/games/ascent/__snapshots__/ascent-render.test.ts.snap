@@ -26615,3 +26615,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
   },
 ]
 `;
+
+exports[`ascent: pinned hint positions > says, at each pin 1`] = `
+{
+  "edgesLine": "19 must sit next to 18, on its diagonal. Only this square does, so it must be 19.",
+  "edgesLines": "2 must be on its row, within a step of 1's column and 3's column. Only this square is, so it must be 2.",
+  "edgesPointers": "Of the missing numbers, only 1, 3 and 23 point here. 3 is too far from 4's column and 23 from 22's row, so it must be 1.",
+  "fill": "No other run can reach this square, and 3 steps from 13 rules out anything higher, so it must be 10.",
+  "hexagonRun": "Only 15, between 14 and 16, can reach this square, so it must be 15.",
+  "rectBetween": "14 must sit next to both 13 and 15, and this is the only empty square that does, so it must be 14.",
+  "rectRun": "Only 23, between 22 and 24, can reach this square, so it must be 23.",
+  "wholeRun": "The run between 3 and 6 has only one route through the empty squares, so it must go along the line.",
+}
+`;

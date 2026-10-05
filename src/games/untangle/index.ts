@@ -50,7 +50,12 @@ import {
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newUntangleDesc } from "./generator.ts";
-import { deduceUntangleHintPlan, untangleKeepTrack } from "./hint.ts";
+import {
+  deduceUntangleHintPlan,
+  UNTANGLE_RUNGS,
+  type UntangleRung,
+  untangleKeepTrack,
+} from "./hint.ts";
 import { COL_BACKGROUND, FLASH_TIME, redrawUntangle } from "./render.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
@@ -140,7 +145,10 @@ export const untangleGame: Game<
   UntangleState,
   UntangleMove,
   UntangleUi,
-  UntangleDrawState
+  UntangleDrawState,
+  unknown,
+  unknown,
+  UntangleRung
 > = {
   id: "untangle",
   preferredTileSize: PREFERRED_TILE_SIZE,
@@ -367,6 +375,7 @@ export const untangleGame: Game<
 
   // --- hint (the move that clears the most crossings; see hint.ts) ---
   hint: (s, aux, ui) => deduceUntangleHintPlan(s, aux, ui?.snapToGrid ?? false),
+  hintRungs: UNTANGLE_RUNGS,
   hintMarks: {
     roles: {
       ring: "the move the step decides: the point to move, drawn in the hint's color, with a line in the same color running to the spot to drop it on, which is also drawn as a point. When only a few crossings are left, the hint may move several points together so that none of their lines crosses anything; the other points it will move next are ringed too (*these points* and *the others*, in its words), and it moves them one at a time.",

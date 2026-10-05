@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`magnets: pinned hint positions > says, at each pin 1`] = `
+{
+  "everyDominoNeeded": "This row needs 3 more +s and has only 3 undecided tiles, so each must be a magnet.",
+  "force": "This tile lies along a row with all its −s, so it must be neutral.",
+  "lineExact": "This column needs 4 more neutral squares and only these 4 aren't in marked magnets, so they must be neutral.",
+  "lineFull": "This column's clues need a + or − in every one of its empty squares, so each tile there must be a magnet.",
+  "mark": "This column's clues need a + or − in every one of its empty squares, so each tile there must be a magnet.",
+  "minus": "This row's empty squares take alternating poles, one more − than +, so this odd-length gap must start with −.",
+  "oddGap": "This row's empty squares take alternating poles, one more − than +, so this odd-length gap must start with −.",
+  "oneNeutralLeft": "This row has room for just one more neutral square, so this tile lying along it must be a magnet.",
+  "onlyEndLeft": "This row needs 3 more +s, one per magnet, and just 3 tiles can give one, so this square must be +.",
+  "placement": "This row's empty squares take alternating poles, one more − than +, so this odd-length gap must start with −.",
+}
+`;

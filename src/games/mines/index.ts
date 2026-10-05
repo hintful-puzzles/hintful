@@ -61,7 +61,9 @@ import {
 import type { Color, GameStatus, Point } from "../../engine/types.ts";
 import { minegen } from "./generator.ts";
 import {
+  MINES_RUNGS,
   type MinesHint,
+  type MinesRung,
   minesHint,
   minesHintKeepTrack,
   minesRefreshHintStep,
@@ -148,6 +150,12 @@ function openSquare(state: MinesState, x: number, y: number): void {
   // generated here: a save restored from the private desc has the layout but
   // not the click, and this replayed open must put it back.
   if (state.clickedAt === null) state.clickedAt = { x, y };
+  // Likewise the layout's start square, which the hint and the "start here"
+  // cross read after an undo back to the start.
+  if (layout.startx < 0) {
+    layout.startx = x;
+    layout.starty = y;
+  }
 
   if (mines[y * w + x]) {
     // Trodden on a mine. Expose only it (so an undo can carry on).
@@ -273,7 +281,8 @@ export const minesGame: Game<
   MinesUi,
   MinesDrawState,
   Point,
-  MinesHint
+  MinesHint,
+  MinesRung
 > = {
   id: "mines",
   preferredTileSize: PREFERRED_TILE_SIZE,
@@ -627,6 +636,7 @@ export const minesGame: Game<
     return isWon(end);
   },
   hint: (s) => minesHint(s, minesGame.executeMove),
+  hintRungs: MINES_RUNGS,
   hintMarks: {
     roles: {
       ring: "each square the step decides: it must be a mine, it must be safe, or its flag must come off, as the sentence says.",

@@ -67,7 +67,9 @@ import { newMapDesc } from "./generator.ts";
 import {
   buildSteps,
   hintKeepTrack,
+  MAP_RUNGS,
   type MapHint,
+  type MapRung,
   markAll,
   refreshHintStep,
   regionsMove,
@@ -476,7 +478,7 @@ function hint(
   state: MapState,
   _aux?: string,
   ui?: MapUi,
-): HintResult<MapMove, MapHint> {
+): HintResult<MapMove, MapHint, MapRung> {
   const steps = buildSteps(state, (ui ?? newUi(state)).candidateReading);
   // Map's three rungs finish every board of the three tiers below Unreasonable
   // (`difficulty-contract.test.ts` holds each board to its tier), so an empty
@@ -513,7 +515,8 @@ export const mapGame: Game<
   MapUi,
   MapDrawState,
   MapMistake,
-  MapHint
+  MapHint,
+  MapRung
 > = {
   id: "map",
   canMarkAll: true,
@@ -549,6 +552,7 @@ export const mapGame: Game<
   difficulty,
   findMistakes,
   hint,
+  hintRungs: MAP_RUNGS,
   hintMarks: {
     roles: {
       ring: 'the region the step decides, the one it calls "this region": a thick band in the hint color along its border. A chain\'s region being dotted keeps its number.',

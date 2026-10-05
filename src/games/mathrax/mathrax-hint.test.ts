@@ -13,7 +13,10 @@
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import {
+  describeHintKindPins,
+  describeHintPins,
+} from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -51,21 +54,84 @@ const TRICKY: MathraxParams = { o: 6, diff: "tricky", options: 63 };
 const strikes = (move: MathraxMove): number =>
   move.type === "pencilStrike" ? move.marks.length : 0;
 
+/**
+ * Every rung on a position whose plan speaks it. A plan is asked under one
+ * reading of the note-less cells, and `populate` and `note` are each spoken
+ * under one of the two, so the boards are split between them by how many clues
+ * a board has.
+ */
+describeHintPins({
+  game: mathraxGame,
+  params: [NORMAL, TRICKY],
+  ui: (s) => ({
+    ...newUi(s),
+    candidateReading:
+      s.clues.filter((c) => c !== 0).length % 2 === 0 ? "populate" : "implicit",
+  }),
+  pins: {
+    /** Held on 11 of 1725 positions walked. */
+    populate: "5dn:b2a5k2h,S0S1bA5hA6b",
+    /** Held on 421 of 1725 positions walked. */
+    clean: { id: "5dn:b2a5k2h,S0S1bA5hA6b", moves: [{ type: "pencilAll" }] },
+    /** Held on 416 of 1725 positions walked. */
+    note: "5dn:n4f3c,A5S2eS1A6dS2b",
+    /** Held on 1559 of 1725 positions walked. */
+    dup: "5dn:n4f3c,A5S2eS1A6dS2b",
+    /** Held on 1679 of 1725 positions walked. */
+    single: {
+      id: "5dn:b2a5k2h,S0S1bA5hA6b",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":2},{"x":1,"y":0,"n":5},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":5},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":2},{"x":4,"y":1,"n":5},{"x":1,"y":2,"n":2},{"x":2,"y":2,"n":2},{"x":4,"y":2,"n":5},{"x":0,"y":3,"n":2},{"x":2,"y":3,"n":2},{"x":3,"y":3,"n":2},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":5},{"x":1,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":4,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":3},{"x":2,"y":4,"n":5}]}]',
+    },
+    /** Held on 573 of 1725 positions walked. */
+    regionsFull: {
+      id: "5dn:e1o2c,A6S1dS1dA6M4c",
+      moves:
+        '[{"type":"set","x":1,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":1,"n":4,"pencil":false,"autoElim":false}]',
+    },
+    /** Held on 1229 of 1725 positions walked. */
+    hiddenSingle: {
+      id: "5dn:n4f3c,A5S2eS1A6dS2b",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2},{"x":2,"y":4,"n":4},{"x":2,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":3,"n":2},{"x":1,"y":3,"n":4}]},{"type":"set","x":0,"y":2,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":2}]},{"type":"set","x":1,"y":3,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":4},{"x":2,"y":4,"n":5}]},{"type":"set","x":2,"y":4,"n":2,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":3},{"x":3,"y":2,"n":5}]},{"type":"set","x":4,"y":1,"n":2,"pencil":false,"autoElim":false}]',
+    },
+    /** Held on 534 of 1725 positions walked. */
+    set: {
+      id: "6dt:b2y1g,aM6gA6OhS1S0S1c",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":2},{"x":5,"y":0,"n":2},{"x":2,"y":1,"n":2},{"x":4,"y":1,"n":1},{"x":2,"y":2,"n":2},{"x":4,"y":2,"n":1},{"x":2,"y":3,"n":2},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":1,"y":4,"n":1},{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":1},{"x":5,"y":4,"n":1},{"x":2,"y":5,"n":2},{"x":4,"y":5,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5},{"x":1,"y":1,"n":6}]},{"type":"set","x":1,"y":1,"n":3,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":3},{"x":0,"y":1,"n":3},{"x":2,"y":1,"n":3},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":3},{"x":5,"y":1,"n":3},{"x":1,"y":2,"n":3},{"x":1,"y":3,"n":3},{"x":1,"y":4,"n":3},{"x":1,"y":5,"n":3}]},{"type":"pencilStrike","marks":[{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":3},{"x":5,"y":3,"n":4},{"x":5,"y":3,"n":5},{"x":5,"y":3,"n":6}]},{"type":"set","x":5,"y":3,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":2},{"x":5,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":1,"y":3,"n":2},{"x":3,"y":3,"n":2},{"x":4,"y":3,"n":2},{"x":5,"y":4,"n":2},{"x":5,"y":5,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":5},{"x":5,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":6}]}]',
+    },
+    /** Held on 0 of 1725 positions walked: this scan does not reach it. The
+     * board is from the same scan at 40 seeds of 6x6 and 7x7 Tricky, where it
+     * held on 131 of 9220, and which runs for six minutes. */
+    forcing: {
+      id: "6dt:ze2d,hS2S1aA7S1S0bS3dS1c",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":4},{"x":1,"y":3,"n":5},{"x":1,"y":3,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":6}]},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":3},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5},{"x":1,"y":4,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":6}]},{"type":"pencilAdd","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":3},{"x":3,"y":2,"n":4},{"x":3,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":3},{"x":3,"y":3,"n":4},{"x":3,"y":3,"n":5}]},{"type":"pencilAdd","marks":[{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":2},{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":4,"y":3,"n":1},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":3},{"x":4,"y":3,"n":4},{"x":4,"y":3,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":5,"n":1},{"x":2,"y":5,"n":3},{"x":2,"y":5,"n":4},{"x":2,"y":5,"n":5},{"x":2,"y":5,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":4}]},{"type":"pencilAdd","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":5},{"x":1,"y":2,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5},{"x":2,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":2,"y":1,"n":3},{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":5},{"x":2,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":3},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":3},{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":3},{"x":2,"y":5,"n":1},{"x":2,"y":5,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6}]},{"type":"pencilAdd","marks":[{"x":5,"y":2,"n":1},{"x":5,"y":2,"n":2},{"x":5,"y":2,"n":3},{"x":5,"y":2,"n":4},{"x":5,"y":2,"n":5},{"x":5,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":5},{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":5},{"x":5,"y":2,"n":1},{"x":5,"y":2,"n":3},{"x":5,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":3,"y":1,"n":2},{"x":3,"y":1,"n":4},{"x":3,"y":1,"n":6}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":3},{"x":4,"y":1,"n":5}]},{"type":"pencilAdd","marks":[{"x":5,"y":1,"n":1},{"x":5,"y":1,"n":3},{"x":5,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":3,"y":3,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":5},{"x":0,"y":3,"n":6}]},{"type":"pencilAdd","marks":[{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":2},{"x":5,"y":3,"n":3},{"x":5,"y":3,"n":4},{"x":5,"y":3,"n":5},{"x":5,"y":3,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":6},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":4},{"x":5,"y":3,"n":2},{"x":5,"y":3,"n":4},{"x":5,"y":3,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":6}]},{"type":"pencilStrike","marks":[{"x":2,"y":5,"n":5}]}]',
+    },
+    /** Held on 1419 of 1725 positions walked. */
+    clue: "5dn:k43l,dS2aOS1bS1aS3c",
+  },
+});
+
+/** How many cells a clue step outlines: the two on an arithmetic clue's
+ * diagonal, or the four around an `E`/`O` clue. */
+const clueCellCount = (s: {
+  rung: string;
+  highlights?: { area: readonly unknown[] };
+}): number => (s.rung === "clue" ? (s.highlights?.area.length ?? 0) : 0);
+
 /** The strikes the journey and frame tests read, each pinned on a position
  * whose hint opens with one. Every board is marked in full first, as a player
  * about to strike candidates has it. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: mathraxGame,
   params: [NORMAL, TRICKY],
   opening: (): MathraxMove[] => [{ type: "pencilAll" }],
   kinds: {
     severalMarks: (s) => strikes(s.move) >= 2,
-    arithmeticClue: (s) =>
-      strikes(s.move) > 0 &&
-      / clue/.test(s.explanation) &&
-      !/all four numbers/.test(s.explanation),
-    parityClue: (s) =>
-      strikes(s.move) > 0 && /all four numbers around it/.test(s.explanation),
+    arithmeticClue: (s) => strikes(s.move) > 0 && clueCellCount(s) === 2,
+    parityClue: (s) => strikes(s.move) > 0 && clueCellCount(s) === 4,
   },
   pins: {
     /** Held on 723 of 1777 positions walked. */
@@ -204,8 +270,7 @@ describe("mathrax hint", () => {
       if (!res?.ok) continue;
       const modal = /can only|can't|must (be|cross)/i;
       const isSetup = (s: (typeof res.steps)[number]) =>
-        (s.move as MathraxMove).type === "pencilAll" ||
-        /clear the easy ones/.test(s.explanation);
+        s.rung === "populate" || s.rung === "clean";
       for (const s of res.steps) {
         if (isSetup(s)) continue;
         expect(s.explanation).toMatch(modal);
@@ -222,7 +287,7 @@ describe("mathrax hint", () => {
         if (!res?.ok) continue;
         for (const step of res.steps as AnyStep[]) {
           if (step.move.type !== "pencilStrike") continue;
-          if (!/clue/.test(step.explanation)) continue;
+          if (step.rung !== "clue") continue;
           const marks = step.move.marks as { x: number; y: number; n: number }[];
           expect(new Set(marks.map((m) => `${m.x},${m.y}`)).size).toBe(1);
           checked++;
@@ -246,7 +311,7 @@ describe("mathrax hint", () => {
         if (!res?.ok) continue;
         for (const step of res.steps as AnyStep[]) {
           const area: { x: number; y: number }[] = step.highlights?.area ?? [];
-          if (!/ clue/.test(step.explanation)) continue;
+          if (step.rung !== "clue") continue;
           if (/all four numbers around it/.test(step.explanation)) {
             expect(area).toHaveLength(4);
             const xs = new Set(area.map((a) => a.x));
@@ -328,7 +393,6 @@ describe("mathrax hint", () => {
   it("auto-pencil on folds away the trivial row/column eliminations", () => {
     const { st } = gen(NORMAL, "hint-autopencil");
     const populated = mathraxGame.executeMove(st, { type: "pencilAll" });
-    const dupRe = /just placed can't repeat in its row and column/;
     const uiOn = newUi(populated);
     uiOn.autoPencil = true;
     const on = mathraxGame.hint?.(populated, undefined, uiOn);
@@ -337,8 +401,7 @@ describe("mathrax hint", () => {
     const off = mathraxGame.hint?.(populated, undefined, uiOff);
     expect(on?.ok && off?.ok).toBe(true);
     if (!on?.ok || !off?.ok) return;
-    const dupCount = (r: typeof on) =>
-      r.steps.filter((s) => dupRe.test(s.explanation)).length;
+    const dupCount = (r: typeof on) => r.steps.filter((s) => s.rung === "dup").length;
     expect(dupCount(off)).toBeGreaterThan(dupCount(on));
     expect(off.steps.length).toBeGreaterThan(on.steps.length);
   });

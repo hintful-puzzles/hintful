@@ -131,6 +131,7 @@ describe("Palisade redraw", () => {
       });
       return {
         move: { type: "edges", edits: [] },
+        rung: "numberExhausted",
         explanation: words.text,
         words,
         highlights: { ...own, kind: "nowall" },

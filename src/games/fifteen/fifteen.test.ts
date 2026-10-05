@@ -342,16 +342,18 @@ describe("Fifteen hint", () => {
       const after = executeMove(board, step.move);
       // Every step names the goal tile it is working toward home.
       expect(step.explanation).toMatch(/^Working on tile \d+: /);
-      if (step.explanation.includes("into place")) {
+      if (step.rung === "goalHome" || step.rung === "tileHome") {
         // Any "into place" wording (goal or a restored tile) must really
         // land the slid tile in its own solved cell.
+        expect(step.explanation).toContain("into place");
         expect(after.tiles[tile - 1]).toBe(tile);
       } else {
         // A non-placing step is a nudge, a step back, or a clear-the-way move.
         expect(step.explanation).toMatch(
           /slide it closer|slide it back a step|slide tile \d+ out of the way/,
         );
-        if (step.explanation.includes("back a step")) {
+        if (step.rung === "goalReposition") {
+          expect(step.explanation).toContain("back a step");
           // The goal lands where the hole was, leaving the hole one cell
           // nearer its home than the tile now is.
           const dist = (i: number) =>
@@ -408,7 +410,10 @@ describe("Fifteen hint", () => {
     let homedEight = false;
     for (const step of result.steps) {
       expect(step.explanation.startsWith("Working on tile 8:")).toBe(true);
-      if (step.explanation === "Working on tile 8: slide tile 7 into place.") {
+      const slid =
+        step.move.type === "move" ? board.tiles[step.move.y * 4 + step.move.x] : 0;
+      if (step.rung === "tileHome" && slid === 7) {
+        expect(step.explanation).toBe("Working on tile 8: slide tile 7 into place.");
         sawSevenRestored = true;
       }
       board = executeMove(board, step.move);
@@ -434,9 +439,11 @@ describe("Fifteen hint", () => {
       if (!result?.ok) continue;
       for (const step of result.steps) {
         if (step.move.type !== "move") continue;
-        if (step.explanation.includes("slide it closer")) {
+        if (step.rung === "goalCloser") {
           closerSteps++;
-          const target = Number(step.explanation.match(/Working on tile (\d+):/)?.[1]);
+          // The tile a "closer" step slides is its goal.
+          const target = board.tiles[step.move.y * 4 + step.move.x];
+          expect(step.explanation).toBe(`Working on tile ${target}: slide it closer.`);
           const dist = (idx: number) =>
             Math.abs((idx % 4) - ((target - 1) % 4)) +
             Math.abs(Math.floor(idx / 4) - Math.floor((target - 1) / 4));

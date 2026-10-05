@@ -56,6 +56,9 @@ import {
 const NORMAL: RomeParams = { w: 6, h: 6, diff: DIFF_NORMAL };
 const TRICKY: RomeParams = { w: 8, h: 8, diff: DIFF_TRICKY };
 
+/** A 6x6 Tricky board on which the `naked-pairs` rung fires. */
+const PAIR_DESC = "1a1aa2a4b1a1ab2a1a4c3aaa1a2aa,aLDRDgRaXUDcLcRUaURg";
+
 /** The plan these cases read: every mark penciled in first. */
 const POPULATE: CandidatePlanPrefs = { autoClean: false, reading: "populate" };
 
@@ -254,8 +257,7 @@ describe("rome hint plan", () => {
    */
   it("names both arrows of a naked pair, not only the ones still live", () => {
     const params: RomeParams = { w: 6, h: 6, diff: DIFF_TRICKY };
-    const desc = "1a1aa2a4b1a1ab2a1a4c3aaa1a2aa,aLDRDgRaXUDcLcRUaURg";
-    const board = descValue(parseDesc(params, desc));
+    const board = descValue(parseDesc(params, PAIR_DESC));
     const ops = recordRomeDeductions(boardFromClues(board), DIFFCOUNT);
     const pair = ops.find((o) => kindOf(o.reason) === "pair");
     expect(pair, "the pinned board no longer fires naked-pairs").toBeDefined();
@@ -351,19 +353,77 @@ describe("rome hint plan", () => {
  * square would fold into what it leaves. */
 const MARK_ALL: RomeMove[] = [{ kind: "pencilAll" }];
 
-/** A position whose hint opens with a loop strike. */
+/** The bare boards of the scan: one read implicitly, where `note` and
+ * `regionsFull` are spoken of a square with no marks, and one read with the
+ * marks penciled in first, which is where a plan opens on `populate`. */
+const BARE: RomeParams = { w: 5, h: 5, diff: DIFF_TRICKY };
+const BARE_POPULATED: RomeParams = { w: 4, h: 4, diff: DIFF_NORMAL };
+
+/** A position for every rung, and one whose hint opens with a loop strike. */
 const pinned = describeHintPins({
   game: romeGame,
-  params: [NORMAL, TRICKY],
-  opening: () => MARK_ALL,
-  kinds: { loop: /^Following the arrows/ },
+  params: [NORMAL, TRICKY, BARE, BARE_POPULATED],
+  opening: (state) => (state.w >= NORMAL.w ? MARK_ALL : []),
+  ui: (state) => ({
+    ...romeGame.newUi(state),
+    ...(state.w === BARE_POPULATED.w ? { candidateReading: "populate" as const } : {}),
+  }),
+  kinds: { opensOnLoop: (step) => step.rung === "loop" },
   pins: {
-    /** Held on 738 of 1823 positions walked. */
-    loop: {
+    /** Held on 1011 of 2499 positions walked. */
+    opensOnLoop: {
       id: "6x6dn:abaaa1a1a4a1ca7a1a2aa1a2a2a1,aRcDbUdUaDcDULDUXbDbRe",
       moves:
         '[{"kind":"pencilAll"},{"kind":"pencilStrike","marks":[{"x":0,"y":0,"n":4},{"x":0,"y":1,"n":1},{"x":1,"y":1,"n":1},{"x":3,"y":1,"n":1},{"x":4,"y":1,"n":2},{"x":5,"y":1,"n":2},{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2},{"x":4,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":1,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":4,"y":4,"n":1},{"x":5,"y":4,"n":1},{"x":1,"y":5,"n":4},{"x":2,"y":5,"n":4}]},{"kind":"place","x":0,"y":0,"dir":8}]',
     },
+    /** Held on 12 of 2499 positions walked. */
+    populate: "4x4dn:2aa10b1d,gXaUdRa",
+    /** Held on 371 of 2499 positions walked. */
+    clean: {
+      id: "6x6dn:1aa1a2a1aa2a1aa3b1aa7b3a2b3,cLbUUDRDDaLbLDaUbDaUDUbDbRXb",
+      moves: [{ kind: "pencilAll" }],
+    },
+    /** Held on 149 of 2499 positions walked. */
+    note: {
+      id: "5x5dt:2c1a9a1b7bca,dDaDcXaLaUURRg",
+      moves:
+        '[{"kind":"place","x":0,"y":4,"dir":32},{"kind":"pencilAdd","marks":[{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":3}]},{"kind":"pencilStrike","marks":[{"x":4,"y":1,"n":2}]},{"kind":"place","x":4,"y":1,"dir":16},{"kind":"pencilAdd","marks":[{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2}]},{"kind":"pencilAdd","marks":[{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3}]},{"kind":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":4}]},{"kind":"place","x":1,"y":4,"dir":4},{"kind":"place","x":2,"y":1,"dir":4}]',
+    },
+    /** Held on 2257 of 2499 positions walked. */
+    dup: "5x5dt:a1a2aaa3b2a2aa1aaaab,bXdRaUmRa",
+    /** Held on 2490 of 2499 positions walked. */
+    single: {
+      id: "6x6dn:1aa1a2a1aa2a1aa3b1aa7b3a2b3,cLbUUDRDDaLbLDaUbDaUDUbDbRXb",
+      moves:
+        '[{"kind":"pencilAll"},{"kind":"pencilStrike","marks":[{"x":4,"y":0,"n":3},{"x":4,"y":0,"n":4},{"x":5,"y":0,"n":2},{"x":2,"y":2,"n":1},{"x":3,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":2,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":5,"y":3,"n":2},{"x":3,"y":4,"n":1},{"x":4,"y":4,"n":2},{"x":0,"y":5,"n":1}]}]',
+    },
+    /** Held on 218 of 2499 positions walked. */
+    regionsFull: "5x5dt:a8c2bad4aa4a,aLDbXbLDaUdUDLaUd",
+    /** Held on 214 of 2499 positions walked. */
+    hiddenSingle: "5x5dt:a1a2aaa3b2a2aa1aaaab,bXdRaUmRa",
+    /** Held on 2347 of 2499 positions walked. */
+    loop: "5x5dt:a1a2aaa3b2a2aa1aaaab,bXdRaUmRa",
+    /** Held on 653 of 2499 positions walked. */
+    onlyHome: {
+      id: "5x5dt:1b3aaaaabaa6a3a2a,dXRcLbDaUaLbDe",
+      moves:
+        '[{"kind":"place","x":0,"y":0,"dir":8},{"kind":"pencilAdd","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":4}]},{"kind":"pencilAdd","marks":[{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2}]},{"kind":"pencilAdd","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2}]},{"kind":"pencilAdd","marks":[{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":4}]},{"kind":"place","x":4,"y":4,"dir":16},{"kind":"pencilAdd","marks":[{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":3}]}]',
+    },
+    /** Held on 1595 of 2499 positions walked. */
+    reach: {
+      id: "5x5dt:ba4aa2a9a1ba2a1a,DdRaLLeLbUaDRUXb",
+      moves:
+        '[{"kind":"pencilAdd","marks":[{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":4}]},{"kind":"pencilStrike","marks":[{"x":1,"y":1,"n":4}]},{"kind":"place","x":1,"y":1,"dir":8},{"kind":"pencilAdd","marks":[{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":2}]},{"kind":"pencilAdd","marks":[{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":4}]},{"kind":"place","x":4,"y":4,"dir":16},{"kind":"pencilAdd","marks":[{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":3}]}]',
+    },
+    /** Held on 1181 of 2499 positions walked. */
+    opposite: {
+      id: "5x5dt:2c1a9a1b7bca,dDaDcXaLaUURRg",
+      moves:
+        '[{"kind":"place","x":0,"y":4,"dir":32},{"kind":"pencilAdd","marks":[{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":3}]},{"kind":"pencilStrike","marks":[{"x":4,"y":1,"n":2}]},{"kind":"place","x":4,"y":1,"dir":16},{"kind":"pencilAdd","marks":[{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2}]},{"kind":"pencilAdd","marks":[{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3}]},{"kind":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":4}]},{"kind":"place","x":1,"y":4,"dir":4},{"kind":"place","x":2,"y":1,"dir":4},{"kind":"pencilAdd","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":4}]},{"kind":"pencilStrike","marks":[{"x":1,"y":2,"n":2}]},{"kind":"place","x":1,"y":2,"dir":16},{"kind":"pencilAdd","marks":[{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4}]}]',
+    },
+    /** Held on 0 of 2499 positions walked: the rung fires on about one board
+     * in sixty. Pinned by hand on the board above that records a pair. */
+    pair: { id: `6x6dt:${PAIR_DESC}`, moves: MARK_ALL },
   },
 });
 
@@ -371,14 +431,13 @@ describe("rome hint render", () => {
   it("rings the square, hatches its area, and crosses the marks it rules out", () => {
     // A walk down one plan on a fixed board, not a pin: the sentence follows a
     // placement inside a plan and opened none of 1823 hints asked afresh.
-    const pred = (e: string): boolean => /^This area now has/.test(e);
     const { recording, hint } = renderScenario({
       game: romeGame,
       id: "6x6dn:3a3aa1a8aab1b1a1c1a2da5a,RaLcRhLUUaDRXaLUaDaLDaUd",
       defaultBackground: DEFAULT_BACKGROUND,
       moves: MARK_ALL,
       showHint: true,
-      hintUntil: (s) => pred(s.explanation),
+      hintUntil: (s) => s.rung === "dup",
     });
     expect(hint?.explanation).toMatch(/^This area now has/);
     // The marks it rules out keep their own pencil color and take a
@@ -403,7 +462,7 @@ describe("rome hint render", () => {
    * claim the player has to be able to walk.
    */
   it("numbers the arrow chain a loop deduction walks", () => {
-    const { id, moves, step } = pinned("loop");
+    const { id, moves, step } = pinned("opensOnLoop");
     const { recording, hint } = renderScenario({
       game: romeGame,
       id,

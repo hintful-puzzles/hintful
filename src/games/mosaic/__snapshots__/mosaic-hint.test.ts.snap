@@ -9635,3 +9635,10 @@ exports[`Mosaic's hint > a step that makes squares white is drawn and said 1`] =
   },
 ]
 `;
+
+exports[`mosaic: pinned hint positions > says, at each pin 1`] = `
+{
+  "met": "This 0 allows no black squares, so these squares must be white.",
+  "needsAll": "This 4 needs all 4 of its squares black, so these squares must be black.",
+}
+`;

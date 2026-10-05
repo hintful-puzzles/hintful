@@ -44,7 +44,13 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { type SlantHint, slantHint, slantHintKeepTrack } from "./hint.ts";
+import {
+  SLANT_RUNGS,
+  type SlantHint,
+  type SlantRung,
+  slantHint,
+  slantHintKeepTrack,
+} from "./hint.ts";
 import {
   border,
   colors,
@@ -294,7 +300,8 @@ export const slantGame: Game<
   SlantUi,
   SlantDrawState,
   SlantMistake,
-  SlantHint
+  SlantHint,
+  SlantRung
 > = {
   id: "slant",
 
@@ -326,6 +333,7 @@ export const slantGame: Game<
         "what the step reasons from: the clues it reads, drawn in the hint color; the diagonals already around them, the chain a loop would close or the pairs along a line of 2s; the marks it relies on; and, doubled, a square already drawn that a mark ties the ringed one to.",
     },
   },
+  hintRungs: SLANT_RUNGS,
   hintKeepTrack: slantHintKeepTrack,
   hintGesture: (s, ui, ds, m): PointerAction[] => {
     if (m.type === "set") {

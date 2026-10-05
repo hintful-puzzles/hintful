@@ -5575,3 +5575,22 @@ exports[`rendering the marks (tier 2.5) > rings the barrel and its square, and s
   },
 ]
 `;
+
+exports[`sokoban: pinned hint positions > says, at each pin 1`] = `
+{
+  "alsoThese": "This barrel can still finish along the arrows, but not every way. One of them: push it up.",
+  "clearsWay": "This barrel keeps the outlined barrel from reaching a target. Push it left: that opens a way.",
+  "fillFirst": "A barrel on the outlined target would wall off the ringed one. Fill that one first: push this barrel left.",
+  "freesYou": "Barrels box you in. Push this barrel up: that lets you out.",
+  "onTarget": "Push this barrel left: that puts it on a target.",
+  "only": "No other push of this barrel can still finish, so push it up.",
+  "onlyThese": "This barrel can still finish only along the arrows. One of them: push it right.",
+  "plain": "Push this barrel down.",
+  "run": "Three pushes put this barrel on a target. First, push it left.",
+  "trap": "This barrel's striped push would jam it so it can never move. One way to avoid that: push it left.",
+  "trapCorner": "This barrel's striped push would wedge it in a corner it can never leave. One way to avoid that: push it down.",
+  "trapDead": "This barrel's striped push would leave it where no push can bring it to a target. One way to avoid that: push it left.",
+  "trapFrozen": "This barrel's striped push would jam it so it can never move. One way to avoid that: push it left.",
+  "trapVictim": "This barrel's striped push would jam the outlined barrel so it can never move. One way to avoid that: push it right.",
+}
+`;

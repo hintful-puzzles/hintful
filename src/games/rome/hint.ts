@@ -43,7 +43,12 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { type DupReason, runCandidatePlan } from "../../engine/candidate-plan.ts";
+import {
+  CANDIDATE_RUNGS,
+  type DupReason,
+  type PlanRung,
+  runCandidatePlan,
+} from "../../engine/candidate-plan.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Premise } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
@@ -112,6 +117,21 @@ type RomeHintReason =
   | RomeReason
   | { kind: "regionsFull" }
   | { kind: "hiddenSingle"; n: number; region: readonly number[] };
+
+/** Every rung a Rome step can be: the walk's own, and the kinds of
+ * {@link RomeHintReason}. */
+export const ROME_RUNGS = [
+  ...CANDIDATE_RUNGS,
+  "single",
+  "regionsFull",
+  "hiddenSingle",
+  "loop",
+  "onlyHome",
+  "reach",
+  "opposite",
+  "pair",
+] as const;
+export type RomeRung = (typeof ROME_RUNGS)[number];
 
 const cellsOf = (w: number, cells: readonly number[]): Point[] =>
   cells.map((i) => ({ x: i % w, y: (i / w) | 0 }));
@@ -220,9 +240,9 @@ function boardOf(state: RomeState, grid: Uint8Array): RomeBoard {
 export function buildSteps(
   state: RomeState,
   { autoClean, reading }: CandidatePlanPrefs,
-): HintStep<RomeMove, RomeHint>[] {
+): HintStep<RomeMove, RomeHint, RomeRung>[] {
   const { w, h } = state;
-  const steps: HintStep<RomeMove, RomeHint>[] = [];
+  const steps: HintStep<RomeMove, RomeHint, PlanRung<RomeHintReason>>[] = [];
   const grid = placedValues(state);
   const pencil = Int32Array.from(state.pencil);
   const regionsOf = romeRegions(state);
@@ -277,7 +297,7 @@ export function buildSteps(
  * Rome's move dialect). */
 export function hintKeepTrack(
   m: RomeMove,
-  step: HintStep<RomeMove, RomeHint>,
+  step: HintStep<RomeMove, RomeHint, RomeRung>,
   state: RomeState,
 ): HintTrackVerdict {
   return keepCandidateHintTrack(m, step, state.pencil, state.w, romeCandidateMoves);
@@ -285,9 +305,9 @@ export function hintKeepTrack(
 
 /** Re-validate a stored step against the current board before display. */
 export function refreshHintStep(
-  step: HintStep<RomeMove, RomeHint>,
+  step: HintStep<RomeMove, RomeHint, RomeRung>,
   state: RomeState,
-): HintStep<RomeMove, RomeHint> | null {
+): HintStep<RomeMove, RomeHint, RomeRung> | null {
   return refreshCandidateHintStep(
     step,
     placedValues(state),

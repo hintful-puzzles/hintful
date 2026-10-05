@@ -2574,3 +2574,29 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   },
 ]
 `;
+
+exports[`boats: pinned hint positions > says, at each pin 1`] = `
+{
+  "allWaterPlaced": "Every square of water the puzzle has room for is already marked, so every square still free must hold a boat segment.",
+  "centerCount": "This row has no room for a boat running across through this middle segment, so the square to its right must be water.",
+  "centerForced": "This middle segment has water beside it, so its boat must run up and down, through the squares above and below, with the water around it.",
+  "givenClue": "This segment is a boat's top end, so the square above it must be water, and its boat must continue below it, with the water around it.",
+  "growTooLong": "Filling this square joins the outlined segments into a boat of 4; the largest still missing is 3, so it must be water.",
+  "isolated": "Every 1-boat is already placed, and water or the board's edge surrounds this square, so it must be water.",
+  "lineForced": "This row still needs 3 more boat squares and has only 3 free squares left, so each must hold a boat segment, with the water around it.",
+  "lineSatisfied": "This column's number is 0, so every square in it must be water.",
+  "lineSatisfiedOfSeveral": "This column's number is 0, so every square in it must be water.",
+  "mustExtend": "Every 1-boat is placed, and water or the edge closes three sides of this segment, so its boat must use the fourth, with the water around it.",
+  "neverTouch": "Boats never touch, not even at a corner, so the squares diagonally beside this segment must be water.",
+  "onlyRunsLeft": "Only one run can still hold the 4-boat, so it must go there: this square is covered wherever it sits.",
+  "refuted": "If this square were water, it would make a boat the fleet has no room for (outlined), so it must hold a boat segment.",
+  "runTooShort": "Filling this run would make a boat of 2, but every 2-boat is already placed, so the free square must be water.",
+  "sharedDiagonal": "This column can take only 1 more water square, so one of these must be a boat segment: either way, the squares either side of the middle one must be water.",
+}
+`;
+
+exports[`boats: pinned hint positions > says, at each pin 2`] = `
+{
+  "evidence": "This segment is a boat's top end, so the square above it must be water, and its boat must continue below it, with the water around it.",
+}
+`;

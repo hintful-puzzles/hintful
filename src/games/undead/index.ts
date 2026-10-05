@@ -406,6 +406,11 @@ function pathCells(common: UndeadCommon, p: number): Point[] {
   }));
 }
 
+/** Every rung an Undead step can be: the opening fill of notes, and the kinds
+ * of {@link UndeadReason}. A sightline's legs share its rung. */
+const UNDEAD_RUNGS = ["populate", "sightline", "total", "onlyCells", "single"] as const;
+type UndeadRung = (typeof UNDEAD_RUNGS)[number];
+
 /** Narrate *why* a firing is forced. `bits` is the struck candidate mask (an
  * elimination) or the single placed monster (a placement); `continues` gets a
  * terser continuation-leg line. The words are [`hint-text.ts`](./hint-text.ts)'s. */
@@ -444,9 +449,9 @@ function markedOf(hl: UndeadHint): Marked {
 
 /** A step, its words narrowed to the highlights a shrunk strike keeps. */
 function narrowedTo(
-  step: HintStep<UndeadMove, UndeadHint>,
+  step: HintStep<UndeadMove, UndeadHint, UndeadRung>,
   hl: UndeadHint,
-): HintStep<UndeadMove, UndeadHint> {
+): HintStep<UndeadMove, UndeadHint, UndeadRung> {
   if (!step.words) return { ...step, highlights: hl };
   const m = markedOf(hl);
   const notes = new Set(m.notes.map((k) => NOTE.key(k)));
@@ -458,13 +463,14 @@ function narrowedTo(
   return { ...step, highlights: hl, words, explanation: words.text };
 }
 
-/** A step with its words and their text. */
+/** A step with its rung, its words and their text. */
 function spoken(
   move: UndeadMove,
+  rung: UndeadRung,
   highlights: UndeadHint,
   words: Sentence,
-): HintStep<UndeadMove, UndeadHint> {
-  return { move, explanation: words.text, words, highlights };
+): HintStep<UndeadMove, UndeadHint, UndeadRung> {
+  return { move, rung, explanation: words.text, words, highlights };
 }
 
 /** The evidence area to shade: a sightline shades its whole bounce path; the
@@ -525,7 +531,7 @@ function nextFiring(
  * cell** into a `continuesPrevious` journey (the shaded sightline stays
  * constant, each leg names one cell). */
 function emitFiring(
-  steps: HintStep<UndeadMove, UndeadHint>[],
+  steps: HintStep<UndeadMove, UndeadHint, UndeadRung>[],
   firing: { ops: HintOp[]; reason: UndeadReason },
   xyOf: Point[],
   common: UndeadCommon,
@@ -557,6 +563,7 @@ function emitFiring(
             type: "pencilStrike",
             marks: cellOps.map((op) => ({ cell, monster: op.monster })),
           },
+          reason.kind,
           highlights,
           narrate(common, reason, bits, leg > 0, highlights),
         ),
@@ -579,6 +586,7 @@ function emitFiring(
         type: "pencilStrike",
         marks: ops.map((op) => ({ cell: op.cell, monster: op.monster })),
       },
+      reason.kind,
       highlights,
       narrate(common, reason, ops[0].monster, false, highlights),
     ),
@@ -593,10 +601,12 @@ function emitFiring(
  * notes; the notes decide which already-valid elimination to surface and what
  * is done. There is no solution walk: where the deductions run out, the plan
  * ends. */
-function buildSteps(state: UndeadState): HintStep<UndeadMove, UndeadHint>[] {
+function buildSteps(
+  state: UndeadState,
+): HintStep<UndeadMove, UndeadHint, UndeadRung>[] {
   const common = state.common;
   const xyOf = monsterCellXY(common);
-  const steps: HintStep<UndeadMove, UndeadHint>[] = [];
+  const steps: HintStep<UndeadMove, UndeadHint, UndeadRung>[] = [];
   const wGuess = state.guess.slice();
   const wPen = state.pencil.slice();
   let ops = recordUndeadDeductions(common, wGuess);
@@ -611,7 +621,12 @@ function buildSteps(state: UndeadState): HintStep<UndeadMove, UndeadHint>[] {
       if (wGuess[i] === MON_NONE && wPen[i] === 0) wPen[i] = MON_NONE;
     }
     steps.push(
-      spoken({ type: "markAll" }, { area: [], targets: [], marks: [] }, say.populate),
+      spoken(
+        { type: "markAll" },
+        "populate",
+        { area: [], targets: [], marks: [] },
+        say.populate,
+      ),
     );
     populated = true;
   };
@@ -625,6 +640,7 @@ function buildSteps(state: UndeadState): HintStep<UndeadMove, UndeadHint>[] {
     steps.push(
       spoken(
         { type: "set", cell, monster },
+        reason.kind,
         highlights,
         narrate(common, reason, monster, false, highlights),
       ),
@@ -670,7 +686,7 @@ function hint(
   state: UndeadState,
   _aux?: string,
   _ui?: UndeadUi,
-): HintResult<UndeadMove, UndeadHint> {
+): HintResult<UndeadMove, UndeadHint, UndeadRung> {
   // Undead has no trivial (non-teachable) elimination to fold away, so it takes
   // no auto-pencil pref and ignores `ui`.
   const steps = buildSteps(state);
@@ -701,7 +717,7 @@ function strikeHighlights(
  * state). */
 function hintKeepTrack(
   m: UndeadMove,
-  step: HintStep<UndeadMove, UndeadHint>,
+  step: HintStep<UndeadMove, UndeadHint, UndeadRung>,
   state: UndeadState,
 ): HintTrackVerdict {
   const sm = step.move;
@@ -741,9 +757,9 @@ function hintKeepTrack(
 /** Re-validate a stored step against the current board before (re-)display, so
  * a stale step is never shown. */
 function refreshHintStep(
-  step: HintStep<UndeadMove, UndeadHint>,
+  step: HintStep<UndeadMove, UndeadHint, UndeadRung>,
   state: UndeadState,
-): HintStep<UndeadMove, UndeadHint> | null {
+): HintStep<UndeadMove, UndeadHint, UndeadRung> | null {
   const m = step.move;
   if (m.type === "pencilStrike") {
     const live = m.marks.filter(
@@ -839,7 +855,8 @@ export const undeadGame: Game<
   UndeadUi,
   UndeadDrawState,
   UndeadMistake,
-  UndeadHint
+  UndeadHint,
+  UndeadRung
 > = {
   id: "undead",
   canMarkAll: true,
@@ -864,6 +881,7 @@ export const undeadGame: Game<
   solve,
   difficulty,
   hint,
+  hintRungs: UNDEAD_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides, in the hint color: the square to fill, or the square whose pencil marks to cross out, with a line through each pencil mark to cross out. To cross one out yourself, right-click the square and type that monster's letter.",

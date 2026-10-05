@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`lightup: pinned hint positions > says, at each pin 1`] = `
+{
+  "clueSatisfied": "The outlined clue is 0, so no bulb may sit beside it: its ringed free neighbors can't hold a bulb.",
+  "clueSaturated": "The outlined clue still needs 3 more bulbs and has exactly 3 free neighbors left, so each ringed one must be a bulb.",
+  "discountClue": "The outlined clue needs a bulb in one of the other outlined squares, and a bulb here would leave each of them lit or beside a full clue, so this square can't hold a bulb.",
+  "discountUnlit": "One of the other outlined squares must light the outlined dark square, and a bulb here would leave each of them lit or beside a full clue, so this square can't hold a bulb.",
+  "forcedLight": "Every other square that could light this dark square is ruled out or already lit, so it must hold a bulb.",
+  "multiCell": "The outlined clue still needs 3 more bulbs and has exactly 3 free neighbors left, so each ringed one must be a bulb.",
+}
+`;

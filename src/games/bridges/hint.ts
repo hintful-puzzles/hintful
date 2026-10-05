@@ -186,6 +186,18 @@ function highlightsOf(
 
 // --- the plan -------------------------------------------------------------
 
+/** The hint's rungs: the kinds of the solver's premises. */
+export const BRIDGES_RUNGS = [
+  "exactSpace",
+  "everyNeighbor",
+  "wouldCloseLoop",
+  "needsThisWay",
+  "wouldSealGroup",
+  "wouldStarve",
+  "mustReachOut",
+] as const;
+export type BridgesRung = (typeof BRIDGES_RUNGS)[number];
+
 /**
  * Deduce the plan from the player's own bridges.
  *
@@ -212,7 +224,7 @@ function highlightsOf(
 export function bridgesHint(
   state: BridgesState,
 ):
-  | { ok: true; steps: HintStep<BridgesMove, BridgesHighlights>[] }
+  | { ok: true; steps: HintStep<BridgesMove, BridgesHighlights, BridgesRung>[] }
   | { ok: false; error: HintRefusal } {
   const work = state.workingCopy();
   const pass = bridgesRecordingPass(
@@ -249,6 +261,7 @@ export function bridgesHint(
       const words = narrate(work, reason, highlights);
       return {
         move: { ops: firing.ops },
+        rung: reason.kind,
         explanation: words.text,
         words,
         highlights,

@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { DESC_NOT_DEDUCIBLE, loadVerdict } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
@@ -14,12 +15,12 @@ import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { DEAD_BOARD, type MinesHint } from "./hint.ts";
+import { DEAD_BOARD, type MinesHint, type MinesRung } from "./hint.ts";
 import { minesGame } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import { FLAG, type MinesMove, type MinesState } from "./state.ts";
 
-type Step = HintStep<MinesMove, MinesHint>;
+type Step = HintStep<MinesMove, MinesHint, MinesRung>;
 
 const params = (w: number, h: number, n: number) => ({
   ...minesGame.defaultParams(),
@@ -74,7 +75,15 @@ const pinned = describeHintPins({
       const end = minesGame.executeMove(state, step.move);
       return minesGame.status(end) === "solved" && flagged(end) > flagged(state);
     },
-    twoNumbers: / allows at most \d+ in the striped squares/,
+    // Two numbers that share squares: both outlined, the squares striped.
+    twoNumbers: (step) =>
+      step.rung === "pair" &&
+      stepMarks(step).of("outline", CELL).length === 2 &&
+      stepMarks(step).of("stripes", CELL).length > 0,
+  },
+  unreached: {
+    restart:
+      'spoken only on a laid-out board with no square open, which is a board undone back to its start: a pin is a desc and the moves played on it, and a laid-out desc opens its first square. "opens the crossed square after an undo back to the start" builds one',
   },
   pins: {
     /** Held on 351 of 632 positions walked. */
@@ -94,10 +103,36 @@ const pinned = describeHintPins({
       moves:
         '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]},{"type":"ops","ops":[{"op":"O","x":2,"y":0},{"op":"O","x":3,"y":0},{"op":"O","x":4,"y":0}]},{"type":"ops","ops":[{"op":"O","x":1,"y":0},{"op":"O","x":1,"y":1}]},{"type":"ops","ops":[{"op":"F","x":5,"y":0}]},{"type":"ops","ops":[{"op":"F","x":1,"y":6}]},{"type":"ops","ops":[{"op":"O","x":0,"y":4},{"op":"O","x":0,"y":5},{"op":"O","x":0,"y":6}]},{"type":"ops","ops":[{"op":"F","x":0,"y":3}]},{"type":"ops","ops":[{"op":"O","x":0,"y":1},{"op":"O","x":0,"y":2}]},{"type":"ops","ops":[{"op":"F","x":0,"y":0}]},{"type":"ops","ops":[{"op":"F","x":6,"y":4}]},{"type":"ops","ops":[{"op":"O","x":6,"y":2},{"op":"O","x":6,"y":3}]},{"type":"ops","ops":[{"op":"F","x":6,"y":1}]},{"type":"ops","ops":[{"op":"O","x":6,"y":0}]},{"type":"ops","ops":[{"op":"O","x":7,"y":0},{"op":"O","x":7,"y":1}]},{"type":"ops","ops":[{"op":"O","x":8,"y":0}]},{"type":"ops","ops":[{"op":"F","x":8,"y":6}]},{"type":"ops","ops":[{"op":"O","x":0,"y":7}]}]',
     },
-    /** Held on 15 of 632 positions walked. */
+    /** Held on 38 of 632 positions walked. */
     twoNumbers: {
       id: "9x9n35:r35,u,a0dba5e4ea00f0ab2d03b97355b4d34d6029eea9369f6d2f2b9a27d1bb251d2f93ab9d8bef2299dfd7cb11725e11f8be919d1d1b2af9c8422ce571b402",
       moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+    },
+    /** A board not laid out yet, which the scan's opening click is past: kept
+     * by hand, with no move played. */
+    firstClick:
+      "9x9n10:r10,u,33c21e9a927d75aecf9e760f2d2c50656c6416164cb8fb65f1693562b902dedd1a9b0a5147240437f3fd8e3dfcb7f38d77ed22bf940754d980af7b1602",
+    /** Held on 628 of 632 positions walked. */
+    satisfied: {
+      id: "9x9n10:r10,u,b5985f51ca0b0d130793b461c08d151bc905c2a2c3557702ac6e69f4a8be9a3fa9e10ca1eb20535440bf0cdd18db91fff447b724ed9a7c0ddbbf56ee02",
+      moves:
+        '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]}]',
+    },
+    /** Held on 582 of 632 positions walked. */
+    full: {
+      id: "9x9n10:r10,u,b5985f51ca0b0d130793b461c08d151bc905c2a2c3557702ac6e69f4a8be9a3fa9e10ca1eb20535440bf0cdd18db91fff447b724ed9a7c0ddbbf56ee02",
+      moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+    },
+    /** Held on 201 of 632 positions walked. */
+    pair: {
+      id: "9x9n35:r35,u,a0dba5e4ea00f0ab2d03b97355b4d34d6029eea9369f6d2f2b9a27d1bb251d2f93ab9d8bef2299dfd7cb11725e11f8be919d1d1b2af9c8422ce571b402",
+      moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+    },
+    /** Held on 122 of 632 positions walked. */
+    count: {
+      id: "9x9n10:r10,u,8c06a4442cfba80767c91c69ae55f206aa83611323495683336b351958dfd19388a2a63b6821a917dc303edce6f7b78d4289a412dcb2fa0ff747e70e02",
+      moves:
+        '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":4,"y":1}]},{"type":"ops","ops":[{"op":"O","x":4,"y":0}]},{"type":"ops","ops":[{"op":"O","x":3,"y":0},{"op":"O","x":3,"y":1}]},{"type":"ops","ops":[{"op":"F","x":3,"y":6}]},{"type":"ops","ops":[{"op":"F","x":7,"y":6}]},{"type":"ops","ops":[{"op":"O","x":8,"y":6}]},{"type":"ops","ops":[{"op":"O","x":2,"y":6}]},{"type":"ops","ops":[{"op":"F","x":1,"y":6},{"op":"F","x":1,"y":7},{"op":"F","x":1,"y":8}]},{"type":"ops","ops":[{"op":"O","x":1,"y":5},{"op":"O","x":2,"y":5}]},{"type":"ops","ops":[{"op":"F","x":2,"y":4}]},{"type":"ops","ops":[{"op":"O","x":2,"y":2},{"op":"O","x":2,"y":3}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]},{"type":"ops","ops":[{"op":"O","x":2,"y":0}]},{"type":"ops","ops":[{"op":"O","x":1,"y":1},{"op":"O","x":1,"y":2},{"op":"O","x":1,"y":3}]},{"type":"ops","ops":[{"op":"F","x":1,"y":0}]},{"type":"ops","ops":[{"op":"O","x":0,"y":0},{"op":"O","x":0,"y":1},{"op":"O","x":0,"y":2}]},{"type":"ops","ops":[{"op":"O","x":0,"y":6}]},{"type":"ops","ops":[{"op":"F","x":0,"y":7}]}]',
     },
   },
 });
@@ -147,6 +182,19 @@ describe("Mines hint: the start of a board", () => {
     expect(steps[0].explanation).toMatch(/drawn with a cross/);
   });
 
+  it("still knows the crossed square after that board is saved and loaded", () => {
+    // A save rebuilds the board from its private desc, which holds the layout
+    // and not the first click; replaying the click is what puts it back.
+    const played = minesGame.executeMove(fresh(9, 9, 10, "restart-saved"), open(4, 4));
+    const priv = minesGame.supersededDesc?.(played)?.privDesc;
+    if (!priv) throw new Error("expected a private desc");
+    const loaded = minesGame.newState(params(9, 9, 10), priv);
+    minesGame.executeMove(loaded, open(4, 4));
+    const steps = plan(loaded);
+    expect(steps[0].rung).toBe("restart");
+    expect(steps[0].move).toEqual(open(4, 4));
+  });
+
   it("refuses on a board whose last move opened a mine, telling the player to undo", () => {
     const s1 = minesGame.executeMove(fresh(9, 9, 10, "dead"), open(4, 4));
     const mines = s1.layout.mines as Int8Array;
@@ -173,11 +221,7 @@ describe("Mines hint: the deductions", () => {
     let checked = 0;
     for (const { steps } of walked)
       for (const [s, step] of steps) {
-        const t = step.explanation;
-        if (/already touches|has no mine around it/.test(t)) seen.satisfied++;
-        if (/unopened squares? (?:left )?around it, so/.test(t)) seen.full++;
-        if (/allows? at most|can be among|both need/.test(t)) seen.pair++;
-        if (/mines? (?:is|are) left|mines are found/.test(t)) seen.count++;
+        if (step.rung in seen) seen[step.rung as keyof typeof seen]++;
         expect(
           bindingDefects(minesGame as AnyGame, s, minesGame.newUi(s), step),
         ).toEqual([]);

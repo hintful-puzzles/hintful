@@ -361,10 +361,20 @@ function markedOf(
   }
 }
 
-function hint(state: RangeState): HintResult<RangeMove, RangeHint> {
+/** The solver's rules, by the `kind` of the reason each records. */
+export const RANGE_RUNGS = [
+  "adjacency",
+  "satisfied",
+  "overrun",
+  "reach",
+  "connect",
+] as const satisfies readonly HintReason["kind"][];
+export type RangeRung = (typeof RANGE_RUNGS)[number];
+
+function hint(state: RangeState): HintResult<RangeMove, RangeHint, RangeRung> {
   const plan = deduceHintPlan(state.grid, state.w, state.h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const steps: HintStep<RangeMove, RangeHint>[] = plan.map((m) => {
+  const steps: HintStep<RangeMove, RangeHint, RangeRung>[] = plan.map((m) => {
     const value = gridValueToCell(m.value);
     const target = { r: m.r, c: m.c, value };
     const words = narrate(
@@ -373,6 +383,7 @@ function hint(state: RangeState): HintResult<RangeMove, RangeHint> {
     );
     return {
       move: { sets: [{ r: m.r, c: m.c, value }] },
+      rung: m.reason.kind,
       explanation: words.text,
       words,
       highlights: { target },
@@ -401,7 +412,8 @@ export const rangeGame: Game<
   RangeUi,
   RangeDrawState,
   RangeMistake,
-  RangeHint
+  RangeHint,
+  RangeRung
 > = {
   id: "range",
 
@@ -424,6 +436,7 @@ export const rangeGame: Game<
 
   solve,
   hint,
+  hintRungs: RANGE_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step decides.",

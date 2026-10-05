@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`palisade hint > palisade: pinned hint positions > says, at each pin 1`] = `
+{
+  "cluesVersusRegionSize": "Two 3s each keep just one side open, and it has to be the one they share, so their region would be exactly 2 cells. Regions here hold 5, so the edge between them must be a wall.",
+  "equivalentEdges": "Both edges border the same region, so they share a fate: both walls or both open. Walling both would exceed clue 1, so neither can be a wall.",
+  "journey": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
+  "noDanglingEdges": "A wall can't stop in mid-air at this corner, so this edge must be a wall.",
+  "noWall": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
+  "notTooBig": "Joining these two regions would make 6 cells, but a region here holds 5, so this edge must be a wall.",
+  "notTooSmall": "This region has 3 of its 5 cells and just one way left to grow, so this edge can't be a wall.",
+  "numberExhausted": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
+}
+`;

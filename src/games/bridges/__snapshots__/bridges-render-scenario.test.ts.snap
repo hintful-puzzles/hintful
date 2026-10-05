@@ -10229,3 +10229,11 @@ exports[`Bridges render scenarios > opener frame: island clues drawn, no bridges
   },
 ]
 `;
+
+exports[`bridges: pinned hint positions > says, at each pin 1`] = `
+{
+  "citesIslands": "This 3 needs more bridges than either neighbor could carry alone, so both must take at least one.",
+  "limitsSpan": "Two bridges here would leave the outlined island unable to reach its own count, so at most one can run this way.",
+  "raisesSpan": "This 3 still needs 2 more bridges and has room for exactly 2, so every one must be drawn.",
+}
+`;

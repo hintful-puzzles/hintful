@@ -1876,3 +1876,16 @@ exports[`crossing hint — the frame > matches its recorded frame 1`] = `
   },
 ]
 `;
+
+exports[`crossing: pinned hint positions > says, at each pin 1`] = `
+{
+  "becauseDigits": "Only one 5-digit number left matches the digits already in this run, so it must be 92612.",
+  "becauseLength": "This run is 3 squares long, and only one number in the list is 3 digits, so it must be 235.",
+  "becauseUsed": "Every other 2-digit number is already on the board, so none can go in this run: it must be 76.",
+  "crossRuns": "The across run's numbers leave this square only 2 or 7; those of the down run rule out all but 2, so it must be 2.",
+  "noteDigits": "Every number that still fits this across run puts 1, 2, 3, 5, 6, 7, 8 or 9 in this square, so note them.",
+  "noteStrike": "No number that still fits this across run puts a 9 in this square, so rule it out.",
+  "onlyNumber": "This run is 3 squares long, and only one number in the list is 3 digits, so it must be 235.",
+  "sharedDigit": "Every number that still fits this across run has a 3 in this square, so it must be 3.",
+}
+`;

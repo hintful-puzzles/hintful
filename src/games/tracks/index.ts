@@ -44,7 +44,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { tracksHint, tracksKeepTrack } from "./hint.ts";
+import { TRACKS_RUNGS, type TracksRung, tracksHint, tracksKeepTrack } from "./hint.ts";
 import {
   copyAndApplyDrag,
   executeMove,
@@ -412,7 +412,9 @@ export const tracksGame: Game<
   TracksMove,
   TracksUi,
   TracksDrawState,
-  Point
+  Point,
+  unknown,
+  TracksRung
 > = {
   id: "tracks",
 
@@ -446,6 +448,7 @@ export const tracksGame: Game<
         "the row or column the sentence calls “this row” or “this column”, striped through its clue, or the closed block a sentence about crossings is about.",
     },
   },
+  hintRungs: TRACKS_RUNGS,
   hintKeepTrack: tracksKeepTrack,
   // One click per op, on its square or edge of the half-grid.
   hintGesture(state, ui, ds, m, step) {

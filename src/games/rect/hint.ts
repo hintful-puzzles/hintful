@@ -54,6 +54,10 @@ export type RectFiring =
   | { kind: "starve"; clue: number; rect: Rect; starved: number[]; stranded: number[] }
   | { kind: "line"; edge: RectEdge; across: Crossing[] };
 
+/** The rungs a step can be: the firings' kinds, cheapest first. */
+export const RECT_RUNGS = ["fit", "reach", "overlap", "starve", "line"] as const;
+export type RectRung = (typeof RECT_RUNGS)[number];
+
 /**
  * A clue with fits across an edge, and why none of them stands: each takes a
  * square (`takes`) that another clue (`owners`) covers wherever it goes, or
@@ -305,17 +309,22 @@ export function moveOf(f: RectFiring): RectMove {
   return { type: "rect", erasing: false, ...f.rect };
 }
 
-function stepOf(s: RectState, f: RectFiring): HintStep<RectMove, RectHint> {
-  return narratedStep({ move: moveOf(f), words: say.firing(s, f), highlights: null });
+function stepOf(s: RectState, f: RectFiring): HintStep<RectMove, RectHint, RectRung> {
+  return narratedStep({
+    move: moveOf(f),
+    rung: f.kind,
+    words: say.firing(s, f),
+    highlights: null,
+  });
 }
 
 /**
  * The plan from the player's lines to the end, a step per rectangle or line.
  * Stops where the rungs run out.
  */
-export function rectHint(state: RectState): HintResult<RectMove, RectHint> {
+export function rectHint(state: RectState): HintResult<RectMove, RectHint, RectRung> {
   const board = { s: state };
-  const steps: HintStep<RectMove, RectHint>[] = [];
+  const steps: HintStep<RectMove, RectHint, RectRung>[] = [];
   deduceHintPlan({
     board,
     status: (b) => isSolved(b.s),
@@ -364,9 +373,9 @@ export function rectKeepTrack(
 
 /** A stored step whose lines are already on the board is resolved. */
 export function rectRefreshStep(
-  step: HintStep<RectMove, RectHint>,
+  step: HintStep<RectMove, RectHint, RectRung>,
   state: RectState,
-): HintStep<RectMove, RectHint> | null {
+): HintStep<RectMove, RectHint, RectRung> | null {
   const m = step.move;
   switch (m.type) {
     case "rect":

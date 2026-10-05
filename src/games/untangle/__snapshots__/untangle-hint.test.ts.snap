@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`untangle: pinned hint positions > says, at each pin 1`] = `
+{
+  "clear": "Move this point here: it cuts its crossings from 27 to 8, clearing the outlined ones.",
+  "journey": "Moving these 2 points clears every crossing. First, this one goes here: it clears the 4 outlined ones, leaving 1.",
+  "rearrange": "Move this point here: it keeps its crossings at 1, clearing the outlined one, but frees a move that removes 1.",
+}
+`;

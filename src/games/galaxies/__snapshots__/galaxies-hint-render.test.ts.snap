@@ -7152,3 +7152,13 @@ exports[`a displayed hint reaches the canvas > the opening hint frame is stable 
   },
 ]
 `;
+
+exports[`galaxies: pinned hint positions > says, at each pin 1`] = `
+{
+  "aDotsOwnCells": "A galaxy covers the cells its dot sits on, so both these cells must belong to the white dot between them.",
+  "everyMark": "Every way out of this cell leads into the striped galaxy, so it and its partner must belong to the ringed white dot.",
+  "evidence": "Every way out of this cell leads into the striped galaxy, so it and its partner must belong to the ringed white dot.",
+  "oneCellAndItsPartner": "Any other dot mirrors this cell off the board or onto a dot, so it and its partner must belong to the ringed white dot.",
+  "wall": "These two cells go with different dots, so they belong to different galaxies: a wall must run between them.",
+}
+`;

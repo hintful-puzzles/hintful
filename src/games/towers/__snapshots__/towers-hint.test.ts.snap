@@ -10861,3 +10861,32 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
 ]
 `;
+
+exports[`towers: pinned hint positions > says, at each pin 1`] = `
+{
+  "arrangement": "No way for clue 2 to show exactly 2 towers along its line puts height 4 here, so this cell must be 2.",
+  "clean": "Now clear the easy ones: cross out any height already standing in each cell's row or column.",
+  "dup": "The 3 just placed can't repeat in its row and column, so we must cross out the 3 from the other cells there.",
+  "facing": "These facing clues sum to one more than the grid size, so their line's tallest is pinned: height 5 can only sit here.",
+  "forcing": "Cell 1 is 4 or 3, and every numbered cell has just two heights left, so each forces the next. If cell 1 is 4, this cell's row already has it; if 3, cell 6 is driven to 4, in line with this cell. Either way, 4 is ruled out here, so we must cross out the 4.",
+  "fullLine": "Clue 5 sees every tower in this line, so heights must climb 1, 2, … from the clue: height 1 can only sit here.",
+  "hiddenSingle": "Every other cell in this row rules out height 5, so this cell must be 5.",
+  "lineFull": "Clue 2 already sees all but one of its towers deeper in the line, so the cell nearest the clue must be tall enough to keep everything between it and them hidden. Height 1 is too short for that, so pencil in only 2, 3 and 4.",
+  "lowerBound": "Clue 2 sees exactly 2 towers along its line; height 5 so near it would hide too many, so pencil in only 1, 2, 3 and 4.",
+  "note": "Nothing in this cell's row or column rules out a height yet, so pencil in every one.",
+  "populate": "Start by penciling every candidate height into each empty cell, so there is something to cross out.",
+  "regionsFull": "This cell's row and column already hold every other height, so it can only be 5.",
+  "set": "The outlined cells already account for a fixed set of heights that includes 5, so we must cross out the 5.",
+  "single": "Every other height has been ruled out in this cell, so it can only be 4.",
+  "tallestNearest": "Clue 1 sees one tower in its line, so the tallest must stand next to it: height 5 can only sit here.",
+}
+`;
+
+exports[`towers: pinned hint positions > says, at each pin 2`] = `
+{
+  "lowerBound": "Clue 4 sees exactly 4 towers along its line; height 4 so near it would hide too many, so we must cross out the 4.",
+  "multiMarkStrike": "Now clear the easy ones: cross out any height already standing in each cell's row or column.",
+  "placement": "Clue 5 sees every tower in this line, so heights must climb 1, 2, … from the clue: height 1 can only sit here.",
+  "strike": "Now clear the easy ones: cross out any height already standing in each cell's row or column.",
+}
+`;

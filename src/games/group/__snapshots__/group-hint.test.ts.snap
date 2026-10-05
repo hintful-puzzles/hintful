@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`group: pinned hint positions > says, at each pin 1`] = `
+{
+  "associativity": "The grid shows d·b = c, b·c = f and d·(b·c) = e. In any group, (d·b)·c = d·(b·c), so (d·b)·c must also be e.",
+  "clean": "Now clear the easy ones: cross out any element already placed in each cell's row or column.",
+  "dup": "The e just placed can't repeat in its row and column, so we must cross out the e from the other cells there.",
+  "forcing": "Cell 1 is c or b, and every numbered cell has just two elements left, so each forces the next. If cell 1 is c, this cell's row already has it; if b, cell 4 is driven to c, in line with this cell. Either way, c is ruled out here, so we must cross out the c.",
+  "hiddenSingle": "Every other cell in this column rules out b, so this cell must be b.",
+  "identityElim": "The product b·a = d, not b as it would be if a were the identity, so we must cross out a's identity marks.",
+  "identityFill": "The product b·b = b shows b is the identity, so its row and column are just the element labels: this cell must be a.",
+  "liveStrike": "The product b·a = d, not b as it would be if a were the identity, so we must cross out a's identity marks.",
+  "note": "Only a, b, c, e, g and h aren't already placed in this cell's row or column, so pencil them in.",
+  "placement": "The grid shows d·b = c, b·c = f and d·(b·c) = e. In any group, (d·b)·c = d·(b·c), so (d·b)·c must also be e.",
+  "populate": "Start by penciling every candidate element into each empty cell, so there is something to cross out.",
+  "regionsFull": "This cell's row and column already hold every other element, so it can only be e.",
+  "set": "The outlined cells already account for c and f between them, so we must cross out c and f.",
+  "single": "Every other element has been ruled out in this cell, so it can only be c.",
+}
+`;
+
+exports[`group: pinned hint positions > says, at each pin 2`] = `
+{
+  "populate": "Start by penciling every candidate element into each empty cell, so there is something to cross out.",
+}
+`;

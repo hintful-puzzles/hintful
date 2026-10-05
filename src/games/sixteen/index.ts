@@ -354,6 +354,13 @@ function statusbarText(state: SixteenState, _ui: SixteenUi): string {
 
 // --- hint heuristic ----------------------------------------------------
 
+/** What a tile's journey is for: it ends in the tile's solved cell, or it
+ * stages the tile for a later one. Both legs of a journey are the one rung. */
+export const SIXTEEN_RUNGS = ["home", "settingUp"] as const;
+export type SixteenRung = (typeof SIXTEEN_RUNGS)[number];
+
+type Step = HintStep<SixteenMove, SixteenHintHighlights, SixteenRung>;
+
 /**
  * What one **tangle too many** is worth to the hint's measure of a board, over
  * and above the distance its tiles have to travel. See {@link TANGLES_IN_REACH}
@@ -400,7 +407,9 @@ function toSixteenMove(m: SlideMove): SixteenMove {
   };
 }
 
-function hint(state: SixteenState): HintResult<SixteenMove, SixteenHintHighlights> {
+function hint(
+  state: SixteenState,
+): HintResult<SixteenMove, SixteenHintHighlights, SixteenRung> {
   const { w, h, n, tiles } = state;
 
   // Every legal move: a slide of any line by any distance. A slide by any
@@ -552,13 +561,13 @@ function hint(state: SixteenState): HintResult<SixteenMove, SixteenHintHighlight
   // its predecessors produce. A step that the previous step previewed as the
   // continuation of a tile's journey ("then to column 2") is narrated around
   // that same tile, so the player following the journey sees its second leg.
-  const steps: HintStep<SixteenMove, SixteenHintHighlights>[] = [];
+  const steps: Step[] = [];
   let board = tiles;
   for (let k = 0; k < path.length; k++) {
     const prev = steps[k - 1]?.highlights;
     const journey =
       prev && prev.ultimatePos !== null
-        ? { tile: prev.tile, ultimatePos: prev.ultimatePos }
+        ? { tile: prev.tile, ultimatePos: prev.ultimatePos, rung: steps[k - 1].rung }
         : null;
     steps.push(narrateStep(board, w, h, path[k], path[k + 1] ?? null, journey));
     const next = new Int32Array(n);
@@ -585,8 +594,8 @@ function narrateStep(
   h: number,
   move: SlideMove,
   nextMove: SlideMove | null,
-  journey: { tile: number; ultimatePos: number } | null = null,
-): HintStep<SixteenMove, SixteenHintHighlights> {
+  journey: { tile: number; ultimatePos: number; rung: SixteenRung } | null = null,
+): Step {
   // A previewed journey continuation keeps narrating the same tile,
   // provided this move really does carry it to the previewed cell.
   let bestTile = 0;
@@ -649,13 +658,17 @@ function narrateStep(
   // journey's *end* — for a previewed two-leg journey use the ultimate landing
   // cell, so a first leg that merely stages but whose second leg homes the
   // tile reads as a home move.
+  const home = (ultimatePos ?? targetPos) === bestTile - 1;
   const words = say.step({
     tile: bestTile,
     target: targetPos,
     onward: ultimatePos,
     continues: continuesPrevious,
-    home: (ultimatePos ?? targetPos) === bestTile - 1,
+    home,
   });
+  // A continuation leg is its journey's rung, which its first leg said.
+  const rung: SixteenRung =
+    continuesPrevious && journey ? journey.rung : home ? "home" : "settingUp";
 
   // Normalize the returned delta to the in-grid direction of travel
   // (same permutation mod w/h) so the slide animation glides the tile
@@ -667,6 +680,7 @@ function narrateStep(
 
   return {
     move: outMove,
+    rung,
     explanation: words.text,
     words,
     highlights: { tile: bestTile, targetPos, ultimatePos },
@@ -683,7 +697,8 @@ export const sixteenGame: Game<
   SixteenUi,
   SixteenDrawState,
   unknown,
-  SixteenHintHighlights
+  SixteenHintHighlights,
+  SixteenRung
 > = {
   id: "sixteen",
 
@@ -709,6 +724,7 @@ export const sixteenGame: Game<
   solve: () => ({ ok: true, move: { type: "solve" } }),
 
   hint,
+  hintRungs: SIXTEEN_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides: the tile it is moving, filled in the hint's color, with the arrow to click drawn in the same color, and the square the move takes it to, outlined. When the tile is on a journey of two moves, one along a row and one along a column, both squares are marked: the nearer one, where this move lands it, with a dashed outline, and the other with a solid one.",

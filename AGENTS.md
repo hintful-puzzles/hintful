@@ -357,9 +357,12 @@ references or types, or at the very least id's"*). A regex over a sentence the
 code itself wrote is the name-keyed scan above, aimed at our own output: a
 rewording empties it in silence, and nothing can say which cases it never
 matched. Where a check has to know which deduction a hint step is, the step
-should say so in a value; `name-the-rung-a-hint-step-speaks` is the change
-that gives it one. A regex stays right where the wording is the thing under
-test.
+says so in a value: `HintStep.rung`, one of the game's `hintRungs`, which the
+pins, the narration ledger and every `hintUntil` key on
+([`docs/games/hints.md`](docs/games/hints.md) § "Name the rung a step speaks").
+**When a check reads prose to learn a fact, give the producer a field for the
+fact**; that is the fix to copy. A regex stays right where the wording is the
+thing under test.
 
 **And a spec delta is a claim about code that is still moving.** A delta
 written mid-change states the signature the code had *that morning*;
@@ -493,7 +496,7 @@ Explained hints are a core deliberate-divergence product value of this fork, not
 
 **A non-deductive game is not exempt from the bar** — it is exempt only from *deduction*. Untangle has no forced move, so it narrates a measurement it can check instead: what the move does to the point's crossings ([`docs/games/hints.md`](docs/games/hints.md) § "Non-deductive (heuristic) hints"); **Inertia** (the non-deductive exemplar, `add-inertia-hint`, owner-endorsed 2026-07-13) shows the other pole: find the one thing the game can *prove* (there, "this gem can never be reached again") and lead with it, hold a stable subgoal and mark it when the game has no name for it, and narrate each move by the consequence it actually has.
 
-**Every game has a hint, and a game without one is a draft** (owner, 2026-09-28: the project is called Hintful on purpose). The goal is every game hinted by the end of October 2026. A new game ships with its hint. The remaining hintless games are also how the framework work gets assessed — a target contract is tested by writing real hints against it — so the order still matters. **Choose the game that presses hardest on whatever is being built**, rather than alphabetically, because the cheapest hint in the corpus is the worst assessment. So the framework leads, and hintless games are pulled in one at a time, at most one beside each framework change it checks, with the rest kept in reserve (owner, 2026-09-29): an open framework change names its game in a "Hints to pull in" section, and `hintless-games-in-reserve` holds the others. `characterize-the-hint-assessment-corpus`'s `audit.md` shows how to read a game for that, though every game its order picked now has a hint. **A new hint is bound from its first commit**: its sentences are built with `phrase` and references to the marks they name, and the game declares `hintMarks` (`engine/hint-words.ts`; [`docs/games/hints.md`](docs/games/hints.md) § "Bind the words to the marks"). A hint that cannot name a mark it draws, or draws one its words never name, is caught by the binding walk in `hint-quality.test.ts`, and a hinted game without `hintMarks` fails that suite. Enrollment in the cross-game hint guards is derived from the `hint()` declaration itself (`src/engine/testing/hint-games.ts`), so a game acquires every guard the moment it acquires a hint, and none before.
+**Every game has a hint, and a game without one is a draft** (owner, 2026-09-28: the project is called Hintful on purpose). The goal is every game hinted by the end of October 2026. A new game ships with its hint. The remaining hintless games are also how the framework work gets assessed — a target contract is tested by writing real hints against it — so the order still matters. **Choose the game that presses hardest on whatever is being built**, rather than alphabetically, because the cheapest hint in the corpus is the worst assessment. So the framework leads, and hintless games are pulled in one at a time, at most one beside each framework change it checks, with the rest kept in reserve (owner, 2026-09-29): an open framework change names its game in a "Hints to pull in" section, and `hintless-games-in-reserve` holds the others. `characterize-the-hint-assessment-corpus`'s `audit.md` shows how to read a game for that, though every game its order picked now has a hint. **A new hint is bound from its first commit**: its sentences are built with `phrase` and references to the marks they name, and the game declares `hintMarks` (`engine/hint-words.ts`; [`docs/games/hints.md`](docs/games/hints.md) § "Bind the words to the marks"). A hint that cannot name a mark it draws, or draws one its words never name, is caught by the binding walk in `hint-quality.test.ts`, and a hinted game without `hintMarks` fails that suite. **And every step names its rung**: the game lists its deductions in `hintRungs`, each step carries one in `rung`, and a rung with no pinned board does not compile ([`docs/games/hints.md`](docs/games/hints.md) § "Name the rung a step speaks"). Enrollment in the cross-game hint guards is derived from the `hint()` declaration itself (`src/engine/testing/hint-games.ts`), so a game acquires every guard the moment it acquires a hint, and none before.
 
 Aspirational next step (owner-flagged 2026-06-15): lift Fifteen/Sixteen hints from "Slide tile 10 into the space" to a Palisade-grade *why* — does the move place a tile in its final home, or is it a helper/setup move toward sorting another tile? Inertia's stable-subgoal narration is the shape this wants.
 
@@ -610,6 +613,12 @@ So the question to ask of any inherited invariant is not "is it true?" but **"wh
   the same standing). `npm run probe -- --verify` is a ~0.2 s anchor check and is
   what to run after touching any of the probed modules; a full run is ~15 min.
   See [`docs/test-strength.md`](docs/test-strength.md) §2a.
+- `npm run hint-scan -- <test file>` — finds a board for every rung of a
+  game's hint and **writes the pins into that test file**, each under the count
+  it rests on. It is how a new rung gets its pin and how a stale pin is
+  replaced; a pin that still fires is left alone. The one tool here that edits
+  source, and it edits only the file it is given. See
+  [`docs/games/testing.md`](docs/games/testing.md) § "Pinning a hint's positions".
 
 Nothing under `src/assets/` is generated — it holds only committed files. `src/assets/icons/` is **committed** as a frozen snapshot of per-puzzle thumbnails; adding a new puzzle requires producing two PNGs by hand (see `openspec/specs/puzzle-icons/spec.md`). `src/asset-integrity.test.ts` asserts every catalog `puzzleId` has both its PNGs (64×64 and 128×128), that every `new URL(<path>, import.meta.url)` reference in `src/` resolves, and that no `.ts` file contains a raw C0 control character — a NUL makes git call the file binary and stop diffing it, which tsc, biome, vitest and `vite build` all pass silently. (`build/` is gone too — `prune-dead-toolchain-leftovers`; `dist/` is the only generated directory anywhere in the tree.)
 

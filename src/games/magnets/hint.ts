@@ -719,11 +719,29 @@ function legsOf(f: MagnetsFiring): Leg[] {
   }));
 }
 
+/** The premises a step can speak, by the `kind` of the solver's reason.
+ * `magnetsFill` is not one: it sets only bits the board already says, so
+ * `magnetsHint` shows none of its firings. */
+export const MAGNETS_RUNGS = [
+  "force",
+  "lineFull",
+  "lineExact",
+  "oddGap",
+  "oneNeutralLeft",
+  "everyDominoNeeded",
+  "onlyEndLeft",
+] as const satisfies readonly Exclude<MagnetsReason["kind"], "magnetsFill">[];
+export type MagnetsRung = (typeof MAGNETS_RUNGS)[number];
+
+type MagnetsStep = HintStep<MagnetsMove, MagnetsHighlights, MagnetsRung>;
+
 /** A firing as the journey the player is shown: one leg per domino, every leg
  * speaking the firing's one sentence, the rings shrinking as legs are done. */
-function stepsOf(f: MagnetsFiring): HintStep<MagnetsMove, MagnetsHighlights>[] {
+function stepsOf(f: MagnetsFiring): MagnetsStep[] {
   const legs = legsOf(f);
   const r = f.reason;
+  if (r.kind === "magnetsFill")
+    throw new Error("magnets hint: a hidden premise reached narration");
   let toldLeg: (k: number) => Told;
   if (countPremise(r)) toldLeg = tellCount(f, r, legs);
   else {
@@ -751,6 +769,7 @@ function stepsOf(f: MagnetsFiring): HintStep<MagnetsMove, MagnetsHighlights>[] {
     );
     return {
       move: leg.move,
+      rung: r.kind,
       explanation: words.text,
       words,
       highlights: { reasonClues: [...new Set(told.reasonClues)] },
@@ -767,9 +786,7 @@ const allSet = (s: MagnetsSolver): boolean => {
 /** Deduce the plan from the player's board. */
 export function magnetsHint(
   state: MagnetsState,
-):
-  | { ok: true; steps: HintStep<MagnetsMove, MagnetsHighlights>[] }
-  | { ok: false; error: HintRefusal } {
+): { ok: true; steps: MagnetsStep[] } | { ok: false; error: HintRefusal } {
   const solver = seedSolver(state);
   if (!solver) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   const pass = recordingPass(solver, stepBudget("magnets hint"));

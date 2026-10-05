@@ -1,5 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`subsets: pinned hint positions > says, at each pin 1`] = `
+{
+  "ruleOut": "No outlined set is a smaller set inside {B}, so the horseshoe to the outlined cell rules {B} out of this cell.",
+}
+`;
+
 exports[`the hint places the rule-outs it rests on > the rule-out hint frame boxes the set and the neighbor's sets, and frames the cell 1`] = `
 [
   {

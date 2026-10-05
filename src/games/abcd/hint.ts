@@ -29,8 +29,10 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
+  CANDIDATE_RUNGS,
   type CandidateRung,
   type Firing,
+  type PlanRung,
   runCandidatePlan,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
@@ -74,6 +76,17 @@ type AbcdReason =
       only: boolean;
       open: Point[];
     };
+
+/** Every rung an ABCD step can be: the walk's own, and the kinds of
+ * {@link AbcdReason}. */
+export const ABCD_RUNGS = [
+  ...CANDIDATE_RUNGS,
+  "single",
+  "regionsFull",
+  "satisfied",
+  "packed",
+] as const;
+export type AbcdRung = (typeof ABCD_RUNGS)[number];
 
 /** A row or column, and its cells in order. */
 interface Line {
@@ -212,7 +225,7 @@ type AbcdFiring = Firing<AbcdMove, AbcdHint, AbcdReason>;
 export function buildSteps(
   state: AbcdState,
   { autoClean, reading }: CandidatePlanPrefs,
-): HintStep<AbcdMove, AbcdHint>[] {
+): HintStep<AbcdMove, AbcdHint, AbcdRung>[] {
   const p = state.params;
   const { w, diag } = p;
   const grid = state.grid.slice();
@@ -274,7 +287,7 @@ export function buildSteps(
     clue: line.clueBase + n - 1,
   });
 
-  const steps: HintStep<AbcdMove, AbcdHint>[] = [];
+  const steps: HintStep<AbcdMove, AbcdHint, PlanRung<AbcdReason>>[] = [];
   runCandidatePlan<AbcdMove, AbcdHint, DeductionRecord, AbcdReason, CellRegion>({
     w,
     steps,
@@ -353,7 +366,7 @@ export function buildSteps(
 
 export function hintKeepTrack(
   m: AbcdMove,
-  step: HintStep<AbcdMove, AbcdHint>,
+  step: HintStep<AbcdMove, AbcdHint, AbcdRung>,
   state: AbcdState,
 ): HintTrackVerdict {
   return keepCandidateHintTrack(
@@ -379,9 +392,9 @@ export function hintGesture(
 }
 
 export function refreshHintStep(
-  step: HintStep<AbcdMove, AbcdHint>,
+  step: HintStep<AbcdMove, AbcdHint, AbcdRung>,
   state: AbcdState,
-): HintStep<AbcdMove, AbcdHint> | null {
+): HintStep<AbcdMove, AbcdHint, AbcdRung> | null {
   return refreshCandidateHintStep(
     step,
     state.grid,

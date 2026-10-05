@@ -213,10 +213,19 @@ function markedOf(reason: HintReason, target: Point, state: UnrulyState): Marked
   }
 }
 
-function hint(state: UnrulyState): HintResult<UnrulyMove, UnrulyHint> {
+/** The solver's techniques, by the `kind` of the reason each records. */
+export const UNRULY_RUNGS = [
+  "threes",
+  "complete",
+  "unique",
+  "nearcomplete",
+] as const satisfies readonly HintReason["kind"][];
+export type UnrulyRung = (typeof UNRULY_RUNGS)[number];
+
+function hint(state: UnrulyState): HintResult<UnrulyMove, UnrulyHint, UnrulyRung> {
   const plan = deduceHintPlan(state);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const steps: HintStep<UnrulyMove, UnrulyHint>[] = plan.map((m) => {
+  const steps: HintStep<UnrulyMove, UnrulyHint, UnrulyRung>[] = plan.map((m) => {
     const value = m.value as Cell;
     const x = m.index % state.w2;
     const y = Math.floor(m.index / state.w2);
@@ -224,6 +233,7 @@ function hint(state: UnrulyState): HintResult<UnrulyMove, UnrulyHint> {
     const words = narrate(m.reason, markedOf(m.reason, { x, y }, state));
     return {
       move: { type: "place", x, y, value },
+      rung: m.reason.kind,
       explanation: words.text,
       words,
       highlights: { target },
@@ -275,7 +285,8 @@ export const unrulyGame: Game<
   UnrulyUi,
   UnrulyDrawState,
   UnrulyMistake,
-  UnrulyHint
+  UnrulyHint,
+  UnrulyRung
 > = {
   id: "unruly",
 
@@ -305,6 +316,7 @@ export const unrulyGame: Game<
   },
 
   hint,
+  hintRungs: UNRULY_RUNGS,
   hintMarks: {
     roles: {
       ring: "the square to color. It is drawn empty: the sentence says whether it must be black or white.",

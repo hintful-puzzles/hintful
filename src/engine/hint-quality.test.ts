@@ -77,8 +77,10 @@ const NARRATION_LIMIT = 120;
 const MAX_NARRATION_CHARS = 300;
 
 /**
- * The override: sentences allowed past {@link NARRATION_LIMIT}, one entry per
- * sentence *template*, each saying why it needs the room.
+ * The override: the rungs whose sentences are allowed past
+ * {@link NARRATION_LIMIT}, an entry per reason they need the room. An entry
+ * lists rungs by id (`HintStep.rung`), never a pattern over the sentence, so
+ * rewording a sentence cannot silently take it out of its listing.
  *
  * **Asserted in both directions**, the `NARRATES_MOVES` shape: a step over the
  * limit that no entry matches fails, and an exemption that matches nothing over
@@ -119,7 +121,7 @@ const MAX_NARRATION_CHARS = 300;
  */
 const LONG_NARRATIONS: {
   games: string[];
-  match: RegExp;
+  rungs: string[];
   why: string;
   spokenOn?: Record<string, string>;
 }[] = [
@@ -139,7 +141,7 @@ const LONG_NARRATIONS: {
     // `lintCases` walks the last preset at the hardest teachable tier. Delete
     // that rule and this listing reads as dead.
     games: ["group", "keen", "salad", "solo", "towers", "unequal"],
-    match: /has just two \w+s left, so each forces the next/,
+    rungs: ["forcing"],
     why:
       "The Latin chain Tactic (`latin-hint.ts`). ts-engine requires a narrated " +
       "chain to name both ends, cite its links by position and say when the " +
@@ -147,7 +149,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["solo"],
-    match: /^This (?:row|column|block)'s whole cages and digits leave \d+ for .*; /,
+    rungs: ["cageMinMax"],
     why:
       "Killer's region rule under a cage-sum strike is two premises: what the " +
       "row, column or block leaves its open cells, which the player needs to " +
@@ -156,7 +158,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["rome"],
-    match: /^Its \w+ neighbor in this area can only point \w+ or \w+: /,
+    rungs: ["opposite"],
     why:
       "Rome's opposite rule has two branches, and dropping either is a " +
       "non-sequitur: an arrow into a square that can only point along its " +
@@ -166,7 +168,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["singles"],
-    match: /^There's a pair of \d+s in one (?:column|row)/,
+    rungs: ["offset"],
     why:
       'The owner-endorsed indication-first offset narration (hints.md § "Lead ' +
       'with the indication"): its opener alone, the pattern the player learns ' +
@@ -174,7 +176,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["lightup"],
-    match: /would leave each of them lit or beside a full clue/,
+    rungs: ["discountClue", "discountUnlit"],
     why:
       "Two premises and a quantifier: one of a set must light the outlined dark square " +
       "or fill the clue, and a bulb here disqualifies every member. The reach " +
@@ -183,7 +185,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["boats"],
-    match: /, with the water around it\.$/,
+    rungs: ["centerForced", "givenClue", "lineForced", "onlyRunsLeft", "refuted"],
     why:
       "A step that places a boat segment also rings the water boats never " +
       "touch, by the owner's choice to show that rule on the board rather than " +
@@ -192,7 +194,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["palisade"],
-    match: /so they share a fate: both walls or both open/,
+    rungs: ["equivalentEdges"],
     why:
       "The collection's hint exemplar, quoted verbatim in AGENTS.md § \"Hint " +
       'quality bar" and owner-endorsed: the "share a fate" premise and its ' +
@@ -200,7 +202,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["palisade"],
-    match: /^Two 3s each keep just one side open/,
+    rungs: ["cluesVersusRegionSize"],
     why:
       "A proof by contradiction over two clues at once: opening their shared " +
       "edge would spend each 3's only open side and seal a region of the wrong " +
@@ -208,7 +210,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["boats"],
-    match: /so one of these must be a boat segment: either way/,
+    rungs: ["sharedDiagonal"],
     why:
       "A two-case argument: the line's water budget forces a boat segment into " +
       "one of the marked squares, and the conclusion holds whichever it is, " +
@@ -216,7 +218,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["pearl"],
-    match: / It runs straight on through the next white pearls? too\.$/,
+    rungs: ["square", "whiteCannotTurn"],
     why:
       "The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also " +
       "draws the line on through a white pearl it runs into, and says so in a " +
@@ -224,7 +226,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["subsets"],
-    match: / For instance, /,
+    rungs: ["collapse"],
     why:
       "The owner's 2026-07-21 enhancement (subsets/index.ts, narrateExclusion): " +
       "a collapse names one competitor set and the visible rule that blocks it, " +
@@ -232,7 +234,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["salad"],
-    match: /^This (?:row|column)'s [\w-]+ clue sees \S+ first/,
+    rungs: ["borderFar", "borderNear"],
     why:
       "Salad's border-clue deductions carry two premises each: the symbol the " +
       "clue sees first, and either the line's empty-square budget or the marked " +
@@ -241,7 +243,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["magnets"],
-    match: / anywhere else would | outlined tile would | at its far end would /,
+    rungs: ["lineExact", "onlyEndLeft"],
     why:
       "Magnets' count premises carry two: the line's count, and why each other " +
       "square of it cannot take the pole. The owner's 2026-09-22 playtest found " +
@@ -250,7 +252,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["clusters"],
-    match: /^Suppose this cell were (?:red|blue):/,
+    rungs: ["chain"],
     why:
       "A Tactic chain. ts-engine requires the narration to name both ends and " +
       'cite the links by their numbers on the board, and "from it" is the ' +
@@ -258,7 +260,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["towers"],
-    match: /already sees all but one of its towers/,
+    rungs: ["lineFull"],
     why:
       "The line-full rule strikes the shortest heights from the cell nearest the " +
       "clue without placing anything, and the guide records a first cut that " +
@@ -267,7 +269,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["map"],
-    match: /^The outlined pair touch and can only be \w+ or \w+, so they use both\./,
+    rungs: ["sharedPair"],
     why:
       "Two premises: the pair are down to the same two colors, and, because " +
       "they touch, they use both between them. The second is what makes " +
@@ -277,8 +279,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["map"],
-    match:
-      /^(?:If region 1 isn't \w+, it's \w+, so |Every numbered region has a \w+ dot\.)/,
+    rungs: ["forcingChain"],
     why:
       "Map's chain Tactic, held to what ts-engine asks of every narrated chain: " +
       "name both ends, cite the links by their numbers on the board, and state " +
@@ -287,8 +288,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["singles"],
-    match:
-      /^(?:A touching pair of \d+s sits at the corner|This (?:corner|inner) \d+ matches)/,
+    rungs: ["corner2", "corner3"],
     why:
       'The owner-directed corner family (hints.md § "Name a square by its ' +
       'value": concrete values read far clearer): each arm is a proof by ' +
@@ -297,7 +297,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["signpost"],
-    match: /, are in its chain or hold the wrong number, so /,
+    rungs: ["onlyBefore", "onlyNext"],
     why:
       "A link's rivals ruled out for all three of Signpost's reasons at once: the " +
       "sentence names each reason some rival has, and a reason left out would " +
@@ -305,8 +305,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["net"],
-    match:
-      / would (?:close a loop through|seal off|close a loop through or seal off|join|lead only into) (?:some of )?the striped /,
+    rungs: ["loop", "sealed"],
     why:
       "A turning ruled out because it would close a loop or seal a group off is " +
       "a second premise beside the notes and locks the others clash with, and " +
@@ -320,7 +319,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["rect"],
-    match: /^Only the outlined [\d, and]+ could cross this edge, and /,
+    rungs: ["line"],
     // Upstream's 10x10 board, which `rect-hint.test.ts` pins for this rung.
     spokenOn: { rect: "10x10e0.5:a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c" },
     why:
@@ -331,32 +330,18 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["mines"],
-    match: / allows? at most \d+ in the (?:striped )?squares/,
+    rungs: ["pair"],
     why:
-      "Two numbers that share squares: one needs more than the other allows in " +
-      "the shared squares. The sentence has to name both numbers, what each " +
-      "needs and the shared squares, or the conclusion does not follow; two " +
+      "Two numbers that share squares, in its three forms: one needs more than " +
+      "the other allows in the shared squares; one's squares all lie inside " +
+      "the other's, which needs more than they can hold; or they lie inside " +
+      "and both need the same. Each has to name both numbers, what each needs " +
+      "and the shared squares, or the conclusion does not follow, and two " +
       "numbers of one value add where each sits.",
   },
   {
     games: ["mines"],
-    match: /, and at most \d+ can be among /,
-    why:
-      "One number's squares all lie inside another's, which needs more than " +
-      "they can hold: both numbers and the inner one's squares are premises, " +
-      "and the count is the reason, so none of the three can go.",
-  },
-  {
-    games: ["mines"],
-    match: /(?: all touch .* too| are all among the striped squares), and both need /,
-    why:
-      "One number's squares all lie inside another's and both need the same: " +
-      "the containment and the equal need are the two halves of the reason, " +
-      "and two numbers of one value add where each sits.",
-  },
-  {
-    games: ["mines"],
-    match: / still needs \d+ mines? and has just \d+ unopened squares? left around it/,
+    rungs: ["full"],
     why:
       "A number that already touches some of its mines needs the rest in its " +
       "last unopened squares; 'still' is what tells the player the flagged " +
@@ -717,6 +702,16 @@ describe("a bound hint's words name exactly the marks it draws", () => {
     expect(HINT_GAMES.length).toBeGreaterThan(40);
   });
 
+  it("every hinted game lists its rungs, each once", () => {
+    // The walk below holds every step's rung to this list, and the pin harness
+    // requires a pinned position for each entry (`testing/hint-positions.ts`).
+    for (const [name, game] of HINT_GAMES) {
+      const rungs = game.hintRungs ?? [];
+      expect(rungs.length, `${name} declares no hintRungs`).toBeGreaterThan(0);
+      expect(new Set(rungs).size, `${name} lists a rung twice`).toBe(rungs.length);
+    }
+  });
+
   for (const [name, game] of BOUND_GAMES) {
     it(`${name}: every step, fresh and refreshed`, () => {
       let checked = 0;
@@ -1065,8 +1060,8 @@ const lintedPerGame = new Map<string, number>();
 let linted = 0;
 
 /** Whether `game`'s hints, followed from the board `id` as the length walk
- * follows them, speak a sentence `match` accepts that is over the limit. */
-function speaksOn(name: string, id: string, match: RegExp): boolean {
+ * follows them, speak a step of one of `rungs` that is over the limit. */
+function speaksOn(name: string, id: string, rungs: readonly string[]): boolean {
   const game = HINT_GAMES.find(([g]) => g === name)?.[1];
   if (!game) return false;
   const colon = id.indexOf(":");
@@ -1077,7 +1072,7 @@ function speaksOn(name: string, id: string, match: RegExp): boolean {
     if (!res?.ok) break;
     for (const step of res.steps) {
       const text = step.explanation;
-      if (text.length > NARRATION_LIMIT && match.test(text)) return true;
+      if (text.length > NARRATION_LIMIT && rungs.includes(step.rung)) return true;
     }
     for (const step of res.steps) state = game.executeMove(state, step.move);
   }
@@ -1113,19 +1108,25 @@ describe("hint narration stays readable at a glance", () => {
                 declaredOrder(step.highlights) === null || name in CHAIN_PINS,
                 `${name} ${label}/${seed}: "${text}" numbers a chain, and no board of ${name}'s is pinned to check the numbers are drawn. Add ${name} to CHAIN_PINS in testing/hint-chain-pins.ts.`,
               ).toBe(true);
+              // The same walk holds a step's rung to the game's list: a
+              // step built outside the typed path could carry any string.
+              expect(
+                game.hintRungs ?? [],
+                `${name} ${label}/${seed}: "${text}" is of a rung hintRungs does not list`,
+              ).toContain(step.rung);
               expect(
                 text.length,
                 `${name} ${label}/${seed}: "${text}" is over the hard ceiling of ${MAX_NARRATION_CHARS}`,
               ).toBeLessThanOrEqual(MAX_NARRATION_CHARS);
               if (text.length <= NARRATION_LIMIT) continue;
               const entry = LONG_NARRATIONS.findIndex(
-                (e) => e.games.includes(name) && e.match.test(text),
+                (e) => e.games.includes(name) && e.rungs.includes(step.rung),
               );
               expect(
                 entry,
-                `${name} ${label}/${seed}: "${text}" is ${text.length} characters, over ${NARRATION_LIMIT}. Shorten it, or add it to LONG_NARRATIONS with the reason it needs the room.`,
+                `${name} ${label}/${seed}: "${text}" (rung ${step.rung}) is ${text.length} characters, over ${NARRATION_LIMIT}. Shorten it, or list the rung in LONG_NARRATIONS with the reason it needs the room.`,
               ).toBeGreaterThanOrEqual(0);
-              ledgerUsed.add(`${entry}:${name}`);
+              ledgerUsed.add(`${entry}:${name}:${step.rung}`);
             }
             // Walk on through the whole plan, not just its first step: the
             // aim is the sentences deeper in the game, cheaply.
@@ -1141,7 +1142,14 @@ describe("hint narration stays readable at a glance", () => {
     // whatever `CORNER_WALKED` says.
     const hinting = new Set(HINT_GAMES.map(([id]) => id));
     for (const e of LONG_NARRATIONS) {
-      expect(e.why.length, `${e.match} states no reason`).toBeGreaterThan(60);
+      expect(e.why.length, `${e.rungs} states no reason`).toBeGreaterThan(60);
+      expect(e.rungs.length, `${e.games} lists no rung`).toBeGreaterThan(0);
+      // A listed rung is one the game declares, so a renamed rung cannot
+      // leave a listing that excuses nothing.
+      for (const [g, game] of HINT_GAMES)
+        if (e.games.includes(g))
+          for (const rung of e.rungs)
+            expect(game.hintRungs ?? [], `${g} has no rung ${rung}`).toContain(rung);
       for (const g of e.games)
         expect(hinting.has(g), `${g} ships no hint()`).toBe(true);
     }
@@ -1152,12 +1160,12 @@ describe("hint narration stays readable at a glance", () => {
     for (const e of LONG_NARRATIONS) {
       for (const [g, id] of Object.entries(e.spokenOn ?? {})) {
         pinned++;
-        expect(e.games, `${g} is pinned on ${e.match} without being listed`).toContain(
+        expect(e.games, `${g} is pinned on ${e.rungs} without being listed`).toContain(
           g,
         );
         expect(
-          speaksOn(g, id, e.match),
-          `${g}: the board pinned for ${e.match} no longer speaks it over ${NARRATION_LIMIT} characters. Pin a board that does, or delete the listing.`,
+          speaksOn(g, id, e.rungs),
+          `${g}: the board pinned for ${e.rungs} no longer speaks it over ${NARRATION_LIMIT} characters. Pin a board that does, or delete the listing.`,
         ).toBe(true);
       }
     }
@@ -1192,14 +1200,15 @@ describe("hint narration stays readable at a glance", () => {
     LONG_NARRATIONS.forEach((e, i) => {
       // A pinned listing is held by the case above, on its board.
       for (const g of e.games)
-        if (!ledgerUsed.has(`${i}:${g}`) && !e.spokenOn?.[g])
-          dead.push(`${g} on ${e.match}`);
+        for (const rung of e.rungs)
+          if (!ledgerUsed.has(`${i}:${g}:${rung}`) && !e.spokenOn?.[g])
+            dead.push(`${g} on ${rung}`);
     });
     expect(
       dead,
-      `listed in LONG_NARRATIONS but never spoke the sentence over ${NARRATION_LIMIT} ` +
+      `listed in LONG_NARRATIONS but never spoke the rung over ${NARRATION_LIMIT} ` +
         "characters. Either the sentence got shorter, or that game never reaches the " +
-        "arm. Widen the walk for the game first (every leaf preset, both auto-pencil " +
+        "rung. Widen the walk for the game first (every leaf preset, both auto-pencil " +
         "settings); if it still says nothing, delete the listing and record the walk " +
         "that found nothing beside the entry, so the next reader can re-run it rather " +
         "than re-derive it.",

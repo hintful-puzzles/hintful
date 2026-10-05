@@ -141,6 +141,17 @@ function statusbarText(state: FifteenState, _ui: FifteenUi): string {
 
 // --- hint -------------------------------------------------------------
 
+/** What a slide does for the goal tile, by the branch of
+ * {@link narrateFifteenStep} that chose its words. */
+export const FIFTEEN_RUNGS = [
+  "goalHome",
+  "goalCloser",
+  "goalReposition",
+  "tileHome",
+  "outOfWay",
+] as const;
+export type FifteenRung = (typeof FIFTEEN_RUNGS)[number];
+
 /** Narrate one greedy step around a **stable goal** tile (see `hint`), not
  * the solver's per-step `target`. To place the last tiles of a line the
  * solver displaces an already-home tile and then restores it; narrating
@@ -162,23 +173,25 @@ function narrateFifteenStep(
   tile: number,
   goal: number,
   dest: Point,
-): Sentence {
+): { rung: FifteenRung; words: Sentence } {
   const w = board.w;
   const landsAtOwnHome = board.gapPos === tile - 1;
 
   if (tile === goal) {
-    if (landsAtOwnHome) return say.goalHome(goal);
+    if (landsAtOwnHome) return { rung: "goalHome", words: say.goalHome(goal) };
     // The goal sits at `dest` before the slide and at the old gap after it.
     const hx = (goal - 1) % w;
     const hy = Math.floor((goal - 1) / w);
     const distBefore = Math.abs(dest.x - hx) + Math.abs(dest.y - hy);
     const distAfter =
       Math.abs((board.gapPos % w) - hx) + Math.abs(Math.floor(board.gapPos / w) - hy);
-    return distAfter < distBefore ? say.goalCloser(goal) : say.goalReposition(goal);
+    return distAfter < distBefore
+      ? { rung: "goalCloser", words: say.goalCloser(goal) }
+      : { rung: "goalReposition", words: say.goalReposition(goal) };
   }
 
-  if (landsAtOwnHome) return say.tileHome(goal, tile);
-  return say.outOfWay(goal, tile);
+  if (landsAtOwnHome) return { rung: "tileHome", words: say.tileHome(goal, tile) };
+  return { rung: "outOfWay", words: say.outOfWay(goal, tile) };
 }
 
 /** The *whole* greedy solution as one plan, one narrated gap slide per
@@ -186,8 +199,8 @@ function narrateFifteenStep(
  * clearing and recomputing on every step, as Sixteen's plan does. The
  * solver is cheap, and the plan is recomputed only when the player
  * deviates (see `hintKeepTrack`). */
-function hint(state: FifteenState): HintResult<FifteenMove> {
-  const steps: HintStep<FifteenMove>[] = [];
+function hint(state: FifteenState): HintResult<FifteenMove, unknown, FifteenRung> {
+  const steps: HintStep<FifteenMove, unknown, FifteenRung>[] = [];
   let board = state;
   // The goal is the running maximum of the solver's `target` until it is
   // homed: mid-rotation the target drops to the tile being restored.
@@ -200,8 +213,8 @@ function hint(state: FifteenState): HintResult<FifteenMove> {
     const tile = board.tiles[dest.y * board.w + dest.x];
     goal = goal === null ? dest.target : Math.max(goal, dest.target);
     const move: FifteenMove = { type: "move", x: dest.x, y: dest.y };
-    const words = narrateFifteenStep(board, tile, goal, dest);
-    steps.push({ move, explanation: words.text, words });
+    const { rung, words } = narrateFifteenStep(board, tile, goal, dest);
+    steps.push({ move, rung, explanation: words.text, words });
     const homedGoal = tile === goal && board.gapPos === goal - 1;
     board = executeMove(board, move);
     if (homedGoal) goal = null;
@@ -228,7 +241,10 @@ export const fifteenGame: Game<
   FifteenState,
   FifteenMove,
   FifteenUi,
-  FifteenDrawState
+  FifteenDrawState,
+  unknown,
+  unknown,
+  FifteenRung
 > = {
   id: "fifteen",
   // Sliding a tile is the only gesture; the secondary button has no meaning,
@@ -257,6 +273,7 @@ export const fifteenGame: Game<
   solve: () => ({ ok: true, move: { type: "solve" } }),
 
   hint,
+  hintRungs: FIFTEEN_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides: the tile to slide, filled in the hint's color.",

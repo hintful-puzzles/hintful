@@ -36,7 +36,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newInertiaDesc } from "./generator.ts";
-import { hint, hintKeepTrack } from "./hint.ts";
+import { hint, hintKeepTrack, INERTIA_RUNGS, type InertiaRung } from "./hint.ts";
 import {
   animLength,
   BORDER,
@@ -235,7 +235,9 @@ export const inertiaGame: Game<
   InertiaMove,
   InertiaUi,
   InertiaDrawState,
-  unknown
+  unknown,
+  unknown,
+  InertiaRung
 > = {
   id: "inertia",
 
@@ -298,6 +300,7 @@ export const inertiaGame: Game<
   // A nudge, not Solve: one slide at a time, and the midend does not count it
   // as using the solver.
   hint,
+  hintRungs: INERTIA_RUNGS,
   hintMarks: {
     roles: {
       ring: "the way to slide: an arrow on the ball, in the hint's color.",

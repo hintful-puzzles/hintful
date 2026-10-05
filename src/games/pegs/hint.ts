@@ -36,7 +36,25 @@ import {
   type PegsState,
 } from "./state.ts";
 
-type Step = HintStep<PegsMove>;
+/** What a step rests on, by the branch of {@link hint} that chose its jump. A
+ * package's jumps are one rung: one journey. */
+export const PEGS_RUNGS = [
+  "last",
+  "trap",
+  "trapSoon",
+  "package",
+  "anyJump",
+  "only",
+  "onlyThese",
+  "alsoThese",
+  "joins",
+  "leavesAlone",
+  "plain",
+] as const;
+export type PegsRung = (typeof PEGS_RUNGS)[number];
+
+type Step = HintStep<PegsMove, unknown, PegsRung>;
+type Said = { rung: PegsRung; words: Sentence };
 
 /** Positions the searches of one request may visit between them, and one
  * rival's proof of loss alone. Past either a rival is unsettled and the step
@@ -114,16 +132,18 @@ function packageAt(s: PegsState, plan: readonly Jump[]): Package | null {
   return null;
 }
 
-function step(s: PegsState, j: Jump, words: Sentence, continues = false): Step {
+function step(s: PegsState, j: Jump, said: Said, continues = false): Step {
+  const { rung, words } = said;
   return {
     move: toMove(s, j),
+    rung,
     explanation: words.text,
     words,
     ...(continues ? { continuesPrevious: true } : {}),
   };
 }
 
-export function hint(state: PegsState): HintResult<PegsMove> {
+export function hint(state: PegsState): HintResult<PegsMove, unknown, PegsRung> {
   // Pegs' one verdict a player can see at a glance: a peg nothing can reach,
   // outlined so they can see which.
   const frozen = frozenPegs(state);
@@ -139,7 +159,8 @@ export function hint(state: PegsState): HintResult<PegsMove> {
 
   const plan = finish.line;
   const j = plan[0];
-  if (plan.length === 1) return { ok: true, steps: [step(state, j, say.last(j))] };
+  if (plan.length === 1)
+    return { ok: true, steps: [step(state, j, { rung: "last", words: say.last(j) })] };
   const rivals = legalJumps(state).filter((r) => !same(r, j));
 
   // A trap the player can see leads: a cut-off at once before one a move
@@ -153,8 +174,9 @@ export function hint(state: PegsState): HintResult<PegsMove> {
     .sort((a, b) => Number(a.cut?.soon) - Number(b.cut?.soon) || dist(a.r) - dist(b.r));
   const trap = traps[0];
   if (trap?.cut) {
-    const say1 = trap.cut.soon ? say.trapSoon : say.trap;
-    return { ok: true, steps: [step(state, j, say1(j, trap.r, trap.cut.victim))] };
+    const rung = trap.cut.soon ? "trapSoon" : "trap";
+    const words = say[rung](j, trap.r, trap.cut.victim);
+    return { ok: true, steps: [step(state, j, { rung, words })] };
   }
 
   const pkg = packageAt(state, plan);
@@ -168,7 +190,7 @@ export function hint(state: PegsState): HintResult<PegsMove> {
           : i === pkg.jumps - 1
             ? say.packageEnd(pj, pkg)
             : say.packageNext(pj, pkg);
-      steps.push(step(s, pj, words, i > 0));
+      steps.push(step(s, pj, { rung: "package", words }, i > 0));
       s = jumped(s, pj);
     });
     return { ok: true, steps };
@@ -181,11 +203,11 @@ export function hint(state: PegsState): HintResult<PegsMove> {
   // First, a peg alone now that this jump lands beside; then a rival that
   // would newly leave a peg with none beside it, where this jump would not.
   // Neither is a proof about winning, and the words do not claim one.
-  const plain = (): Sentence => {
+  const plain = (): Said => {
     const now = new Set(alone(state));
     const mine = new Set(alone(jumped(state, j)));
     const joined = [...now].find((p) => !mine.has(p) && p !== j.from && p !== j.over);
-    if (joined !== undefined) return say.joins(j, joined);
+    if (joined !== undefined) return { rung: "joins", words: say.joins(j, joined) };
     const lone = rivals
       .map((r) => ({
         r,
@@ -196,19 +218,24 @@ export function hint(state: PegsState): HintResult<PegsMove> {
       }))
       .filter((x) => x.p !== undefined)
       .sort((a, b) => dist(a.r) - dist(b.r))[0];
-    return lone?.p !== undefined ? say.leavesAlone(j, lone.r, lone.p) : say.plain(j);
+    return lone?.p !== undefined
+      ? { rung: "leavesAlone", words: say.leavesAlone(j, lone.r, lone.p) }
+      : { rung: "plain", words: say.plain(j) };
   };
-  const words: Sentence =
+  const said: Said =
     claim.kind === "every"
-      ? say.anyJump(j, claim.relation)
+      ? { rung: "anyJump", words: say.anyJump(j, claim.relation) }
       : claim.kind === "only"
-        ? say.only(j, claim.relation)
+        ? { rung: "only", words: say.only(j, claim.relation) }
         : claim.kind === "onlyThese"
-          ? say.onlyThese(j, claim.goods, claim.relation)
+          ? { rung: "onlyThese", words: say.onlyThese(j, claim.goods, claim.relation) }
           : claim.kind === "alsoThese"
-            ? say.alsoThese(j, claim.goods, claim.relation)
+            ? {
+                rung: "alsoThese",
+                words: say.alsoThese(j, claim.goods, claim.relation),
+              }
             : plain();
-  return { ok: true, steps: [step(state, j, words)] };
+  return { ok: true, steps: [step(state, j, said)] };
 }
 
 /** The pegs of `s` with no peg in the four squares beside them. */

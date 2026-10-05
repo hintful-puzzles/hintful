@@ -19,6 +19,12 @@ import { say } from "./hint-text.ts";
 import { shortestAnswer } from "./solver.ts";
 import type { FlipMove, FlipState } from "./state.ts";
 
+/** What a step rests on, by the branch of {@link hint} that chose its words. */
+export const FLIP_RUNGS = ["lastPress", "lastChance", "fromTheAnswer"] as const;
+export type FlipRung = (typeof FLIP_RUNGS)[number];
+
+type Step = HintStep<FlipMove, unknown, FlipRung>;
+
 /** For each square, the last square in reading order that flips it; -1 when
  * none does. */
 function lastFlippers(s: Pick<FlipState, "w" | "h" | "matrix">): Int32Array {
@@ -30,7 +36,7 @@ function lastFlippers(s: Pick<FlipState, "w" | "h" | "matrix">): Int32Array {
   return last;
 }
 
-export function hint(state: FlipState): HintResult<FlipMove> {
+export function hint(state: FlipState): HintResult<FlipMove, unknown, FlipRung> {
   const answer = shortestAnswer(state);
   // Only a game ID typed by hand: the generator deals a board some presses
   // light, and a press keeps it one.
@@ -43,7 +49,7 @@ export function hint(state: FlipState): HintResult<FlipMove> {
   // Each step's dark squares are read off the board it is shown on: the one
   // the presses before it leave.
   const grid = state.grid.slice();
-  const steps: HintStep<FlipMove>[] = [];
+  const steps: Step[] = [];
   // The presses the board a step is shown on still takes: the answer is the
   // shortest, and what is left of it is the shortest for the board it leaves.
   let left = answer.presses.reduce((n, p) => n + p, 0);
@@ -59,14 +65,21 @@ export function hint(state: FlipState): HintResult<FlipMove> {
     }
     // The last press says it finishes the board, whichever kind it is: every
     // square still dark is one it flips.
+    const rung: FlipRung =
+      left === 1 ? "lastPress" : owed.length > 0 ? "lastChance" : "fromTheAnswer";
     const words =
-      left === 1
+      rung === "lastPress"
         ? say.lastPress(at(i), dark)
-        : owed.length > 0
+        : rung === "lastChance"
           ? say.lastChance(at(i), owed, also)
           : say.fromTheAnswer(at(i), left, answer.only);
     left--;
-    steps.push({ move: { kind: "flip", ...at(i) }, explanation: words.text, words });
+    steps.push({
+      move: { kind: "flip", ...at(i) },
+      rung,
+      explanation: words.text,
+      words,
+    });
     for (let j = 0; j < wh; j++) grid[j] ^= matrix[i * wh + j];
   }
   // A solved board, which the midend answers before asking.

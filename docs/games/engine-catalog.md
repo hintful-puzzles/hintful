@@ -1337,11 +1337,15 @@ guard finds its population"), `engine-source.ts` and `test-source.ts` (the
 engine's and the suite's own comment-stripped code, each in a module of its own
 because importing one reads that whole tree, which makes the importer run whole
 on the pre-commit hook; `code-lines.ts` is their shared stripper),
-`hint-positions.ts` (`describeHintPins` — **the position each hint sentence is
-tested on**: one pin a kind, the test that each still fires, and the scan that
-finds them again under `HINT_SCAN=1`, reporting the count each rests on; do not
-write a seed scan for a hint test, see [`testing.md`](./testing.md)
-§ "Pinning a hint's positions"), `hint-chain-pins.ts` (the pinned position of
+`hint-positions.ts` (`describeHintPins` — **the position each hint rung is
+tested on**: one pin for every rung a game declares, the test that each still
+fires, a snapshot of the sentence at each, and the scan that finds them again,
+which `npm run hint-scan` runs and writes into the test file, each pin under
+the count it rests on; `describeHintKindPins` for a test file's further
+positions; do not write a seed scan for a hint test, see
+[`testing.md`](./testing.md) § "Pinning a hint's positions"),
+`hint-scan-report.ts` (the report a scan fails with, as `scripts/hint-scan.ts`
+reads it back), `hint-chain-pins.ts` (the pinned position of
 each game whose hint numbers a chain, read by `hint-ordinal.test.ts`, and
 `declaredOrder`, by which `hint-quality.test.ts` tells a game that owes one),
 `slow.ts` (the

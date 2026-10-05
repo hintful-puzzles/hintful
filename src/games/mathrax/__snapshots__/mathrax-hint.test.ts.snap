@@ -8073,3 +8073,26 @@ exports[`mathrax hint render > an even/odd clue outlines the block of four it co
   },
 ]
 `;
+
+exports[`mathrax: pinned hint positions > says, at each pin 1`] = `
+{
+  "clean": "Now clear the easy ones: cross out any number already standing in each cell's row or column.",
+  "clue": "The 2− clue means this cell and the 4 across it differ by 2, so this cell must be 2.",
+  "dup": "The 5 just placed can't repeat in its row and column, so we must cross out the 5 from the other cells there.",
+  "forcing": "Cell 1 is 1 or 5, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 1, this cell's row already has it; if 5, cell 3 is driven to 1, in line with this cell. Either way, 1 is ruled out here, so we must cross out the 1.",
+  "hiddenSingle": "Every other cell in this row rules out 2, so this cell must be 2.",
+  "note": "Only 1, 2, 4 and 5 aren't already standing in this cell's row or column, so pencil them in.",
+  "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
+  "regionsFull": "This cell's row and column already hold every other number, so it can only be 3.",
+  "set": "The outlined cells already account for 2 and 5 between them, so we must cross out 2 and 5.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 4.",
+}
+`;
+
+exports[`mathrax: pinned hint positions > says, at each pin 2`] = `
+{
+  "arithmeticClue": "Nothing open across the 6+ clue adds with 6 to make 6, so we must cross it out.",
+  "parityClue": "The O clue means all four numbers around it are odd, so we must cross out 2 and 4.",
+  "severalMarks": "Now clear the easy ones: cross out any number already standing in each cell's row or column.",
+}
+`;

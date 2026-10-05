@@ -77,7 +77,9 @@ import { newRomeDesc } from "./generator.ts";
 import {
   buildSteps,
   hintKeepTrack,
+  ROME_RUNGS,
   type RomeHint,
+  type RomeRung,
   refreshHintStep,
   romeCandidateMoves,
 } from "./hint.ts";
@@ -655,7 +657,8 @@ export const romeGame: Game<
   RomeUi,
   RomeDrawState,
   RomeMistake,
-  RomeHint
+  RomeHint,
+  RomeRung
 > = {
   id: "rome",
   canMarkAll: true,
@@ -683,6 +686,7 @@ export const romeGame: Game<
   // Rome has no auto-pencil preference, so a placement's area cull is always
   // taught as an explicit strike rather than folded into the placement.
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  hintRungs: ROME_RUNGS,
   hintMarks: {
     roles: {
       ring: "the square the step decides: the arrow to place, the marks to pencil in, or the marks to cross off, which are drawn with a line through them.",

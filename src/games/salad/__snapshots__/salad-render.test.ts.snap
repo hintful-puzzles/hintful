@@ -10590,3 +10590,13 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
   },
 ]
 `;
+
+exports[`salad: pinned hint positions > says, at each pin 1`] = `
+{
+  "confinedRun": "This column's bottom clue sees B first, so every square before its B must be empty. This column has room for only 1 empty square, which keeps the B within the first 2 squares from the clue, so we must cross out the B beyond that.",
+  "emptyMarker": "We already know which 3 squares of this row hold its numbers, so this square and the rest of it must be empty.",
+  "nearestSquare": "This column's bottom clue sees B first and this square is nearest to it, which leaves only B for this square, so we must cross out A and C.",
+  "placement": "Every other number has been ruled out in this square, so it can only be 3.",
+  "symbolMarker": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",
+}
+`;

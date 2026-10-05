@@ -30,7 +30,9 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import {
+  GUESS_RUNGS,
   type GuessHighlights,
+  type GuessRung,
   guessHint,
   guessHintKeepTrack,
   guessRefreshHintStep,
@@ -505,7 +507,8 @@ export const guessGame: Game<
   GuessUi,
   GuessDrawState,
   GuessMistake,
-  GuessHighlights
+  GuessHighlights,
+  GuessRung
 > = {
   id: "guess",
 
@@ -581,6 +584,7 @@ export const guessGame: Game<
     return { ok: true, move: { type: "guess", pegs: curr.solution.slice(), holds } };
   },
   hint: (state, _aux, ui) => guessHint(state, ui),
+  hintRungs: GUESS_RUNGS,
   hintMarks: {
     roles: {
       ring: "the colors the step acts on, each with a frame beside it in the answer row: *the framed colors*, which the step rules out, or, when it suggests a guess, the color it picks for each slot.",

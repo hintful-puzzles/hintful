@@ -38,16 +38,23 @@ const pinned = describeHintPins({
   seeds: 4,
   kinds: {
     severalCells: (step) => (step.highlights as PatternHint).cells.length > 1,
-    // The hint's steps are the solver's firings in order, so the step a plan
-    // opens with is the first firing.
-    intersection: (_, state) =>
-      deduceHintPlan(state)[0]?.reason.kind === "intersection",
   },
   pins: {
     /** Held on 593 of 1826 positions walked. */
     severalCells:
       "10x10:1.1.1.1/6.3/6.2/6.1/6.1/2.2/6/1.2/1/1/4/4/5/4/6.2/7/2/2.1/2.3/8",
-    /** Held on 2 of 1826 positions walked. */
+    /** Held on 1826 of 1826 positions walked. */
+    overlap: "10x10:1.1.1.1/6.3/6.2/6.1/6.1/2.2/6/1.2/1/1/4/4/5/4/6.2/7/2/2.1/2.3/8",
+    /** Held on 1821 of 1826 positions walked. */
+    unreachable: {
+      id: "10x10:1.1.1.1/6.3/6.2/6.1/6.1/2.2/6/1.2/1/1/4/4/5/4/6.2/7/2/2.1/2.3/8",
+      moves:
+        '[{"type":"fillCells","value":1,"cells":[1,11,21,31,41,51]},{"type":"fillCells","value":1,"cells":[71,81,91]}]',
+    },
+    /** Built by hand: a 3x3 board whose first and last columns have no clue.
+     * The scan's boards never had a clueless line. */
+    lineEmpty: "3x3:/3//1/1/1",
+    /** Held on 26 of 1826 positions walked. */
     intersection: {
       id: "30x30:4.3.5.3/2.3.3/4.4.1/4.2.4/9.4.2/8.3.5/1.3.2.3/2.1.1.2.1/5.1.5/5.1.3/3.3.3.8/3.1.1.8.3/3.8.2.5/4.11.2.5/5.5.3.3.3.1.1/8.1.1.8/2.3.3.2.1.1.5.4/2.3.1.2.9/4.4.7/4.7.5/16.1/11.1.1.1.1/7.3.2.1/7.1.1.1.2.4/2.3.1.2.2.2/2.1.4.3.3.4/2.1.7.5.3/4.3.2.6.6/2.4.8.4/1.3.2.1.3.3/5.4.5/11.4/1.4.9.1.1/6.2.4.5.2/10.4.5/1.4.9.1/2.1.4.12/1.3.1.13.4/1.4.5.1.12/1.5.5.4.2.2/1.4.2.2/1.2.8/6.5.1/4.8.1/1.1.4.3.1/2.1.1.2.4.1.1/6.2.4.2.5/7.2.1.1.3.5/1.5.2.3.1.6/2.6.3/2.1.6.3/4.4.2.3/3.4.4.2/3.5.3/1.1.4.3/1.3.3.2/2.1.2.4.1.1.4/2.2.4.4.1.1.3/3.3.3.5.4.3/4.4.1.3.3",
       moves:

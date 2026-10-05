@@ -182,7 +182,7 @@ describe("narration — a second mark on the board is named", () => {
         const step = steps[i];
         const hl = step.highlights;
         if (!hl) throw new Error("step without highlights");
-        kinds.add(firings[i].reason.kind);
+        kinds.add(step.rung);
         checked++;
         const secondMark = stepMarks(step).of("outline", CELL).length > 0;
         if (!secondMark) continue;
@@ -190,7 +190,7 @@ describe("narration — a second mark on the board is named", () => {
         if (!DEICTIC.test(step.explanation)) continue;
         expect(
           TIE.test(step.explanation),
-          `${firings[i].reason.kind}: ${step.explanation} — a second mark is shown but "this square" is not tied to it`,
+          `${step.rung}: ${step.explanation} — a second mark is shown but "this square" is not tied to it`,
         ).toBe(true);
       }
       // Both discount sentences say "one of them must" of the set, so the set
@@ -265,17 +265,31 @@ describe("refusals", () => {
   });
 });
 
-/** A step that decides several squares at once, with the board it is asked
- * from. */
+/** Every rule, and a step that decides several squares at once, each with the
+ * board it is asked from. The two discount rules are Tricky's. */
 const pinned = describeHintPins({
   game: lightupGame,
-  params: [EASY],
+  params: [EASY, TRICKY],
   kinds: {
     multiCell: (step) => (step.highlights?.targets.length ?? 0) > 1,
   },
   pins: {
-    /** Held on 42 of 112 positions walked. */
+    /** Held on 82 of 282 positions walked. */
     multiCell: "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
+    /** Held on 281 of 282 positions walked. */
+    forcedLight: "7x7b20s4d0:c1a1a1cBc1eBe2e4c2cBaBaBc",
+    /** Held on 161 of 282 positions walked. */
+    clueSatisfied: "7x7b20s4d0:i21hBbBaBa1b0h13i",
+    /** Held on 214 of 282 positions walked. */
+    clueSaturated: "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
+    /** Held on 101 of 282 positions walked. */
+    discountUnlit: {
+      id: "7x7b20s4d1:b1h3cBd1g0d3c2hBb",
+      moves:
+        '[{"ops":[{"kind":"impossible","x":1,"y":4},{"kind":"impossible","x":0,"y":3},{"kind":"impossible","x":0,"y":5}]}]',
+    },
+    /** Held on 44 of 282 positions walked. */
+    discountClue: "7x7b20s4d1:c1lBaBbBb2b2b3aBl2c",
   },
 });
 

@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { type DrawOp, opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -26,7 +26,7 @@ const lit = (step: HintStep<GalaxiesMove, GalaxiesHint>): GalaxiesHint => {
 
 /** The shapes of step whose frames are asserted below, each pinned on a
  * position whose hint opens with one. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: galaxiesGame,
   params: [{ w: 7, h: 7, diff: GalaxiesDiff.Normal }],
   kinds: {

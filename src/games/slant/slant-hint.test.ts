@@ -52,14 +52,33 @@ const pinned = describeHintPins({
   game: slantGame,
   params: [{ w: 8, h: 8, diff: DIFF_HARD }],
   kinds: {
-    clue: /^(This \d clue|A [04] clue)/,
     clueWithSecondSquare: (_step, state) => secondSquareContinues(state),
   },
   pins: {
-    /** Held on 779 of 856 positions walked. */
-    clue: "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
     /** Held on 270 of 856 positions walked. */
     clueWithSecondSquare: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
+    /** Held on 829 of 856 positions walked. */
+    "clue-fill": "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
+    /** Held on 833 of 856 positions walked. */
+    "clue-empty": "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
+    /** Held on 754 of 856 positions walked. */
+    loop: {
+      id: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
+      moves:
+        '[{"type":"set","x":0,"y":7,"v":1},{"type":"set","x":1,"y":7,"v":-1},{"type":"set","x":3,"y":3,"v":-1},{"type":"set","x":4,"y":3,"v":1},{"type":"alike","x":0,"y":1,"dir":"right","on":true},{"type":"set","x":0,"y":0,"v":-1},{"type":"set","x":1,"y":0,"v":1},{"type":"set","x":1,"y":1,"v":1},{"type":"set","x":0,"y":1,"v":1},{"type":"set","x":2,"y":1,"v":-1},{"type":"set","x":2,"y":0,"v":1},{"type":"set","x":0,"y":2,"v":1},{"type":"set","x":1,"y":2,"v":-1}]',
+    },
+    /** Held on 260 of 856 positions walked. */
+    deadend: "8x8dh:a1e1c23123c3a21a21c2121e2a32211a3a2a2a2c123a12a1a22a33c1d11a",
+    /** Held on 560 of 856 positions walked. */
+    equiv: "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
+    /** Held on 553 of 856 positions walked. */
+    "mark-clue": "8x8dh:a1a11d122212a1c3c11b2b1a32a113b32g2a3b2b3a21a112b3a11i",
+    /** Held on 398 of 856 positions walked. */
+    "mark-v": {
+      id: "8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c",
+      moves:
+        '[{"type":"set","x":0,"y":7,"v":1},{"type":"set","x":1,"y":7,"v":-1},{"type":"set","x":3,"y":3,"v":-1},{"type":"set","x":4,"y":3,"v":1}]',
+    },
   },
 });
 
@@ -127,7 +146,7 @@ describe("slant hint", () => {
   });
 
   test("clue firings lead with the indication and group as one journey", () => {
-    const clue = pinned("clue").step;
+    const clue = pinned("clue-fill").step;
     expect((clue.highlights as SlantHint).clues?.length).toBe(1);
 
     const journey = pinned("clueWithSecondSquare").steps;
@@ -148,27 +167,16 @@ describe("slant hint", () => {
     const res = slantGame.hint?.(s);
     if (!res?.ok) throw new Error("expected a plan");
     for (const step of res.steps) {
-      const e = step.explanation;
-      if (/join two corners/.test(e)) seen.add("loop");
-      if (/one way out each/.test(e)) seen.add("deadend");
-      if (/links? this square to the outlined square/.test(e)) {
-        seen.add("equiv");
+      seen.add(step.rung);
+      if (step.rung === "equiv") {
         const hl = step.highlights as SlantHint;
         expect(hl.ref).toBeDefined();
         expect(hl.marks?.length).toBeGreaterThan(0);
       }
-      if (step.move.type === "alike") {
-        seen.add(/^This \d clue/.test(e) ? "mark-clue" : "mark-v");
-      }
     }
     // This board's plan says all five.
-    expect([...seen].sort()).toEqual([
-      "deadend",
-      "equiv",
-      "loop",
-      "mark-clue",
-      "mark-v",
-    ]);
+    for (const rung of ["deadend", "equiv", "loop", "mark-clue", "mark-v"])
+      expect(seen).toContain(rung);
   });
 
   test("hintKeepTrack: the hinted move completes, a wrong move drops the plan", () => {

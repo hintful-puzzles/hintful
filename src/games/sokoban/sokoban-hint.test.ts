@@ -18,8 +18,8 @@ import {
 } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { hint, hintKeepTrack, pushMove } from "./hint.ts";
-import { BARREL, GOAL, PUSH } from "./hint-text.ts";
+import { hint, hintKeepTrack, pushMove, type SokobanRung } from "./hint.ts";
+import { BARREL, GOAL, PUSH, type Stuck } from "./hint-text.ts";
 import { executeMove, sokobanGame } from "./index.ts";
 import { DIRS, SokobanBoard, search, searchFrom } from "./solver.ts";
 import {
@@ -39,8 +39,10 @@ function load(id: string): SokobanState {
   return G.newState(G.decodeParams(params), desc);
 }
 
-/** Positions the scan found, each with how many of the 937 positions it walked
- * on 40 boards open with the pin's sentence (2026-10-04). */
+/** Positions the scan found, each with how many of the positions it walked
+ * hold the pin's rung or case: of 937 on 40 boards (2026-10-04), or of 3824
+ * on the 160 boards it took to reach `alsoThese` (2026-10-05). A const,
+ * because the tests below read the pins by id. */
 const PINNED = {
   /** This barrel's other push would jam it where it can never move.
    * Held on 86 of 937. */
@@ -58,24 +60,21 @@ const PINNED = {
    * Held on 5 of 937. */
   trapDead:
     "10x12:w11f3sfs2fw2s2fs4fw2f2s4fsw2sfsfs4w2s4fs3w2s3fs4w2s2f2sfsfw2f2s3us2w2tbs2ftbsw2s8w11",
+  /** A push of this barrel strands a barrel, whichever and however. */
+  trap: "10x12:w12s3twf2w3b2s5w2stsfs4w2bs2btsbsw2t2st2stbw2sb2sbs2tw2s3fs4w2bs4fsfw2t2sbus3w3tbs5w11",
+  /** Every other push of this barrel was searched to the end, and none
+   * finishes.
+   * Held on 109 of 3824. */
+  only: "10x12:w24s2tw7sbw8s3btw7stsw7sb2w4tbs3tw6s2b2w6sbt2w5futbtw11",
   /** Every other push of this barrel settled, and more than one finishes.
    * Held on 6 of 937. */
   onlyThese:
     "10x12:w11s2fsfs2fw2s5fs2w2s2fsfs2fw2us2ts2btw2fs2bs4w2fbt2sbt2w2tsb2tbsbw2ts4tbsw2bs2bs4w2s3tsfs2w11",
-  /** Nothing settled worth saying; the push lands on a target.
-   * Held on 454 of 937. */
-  onTarget:
-    "10x12:w11s2tsfs2fw2sbs3fs2w2s2fstbufw2bs2ts2btw2ts2bsbs2w2fbt2s2t2w2ts2btbsbw2tsbs2tbsw2sbsbsbs2w2s3tsts2w11",
-  /** Barrels shut the player into a corner of the board, and this push lets
-   * them out (owner, 2026-10-03).
-   * Held on 22 of 937. */
-  freesYou:
-    "10x12:w12s3twt2w3b2s2bsbw2stsfs4w2bs3tsbsw2t2sftstbw2sb2ubs2tw2s3fs4w2bs4fsfw2t2s3bs2w3tbs5w11",
-  /** Nothing settled worth saying, the push lands on floor, and no run to a
-   * target opens with it.
-   * Held on 66 of 937. */
-  plain:
-    "10x12:w11s2fsfs2fw2s5fs2w2s2fsfs2fw2s3fs3fw2fs2us4w2fbt2sbt2w2tsb2tbsbw2ts4tbsw2bs2bs4w2s3tsfs2w11",
+  /** Some other pushes of this barrel finish, one is lost, and one the search
+   * could not settle.
+   * Held on 4 of 3824. */
+  alsoThese:
+    "10x12:w13tbsw6tbs3w7tbtbtw5bsbtw3tw2sus2w3bs3fs3w2s2wstswsw2tbs2bsbtw4sbtsbsw6tbstw11",
   /** The push fills a target at the end of a corridor, which a barrel on the
    * target before it would shut off.
    * Held on 8 of 937. */
@@ -85,9 +84,23 @@ const PINNED = {
    * Held on 77 of 937. */
   clearsWay:
     "10x12:w11tbtbs2btw3s4btw4fws4tw3s3tbs2w2tbs2bstbw2s2tstbstw2sb2sbsf2w2tbts5w2s2fus3fw3fs3w14",
+  /** Nothing settled worth saying; the push lands on a target.
+   * Held on 454 of 937. */
+  onTarget:
+    "10x12:w11s2tsfs2fw2sbs3fs2w2s2fstbufw2bs2ts2btw2ts2bsbs2w2fbt2s2t2w2ts2btbsbw2tsbs2tbsw2sbsbsbs2w2s3tsts2w11",
+  /** Barrels shut the player into a corner of the board, and this push lets
+   * them out (owner, 2026-10-03).
+   * Held on 22 of 937. */
+  freesYou:
+    "10x12:w12s3twt2w3b2s2bsbw2stsfs4w2bs3tsbsw2t2sftstbw2sb2ubs2tw2s3fs4w2bs4fsfw2t2s3bs2w3tbs5w11",
   /** The plan pushes one barrel twice or more, onto a target.
    * Held on 119 of 937. */
   run: "10x12:w11tbtbs2btw3s4btw4fws4tw3s3tbs2w2tbs2bstbw2s2tstbstw2sb2sbsf2w2tbtsbs3w2s2ts3ufw3fs3w14",
+  /** Nothing settled worth saying, the push lands on floor, and no run to a
+   * target opens with it.
+   * Held on 66 of 937. */
+  plain:
+    "10x12:w11s2fsfs2fw2s5fs2w2s2fsfs2fw2s3fs3fw2fs2us4w2fbt2sbt2w2tsb2tbsbw2ts4tbsw2bs2bs4w2s3tsfs2w11",
 };
 
 /** A board as dealt, whose walk by hints says each of the three things the
@@ -151,41 +164,48 @@ function step(id: string) {
   return { s, step: r.steps[0] };
 }
 
-/** What the hint says at each pinned position. */
-const SENTENCES: Record<keyof typeof PINNED, RegExp> = {
-  trapFrozen:
-    /^This barrel's striped push would jam it so it can never move\. One way to avoid that: push it (left|right|up|down)\.$/,
-  trapVictim:
-    /^This barrel's striped push would jam the outlined barrel so it can never move\. One way to avoid that: push it \w+\.$/,
-  trapCorner:
-    /^This barrel's striped push would wedge it in a corner it can never leave\. One way to avoid that: push it \w+\.$/,
-  trapDead:
-    /^This barrel's striped push would leave it where no push can bring it to a target\. One way to avoid that: push it \w+\.$/,
-  onlyThese:
-    /^This barrel can still finish only along the arrows\. One of them: push it \w+\.$/,
-  onTarget: /^Push this barrel \w+: that puts it on a target\.$/,
-  freesYou: /^Barrels box you in\. Push this barrel \w+: that lets you out\.$/,
-  plain: /^Push this barrel \w+\.$/,
-  fillFirst:
-    /^A barrel on the outlined target would wall off the ringed one\. Fill that one first: push this barrel \w+\.$/,
-  clearsWay:
-    /^This barrel keeps the outlined barrel from reaching a target\. Push it \w+: that opens a way\.$/,
-  run: /^(Two|Three|Four|Five) pushes put this barrel on a target\. First, push it \w+\.$/,
+type Step = HintStep<SokobanMove, unknown, SokobanRung>;
+
+/** A trap's case: whether the striped push strands the pushed barrel itself
+ * or another, and how that barrel is stuck. */
+function trapCase(st: Step, s: SokobanState): { own: boolean; why: Stuck } | null {
+  if (st.rung !== "trap") return null;
+  const [rival] = stepMarks(st).of("stripes", PUSH);
+  const board = new SokobanBoard(s);
+  const after = board.apply(board.positionOf(s), rival);
+  const landed = board.step(rival.barrel, rival.dir);
+  const victim = board.stuck(after, landed);
+  const kind = board.stuckKind(after, victim);
+  if (kind === null) return null;
+  const why = kind === "dead" && board.cornered(victim) ? "corner" : kind;
+  return { own: victim === landed, why };
+}
+const trapOf = (own: boolean, why: Stuck) => (st: Step, s: SokobanState) => {
+  const c = trapCase(st, s);
+  return c !== null && c.own === own && c.why === why;
 };
 
-/** Each pin opens with its sentence, and the scan finds the pins again when a
- * change to the search moves them. */
+/** The cases of a trap that read differently. */
+const KINDS = {
+  trapFrozen: trapOf(true, "frozen"),
+  trapVictim: trapOf(false, "frozen"),
+  trapCorner: trapOf(true, "corner"),
+  trapDead: trapOf(true, "dead"),
+};
+
+/** Each pin's plan speaks its rung or opens with its case, and the scan finds
+ * the pins again when a change to the search moves them. */
 const pinned = describeHintPins({
   game: G,
   params: [G.decodeParams("10x12")],
-  seeds: 40,
+  seeds: 160,
   descOf: encodeBoard,
-  kinds: SENTENCES,
+  kinds: KINDS,
   pins: PINNED,
 });
 
 describe("the hint's sentences", () => {
-  for (const name of Object.keys(SENTENCES) as (keyof typeof PINNED)[]) {
+  for (const name of Object.keys(PINNED) as (keyof typeof PINNED)[]) {
     it(`${name}: says what it checked, and draws what it says`, () => {
       const { state: s, step: st } = pinned(name);
       expect(bindingDefects(G, s, G.newUi(s), st)).toEqual([]);
@@ -279,10 +299,10 @@ describe("the hint's sentences", () => {
       const r = hint(s);
       if (!r.ok) throw new Error(r.error);
       const [st] = r.steps;
-      if (/wall off/.test(st.explanation)) {
+      if (st.rung === "fillFirst") {
         expectWalledOff(s, st);
         said.walledOff++;
-      } else if (/from reaching a target/.test(st.explanation)) {
+      } else if (st.rung === "clearsWay") {
         expectWayOpened(s, st);
         said.wayOpened++;
       } else if (r.steps.length > 1) {

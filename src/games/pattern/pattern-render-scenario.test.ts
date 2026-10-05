@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -20,7 +20,7 @@ const P = { w: 10, h: 10 };
 /** A position whose hint opens with a step citing a black mark on the board.
  * The hint's steps are the solver's firings in order, so the step a plan opens
  * with is the first firing. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: patternGame,
   params: [P],
   kinds: {

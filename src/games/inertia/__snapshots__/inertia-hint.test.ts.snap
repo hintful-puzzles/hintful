@@ -722,3 +722,12 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
   },
 ]
 `;
+
+exports[`inertia: pinned hint positions > says, at each pin 1`] = `
+{
+  "collect": "Slide north-east: it sweeps up a gem and then the outlined gem, and the wall at the end brings you up short.",
+  "forced": "Working on the outlined gem: every other way you can go runs you onto a mine, so slide east.",
+  "positioning": "Working on the outlined gem: no slide from here reaches it. Slide south: it works the ball round toward it.",
+  "strands": "Sliding south-west grabs the outlined gem, but you can't pick where you stop and it strands four gems. One safe way: slide south.",
+}
+`;

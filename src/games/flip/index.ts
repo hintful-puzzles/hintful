@@ -28,7 +28,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { genCrossesMatrix, genRandomMatrix } from "./generator.ts";
-import { hint, hintKeepTrack } from "./hint.ts";
+import { FLIP_RUNGS, type FlipRung, hint, hintKeepTrack } from "./hint.ts";
 import {
   ANIM_TIME,
   border,
@@ -149,7 +149,16 @@ function executeMove(from: FlipState, move: FlipMove): FlipState {
 
 // --- the Game -------------------------------------------------------
 
-export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawState> = {
+export const flipGame: Game<
+  FlipParams,
+  FlipState,
+  FlipMove,
+  FlipUi,
+  FlipDrawState,
+  unknown,
+  unknown,
+  FlipRung
+> = {
   id: "flip",
   // Flipping a cell is the only gesture; the secondary button has no meaning,
   // so a touch player's held press must not be promoted into one.
@@ -259,6 +268,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   },
 
   hint,
+  hintRungs: FLIP_RUNGS,
   hintMarks: {
     roles: {
       ring: "the square to press.",

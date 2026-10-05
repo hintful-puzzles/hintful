@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sixteen: pinned hint positions > says, at each pin 1`] = `
+{
+  "home": "Working on tile 2: move it to the ringed square, its final spot.",
+  "settingUp": "Working on tile 9: move it to the ringed square (setting up).",
+  "straightSlideAlongItsLine": "Working on tile 9: move it to the ringed square (setting up).",
+}
+`;

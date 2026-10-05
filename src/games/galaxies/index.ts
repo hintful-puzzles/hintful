@@ -64,7 +64,9 @@ import {
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
 import {
+  GALAXIES_RUNGS,
   type GalaxiesHint,
+  type GalaxiesRung,
   galaxiesHintSteps,
   outstanding,
   stepSatisfied,
@@ -765,7 +767,7 @@ function hintGesture(
   ui: GalaxiesUi,
   ds: GalaxiesDrawState,
   m: GalaxiesMove,
-  step: HintStep<GalaxiesMove, GalaxiesHint>,
+  step: HintStep<GalaxiesMove, GalaxiesHint, GalaxiesRung>,
 ): readonly PointerAction[] {
   const tile = ds.tileSize;
   const border = borderFor(tile);
@@ -907,7 +909,7 @@ function findMistakes(s: GalaxiesState): readonly GalaxiesMistake[] {
  * their wording; the refusals live here because they are about the board the
  * player is looking at, not about the deduction.
  */
-function hint(s: GalaxiesState): HintResult<GalaxiesMove, GalaxiesHint> {
+function hint(s: GalaxiesState): HintResult<GalaxiesMove, GalaxiesHint, GalaxiesRung> {
   const steps = galaxiesHintSteps(s);
   if (steps.length === 0) {
     // On an Unreasonable board this is the expected end of the road: what
@@ -947,9 +949,9 @@ function hintKeepTrack(
  * advance, partly done ⇒ show only what is left.
  */
 function refreshHintStep(
-  step: HintStep<GalaxiesMove, GalaxiesHint>,
+  step: HintStep<GalaxiesMove, GalaxiesHint, GalaxiesRung>,
   s: GalaxiesState,
-): HintStep<GalaxiesMove, GalaxiesHint> | null {
+): HintStep<GalaxiesMove, GalaxiesHint, GalaxiesRung> | null {
   if (stepSatisfied(s, step)) return null;
   const hl = step.highlights;
   if (!hl?.targetDot || hl.targets.length < 2) return step;
@@ -1065,7 +1067,8 @@ export const galaxiesGame: Game<
   GalaxiesUi,
   GalaxiesDrawState,
   GalaxiesMistake,
-  GalaxiesHint
+  GalaxiesHint,
+  GalaxiesRung
 > = {
   id: "galaxies",
   preferredTileSize: PREFERRED_TILE_SIZE,
@@ -1132,6 +1135,7 @@ export const galaxiesGame: Game<
   solve: solveGalaxies,
   findMistakes,
   hint,
+  hintRungs: GALAXIES_RUNGS,
   hintKeepTrack,
   hintGesture,
   refreshHintStep,

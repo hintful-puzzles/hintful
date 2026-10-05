@@ -66,6 +66,13 @@ export interface NetslideHint {
  * times longer than Sixteen's and the search is correspondingly deeper. A
  * partial plan is a fine outcome, so this is a "how much is a hint worth"
  * number, not a correctness one. */
+/** What a step's sentence rests on, by the branch of {@link narrateStep} that
+ * chose it. The legs of a journey carry the rung of the step that opened it. */
+export const NETSLIDE_RUNGS = ["frozenLine", "besideSource", "working"] as const;
+export type NetslideRung = (typeof NETSLIDE_RUNGS)[number];
+
+type Step = HintStep<NetslideMove, NetslideHint, NetslideRung>;
+
 const MAX_STATES = 6_000;
 
 /* ----------------------------------------------------------------------
@@ -333,7 +340,7 @@ export function arrowFor(
 export function hint(
   s: NetslideState,
   aux?: string,
-): HintResult<NetslideMove, NetslideHint> {
+): HintResult<NetslideMove, NetslideHint, NetslideRung> {
   const { w, h } = s;
   const n = w * h;
 
@@ -460,11 +467,7 @@ function distanceTo(cell: number, home: number, w: number, h: number): number {
  * hints: the continuation legs are flagged `continuesPrevious`, so the midend
  * keeps the hint on screen through them and auto-play runs them back to back.
  */
-function narratePlan(
-  s: NetslideState,
-  target: Uint8Array,
-  path: SlideMove[],
-): HintStep<NetslideMove, NetslideHint>[] {
+function narratePlan(s: NetslideState, target: Uint8Array, path: SlideMove[]): Step[] {
   const { w, h } = s;
   const n = w * h;
 
@@ -486,14 +489,17 @@ function narratePlan(
   const destination = new Int32Array(n);
   for (let cell = 0; cell < n; cell++) destination[finish[cell]] = cell;
 
-  const steps: HintStep<NetslideMove, NetslideHint>[] = [];
+  const steps: Step[] = [];
   let journey: number | null = null;
+  let opened: NetslideRung = "working";
 
   for (let k = 0; k < path.length; k++) {
     const focus = chooseFocus(boards[k], destination, target, s, path[k], journey);
     const continuesPrevious = journey !== null && focus.label === journey;
 
-    steps.push(narrateStep(s, path[k], focus, continuesPrevious));
+    const step = narrateStep(s, path[k], focus, continuesPrevious ? opened : null);
+    steps.push(step);
+    opened = step.rung;
 
     // The journey ends when its tile arrives; otherwise the next slide that
     // carries this tile further is the same journey's next leg.
@@ -610,8 +616,10 @@ function narrateStep(
   s: NetslideState,
   m: SlideMove,
   focus: Focus,
-  continuesPrevious: boolean,
-): HintStep<NetslideMove, NetslideHint> {
+  /** The rung of the journey this step is a later leg of, or null. */
+  journey: NetslideRung | null,
+): Step {
+  const continuesPrevious = journey !== null;
   const { w, cx, cy } = s;
   const move = toNetslideMove(m);
   const mask = s.tiles[focus.label];
@@ -638,23 +646,30 @@ function narrateStep(
   // never slides, so the only line that can move it is its column — and the other
   // way about. The row is "this row", striped: the board draws no numbers.
   let words: (m: Marked) => Sentence;
-  if (continuesPrevious) {
+  let rung: NetslideRung;
+  if (journey !== null) {
+    rung = journey;
     words = (m) => say.next(m, arrivesHome);
   } else if (row === cy && m.axis === "col") {
+    rung = "frozenLine";
     words = (m) => say.rowFixed(m, arrivesHome);
     highlights.line = Array.from({ length: w }, (_, x) => cy * w + x);
   } else if (col === cx && m.axis === "row") {
+    rung = "frozenLine";
     words = (m) => say.colFixed(m, arrivesHome);
     highlights.line = Array.from({ length: s.h }, (_, y) => y * w + cx);
   } else if (focus.belongs && isBesideSource(focus.destination, w, cx, cy)) {
+    rung = "besideSource";
     words = (m) => say.besideSource(m, arrivesHome);
   } else {
+    rung = "working";
     words = (m) => say.working(m, arrivesHome);
   }
 
   const said = words({ ...markedOf(highlights), mask });
   return {
     move,
+    rung,
     explanation: said.text,
     words: said,
     highlights,
@@ -694,7 +709,7 @@ function isBesideSource(cell: number, w: number, cx: number, cy: number): boolea
  */
 export function hintKeepTrack(
   m: NetslideMove,
-  step: HintStep<NetslideMove, NetslideHint>,
+  step: Step,
   _s: NetslideState,
 ): HintTrackVerdict {
   if (m.type !== "slide" || step.move.type !== "slide") return "off";

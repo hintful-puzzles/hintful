@@ -82,17 +82,15 @@ const pinned = describeHintPins({
     // A tile sitting in the source's row can only be shifted by its column,
     // and the other way about.
     offFrozenRow: (step, state) =>
+      step.rung === "frozenLine" &&
       step.move.type === "slide" &&
       step.move.axis === "col" &&
       Math.floor(marksOf(step).tile / state.w) === state.cy,
     offFrozenColumn: (step, state) =>
+      step.rung === "frozenLine" &&
       step.move.type === "slide" &&
       step.move.axis === "row" &&
       marksOf(step).tile % state.w === state.cx,
-    // Selected on the sentence, not on the marks: a tile on the source's own
-    // row or column can also belong beside it, but the frozen-line branch
-    // takes precedence and narrates it differently.
-    besideSource: /belongs beside the source/,
     // A tile that needs more than one slide to get home: the opening step's
     // plan has a continuation leg straight after it.
     journey: (_, state) => {
@@ -111,12 +109,16 @@ const pinned = describeHintPins({
     offFrozenRow: "5x5w:767822c589d47adb629595514",
     /** Held on 15 of 128 positions walked. */
     offFrozenColumn: "4x4b1:chb4h2h8v9v43h1ah7h457dv5",
-    /** Held on 17 of 128 positions walked. */
-    besideSource: "4x4b1:1h8v9eh4v7h4v83hcvb1h3c67",
     /** Held on 20 of 128 positions walked. */
     journey: "4x4b1:6v97h4hd5hbvh382d4h8vbv24",
     /** Held on 81 of 128 positions walked. */
     aimsAlongItsSlide: "4x4b1:1h1v7hdch6h26h9d7h1cv2v1c",
+    /** Held on 103 of 128 positions walked. */
+    frozenLine: "4x4b1:chb4h2h8v9v43h1ah7h457dv5",
+    /** Held on 96 of 128 positions walked. */
+    besideSource: "4x4b1:1h8v9eh4v7h4v83hcvb1h3c67",
+    /** Held on 128 of 128 positions walked. */
+    working: "4x4b1:1h1v7hdch6h26h9d7h1cv2v1c",
   },
 });
 

@@ -20,7 +20,11 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { runLatinCandidatePlan } from "../../engine/candidate-plan.ts";
+import {
+  LATIN_RUNGS,
+  type PlanRung,
+  runLatinCandidatePlan,
+} from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
@@ -501,6 +505,19 @@ function extremeClueLines(
   return out;
 }
 
+/** Every rung a Towers step can be: the Latin family's, and the kinds of
+ * {@link TowersReason}. */
+export const TOWERS_RUNGS = [
+  ...LATIN_RUNGS,
+  "fullLine",
+  "tallestNearest",
+  "facing",
+  "lineFull",
+  "lowerBound",
+  "arrangement",
+] as const;
+export type TowersRung = (typeof TOWERS_RUNGS)[number];
+
 /** Build the hint plan by walking a working copy of the board the way a person
  * solves it (`runLatinCandidatePlan`). Towers' own rung is the extreme-clue lines,
  * which need no notes, so an empty board opens on them rather than on
@@ -509,9 +526,9 @@ function extremeClueLines(
 function buildSteps(
   state: TowersState,
   { autoClean, reading }: CandidatePlanPrefs,
-): HintStep<TowersMove, TowersHint>[] {
+): HintStep<TowersMove, TowersHint, TowersRung>[] {
   const w = state.w;
-  const steps: HintStep<TowersMove, TowersHint>[] = [];
+  const steps: HintStep<TowersMove, TowersHint, PlanRung<HintReason>>[] = [];
   const wGrid = Uint8Array.from(state.grid);
   const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
   runLatinCandidatePlan<TowersMove, TowersHint, HintOp, HintReason>({
@@ -562,7 +579,8 @@ export const towersGame: Game<
   TowersUi,
   TowersDrawState,
   TowersMistake,
-  TowersHint
+  TowersHint,
+  TowersRung
 > = {
   id: "towers",
   canMarkAll: true, // handles 'M' (pencilAll) in interpretMove
@@ -586,6 +604,7 @@ export const towersGame: Game<
   solve,
   difficulty,
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  hintRungs: TOWERS_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step decides, or whose pencil marks it crosses out. The heights it strikes are crossed through in their own color.",

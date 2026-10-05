@@ -71,7 +71,9 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  CLUSTERS_RUNGS,
   type ClustersDeduction,
+  type ClustersRung,
   COMPLETE,
   clustersStatus,
   deduceHintPlan,
@@ -354,7 +356,9 @@ function buildHighlights(d: ClustersDeduction, w: number): ClustersHintHighlight
   };
 }
 
-function hint(state: ClustersState): HintResult<ClustersMove, ClustersHintHighlights> {
+function hint(
+  state: ClustersState,
+): HintResult<ClustersMove, ClustersHintHighlights, ClustersRung> {
   // A board `findMistakes` passes can still be inconsistent without any one cell
   // being provably wrong, and that is answered with `CONTRADICTION_UNLOCALIZED`
   // below.
@@ -366,19 +370,19 @@ function hint(state: ClustersState): HintResult<ClustersMove, ClustersHintHighli
   if (plan.verdict !== COMPLETE || plan.deductions.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
-  const steps: HintStep<ClustersMove, ClustersHintHighlights>[] = plan.deductions.map(
-    (d) => {
+  const steps: HintStep<ClustersMove, ClustersHintHighlights, ClustersRung>[] =
+    plan.deductions.map((d) => {
       const highlights = buildHighlights(d, state.w);
       const target = { x: d.index % state.w, y: (d.index / state.w) | 0 };
       const words = narrate(d, target, highlights);
       return {
         move: { kind: "paint", cells: [{ index: d.index, fill: d.fill }] },
+        rung: d.reason.kind,
         explanation: words.text,
         words,
         highlights,
       };
-    },
-  );
+    });
   return { ok: true, steps };
 }
 
@@ -439,7 +443,8 @@ export const clustersGame: Game<
   ClustersUi,
   ClustersDrawState,
   ClustersMistake,
-  ClustersHintHighlights
+  ClustersHintHighlights,
+  ClustersRung
 > = {
   id: "clusters",
 
@@ -470,6 +475,7 @@ export const clustersGame: Game<
         "the squares the step reasons from. A double orange ring is on the dot or square where the other color would break a rule. On Normal boards, numbered outlined squares, each holding a small square of red or blue, show what supposing the other color would force, in order, and to which color: they are only a supposition, and nothing is placed there.",
     },
   },
+  hintRungs: CLUSTERS_RUNGS,
   hintKeepTrack,
   hintGesture,
   findMistakes,

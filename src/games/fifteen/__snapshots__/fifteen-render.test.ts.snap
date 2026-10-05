@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`fifteen: pinned hint positions > says, at each pin 1`] = `
+{
+  "goalCloser": "Working on tile 1: slide it closer.",
+  "goalHome": "Working on tile 1: slide it into place.",
+  "goalReposition": "Working on tile 3: slide it back a step, leaving the hole between it and its home.",
+  "outOfWay": "Working on tile 1: slide tile 12 out of the way.",
+  "slide": "Working on tile 1: slide tile 12 out of the way.",
+  "tileHome": "Working on tile 1: slide tile 7 into place.",
+}
+`;

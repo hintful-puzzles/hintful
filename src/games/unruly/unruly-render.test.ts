@@ -222,6 +222,7 @@ describe("Unruly redraw", () => {
     });
     const hint: HintStep<UnrulyMove, UnrulyHint> = {
       move: { type: "place", x: 2, y: 0, value: ONE },
+      rung: "threes",
       explanation: words.text,
       words,
       highlights: { target },

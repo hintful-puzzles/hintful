@@ -12661,3 +12661,11 @@ exports[`tents render scenarios > opener frame: grid lines, a tree, edge numbers
   },
 ]
 `;
+
+exports[`tents: pinned hint positions > says, at each pin 1`] = `
+{
+  "lineCount": "This column needs 3 more tents, and its open squares have room for only 3 that don't touch, so this one must be a tent.",
+  "lineNeighbors": "Wherever this column's 3 remaining tents go, one touches each of these squares beside it, so they must be grass.",
+  "tentLink": "Every other tree beside the ringed tent has its tent (outlined), so it must belong to the tree below it: join them.",
+}
+`;

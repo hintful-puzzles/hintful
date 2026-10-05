@@ -268,6 +268,10 @@ export type ClustersReason =
   | { kind: "direct"; at: ClustersContradiction }
   | { kind: "chain"; steps: ChainStep[]; at: ClustersContradiction };
 
+/** The rungs a hint step can be: the reasons' kinds. */
+export const CLUSTERS_RUNGS = ["direct", "chain"] as const;
+export type ClustersRung = (typeof CLUSTERS_RUNGS)[number];
+
 /** One forced move: coloring `index` with `refuted` breaks `reason`, so it
  * must be `fill`. */
 export interface ClustersDeduction {

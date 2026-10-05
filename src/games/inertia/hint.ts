@@ -45,7 +45,18 @@ import {
   slidePath,
 } from "./state.ts";
 
-type Step = HintStep<InertiaMove>;
+/** What a step rests on, by the branch of {@link narrate} that chose its words. */
+export const INERTIA_RUNGS = [
+  "collect",
+  "forced",
+  "strands",
+  "declined",
+  "positioning",
+] as const;
+export type InertiaRung = (typeof INERTIA_RUNGS)[number];
+
+type Step = HintStep<InertiaMove, unknown, InertiaRung>;
+type Said = { rung: InertiaRung; words: Sentence };
 
 // --- the claims we are allowed to make -------------------------------
 
@@ -115,30 +126,33 @@ function narrate(
   goal: number,
   /** How many moves of this leg are left, counting this one. */
   toGoal: number,
-): Sentence {
+): Said {
   const only = onlyMove(before, dir);
   const m = { dir, goal };
 
   // The leg's payoff. The goal is the *last* gem on the path, so any others are
   // swept up on the way to it.
   if (path.gems.length > 0) {
-    return say.collect(m, path.gems.length - 1, only, path.stopper);
+    return {
+      rung: "collect",
+      words: say.collect(m, path.gems.length - 1, only, path.stopper),
+    };
   }
-  if (only) return say.forced(m, only);
+  if (only) return { rung: "forced", words: say.forced(m, only) };
 
   const grab = oneSlideGrab(before, goal);
   if (grab !== null) {
     const stranded = unreachableGems(slide(before, grab));
     return stranded.length > 0
-      ? say.strands(m, grab, stranded.length)
-      : say.declined(m);
+      ? { rung: "strands", words: say.strands(m, grab, stranded.length) }
+      : { rung: "declined", words: say.declined(m) };
   }
 
   // "One more slide" is a promise about the *plan's own next move*, not about
   // some slide existing: the route may reach the gem from a side no single
   // slide from here can, and a promise it then breaks reads as a hint that has
   // lost the plot.
-  return say.positioning(m, toGoal === 2);
+  return { rung: "positioning", words: say.positioning(m, toGoal === 2) };
 }
 
 // --- planning: the nearest gem the ball can safely take ---------------
@@ -263,7 +277,9 @@ function firstLegOf(s: InertiaState, route: readonly number[]): number[] | null 
 
 // --- the plan --------------------------------------------------------
 
-export function hint(state: InertiaState): HintResult<InertiaMove> {
+export function hint(
+  state: InertiaState,
+): HintResult<InertiaMove, unknown, InertiaRung> {
   // The board already draws a dead ball as one, so there is nothing to mark.
   if (state.dead) {
     return {
@@ -304,7 +320,7 @@ export function hint(state: InertiaState): HintResult<InertiaMove> {
     leg.dirs.forEach((dir, i) => {
       // The goal is carried across every step of the leg, not re-derived
       // from where the ball is standing.
-      const words = narrate(
+      const { rung, words } = narrate(
         leg.states[i],
         dir,
         leg.paths[i],
@@ -313,6 +329,7 @@ export function hint(state: InertiaState): HintResult<InertiaMove> {
       );
       steps.push({
         move: { type: "move", dir },
+        rung,
         explanation: words.text,
         words,
       });
@@ -339,7 +356,7 @@ export function hint(state: InertiaState): HintResult<InertiaMove> {
  */
 export function hintKeepTrack(
   m: InertiaMove,
-  step: Step,
+  step: HintStep<InertiaMove>,
   _state: InertiaState,
 ): HintTrackVerdict {
   if (m.type !== "move" || step.move.type !== "move") return "off";

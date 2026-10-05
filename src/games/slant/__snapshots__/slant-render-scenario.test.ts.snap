@@ -3161,3 +3161,10 @@ exports[`Slant hint render scenarios > opener frame: ringed target(s), recolored
   },
 ]
 `;
+
+exports[`slant: pinned hint positions > says, at each pin 1`] = `
+{
+  "clue": "This 1 clue needs a line from every square around it, so this square must slant toward it.",
+  "loop": "Diagonals in the outlined squares join two corners of this square, so it must slant the other way to avoid a loop.",
+}
+`;

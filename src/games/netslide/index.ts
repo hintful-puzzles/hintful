@@ -33,7 +33,15 @@ import { registerGame } from "../../engine/registry.ts";
 import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { arrowFor, hint, hintKeepTrack, type NetslideHint, parseAux } from "./hint.ts";
+import {
+  arrowFor,
+  hint,
+  hintKeepTrack,
+  NETSLIDE_RUNGS,
+  type NetslideHint,
+  type NetslideRung,
+  parseAux,
+} from "./hint.ts";
 import { reconstructSolution } from "./reconstruct.ts";
 import {
   ANIM_TIME,
@@ -220,7 +228,8 @@ export const netslideGame: Game<
   NetslideUi,
   NetslideDrawState,
   unknown,
-  NetslideHint
+  NetslideHint,
+  NetslideRung
 > = {
   id: "netslide",
 
@@ -310,6 +319,7 @@ export const netslideGame: Game<
   },
 
   hint,
+  hintRungs: NETSLIDE_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides: the piece it is placing, with a double ring round its square, the arrow to click, drawn in the hint's color, and the square the slide takes the piece to, outlined. A solid outline is where the piece belongs; a dashed one is a square it is only passing through, or being parked in to set up a later move. When the slide only starts a longer journey, both squares are marked, and the dashed one nearer the piece is where this slide lands it. The words name the piece by its shape: a *loose end*, a *straight*, a *corner*, a *T-piece* or a *cross*.",

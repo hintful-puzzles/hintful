@@ -1,7 +1,7 @@
 # name-the-rung-a-hint-step-speaks
 
-**Status: scaffolded, not started (2026-10-04).** A follow-up from
-`move-the-hint-scans-onto-the-harness`.
+A follow-up from `move-the-hint-scans-onto-the-harness`. Implemented together
+with `keep-the-pin-scan-command`; `design.md` has what was decided.
 
 ## Why
 

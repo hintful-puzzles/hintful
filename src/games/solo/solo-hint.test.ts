@@ -11,7 +11,10 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import {
+  describeHintKindPins,
+  describeHintPins,
+} from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -72,32 +75,124 @@ const KILLER: SoloParams = {
   killer: true,
 };
 
-const HIDDEN_SINGLE =
-  /^Every other cell in this \w+ rules out \w, so this cell must be/;
 const EXTRA_CAGE = /^This (row|column|block) must total (\d+);/;
 const LOCKED_PATTERN = /^Their columns fit (\S+) only in the outlined cells/;
-/** A deductive elimination that names the region it rests on. */
-const REGION_STRIKE = /cross out the \w from the rest of it|already accounts? for/;
 
 const strikes = (step: AnyStep): number =>
   step.move.type === "pencilStrike" ? step.move.marks.length : 0;
 
+type Cell = { x: number; y: number };
+
+/** The cells of the region a step stripes: the one its sentence calls "this
+ * row", "this block", "this diagonal". */
+const striped = (step: { highlights?: unknown }): readonly Cell[] =>
+  (step.highlights as { hatch?: Cell[] } | undefined)?.hatch ?? [];
+
+/** Whether `cells` are one of the board's two long diagonals. */
+const isDiagonal = (cells: readonly Cell[], cr: number): boolean =>
+  cells.length === cr &&
+  (cells.every((c) => c.x === c.y) || cells.every((c) => c.x + c.y === cr - 1));
+
+/**
+ * Every rung on a position whose plan speaks it. A plan is asked under one
+ * reading of the note-less cells, and `populate` and `note` are each spoken
+ * under one of the two, so the boards are split between them by how many
+ * givens a board has.
+ */
+describeHintPins({
+  game: soloGame,
+  params: [ADV, XADV, KILLER, EXTREME],
+  seeds: 6,
+  ui: (st) => ({
+    ...newUi(st),
+    candidateReading:
+      st.immutable.filter((g) => g).length % 2 === 0 ? "implicit" : "populate",
+  }),
+  pins: {
+    /** Held on 4 of 3025 positions walked. */
+    populate: "3x3da:b6_7_2f8_5c4_6d4a2b8b2b3b9c1c4b4b5b7b7a5d6_1c3_4f7_2_9b",
+    /** Held on 781 of 3025 positions walked. */
+    clean: {
+      id: "3x3da:b6_7_2f8_5c4_6d4a2b8b2b3b9c1c4b4b5b7b7a5d6_1c3_4f7_2_9b",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 1402 of 3025 positions walked. */
+    note: "3x3ka:zzzc,aa_aa_a_______a_______________________a__________a______aaa_abaa_aaa___aaa___aab_a_a_aaaababaaabaaa_,14a8a6_14a10a17_9_9b17_14_15c6_8d10a7a14_10_6a9a17a10c7a10a9a9_14b11a12a15a9a16a10c16a17a15a5h",
+    /** Held on 2880 of 3025 positions walked. */
+    dup: "3x3da:a1_9d7c5_7f3b2c9_3b2_9b5c8_6a4_1c6b5_7b2_4c6b2f3_7c5d9_3a",
+    /** Held on 3006 of 3025 positions walked. */
+    single: {
+      id: "3x3da:a8e6c2_3b4e9a6_2_3d8_4_7_1f6f4_2_9_5d3_1_5a2e6b9_5c9e4a",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":6},{"x":0,"y":0,"n":8},{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":6},{"x":2,"y":0,"n":8},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":3,"y":0,"n":5},{"x":3,"y":0,"n":6},{"x":3,"y":0,"n":8},{"x":3,"y":0,"n":9},{"x":4,"y":0,"n":3},{"x":4,"y":0,"n":4},{"x":4,"y":0,"n":6},{"x":4,"y":0,"n":8},{"x":4,"y":0,"n":9},{"x":5,"y":0,"n":2},{"x":5,"y":0,"n":3},{"x":5,"y":0,"n":5},{"x":5,"y":0,"n":6},{"x":5,"y":0,"n":7},{"x":5,"y":0,"n":8},{"x":5,"y":0,"n":9},{"x":6,"y":0,"n":1},{"x":6,"y":0,"n":2},{"x":6,"y":0,"n":3},{"x":6,"y":0,"n":4},{"x":6,"y":0,"n":5},{"x":6,"y":0,"n":6},{"x":6,"y":0,"n":8},{"x":8,"y":0,"n":2},{"x":8,"y":0,"n":3},{"x":8,"y":0,"n":4},{"x":8,"y":0,"n":6},{"x":8,"y":0,"n":8},{"x":0,"y":1,"n":2},{"x":0,"y":1,"n":3},{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":8},{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":3},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":8},{"x":1,"y":1,"n":9},{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":3},{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":6},{"x":4,"y":1,"n":9},{"x":5,"y":1,"n":2},{"x":5,"y":1,"n":3},{"x":5,"y":1,"n":4},{"x":5,"y":1,"n":5},{"x":5,"y":1,"n":6},{"x":5,"y":1,"n":7},{"x":5,"y":1,"n":9},{"x":7,"y":1,"n":2},{"x":7,"y":1,"n":3},{"x":7,"y":1,"n":4},{"x":7,"y":1,"n":6},{"x":8,"y":1,"n":2},{"x":8,"y":1,"n":3},{"x":8,"y":1,"n":4},{"x":8,"y":1,"n":6},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":8},{"x":0,"y":2,"n":9},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":1,"y":2,"n":6},{"x":1,"y":2,"n":8},{"x":1,"y":2,"n":9},{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":6},{"x":2,"y":2,"n":8},{"x":2,"y":2,"n":9},{"x":4,"y":2,"n":2},{"x":4,"y":2,"n":3},{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":6},{"x":4,"y":2,"n":9},{"x":8,"y":2,"n":2},{"x":8,"y":2,"n":3},{"x":8,"y":2,"n":4},{"x":8,"y":2,"n":6},{"x":8,"y":2,"n":9},{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":7},{"x":0,"y":3,"n":8},{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":4},{"x":1,"y":3,"n":7},{"x":1,"y":3,"n":8},{"x":1,"y":3,"n":9},{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":6},{"x":2,"y":3,"n":7},{"x":2,"y":3,"n":8},{"x":7,"y":3,"n":1},{"x":7,"y":3,"n":3},{"x":7,"y":3,"n":4},{"x":7,"y":3,"n":6},{"x":7,"y":3,"n":7},{"x":7,"y":3,"n":8},{"x":8,"y":3,"n":1},{"x":8,"y":3,"n":4},{"x":8,"y":3,"n":7},{"x":8,"y":3,"n":8},{"x":0,"y":4,"n":4},{"x":0,"y":4,"n":6},{"x":1,"y":4,"n":3},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":6},{"x":1,"y":4,"n":8},{"x":1,"y":4,"n":9},{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2},{"x":2,"y":4,"n":4},{"x":2,"y":4,"n":6},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":3,"y":4,"n":4},{"x":3,"y":4,"n":5},{"x":3,"y":4,"n":6},{"x":3,"y":4,"n":7},{"x":3,"y":4,"n":8},{"x":3,"y":4,"n":9},{"x":5,"y":4,"n":2},{"x":5,"y":4,"n":4},{"x":5,"y":4,"n":5},{"x":5,"y":4,"n":6},{"x":5,"y":4,"n":7},{"x":5,"y":4,"n":8},{"x":5,"y":4,"n":9},{"x":6,"y":4,"n":1},{"x":6,"y":4,"n":2},{"x":6,"y":4,"n":4},{"x":6,"y":4,"n":5},{"x":6,"y":4,"n":6},{"x":7,"y":4,"n":1},{"x":7,"y":4,"n":3},{"x":7,"y":4,"n":4},{"x":7,"y":4,"n":6},{"x":8,"y":4,"n":1},{"x":8,"y":4,"n":6},{"x":0,"y":5,"n":2},{"x":0,"y":5,"n":4},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":9},{"x":1,"y":5,"n":2},{"x":1,"y":5,"n":3},{"x":1,"y":5,"n":4},{"x":1,"y":5,"n":5},{"x":1,"y":5,"n":8},{"x":1,"y":5,"n":9},{"x":6,"y":5,"n":1},{"x":6,"y":5,"n":2},{"x":6,"y":5,"n":4},{"x":6,"y":5,"n":5},{"x":6,"y":5,"n":9},{"x":7,"y":5,"n":1},{"x":7,"y":5,"n":2},{"x":7,"y":5,"n":3},{"x":7,"y":5,"n":4},{"x":7,"y":5,"n":5},{"x":7,"y":5,"n":6},{"x":7,"y":5,"n":9},{"x":8,"y":5,"n":1},{"x":8,"y":5,"n":2},{"x":8,"y":5,"n":4},{"x":8,"y":5,"n":5},{"x":8,"y":5,"n":9},{"x":0,"y":6,"n":1},{"x":0,"y":6,"n":2},{"x":0,"y":6,"n":3},{"x":0,"y":6,"n":5},{"x":0,"y":6,"n":6},{"x":0,"y":6,"n":9},{"x":4,"y":6,"n":1},{"x":4,"y":6,"n":2},{"x":4,"y":6,"n":3},{"x":4,"y":6,"n":4},{"x":4,"y":6,"n":5},{"x":4,"y":6,"n":6},{"x":4,"y":6,"n":9},{"x":6,"y":6,"n":1},{"x":6,"y":6,"n":2},{"x":6,"y":6,"n":3},{"x":6,"y":6,"n":4},{"x":6,"y":6,"n":5},{"x":7,"y":6,"n":1},{"x":7,"y":6,"n":2},{"x":7,"y":6,"n":3},{"x":7,"y":6,"n":4},{"x":7,"y":6,"n":5},{"x":7,"y":6,"n":6},{"x":8,"y":6,"n":1},{"x":8,"y":6,"n":2},{"x":8,"y":6,"n":3},{"x":8,"y":6,"n":4},{"x":8,"y":6,"n":5},{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":6},{"x":0,"y":7,"n":9},{"x":1,"y":7,"n":1},{"x":1,"y":7,"n":3},{"x":1,"y":7,"n":5},{"x":1,"y":7,"n":6},{"x":1,"y":7,"n":8},{"x":1,"y":7,"n":9},{"x":3,"y":7,"n":2},{"x":3,"y":7,"n":3},{"x":3,"y":7,"n":5},{"x":3,"y":7,"n":6},{"x":3,"y":7,"n":8},{"x":3,"y":7,"n":9},{"x":4,"y":7,"n":2},{"x":4,"y":7,"n":4},{"x":4,"y":7,"n":5},{"x":4,"y":7,"n":6},{"x":4,"y":7,"n":9},{"x":7,"y":7,"n":3},{"x":7,"y":7,"n":4},{"x":7,"y":7,"n":5},{"x":7,"y":7,"n":6},{"x":7,"y":7,"n":9},{"x":8,"y":7,"n":4},{"x":8,"y":7,"n":5},{"x":8,"y":7,"n":6},{"x":8,"y":7,"n":9},{"x":0,"y":8,"n":1},{"x":0,"y":8,"n":3},{"x":0,"y":8,"n":4},{"x":0,"y":8,"n":6},{"x":0,"y":8,"n":9},{"x":2,"y":8,"n":1},{"x":2,"y":8,"n":2},{"x":2,"y":8,"n":3},{"x":2,"y":8,"n":4},{"x":2,"y":8,"n":6},{"x":2,"y":8,"n":9},{"x":3,"y":8,"n":2},{"x":3,"y":8,"n":3},{"x":3,"y":8,"n":4},{"x":3,"y":8,"n":5},{"x":3,"y":8,"n":8},{"x":3,"y":8,"n":9},{"x":4,"y":8,"n":2},{"x":4,"y":8,"n":4},{"x":4,"y":8,"n":5},{"x":4,"y":8,"n":6},{"x":4,"y":8,"n":9},{"x":5,"y":8,"n":2},{"x":5,"y":8,"n":4},{"x":5,"y":8,"n":5},{"x":5,"y":8,"n":6},{"x":5,"y":8,"n":7},{"x":5,"y":8,"n":9},{"x":6,"y":8,"n":1},{"x":6,"y":8,"n":2},{"x":6,"y":8,"n":4},{"x":6,"y":8,"n":5},{"x":6,"y":8,"n":9},{"x":8,"y":8,"n":4},{"x":8,"y":8,"n":5},{"x":8,"y":8,"n":9}]}]',
+    },
+    /** Held on 1916 of 3025 positions walked. */
+    regionsFull: "3x3da:a1_9d7c5_7f3b2c9_3b2_9b5c8_6a4_1c6b5_7b2_4c6b2f3_7c5d9_3a",
+    /** Held on 2424 of 3025 positions walked. */
+    hiddenSingle: "3x3da:5_9a2e1a8e2c8_1b5d6d4a7_4c5_9a3d5d1b6_7c9e6a7e4a1_8",
+    /** Held on 576 of 3025 positions walked. */
+    intersect: {
+      id: "3x3da:b6_7_2f8_5c4_6d4a2b8b2b3b9c1c4b4b5b7b7a5d6_1c3_4f7_2_9b",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":6},{"x":0,"y":0,"n":7},{"x":0,"y":0,"n":8},{"x":0,"y":0,"n":9},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":1,"y":0,"n":6},{"x":1,"y":0,"n":7},{"x":1,"y":0,"n":8},{"x":5,"y":0,"n":2},{"x":5,"y":0,"n":3},{"x":5,"y":0,"n":4},{"x":5,"y":0,"n":5},{"x":5,"y":0,"n":6},{"x":5,"y":0,"n":7},{"x":6,"y":0,"n":2},{"x":6,"y":0,"n":3},{"x":6,"y":0,"n":4},{"x":6,"y":0,"n":6},{"x":6,"y":0,"n":7},{"x":6,"y":0,"n":9},{"x":7,"y":0,"n":2},{"x":7,"y":0,"n":4},{"x":7,"y":0,"n":6},{"x":7,"y":0,"n":7},{"x":8,"y":0,"n":2},{"x":8,"y":0,"n":4},{"x":8,"y":0,"n":6},{"x":8,"y":0,"n":7},{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5},{"x":0,"y":1,"n":6},{"x":0,"y":1,"n":8},{"x":0,"y":1,"n":9},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5},{"x":1,"y":1,"n":6},{"x":1,"y":1,"n":8},{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":5},{"x":4,"y":1,"n":6},{"x":4,"y":1,"n":7},{"x":4,"y":1,"n":8},{"x":5,"y":1,"n":2},{"x":5,"y":1,"n":3},{"x":5,"y":1,"n":4},{"x":5,"y":1,"n":5},{"x":5,"y":1,"n":6},{"x":5,"y":1,"n":7},{"x":5,"y":1,"n":8},{"x":6,"y":1,"n":2},{"x":6,"y":1,"n":3},{"x":6,"y":1,"n":4},{"x":6,"y":1,"n":5},{"x":6,"y":1,"n":6},{"x":6,"y":1,"n":8},{"x":6,"y":1,"n":9},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":8},{"x":0,"y":2,"n":9},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":6},{"x":1,"y":2,"n":8},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":6},{"x":2,"y":2,"n":7},{"x":2,"y":2,"n":8},{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":4},{"x":3,"y":2,"n":5},{"x":3,"y":2,"n":7},{"x":5,"y":2,"n":2},{"x":5,"y":2,"n":3},{"x":5,"y":2,"n":4},{"x":5,"y":2,"n":5},{"x":5,"y":2,"n":7},{"x":7,"y":2,"n":2},{"x":7,"y":2,"n":4},{"x":7,"y":2,"n":6},{"x":8,"y":2,"n":2},{"x":8,"y":2,"n":4},{"x":8,"y":2,"n":6},{"x":8,"y":2,"n":7},{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":2},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":4},{"x":1,"y":3,"n":8},{"x":1,"y":3,"n":9},{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":6},{"x":2,"y":3,"n":7},{"x":2,"y":3,"n":8},{"x":2,"y":3,"n":9},{"x":4,"y":3,"n":1},{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":3},{"x":4,"y":3,"n":4},{"x":4,"y":3,"n":5},{"x":4,"y":3,"n":7},{"x":4,"y":3,"n":8},{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":2},{"x":5,"y":3,"n":3},{"x":5,"y":3,"n":5},{"x":5,"y":3,"n":8},{"x":7,"y":3,"n":2},{"x":7,"y":3,"n":3},{"x":7,"y":3,"n":4},{"x":7,"y":3,"n":7},{"x":7,"y":3,"n":8},{"x":8,"y":3,"n":2},{"x":8,"y":3,"n":3},{"x":8,"y":3,"n":4},{"x":8,"y":3,"n":6},{"x":8,"y":3,"n":7},{"x":8,"y":3,"n":8},{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":8},{"x":1,"y":4,"n":9},{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":4},{"x":2,"y":4,"n":6},{"x":2,"y":4,"n":7},{"x":2,"y":4,"n":8},{"x":2,"y":4,"n":9},{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":4},{"x":3,"y":4,"n":5},{"x":3,"y":4,"n":7},{"x":3,"y":4,"n":9},{"x":5,"y":4,"n":1},{"x":5,"y":4,"n":2},{"x":5,"y":4,"n":3},{"x":5,"y":4,"n":4},{"x":5,"y":4,"n":5},{"x":5,"y":4,"n":9},{"x":6,"y":4,"n":1},{"x":6,"y":4,"n":2},{"x":6,"y":4,"n":3},{"x":6,"y":4,"n":4},{"x":6,"y":4,"n":7},{"x":6,"y":4,"n":9},{"x":7,"y":4,"n":1},{"x":7,"y":4,"n":3},{"x":7,"y":4,"n":4},{"x":7,"y":4,"n":7},{"x":7,"y":4,"n":9},{"x":0,"y":5,"n":4},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8},{"x":0,"y":5,"n":9},{"x":1,"y":5,"n":1},{"x":1,"y":5,"n":4},{"x":1,"y":5,"n":5},{"x":1,"y":5,"n":7},{"x":1,"y":5,"n":8},{"x":1,"y":5,"n":9},{"x":3,"y":5,"n":1},{"x":3,"y":5,"n":2},{"x":3,"y":5,"n":4},{"x":3,"y":5,"n":5},{"x":3,"y":5,"n":7},{"x":4,"y":5,"n":1},{"x":4,"y":5,"n":2},{"x":4,"y":5,"n":4},{"x":4,"y":5,"n":5},{"x":4,"y":5,"n":7},{"x":6,"y":5,"n":2},{"x":6,"y":5,"n":3},{"x":6,"y":5,"n":4},{"x":6,"y":5,"n":5},{"x":6,"y":5,"n":7},{"x":6,"y":5,"n":9},{"x":7,"y":5,"n":3},{"x":7,"y":5,"n":4},{"x":7,"y":5,"n":5},{"x":7,"y":5,"n":7},{"x":0,"y":6,"n":1},{"x":0,"y":6,"n":5},{"x":0,"y":6,"n":6},{"x":0,"y":6,"n":7},{"x":0,"y":6,"n":8},{"x":0,"y":6,"n":9},{"x":1,"y":6,"n":1},{"x":1,"y":6,"n":5},{"x":1,"y":6,"n":6},{"x":1,"y":6,"n":7},{"x":3,"y":6,"n":2},{"x":3,"y":6,"n":3},{"x":3,"y":6,"n":5},{"x":3,"y":6,"n":7},{"x":5,"y":6,"n":2},{"x":5,"y":6,"n":3},{"x":5,"y":6,"n":5},{"x":5,"y":6,"n":7},{"x":6,"y":6,"n":2},{"x":6,"y":6,"n":3},{"x":6,"y":6,"n":4},{"x":6,"y":6,"n":5},{"x":6,"y":6,"n":7},{"x":6,"y":6,"n":9},{"x":7,"y":6,"n":4},{"x":7,"y":6,"n":5},{"x":7,"y":6,"n":7},{"x":7,"y":6,"n":9},{"x":8,"y":6,"n":4},{"x":8,"y":6,"n":5},{"x":8,"y":6,"n":6},{"x":8,"y":6,"n":7},{"x":8,"y":6,"n":9},{"x":2,"y":7,"n":1},{"x":2,"y":7,"n":3},{"x":2,"y":7,"n":4},{"x":2,"y":7,"n":6},{"x":2,"y":7,"n":7},{"x":2,"y":7,"n":8},{"x":3,"y":7,"n":1},{"x":3,"y":7,"n":2},{"x":3,"y":7,"n":3},{"x":3,"y":7,"n":4},{"x":3,"y":7,"n":5},{"x":3,"y":7,"n":6},{"x":3,"y":7,"n":7},{"x":4,"y":7,"n":1},{"x":4,"y":7,"n":2},{"x":4,"y":7,"n":3},{"x":4,"y":7,"n":4},{"x":4,"y":7,"n":5},{"x":4,"y":7,"n":6},{"x":4,"y":7,"n":7},{"x":7,"y":7,"n":1},{"x":7,"y":7,"n":3},{"x":7,"y":7,"n":4},{"x":7,"y":7,"n":6},{"x":7,"y":7,"n":9},{"x":8,"y":7,"n":1},{"x":8,"y":7,"n":3},{"x":8,"y":7,"n":4},{"x":8,"y":7,"n":6},{"x":8,"y":7,"n":7},{"x":8,"y":7,"n":9},{"x":0,"y":8,"n":1},{"x":0,"y":8,"n":2},{"x":0,"y":8,"n":6},{"x":0,"y":8,"n":7},{"x":0,"y":8,"n":8},{"x":0,"y":8,"n":9},{"x":1,"y":8,"n":1},{"x":1,"y":8,"n":2},{"x":1,"y":8,"n":6},{"x":1,"y":8,"n":7},{"x":1,"y":8,"n":9},{"x":2,"y":8,"n":1},{"x":2,"y":8,"n":2},{"x":2,"y":8,"n":4},{"x":2,"y":8,"n":6},{"x":2,"y":8,"n":7},{"x":2,"y":8,"n":8},{"x":2,"y":8,"n":9},{"x":3,"y":8,"n":2},{"x":3,"y":8,"n":3},{"x":3,"y":8,"n":5},{"x":3,"y":8,"n":7},{"x":3,"y":8,"n":9},{"x":7,"y":8,"n":2},{"x":7,"y":8,"n":4},{"x":7,"y":8,"n":7},{"x":7,"y":8,"n":9},{"x":8,"y":8,"n":2},{"x":8,"y":8,"n":4},{"x":8,"y":8,"n":6},{"x":8,"y":8,"n":7},{"x":8,"y":8,"n":9}]}]',
+    },
+    /** Held on 480 of 3025 positions walked. */
+    set: {
+      id: "3x3da:d5b7d4a7_3a1b7c5_6b5_4b3c7a9_8a5_2a3c1b6_5b4_2c1b5a8_7a1d7b2d",
+      moves:
+        '[{"type":"set","x":2,"y":5,"n":3,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":6}]}]',
+    },
+    /** Held on 196 of 3025 positions walked. */
+    forcing: {
+      id: "3x3de:a3a8a6a7a7_8g1a6_7a5c3a8_9d4_6g2_2d4_7a9c3a9_8a5g6_7a2a4a7a9a",
+      moves:
+        '[{"type":"set","x":8,"y":0,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":6,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":8,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":1,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":2,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":8,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":6,"n":2,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":7,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":8,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":5,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":5,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":3,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":5,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":6,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":8,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":7,"n":9,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":7,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":6,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":6,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":7,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":8,"n":6,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2}]},{"type":"pencilAdd","marks":[{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":4,"y":3,"n":2},{"x":4,"y":3,"n":5}]}]',
+    },
+    /** Held on 1460 of 3025 positions walked. */
+    cageSingle: {
+      id: "3x3ka:zzzc,__a_aaaa____a______a__________________a_____a______a__aaa_baaaa__aa____aa__babaa___aa____aa_baaabaaa_,7_10_17a16_10a15f7_5_11a6_16a12_9c9a12c15_17_12a12_7_12a6c7c9a10a10a15_7_8a10a15a15c15_5b11a14c11d",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":4},{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6},{"x":0,"y":0,"n":7},{"x":0,"y":0,"n":8},{"x":0,"y":0,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":2},{"x":0,"y":1,"n":3},{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5},{"x":0,"y":1,"n":6},{"x":0,"y":1,"n":7},{"x":0,"y":1,"n":8},{"x":0,"y":1,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":7},{"x":0,"y":2,"n":8},{"x":0,"y":2,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":5},{"x":0,"y":3,"n":6},{"x":0,"y":3,"n":7},{"x":0,"y":3,"n":8},{"x":0,"y":3,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":4},{"x":0,"y":4,"n":5},{"x":0,"y":4,"n":6},{"x":0,"y":4,"n":7},{"x":0,"y":4,"n":8},{"x":0,"y":4,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":5,"n":1},{"x":0,"y":5,"n":2},{"x":0,"y":5,"n":3},{"x":0,"y":5,"n":4},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8},{"x":0,"y":5,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":6,"n":1},{"x":0,"y":6,"n":2},{"x":0,"y":6,"n":3},{"x":0,"y":6,"n":4},{"x":0,"y":6,"n":5},{"x":0,"y":6,"n":6},{"x":0,"y":6,"n":7},{"x":0,"y":6,"n":8},{"x":0,"y":6,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":2},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":4},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":6},{"x":0,"y":7,"n":7},{"x":0,"y":7,"n":8},{"x":0,"y":7,"n":9}]}]',
+    },
+    /** Held on 1145 of 3025 positions walked. */
+    cageMinMax: {
+      id: "3x3ka:zzzc,aa_aa_a_______a_______________________a__________a______aaa_abaa_aaa___aaa___aab_a_a_aaaababaaabaaa_,14a8a6_14a10a17_9_9b17_14_15c6_8d10a7a14_10_6a9a17a10c7a10a9a9_14b11a12a15a9a16a10c16a17a15a5h",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":5},{"x":1,"y":2,"n":6},{"x":1,"y":2,"n":7},{"x":1,"y":2,"n":8},{"x":1,"y":2,"n":9}]}]',
+    },
+    /** Held on 384 of 3025 positions walked. */
+    cageSums: {
+      id: "3x3ka:zzzc,aa_aa_a_______a_______________________a__________a______aaa_abaa_aaa___aaa___aab_a_a_aaaababaaabaaa_,14a8a6_14a10a17_9_9b17_14_15c6_8d10a7a14_10_6a9a17a10c7a10a9a9_14b11a12a15a9a16a10c16a17a15a5h",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":5},{"x":1,"y":2,"n":6},{"x":1,"y":2,"n":7},{"x":1,"y":2,"n":8},{"x":1,"y":2,"n":9}]},{"type":"pencilAdd","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":3},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":5},{"x":1,"y":1,"n":6},{"x":1,"y":1,"n":7},{"x":1,"y":1,"n":8}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":9}]},{"type":"pencilAdd","marks":[{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":5},{"x":2,"y":3,"n":6},{"x":2,"y":3,"n":7},{"x":2,"y":3,"n":8},{"x":2,"y":3,"n":9}]},{"type":"pencilAdd","marks":[{"x":2,"y":2,"n":1},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":6},{"x":2,"y":3,"n":7},{"x":2,"y":3,"n":8},{"x":2,"y":3,"n":9}]},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":2},{"x":1,"y":4,"n":3},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5},{"x":1,"y":4,"n":6},{"x":1,"y":4,"n":7},{"x":1,"y":4,"n":8},{"x":1,"y":4,"n":9}]},{"type":"pencilAdd","marks":[{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":2},{"x":1,"y":3,"n":3},{"x":1,"y":3,"n":4},{"x":1,"y":3,"n":5},{"x":1,"y":3,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":7},{"x":1,"y":4,"n":8},{"x":1,"y":4,"n":9}]},{"type":"pencilAdd","marks":[{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":3,"y":4,"n":4},{"x":3,"y":4,"n":5},{"x":3,"y":4,"n":6},{"x":3,"y":4,"n":7},{"x":3,"y":4,"n":8},{"x":3,"y":4,"n":9}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":5},{"x":3,"y":3,"n":6},{"x":3,"y":3,"n":7},{"x":3,"y":3,"n":8},{"x":3,"y":3,"n":9}]},{"type":"pencilStrike","marks":[{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":3,"y":4,"n":4}]},{"type":"pencilAdd","marks":[{"x":1,"y":8,"n":1},{"x":1,"y":8,"n":2},{"x":1,"y":8,"n":3},{"x":1,"y":8,"n":4},{"x":1,"y":8,"n":5},{"x":1,"y":8,"n":6},{"x":1,"y":8,"n":7},{"x":1,"y":8,"n":8},{"x":1,"y":8,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":8,"n":1},{"x":0,"y":8,"n":2},{"x":0,"y":8,"n":3},{"x":0,"y":8,"n":4}]},{"type":"pencilStrike","marks":[{"x":1,"y":8,"n":5},{"x":1,"y":8,"n":6},{"x":1,"y":8,"n":7},{"x":1,"y":8,"n":8},{"x":1,"y":8,"n":9}]}]',
+    },
+  },
+});
+
 /** Positions on the default reading, where nothing is penciled in first. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: soloGame,
   params: [ADV, XADV, KILLER, EXTREME],
   kinds: {
-    hiddenSingle: HIDDEN_SINGLE,
-    diagonal: /diagonal/,
-    extraCage: EXTRA_CAGE,
-    lockedPattern: LOCKED_PATTERN,
+    hiddenSingle: (step) => step.rung === "hiddenSingle",
+    // A deduction that reads one of an X board's diagonals.
+    diagonal: (step, state) => isDiagonal(striped(step), state.cr),
+    // A killer placement from a whole region's total, which stripes the region.
+    extraCage: (step, state) =>
+      step.rung === "cageSingle" && striped(step).length === state.cr,
+    // A set that sits in no one region, so stripes none: it runs across lines.
+    lockedPattern: (step) => step.rung === "set" && striped(step).length === 0,
   },
   pins: {
     /** Held on 625 of 5839 positions walked. */
     hiddenSingle: "3x3da:5_9a2e1a8e2c8_1b5d6d4a7_4c5_9a3d5d1b6_7c9e6a7e4a1_8",
-    /** Held on 235 of 5839 positions walked. */
-    diagonal: "3x3xda:5e2_9a2a4d5n1_7_3e8_6_5e1_9_3n1d6a9a4_9e7",
-    /** Held on 67 of 5839 positions walked. */
+    /** Held on 59 of 5839 positions walked. */
+    diagonal: {
+      id: "3x3xda:j4_1_9b3b6b4_1b9b1d8b3c7c2b8d1b3b9_4b5b7b3_9_2j",
+      moves:
+        '[{"type":"set","x":2,"y":2,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":8,"n":3,"pencil":false,"autoElim":false}]',
+    },
+    /** Held on 79 of 5839 positions walked. */
     extraCage: {
       id: "3x3ka:zzzc,__a_aaaa____a______a__________________a_____a______a__aaa_baaaa__aa____aa__babaa___aa____aa_baaabaaa_,7_10_17a16_10a15f7_5_11a6_16a12_9c9a12c15_17_12a12_7_12a6c7c9a10a10a15_7_8a10a15a15c15_5b11a14c11d",
       moves:
@@ -113,13 +208,17 @@ const pinned = describeHintPins({
 });
 
 /** Positions a player reaches with every candidate penciled in first. */
-const pinnedPopulated = describeHintPins({
+const pinnedPopulated = describeHintKindPins({
   game: soloGame,
   params: [ADV],
   opening: (): SoloMove[] => [{ type: "pencilAll" }],
   kinds: {
     multiMarkStrike: (step) => strikes(step) >= 2,
-    regionStrike: (step) => strikes(step) > 0 && REGION_STRIKE.test(step.explanation),
+    // A deductive elimination that names, and stripes, the region it rests on.
+    regionStrike: (step) =>
+      strikes(step) > 0 &&
+      (step.rung === "intersect" || step.rung === "set") &&
+      striped(step).length > 0,
   },
   pins: {
     /** Held on 275 of 991 positions walked. */
@@ -394,10 +493,7 @@ describe("solo hint", () => {
           // Skip the basic-region dup opening (one placed value across its groups)
           // and the bulk obvious-candidate cleanup at populate (a setup step, not a
           // deductive strike — multi-cell and multi-digit by design).
-          if (/is placed here and can't repeat/.test(step.explanation)) continue;
-          if (/clear the easy ones|fill all pencil marks/.test(step.explanation)) {
-            continue;
-          }
+          if (step.rung === "dup" || step.rung === "clean") continue;
           const marks = step.move.marks as { x: number; y: number; n: number }[];
           const cells = new Set(marks.map((m) => `${m.x},${m.y}`));
           const digits = new Set(marks.map((m) => m.n));
@@ -413,7 +509,6 @@ describe("solo hint", () => {
 
   it("auto-pencil off teaches more cleanup steps than on", () => {
     const { st } = gen(ADV, "autopencil");
-    const dupRe = /just placed can't repeat/;
     const uiOn = soloGame.newUi(st);
     uiOn.autoPencil = true;
     const on = soloGame.hint?.(st, undefined, uiOn);
@@ -422,8 +517,7 @@ describe("solo hint", () => {
     const off = soloGame.hint?.(st, undefined, uiOff);
     expect(on?.ok && off?.ok).toBe(true);
     if (!on?.ok || !off?.ok) return;
-    const dupCount = (r: typeof on) =>
-      r.steps.filter((s) => dupRe.test(s.explanation)).length;
+    const dupCount = (r: typeof on) => r.steps.filter((s) => s.rung === "dup").length;
     // On, each placement's own `autoElim` does the cleanup, so the plan never
     // teaches it; off, the plan does.
     expect(dupCount(on)).toBe(0);

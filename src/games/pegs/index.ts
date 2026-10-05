@@ -33,7 +33,7 @@ import {
 import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { hint, hintKeepTrack } from "./hint.ts";
+import { hint, hintKeepTrack, PEGS_RUNGS, type PegsRung } from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
 import {
   colors,
@@ -254,7 +254,16 @@ function solve(orig: PegsState, curr: PegsState): SolveResult<PegsMove> {
 
 // --- register --------------------------------------------------------
 
-export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawState> = {
+export const pegsGame: Game<
+  PegsParams,
+  PegsState,
+  PegsMove,
+  PegsUi,
+  PegsDrawState,
+  unknown,
+  unknown,
+  PegsRung
+> = {
   id: "pegs",
   // The whole game is one press-and-drag and the secondary button means
   // nothing, so a held press must not be promoted to it: that would destroy
@@ -303,6 +312,7 @@ export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawSta
 
   hint,
   hintMarks: HINT_MARKS,
+  hintRungs: PEGS_RUNGS,
   hintKeepTrack,
   // The drag a player makes: pick the peg up and drop it in the hole.
   hintGesture(_s, _ui, ds, m) {

@@ -861,11 +861,16 @@ describe("Sixteen hint", () => {
       if (step.continuesPrevious) continue;
       const sh = step.highlights as SixteenHintHighlights;
       const finalPos = sh.ultimatePos ?? sh.targetPos;
-      const labelHome = step.explanation.includes("its final spot");
-      const labelStage = step.explanation.includes("(setting up)");
-      expect(labelHome || labelStage).toBe(true);
-      expect(labelHome).toBe(finalPos === sh.tile - 1);
-      if (labelStage) sawStaging = true;
+      const home = finalPos === sh.tile - 1;
+      expect(step.rung).toBe(home ? "home" : "settingUp");
+      if (home) {
+        expect(step.explanation).toContain("its final spot");
+        expect(step.explanation).not.toContain("(setting up)");
+      } else {
+        expect(step.explanation).toContain("(setting up)");
+        expect(step.explanation).not.toContain("its final spot");
+        sawStaging = true;
+      }
     }
     expect(sawStaging).toBe(true);
   });
@@ -1054,6 +1059,7 @@ describe("Sixteen hint rendering", () => {
     const size = sixteenGame.computeSize(defaultParams(), 32);
     const hint: HintStep<SixteenMove, SixteenHintHighlights> = {
       move: { type: "slide", axis: "row", index: 1, delta: -1 },
+      rung: "settingUp",
       explanation: "",
       highlights: { tile: 6, targetPos: 4, ultimatePos: 0 },
     };
@@ -1095,6 +1101,7 @@ describe("Sixteen hint track and direction fixes", () => {
     });
     return {
       move,
+      rung: "settingUp",
       explanation: words.text,
       words,
       highlights: { tile, targetPos, ultimatePos: null },
@@ -1157,6 +1164,7 @@ describe("Sixteen hint track and direction fixes", () => {
   it("hintKeepTrack classifies moves against the current step", () => {
     const step = (): HintStep<SixteenMove, SixteenHintHighlights> => ({
       move: { type: "slide", axis: "row", index: 0, delta: 2 },
+      rung: "settingUp",
       explanation: "",
       highlights: {
         tile: 1,
@@ -1193,6 +1201,7 @@ describe("Sixteen hint track and direction fixes", () => {
     const s4 = solvedState(4, 4); // tile 1 at col 0
     const h4: HintStep<SixteenMove, SixteenHintHighlights> = {
       move: { type: "slide", axis: "row", index: 0, delta: 2 },
+      rung: "settingUp",
       explanation: "",
       highlights: { tile: 1, targetPos: 2, ultimatePos: null },
     };
@@ -1209,6 +1218,7 @@ const pinned = describeHintPins({
   // The hint plans by searching, so the scan stays short.
   seeds: 6,
   maxSteps: 8,
+  descOf: (s: SixteenState) => Array.from(s.tiles).join(","),
   kinds: {
     straightSlideAlongItsLine: (step, state) => {
       if (step.move.type !== "slide") return false;
@@ -1238,6 +1248,10 @@ const pinned = describeHintPins({
   pins: {
     /** Held on 36 of 48 positions walked. */
     straightSlideAlongItsLine: "4x4:5,9,2,14,4,13,3,16,10,15,8,11,6,12,1,7",
+    /** Held on 48 of 48 positions walked. */
+    home: "4x4:7,10,14,1,11,2,5,4,3,6,16,13,9,15,8,12",
+    /** Held on 48 of 48 positions walked. */
+    settingUp: "4x4:5,9,2,14,4,13,3,16,10,15,8,11,6,12,1,7",
   },
 });
 

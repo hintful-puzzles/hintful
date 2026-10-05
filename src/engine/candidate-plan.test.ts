@@ -4,6 +4,7 @@ import {
   type CandidatePlan,
   type DupReason,
   type Firing,
+  type PlanRung,
   runCandidatePlan,
   runLatinCandidatePlan,
 } from "./candidate-plan.ts";
@@ -108,11 +109,16 @@ describe("runCandidatePlan", () => {
         done: () => setUps >= opts.setUpSteps,
         step: () => {
           setUps++;
-          steps.push({ move: { type: "none" }, explanation: "setUp" });
+          steps.push({
+            move: { type: "none" },
+            rung: "populate",
+            explanation: "setUp",
+          });
           return true;
         },
       },
-      stuck: () => steps.push({ move: { type: "none" }, explanation: "stuck" }),
+      stuck: () =>
+        steps.push({ move: { type: "none" }, rung: "populate", explanation: "stuck" }),
     });
     return steps.map((s) => s.explanation);
   }
@@ -522,7 +528,7 @@ describe("runLatinCandidatePlan", () => {
   /** A reason union of the shape the preset requires: it can hold every arm of
    * a {@link SingleReason}. */
   type LatinReason = SingleReason | DupReason;
-  type LatinStep = HintStep<Move, CandidateHighlights>;
+  type LatinStep = HintStep<Move, CandidateHighlights, PlanRung<LatinReason>>;
 
   /** Walk a 3×3 plan through the preset. The game supplies its solver and its
    * words; it passes no regions, no single-reason function and no evidence for

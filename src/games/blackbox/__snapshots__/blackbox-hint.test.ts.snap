@@ -6258,3 +6258,19 @@ exports[`Black Box's hint > rings the square it settles and outlines the laser's
   },
 ]
 `;
+
+exports[`blackbox: pinned hint positions > says, at each pin 1`] = `
+{
+  "done": "Check your answer: the balls you have send every laser where it went.",
+  "fire": "No laser is fired yet. Fire this laser: nothing settled yet decides where it goes.",
+  "fireAnother": "The lasers fired so far settle no other square. Fire this laser: nothing settled yet decides where it goes.",
+  "hidden": "Every laser's way is settled, and 1 more ball hides on squares no laser reaches. One of them: put a ball on this square.",
+  "hitBall": "The ray marked H hit a ball, but with this square empty it would leave the box, so it must hold a ball.",
+  "hitEmpty": "The ray marked H hit a ball, but with a ball here it would leave the box, so this square must be empty.",
+  "layout": "Every laser is fired, and the ringed squares can be set so each goes where it went. First, put a ball on this square.",
+  "ray": "The two 1s are one ray's ends, but with a ball here no ray could run between them, so this square must be empty.",
+  "raysEndsBall": "The two 2s are one ray's ends, but with this square empty no ray could run between them, so it must hold a ball.",
+  "raysEndsEmpty": "The two 1s are one ray's ends, but with a ball here no ray could run between them, so this square must be empty.",
+  "reflectedEmpty": "The ray marked R came straight back, but with a ball here it would stop dead, so this square must be empty.",
+}
+`;

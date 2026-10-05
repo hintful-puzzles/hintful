@@ -6,23 +6,27 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { answerCount } from "./answer.ts";
-import { deduce } from "./hint.ts";
+import { type BlackboxRung, deduce, type Firing } from "./hint.ts";
 import { blackboxGame as game } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import {
   BALL_CORRECT,
   BALL_GUESS,
+  type BlackboxMove,
   type BlackboxParams,
   type BlackboxState,
   gridGet,
   gridIdx,
   LASER_EMPTY,
 } from "./state.ts";
+
+type Step = HintStep<BlackboxMove, unknown, BlackboxRung>;
 
 const P8: BlackboxParams = { w: 8, h: 8, minballs: 5, maxballs: 5 };
 
@@ -49,26 +53,43 @@ function follow(s: BlackboxState): { state: BlackboxState; said: string[] } {
   return { state: s, said };
 }
 
-/** Each sentence the hint says, and the positions the tests below start from,
- * pinned on a position whose hint opens with it. */
+/** The firing the step settles its square by. */
+function firingOf(step: Step, s: BlackboxState): Firing {
+  const m = step.move;
+  if (m.type !== "toggleBall" && m.type !== "toggleLock")
+    throw new Error("a ray's step marks a square");
+  const f = deduce(s).firings.find(
+    (f) => f.settled.at.x === m.x && f.settled.at.y === m.y,
+  );
+  if (!f) throw new Error("no firing settles the step's square");
+  return f;
+}
+
+/** A ray's case: what the laser followed was seen to do, and what the square
+ * holds. */
+const rayCase =
+  (seen: Firing["seen"]["kind"], ball: boolean) =>
+  (step: Step, s: BlackboxState): boolean => {
+    if (step.rung !== "ray") return false;
+    const f = firingOf(step, s);
+    return f.seen.kind === seen && f.settled.ball === ball;
+  };
+
+/** Each rung and case the hint says, and the positions the tests below start
+ * from. */
 const pinned = describeHintPins({
   game,
   params: [P8],
   kinds: {
-    raysEndsEmpty:
-      /^The two \d+s are one ray's ends, but with a ball here no ray could run between them, so this square must be empty\.$/,
-    raysEndsBall:
-      /^The two \d+s are one ray's ends, but with this square empty no ray could run between them, so it must hold a ball\.$/,
-    hitEmpty:
-      /^The ray marked H hit a ball, but with a ball here it would (?:come straight back|leave the box), so this square must be empty\.$/,
-    hitBall:
-      /^The ray marked H hit a ball, but with this square empty it would (?:come straight back|leave the box), so it must hold a ball\.$/,
-    reflectedEmpty:
-      /^The ray marked R came straight back, but with a ball here it would (?:stop dead|come out elsewhere), so this square must be empty\.$/,
-    fireAnother:
-      /^The lasers fired so far settle no other square\. Fire this laser: nothing settled yet decides where it goes\.$/,
-    settles: /, so (?:this square|it) must /,
-    check: /^Check your answer/,
+    raysEndsEmpty: rayCase("exit", false),
+    raysEndsBall: rayCase("exit", true),
+    hitEmpty: rayCase("hit", false),
+    hitBall: rayCase("hit", true),
+    reflectedEmpty: rayCase("reflect", false),
+    // Not the opening laser: one asked for because the lasers fired settle
+    // nothing more.
+    fireAnother: (step, s) =>
+      step.rung === "fire" && s.exits.some((e) => e !== LASER_EMPTY),
   },
   pins: {
     /** Held on 516 of 966 positions walked. */
@@ -105,35 +126,32 @@ const pinned = describeHintPins({
       moves: [{ type: "fire", rangeno: 0 }],
     },
     /** Held on 684 of 966 positions walked. */
-    settles: {
+    ray: {
       id: "w8h8m5M5:df9dadb86021bc4da15414a4",
       moves: [{ type: "fire", rangeno: 0 }],
     },
-    /** Held on 12 of 966 positions walked. */
-    check: {
+    /** Held on 250 of 966 positions walked. */
+    fire: "w8h8m5M5:a4b5528a1a7e455ed81b288b",
+    /** Held on 20 of 966 positions walked. */
+    layout: {
       id: "w8h8m5M5:2d1775dc7ab2e71fa58b5abc",
       moves:
-        '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"toggleLock","x":2,"y":2},{"type":"fire","rangeno":2},{"type":"fire","rangeno":4},{"type":"toggleLock","x":6,"y":1},{"type":"fire","rangeno":5},{"type":"toggleLock","x":7,"y":1},{"type":"fire","rangeno":6},{"type":"toggleLock","x":8,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":3,"y":2},{"type":"toggleLock","x":7,"y":2},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":2,"y":3},{"type":"toggleLock","x":4,"y":3},{"type":"toggleLock","x":6,"y":2},{"type":"toggleBall","x":8,"y":2},{"type":"fire","rangeno":10},{"type":"toggleLock","x":8,"y":3},{"type":"fire","rangeno":11},{"type":"toggleLock","x":8,"y":4},{"type":"toggleLock","x":6,"y":8},{"type":"toggleLock","x":8,"y":5},{"type":"toggleLock","x":5,"y":8},{"type":"toggleLock","x":7,"y":4},{"type":"toggleLock","x":7,"y":8},{"type":"toggleLock","x":6,"y":7},{"type":"fire","rangeno":12},{"type":"toggleLock","x":1,"y":5},{"type":"toggleLock","x":8,"y":6},{"type":"toggleLock","x":1,"y":4},{"type":"toggleLock","x":7,"y":5},{"type":"toggleLock","x":1,"y":6},{"type":"toggleLock","x":2,"y":5},{"type":"fire","rangeno":13},{"type":"toggleLock","x":8,"y":7},{"type":"toggleLock","x":1,"y":7},{"type":"toggleLock","x":7,"y":6},{"type":"toggleLock","x":2,"y":6},{"type":"toggleLock","x":6,"y":5},{"type":"fire","rangeno":14},{"type":"fire","rangeno":15},{"type":"fire","rangeno":16},{"type":"fire","rangeno":17},{"type":"fire","rangeno":19},{"type":"toggleLock","x":4,"y":8},{"type":"fire","rangeno":20},{"type":"toggleLock","x":3,"y":8},{"type":"fire","rangeno":21},{"type":"fire","rangeno":22},{"type":"fire","rangeno":23},{"type":"toggleLock","x":1,"y":8},{"type":"fire","rangeno":24},{"type":"fire","rangeno":25},{"type":"fire","rangeno":28},{"type":"fire","rangeno":29},{"type":"fire","rangeno":30},{"type":"toggleBall","x":1,"y":3},{"type":"toggleBall","x":5,"y":3},{"type":"toggleBall","x":2,"y":8},{"type":"toggleBall","x":8,"y":8}]',
+        '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"toggleLock","x":2,"y":2},{"type":"fire","rangeno":2},{"type":"fire","rangeno":4},{"type":"toggleLock","x":6,"y":1},{"type":"fire","rangeno":5},{"type":"toggleLock","x":7,"y":1},{"type":"fire","rangeno":6},{"type":"toggleLock","x":8,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":3,"y":2},{"type":"toggleLock","x":7,"y":2},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":2,"y":3},{"type":"toggleLock","x":4,"y":3},{"type":"toggleLock","x":6,"y":2},{"type":"toggleBall","x":8,"y":2},{"type":"fire","rangeno":10},{"type":"toggleLock","x":8,"y":3},{"type":"fire","rangeno":11},{"type":"toggleLock","x":8,"y":4},{"type":"toggleLock","x":6,"y":8},{"type":"toggleLock","x":8,"y":5},{"type":"toggleLock","x":5,"y":8},{"type":"toggleLock","x":7,"y":4},{"type":"toggleLock","x":7,"y":8},{"type":"toggleLock","x":6,"y":7},{"type":"fire","rangeno":12},{"type":"toggleLock","x":1,"y":5},{"type":"toggleLock","x":8,"y":6},{"type":"toggleLock","x":1,"y":4},{"type":"toggleLock","x":7,"y":5},{"type":"toggleLock","x":1,"y":6},{"type":"toggleLock","x":2,"y":5},{"type":"fire","rangeno":13},{"type":"toggleLock","x":8,"y":7},{"type":"toggleLock","x":1,"y":7},{"type":"toggleLock","x":7,"y":6},{"type":"toggleLock","x":2,"y":6},{"type":"toggleLock","x":6,"y":5},{"type":"fire","rangeno":14},{"type":"fire","rangeno":15},{"type":"fire","rangeno":16},{"type":"fire","rangeno":17},{"type":"fire","rangeno":19},{"type":"toggleLock","x":4,"y":8},{"type":"fire","rangeno":20},{"type":"toggleLock","x":3,"y":8},{"type":"fire","rangeno":21},{"type":"fire","rangeno":22},{"type":"fire","rangeno":23},{"type":"toggleLock","x":1,"y":8},{"type":"fire","rangeno":24},{"type":"fire","rangeno":25},{"type":"fire","rangeno":28},{"type":"fire","rangeno":29},{"type":"fire","rangeno":30}]',
     },
-  },
-});
-
-/** A ball on the one square no laser reaches, which the count of five fills. */
-const pinnedHidden = describeHintPins({
-  game,
-  params: [P8],
-  seeds: 400,
-  kinds: {
-    hiddenBall:
-      /^Every laser's way is settled, and 1 more ball hides on squares no laser reaches\. One of them: put a ball on this square\.$/,
-  },
-  pins: {
-    /** Held on 0 of 32561 positions walked. The board is one an earlier scan
-     * of 400 deals found, pasted by hand with the hint's own moves to here. */
-    hiddenBall: {
+    /** A ball on the one square no laser reaches, which the count of five
+     * fills. Held on 0 of 32561 positions walked by a scan of 400 deals: the
+     * board is one an earlier scan of 400 found, pasted by hand with the
+     * hint's own moves to here. */
+    hidden: {
       id: "w8h8m5M5:4fa6ab5019c09e710317f3c0",
       moves:
         '[{"type":"fire","rangeno":0},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":1,"y":4},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":1,"y":3},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":1,"y":5},{"type":"toggleLock","x":2,"y":2},{"type":"toggleLock","x":2,"y":4},{"type":"toggleLock","x":2,"y":3},{"type":"fire","rangeno":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":3,"y":2},{"type":"fire","rangeno":2},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"fire","rangeno":3},{"type":"toggleLock","x":8,"y":2},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":8,"y":3},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":8,"y":1},{"type":"toggleLock","x":4,"y":3},{"type":"toggleLock","x":7,"y":2},{"type":"fire","rangeno":4},{"type":"toggleLock","x":6,"y":1},{"type":"toggleLock","x":8,"y":4},{"type":"toggleLock","x":6,"y":2},{"type":"toggleLock","x":7,"y":3},{"type":"toggleLock","x":5,"y":3},{"type":"fire","rangeno":5},{"type":"toggleLock","x":7,"y":1},{"type":"toggleLock","x":6,"y":3},{"type":"toggleLock","x":7,"y":4},{"type":"toggleBall","x":3,"y":3},{"type":"toggleLock","x":5,"y":4},{"type":"toggleLock","x":6,"y":4},{"type":"toggleBall","x":4,"y":4},{"type":"fire","rangeno":6},{"type":"toggleLock","x":8,"y":5},{"type":"toggleLock","x":7,"y":5},{"type":"fire","rangeno":7},{"type":"toggleLock","x":8,"y":8},{"type":"toggleLock","x":7,"y":8},{"type":"toggleLock","x":8,"y":6},{"type":"toggleLock","x":8,"y":7},{"type":"toggleLock","x":7,"y":6},{"type":"toggleLock","x":7,"y":7},{"type":"fire","rangeno":12},{"type":"fire","rangeno":13},{"type":"toggleLock","x":6,"y":8},{"type":"toggleLock","x":6,"y":6},{"type":"toggleLock","x":6,"y":7},{"type":"toggleBall","x":6,"y":5},{"type":"fire","rangeno":14},{"type":"toggleLock","x":1,"y":7},{"type":"toggleLock","x":1,"y":6},{"type":"toggleLock","x":5,"y":7},{"type":"toggleLock","x":1,"y":8},{"type":"toggleLock","x":2,"y":7},{"type":"fire","rangeno":15},{"type":"toggleLock","x":5,"y":8},{"type":"toggleLock","x":2,"y":8},{"type":"toggleLock","x":4,"y":8},{"type":"toggleLock","x":3,"y":8},{"type":"toggleLock","x":5,"y":6},{"type":"toggleLock","x":2,"y":6},{"type":"toggleLock","x":4,"y":7},{"type":"toggleLock","x":3,"y":7},{"type":"toggleBall","x":2,"y":5},{"type":"toggleLock","x":4,"y":6},{"type":"toggleLock","x":3,"y":6},{"type":"fire","rangeno":19},{"type":"toggleLock","x":5,"y":5},{"type":"toggleLock","x":3,"y":5},{"type":"toggleLock","x":4,"y":5}]',
+    },
+    /** Held on 12 of 966 positions walked. */
+    done: {
+      id: "w8h8m5M5:2d1775dc7ab2e71fa58b5abc",
+      moves:
+        '[{"type":"fire","rangeno":0},{"type":"fire","rangeno":1},{"type":"toggleLock","x":2,"y":1},{"type":"toggleLock","x":4,"y":1},{"type":"toggleLock","x":3,"y":1},{"type":"toggleLock","x":5,"y":1},{"type":"toggleLock","x":1,"y":1},{"type":"toggleLock","x":4,"y":2},{"type":"toggleLock","x":2,"y":2},{"type":"fire","rangeno":2},{"type":"fire","rangeno":4},{"type":"toggleLock","x":6,"y":1},{"type":"fire","rangeno":5},{"type":"toggleLock","x":7,"y":1},{"type":"fire","rangeno":6},{"type":"toggleLock","x":8,"y":1},{"type":"toggleLock","x":1,"y":2},{"type":"toggleLock","x":3,"y":2},{"type":"toggleLock","x":7,"y":2},{"type":"toggleLock","x":5,"y":2},{"type":"toggleLock","x":2,"y":3},{"type":"toggleLock","x":4,"y":3},{"type":"toggleLock","x":6,"y":2},{"type":"toggleBall","x":8,"y":2},{"type":"fire","rangeno":10},{"type":"toggleLock","x":8,"y":3},{"type":"fire","rangeno":11},{"type":"toggleLock","x":8,"y":4},{"type":"toggleLock","x":6,"y":8},{"type":"toggleLock","x":8,"y":5},{"type":"toggleLock","x":5,"y":8},{"type":"toggleLock","x":7,"y":4},{"type":"toggleLock","x":7,"y":8},{"type":"toggleLock","x":6,"y":7},{"type":"fire","rangeno":12},{"type":"toggleLock","x":1,"y":5},{"type":"toggleLock","x":8,"y":6},{"type":"toggleLock","x":1,"y":4},{"type":"toggleLock","x":7,"y":5},{"type":"toggleLock","x":1,"y":6},{"type":"toggleLock","x":2,"y":5},{"type":"fire","rangeno":13},{"type":"toggleLock","x":8,"y":7},{"type":"toggleLock","x":1,"y":7},{"type":"toggleLock","x":7,"y":6},{"type":"toggleLock","x":2,"y":6},{"type":"toggleLock","x":6,"y":5},{"type":"fire","rangeno":14},{"type":"fire","rangeno":15},{"type":"fire","rangeno":16},{"type":"fire","rangeno":17},{"type":"fire","rangeno":19},{"type":"toggleLock","x":4,"y":8},{"type":"fire","rangeno":20},{"type":"toggleLock","x":3,"y":8},{"type":"fire","rangeno":21},{"type":"fire","rangeno":22},{"type":"fire","rangeno":23},{"type":"toggleLock","x":1,"y":8},{"type":"fire","rangeno":24},{"type":"fire","rangeno":25},{"type":"fire","rangeno":28},{"type":"fire","rangeno":29},{"type":"fire","rangeno":30},{"type":"toggleBall","x":1,"y":3},{"type":"toggleBall","x":5,"y":3},{"type":"toggleBall","x":2,"y":8},{"type":"toggleBall","x":8,"y":8}]',
     },
   },
 });
@@ -226,7 +244,7 @@ describe("Black Box's hint", () => {
   });
 
   it("rings the square it settles and outlines the laser's ends", () => {
-    const { id, moves, step } = pinned("settles");
+    const { id, moves, step } = pinned("ray");
     const { hint, recording } = renderScenario({ game, id, moves, showHint: true });
     expect(hint?.explanation).toBe(step.explanation);
     const rects = recording.ops.filter((o) => o.op === "rect");
@@ -238,7 +256,7 @@ describe("Black Box's hint", () => {
 
 describe("the end of the box", () => {
   it("puts a ball where no laser can tell, when the board must hold more", () => {
-    const { id, state: s } = pinnedHidden("hiddenBall");
+    const { id, state: s } = pinned("hidden");
     expect(answerCount(game.newState(P8, id.slice(id.indexOf(":") + 1)))).toBe(1);
     expect(game.status(follow(s).state)).toBe("solved");
   });
@@ -247,7 +265,7 @@ describe("the end of the box", () => {
   // and a known mark on one of them is a mark no finish could keep: the check
   // finds it, and the midend refuses a hint until it comes off.
   it("finds a known mark on the square the count fills", () => {
-    const { state: s } = pinnedHidden("hiddenBall");
+    const { state: s } = pinned("hidden");
     expect(game.findMistakes?.(s)).toEqual([]);
     const hidden = [...deduce(s).known.squares()].filter(
       ({ at, holds }) => holds === null && gridGet(s, at.x, at.y) & BALL_CORRECT,
@@ -259,7 +277,7 @@ describe("the end of the box", () => {
   });
 
   it("finds a ball beyond the real ones, wherever no laser could tell", () => {
-    const { state: s } = pinned("check");
+    const { state: s } = pinned("done");
     expect(game.findMistakes?.(s)).toEqual([]);
     const empty = [...deduce(s).known.squares()].find(
       ({ at }) => !(gridGet(s, at.x, at.y) & (BALL_CORRECT | BALL_GUESS)),

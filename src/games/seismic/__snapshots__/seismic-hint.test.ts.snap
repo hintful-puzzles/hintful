@@ -1,5 +1,22 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`seismic: pinned hint positions > says, at each pin 1`] = `
+{
+  "clean": "Now clear the easy ones: cross out any number already in the cell's area or in a cell touching it.",
+  "dup": "The 3 just placed rules out 3 in its area and within 3 cells of it in its row and column, so we must cross out those 3s.",
+  "hidden": "No other cell in the striped area can still be 3, so this cell must be 3.",
+  "note": "Only 2 and 3 aren't already in this cell's area or within reach along its row or column, so pencil them in.",
+  "placement": "Every other number is already in this cell's area or within reach along its row or column, so it can only be 1.",
+  "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
+  "regionsFull": "Every other number is already in this cell's area or within reach along its row or column, so it can only be 1.",
+  "severalNotes": "The striped area can put its 4 only in a cell touching each of these, so we must cross out their 4s.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 3.",
+  "singleton": "This area is a single cell, so it can only be 1.",
+  "starve": "The striped area can put its 2 only in line with this cell and within 2 cells of it, so pencil in only 1, 3 and 4.",
+  "starvedArea": "The striped area can put its 2 only in line with this cell and within 2 cells of it, so we must cross out this cell's 2.",
+}
+`;
+
 exports[`the frames a hint draws > rings each struck cell, hatches the starved area, and strikes each note through 1`] = `
 [
   {

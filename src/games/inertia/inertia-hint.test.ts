@@ -9,6 +9,7 @@ import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { deadEndBindingDefects } from "../../engine/testing/hint-binding.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { hint } from "./hint.ts";
@@ -73,6 +74,46 @@ function harness(id: string) {
   const status = () => h.last("status-bar-change")?.statusBarText ?? "";
   return { m: h.midend, status };
 }
+
+// --- the rungs -------------------------------------------------------
+
+/** Each rung pinned on a position whose plan speaks it. The plan takes the
+ * nearest gem it safely can, so a grab it turns down is met mostly off its own
+ * line: the scan's second line takes any slide that does not kill the ball on
+ * every other turn. */
+describeHintPins({
+  game: inertiaGame,
+  params: [
+    { w: 6, h: 6 },
+    { w: 8, h: 10 },
+  ],
+  seeds: 40,
+  maxSteps: 80,
+  stray: (s, turn, hinted): InertiaMove | null => {
+    if (turn % 2 === 0 && hinted) return hinted;
+    const safe = legalDirections(s.board, s.px, s.py).filter(
+      (dir) => slidePath(s.board, s.px, s.py, dir).stopper !== "mine",
+    );
+    return safe.length > 0 ? { type: "move", dir: safe[turn % safe.length] } : null;
+  },
+  unreached: {
+    declined:
+      "in no plan of 6,244 positions on 80 boards (6x6 and 8x10, 40 seeds, the hint's line and the stray one), nor of 11,992 with 12x15 added. It takes a one-slide grab of the leg's goal that `nextLeg` turned down because no route collects the rest after it, while `unreachableGems` finds every gem still reachable after it: stranding that the reachability check cannot see.",
+  },
+  pins: {
+    /** Held on 6244 of 6244 positions walked. */
+    collect: "6x6:mmgbwswbgswbgwsgswsmgbgbsSbwgmbmwmms",
+    /** Held on 2520 of 6244 positions walked. */
+    forced: "6x6:smbwbswwsgwmmgmsmmgggggswwbbbsmSsbbw",
+    /** Held on 39 of 6244 positions walked. */
+    strands: {
+      id: "6x6:sgSmbmmbmgwsgsgswwwgswbmbwmwsbsbmggb",
+      moves: [{ type: "move", dir: 3 }],
+    },
+    /** Held on 5948 of 6244 positions walked. */
+    positioning: "6x6:sbmmbsggmmSwbwbmsbgbwswwwbmgswsgsmgg",
+  },
+});
 
 // --- the plan --------------------------------------------------------
 
@@ -233,7 +274,8 @@ describe("inertia hint narration", () => {
       const res = hint(s);
       if (!res.ok) throw new Error(`${seed}: ${res.error}`);
       for (const step of res.steps) {
-        if (step.explanation.includes("no slide from here reaches it")) {
+        if (step.rung === "positioning") {
+          expect(step.explanation).toContain("no slide from here reaches it");
           const goal = goalOf(step);
           const grabbable = legalDirections(s.board, s.px, s.py).some((dir) => {
             const path = slidePath(s.board, s.px, s.py, dir);
@@ -248,11 +290,8 @@ describe("inertia hint narration", () => {
         s = inertiaGame.executeMove(s, step.move);
       }
     }
-    // Keyed on the sentence, so a rewording would empty the scan silently.
-    expect(
-      claims,
-      "no plan claimed a gem was out of reach — the phrase has changed",
-    ).toBeGreaterThan(0);
+    // Vacuity: some plan spoke the rung.
+    expect(claims, "no plan claimed a gem was out of reach").toBeGreaterThan(0);
   });
 
   it("promises 'one more slide' only when the plan's own next move is the one", () => {
@@ -260,6 +299,7 @@ describe("inertia hint narration", () => {
     // and the route can reach a gem from a side no single slide from here can,
     // so "a slide exists" is not the claim to make.
     let promises = 0;
+    let unpromised = 0;
     for (const seed of ["p-a", "p-b", "p-c", "p-d"]) {
       const params = { w: 10, h: 8 };
       const { desc } = newInertiaDesc(params, randomNew(seed));
@@ -268,29 +308,37 @@ describe("inertia hint narration", () => {
       const res = hint(s);
       if (!res.ok) throw new Error(`${seed}: ${res.error}`);
       res.steps.forEach((step, i) => {
-        if (step.explanation.includes("one more slide sweeps it up")) {
-          const next = res.steps[i + 1];
-          expect(
-            next,
-            `${seed}: promised one more slide, then ended the plan`,
-          ).toBeDefined();
-          const move = next.move as Extract<InertiaMove, { type: "move" }>;
-          const after = inertiaGame.executeMove(s, step.move);
-          const goal = goalOf(step);
-          expect(
-            slidePath(after.board, after.px, after.py, move.dir).gems,
-            `${seed}: promised one more slide, and the plan's next move didn't take it`,
-          ).toContain(goal);
-          promises++;
+        const after = inertiaGame.executeMove(s, step.move);
+        // The promise is one case of the rung, and the words are all that tell
+        // it from the other: so the rung picks the steps, and each is held to
+        // promising exactly when the plan's next move sweeps the gem up.
+        if (step.rung === "positioning") {
+          const next = res.steps.at(i + 1);
+          const move = next?.move as Extract<InertiaMove, { type: "move" }> | undefined;
+          const taken =
+            move !== undefined &&
+            slidePath(after.board, after.px, after.py, move.dir).gems.includes(
+              goalOf(step),
+            );
+          if (taken) {
+            expect(step.explanation).toContain("one more slide sweeps it up");
+            promises++;
+          } else {
+            expect(
+              step.explanation,
+              `${seed}: promised one more slide, and the plan's next move didn't take it`,
+            ).not.toContain("one more slide");
+            unpromised++;
+          }
         }
-        s = inertiaGame.executeMove(s, step.move);
+        s = after;
       });
     }
-    // Keyed on the sentence, so a rewording would empty the scan silently.
-    expect(
-      promises,
-      "no plan promised 'one more slide' — the phrase has changed",
-    ).toBeGreaterThan(0);
+    // Vacuity: both cases of the rung were walked.
+    expect(promises, "no plan promised 'one more slide'").toBeGreaterThan(0);
+    expect(unpromised, "every positioning slide was the last but one").toBeGreaterThan(
+      0,
+    );
   });
 
   it("warns when the gem could be grabbed now, and grabbing it would strand the ball", () => {

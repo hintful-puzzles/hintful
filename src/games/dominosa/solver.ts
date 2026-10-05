@@ -45,6 +45,19 @@ export type BarrierTechnique =
   | "parity"
   | "set";
 
+/** The rungs a hint step can be: the techniques. */
+export const DOMINOSA_RUNGS = [
+  "onlySpot",
+  "squareOnly",
+  "squareSingleDomino",
+  "mustOverlap",
+  "localDuplicate",
+  "localDuplicate2",
+  "parity",
+  "set",
+] as const;
+export type DominosaRung = (typeof DOMINOSA_RUNGS)[number];
+
 /**
  * One firing captured by the hint recorder — either a forced domino placement
  * or a set of ruled-out placements (barriers), plus the squares it reasons

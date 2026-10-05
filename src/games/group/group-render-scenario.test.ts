@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -38,14 +38,14 @@ function rects(ops: readonly { op: string }[]) {
 const areaOf = (step: { highlights?: unknown }): { x: number; y: number }[] =>
   (step.highlights as { area: { x: number; y: number }[] }).area;
 
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: groupGame,
   params: [groupGame.decodeParams("6dn")],
   kinds: {
     // Three premises, exactly two of them side by side: the shape whose
     // contour the frame's side count is read against.
     associativityPairAndOne: (step) => {
-      if (!/In any group/.test(step.explanation)) return false;
+      if (step.rung !== "associativity") return false;
       const area = areaOf(step);
       const touching = area.flatMap((a, i) =>
         area
@@ -135,6 +135,7 @@ describe("group hint marks on a warm canvas", () => {
   const palette = groupGame.colors(DEFAULT_BACKGROUND);
   const hintOver = (area: { x: number; y: number }[]) => ({
     move: { type: "set", cells: [], n: 0 } satisfies GroupMove,
+    rung: "associativity",
     explanation: "",
     highlights: { area, targets: [], marks: [] },
   });

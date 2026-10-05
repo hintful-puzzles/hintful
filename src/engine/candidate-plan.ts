@@ -29,7 +29,9 @@ import {
   impliedNotes,
   lazyPopulate,
   type Mark,
+  NOTES_RUNGS,
   type NoteEncoding,
+  type NotesRung,
   nakedSingles,
   obviousCandidateMarks,
   type Reach,
@@ -72,6 +74,22 @@ export interface DupReason {
   py: number;
 }
 
+/** The rungs the walk speaks in every game: the setup's, and a placement's
+ * cull ({@link DupReason}). */
+export const CANDIDATE_RUNGS = [...NOTES_RUNGS, "dup"] as const;
+
+/** The rungs a plan's steps carry: the walk's own, and the `kind` of each of
+ * the game's reasons, which is the rung of the step a reason narrates. */
+export type PlanRung<Reason> =
+  | NotesRung
+  | DupReason["kind"]
+  | (Reason extends { kind: infer K extends string } ? K : never);
+
+/** A reason's rung: its `kind`. */
+function rungOf<Reason>(reason: Reason | DupReason): PlanRung<Reason> {
+  return (reason as { kind: string }).kind as PlanRung<Reason>;
+}
+
 /** One leg of a firing: one step the player is shown. A `step` leg is a move the
  * canonical shapes have no room for (Salad's markers), built by the game and
  * applied to the working board by its own `apply`. A `place` leg's `reads` is
@@ -79,15 +97,15 @@ export interface DupReason {
 export type Leg<M, H, Reason> =
   | { place: Mark; reason: Reason; reads?: readonly Point[] }
   | { strike: readonly Mark[]; reason: Reason }
-  | { step: HintStep<M, H>; apply(): void };
+  | { step: HintStep<M, H, PlanRung<Reason>>; apply(): void };
 
 /** One firing: its legs in order, read and played as one journey. */
 export type Firing<M, H, Reason> = readonly Leg<M, H, Reason>[];
 
 /** A step the walk has built, and how to play it on the working board:
  * `apply` says whether it decided a cell, which is when the solver reruns. */
-interface Built<M, H> {
-  step: HintStep<M, H>;
+interface Built<M, H, Rung extends string = string> {
+  step: HintStep<M, H, Rung>;
   apply(): boolean;
 }
 
@@ -167,6 +185,9 @@ export function evidenceOf(words: Narration): { area: OrderedCell[]; hatch?: Poi
  * never the game's to write. */
 export type StrikeWords<H> = Omit<StepWords<H>, "words"> & Premise;
 
+/** A strike's words inside the walk, with the rung of the reason they narrate. */
+type RungStrikeWords<H, Reason> = StrikeWords<H> & { rung: PlanRung<Reason> };
+
 /** The setup a candidate plan does before its every rung competes. */
 export interface PlanSetUp {
   /** Whether the setup is finished. */
@@ -214,7 +235,7 @@ export interface CandidatePlan<
   /** The board's row stride; its height is read off `grid`. */
   w: number;
   /** The steps the plan pushes to. */
-  steps: HintStep<M, H>[];
+  steps: HintStep<M, H, PlanRung<Reason>>[];
   /** The working board, advanced as the plan is built: 0 = empty. */
   grid: Uint8Array | Int8Array;
   /** The working notes, in `enc`'s encoding. */
@@ -250,8 +271,14 @@ export interface CandidatePlan<
   reach?: Reach;
   /** The reason a single the board shows narrates as. */
   singleReason: (n: number, why: SingleWhy<WholeRegion<Reg>>) => Reason;
-  /** A placement's words; `continues` is true on a journey's later legs. */
-  placeWords: (m: Mark, reason: Reason, continues: boolean) => StepWords<H>;
+  /** A placement's words; `continues` is true on a journey's later legs. The
+   * step's rung is the reason's kind, unless the words narrate another of the
+   * game's reasons than the one handed in, and then they say which: `rung`. */
+  placeWords: (
+    m: Mark,
+    reason: Reason,
+    continues: boolean,
+  ) => StepWords<H> & { rung?: PlanRung<Reason> };
   /** A strike's words, including a placement's cull (a {@link DupReason}). */
   strikeWords: (
     marks: readonly Mark[],
@@ -391,6 +418,18 @@ export type LatinCandidatePlan<
   };
 };
 
+/** The rungs every row/column Latin plan can speak: the walk's own, the three
+ * singles, and the generic set and chain eliminations `latin.ts` records. A
+ * game's list is these and its own reasons' kinds. */
+export const LATIN_RUNGS = [
+  ...CANDIDATE_RUNGS,
+  "single",
+  "regionsFull",
+  "hiddenSingle",
+  "set",
+  "forcing",
+] as const;
+
 /**
  * The plain row/column Latin square's {@link runCandidatePlan}: a preset over
  * it, not a second entry point, so a game supplies its recording solver, its
@@ -478,7 +517,10 @@ class CandidateWalk<
   /** Each firing's strikes as legs, keyed by its live records, for the turn. */
   private strikeFirings = new Map<readonly R[], Firing<M, H, Reason>>();
   /** Each firing's steps, built once whether the frontier or the take asks. */
-  private readonly built = new WeakMap<Firing<M, H, Reason>, Built<M, H>[]>();
+  private readonly built = new WeakMap<
+    Firing<M, H, Reason>,
+    Built<M, H, PlanRung<Reason>>[]
+  >();
 
   constructor(private readonly plan: CandidatePlan<M, H, R, Reason, Reg>) {
     const { w, grid, pencil, steps, enc } = plan;
@@ -811,7 +853,7 @@ class CandidateWalk<
   /** A firing's steps: a step per leg, and under the implicit reading the note
    * legs its premise needs, with a strike from a note-less cell folded into its
    * conclusion ({@link implicitSteps}). */
-  private stepsOf(f: Firing<M, H, Reason>): Built<M, H>[] {
+  private stepsOf(f: Firing<M, H, Reason>): Built<M, H, PlanRung<Reason>>[] {
     let built = this.built.get(f);
     if (!built) {
       built = this.implicit
@@ -827,15 +869,17 @@ class CandidateWalk<
     marks: readonly Mark[],
     reason: Reason | DupReason,
     continues: boolean,
-  ): StrikeWords<H> {
+  ): RungStrikeWords<H, Reason> {
     const words = this.plan.strikeWords(marks, reason, continues);
     const more = recordedReads(reason);
-    return more.length > 0
-      ? { ...words, reads: [...(words.reads ?? []), ...more] }
-      : words;
+    const reads = more.length > 0 ? [...(words.reads ?? []), ...more] : words.reads;
+    return { ...words, ...(reads ? { reads } : {}), rung: rungOf<Reason>(reason) };
   }
 
-  private builtLeg(leg: Leg<M, H, Reason>, continues: boolean): Built<M, H> {
+  private builtLeg(
+    leg: Leg<M, H, Reason>,
+    continues: boolean,
+  ): Built<M, H, PlanRung<Reason>> {
     if ("step" in leg)
       return {
         step: leg.step,
@@ -850,7 +894,11 @@ class CandidateWalk<
         this.strikeWords(leg.strike, leg.reason, continues),
       );
     const { x, y, n } = leg.place;
-    const { words, ...rest } = this.plan.placeWords(leg.place, leg.reason, continues);
+    const { words, rung, ...rest } = this.plan.placeWords(
+      leg.place,
+      leg.reason,
+      continues,
+    );
     const reads = [
       ...(rest.reads ?? []),
       ...(leg.reads ?? []),
@@ -859,6 +907,7 @@ class CandidateWalk<
     return {
       step: {
         move: this.place(x, y, n, this.plan.autoClean),
+        rung: rung ?? rungOf<Reason>(leg.reason),
         explanation: words.text,
         words,
         highlights: {
@@ -899,7 +948,7 @@ class CandidateWalk<
    * strike over several cells reaches, still gets its note leg, since it is read
    * before the fold could write it.
    */
-  private implicitSteps(f: Firing<M, H, Reason>): Built<M, H>[] {
+  private implicitSteps(f: Firing<M, H, Reason>): Built<M, H, PlanRung<Reason>>[] {
     const { grid, pencil, w } = this.plan;
     const h = grid.length / w;
     /** Each cell a leg places in, and the first leg to. */
@@ -925,9 +974,9 @@ class CandidateWalk<
       const i = bare(p, k);
       if (i !== null && !folded.has(i) && !into.includes(i)) into.push(i);
     };
-    const own: Built<M, H>[] = [];
+    const own: Built<M, H, PlanRung<Reason>>[] = [];
     f.forEach((leg, k) => {
-      let built: Built<M, H>;
+      let built: Built<M, H, PlanRung<Reason>>;
       if ("strike" in leg) {
         // A fold earlier in this firing may already have settled a cell this
         // leg strikes from.
@@ -976,13 +1025,20 @@ class CandidateWalk<
   private fold(
     i: number,
     marks: readonly Mark[],
-    words: StrikeWords<H>,
+    words: RungStrikeWords<H, Reason>,
     folded: Map<number, Folded>,
-  ): Built<M, H> {
+  ): Built<M, H, PlanRung<Reason>> {
     const { plan } = this;
     const x = i % plan.w;
     const y = (i / plan.w) | 0;
-    const { premise, where: _where, struck: _struck, named: _named, ...rest } = words;
+    const {
+      premise,
+      where: _where,
+      struck: _struck,
+      named: _named,
+      rung,
+      ...rest
+    } = words;
     let bits = this.shown[i];
     for (const m of marks) bits &= ~this.bit(m.n);
     // The view was taken before the firing, so a value an earlier fold placed
@@ -1013,6 +1069,7 @@ class CandidateWalk<
       return {
         step: {
           move: this.place(x, y, n, plan.autoClean),
+          rung,
           explanation: said.text,
           words: said,
           highlights: highlightsOf(said),
@@ -1031,6 +1088,7 @@ class CandidateWalk<
           left.map((n) => ({ x, y, n })),
           plan.moves,
         ),
+        rung,
         explanation: said.text,
         words: said,
         highlights: highlightsOf(said),
@@ -1050,7 +1108,7 @@ class CandidateWalk<
     return values;
   }
 
-  private noteLeg(i: number): Built<M, H> {
+  private noteLeg(i: number): Built<M, H, PlanRung<Reason>> {
     const { plan } = this;
     const x = i % plan.w;
     const y = (i / plan.w) | 0;
@@ -1064,6 +1122,7 @@ class CandidateWalk<
     return {
       step: {
         move: addMove(marks, plan.moves),
+        rung: "note",
         explanation: words.text,
         words,
         highlights: { area: [], targets: [{ x, y }], marks: [] } as unknown as H,
@@ -1076,7 +1135,10 @@ class CandidateWalk<
   }
 
   /** A strike's step, played by clearing its marks. */
-  private struck(marks: readonly Mark[], words: StrikeWords<H>): Built<M, H> {
+  private struck(
+    marks: readonly Mark[],
+    words: RungStrikeWords<H, Reason>,
+  ): Built<M, H, PlanRung<Reason>> {
     return {
       step: this.strikeStep(marks, words),
       apply: () => {
@@ -1088,9 +1150,12 @@ class CandidateWalk<
 
   /** A strike concluded as one: its premise, then the plan's words for the
    * values it crosses out. */
-  private strikeStep(struck: readonly Mark[], words: StrikeWords<H>): HintStep<M, H> {
+  private strikeStep(
+    struck: readonly Mark[],
+    words: RungStrikeWords<H, Reason>,
+  ): HintStep<M, H, PlanRung<Reason>> {
     const marks = [...struck];
-    const { premise, where, struck: noun, named, ...rest } = words;
+    const { premise, where, struck: noun, named, rung, ...rest } = words;
     // The ending names the ringed notes it strikes, and re-renders from them
     // when a refresh finds some already gone.
     const ending = mark.as("ring", NOTE, marks, (live) =>
@@ -1099,6 +1164,7 @@ class CandidateWalk<
     const said = so({ look: premise, move: ending });
     return {
       move: this.strike(marks),
+      rung,
       explanation: said.text,
       words: said,
       highlights: {
@@ -1155,7 +1221,7 @@ class CandidateWalk<
     if (plan.autoClean || dup.length === 0) return;
     const step = this.strikeStep(
       dup,
-      plan.strikeWords(dup, { kind: "dup", n, px: x, py: y }, true),
+      this.strikeWords(dup, { kind: "dup", n, px: x, py: y }, true),
     );
     step.continuesPrevious = true;
     plan.steps.push(step);

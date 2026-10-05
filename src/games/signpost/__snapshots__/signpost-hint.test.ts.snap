@@ -1547,3 +1547,12 @@ exports[`signpost hint frame > draws the arrow in the hint color, rings its targ
   },
 ]
 `;
+
+exports[`signpost: pinned hint positions > says, at each pin 1`] = `
+{
+  "follows": "The 22 must come right after the 21, and the 21's arrow points at it, so the two must be linked.",
+  "onlyBefore": "Only this arrow points at the ringed square, so it must lead there.",
+  "onlyNext": "The other square this arrow points at holds the wrong number, so only the ringed one can follow it.",
+  "onlyNextOfSeveral": "The other square this arrow points at holds the wrong number, so only the ringed one can follow it.",
+}
+`;

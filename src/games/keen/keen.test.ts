@@ -451,6 +451,7 @@ describe("keen render", () => {
     const target = { x: cell % w, y: Math.floor(cell / w) };
     const hint: HintStep<KeenMove, KeenHint> = {
       move: { type: "set", ...target, n: 1, pencil: false },
+      rung: "single",
       explanation: "",
       highlights: { area: [], targets: [target], marks: [] },
     };

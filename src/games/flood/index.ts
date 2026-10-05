@@ -132,7 +132,11 @@ function statusbarText(state: FloodState, _ui: FloodUi): string {
 /** The solver's whole remaining fill sequence, one narrated step per fill.
  * Returning the full plan rather than one step keeps the hint banner
  * populated through an auto-hint run. */
-function hint(state: FloodState): HintResult<FloodMove> {
+/** The hint has one branch: the solver's next fill. */
+export const FLOOD_RUNGS = ["fill"] as const;
+export type FloodRung = (typeof FLOOD_RUNGS)[number];
+
+function hint(state: FloodState): HintResult<FloodMove, unknown, FloodRung> {
   // Flooded past the move limit: the status is lost, and no fill is legal.
   if (completed(state.grid)) return { ok: false, error: GAME_OVER };
   const moves = solveMoves(state.w, state.h, state.grid, state.colors);
@@ -141,14 +145,19 @@ function hint(state: FloodState): HintResult<FloodMove> {
   // fills before it leave.
   let board = state;
   const { w } = state;
-  const steps = moves.map((color): HintStep<FloodMove> => {
+  const steps = moves.map((color): HintStep<FloodMove, unknown, FloodRung> => {
     const joined = joinedBy(board, color).map((i) => ({
       x: i % w,
       y: Math.floor(i / w),
     }));
     const words = say.fill(color, joined);
     board = applyFills(board, [color]);
-    return { move: { type: "fill", color }, explanation: words.text, words };
+    return {
+      move: { type: "fill", color },
+      rung: "fill",
+      explanation: words.text,
+      words,
+    };
   });
   return { ok: true, steps };
 }
@@ -192,7 +201,10 @@ export const floodGame: Game<
   FloodState,
   FloodMove,
   FloodUi,
-  FloodDrawState
+  FloodDrawState,
+  unknown,
+  unknown,
+  FloodRung
 > = {
   id: "flood",
   // Choosing a color is the only gesture; the secondary button has no
@@ -254,6 +266,7 @@ export const floodGame: Game<
   },
 
   hint,
+  hintRungs: FLOOD_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides: a black dot on every square the named color's fill would join to your region, so you can see what it gains.",

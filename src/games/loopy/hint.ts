@@ -65,6 +65,42 @@ import {
 
 type Marks = Omit<Marked, "targets">;
 
+/**
+ * The hint's rungs: a line step is the solver's firing, by its reason's kind,
+ * and a note step is the sentence that places the note.
+ */
+export const LOOPY_RUNGS = [
+  "clueFull",
+  "clueStarved",
+  "clueOneShort",
+  "clueBlockedPair",
+  "deadEnd",
+  "lineContinues",
+  "dotFull",
+  "clueBound",
+  "corner",
+  "cornerExit",
+  "matchingPair",
+  "parity",
+  "related",
+  "earlyLoop",
+  "closesLoop",
+  "cornerAtDot",
+  "cornerFromClue",
+  "cornerAcross",
+  "cornerOppositeExit",
+  "cornerFromPair",
+  "pairAtClue",
+  "pairAtDot",
+  "pairAtCorner",
+  "pairAcrossClue",
+  "pairAcrossDot",
+  "pairChain",
+] as const;
+export type LoopyRung = (typeof LOOPY_RUNGS)[number];
+
+type Step = HintStep<LoopyMove, unknown, LoopyRung>;
+
 /** One firing as the plan keeps it: the board just before it, and the facts it
  * rests on, deepest first. */
 interface Planned extends LoopyFiring {
@@ -138,7 +174,7 @@ interface Planner {
   readonly state: LoopyState;
   readonly facts: readonly LoopyFact[];
   readonly notes: Notes;
-  readonly steps: HintStep<LoopyMove>[];
+  readonly steps: Step[];
 }
 
 const NO_MARKS: Marks = {
@@ -156,13 +192,14 @@ type Words = (m: Marked) => Sentence;
 
 function push(
   pl: Planner,
+  rung: LoopyRung,
   move: LoopyMove,
   words: Words,
   marks: Partial<Marks>,
   targets: readonly number[] = [],
 ): void {
   const said = words({ ...NO_MARKS, ...marks, targets });
-  pl.steps.push({ move, explanation: said.text, words: said });
+  pl.steps.push({ move, rung, explanation: said.text, words: said });
 }
 
 function cornerOf(pl: Planner, id: number): CornerFact {
@@ -204,6 +241,7 @@ function chainPair(pl: Planner, path: readonly number[]): LoopyPair {
       const first = opposite;
       push(
         pl,
+        "pairChain",
         { kind: "pair", a: joined.a, b: joined.b, relation: relationWord(joined) },
         (m) => say.pairChain(first, link.opposite, m),
         {
@@ -242,6 +280,7 @@ function placeCorner(pl: Planner, group: readonly CornerFact[]): void {
   const bound: CornerBound = bits === 3 ? "exactlyOne" : f.bound;
   const clue = (face: number): number => pl.state.clues[face];
 
+  let rung: LoopyRung;
   let words: Words;
   let marks: Partial<Marks>;
   const why = f.why;
@@ -250,10 +289,12 @@ function placeCorner(pl: Planner, group: readonly CornerFact[]): void {
       return;
     case "lineElsewhere":
     case "onlyWayOn":
+      rung = "cornerAtDot";
       words = (m) => say.cornerAtDot(bound, m);
       marks = { dots: [f.dot] };
       break;
     case "clue":
+      rung = "cornerFromClue";
       words = (m) => say.cornerFromClue(clue(why.face), why.witness.total, f.bound, m);
       marks = {
         faces: [why.face],
@@ -261,20 +302,23 @@ function placeCorner(pl: Planner, group: readonly CornerFact[]): void {
       };
       break;
     case "acrossTheDot":
+      rung = "cornerAcross";
       words = say.cornerAcross;
       marks = { dots: [f.dot], corners: [cornerOf(pl, f.parents[0]).dline] };
       break;
     case "exactlyOneAcross":
+      rung = "cornerOppositeExit";
       words = say.cornerOppositeExit;
       marks = { dots: [f.dot], corners: [cornerOf(pl, f.parents[0]).dline] };
       break;
     case "opposites":
+      rung = "cornerFromPair";
       marks = { pairs: [chainPair(pl, f.parents)] };
       words = (m) => say.cornerFromPair(bound, m);
       break;
   }
   const next = had | bits;
-  push(pl, { kind: "corner", dline: f.dline, bits: next }, words, {
+  push(pl, rung, { kind: "corner", dline: f.dline, bits: next }, words, {
     ...marks,
     placedCorner: f.dline,
   });
@@ -290,6 +334,7 @@ function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
     pl.state.clues[face] - yesAround(g.faces[face].edges, before);
   const dotLines = (dot: number): number => yesAround(g.dots[dot].edges, before);
 
+  let rung: LoopyRung;
   let words: Words;
   let marks: Partial<Marks>;
   const why = f.why;
@@ -297,6 +342,7 @@ function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
     case "note":
       return;
     case "faceParity": {
+      rung = "pairAtClue";
       const clue = pl.state.clues[why.face];
       const more = needed(why.face);
       words = (m) => say.pairAtClue(clue, more, f.opposite, m);
@@ -304,16 +350,19 @@ function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
       break;
     }
     case "dotParity": {
+      rung = "pairAtDot";
       const lines = dotLines(why.dot);
       words = (m) => say.pairAtDot(lines, f.opposite, m);
       marks = { dots: [why.dot] };
       break;
     }
     case "exactlyOneAtCorner":
+      rung = "pairAtCorner";
       words = say.pairAtCorner;
       marks = { corners: [cornerOf(pl, f.parents[0]).dline] };
       break;
     case "faceLink": {
+      rung = "pairAcrossClue";
       const pair = chainPair(pl, f.parents);
       const clue = pl.state.clues[why.face];
       const more = needed(why.face);
@@ -322,6 +371,7 @@ function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
       break;
     }
     case "dotLink": {
+      rung = "pairAcrossDot";
       const pair = chainPair(pl, f.parents);
       const lines = dotLines(why.dot);
       words = (m) => say.pairAcrossDot(lines, pair.opposite, f.opposite, m);
@@ -332,6 +382,7 @@ function placePair(pl: Planner, f: RelationFact, before: Uint8Array): void {
   const placed = pairOf(a, b, f.opposite);
   push(
     pl,
+    rung,
     { kind: "pair", a: placed.a, b: placed.b, relation: relationWord(placed) },
     words,
     { ...marks, placedPair: placed },
@@ -641,7 +692,7 @@ function planSteps(
   plan: readonly Planned[],
   facts: readonly LoopyFact[],
   tickOf: readonly number[],
-): HintStep<LoopyMove>[] {
+): Step[] {
   const pl: Planner = { state, facts, notes: new Notes(state), steps: [] };
   const firstUse = new Map<number, number>();
   plan.forEach((p, i) => {
@@ -717,6 +768,7 @@ function planSteps(
     const ops: LoopyOp[] = p.ops.map(({ edge, state: to }) => ({ edge, state: to }));
     push(
       pl,
+      p.reason.kind,
       { kind: "set", ops },
       words,
       marks,
@@ -727,7 +779,7 @@ function planSteps(
   return pl.steps;
 }
 
-export function hint(state: LoopyState): HintResult<LoopyMove> {
+export function hint(state: LoopyState): HintResult<LoopyMove, unknown, LoopyRung> {
   const { plan, facts, tickOf, contradiction } = deduceLoopyPlan(state);
   if (plan.length === 0) {
     return {
@@ -806,10 +858,10 @@ export function hintKeepTrack(
 
 /** Drop the edges the board already has as the step wants them, or the whole step
  * once its note is already there. */
-export function refreshHintStep<H>(
-  step: HintStep<LoopyMove, H>,
+export function refreshHintStep<H, R extends string>(
+  step: HintStep<LoopyMove, H, R>,
   state: LoopyState,
-): HintStep<LoopyMove, H> | null {
+): HintStep<LoopyMove, H, R> | null {
   const move = step.move;
   switch (move.kind) {
     case "corner":

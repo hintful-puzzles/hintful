@@ -41,7 +41,13 @@ import {
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
 import { newSignpostDesc } from "./generator.ts";
-import { type SignpostHint, signpostHint, signpostKeepTrack } from "./hint.ts";
+import {
+  SIGNPOST_RUNGS,
+  type SignpostHint,
+  type SignpostRung,
+  signpostHint,
+  signpostKeepTrack,
+} from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import { BORDER, buildPalette, FLASH_SPIN, redrawSignpost } from "./render.ts";
 import { solveState } from "./solver.ts";
@@ -361,7 +367,8 @@ export const signpostGame: Game<
   SignpostUi,
   SignpostDrawState,
   SignpostMistake,
-  SignpostHint
+  SignpostHint,
+  SignpostRung
 > = {
   id: "signpost",
 
@@ -399,6 +406,7 @@ export const signpostGame: Game<
         "the squares an arrow points at, when the sentence says which of them can come next.",
     },
   },
+  hintRungs: SIGNPOST_RUNGS,
   hintKeepTrack: signpostKeepTrack,
   hintGesture(_s, _ui, ds, m) {
     if (m.type !== "link") return [];

@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`an ordered hint chain carries its order to the canvas > clusters: pinned hint positions > says, at each pin 1`] = `
+{
+  "numberedChain": "Suppose this cell were blue: cells 1 to 3 are then forced from it, and by 3 the outlined dot would touch a second tile of its own color, so this cell must be red.",
+}
+`;
+
+exports[`an ordered hint chain carries its order to the canvas > group: pinned hint positions > says, at each pin 1`] = `
+{
+  "numberedChain": "Cell 1 is b or h, and every numbered cell has just two elements left, so each forces the next. If cell 1 is b, this cell's row already has it; if h, cell 10 is driven to b, in line with this cell. Either way, b is ruled out here, so pencil in only f, h and i.",
+}
+`;
+
+exports[`an ordered hint chain carries its order to the canvas > keen: pinned hint positions > says, at each pin 1`] = `
+{
+  "numberedChain": "Cell 1 is 4 or 3, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 4, this cell's column already has it; if 3, cell 4 is driven to 4, in line with this cell. Either way, 4 is ruled out here, so we must cross out the 4.",
+}
+`;
+
+exports[`an ordered hint chain carries its order to the canvas > rome: pinned hint positions > says, at each pin 1`] = `
+{
+  "numberedChain": "Following the arrows from the square below leads back here, so pencil in only left and right.",
+}
+`;
+
+exports[`an ordered hint chain carries its order to the canvas > salad: pinned hint positions > says, at each pin 1`] = `
+{
+  "numberedChain": "Square 1 is B or D, and every numbered square has just two letters left, so each forces the next. If square 1 is B, this square's column already has it; if D, square 4 is driven to B, in line with this square. Either way, B is ruled out here, so we must cross out the B.",
+}
+`;
+
+exports[`an ordered hint chain carries its order to the canvas > solo: pinned hint positions > says, at each pin 1`] = `
+{
+  "numberedChain": "Cell 1 is 2 or 1, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 2, this cell's block already has it; if 1, cell 3 is driven to 2, in line with this cell. Either way, 2 is ruled out here, so pencil in only 4 and 9.",
+}
+`;
+
+exports[`an ordered hint chain carries its order to the canvas > towers: pinned hint positions > says, at each pin 1`] = `
+{
+  "numberedChain": "Cell 1 is 1 or 3, and every numbered cell has just two heights left, so each forces the next. If cell 1 is 1, this cell's column already has it; if 3, cell 6 is driven to 1, in line with this cell. Either way, 1 is ruled out here, so we must cross out the 1.",
+}
+`;
+
+exports[`an ordered hint chain carries its order to the canvas > unequal: pinned hint positions > says, at each pin 1`] = `
+{
+  "numberedChain": "Cell 1 is 4 or 2, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 4, this cell's row already has it; if 2, cell 3 is driven to 4, in line with this cell. Either way, 4 is ruled out here, so pencil in only 1 and 2.",
+}
+`;

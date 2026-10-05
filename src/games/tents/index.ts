@@ -55,7 +55,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
-import { tentsHint, tentsKeepTrack } from "./hint.ts";
+import { TENTS_RUNGS, type TentsRung, tentsHint, tentsKeepTrack } from "./hint.ts";
 import {
   cellCenter,
   colors,
@@ -432,7 +432,9 @@ export const tentsGame: Game<
   TentsMove,
   TentsUi,
   TentsDrawState,
-  TentsMistake
+  TentsMistake,
+  unknown,
+  TentsRung
 > = {
   id: "tents",
 
@@ -457,6 +459,7 @@ export const tentsGame: Game<
   difficulty,
   findMistakes,
   hint: tentsHint,
+  hintRungs: TENTS_RUNGS,
   hintMarks: {
     roles: {
       ring: "the squares the step decides. When it asks for a link, the tent and the tree are ringed as one shape, and the link is drawn between them in the hint color.",

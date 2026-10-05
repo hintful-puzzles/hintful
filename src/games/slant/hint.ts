@@ -50,7 +50,20 @@ export interface SlantHint {
   clues?: Point[];
 }
 
-type Step = HintStep<SlantMove, SlantHint>;
+/** The hint's rungs: a square step is its firing's technique, and a step
+ * placing a same-slant mark is why the merge holds, a clue or a v-shape. */
+export const SLANT_RUNGS = [
+  "clue-fill",
+  "clue-empty",
+  "loop",
+  "deadend",
+  "equiv",
+  "mark-clue",
+  "mark-v",
+] as const;
+export type SlantRung = (typeof SLANT_RUNGS)[number];
+
+type Step = HintStep<SlantMove, SlantHint, SlantRung>;
 
 /** The mark joining two edge-adjacent squares. */
 function markOf(a: number, b: number, w: number): SlantMark {
@@ -539,6 +552,7 @@ function markStep(
   if (cites.length) hl.marks = cites;
   return {
     move: { type: "alike", ...mark, on: true },
+    rung: m.why.kind === "clue" ? "mark-clue" : "mark-v",
     explanation: words.text,
     words,
     highlights: hl,
@@ -669,7 +683,9 @@ function narrate(firing: SlantFiring, leg: number, hl: SlantHint, w: number): Se
  * where the solver found it; either way it and the firing it is placed
  * beside make one journey.
  */
-export function slantHint(state: SlantState): HintResult<SlantMove, SlantHint> {
+export function slantHint(
+  state: SlantState,
+): HintResult<SlantMove, SlantHint, SlantRung> {
   const { w, h } = state;
   const { firings, trace } = deduceHintPlan(w, h, state.clues, state.soln, state.alike);
   if (firings.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
@@ -753,6 +769,7 @@ export function slantHint(state: SlantState): HintResult<SlantMove, SlantHint> {
       const words = narrate(firing, leg, highlights, w);
       push({
         move: { type: "set", ...firing.moves[leg] },
+        rung: firing.technique,
         explanation: words.text,
         words,
         highlights,

@@ -12,6 +12,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";
 import { deduceUntangleHintPlan, solvedPlaces } from "./hint.ts";
 import { CROSSING, SPOT, say, type UntangleMarks, VERTEX } from "./hint-text.ts";
@@ -107,7 +108,8 @@ function followHints(start: UntangleState, aux?: string) {
     const res = deduceUntangleHintPlan(s, aux);
     if (!res.ok) throw new Error(`hint gave up on an unsolved board: ${res.error}`);
     const legs = marksOf(res.steps[0]).marked.length;
-    if (legs > 0) {
+    expect(legs > 0).toBe(res.steps[0].rung === "journey");
+    if (res.steps[0].rung === "journey") {
       // A journey is the whole plan: every leg's count is the board's, the
       // marked points are the ones still to move, and it does what its first
       // leg says it does.
@@ -127,7 +129,11 @@ function followHints(start: UntangleState, aux?: string) {
       }
       const movers = res.steps.map((st) => st.move.points[0].i);
       expect(res.steps.length).toBe(legs + 1);
-      const finishes = res.steps[0].explanation.includes("clears every crossing.");
+      // Whether the journey leaves the board solved, which its first leg says
+      // (the sentence each leg is held to below is built from it).
+      const finishes = isSolved(
+        res.steps.reduce((b, st) => untangleGame.executeMove(b, st.move), s),
+      );
       if (finishes) finishing++;
       const crossingsBefore = count(s);
       // Points on their place in the solved layout are what keep a hint
@@ -158,7 +164,6 @@ function followHints(start: UntangleState, aux?: string) {
         // What keeps a hint recomputed after any step from cycling.
         if (i === 0) expect(after).toBeLessThan(before);
       });
-      if (finishes) expect(isSolved(s)).toBe(true);
       for (const v of movers) expect(lineCrossings(s, v)).toBe(0);
       expect(count(s)).toBeLessThan(crossingsBefore);
       continue;
@@ -185,6 +190,27 @@ function followHints(start: UntangleState, aux?: string) {
   }
   throw new Error("following hints did not converge");
 }
+
+/** Each rung pinned on a position whose plan speaks it. A pin carries no `aux`,
+ * so these are plans made as for a board shared by its ID. */
+describeHintPins({
+  game: untangleGame,
+  params: [{ n: 6 }, { n: 15 }, { n: 25 }],
+  seeds: 4,
+  maxSteps: 40,
+  pins: {
+    /** Held on 180 of 242 positions walked. */
+    clear: "10:0-1,0-5,0-7,0-9,1-8,2-5,2-6,2-8,2-9,3-4,3-6,3-7,4-6,4-7,5-8,5-9,6-9",
+    /** Held on 38 of 242 positions walked. */
+    rearrange: {
+      id: "15:0-4,0-7,0-12,0-13,1-2,1-8,1-11,2-3,2-9,3-6,3-8,3-9,4-6,4-13,4-14,5-10,5-12,6-13,6-14,7-9,7-10,7-13,8-11,8-14,9-10,10-12,11-14",
+      moves:
+        '[{"kind":"place","points":[{"i":8,"x":159,"y":149,"d":64}],"solving":false},{"kind":"place","points":[{"i":13,"x":291,"y":215,"d":64}],"solving":false},{"kind":"place","points":[{"i":5,"x":95,"y":235,"d":64}],"solving":false},{"kind":"place","points":[{"i":0,"x":225,"y":268,"d":64}],"solving":false},{"kind":"place","points":[{"i":11,"x":199,"y":69,"d":64}],"solving":false},{"kind":"place","points":[{"i":6,"x":265,"y":175,"d":64}],"solving":false},{"kind":"place","points":[{"i":3,"x":172,"y":202,"d":64}],"solving":false},{"kind":"place","points":[{"i":14,"x":225,"y":122,"d":64}],"solving":false},{"kind":"place","points":[{"i":9,"x":146,"y":281,"d":64}],"solving":false},{"kind":"place","points":[{"i":2,"x":66,"y":56,"d":64}],"solving":false},{"kind":"place","points":[{"i":1,"x":142,"y":87,"d":64}],"solving":false}]',
+    },
+    /** Held on 24 of 242 positions walked. */
+    journey: "6:0-1,0-2,0-3,0-5,1-2,1-4,1-5,2-3,2-4,4-5",
+  },
+});
 
 describe("Untangle hint", () => {
   it("narrates true counts and solves every board it is followed on", () => {

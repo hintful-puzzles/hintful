@@ -298,23 +298,40 @@ describe("palisade hint", () => {
     params: [P, { w: 8, h: 6, k: 6 }],
     kinds: {
       journey: (_, state) => opensJourney(state),
-      // equivalentEdges is about "the same region" (hatched, where
-      // numberExhausted outlines a single clue cell) and pairs two edges into
-      // one journey.
-      sharedFate: (step, state) => marksOf(step).hatch > 1 && opensJourney(state),
       noWall: (step) => hlOf(step).kind === "nowall",
     },
     pins: {
       /** Held on 286 of 1307 positions walked. */
       journey: "5x5n5:g0g2b2b2b2",
-      /** Held on 56 of 1307 positions walked. */
-      sharedFate: {
+      /** Held on 654 of 1307 positions walked. */
+      noWall: "5x5n5:g0g2b2b2b2",
+      /** Held on 15 of 1307 positions walked. */
+      cluesVersusRegionSize: "5x5n5:a2a1a2b2e1e33",
+      /** Held on 1129 of 1307 positions walked. */
+      numberExhausted: "5x5n5:g0g2b2b2b2",
+      /** Held on 1289 of 1307 positions walked. */
+      notTooBig: {
+        id: "5x5n5:a2c1e232c22d2",
+        moves:
+          '[{"type":"edges","edits":[{"x":0,"y":1,"flag":16},{"x":0,"y":0,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":32},{"x":1,"y":1,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":64},{"x":0,"y":2,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":64},{"x":1,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":2},{"x":2,"y":0,"flag":8}]}]',
+      },
+      /** Held on 1292 of 1307 positions walked. */
+      notTooSmall: {
+        id: "5x5n5:23m2a33b1a3",
+        moves:
+          '[{"type":"edges","edits":[{"x":2,"y":3,"flag":2},{"x":3,"y":3,"flag":8}]},{"type":"edges","edits":[{"x":3,"y":3,"flag":4},{"x":3,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":32},{"x":1,"y":0,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":64},{"x":0,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":2},{"x":2,"y":0,"flag":8}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":4},{"x":1,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":16},{"x":1,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":32},{"x":2,"y":4,"flag":128}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":128},{"x":0,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":1,"y":1,"flag":8},{"x":0,"y":1,"flag":2}]}]',
+      },
+      /** Held on 1174 of 1307 positions walked. */
+      noDanglingEdges: {
+        id: "5x5n5:b31c2a3b3d1c2",
+        moves:
+          '[{"type":"edges","edits":[{"x":3,"y":0,"flag":32},{"x":4,"y":0,"flag":128}]},{"type":"edges","edits":[{"x":3,"y":0,"flag":64},{"x":3,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":3,"y":0,"flag":128},{"x":2,"y":0,"flag":32}]},{"type":"edges","edits":[{"x":2,"y":0,"flag":4},{"x":2,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":2,"y":0,"flag":8},{"x":1,"y":0,"flag":2}]}]',
+      },
+      equivalentEdges: {
         id: "5x5n5:c2d2d22a13b222",
         moves:
           '[{"type":"edges","edits":[{"x":0,"y":4,"flag":16},{"x":0,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]}]',
       },
-      /** Held on 654 of 1307 positions walked. */
-      noWall: "5x5n5:g0g2b2b2b2",
     },
   });
 
@@ -381,9 +398,9 @@ describe("palisade hint", () => {
 
   it("equivalentEdges opens a journey stating the shared-fate coupling", () => {
     // Its opener leg must spell out the shared-fate coupling.
-    const { step: opener, steps } = pinned("sharedFate");
+    const { step: opener, steps, index } = pinned("equivalentEdges");
     expect(opener.continuesPrevious).toBeUndefined();
-    expect(steps[1]?.continuesPrevious).toBe(true);
+    expect(steps[index + 1]?.continuesPrevious).toBe(true);
     expect(opener.explanation).toMatch(/share a fate/);
     expect(marksOf(opener).siblings).toBeGreaterThan(0);
     expect(marksOf(opener).hatch).toBeGreaterThan(1);

@@ -10,9 +10,10 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import type { AscentRung } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-text.ts";
 import { ascentGame } from "./index.ts";
 import {
@@ -113,12 +114,18 @@ const hl = (step: HintStep<AscentMove>) => {
   };
 };
 
-/** The striped sentences: "Only the run between …" and "Only 12, between …". */
-const STRIPED = /^Only (the run|\d+, between)/;
+/** The rungs that say a square is one run's alone. Their step stripes the
+ * run's reach, or stripes nothing and counts the steps from the run's ends. */
+const ONE_RUNS: readonly AscentRung[] = [
+  "onlyBeside",
+  "only",
+  "routeBeside",
+  "routeOnly",
+];
 
 /** The steps whose frames are asserted below. Each kind names its mode, since
  * a frame's stroke counts are a mode's. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: ascentGame,
   params: [
     RECT,
@@ -131,29 +138,22 @@ const pinned = describeHintPins({
   kinds: {
     rectBetween: (s, state) =>
       state.mode === MODE_RECT && s.move.kind === "place" && hl(s).area.length === 2,
-    rectRun: (s, state) => state.mode === MODE_RECT && STRIPED.test(s.explanation),
+    rectRun: (s, state) =>
+      state.mode === MODE_RECT && ONE_RUNS.includes(s.rung) && hl(s).hatch.length > 0,
     hexagonRun: (s, state) =>
-      state.mode === MODE_HEXAGON && STRIPED.test(s.explanation),
+      state.mode === MODE_HEXAGON &&
+      ONE_RUNS.includes(s.rung) &&
+      hl(s).hatch.length > 0,
     fill: (s, state) =>
-      state.mode === MODE_RECT &&
-      /^(?:No other run (?:comes close to|can reach)|The run [^,]* (?:is too far from|can't fill)) this square/.test(
-        s.explanation,
-      ),
-    wholeRun: (s, state) =>
-      state.mode === MODE_RECT &&
-      / only one route| the one route that does/.test(s.explanation),
+      state.mode === MODE_RECT && ONE_RUNS.includes(s.rung) && hl(s).hatch.length === 0,
+    wholeRun: (s, state) => state.mode === MODE_RECT && s.rung === "wholeRun",
+    // A number read off its neighbors and its arrow's line, which is striped.
     edgesLine: (s, state) =>
       state.mode === MODE_EDGES &&
-      hl(s).hatch.length > 0 &&
-      /, on its (row|column|diagonal)\./.test(s.explanation),
-    edgesLines: (s, state) =>
-      state.mode === MODE_EDGES &&
-      / must be on its (row|column|diagonal), within /.test(s.explanation),
-    edgesPointers: (s, state) =>
-      state.mode === MODE_EDGES &&
-      /^Of the missing numbers, only \d+(, \d+)* and \d+ point here\. /.test(
-        s.explanation,
-      ),
+      (s.rung === "touch" || s.rung === "reach") &&
+      hl(s).hatch.length > 0,
+    edgesLines: (s, state) => state.mode === MODE_EDGES && s.rung === "lines",
+    edgesPointers: (s, state) => state.mode === MODE_EDGES && s.rung === "pointers",
   },
   pins: {
     /** Held on 173 of 796 positions walked. */
@@ -178,15 +178,15 @@ const pinned = describeHintPins({
         { kind: "place", cell: 7, n: 4 },
       ],
     },
-    /** Held on 145 of 796 positions walked. */
+    /** Held on 166 of 796 positions walked. */
     wholeRun: "5x5mRdn:25c6a1_3_8_7_22_16a11e12b18_14a",
-    /** Held on 62 of 796 positions walked. */
+    /** Held on 69 of 796 positions walked. */
     edgesLine:
       "5x5mEEdn:1_10_23_3_17_15_19_25d18_21_24e20_5e4_14e8_12e9_11_7_6_22_2_16_13",
     /** Held on 66 of 796 positions walked. */
     edgesLines:
       "5x5mEEdn:13_4_3_10_1_14_18_5e2_9e16_15e7_20_25d23_22e12_24_6_8_21_19_17_11",
-    /** Held on 17 of 796 positions walked. */
+    /** Held on 32 of 796 positions walked. */
     edgesPointers: {
       id: "5x5mEEdh:5_13_9_23_19_4_21_24e22_20e15_12e17_1_10d3_7e6_8_25_11_16_2_18_14",
       moves:

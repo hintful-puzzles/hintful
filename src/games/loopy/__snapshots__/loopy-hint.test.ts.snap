@@ -4363,3 +4363,40 @@ exports[`Loopy hint frames > outlines the clue a step counts inside its face 1`]
   },
 ]
 `;
+
+exports[`loopy: pinned hint positions > says, at each pin 1`] = `
+{
+  "clueBlockedPair": "Both outlined dots already have a line, so joining them leaves this 2 short: that edge is out and the other 2 are lines.",
+  "clueBound": "This 3's other edges can give it only 2, counting the marked corner as one, so this edge must be a line.",
+  "clueFull": "This 0 takes no lines, so its edges can't be lines.",
+  "clueOneShort": "This 3 can spare one open edge and must spare it at the outlined dot, which has a line, so the rest must be lines.",
+  "clueStarved": "Only 3 of this 3's edges aren't ruled out, so all of them must be lines.",
+  "corner": "The marked corner needs a line; the outlined dot takes both or neither, so both must be lines.",
+  "cornerAcross": "The marked corner across the outlined dot needs a line, so this corner can take one line at most.",
+  "cornerAtDot": "The line at the outlined dot can only go on through this corner, so it needs a line.",
+  "cornerCitingCorners": "The marked corner across the outlined dot needs a line, so this corner can take one line at most.",
+  "cornerExit": "The marked corner takes exactly one line; the outlined dot has no line yet, so this edge must be its second.",
+  "cornerFromClue": "This 3's other edges can give it 2 at most, so this corner needs a line.",
+  "cornerFromPair": "The marked pair makes this corner's edges opposites, so it takes exactly one line.",
+  "cornerNote": "The marked corner across the outlined dot needs a line, so this corner can take one line at most.",
+  "cornerOppositeExit": "The marked corner takes exactly one of the outlined dot's two lines, so this corner needs the other.",
+  "deadEnd": "The outlined dot has no line and no other open edge, so a line here would dead-end: this edge can't be a line.",
+  "dotFull": "The outlined dot already has its two lines, so this edge can't be a line.",
+  "earlyLoop": "This edge would close the marked lines into a loop that leaves other lines out, so it can't be a line.",
+  "lineContinues": "The line at the outlined dot has no other way to go on, so this edge must be a line.",
+  "matchingPair": "The marked pair makes these two edges match, and this 1 has room for one more line, so neither can be one.",
+  "oneFace": "This 3's other edges can give it 2 at most, so this corner needs a line.",
+  "oneLine": "The line at the outlined dot has no other way to go on, so this edge must be a line.",
+  "oneRuledOut": "The outlined dot has no line and no other open edge, so a line here would dead-end: this edge can't be a line.",
+  "pairAcrossClue": "This 2 needs 2 more from four open edges, and the marked pair gives 0 or 2, so these two must match.",
+  "pairAcrossDot": "The outlined dot has no line and four open edges; the marked pair gives 0 or 2, so these two must match.",
+  "pairAtClue": "Only these two of this 3's edges are still open, and it needs 1 more, so they must be opposites.",
+  "pairAtCorner": "The marked corner takes exactly one line, so these two edges must be opposites.",
+  "pairAtDot": "Only these two of the outlined dot's edges are still open, and it has no line, so they must match.",
+  "pairChain": "One of these edges matches the edge the marked pairs share and the other is its opposite, so they must be opposites.",
+  "pairCitingPairs": "This 2 needs 2 more from four open edges, and the marked pair gives 0 or 2, so these two must match.",
+  "pairNote": "Only these two of the outlined dot's edges are still open, and it has no line, so they must match.",
+  "parity": "The outlined dot has no line; the marked pair makes two of its open edges give 0 or 2, so this edge can't be a line.",
+  "severalEdges": "This 0 takes no lines, so its edges can't be lines.",
+}
+`;

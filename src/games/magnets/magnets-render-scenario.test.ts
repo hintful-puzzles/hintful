@@ -11,7 +11,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_SELECT, CURSOR_UP } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {
   expectPieceRing,
   expectRing,
@@ -129,7 +129,7 @@ describe("magnets render scenarios", () => {
 
   /** The shapes of step whose frames are asserted below, each pinned on a
    * position whose hint opens with one. */
-  const pinned = describeHintPins({
+  const pinned = describeHintKindPins({
     game: magnetsGame,
     params: [P],
     kinds: {

@@ -280,6 +280,22 @@ function showable(b: Board, f: TracksFiring): boolean {
   return f.reason !== null && !f.ops.every((op) => evident(b, op));
 }
 
+/** The hint's rungs: the kinds of the solver's premises. */
+export const TRACKS_RUNGS = [
+  "onlyOneSideLeft",
+  "bothSidesLeft",
+  "clueFull",
+  "clueExact",
+  "wouldCloseLoop",
+  "wouldStrandTrack",
+  "wouldFinishEarly",
+  "looseEndsFill",
+  "looseEndSpans",
+  "sharedFate",
+  "crossingParity",
+] as const;
+export type TracksRung = (typeof TRACKS_RUNGS)[number];
+
 /**
  * Deduce the plan from the player's current marks.
  *
@@ -293,7 +309,9 @@ function showable(b: Board, f: TracksFiring): boolean {
  */
 export function tracksHint(
   state: TracksState,
-): { ok: true; steps: HintStep<TracksMove>[] } | { ok: false; error: HintRefusal } {
+):
+  | { ok: true; steps: HintStep<TracksMove, unknown, TracksRung>[] }
+  | { ok: false; error: HintRefusal } {
   const board = stateToBoard(state);
   const next = tracksRecordingPass(board, state.diff, stepBudget("tracks hint"));
   const { plan } = deduceHintPlan<Board, TracksFiring, string>({
@@ -323,7 +341,12 @@ export function tracksHint(
       const { reason } = firing;
       if (!reason) throw new Error("tracks hint: a step with no premise was shown");
       const words = narrate(board, reason, pictureOf(board, reason, firing));
-      return { move: { ops: firing.ops }, explanation: words.text, words };
+      return {
+        move: { ops: firing.ops },
+        rung: reason.kind,
+        explanation: words.text,
+        words,
+      };
     }),
   };
 }

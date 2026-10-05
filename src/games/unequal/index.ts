@@ -21,7 +21,12 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
+import {
+  LATIN_RUNGS,
+  type PlanRung,
+  runLatinCandidatePlan,
+  valuesOf,
+} from "../../engine/candidate-plan.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
@@ -409,15 +414,26 @@ function narrate(reason: HintReason, m: Mark, o: number): Sentence {
   }
 }
 
+/** Every rung an Unequal step can be: the Latin family's, and the kinds of
+ * `UnequalReason`. */
+export const UNEQUAL_RUNGS = [
+  ...LATIN_RUNGS,
+  "greater",
+  "lesser",
+  "adjacent",
+  "adjacentSet",
+] as const;
+export type UnequalRung = (typeof UNEQUAL_RUNGS)[number];
+
 /** Build the hint plan by walking a working copy of the board the way a person
  * solves it (`runLatinCandidatePlan`), under the player's two pencil
  * preferences. */
 function buildSteps(
   state: UnequalState,
   { autoClean, reading }: CandidatePlanPrefs,
-): HintStep<UnequalMove, UnequalHint>[] {
+): HintStep<UnequalMove, UnequalHint, UnequalRung>[] {
   const o = state.order;
-  const steps: HintStep<UnequalMove, UnequalHint>[] = [];
+  const steps: HintStep<UnequalMove, UnequalHint, PlanRung<HintReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
   const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
   runLatinCandidatePlan<UnequalMove, UnequalHint, HintOp, HintReason>({
@@ -450,7 +466,7 @@ function hint(
   state: UnequalState,
   _aux?: string,
   ui?: UnequalUi,
-): HintResult<UnequalMove, UnequalHint> {
+): HintResult<UnequalMove, UnequalHint, UnequalRung> {
   return candidateHint(state, ui ?? newUi(state), buildSteps);
 }
 
@@ -512,7 +528,8 @@ export const unequalGame: Game<
   UnequalUi,
   UnequalDrawState,
   UnequalMistake,
-  UnequalHint
+  UnequalHint,
+  UnequalRung
 > = {
   id: "unequal",
   canMarkAll: true,
@@ -562,6 +579,7 @@ export const unequalGame: Game<
   solve,
   difficulty,
   hint,
+  hintRungs: UNEQUAL_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",

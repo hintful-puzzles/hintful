@@ -20,7 +20,12 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
+import {
+  CANDIDATE_RUNGS,
+  type PlanRung,
+  runCandidatePlan,
+  valuesOf,
+} from "../../engine/candidate-plan.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
@@ -549,14 +554,30 @@ function reasonReads(reason: SoloReason): { reads?: Point[] } {
     : {};
 }
 
+/** Every rung a Solo step can be: the candidate walk's, and the kinds of
+ * `SoloReason`. */
+export const SOLO_RUNGS = [
+  ...CANDIDATE_RUNGS,
+  "single",
+  "regionsFull",
+  "hiddenSingle",
+  "intersect",
+  "set",
+  "forcing",
+  "cageSingle",
+  "cageMinMax",
+  "cageSums",
+] as const;
+export type SoloRung = (typeof SOLO_RUNGS)[number];
+
 /** Build the hint plan by walking a working copy of the board the way a person
  * solves it (`runCandidatePlan`). */
 function buildSteps(
   state: SoloState,
   { autoClean, reading }: CandidatePlanPrefs,
-): HintStep<SoloMove, SoloHint>[] {
+): HintStep<SoloMove, SoloHint, SoloRung>[] {
   const cr = state.cr;
-  const steps: HintStep<SoloMove, SoloHint>[] = [];
+  const steps: HintStep<SoloMove, SoloHint, PlanRung<SoloReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
   const maxdiff = Math.min(state.params.diff, DIFF_EXTREME);
   const maxkdiff = state.params.kdiff;
@@ -595,7 +616,7 @@ function hint(
   state: SoloState,
   _aux?: string,
   ui?: SoloUi,
-): HintResult<SoloMove, SoloHint> {
+): HintResult<SoloMove, SoloHint, SoloRung> {
   return candidateHint(state, ui ?? newUi(state), buildSteps);
 }
 
@@ -640,7 +661,8 @@ export const soloGame: Game<
   SoloUi,
   SoloDrawState,
   SoloMistake,
-  SoloHint
+  SoloHint,
+  SoloRung
 > = {
   id: "solo",
   canMarkAll: true,
@@ -738,6 +760,7 @@ export const soloGame: Game<
   solve,
   difficulty,
   hint,
+  hintRungs: SOLO_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",

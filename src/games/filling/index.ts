@@ -54,7 +54,13 @@ import {
   PREFERRED_TILE_SIZE,
   redrawFilling,
 } from "./render.ts";
-import { deduceHintPlan, type FillingHintReason, solveFilling } from "./solver.ts";
+import {
+  deduceHintPlan,
+  FILLING_RUNGS,
+  type FillingHintReason,
+  type FillingRung,
+  solveFilling,
+} from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
@@ -250,17 +256,18 @@ function narrate(
   }
 }
 
-function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
+function hint(state: FillingState): HintResult<FillingMove, FillingHint, FillingRung> {
   const plan = deduceHintPlan(state.board, state.w, state.h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const w = state.w;
-  const steps: HintStep<FillingMove, FillingHint>[] = plan.map((m) => {
+  const steps: HintStep<FillingMove, FillingHint, FillingRung>[] = plan.map((m) => {
     const highlights: FillingHint = { cells: m.cells, value: m.value };
     const words = namesRegion(m.reason)
       ? narrate(m.reason, w, m.cells, m.area, [])
       : narrate(m.reason, w, m.cells, [], m.area);
     return {
       move: { type: "set", cells: m.cells, value: m.value },
+      rung: m.reason.kind,
       explanation: words.text,
       words,
       highlights,
@@ -294,7 +301,7 @@ function hintGesture(
  * auto-hint fills only the rest. */
 function hintKeepTrack(
   m: FillingMove,
-  step: HintStep<FillingMove, FillingHint>,
+  step: HintStep<FillingMove, FillingHint, FillingRung>,
   state: FillingState,
 ): HintTrackVerdict {
   const t = step.highlights;
@@ -332,7 +339,8 @@ export const fillingGame: Game<
   FillingUi,
   FillingDrawState,
   Point,
-  FillingHint
+  FillingHint,
+  FillingRung
 > = {
   id: "filling",
   // Selection is a left press or a left drag across a run of cells, and the
@@ -368,6 +376,7 @@ export const fillingGame: Game<
         "the region the sentence names: a group of equal numbers already on the board that is not yet as big as its number. The squares the step fills take that same number.",
     },
   },
+  hintRungs: FILLING_RUNGS,
   hintKeepTrack,
   hintGesture,
   findMistakes,

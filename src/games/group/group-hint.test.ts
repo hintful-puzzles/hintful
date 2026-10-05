@@ -12,7 +12,10 @@
 
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import {
+  describeHintKindPins,
+  describeHintPins,
+} from "../../engine/testing/hint-positions.ts";
 import { groupGame } from "./index.ts";
 import { type HintReason, recordGroupDeductions } from "./solver.ts";
 import {
@@ -51,13 +54,24 @@ function walk(
   return { texts, solved: groupGame.status(state) === "solved", states };
 }
 
-/** The steps the narration and keep-track tests below are asserted on. */
+/**
+ * Every rung on a position whose plan speaks it, and the steps the narration
+ * and keep-track tests below are asserted on. A plan is asked under one reading
+ * of the note-less cells, and `populate` and `note` are each spoken under one
+ * of the two, so the boards are split between them by how many givens a board
+ * has.
+ */
 const pinned = describeHintPins({
   game: groupGame,
-  params: [NORMAL, HARD_HIDDEN],
+  // The 8x8 at the tier above the presets' is where a forcing chain is met.
+  params: [NORMAL, HARD_HIDDEN, { w: 8, diff: 3, id: false }],
+  seeds: 30,
+  ui: (state) => ({
+    ...newUi(state),
+    candidateReading:
+      state.immutable.filter((g) => g !== 0).length % 2 === 0 ? "implicit" : "populate",
+  }),
   kinds: {
-    associativity: /In any group/,
-    identityElim: /if (\w) were the identity, so we must cross out \1's identity marks/,
     placement: (step) => (step.move as GroupMove).type === "set",
     // A strike whose first mark the board still shows.
     liveStrike: (step, state) => {
@@ -68,18 +82,57 @@ const pinned = describeHintPins({
     },
   },
   pins: {
-    /** Held on 357 of 1324 positions walked. */
-    associativity: "6dn:1_2_3_4_5_6_2e3b6b4d2_5a4b1_6e",
-    /** Held on 48 of 1324 positions walked. */
-    identityElim: {
+    /** Held on 4034 of 5651 positions walked. */
+    placement: "6dn:1_2_3_4_5_6_2e3b6b4d2_5a4b1_6e",
+    /** Held on 514 of 5651 positions walked. */
+    liveStrike: {
       id: "8dhi:a7a2a8b4p1e2m3q6",
       moves:
         '[{"type":"set","cells":[{"x":0,"y":6}],"n":2},{"type":"set","cells":[{"x":7,"y":1}],"n":7},{"type":"set","cells":[{"x":6,"y":1}],"n":1},{"type":"set","cells":[{"x":5,"y":3}],"n":7},{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":7},{"x":0,"y":2,"n":8}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5},{"x":2,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":5},{"x":0,"y":4,"n":6},{"x":0,"y":4,"n":7},{"x":0,"y":4,"n":8}]},{"type":"pencilAdd","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3},{"x":4,"y":0,"n":4},{"x":4,"y":0,"n":5},{"x":4,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":5,"n":1},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8}]},{"type":"pencilAdd","marks":[{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":7},{"x":0,"y":7,"n":8}]}]',
     },
-    /** Held on 927 of 1324 positions walked. */
-    placement: "6dn:1_2_3_4_5_6_2e3b6b4d2_5a4b1_6e",
-    /** Held on 60 of 1324 positions walked. */
-    liveStrike: {
+    /** Held on 228 of 5651 positions walked. */
+    populate: "6dxi:a5b6w4_1_2e",
+    /** Held on 892 of 5651 positions walked. */
+    clean: { id: "6dxi:a5b6w4_1_2e", moves: [{ type: "pencilAll" }] },
+    /** Held on 1357 of 5651 positions walked. */
+    note: {
+      id: "8dhi:j1_8e1f6o4_5c7m2d",
+      moves: [{ type: "set", cells: [{ x: 2, y: 4 }], n: 4 }],
+    },
+    /** Held on 4929 of 5651 positions walked. */
+    dup: "8dhi:i1_6d7e2c5_8c6z7d2a",
+    /** Held on 4827 of 5651 positions walked. */
+    single: {
+      id: "6dxi:p4a6b1d4a6g",
+      moves:
+        '[{"type":"set","cells":[{"x":3,"y":0}],"n":6},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":6},{"x":1,"y":0,"n":6},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":6},{"x":4,"y":0,"n":4},{"x":4,"y":0,"n":6},{"x":5,"y":0,"n":6},{"x":0,"y":1,"n":6},{"x":2,"y":1,"n":4},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":6},{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":6},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":6},{"x":1,"y":2,"n":4},{"x":2,"y":2,"n":4},{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":4},{"x":3,"y":2,"n":6},{"x":5,"y":2,"n":4},{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":6},{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":6},{"x":4,"y":3,"n":1},{"x":4,"y":3,"n":4},{"x":4,"y":3,"n":6},{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":6},{"x":0,"y":4,"n":4},{"x":0,"y":4,"n":6},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":6},{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":4},{"x":3,"y":4,"n":6},{"x":5,"y":4,"n":4},{"x":5,"y":4,"n":6},{"x":0,"y":5,"n":6},{"x":2,"y":5,"n":4},{"x":3,"y":5,"n":1},{"x":3,"y":5,"n":6},{"x":4,"y":5,"n":4},{"x":4,"y":5,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":1,"n":2},{"x":1,"y":0,"n":2},{"x":0,"y":2,"n":3},{"x":2,"y":0,"n":3},{"x":0,"y":4,"n":5},{"x":4,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":0,"y":2,"n":1},{"x":2,"y":1,"n":2},{"x":1,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":2,"y":5,"n":6},{"x":5,"y":2,"n":6}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":2},{"x":1,"y":3,"n":2},{"x":3,"y":2,"n":3},{"x":2,"y":3,"n":3},{"x":3,"y":4,"n":5},{"x":4,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":1},{"x":0,"y":4,"n":1},{"x":4,"y":1,"n":2},{"x":1,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":5},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":5},{"x":5,"y":2,"n":2},{"x":5,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":3},{"x":5,"y":4,"n":2},{"x":5,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":5},{"x":2,"y":5,"n":2},{"x":2,"y":5,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":3},{"x":4,"y":5,"n":2},{"x":4,"y":5,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":2,"n":1},{"x":1,"y":5,"n":1},{"x":5,"y":1,"n":1},{"x":5,"y":2,"n":1},{"x":5,"y":5,"n":1}]}]',
+    },
+    /** Held on 2368 of 5651 positions walked. */
+    regionsFull: "6dn:1_2_3_4_5_6_2e3e4b5_3a5e6d2",
+    /** Held on 5282 of 5651 positions walked. */
+    hiddenSingle: "6dn:1_2_3_4_5_6_2e3_1d4_6d5b3b6_5d",
+    /** Held on 1199 of 5651 positions walked. */
+    set: {
+      id: "6dxi:a5b6w4_1_2e",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6},{"x":2,"y":0,"n":5},{"x":2,"y":0,"n":6},{"x":3,"y":0,"n":5},{"x":3,"y":0,"n":6},{"x":5,"y":0,"n":1},{"x":5,"y":0,"n":5},{"x":5,"y":0,"n":6},{"x":0,"y":1,"n":2},{"x":1,"y":1,"n":5},{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":6},{"x":5,"y":1,"n":1},{"x":0,"y":2,"n":2},{"x":1,"y":2,"n":5},{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":6},{"x":5,"y":2,"n":1},{"x":0,"y":3,"n":2},{"x":1,"y":3,"n":5},{"x":4,"y":3,"n":4},{"x":4,"y":3,"n":6},{"x":5,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":0,"y":4,"n":4},{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5},{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":4},{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":4},{"x":1,"y":5,"n":2},{"x":1,"y":5,"n":5},{"x":2,"y":5,"n":2},{"x":3,"y":5,"n":2},{"x":4,"y":5,"n":2},{"x":4,"y":5,"n":4},{"x":4,"y":5,"n":6},{"x":5,"y":5,"n":1},{"x":5,"y":5,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":2,"n":3},{"x":2,"y":0,"n":3},{"x":0,"y":3,"n":4},{"x":3,"y":0,"n":4},{"x":0,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":1,"n":3},{"x":1,"y":3,"n":4},{"x":3,"y":1,"n":4},{"x":4,"y":1,"n":5},{"x":1,"y":5,"n":6},{"x":5,"y":1,"n":6}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":2},{"x":1,"y":4,"n":2},{"x":4,"y":2,"n":3},{"x":2,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":2},{"x":5,"y":2,"n":3},{"x":2,"y":5,"n":3},{"x":5,"y":3,"n":4},{"x":3,"y":5,"n":4},{"x":4,"y":5,"n":5},{"x":5,"y":5,"n":6}]}]',
+    },
+    /** Held on 33 of 5651 positions walked. */
+    forcing: {
+      id: "8dxi:8b7n5b2r3l8h6a",
+      moves:
+        '[{"type":"set","cells":[{"x":0,"y":1}],"n":5},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":7},{"x":1,"y":0,"n":8},{"x":2,"y":0,"n":5},{"x":2,"y":0,"n":7},{"x":2,"y":0,"n":8},{"x":4,"y":0,"n":7},{"x":4,"y":0,"n":8},{"x":5,"y":0,"n":2},{"x":5,"y":0,"n":7},{"x":5,"y":0,"n":8},{"x":6,"y":0,"n":6},{"x":6,"y":0,"n":7},{"x":6,"y":0,"n":8},{"x":7,"y":0,"n":7},{"x":7,"y":0,"n":8},{"x":1,"y":1,"n":5},{"x":2,"y":1,"n":5},{"x":3,"y":1,"n":5},{"x":3,"y":1,"n":7},{"x":4,"y":1,"n":5},{"x":5,"y":1,"n":2},{"x":5,"y":1,"n":5},{"x":5,"y":1,"n":8},{"x":6,"y":1,"n":5},{"x":6,"y":1,"n":6},{"x":7,"y":1,"n":5},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":8},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":5},{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":5},{"x":3,"y":2,"n":7},{"x":4,"y":2,"n":2},{"x":4,"y":2,"n":5},{"x":6,"y":2,"n":2},{"x":6,"y":2,"n":5},{"x":6,"y":2,"n":6},{"x":7,"y":2,"n":2},{"x":7,"y":2,"n":5},{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":5},{"x":0,"y":3,"n":8},{"x":2,"y":3,"n":5},{"x":3,"y":3,"n":7},{"x":5,"y":3,"n":2},{"x":5,"y":3,"n":8},{"x":6,"y":3,"n":6},{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":5},{"x":0,"y":4,"n":8},{"x":2,"y":4,"n":5},{"x":3,"y":4,"n":7},{"x":5,"y":4,"n":2},{"x":5,"y":4,"n":8},{"x":6,"y":4,"n":6},{"x":1,"y":5,"n":3},{"x":2,"y":5,"n":3},{"x":2,"y":5,"n":5},{"x":3,"y":5,"n":3},{"x":3,"y":5,"n":7},{"x":4,"y":5,"n":3},{"x":5,"y":5,"n":2},{"x":5,"y":5,"n":3},{"x":5,"y":5,"n":8},{"x":6,"y":5,"n":3},{"x":6,"y":5,"n":6},{"x":7,"y":5,"n":3},{"x":0,"y":6,"n":3},{"x":0,"y":6,"n":5},{"x":0,"y":6,"n":8},{"x":1,"y":6,"n":8},{"x":2,"y":6,"n":5},{"x":2,"y":6,"n":8},{"x":3,"y":6,"n":7},{"x":3,"y":6,"n":8},{"x":4,"y":6,"n":8},{"x":6,"y":6,"n":6},{"x":6,"y":6,"n":8},{"x":7,"y":6,"n":8},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":6},{"x":0,"y":7,"n":8},{"x":1,"y":7,"n":6},{"x":2,"y":7,"n":5},{"x":2,"y":7,"n":6},{"x":3,"y":7,"n":6},{"x":3,"y":7,"n":7},{"x":4,"y":7,"n":6},{"x":5,"y":7,"n":2},{"x":5,"y":7,"n":6},{"x":5,"y":7,"n":8},{"x":7,"y":7,"n":6}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":0,"y":3,"n":4},{"x":4,"y":0,"n":5},{"x":5,"y":0,"n":6},{"x":0,"y":6,"n":7}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":1,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":1,"n":3},{"x":1,"y":3,"n":4},{"x":3,"y":1,"n":4},{"x":1,"y":4,"n":5},{"x":1,"y":5,"n":6},{"x":5,"y":1,"n":6},{"x":1,"y":6,"n":7},{"x":6,"y":1,"n":7},{"x":1,"y":7,"n":8},{"x":7,"y":1,"n":8}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":0,"y":2,"n":1},{"x":2,"y":1,"n":2},{"x":2,"y":3,"n":4},{"x":3,"y":2,"n":4},{"x":2,"y":5,"n":6},{"x":2,"y":6,"n":7},{"x":6,"y":2,"n":7},{"x":2,"y":7,"n":8},{"x":7,"y":2,"n":8}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1},{"x":3,"y":1,"n":2},{"x":1,"y":3,"n":2},{"x":3,"y":2,"n":3},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":4},{"x":3,"y":4,"n":5},{"x":4,"y":3,"n":5},{"x":3,"y":5,"n":6},{"x":5,"y":3,"n":6},{"x":6,"y":3,"n":7},{"x":3,"y":7,"n":8},{"x":7,"y":3,"n":8}]},{"type":"pencilStrike","marks":[{"x":5,"y":0,"n":1},{"x":1,"y":5,"n":2},{"x":5,"y":3,"n":4},{"x":3,"y":5,"n":4},{"x":5,"y":4,"n":5},{"x":4,"y":5,"n":5},{"x":5,"y":5,"n":6},{"x":6,"y":5,"n":7},{"x":7,"y":5,"n":8}]},{"type":"set","cells":[{"x":5,"y":4}],"n":6},{"type":"set","cells":[{"x":1,"y":2}],"n":6},{"type":"set","cells":[{"x":4,"y":2}],"n":3},{"type":"set","cells":[{"x":1,"y":4}],"n":2},{"type":"set","cells":[{"x":2,"y":4}],"n":3},{"type":"set","cells":[{"x":4,"y":4}],"n":5},{"type":"set","cells":[{"x":4,"y":0}],"n":1},{"type":"set","cells":[{"x":4,"y":7}],"n":8},{"type":"set","cells":[{"x":0,"y":4}],"n":1},{"type":"set","cells":[{"x":7,"y":1}],"n":1},{"type":"set","cells":[{"x":7,"y":4}],"n":8},{"type":"set","cells":[{"x":6,"y":4}],"n":7},{"type":"set","cells":[{"x":3,"y":4}],"n":4},{"type":"set","cells":[{"x":6,"y":1}],"n":4},{"type":"set","cells":[{"x":5,"y":3}],"n":1},{"type":"set","cells":[{"x":2,"y":3}],"n":8},{"type":"set","cells":[{"x":1,"y":7}],"n":1},{"type":"set","cells":[{"x":1,"y":0}],"n":5},{"type":"set","cells":[{"x":4,"y":1}],"n":2},{"type":"set","cells":[{"x":4,"y":5}],"n":6},{"type":"set","cells":[{"x":4,"y":3}],"n":4},{"type":"set","cells":[{"x":4,"y":6}],"n":7},{"type":"set","cells":[{"x":2,"y":7}],"n":4},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":4},{"x":5,"y":0,"n":5},{"x":6,"y":0,"n":1},{"x":6,"y":0,"n":4},{"x":6,"y":0,"n":5},{"x":7,"y":0,"n":1},{"x":7,"y":0,"n":5},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":4},{"x":1,"y":1,"n":6},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":4},{"x":2,"y":1,"n":8},{"x":3,"y":1,"n":1},{"x":5,"y":1,"n":1},{"x":5,"y":1,"n":4},{"x":0,"y":2,"n":6},{"x":3,"y":2,"n":6},{"x":6,"y":2,"n":3},{"x":6,"y":2,"n":4},{"x":7,"y":2,"n":1},{"x":7,"y":2,"n":3},{"x":7,"y":2,"n":6},{"x":1,"y":3,"n":1},{"x":1,"y":3,"n":5},{"x":1,"y":3,"n":6},{"x":1,"y":3,"n":8},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":8},{"x":6,"y":3,"n":1},{"x":6,"y":3,"n":4},{"x":6,"y":3,"n":8},{"x":7,"y":3,"n":1},{"x":7,"y":3,"n":4},{"x":1,"y":5,"n":1},{"x":1,"y":5,"n":5},{"x":2,"y":5,"n":4},{"x":2,"y":5,"n":8},{"x":5,"y":5,"n":1},{"x":6,"y":5,"n":4},{"x":7,"y":5,"n":1},{"x":7,"y":5,"n":6},{"x":0,"y":6,"n":1},{"x":1,"y":6,"n":1},{"x":1,"y":6,"n":2},{"x":1,"y":6,"n":5},{"x":1,"y":6,"n":6},{"x":2,"y":6,"n":3},{"x":2,"y":6,"n":4},{"x":3,"y":6,"n":4},{"x":6,"y":6,"n":4},{"x":6,"y":6,"n":7},{"x":7,"y":6,"n":1},{"x":7,"y":6,"n":7},{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":4},{"x":3,"y":7,"n":1},{"x":3,"y":7,"n":4},{"x":5,"y":7,"n":1},{"x":5,"y":7,"n":4},{"x":7,"y":7,"n":1},{"x":7,"y":7,"n":4},{"x":7,"y":7,"n":8}]}]',
+    },
+    /** Held on 4696 of 5651 positions walked. */
+    associativity: "6dn:1_2_3_4_5_6_2e3b6b4d2_5a4b1_6e",
+    /** Held on 2158 of 5651 positions walked. */
+    identityFill: {
+      id: "6dxi:2m4b1h1b4f",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":4},{"x":3,"y":0,"n":2},{"x":4,"y":0,"n":2},{"x":5,"y":0,"n":1},{"x":5,"y":0,"n":2},{"x":5,"y":0,"n":4},{"x":0,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":4},{"x":5,"y":1,"n":1},{"x":5,"y":1,"n":4},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":4},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":4},{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":4},{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":4},{"x":0,"y":3,"n":2},{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":4},{"x":5,"y":3,"n":1},{"x":5,"y":3,"n":4},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":0,"y":4,"n":4},{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":4},{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":4},{"x":4,"y":4,"n":1},{"x":4,"y":4,"n":4},{"x":0,"y":5,"n":2},{"x":2,"y":5,"n":1},{"x":2,"y":5,"n":4},{"x":5,"y":5,"n":1},{"x":5,"y":5,"n":4}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":3},{"x":2,"y":0,"n":3},{"x":0,"y":3,"n":4},{"x":3,"y":0,"n":4},{"x":0,"y":4,"n":5},{"x":4,"y":0,"n":5},{"x":0,"y":5,"n":6},{"x":5,"y":0,"n":6}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":2},{"x":1,"y":2,"n":2},{"x":4,"y":2,"n":5},{"x":2,"y":5,"n":6}]},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":1,"n":2},{"x":1,"y":4,"n":2},{"x":4,"y":2,"n":3},{"x":4,"y":3,"n":4},{"x":4,"y":4,"n":5},{"x":4,"y":5,"n":6}]},{"type":"pencilStrike","marks":[{"x":0,"y":5,"n":1},{"x":5,"y":1,"n":2},{"x":1,"y":5,"n":2},{"x":2,"y":5,"n":3},{"x":3,"y":5,"n":4},{"x":4,"y":5,"n":5},{"x":5,"y":5,"n":6}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":2},{"x":3,"y":3,"n":2},{"x":3,"y":5,"n":2},{"x":4,"y":3,"n":2},{"x":4,"y":5,"n":2}]},{"type":"set","cells":[{"x":1,"y":1}],"n":2}]',
+    },
+    /** Held on 1653 of 5651 positions walked. */
+    identityElim: {
       id: "8dhi:a7a2a8b4p1e2m3q6",
       moves:
         '[{"type":"set","cells":[{"x":0,"y":6}],"n":2},{"type":"set","cells":[{"x":7,"y":1}],"n":7},{"type":"set","cells":[{"x":6,"y":1}],"n":1},{"type":"set","cells":[{"x":5,"y":3}],"n":7},{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":7},{"x":0,"y":2,"n":8}]},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5},{"x":2,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":5},{"x":0,"y":4,"n":6},{"x":0,"y":4,"n":7},{"x":0,"y":4,"n":8}]},{"type":"pencilAdd","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3},{"x":4,"y":0,"n":4},{"x":4,"y":0,"n":5},{"x":4,"y":0,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":5,"n":1},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8}]},{"type":"pencilAdd","marks":[{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":7},{"x":0,"y":7,"n":8}]}]',
@@ -88,12 +141,12 @@ const pinned = describeHintPins({
 });
 
 /** A populate step, which only the reading that has one gives. */
-const pinnedPopulate = describeHintPins({
+const pinnedPopulate = describeHintKindPins({
   game: groupGame,
   params: [HARD_HIDDEN],
   ui: (state) => ({ ...newUi(state), candidateReading: "populate" }),
   kinds: {
-    populate: (step) => (step.move as GroupMove).type === "pencilAll",
+    populate: (step) => step.rung === "populate",
   },
   pins: {
     /** Held on 12 of 766 positions walked. */

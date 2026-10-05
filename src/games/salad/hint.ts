@@ -50,7 +50,9 @@ import {
 import {
   evidenceOf,
   type Firing,
+  LATIN_RUNGS,
   type Leg,
+  type PlanRung,
   populateThenClean,
   runLatinCandidatePlan,
 } from "../../engine/candidate-plan.ts";
@@ -126,6 +128,20 @@ export type SaladReason =
    * symbol. Recorded, and narratable, but the strike walk drops hole-symbol
    * strikes (file header, point 1), so it is reached only if that changes. */
   | LatinRepeatReason;
+
+/** Every rung a Salad step can be: the Latin family's, and the kinds of
+ * {@link SaladReason}. */
+export const SALAD_RUNGS = [
+  ...LATIN_RUNGS,
+  "borderNear",
+  "borderFar",
+  "countHolesDone",
+  "countLettersDone",
+  "crossNaked",
+  "circleXNote",
+  "repeatFull",
+] as const;
+export type SaladRung = (typeof SALAD_RUNGS)[number];
 
 /** What a Salad hint step draws (docs/games/hints.md § "The element-type color
  * legend"): `area` is the deduction's evidence, `targets` the squares it acts
@@ -531,8 +547,9 @@ function markerFiring(f: MarkerFiring, w: Working, state: SaladState): SaladFiri
         ? narrate(f.reason, { ...c, n: 0 }, state)
         : narrateAgain(f.reason, c, state);
     return {
-      step: narratedStep<SaladMove, SaladHint>({
+      step: narratedStep<SaladMove, SaladHint, PlanRung<SaladReason>>({
         move: { type: "set", x: c.x, y: c.y, value: f.mark },
+        rung: f.reason.kind,
         words,
         highlights: {
           ...markerEvidence(words),
@@ -594,10 +611,10 @@ function circledEmptyNotes(w: Working, o: number, nums: number): SaladFiring[] {
 function buildSteps(
   state: SaladState,
   { autoClean }: CandidatePlanPrefs,
-): HintStep<SaladMove, SaladHint>[] {
+): HintStep<SaladMove, SaladHint, SaladRung>[] {
   const o = state.order;
   const nums = state.nums;
-  const steps: HintStep<SaladMove, SaladHint>[] = [];
+  const steps: HintStep<SaladMove, SaladHint, PlanRung<SaladReason>>[] = [];
   const w = startWorking(state);
   const enc = saladNotes(nums);
   const text = say(state.mode);
@@ -734,7 +751,7 @@ export function hint(
   state: SaladState,
   _aux?: string,
   _ui?: SaladUi,
-): HintResult<SaladMove, SaladHint> {
+): HintResult<SaladMove, SaladHint, SaladRung> {
   // No `autoPencil` preference to honor: Salad has no auto-elimination on
   // placement, so the plan always teaches the row/column note cull explicitly.
   return candidateHint(state, null, buildSteps);

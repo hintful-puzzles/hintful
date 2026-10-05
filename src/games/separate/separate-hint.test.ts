@@ -12,7 +12,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/border-grid.ts";
-import type { BorderHint } from "../../engine/border-grid-hint.ts";
+import { type BorderHint, EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
@@ -21,7 +21,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
-import { separateGame } from "./index.ts";
+import { type SeparateRung, separateGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { separateRecordingPass, solveToBorders } from "./solver.ts";
 import {
@@ -76,14 +76,16 @@ function partialBoard(
 
 const isSolved = (s: SeparateState): boolean => separateGame.status(s) === "solved";
 
-/** Every step's sentence, walking to solved one recomputed hint at a time. */
-function walk(start: SeparateState): { spoken: string[]; solved: boolean } {
-  const spoken: string[] = [];
+type Step = HintStep<SeparateMove, BorderHint, SeparateRung>;
+
+/** Every step given, walking to solved one recomputed hint at a time. */
+function walk(start: SeparateState): { spoken: Step[]; solved: boolean } {
+  const spoken: Step[] = [];
   let st = start;
   for (let guard = 0; guard < 400 && !isSolved(st); guard++) {
     const r = hintOf(st);
     if (!r.ok) return { spoken, solved: false };
-    for (const s of r.steps) spoken.push(s.explanation);
+    spoken.push(...r.steps);
     st = executeMove(st, r.steps[0].move);
   }
   return { spoken, solved: isSolved(st) };
@@ -103,21 +105,36 @@ const corpus = PRESETS.flatMap((p) =>
   }),
 );
 
-/** Each sentence arm, keyed by the phrase only it says. */
+/** How many squares a step stripes, how many it outlines, how many edges it
+ * rings. */
+const marked = (s: Step) => {
+  const m = stepMarks(s);
+  return {
+    striped: m.of("stripes", CELL).length,
+    outlined: m.of("outline", CELL).length,
+    edges: m.of("ring", EDGE).length,
+  };
+};
+/** A firing's first leg, of `rung`. */
+const opens = (s: Step, rung: SeparateRung): boolean =>
+  s.rung === rung && !s.continuesPrevious;
+
+/** Each sentence arm, keyed by what its step is and marks. */
 const ARMS = {
-  "two-letters": /^These two [A-Z]s can't share a region/,
-  "region-and-letter": /already holds an? [A-Z], so the outlined/,
-  "two-regions": /^The striped and outlined regions both hold/,
-  "walled-apart-one": /so this edge between them must be a wall too/,
-  "walled-apart-many": /so every other edge between them must be a wall too/,
-  "only-way-letter": /is walled in on every side but one/,
-  "only-way-region": /one square left to grow into/,
-  "shared-letter-many": /: every edge between them must be a wall/,
-  "continue-wall":
-    /^…and (this edge|these edges) must be (a wall|walls) too, for the same /,
-  "continue-open":
-    /^…and (this edge|these edges) can't be (a wall|walls) either, for the same /,
-} as const satisfies Record<string, RegExp>;
+  "two-letters": (s) => opens(s, "sharedLetter") && marked(s).striped === 0,
+  "region-and-letter": (s) =>
+    opens(s, "sharedLetter") && marked(s).striped > 0 && marked(s).outlined === 1,
+  "two-regions": (s) =>
+    opens(s, "sharedLetter") && marked(s).striped > 0 && marked(s).outlined > 1,
+  "walled-apart-one": (s) => opens(s, "walledApart") && marked(s).edges === 1,
+  "walled-apart-many": (s) => opens(s, "walledApart") && marked(s).edges > 1,
+  "only-way-letter": (s) => opens(s, "onlyWay") && marked(s).striped === 1,
+  "only-way-region": (s) => opens(s, "onlyWay") && marked(s).striped > 1,
+  "shared-letter-many": (s) => opens(s, "sharedLetter") && marked(s).edges > 1,
+  "continue-wall": (s) => s.continuesPrevious === true && s.highlights?.kind === "wall",
+  "continue-open": (s) =>
+    s.continuesPrevious === true && s.highlights?.kind === "nowall",
+} as const satisfies Record<string, (s: Step) => boolean>;
 
 /** Arms this corpus does not reach, each with its reason; the pinned test
  * below reaches it directly. */
@@ -139,8 +156,8 @@ describe("separate hint from the player's own positions", () => {
         walked++;
         expect(solved, `${label} start ${n}: the hint stopped short`).toBe(true);
         for (const s of spoken) {
-          const arms = Object.entries(ARMS).filter(([, re]) => re.test(s));
-          expect(arms.length, `no single arm speaks "${s}"`).toBeGreaterThan(0);
+          const arms = Object.entries(ARMS).filter(([, is]) => is(s));
+          expect(arms.length, `no arm speaks "${s.explanation}"`).toBeGreaterThan(0);
           for (const [arm] of arms) reached.add(arm);
         }
       }
@@ -237,6 +254,20 @@ const pinned = describeHintPins({
       id: "5x5n5:ECBDAEEAEABECDCADCBDDCABB",
       moves:
         '[{"type":"edges","edits":[{"x":0,"y":0,"flag":4},{"x":0,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":4,"y":0,"flag":4},{"x":4,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":2},{"x":1,"y":1,"flag":8}]},{"type":"edges","edits":[{"x":1,"y":1,"flag":4},{"x":1,"y":2,"flag":1}]},{"type":"edges","edits":[{"x":2,"y":2,"flag":4},{"x":2,"y":3,"flag":1}]},{"type":"edges","edits":[{"x":3,"y":3,"flag":4},{"x":3,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":2},{"x":4,"y":4,"flag":8}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":32},{"x":1,"y":0,"flag":128}]}]',
+    },
+    /** Held on 418 of 437 positions walked. */
+    sharedLetter: "5x5n5:CCADEEEEEBDBBDCAAAABBDDCC",
+    /** Held on 405 of 437 positions walked. */
+    walledApart: {
+      id: "5x5n5:EECBAABCBDABDCEACDEACBDED",
+      moves:
+        '[{"type":"edges","edits":[{"x":0,"y":0,"flag":2},{"x":1,"y":0,"flag":8}]},{"type":"edges","edits":[{"x":2,"y":0,"flag":4},{"x":2,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":3,"y":0,"flag":4},{"x":3,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":4},{"x":0,"y":2,"flag":1}]},{"type":"edges","edits":[{"x":1,"y":1,"flag":4},{"x":1,"y":2,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":2,"flag":4},{"x":0,"y":3,"flag":1}]},{"type":"edges","edits":[{"x":2,"y":2,"flag":4},{"x":2,"y":3,"flag":1}]},{"type":"edges","edits":[{"x":2,"y":3,"flag":4},{"x":2,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":3,"y":3,"flag":4},{"x":3,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":64},{"x":0,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":32},{"x":1,"y":1,"flag":128}]}]',
+    },
+    /** Held on 420 of 437 positions walked. */
+    onlyWay: {
+      id: "5x5n5:ECBDAEEAEABECDCADCBDDCABB",
+      moves:
+        '[{"type":"edges","edits":[{"x":0,"y":0,"flag":4},{"x":0,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":4,"y":0,"flag":4},{"x":4,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":2},{"x":1,"y":1,"flag":8}]},{"type":"edges","edits":[{"x":1,"y":1,"flag":4},{"x":1,"y":2,"flag":1}]},{"type":"edges","edits":[{"x":2,"y":2,"flag":4},{"x":2,"y":3,"flag":1}]},{"type":"edges","edits":[{"x":3,"y":3,"flag":4},{"x":3,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":2},{"x":4,"y":4,"flag":8}]}]',
     },
   },
 });

@@ -8855,3 +8855,16 @@ exports[`hint rendering (tier 2.5) > an arrow hint frame paints the COL_HINT tar
   },
 ]
 `;
+
+exports[`subsets: pinned hint positions > says, at each pin 1`] = `
+{
+  "arrowKnown": "The outlined cell's set lies inside this cell's and has A marked, so A must be here too: mark A present.",
+  "arrowMask": "This cell's set lies inside the outlined cell's, which has no C, so C can't be here either: clear C.",
+  "collapse": "Only the outlined set can still go in this cell. For instance, {A,D} is already placed on the board (outlined). The outlined set contains A, so mark A present.",
+  "collapseWithCompetitor": "No outlined set is a smaller set inside {A}, so the horseshoe to the outlined cell rules {A} out of this cell.",
+  "cubeLastPlace": "No outlined set is a smaller set inside {B}, so the horseshoe to the outlined cell rules {B} out of this cell.",
+  "hiddenSingle": "The outlined set can go nowhere but this cell, and it has no A, so clear A.",
+  "ruleOut": "No outlined set is a smaller set inside {A}, so the horseshoe to the outlined cell rules {A} out of this cell.",
+  "severalLetters": "The outlined cell's set lies inside this cell's and has A marked, so A must be here too: mark A present.",
+}
+`;

@@ -2092,22 +2092,36 @@ matching cannot report a clean suite.
 ### Requirement: A hint test's pinned positions keep the scan that finds them
 
 The test harness SHALL provide one way to pin the position each of a hint's
-sentences is tested on (`src/engine/testing/hint-positions.ts`). A game's test
-names its kinds, each the sentence a hint opens with or a predicate over the
-opening step and its board, and pins one position a kind as an input: a
-`params:desc`, with the moves played on it where the board mid-game is not
-itself a desc. The harness SHALL declare the test that every pin's hint still
-opens with a step of its kind, and SHALL fail a pin that does not with the
-command that finds another.
+rungs is tested on (`src/engine/testing/hint-positions.ts`). A game's hint test
+SHALL pin one position for every rung the game declares (`Game.hintRungs`),
+keyed by the rung's id, as an input: a `params:desc`, with the moves played on
+it where the board mid-game is not itself a desc. A rung's pin is a position
+whose plan holds a step of that rung. A rung that no known board fires SHALL be
+excused only by listing it with the reason, and the scan SHALL walk the excused
+rungs too and say when one fires.
 
-That command SHALL walk hint-guided play over fixed seeds, taking each plan's
+A test MAY pin further kinds, each a predicate over the step a plan opens with
+and the board it is asked from, for what a rung id does not say: a step's
+shape, which of a rung's cases it is, or the board's. A kind SHALL read the
+step's fields and SHALL NOT be a pattern matched against its sentence; the
+harness's type for a kind does not admit one. A test file that pins positions
+of its own beside the game's rungs SHALL do so through the same harness, with
+kinds that are rung ids or predicates.
+
+The harness SHALL declare the test that every pin's plan still fires its kind,
+and SHALL fail a pin that does not with the command that finds another. It
+SHALL also hold the sentence said at each pin as a snapshot, which is where a
+rung's wording is asserted now that no pin reads it.
+
+The scan SHALL walk hint-guided play over fixed seeds, taking each plan's
 first step and asking again, and SHALL report for every kind how many of the
-positions walked it held on and the one of them that is fewest moves in. Where
-a test says so, it SHALL play moves before the first hint, ask the hint under
-a `Ui` the test names, and walk a second line of play that the test steers,
-for a kind hint-guided play does not meet. A pin SHALL be recorded with that
-count. A hint test SHALL NOT pin a position found by a scan that is not in the
-tree, unless the scan in the tree was run and did not reach the kind, which
+positions walked it held on and the one of them to pin: one where the kind's
+step opens the plan before one where it comes later, then the fewest moves in.
+Where a test says so, it SHALL play moves before the first hint, ask the hint
+under a `Ui` the test names, and walk a second line of play that the test
+steers, for a kind hint-guided play does not meet. A pin SHALL be recorded with
+that count. A hint test SHALL NOT pin a position found by a scan that is not in
+the tree, unless the scan in the tree was run and did not reach the kind, which
 the pin SHALL say with the count walked.
 
 A hint test SHALL NOT walk seeds to find the position it asserts on. A test
@@ -2117,15 +2131,15 @@ scan for a position, and is not covered by this requirement.
 #### Scenario: A pin stops firing
 
 - **WHEN** a change to a hint, a solver or a generator leaves a pinned
-  position opening with a step of another kind
-- **THEN** the pin's test fails, quoting what the hint says there now
+  position whose plan no longer fires the pin's kind
+- **THEN** the pin's test fails, quoting what the hint says there now and the
+  rungs of its plan
 - **AND** the failure names the command that scans for a position that fires
 
 #### Scenario: Scanning again
 
-- **WHEN** a hint test file is run with `HINT_SCAN` set
-- **THEN** it walks its boards and fails with a position for every kind, the
-  one fewest moves in, as pins to paste
+- **WHEN** the scan command is run on a hint test file
+- **THEN** it walks its boards and reports a position for every kind
 - **AND** each is reported with how many of the positions walked it held on,
   and a kind that held on none is reported as not found
 
@@ -2134,9 +2148,28 @@ scan for a position, and is not covered by this requirement.
 - **WHEN** a test names a kind and pins no position for it
 - **THEN** the file does not typecheck
 
+#### Scenario: A rung with no pin
+
+- **WHEN** a game's hint gains a rung, and its hint test neither pins a
+  position for it nor lists it as unreached
+- **THEN** the test file does not typecheck
+
+#### Scenario: A rung that is only ever a later leg
+
+- **WHEN** a rung is never the step a plan opens with, as a placement's cull
+  is not
+- **THEN** it is pinned on a position whose plan holds a step of it, and the
+  loader says where in the plan that step is
+
+#### Scenario: A reworded sentence
+
+- **WHEN** a hint's sentence is reworded and its deduction is not changed
+- **THEN** every pin still fires, and the snapshot of what each pin says is
+  the test that changes
+
 #### Scenario: A sentence spoken only off the hint's line
 
-- **WHEN** a hint keeps to lines that finish, and a sentence is about a move
+- **WHEN** a hint keeps to lines that finish, and a rung is about a move
   that would not
 - **THEN** the test gives the scan a second line of play, naming the move
   played at each turn from the board and the move the hint offers
@@ -2144,7 +2177,7 @@ scan for a position, and is not covered by this requirement.
 
 #### Scenario: A board on which a solver rung fires
 
-- **WHEN** a test wants the board a rung fires on, and no step says the rung
+- **WHEN** a test wants the board a solver rung fires on, and no step says so
 - **THEN** the kind is a predicate that asks the solver about the board the
   hint is asked from, and the pin is that board
 
@@ -2163,3 +2196,75 @@ scan for a position, and is not covered by this requirement.
 - **AND** a walk another guard already makes fails on such a step from a game
   with no pin, so which games are checked stays derived from what their hints
   do
+
+### Requirement: One command scans a hint test's positions and writes its pins
+
+The repository SHALL provide `npm run hint-scan -- <test file>`
+(`scripts/hint-scan.ts`), which runs the scans the file declares through the
+hint-position harness and writes each scan's positions into that call's `pins`
+object, each pin under how many of the positions walked it held on. It SHALL
+find a call's `pins` by parsing the file, so a call at any indent, inside a
+`describe`, or the second of several in one file is written the same way. It
+SHALL write no file but the test file it was given.
+
+The command SHALL NOT replace a pin that still fires its kind, because tests and
+snapshots are written against a pin's board; it brings that pin's count up to
+date and no more, and replaces it only when asked for every pin. It SHALL leave
+in place a pin for a kind the scan found no position for, and name it, because
+such a pin is kept by hand for a kind the scan's line of play does not reach.
+It SHALL exit non-zero, naming the kind, when a kind has neither a pin that
+fires nor a position found.
+
+An empty result SHALL NOT read as health: the command SHALL fail when the file
+declares no scan, and when the file fails before any scan runs it SHALL fail
+with the error the test runner gave. While a scan runs, a pin that does not
+load SHALL NOT stop the file being collected: the harness hands a test that
+reads such a pin a stand-in, so a test file that reads a pin in a `describe`
+body can still be scanned for the pin it lacks.
+
+A scan whose pins are not written in the call (a cross-game guard that keeps
+them in a module of their own) SHALL have its positions printed and nothing
+written.
+
+#### Scenario: Adding a kind
+
+- **WHEN** a game's hint gains a rung, or a test names a new kind, and the
+  command is run on the test file
+- **THEN** the file gains a pin for it under the count it held on
+- **AND** every pin that still fires is byte-for-byte the board it was
+
+#### Scenario: A pin kept by hand
+
+- **WHEN** the scan finds no position for a kind whose pin still fires
+- **THEN** the pin is left as written, comment and all
+- **AND** the command says the pin is kept by hand and the scan reaches none
+
+#### Scenario: A stale pin
+
+- **WHEN** a pin no longer fires its kind and the scan finds a position that
+  does
+- **THEN** the pin is replaced by that position and its count
+
+#### Scenario: A kind nothing fires
+
+- **WHEN** a kind has no pin, or a stale one, and the scan finds no position
+- **THEN** the command names the kind and exits non-zero
+- **AND** it does not write a placeholder that would make the file look pinned
+
+#### Scenario: A pin read while tests are collected
+
+- **WHEN** a test file reads a pin in a `describe` body, and that pin is
+  missing or stale
+- **THEN** an ordinary run fails at collection with the command to run
+- **AND** the command itself still scans the file and writes the pin
+
+#### Scenario: A file with no scan
+
+- **WHEN** the command is run on a test file that declares no hint pins
+- **THEN** it fails saying so, and does not report that every pin stands
+
+#### Scenario: A rung excused from a pin that fires
+
+- **WHEN** a rung is listed as unreached and the scan finds a position that
+  fires it
+- **THEN** the command says so and prints the position to pin

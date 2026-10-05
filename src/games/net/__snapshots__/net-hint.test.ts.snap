@@ -1,5 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`net: pinned hint positions > says, at each pin 1`] = `
+{
+  "loop": "Pointing any way but right, the outlined corner would close a loop through some of the striped squares, so it must point right: note a wire across this side.",
+  "loopOnTheWay": "This corner must fit the outlined lock, and, pointing right and down, it would lead only into the striped squares (one across the wrapped edge), where its wire must stop however they turn without closing a loop, sealing them off from the rest, so only one way fits: turn it.",
+  "sealed": "Lying across, this straight would join the striped dead ends, which have no other wire, closing all three off from the rest, so only one way fits: turn it.",
+  "side": "This straight must fit the wall, so only one way fits: turn it.",
+  "turn": "This straight must fit the wall, so only one way fits: turn it.",
+}
+`;
+
 exports[`refusal and marks > rings the square a step turns and locks, in the hint color 1`] = `
 [
   {

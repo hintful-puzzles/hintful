@@ -82,15 +82,17 @@ export type BorderHint = ForcedBorderEdge;
  * edges it rings: its own and the ones still to come. The squares it outlines
  * and the region it stripes are the leg's evidence.
  */
-export function borderHintJourney<M>(
+export function borderHintJourney<M, Rung extends string>(
+  rung: Rung,
   edges: readonly ForcedBorderEdge[],
   words: (leg: number, left: readonly ForcedBorderEdge[]) => Sentence,
   toMove: (edits: BorderEdit[]) => M,
-): HintStep<M, BorderHint>[] {
+): HintStep<M, BorderHint, Rung>[] {
   return edges.map((e, leg) => {
     const { x, y, dir, kind } = e;
     const said = words(leg, edges.slice(leg));
-    return narratedStep<M, BorderHint>({
+    return narratedStep<M, BorderHint, Rung>({
+      rung,
       move: toMove([
         { x, y, flag: edgeFlag(dir, kind) },
         { x: x + DX[dir], y: y + DY[dir], flag: edgeFlag(FLIP(dir), kind) },

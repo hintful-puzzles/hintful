@@ -23,10 +23,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { type Narration, type Sentence, stepMarks } from "../../engine/hint-words.ts";
+import type { HintStep } from "../../engine/game.ts";
+import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { evident, narrate, type TracksPicture } from "./hint.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { evident, narrate, type TracksPicture, type TracksRung } from "./hint.ts";
 import { PIECE } from "./hint-text.ts";
 import { tracksGame } from "./index.ts";
 import { uiCanFlipEdge, uiCanFlipSquare } from "./moves.ts";
@@ -83,16 +85,12 @@ function walk(params: TracksParams, seed: string) {
   const { desc } = tracksGame.newDesc(params, randomNew(seed));
   let state = tracksGame.newState(params, desc);
   const steps: { step: (typeof out)[number]; before: TracksState }[] = [];
-  const out: {
-    move: TracksMove;
-    explanation: string;
-    words?: Sentence;
-  }[] = [];
+  const out: HintStep<TracksMove, unknown, TracksRung>[] = [];
   for (let i = 0; i < 900; i++) {
     if (tracksGame.status(state) === "solved") break;
     const res = tracksGame.hint?.(state);
     if (!res?.ok) throw new Error(`${seed}: refused after ${i}: ${res?.error}`);
-    const step = res.steps[0] as (typeof out)[number];
+    const step = res.steps[0];
     out.push(step);
     steps.push({ step, before: state });
     state = tracksGame.executeMove(state, step.move);
@@ -289,6 +287,7 @@ describe("the picture holds exactly the number the sentence states", () => {
       for (const seed of SEEDS) {
         const { steps } = walk(params, `count-${params.w}-${params.diff}-${seed}`);
         for (const { step, before } of steps) {
+          if (step.rung !== "clueFull") continue;
           const hl = outlinedBy(step);
           if (hl.clues.length !== 1) continue;
           // "already has all N of the track squares its clue allows" — so the
@@ -316,10 +315,7 @@ describe("the picture holds exactly the number the sentence states", () => {
       const params = SHAPES[2];
       const { steps } = walk(params, `parity-${seed}`);
       for (const { step } of steps) {
-        const m = step.explanation.match(
-          /^Every entry to the striped block needs an exit/,
-        );
-        if (!m) continue;
+        if (step.rung !== "crossingParity") continue;
         checked++;
         const said = /no crossing is marked yet/.test(step.explanation)
           ? 0
@@ -372,6 +368,56 @@ const UNREACHED: Record<string, string> = {
     "other cause, fires 64 times over the corpus; this combination did not " +
     "come up. Retire this entry by building a board that reaches it.",
 };
+
+/** A position for every rung a step can be, but the two the ledger above
+ * records no board reaching. */
+describeHintPins({
+  game: tracksGame,
+  params: SHAPES,
+  unreached: {
+    looseEndsFill: UNREACHED["looseEndsFill"],
+    wouldFinishEarly: UNREACHED["wouldFinishEarly"],
+  },
+  pins: {
+    /** Held on 1324 of 1718 positions walked. */
+    onlyOneSideLeft: "8x8de:k3l6c5e6v9f,4,S7,6,6,6,5,6,2,8,6,7,S6,6,5,2,2",
+    /** Held on 1718 of 1718 positions walked. */
+    bothSidesLeft: "8x8de:h6eCzvA,2,4,2,2,1,4,7,S6,2,S6,5,4,2,3,3,3",
+    /** Held on 1371 of 1718 positions walked. */
+    clueFull: "8x8de:c5zbCm3n9b,2,4,3,5,1,S2,8,2,6,4,2,2,S5,4,2,2",
+    /** Held on 1427 of 1718 positions walked. */
+    clueExact: "8x8dt:p6zo9e,3,1,S2,4,6,4,2,6,8,4,S2,3,3,4,2,2",
+    /** Held on 848 of 1718 positions walked. */
+    wouldCloseLoop: {
+      id: "10x10dh:zdCo956zaAp3cCb,3,2,1,4,6,4,10,S8,6,6,4,3,3,S5,6,6,9,7,3,4",
+      moves:
+        '[{"ops":[{"kind":"square","x":6,"y":0,"track":true,"set":true},{"kind":"square","x":6,"y":1,"track":true,"set":true},{"kind":"square","x":6,"y":2,"track":true,"set":true},{"kind":"square","x":6,"y":3,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":9,"track":false,"set":true},{"kind":"square","x":1,"y":9,"track":false,"set":true},{"kind":"square","x":2,"y":9,"track":false,"set":true},{"kind":"square","x":5,"y":9,"track":false,"set":true},{"kind":"square","x":8,"y":9,"track":false,"set":true},{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":8,"track":false,"set":true},{"kind":"square","x":1,"y":8,"track":false,"set":true},{"kind":"square","x":2,"y":8,"track":false,"set":true},{"kind":"square","x":5,"y":8,"track":false,"set":true},{"kind":"square","x":7,"y":8,"track":false,"set":true},{"kind":"square","x":8,"y":8,"track":false,"set":true},{"kind":"square","x":9,"y":8,"track":false,"set":true}]}]',
+    },
+    /** Held on 248 of 1718 positions walked. */
+    wouldStrandTrack: {
+      id: "8x8de:k3l6c5e6v9f,4,S7,6,6,6,5,6,2,8,6,7,S6,6,5,2,2",
+      moves:
+        '[{"ops":[{"kind":"square","x":0,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"square","x":0,"y":0,"track":true,"set":true},{"kind":"square","x":1,"y":0,"track":true,"set":true},{"kind":"square","x":2,"y":0,"track":true,"set":true},{"kind":"square","x":4,"y":0,"track":true,"set":true},{"kind":"square","x":5,"y":0,"track":true,"set":true},{"kind":"square","x":6,"y":0,"track":true,"set":true},{"kind":"square","x":7,"y":0,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":0,"y":0,"dir":1,"track":true,"set":true},{"kind":"edge","x":0,"y":0,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":0,"dir":4,"track":true,"set":true},{"kind":"edge","x":7,"y":0,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":4,"track":false,"set":true},{"kind":"square","x":0,"y":5,"track":false,"set":true},{"kind":"square","x":0,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"square","x":7,"y":2,"track":false,"set":true},{"kind":"square","x":7,"y":3,"track":false,"set":true},{"kind":"square","x":7,"y":4,"track":false,"set":true},{"kind":"square","x":7,"y":5,"track":false,"set":true},{"kind":"square","x":7,"y":6,"track":false,"set":true},{"kind":"square","x":7,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":1,"dir":4,"track":true,"set":true}]},{"ops":[{"kind":"square","x":1,"y":2,"track":true,"set":true},{"kind":"square","x":2,"y":2,"track":true,"set":true},{"kind":"square","x":3,"y":2,"track":true,"set":true},{"kind":"square","x":4,"y":2,"track":true,"set":true},{"kind":"square","x":5,"y":2,"track":true,"set":true},{"kind":"square","x":6,"y":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":4,"track":true,"set":true},{"kind":"square","x":4,"y":4,"track":true,"set":true},{"kind":"square","x":5,"y":4,"track":true,"set":true},{"kind":"square","x":6,"y":4,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":7,"track":false,"set":true},{"kind":"square","x":4,"y":7,"track":false,"set":true},{"kind":"square","x":5,"y":7,"track":false,"set":true},{"kind":"square","x":6,"y":7,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":2,"y":7,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":2,"y":1,"track":false,"set":true},{"kind":"square","x":2,"y":5,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":2,"y":0,"dir":1,"track":true,"set":true},{"kind":"edge","x":2,"y":0,"dir":4,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":0,"dir":1,"track":true,"set":true},{"kind":"edge","x":4,"y":0,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":2,"dir":1,"track":true,"set":true},{"kind":"edge","x":4,"y":2,"dir":4,"track":true,"set":true}]},{"ops":[{"kind":"square","x":1,"y":5,"track":true,"set":true},{"kind":"square","x":3,"y":5,"track":true,"set":true},{"kind":"square","x":4,"y":5,"track":true,"set":true},{"kind":"square","x":5,"y":5,"track":true,"set":true},{"kind":"square","x":6,"y":5,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":5,"dir":2,"track":true,"set":true},{"kind":"edge","x":1,"y":5,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":6,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":3,"y":5,"dir":1,"track":true,"set":true},{"kind":"edge","x":3,"y":5,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":4,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"square","x":5,"y":1,"track":false,"set":true},{"kind":"square","x":5,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":5,"y":0,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":1,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"square","x":6,"y":6,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":5,"dir":2,"track":true,"set":true},{"kind":"edge","x":6,"y":5,"dir":4,"track":true,"set":true}]},{"ops":[{"kind":"square","x":6,"y":3,"track":true,"set":true}]},{"ops":[{"kind":"square","x":1,"y":1,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":1,"y":1,"dir":4,"track":true,"set":true},{"kind":"edge","x":1,"y":1,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":0,"y":2,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":1,"y":3,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":2,"y":2,"dir":1,"track":true,"set":true},{"kind":"edge","x":2,"y":2,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":3,"y":3,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":4,"dir":1,"track":true,"set":true},{"kind":"edge","x":4,"y":4,"dir":8,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":5,"y":5,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"edge","x":6,"y":4,"dir":2,"track":true,"set":true}]}]',
+    },
+    /** Held on 162 of 1718 positions walked. */
+    looseEndSpans: {
+      id: "8x8dt:h6q6r5e5kA,4,7,5,5,5,4,6,S4,3,S3,6,5,6,7,7,3",
+      moves: [{ ops: [{ kind: "edge", x: 0, y: 0, dir: 1, track: true, set: true }] }],
+    },
+    /** Held on 636 of 1718 positions walked. */
+    sharedFate: {
+      id: "10x10dh:zb3k6zzc9c,5,3,2,1,2,3,S2,5,4,5,6,8,6,2,S2,1,2,2,1,2",
+      moves:
+        '[{"ops":[{"kind":"square","x":0,"y":9,"track":false,"set":true},{"kind":"square","x":1,"y":9,"track":false,"set":true},{"kind":"square","x":2,"y":9,"track":false,"set":true},{"kind":"square","x":3,"y":9,"track":false,"set":true},{"kind":"square","x":4,"y":9,"track":false,"set":true},{"kind":"square","x":5,"y":9,"track":false,"set":true},{"kind":"square","x":8,"y":9,"track":false,"set":true},{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":9,"dir":2,"track":true,"set":true}]},{"ops":[{"kind":"square","x":0,"y":8,"track":false,"set":true},{"kind":"square","x":1,"y":8,"track":false,"set":true},{"kind":"square","x":2,"y":8,"track":false,"set":true},{"kind":"square","x":3,"y":8,"track":false,"set":true},{"kind":"square","x":4,"y":8,"track":false,"set":true},{"kind":"square","x":5,"y":8,"track":false,"set":true},{"kind":"square","x":6,"y":8,"track":false,"set":true},{"kind":"square","x":8,"y":8,"track":false,"set":true},{"kind":"square","x":9,"y":8,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":7,"y":8,"dir":2,"track":true,"set":true}]}]',
+    },
+    /** Held on 232 of 1718 positions walked. */
+    crossingParity: {
+      id: "10x10dh:zd6lAeCf96o9i3dCiAa,2,3,4,5,4,4,5,4,S4,4,2,2,3,S3,4,6,4,6,6,3",
+      moves:
+        '[{"ops":[{"kind":"square","x":9,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"square","x":9,"y":8,"track":false,"set":true}]},{"ops":[{"kind":"square","x":0,"y":0,"track":false,"set":true},{"kind":"square","x":0,"y":1,"track":false,"set":true},{"kind":"square","x":0,"y":4,"track":false,"set":true},{"kind":"square","x":0,"y":5,"track":false,"set":true},{"kind":"square","x":0,"y":6,"track":false,"set":true},{"kind":"square","x":0,"y":7,"track":false,"set":true},{"kind":"square","x":0,"y":8,"track":false,"set":true},{"kind":"square","x":0,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":0,"y":2,"dir":1,"track":true,"set":true}]},{"ops":[{"kind":"square","x":3,"y":0,"track":false,"set":true},{"kind":"square","x":3,"y":1,"track":false,"set":true},{"kind":"square","x":3,"y":2,"track":false,"set":true},{"kind":"square","x":3,"y":6,"track":false,"set":true},{"kind":"square","x":3,"y":9,"track":false,"set":true}]},{"ops":[{"kind":"square","x":1,"y":4,"track":false,"set":true},{"kind":"square","x":2,"y":4,"track":false,"set":true},{"kind":"square","x":4,"y":4,"track":false,"set":true},{"kind":"square","x":5,"y":4,"track":false,"set":true},{"kind":"square","x":6,"y":4,"track":false,"set":true}]},{"ops":[{"kind":"edge","x":4,"y":7,"dir":8,"track":false,"set":true}]},{"ops":[{"kind":"square","x":1,"y":3,"track":false,"set":true}]},{"ops":[{"kind":"square","x":9,"y":3,"track":false,"set":true}]},{"ops":[{"kind":"square","x":9,"y":2,"track":false,"set":true}]}]',
+    },
+  },
+});
 
 describe("every narratable premise the corpus reaches is reached", () => {
   // Adding a variant to `TracksReason` breaks this object until it is listed,

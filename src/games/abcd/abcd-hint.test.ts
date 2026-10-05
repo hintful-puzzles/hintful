@@ -10,13 +10,20 @@
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { type AbcdHint, hintKeepTrack, packedLines, refreshHintStep } from "./hint.ts";
-import { type LineMarks, say } from "./hint-text.ts";
+import {
+  type AbcdHint,
+  type AbcdRung,
+  hintKeepTrack,
+  packedLines,
+  refreshHintStep,
+} from "./hint.ts";
+import { CLUE, type LineMarks, say } from "./hint-text.ts";
 import { abcdGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { newSolverBoard, runsForce, solveBoard } from "./solver.ts";
@@ -28,7 +35,7 @@ import {
   letterBit,
 } from "./state.ts";
 
-type Step = HintStep<AbcdMove, AbcdHint>;
+type Step = HintStep<AbcdMove, AbcdHint, AbcdRung>;
 
 /** Every preset, plus diagonal mode and a thin board. */
 const SHAPES: AbcdParams[] = [
@@ -70,27 +77,90 @@ function planOf(label: string, state: AbcdState, reading?: CandidateReading): St
   return r.steps as Step[];
 }
 
-/** The steps the keep-track and frame tests below are asserted on. */
+/** Whether a runs step outlines a stretch: two cells of its line side by side.
+ * Cells that must all take the letter never touch, so a step that outlines two
+ * that do is the technique proper, counting what each stretch fits. */
+function outlinesStretch(step: Step): boolean {
+  const open = stepMarks(step).of("outline", CELL);
+  return open.some((a) =>
+    open.some((b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1),
+  );
+}
+/** Whether a step reads a clue's count. A runs firing's later legs do not. */
+const readsCount = (step: Step): boolean =>
+  stepMarks(step).of("outline", CLUE).length > 0;
+
+/** The steps the keep-track and frame tests below are asserted on, and a
+ * position for every rung. The orthogonal boards are read with the notes
+ * populated and the diagonal ones implicitly, since `note` and `regionsFull`
+ * are spoken only of a cell with no notes. The second line of play opens with
+ * a letter written on the bare board, which is what `clean` clears after. */
 const RUNS_PARAMS: AbcdParams = { w: 5, h: 5, n: 4, diag: false, removenums: true };
 const pinned = describeHintPins({
   game: abcdGame,
-  params: [RUNS_PARAMS],
+  params: [RUNS_PARAMS, { ...RUNS_PARAMS, diag: true }],
+  ui: (state) => ({
+    ...abcdGame.newUi(state),
+    candidateReading: state.params.diag ? "implicit" : "populate",
+  }),
+  stray: (state, turn, hinted): AbcdMove | null => {
+    if (turn > 0) return hinted;
+    const solved = abcdGame.solve?.(state, state);
+    if (!solved?.ok || solved.move.type !== "solve") throw new Error("unsolvable");
+    const at = state.params.w + 1;
+    return { type: "enter", x: 1, y: 1, letter: solved.move.grid[at] };
+  },
   kinds: {
-    runs: /fit only/,
+    runs: (step) => step.rung === "packed" && readsCount(step) && outlinesStretch(step),
     multiNoteStrike: (step) =>
       step.move.type === "pencilStrike" && step.move.marks.length >= 2,
   },
   pins: {
-    /** Held on 51 of 594 positions walked. */
+    /** Held on 197 of 2388 positions walked. */
     runs: {
       id: "5x5n4R:1,-,-,-,1,-,2,0,2,2,-,-,1,1,1,-,3,-,1,-,3,-,1,-,-,-,1,2,2,-,-,-,2,1,1,-,-,-,-,-,",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":1,"letter":3},{"x":1,"y":1,"letter":3},{"x":2,"y":1,"letter":3},{"x":3,"y":1,"letter":3},{"x":4,"y":1,"letter":3}]}]',
     },
-    /** Held on 173 of 594 positions walked. */
+    /** Held on 498 of 2388 positions walked. */
     multiNoteStrike: {
       id: "5x5n4R:-,0,-,2,2,-,1,-,-,2,-,2,1,-,-,2,-,1,-,0,1,-,1,-,-,0,3,-,-,0,-,2,0,-,-,-,-,1,-,2,",
       moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 36 of 2388 positions walked. */
+    populate:
+      "5x5n4R:-,0,-,2,2,-,1,-,-,2,-,2,1,-,-,2,-,1,-,0,1,-,1,-,-,0,3,-,-,0,-,2,0,-,-,-,-,1,-,2,",
+    /** Held on 757 of 2388 positions walked. */
+    clean: {
+      id: "5x5n4R:-,0,-,2,2,-,1,-,-,2,-,2,1,-,-,2,-,1,-,0,1,-,1,-,-,0,3,-,-,0,-,2,0,-,-,-,-,1,-,2,",
+      moves: [{ type: "enter", x: 1, y: 1, letter: 3 }, { type: "pencilAll" }],
+    },
+    /** Held on 656 of 2388 positions walked. */
+    note: "5x5n4DR:-,-,-,-,-,-,-,-,-,-,-,-,-,-,2,1,-,-,-,-,-,3,-,0,3,-,-,-,-,-,-,-,-,-,0,-,-,3,-,-,",
+    /** Held on 2155 of 2388 positions walked. */
+    dup: "5x5n4R:-,0,-,2,2,-,1,-,-,2,-,2,1,-,-,2,-,1,-,0,1,-,1,-,-,0,3,-,-,0,-,2,0,-,-,-,-,1,-,2,",
+    /** Held on 2278 of 2388 positions walked. */
+    single: {
+      id: "5x5n4R:-,-,-,1,-,-,1,0,1,-,-,-,1,1,-,2,1,-,-,-,0,3,-,0,1,1,-,1,-,2,-,-,-,-,1,-,1,-,-,0,",
+      moves:
+        '[{"type":"enter","x":1,"y":1,"letter":1},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"letter":1},{"x":0,"y":1,"letter":1},{"x":2,"y":1,"letter":1},{"x":1,"y":2,"letter":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"letter":3},{"x":2,"y":1,"letter":3},{"x":3,"y":1,"letter":3},{"x":4,"y":1,"letter":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"letter":0},{"x":0,"y":1,"letter":0},{"x":0,"y":2,"letter":0},{"x":0,"y":3,"letter":0},{"x":0,"y":4,"letter":0}]}]',
+    },
+    /** Held on 1123 of 2388 positions walked. */
+    regionsFull: {
+      id: "5x5n4DR:-,-,-,2,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-,2,-,-,3,-,-,-,-,-,-,-,-,-,3,-,-,-,-,-,3,",
+      moves:
+        '[{"type":"enter","x":1,"y":1,"letter":1},{"type":"pencilAdd","marks":[{"x":0,"y":1,"letter":0},{"x":0,"y":1,"letter":2},{"x":0,"y":1,"letter":3}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"letter":0},{"x":0,"y":2,"letter":2},{"x":0,"y":2,"letter":3}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"letter":0},{"x":0,"y":3,"letter":1},{"x":0,"y":3,"letter":2},{"x":0,"y":3,"letter":3}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"letter":0},{"x":0,"y":4,"letter":1},{"x":0,"y":4,"letter":2},{"x":0,"y":4,"letter":3}]},{"type":"enter","x":0,"y":0,"letter":3},{"type":"pencilStrike","marks":[{"x":0,"y":1,"letter":3}]},{"type":"enter","x":0,"y":2,"letter":3},{"type":"pencilStrike","marks":[{"x":0,"y":3,"letter":3}]},{"type":"enter","x":0,"y":1,"letter":0}]',
+    },
+    /** Held on 1683 of 2388 positions walked. */
+    satisfied: {
+      id: "5x5n4R:-,0,-,2,2,-,1,-,-,2,-,2,1,-,-,2,-,1,-,0,1,-,1,-,-,0,3,-,-,0,-,2,0,-,-,-,-,1,-,2,",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 2040 of 2388 positions walked. */
+    packed: {
+      id: "5x5n4R:1,-,-,-,1,-,2,0,2,2,-,-,1,1,1,-,3,-,1,-,3,-,1,-,-,-,1,2,2,-,-,-,2,1,1,-,-,-,-,-,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":1,"letter":3},{"x":1,"y":1,"letter":3},{"x":2,"y":1,"letter":3},{"x":3,"y":1,"letter":3},{"x":4,"y":1,"letter":3}]}]',
     },
   },
 });
@@ -155,36 +225,21 @@ type Kind =
   | "packed"
   | "alsoForced";
 
-const isSatisfied = (text: string): boolean =>
-  /^This (row|column) (must hold no|already holds)/.test(text);
-
-function kindOf(step: Step, diag: boolean): Kind {
-  const m = step.move;
-  const text = step.explanation;
-  const reach = diag ? "touching it, even at a corner" : "beside, above or below it";
-  if (text === say.populate) return "populate";
-  if (text.startsWith("Now clear the easy ones: ")) return "clean";
-  if (m.type === "pencilAdd") return isSatisfied(text) ? "fold" : "note";
-  if (m.type === "pencilStrike") {
-    const l = String.fromCharCode(65 + m.marks[0].letter);
-    if (text.startsWith(`The ${l} just placed rules out ${l} in every cell ${reach}`))
-      return "cull";
-    if (isSatisfied(text)) return "satisfied";
-  } else if (m.type === "enter" && m.letter !== null) {
-    const l = String.fromCharCode(65 + m.letter);
-    if (isSatisfied(text)) return "fold";
-    if (
-      text ===
-      `Every other letter has been ruled out in this cell, so it can only be ${l}.`
-    )
+function kindOf(step: Step): Kind {
+  switch (step.rung) {
+    case "single":
       return "naked";
-    if (text.startsWith("Every other letter is already ")) return "regionsFull";
-    if (text.startsWith(`…and this cell must be ${l} too, for the same `))
-      return "alsoForced";
-    if (text.includes("fit only")) return "packed";
-    if (text.includes("can take one")) return "onlyHomes";
+    case "dup":
+      return "cull";
+    // A strike from a cell with no notes is folded into what it leaves there.
+    case "satisfied":
+      return step.move.type === "pencilStrike" ? "satisfied" : "fold";
+    case "packed":
+      if (!readsCount(step)) return "alsoForced";
+      return outlinesStretch(step) ? "packed" : "onlyHomes";
+    default:
+      return step.rung;
   }
-  throw new Error(`an unclassified step: "${text}"`);
 }
 
 /**
@@ -221,11 +276,11 @@ describe.each(READINGS)("the corpus, under the %s reading", (reading) => {
   it("finishes every board and reaches every premise", () => {
     const seen = new Set<Kind>();
     let steps = 0;
-    for (const { label, params, state: start } of boards()) {
+    for (const { label, state: start } of boards()) {
       let state = start;
       const plan = planOf(label, start, reading);
       for (const step of plan) {
-        seen.add(kindOf(step, params.diag));
+        seen.add(kindOf(step));
         state = abcdGame.executeMove(state, step.move);
       }
       expect(abcdGame.status(state), `${label} stalled`).toBe("solved");
@@ -249,7 +304,7 @@ describe("the runs finder", () => {
       for (let move = 0; move < 400 && abcdGame.status(state) !== "solved"; move++) {
         const plan = planOf(label, state, "populate");
         const head = plan[0];
-        if (head.move.type === "enter" && kindOf(head, params.diag) === "packed") {
+        if (head.move.type === "enter" && kindOf(head) === "packed") {
           points++;
           const found = [
             ...packedLines(params, state.grid, state.pencil, state.numbers),
@@ -309,10 +364,7 @@ describe("the player's own board", () => {
       letter: solved.move.grid[params.w + 1],
     });
     const plan = planOf(label, state, "populate");
-    expect(plan.map((s) => kindOf(s, params.diag)).slice(0, 2)).toEqual([
-      "populate",
-      "clean",
-    ]);
+    expect(plan.map(kindOf).slice(0, 2)).toEqual(["populate", "clean"]);
   });
 
   it("follows a strike note by note, in the game's own letters", () => {

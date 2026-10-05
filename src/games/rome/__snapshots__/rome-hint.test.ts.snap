@@ -5127,3 +5127,21 @@ exports[`rome hint render > rings the square, hatches its area, and crosses the 
   },
 ]
 `;
+
+exports[`rome: pinned hint positions > says, at each pin 1`] = `
+{
+  "clean": "Now clear the easy ones: cross out any arrow already placed in each square's area.",
+  "dup": "This area now has its right arrow, so no other square in it can point right.",
+  "hiddenSingle": "Its area must hold all four arrows, and only this square can still point right, so it must point right.",
+  "loop": "Following the arrows from the square below leads back here, so this square must point left.",
+  "note": "Of the ways this square can point, only up and right aren't already used in its area, so pencil them in.",
+  "onlyHome": "Its area must hold all four arrows, and only this square can still point up, so this square must point up.",
+  "opensOnLoop": "Following the arrows from the square below leads back here, so this square can't point down.",
+  "opposite": "Its left neighbor in this area can only point left or right: an arrow into it would close a loop or be the area's second left, so this square must point right.",
+  "pair": "Two squares of this area must take up or down between them, so no other square of the area can point up.",
+  "populate": "Start by penciling every candidate arrow into each empty square, so there is something to cross out.",
+  "reach": "Every square must reach a goal, and only this mark still leads into the striped group, so the rest must go.",
+  "regionsFull": "Every other way this square can point is already used in its area, so it must point left.",
+  "single": "Every other arrow has been ruled out in this square, so it must point down.",
+}
+`;

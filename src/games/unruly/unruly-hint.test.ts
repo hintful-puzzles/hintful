@@ -14,6 +14,7 @@ import { type UnrulyHint, unrulyGame } from "./index.ts";
 import { PLACE_ANIM_TIME } from "./render.ts";
 import { deduceHintPlan, isComplete } from "./solver.ts";
 import {
+  encodeGrid,
   newState,
   type UnrulyMove,
   type UnrulyParams,
@@ -45,15 +46,29 @@ const padTo6 = (top: Cell[][]): Cell[][] => {
 
 const pinned = describeHintPins({
   game: unrulyGame,
-  params: [{ w2: 14, h2: 14, unique: false, diff: 2 }],
+  // No preset turns unique rows on, and only a board dealt with it fires
+  // that rung.
+  params: [
+    { w2: 14, h2: 14, unique: false, diff: 2 },
+    { w2: 8, h2: 8, unique: true, diff: 2 },
+  ],
+  descOf: (s) => encodeGrid(s.grid, s.w2 * s.h2),
   kinds: {
     // A board whose plan holds a firing that forces several cells.
     groupedPlan: (_step, state) =>
       deduceHintPlan(state).some((m) => m.continuesPrevious),
   },
   pins: {
-    /** Held on 1611 of 1804 positions walked. */
+    /** Held on 1920 of 2390 positions walked. */
     groupedPlan: "14x14dn:bbadAfCAcDmfcccDFCceFEBDdBbOBbabamabGAJjbgbACJAc",
+    /** Held on 2340 of 2390 positions walked. */
+    threes: "14x14dn:bbadAfCAcDmfcccDFCceFEBDdBbOBbabamabGAJjbgbACJAc",
+    /** Held on 2376 of 2390 positions walked. */
+    complete: "8x8udn:mAaaAaiHaAAaAcAbAfAaDCaAa",
+    /** Held on 437 of 2390 positions walked. */
+    unique: "8x8udn:CCaAbdAaBDaADaaAbDaAccAaGaACaAaAb",
+    /** Held on 2047 of 2390 positions walked. */
+    nearcomplete: "8x8udn:aAaAAaAabAdBAaMFbbAAacdDACcb",
   },
 });
 

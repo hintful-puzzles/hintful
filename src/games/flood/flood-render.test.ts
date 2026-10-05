@@ -68,6 +68,7 @@ describe("Flood redraw", () => {
     const words = say.fill(1, [{ x: 1, y: 0 }]);
     const hint: HintStep<FloodMove> = {
       move: { type: "fill", color: 1 },
+      rung: "fill",
       explanation: words.text,
       words,
     };

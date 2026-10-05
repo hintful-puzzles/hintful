@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`flood: pinned hint positions > says, at each pin 1`] = `
+{
+  "fill": "Fill with green: it joins the dotted squares to your region.",
+}
+`;

@@ -54,7 +54,9 @@ import {
   hintGesture,
   hintKeepTrack,
   refreshHintStep,
+  SEISMIC_RUNGS,
   type SeismicHint,
+  type SeismicRung,
 } from "./hint.ts";
 import {
   colors,
@@ -296,7 +298,8 @@ export const seismicGame: Game<
   SeismicUi,
   SeismicDrawState,
   SeismicMistake,
-  SeismicHint
+  SeismicHint,
+  SeismicRung
 > = {
   id: "seismic",
   canMarkAll: true,
@@ -327,6 +330,7 @@ export const seismicGame: Game<
   difficulty,
   findMistakes,
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  hintRungs: SEISMIC_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step is about: the number to enter there, the marks to write, or the pencil marks to cross out, which are shown with a line through them.",

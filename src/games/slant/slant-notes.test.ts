@@ -492,7 +492,13 @@ describe("slant marks render", () => {
 
   it("a hint step placing a mark draws it in the hint color", () => {
     const words = markWords.the("ring", ALIKE, [{ x: 1, y: 1, dir: "right" }], "mark");
-    const step = { move: mark, explanation: words.text, words, highlights: { mark } };
+    const step = {
+      move: mark,
+      rung: "mark-v" as const,
+      explanation: words.text,
+      words,
+      highlights: { mark },
+    };
     expect(barsAcross(frame(s, ui, step), COL_HINT)).toHaveLength(4);
   });
 

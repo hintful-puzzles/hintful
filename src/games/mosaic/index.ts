@@ -28,7 +28,13 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import { type MosaicHint, mosaicHint, mosaicKeepTrack } from "./hint.ts";
+import {
+  MOSAIC_RUNGS,
+  type MosaicHint,
+  type MosaicRung,
+  mosaicHint,
+  mosaicKeepTrack,
+} from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -192,7 +198,8 @@ export const mosaicGame: Game<
   MosaicUi,
   MosaicDrawState,
   MosaicMistake,
-  MosaicHint
+  MosaicHint,
+  MosaicRung
 > = {
   id: "mosaic",
 
@@ -246,6 +253,7 @@ export const mosaicGame: Game<
   findMistakes,
 
   hint: mosaicHint,
+  hintRungs: MOSAIC_RUNGS,
   hintKeepTrack: mosaicKeepTrack,
   // A tap on each of the step's squares: a tap cycles a filled square too,
   // where a drag would paint only empty ones.

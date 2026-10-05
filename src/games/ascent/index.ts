@@ -23,7 +23,13 @@ import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newAscentDesc } from "./generator.ts";
-import { type AscentHighlights, ascentHint, ascentKeepTrack } from "./hint.ts";
+import {
+  ASCENT_RUNGS,
+  type AscentHighlights,
+  type AscentRung,
+  ascentHint,
+  ascentKeepTrack,
+} from "./hint.ts";
 import { executeAscentMove } from "./moves.ts";
 import {
   type AscentDrawState,
@@ -474,7 +480,8 @@ export const ascentGame: Game<
   AscentUi,
   AscentDrawState,
   AscentMistake,
-  AscentHighlights
+  AscentHighlights,
+  AscentRung
 > = {
   id: "ascent",
   preferredTileSize: 48,
@@ -507,6 +514,7 @@ export const ascentGame: Game<
   // a board it passes, the only kind the midend asks about, is one the hint may
   // deduce from.
   hint: ascentHint,
+  hintRungs: ASCENT_RUNGS,
   hintMarks: {
     roles: {
       ring: "the square the step fills. When the step fills a whole run at once, a line in the hint's color runs along its only route from one end to the other.",

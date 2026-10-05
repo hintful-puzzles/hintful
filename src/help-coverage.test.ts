@@ -379,6 +379,10 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     kind: "internal",
     why: "the game page's list of marks, generated from it rather than told once",
   },
+  hintRungs: {
+    kind: "internal",
+    why: "the ids a hint step's deduction goes by, which no player sees",
+  },
   targetVerbs: {
     kind: "internal",
     why: "the game page's Controls paragraph, generated from it rather than told once",

@@ -95,12 +95,23 @@ describe("Fifteen rendering", () => {
 const pinned = describeHintPins({
   game: fifteenGame,
   params: [{ w: 4, h: 4 }],
+  descOf: (s: FifteenState) => s.tiles.join(","),
   kinds: {
     slide: (step) => step.move.type === "move",
   },
   pins: {
     /** Held on 1292 of 1292 positions walked. */
     slide: "4x4:8,2,13,4,0,12,3,15,9,14,7,10,5,11,1,6",
+    /** Held on 1292 of 1292 positions walked. */
+    goalHome: "4x4:0,1,5,10,9,2,13,4,3,6,15,12,8,14,7,11",
+    /** Held on 1205 of 1292 positions walked. */
+    goalCloser: "4x4:12,2,0,1,6,10,5,14,4,9,11,13,15,3,7,8",
+    /** Held on 874 of 1292 positions walked. */
+    goalReposition: "4x4:1,2,5,10,6,15,3,4,9,13,0,12,8,14,7,11",
+    /** Held on 1261 of 1292 positions walked. */
+    tileHome: "4x4:8,2,13,4,12,3,0,15,9,14,7,10,5,11,1,6",
+    /** Held on 1237 of 1292 positions walked. */
+    outOfWay: "4x4:8,2,13,4,0,12,3,15,9,14,7,10,5,11,1,6",
   },
 });
 

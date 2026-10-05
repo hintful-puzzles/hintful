@@ -205,6 +205,7 @@ describe("verbClicks: a hint step's clicks, found by its keep-track", () => {
   const state: S = { w: 3, h: 2, marks: {} };
   const stepOf = (set: [string, string][]): HintStep<M> => ({
     move: { set },
+    rung: "test",
     explanation: "",
   });
 

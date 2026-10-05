@@ -182,11 +182,32 @@ const pinned = describeHintPins({
   game: fillingGame,
   params: [decodeParams("9x7")],
   kinds: {
-    stripedRegion: /^The striped region of \d+/,
+    // A step about one region, which it stripes.
+    stripedRegion: (step) => stepMarks(step).of("stripes", CELL).length > 0,
   },
   pins: {
     /** Held on 298 of 310 positions walked. */
     stripedRegion: "9x7:c2c2b6a5d53663a27a4c3a7a4b773a7c7b22324b6d2b",
+    /** Held on 309 of 310 positions walked. */
+    growth: "9x7:c2c2b6a5d53663a27a4c3a7a4b773a7c7b22324b6d2b",
+    /** Held on 116 of 310 positions walked. */
+    blocked: {
+      id: "9x7:a64e4a65b354c95d569a9b7b4c5f45a52b3d4a2a",
+      moves:
+        '[{"type":"set","cells":[3],"value":4},{"type":"set","cells":[18],"value":6},{"type":"set","cells":[12],"value":5},{"type":"set","cells":[4],"value":4},{"type":"set","cells":[22],"value":5},{"type":"set","cells":[24],"value":5},{"type":"set","cells":[58],"value":4}]',
+    },
+    /** Held on 51 of 310 positions walked. */
+    lonely: {
+      id: "9x7:12d95d992a5542a99b55a4499c3a7h778b64478b8c5",
+      moves:
+        '[{"type":"set","cells":[45],"value":7},{"type":"set","cells":[56,57],"value":8},{"type":"set","cells":[61,60,59,50],"value":5},{"type":"set","cells":[42],"value":6},{"type":"set","cells":[43],"value":4},{"type":"set","cells":[34],"value":3},{"type":"set","cells":[44],"value":4},{"type":"set","cells":[33],"value":3},{"type":"set","cells":[41],"value":6},{"type":"set","cells":[39],"value":8},{"type":"set","cells":[32],"value":6},{"type":"set","cells":[36],"value":7},{"type":"set","cells":[2],"value":2},{"type":"set","cells":[20],"value":2},{"type":"set","cells":[27],"value":4},{"type":"set","cells":[38],"value":7},{"type":"set","cells":[49,40],"value":8},{"type":"set","cells":[23,24],"value":6},{"type":"set","cells":[5,4],"value":9},{"type":"set","cells":[15],"value":2}]',
+    },
+    /** Held on 120 of 310 positions walked. */
+    bitmap: {
+      id: "9x7:2b5a5a3b1a95b68b4a9a6e99a6b345a992d6b44b26d4b",
+      moves:
+        '[{"type":"set","cells":[4],"value":5},{"type":"set","cells":[6],"value":3},{"type":"set","cells":[21],"value":9},{"type":"set","cells":[26],"value":8},{"type":"set","cells":[28],"value":4},{"type":"set","cells":[39,48],"value":5},{"type":"set","cells":[43],"value":2},{"type":"set","cells":[35,44,53],"value":8},{"type":"set","cells":[56,57],"value":6},{"type":"set","cells":[49],"value":5},{"type":"set","cells":[45],"value":2},{"type":"set","cells":[27,18],"value":3},{"type":"set","cells":[58],"value":6},{"type":"set","cells":[29],"value":5},{"type":"set","cells":[19],"value":4}]',
+    },
   },
 });
 

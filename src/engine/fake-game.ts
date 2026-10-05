@@ -100,6 +100,7 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
           ok: true,
           steps: Array.from({ length: s.target - s.count }, (_, i) => ({
             move: "inc" as FakeMove,
+            rung: "inc",
             explanation: `Increment the counter to ${s.count + i + 1}`,
           })),
         },

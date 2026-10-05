@@ -28,6 +28,22 @@ import {
   type SlotMark,
 } from "./state.ts";
 
+/** What a step rests on: its {@link Reason}'s kind. */
+export const GUESS_RUNGS = [
+  "scoredNothing",
+  "noBlack",
+  "everyPegScored",
+  "noRepeats",
+  "blacksForced",
+  "blacksAccounted",
+  "totalAccounted",
+  "onlyAnswer",
+  "opening",
+  "probe",
+  "probeFits",
+] as const;
+export type GuessRung = (typeof GUESS_RUNGS)[number];
+
 /** What a step points at. */
 export interface GuessHighlights {
   /** The scored row the sentence reads ("the striped row"), hatched; empty when
@@ -508,14 +524,14 @@ function chooseProbe(state: GuessState, out: Int32Array): Probe | null {
 export function guessHint(
   state: GuessState,
   ui?: { holds: boolean[] },
-): HintResult<GuessMove, GuessHighlights> {
+): HintResult<GuessMove, GuessHighlights, GuessRung> {
   // Out of guesses, or the answer shown by Solve: the status is lost.
   if (outcome(state) < 0) return { ok: false, error: GAME_OVER };
   const p = state.params;
   const rows = scoredRows(state);
   const out = new Int32Array(p.npegs);
   const board = state.ruledOut.slice();
-  const steps: HintStep<GuessMove, GuessHighlights>[] = [];
+  const steps: HintStep<GuessMove, GuessHighlights, GuessRung>[] = [];
 
   for (let f = nextFiring(p, rows, out); f; f = nextFiring(p, rows, out)) {
     for (const m of f.marks) out[m.pos] |= bit(m.color);
@@ -532,6 +548,7 @@ export function guessHint(
     const words = say(f.reason, highlights, relation);
     steps.push({
       move: { type: "mark", marks: place, ruledOut: true },
+      rung: f.reason.kind,
       explanation: words.text,
       words,
       highlights,
@@ -554,8 +571,9 @@ export function guessHint(
   // When one answer fits, the enumeration found every other answer misfitting
   // a score: each is a rival guess, and lost.
   const only = probe.fitting === 1;
+  const reason = probeReason(probe);
   const words = say(
-    probeReason(probe),
+    reason,
     highlights,
     only
       ? claimRelation(judgeRivals(["every other answer"], 0, () => "lost").claim)
@@ -567,6 +585,7 @@ export function guessHint(
       pegs: probe.guess,
       holds: ui ? ui.holds.slice() : new Array(p.npegs).fill(false),
     },
+    rung: reason.kind,
     explanation: words.text,
     words,
     highlights,

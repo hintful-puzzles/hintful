@@ -178,13 +178,19 @@ function evidence(f: SeparateFiring): { striped: number[]; outlined: number[] } 
   }
 }
 
+/** The hint's rungs: the kinds of the solver's firings. */
+export const SEPARATE_RUNGS = ["sharedLetter", "walledApart", "onlyWay"] as const;
+export type SeparateRung = (typeof SEPARATE_RUNGS)[number];
+
 /**
  * The deduction from the player's own marks to the end, as one journey per
  * firing. Refuses on a solved board or one carrying a mistake, so no firing is
  * built on a wrong edge, and on a board the solver cannot finish from empty,
  * whose marks nothing can vouch for.
  */
-function hint(state: SeparateState): HintResult<SeparateMove, BorderHint> {
+function hint(
+  state: SeparateState,
+): HintResult<SeparateMove, BorderHint, SeparateRung> {
   const p = paramsOf(state);
   if (!solveToBorders(p, state.letters))
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
@@ -207,7 +213,8 @@ function hint(state: SeparateState): HintResult<SeparateMove, BorderHint> {
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
   const steps = plan.flatMap((f) =>
-    borderHintJourney(
+    borderHintJourney<SeparateMove, SeparateRung>(
+      f.kind,
       f.edges,
       (leg, left) => explain(f, state.letters, state.w, state.k, leg, left),
       (edits): SeparateMove => ({ type: "edges", edits }),
@@ -238,7 +245,8 @@ export const separateGame: Game<
   SeparateUi,
   SeparateDrawState,
   SeparateMistake,
-  BorderHint
+  BorderHint,
+  SeparateRung
 > = {
   id: "separate",
 
@@ -276,6 +284,7 @@ export const separateGame: Game<
       stripes: "the region the sentence is about.",
     },
   },
+  hintRungs: SEPARATE_RUNGS,
   hintKeepTrack,
   hintGesture: (s, ui, ds, m, step) => {
     if (m.type !== "edges") throw new Error("separate: a hint only sets edges");

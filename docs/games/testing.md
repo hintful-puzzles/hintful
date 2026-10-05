@@ -54,25 +54,52 @@ state matches — pinned by a recorded first-hit (see "Right-sizing the gate").
 
 ### Pinning a hint's positions
 
-**For a hint's sentences the scan is shared, and it stays in the tree.**
+**For a hint's rungs the scan is shared, and it stays in the tree.**
 `describeHintPins` ([`testing/hint-positions.ts`](../../src/engine/testing/hint-positions.ts))
-takes a game's kinds, each the sentence a hint opens with (a regex) or a
-predicate over the opening step and its board, and one pinned position a kind.
-It declares the test that every pin still opens with its kind, and returns the
-loader the game's own tests read the pins through (`pinned("trapCorner")` gives
-the board, the step, and the `id` and `moves` a `renderScenario` takes). A pin
-that stops firing fails with the command that finds another:
-`HINT_SCAN=1 npx vitest run <the test file>` walks hint-guided play over fixed
-seeds, taking each plan's first step and asking again, and fails with the pins
-to paste, each under how many of the positions walked it held on. Copy that
-count beside the pin: it is the power argument the pin owes (AGENTS.md
-§ "Method"), and a kind that held on 5 of 937 is the one to watch. A game whose
-mid-game board is itself a desc passes `descOf`, and its pins are bare
-`params:desc` strings; otherwise a pin is a board and the moves played on it,
-which the scan writes as their JSON in one string once there are more than a
-few. Of the positions a kind holds on, the scan reports the one fewest moves
-in. A deep pin is long, because a ladder's late rung opens a plan only once
-every earlier one is spent: read a file of pins through `cut -c1-200`.
+pins one position for **every rung the game declares** (`Game.hintRungs`,
+[`hints.md`](./hints.md) § "Name the rung a step speaks"), keyed on the rung's
+id, and returns the loader the game's own tests read the pins through
+(`pinned("trap")` gives the board, the plan, the step of that rung and its
+index, and the `id` and `moves` a `renderScenario` takes). It declares two
+tests: every pin still fires its kind, and a snapshot of the sentence said at
+each pin, which is where a rung's wording is held. One call a game, in
+`<game>-hint.test.ts`.
+
+**Adding a rung is: name it, run one command, read the count.** The types
+require a pin for every rung, so a new one does not compile until
+`npm run hint-scan -- <the test file>` has run. That walks hint-guided play
+over fixed seeds, taking each plan's first step and asking again, and writes
+the pins into the file, each under how many of the positions walked it held on.
+That count is the power argument the pin owes (AGENTS.md § "Method"): a rung
+that held on 5 of 937 is the one to watch. What the command does with a pin
+already there:
+
+- **a pin that still fires is left alone**, since tests and snapshots are
+  written against its board (`--all` replaces every pin the scan found);
+- **a pin the scan found no position for is left alone too**, and named: it is
+  one kept by hand, for a rung this scan's line of play does not reach;
+- **a rung with no pin and no position found is named, and the command exits
+  1.** Widen the scan (`params`, `seeds`, `stray`), build the board by hand and
+  pin that, or, when no board is known to fire the rung, list it in
+  `unreached` with the reason, which is a shortfall on show: empty is the goal,
+  as it is for `describeLadderCensus`. The scan walks the excused rungs too and
+  says when one fires.
+
+**A rung's pin is a position whose plan speaks the rung; a further kind's is one
+whose plan opens with it.** Of the positions a rung holds on, the scan takes one
+where its step opens the plan before one where it comes later (`index` says
+where), and then the fewest moves in. A game whose mid-game board is itself a
+desc passes `descOf`, and its pins are bare `params:desc` strings; otherwise a
+pin is a board and the moves played on it, which the scan writes as their JSON
+in one string once there are more than a few. A deep pin is long, because a
+ladder's late rung opens a plan only once every earlier one is spent.
+
+**A further kind is a predicate over the opening step and its board**, under
+`kinds`, for what a rung id does not say: a step's shape (several cells, a
+journey), which of a rung's cases it is (`step.rung === "trap" && ownRival(step)`),
+or the board's. It reads the step's fields and never its sentence: a regex over
+`step.explanation` is the name-keyed scan aimed at our own output (AGENTS.md
+§ "Method"), and `HintKind` does not take one.
 
 What a scan can be told:
 
@@ -84,7 +111,7 @@ What a scan can be told:
 - **`ui`**: the `Ui` the hint is asked under, for a kind a candidate reading
   decides (`group-hint.test.ts`).
 - **`stray`**: a second line of play on every board, steered by the game. A
-  hint keeps to lines that finish, so a sentence about a jump that would not is
+  hint keeps to lines that finish, so a rung about a jump that would not is
   spoken only off them (`pegs-hint.test.ts`, which follows the hint on even
   turns and takes any legal jump on odd ones).
 - **A kind may read the board and ignore the step.** A test that wants the
@@ -93,14 +120,15 @@ What a scan can be told:
   Whether a rung fires at all on a corpus is `describeLadderCensus`'s
   question, not this one's.
 
-**Call `pinned(kind)` inside a test, never in a `describe` body.** A
-`describe` body runs while tests are collected, before a new kind has a pin,
-and the scan then reports nothing with no error. And **a kind is what a plan
-opens with**: a sentence that is only ever a plan's second step, because the
-recompute after the first explains it another way, holds on no position. State
-the kind as "the opening firing has a leg that says it" (`tents-hint.test.ts`),
-or keep that one frame as a `hintUntil` on a fixed desc with the count at the
-site (`rome-hint.test.ts`, `slant-hint.test.ts`).
+**A test file with positions of its own takes `describeHintKindPins`**: a
+render test's frames, a second scan under another `ui`. Its kinds are rung ids
+or predicates, and the same command writes its pins. A file may hold several
+blocks, at any indent.
+
+**Prefer `pinned(kind)` inside a test to one in a `describe` body.** A
+`describe` body runs while tests are collected, so a pin that does not load
+fails the whole file there, with the command to run. The command itself is
+safe from that: while it scans, a pin that does not load reads as a stand-in.
 
 What it does not do: **pin a refusal.** A refusal has no step for a loader to
 return, so a test that wants a lost board keeps the desc by hand and says why
@@ -115,9 +143,9 @@ position a game from `testing/hint-chain-pins.ts`, and `hint-quality.test.ts`,
 whose walk was already paid for, fails on a numbered chain from a game with no
 pin there. The search runs when a pin is made, and membership is still derived.
 
-Exemplars: `flip-hint.test.ts` (written against it), `sokoban-hint.test.ts`
-(eleven pins moved onto it), `galaxies-hint.test.ts` (sentences and step shapes,
-pinned mid-game) with `galaxies-hint-render.test.ts` (a frame from a pin:
+Exemplars: `pegs-hint.test.ts` (rungs, cases of a rung as kinds, a stray line
+of play, a pin kept by hand), `galaxies-hint.test.ts` (a ladder's rungs, pinned
+mid-game) with `galaxies-hint-render.test.ts` (a frame from a pin:
 `renderScenario({ game, id, moves, showHint: true })`).
 
 **A game's own directory is not its coverage.** Its input paths, save

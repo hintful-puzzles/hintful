@@ -151,11 +151,6 @@ describe("crossing hint — soundness", () => {
 
 const PLACEMENTS = ["onlyNumber", "sharedDigit", "crossRuns"] as const;
 
-const opensWith =
-  (technique: CrossingFiring["technique"]) =>
-  (_step: unknown, state: CrossingState): boolean =>
-    deduceCrossingPlan(state).firings[0]?.technique === technique;
-
 /** A whole-run placement forced one particular way. */
 const opensBecause =
   (because: "length" | "digits" | "used") =>
@@ -164,26 +159,17 @@ const opensBecause =
     return f?.technique === "onlyNumber" && f.because === because;
   };
 
-/** A position for each placement technique, found as the firing the plan
- * opens with there. */
+/** A position for each technique, and for each way a whole-run placement is
+ * forced, found as the firing the plan opens with there. */
 const pinned = describeHintPins({
   game: crossingGame,
   params: [crossingPresets[0], crossingPresets[2], crossingPresets[4]],
   kinds: {
-    onlyNumber: opensWith("onlyNumber"),
-    sharedDigit: opensWith("sharedDigit"),
-    crossRuns: opensWith("crossRuns"),
     becauseLength: opensBecause("length"),
     becauseDigits: opensBecause("digits"),
     becauseUsed: opensBecause("used"),
   },
   pins: {
-    /** Held on 866 of 991 positions walked. */
-    onlyNumber: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
-    /** Held on 61 of 991 positions walked. */
-    sharedDigit: "5x5:a1a2a2a3a3c6,14,23,27,53,257,265,43339,53639",
-    /** Held on 57 of 991 positions walked. */
-    crossRuns: "5x5:2a3b1a5a1a1a5,25,76,218,496,56426,79132,84915",
     /** Held on 40 of 991 positions walked. */
     becauseLength: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
     /** Held on 783 of 991 positions walked. */
@@ -197,6 +183,30 @@ const pinned = describeHintPins({
       moves: [
         { x: 0, y: 0, kind: "set", digit: 2 },
         { kind: "place", run: 0, number: 0 },
+      ],
+    },
+    /** Held on 991 of 991 positions walked. */
+    onlyNumber: "5x5:5a1b1a2a1a1a1a5,32,96,235,25979,79525,92612",
+    /** Held on 331 of 991 positions walked. */
+    sharedDigit: "5x5:a1a2a2a3a3c6,14,23,27,53,257,265,43339,53639",
+    /** Held on 497 of 991 positions walked. */
+    crossRuns: "5x5:2a3b1a5a1a1a5,25,76,218,496,56426,79132,84915",
+    /** Held on 42 of 991 positions walked. */
+    noteDigits: {
+      id: "13x13:4a4a4b3b3a3a1a1a2a4a6a2a4b1a3a3a1a3b3a2a2a4a2a2a2a1b1a1a1a2a5a4a1a1a1a4a2a5a1a2a2a1b3a1a2a5a2,15,18,22,23,27,31,35,37,48,52,61,67,71,78,86,87,99,119,123,151,235,277,382,444,491,565,617,645,732,747,758,761,762,799,851,853,926,1278,1492,2688,2724,3885,4566,5137,6582,6984,8382,51251,65827,73855,75454,85229,88142,147571,496585,6231712",
+      moves:
+        '[{"kind":"place","run":33,"number":55},{"x":2,"y":0,"kind":"set","digit":8},{"x":5,"y":3,"kind":"set","digit":5},{"x":3,"y":3,"kind":"set","digit":4},{"kind":"place","run":8,"number":53},{"kind":"place","run":41,"number":54},{"kind":"place","run":1,"number":42},{"x":3,"y":0,"kind":"set","digit":2},{"kind":"place","run":0,"number":44},{"kind":"place","run":38,"number":40},{"kind":"place","run":3,"number":33}]',
+    },
+    /** Held on 0 of 991 positions walked: a strike needs a note that no number
+     * still fitting supports, and the plan never writes one, so only a note of
+     * the player's own is struck. By hand, the board of "ruling a candidate
+     * out" below: a 9 penciled where either number has a 1 or a 5. */
+    noteStrike: {
+      id: "4x3:4d4,1234,5678",
+      moves: [
+        { kind: "pencil", x: 0, y: 0, digit: 9 },
+        { kind: "pencil", x: 0, y: 0, digit: 1 },
+        { kind: "pencil", x: 0, y: 0, digit: 5 },
       ],
     },
   },

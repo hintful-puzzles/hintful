@@ -9,9 +9,10 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
 import {
+  type Crossing,
   moveOf,
   nextFiring,
-  type RectFiring,
+  RECT_RUNGS,
   rectHint,
   rectKeepTrack,
   rungsFinish,
@@ -28,52 +29,41 @@ const params = (w: number, h: number, expandfactor = 0): RectParams => ({
 });
 const P7 = params(7, 7);
 
-/** The sentence each rung says, and the rung the solver fires where it is
- * said. A line has two: the fit across the edge is out for one of two
- * reasons. */
-const RUNGS = {
-  fit: [/^Elsewhere the \d+ would .*, so only this rectangle fits\.$/, "fit"],
-  reach: [/^No other clue can reach the outlined square/, "reach"],
-  overlap: [/^Wherever the outlined \d+ goes, it covers the striped square/, "overlap"],
-  starve: [/^Anywhere else, the \d+ would leave the outlined/, "starve"],
-  lineTakes: [
-    /^Only the outlined \d+ could cross this edge, and it would take the striped square, which the outlined \d+ covers wherever it goes, so the edge must be a line\.$/,
-    "line",
-  ],
-  lineMisses: [
-    /^Only the outlined \d+ could cross this edge, and it would miss the outlined square, which no other clue reaches, so the edge must be a line\.$/,
-    "line",
-  ],
-} satisfies Record<string, [RegExp, RectFiring["kind"]]>;
-type Rung = keyof typeof RUNGS;
+/** The one clue with fits across the edge a line step opens with, when there
+ * is just one. */
+function soleCrossing(state: RectState): Crossing | null {
+  const f = nextFiring(state);
+  return f?.kind === "line" && f.across.length === 1 ? f.across[0] : null;
+}
 
-/** Each rung's sentence and the shapes of step the keep-track and frame tests
- * read, each pinned on a position whose hint opens with one. */
+/** Each rung, the two reasons a line has (the fit across the edge takes a
+ * square another clue is sure of, or misses one no other clue reaches) and the
+ * shapes of step the keep-track and frame tests read. */
 const pinned = describeHintPins({
   game: rectGame,
   params: [P7, params(9, 9), params(10, 10, 0.5)],
   seeds: 400,
   kinds: {
-    fit: RUNGS.fit[0],
-    reach: RUNGS.reach[0],
-    overlap: RUNGS.overlap[0],
-    starve: RUNGS.starve[0],
-    lineTakes: RUNGS.lineTakes[0],
-    lineMisses: RUNGS.lineMisses[0],
+    lineTakes: (step, state) => {
+      const c = soleCrossing(state);
+      return (
+        step.rung === "line" &&
+        c !== null &&
+        c.misses.length === 0 &&
+        c.owners.length === 1
+      );
+    },
+    lineMisses: (step, state) => {
+      const c = soleCrossing(state);
+      return step.rung === "line" && c !== null && c.takes.length === 0;
+    },
     rectangle: (step) => step.move.type === "rect" && step.move.w * step.move.h > 1,
+    // A fit outlines only the clues its other rectangles would take in.
     blockedByClue: (step) =>
-      step.move.type === "rect" && /take in the outlined clue/.test(step.explanation),
+      step.rung === "fit" && stepMarks(step).of("outline", CELL).length > 0,
   },
   pins: {
-    /** Held on 10916 of 14936 positions walked. */
-    fit: "7x7:c4b3a2a3c6e4k4a4_3_4a4a3e5b",
-    /** Held on 3814 of 14936 positions walked. */
-    reach: "7x7:e4a4a3g3_3_2a3b8d3d4d4c6c2a",
-    /** Held on 117 of 14936 positions walked. */
-    overlap: "10x10e0.5:h6b12e3f6f18h8m18b15za7h7e",
-    /** Held on 78 of 14936 positions walked. */
-    starve: "7x7:b8b2f3c4d4a2a2a5_3b3d2a2_4d3c2",
-    /** Held on 2 of 14936 positions walked. */
+    /** Held on 5 of 14936 positions walked. */
     lineTakes: {
       id: "9x9:e8c6b4d2b2c5d2e4b2c6c8l8a2_3_3a8b8l",
       moves:
@@ -89,14 +79,42 @@ const pinned = describeHintPins({
     rectangle: "7x7:c4b3a2a3c6e4k4a4_3_4a4a3e5b",
     /** Held on 9533 of 14936 positions walked. */
     blockedByClue: "7x7:c4b3a2a3c6e4k4a4_3_4a4a3e5b",
+    /** Held on 14612 of 14936 positions walked. */
+    fit: "7x7:c4b3a2a3c6e4k4a4_3_4a4a3e5b",
+    /** Held on 8702 of 14936 positions walked. */
+    reach: "7x7:e4a4a3g3_3_2a3b8d3d4d4c6c2a",
+    /** Held on 669 of 14936 positions walked. */
+    overlap: "10x10e0.5:h6b12e3f6f18h8m18b15za7h7e",
+    /** Held on 339 of 14936 positions walked. */
+    starve: "7x7:b8b2f3c4d4a2a2a5_3b3d2a2_4d3c2",
+    /** Held on 35 of 14936 positions walked. */
+    line: {
+      id: "9x9:e8c6b4d2b2c5d2e4b2c6c8l8a2_3_3a8b8l",
+      moves: [{ type: "rect", erasing: false, x: 0, y: 6, w: 1, h: 3 }],
+    },
   },
 });
 
 describe("rect hint rungs", () => {
-  for (const rung of Object.keys(RUNGS) as Rung[])
-    it(`${rung} is said where the solver fires ${RUNGS[rung][1]}`, () => {
-      expect(nextFiring(pinned(rung).state)?.kind).toBe(RUNGS[rung][1]);
+  for (const rung of RECT_RUNGS)
+    it(`a ${rung} step is the solver's ${rung} firing`, () => {
+      // The firing the step was built from, on the board as its turn comes.
+      const { state, steps, index } = pinned(rung);
+      let s = state;
+      for (const earlier of steps.slice(0, index)) s = executeMove(s, earlier.move);
+      const f = nextFiring(s);
+      expect(f?.kind).toBe(rung);
+      if (f) expect(moveOf(f)).toEqual(steps[index].move);
     });
+
+  it("a line says which of its two reasons rules the crossing out", () => {
+    expect(pinned("lineTakes").step.explanation).toMatch(
+      /^Only the outlined \d+ could cross this edge, and it would take the striped square, which the outlined \d+ covers wherever it goes, so the edge must be a line\.$/,
+    );
+    expect(pinned("lineMisses").step.explanation).toMatch(
+      /^Only the outlined \d+ could cross this edge, and it would miss the outlined square, which no other clue reaches, so the edge must be a line\.$/,
+    );
+  });
 
   it("several clues across one edge share a clause", () => {
     const p = params(15, 15, 1);

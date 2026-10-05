@@ -24,11 +24,18 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { boardOf, tentsKeepTrack, tentsPlan } from "./hint.ts";
+import {
+  boardOf,
+  TENTS_RUNGS,
+  type TentsRung,
+  tentsKeepTrack,
+  tentsPlan,
+} from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { tentsGame } from "./index.ts";
 import { type TentsBoard, type TentsReason, tentsSolve } from "./solver.ts";
 import {
+  BLANK,
   DIFF_EASY,
   DIFF_TRICKY,
   DX,
@@ -45,7 +52,7 @@ import {
   TREE,
 } from "./state.ts";
 
-type Step = HintStep<TentsMove>;
+type Step = HintStep<TentsMove, unknown, TentsRung>;
 
 const SHAPES: TentsParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY },
@@ -179,27 +186,31 @@ describe("a link is drawn only for a step that rests on it", () => {
   });
 });
 
-/** The premise of the firing a plan opens with on `state`. */
-const premiseAt = (state: TentsState): TentsReason["kind"] | null =>
-  tentsPlan(state).plan[0]?.firing.reason.kind ?? null;
+type LineCase = "countMet" | "allOpen" | "noSpareRoom" | "betweenThem";
 
-const rests =
-  (kind: TentsReason["kind"]) =>
-  (_step: unknown, state: TentsState): boolean =>
-    premiseAt(state) === kind;
+/** Which of a line count's cases a leg is, read off what it decides: grass or
+ * tents, a later leg or the first, and whether its tents take every open
+ * square of the line it stripes. `state` is the board the firing was planned
+ * on. */
+function lineCaseOf(step: Step, state: TentsState): LineCase | null {
+  if (step.rung !== "lineCount" || step.move.type !== "cells") return null;
+  const { cells } = step.move;
+  if (cells[0].v === NONTENT)
+    return step.continuesPrevious ? "betweenThem" : "countMet";
+  const open = stepMarks(step)
+    .of("stripes", CELL)
+    .filter((p) => state.grid[p.y * state.w + p.x] === BLANK);
+  return open.length === cells.length ? "allOpen" : "noSpareRoom";
+}
 
-/** A line count's sentence, told apart by its opening words. Any leg of the
- * firing may say it: the square between two tents is a later leg, and is
- * another premise's once the tents beside it are placed. */
+/** A line count's case. Any leg of the opening firing may be it: the square
+ * between two tents is a later leg, and is another premise's once the tents
+ * beside it are placed. */
 const lineCase =
-  (sentence: RegExp) =>
-  (_step: unknown, state: TentsState): boolean => {
-    const [opening] = tentsPlan(state).plan;
-    return (
-      opening?.firing.reason.kind === "lineCount" &&
-      opening.steps.some((s) => sentence.test(s.explanation))
-    );
-  };
+  (which: LineCase) =>
+  (_step: Step, state: TentsState): boolean =>
+    tentsPlan(state).plan[0]?.steps.some((s) => lineCaseOf(s, state) === which) ??
+    false;
 
 /** A step deciding at least `n` grass squares. */
 const grass =
@@ -215,74 +226,15 @@ const pinned = describeHintPins({
   game: tentsGame,
   params: SHAPES,
   kinds: {
-    noTree: rests("noTree"),
-    treesDone: rests("treesDone"),
-    nextToTent: rests("nextToTent"),
-    treeSingle: rests("treeSingle"),
-    treeDiagonal: rests("treeDiagonal"),
-    lineCount: rests("lineCount"),
-    lineNeighbors: rests("lineNeighbors"),
-    tentLink: rests("tentLink"),
-    treeLink: rests("treeLink"),
-    countMet: lineCase(/already has|number is 0/),
-    allOpen: lineCase(/has only \d+ open/),
-    noSpareRoom: lineCase(/have room for only/),
-    betweenThem: lineCase(/, for tents never touch\.$/),
+    countMet: lineCase("countMet"),
+    allOpen: lineCase("allOpen"),
+    noSpareRoom: lineCase("noSpareRoom"),
+    betweenThem: lineCase("betweenThem"),
     grass: grass(1),
     grassOfSeveral: grass(2),
     link: (step: Step) => step.move.type === "link",
   },
   pins: {
-    /** Held on 60 of 2560 positions walked. */
-    noTree: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
-    /** Held on 330 of 2560 positions walked. */
-    treesDone: {
-      id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
-      moves:
-        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":0,"y":2,"v":2},{"x":0,"y":4,"v":2},{"x":0,"y":6,"v":2}]}]',
-    },
-    /** Held on 655 of 2560 positions walked. */
-    nextToTent: {
-      id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
-      moves:
-        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"link","x":7,"y":2,"d":4,"on":true}]',
-    },
-    /** Held on 628 of 2560 positions walked. */
-    treeSingle: {
-      id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
-      moves:
-        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
-    },
-    /** Held on 112 of 2560 positions walked. */
-    treeDiagonal: {
-      id: "8x8de:hfbad_ibdbacj,2,1,1,2,1,2,1,2,1,3,0,3,1,2,1,1",
-      moves:
-        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":6,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":6,"y":2,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":2,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":4,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
-    },
-    /** Held on 657 of 2560 positions walked. */
-    lineCount: {
-      id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
-      moves:
-        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
-    },
-    /** Held on 83 of 2560 positions walked. */
-    lineNeighbors: {
-      id: "10x10dt:cbcbb_aijdabakdffdbg_,3,1,2,3,1,2,1,2,2,3,4,1,2,2,3,1,2,2,1,2",
-      moves:
-        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":8,"y":0,"v":3},{"x":1,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":1,"y":3,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":8,"y":3,"v":3},{"x":3,"y":4,"v":3},{"x":9,"y":4,"v":3},{"x":6,"y":5,"v":3},{"x":8,"y":5,"v":3},{"x":1,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":0,"y":8,"v":3},{"x":5,"y":8,"v":3},{"x":4,"y":9,"v":3},{"x":5,"y":9,"v":3},{"x":6,"y":9,"v":3},{"x":7,"y":9,"v":3}]}]',
-    },
-    /** Held on 31 of 2560 positions walked. */
-    tentLink: {
-      id: "8x8de:hcabfehj_adbb,3,1,1,1,1,1,1,3,1,1,2,1,1,3,0,3",
-      moves:
-        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":7,"y":2,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":1,"y":5,"v":3},{"x":4,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":0,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":0,"y":0,"v":2},{"x":0,"y":2,"v":2},{"x":0,"y":4,"v":2}]},{"type":"cells","cells":[{"x":1,"y":1,"v":3}]},{"type":"cells","cells":[{"x":1,"y":3,"v":3}]}]',
-    },
-    /** Held on 4 of 2560 positions walked. */
-    treeLink: {
-      id: "10x10dt:agaa_aidlcldbdbcadcbd,3,1,2,2,2,1,4,1,1,3,1,4,1,3,1,3,1,1,4,1",
-      moves:
-        '[{"type":"cells","cells":[{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":8,"y":1,"v":3},{"x":0,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":8,"y":2,"v":3},{"x":9,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":9,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":6,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":2,"y":5,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":7,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":6,"y":8,"v":3},{"x":0,"y":9,"v":3},{"x":7,"y":9,"v":3},{"x":9,"y":9,"v":3}]},{"type":"cells","cells":[{"x":9,"y":1,"v":2}]},{"type":"cells","cells":[{"x":8,"y":0,"v":3}]},{"type":"cells","cells":[{"x":1,"y":7,"v":3}]},{"type":"cells","cells":[{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":5,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":5,"y":8,"v":3},{"x":7,"y":8,"v":3}]},{"type":"cells","cells":[{"x":0,"y":8,"v":2},{"x":2,"y":8,"v":2},{"x":4,"y":8,"v":2},{"x":9,"y":8,"v":2}]},{"type":"cells","cells":[{"x":8,"y":9,"v":3}]},{"type":"cells","cells":[{"x":3,"y":7,"v":3},{"x":1,"y":9,"v":3},{"x":3,"y":9,"v":3}]},{"type":"cells","cells":[{"x":5,"y":7,"v":3},{"x":4,"y":9,"v":3}]},{"type":"cells","cells":[{"x":8,"y":7,"v":3},{"x":9,"y":7,"v":3}]},{"type":"link","x":6,"y":7,"d":3,"on":true},{"type":"link","x":6,"y":5,"d":4,"on":true},{"type":"link","x":6,"y":9,"d":2,"on":true},{"type":"cells","cells":[{"x":8,"y":5,"v":3}]}]',
-    },
     /** Held on 206 of 2560 positions walked. */
     countMet: {
       id: "8x8de:_adra_fecbhac,1,2,0,4,0,3,0,2,1,2,1,2,1,3,0,2",
@@ -317,26 +269,64 @@ const pinned = describeHintPins({
       moves:
         '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
     },
+    /** Held on 60 of 2560 positions walked. */
+    noTree: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+    /** Held on 1977 of 2560 positions walked. */
+    treesDone: {
+      id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":0,"y":2,"v":2},{"x":0,"y":4,"v":2},{"x":0,"y":6,"v":2}]}]',
+    },
+    /** Held on 2362 of 2560 positions walked. */
+    nextToTent: {
+      id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"link","x":7,"y":2,"d":4,"on":true}]',
+    },
+    /** Held on 2435 of 2560 positions walked. */
+    treeSingle: {
+      id: "8x8de:bcbeahc_g_iak,0,3,1,2,1,2,0,3,4,0,1,3,0,2,0,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":4,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":0,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":6,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":5,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+    /** Held on 985 of 2560 positions walked. */
+    treeDiagonal: {
+      id: "8x8de:hfbad_ibdbacj,2,1,1,2,1,2,1,2,1,3,0,3,1,2,1,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":4,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":6,"y":0,"v":3},{"x":3,"y":1,"v":3},{"x":5,"y":1,"v":3},{"x":6,"y":2,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":2,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":3,"y":7,"v":3},{"x":4,"y":7,"v":3},{"x":6,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+    /** Held on 2430 of 2560 positions walked. */
+    lineCount: {
+      id: "8x8de:cbfaafihbbdec,3,0,2,1,0,3,0,3,2,0,3,1,1,1,3,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":0,"y":0,"v":3},{"x":1,"y":0,"v":3},{"x":0,"y":1,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":6,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":7,"y":7,"v":3}]}]',
+    },
+    /** Held on 573 of 2560 positions walked. */
+    lineNeighbors: {
+      id: "10x10dt:cbcbb_aijdabakdffdbg_,3,1,2,3,1,2,1,2,2,3,4,1,2,2,3,1,2,2,1,2",
+      moves:
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":8,"y":0,"v":3},{"x":1,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":4,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":1,"y":3,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":6,"y":3,"v":3},{"x":8,"y":3,"v":3},{"x":3,"y":4,"v":3},{"x":9,"y":4,"v":3},{"x":6,"y":5,"v":3},{"x":8,"y":5,"v":3},{"x":1,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":1,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":0,"y":8,"v":3},{"x":5,"y":8,"v":3},{"x":4,"y":9,"v":3},{"x":5,"y":9,"v":3},{"x":6,"y":9,"v":3},{"x":7,"y":9,"v":3}]}]',
+    },
+    /** Held on 534 of 2560 positions walked. */
+    tentLink: {
+      id: "8x8de:hcabfehj_adbb,3,1,1,1,1,1,1,3,1,1,2,1,1,3,0,3",
+      moves:
+        '[{"type":"cells","cells":[{"x":1,"y":0,"v":3},{"x":2,"y":0,"v":3},{"x":3,"y":0,"v":3},{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":2,"y":1,"v":3},{"x":3,"y":2,"v":3},{"x":5,"y":2,"v":3},{"x":7,"y":2,"v":3},{"x":2,"y":3,"v":3},{"x":3,"y":3,"v":3},{"x":4,"y":3,"v":3},{"x":1,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":3,"y":4,"v":3},{"x":4,"y":4,"v":3},{"x":5,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":1,"y":5,"v":3},{"x":4,"y":5,"v":3},{"x":6,"y":5,"v":3},{"x":0,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":7,"y":7,"v":3}]},{"type":"cells","cells":[{"x":0,"y":0,"v":2},{"x":0,"y":2,"v":2},{"x":0,"y":4,"v":2}]},{"type":"cells","cells":[{"x":1,"y":1,"v":3}]},{"type":"cells","cells":[{"x":1,"y":3,"v":3}]}]',
+    },
+    /** Held on 81 of 2560 positions walked. */
+    treeLink: {
+      id: "10x10dt:agaa_aidlcldbdbcadcbd,3,1,2,2,2,1,4,1,1,3,1,4,1,3,1,3,1,1,4,1",
+      moves:
+        '[{"type":"cells","cells":[{"x":5,"y":0,"v":3},{"x":7,"y":0,"v":3},{"x":8,"y":1,"v":3},{"x":0,"y":2,"v":3},{"x":2,"y":2,"v":3},{"x":8,"y":2,"v":3},{"x":9,"y":2,"v":3},{"x":3,"y":3,"v":3},{"x":5,"y":3,"v":3},{"x":7,"y":3,"v":3},{"x":9,"y":3,"v":3},{"x":0,"y":4,"v":3},{"x":2,"y":4,"v":3},{"x":6,"y":4,"v":3},{"x":0,"y":5,"v":3},{"x":2,"y":5,"v":3},{"x":3,"y":5,"v":3},{"x":5,"y":5,"v":3},{"x":7,"y":5,"v":3},{"x":3,"y":6,"v":3},{"x":0,"y":7,"v":3},{"x":2,"y":7,"v":3},{"x":6,"y":8,"v":3},{"x":0,"y":9,"v":3},{"x":7,"y":9,"v":3},{"x":9,"y":9,"v":3}]},{"type":"cells","cells":[{"x":9,"y":1,"v":2}]},{"type":"cells","cells":[{"x":8,"y":0,"v":3}]},{"type":"cells","cells":[{"x":1,"y":7,"v":3}]},{"type":"cells","cells":[{"x":5,"y":4,"v":3},{"x":7,"y":4,"v":3},{"x":5,"y":6,"v":3},{"x":7,"y":6,"v":3},{"x":5,"y":8,"v":3},{"x":7,"y":8,"v":3}]},{"type":"cells","cells":[{"x":0,"y":8,"v":2},{"x":2,"y":8,"v":2},{"x":4,"y":8,"v":2},{"x":9,"y":8,"v":2}]},{"type":"cells","cells":[{"x":8,"y":9,"v":3}]},{"type":"cells","cells":[{"x":3,"y":7,"v":3},{"x":1,"y":9,"v":3},{"x":3,"y":9,"v":3}]},{"type":"cells","cells":[{"x":5,"y":7,"v":3},{"x":4,"y":9,"v":3}]},{"type":"cells","cells":[{"x":8,"y":7,"v":3},{"x":9,"y":7,"v":3}]},{"type":"link","x":6,"y":7,"d":3,"on":true},{"type":"link","x":6,"y":5,"d":4,"on":true},{"type":"link","x":6,"y":9,"d":2,"on":true},{"type":"cells","cells":[{"x":8,"y":5,"v":3}]}]',
+    },
   },
 });
 
 describe("every premise the corpus reaches is reached", () => {
   it("a pin stands for every kind of premise", () => {
-    // The record is exhaustive over the solver's reasons, so a reason added
-    // there without a pinned position fails to compile here.
-    const kinds: Record<TentsReason["kind"], Parameters<typeof pinned>[0]> = {
-      noTree: "noTree",
-      treesDone: "treesDone",
-      nextToTent: "nextToTent",
-      treeSingle: "treeSingle",
-      treeDiagonal: "treeDiagonal",
-      lineCount: "lineCount",
-      lineNeighbors: "lineNeighbors",
-      tentLink: "tentLink",
-      treeLink: "treeLink",
-    };
-    for (const [reason, kind] of Object.entries(kinds))
-      expect(premiseAt(pinned(kind).state)).toBe(reason);
+    // The rungs are the solver's reasons, and a reason with no pinned position
+    // does not compile above. Each pin's plan opens with its premise.
+    for (const rung of TENTS_RUNGS) expect(pinned(rung).steps[0].rung).toBe(rung);
   });
 
   it("says a line's count from the clue, singular and plural", () => {

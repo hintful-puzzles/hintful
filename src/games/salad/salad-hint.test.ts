@@ -82,30 +82,25 @@ const isMarker = (step: Step): boolean =>
 const ghostOf = (step: Step) => (step.highlights as SaladHint).ghost;
 
 /**
- * The three signature techniques, each arm pinned on a position whose hint
- * opens with its sentence, and the entries a step previews. A sentence that
- * names letters holds only on a letters board, and one that names numbers only
- * on a numbers board.
+ * Every rung on a position whose plan speaks it, and the entries a step
+ * previews. The three signature techniques are the border's two rungs (near
+ * the clue and past its reach), a line's two counts, and the note collapse; a
+ * sentence that names letters is spoken only on a letters board, and one that
+ * names numbers only on a numbers board.
  */
 const pinned = describeHintPins({
   game: saladGame,
-  params: [LETTERS, NUMBERS],
+  params: [LETTERS, NUMBERS, { ...LETTERS, diff: DIFF_HARD }],
+  unreached: {
+    note: "it is the implicit reading's step, and Salad's plan sets its notes up itself and always walks the populate reading (`buildSteps`'s `setUp`)",
+    regionsFull:
+      "it is how a single reads on a square with no notes; held on 0 of 2117 positions walked on these 36 boards, where every single follows the populate step",
+    forcing:
+      "held on 0 of 2914 positions walked on 40 letters boards at the solver's forcing tier (5x5, three letters, `DIFF_HARD`); the numbers boards at that tier were not walked through, because the hint throws on one of them",
+    repeatFull:
+      "it is a strike of the hole symbol, and `buildSteps`'s `record` drops every such strike before the walk sees it",
+  },
   kinds: {
-    // Near the clue: the first square that could hold anything must hold the
-    // clue's symbol, so every other symbol is crossed out of it.
-    borderNear:
-      /sees [A-C] first.*leaves only [A-C] for this square, so we must cross out/,
-    // Past its reach: bounded by how many empty squares the line may hold.
-    borderFar:
-      /sees [A-C] first, so every square before its [A-C] must be empty\. This (row|column) has room for only \d+ empty squares?/,
-    // A line's hole and symbol counts, each from its own side.
-    holesPlaced:
-      /already has (its one empty square|both of its empty squares|all \d+ of its empty squares), so this square and the rest of it must hold a number/,
-    numbersPlaced:
-      /(All \d+ numbers of this (row|column) are already placed|We already know which \d+ squares of this (row|column) hold its numbers), so this square and the rest of it must be empty/,
-    // The hole/symbol synchronization, as a note collapse.
-    noteCollapse:
-      /Every letter is ruled out here, so the empty-square mark is the only one left: this square must be empty\./,
     // A marker step previews the entry it asks for, a placement its symbol.
     marker: (step) => isMarker(step),
     previewsCross: (step) => ghostOf(step) === "cross",
@@ -113,35 +108,65 @@ const pinned = describeHintPins({
     previewsNumber: (step) => typeof ghostOf(step) === "number",
   },
   pins: {
-    /** Held on 124 of 1249 positions walked. */
+    /** Held on 693 of 2117 positions walked. */
+    marker: "5n3Bde:dXbXb2a1aX1bOb3c",
+    /** Held on 333 of 2117 positions walked. */
+    previewsCross: "5n3Bde:bXc1ObOg2113Ob",
+    /** Held on 360 of 2117 positions walked. */
+    previewsCircle: "5n3Bde:dXbXb2a1aX1bOb3c",
+    /** Held on 488 of 2117 positions walked. */
+    previewsNumber: {
+      id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
+    },
+    /** Held on 85 of 2117 positions walked. */
+    populate: "5n3Lde:AbCAbCbBaAAaBd,y",
+    /** Held on 439 of 2117 positions walked. */
+    clean: { id: "5n3Bde:Oa2b1bOd3b1Xc2bO", moves: [{ type: "pencilAll" }] },
+    /** Held on 1945 of 2117 positions walked. */
+    dup: "5n3Lde:AbCAbCbBaAAaBd,y",
+    /** Held on 2117 of 2117 positions walked. */
+    single: {
+      id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
+    },
+    /** Held on 1226 of 2117 positions walked. */
+    hiddenSingle: {
+      id: "5n3Bde:bOa21a3b3cOaOf3a",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":3},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":3},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":3},{"x":3,"y":2,"n":3},{"x":4,"y":2,"n":2},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":3},{"x":2,"y":3,"n":3},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":2},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":3},{"x":2,"y":4,"n":3},{"x":4,"y":4,"n":2},{"x":4,"y":4,"n":3}]},{"type":"set","x":2,"y":0,"value":1},{"type":"set","x":4,"y":2,"value":1},{"type":"set","x":0,"y":0,"value":"cross"},{"type":"set","x":4,"y":1,"value":"cross"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":3,"y":0,"n":1},{"x":1,"y":2,"n":1},{"x":2,"y":2,"n":1},{"x":3,"y":2,"n":1},{"x":2,"y":3,"n":1},{"x":4,"y":3,"n":1},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":1}]},{"type":"set","x":3,"y":0,"value":"cross"},{"type":"set","x":1,"y":0,"value":"circle"},{"type":"set","x":4,"y":4,"value":"cross"},{"type":"set","x":4,"y":3,"value":"circle"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":4},{"x":4,"y":3,"n":4}]},{"type":"set","x":1,"y":0,"value":3},{"type":"set","x":4,"y":3,"value":3},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":3}]}]',
+    },
+    /** Held on 331 of 2117 positions walked. */
+    set: {
+      id: "5n3Ldx:bCAbBBCbAdCCBa,y",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":1,"n":2},{"x":4,"y":1,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":2},{"x":1,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":0,"n":1}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":3},{"x":2,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":2,"n":2},{"x":4,"y":2,"n":2}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":4,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":2}]}]',
+    },
+    /** Held on 981 of 2117 positions walked. */
     borderNear: { id: "5n3Lde:AbCAbCbBaAAaBd,y", moves: [{ type: "pencilAll" }] },
-    /** Held on 105 of 1249 positions walked. */
+    /** Held on 984 of 2117 positions walked. */
     borderFar: {
       id: "5n3Lde:AbCAbCbBaAAaBd,y",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3}]}]',
     },
-    /** Held on 103 of 1249 positions walked. */
-    holesPlaced: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 54 of 1249 positions walked. */
-    numbersPlaced: "5n3Bde:bXc1ObOg2113Ob",
-    /** Held on 81 of 1249 positions walked. */
-    noteCollapse: {
+    /** Held on 1889 of 2117 positions walked. */
+    countHolesDone: "5n3Bde:dXbXb2a1aX1bOb3c",
+    /** Held on 1875 of 2117 positions walked. */
+    countLettersDone: "5n3Bde:bXc1ObOg2113Ob",
+    /** Held on 1708 of 2117 positions walked. */
+    crossNaked: {
       id: "5n3Lde:aBaAbAaBcCaCBd,y",
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":0,"y":0,"n":2}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":3}]}]',
     },
-    /** Held on 440 of 1249 positions walked. */
-    marker: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 213 of 1249 positions walked. */
-    previewsCross: "5n3Bde:bXc1ObOg2113Ob",
-    /** Held on 227 of 1249 positions walked. */
-    previewsCircle: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 308 of 1249 positions walked. */
-    previewsNumber: {
-      id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
+    /** Held on 1944 of 2117 positions walked. */
+    circleXNote: {
+      id: "5n3Bde:Xb3aXb2c1b2Xd2bO",
       moves:
-        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
+        '[{"type":"set","x":0,"y":2,"value":"circle"},{"type":"set","x":0,"y":4,"value":"circle"},{"type":"set","x":2,"y":4,"value":"cross"},{"type":"set","x":3,"y":4,"value":"cross"},{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":1,"y":0,"n":3},{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":3},{"x":4,"y":0,"n":3},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":4,"y":1,"n":2},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":2},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":3,"y":2,"n":1},{"x":3,"y":2,"n":2},{"x":3,"y":2,"n":3},{"x":4,"y":2,"n":1},{"x":2,"y":3,"n":1},{"x":2,"y":3,"n":2},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":2},{"x":0,"y":4,"n":2},{"x":4,"y":4,"n":2}]},{"type":"set","x":0,"y":2,"value":3},{"type":"set","x":3,"y":2,"value":"cross"},{"type":"set","x":3,"y":3,"value":"circle"}]',
     },
   },
 });
@@ -198,22 +223,20 @@ describe("salad hint — journeys and highlights", () => {
   });
 
   it("a border step highlights its clue and the run it reasons over", () => {
-    /** The two far arms both conclude *about squares past* the outlined run. */
-    const isFar = (t: string): boolean =>
-      /has room for only|outlined square furthest/.test(t);
     let near = 0;
     let far = 0;
     for (const seed of ["h1", "h2", "h3"]) {
       for (const step of walk(LETTERS, seed).steps) {
-        if (!/sees [A-C] first/.test(step.explanation)) continue;
+        if (step.rung !== "borderNear" && step.rung !== "borderFar") continue;
         const hl = step.highlights as SaladHint;
         // The premise is only visible if the clue itself is lit.
         expect(hl.clues.length).toBe(1);
         expect(hl.area.length).toBeGreaterThan(0);
         const inArea = (t: { x: number; y: number }): boolean =>
           hl.area.some((a) => a.x === t.x && a.y === t.y);
-        if (isFar(step.explanation)) {
-          // The run is where the clue's symbol *can* be; the struck squares lie
+        if (step.rung === "borderFar") {
+          // Both far arms conclude about squares past the outlined run, which
+          // is where the clue's symbol *can* be; the struck squares lie
           // beyond it, which is exactly the deduction.
           for (const t of hl.targets) expect(inArea(t)).toBe(false);
           far++;

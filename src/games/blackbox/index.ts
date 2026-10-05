@@ -32,7 +32,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { answerCount, newDesc } from "./answer.ts";
-import { hint, hintKeepTrack } from "./hint.ts";
+import { BLACKBOX_RUNGS, type BlackboxRung, hint, hintKeepTrack } from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
 import {
   animLength,
@@ -377,7 +377,9 @@ export const blackboxGame: Game<
   BlackboxMove,
   BlackboxUi,
   BlackboxDrawState,
-  Point
+  Point,
+  unknown,
+  BlackboxRung
 > = {
   id: "blackbox",
 
@@ -439,6 +441,7 @@ export const blackboxGame: Game<
 
   hint,
   hintMarks: HINT_MARKS,
+  hintRungs: BLACKBOX_RUNGS,
   hintKeepTrack,
   hintGesture,
 

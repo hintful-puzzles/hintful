@@ -24,7 +24,12 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
+import {
+  LATIN_RUNGS,
+  type PlanRung,
+  runLatinCandidatePlan,
+  valuesOf,
+} from "../../engine/candidate-plan.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
@@ -390,15 +395,20 @@ function narrate(reason: HintReason, m: Mark, o: number): Sentence {
   return narrateLatinReason(reason, m, o);
 }
 
+/** Every rung a Mathrax step can be: the Latin family's, and the one kind of
+ * `MathraxReason`, a clue. */
+export const MATHRAX_RUNGS = [...LATIN_RUNGS, "clue"] as const;
+export type MathraxRung = (typeof MATHRAX_RUNGS)[number];
+
 /** Build the hint plan by walking a working copy of the board the way a person
  * solves it (`runLatinCandidatePlan`), under the player's two pencil
  * preferences. */
 function buildSteps(
   state: MathraxState,
   { autoClean, reading }: CandidatePlanPrefs,
-): HintStep<MathraxMove, MathraxHint>[] {
+): HintStep<MathraxMove, MathraxHint, MathraxRung>[] {
   const o = state.params.o;
-  const steps: HintStep<MathraxMove, MathraxHint>[] = [];
+  const steps: HintStep<MathraxMove, MathraxHint, PlanRung<HintReason>>[] = [];
   const wGrid = Uint8Array.from(state.grid);
   // Deductive only: a guess is not a teachable note strike, so the recording
   // solve is capped below the recursive tier whatever the board's own tier is.
@@ -423,7 +433,7 @@ function hint(
   state: MathraxState,
   _aux?: string,
   ui?: MathraxUi,
-): HintResult<MathraxMove, MathraxHint> {
+): HintResult<MathraxMove, MathraxHint, MathraxRung> {
   return candidateHint(state, ui ?? newUi(state), buildSteps);
 }
 
@@ -533,7 +543,8 @@ export const mathraxGame: Game<
   MathraxUi,
   MathraxDrawState,
   MathraxMistake,
-  MathraxHint
+  MathraxHint,
+  MathraxRung
 > = {
   id: "mathrax",
   canMarkAll: true,
@@ -591,6 +602,7 @@ export const mathraxGame: Game<
   difficulty,
   findMistakes,
   hint,
+  hintRungs: MATHRAX_RUNGS,
   hintMarks: {
     roles: {
       ring: "the cell the step decides, or whose pencil marks it crosses out. The numbers it strikes are crossed through in their own color.",

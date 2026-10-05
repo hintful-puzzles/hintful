@@ -5448,3 +5448,37 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   },
 ]
 `;
+
+exports[`solo: pinned hint positions > says, at each pin 1`] = `
+{
+  "cageMinMax": "This killer cage must total 9, and its other cells leave no room for 9, so pencil in only 1, 2, 3, 4, 5, 6, 7 and 8.",
+  "cageSingle": "This column must total 45; the cages and digits inside it account for all but 5, so its one open cell must be 5.",
+  "cageSums": "No way to make this killer cage total 6 uses 3 in this cell, so we must cross it out.",
+  "clean": "Now clear the easy ones: cross out any number already placed in each cell's row, column or block.",
+  "dup": "The 4 just placed can't repeat in its row, column or block, so we must cross out the 4 from these cells.",
+  "forcing": "Cell 1 is 2 or 1, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 2, this cell's block already has it; if 1, cell 3 is driven to 2, in line with this cell. Either way, 2 is ruled out here, so pencil in only 4 and 9.",
+  "hiddenSingle": "Every other cell in this column rules out 5, so this cell must be 5.",
+  "intersect": "In this column, every cell that can still take 6 lies in one block, so we must cross out the 6 from the rest of it.",
+  "note": "Nothing in this cell's row, column, block or cage rules out a number yet, so pencil in every one.",
+  "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
+  "regionsFull": "This cell's row, column and block already hold every other number, so it can only be 3.",
+  "set": "Other cells in this block already account for 2 and 8, so pencil in only 1 and 6.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 1.",
+}
+`;
+
+exports[`solo: pinned hint positions > says, at each pin 2`] = `
+{
+  "diagonal": "Every other cell in this diagonal rules out 3, so this cell must be 3.",
+  "extraCage": "This column must total 45; the cages and digits inside it account for all but 5, so its one open cell must be 5.",
+  "hiddenSingle": "Every other cell in this column rules out 5, so this cell must be 5.",
+  "lockedPattern": "Their columns fit 2 only in the outlined cells, leaving no other 2 in their rows, so this cell must be 6.",
+}
+`;
+
+exports[`solo: pinned hint positions > says, at each pin 3`] = `
+{
+  "multiMarkStrike": "Now clear the easy ones: cross out any number already placed in each cell's row, column or block.",
+  "regionStrike": "In this column, every cell that can still take 6 lies in one block, so we must cross out the 6 from the rest of it.",
+}
+`;

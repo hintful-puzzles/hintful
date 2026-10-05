@@ -19,7 +19,7 @@ import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
-import { type SinglesHint, singlesGame } from "./index.ts";
+import { type SinglesHint, type SinglesRung, singlesGame } from "./index.ts";
 import {
   COL_HINT,
   COL_HINT_BLACKREF,
@@ -46,82 +46,101 @@ function fromSeed(p: SinglesParams, seed: string): SinglesState {
   return newState(p, desc);
 }
 
-type Step = HintStep<SinglesMove, SinglesHint>;
+type Step = HintStep<SinglesMove, SinglesHint, SinglesRung>;
 
 const stripes = (step: Step): number => stepMarks(step).of("stripes", CELL).length;
 
-/** The rules a crafted board does not reach, each named for the reason the
- * recorder gives it and found by the sentence only it says. */
-const RULE_SENTENCES = {
-  adjBlack: /touch(?:es)? a black square/,
-  // boxedIn also cites an outlined white square, so this is the phrase only
-  // sameLine says.
-  sameLine: /shares? (?:a line|this row|this column) with/,
-  boxedIn: /last neighbor that isn't black/,
-  split: /would cut some of/,
-  offset: /black next to each other/,
-} as const satisfies Record<string, RegExp>;
+/** The rules a crafted board does not reach: each one's pin is a generated
+ * board whose plan opens with it. */
+const GENERATED_RULES = [
+  "adjBlack",
+  "sameLine",
+  "boxedIn",
+  "split",
+  "offset",
+] as const satisfies readonly SinglesRung[];
 
 const pinned = describeHintPins({
   game: singlesGame,
-  params: [{ w: 6, h: 6, diff: "tricky" }],
+  params: [
+    { w: 6, h: 6, diff: "tricky" },
+    { w: 5, h: 5, diff: "easy" },
+  ],
+  seeds: 150,
   kinds: {
-    ...RULE_SENTENCES,
     oneCell: (step: Step) => step.move.sets.length === 1,
     // Several rules (offset, corner-4) force two cells in one firing.
     twoCells: (step: Step) => step.move.sets.length === 2,
-    touchingPairLine: (step: Step) =>
-      /touch, so one of them stays white/.test(step.explanation) && stripes(step) > 0,
-    sharedLine: (step: Step) =>
-      /shares? (?:this row|this column) with/.test(step.explanation) &&
-      stripes(step) > 0,
+    // The circled square's copies all on one of its lines, which is then
+    // hatched; copies on both name no single line.
+    sharedLine: (step: Step) => step.rung === "sameLine" && stripes(step) > 0,
   },
   pins: {
-    /** Held on 92 of 272 positions walked. */
-    adjBlack: {
-      id: "6x6dk:146214162623436526534361613462465334",
-      moves:
-        '[{"sets":[{"x":2,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"black"}]}]',
+    /** Held on 3633 of 5429 positions walked. */
+    oneCell: "6x6dk:146214162623436526534361613462465334",
+    /** Held on 1135 of 5429 positions walked. */
+    twoCells: {
+      id: "6x6dk:614262562311433246423351441133651123",
+      moves: [{ sets: [{ x: 0, y: 3, value: "circle" }] }],
     },
-    /** Held on 99 of 272 positions walked. */
-    sameLine: {
+    /** Held on 1847 of 5429 positions walked. */
+    sharedLine: {
       id: "6x6dk:146214162623436526534361613462465334",
       moves: [{ sets: [{ x: 2, y: 1, value: "circle" }] }],
     },
-    /** Held on 29 of 272 positions walked. */
-    boxedIn: {
-      id: "6x6dk:146214162623436526534361613462465334",
-      moves:
-        '[{"sets":[{"x":2,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"black"}]},{"sets":[{"x":3,"y":1,"value":"circle"},{"x":5,"y":1,"value":"circle"},{"x":4,"y":0,"value":"circle"},{"x":4,"y":2,"value":"circle"}]},{"sets":[{"x":0,"y":0,"value":"black"}]},{"sets":[{"x":1,"y":0,"value":"circle"},{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":5,"y":0,"value":"black"}]},{"sets":[{"x":1,"y":1,"value":"black"}]},{"sets":[{"x":1,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":3,"value":"black"}]},{"sets":[{"x":0,"y":3,"value":"circle"},{"x":2,"y":3,"value":"circle"},{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":5,"value":"black"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]}]',
+    /** Held on 2258 of 5429 positions walked. */
+    sandwich: "6x6dk:146214162623436526534361613462465334",
+    /** Held on 955 of 5429 positions walked. */
+    pair: {
+      id: "6x6dk:445642432165334561225311213556453244",
+      moves: [{ sets: [{ x: 3, y: 3, value: "circle" }] }],
     },
-    /** Held on 8 of 272 positions walked. */
-    split: {
-      id: "6x6dk:231635324553435412511344463361362544",
+    /** Held on 52 of 5429 positions walked. */
+    corner4: {
+      id: "6x6dk:663255261455611642532264154346416613",
       moves:
-        '[{"sets":[{"x":0,"y":3,"value":"circle"}]},{"sets":[{"x":1,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":4,"value":"circle"}]},{"sets":[{"x":1,"y":4,"value":"black"}]},{"sets":[{"x":0,"y":4,"value":"circle"},{"x":2,"y":4,"value":"circle"},{"x":1,"y":3,"value":"circle"},{"x":1,"y":5,"value":"circle"}]},{"sets":[{"x":2,"y":3,"value":"black"}]},{"sets":[{"x":3,"y":3,"value":"circle"},{"x":2,"y":2,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"black"}]},{"sets":[{"x":0,"y":2,"value":"black"}]},{"sets":[{"x":1,"y":2,"value":"circle"},{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":5,"y":1,"value":"black"},{"x":0,"y":5,"value":"black"}]},{"sets":[{"x":4,"y":1,"value":"circle"},{"x":5,"y":0,"value":"circle"},{"x":5,"y":2,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"black"}]},{"sets":[{"x":2,"y":1,"value":"circle"},{"x":3,"y":0,"value":"circle"},{"x":3,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":0,"value":"black"}]},{"sets":[{"x":0,"y":0,"value":"circle"},{"x":2,"y":0,"value":"circle"}]},{"sets":[{"x":3,"y":5,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":0,"value":"circle"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]}]',
+        '[{"sets":[{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":3,"value":"circle"}]}]',
     },
-    /** Held on 4 of 272 positions walked. */
+    /** Held on 490 of 5429 positions walked. */
+    corner3: {
+      id: "6x6dk:125136446533344162432351161354613145",
+      moves:
+        '[{"sets":[{"x":0,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":2,"y":3,"value":"circle"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"circle"}]},{"sets":[{"x":1,"y":0,"value":"circle"}]}]',
+    },
+    /** Held on 2694 of 5429 positions walked. */
+    corner2: {
+      id: "6x6dk:125136446533344162432351161354613145",
+      moves:
+        '[{"sets":[{"x":0,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":2,"y":3,"value":"circle"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"circle"}]}]',
+    },
+    /** Held on 2635 of 5429 positions walked. */
     offset: {
       id: "6x6dk:122513631454336424114662242615325532",
       moves:
         '[{"sets":[{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":2,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]}]',
     },
-    /** Held on 190 of 272 positions walked. */
-    oneCell: "6x6dk:146214162623436526534361613462465334",
-    /** Held on 49 of 272 positions walked. */
-    twoCells: {
-      id: "6x6dk:614262562311433246423351441133651123",
-      moves: [{ sets: [{ x: 0, y: 3, value: "circle" }] }],
+    /** Held on 5203 of 5429 positions walked. */
+    adjBlack: {
+      id: "6x6dk:146214162623436526534361613462465334",
+      moves:
+        '[{"sets":[{"x":2,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"black"}]}]',
     },
-    /** Held on 3 of 272 positions walked. */
-    touchingPairLine: {
-      id: "6x6dk:445642432165334561225311213556453244",
-      moves: [{ sets: [{ x: 3, y: 3, value: "circle" }] }],
-    },
-    /** Held on 88 of 272 positions walked. */
-    sharedLine: {
+    /** Held on 5401 of 5429 positions walked. */
+    sameLine: {
       id: "6x6dk:146214162623436526534361613462465334",
       moves: [{ sets: [{ x: 2, y: 1, value: "circle" }] }],
+    },
+    /** Held on 4960 of 5429 positions walked. */
+    boxedIn: {
+      id: "6x6dk:146214162623436526534361613462465334",
+      moves:
+        '[{"sets":[{"x":2,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":1,"value":"black"}]},{"sets":[{"x":3,"y":1,"value":"circle"},{"x":5,"y":1,"value":"circle"},{"x":4,"y":0,"value":"circle"},{"x":4,"y":2,"value":"circle"}]},{"sets":[{"x":0,"y":0,"value":"black"}]},{"sets":[{"x":1,"y":0,"value":"circle"},{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":5,"y":0,"value":"black"}]},{"sets":[{"x":1,"y":1,"value":"black"}]},{"sets":[{"x":1,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":3,"value":"black"}]},{"sets":[{"x":0,"y":3,"value":"circle"},{"x":2,"y":3,"value":"circle"},{"x":1,"y":4,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":5,"value":"circle"}]},{"sets":[{"x":3,"y":5,"value":"black"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]}]',
+    },
+    /** Held on 3127 of 5429 positions walked. */
+    split: {
+      id: "6x6dk:231635324553435412511344463361362544",
+      moves:
+        '[{"sets":[{"x":0,"y":3,"value":"circle"}]},{"sets":[{"x":1,"y":1,"value":"circle"}]},{"sets":[{"x":4,"y":4,"value":"circle"}]},{"sets":[{"x":1,"y":4,"value":"black"}]},{"sets":[{"x":0,"y":4,"value":"circle"},{"x":2,"y":4,"value":"circle"},{"x":1,"y":3,"value":"circle"},{"x":1,"y":5,"value":"circle"}]},{"sets":[{"x":2,"y":3,"value":"black"}]},{"sets":[{"x":3,"y":3,"value":"circle"},{"x":2,"y":2,"value":"circle"}]},{"sets":[{"x":3,"y":4,"value":"black"}]},{"sets":[{"x":0,"y":2,"value":"black"}]},{"sets":[{"x":1,"y":2,"value":"circle"},{"x":0,"y":1,"value":"circle"}]},{"sets":[{"x":5,"y":1,"value":"black"},{"x":0,"y":5,"value":"black"}]},{"sets":[{"x":4,"y":1,"value":"circle"},{"x":5,"y":0,"value":"circle"},{"x":5,"y":2,"value":"circle"}]},{"sets":[{"x":3,"y":1,"value":"black"}]},{"sets":[{"x":2,"y":1,"value":"circle"},{"x":3,"y":0,"value":"circle"},{"x":3,"y":2,"value":"circle"}]},{"sets":[{"x":1,"y":0,"value":"black"}]},{"sets":[{"x":0,"y":0,"value":"circle"},{"x":2,"y":0,"value":"circle"}]},{"sets":[{"x":3,"y":5,"value":"circle"}]},{"sets":[{"x":5,"y":4,"value":"circle"}]},{"sets":[{"x":4,"y":0,"value":"circle"}]},{"sets":[{"x":2,"y":5,"value":"circle"}]}]',
     },
   },
 });
@@ -187,7 +206,7 @@ describe("deduceHintPlan records the deduction reason", () => {
   });
 
   it("covers the cascade / connectivity / offset rules on generated boards", () => {
-    for (const k of Object.keys(RULE_SENTENCES) as (keyof typeof RULE_SENTENCES)[]) {
+    for (const k of GENERATED_RULES) {
       // The step a hint opens with is the recorder's first firing.
       expect(deduceHintPlan(pinned(k).state)[0].reason.kind).toBe(k);
     }
@@ -391,7 +410,7 @@ function hintFrame(kind: Parameters<typeof pinned>[0]) {
 
 describe("singles hint: the line a sentence names", () => {
   it.each([
-    ["a touching pair", "touchingPairLine"],
+    ["a touching pair", "pair"],
     ["a number sharing a line with an outlined white one", "sharedLine"],
   ] as const)("%s hatches the one row or column it names", (_, kind) => {
     const { recording, step } = hintFrame(kind);

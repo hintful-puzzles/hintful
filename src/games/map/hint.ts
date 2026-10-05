@@ -80,7 +80,19 @@ export interface MapHint {
 /** A deduction's end state for its one target. */
 type SingleWant = { color: number } | { dots: number };
 
-export type MapHintStep = HintStep<MapMove, MapHint>;
+/** Every rung a Map step can be: the two halves of the Mark-all press, by
+ * `markAll`'s own names, and the solver's three rungs, by theirs. The legs
+ * that dot a pair's or a chain's premise share that firing's rung. */
+export const MAP_RUNGS = [
+  "fill",
+  "clean",
+  "onlyColorLeft",
+  "sharedPair",
+  "forcingChain",
+] as const;
+export type MapRung = (typeof MAP_RUNGS)[number];
+
+export type MapHintStep = HintStep<MapMove, MapHint, MapRung>;
 
 /** The working board: the player's colors and dots, advanced as the plan is
  * built. */
@@ -205,9 +217,16 @@ interface Firing {
   legs(w: Work): MapHintStep[];
 }
 
-function step(w: Work, r: number, want: SingleWant, words: Sentence): MapHintStep {
+function step(
+  w: Work,
+  rung: MapRung,
+  r: number,
+  want: SingleWant,
+  words: Sentence,
+): MapHintStep {
   const s: MapHintStep = {
     move: moveFor(r, w.pencil[r], want),
+    rung,
     explanation: words.text,
     words,
     highlights: { targets: [r], want },
@@ -220,6 +239,7 @@ function step(w: Work, r: number, want: SingleWant, words: Sentence): MapHintSte
  * already settled. */
 function narrowLegs(
   w: Work,
+  rung: MapRung,
   targets: readonly number[],
   struck: number,
   speak: (k: number, c: Conclusion) => Sentence,
@@ -228,7 +248,7 @@ function narrowLegs(
   for (const k of targets) {
     if (w.coloring[k] >= 0 || !(colorsLeft(w, k) & struck)) continue;
     const c = narrowing(w, k, struck);
-    const s = step(w, k, wantOf(w, k, c), speak(k, c));
+    const s = step(w, rung, k, wantOf(w, k, c), speak(k, c));
     if (out.length > 0) s.continuesPrevious = true;
     out.push(s);
   }
@@ -266,7 +286,7 @@ function singles(w: Work, b: MapBoard): Firing[] {
           : say.deadDots(r, color);
     out.push({
       reads: [r, ...cited],
-      legs: (w) => [step(w, r, { color }, words)],
+      legs: (w) => [step(w, "onlyColorLeft", r, { color }, words)],
     });
   });
   return out;
@@ -285,11 +305,11 @@ function pairs(b: MapBoard): Firing[] {
     legs: (w) => {
       const pair = [{ region: a }, { region: b2 }];
       return journey([
-        ...premiseDots(w, [a, b2], {
+        ...premiseDots(w, "sharedPair", [a, b2], {
           dot: (_i, r, touched, two) => say.pairDot(r, touched, two),
           trim: (_i, r, two) => say.pairTrim(r, two),
         }),
-        ...narrowLegs(w, ks, v, (k, c) => say.pair(k, pair, v, c)),
+        ...narrowLegs(w, "sharedPair", ks, v, (k, c) => say.pair(k, pair, v, c)),
       ]);
     },
   }));
@@ -322,11 +342,17 @@ function chains(b: MapBoard): Firing[] {
       const numbered = chain.map((region, i) => ({ region, order: i + 1 }));
       // A chain region being dotted is ringed, and keeps its number.
       return journey([
-        ...premiseDots(w, chain, {
+        ...premiseDots(w, "forcingChain", chain, {
           dot: (i, r, touched, two) => say.chainDot(r, i + 1, numbered, touched, two),
           trim: (i, r, two) => say.chainTrim(r, i + 1, numbered, two),
         }),
-        ...narrowLegs(w, ks, 1 << color, chainSentence(w, numbered, color, other)),
+        ...narrowLegs(
+          w,
+          "forcingChain",
+          ks,
+          1 << color,
+          chainSentence(w, numbered, color, other),
+        ),
       ]);
     },
   }));
@@ -376,6 +402,7 @@ interface DotWords {
  */
 function premiseDots(
   w: Work,
+  rung: MapRung,
   regions: readonly number[],
   words: DotWords,
 ): MapHintStep[] {
@@ -389,7 +416,7 @@ function premiseDots(
       if (w.coloring[k] >= 0) touched |= 1 << w.coloring[k];
     const said =
       w.pencil[r] === 0 ? words.dot(i, r, touched, two) : words.trim(i, r, two);
-    out.push(step(w, r, { dots: two }, said));
+    out.push(step(w, rung, r, { dots: two }, said));
   });
   return out;
 }
@@ -416,6 +443,7 @@ function setUp(w: Work, steps: MapHintStep[]): void {
     const words = clean ? say.cleanNeighbors : say.fillAll;
     steps.push({
       move: regionsMove(w.pencil, press.regions),
+      rung: press.kind,
       explanation: words.text,
       words,
       // Rings nothing: a clean strikes from nearly every blank region, and a

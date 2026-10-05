@@ -16,41 +16,52 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { hint, hintKeepTrack } from "./hint.ts";
+import { type FlipRung, hint, hintKeepTrack } from "./hint.ts";
 import { flipGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { shortestAnswer } from "./solver.ts";
 import { encodeBitmap, type FlipMove, type FlipState } from "./state.ts";
 
 const G = flipGame;
 const PRESETS = leafPresets(G).map((e) => e.params);
 
-const outlined = (step: HintStep<FlipMove>) => stepMarks(step).of("outline", CELL);
-const striped = (step: HintStep<FlipMove>) => stepMarks(step).of("stripes", CELL);
+type Step = HintStep<FlipMove, unknown, FlipRung>;
 
-/** Every sentence the hint says, each pinned on a position that opens with it. */
+const outlined = (step: Step) => stepMarks(step).of("outline", CELL);
+const striped = (step: Step) => stepMarks(step).of("stripes", CELL);
+
+/** The cases of a rung that read differently: how many squares a press is the
+ * last chance of and whether it flips any other, whether the answer a press
+ * comes from is the only one, and a last press that lights only itself. */
+const KINDS = {
+  lastChanceOfOne: (step: Step) =>
+    step.rung === "lastChance" &&
+    outlined(step).length === 1 &&
+    striped(step).length > 0,
+  lastChanceOfTwo: (step: Step) =>
+    step.rung === "lastChance" && outlined(step).length > 1 && striped(step).length > 0,
+  lastChanceFlippingNoMore: (step: Step) =>
+    step.rung === "lastChance" && striped(step).length === 0,
+  fromOnlyAnswer: (step: Step, s: FlipState) =>
+    step.rung === "fromTheAnswer" && shortestAnswer(s)?.only === true,
+  fromShortestAnswer: (step: Step, s: FlipState) =>
+    step.rung === "fromTheAnswer" && shortestAnswer(s)?.only === false,
+  lastPressOfOthers: (step: Step) =>
+    step.rung === "lastPress" && outlined(step).length > 0,
+  lastPressOfItself: (step: Step) =>
+    step.rung === "lastPress" && outlined(step).length === 0,
+};
+
+/** Every rung and case of the hint, each pinned on a position that opens with it. */
 const pinned = describeHintPins({
   game: G,
   params: PRESETS,
   descOf: (s: FlipState) =>
     `${encodeBitmap(s.matrix, s.matrix.length)},${encodeBitmap(s.grid, s.grid.length)}`,
-  kinds: {
-    lastChance:
-      /^Row by row, only this square can still light the outlined square, so it must be pressed\. It flips the striped ones? too\.$/,
-    lastChanceOfTwo:
-      /^Row by row, only this square can still light the outlined squares, so it must be pressed\. It flips the striped ones? too\.$/,
-    lastChanceFlippingNoMore:
-      /^Row by row, only this square can still light the outlined squares?, so it must be pressed\.$/,
-    fromOnlyAnswer:
-      /^There is only one way to light the whole board, and it takes \d+ presses\. One of them: press this square\.$/,
-    fromShortestAnswer:
-      /^The whole board can be lit in \d+ presses, and no fewer\. One of them: press this square\.$/,
-    lastPress:
-      /^Press this square: that lights the outlined squares? and finishes the board\.$/,
-    lastPressOfItself: /^Press this square: that finishes the board\.$/,
-  },
+  kinds: KINDS,
   pins: {
     /** Held on 211 of 494 positions walked. */
-    lastChance: "3x3c:d074191345d1644c17058,f68",
+    lastChanceOfOne: "3x3c:d074191345d1644c17058,f68",
     /** Held on 57 of 494 positions walked. */
     lastChanceOfTwo: "3x3c:d074191345d1644c17058,0e0",
     /** Held on 2 of 494 positions walked: only a Random board has a square
@@ -63,24 +74,19 @@ const pinned = describeHintPins({
     fromShortestAnswer:
       "4x4c:c800e400720031008c804e402720131008c804e402720131008c004e00270013,f1a1",
     /** Held on 72 of 494 positions walked: once a board. */
-    lastPress: "3x3c:d074191345d1644c17058,058",
+    lastPressOfOthers: "3x3c:d074191345d1644c17058,058",
     /** Held on 0 of 494 positions walked: it takes a square that flips only
      * itself, so the board is built by hand, each square flipping itself
      * alone and the first one dark. */
     lastPressOfItself: "3x3r:802008020080200802008,800",
+    lastPress: "3x3c:d074191345d1644c17058,058",
+    lastChance: "3x3c:d074191345d1644c17058,f68",
+    fromTheAnswer: "3x3c:d074191345d1644c17058,1e8",
   },
 });
 
 describe("Flip hint sentences", () => {
-  for (const kind of [
-    "lastChance",
-    "lastChanceOfTwo",
-    "lastChanceFlippingNoMore",
-    "fromOnlyAnswer",
-    "fromShortestAnswer",
-    "lastPress",
-    "lastPressOfItself",
-  ] as const) {
+  for (const kind of Object.keys(KINDS) as (keyof typeof KINDS)[]) {
     it(`${kind}: draws what it says`, () => {
       const { state, step } = pinned(kind);
       expect(bindingDefects(G, state, G.newUi(state), step)).toEqual([]);

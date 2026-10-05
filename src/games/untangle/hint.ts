@@ -68,6 +68,15 @@ import {
   type UntangleState,
 } from "./state.ts";
 
+/** What a step is, by the sentence its move earns: a move that removes
+ * crossings of its point, one that removes none, and a leg of an endgame's
+ * journey of several points. */
+export const UNTANGLE_RUNGS = ["clear", "rearrange", "journey"] as const;
+export type UntangleRung = (typeof UNTANGLE_RUNGS)[number];
+
+type Step = HintStep<UntangleMove, unknown, UntangleRung>;
+type Said = { rung: UntangleRung; words: Sentence };
+
 /** Spots tried per axis. Offset from the grid lines so a spot is not
  * collinear with points that sit on whole or half units. */
 const GRID = 24;
@@ -581,19 +590,20 @@ function plan(board: Board, vertex: number, to: RationalPoint): Planned {
 /** A step's sentence. A move to the solved layout is narrated by what it does
  * on the board — the layout itself is nothing the player can see — and by the
  * crossings the next move removes, when that repays what this one adds. */
-function narrate(p: Planned, next: Planned | null): Sentence {
+function narrate(p: Planned, next: Planned | null): Said {
   const m: UntangleMarks = {
     vertex: p.vertex,
     to: p.to,
     cleared: p.cleared,
     marked: [],
   };
-  if (p.after < p.before) return say.clear(m, p.before, p.after);
+  if (p.after < p.before)
+    return { rung: "clear", words: say.clear(m, p.before, p.after) };
   // "…but frees a move that removes N" justifies the move, so it is said only
   // when the next move takes back at least what this one adds.
   const gain = next === null ? 0 : next.before - next.after;
   const opens = gain > 0 && gain >= p.after - p.before ? gain : null;
-  return say.rearrange(m, p.before, p.after, opens);
+  return { rung: "rearrange", words: say.rearrange(m, p.before, p.after, opens) };
 }
 
 /**
@@ -719,7 +729,7 @@ export function deduceUntangleHintPlan(
   state: UntangleState,
   aux?: string,
   snap = false,
-): HintResult<UntangleMove> {
+): HintResult<UntangleMove, unknown, UntangleRung> {
   const board = new Board(state.n, state.w, state.edges, state.pts.slice());
   board.snap = snap;
   const layout = solvedLayout(state.n, state.w, state.edges, aux);
@@ -774,9 +784,9 @@ export function deduceUntangleHintPlan(
 
   // `next` is now the move after the plan's last step, so that step is narrated
   // exactly as it would be at the head of the next request's plan.
-  const steps = planned.map((p, i): HintStep<UntangleMove> => {
-    const words = narrate(p, planned[i + 1] ?? next);
-    return { move: placeMove(p.vertex, p.to), explanation: words.text, words };
+  const steps = planned.map((p, i): Step => {
+    const { rung, words } = narrate(p, planned[i + 1] ?? next);
+    return { move: placeMove(p.vertex, p.to), rung, explanation: words.text, words };
   });
   return { ok: true, steps };
 }
@@ -810,11 +820,8 @@ export function untangleKeepTrack(
  * near its own that the pointer can land on with the same crossings, or when,
  * so moved, the journey no longer does what its first leg says.
  */
-function journey(
-  board: Board,
-  { moves, finishes }: Endgame,
-): HintStep<UntangleMove>[] | null {
-  const steps: HintStep<UntangleMove>[] = [];
+function journey(board: Board, { moves, finishes }: Endgame): Step[] | null {
+  const steps: Step[] = [];
   for (const [i, leg] of moves.entries()) {
     const { vertex } = leg;
     const to = board.steadyWhere(vertex) ? board.land(vertex, leg.to) : null;
@@ -828,12 +835,16 @@ function journey(
       cleared: p.cleared,
       marked: moves.slice(i + 1).map((mv) => mv.vertex),
     };
-    const words =
+    const { rung, words }: Said =
       moves.length === 1
         ? narrate(p, null)
-        : say.journey(m, i, moves.length, finishes, p.before, p.after);
+        : {
+            rung: "journey",
+            words: say.journey(m, i, moves.length, finishes, p.before, p.after),
+          };
     steps.push({
       move: placeMove(vertex, to),
+      rung,
       explanation: words.text,
       words,
       ...(i > 0 ? { continuesPrevious: true } : {}),

@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`slant: pinned hint positions > says, at each pin 1`] = `
+{
+  "clue-empty": "This 0 clue is touched by no diagonals, so these squares must slant away from it.",
+  "clue-fill": "This 1 clue needs a line from every square around it, so this square must slant toward it.",
+  "clueWithSecondSquare": "This 0 clue is touched by no diagonals, so these squares must slant away from it.",
+  "deadend": "The outlined squares leave two corners of this square one way out each, so it must slant the other way or seal a loop.",
+  "equiv": "The outlined mark links this square to the outlined square, so it must be a backslash too.",
+  "loop": "Diagonals in the outlined squares join two corners of this square, so it must slant the other way to avoid a loop.",
+  "mark-clue": "This 1 clue needs one line, from just these two squares, so they must slant the same way.",
+  "mark-v": "These two can't both slant away from either 3, so they must slant the same way.",
+}
+`;

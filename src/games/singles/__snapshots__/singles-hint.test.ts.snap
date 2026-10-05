@@ -2357,3 +2357,21 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   },
 ]
 `;
+
+exports[`singles: pinned hint positions > says, at each pin 1`] = `
+{
+  "adjBlack": "These squares (6, 3, 1 and 2) touch a black square (outlined), and black squares can't touch, so they must be white.",
+  "boxedIn": "This 6 is the outlined white square's last neighbor that isn't black, so it must be white to keep that square joined.",
+  "corner2": "A touching pair of 4s sits at the corner, so one must be black. Blacking out this 2 would force the 4 beside the corner black, leaving the corner 1 boxed in, so it must stay white.",
+  "corner3": "This inner 3 matches both outlined 3s flanking the outlined corner 6; keeping it white would make both black and box the corner in, so it must be black.",
+  "corner4": "This corner 5 matches both its outlined neighbors; keeping it white would make both black and box it in, so it and the 5 diagonally inside must be black.",
+  "offset": "There's a pair of 2s in one column and another pair in the next, lined up so that blacking out the ringed 5 would force two of the 2s to be black next to each other, and black squares can't touch, so it must be white.",
+  "oneCell": "The outlined 6s sit one square apart, so one of them must be black: the 2 between them must be white.",
+  "pair": "The outlined 4s touch, so one of them stays white and uses up the 4 in this row: the ringed 4 must be black.",
+  "sameLine": "This 2 shares this row with the outlined white 2, which already uses that number, so it must be black.",
+  "sandwich": "The outlined 6s sit one square apart, so one of them must be black: the 2 between them must be white.",
+  "sharedLine": "This 2 shares this row with the outlined white 2, which already uses that number, so it must be black.",
+  "split": "Blacking out this 4 would cut some of the outlined squares off from the rest of the white region, so it must be white.",
+  "twoCells": "These 4s share this column with the outlined white 4, which already uses that number, so they must be black.",
+}
+`;

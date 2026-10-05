@@ -37,6 +37,16 @@ import {
   type SideNote,
 } from "./state.ts";
 
+/** What a step rests on: the hardest reason it cites for ruling a turning
+ * out, by `Why`'s kinds. A turn and the lock after it are one firing. */
+export const NET_RUNGS = ["side", "loop", "sealed"] as const;
+export type NetRung = (typeof NET_RUNGS)[number];
+
+function rungOf(step: Step): NetRung {
+  const cited = (kind: NetRung) => step.because.some((b) => b.why.kind === kind);
+  return cited("sealed") ? "sealed" : cited("loop") ? "loop" : "side";
+}
+
 /** What keep-track compares a move against. The marks are the step's words'. */
 export type NetHint =
   | { readonly kind: "note"; readonly side: SideMark }
@@ -155,13 +165,14 @@ export function netHint(
   state: NetState,
   verbs: Verbs,
   ui: NetUi,
-): HintResult<NetMove, NetHint> {
+): HintResult<NetMove, NetHint, NetRung> {
   const f = new Facts(state);
   let s = state;
-  const steps: HintStep<NetMove, NetHint>[] = [];
+  const steps: HintStep<NetMove, NetHint, NetRung>[] = [];
   for (let step = nextStep(f); step !== null; step = nextStep(f)) {
     const p = premisesOf(f, step);
     const at = pointOf(f, step.at);
+    const rung = rungOf(step);
     if (step.kind === "note") {
       const side = sideOf(f, step.at, step.dir, step.value);
       const words = say.note(at, s.tiles[step.at] & 0xf, side, step.dir, p);
@@ -174,6 +185,7 @@ export function netHint(
       };
       steps.push({
         move,
+        rung,
         explanation: words.text,
         words,
         highlights: { kind: "note", side },
@@ -185,6 +197,7 @@ export function netHint(
         const words = say.turn(at, step.wires, p);
         steps.push({
           move: turn,
+          rung,
           explanation: words.text,
           words,
           highlights: { kind: "turn", at, wires: step.wires },
@@ -200,6 +213,7 @@ export function netHint(
           : say.lock(at, step.wires, p);
       steps.push({
         move: lock,
+        rung,
         explanation: words.text,
         words,
         highlights: { kind: "lock", at, wires: step.wires },
@@ -223,7 +237,7 @@ export function netHint(
  */
 export function netHintKeepTrack(
   m: NetMove,
-  step: HintStep<NetMove, NetHint>,
+  step: HintStep<NetMove, NetHint, NetRung>,
   state: NetState,
 ): HintTrackVerdict {
   const h = step.highlights;

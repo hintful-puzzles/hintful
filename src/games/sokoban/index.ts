@@ -24,7 +24,13 @@ import { registerGame } from "../../engine/registry.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSokobanDesc } from "./generator.ts";
-import { hint, hintKeepTrack, pushMove } from "./hint.ts";
+import {
+  hint,
+  hintKeepTrack,
+  pushMove,
+  SOKOBAN_RUNGS,
+  type SokobanRung,
+} from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
 import { motionFor, motionLength } from "./motion.ts";
 import {
@@ -317,7 +323,10 @@ export const sokobanGame: Game<
   SokobanState,
   SokobanMove,
   SokobanUi,
-  SokobanDrawState
+  SokobanDrawState,
+  unknown,
+  unknown,
+  SokobanRung
 > = {
   id: "sokoban",
   // Stepping the player is the only gesture; the secondary button has no
@@ -348,6 +357,7 @@ export const sokobanGame: Game<
 
   hint,
   hintMarks: HINT_MARKS,
+  hintRungs: SOKOBAN_RUNGS,
   hintKeepTrack,
   // The walk a player makes to the barrel, a tap toward each square on the
   // way, then the tap that pushes it.

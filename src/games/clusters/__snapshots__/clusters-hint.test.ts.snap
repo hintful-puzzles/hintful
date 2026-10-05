@@ -1,5 +1,16 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`clusters: pinned hint positions > says, at each pin 1`] = `
+{
+  "chain": "Suppose this cell were red: cells 1 and 2 are then forced from it, and by 2 this very cell could no longer touch two red tiles, so this cell must be blue.",
+  "chainWithDanger": "Suppose this cell were red: cells 1 and 2 are then forced from it, and by 2 the outlined tile could no longer touch two of its own color, so this cell must be blue.",
+  "direct": "If this cell were blue, at most one neighbor could ever match it, but it needs to touch two, so it must be red.",
+  "dotOvercount": "The outlined red dot beside this cell already touches its one red tile, so this cell must be blue.",
+  "reachTwoAtTarget": "If this cell were blue, at most one neighbor could ever match it, but it needs to touch two, so it must be red.",
+  "surroundedAtTarget": "Every neighbor of this cell is red. A blue tile here could never touch another blue tile, so it must be red.",
+}
+`;
+
 exports[`hint rendering (tier 2.5) > a chain frame paints the what-if marks and the danger double ring 1`] = `
 [
   {

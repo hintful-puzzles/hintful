@@ -334,6 +334,18 @@ function evident(b: PearlBoard, op: PearlEdgeOp): boolean {
   );
 }
 
+/** The hint's rungs: the kinds of the solver's premises. */
+export const PEARL_RUNGS = [
+  "square",
+  "blackRunsOn",
+  "blackCannotRunOn",
+  "whiteCannotTurn",
+  "whiteTurnsOpposite",
+  "closesEarly",
+  "closesEarlyThrough",
+] as const;
+export type PearlRung = (typeof PEARL_RUNGS)[number];
+
 /**
  * Deduce the plan from the player's lines and crosses.
  *
@@ -344,7 +356,7 @@ function evident(b: PearlBoard, op: PearlEdgeOp): boolean {
 export function pearlHint(
   state: PearlState,
 ):
-  | { ok: true; steps: HintStep<PearlMove, PearlHint>[] }
+  | { ok: true; steps: HintStep<PearlMove, PearlHint, PearlRung>[] }
   | { ok: false; error: HintRefusal } {
   const board = boardOf(state);
   const pass = pearlRecordingPass(board, stepBudget("pearl hint"));
@@ -379,6 +391,7 @@ export function pearlHint(
       const words = narrate(board, f, reason);
       return {
         move: moveOf(board, f.shown),
+        rung: reason.kind,
         explanation: words.text,
         words,
         highlights: { targets: f.shown },

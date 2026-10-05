@@ -64,8 +64,6 @@ interface GuessMarks {
   marked: readonly SlotMark[];
 }
 
-const pegs = (n: number): string => (n === 1 ? "1 peg" : `${n} pegs`);
-
 export function say(
   r: Reason,
   m: GuessMarks,
@@ -130,7 +128,7 @@ export function say(
           );
     case "totalAccounted":
       return proved(
-        phrase`${slots} account for all ${pegs(r.total)} ${row} scored`,
+        phrase`${slots} ${m.slots.length === 1 ? "accounts" : "account"} for ${r.total === 1 ? "the 1 peg" : `all ${r.total} pegs`} ${row} scored`,
         null,
       );
     case "onlyAnswer":

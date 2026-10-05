@@ -28,7 +28,12 @@ import type { Sentence } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { lineSquares, pointOf } from "./hint-marks.ts";
 import { type Counted, type Dir, type LineKind, say } from "./hint-text.ts";
-import { TentsBoard, type TentsFiring, tentsRecordingPass } from "./solver.ts";
+import {
+  TentsBoard,
+  type TentsFiring,
+  type TentsReason,
+  tentsRecordingPass,
+} from "./solver.ts";
 import {
   BLANK,
   checkCompletion,
@@ -55,7 +60,22 @@ import {
  */
 const PLAN_CAP = 24;
 
-type TentsStep = HintStep<TentsMove>;
+/** The solver's rungs and its two link steps, by the `kind` of the reason a
+ * firing carries. */
+export const TENTS_RUNGS = [
+  "noTree",
+  "treesDone",
+  "nextToTent",
+  "treeSingle",
+  "treeDiagonal",
+  "lineCount",
+  "lineNeighbors",
+  "tentLink",
+  "treeLink",
+] as const satisfies readonly TentsReason["kind"][];
+export type TentsRung = (typeof TENTS_RUNGS)[number];
+
+type TentsStep = HintStep<TentsMove, unknown, TentsRung>;
 
 /** The player's board as the solver's: their squares, and their links as the
  * links drawn. */
@@ -186,6 +206,7 @@ function room(squares: number[], open: number[]): number {
 /** One leg: set `cells` to `v`, saying `words`. */
 function cellsLeg(
   state: TentsState,
+  rung: TentsRung,
   cells: number[],
   v: number,
   words: Sentence,
@@ -196,6 +217,7 @@ function cellsLeg(
       type: "cells",
       cells: cells.map((i) => ({ x: i % w, y: Math.floor(i / w), v })),
     },
+    rung,
     explanation: words.text,
     words,
   };
@@ -204,6 +226,7 @@ function cellsLeg(
 /** A step that asks for a link, which may also place its tent. */
 function linkStep(
   state: TentsState,
+  rung: TentsRung,
   sq: number,
   d: number,
   words: Sentence,
@@ -211,6 +234,7 @@ function linkStep(
   const { w } = state;
   return {
     move: { type: "link", x: sq % w, y: Math.floor(sq / w), d, on: true },
+    rung,
     explanation: words.text,
     words,
   };
@@ -226,7 +250,9 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
   const at = (i: number) => pointOf(i, w);
   const pts = (is: readonly number[]) => is.map(at);
   const leg = (cells: number[], v: number, words: Sentence) =>
-    cellsLeg(state, cells, v, words);
+    cellsLeg(state, reason.kind, cells, v, words);
+  const link = (sq: number, d: number, words: Sentence) =>
+    linkStep(state, reason.kind, sq, d, words);
 
   switch (reason.kind) {
     case "tentLink": {
@@ -240,7 +266,7 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
         sq: tent,
         d,
       });
-      return [linkStep(state, tent, d, words)];
+      return [link(tent, d, words)];
     }
     case "treeLink": {
       const { tent, tree } = reason;
@@ -255,7 +281,7 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
         taken.length,
         { sq: tent, d },
       );
-      return [linkStep(state, tent, d, words)];
+      return [link(tent, d, words)];
     }
     case "noTree":
       return [leg(grass, NONTENT, say.noTree(pts(grass)))];
@@ -275,7 +301,7 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
       const taken = takenTents(state, f, tree);
       const d = dirBetween(w, square, tree);
       const words = say.treeSingle(at(square), at(tree), pts(taken), { sq: square, d });
-      return [linkStep(state, square, d, words)];
+      return [link(square, d, words)];
     }
     case "treeDiagonal": {
       if (grass.length !== 1)
@@ -312,7 +338,7 @@ function lineSteps(
   const { squares, open, need, counted } = lineOf(state, f, line);
   const pts = (is: readonly number[]) => is.map((i) => pointOf(i, state.w));
   const leg = (cells: number[], v: number, words: Sentence) =>
-    cellsLeg(state, cells, v, words);
+    cellsLeg(state, f.reason.kind, cells, v, words);
 
   if (need === 0)
     return [
@@ -342,7 +368,7 @@ interface Target {
   want: number;
 }
 
-function targetsOf(step: TentsStep, state: TentsState): Target[] {
+function targetsOf(step: HintStep<TentsMove>, state: TentsState): Target[] {
   const { move } = step;
   const { w, grid } = state;
   if (move.type === "cells")
@@ -381,7 +407,7 @@ function changesBetween(before: TentsState, after: TentsState): Map<number, numb
  */
 export function tentsKeepTrack(
   m: TentsMove,
-  hintStep: TentsStep,
+  hintStep: HintStep<TentsMove>,
   state: TentsState,
 ): HintTrackVerdict {
   if (m.type === "solve") return "off";

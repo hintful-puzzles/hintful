@@ -9,14 +9,13 @@
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { tentsPlan } from "./hint.ts";
 import { LINK, NUMBER } from "./hint-marks.ts";
 import { tentsGame } from "./index.ts";
 import { COL_ERROR, COL_GRID, COL_HINT, COL_MISTAKE, COL_TREELEAF } from "./render.ts";
-import { type TentsReason, tentsSolve } from "./solver.ts";
+import { tentsSolve } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_TRICKY,
@@ -26,7 +25,6 @@ import {
   TENT,
   type TentsMove,
   type TentsParams,
-  type TentsState,
   TREE,
 } from "./state.ts";
 
@@ -38,20 +36,16 @@ function board(p: TentsParams, seed: string) {
   return { id: `${encodeParams(p, true)}:${desc}`, state, soln, links };
 }
 
-const rests =
-  (kind: TentsReason["kind"]) =>
-  (_step: unknown, state: TentsState): boolean =>
-    tentsPlan(state).plan[0]?.firing.reason.kind === kind;
-
 /** A Tricky position for each premise whose frame is asserted below: the
- * firing a plan opens with there rests on it. */
-const pinned = describeHintPins({
+ * step a plan opens with there rests on it, since that is the step a frame
+ * shows. */
+const pinned = describeHintKindPins({
   game: tentsGame,
   params: [{ w: 10, h: 10, diff: DIFF_TRICKY }],
   kinds: {
-    lineCount: rests("lineCount"),
-    lineNeighbors: rests("lineNeighbors"),
-    tentLink: rests("tentLink"),
+    lineCount: (step) => step.rung === "lineCount",
+    lineNeighbors: (step) => step.rung === "lineNeighbors",
+    tentLink: (step) => step.rung === "tentLink",
   },
   pins: {
     /** Held on 112 of 482 positions walked. */

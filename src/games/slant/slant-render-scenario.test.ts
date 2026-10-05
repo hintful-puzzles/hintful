@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { SlantHint } from "./hint.ts";
@@ -20,7 +20,7 @@ const lit = (step: HintStep<unknown>): SlantHint => {
   return step.highlights as SlantHint;
 };
 
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: slantGame,
   params: [
     { w: 5, h: 5, diff: DIFF_EASY },
@@ -29,7 +29,7 @@ const pinned = describeHintPins({
   kinds: {
     // A clue firing: it carries a driving clue.
     clue: (step) => lit(step).clues?.length === 1,
-    loop: /join two corners/,
+    loop: (step) => step.rung === "loop",
   },
   pins: {
     /** Held on 1060 of 1156 positions walked. */
@@ -91,8 +91,7 @@ describe("Slant hint render scenarios", () => {
       game: slantGame,
       id: "12x10dh:d1a1g1a2a123a2a2b222c2223a1b1a2b33b2b1213e3c2b2a11a2a1112b3b322a3b3a32b23b1g2b3a11a11a21222b2b1c11c1b",
       showHint: true,
-      hintUntil: (step) =>
-        /links? this square to the outlined square/.test(step.explanation ?? ""),
+      hintUntil: (step) => step.rung === "equiv",
     });
 
     const h = hint ? lit(hint) : null;

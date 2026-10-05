@@ -20,7 +20,13 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMagnetsDesc } from "./generator.ts";
-import { type MagnetsHighlights, magnetsHint, magnetsKeepTrack } from "./hint.ts";
+import {
+  MAGNETS_RUNGS,
+  type MagnetsHighlights,
+  type MagnetsRung,
+  magnetsHint,
+  magnetsKeepTrack,
+} from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -236,7 +242,8 @@ export const magnetsGame: Game<
   MagnetsUi,
   MagnetsDrawState,
   MagnetsMistake,
-  MagnetsHighlights
+  MagnetsHighlights,
+  MagnetsRung
 > = {
   id: "magnets",
 
@@ -261,6 +268,7 @@ export const magnetsGame: Game<
   solve,
   findMistakes,
   hint: magnetsHint,
+  hintRungs: MAGNETS_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides: one end of a magnet, or a whole tile to make neutral or to mark ?.",

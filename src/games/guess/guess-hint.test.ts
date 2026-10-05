@@ -20,6 +20,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -116,6 +117,96 @@ const DEDUCTIONS: Record<
   blacksAccounted: true,
   totalAccounted: true,
 };
+
+/**
+ * Each rung pinned on a position that speaks it. The hint's own guesses are
+ * chosen to split the answers, and several rules fire only on a row a player
+ * would more likely enter (one color throughout, or a spread that scores
+ * nothing), so the scan's second line enters a guess of its own on every other
+ * row. `probeFits` wants more answers than the probe enumerates, which only
+ * the largest board here has.
+ */
+describeHintPins({
+  game: guessGame,
+  params: ["c4p4g8Bm", "c6p4g10Bm", "c6p4g10BM", "c10p5g12Bm"].map(decodeParams),
+  seeds: 8,
+  maxSteps: 60,
+  stray: (s, turn, hinted): GuessMove | null => {
+    if (hinted?.type === "mark" || s.nextGo % 2 === 0) return hinted;
+    const { npegs, ncolors, allowMultiple } = s.params;
+    const k = turn * 7 + s.nextGo * 3;
+    const pegs = Array.from({ length: npegs }, (_, i) =>
+      allowMultiple && k % 2 === 0
+        ? (k % ncolors) + 1
+        : ((k + i * (1 + (k % (ncolors - 1)))) % ncolors) + 1,
+    );
+    if (!allowMultiple && new Set(pegs).size < npegs) return hinted;
+    return { type: "guess", pegs, holds: pegs.map(() => false) };
+  },
+  pins: {
+    /** Held on 32 of 590 positions walked. */
+    scoredNothing: {
+      id: "c6p4g10Bm:7bd179b6",
+      moves: [
+        { type: "guess", pegs: [1, 1, 2, 2], holds: [false, false, false, false] },
+      ],
+    },
+    /** Held on 93 of 590 positions walked. */
+    noBlack: {
+      id: "c4p4g8Bm:e1948257",
+      moves: [
+        { type: "guess", pegs: [1, 1, 2, 2], holds: [false, false, false, false] },
+      ],
+    },
+    /** Held on 31 of 590 positions walked. */
+    everyPegScored: {
+      id: "c6p4g10BM:7ee4710e",
+      moves:
+        '[{"type":"guess","pegs":[1,2,3,4],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":0,"color":1},{"pos":1,"color":2},{"pos":2,"color":3},{"pos":3,"color":4}],"ruledOut":true}]',
+    },
+    /** Held on 28 of 590 positions walked. */
+    noRepeats: {
+      id: "c6p4g10BM:8469a93a",
+      moves:
+        '[{"type":"guess","pegs":[1,2,3,4],"holds":[false,false,false,false]},{"type":"guess","pegs":[1,2,5,6],"holds":[false,false,false,false]},{"type":"guess","pegs":[1,5,3,6],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":0,"color":1},{"pos":1,"color":5},{"pos":2,"color":3},{"pos":3,"color":6}],"ruledOut":true},{"type":"mark","marks":[{"pos":1,"color":1},{"pos":1,"color":3},{"pos":1,"color":4},{"pos":1,"color":6},{"pos":3,"color":1},{"pos":3,"color":2},{"pos":3,"color":3},{"pos":3,"color":5}],"ruledOut":true}]',
+    },
+    /** Held on 45 of 590 positions walked. */
+    blacksForced: {
+      id: "c6p4g10Bm:00562c08",
+      moves:
+        '[{"type":"guess","pegs":[1,1,2,2],"holds":[false,false,false,false]},{"type":"guess","pegs":[1,3,4,4],"holds":[false,false,false,false]},{"type":"guess","pegs":[1,4,4,5],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":0,"color":1},{"pos":1,"color":4},{"pos":2,"color":4},{"pos":3,"color":5}],"ruledOut":true}]',
+    },
+    /** Held on 25 of 590 positions walked. */
+    blacksAccounted: {
+      id: "c4p4g8Bm:1980e296",
+      moves:
+        '[{"type":"guess","pegs":[1,1,2,2],"holds":[false,false,false,false]},{"type":"guess","pegs":[3,3,3,3],"holds":[false,false,false,false]},{"type":"guess","pegs":[1,3,1,4],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":0,"color":1},{"pos":1,"color":3},{"pos":2,"color":1},{"pos":3,"color":4}],"ruledOut":true},{"type":"guess","pegs":[2,4,2,4],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":0,"color":2},{"pos":1,"color":4},{"pos":2,"color":2}],"ruledOut":true},{"type":"guess","pegs":[3,2,4,2],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":1,"color":1},{"pos":3,"color":1}],"ruledOut":true},{"type":"mark","marks":[{"pos":3,"color":3}],"ruledOut":true}]',
+    },
+    /** Held on 34 of 590 positions walked. */
+    totalAccounted: {
+      id: "c4p4g8Bm:e1948257",
+      moves:
+        '[{"type":"guess","pegs":[1,1,2,2],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":0,"color":1},{"pos":1,"color":1},{"pos":2,"color":2},{"pos":3,"color":2}],"ruledOut":true},{"type":"guess","pegs":[2,1,4,3],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":0,"color":2},{"pos":2,"color":4},{"pos":3,"color":3}],"ruledOut":true},{"type":"guess","pegs":[3,3,3,1],"holds":[false,false,false,false]},{"type":"mark","marks":[{"pos":0,"color":3},{"pos":1,"color":3},{"pos":2,"color":3},{"pos":3,"color":1}],"ruledOut":true}]',
+    },
+    /** Held on 149 of 590 positions walked. */
+    onlyAnswer: {
+      id: "c6p4g10BM:8bfca5e4",
+      moves:
+        '[{"type":"guess","pegs":[1,2,3,4],"holds":[false,false,false,false]},{"type":"guess","pegs":[1,2,3,5],"holds":[false,false,false,false]}]',
+    },
+    /** Held on 48 of 590 positions walked. */
+    opening: "c4p4g8Bm:5380819c",
+    /** Held on 357 of 590 positions walked. */
+    probe: {
+      id: "c4p4g8Bm:5380819c",
+      moves: [
+        { type: "guess", pegs: [1, 1, 2, 2], holds: [false, false, false, false] },
+      ],
+    },
+    /** Held on 36 of 590 positions walked. */
+    probeFits: "c10p5g12Bm:d37db7fbb2",
+  },
+});
 
 describe("every mark the rules prove holds for every answer the rows allow", () => {
   const CONFIGS = [

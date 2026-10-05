@@ -13,135 +13,237 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
-import { REGION } from "./hint-text.ts";
+import { REGION, WALK_MAX } from "./hint-text.ts";
 import { mapGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { neighbors } from "./solver.ts";
 import type { MapMove, MapParams, MapState } from "./state.ts";
 
-/** Every arm the hint speaks, keyed so adding one breaks compilation until it is
- * pinned here or ledgered below. */
-const ARMS = {
-  touches: /^This region touches /,
-  lastDot: /^This region has a single dot/,
-  deadDots: /^This region's other dots match .* must be \w+\.$/,
-  pairDot: /^This region's neighbors show /,
-  pairTrim: /^This region's other dots match .* can only be /,
-  pairPlace: /^The outlined pair .* and must be \w+\.$/,
-  pairStrike: /^The outlined pair .* must go\.$/,
-  pairMark: /^The outlined pair .*: dot [\w ,]+\.$/,
-  chainPlace: /^(?:If region 1 isn't|Every numbered region has) .* and must be \w+\.$/,
-  chainStrike: /^(?:If region 1 isn't|Every numbered region has) .* must go\.$/,
-  chainMark: /^(?:If region 1 isn't|Every numbered region has) .*: dot [\w ,]+\.$/,
-  chainWalk: /^If region 1 isn't \w+, it's \w+, so region 2 is /,
-  chainLongWalk: /^If region 1 isn't \w+, it's \w+, so each numbered region takes /,
-  chainAlternates: /^Every numbered region has a \w+ dot\./,
-  chainDot: /^Region \d+ of the numbered chain touches /,
-  chainTrim: /^Region \d+ of the numbered chain has other dots/,
-} satisfies Record<string, RegExp>;
-type Arm = keyof typeof ARMS;
+/** Every arm the hint speaks: the cases of a rung that read differently. A
+ * step's arms are read off its rung, what it wants and the board it is shown
+ * on ({@link armsOf}), so adding one breaks compilation until it is pinned here
+ * or ledgered below. */
+const ARMS = [
+  // A single: with no dots, with one dot, with dots a neighbor's color kills.
+  "touches",
+  "lastDot",
+  "deadDots",
+  // A pair: its own regions dotted first, then what it rules out of a third.
+  "pairDot",
+  "pairTrim",
+  "pairPlace",
+  "pairStrike",
+  "pairMark",
+  // A chain, the same way, and the three ways its sentence tells the walk.
+  "chainPlace",
+  "chainStrike",
+  "chainMark",
+  "chainWalk",
+  "chainLongWalk",
+  "chainAlternates",
+  "chainDot",
+  "chainTrim",
+] as const;
+type Arm = (typeof ARMS)[number];
 
 /** The regions a step's words outline, with their chain numbers. */
 const evidenceOf = (step: MapHintStep) => stepMarks(step).of("outline", REGION);
 
-/** The arms hint-guided play on a dealt board reaches. */
-const DEALT = {
-  touches: ARMS.touches,
-  deadDots: ARMS.deadDots,
-  pairPlace: ARMS.pairPlace,
-  pairDot: ARMS.pairDot,
-  pairMark: ARMS.pairMark,
-  chainPlace: ARMS.chainPlace,
-  chainStrike: ARMS.chainStrike,
-  chainMark: ARMS.chainMark,
-  chainDot: ARMS.chainDot,
-  chainWalk: ARMS.chainWalk,
-  chainAlternates: ARMS.chainAlternates,
-  chainLongWalk: ARMS.chainLongWalk,
-} satisfies Partial<Record<Arm, RegExp>>;
-type DealtArm = keyof typeof DEALT;
+/** What a region can still be, recomputed here rather than imported: its dots,
+ * or all four without any, less its neighbors' colors. */
+function left(s: MapState, r: number): number {
+  const { graph, n, ngraph } = s.map;
+  let p = s.pencil[r] || 0xf;
+  for (const k of neighbors(graph, n, ngraph, r))
+    if (s.coloring[k] >= 0) p &= ~(1 << s.coloring[k]);
+  return p;
+}
 
-/** A position each dealt arm opens the hint on, at the three teachable tiers. */
+/**
+ * The arms `step` speaks on `s`, the board it is shown on.
+ *
+ * A single's arm is what the region's dots are; a leg that narrows a region
+ * ends in a placement, a strike from its dots, or dots written on a bare one.
+ * A leg writing a pair's premise outlines nothing, and one writing a chain's
+ * is itself one of the numbered regions. The way a chain tells its walk is
+ * read off the chain's dots, which the sentence was chosen from as the
+ * firing's first narrowing leg was built: it is exact for a step that opens a
+ * plan, and a later leg of the same firing may see a board that has moved.
+ */
+function armsOf(step: MapHintStep, s: MapState): Arm[] {
+  const hl = step.highlights;
+  if (!hl || "regions" in hl.want) return [];
+  const { want } = hl;
+  const [t] = hl.targets;
+  const dotted = s.pencil[t] !== 0;
+  const ev = evidenceOf(step).map((e) => e.region);
+  const { graph, n, ngraph } = s.map;
+  switch (step.rung) {
+    case "fill":
+    case "clean":
+      return [];
+    case "onlyColorLeft": {
+      if (!dotted) return ["touches"];
+      const dead = [...neighbors(graph, n, ngraph, t)].some(
+        (k) => s.coloring[k] >= 0 && s.pencil[t] & (1 << s.coloring[k]),
+      );
+      return [dead ? "deadDots" : "lastDot"];
+    }
+    case "sharedPair":
+      if (ev.length === 0) return [dotted ? "pairTrim" : "pairDot"];
+      return ["color" in want ? "pairPlace" : dotted ? "pairStrike" : "pairMark"];
+    case "forcingChain": {
+      if (ev.includes(t)) return [dotted ? "chainTrim" : "chainDot"];
+      const struck = left(s, t) & ~("color" in want ? 1 << want.color : want.dots);
+      const told = ev.every((e) => left(s, e) & struck)
+        ? "chainAlternates"
+        : ev.length <= WALK_MAX
+          ? "chainWalk"
+          : "chainLongWalk";
+      return [
+        "color" in want ? "chainPlace" : dotted ? "chainStrike" : "chainMark",
+        told,
+      ];
+    }
+  }
+}
+
+/** The arms hint-guided play on a dealt board reaches. */
+const DEALT = [
+  "touches",
+  "deadDots",
+  "pairPlace",
+  "pairDot",
+  "pairMark",
+  "chainPlace",
+  "chainStrike",
+  "chainMark",
+  "chainDot",
+  "chainWalk",
+  "chainAlternates",
+  "chainLongWalk",
+] as const satisfies readonly Arm[];
+type DealtArm = (typeof DEALT)[number];
+
+const speaks =
+  (arm: Arm) =>
+  (step: MapHintStep, s: MapState): boolean =>
+    armsOf(step, s).includes(arm);
+
+/** The boards read with the dots filled in first, which is where a plan opens
+ * on the Mark-all press: `fill`, then `clean`. */
+const POPULATED: MapParams = { w: 10, h: 10, n: 12, diff: 0 };
+
+/** A position for every rung, and one each dealt arm opens the hint on, at the
+ * three teachable tiers. */
 const pinned = describeHintPins({
   game: mapGame,
-  params: [0, 1, 2].map((diff): MapParams => ({ w: 15, h: 20, n: 30, diff })),
+  params: [
+    ...[0, 1, 2].map((diff): MapParams => ({ w: 15, h: 20, n: 30, diff })),
+    POPULATED,
+  ],
   seeds: 40,
-  kinds: DEALT,
+  ui: (state) => ({
+    ...mapGame.newUi(state),
+    ...(state.map.n === POPULATED.n ? { candidateReading: "populate" as const } : {}),
+  }),
+  kinds: Object.fromEntries(DEALT.map((arm) => [arm, speaks(arm)])) as Record<
+    DealtArm,
+    ReturnType<typeof speaks>
+  >,
   pins: {
-    /** Held on 1547 of 2480 positions walked. */
+    /** Held on 1547 of 2876 positions walked. */
     touches:
       "15x20n30de:gaabgbaadaeabadccafbccecgacagbhaacgcamaacadacbacaaaagadamaaacbaaibbaabbdibdaccdbaicaabiclaaaddbdlagdvaedbhfabcaacagagaccdacabaabcjaeadcadacakaaaldaabafabbbaaadababaaabcmbbcgbdbbabc,23a2e03d2b3b2a01b3a0",
-    /** Held on 358 of 2480 positions walked. */
+    /** Held on 358 of 2876 positions walked. */
     deadDots: {
       id: "15x20n30dh:nafahabcgceaaaaafabaaaaaaceagaccgckacbcadaabeaacbabccacabceccblaaadccdbcbabadbgacabadddbgaabbfbbcalbjccbbcebbafabaaababagacbeaaaccjaaabbbagciaeagbdjbceacecbfabaaaafabeaebbcbeaabaadabbadcbagbaar,b13d0e2c32f32a1",
       moves:
         '[{"ops":[{"op":"pencil","region":9,"bit":0},{"op":"pencil","region":9,"bit":1}]},{"ops":[{"op":"pencil","region":20,"bit":0},{"op":"pencil","region":20,"bit":1}]},{"ops":[{"op":"pencil","region":13,"bit":2},{"op":"pencil","region":13,"bit":3}]},{"ops":[{"op":"pencil","region":16,"bit":0},{"op":"pencil","region":16,"bit":1}]},{"ops":[{"op":"color","region":17,"color":2}]}]',
     },
-    /** Held on 141 of 2480 positions walked. */
+    /** Held on 141 of 2876 positions walked. */
     pairPlace: {
       id: "15x20n30dn:kadeeacalbaadbaddacaaaacedabcdaacadbaaaababbdabaabdbddaaadiaaaaabaabaacaaabaaaabadaaabfcacbacafbbacaccbaebbaeaccbadaacebcahabaaababaaagbaaccaaiccbcefblcabaaabcaabeaaebbabeaadaaaaeadbdbaaaahaabaaabgaabgbadaaaaecbacaaadaaaeaaaaciacdgadacah,0a1f302c3c01d21a3a",
       moves:
         '[{"ops":[{"op":"pencil","region":3,"bit":1},{"op":"pencil","region":3,"bit":2}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]}]',
     },
-    /** Held on 217 of 2480 positions walked. */
+    /** Held on 217 of 2876 positions walked. */
     pairDot:
       "15x20n30dn:kadeeacalbaadbaddacaaaacedabcdaacadbaaaababbdabaabdbddaaadiaaaaabaabaacaaabaaaabadaaabfcacbacafbbacaccbaebbaeaccbadaacebcahabaaababaaagbaaccaaiccbcefblcabaaabcaabeaaebbabeaadaaaaeadbdbaaaahaabaaabgaabgbadaaaaecbacaaadaaaeaaaaciacdgadacah,0a1f302c3c01d21a3a",
-    /** Held on 21 of 2480 positions walked. */
+    /** Held on 21 of 2876 positions walked. */
     pairMark: {
       id: "15x20n30dh:nafahabcgceaaaaafabaaaaaaceagaccgckacbcadaabeaacbabccacabceccblaaadccdbcbabadbgacabadddbgaabbfbbcalbjccbbcebbafabaaababagacbeaaaccjaaabbbagciaeagbdjbceacecbfabaaaafabeaebbcbeaabaadabbadcbagbaar,b13d0e2c32f32a1",
       moves:
         '[{"ops":[{"op":"pencil","region":9,"bit":0},{"op":"pencil","region":9,"bit":1}]},{"ops":[{"op":"pencil","region":20,"bit":0},{"op":"pencil","region":20,"bit":1}]}]',
     },
-    /** Held on 27 of 2480 positions walked. */
+    /** Held on 27 of 2876 positions walked. */
     chainPlace: {
       id: "15x20n30dh:dbcacasbbaaacagbacabgcabbeabhccadafebaiaacjacaaafadafcbaaaafaibahalbdbebbbabfheaaabdbadacabaaaaclaeaacmaaaaafacaeaecbcdaecbbaddbdaaaabacabcdaaaabcaabacabadabaaccaabaadaaaacabadakabeababbdcbbaabccbcaaabahageo,1021a0a1c20d0c01c2b3",
       moves:
         '[{"ops":[{"op":"pencil","region":8,"bit":2},{"op":"pencil","region":8,"bit":3}]},{"ops":[{"op":"pencil","region":14,"bit":2},{"op":"pencil","region":14,"bit":3}]},{"ops":[{"op":"color","region":15,"color":1}]},{"ops":[{"op":"pencil","region":23,"bit":2},{"op":"pencil","region":23,"bit":3}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":25,"bit":0},{"op":"pencil","region":25,"bit":3}]},{"ops":[{"op":"pencil","region":18,"bit":0},{"op":"pencil","region":18,"bit":3}]}]',
     },
-    /** Held on 2 of 2480 positions walked. */
+    /** Held on 2 of 2876 positions walked. */
     chainStrike: {
       id: "15x20n30dh:baiahalfgbfbeabbbahbbbaeaafaaeffcaaaabaedaabbacabacaabafaabaaacabbfabdfbaaacaabaebcbaacabbbdbbabbbcchaababhagfbajadaccbccdbcaaabbahacbabhabdcbabcbcabaaelababbaahbbbaadaaaccaacadaaajadacbacdaaaabacbamaaaabjbcaaahbbacae,10101e0i1a3a212011",
       moves:
         '[{"ops":[{"op":"color","region":18,"color":1}]},{"ops":[{"op":"color","region":19,"color":2}]},{"ops":[{"op":"color","region":23,"color":0}]},{"ops":[{"op":"color","region":17,"color":1}]},{"ops":[{"op":"color","region":14,"color":3}]},{"ops":[{"op":"pencil","region":5,"bit":2},{"op":"pencil","region":5,"bit":3}]},{"ops":[{"op":"pencil","region":9,"bit":2},{"op":"pencil","region":9,"bit":3}]},{"ops":[{"op":"pencil","region":8,"bit":0},{"op":"pencil","region":8,"bit":1}]},{"ops":[{"op":"pencil","region":12,"bit":1},{"op":"pencil","region":12,"bit":2}]},{"ops":[{"op":"pencil","region":11,"bit":0},{"op":"pencil","region":11,"bit":2}]},{"ops":[{"op":"pencil","region":6,"bit":0},{"op":"pencil","region":6,"bit":3}]},{"ops":[{"op":"pencil","region":7,"bit":0},{"op":"pencil","region":7,"bit":1},{"op":"pencil","region":7,"bit":3}]}]',
     },
-    /** Held on 37 of 2480 positions walked. */
+    /** Held on 37 of 2876 positions walked. */
     chainMark: {
       id: "15x20n30dh:dbfaabsbaacabahbbcfafafbbcablbadabbabaaadbacicccadcaabacddcaacgasbaadbdabaebbcdbdbbahbhbabbabasdtbjaebdfabibccfabadbdaaakcbcacaaaadagbfadbbceacdbbaaaagaabhacaabaabdabaabaaacadcbdicadace,203a2b0b3c0a3a1d3a32201",
       moves:
         '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":5,"bit":1},{"op":"pencil","region":5,"bit":3}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]},{"ops":[{"op":"pencil","region":17,"bit":2},{"op":"pencil","region":17,"bit":3}]}]',
     },
-    /** Held on 128 of 2480 positions walked. */
+    /** Held on 128 of 2876 positions walked. */
     chainDot: {
       id: "15x20n30dh:dbfaabsbaacabahbbcfafafbbcablbadabbabaaadbacicccadcaabacddcaacgasbaadbdabaebbcdbdbbahbhbabbabasdtbjaebdfabibccfabadbdaaakcbcacaaaadagbfadbbceacdbbaaaagaabhacaabaabdabaabaaacadcbdicadace,203a2b0b3c0a3a1d3a32201",
       moves:
         '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]}]',
     },
-    /** Held on 50 of 2480 positions walked. */
+    /** Held on 50 of 2876 positions walked. */
     chainWalk: {
       id: "15x20n30dh:dbfaabsbaacabahbbcfafafbbcablbadabbabaaadbacicccadcaabacddcaacgasbaadbdabaebbcdbdbbahbhbabbabasdtbjaebdfabibccfabadbdaaakcbcacaaaadagbfadbbceacdbbaaaagaabhacaabaabdabaabaaacadcbdicadace,203a2b0b3c0a3a1d3a32201",
       moves:
         '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":5,"bit":1},{"op":"pencil","region":5,"bit":3}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]},{"ops":[{"op":"pencil","region":17,"bit":2},{"op":"pencil","region":17,"bit":3}]}]',
     },
-    /** Held on 11 of 2480 positions walked. */
+    /** Held on 11 of 2876 positions walked. */
     chainAlternates: {
       id: "15x20n30dh:dbcacasbbaaacagbacabgcabbeabhccadafebaiaacjacaaafadafcbaaaafaibahalbdbebbbabfheaaabdbadacabaaaaclaeaacmaaaaafacaeaecbcdaecbbaddbdaaaabacabcdaaaabcaabacabadabaaccaabaadaaaacabadakabeababbdcbbaabccbcaaabahageo,1021a0a1c20d0c01c2b3",
       moves:
         '[{"ops":[{"op":"pencil","region":8,"bit":2},{"op":"pencil","region":8,"bit":3}]},{"ops":[{"op":"pencil","region":14,"bit":2},{"op":"pencil","region":14,"bit":3}]},{"ops":[{"op":"color","region":15,"color":1}]},{"ops":[{"op":"pencil","region":23,"bit":2},{"op":"pencil","region":23,"bit":3}]},{"ops":[{"op":"color","region":24,"color":1}]},{"ops":[{"op":"pencil","region":25,"bit":0},{"op":"pencil","region":25,"bit":3}]},{"ops":[{"op":"pencil","region":18,"bit":0},{"op":"pencil","region":18,"bit":3}]}]',
     },
-    /** Held on 5 of 2480 positions walked. */
+    /** Held on 5 of 2876 positions walked. */
     chainLongWalk: {
       id: "15x20n30dh:fadcceaamabbiaabbacdbaacaccbcagbbccceacaabbbbacaiaacabgacbbacbbaaacebabacaiejasbabgcbceacdbabaaacacababcbbcafchcffaabaadcafebabcabcbaadaacddebjaacbahaabbaaebcaaaeacdahdcceadbaabacebaeabakbobiacafaa,1a2d0013g03a3a103b12",
       moves:
         '[{"ops":[{"op":"color","region":1,"color":3}]},{"ops":[{"op":"color","region":27,"color":2}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":20,"color":2}]},{"ops":[{"op":"color","region":26,"color":3}]},{"ops":[{"op":"pencil","region":4,"bit":0},{"op":"pencil","region":4,"bit":2}]},{"ops":[{"op":"pencil","region":5,"bit":1},{"op":"pencil","region":5,"bit":2}]},{"ops":[{"op":"pencil","region":6,"bit":1},{"op":"pencil","region":6,"bit":2}]},{"ops":[{"op":"pencil","region":13,"bit":1},{"op":"pencil","region":13,"bit":2}]},{"ops":[{"op":"pencil","region":17,"bit":0},{"op":"pencil","region":17,"bit":1}]},{"ops":[{"op":"pencil","region":11,"bit":2},{"op":"pencil","region":11,"bit":3}]},{"ops":[{"op":"pencil","region":15,"bit":0},{"op":"pencil","region":15,"bit":3}]}]',
+    },
+    /** Held on 40 of 2876 positions walked. */
+    fill: "10x10n12de:dabcacaacbddccgacaacdaaaebaaaabaaaeabaaaeabbadcbadbafabaaababababbddaacadbcaaadabagaa,a103a21b1a1",
+    /** Held on 191 of 2876 positions walked. */
+    clean: {
+      id: "10x10n12de:dabcacaacbddccgacaacdaaaebaaaabaaaeabaaaeabbadcbadbafabaaababababbddaacadbcaaadabagaa,a103a21b1a1",
+      moves:
+        '[{"ops":[{"op":"pencil","region":0,"bit":0},{"op":"pencil","region":0,"bit":1},{"op":"pencil","region":0,"bit":2},{"op":"pencil","region":0,"bit":3},{"op":"pencil","region":4,"bit":0},{"op":"pencil","region":4,"bit":1},{"op":"pencil","region":4,"bit":2},{"op":"pencil","region":4,"bit":3},{"op":"pencil","region":7,"bit":0},{"op":"pencil","region":7,"bit":1},{"op":"pencil","region":7,"bit":2},{"op":"pencil","region":7,"bit":3},{"op":"pencil","region":8,"bit":0},{"op":"pencil","region":8,"bit":1},{"op":"pencil","region":8,"bit":2},{"op":"pencil","region":8,"bit":3},{"op":"pencil","region":10,"bit":0},{"op":"pencil","region":10,"bit":1},{"op":"pencil","region":10,"bit":2},{"op":"pencil","region":10,"bit":3}]}]',
+    },
+    /** Held on 2876 of 2876 positions walked. */
+    onlyColorLeft:
+      "15x20n30de:gaabgbaadaeabadccafbccecgacagbhaacgcamaacadacbacaaaagadamaaacbaaibbaabbdibdaccdbaicaabiclaaaddbdlagdvaedbhfabcaacagagaccdacabaabcjaeadcadacakaaaldaabafabbbaaadababaaabcmbbcgbdbbabc,23a2e03d2b3b2a01b3a0",
+    /** Held on 940 of 2876 positions walked. */
+    sharedPair:
+      "15x20n30dn:kadeeacalbaadbaddacaaaacedabcdaacadbaaaababbdabaabdbddaaadiaaaaabaabaacaaabaaaabadaaabfcacbacafbbacaccbaebbaeaccbadaacebcahabaaababaaagbaaccaaiccbcefblcabaaabcaabeaaebbabeaadaaaaeadbdbaaaahaabaaabgaabgbadaaaaecbacaaadaaaeaaaaciacdgadacah,0a1f302c3c01d21a3a",
+    /** Held on 547 of 2876 positions walked. */
+    forcingChain: {
+      id: "15x20n30dh:dbfaabsbaacabahbbcfafafbbcablbadabbabaaadbacicccadcaabacddcaacgasbaadbdabaebbcdbdbbahbhbabbabasdtbjaebdfabibccfabadbdaaakcbcacaaaadagbfadbbceacdbbaaaagaabhacaabaabdabaabaaacadcbdicadace,203a2b0b3c0a3a1d3a32201",
+      moves:
+        '[{"ops":[{"op":"color","region":3,"color":1}]},{"ops":[{"op":"color","region":22,"color":0}]},{"ops":[{"op":"color","region":24,"color":1}]}]',
     },
   },
 });
 
 /** The boards the pins sit on, each from its fresh state: the corpus the
  * whole-plan checks below walk. */
-const pinnedBoards = (): string[] => [
-  ...new Set((Object.keys(DEALT) as DealtArm[]).map((arm) => pinned(arm).id)),
-];
+const pinnedBoards = (): string[] => [...new Set(DEALT.map((arm) => pinned(arm).id))];
 
 /**
  * The arms no fresh board reaches, each with why and with the board built by
@@ -168,19 +270,6 @@ function plan(state: MapState): MapHintStep[] {
   return res.steps as MapHintStep[];
 }
 
-const armOf = (text: string): Arm[] =>
-  (Object.keys(ARMS) as Arm[]).filter((a) => ARMS[a].test(text));
-
-/** What a region can still be, recomputed here rather than imported: its dots,
- * or all four without any, less its neighbors' colors. */
-function left(s: MapState, r: number): number {
-  const { graph, n, ngraph } = s.map;
-  let p = s.pencil[r] || 0xf;
-  for (const k of neighbors(graph, n, ngraph, r))
-    if (s.coloring[k] >= 0) p &= ~(1 << s.coloring[k]);
-  return p;
-}
-
 function adjacent(s: MapState, a: number, b: number): boolean {
   const { graph, n, ngraph } = s.map;
   return [...neighbors(graph, n, ngraph, a)].includes(b);
@@ -203,11 +292,29 @@ function walk(
   return s;
 }
 
+/** Every step of the plan from `state`, with the board it is shown on and the
+ * arms it speaks there. */
+function spoken(state: MapState): { s: MapState; step: MapHintStep; arms: Arm[] }[] {
+  const out: { s: MapState; step: MapHintStep; arms: Arm[] }[] = [];
+  walk(state, plan(state), (s, step) => {
+    out.push({ s, step, arms: armsOf(step, s) });
+  });
+  return out;
+}
+
+/** The words of the arms no dealt board speaks, which no pin's snapshot holds. */
+const BUILT_WORDS: Record<Exclude<Arm, DealtArm>, RegExp> = {
+  lastDot: /^This region has a single dot/,
+  pairStrike: /^The outlined pair .* must go\.$/,
+  chainTrim: /^Region \d+ of the numbered chain has other dots/,
+  pairTrim: /^This region's other dots match .* can only be /,
+};
+
 describe("map hint arms", () => {
   it("accounts for every arm exactly once", () => {
-    const dealt = Object.keys(DEALT);
+    const dealt: readonly string[] = DEALT;
     const built = Object.keys(BUILT);
-    expect([...dealt, ...built].sort()).toEqual(Object.keys(ARMS).sort());
+    expect([...dealt, ...built].sort()).toEqual([...ARMS].sort());
     expect(dealt.filter((a) => built.includes(a))).toEqual([]);
   });
 
@@ -218,8 +325,11 @@ describe("map hint arms", () => {
     const dotted = mapGame.executeMove(start, {
       ops: [{ op: "pencil", region: r, bit: solved.coloring[r] }],
     });
-    const spoken = plan(dotted).filter((s) => s.highlights?.targets[0] === r);
-    expect(spoken.map((s) => armOf(s.explanation))).toEqual([["lastDot"]]);
+    const ofRegion = spoken(dotted).filter(
+      ({ step }) => step.highlights?.targets[0] === r,
+    );
+    expect(ofRegion.map(({ arms }) => arms)).toEqual([["lastDot"]]);
+    expect(ofRegion[0].step.explanation).toMatch(BUILT_WORDS.lastDot);
   });
 
   it("chainTrim: a chain region carrying a dead dot loses it before the chain", () => {
@@ -230,10 +340,12 @@ describe("map hint arms", () => {
       (s, bit) => mapGame.executeMove(s, { ops: [{ op: "pencil", region: r, bit }] }),
       before,
     );
-    const trims = plan(dotted).filter(
-      (s) => s.highlights?.targets[0] === r && ARMS.chainTrim.test(s.explanation),
+    const trims = spoken(dotted).filter(
+      ({ step, arms }) =>
+        step.highlights?.targets[0] === r && arms.includes("chainTrim"),
     );
     expect(trims).toHaveLength(1);
+    expect(trims[0].step.explanation).toMatch(BUILT_WORDS.chainTrim);
   });
 
   it("pairTrim: a pair region carrying a dead dot loses it before the pair", () => {
@@ -243,10 +355,12 @@ describe("map hint arms", () => {
       (s, bit) => mapGame.executeMove(s, { ops: [{ op: "pencil", region: r, bit }] }),
       before,
     );
-    const trims = plan(dotted).filter(
-      (s) => s.highlights?.targets[0] === r && ARMS.pairTrim.test(s.explanation),
+    const trims = spoken(dotted).filter(
+      ({ step, arms }) =>
+        step.highlights?.targets[0] === r && arms.includes("pairTrim"),
     );
     expect(trims).toHaveLength(1);
+    expect(trims[0].step.explanation).toMatch(BUILT_WORDS.pairTrim);
   });
 
   it("pairStrike: a pair's dotted target loses exactly the pair's dots", () => {
@@ -258,9 +372,11 @@ describe("map hint arms", () => {
       before,
     );
     // The pair's own regions may be dotted first, as legs of the same journey.
-    const first = plan(dotted).find((s) => !ARMS.pairDot.test(s.explanation));
-    if (!first) throw new Error("no step after the pair's dots");
-    expect(armOf(first.explanation)).toEqual(["pairStrike"]);
+    const after1 = spoken(dotted).find(({ arms }) => !arms.includes("pairDot"));
+    if (!after1) throw new Error("no step after the pair's dots");
+    const first = after1.step;
+    expect(after1.arms).toEqual(["pairStrike"]);
+    expect(first.explanation).toMatch(BUILT_WORDS.pairStrike);
     expect(first.highlights?.targets).toEqual([k]);
     const after = mapGame.executeMove(dotted, first.move);
     const [a, b] = evidenceOf(first).map((e) => e.region);
@@ -278,7 +394,7 @@ describe("map hint claims hold on the board they are spoken over", () => {
         const hl = step.highlights as MapHint;
         const [t] = hl.targets;
         const ev = evidenceOf(step).map((e) => e.region);
-        const [arm] = armOf(step.explanation);
+        const [arm] = armsOf(step, s);
         expect(arm, step.explanation).toBeDefined();
         expect(s.coloring[t], "the target is blank").toBe(-1);
         if (arm === "touches" || arm === "deadDots" || arm === "lastDot") {
@@ -394,7 +510,7 @@ describe("map hint claims hold on the board they are spoken over", () => {
     for (const id of boards)
       walk(stateOf(id), plan(stateOf(id)), (s, step) => {
         if (step.continuesPrevious) return; // a journey's later legs follow its first
-        const [arm] = armOf(step.explanation);
+        const [arm] = armsOf(step, s);
         if (arm?.startsWith("pair")) {
           seen.pair++;
           expect(single(s), step.explanation).toBe(false);
@@ -595,9 +711,7 @@ describe("map's Mark-all press and the populate reading", () => {
     expect(hintKeepTrack(mPress(start) as MapMove, fill, start)).toBe("completed");
     expect(refreshHintStep(clean, press(start) as MapState)).toBe(clean);
     // Not a step of the implicit plan, which reads the neighbors instead.
-    expect(plan(start).some((s) => /^Start by dotting/.test(s.explanation))).toBe(
-      false,
-    );
+    expect(plan(start).some((s) => s.rung === "fill")).toBe(false);
   });
 
   it("a clean done dot by dot keeps the plan, and a finished one drops the step", () => {

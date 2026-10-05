@@ -13509,3 +13509,25 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
   },
 ]
 `;
+
+exports[`map: pinned hint positions > says, at each pin 1`] = `
+{
+  "chainAlternates": "Every numbered region has a violet dot. If region 1 isn't violet, region 2 must be, and so on every other region to region 4. Either way region 1 or region 4 is violet, and this region touches both, so it can't be violet and must be yellow.",
+  "chainDot": "Region 1 of the numbered chain touches red and teal, so it can only be yellow or violet: dot those.",
+  "chainLongWalk": "If region 1 isn't teal, it's yellow, so each numbered region takes the dot the one before it leaves, down to region 6 being teal. Either way region 1 or region 6 is teal, and this region touches both, so it can't be teal and must be red.",
+  "chainMark": "If region 1 isn't violet, it's yellow, so region 2 is teal and region 3 is violet. Either way region 1 or region 3 is violet, and this region touches both, so it can't be violet: dot yellow and teal.",
+  "chainPlace": "Every numbered region has a violet dot. If region 1 isn't violet, region 2 must be, and so on every other region to region 4. Either way region 1 or region 4 is violet, and this region touches both, so it can't be violet and must be yellow.",
+  "chainStrike": "If region 1 isn't red, it's yellow, so region 2 is teal and region 3 is red. Either way region 1 or region 3 is red, and this region touches both, so it can't be red: its red dot must go.",
+  "chainWalk": "If region 1 isn't violet, it's yellow, so region 2 is teal and region 3 is violet. Either way region 1 or region 3 is violet, and this region touches both, so it can't be violet: dot yellow and teal.",
+  "clean": "Now clear the easy ones: remove from each blank region the dot of every color a neighbor already shows.",
+  "deadDots": "This region's other dots match its neighbors' colors, so it must be violet.",
+  "fill": "Start by dotting all four colors into each blank region, so there is something to cross out.",
+  "forcingChain": "Region 1 of the numbered chain touches red and teal, so it can only be yellow or violet: dot those.",
+  "onlyColorLeft": "This region touches red, teal and violet, so it must be yellow.",
+  "pairDot": "This region's neighbors show red and violet, so it can only be yellow or teal: dot those.",
+  "pairMark": "The outlined pair touch and can only be red or yellow, so they use both. This region touches both, so it can't be either: dot teal and violet.",
+  "pairPlace": "The outlined pair touch and can only be yellow or teal, so they use both. This region touches both, so it can't be either and must be violet.",
+  "sharedPair": "This region's neighbors show red and violet, so it can only be yellow or teal: dot those.",
+  "touches": "This region touches red, teal and violet, so it must be yellow.",
+}
+`;

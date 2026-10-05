@@ -48,9 +48,13 @@ import {
 /** Why a square cannot be the other end of a link. */
 export type Rival = "taken" | "chain" | "number";
 
+/** The rungs a step can be: the firings' kinds, in the order they are tried. */
+export const SIGNPOST_RUNGS = ["follows", "onlyNext", "onlyBefore"] as const;
+export type SignpostRung = (typeof SIGNPOST_RUNGS)[number];
+
 /** One forced link, from `from`'s arrow into `to`, and what it rests on. */
 export interface SignpostFiring {
-  kind: "follows" | "onlyNext" | "onlyBefore";
+  kind: SignpostRung;
   from: number;
   to: number;
   /** The squares `from`'s arrow points at, in order (`onlyNext`). */
@@ -189,7 +193,7 @@ function solvable(state: SignpostState): boolean {
  */
 export function signpostHint(
   state: SignpostState,
-): HintResult<SignpostMove, SignpostHint> {
+): HintResult<SignpostMove, SignpostHint, SignpostRung> {
   if (!solvable(state)) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   const board = cloneState(state);
   const { plan } = deduceHintPlan({
@@ -210,7 +214,7 @@ export function signpostHint(
 function stepOf(
   state: SignpostState,
   f: SignpostFiring,
-): HintStep<SignpostMove, SignpostHint> {
+): HintStep<SignpostMove, SignpostHint, SignpostRung> {
   const { w } = state;
   const at = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
   const highlights: SignpostHint = {
@@ -228,6 +232,7 @@ function stepOf(
       toX: highlights.target.x,
       toY: highlights.target.y,
     },
+    rung: f.kind,
     words: say.firing(f, highlights),
     highlights,
   });

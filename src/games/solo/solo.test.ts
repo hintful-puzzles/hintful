@@ -279,6 +279,7 @@ describe("solo render (initial frame)", () => {
     // (0, 4) shares its sub-block with (0, 3) above it.
     const hint: HintStep<SoloMove, SoloHint> = {
       move: { type: "set", x: 0, y: 4, n: 1, pencil: false },
+      rung: "single",
       explanation: "",
       highlights: { area: [], targets: [{ x: 0, y: 4 }], marks: [] },
     };

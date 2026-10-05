@@ -38,7 +38,13 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { type PearlHint, pearlHint, pearlKeepTrack } from "./hint.ts";
+import {
+  PEARL_RUNGS,
+  type PearlHint,
+  type PearlRung,
+  pearlHint,
+  pearlKeepTrack,
+} from "./hint.ts";
 import { executeMove, interpretUiDrag, status, updateUiDrag } from "./moves.ts";
 import {
   centeredCoord,
@@ -378,7 +384,8 @@ export const pearlGame: Game<
   PearlUi,
   PearlDrawState,
   PearlMistake,
-  PearlHint
+  PearlHint,
+  PearlRung
 > = {
   id: "pearl",
 
@@ -409,6 +416,7 @@ export const pearlGame: Game<
         "the squares the step reasons from: the pearl or square it is about, the squares beside a pearl, or a stretch of loop drawn so far.",
     },
   },
+  hintRungs: PEARL_RUNGS,
   hintKeepTrack: pearlKeepTrack,
   hintGesture,
 

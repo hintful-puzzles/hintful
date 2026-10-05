@@ -42,7 +42,9 @@ import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
+  RECT_RUNGS,
   type RectHint,
+  type RectRung,
   rectHint,
   rectKeepTrack,
   rectRefreshStep,
@@ -392,7 +394,8 @@ export const rectGame: Game<
   RectUi,
   RectDrawState,
   RectMistake,
-  RectHint
+  RectHint,
+  RectRung
 > = {
   id: "rect",
 
@@ -451,6 +454,7 @@ export const rectGame: Game<
         "the squares another clue covers wherever its rectangle goes, which no other rectangle can use.",
     },
   },
+  hintRungs: RECT_RUNGS,
   hintKeepTrack: rectKeepTrack,
   hintGesture,
   refreshHintStep: rectRefreshStep,

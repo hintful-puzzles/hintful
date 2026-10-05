@@ -6,12 +6,12 @@ import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSignpostDesc } from "./generator.ts";
-import { type SignpostHint, signpostKeepTrack } from "./hint.ts";
+import { type SignpostHint, type SignpostRung, signpostKeepTrack } from "./hint.ts";
 import { signpostGame } from "./index.ts";
 import { COL_HINT } from "./render.ts";
 import type { SignpostMove, SignpostParams, SignpostState } from "./state.ts";
 
-type Step = HintStep<SignpostMove, SignpostHint>;
+type Step = HintStep<SignpostMove, SignpostHint, SignpostRung>;
 
 const SIZES: SignpostParams[] = [
   { w: 4, h: 4, forceCornerStart: true },
@@ -21,21 +21,25 @@ const SIZES: SignpostParams[] = [
 ];
 const SEEDS = ["a", "b", "c", "d"];
 
-/** Which sentence a step speaks, by the marks it draws and the words that
- * open it. */
+/** Which sentence a step speaks: its rung, and the marks that decide the
+ * rung's wording. */
 function arm(step: Step): string {
   const h = step.highlights;
   if (!h) return "none";
-  if (/must come right after/.test(step.explanation)) return "follows";
-  if (h.line.length > 0) return "onlyNext";
-  if (/points only at/.test(step.explanation)) return "onlyNextAlone";
-  return h.others.length > 0 ? "onlyBeforeRivals" : "onlyBeforeAlone";
+  switch (step.rung) {
+    case "follows":
+      return "follows";
+    case "onlyNext":
+      return h.line.length > 0 ? "onlyNext" : "onlyNextAlone";
+    case "onlyBefore":
+      return h.others.length > 0 ? "onlyBeforeRivals" : "onlyBeforeAlone";
+  }
 }
 
 function hintOf(state: SignpostState): Step[] {
   const res = signpostGame.hint?.(state);
   if (!res?.ok) throw new Error(`no hint: ${res?.error}`);
-  return res.steps as Step[];
+  return res.steps;
 }
 
 /** Play `steps` on `state`, which the plan was made for. */
@@ -81,6 +85,7 @@ describe("signpost hint keep-track", () => {
   it("completes on the step's own link and goes off on any other", () => {
     const step = {
       move: { type: "link", fromX: 0, fromY: 0, toX: 1, toY: 0 },
+      rung: "follows",
       explanation: "",
       highlights: {
         arrow: { x: 0, y: 0 },
@@ -100,16 +105,27 @@ describe("signpost hint keep-track", () => {
 const pinned = describeHintPins({
   game: signpostGame,
   params: [SIZES[1]],
-  kinds: { onlyNext: (s) => arm(s as Step) === "onlyNext" },
+  // An arrow with several squares along it, which the frame test stripes.
+  kinds: { onlyNextOfSeveral: (s) => arm(s) === "onlyNext" },
   pins: {
     /** Held on 134 of 246 positions walked. */
+    onlyNextOfSeveral: "5x5:degffe1egegb4eccacbbagca25aah",
+    /** Held on 206 of 246 positions walked. */
+    follows: "5x5:cgdffd1bhb18gccfdeddab25aabbhg",
+    /** Held on 246 of 246 positions walked. */
     onlyNext: "5x5:degffe1egegb4eccacbbagca25aah",
+    /** Held on 168 of 246 positions walked. */
+    onlyBefore: {
+      id: "5x5:e24deeee15hgagcedf18h12cbaa25a1babha",
+      moves:
+        '[{"type":"link","fromX":1,"fromY":1,"toX":0,"toY":0},{"type":"link","fromX":3,"fromY":1,"toX":3,"toY":0}]',
+    },
   },
 });
 
 describe("signpost hint frame", () => {
   it("draws the arrow in the hint color, rings its target and stripes the line", () => {
-    const { id, moves, step } = pinned("onlyNext");
+    const { id, moves, step } = pinned("onlyNextOfSeveral");
     const result = renderScenario({ game: signpostGame, id, moves, showHint: true });
     expect(result.hint?.explanation).toBe(step.explanation);
     const h = step.highlights as SignpostHint;

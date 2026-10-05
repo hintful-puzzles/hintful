@@ -69,7 +69,9 @@ import {
 import {
   deduceHintPlan,
   findMistakes,
+  PATTERN_RUNGS,
   type PatternHintMove,
+  type PatternRung,
   solveToString,
 } from "./solver.ts";
 import {
@@ -323,16 +325,17 @@ function narrate(m: PatternHintMove, w: number): Sentence {
   }
 }
 
-function hint(state: PatternState): HintResult<PatternMove, PatternHint> {
+function hint(state: PatternState): HintResult<PatternMove, PatternHint, PatternRung> {
   const plan = deduceHintPlan(state);
   if (plan.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
   const { w } = state.common;
-  const steps: HintStep<PatternMove, PatternHint>[] = plan.map((m) => {
+  const steps: HintStep<PatternMove, PatternHint, PatternRung>[] = plan.map((m) => {
     const words = narrate(m, w);
     return {
       move: { type: "fillCells", value: m.value, cells: m.cells },
+      rung: m.reason.kind,
       explanation: words.text,
       words,
       highlights: { cells: m.cells, value: m.value, w },
@@ -433,7 +436,8 @@ export const patternGame: Game<
   PatternUi,
   PatternDrawState,
   PatternMistake,
-  PatternHint
+  PatternHint,
+  PatternRung
 > = {
   id: "pattern",
 
@@ -469,6 +473,7 @@ export const patternGame: Game<
       stripes: "the row or column the sentence names, running on through its numbers.",
     },
   },
+  hintRungs: PATTERN_RUNGS,
   hintKeepTrack,
   hintGesture,
   findMistakes,

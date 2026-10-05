@@ -6431,3 +6431,10 @@ exports[`Tracks render scenarios > opener frame: clue numbers + A/B labels drawn
   },
 ]
 `;
+
+exports[`tracks: pinned hint positions > says, at each pin 1`] = `
+{
+  "countsWithClue": "This column's clue is 6 and it is 6 squares long, so every square in it must carry track.",
+  "namesLine": "This column's clue is 6 and it is 6 squares long, so every square in it must carry track.",
+}
+`;

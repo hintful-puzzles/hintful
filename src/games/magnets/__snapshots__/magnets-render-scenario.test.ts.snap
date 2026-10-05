@@ -4237,6 +4237,14 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
 ]
 `;
 
+exports[`magnets render scenarios > magnets: pinned hint positions > says, at each pin 1`] = `
+{
+  "countedLine": "This column's clues need a + or − in every one of its empty squares, so each tile there must be a magnet.",
+  "markCountingClues": "This column's clues need a + or − in every one of its empty squares, so each tile there must be a magnet.",
+  "placementWithEvidence": "This magnet's − can't go here, beside another −, so this end must be +.",
+}
+`;
+
 exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`] = `
 [
   {

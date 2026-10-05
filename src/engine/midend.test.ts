@@ -1403,6 +1403,7 @@ function strikeGame(opts: {
         if (present(s, i)) {
           steps.push({
             move: { type: "strike", i } as StrikeMove,
+            rung: "strike",
             explanation: `Strike candidate ${i}`,
             // One journey, so the display stays on across legs (Towers' dup chain).
             continuesPrevious: i > 0,
@@ -1640,7 +1641,10 @@ describe("Midend executeHint plays a step's gesture, never its move", () => {
     // as Net's half turn is two quarter turns.
     const h = harness({
       ...fakeGame,
-      hint: () => ({ ok: true, steps: [{ move: "solve", explanation: "Finish" }] }),
+      hint: () => ({
+        ok: true,
+        steps: [{ move: "solve", rung: "inc", explanation: "Finish" }],
+      }),
       hintKeepTrack: (m, _step, s) =>
         m !== "inc" ? "off" : s.count + 1 >= s.target ? "completed" : "onTrack",
       hintGesture: (s) =>

@@ -389,34 +389,50 @@ function groupRecords(records: HintRecord[]): HintRecord[][] {
   return [...groups.values()];
 }
 
-function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint> {
+/** The solver's rules, by the `kind` of the reason each records. */
+export const SINGLES_RUNGS = [
+  "sandwich",
+  "pair",
+  "corner4",
+  "corner3",
+  "corner2",
+  "offset",
+  "adjBlack",
+  "sameLine",
+  "boxedIn",
+  "split",
+] as const satisfies readonly SinglesReason["kind"][];
+export type SinglesRung = (typeof SINGLES_RUNGS)[number];
+
+function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint, SinglesRung> {
   const records = deduceHintPlan(state);
   if (records.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
   const key = (c: Point): number => c.y * state.w + c.x;
-  const steps: HintStep<SinglesMove, SinglesHint>[] = groupRecords(records).map(
-    (group) => {
-      const reason = group[0].reason;
-      const targets = group.map((r) => ({ x: r.x, y: r.y, value: opValue(r.op) }));
-      const targetKey = new Set(targets.map(key));
-      // The protected corner is drawn in its own color; keep it out of
-      // both the targets and the matching-number evidence.
-      const strand = strandOf(reason).filter((c) => !targetKey.has(key(c)));
-      const strandKey = new Set(strand.map(key));
-      const evidence = evidenceOf(reason).filter(
-        (c) => !targetKey.has(key(c)) && !strandKey.has(key(c)),
-      );
-      const line = namedLine(reason, targets, state.w, state.h);
-      const words = narrate(reason, { targets, evidence, strand, line }, state);
-      return {
-        move: { sets: targets.map((t) => ({ ...t })) },
-        explanation: words.text,
-        words,
-        highlights: { targets, strand },
-      };
-    },
-  );
+  const steps: HintStep<SinglesMove, SinglesHint, SinglesRung>[] = groupRecords(
+    records,
+  ).map((group) => {
+    const reason = group[0].reason;
+    const targets = group.map((r) => ({ x: r.x, y: r.y, value: opValue(r.op) }));
+    const targetKey = new Set(targets.map(key));
+    // The protected corner is drawn in its own color; keep it out of
+    // both the targets and the matching-number evidence.
+    const strand = strandOf(reason).filter((c) => !targetKey.has(key(c)));
+    const strandKey = new Set(strand.map(key));
+    const evidence = evidenceOf(reason).filter(
+      (c) => !targetKey.has(key(c)) && !strandKey.has(key(c)),
+    );
+    const line = namedLine(reason, targets, state.w, state.h);
+    const words = narrate(reason, { targets, evidence, strand, line }, state);
+    return {
+      move: { sets: targets.map((t) => ({ ...t })) },
+      rung: reason.kind,
+      explanation: words.text,
+      words,
+      highlights: { targets, strand },
+    };
+  });
   return { ok: true, steps };
 }
 
@@ -473,7 +489,8 @@ export const singlesGame: Game<
   SinglesUi,
   SinglesDrawState,
   SinglesMistake,
-  SinglesHint
+  SinglesHint,
+  SinglesRung
 > = {
   id: "singles",
 
@@ -497,6 +514,7 @@ export const singlesGame: Game<
   solve,
   difficulty,
   hint,
+  hintRungs: SINGLES_RUNGS,
   hintMarks: {
     roles: {
       ring: "the square the step decides. It is drawn empty: the sentence says whether to shade it or circle it.",

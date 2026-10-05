@@ -19,10 +19,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { boardOf, type PearlHint, pearlKeepTrack } from "./hint.ts";
+import { boardOf, type PearlHint, type PearlRung, pearlKeepTrack } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
 import { executeMove } from "./moves.ts";
@@ -52,7 +53,7 @@ const SHAPES: PearlParams[] = [
 ];
 const SEEDS = ["ph-a", "ph-b", "ph-c"];
 
-type Step = { move: PearlMove; explanation: string; highlights?: PearlHint };
+type Step = HintStep<PearlMove, PearlHint, PearlRung>;
 
 const label = (p: PearlParams, seed: string) =>
   `${p.w}x${p.h} ${p.difficulty === DIFF_EASY ? "Easy" : "Tricky"} / ${seed}`;
@@ -245,14 +246,56 @@ describe("following one step at a time", () => {
   const pinned = describeHintPins({
     game: pearlGame,
     params: SHAPES,
-    seeds: 3,
+    seeds: 30,
+    // A second line of play draws only the first edge of each step. A step
+    // draws a black pearl's run-on with its line, so following it whole never
+    // leaves a run-on for `blackRunsOn` to draw.
+    stray: (_state, _turn, hinted) => (hinted ? { ops: hinted.ops.slice(0, 2) } : null),
     kinds: {
       twoLines: (step) =>
         (step.highlights as PearlHint).targets.filter((t) => t.line).length === 2,
     },
     pins: {
-      /** Held on 137 of 462 positions walked. */
+      /** Held on 3043 of 11189 positions walked. */
       twoLines: "6x6de:cWaBfBcWbWWaWbWiB",
+      /** Held on 11189 of 11189 positions walked. */
+      square: "6x6de:aBiWaWbBWlBaBBb",
+      /** Held on 4273 of 11189 positions walked. */
+      blackRunsOn: {
+        id: "6x6de:cWaBfBcWbWWaWbWiB",
+        moves:
+          '[{"ops":[{"kind":"line","l":1,"x":2,"y":0},{"kind":"line","l":4,"x":3,"y":0}]},{"ops":[{"kind":"line","l":1,"x":3,"y":0},{"kind":"line","l":4,"x":4,"y":0}]},{"ops":[{"kind":"line","l":1,"x":4,"y":0},{"kind":"line","l":4,"x":5,"y":0}]},{"ops":[{"kind":"line","l":8,"x":5,"y":0},{"kind":"line","l":2,"x":5,"y":1}]},{"ops":[{"kind":"line","l":1,"x":0,"y":2},{"kind":"line","l":4,"x":1,"y":2}]},{"ops":[{"kind":"line","l":1,"x":4,"y":5},{"kind":"line","l":4,"x":5,"y":5}]},{"ops":[{"kind":"line","l":8,"x":5,"y":4},{"kind":"line","l":2,"x":5,"y":5}]},{"ops":[{"kind":"line","l":8,"x":2,"y":0},{"kind":"line","l":2,"x":2,"y":1}]}]',
+      },
+      /** Held on 5984 of 11189 positions walked. */
+      blackCannotRunOn: {
+        id: "8x8dt:BbBnWaBaBcWWWkBdBcWbWaWeWc",
+        moves:
+          '[{"ops":[{"kind":"line","l":1,"x":0,"y":0},{"kind":"line","l":4,"x":1,"y":0},{"kind":"line","l":1,"x":1,"y":0},{"kind":"line","l":4,"x":2,"y":0}]},{"ops":[{"kind":"line","l":8,"x":0,"y":0},{"kind":"line","l":2,"x":0,"y":1},{"kind":"line","l":8,"x":0,"y":1},{"kind":"line","l":2,"x":0,"y":2}]},{"ops":[{"kind":"line","l":8,"x":3,"y":0},{"kind":"line","l":2,"x":3,"y":1},{"kind":"line","l":8,"x":3,"y":1},{"kind":"line","l":2,"x":3,"y":2}]},{"ops":[{"kind":"line","l":1,"x":0,"y":5},{"kind":"line","l":4,"x":1,"y":5},{"kind":"line","l":1,"x":1,"y":5},{"kind":"line","l":4,"x":2,"y":5}]},{"ops":[{"kind":"line","l":1,"x":0,"y":6},{"kind":"line","l":4,"x":1,"y":6},{"kind":"line","l":1,"x":1,"y":6},{"kind":"line","l":4,"x":2,"y":6}]},{"ops":[{"kind":"line","l":1,"x":3,"y":7},{"kind":"line","l":4,"x":4,"y":7},{"kind":"line","l":1,"x":4,"y":7},{"kind":"line","l":4,"x":5,"y":7}]},{"ops":[{"kind":"line","l":1,"x":3,"y":6},{"kind":"line","l":4,"x":4,"y":6},{"kind":"line","l":1,"x":4,"y":6},{"kind":"line","l":4,"x":5,"y":6}]}]',
+      },
+      /** Held on 1828 of 11189 positions walked. */
+      whiteCannotTurn: {
+        id: "8x8dt:BbBnWaBaBcWWWkBdBcWbWaWeWc",
+        moves:
+          '[{"ops":[{"kind":"line","l":1,"x":0,"y":0},{"kind":"line","l":4,"x":1,"y":0},{"kind":"line","l":1,"x":1,"y":0},{"kind":"line","l":4,"x":2,"y":0}]},{"ops":[{"kind":"line","l":8,"x":0,"y":0},{"kind":"line","l":2,"x":0,"y":1},{"kind":"line","l":8,"x":0,"y":1},{"kind":"line","l":2,"x":0,"y":2}]},{"ops":[{"kind":"line","l":8,"x":3,"y":0},{"kind":"line","l":2,"x":3,"y":1},{"kind":"line","l":8,"x":3,"y":1},{"kind":"line","l":2,"x":3,"y":2}]},{"ops":[{"kind":"line","l":1,"x":0,"y":5},{"kind":"line","l":4,"x":1,"y":5},{"kind":"line","l":1,"x":1,"y":5},{"kind":"line","l":4,"x":2,"y":5}]},{"ops":[{"kind":"line","l":1,"x":0,"y":6},{"kind":"line","l":4,"x":1,"y":6},{"kind":"line","l":1,"x":1,"y":6},{"kind":"line","l":4,"x":2,"y":6}]},{"ops":[{"kind":"line","l":1,"x":3,"y":7},{"kind":"line","l":4,"x":4,"y":7},{"kind":"line","l":1,"x":4,"y":7},{"kind":"line","l":4,"x":5,"y":7}]},{"ops":[{"kind":"line","l":1,"x":3,"y":6},{"kind":"line","l":4,"x":4,"y":6},{"kind":"line","l":1,"x":4,"y":6},{"kind":"line","l":4,"x":5,"y":6}]},{"ops":[{"kind":"mark","l":1,"x":3,"y":2},{"kind":"mark","l":4,"x":4,"y":2}]},{"ops":[{"kind":"line","l":1,"x":4,"y":2},{"kind":"line","l":4,"x":5,"y":2},{"kind":"line","l":1,"x":5,"y":2},{"kind":"line","l":4,"x":6,"y":2}]},{"ops":[{"kind":"mark","l":1,"x":6,"y":2},{"kind":"mark","l":4,"x":7,"y":2}]}]',
+      },
+      /** Held on 7278 of 11189 positions walked. */
+      whiteTurnsOpposite: {
+        id: "6x6dt:cWaBWeWcWWhBBh",
+        moves:
+          '[{"ops":[{"kind":"line","l":1,"x":2,"y":0},{"kind":"line","l":4,"x":3,"y":0},{"kind":"line","l":1,"x":3,"y":0},{"kind":"line","l":4,"x":4,"y":0}]},{"ops":[{"kind":"line","l":1,"x":4,"y":0},{"kind":"line","l":4,"x":5,"y":0}]},{"ops":[{"kind":"line","l":8,"x":5,"y":0},{"kind":"line","l":2,"x":5,"y":1},{"kind":"line","l":8,"x":5,"y":1},{"kind":"line","l":2,"x":5,"y":2},{"kind":"line","l":8,"x":5,"y":2},{"kind":"line","l":2,"x":5,"y":3}]},{"ops":[{"kind":"line","l":8,"x":0,"y":0},{"kind":"line","l":2,"x":0,"y":1},{"kind":"line","l":8,"x":0,"y":1},{"kind":"line","l":2,"x":0,"y":2},{"kind":"line","l":8,"x":0,"y":2},{"kind":"line","l":2,"x":0,"y":3}]},{"ops":[{"kind":"line","l":1,"x":0,"y":0},{"kind":"line","l":4,"x":1,"y":0}]},{"ops":[{"kind":"line","l":8,"x":4,"y":1},{"kind":"line","l":2,"x":4,"y":2},{"kind":"line","l":8,"x":4,"y":2},{"kind":"line","l":2,"x":4,"y":3}]},{"ops":[{"kind":"line","l":1,"x":3,"y":1},{"kind":"line","l":4,"x":4,"y":1}]}]',
+      },
+      /** Held on 3802 of 11189 positions walked. */
+      closesEarly: {
+        id: "6x6dt:cWWaWcWaWiWcBaWeWa",
+        moves:
+          '[{"ops":[{"kind":"line","l":1,"x":2,"y":0},{"kind":"line","l":4,"x":3,"y":0},{"kind":"line","l":1,"x":3,"y":0},{"kind":"line","l":4,"x":4,"y":0},{"kind":"line","l":1,"x":4,"y":0},{"kind":"line","l":4,"x":5,"y":0}]},{"ops":[{"kind":"line","l":8,"x":5,"y":0},{"kind":"line","l":2,"x":5,"y":1}]},{"ops":[{"kind":"line","l":8,"x":0,"y":0},{"kind":"line","l":2,"x":0,"y":1},{"kind":"line","l":8,"x":0,"y":1},{"kind":"line","l":2,"x":0,"y":2},{"kind":"line","l":8,"x":0,"y":2},{"kind":"line","l":2,"x":0,"y":3}]},{"ops":[{"kind":"line","l":1,"x":0,"y":0},{"kind":"line","l":4,"x":1,"y":0}]},{"ops":[{"kind":"line","l":1,"x":3,"y":1},{"kind":"line","l":4,"x":4,"y":1},{"kind":"line","l":1,"x":4,"y":1},{"kind":"line","l":4,"x":5,"y":1}]},{"ops":[{"kind":"line","l":1,"x":3,"y":5},{"kind":"line","l":4,"x":4,"y":5},{"kind":"line","l":1,"x":4,"y":5},{"kind":"line","l":4,"x":5,"y":5}]},{"ops":[{"kind":"line","l":1,"x":3,"y":4},{"kind":"line","l":4,"x":4,"y":4},{"kind":"line","l":1,"x":4,"y":4},{"kind":"line","l":4,"x":5,"y":4}]},{"ops":[{"kind":"line","l":1,"x":3,"y":3},{"kind":"line","l":4,"x":4,"y":3},{"kind":"line","l":1,"x":4,"y":3},{"kind":"line","l":4,"x":5,"y":3}]},{"ops":[{"kind":"line","l":8,"x":5,"y":4},{"kind":"line","l":2,"x":5,"y":5}]},{"ops":[{"kind":"line","l":8,"x":5,"y":2},{"kind":"line","l":2,"x":5,"y":3}]},{"ops":[{"kind":"line","l":1,"x":4,"y":2},{"kind":"line","l":4,"x":5,"y":2}]},{"ops":[{"kind":"line","l":1,"x":3,"y":2},{"kind":"line","l":4,"x":4,"y":2}]},{"ops":[{"kind":"line","l":8,"x":2,"y":0},{"kind":"line","l":2,"x":2,"y":1}]},{"ops":[{"kind":"line","l":8,"x":1,"y":0},{"kind":"line","l":2,"x":1,"y":1}]},{"ops":[{"kind":"line","l":1,"x":0,"y":3},{"kind":"line","l":4,"x":1,"y":3}]},{"ops":[{"kind":"mark","l":8,"x":2,"y":4},{"kind":"mark","l":2,"x":2,"y":5}]},{"ops":[{"kind":"line","l":8,"x":2,"y":3},{"kind":"line","l":2,"x":2,"y":4},{"kind":"line","l":8,"x":2,"y":2},{"kind":"line","l":2,"x":2,"y":3}]}]',
+      },
+      /** Held on 412 of 11189 positions walked. */
+      closesEarlyThrough: {
+        id: "8x8dt:BaWdBeWeBBjWWWcWgWdBhBBbB",
+        moves:
+          '[{"ops":[{"kind":"line","l":1,"x":0,"y":0},{"kind":"line","l":4,"x":1,"y":0},{"kind":"line","l":1,"x":1,"y":0},{"kind":"line","l":4,"x":2,"y":0},{"kind":"line","l":1,"x":2,"y":0},{"kind":"line","l":4,"x":3,"y":0}]},{"ops":[{"kind":"line","l":8,"x":0,"y":0},{"kind":"line","l":2,"x":0,"y":1},{"kind":"line","l":8,"x":0,"y":1},{"kind":"line","l":2,"x":0,"y":2}]},{"ops":[{"kind":"line","l":1,"x":6,"y":0},{"kind":"line","l":4,"x":7,"y":0},{"kind":"line","l":1,"x":5,"y":0},{"kind":"line","l":4,"x":6,"y":0}]},{"ops":[{"kind":"line","l":8,"x":7,"y":0},{"kind":"line","l":2,"x":7,"y":1},{"kind":"line","l":8,"x":7,"y":1},{"kind":"line","l":2,"x":7,"y":2}]},{"ops":[{"kind":"line","l":8,"x":7,"y":2},{"kind":"line","l":2,"x":7,"y":3},{"kind":"line","l":8,"x":7,"y":3},{"kind":"line","l":2,"x":7,"y":4}]},{"ops":[{"kind":"line","l":8,"x":0,"y":3},{"kind":"line","l":2,"x":0,"y":4},{"kind":"line","l":8,"x":0,"y":4},{"kind":"line","l":2,"x":0,"y":5}]},{"ops":[{"kind":"line","l":8,"x":1,"y":3},{"kind":"line","l":2,"x":1,"y":4},{"kind":"line","l":8,"x":1,"y":4},{"kind":"line","l":2,"x":1,"y":5}]},{"ops":[{"kind":"line","l":8,"x":3,"y":6},{"kind":"line","l":2,"x":3,"y":7},{"kind":"line","l":8,"x":3,"y":5},{"kind":"line","l":2,"x":3,"y":6}]},{"ops":[{"kind":"line","l":1,"x":1,"y":6},{"kind":"line","l":4,"x":2,"y":6},{"kind":"line","l":1,"x":0,"y":6},{"kind":"line","l":4,"x":1,"y":6}]},{"ops":[{"kind":"line","l":8,"x":4,"y":6},{"kind":"line","l":2,"x":4,"y":7},{"kind":"line","l":8,"x":4,"y":5},{"kind":"line","l":2,"x":4,"y":6}]},{"ops":[{"kind":"line","l":1,"x":6,"y":7},{"kind":"line","l":4,"x":7,"y":7},{"kind":"line","l":1,"x":5,"y":7},{"kind":"line","l":4,"x":6,"y":7}]},{"ops":[{"kind":"line","l":8,"x":7,"y":6},{"kind":"line","l":2,"x":7,"y":7},{"kind":"line","l":8,"x":7,"y":5},{"kind":"line","l":2,"x":7,"y":6}]},{"ops":[{"kind":"line","l":8,"x":3,"y":0},{"kind":"line","l":2,"x":3,"y":1}]},{"ops":[{"kind":"mark","l":1,"x":3,"y":2},{"kind":"mark","l":4,"x":4,"y":2}]},{"ops":[{"kind":"line","l":1,"x":2,"y":2},{"kind":"line","l":4,"x":3,"y":2},{"kind":"line","l":1,"x":1,"y":2},{"kind":"line","l":4,"x":2,"y":2}]},{"ops":[{"kind":"line","l":1,"x":4,"y":2},{"kind":"line","l":4,"x":5,"y":2},{"kind":"line","l":1,"x":5,"y":2},{"kind":"line","l":4,"x":6,"y":2}]},{"ops":[{"kind":"line","l":1,"x":4,"y":1},{"kind":"line","l":4,"x":5,"y":1},{"kind":"line","l":1,"x":5,"y":1},{"kind":"line","l":4,"x":6,"y":1}]},{"ops":[{"kind":"line","l":1,"x":4,"y":0},{"kind":"line","l":4,"x":5,"y":0}]},{"ops":[{"kind":"line","l":8,"x":4,"y":0},{"kind":"line","l":2,"x":4,"y":1}]},{"ops":[{"kind":"line","l":8,"x":6,"y":1},{"kind":"line","l":2,"x":6,"y":2}]},{"ops":[{"kind":"line","l":8,"x":4,"y":2},{"kind":"line","l":2,"x":4,"y":3},{"kind":"line","l":8,"x":4,"y":3},{"kind":"line","l":2,"x":4,"y":4}]},{"ops":[{"kind":"line","l":1,"x":6,"y":4},{"kind":"line","l":4,"x":7,"y":4}]},{"ops":[{"kind":"line","l":1,"x":6,"y":5},{"kind":"line","l":4,"x":7,"y":5}]},{"ops":[{"kind":"mark","l":8,"x":2,"y":6},{"kind":"mark","l":2,"x":2,"y":7}]},{"ops":[{"kind":"line","l":8,"x":2,"y":5},{"kind":"line","l":2,"x":2,"y":6},{"kind":"line","l":8,"x":2,"y":4},{"kind":"line","l":2,"x":2,"y":5}]},{"ops":[{"kind":"line","l":1,"x":0,"y":5},{"kind":"line","l":4,"x":1,"y":5}]},{"ops":[{"kind":"line","l":8,"x":0,"y":6},{"kind":"line","l":2,"x":0,"y":7}]},{"ops":[{"kind":"line","l":1,"x":0,"y":7},{"kind":"line","l":4,"x":1,"y":7}]},{"ops":[{"kind":"line","l":1,"x":1,"y":7},{"kind":"line","l":4,"x":2,"y":7}]},{"ops":[{"kind":"line","l":1,"x":2,"y":7},{"kind":"line","l":4,"x":3,"y":7}]},{"ops":[{"kind":"line","l":1,"x":4,"y":7},{"kind":"line","l":4,"x":5,"y":7}]},{"ops":[{"kind":"mark","l":1,"x":0,"y":3},{"kind":"mark","l":4,"x":1,"y":3}]},{"ops":[{"kind":"line","l":8,"x":0,"y":2},{"kind":"line","l":2,"x":0,"y":3}]}]',
+      },
     },
   });
   const twoLineStep = (): { state: PearlState; step: Step } => {

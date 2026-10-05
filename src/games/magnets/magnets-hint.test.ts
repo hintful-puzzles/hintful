@@ -115,6 +115,36 @@ const pinned = describeHintPins({
     },
     /** Held on 365 of 1022 positions walked. */
     mark: "5x6de:23322,213222,23232,212322,TTLRTBBLRBTLRTTBTTBBTBBLRBLRLR",
+    /** Held on 1015 of 1022 positions walked. */
+    force:
+      "7x8dt:3231433,33212314,3323332,33303133,TTTLRTTBBBLRBBTLRLRLRBLRTLRTTTTBLRBBBBTTLRTLRBBLRBLRLRLR",
+    /** Held on 819 of 1022 positions walked. */
+    lineFull: "5x6de:23322,213222,23232,212322,TTLRTBBLRBTLRTTBTTBBTBBLRBLRLR",
+    /** Held on 858 of 1022 positions walked. */
+    lineExact: {
+      id: "5x6de:21312,112302,21222,113130,LRLRTTTLRBBBTTTTTBBBBBTTTLRBBB",
+      moves:
+        '[{"type":"flag","idx":5,"mode":"notneutral"},{"type":"flag","idx":6,"mode":"notneutral"}]',
+    },
+    /** Held on 307 of 1022 positions walked. */
+    oddGap: {
+      id: "5x6dt:22311,111222,13212,211131,TTLRTBBTTBLRBBTLRLRBTLRLRBLRLR",
+      moves:
+        '[{"type":"flag","idx":20,"mode":"notneutral"},{"type":"flag","idx":21,"mode":"notneutral"},{"type":"flag","idx":23,"mode":"notneutral"}]',
+    },
+    /** Held on 383 of 1022 positions walked. */
+    oneNeutralLeft: "5x6dtS:..22.,3....2,..22.,.1.1.2,TLRLRBLRLRTTTLRBBBLRTTLRTBBLRB",
+    /** Held on 100 of 1022 positions walked. */
+    everyDominoNeeded: {
+      id: "5x6dtS:..22.,3....2,..22.,.1.1.2,TLRLRBLRLRTTTLRBBBLRTTLRTBBLRB",
+      moves: [{ type: "flag", idx: 27, mode: "notneutral" }],
+    },
+    /** Held on 187 of 1022 positions walked. */
+    onlyEndLeft: {
+      id: "5x6dtS:..22.,3....2,..22.,.1.1.2,TLRLRBLRLRTTTLRBBBLRTTLRTBBLRB",
+      moves:
+        '[{"type":"flag","idx":27,"mode":"notneutral"},{"type":"flag","idx":0,"mode":"notneutral"},{"type":"flag","idx":1,"mode":"notneutral"},{"type":"flag","idx":3,"mode":"notneutral"}]',
+    },
   },
 });
 

@@ -15,7 +15,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSticksDesc } from "./generator.ts";
-import { sticksGame } from "./index.ts";
+import { STICKS_RUNGS, sticksGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL, COL_LINE } from "./render.ts";
 import {
   deduceSticksPlan,
@@ -42,54 +42,37 @@ function board(seed: number): { id: string; state: SticksState } {
   return { id: `${PARAM_STR}:${desc}`, state: newState(PARAMS, desc) };
 }
 
-const KINDS = [
-  "tooLong",
-  "unreachable",
-  "twoClues",
-  "overConnected",
-  "starved",
-] as const;
+const KINDS = STICKS_RUNGS;
 
-/** Phrases only one narration branch ever utters — a loose predicate stops a
- * `hintUntil` walk on the wrong frame. */
-const PHRASE: Record<SticksReason["kind"], RegExp> = {
-  tooLong: /too long for it/,
-  unreachable: /needs a longer line/,
-  twoClues: /(?:into|on) one line, so /,
-  overConnected: /already has its \d+ lines?|takes no lines/,
-  starved: /needs (?:all \d+|both) of its open sides|has one open side left/,
-};
-
-/** A position for each kind, found by the sentence its step says, and one
- * whose plan opens with a firing that decides more than one square. */
+/** A position for each rung, whose plan opens with it, and one whose plan
+ * opens with a firing that decides more than one square. */
 const pinned = describeHintPins({
   game: sticksGame,
   params: [PARAMS],
   kinds: {
-    ...PHRASE,
     journey: (_step, state) => deduceSticksPlan(state)[0].length > 1,
   },
   pins: {
-    /** Held on 129 of 485 positions walked. */
+    /** Held on 102 of 485 positions walked. */
+    journey: "7x7b20s2:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
+    /** Held on 453 of 485 positions walked. */
     tooLong: {
       id: "7x7b20s2:1b2a1_1B_1aB3a2aBB1bB1b1d5_1bBa2B1Ba1aB3bB0_1_2b1b",
       moves:
         '[{"kind":"set","changes":[{"index":3,"line":"hor"}]},{"kind":"set","changes":[{"index":9,"line":"hor"}]}]',
     },
-    /** Held on 187 of 485 positions walked. */
+    /** Held on 453 of 485 positions walked. */
     unreachable: "7x7b20s2:a4cB3a2c3b1c2aB2aB1_1bB2aB3b4a2_1b2b1bB2a1_2a2",
-    /** Held on 38 of 485 positions walked. */
+    /** Held on 326 of 485 positions walked. */
     twoClues: {
       id: "7x7b20s2:B1a1_1_2aB_1a2_1a2Bb6f1B2a3a1_1_3_1a1aB1c1bB1c3aB2",
       moves:
         '[{"kind":"set","changes":[{"index":9,"line":"hor"}]},{"kind":"set","changes":[{"index":8,"line":"hor"}]}]',
     },
-    /** Held on 64 of 485 positions walked. */
+    /** Held on 371 of 485 positions walked. */
     overConnected: "7x7b20s2:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
-    /** Held on 67 of 485 positions walked. */
+    /** Held on 408 of 485 positions walked. */
     starved: "7x7b20s2:aB2aB1B_1a1_2_1B2b1e3B1_1a2c1B2a1_1_3a2a3aB3c2aBB1aB1_1",
-    /** Held on 102 of 485 positions walked. */
-    journey: "7x7b20s2:a2b2B_3aB0B1b2d3cBBa2_3BB2a2_2hB1B2a1B0a1_3b",
   },
 });
 
@@ -143,12 +126,17 @@ describe("sticks hint — narration", () => {
     // starkest: a black 0 has no line running into it at all.
     let seen = 0;
     for (let seed = 0; seed < 12; seed++) {
-      for (const s of stepsFor(seed)) {
-        if (/[Tt]he black 0/.test(s.explanation)) {
+      // One step a firing, in the plan's order.
+      const firings = deduceSticksPlan(board(seed).state).flat();
+      stepsFor(seed).forEach((s, i) => {
+        const { reason } = firings[i];
+        if (reason.kind === "overConnected" && reason.value === 0) {
+          expect(s.rung).toBe("overConnected");
+          expect(s.explanation).toMatch(/[Tt]he black 0/);
           expect(s.explanation).not.toMatch(/as well|another/);
           seen++;
         }
-      }
+      });
     }
     expect(seen, "no step narrated a black 0 — the phrase has changed").toBeGreaterThan(
       0,
@@ -185,7 +173,7 @@ describe("sticks hint — evidence counts out against the words", () => {
         expect(evidence.length, s.explanation).toBeGreaterThan(0);
         // A black clue's counted lines never include the one being ruled out.
         const [target] = marks.of("ring", CELL);
-        if (/black/.test(s.explanation))
+        if (s.rung === "overConnected" || s.rung === "starved")
           expect(evidence).not.toContain(`${target.x},${target.y}`);
       }
     }

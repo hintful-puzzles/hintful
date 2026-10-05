@@ -64,8 +64,13 @@ export type SolveResult<Move> =
  * applies to (i.e. the state after every earlier step of the plan).
  * The current step is what the renderer displays and the status bar
  * narrates. */
-export interface HintStep<Move, Highlights = unknown> {
+export interface HintStep<Move, Highlights = unknown, Rung extends string = string> {
   move: Move;
+  /** Which of the game's deductions this step is: one of {@link Game.hintRungs}.
+   * Whatever needs to know reads this and never the sentence, so rewording a
+   * step moves nothing that is not about its wording
+   * (docs/games/hints.md § "Name the rung a step speaks"). */
+  rung: Rung;
   /** The sentence, as the status bar shows it: `words.text` when the step has
    * words. The only part of a step that crosses the worker boundary. */
   explanation: string;
@@ -98,8 +103,8 @@ export interface HintStep<Move, Highlights = unknown> {
  * finds nothing, and refuses the rest itself; a game's error is the
  * collection's own ({@link HintRefusal}), and a dead end of the game's own may
  * carry the words that mark its cause ({@link MarkedDeadEnd}). */
-export type HintResult<Move, Highlights = unknown> =
-  | { ok: true; steps: HintStep<Move, Highlights>[] }
+export type HintResult<Move, Highlights = unknown, Rung extends string = string> =
+  | { ok: true; steps: HintStep<Move, Highlights, Rung>[] }
   | { ok: false; error: HintRefusal; words?: never }
   | MarkedDeadEnd;
 
@@ -125,11 +130,11 @@ export interface ActiveHint<Move, Highlights = unknown> {
 export type HintTrackVerdict = "completed" | "onTrack" | "off";
 
 /** A step built from its words: the explanation is theirs. */
-export function narratedStep<Move, Highlights>(
-  step: Omit<HintStep<Move, Highlights>, "explanation" | "words"> & {
+export function narratedStep<Move, Highlights, Rung extends string = string>(
+  step: Omit<HintStep<Move, Highlights, Rung>, "explanation" | "words"> & {
     words: Sentence;
   },
-): HintStep<Move, Highlights> {
+): HintStep<Move, Highlights, Rung> {
   return { ...step, explanation: step.words.text };
 }
 
@@ -308,6 +313,8 @@ export interface Game<
    * every hint member and `redraw`, so a game's renderer and its legend see
    * the type its `hint` builds. */
   Highlights = unknown,
+  /** The ids of the deductions a hint step can be ({@link Game.hintRungs}). */
+  Rung extends string = string,
 > {
   /** Catalog puzzleId; the registry key. */
   readonly id: string;
@@ -503,7 +510,13 @@ export interface Game<
    *
    * Never asked about a board whose status is solved, or on which
    * `findMistakes` finds anything: the midend refuses those itself. */
-  hint?(state: State, aux?: string, ui?: Ui): HintResult<Move, Highlights>;
+  hint?(state: State, aux?: string, ui?: Ui): HintResult<Move, Highlights, Rung>;
+  /** Every rung a hint step of this game can be, each once: the ids its steps
+   * carry in {@link HintStep.rung}. Every game with a `hint` has it. The pin
+   * harness requires a pinned position for each
+   * (`testing/hint-positions.ts`), and the hint-quality walk fails a step
+   * whose rung is not listed. */
+  hintRungs?: readonly Rung[];
   /** How the pointer makes `move`, the move of the hint step on display, from
    * `state` with `ui` as it is and the board drawn at `ds`: the taps, drags and
    * on-screen keys a player would use (`hint-gesture.ts`). The midend plays a

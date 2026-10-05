@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { newCursor } from "../../engine/pointer.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -183,23 +183,28 @@ const hlOf = (step: { highlights?: unknown }): SaladHint =>
 
 /** The steps whose frames are asserted below, each pinned on a position whose
  * hint opens with one. The letters board has one empty square per line. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: saladGame,
   params: [LETTERS_P, NUMBERS_P],
   kinds: {
-    // The far arm, over a run of more than one square.
-    confinedRun: (step) =>
-      /has room for only \d+ empty square/.test(step.explanation) &&
-      hlOf(step).area.length > 1,
-    // The near arm where the run is a single square.
-    nearestSquare: (step) =>
-      /leaves only [A-C] for this square/.test(step.explanation) &&
-      /and this square is nearest to it/.test(step.explanation),
+    // The far rung, over a run of more than one square.
+    confinedRun: (step) => step.rung === "borderFar" && hlOf(step).area.length > 1,
+    // The near rung where the run is a single square: the square it decides
+    // is the one outlined.
+    nearestSquare: (step) => {
+      const { area, targets } = hlOf(step);
+      return (
+        step.rung === "borderNear" &&
+        targets.every((t) => area.some((a) => a.x === t.x && a.y === t.y))
+      );
+    },
+    // The markers and a placement, on a numbers board.
     emptyMarker: (step, state) =>
-      state.mode === GAMEMODE_NUMBERS &&
-      /and the rest of it must be empty|must be empty\.$/.test(step.explanation),
-    symbolMarker: /must hold a number|holds a number/,
-    placement: /it can only be \d/,
+      state.mode === GAMEMODE_NUMBERS && hlOf(step).ghost === "cross",
+    symbolMarker: (step, state) =>
+      state.mode === GAMEMODE_NUMBERS && hlOf(step).ghost === "circle",
+    placement: (step, state) =>
+      state.mode === GAMEMODE_NUMBERS && typeof hlOf(step).ghost === "number",
   },
   pins: {
     /** Held on 53 of 966 positions walked. */
@@ -214,7 +219,7 @@ const pinned = describeHintPins({
     emptyMarker: "5n3Bde:bXc1ObOg2113Ob",
     /** Held on 103 of 966 positions walked. */
     symbolMarker: "5n3Bde:dXbXb2a1aX1bOb3c",
-    /** Held on 127 of 966 positions walked. */
+    /** Held on 128 of 966 positions walked. */
     placement: {
       id: "5n3Bde:Oa2b1bOd3b1Xc2bO",
       moves:
@@ -314,7 +319,7 @@ describe("salad hint frames", () => {
       game: saladGame,
       id: NUMBERS_ID,
       showHint: true,
-      hintUntil: (step) => /The \d just placed /.test(step.explanation),
+      hintUntil: (step) => step.rung === "dup",
     });
     const notes = recording.ops.filter(
       (o) => o.op === "text" && o.color === COL_PENCIL,

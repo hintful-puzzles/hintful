@@ -188,6 +188,26 @@ export type BoatsTechnique =
       center: { at: Point; vertical: boolean } | null;
     };
 
+/** The rungs a hint step can be: the techniques' kinds. */
+export const BOATS_RUNGS = [
+  "givenClue",
+  "neverTouch",
+  "lineSatisfied",
+  "lineForced",
+  "allWaterPlaced",
+  "centerForced",
+  "isolated",
+  "mustExtend",
+  "centerCount",
+  "growTooLong",
+  "mustGrow",
+  "runTooShort",
+  "onlyRunsLeft",
+  "sharedDiagonal",
+  "refuted",
+] as const;
+export type BoatsRung = (typeof BOATS_RUNGS)[number];
+
 /** One deduction: what it forces, what follows from that by the never-touch
  * rule, and the squares it reasons over. */
 export interface BoatsFiring {

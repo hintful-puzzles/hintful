@@ -62,7 +62,13 @@ import {
 } from "../../engine/wires.ts";
 import { finishes } from "./deduce.ts";
 import { newDesc } from "./generator.ts";
-import { type NetHint, netHint, netHintKeepTrack } from "./hint.ts";
+import {
+  NET_RUNGS,
+  type NetHint,
+  type NetRung,
+  netHint,
+  netHintKeepTrack,
+} from "./hint.ts";
 import { findMistakes, type NetMistake } from "./mistakes.ts";
 import {
   boardMargin,
@@ -691,7 +697,8 @@ export const netGame: Game<
   NetUi,
   NetDrawState,
   NetMistake,
-  NetHint
+  NetHint,
+  NetRung
 > = {
   id: "net",
 
@@ -769,6 +776,7 @@ export const netGame: Game<
       s.wrapping,
     ) === SOLVER_UNIQUE && finishes(s),
   hint: (s, _aux, ui) => netHint(s, targetVerbs, ui ?? newUi(s)),
+  hintRungs: NET_RUNGS,
   hintMarks: {
     roles: {
       ring: "what the step decides: the square to turn and lock, or the side to note, drawn as the note the step places.",

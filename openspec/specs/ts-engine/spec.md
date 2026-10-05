@@ -4072,17 +4072,20 @@ and in a manual `npm run gate`. Measured 2026-09-20, it is 47 s of the block's
 under `src/games/`, so it otherwise lands on nearly every commit; what it
 protects is decay rather than the narration the commit just wrote.
 
-A sentence template MAY exceed the limit only when a ledger entry names it,
-the games that speak it, and the reason it needs the room. A ledgered sentence
-SHALL still be at most 300 characters. The ledger SHALL be asserted in both
-directions, and **the unit of both directions SHALL be the `(entry, game)`
-listing rather than the entry**: a step over the limit that no entry listing
-its game matches fails, and a listing that matches no step over the limit fails,
-so a sentence brought under the limit takes its entry with it and a game that
-stops speaking a shared sentence takes its listing with it. Keyed by entry
-alone, the reverse direction passes as soon as any one listed game reaches the
-sentence, which leaves a game listed on a shared sentence it never speaks
-invisible.
+A step MAY exceed the limit only when a ledger entry lists its rung
+(`HintStep.rung`) for its game, with the reason that rung's sentences need the
+room. An entry SHALL name rungs by id and SHALL NOT match a step's sentence, so
+that rewording a sentence cannot take it out of its listing unseen; and every
+rung an entry lists SHALL be one its games declare. A ledgered sentence SHALL
+still be at most 300 characters. The ledger SHALL be asserted in both
+directions, and **the unit of both directions SHALL be the
+`(entry, game, rung)` listing rather than the entry**: a step over the limit
+whose rung no entry listing its game names fails, and a listing whose rung its
+game never speaks over the limit fails, so a sentence brought under the limit
+takes its listing with it and a game that stops speaking a shared rung at
+length takes its listing with it. Keyed by entry alone, the reverse direction
+passes as soon as any one listed game reaches the rung, which leaves a game
+listed on a shared rung it never speaks at length invisible.
 
 The forward direction SHALL run on every commit; the reverse direction SHALL
 defer with the corner rule its verdict is decided against, and SHALL be
@@ -4098,20 +4101,20 @@ but on a widened walk of that game recorded beside the entry.
 #### Scenario: A long sentence without a ledger entry fails
 
 - **WHEN** a hint step's narration is longer than 120 characters and no ledger
-  entry for its game matches it
-- **THEN** the check fails, naming the sentence and its length
+  entry for its game lists its rung
+- **THEN** the check fails, naming the sentence, its rung and its length
 - **AND** it does so on the per-commit path, not only on push
 
 #### Scenario: A ledger entry that no longer matches anything long fails
 
-- **WHEN** a ledgered sentence is shortened under 120 characters, or stops
-  being spoken
-- **THEN** the check fails until the entry is deleted
+- **WHEN** a ledgered rung's sentences are shortened under 120 characters, or
+  the rung stops being spoken
+- **THEN** the check fails until the listing is deleted
 
 #### Scenario: A game listed on a shared sentence it never speaks fails
 
 - **WHEN** a ledger entry names several games and one of them never speaks the
-  sentence over the limit, while the others do
+  rung over the limit, while the others do
 - **THEN** the check fails naming that game and that entry, and does not pass
   on the strength of the games that do speak it
 
@@ -4135,6 +4138,16 @@ but on a widened walk of that game recorded beside the entry.
 
 - **WHEN** a ledgered sentence grows past 300 characters
 - **THEN** the check fails, ledger or not
+
+#### Scenario: A reworded sentence keeps its listing
+
+- **WHEN** a ledgered rung's sentence is reworded and stays over the limit
+- **THEN** its listing still excuses it, with no edit to the ledger
+
+#### Scenario: A listing for a rung the game does not have
+
+- **WHEN** a ledger entry lists a rung that one of its games does not declare
+- **THEN** the check fails on every commit, naming the game and the rung
 
 ### Requirement: The engine answers which key is a digit, once
 
@@ -8125,3 +8138,63 @@ A bevel whose two colors are also used as tints SHALL take palette slots of its 
 
 - **WHEN** the guard runs
 - **THEN** it finds a bevel in a game that draws through each shared helper and in a game that draws its own, and fails if it finds none
+
+### Requirement: A hint step SHALL name the rung it speaks
+
+Every hint step SHALL carry `rung`, the id of the deduction it is, and every
+game that declares a `hint` SHALL declare `hintRungs`, the list of every rung a
+step of its hint can be, each once. A step's rung SHALL be one of its game's
+`hintRungs`. `HintStep` and `Game` SHALL be typed by the game's rung union, so
+that a game whose steps are typed by its list fails to compile when a step is
+stamped with an id the list lacks.
+
+A rung is the deduction, at the grain the game's solver or plan already names
+it: the kinds of its reason union, or the branches of a hint that deduces
+nothing. The legs of one journey SHALL share their firing's rung. Two wordings
+of one deduction SHALL NOT be two rungs.
+
+Whatever needs to know which deduction a step is SHALL read `rung`, and SHALL
+NOT match the step's sentence to find out: the pins a game's tests read, the
+narration ledger, and a render scenario that walks a plan to a step. A test MAY
+still assert what a step's sentence says, where the wording is the thing under
+test.
+
+The candidate walk SHALL stamp the steps it builds: a placement or a strike
+with the kind of the reason it narrates, and its own setup steps and a
+placement's cull with ids the engine owns. A game on the walk SHALL therefore
+write its list and no stamp. Where a game's words for a placement narrate
+another of its reasons than the one the walk handed it, the game SHALL say
+which, so that a step's rung and its sentence name the same deduction.
+
+A rung id is not player-facing: no sentence, help page, save or game ID holds
+one.
+
+#### Scenario: A reason kind missing from the list
+
+- **WHEN** a game's hint gains a reason kind and its rung list does not
+- **THEN** the game does not typecheck, at the line that stamps the step
+
+#### Scenario: A hinted game without a list
+
+- **WHEN** a registered game declares `hint` and not `hintRungs`, or lists a
+  rung twice
+- **THEN** the hint-quality suite fails, naming the game
+
+#### Scenario: A step of a rung the list lacks
+
+- **WHEN** the hint-quality walk meets a step whose rung is not in its game's
+  `hintRungs`
+- **THEN** it fails, quoting the step's sentence
+
+#### Scenario: A candidate game writes no stamp
+
+- **WHEN** a game builds its plan through the shared candidate walk
+- **THEN** each step's rung is the kind of the reason the walk narrated, or
+  the engine's id for a setup step or a cull
+- **AND** the game's list is the engine's ids and its own reasons' kinds
+
+#### Scenario: A sentence of another reason
+
+- **WHEN** a game's words for a placement are those of a reason other than
+  the one the walk found, as a one-cell area's are a singleton's
+- **THEN** the step carries that reason's rung, not the one the walk found

@@ -59,6 +59,7 @@ describe("candidateHint (shared hint entry)", () => {
   const oneStep: HintStep<CandidateMove, CandidateHighlights>[] = [
     {
       move: { type: "set", x: 0, y: 0, n: 1, pencil: false },
+      rung: "test",
       explanation: "place 1",
     },
   ];
@@ -564,7 +565,7 @@ function step(
   move: CandidateMove,
   highlights?: CandidateHighlights,
 ): HintStep<CandidateMove, CandidateHighlights> {
-  return { move, explanation: "", highlights };
+  return { move, rung: "test", explanation: "", highlights };
 }
 
 describe("keepCandidateHintTrack", () => {
@@ -755,6 +756,7 @@ describe("refreshCandidateHintStep", () => {
     });
     const s: HintStep<CandidateMove, CandidateHighlights> = {
       move: { type: "pencilStrike", marks },
+      rung: "test",
       explanation: words.text,
       words,
       highlights: { area: [], targets: [{ x: 0, y: 0 }], marks },
@@ -1066,6 +1068,7 @@ describe("a game's own move dialect", () => {
     // the discriminator.
     const pencil = Int32Array.from([bitFrom1(1) | bitFrom1(2), 0, 0, 0]);
     const s: HintStep<DialectMove, CandidateHighlights> = {
+      rung: "test",
       move: {
         kind: "strike",
         marks: [
@@ -1089,6 +1092,7 @@ describe("a game's own move dialect", () => {
     const grid = Int8Array.from([0, 0, 0, 0]);
     const pencil = Int32Array.from([bitFrom1(1), bitFrom1(1) | bitFrom1(2), 0, 0]);
     const s: HintStep<DialectMove, CandidateHighlights> = {
+      rung: "test",
       move: {
         kind: "strike",
         marks: [

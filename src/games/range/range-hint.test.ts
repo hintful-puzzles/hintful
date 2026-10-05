@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { CLUE } from "./hint-text.ts";
 import { type RangeHint, rangeGame } from "./index.ts";
 import { deduceHintPlan, findErrors } from "./solver.ts";
@@ -20,6 +21,39 @@ function fromSeed(params: string, seed: string): RangeState {
   const { desc } = rangeGame.newDesc(p, randomNew(seed));
   return newState(p, desc);
 }
+
+/** Every rule, on a board whose plan speaks it. */
+describeHintPins({
+  game: rangeGame,
+  params: [decodeParams("9x6")],
+  pins: {
+    /** Held on 482 of 483 positions walked. */
+    adjacency: {
+      id: "9x6:d6c3d4f4l12f6d3c9d",
+      moves:
+        '[{"sets":[{"r":2,"c":6,"value":"white"}]},{"sets":[{"r":3,"c":5,"value":"white"}]},{"sets":[{"r":3,"c":4,"value":"white"}]},{"sets":[{"r":2,"c":4,"value":"black"}]},{"sets":[{"r":3,"c":3,"value":"white"}]},{"sets":[{"r":3,"c":2,"value":"white"}]},{"sets":[{"r":5,"c":5,"value":"white"}]},{"sets":[{"r":5,"c":6,"value":"white"}]},{"sets":[{"r":5,"c":3,"value":"white"}]},{"sets":[{"r":4,"c":0,"value":"white"}]},{"sets":[{"r":4,"c":5,"value":"white"}]},{"sets":[{"r":5,"c":2,"value":"white"}]},{"sets":[{"r":5,"c":1,"value":"black"}]},{"sets":[{"r":3,"c":0,"value":"white"}]},{"sets":[{"r":2,"c":0,"value":"black"}]},{"sets":[{"r":5,"c":7,"value":"white"}]},{"sets":[{"r":5,"c":8,"value":"white"}]}]',
+    },
+    /** Held on 483 of 483 positions walked. */
+    satisfied: {
+      id: "9x6:a3_7c5b7b6j8f4j12b4b6c8_5a",
+      moves: [{ sets: [{ r: 1, c: 1, value: "white" }] }],
+    },
+    /** Held on 332 of 483 positions walked. */
+    overrun: {
+      id: "9x6:d6c3d4f4l12f6d3c9d",
+      moves:
+        '[{"sets":[{"r":2,"c":6,"value":"white"}]},{"sets":[{"r":3,"c":5,"value":"white"}]},{"sets":[{"r":3,"c":4,"value":"white"}]}]',
+    },
+    /** Held on 461 of 483 positions walked. */
+    reach: "9x6:a4d6a4_9e7e7j6e10e4_6a5d8a",
+    /** Held on 208 of 483 positions walked. */
+    connect: {
+      id: "9x6:3e11h9a5c10j6c5a8h11e12",
+      moves:
+        '[{"sets":[{"r":2,"c":6,"value":"white"}]},{"sets":[{"r":0,"c":5,"value":"white"}]},{"sets":[{"r":0,"c":4,"value":"white"}]},{"sets":[{"r":0,"c":3,"value":"white"}]},{"sets":[{"r":1,"c":0,"value":"white"}]},{"sets":[{"r":1,"c":5,"value":"white"}]},{"sets":[{"r":2,"c":4,"value":"white"}]},{"sets":[{"r":5,"c":3,"value":"white"}]},{"sets":[{"r":5,"c":4,"value":"white"}]},{"sets":[{"r":5,"c":5,"value":"white"}]},{"sets":[{"r":3,"c":2,"value":"white"}]},{"sets":[{"r":4,"c":8,"value":"white"}]},{"sets":[{"r":3,"c":8,"value":"white"}]},{"sets":[{"r":2,"c":8,"value":"white"}]},{"sets":[{"r":0,"c":8,"value":"black"}]},{"sets":[{"r":3,"c":6,"value":"white"}]},{"sets":[{"r":0,"c":2,"value":"white"}]},{"sets":[{"r":0,"c":1,"value":"black"}]},{"sets":[{"r":2,"c":0,"value":"white"}]},{"sets":[{"r":3,"c":0,"value":"black"}]},{"sets":[{"r":4,"c":6,"value":"white"}]},{"sets":[{"r":5,"c":6,"value":"white"}]},{"sets":[{"r":0,"c":7,"value":"white"}]},{"sets":[{"r":1,"c":7,"value":"black"}]},{"sets":[{"r":1,"c":4,"value":"white"}]},{"sets":[{"r":1,"c":3,"value":"white"}]},{"sets":[{"r":1,"c":2,"value":"black"}]},{"sets":[{"r":4,"c":1,"value":"white"}]},{"sets":[{"r":4,"c":3,"value":"white"}]},{"sets":[{"r":4,"c":4,"value":"white"}]},{"sets":[{"r":5,"c":0,"value":"black"}]},{"sets":[{"r":4,"c":5,"value":"black"}]},{"sets":[{"r":2,"c":2,"value":"white"}]},{"sets":[{"r":5,"c":7,"value":"white"}]},{"sets":[{"r":5,"c":1,"value":"white"}]},{"sets":[{"r":1,"c":1,"value":"white"}]},{"sets":[{"r":2,"c":7,"value":"white"}]},{"sets":[{"r":3,"c":1,"value":"white"}]}]',
+    },
+  },
+});
 
 describe("deduceHintPlan", () => {
   it("records an adjacency reason for a black cell's neighbor", () => {
@@ -117,11 +151,11 @@ describe("hint", () => {
         expect(plan.length).toBe(res.steps.length);
         for (let i = 0; i < res.steps.length; i++) {
           const step = res.steps[i];
-          kinds.add(plan[i].reason.kind);
+          kinds.add(step.rung);
           checked++;
           expect(
             TIE.test(step.explanation),
-            `${plan[i].reason.kind}: ${step.explanation} — a second mark is shown but "this cell" is not tied to it`,
+            `${step.rung}: ${step.explanation} — a second mark is shown but "this cell" is not tied to it`,
           ).toBe(true);
           // Words and picture agree in *both* directions: a sentence saying
           // "this N" is pointing at a mark, so the mark must exist. The clue

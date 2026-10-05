@@ -11,7 +11,10 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import {
+  describeHintKindPins,
+  describeHintPins,
+} from "../../engine/testing/hint-positions.ts";
 import { expectContour, expectRing } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -162,8 +165,7 @@ describe("unequal hint", () => {
       // so they are exempt.)
       const modal = /can only|can't|must (be|cross)/i;
       const isSetup = (s: (typeof res.steps)[number]) =>
-        (s.move as UnequalMove).type === "pencilAll" ||
-        /clear the easy ones|fill all pencil marks/.test(s.explanation);
+        s.rung === "populate" || s.rung === "clean";
       for (const s of res.steps) {
         if (isSetup(s)) continue;
         expect(s.explanation).toMatch(modal);
@@ -187,8 +189,6 @@ describe("unequal hint", () => {
   it("auto-pencil on folds away the trivial row/column eliminations a placement implies", () => {
     const { st } = gen(UNEQ, "hint-autopencil");
     const populated = unequalGame.executeMove(st, { type: "pencilAll" });
-    const dupRe = /just placed can't repeat in its row and column/;
-
     const uiOn = newUi(populated);
     uiOn.autoPencil = true;
     const on = unequalGame.hint?.(populated, undefined, uiOn);
@@ -201,8 +201,7 @@ describe("unequal hint", () => {
     // The basic-Latin opening culls (givens) use the same dup narration in both,
     // so compare the *count*: with auto-pencil off, each placement also teaches
     // its row/column cleanup, so there are strictly more dup steps.
-    const dupCount = (r: typeof on) =>
-      r.steps.filter((s) => dupRe.test(s.explanation)).length;
+    const dupCount = (r: typeof on) => r.steps.filter((s) => s.rung === "dup").length;
     expect(dupCount(off)).toBeGreaterThan(dupCount(on));
     expect(off.steps.length).toBeGreaterThan(on.steps.length);
   });
@@ -222,7 +221,7 @@ describe("unequal hint", () => {
           // Basic-Latin/dup steps shade ≤1 cell; a set outlines the cells that
           // account for what it strikes, which lie outside them.
           const area: { x: number; y: number }[] = step.highlights?.area ?? [];
-          if (area.length !== 2 || /account for/.test(step.explanation)) continue;
+          if (area.length !== 2 || step.rung === "set") continue;
           const cells = new Set(marks.map((m) => `${m.x},${m.y}`));
           expect(cells.size).toBe(1);
           for (const m of marks) {
@@ -344,17 +343,104 @@ describe("unequal hint resumes to solved", () => {
 const strikes = (step: AnyStep): number =>
   step.move.type === "pencilStrike" ? step.move.marks.length : 0;
 
+/** How many of a board's cells carry a clue, which splits the boards a scan
+ * deals in two. */
+const clueSum = (s: UnequalState): number => s.clueFlags.filter((f) => f !== 0).length;
+
+/**
+ * Every rung on a position whose plan speaks it. A plan is asked under one
+ * reading of the note-less cells, and `populate` and `note` are each spoken
+ * under one of the two, so the boards are split between them.
+ */
+describeHintPins({
+  game: unequalGame,
+  params: [UNEQ, ADJ, { ...UNEQ, diff: "extreme" }],
+  ui: (s) => ({
+    ...newUi(s),
+    candidateReading: clueSum(s) % 2 === 0 ? "populate" : "implicit",
+  }),
+  pins: {
+    /** Held on 19 of 2328 positions walked. */
+    populate: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
+    /** Held on 581 of 2328 positions walked. */
+    clean: {
+      id: "5dk:0,0,0R,0R,0,0,0U,0,0,0U,1,0D,0U,0R,0,5,0R,0,0,0U,0,0L,0,0L,0,",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 423 of 2328 positions walked. */
+    note: "5dk:0,0,0R,0R,0,0,0U,0,0,0U,1,0D,0U,0R,0,5,0R,0,0,0U,0,0L,0,0L,0,",
+    /** Held on 2200 of 2328 positions walked. */
+    dup: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
+    /** Held on 2327 of 2328 positions walked. */
+    single: {
+      id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":3},{"x":2,"y":0,"n":3},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3},{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3},{"x":1,"y":1,"n":1},{"x":2,"y":1,"n":1},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":0,"y":2,"n":3},{"x":3,"y":2,"n":3},{"x":4,"y":2,"n":1},{"x":0,"y":3,"n":3},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":3},{"x":2,"y":4,"n":3},{"x":4,"y":4,"n":1},{"x":4,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5}]}]',
+    },
+    /** Held on 919 of 2328 positions walked. */
+    regionsFull: {
+      id: "5dx:0,0R,0,0L,0,0U,0,0,4,0,0R,0,0,0D,0,0U,0,0D,0,0,0R,0,2R,0,0,",
+      moves:
+        '[{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":4},{"x":0,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":1,"n":2},{"x":0,"y":1,"n":3},{"x":0,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":1,"y":2,"n":4},{"x":1,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":3},{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":4},{"x":0,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":5}]},{"type":"pencilAdd","marks":[{"x":2,"y":3,"n":3},{"x":2,"y":3,"n":4},{"x":2,"y":3,"n":5}]},{"type":"set","x":3,"y":4,"n":1,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":4,"n":3}]},{"type":"set","x":0,"y":0,"n":1,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4},{"x":2,"y":0,"n":5}]},{"type":"pencilAdd","marks":[{"x":1,"y":0,"n":4},{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":5}]},{"type":"set","x":3,"y":0,"n":5,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":5}]},{"type":"set","x":1,"y":0,"n":4,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":4},{"x":1,"y":4,"n":4}]},{"type":"set","x":2,"y":0,"n":3,"pencil":false,"autoElim":false}]',
+    },
+    /** Held on 1606 of 2328 positions walked. */
+    hiddenSingle: {
+      id: "5adk:2,0RD,0L,0,0,0RD,0UL,0R,0RDL,0DL,0U,0,0R,0URDL,0UL,0,0RD,0L,0UR,0DL,0R,0UL,0,1,0U,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":2},{"x":3,"y":0,"n":1},{"x":3,"y":0,"n":2},{"x":4,"y":0,"n":2},{"x":0,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":0,"y":2,"n":2},{"x":3,"y":2,"n":1},{"x":0,"y":3,"n":2},{"x":3,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":1,"y":4,"n":1},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":4,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":1}]}]',
+    },
+    /** Held on 587 of 2328 positions walked. */
+    set: {
+      id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":3},{"x":2,"y":0,"n":3},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":1},{"x":4,"y":0,"n":3},{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":3},{"x":1,"y":1,"n":1},{"x":2,"y":1,"n":1},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":0,"y":2,"n":3},{"x":3,"y":2,"n":3},{"x":4,"y":2,"n":1},{"x":0,"y":3,"n":3},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":3},{"x":1,"y":4,"n":3},{"x":2,"y":4,"n":3},{"x":4,"y":4,"n":1},{"x":4,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5}]},{"type":"set","x":0,"y":1,"n":2,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":2},{"x":0,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":0,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":1,"n":3}]},{"type":"pencilStrike","marks":[{"x":2,"y":2,"n":1}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":1},{"x":2,"y":4,"n":2}]}]',
+    },
+    /** Held on 427 of 2328 positions walked. */
+    forcing: {
+      id: "5dx:0R,0,0,0L,2,0,0U,3D,0,0U,0,0,0,0,0,0R,0D,0D,0,0,0,0,0L,0U,0L,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":2},{"x":2,"y":0,"n":2},{"x":2,"y":0,"n":3},{"x":3,"y":0,"n":2},{"x":0,"y":1,"n":3},{"x":1,"y":1,"n":3},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":3},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":2},{"x":2,"y":3,"n":3},{"x":4,"y":3,"n":2},{"x":2,"y":4,"n":3},{"x":4,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":1,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":4},{"x":1,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":2,"y":2,"n":4},{"x":2,"y":2,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":1}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":2,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":2,"y":3,"n":2}]},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":1}]},{"type":"pencilStrike","marks":[{"x":2,"y":0,"n":5}]},{"type":"pencilStrike","marks":[{"x":4,"y":1,"n":1}]},{"type":"set","x":2,"y":3,"n":5,"pencil":false,"autoElim":false},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":5},{"x":3,"y":3,"n":5},{"x":4,"y":3,"n":5}]},{"type":"pencilStrike","marks":[{"x":1,"y":3,"n":4}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":3,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":4,"y":4,"n":1}]},{"type":"pencilStrike","marks":[{"x":3,"y":4,"n":5}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":4}]}]',
+    },
+    /** Held on 914 of 2328 positions walked. */
+    greater: {
+      id: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
+      moves: [{ type: "pencilAll" }],
+    },
+    /** Held on 977 of 2328 positions walked. */
+    lesser: {
+      id: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,",
+      moves: [
+        { type: "pencilAll" },
+        { type: "pencilStrike", marks: [{ x: 1, y: 2, n: 1 }] },
+      ],
+    },
+    /** Held on 610 of 2328 positions walked. */
+    adjacent: {
+      id: "5adk:0D,0RD,0DL,0,5,0UD,0U,0UR,0L,0,0UD,0D,1,0RD,0DL,0U,0URD,0L,0UR,0UL,0,0UR,0L,0,0,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":1,"y":0,"n":5},{"x":2,"y":0,"n":1},{"x":2,"y":0,"n":5},{"x":3,"y":0,"n":5},{"x":2,"y":1,"n":1},{"x":4,"y":1,"n":5},{"x":0,"y":2,"n":1},{"x":1,"y":2,"n":1},{"x":3,"y":2,"n":1},{"x":4,"y":2,"n":1},{"x":4,"y":2,"n":5},{"x":2,"y":3,"n":1},{"x":4,"y":3,"n":5},{"x":2,"y":4,"n":1},{"x":4,"y":4,"n":5}]}]',
+    },
+    /** Held on 249 of 2328 positions walked. */
+    adjacentSet: {
+      id: "5adk:0R,0DL,0RD,0L,0,0,0UR,0UDL,0D,0,0RD,0L,0UD,0UR,0L,0U,0R,0URDL,0RL,0DL,2,0,0U,0,0U,",
+      moves:
+        '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":2},{"x":0,"y":1,"n":2},{"x":0,"y":2,"n":2},{"x":0,"y":3,"n":2},{"x":1,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":4,"y":4,"n":2}]},{"type":"pencilStrike","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":4,"n":1},{"x":1,"y":4,"n":3}]}]',
+    },
+  },
+});
+
 /** Positions on a board with every candidate penciled in first, each mode's
  * clue strike among them. */
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: unequalGame,
   params: [UNEQ, ADJ],
   opening: (): UnequalMove[] => [{ type: "pencilAll" }],
   kinds: {
     multiMarkStrike: (step) => strikes(step) >= 2,
     greaterThanStrike: (step) =>
-      strikes(step) > 0 && /greater-than sign/.test(step.explanation),
-    barStrike: (step) => strikes(step) > 0 && /bar/.test(step.explanation),
+      strikes(step) > 0 && (step.rung === "greater" || step.rung === "lesser"),
+    barStrike: (step) =>
+      strikes(step) > 0 && (step.rung === "adjacent" || step.rung === "adjacentSet"),
   },
   pins: {
     /** Held on 461 of 1506 positions walked. */

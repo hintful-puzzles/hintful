@@ -17,7 +17,7 @@ import {
   newCursor,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -310,7 +310,7 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       if (st.move.type === "known") marked |= 1 << st.move.bit;
       else cleared |= 1 << st.move.bit;
     }
-    const single = lead !== undefined && /can go nowhere but/.test(lead.explanation);
+    const single = lead?.rung === "hiddenSingle";
     journey.forEach((st, k) => {
       const m = st.move;
       if (m.kind !== "rule") return;
@@ -365,10 +365,14 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       for (const v of sets)
         expect(head ? strictSub(m.value, v) : strictSub(v, m.value)).toBe(false);
       expect(marks.of("ring", TALLY_SET)).toEqual([m.value]);
-    } else if (m.kind === "set" && !st.explanation.startsWith("…and ")) {
-      if (/can go nowhere but this cell/.test(st.explanation))
+    } else if (
+      m.kind === "set" &&
+      journey.every((j) => j === st || j.move.kind !== "set")
+    ) {
+      // The firing's lead letter, which states what the later ones rest on.
+      if (st.rung === "hiddenSingle")
         expect(candidateCells(board, sets[0])).toEqual([m.pos]);
-      if (/can still go in this cell/.test(st.explanation)) {
+      if (st.rung === "collapse") {
         expect(sets).toEqual(candidateSets(board, m.pos));
         const b = 1 << m.bit;
         for (const v of sets) expect((v & b) !== 0).toBe(m.type === "known");
@@ -380,10 +384,10 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
   expect(subsetsGame.status(board)).toBe("solved");
 }
 
-const pinned = describeHintPins({
+const pinned = describeHintKindPins({
   game: subsetsGame,
   params: [{ w: 4, h: 4, n: 4, diff: DIFF_TRICKY }],
-  kinds: { ruleOut: (step) => step.move.kind === "rule" },
+  kinds: { ruleOut: (step) => step.rung === "ruleOut" },
   pins: {
     /** Held on 140 of 668 positions walked. */
     ruleOut: {

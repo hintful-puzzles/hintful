@@ -18,5 +18,11 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "vite-plugins", "scripts/checks"]
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "vite-plugins",
+    "scripts/checks",
+    "scripts/hint-scan.ts"
+  ]
 }

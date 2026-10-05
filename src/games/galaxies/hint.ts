@@ -84,6 +84,18 @@ export interface GalaxiesHint {
   said: GalaxiesSaid;
 }
 
+/** The rungs a step can be: the kinds of firing it narrates. */
+export const GALAXIES_RUNGS = [
+  "dotTile",
+  "separate",
+  "enclosed",
+  "soleOwner",
+  "onlyReach",
+  "exclave",
+  "mirrorWall",
+] as const;
+export type GalaxiesRung = (typeof GALAXIES_RUNGS)[number];
+
 /**
  * How many *showable* steps one `hint()` call plans ahead. A UX bound: the
  * player sees one step at a time and every request recomputes, so a longer
@@ -396,11 +408,17 @@ function moveOf(firing: GalaxiesFiring): GalaxiesMove {
 
 export function galaxiesHintSteps(
   state: GalaxiesState,
-): HintStep<GalaxiesMove, GalaxiesHint>[] {
+): HintStep<GalaxiesMove, GalaxiesHint, GalaxiesRung>[] {
   return galaxiesHintPlan(state).plan.map((p) => {
     const highlights = highlightsOf(state, p.firing);
     const words = tell(highlights);
-    return { move: moveOf(p.firing), explanation: words.text, words, highlights };
+    return {
+      move: moveOf(p.firing),
+      rung: p.firing.kind,
+      explanation: words.text,
+      words,
+      highlights,
+    };
   });
 }
 

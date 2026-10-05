@@ -53,7 +53,21 @@ export interface MinesHint {
   readonly targets: readonly Point[];
 }
 
-type Step = HintStep<MinesMove, MinesHint>;
+/** What a step rests on: the two openings no number decides, then
+ * `deduce.ts`'s rungs. The legs of one firing share its rung. */
+export const MINES_RUNGS = [
+  "firstClick",
+  "restart",
+  "satisfied",
+  "full",
+  "pair",
+  "count",
+] as const;
+export type MinesRung = (typeof MINES_RUNGS)[number];
+
+type Step = HintStep<MinesMove, MinesHint, MinesRung>;
+/** A step as following it reads one: whatever its rung. */
+type AnyStep = HintStep<MinesMove, MinesHint>;
 type Execute = (s: MinesState, m: MinesMove) => MinesState;
 
 /** Said on a board whose last move opened a mine. */
@@ -65,6 +79,7 @@ const isOpened = (v: number): boolean => v >= 0 && v <= 8;
 const opOf = (kind: MinesHint["kind"]): MineOp["op"] => (kind === "open" ? "O" : "F");
 
 function stepFor(
+  rung: MinesRung,
   kind: MinesHint["kind"],
   targets: readonly Point[],
   words: Sentence,
@@ -75,6 +90,7 @@ function stepFor(
       type: "ops",
       ops: targets.map((t) => ({ op: opOf(kind), x: t.x, y: t.y })),
     },
+    rung,
     explanation: words.text,
     words,
     highlights: { kind, targets },
@@ -270,19 +286,25 @@ function narrate(board: MinesState, f: Firing, legs: readonly Leg[]): Sentence[]
 export function minesHint(
   state: MinesState,
   execute: Execute,
-): HintResult<MinesMove, MinesHint> {
+): HintResult<MinesMove, MinesHint, MinesRung> {
   if (state.dead) return { ok: false, error: DEAD_BOARD };
   const { w, h, layout } = state;
 
   // No board yet: the first square opened is laid out to be safe.
   if (!layout.mines) {
     const at = { x: w >> 1, y: h >> 1 };
-    return { ok: true, steps: [stepFor("open", [at], say.firstClick(at), false)] };
+    return {
+      ok: true,
+      steps: [stepFor("firstClick", "open", [at], say.firstClick(at), false)],
+    };
   }
   // Undone back to the start of a laid-out board: its first square is safe.
   if (!state.grid.some(isOpened)) {
     const at = { x: layout.startx, y: layout.starty };
-    return { ok: true, steps: [stepFor("open", [at], say.restart(at), false)] };
+    return {
+      ok: true,
+      steps: [stepFor("restart", "open", [at], say.restart(at), false)],
+    };
   }
 
   const known = new Int8Array(w * h);
@@ -296,7 +318,7 @@ export function minesHint(
     if (legs.length === 0) continue;
     const sentences = narrate(board, f, legs);
     legs.forEach((leg, i) => {
-      const step = stepFor(leg.kind, leg.targets, sentences[i], i > 0);
+      const step = stepFor(f.rung, leg.kind, leg.targets, sentences[i], i > 0);
       steps.push(step);
       board = execute(board, step.move);
     });
@@ -317,7 +339,7 @@ function holds(s: MinesState, kind: MinesHint["kind"], t: Point): boolean {
 }
 
 /** `step` shrunk to the targets `left`, its words narrowed to match. */
-function narrowed(step: Step, left: readonly Point[]): Step {
+function narrowed<S extends AnyStep>(step: S, left: readonly Point[]): S {
   const hl = step.highlights as MinesHint;
   const kept = new Set(left.map((p) => CELL.key(p)));
   const words = step.words?.narrow(
@@ -342,7 +364,7 @@ function narrowed(step: Step, left: readonly Point[]): Step {
  */
 export function minesHintKeepTrack(
   m: MinesMove,
-  step: Step,
+  step: AnyStep,
   state: MinesState,
   execute: Execute,
 ): HintTrackVerdict {
@@ -374,7 +396,10 @@ export function minesHintKeepTrack(
 }
 
 /** Drop the targets the board already shows done; `null` once none is left. */
-export function minesRefreshHintStep(step: Step, state: MinesState): Step | null {
+export function minesRefreshHintStep<S extends AnyStep>(
+  step: S,
+  state: MinesState,
+): S | null {
   const hl = step.highlights;
   if (!hl) return step;
   const left = hl.targets.filter((t) => !holds(state, hl.kind, t));

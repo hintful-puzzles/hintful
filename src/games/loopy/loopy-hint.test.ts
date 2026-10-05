@@ -25,6 +25,7 @@ import { dlineEnds } from "./dlines.ts";
 import {
   deduceLoopyPlan,
   hintKeepTrack,
+  type LoopyRung,
   refreshHintStep,
   sentenceExpires,
 } from "./hint.ts";
@@ -102,7 +103,7 @@ function corpus(): Board[] {
   return boards;
 }
 
-type Step = HintStep<LoopyMove>;
+type Step = HintStep<LoopyMove, unknown, LoopyRung>;
 
 const stepsCache = new Map<LoopyState, Step[]>();
 
@@ -144,15 +145,24 @@ const pinned = describeHintPins({
     cornerNote: (s) =>
       s.move.kind === "corner" && (s.move.bits === 2 || s.move.bits === 3),
     pairNote: (s) => s.move.kind === "pair",
-    oneLine: (s) =>
-      marksOf(s).targets.length === 1 && /must be a line\.$/.test(s.explanation),
-    oneRuledOut: (s) =>
-      marksOf(s).targets.length === 1 && /can't be a line\.$/.test(s.explanation),
+    oneLine: (s) => {
+      const ops = opsOf(s.move);
+      return ops.length === 1 && ops[0].state === LINE_YES;
+    },
+    oneRuledOut: (s) => {
+      const ops = opsOf(s.move);
+      return ops.length === 1 && ops[0].state === LINE_NO;
+    },
     pairCitingPairs: (s) => s.move.kind === "pair" && marksOf(s).pairs.length > 0,
     oneFace: (s) => marksOf(s).faces.length === 1,
     cornerCitingCorners: (s) =>
       s.move.kind === "corner" && marksOf(s).corners.length > 0,
-    blockedPair: /both outlined dots/i,
+  },
+  unreached: {
+    related:
+      "none in 1459 positions on 12 boards at 7x7 Hard squares, and none on the corpus below, whose UNREACHED says why",
+    closesLoop:
+      "none in 1459 positions on 12 boards at 7x7 Hard squares, and none on the corpus below, whose UNREACHED says why",
   },
   pins: {
     /** Held on 233 of 1459 positions walked. */
@@ -168,13 +178,13 @@ const pinned = describeHintPins({
       moves:
         '[{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]}]',
     },
-    /** Held on 360 of 1459 positions walked. */
+    /** Held on 478 of 1459 positions walked. */
     oneLine: {
       id: "7x7t0dh:b3a31c1a3222b2d3f1b203a2c1a33a222a",
       moves:
         '[{"kind":"set","ops":[{"edge":64,"state":2},{"edge":78,"state":2},{"edge":79,"state":2},{"edge":76,"state":2}]},{"kind":"set","ops":[{"edge":66,"state":0},{"edge":80,"state":0},{"edge":81,"state":0}]}]',
     },
-    /** Held on 341 of 1459 positions walked. */
+    /** Held on 349 of 1459 positions walked. */
     oneRuledOut: {
       id: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
       moves:
@@ -193,11 +203,137 @@ const pinned = describeHintPins({
       id: "7x7t0dh:21a21b2d2321a1b3c1a2b2a22232b3a2a2b2a22",
       moves: [{ kind: "corner", dline: 179, bits: 1 }],
     },
-    /** Held on 8 of 1459 positions walked. */
-    blockedPair: {
+    /** Held on 1380 of 1459 positions walked. */
+    clueFull: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
+    /** Held on 1375 of 1459 positions walked. */
+    clueStarved: {
+      id: "7x7t0dh:b3a31c1a3222b2d3f1b203a2c1a33a222a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":64,"state":2},{"edge":78,"state":2},{"edge":79,"state":2},{"edge":76,"state":2}]}]',
+    },
+    /** Held on 1234 of 1459 positions walked. */
+    clueOneShort: {
+      id: "7x7t0dh:333a3b2a1c2a3c32b2a2b1b2b3a3a2d12c3",
+      moves:
+        '[{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]}]',
+    },
+    /** Held on 570 of 1459 positions walked. */
+    clueBlockedPair: {
       id: "7x7t0dh:b2a2a23b2a11b20a1a32a013a2c2a23222b22b1c",
       moves:
         '[{"kind":"set","ops":[{"edge":30,"state":2},{"edge":44,"state":2},{"edge":45,"state":2},{"edge":42,"state":2}]},{"kind":"set","ops":[{"edge":59,"state":2},{"edge":60,"state":2},{"edge":57,"state":2}]},{"kind":"set","ops":[{"edge":43,"state":2}]},{"kind":"set","ops":[{"edge":28,"state":0},{"edge":40,"state":0}]},{"kind":"set","ops":[{"edge":26,"state":2},{"edge":25,"state":2}]},{"kind":"set","ops":[{"edge":27,"state":0}]},{"kind":"set","ops":[{"edge":47,"state":2}]},{"kind":"corner","dline":59,"bits":1},{"kind":"corner","dline":59,"bits":3},{"kind":"corner","dline":22,"bits":2},{"kind":"corner","dline":29,"bits":1},{"kind":"corner","dline":22,"bits":3},{"kind":"corner","dline":29,"bits":3},{"kind":"set","ops":[{"edge":16,"state":0}]},{"kind":"corner","dline":39,"bits":3},{"kind":"corner","dline":43,"bits":2},{"kind":"corner","dline":43,"bits":3},{"kind":"set","ops":[{"edge":35,"state":0}]},{"kind":"set","ops":[{"edge":21,"state":2},{"edge":36,"state":2},{"edge":33,"state":2}]},{"kind":"set","ops":[{"edge":20,"state":0}]},{"kind":"set","ops":[{"edge":19,"state":0}]},{"kind":"set","ops":[{"edge":17,"state":2}]},{"kind":"set","ops":[{"edge":18,"state":2}]},{"kind":"set","ops":[{"edge":50,"state":0}]},{"kind":"corner","dline":97,"bits":2},{"kind":"set","ops":[{"edge":48,"state":2},{"edge":34,"state":2}]},{"kind":"set","ops":[{"edge":31,"state":0}]},{"kind":"corner","dline":31,"bits":3},{"kind":"corner","dline":27,"bits":2},{"kind":"corner","dline":27,"bits":3},{"kind":"set","ops":[{"edge":10,"state":0}]},{"kind":"corner","dline":17,"bits":3},{"kind":"corner","dline":10,"bits":2},{"kind":"corner","dline":10,"bits":3},{"kind":"set","ops":[{"edge":6,"state":0}]},{"kind":"set","ops":[{"edge":23,"state":0},{"edge":24,"state":0}]},{"kind":"set","ops":[{"edge":39,"state":2}]},{"kind":"corner","dline":45,"bits":1},{"kind":"corner","dline":2,"bits":2},{"kind":"set","ops":[{"edge":1,"state":2}]},{"kind":"corner","dline":76,"bits":1},{"kind":"set","ops":[{"edge":38,"state":0},{"edge":54,"state":0}]},{"kind":"corner","dline":92,"bits":2},{"kind":"corner","dline":92,"bits":3},{"kind":"set","ops":[{"edge":61,"state":0}]},{"kind":"set","ops":[{"edge":62,"state":2}]},{"kind":"set","ops":[{"edge":74,"state":2}]},{"kind":"set","ops":[{"edge":76,"state":0},{"edge":77,"state":0}]},{"kind":"set","ops":[{"edge":64,"state":2}]},{"kind":"set","ops":[{"edge":49,"state":0},{"edge":63,"state":0}]},{"kind":"set","ops":[{"edge":46,"state":2}]},{"kind":"set","ops":[{"edge":32,"state":0}]},{"kind":"set","ops":[{"edge":29,"state":0}]},{"kind":"set","ops":[{"edge":12,"state":2}]},{"kind":"set","ops":[{"edge":51,"state":2}]},{"kind":"set","ops":[{"edge":65,"state":0}]},{"kind":"set","ops":[{"edge":91,"state":2},{"edge":79,"state":2}]},{"kind":"set","ops":[{"edge":15,"state":2}]}]',
+    },
+    /** Held on 1221 of 1459 positions walked. */
+    deadEnd: {
+      id: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":10,"state":2},{"edge":11,"state":2},{"edge":12,"state":2},{"edge":8,"state":2}]},{"kind":"set","ops":[{"edge":62,"state":2},{"edge":76,"state":2},{"edge":77,"state":2},{"edge":74,"state":2}]}]',
+    },
+    /** Held on 1447 of 1459 positions walked. */
+    lineContinues: {
+      id: "7x7t0dh:b3a31c1a3222b2d3f1b203a2c1a33a222a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":64,"state":2},{"edge":78,"state":2},{"edge":79,"state":2},{"edge":76,"state":2}]},{"kind":"set","ops":[{"edge":66,"state":0},{"edge":80,"state":0},{"edge":81,"state":0}]}]',
+    },
+    /** Held on 1412 of 1459 positions walked. */
+    dotFull: {
+      id: "7x7t0dh:b3a31c1a3222b2d3f1b203a2c1a33a222a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":64,"state":2},{"edge":78,"state":2},{"edge":79,"state":2},{"edge":76,"state":2}]},{"kind":"set","ops":[{"edge":66,"state":0},{"edge":80,"state":0},{"edge":81,"state":0}]},{"kind":"set","ops":[{"edge":63,"state":0}]}]',
+    },
+    /** Held on 565 of 1459 positions walked. */
+    clueBound: {
+      id: "7x7t0dh:a2a33323d1d11c31c2c13b2b2a3b3e",
+      moves: [
+        { kind: "corner", dline: 158, bits: 1 },
+        { kind: "corner", dline: 155, bits: 2 },
+      ],
+    },
+    /** Held on 751 of 1459 positions walked. */
+    corner: {
+      id: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+      moves: [{ kind: "corner", dline: 1, bits: 1 }],
+    },
+    /** Held on 796 of 1459 positions walked. */
+    cornerExit: {
+      id: "7x7t0dh:3a33c12c32b3a011a1a1b23b2a22d2a23a3b2a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":32,"state":2},{"edge":46,"state":2},{"edge":47,"state":2},{"edge":44,"state":2}]},{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]},{"kind":"corner","dline":4,"bits":1},{"kind":"set","ops":[{"edge":22,"state":2}]},{"kind":"set","ops":[{"edge":23,"state":2}]},{"kind":"corner","dline":5,"bits":2},{"kind":"corner","dline":5,"bits":3}]',
+    },
+    /** Held on 142 of 1459 positions walked. */
+    matchingPair: {
+      id: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+      moves:
+        '[{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]},{"kind":"pair","a":19,"b":20,"relation":"match"},{"kind":"pair","a":17,"b":21,"relation":"match"},{"kind":"pair","a":18,"b":33,"relation":"match"}]',
+    },
+    /** Held on 757 of 1459 positions walked. */
+    parity: {
+      id: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":10,"state":2},{"edge":11,"state":2},{"edge":12,"state":2},{"edge":8,"state":2}]},{"kind":"set","ops":[{"edge":62,"state":2},{"edge":76,"state":2},{"edge":77,"state":2},{"edge":74,"state":2}]},{"kind":"set","ops":[{"edge":7,"state":2}]},{"kind":"set","ops":[{"edge":9,"state":0},{"edge":5,"state":0}]},{"kind":"set","ops":[{"edge":4,"state":0}]},{"kind":"set","ops":[{"edge":25,"state":2},{"edge":6,"state":2}]},{"kind":"set","ops":[{"edge":27,"state":0}]},{"kind":"set","ops":[{"edge":29,"state":2},{"edge":30,"state":2}]},{"kind":"set","ops":[{"edge":13,"state":2}]},{"kind":"set","ops":[{"edge":15,"state":2}]},{"kind":"corner","dline":64,"bits":1},{"kind":"set","ops":[{"edge":32,"state":0},{"edge":44,"state":0}]},{"kind":"pair","a":14,"b":16,"relation":"match"},{"kind":"pair","a":17,"b":18,"relation":"match"},{"kind":"pair","a":21,"b":33,"relation":"match"},{"kind":"pair","a":35,"b":36,"relation":"match"}]',
+    },
+    /** Held on 1299 of 1459 positions walked. */
+    earlyLoop: {
+      id: "7x7t0dh:3a33c12c32b3a011a1a1b23b2a22d2a23a3b2a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":32,"state":2},{"edge":46,"state":2},{"edge":47,"state":2},{"edge":44,"state":2}]},{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]},{"kind":"corner","dline":4,"bits":1},{"kind":"set","ops":[{"edge":22,"state":2}]},{"kind":"set","ops":[{"edge":23,"state":2}]},{"kind":"corner","dline":5,"bits":2},{"kind":"corner","dline":5,"bits":3},{"kind":"set","ops":[{"edge":6,"state":0}]},{"kind":"set","ops":[{"edge":7,"state":0},{"edge":8,"state":0}]},{"kind":"set","ops":[{"edge":10,"state":2}]},{"kind":"set","ops":[{"edge":11,"state":0},{"edge":12,"state":0}]},{"kind":"set","ops":[{"edge":27,"state":2},{"edge":9,"state":2}]},{"kind":"set","ops":[{"edge":5,"state":0}]},{"kind":"set","ops":[{"edge":4,"state":2}]},{"kind":"set","ops":[{"edge":1,"state":0}]},{"kind":"set","ops":[{"edge":2,"state":2}]},{"kind":"set","ops":[{"edge":24,"state":0}]},{"kind":"set","ops":[{"edge":25,"state":2}]},{"kind":"set","ops":[{"edge":26,"state":0}]},{"kind":"set","ops":[{"edge":42,"state":0},{"edge":43,"state":0}]},{"kind":"set","ops":[{"edge":13,"state":0}]},{"kind":"set","ops":[{"edge":29,"state":2},{"edge":15,"state":2}]},{"kind":"set","ops":[{"edge":37,"state":0}]},{"kind":"set","ops":[{"edge":39,"state":0}]},{"kind":"set","ops":[{"edge":30,"state":2}]},{"kind":"set","ops":[{"edge":28,"state":0}]},{"kind":"set","ops":[{"edge":40,"state":2}]},{"kind":"set","ops":[{"edge":57,"state":2},{"edge":45,"state":2}]},{"kind":"set","ops":[{"edge":59,"state":2}]},{"kind":"set","ops":[{"edge":60,"state":0}]}]',
+    },
+    /** Held on 1022 of 1459 positions walked. */
+    cornerAtDot: {
+      id: "7x7t0dh:3a33c12c32b3a011a1a1b23b2a22d2a23a3b2a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":32,"state":2},{"edge":46,"state":2},{"edge":47,"state":2},{"edge":44,"state":2}]},{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]}]',
+    },
+    /** Held on 1114 of 1459 positions walked. */
+    cornerFromClue: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+    /** Held on 1094 of 1459 positions walked. */
+    cornerAcross: {
+      id: "7x7t0dh:21a21b2d2321a1b3c1a2b2a22232b3a2a2b2a22",
+      moves: [{ kind: "corner", dline: 179, bits: 1 }],
+    },
+    /** Held on 702 of 1459 positions walked. */
+    cornerOppositeExit: {
+      id: "7x7t0dh:b2a2a23b2a11b20a1a32a013a2c2a23222b22b1c",
+      moves:
+        '[{"kind":"set","ops":[{"edge":30,"state":2},{"edge":44,"state":2},{"edge":45,"state":2},{"edge":42,"state":2}]},{"kind":"set","ops":[{"edge":59,"state":2},{"edge":60,"state":2},{"edge":57,"state":2}]},{"kind":"set","ops":[{"edge":43,"state":2}]},{"kind":"set","ops":[{"edge":28,"state":0},{"edge":40,"state":0}]},{"kind":"set","ops":[{"edge":26,"state":2},{"edge":25,"state":2}]},{"kind":"set","ops":[{"edge":27,"state":0}]},{"kind":"set","ops":[{"edge":47,"state":2}]},{"kind":"corner","dline":59,"bits":1},{"kind":"corner","dline":59,"bits":3},{"kind":"corner","dline":22,"bits":2},{"kind":"corner","dline":29,"bits":1}]',
+    },
+    /** Held on 96 of 1459 positions walked. */
+    cornerFromPair: "7x7t0dh:3a33c12c32b3a011a1a1b23b2a22d2a23a3b2a",
+    /** Held on 228 of 1459 positions walked. */
+    pairAtClue: {
+      id: "7x7t0dh:3a33c12c32b3a011a1a1b23b2a22d2a23a3b2a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":32,"state":2},{"edge":46,"state":2},{"edge":47,"state":2},{"edge":44,"state":2}]},{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]},{"kind":"corner","dline":4,"bits":1},{"kind":"set","ops":[{"edge":22,"state":2}]},{"kind":"set","ops":[{"edge":23,"state":2}]},{"kind":"corner","dline":5,"bits":2},{"kind":"corner","dline":5,"bits":3},{"kind":"set","ops":[{"edge":6,"state":0}]},{"kind":"set","ops":[{"edge":7,"state":0},{"edge":8,"state":0}]},{"kind":"set","ops":[{"edge":10,"state":2}]},{"kind":"set","ops":[{"edge":11,"state":0},{"edge":12,"state":0}]},{"kind":"set","ops":[{"edge":27,"state":2},{"edge":9,"state":2}]},{"kind":"set","ops":[{"edge":5,"state":0}]},{"kind":"set","ops":[{"edge":4,"state":2}]},{"kind":"set","ops":[{"edge":1,"state":0}]},{"kind":"set","ops":[{"edge":2,"state":2}]},{"kind":"set","ops":[{"edge":24,"state":0}]},{"kind":"set","ops":[{"edge":25,"state":2}]},{"kind":"set","ops":[{"edge":26,"state":0}]},{"kind":"set","ops":[{"edge":42,"state":0},{"edge":43,"state":0}]},{"kind":"set","ops":[{"edge":13,"state":0}]},{"kind":"set","ops":[{"edge":29,"state":2},{"edge":15,"state":2}]},{"kind":"set","ops":[{"edge":37,"state":0}]},{"kind":"set","ops":[{"edge":39,"state":0}]},{"kind":"set","ops":[{"edge":30,"state":2}]},{"kind":"set","ops":[{"edge":28,"state":0}]},{"kind":"set","ops":[{"edge":40,"state":2}]},{"kind":"set","ops":[{"edge":57,"state":2},{"edge":45,"state":2}]},{"kind":"set","ops":[{"edge":59,"state":2}]},{"kind":"set","ops":[{"edge":60,"state":0}]},{"kind":"set","ops":[{"edge":41,"state":2}]},{"kind":"set","ops":[{"edge":55,"state":0}]},{"kind":"set","ops":[{"edge":56,"state":2},{"edge":52,"state":2}]},{"kind":"set","ops":[{"edge":38,"state":0}]},{"kind":"set","ops":[{"edge":54,"state":2}]},{"kind":"corner","dline":62,"bits":1},{"kind":"set","ops":[{"edge":31,"state":0},{"edge":34,"state":0}]},{"kind":"set","ops":[{"edge":48,"state":2},{"edge":49,"state":2}]},{"kind":"set","ops":[{"edge":61,"state":2}]},{"kind":"corner","dline":66,"bits":3},{"kind":"corner","dline":71,"bits":2},{"kind":"corner","dline":71,"bits":3},{"kind":"set","ops":[{"edge":20,"state":0}]},{"kind":"set","ops":[{"edge":19,"state":0}]},{"kind":"corner","dline":135,"bits":1},{"kind":"set","ops":[{"edge":67,"state":0},{"edge":53,"state":0}]},{"kind":"set","ops":[{"edge":69,"state":0}]},{"kind":"set","ops":[{"edge":68,"state":2}]},{"kind":"set","ops":[{"edge":84,"state":0}]},{"kind":"set","ops":[{"edge":97,"state":0},{"edge":98,"state":0}]},{"kind":"set","ops":[{"edge":101,"state":2}]},{"kind":"set","ops":[{"edge":99,"state":0}]},{"kind":"set","ops":[{"edge":83,"state":2}]},{"kind":"set","ops":[{"edge":82,"state":2}]},{"kind":"set","ops":[{"edge":71,"state":0}]},{"kind":"set","ops":[{"edge":86,"state":0}]},{"kind":"set","ops":[{"edge":102,"state":0},{"edge":103,"state":0}]},{"kind":"set","ops":[{"edge":100,"state":0}]},{"kind":"set","ops":[{"edge":88,"state":2}]},{"kind":"set","ops":[{"edge":85,"state":2}]},{"kind":"set","ops":[{"edge":105,"state":2}]},{"kind":"corner","dline":33,"bits":3},{"kind":"corner","dline":28,"bits":3},{"kind":"corner","dline":35,"bits":3},{"kind":"corner","dline":67,"bits":1},{"kind":"corner","dline":34,"bits":2},{"kind":"corner","dline":67,"bits":3},{"kind":"corner","dline":34,"bits":3}]',
+    },
+    /** Held on 626 of 1459 positions walked. */
+    pairAtDot: {
+      id: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+      moves:
+        '[{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]}]',
+    },
+    /** Held on 728 of 1459 positions walked. */
+    pairAtCorner: {
+      id: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":10,"state":2},{"edge":11,"state":2},{"edge":12,"state":2},{"edge":8,"state":2}]},{"kind":"set","ops":[{"edge":62,"state":2},{"edge":76,"state":2},{"edge":77,"state":2},{"edge":74,"state":2}]},{"kind":"set","ops":[{"edge":7,"state":2}]},{"kind":"set","ops":[{"edge":9,"state":0},{"edge":5,"state":0}]},{"kind":"set","ops":[{"edge":4,"state":0}]},{"kind":"set","ops":[{"edge":25,"state":2},{"edge":6,"state":2}]},{"kind":"set","ops":[{"edge":27,"state":0}]},{"kind":"set","ops":[{"edge":29,"state":2},{"edge":30,"state":2}]},{"kind":"set","ops":[{"edge":13,"state":2}]},{"kind":"set","ops":[{"edge":15,"state":2}]},{"kind":"corner","dline":64,"bits":1},{"kind":"set","ops":[{"edge":32,"state":0},{"edge":44,"state":0}]},{"kind":"pair","a":14,"b":16,"relation":"match"},{"kind":"pair","a":17,"b":18,"relation":"match"},{"kind":"pair","a":21,"b":33,"relation":"match"},{"kind":"pair","a":35,"b":36,"relation":"match"},{"kind":"set","ops":[{"edge":50,"state":2}]},{"kind":"set","ops":[{"edge":36,"state":0},{"edge":51,"state":0},{"edge":48,"state":0}]},{"kind":"set","ops":[{"edge":34,"state":2},{"edge":33,"state":2}]},{"kind":"set","ops":[{"edge":35,"state":0}]},{"kind":"set","ops":[{"edge":21,"state":2}]},{"kind":"set","ops":[{"edge":20,"state":0}]},{"kind":"set","ops":[{"edge":19,"state":0}]},{"kind":"set","ops":[{"edge":17,"state":2}]},{"kind":"set","ops":[{"edge":16,"state":0}]},{"kind":"set","ops":[{"edge":14,"state":0}]},{"kind":"set","ops":[{"edge":18,"state":2}]},{"kind":"set","ops":[{"edge":31,"state":0}]},{"kind":"set","ops":[{"edge":46,"state":2}]},{"kind":"set","ops":[{"edge":47,"state":0}]},{"kind":"set","ops":[{"edge":59,"state":2},{"edge":45,"state":2}]},{"kind":"set","ops":[{"edge":63,"state":2},{"edge":49,"state":2}]},{"kind":"set","ops":[{"edge":61,"state":0}]},{"kind":"set","ops":[{"edge":65,"state":0}]},{"kind":"set","ops":[{"edge":60,"state":2}]},{"kind":"set","ops":[{"edge":64,"state":0}]},{"kind":"set","ops":[{"edge":66,"state":2}]},{"kind":"set","ops":[{"edge":78,"state":0}]},{"kind":"set","ops":[{"edge":80,"state":0}]},{"kind":"set","ops":[{"edge":81,"state":2}]},{"kind":"set","ops":[{"edge":95,"state":0}]},{"kind":"corner","dline":187,"bits":3},{"kind":"corner","dline":221,"bits":3},{"kind":"corner","dline":182,"bits":2},{"kind":"corner","dline":182,"bits":3}]',
+    },
+    /** Held on 309 of 1459 positions walked. */
+    pairAcrossClue: {
+      id: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+      moves:
+        '[{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]},{"kind":"pair","a":19,"b":20,"relation":"match"}]',
+    },
+    /** Held on 283 of 1459 positions walked. */
+    pairAcrossDot: {
+      id: "7x7t0dh:3a1c2d212223a3233a2a3g13h2312b",
+      moves:
+        '[{"kind":"corner","dline":1,"bits":1},{"kind":"set","ops":[{"edge":0,"state":0},{"edge":3,"state":0}]},{"kind":"pair","a":19,"b":20,"relation":"match"},{"kind":"pair","a":17,"b":21,"relation":"match"}]',
+    },
+    /** Held on 756 of 1459 positions walked. */
+    pairChain: {
+      id: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":10,"state":2},{"edge":11,"state":2},{"edge":12,"state":2},{"edge":8,"state":2}]},{"kind":"set","ops":[{"edge":62,"state":2},{"edge":76,"state":2},{"edge":77,"state":2},{"edge":74,"state":2}]},{"kind":"set","ops":[{"edge":7,"state":2}]},{"kind":"set","ops":[{"edge":9,"state":0},{"edge":5,"state":0}]},{"kind":"set","ops":[{"edge":4,"state":0}]},{"kind":"set","ops":[{"edge":25,"state":2},{"edge":6,"state":2}]},{"kind":"set","ops":[{"edge":27,"state":0}]},{"kind":"set","ops":[{"edge":29,"state":2},{"edge":30,"state":2}]},{"kind":"set","ops":[{"edge":13,"state":2}]},{"kind":"set","ops":[{"edge":15,"state":2}]},{"kind":"corner","dline":64,"bits":1},{"kind":"set","ops":[{"edge":32,"state":0},{"edge":44,"state":0}]},{"kind":"pair","a":14,"b":16,"relation":"match"},{"kind":"pair","a":17,"b":18,"relation":"match"},{"kind":"pair","a":21,"b":33,"relation":"match"},{"kind":"pair","a":35,"b":36,"relation":"match"},{"kind":"set","ops":[{"edge":50,"state":2}]},{"kind":"set","ops":[{"edge":36,"state":0},{"edge":51,"state":0},{"edge":48,"state":0}]},{"kind":"set","ops":[{"edge":34,"state":2},{"edge":33,"state":2}]},{"kind":"set","ops":[{"edge":35,"state":0}]},{"kind":"set","ops":[{"edge":21,"state":2}]},{"kind":"set","ops":[{"edge":20,"state":0}]},{"kind":"set","ops":[{"edge":19,"state":0}]},{"kind":"set","ops":[{"edge":17,"state":2}]},{"kind":"set","ops":[{"edge":16,"state":0}]},{"kind":"set","ops":[{"edge":14,"state":0}]},{"kind":"set","ops":[{"edge":18,"state":2}]},{"kind":"set","ops":[{"edge":31,"state":0}]},{"kind":"set","ops":[{"edge":46,"state":2}]},{"kind":"set","ops":[{"edge":47,"state":0}]},{"kind":"set","ops":[{"edge":59,"state":2},{"edge":45,"state":2}]},{"kind":"set","ops":[{"edge":63,"state":2},{"edge":49,"state":2}]},{"kind":"set","ops":[{"edge":61,"state":0}]},{"kind":"set","ops":[{"edge":65,"state":0}]},{"kind":"set","ops":[{"edge":60,"state":2}]},{"kind":"set","ops":[{"edge":64,"state":0}]},{"kind":"set","ops":[{"edge":66,"state":2}]},{"kind":"set","ops":[{"edge":78,"state":0}]},{"kind":"set","ops":[{"edge":80,"state":0}]},{"kind":"set","ops":[{"edge":81,"state":2}]},{"kind":"set","ops":[{"edge":95,"state":0}]},{"kind":"corner","dline":187,"bits":3},{"kind":"corner","dline":221,"bits":3},{"kind":"corner","dline":182,"bits":2},{"kind":"corner","dline":182,"bits":3},{"kind":"pair","a":91,"b":94,"relation":"opposite"},{"kind":"pair","a":79,"b":91,"relation":"match"}]',
     },
   },
 });
@@ -1125,7 +1261,7 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
     // The sentence says "both outlined dots"; with one ring the reader cannot tell
     // which pair of edges is meant to be blocked. Judged on where the pixels
     // land rather than on the marks the step carries.
-    const { id, moves, step } = pinned("blockedPair");
+    const { id, moves, step } = pinned("clueBlockedPair");
     const result = renderScenario({ game: loopyGame, id, moves, showHint: true });
     expect(result.hint?.explanation).toBe(step.explanation);
 

@@ -637,6 +637,7 @@ describe("towers render", () => {
     expect(ui.threeD).toBe(true);
     const hint: HintStep<TowersMove, TowersHint> = {
       move: set,
+      rung: "single",
       explanation: "",
       highlights: { area: [], targets: [], marks: [], hatch: [{ x: 0, y: 1 }] },
     };

@@ -404,6 +404,15 @@ const markedOf = (hl: SpokesHint): Marked => ({
   hubs: hl.evidence,
 });
 
+/** The hint's rungs: the kinds of the solver's firings. */
+export const SPOKES_RUNGS = [
+  "twoOnes",
+  "saturation",
+  "exhaustion",
+  "contradiction",
+] as const;
+export type SpokesRung = (typeof SPOKES_RUNGS)[number];
+
 /**
  * Narrate why a firing is forced — one crisp line for a player who knows the
  * rules, premise then conclusion, in the necessity voice (the hint quality bar).
@@ -431,7 +440,10 @@ function continuation(f: SpokesFiring, hl: SpokesHint): Sentence {
 /** Flatten one firing into its journey of legs: leg 0 carries the full
  * narration, the rest continue it. Each leg shows the spokes still to settle,
  * so the whole deduction stays on screen as its spokes are drawn one by one. */
-function stepsOfFiring(f: SpokesFiring, w: number): HintStep<SpokesMove, SpokesHint>[] {
+function stepsOfFiring(
+  f: SpokesFiring,
+  w: number,
+): HintStep<SpokesMove, SpokesHint, SpokesRung>[] {
   return f.forced.map((sp, leg) => {
     const highlights: SpokesHint = {
       spokes: f.forced.slice(leg),
@@ -441,6 +453,7 @@ function stepsOfFiring(f: SpokesFiring, w: number): HintStep<SpokesMove, SpokesH
     const words = leg === 0 ? narrate(f, highlights) : continuation(f, highlights);
     return {
       move: { kind: "set", ...sp },
+      rung: f.kind,
       explanation: words.text,
       words,
       highlights,
@@ -449,7 +462,7 @@ function stepsOfFiring(f: SpokesFiring, w: number): HintStep<SpokesMove, SpokesH
   });
 }
 
-function hint(state: SpokesState): HintResult<SpokesMove, SpokesHint> {
+function hint(state: SpokesState): HintResult<SpokesMove, SpokesHint, SpokesRung> {
   if (!solveFromClues(state)) {
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
   }
@@ -537,7 +550,8 @@ export const spokesGame: Game<
   SpokesUi,
   SpokesDrawState,
   SpokesMistake,
-  SpokesHint
+  SpokesHint,
+  SpokesRung
 > = {
   id: "spokes",
 
@@ -580,6 +594,7 @@ export const spokesGame: Game<
       outline: "the hubs the step reasons from, with a halo in a second color.",
     },
   },
+  hintRungs: SPOKES_RUNGS,
   hintKeepTrack,
   hintGesture,
   findMistakes,
