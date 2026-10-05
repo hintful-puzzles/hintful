@@ -344,8 +344,8 @@ prints the files, lines and games — `tierNames(<digit>` found 21 tiered games
 where references found 29. The agent's LSP tool agrees once warm. On its default
 server, though, a query issued while the server loads comes back short with no
 error: 2 references against 72, and 2, 2, 2 for over three seconds. So an answer
-that has settled is not proof of a warm server; hand it a known positive first
-(`.claude/plugins/tsgo-lsp` has no such window). Neither sees a renamed copy, a
+that has settled is not proof of a warm server; hand it a known positive
+first. Neither sees a renamed copy, a
 typed-out value or source read through a `?raw` glob, and **"who references
 `Game.hint`" is not "who has a hint"** — the references include tests naming
 hintless games; the population is the implementations, or `HINT_GAMES`.
@@ -867,7 +867,7 @@ Update `/help` when adding features that diverge from upstream.
 
   In order, blocking on any failure — `npm run gate` runs the lot, `npm run typecheck` runs just the two `tsgo` passes:
 
-  1. **`tsgo -b --noEmit`** — the browser project. `tsgo` (`@typescript/native-preview`), **not** `tsc`: it checks this tree in ~2.5 s against ~13 s. The same binary can serve an editor's language server (`tsgo --lsp`), but the agent's LSP tool runs whatever its plugin names — `typescript-language-server` on `typescript` 5.9 by default — so the diagnostics it pushes after an edit are 5.9's, not the gate's, unless the session loads `.claude/plugins/tsgo-lsp` (its README says how). `typescript` 5.x is still installed for the packages needing its programmatic API.
+  1. **`tsgo -b --noEmit`** — the browser project. `tsgo` (`@typescript/native-preview`), **not** `tsc`: it checks this tree in ~2.5 s against ~13 s. The same binary can serve an editor's language server (`tsgo --lsp`), but the agent's LSP tool runs `typescript-language-server` on `typescript` 5.9, so the diagnostics it pushes after an edit are 5.9's, not the gate's. `tsgo --lsp` is not a replacement there: it hands diagnostics over only when a client asks, the tool relays only what a server pushes, and a session pointed at it got none after an edit (measured 2026-10-05, through `typescript` 7.1.0-dev.20261005). `typescript` 5.x is still installed for the packages needing its programmatic API.
   2. **`tsgo --noEmit -p tsconfig.node.json`** — the build-side project (`vite.config.ts`, `vitest.config.ts`, `vite-plugins/`, `scripts/checks/`). Separate because it runs in Node while `tsconfig.json` is deliberately browser-shaped. Not optional: the file that renders every help page went unchecked while it sat outside `include`.
   3. **biome** — the read-only form of `biome check` (lint rules, formatting, **and** import order — so a lint-clean-but-unformatted file can't land and re-open the drift that once made `npm run check` reformat ~150 untouched files). It is **scoped by role**: the per-commit hook checks only the *staged* files (`biome check --staged`, via `GATE_BIOME_STAGED=1`), while CI and a manual `npm run gate` check the *whole tree* (`biome ci .`) as the backstop for `--no-verify` bypasses and biome-upgrade restyles. `npm run check` remains the fixer.
   4. **`scripts/feedback-probe.mjs --verify`** (0.02 s) — the probe anchor. Fails when a refactor moves a line the local-feedback corpus quotes as an anchor; otherwise the harness measures a smaller corpus and *reports success*. Only that the corpus **applies** is gated; its rate never is.
