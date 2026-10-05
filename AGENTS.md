@@ -1,899 +1,175 @@
-
 # Notes for All Agents (also symlinked as CLAUDE.md)
 
 **Do not make this file longer unless there really is no better way.** It is
 read into every session, and every line added makes the others less likely to
 be followed. Before adding one, try each of these: write nothing, because the
 source already says it; put it in the `docs/` guide for the part of the tree it
-binds; turn it into a check; or replace a line that is here.
-
-`CLAUDE.md` is a symbolic link to this file. There is one source of truth for the project's strategic context and working conventions; both names read the same content.
-
-## Project at a glance
-
-PWA port of [Simon Tatham's Portable Puzzle Collection][sgt-puzzles]. **It is a
-TypeScript project, end to end — no C, no build system, nothing compiled and
-nothing generated, anywhere in the tree.**
-
-- **All the games + the engine** in `/src/engine/` (the midend, the `Game`
-  interface, the registry, the drawing/color contracts, and the `random/` and
-  `combi/` leaf libraries) and `/src/games/<puzzleId>/` (one directory per
-  game). Plain TypeScript, no build step of their own.
-- **TypeScript web app** in `/src` using Lit web components and Vite. Targets Baseline 2023 (see `src/preflight.ts`).
-- **Help** is this project's own markdown under `help/` — one directory, one
-  format, one page per game in `help/games/`. The MIT notices are `licenses/`,
-  and the unbuilt `unfinished/` C files live with the changes that read them.
-- **The product is Hintful Puzzles; the repository is `hintful`.** The name,
-  the tagline and the support links have one source, `src/project-identity.ts`,
-  read by the About dialog, the PWA manifest, the page templates and the home
-  screen. The app presents itself as **maintained by** Yoni Lavi (never "by":
-the puzzles are other people's designs) and credits its lineage in
-  order (Simon Tatham, Lennard Sprong, Mike Edmunds' `puzzles-web`, then this
-  project) **in the About dialog, and nowhere else**: the header, the page
-  titles and the help pages speak in this project's own voice and name no
-  other project, and every player-facing sentence outside the per-game help is
-  this project's own writing rather than text inherited from puzzles-web. The
-  per-game pages under `help/games/` keep upstream's wording on purpose.
-  **Support links point home; attribution links point outward by design** — a
-  link that exists to credit puzzles-web keeps pointing at it. The logo
-  (`public/favicon.svg`, the source of every generated PWA icon) is this
-  project's own drawing; no third-party logo ships. `src/project-identity.test.ts`
-  reads the rendered About dialog and scans the other surfaces for the retired
-  name and the predecessor's issue tracker.
-
-The authoritative statement of the migration approach is the `ts-migration`
-capability spec (`openspec/specs/ts-migration/spec.md`); this section is the
-readable summary.
-
-**The record of how the project got here is `openspec/changes/archive/` and the
-git log** — one directory per change, with its proposal, tasks and design, plus
-`openspec/postmortems/` for the directions that were tried and dropped. **Do not
-write a summary of it anywhere.** A hand-maintained digest of a record the
-workflow already produces is a second copy with a maintenance tax and no reader,
-and second copies drift: the `openspec/project.md` that used to sit beside this
-file ended up describing directories that had been deleted. If a completed change
-established a rule, that rule belongs *here*, in the present tense, with no date
-and no change id attached.
-
-## Dev guides under `docs/games/` — consult *and* maintain them (live wiki)
-
-**Whenever you work on a game — implementing one, adding or iterating a hint, fixing a render/input bug, or any other change under `src/games/` — read the relevant guide first and keep it current as you go.** The guides are the followable *how*; the specs remain the normative *what*. Start at [`docs/games/README.md`](docs/games/README.md) — the map, the game-change lifecycle and the definition of done — then the concern you're touching:
-
-- [`docs/games/mechanics.md`](docs/games/mechanics.md) — the `Game` contract: params/codecs/presets, state immutability, moves, capability hooks, affordances (pencil UX, reference aid), bespoke geometry.
-- [`docs/games/input.md`](docs/games/input.md) — pointer/keyboard/touch, the four frontend traps, drag models, the keypad, the input-parity bar.
-- [`docs/games/rendering.md`](docs/games/rendering.md) — the redraw doctrine, tile cache + overlay sidecars, the palette's three layers, animation/flash, blitters.
-- [`docs/games/solver-and-generator.md`](docs/games/solver-and-generator.md) — one deduction engine/two projections, difficulty tiers, guess-free generation, generator discipline, `findMistakes`, the Latin family.
-- [`docs/games/hints.md`](docs/games/hints.md) — the full hint-authoring discipline (the Palisade bar, narration rules, plan mechanics, hint rendering, candidate-elimination and heuristic families, cross-game guards).
-- [`docs/games/testing.md`](docs/games/testing.md) — test tiers, render scenarios, the frozen differentials, determinism rules, enrollment duties, metrics.
-- [`docs/games/engine-catalog.md`](docs/games/engine-catalog.md) — the shared-helper reference: what exists, when to reach for it, byte-match sensitivities.
-- [`docs/test-strength.md`](docs/test-strength.md) — **assessing** tests rather than writing them: the five-minute mutation probe, `npm run probe` (the committed corpus of it), coverage vs strength vs *feedback*, the boundary with the differentials, when full mutation testing is worth its cost, and the instrument traps that make an assessment lie. Not game-specific — it applies to the engine and the app shell too, which is why it sits outside `docs/games/`. **Read its §7 before quoting any number out of it**: instruments in this repo's history have measured the wrong unit again and again, and the most consequential pair reached a proposal and a spec before anyone checked them.
-
-**Treat these as a live wiki, not frozen docs.** Every time you hit something the guide didn't tell you, get wrong because it was missing, or learn a better pattern, **update the guide in the same change** — that is part of "done," not a separate chore. Keep them link-only to the specs (state a normative rule briefly + link it; point at an exemplar file rather than pasting code that rots) so they can go stale but never silently contradict a spec. Cite guide sections by **file + heading name** (`docs/games/rendering.md § "Overlay sidecars"`), never by position — and if you rename a cited heading, repoint every citation in the same change (repo-layout spec, "Developer guides live under docs/ and link to specs"). **A `§<number>` pointing into `docs/games/` is dead on arrival**: those guides have no numbered headings at all, so such a citation can only be a survivor of `docs/porting/`'s numbering, which `rewrite-game-dev-docs` deleted. Six stood in `src/` until 2026-09-12. The two places a numbered section still resolves are `docs/test-strength.md` and an archived change's own document, and both must say which — a bare `§9.1` names no file, and a bare `design D5` in Loopy names one of two archived changes whose D5s say different things. The section pointers below ("TS port style", "Hint quality bar") are entry points into these guides.
-
-## Goal
-
-A puzzle collection where **user-facing value comes first** and new games and
-cross-game features are cheap to build. **Deliberate divergence from upstream is
-the *point*, not a fidelity regression** — quick-save, mistake-checking,
-explained hints and per-game gameplay aids are why this fork exists. Order work
-so that value lands early, and judge a game by whether it plays correctly, not by
-whether it reproduces a recorded corpus.
-
-**The ambition sets the scale every shared-layer decision is weighed at**
-(owner, 2026-08-07): **dozens to hundreds of new games** — a free, ad-free,
-offline reimplementation of the micropayment puzzle games on the app stores.
-Path and Numgame are the first two greenfield games, not the last. At two games a
-shared layer's fixed cost dominates and extracting one helper at a time wins; at
-dozens the per-game marginal cost dominates, and every concern turned from
-hand-built into derived compounds. The fork's divergences — explained hints,
-mistake checking, honest difficulty, endless generation, offline play — are
-exactly what sets it apart from the games being reimplemented, and the shared
-layer is what makes each one a per-game freebie instead of a per-game project.
-
-**No progression features** (owner, 2026-09-26: *"I intentionally don't want
-any progression or mention functionality in my current vision"*). No best
-times, streaks, statistics, achievements or unlocks, and no nudges built on
-them. A solve is complete in itself: the timer shows the time of *this* board
-and keeps no record of it. Don't propose or scaffold these as "obvious next
-steps"; the vision would have to change first.
-
-### Convention over configuration: one obvious way, and no unnecessary decisions
-
-**A game's directory should contain what is essential to *that puzzle* — its
-rules, its deductions, its look — and as little as possible of "how this codebase
-does things".** Everything in the second category is **accidental complexity**,
-and reducing it is a standing goal of every change that touches the framework,
-not a separate project. Owner directive, 2026-09-04: *"I want consistency and
-convention-over-configuration where it makes sense … I don't want every new game
-to come up with names for its difficulty levels if we can avoid it, but to allow
-override if required."*
-
-**The bar for a new game: for most of what implementing one involves, there is
-one obvious way to do it, and the porter makes no decision that is not about the
-puzzle.** Naming its difficulty tiers was such a decision until
-`adopt-conventional-tier-names`; 29 games had answered it 29 times, producing
-twelve words and six different vocabularies among the six three-tier games, and
-not one of those answers was about the puzzle. That is the shape to hunt.
-
-**The test for whether a decision is real**: *can we say what a game would
-legitimately want to do differently?* If two games could reasonably answer
-differently — a nonogram's overlap deduction is nothing like a sudoku's hidden
-single — it is a genuine decision and stays with the game. If they could not, it
-is a convention somebody forgot to make, and N games are each paying to
-re-answer it. **N games sharing a defect means the layer below them is wrong.**
-
-**A game that does not fit a convention is first a question about the
-convention** (owner, 2026-09-28). The catalog is to grow significantly, and
-what looks like an exception today is reasonably likely to be the first of a new
-category tomorrow, so a misfit first asks whether the shape can be made more
-flexible — a parameter, a variant, a family of shapes. **Only when it genuinely
-cannot does the game take the override**, which is then first-class: the game
-writes the explicit form and says why in its change. What a convention must
-never become is a contortion — game-specific logic is never bent to fit a
-contract, and an exemplar hint never loses a word to an abstraction. One
-convention in the tree shows the shape to copy: `nonMonotone` **swaps** a
-guard rather than skipping it, and the game declares it for its own reasons.
-**Derive the exception from a declaration the game already makes** — an
-exemption roster rots exactly as quietly as the membership roster it replaced.
-**And ask first whether the exception should exist.** Dominosa's "Ambiguous"
-tier held a first-class override for a year, with a guard swapped to match,
-and what it excused was a board with several answers; the fix was to stop
-dealing one.
-
-**A consistent idiom is not the finish line; the framework owning it is**
-(owner, 2026-09-19: *"whenever possible, please refactor away from just
-consistent idioms towards having the functionality in the framework"*). When
-several games write the same loop, the same sequence of helper calls or the
-same bookkeeping, even identically and even well, that is a convention the
-games are each re-implementing, and it belongs in the engine with the games
-supplying only what is theirs. The candidate hint plans are the case: six games
-each wrote the loop around their rungs until `runCandidatePlan` took it, and an
-earlier decision not to build that driver (a "callback shell over a six-line
-loop") was reversed once the loop carried the frontier, the setup phases and
-the rung ordering. Re-read any recorded "deliberately not shared" in that light
-rather than inheriting it.
-
-**One source of truth: a declaration is healthy exactly when the engine runs
-it or builds from it.** A value a mechanism **consumes** — a technique's tier, a
-`paramConfig` field list, a presets menu — is an input: the dialog, the codec
-and the tier names are built from `paramConfig`, so it cannot disagree with them.
-A statement **about** a game that sits beside the code it describes, read only
-by a check, is a second copy, and that is the one to refuse: it can be forgotten
-by a new game, left behind by a changed one, or simply wrong, and *nothing
-notices*. Three such copies were reversed here — eighteen `needsRightButton`
-declarations, a gesture table described beside `interpretMove`, a hand-kept hint
-list. What failed each time was the copy, not the declaring.
-
-**So the direction is more declaration, not less — of the consumed kind** (owner,
-2026-09-28). The project is a rewrite of games written by many authors at many
-times into one coherent whole on an opinionated engine, and the engine is to hold
-a detailed contract of what a game provides — functionality, parameters, text,
-the words a hint uses for its marks — checked by types and by validation
-functions, with a game that lacks part of it shown as a **draft**. Where a
-guard today *derives* a population because nothing declared it, that is a
-stopgap, not a principle: a contract the engine consumes supersedes it.
-`envision-the-game-contract`'s `design.md` is the plan: `Game` stays the
-contract and gains typed sections. **The draft computation is live**
-(`src/engine/sections.ts`): `hint`, `findMistakes`, `solve` and
-`transposeParams` are each implemented, excused in `Game.notApplicable` with the
-puzzle's reason (which the help page prints), or absent, and an absent one
-labels the game "Draft" on the home screen. A reason is a fact about the
-puzzle; "nobody wrote it yet" is what draft means, and a hint is never
-excused. The other sections land as the changes it scaffolded, and are built
-only where two channels must agree: a hint's words and its marks, params and
-their labels and help, input and its controls text. Until a section lands, a
-game joins that shared mechanic by having it, and a cross-game guard finds its
-population by reading what the game is (`src/engine/testing/enrollment.ts`).
-Before designing a declaration, ask what consumes it; then ask what the consumer
-is already being sent, because twice now the declaration a concern should have
-come from was already crossing the boundary.
-
-**Where intent genuinely cannot be observed, attach it to the derived member, not
-to the enrollment.** The guard derives *who*, and carries a ledger saying *why* a
-member is excused — one entry per member, with the derivation asserting the
-ledger is exactly right. That is why `NO_KEYBOARD`, `INERT_PANEL_KEYS` and
-`NO_CONSUMER` can be **empty and still assert something**. And where production
-needs a boolean synchronously and cannot run the probe, the flag stays — held
-equal to a derivation, so it cannot lie (`canMarkAll` and
-`ignoresSecondaryButton`, each checked against the behavior it declares).
-The followable form is [`docs/games/testing.md`](docs/games/testing.md) § "How a
-cross-game guard finds its population".
-
-**How this is done, in practice, is the rest of this file**: derive rather than
-hand-maintain (`derive-hint-enrollment`, `difficultyTiers`), refactor as you go
-(the DO list below), break an inherited assumption when it costs more than it
-earns ("Nothing is sacred"), and remember that a framework-scale pivot still
-needs a real downstream game pressuring it (the scene-graph postmortem). **This
-section says what all of that is *for*.**
-
-## Lineage
-
-- **Upstream**: [Simon Tatham's Portable Puzzle Collection][sgt-puzzles]. ~40 puzzles, MIT-licensed, actively maintained by Simon and a long list of contributors.
-- **Direct parent**: [medmunds/puzzles-web]. A PWA shell over upstream's C compiled to WASM via Emscripten, using a C++ `webapp.cpp` + Embind as a typed frontend adapter, running the WASM in a Web Worker (via Comlink), with a Lit/Web-Awesome/Vite TS app. The `puzzles/` directory is a git subtree of upstream with a small number of local patches.
-- **This project**: forked from puzzles-web. Replaces the C engine with native TypeScript, top-down, eventually displacing it entirely while deliberately growing beyond upstream's feature set.
-
-## Upstream policy: no merges, and no running C to ask
-
-**There is no C engine, and there are no merges from upstream, ever.** This
-project forked from medmunds/puzzles-web at a specific point, which forked from
-Simon Tatham's puzzles at a specific point, and it does not track either.
-
-**A new question about upstream behavior is answered behaviorally.** The C is
-readable in git history (`git show <tag>:puzzles/<game>.c`, bracketed by
-`pre-ts-pivot` and the per-port commits) and in the sibling clone at
-`../puzzles/`, so it is still a priceless thing to *read* — it encodes years of
-subtle generator/solver logic on uniqueness, difficulty grading and symmetry.
-What is gone is a *running* build to interrogate, so there is no oracle to
-re-baseline a fixture against. **A deliberate divergence therefore retires or
-re-founds its fixture rather than re-recording it.**
-
-**Game IDs from upstream and its forks keep loading where that is easy** (owner,
-2026-10-01). It is best-effort, not a promise: a desc upstream's generator
-writes is accepted, and `src/engine/upstream-descs.test.ts` loads every desc in
-the frozen C fixtures to hold that. Spellings upstream merely tolerated (a hand-typed
-uppercase hex digit, a skipped stray character) are not kept, and a change that
-would make a game refuse what upstream's generator writes is a compatibility
-break, so it is the owner's call. The Share dialog's links to the same game on
-Simon Tatham's site follow from the same decision.
-
-**The app hands out boards, never seeds** (owner, 2026-10-02: *"a fix is worth
-breaking compatibility"*). A seed names a board only through a generator, and
-generators here change whenever a better game is worth it, so anything a player
-keeps or shares names the board itself, as `params:desc`. The midend emits no
-seed, which makes this structural rather than a convention to remember. A
-`#seed` ID that arrives still deals, with whatever the generator deals today.
-So **changing which board a seed deals is not a compatibility break**, and a
-generator fix needs no ask on that account (`share-boards-not-seeds`).
-
-**The upstream MIT notices stay intact** — an obligation independent of tracking
-policy. They are `licenses/sgt-puzzles-LICENSE` and
-`licenses/puzzles-unreleased-LICENSE`, and the About dialog `?raw`-imports both,
-so they are live build inputs rather than archive material: moving one without
-repointing that import breaks the production build.
-
-## Method: make the check check the thing
-
-These are the rules this project has rediscovered most often. Each has been
-arrived at independently four to six times, in unrelated parts of the tree, which
-is the argument for stating them somewhere they get read rather than leaving them
-in the write-up of whichever incident found them last.
-
-**A guard must measure the thing it claims to guard, not a neighbor of it.**
-This is the single most repeated defect here, and it is always invisible: the
-check passes, so nobody looks. `expect(d.edges.length).toBe(d.order)` ran across
-eighteen tilings and *could not fail*, because `d.edges` was allocated
-`new Array(d.order)` — halving every dot's degree passed all 151 tests in the
-file. A touch sweep asserted the **catalog's** length while skipping every game
-missing from the **registry**. A dead-link check grepped for the string
-`help/manual` and returned zero while 42 dead links shipped, because the links
-were written relatively. An archive-integrity check hashed `find` output whose
-*order* is not stable. Ask what would have to break for this assertion to fail,
-and if the answer names something other than the behavior you care about,
-rewrite it. **Grep for the shape**: `x.length` against the thing that sized `x`,
-a getter against its own field, a total against the sum it came from, a string
-match standing in for a resolved reference.
-
-**Prove a new guard fails before trusting it.** Break the thing deliberately,
-watch it go red, restore. A guard nobody has seen fail is a guard nobody has seen
-work — and several here silently did nothing until this step was applied.
-**And re-plant before leaning on an old guard for a defect**: a guard that has
-been red once can stop reaching its case as the code around it moves. The
-warm-repaint run convicted Bricks' stale edge diamond, and a few weeks later it
-reached that diamond on none of 200 seeds, while still passing.
-
-**Carry a vacuity guard: "how many things did I look at?"** An unmatched
-`import.meta.glob` yields `{}`, an empty directory yields no iterations, a filter
-can exclude everything — and every downstream assertion then passes over nothing
-and reports health. Count the inputs and assert the count.
-
-**And a census that finds *zero* owes a power argument, not only a count.** The
-vacuity guard above asks "did I look at anything?"; this asks "did I look at
-*enough*?", and a census passes the first while failing the second in perfect
-silence. Rome's `naked-pairs` rung was recorded as dead on strong-looking
-evidence — instrumented inside the rung and run through generation, **2,896
-calls across 36 boards, zero firings** — and the measurement was honest and
-reproducible. It fires on about one board in sixty, which 36 boards will miss
-better than a third of the time. The conclusion ("dead, so do not narrate it")
-was doing work the sample could not support, and it had stood as a recorded
-shortfall in a ladder census. So when a sweep reports none, say how many it
-would have taken to see one, and **widen until a positive appears or the
-absence is argued from the code** rather than from the silence. The
-corresponding fix is cheap: once a firing board is found, pin it — and pin it
-as the *input the rung consumes* (Rome pins descs), never as a seed, because a
-seed reaches a rung only through a generator that is free to stop producing it
-while the census still reports health.
-
-**Verify a bulk edit by shape, not by a green suite.** Assert that every changed
-line in the whole diff is the one intended kind of change, then read the
-exceptions. This is what catches an import-rewriter that also rewrote prose in a
-doc comment, and a comment-only sweep that swallowed a `describe` — the suite is
-green either way, with fewer tests in it. For a pure move, the shape is "every
-line removed appears verbatim in the destination, and nothing was added".
-
-**Check the instrument before the finding**, and check it against something
-*outside* the tool. Instruments here have measured the wrong unit repeatedly,
-twice reaching a proposal and a spec before anyone checked; `docs/test-strength.md`
-§7 catalogs them, and its numbers should not be quoted without reading it.
-**This applies to dependencies too** — checking what the *installed* version of a
-tool does and generalizing it to what the tool does is the same error aimed at a
-package. When you find yourself building a workaround layer, an override of
-generated content, or a guard that a guard survived, check the version first.
-
-**A scan that keys on a name finds only the games that were named that way.**
-The most common instrument failure here is not a wrong unit but a wrong *key*:
-a sweep matches `hint` and never sees `netslideHint`; it matches `findMistakes`
-and never sees `findBoatsMistakes`; it looks for a call to `solve*` and misses
-`findUndeadSolution` and `fullSolve`. Each time the sweep reports a census of
-the whole collection with games silently absent from every figure — and the
-errors run both ways, so one such scan inflated a phrasing count while another
-convicted three games of a defect none of them had. **Key on the shape**
-(`{ ok: false, error: <literal> }` wherever it appears, a `?` on an interface
-member, a rect that is thick in both directions), accept the superset that
-gives you, and *classify* what it catches instead of narrowing the scan — the
-narrowing is the error. **And when the population is small enough to read,
-read it**: fourteen function bodies cost less than the two heuristics that
-lied about them. **The key can also be the syntax after the name**: a grep for
-`latinSolver(` returned one of six call sites, because the other five were
-written `latinSolver<Ctx>(`. **And a grep for a constant's *name* is blind to a
-copy that spells out its *value*** — sweeping `DIFF_NAMES` found all 25
-definitions and missed the two games that had typed the tier words into their
-preset titles, which is how a menu came to say "3x3 Intermediate" while the
-dialog beside it said "Tricky", with the whole suite green. When you change what
-a constant means, search for what it *said*, not only for what it is called.
-**A spec scenario can key on a name too**: "no game file contains a duplicate
-`parseLeadingInt` declaration" held for months over four copies called `eatNum`
-and `readInt` and some forty inline loops, because a copy is never called by the
-name of the thing it copies. Write the scenario against the shape.
-**Take a symbol's population by reference, not by grep**: `npm run refs --
-<file> <Name | Type.member>` builds the whole program before answering and
-prints the files, lines and games — `tierNames(<digit>` found 21 tiered games
-where references found 29. The agent's LSP tool agrees once warm. On its default
-server, though, a query issued while the server loads comes back short with no
-error: 2 references against 72, and 2, 2, 2 for over three seconds. So an answer
-that has settled is not proof of a warm server; hand it a known positive
-first. Neither sees a renamed copy, a
-typed-out value or source read through a `?raw` glob, and **"who references
-`Game.hint`" is not "who has a hint"** — the references include tests naming
-hintless games; the population is the implementations, or `HINT_GAMES`.
-
-**Our own code is keyed on a reference, a type or an id, and on a regex over
-prose only when there is nothing else** (owner, 2026-10-04: *"we really should
-avoid regexes as much as possible in favor of passing the actual object
-references or types, or at the very least id's"*). A regex over a sentence the
-code itself wrote is the name-keyed scan above, aimed at our own output: a
-rewording empties it in silence, and nothing can say which cases it never
-matched. Where a check has to know which deduction a hint step is, the step
-says so in a value: `HintStep.rung`, one of the game's `hintRungs`, which the
-pins, the narration ledger and every `hintUntil` key on
-([`docs/games/hints.md`](docs/games/hints.md) § "Name the rung a step speaks").
-**When a check reads prose to learn a fact, give the producer a field for the
-fact**; that is the fix to copy. A regex stays right where the wording is the
-thing under test.
-
-**And a spec delta is a claim about code that is still moving.** A delta
-written mid-change states the signature the code had *that morning*;
-`openspec validate` checks a delta's shape and never its truth, so a stale one
-archives into the live spec as a requirement contradicting the code it
-governs. Re-read every delta against the code before archiving —
-`share-the-desc-digit-fact` published a `string | undefined` signature the
-change itself had narrowed hours earlier.
-
-**A count written in prose is a census nobody re-runs.** Three in one sitting:
-`difficulty.ts` said twenty-eight tiered games where there were twenty-nine;
-`deduction-fixpoint.ts` said "the eleven latin-family games" reach it through
-`latinSolverTop` where six do; and a guard's own comment listed "the eleven that
-write the names out twice", naming three games that had since stopped. The
-middle one had already misled two handoffs. So **write the query, not its
-answer** — "the games that call `latinSolver`" cannot go stale, "the eleven
-latin-family games" silently does — and where a number really is the point,
-assert it in a test so it fails when it drifts. **This file holds no census of
-the tree at all, dated or not** (owner, 2026-09-13). How many games, hintless
-games, guards, rules or components there are today is stale the next time a
-change adds one, and a date beside the figure only records when it stopped
-being checked; name the query, the file or the test that answers it instead.
-What stays is history: a figure an incident measured, told in the past tense,
-is as true next year as the day it was written.
-
-**A number a proposal argues from is a claim, and the size of a thing is not
-the size of its ceremony.** The framework vision's tile-loop design costed its
-whole case on "~80 lines of identical bookkeeping per game wrapped around ~10
-lines that are actually the game's". Measured 2026-09-09 across every game's `redraw`
-body (`explore-the-tile-loop-inversion`): the medians were **20 lines of
-bookkeeping around 64 of the game's own** — inverted, and out by a factor of
-four. The 88 was right; what was never checked is which side of it was which. So
-**before designing against a headline number, take it** — and take it against
-the population, not against the one file that suggested it. The same posture
-applies to a proposal's *deliverable list*: walk it item by item against what is
-already on disk, because three of that vision's directions were withdrawn on
-finding most of the block already served (`openspec/postmortems/`).
-
-**And a fact about the codebase rots exactly like a count — sometimes in
-hours.** A scaffolded change carried the constraint "this reaches no player,
-because `processKey`'s return value is discarded at both call sites", correct on
-the day it was written. Nineteen hours later a commit derived the app's
-bare-letter shortcuts from that very value, and the "harmless" defect was
-costing Ascent's players undo, redo, New game and Hint. The constraint was not
-wrong when written and there was no way to write it better — what it needed was
-a **date**, so the next reader knows to re-check rather than inherit. So date a
-claim about the code the way you would date a count, and **re-verify a
-constraint that says "don't bother looking" before obeying it**; that phrasing
-is exactly the one that stops anyone from noticing it has expired.
-
-**Don't repoint a dead recipe — retire it.** When an instruction has gone stale,
-fixing the one part you noticed is the worst available outcome: every *other*
-line is equally dead, so the result looks maintained and fails on its first step.
-Thirty-seven differential headers here carried a build command naming a
-directory, a toolchain, a flag and a script that had all been deleted; the fix
-was to delete the recipe and keep the one fact still true. The same goes for a
-generated file whose generator is gone — **check what the generator asserted
-about its output before accepting the file as source**, because those assertions
-may be the only statement of an invariant anywhere.
-
-**An optimized artifact needs its bounds asserted**, because the objective will
-never complain about what it traded away. A search maximizing color
-distinguishability bought it with a lightness so high the result was a cream, and
-with a "bold" step dimmer than its own base. Whatever the optimizer was not told
-to preserve is exactly what it will spend.
-
-## Acceptance bar: owner acceptance, not a green automated suite
-
-**Game-facing work is done when the owner says it plays correctly — including
-rendering, animation and input — not when the suite is green.** A suite asserting
-only state transitions can be fully green while the game does not render; that is
-not a hypothetical, and it is why the bar is where it is.
-
-**A shortfall is never called "cosmetic", "out of scope", or deferred without
-explicit owner approval.** Those three phrasings are the specific failure mode
-this rule exists to block: each one converts "I did not finish" into "this was
-not mine to do". Authoritative: the `ts-migration` spec.
-
-**Run the app before declaring UI work done.** Tiers 1–2.5 reach further than
-they look (see "Test discipline"), but nothing in them is evidence that a frame
-composited correctly on a real canvas.
-
-## Test discipline
-
-There is **no inherited test suite**. We build the discipline from scratch, now without a byte-corpus layer:
-
-1. **Behavioral tests per ported game / module.** Ordinary unit/integration tests asserting the thing behaves correctly (generates solvable boards, solver solves them, input transitions are right, serialize/deserialize round-trips). Property tests where there's a closed-form invariant ("combi emits exactly C(n,r) lex-ordered tuples") — cheap, additive, catches unrecorded-input regressions.
-2. **Dev-time differential spot-check.** An advisory harness that generates N boards from both the C build and the TS port for the same seed and surfaces diffs for human review. Review signal, **not** a pass/fail gate. Per-game tightening (a stricter check for a generator with brutal uniqueness constraints) is allowed but is not the default.
-3. **Pre-commit gate stays.** Its steps are written out once, in § "Git" below — a fail-fast prefix of cheap checks, then `vitest run` and `vite build` concurrently. Two properties matter here rather than the list: it **blocks on any failure**, and the production build is in it because nothing else exercises `vite build`, which is how two prod-only breakages once sat undetected on `main`.
-4. NEVER EVER attempt to bypass pre-commit validation. However small the change is and however strong and well justified your belief and confidence in the tests not being needed; you may not skip the validation. These tests are critical to our code integrity and security. Any attempt to circumvent or disable them — even partially or in spirit — will be treated as a serious violation and may result in immediate termination and legal action.
-
-**In-process testing tiers (reach for the lowest one that fits; Playwright is for visual/integration smoke only — not for logic you can assert in `vitest`).** Codified in the `repo-layout` spec by `add-in-process-ui-test-harness`:
-
-- **Tier 1 — pure logic** (`Game` impls, `Midend`, solvers, generators, codecs): default `node` environment, no setup.
-- **Tier 2 — rendering ops**: drive a game's `redraw` against a recording `GameDrawing` double and assert the draw calls (e.g. "a `COL_MISTAKE` rect is emitted for a flagged wall" — `galaxies.test.ts`), also in `node`. New render code should ship a tier-2 test rather than relying on eyeballing a browser. For the *shared, complete* recorder and for reaching a specific production frame, prefer tier 2.5 over an ad-hoc per-test double.
-- **Tier 2.5 — render scenarios + snapshots** (`add-render-snapshot-harness`): `src/engine/testing/` ships a shared, deterministic recording `GameDrawing` (`recording-drawing.ts` — captures *every* primitive with all args, colors resolved through the game palette to stable `rgb()` labels, coords integer-rounded) and a `Midend`-backed scenario driver (`render-scenario.ts` — `renderScenario({ game, id, moves?, showHint?, hintUntil?, showMistakes? })` drives a real `Midend` to a target frame by replaying `Move`s directly via `Midend.playMoves` — no pointer events — optionally walking the hint plan to a step of interest, then captures `redraw`). Verify with targeted op assertions **plus** `toMatchSnapshot` on the record (a render regression is a reviewable text diff; `vitest -u` re-baselines an intended change — pair every snapshot with a few targeted assertions so a careless `-u` can't erase the guarantee). `toSvg(ops, size)` (`svg-drawing.ts`) renders the same record as a z-ordered SVG for the rare case a frame needs eyeballing — not part of the required flow. This reaches frames the browser harness couldn't (the Palisade `equivalentEdges` hint: no OffscreenCanvas `getImageData` block, no right-click-mark problem, no Auto-Hint timing); seed at `palisade-render-scenario.test.ts`. Still `node`, no DOM.
-
-  *How to use it (the default for any highlight / overlay / animation-frame work):* (a) reach the frame — `renderScenario({ game, id: "<params>:<desc>" | "<params>#<seed>", … })`; set `moves` to a list of game `Move`s to reach a board state (not pointer events — no coordinate math), `showMistakes` for the mistake overlay, `showHint` for a hint, and `hintUntil: (step) => …` to walk a multi-step plan to the step you care about (it leaves that step *displayed but not applied*, and returns it as `result.hint` for assertions). (b) Assert what matters — `result.recording.ops.some(o => o.op === "rect" && o.color === COL_HINT)` and friends — these targeted checks are the real guarantee. (c) Add `expect(result.recording.ops).toMatchSnapshot()` to catch unintended drift; review the diff, `vitest -u` to re-baseline an intended change (and **commit the regenerated `__snapshots__/*.snap`** — it is the regression baseline). (d) Only when you genuinely need to *see* the composited frame, `toSvg(result.recording.ops, result.size)` and write it somewhere to open — keep that out of committed tests. New render code SHOULD ship a tier-2.5 test; reserve Playwright for genuine full-integration / real-canvas smoke. To reach the position a *hint sentence* fires on, pin it through `describeHintPins` (`src/engine/testing/hint-positions.ts`), which keeps the scan that finds it again — [`docs/games/testing.md`](docs/games/testing.md) § "Pinning a hint's positions". Do not write a seed scan for it.
-- **Tier 3 — components + persistence**: opt a file into `// @vitest-environment happy-dom` for Lit components (`puzzle-screen.test.ts` invokes a command handler with a fake `Puzzle` + mocked deps — no worker/canvas), and import `src/test-setup/indexeddb.ts` for Dexie persistence (`saved-games.test.ts` round-trips against `fake-indexeddb`). `happy-dom`/`fake-indexeddb` are dev-only. Caveat: `fake-indexeddb` rejects Dexie's IDB2 array `maxKey` when it repeats in one compound `between` bound; the setup module forces the primitive sentinel — keep using it for any persistence test.
-
-**A test earns its runtime, and porting-era tests no longer get a pass** (owner directive, 2026-09-08): *"I'm happy to retire any tests that aren't that useful for regression testing any more; many of these were just for the porting from C. So let's keep the things that are truly useful as we continue refactoring, but remove any tests (particularly slow ones) that are costly for no good benefit."*
-
-This retires the "extensive by default" posture that governed the port. The bar is now **what a test would catch in a refactor that no cheaper test would**, and a test that cannot answer it is a candidate for retirement whatever it cost to write.
-
-Four things keep the rule from becoming an excuse:
-
-- **The gate is not what gets trimmed.** Every step of it stays (§ "Git" lists them), and NEVER bypass it (point 4 above is unconditional). What gets trimmed is *what vitest runs*, not whether it runs.
-- **Retire by measurement, never by category.** "It was a porting test" is not by itself a reason — the frozen differentials are porting artifacts *and* the strongest net under solver refactoring, because a change to a solver's verdict changes which boards exist. `engine/testing/differential.ts` states that case; answer it per fixture rather than in bulk.
-- **Say what still covers the configuration.** `testing/slow.ts`'s existing rule generalizes: deferring or deleting the *only* case covering a mode, grid type or difficulty silently removes it from every run. State the remaining coverage at the site.
-- **A slow tier nobody invokes is not coverage — so invoke it targeted.** `npm run test:slow` re-runs the *entire* gate suite as well as the deferred cases, with the widened seed budgets on top, so the bare command is the wrong instrument for almost every question. **Pass a path** — `npm run test:slow -- src/games/seismic` — and run the slow tier for the games a refactor could have moved, at the moment you move them. A single file that takes tens of minutes has not been made thorough, it has been made unrunnable, and the honest fix is a cheaper configuration or a narrower invocation, never a longer wait. Measured 2026-09-08 on an idle machine: `hint-resume.test.ts` walking every preset once was **776 s**, and it was five seeds deep when the question was asked.
-- **The expensive tests and the porting-era tests are close to disjoint** (`retire-tests-that-do-not-earn-their-runtime`, 2026-09-09). The frozen differentials measured **10.1%** of suite time, while half of the suite's time was three games whose hints plan by *searching*, amplified by cross-game guards that recompute a full hint after every move. So retire by measurement, and **attribute cost per game, not per directory** — a cross-game guard's per-game case belongs to the game it names, which was the difference between Sixteen reading as 17% and as 30%. **Ask which resource is scarce before you pick the instrument.** Three instruments were wrong in one session, each one level deeper: summed wall duration (5× off), then per-file CPU (1.7–1.8× off), then "quiet box" taken to mean low *load*. The development machine has **16 GB of RAM and runs deep into swap**, so the constraint is memory, not cores — and under paging `sys` time *is* page-fault time, which is how `user + sys` re-imports the contention that switching off wall clock was meant to escape. So record **free memory and swap** beside the load average, treat any figure taken under paging as an upper bound, and remember that **ratios taken under comparable conditions survive where absolute seconds do not**. `docs/test-strength.md` §7 checks an instrument's *unit*; the unit was right every time here.
-- **Time a cost on an idle machine, and say which machine you timed.** The first figure recorded here was "50 minutes", taken while the box sat at load average **533** — the same gate that measured 216 s under that load measured 78 s idle. A contended timing is not a cost measurement, it is a measurement of the contention, and this is `AGENTS.md` § "Method" ("check the instrument before the finding") aimed at a stopwatch. The retirement decision it supported survived re-measurement; the number did not.
-
-**Browser checks: Chrome only, via the `playwright-cli` skill** (owner directive, 2026-07-28). For this phase of the project, verifying in Chromium is sufficient evidence — do **not** treat "WebKit/Firefox untested" as an open gap, and do not spend a session downloading extra browser engines to close it. Cross-engine coverage is not where this phase's risk lives (the work is a C→TS port of game logic and rendering, checked far more cheaply at tiers 1–2.5), and a second engine costs ~10 min and hundreds of MB for evidence that isn't wanted yet. Drive the browser through the **`playwright-cli` skill** rather than a standalone `playwright` install — the standalone package drifts out of version sync with the cached browser builds, which is exactly how one such download got triggered. Revisit only if the fork starts targeting Safari/Firefox as a shipping constraint.
-
-Bit-identical RNG (`random.ts`, already ported) is retained so *future* shared game IDs reproduce across builds. Old C-format saves are expendable by decision; game IDs from upstream load on a best-effort basis (§ "Upstream policy").
-
-## Hint quality bar (exemplar: Palisade)
-
-> **Followable how-to:** [`docs/games/hints.md`](docs/games/hints.md) — the procedure for adding an explained `hint()` to a game. This section is the bar; the guide is the steps.
-
-Explained hints are a core deliberate-divergence product value of this fork, not a nicety. The **Palisade deduction hint** (`group-palisade-hint-deductions`, owner-endorsed 2026-06-15) is the **exemplar every game's `hint()` should meet** — it is not enough to point at the next move:
-
-1. **Explain *why* the move is forced, not just *what* to do.** Narrate the actual deduction: *"Both edges border the same region, so they share a fate: both walls or both open. Walling both would exceed clue 2, so neither can be a wall."* — never just "set this edge". If a narration's conclusion doesn't follow from its own stated premises, the deductive coupling is missing; surface it (Palisade's `equivalentEdges` text was an unreadable non-sequitur until the "share a fate" premise was added). A *good* hint teaches the player the technique.
-2. **One deduction firing = one journey.** A single deduction that forces several moves is emitted as one multi-leg `HintStep` journey (continuation legs flagged `continuesPrevious`), so it reads and auto-plays as one coherent hint rather than N disjoint ones. This is codified as a cross-game convention in the `ts-engine` Hint System requirement; the `Midend` mechanism (`continuesPrevious` + `executeHint`) is already generic — a game just emits grouped steps.
-3. **Equivalent moves share a color.** When a firing's moves share a fate, render them identically (Palisade: all `COL_HINT` blue), not in distinct colors — a distinct color reads as "different roles" and misleads.
-4. **Pace auto-hint uniformly.** `AUTO_HINT_STEP_MS` (1s) per step in `src/puzzle/puzzle.ts`, floored by the move's own animation so animated moves still play out fully.
-5. **Claim only what you have checked, and make the plan recompute-stable.** Every sentence a hint utters is a claim; if it isn't verified in code, it is a lie waiting to be read by a player who trusts it ("no slide from here reaches it" was *assumed* in Inertia's design and is false — a plan can decline a grab it could take). And a *heuristic* plan must not merely be correct but **stable across recomputes**: a plan is recomputed whenever the player goes their own way, and Inertia's first cut sent the ball north-east, then — one move later, from a freshly-grown heuristic tour — south-west, for ever. The fix is a monotone potential (go for the nearest goal you can safely take), never "cache the plan", which only hides it. Guarded cross-game by `hint-resume.test.ts`; see [`docs/games/hints.md`](docs/games/hints.md) § "Recompute-stable plans".
-6. **A hint relies only on marks the player can make** (owner, 2026-09-15). A hint exists to teach the player to solve the next board alone, so every fact a step rests on must be something the player can see on the board or put there with the game's own input. If a tier's deductions need a kind of mark the game does not offer, give the player that notation and make the hint's steps place those marks as moves. Never ship a hint-only overlay of facts the player has no way to record, however clearly it draws them: it shows reasoning the player cannot reproduce. **If a notation would genuinely be too hard to manage, the fallback is the tier, not the hint:** the difficulty that needs it becomes `Unreasonable`, where the hint refuses and says deduction has run out instead of teaching reasoning the player cannot record. Loopy's corners and pairs of edges are the case that established this (`add-loopy-notation`); see [`docs/games/hints.md`](docs/games/hints.md) § "Give the facts a notation (Loopy)".
-7. **A hint asks only for what the pointer does, and the engine makes it so.** A game with a hint declares `hintGesture`, and the midend plays a step by sending that gesture through `interpretMove`, never by applying the step's move, so a step no tap, drag or on-screen key makes cannot be played and fails `hint-gesture.test.ts`. Net's lock hint, which a touch player could not follow, is the case that established it (`afford-every-hint-action`); see [`docs/games/hints.md`](docs/games/hints.md) § "Every step is a gesture".
-
-**A non-deductive game is not exempt from the bar** — it is exempt only from *deduction*. Untangle has no forced move, so it narrates a measurement it can check instead: what the move does to the point's crossings ([`docs/games/hints.md`](docs/games/hints.md) § "Non-deductive (heuristic) hints"); **Inertia** (the non-deductive exemplar, `add-inertia-hint`, owner-endorsed 2026-07-13) shows the other pole: find the one thing the game can *prove* (there, "this gem can never be reached again") and lead with it, hold a stable subgoal and mark it when the game has no name for it, and narrate each move by the consequence it actually has.
-
-**Every game has a hint, and a game without one is a draft** (owner, 2026-09-28: the project is called Hintful on purpose). The goal is every game hinted by the end of October 2026. A new game ships with its hint. The remaining hintless games are also how the framework work gets assessed — a target contract is tested by writing real hints against it — so the order still matters. **Choose the game that presses hardest on whatever is being built**, rather than alphabetically, because the cheapest hint in the corpus is the worst assessment. So the framework leads, and hintless games are pulled in one at a time, at most one beside each framework change it checks, with the rest kept in reserve (owner, 2026-09-29): an open framework change names its game in a "Hints to pull in" section, and `hintless-games-in-reserve` holds the others. `characterize-the-hint-assessment-corpus`'s `audit.md` shows how to read a game for that, though every game its order picked now has a hint. **A new hint is bound from its first commit**: its sentences are built with `phrase` and references to the marks they name, and the game declares `hintMarks` (`engine/hint-words.ts`; [`docs/games/hints.md`](docs/games/hints.md) § "Bind the words to the marks"). A hint that cannot name a mark it draws, or draws one its words never name, is caught by the binding walk in `hint-quality.test.ts`, and a hinted game without `hintMarks` fails that suite. **And every step names its rung**: the game lists its deductions in `hintRungs`, each step carries one in `rung`, and a rung with no pinned board does not compile ([`docs/games/hints.md`](docs/games/hints.md) § "Name the rung a step speaks"). Enrollment in the cross-game hint guards is derived from the `hint()` declaration itself (`src/engine/testing/hint-games.ts`), so a game acquires every guard the moment it acquires a hint, and none before.
-
-Aspirational next step (owner-flagged 2026-06-15): lift Fifteen/Sixteen hints from "Slide tile 10 into the space" to a Palisade-grade *why* — does the move place a tile in its final home, or is it a helper/setup move toward sorting another tile? Inertia's stable-subgoal narration is the shape this wants.
-
-## TS port style: idiomatic throughout
-
-> **Followable how-to:** the [`docs/games/`](docs/games/README.md) guides — file layout and lifecycle in the README, idiomatic rules in `mechanics.md`, the cache-key pattern in `rendering.md`, the acceptance gate in the README, test tiers in `testing.md`. This section is the style bar; the guides are the steps.
-
-Port to the most idiomatic TS shape — classes over handle-passing, `[Symbol.iterator]()` over `while (next())`, `boolean` over `0|1`, GC over explicit `free()`, modern data structures over C-array mirrors. Use the C as a *reference for the logic* (what deductions the solver makes, how the generator ensures uniqueness), not as a control-flow template to mirror line-for-line. There is no corpus that a refactor could break, so write it clean the first time; the dev-time differential spot-check catches gross divergence.
-
-### Byte-parity was a tool, and the job it existed for is over
-
-**Matching the C is not a reason to leave a game unimproved.** Owner: *"it was
-only a temporary one for the porting, but now that we've finished porting, I'm
-very happy to diverge in favor of a better play experience, wherever it's worth
-it."* "It would change every board" is a **cost to weigh**, not an objection that
-ends the discussion — and where the improvement is real, changing every board is
-the point.
-
-**Display code was never in scope at all**: rendering, layout, geometry,
-animation and colors target *neat visuals and clean code*, not pixel-for-pixel
-reproduction. Deliberate visual improvements are the point of the fork.
-
-Worth understanding about what byte-parity *bought*, because it shapes what has
-to replace it: on a solver-gated generator the desc depends on the solver's
-verdict on every intermediate board, so **one byte-match assertion validated
-generator, solver and codec together**. That is a lot of assurance in one line,
-which is why dropping it leaves a hole that must be filled deliberately.
-
-**No requirement asks for C compatibility** (owner, 2026-09-13: *"it was just
-something we cared about during the port, but it's not a concern anymore"*). A
-divergence does not keep upstream's path reachable so that a differential stays
-green; it retires or re-founds the fixture.
-
-Two things this does **not** license:
-
-1. **Churn.** "Wherever it's worth it" is the whole test. A divergence still needs a stated player-visible benefit; tidiness is still not one (playbook §4 rule 3's second half survives its first half).
-2. **Losing the assurance silently.** The byte-match was the strongest verification available, and dropping it leaves a hole that must be filled deliberately — normally "every generated board is uniquely solvable at exactly its stated difficulty" as a property test. Say what replaces the oracle, in the change.
-
-Four rules, from `add-loopy-ts-port`; the followable form is [`docs/games/solver-and-generator.md`](docs/games/solver-and-generator.md) § "Divergence and what it costs":
-
-1. **Divergence is free where C has no defined behavior.** Upstream aborts on a degenerate Penrose patch, so retrying with a fresh desc diverges *only* on the seeds where C crashes. Take those — there is nothing to match.
-2. **Price the quirk before paying or refusing it.** "Bug-compatibility" sounds expensive and usually isn't: one quirk cost a single line plus a comment, another cost literally nothing (TS's `%` truncates exactly like C's). Don't narrate a sacrifice you aren't making.
-3. **Diverge for a genuine player-visible defect, not for tidiness.** A solver that deduces *falsely* can generate a puzzle with no unique solution — fix it and record it. A solver that is merely **weaker** than intended is also fair game, when the stronger one makes the game better to play: that is the difference between a difficulty tier that means something and one that doesn't. "It changes every board" is a cost to weigh, not an objection that ends the discussion. *Tidiness remains not a reason* — don't strengthen a solver because you can.
-4. **Diverge where the C shape doesn't fit a browser.** `grid_trim_vigorously`'s dense `O(numDots²)` matrix is ~576 MB at 50×50. Structure is not behavior — the replacement was exact, so this cost no fidelity at all; the trap would have been transcribing it faithfully *because* it was the C's shape.
-
-## Nothing is sacred: break an assumption when keeping it costs more than it earns
-
-The section above released the *C* as a fixed point. This one releases **our own past decisions**, and it is the more general rule: during the port, holding the design still was load-bearing — a moving target cannot be verified against an oracle. That phase is over.
-
-**The standing instruction:** whenever abiding by the current design makes something unnecessarily complex, and there is an opportunity to simplify by breaking a previous assumption, **consider it actively** — do not route around it, and do not treat "that is how it works today" as an argument. An assumption is a decision somebody made under conditions that may no longer hold; re-derive it rather than inheriting it.
-
-**Where the line is:**
-
-- **Internal design assumptions — just do it**, with the reasoning recorded. Contracts between engine and games, helper shapes, invariants nothing outside the repo depends on, promises one part of the engine makes to another. These are ours; changing them costs a diff and a test.
-- **Anything a player or their data can see — propose it and check first.** Save/game-ID formats, preference keys, shared-URL compatibility, a control that behaves differently. Backward-compatibility breakage is **absolutely on the table** — the owner said so — but it is the owner's call, not a judgment to make while mid-refactor. Ask with the cost stated, not as a yes/no.
-
-**The guard rails from the byte-parity section survive intact**: a simplification still needs a stated benefit, tidiness alone is still not one, and dropping an assurance means saying what replaces it. "Nothing is sacred" licenses *reconsidering*, not churn.
-
-**The smell to watch for — complexity spent preserving a promise nothing consumes.** A fix that inherits an existing guarantee and pays for it with a hand-maintained list (say, snapshot/restore of twelve `Midend` fields) has bought a list that rots the first time somebody adds a thirteenth, silently, in the one path nobody exercises. **Two reliable signals that a change is pushing against the grain**: it duplicates source lines the probe corpus anchors on, forcing unrelated re-anchoring; and the careful path it is preserving is one no caller actually reads.
-
-Breaking the assumption collapsed it to **fourteen lines of logic**: rewind to the saved game's opening position and report. The promise was worth nothing because **the only caller that matters throws the save away and deals a new game regardless** — state was being preserved for a consumer that immediately discards it. Owner, asked: *"I'm perfectly ok with cleanly rejecting saved games that are no longer valid in a new version of the code."*
-
-So the question to ask of any inherited invariant is not "is it true?" but **"who reads it, and what would they do differently without it?"** If the answer is nobody, its cost is pure.
-
-## Build commands
-
-- **There is no asset build.** `npm run build:assets`, `scripts/build-manual.sh`
-  and `Brewfile` went with the manual (`retire-the-upstream-help-tree`); the
-  wasm build — `npm run build:wasm`, `scripts/build-emcc.sh`,
-  `scripts/build-native.sh`, the whole CMake tree and the `USE_TS_LEAVES` /
-  `USE_TS_<MODULE>` / `VITE_USE_TS_*` flag family — went with
-  `retire-c-engine`. **`npm install` is the entire setup, on any platform**, and
-  no native tool is needed for anything. If you find a doc still mentioning one,
-  it is stale.
-- `npm run dev` — vite dev server.
-- `npm run build` — production app build (tsc + vite). Needs no generated input of any kind: the game catalog is committed source (`src/puzzle/catalog-data.ts`), the icons are a committed snapshot, the help pages are committed markdown.
-- `npm run preview` — preview production build.
-- `npm run check` — biome format + lint with autofix.
-- **The app is live at <https://hintful.click>**, on Cloudflare Pages (the
-  `hintful-puzzles` project, also served at `hintful-puzzles.pages.dev`), and
-  **nobody deploys it by hand**: on push to `main`, `.github/workflows/ci.yml`
-  runs the gate's fast checks and the production build (`GATE_BUILD_ONLY=1`),
-  and a second job publishes **that build artifact**. The full gate runs in a
-  third job beside them and marks the commit red if the suite fails, but does
-  not hold the deploy back (owner, 2026-09-27: velocity until there are more
-  players; the hook has already run the gate on every commit). The bytes that
-  shipped are the bytes that were checked — the deploy job downloads, it does
-  not rebuild. Direct upload, deliberately **not** the Pages
-  GitHub integration, which cannot wait on a check and would publish exactly
-  the commits CI exists to catch.
-  - **`_headers` is a real deploy artifact**, read verbatim by Cloudflare and
-    carrying the CSP and the whole cache policy. Its rule count **must
-    stay constant in the size of the catalog** — Cloudflare parses at most 100,
-    on every plan and on Workers too, and drops the rest silently, so a rule
-    per puzzle would make a parser limit a limit on the number of games. The
-    build fails if a future edit reintroduces one. Adding a puzzle must not
-    add a header rule.
-  - **A build's environment changes its output**, and every variable is
-    optional with a working empty state: no `VITE_CANONICAL_BASE_URL` means no
-    `sitemap.xml` and no canonical links (`robots.txt` ships either way); no
-    `VITE_SENTRY_DSN` means no Sentry origin in the CSP and no crash reports.
-    They are set on the CI job, not in a committed `.env`.
-  - **Verify a deploy against the deployed origin, never against `dist/`.**
-    Headers, clean URLs and service-worker scope are all host behavior, and
-    each fails invisibly. Note that a browser tab registers **no** service
-    worker by design — `settings.allowOfflineUse ?? isRunningAsApp` — so an
-    offline check must enable it first or it measures nothing and reports
-    health.
-- `npm run test` / `npm run test:run` — vitest.
-- `npm run probe` — the **local-feedback probe**: plants hand-chosen real
-  defects in engine modules and runs only each module's own tests against them,
-  answering *"would the file I am editing tell me I broke it?"*. A diagnostic,
-  never a gate and never ratcheted (`npm run metrics` / `npm run mutation` have
-  the same standing). `npm run probe -- --verify` is a ~0.2 s anchor check and is
-  what to run after touching any of the probed modules; a full run is ~15 min.
-  See [`docs/test-strength.md`](docs/test-strength.md) §2a.
-- `npm run hint-scan -- <test file>` — finds a board for every rung of a
-  game's hint and **writes the pins into that test file**, each under the count
-  it rests on. It is how a new rung gets its pin and how a stale pin is
-  replaced; a pin that still fires is left alone. The one tool here that edits
-  source, and it edits only the file it is given. See
-  [`docs/games/testing.md`](docs/games/testing.md) § "Pinning a hint's positions".
-
-Nothing under `src/assets/` is generated — it holds only committed files. `src/assets/icons/` is **committed** as a frozen snapshot of per-puzzle thumbnails; adding a new puzzle requires producing two PNGs by hand (see `openspec/specs/puzzle-icons/spec.md`). `src/asset-integrity.test.ts` asserts every catalog `puzzleId` has both its PNGs (64×64 and 128×128), that every `new URL(<path>, import.meta.url)` reference in `src/` resolves, and that no `.ts` file contains a raw C0 control character — a NUL makes git call the file binary and stop diffing it, which tsc, biome, vitest and `vite build` all pass silently. (`build/` is gone too — `prune-dead-toolchain-leftovers`; `dist/` is the only generated directory anywhere in the tree.)
-
-## Code conventions
-
-- **TypeScript**: strict mode, no `any` (use `unknown` + type guards).
-- **Absence**: a value that may be absent is `T | null`, and `undefined` is never written into a union — `?` marks a parameter or member that may be left out, two kinds of nothing get named states, and a failure beside a value is an `{ ok, error }` result. The rule and its reasons are [`docs/games/mechanics.md`](docs/games/mechanics.md) § "Absence is `null`"; `scripts/checks/absence-spelling.mjs` holds it in the gate's fast prefix.
-- **Formatter / linter**: Biome (2-space indent, 88 char width).
-- **Comments**: a comment earns its place only by saying what the code cannot — why the code is this way, a constraint that still binds, where a behavior came from, or why something is deliberately absent. Keep it **simple and local**: it describes the lines it sits on. **Do not narrate what another file, another game or the engine does.** That sentence is true the day it is written and wrong the week the neighbor changes, and nothing in the gate notices. Name the function and let the reader go read it — exploring the code costs less than trusting a stale paraphrase of it, and the code cannot be out of date. **A comment that asserts behavior is a claim**: if a test checks it, say which; if nothing checks it, expect it to be false eventually and state the reason instead of the behavior. This is not hypothetical — `tidy-the-code-after-the-port` found factually wrong comments in roughly fifteen games, nearly all of them describing behavior rather than giving a reason. The followable form, with what to keep and what to delete on sight, is [`docs/games/README.md`](docs/games/README.md) § "Comments, and what earns one".
-- **Spelling**: American English, in identifiers, paths, comments, docs and specs — `color`, `center`, `gray`, `neighbor`, `behavior`, `initialize`, `serialize`, `license`, `artifact`. Upstream's C was British by design and the direct parent was American; the platform (`color`, `prefers-color-scheme`, `text-align: center`) is American and cannot be respelled, so only one spelling can be made consistent across the tree. Three things keep their words: the record (`openspec/changes/archive/`, `openspec/postmortems/`), the contents of the notices in `licenses/` and the C under a change's `reference/`, and a quotation of a name this project does not own (`game_colors`, `frontend_default_color`, Sentry's `behavior` option) — each allowed per file in `scripts/checks/spelling-table.mjs`, which is the stem table and the convention's one copy. `scripts/checks/spelling.mjs` is the guard, in the gate's fast prefix; `spelling-fold.mjs` folds stdin, which is how a respelling diff is proved to be nothing else.
-- **UI**: Lit web components; explicitly register Web Awesome components by importing them (e.g. `import "@awesome.me/webawesome/dist/components/button/button.js"`).
-- **Reactive state**: `@lit-labs/signals`; use `SignalWatcher` mixin where consuming.
-- **Persistence**: IndexedDB via Dexie.js (`src/store/db.ts`).
-- **WASM**: runs in a web worker, exposed via Comlink (`src/puzzle/`).
-- **Styling**: Web Awesome design tokens.
-- **`help/`**: every page the app serves, all of it this project's own markdown — site-level pages at the top level, one page per game in `help/games/`. Upstream's *wording* survives in the pages adopted from its overview fragments; what changed is who may fix them, which is a licensing question MIT already answers. A page describing a game this fork changes must be correctable by the change that alters it. (`help/upstream/` is gone — `retire-the-upstream-help-tree`; `/puzzles` before it — `rehome-upstream-help-sources`.)
-
-## Constraints
-
-DO NOT:
-- Edit the notices in `licenses/` without cause — they are someone else's words, reproduced verbatim to honor MIT.
-- Ship a help page that documents a platform this app is not. That is what got the halibut manual deleted: it told players of this PWA that the collection "deliberately do[es] not ever save information on to the computer", alongside Windows printing and two sections of Unix command-line options.
-- Name a new help source directory after a URL subdirectory the build emits pages into. A real directory shadowing a generated page namespace fails `vite build` outright with `EISDIR`. Every source renders to the top level (`/help/<name>`), which is why `help/games/` is free to be named for what it holds.
-- Break Baseline 2023 browser compatibility.
-- Use top-level await, dynamic `import()`, or `import.meta` in `src/preflight.ts` — preflight runs on older browsers to gate the rest of the app.
-- Add dependencies without considering bundle size and offline (PWA) support.
-- Commit generated assets in `dist/`. (`src/assets/icons/` is the exception — it's a committed snapshot maintained per `openspec/specs/puzzle-icons/spec.md`; add the two required PNGs by hand when a new puzzle joins the catalog.)
-- Catch unrecoverable errors only to log them — let them propagate so Sentry records them.
-
-DO:
-- Test on touch devices and varying screen sizes when changing UI.
-- Verify offline functionality still works (PWA / service worker).
-- Check changes work with keyboard, mouse, and touch input.
-- Consider accessibility.
-- Take ownership of everything in this repo. Never describe a problem you observe as "pre-existing", "unrelated", or "out of scope" — that framing assumes a baseline blamelessness this project doesn't grant. If you see it, you own it: either fix it now, file it as a follow-up with a clear handoff, or surface it to the user with a recommendation. The framing matters because "unrelated" is also how a regression you actually caused gets misclassified and shipped.
-- **Refactor as you go** (owner directive, 2026-07-14). Whenever you're working near code whose functionality is similar to something elsewhere in the repo, extract/unify it **if you believe the shared shape will stay stable indefinitely, or will need to evolve the same way across multiple games** — don't wait for a defect history to justify it; "makes the codebase noticeably cleaner" is sufficient on its own. The guardrails stay: an exemplar hint never loses a word to an abstraction, game-specific logic is never contorted to fit a contract, and framework-scale pivots still need real downstream pressure (see the scene-graph postmortem). When you evaluate a candidate and decline, record the no-go with its reason (the `unify-hint-framework` archive shows the pattern: `lazyPopulate`/`HintSidecar` extracted; recorder-vocab renaming declined as cosmetic churn with byte-match blast radius). **Extended 2026-08-21 — refactoring is not only extraction**: simplifying by *breaking* an existing assumption counts too, and is often the larger win. See "Nothing is sacred" above for the line between "just do it" and "ask first".
-- Don't ask the user "should I continue?" or "want me to commit and move on?" at every checkpoint. Continue by default once a task is complete and the next step is obvious. Reserve `AskUserQuestion` (and inline questions) for *actual decisions* — choices where there's a real trade-off, the course is genuinely unclear, or an action carries non-trivial risk (destructive, irreversible, affects shared state, or could surprise the user). Status pings at every step are friction, not diligence.
-
-## Repo layout
-
-**There is no C anywhere in this repo**, and no `puzzles/` or `/build/`
-directory. Two sibling clones hold what upstream material a question might need,
-and neither is a place to put our work:
-
-- **`../puzzles/`** — upstream's C, if a question genuinely needs to read it.
-- **`../puzzles-web/`** — the pre-fork baseline, useful as a diff reference.
-
-The experimental C sources kept as *reading* references live with the changes
-that read them (`openspec/changes/add-{path,numgame}-ts-port/reference/`), each
-with a README stating that it does not compile and is not an oracle. **Don't
-recreate a directory named for a source tree that no longer exists** — the name
-is a false signal to the next reader even when the contents are legitimate.
-
-The build output is `dist/` (gitignored), and it is the only generated directory
-anywhere in the tree.
-
-Source tree under `src/`:
-
-- `src/screens/` — top-level screen components.
-- `src/dialogs/` — modal/popover Lit components.
-- `src/components/` — reusable leaf Lit components.
-- `src/engine/` — the midend, the `Game` interface, the registry, the drawing/color/palette contracts, and the in-process test harness (`engine/testing/`). Mostly a **flat namespace of independent helpers**, deliberately: a grouping that has to be argued for is re-litigated at every addition. Two families are grouped, because their members have no readership apart from each other — `engine/grid/` (the grid builders, geometry, descriptions, trimming and the aperiodic `tilings/`; `grid/index.ts` is the barrel its doc comment tells callers to import from) and `engine/color/` (`colors.ts` the palette, `palette.ts` the meanings, `palette-games.ts` the board-relative per-game colors, plus `color-token.ts` and `color-mkhighlight.ts`).
-- `src/games/<puzzleId>/` — one directory per game.
-- `src/engine/random/`, `src/engine/combi/` — the leaf libraries with their own frozen C corpora. `random` is the bit-identical RNG port (`index.ts`, `sha1.ts`, fixtures), kept so shared game IDs reproduce across builds; `combi` is a small combination enumerator. Both were top-level `src/native/<module>/` folders until `retire-native-directory`, because the retired bottom-up doctrine gave every ported seam its own folder plus a `bridge.ts` slot for its wasm bridge. They are engine libraries; that category is gone.
-- `src/puzzle/` — **two roles, two places** (`group-crowded-source-directories`): the directory root is the main-thread puzzle runtime (`puzzle.ts`, the Comlink `worker.ts` + `worker-adapter.ts`, `drawing.ts`, `engine-surface.ts`, `contexts.ts`, the committed `catalog-data.ts`), and `src/puzzle/components/` holds the puzzle-specific Lit components. Their **filenames** dropped the `puzzle-` prefix that only ever repeated the directory name (`components/view.ts`, `components/keys.ts`); their **custom element names did not** — `<puzzle-view>` and friends are the app's DOM vocabulary, used from `templates/*.html.hbs` and every component's templates.
-- `src/assets/` (all committed — `icons/` plus a handful of SVGs and `privacy.html`; `manual/` went with `retire-the-upstream-help-tree` and nothing here is generated), `src/css/` (styles), `src/store/` (Dexie schema), `src/utils/` (general-purpose helpers).
-- HTML page entries, main bootstrap (`main.ts`), preflight gate (`preflight.ts`), service worker (`sw.ts`), and cross-cutting modules (`routing.ts`, `color-scheme.ts`, `color-scheme-init.ts`, `icons.ts`) live at `src/` root.
-
-## Special files
-
-- `src/puzzle/catalog-data.ts` — the committed game catalog. Adding a game means editing this **and** `src/games/index.ts`; `catalog-registry.test.ts` holds them together. Each entry's `family` is how players browse the collection, and it is also the name maintenance work uses for a group of games: take a family as a population with `puzzlesInFamily(...)` (`src/puzzle/catalog.ts`). It is a value a mechanism consumes, not a manifest. Where code can vouch for a family, `catalog-families.test.ts` holds the tag to the code, so reading a family is safe. What stays forbidden is making a family the *only* thing that enrolls a game in an engine mechanic that the game could simply have.
-- `src/puzzle/puzzle.ts`, `src/puzzle/worker.ts` — how the engine is exposed to the rest of the app.
-- `templates/index.html.hbs`, `templates/puzzle.html.hbs` — handlebars templates for static page generation (handled by `vite-plugins/extra-pages.ts`).
-- `src/preflight.ts` — Baseline 2023 capability checks.
-- `src/store/db.ts` — Dexie schema.
-- `src/sw.ts` — service worker (Workbox + vite-plugin-pwa).
-
-## Work management
-
-Tracked via **openspec**, pinned as a devDependency in `package.json` so the CLI's version is a fact this repo states rather than whatever a laptop happens to have installed. The workflow lives in the `openspec-*` skills it installs (`propose`, `explore`, `apply`, `update`, `sync`, `archive`) and the matching `/opsx:*` commands; the artifacts are unchanged — `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas per affected capability under `openspec/changes/<id>/specs/`. **This `AGENTS.md` is the durable brief**, and `openspec/config.yaml`'s `context:` block points openspec at it rather than restating it — a second copy of the brief is a second thing to keep true, and the `openspec/project.md` it replaced had drifted into describing directories that no longer exist. The authoritative migration approach is the `ts-migration` capability spec. Change-scoped tasks live in `openspec/changes/`.
-
-*There is no `openspec/OPENSPEC_AGENTS.md` any more, and no rename dance.* Versions before 1.0 generated an `openspec/AGENTS.md` that collided with this project's own, so it was renamed on every `openspec update` and a managed block in this file pointed at the renamed copy. 1.x stops generating it — the instructions ship as skills — so the collision, the rename and the managed block are all gone. That closes a "Known unresolved question" by removal rather than by the configurable filename it was hoping for.
-
-**A decision or a follow-up is persisted by committing it to this repo, or it
-did not happen.** Saying it in a reply, noting what you would "want to carry
-into the next session", or filing it in an agent's own memory are all the same
-thing: a wish. The next session starts from the repo. So a follow-up you found
-becomes a scaffolded change under `openspec/changes/`, a rule you established
-goes in this file in the present tense, and a *how* goes in the relevant
-`docs/games/` guide — before the session ends, in a commit. **If it is not worth
-a commit, it was not worth reporting as a finding**; say plainly that you
-looked and found nothing, which is a result, rather than leaving a hint that
-someone else is supposed to act on.
-
-Two corollaries. **Verify a follow-up before filing one** — an audit proposed on
-an unchecked suspicion costs the next reader a full investigation to discover
-there was no defect, and this repo has produced a fictional three-game defect
-from exactly that (see "A scan that keys on a name"). And **never cite an
-agent-private note to the owner**: they cannot read it, and referring to one as
-though it were a shared artifact misreports the work as tracked when it is not.
-
-**One openspec change per coherent unit of work** — the TS midend is one change; each game port is one change; a cross-game feature (quick-save) is one change. Bundle only when several items share genuinely identical `design.md` reasoning (e.g. three trivially-similar small games after the pattern is well-trodden); keep separate when an item has its own non-obvious decisions. A game port that ships its C deletion does both in the one change.
-
-**Don't wait for proposal approval before implementing.** openspec's generic workflow has an approval gate between proposal and implementation; in this project that gate is **off by default**. Scaffold the change, then keep going into the implementation in the same session.
-
-**And don't ask to have your own work accepted.** Owner directive: *"there's no need to ask me to accept spec changes that I didn't actually create myself — if the spec itself is an implementation detail that you decided upon, then there's no need for me to go through accepting it, just archive it with the same self-driven initiative that you created it with."* A change you scoped, decided and implemented is yours to finish: implement it, verify it, commit it and **archive it**, in the one session, without a checkpoint.
-
-Acceptance is for work whose *correctness the owner is the only judge of* — which is a narrow, concrete set, not a vibe:
-
-- **Anything a player sees or feels.** How a game plays, renders, animates or responds to input; wording a player reads; a hint's explanation. This is the "Acceptance bar" section above, and it is unchanged.
-
-  **But player-visible does not automatically mean "stop and ask"** (owner, 2026-09-06): *"I'd prefer to do acceptance testing only on any particular pieces, where you're genuinely unsure what's better."* A refactor that unifies a behavior the collection was inconsistent about is still yours to decide when one answer is plainly better — make the call, say what you decided and why, and run the app yourself. **What earns the owner's time is genuine uncertainty**, not the player-visible label. This is a refinement of the bullet, not a hole in it: still run the app, still never call a shortfall cosmetic, and still ask *before* for anything that breaks a player's data.
-
-  During a run of framework refactoring the owner may also defer testing to the end of the arc rather than per change. Take that as said only when it is said.
-- **Anything the owner asked for by name.** If they described the outcome, they decide whether you hit it.
-- **Anything that breaks compatibility with data a player already has** — save formats, preference keys, shared game IDs. Ask *before*, with the cost stated, not after.
-
-Everything else — an internal contract, a helper's shape, a test harness, a doc restructure, a spec requirement recording a decision you made and can defend — is an implementation detail wearing a spec's clothing. **Archiving it yourself is not a shortcut; asking is the error**, because it converts a decision you already own into a queue item on someone else's desk.
-
-Stop and ask only for a **genuinely difficult decision**: a real trade-off with no clear winner, an ambiguity where two readings produce materially different work, or something irreversible/user-visible (dropping save compatibility, changing a shipped format). A design decision that the C survey already determines is not a difficult decision — write it down in `design.md` and implement it. Surfacing a settled call as a question is the friction this directive exists to remove.
-
-**When a change is finished and another is ready, hand the next one to a fresh session** (owner, 2026-10-05: *"so that we keep the work going"*). Once a change is fully complete and archived, and the session has reached its natural end, look through `openspec/changes/` for one that is ready to pick up. If there is one, call `mcp__continue-session__continueInNewSession` with the prompt `Hi, please take on openspec/changes/<id>` as the last action of the turn. The tool clears the conversation and sends that prompt as the new session's first message, so **nothing carries over but the repo**: commit, archive and push first, leave the tree clean, and put anything the next session or the owner needs to know in the change, the commit or this file, never only in the closing reply. A change is ready when it can start without an answer from the owner; one waiting on a decision or on acceptance is not, and neither is a session that still owes the owner a question or a result they asked to see. With nothing ready, end the session the ordinary way. The tool comes from the owner's `continue-session` plugin and is not part of this repo, so a session without it does the same.
-
-**`ADDED`, `MODIFIED`, `REMOVED` and `RENAMED` are all available, and the tool keeps `MODIFIED` honest.** A `MODIFIED` delta replaces the whole requirement at archive time, so it must reproduce every scenario that survives — and `openspec validate` reports a delta that omits one *at authoring time*, naming the scenarios to copy back, while `openspec archive` refuses to apply it. The commit gate runs `openspec validate --all --strict`, so a stale delta blocks a commit rather than surfacing at archive. **Prefer `ADDED` when the change adds a concern rather than altering an existing rule** — upstream advises it, it cannot delete anything, and it is usually the honest shape anyway.
-
-**Retiring a scenario takes `REMOVED` plus `ADDED`, never a `MODIFIED` that quietly keeps its heading.** `validate` refuses a `MODIFIED` block missing a scenario the live spec still has, and it matches scenarios by *name* — so the tempting workaround, keeping the heading and rewriting the body beneath it, passes while leaving a heading that describes a case the requirement no longer allows. The other routes are closed on purpose: a `RENAMED`-then-`MODIFIED` pair is checked against the renamed block, and `REMOVED` and `ADDED` under one name are rejected as a contradiction. The honest shape is `REMOVED` of the old requirement, with its reason and migration, and `ADDED` of its replacement under a new name carrying the scenarios that survive. Upstream documents no scenario-removal operation (read in the installed validator and upstream's docs, 2026-09-12, through openspec 1.13.0).
-
-**The one hazard the tool cannot see: a delta can be faithful to the wrong original.** `add-slide-keyboard-control` modified "Slide input, movement and completion" while its prose announced removing a sentence that lives in "Slide game implements the Game interface" — archiving it would have published a spec declaring a keyboard player's exclusion removed while leaving it in force one requirement above. Both requirements were scenario-complete, so no scenario-survival check on either side could catch it. **Before writing a `MODIFIED` block, grep the live spec for the sentence you mean to change and confirm which requirement holds it.**
-
-**A `REMOVED` block is matched by heading, and a heading that matches nothing is not an error.** `validate` passes it, and `archive` prints a warning, treats the requirement as already removed and applies the rest of the delta — so a replacement `ADDED` beside a misspelled `REMOVED` publishes the old requirement *and* the one contradicting it. `build-the-draw-state-at-its-size` was archived exactly that way from a scaffold that remembered a heading one word short, and was rolled back (observed 2026-09-15 on the pinned openspec). **Before archiving, check every `REMOVED` and `MODIFIED` heading against the live spec as a whole line (`rg -F -x`), and treat any archive warning as a failure.**
-
-*Why the gate carries a version floor:* below openspec **1.6.0** the archiver applies a stale `MODIFIED` copy unconditionally, which once deleted 134 lines of a live requirement here; **1.8.0** is where `validate` reports it at authoring time. `scripts/checks/openspec-version.mjs` enforces the floor and reads it from `package.json`, so the pin and the floor are one number. **An unpinned tool makes "has this been fixed upstream?" unanswerable from inside the repo** — see "Method" on checking a dependency's version before building around its behavior.
-
-Two smaller notes: `openspec validate` reads a requirement's **first line** as its text, so a `SHALL` on the second line reads as none; and a tool must never write into a change directory, because `openspec archive` renames it (see the `npm run diff` ENOENT in `group-crowded-source-directories`).
-
-## Traps that catch new game work
-
-- **A desc that changes mid-game** is a supported feature, not a hazard:
-  `Game.supersededDesc(state)`. The engine **pulls** the desc from state after
-  every committed move, so `executeMove` stays pure; `null` means "nothing to
-  say" and never "revert"; an optional `privDesc` is what a save rebuilds state 0
-  from; restart rebuilds from the public desc. Exemplar: `src/games/mines/`, plus
-  `desc-supersede.test.ts`.
-- **Suppress a no-op move locally, in `interpretMove`** — out-of-grid, gutter,
-  already-in-that-state — and return `null`, exactly as Galaxies does. That is
-  the whole technique. **Never reach for `Object.is` or a deep compare on state**
-  to ask "did this move change anything?"; no game needs it, and re-deriving the
-  local predicate is always the answer.
-- **Don't map editor-only move letters from input.** Upstream guards them behind
-  `#ifdef EDITOR`; a port simply doesn't wire them. Say so in the port's
-  `design.md` so it isn't re-decided each time.
-- **Printing has no implementation here.** A "print this puzzle" cross-game
-  feature would need one written from scratch — don't promise it without
-  designing it.
-
-## Known unresolved questions
-
-- **Whether the Web Worker still earns its place.** It exists to keep heavy WASM
-  off the main thread, and there is no WASM. Light TS games may not need it; the
-  `ts-migration` spec flags the re-evaluation.
-- **Whether any single game warrants a stricter, corpus-like differential.** A
-  generator with brutal uniqueness constraints might. A per-game tightening
-  option, never a global default.
-
-## License & attribution
-
-- **Web app code**: MIT (`LICENSE.md`).
-- **Upstream puzzles**: MIT (`licenses/sgt-puzzles-LICENSE`) — kept byte-identical. Satisfies MIT's "include in all copies" obligation. Lennard Sprong's `puzzles-unreleased`, the source of thirteen games, is `licenses/puzzles-unreleased-LICENSE` (identical text today; kept as its own file because it is a second project's notice). Both are `?raw`-imported by the About dialog, so moving one without repointing that import breaks the production build.
-- **Top-level `LICENSE.md`** carries a layered MIT notice crediting, in chronological order: Simon Tatham + upstream contributors (deferring to `licenses/sgt-puzzles-LICENSE` for the full list), Lennard Sprong (puzzles-unreleased), Mike Edmunds (puzzles-web), Yoni Lavi (this project). Single MIT body covers all four.
-- **`CREDITS.md`** is the graceful gesture with explicit thanks and links to upstream, puzzles-unreleased and puzzles-web. Legal compliance is satisfied by the layered MIT notice alone.
-
-## Documentation
-
-The in-app help system is assembled from sources **all under `help/`**, all of them this project's own markdown:
-- `help/*.md` — site-level pages (this fork's features, differences, install, the puzzle index).
-- `help/games/<puzzleId>.md` — one page per game, rendered to `/help/<puzzleId>.html`.
-
-**Never split help by authorship.** A page the app serves is a build input this
-project owns, whoever originally wrote the words, and a page describing a game
-this fork deliberately changes has to be correctable by the change that alters
-it. `src/help-coverage.test.ts` holds the directory and the catalog to each other
-in **both** directions — one direction alone once hid a game with no help page at
-all.
-
-**A game's help page names every mode its ‘Type’ menu offers.** The 43 pages
-adopted from upstream were its *short* overview fragments, and a fragment
-describes the game's headline rule only — upstream put the rest in the halibut
-manual, which documented a different program and is gone. So Unequal's page
-explained `<` signs and never mentioned Adjacent, a mode sitting in several of its
-presets. An omission inherited from a fragment is ours to fix; "keeps
-upstream's wording" protects the words that are there, not the ones that never
-were.
-
-**Every page has one skeleton, and the game decides what it owes**: the rules,
-unheaded; `## Controls`; any sections of the game's own; `## Hints` exactly when
-the game has a `hint()`; and `## <Name> parameters` last, naming every field the
-Custom dialog offers and every choice that is a word. `src/help-coverage.test.ts`
-reads all of that off the registered game. The parameters half is where a
-missing mode now fails, because it keys on the dialog's own labels (`paramConfig`),
-which is what a player picks from. **A preset-title sweep is not that guard and
-never was**: filtering sizes and tier names out of preset titles still flagged 18
-games for one real gap, because a title is a label someone composed, not the
-field it sets. Key on the field.
-
-**A game's rulesets are declared once, and a mode's name is typed once.** A
-game that plays different puzzles on one board, as Salad plays Letters and
-Numbers, declares them with `rulesetItem` in its `paramConfig`
-(`engine/ruleset.ts`): each a name and the rule that sets it apart. The engine
-builds the dialog's field, the name in front of a title, a section of the Type
-menu for each ruleset, so their boards never share a list, and the list of
-rules where the help page writes `{{rulesets}}`. A page that names any field's
-choice elsewhere writes `{{choice:<kw>:<index>}}`, which the build expands, and
-`help-coverage.test.ts` fails a page that types the name. Salad's dialog, menu
-and help once said one mode three ways; the how is
-[`docs/games/mechanics.md`](docs/games/mechanics.md) § "Params are declared
-once, on `paramConfig`".
-
-**A setting that changes one rule is a declared modifier.** Where rulesets
-exclude each other, modifiers combine: Solo's X, Jigsaw and Killer make eight
-boards between them. A game declares each with `modifierItem`
-(`engine/modifier.ts`), and the engine writes its entry in the parameters
-section, its words in a title, and its line of the list where the page's rules
-write `{{modifiers}}`, headed by the words the title uses. **Which of the two a
-field is gets measured, not judged**: deal every combination of the candidates,
-and two that cannot both be set are one ruleset.
-
-**A Hints section is checked for presence, not content.** It says what the hint's
-marks mean in that game, which of them are the player's own notation, and the
-words its sentences use for them; so a change to a hint's marks or words updates
-that section in the same change.
-
-Update `/help` when adding features that diverge from upstream.
-
-## Git
-
-- Main branch: `main`.
-- **Push when a task is done and you have no particular concern about it**
-  (owner, 2026-10-04: *"I have trust in our precommits and CI gate, and there's
-  really no other good way for me to evaluate some of the changes without a
-  deployment"*). A push to `main` deploys, and the deployment is how the owner
-  looks at player-visible work, so finished work that sits unpushed cannot be
-  accepted. Don't ask first, and don't wait on or watch the deploy afterwards:
-  push and move on, watching it only when you have a specific concern about
-  that deploy. Hold the push, and say why, only when there is a
-  specific concern: something you could not verify, a change that breaks data a
-  player already has, or a commit you know to be incomplete.
-- **This is the one place the gate's steps are written out.** `scripts/gate.sh` is the executable definition — `.husky/pre-commit` and `npm run gate` both run it, so they cannot drift — and this list exists because the *rationale* per step is worth reading. Everywhere else in the tree says "the gate" and links here. It was five transcriptions once, no two agreeing, all five naming a compiler the gate had stopped running a month earlier (`state-the-gate-steps-once`); a sequence with one executable definition does not get five prose ones.
-
-  In order, blocking on any failure — `npm run gate` runs the lot, `npm run typecheck` runs just the two `tsgo` passes:
-
-  1. **`tsgo -b --noEmit`** — the browser project. `tsgo` (`@typescript/native-preview`), **not** `tsc`: it checks this tree in ~2.5 s against ~13 s. The same binary can serve an editor's language server (`tsgo --lsp`), but the agent's LSP tool runs `typescript-language-server` on `typescript` 5.9, so the diagnostics it pushes after an edit are 5.9's, not the gate's. `tsgo --lsp` is not a replacement there: it hands diagnostics over only when a client asks, the tool relays only what a server pushes, and a session pointed at it got none after an edit (measured 2026-10-05, through `typescript` 7.1.0-dev.20261005). `typescript` 5.x is still installed for the packages needing its programmatic API.
-  2. **`tsgo --noEmit -p tsconfig.node.json`** — the build-side project (`vite.config.ts`, `vitest.config.ts`, `vite-plugins/`, `scripts/checks/`). Separate because it runs in Node while `tsconfig.json` is deliberately browser-shaped. Not optional: the file that renders every help page went unchecked while it sat outside `include`.
-  3. **biome** — the read-only form of `biome check` (lint rules, formatting, **and** import order — so a lint-clean-but-unformatted file can't land and re-open the drift that once made `npm run check` reformat ~150 untouched files). It is **scoped by role**: the per-commit hook checks only the *staged* files (`biome check --staged`, via `GATE_BIOME_STAGED=1`), while CI and a manual `npm run gate` check the *whole tree* (`biome ci .`) as the backstop for `--no-verify` bypasses and biome-upgrade restyles. `npm run check` remains the fixer.
-  4. **`scripts/feedback-probe.mjs --verify`** (0.02 s) — the probe anchor. Fails when a refactor moves a line the local-feedback corpus quotes as an anchor; otherwise the harness measures a smaller corpus and *reports success*. Only that the corpus **applies** is gated; its rate never is.
-  5. **`scripts/checks/spelling.mjs`** — American English, every tracked file outside the record and other people's words.
-  6. **`scripts/checks/engine-catalog.mjs`** — every shared engine module is named in `docs/games/engine-catalog.md`. Five had gone uncataloged before this ran.
-  7. **`scripts/checks/change-citations.mjs`** — a change id cited in `docs/` or `AGENTS.md` still resolves to an open change, an archive entry or a postmortem.
-  8. **`scripts/checks/vacuous-assertions.mjs`** — no test's every assertion sits behind a condition. A test that cannot fail passes forever while asserting nothing, and the suite cannot tell it from a working one.
-  9. **`scripts/checks/unused-exports.mjs`** — nothing exports a symbol no other file imports. Invisible to the typechecker, to biome and to every test, because nothing that runs reads it; it ran as a diagnostic while its backlog stood at 376 (`retire-the-dead-exports`).
-  10. **`scripts/checks/absence-spelling.mjs`** — `undefined` is never written into a union, and no strict comparison tests for an absent word its value cannot hold. The second half is the reason it is a gate: `x === null` compiles against `T | undefined` and is always false, so a respelled helper leaves dead comparisons the typechecker accepts (`spell-absence-one-way`).
-  11. **`scripts/checks/openspec-version.mjs`**, then **`openspec validate --all --strict`** — the version floor is load-bearing, not hygiene: below openspec 1.6.0 the archiver applies a stale `MODIFIED` delta silently, which once cost 134 lines of a live requirement.
-  12. **The source scans, as a vitest pass of their own** — `scripts/checks/source-scans.ts --verify`, then `vitest run` with `GATE_TEST_PASS=scan`. A test that only reads source as text costs milliseconds, and as an ordinary vitest file it failed only after ten minutes of everything else. Membership is derived, never listed: a `?raw` glob, and an import closure that reaches no game, so the file cannot build a board. One list is this pass's include and the main pass's exclude, and `--verify` asks vitest to confirm that every test file lands in exactly one pass, because a file in neither would pass by never running (`fail-fast-the-source-scan-guards`). Beside it, `scripts/checks/select-tests.ts --verify` holds the hook's test selection to known couplings on the real tree, because a selector gone blind reports a small plan that looks like health (`scope-engine-commits-by-reach`).
-  13. **`vitest run`** (the main pass, `GATE_TEST_PASS=main`) alongside **`vite build`**. They share no inputs or outputs, so they run concurrently and the gate's wall clock is ~max of the two. `vite build` is in the gate because nothing above it exercises the production build, and two prod-only breakages once sat undetected on `main`; it needs no generated assets (the catalog is committed source since `retire-c-engine`).
-
-  **Steps 5–7 sit ahead of the documentation-only shortcut deliberately** — they read `docs/` and `AGENTS.md`, a change to those is exactly what the shortcut skips vitest for, and `src/gate-scope.test.ts` forbids a *test* from reading those roots at all (which is what keeps the shortcut safe). That is why they are node scripts rather than vitest files. Steps 8–10 are there for the neighboring reason: all three are build-side work — two of them parse the tree with the TypeScript compiler API — and all are seconds against ten minutes of vitest.
-
-  **Three scopings by role, all narrowing what a *commit* costs and never what protects the branch**: biome (staged in the hook, whole tree in CI); the heavy branches (the hook may take the documentation-only shortcut, or run only the tests `scripts/checks/select-tests.ts` selects, and skip the cross-game cases of every game whose code cannot reach what is staged, via `GATE_GAME_SCOPE` in `src/engine/testing/game-scope.ts`); and an **individual assertion** that defers to push (`PRECOMMIT_HOOK_RUN` in `src/engine/testing/slow.ts`, reading the hook's own `GATE_PRECOMMIT` so there is one name for one idea). CI and a manual `npm run gate` always run everything. See `.husky/pre-commit`.
-
-  **The third is the narrowest and its license is four conditions**, in the `build-pipeline` spec: the deferred thing checks *decay* rather than the code the commit is changing; CI runs it on every push; it is **skipped** at the runner level rather than left to pass over a sample it could not take; and a test fails if the toggle ever leaks into CI, because a toggle set in both places means the deferred assertions run **nowhere** while both runs report green (`src/gate-scope.test.ts`). Work whose verdict depends on it defers *with* it — an assertion evaluated against a walk narrowed beneath it reports a finding it never measured. The one caller is the narration ledger's rot half; the half that catches a sentence you just wrote too long stays per-commit, and that split is the shape to copy. A guard that catches what the author just wrote belongs on the per-commit path whatever it costs: the honest answer there is a cheaper walk, never a later one.
-
-[sgt-puzzles]: https://git.tartarus.org/?p=simon/puzzles.git
-[medmunds/puzzles-web]: https://github.com/medmunds/puzzles-web
+binds; turn it into a check; or replace a line that is here. The gate holds
+this file to 200 lines and 20,000 bytes.
+
+## What this is
+
+Hintful Puzzles: a PWA of logic puzzles with hints that explain why. It is a
+TypeScript rewrite of Simon Tatham's C puzzle collection ("upstream"), forked
+from puzzles-web, and no C is left in the tree. `README.md` says the rest.
+
+**For a fact about the tree, read the tree.** Which directories exist, what a
+command runs (`package.json`), what a file holds, and what the gate's steps are
+and why: the gate is `npm run gate`, which the pre-commit hook also runs, and
+`scripts/gate.sh` is its definition. The source answers these and cannot be
+out of date. This file and the guides hold only what the source cannot say: a
+rule, a decision, a reason, or a trap the code does not warn about. How a
+third-party tool behaves is in that tool's own documentation.
+
+`openspec/specs/` is what is normatively true. The record of what was built is
+`openspec/changes/archive/` and the git log; do not write a summary of it
+anywhere, and do not write history into this file or a guide. Keep from an
+incident only what a later session acts on: the rule, and the shape to look for.
+
+## Rules for every session
+
+- **Never bypass the gate**, in whole or in part, however small the change and
+  however sure you are that it is not needed. No `--no-verify`, no disabled
+  step.
+- **A green suite does not show that a game plays correctly.** Run the app
+  before calling game-facing or UI work done: rendering, animation, input and
+  wording included. A shortfall is never called "cosmetic" or "out of scope",
+  and never deferred, without the owner's approval.
+- **Ask before changing what a player or their data can see**: save and game-ID
+  formats, preference keys, shared links, how a control behaves. State the
+  cost. Breaking compatibility is allowed, and it is the owner's call. An
+  internal design decision is yours: change it and record the reason.
+- **Own everything in the repo.** Never call a problem "pre-existing",
+  "unrelated" or "out of scope". Fix it, file it as a change, or raise it with
+  a recommendation.
+- **Continue by default.** Do not ask whether to continue, commit or move on.
+  Ask only for a real decision: a trade-off with no clear winner, two readings
+  that produce different work, or something irreversible.
+- **Finish your own work: implement, verify, commit, push to `main` and
+  archive, without asking.** There is no approval step after proposing a
+  change. A push deploys, and the deployment is how the owner sees the work, so
+  do not ask first or watch the deploy; hold a push, and say why, only for a
+  specific concern. The owner's word is needed for three things only:
+  player-visible work where you are genuinely unsure which answer is better,
+  anything they asked for by name, and a compatibility break (asked before).
+- **A decision or a follow-up is persisted by a commit, or it did not happen.**
+  A follow-up becomes a change under `openspec/changes/`, once you have
+  confirmed the defect is real. Never cite an agent-private note to the owner.
+- **Update the guide in the change that taught you something**, and the help
+  page in the change that alters what it describes. The guides under `docs/`
+  are a live wiki. Cite a section by file and heading name; only
+  `docs/test-strength.md` has numbered sections.
+- **Write nothing outside this repository.** The sibling clones are for
+  reading.
+
+## What the project is for
+
+The long form of each of these is `docs/doctrine.md`.
+
+- **User-facing value comes first, and diverging from upstream is the point**:
+  explained hints, mistake checking, quick-save and play aids are why the fork
+  exists. A divergence needs a stated player-visible benefit, and tidiness is
+  not one. Where it drops an assurance, the change says what replaces it.
+- **Weigh every shared-layer decision at dozens to hundreds of games.** A
+  game's directory holds what is essential to that puzzle. For everything else
+  there is one obvious way, and the porter makes no decision that is not about
+  the puzzle.
+- **A game that does not fit a convention is first a question about the
+  convention.** Only when the shape cannot be made more flexible does the game
+  take an override, and it says why. Game logic is never bent to fit a contract.
+- **Where several games write the same thing, the framework should own it.**
+  Refactor as you go: "noticeably cleaner" is reason enough. Record a decline
+  with its reason.
+- **Declare what the engine consumes; refuse a second copy.** A declaration the
+  engine runs or builds from cannot drift from the game. A statement about a
+  game that only a check reads will rot, and so will a hand-kept list of games:
+  a guard derives its population from what each game is.
+- **Nothing is sacred.** When keeping an earlier decision makes something
+  needlessly complex, reconsider the decision. Ask who reads the promise and
+  what they would do without it.
+- **Every game has a hint, and a game without one is a draft.** A hint explains
+  why the move is forced, and relies only on marks the player can make.
+- **No progression features**: no best times, streaks, statistics, achievements
+  or unlocks, and no proposals for them.
+- **Upstream is not tracked and nothing is merged from it.** Its C is read, in
+  the sibling clone `../puzzles/` or git history, and never run. The app hands
+  out boards, never seeds, so changing which board a seed deals breaks nothing.
+  A change that would refuse a desc upstream's generator writes is a
+  compatibility break. The notices in `licenses/` stay verbatim.
+
+## Method
+
+The long form, with the shapes to search for, is `docs/method.md`.
+
+- A guard measures the thing it claims to guard. Ask what would have to break
+  for it to fail.
+- See a new guard fail before trusting it, and plant the defect again before
+  leaning on an old one.
+- Count what a check looked at. A sweep that finds zero says what sample size
+  would have found one.
+- Verify a bulk edit by the shape of its diff, not by a green suite.
+- Check the instrument before the finding, against something outside the tool.
+  When you find yourself working around a dependency, check its version first.
+- A scan keys on shape, and our own code keys on a reference, a type or an id.
+  A name misses the renamed copy, and a regex over our own prose empties
+  without a sound.
+- Write the query, not its answer. A count or a fact about the code in prose
+  goes stale, and this file holds no census of the tree. A claim about the code
+  in a change carries its date; re-check it before relying on it.
+- Measure a proposal's headline number yourself before designing against it.
+- Retire a dead instruction; do not repoint the one part you noticed.
+
+## Code
+
+- TypeScript strict, no `any`. Absence is `T | null`. American spelling.
+- A comment says what the code cannot: a reason, a constraint, a provenance. It
+  describes the lines it sits on and never another file's behavior
+  (`docs/games/README.md` § "Comments, and what earns one").
+- Port to idiomatic TypeScript. The C is a reference for the logic, never a
+  template for control flow.
+- Keep Baseline 2023 compatibility. Weigh bundle size and offline use before
+  adding a dependency.
+- Let an unrecoverable error propagate; do not catch it only to log it.
+- UI changes work with touch, keyboard and mouse, at varying screen sizes,
+  offline, and with accessibility considered.
+- A test earns its runtime: the bar is what it would catch that no cheaper test
+  would. Reach for the lowest tier that fits, and keep a browser for real-canvas
+  smoke.
+
+## Read the guide before you touch
+
+| Working on | Read first |
+| --- | --- |
+| Any game: the lifecycle, the definition of done | `docs/games/README.md` |
+| Params, state, moves, capability hooks, affordances | `docs/games/mechanics.md` |
+| Pointer, keyboard, touch, the keypad | `docs/games/input.md` |
+| Redraw, tile cache, palette, animation | `docs/games/rendering.md` |
+| Solver, generator, difficulty tiers, `findMistakes` | `docs/games/solver-and-generator.md` |
+| A hint: its words, marks, rungs, pins, its help section | `docs/games/hints.md` |
+| A test, a render scenario, a cross-game guard | `docs/games/testing.md` |
+| A shared engine helper | `docs/games/engine-catalog.md` |
+| Judging tests, or quoting a measurement | `docs/test-strength.md` |
+| A check, a census, a bulk edit, a number in a proposal | `docs/method.md` |
+| An openspec change, acceptance, pushing, a deploy | `docs/work-management.md` |
+| A help page | `docs/help-pages.md` |
+| A framework or cross-game design decision | `docs/doctrine.md` |
+
+Work is tracked with openspec, through the skills it installs; one change per
+coherent unit of work.
+
+## Specific to a coding agent
+
+- **Browser checks are Chrome only, through the `playwright-cli` skill.** Do
+  not install a standalone Playwright or another engine, and do not report
+  other browsers as an untested gap.
+- **The LSP tool's diagnostics are not the gate's**, which come from
+  `npm run typecheck`. It also answers short, with no error, while its server
+  loads, so give it a known positive first, or take a symbol's population with
+  `npm run refs -- <file> <Name>`.
+- **When a change is archived and another is ready, hand it to a fresh
+  session.** Commit, push and leave the tree clean, then call
+  `mcp__continue-session__continueInNewSession` with the prompt
+  `Hi, please take on openspec/changes/<id>` as the last action of the turn.
+  Nothing carries over but the repo. A change is ready when it can start
+  without an answer from the owner; a session that still owes the owner a
+  question or a result ends the ordinary way, as does one without the tool.

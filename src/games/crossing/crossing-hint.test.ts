@@ -398,7 +398,7 @@ function digitsOnBoard(state: CrossingState, r: number, cell: number): number[] 
 }
 
 describe("crossing hint — every premise is on the board", () => {
-  // A hint relies only on marks the player can make (AGENTS.md § "Hint quality
+  // A hint relies only on marks the player can make (docs/games/hints.md § "The quality
   // bar" rule 6): each step's claim is re-checked against the entered digits
   // and notes of the board it fires on, never against the hint's own tables.
   const premiseHolds = (f: CrossingFiring, s: CrossingState): void => {

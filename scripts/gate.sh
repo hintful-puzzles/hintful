@@ -4,8 +4,8 @@
 #
 # THIS COMMENT DESCRIBES THE SHAPE, NOT THE STEPS. Naming a step up here is how
 # a header comes to name a compiler the gate no longer runs, eight lines above
-# the line that runs the real one. The readable list, with the reason for each
-# step, is `AGENTS.md` § "Git", and it is the only prose copy there is.
+# the line that runs the real one. The reason for each step is the comment
+# above it, below, and that is the only prose copy there is.
 #
 # Order and semantics:
 #   1. Fast fail-fast prefix — the typechecks, then biome, then the cheap node
@@ -54,9 +54,8 @@ sh "$(dirname -- "$0")/reap-orphaned-workers.sh" || true
 
 # --- 1. Fast fail-fast prefix. ---
 # `tsgo` (@typescript/native-preview), not `tsc`: the Go-native compiler checks
-# this tree in ~2.5s against ~13s for tsc 5.9, and the same binary serves the
-# editor/agent language server via `.lsp.json`, so the gate and the LSP agree on
-# what a type error is. `typescript` (5.x) is still installed — see the madge
+# this tree in ~2.5s against ~13s for tsc 5.9, and the same binary can serve an
+# editor's language server (`.lsp.json`). `typescript` (5.x) is still installed — see the madge
 # section of metrics.sh for the ten packages that need its programmatic API.
 npx tsgo -b --noEmit
 # The build-side TypeScript — `vite.config.ts`, `vitest.config.ts`,
@@ -140,6 +139,15 @@ node scripts/checks/engine-catalog.mjs
 # a vitest file from reading that root at all.
 node scripts/checks/change-citations.mjs
 
+# --- 1b-iii-a. The brief every session loads stays short. ~0s. ---
+#
+# `AGENTS.md` is read into every session, and a long one is followed less well
+# than a short one. It grew by a rule that said every new rule goes there; the
+# rule now says the guide it binds, and this is what holds when that is not
+# followed. Here for the reason the guards above are: editing the file is a
+# documentation-only commit.
+node scripts/checks/brief-size.mjs
+
 # --- 1b-iv. No test's every assertion sits behind a condition. ~1s. ---
 #
 # A test that cannot fail passes forever while asserting nothing, and the suite
@@ -186,7 +194,7 @@ node scripts/checks/absence-spelling.mjs
 # retiring the verb and writing its own scenario-survival check; the actual cause
 # was an openspec CLI nine months and fifteen releases stale, which had fixed it
 # in 1.6.0 (archive refuses the loss) and 1.8.0 (validate reports it at authoring
-# time). See `AGENTS.md` § "Work management".
+# time). See `docs/work-management.md`.
 #
 # So the floor is load-bearing, not hygiene: below 1.6.0 the archiver will apply
 # the loss silently, and this line would still print a cheerful pass. `npx`

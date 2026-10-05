@@ -38,8 +38,8 @@ export const pencilModeKey: KeyLabel = { button: PENCIL_MODE_BUTTON, label: "Mar
  * **Deliberately not a game-declared boolean.** A declaration can be forgotten
  * by a new game and left behind by a changed one with nothing noticing, which
  * is exactly what happened while this was keyed on the *name* `pencilMode`:
- * Rome and Map carried notes with no key for their whole lives (AGENTS.md
- * § "A game joins a shared mechanic by *having* it").
+ * Rome and Map carried notes with no key for their whole lives (docs/doctrine.md
+ * § "One source of truth").
  */
 export function takesNotes(state: unknown, ui: unknown): boolean {
   if (hasPencilArray(state)) return true;

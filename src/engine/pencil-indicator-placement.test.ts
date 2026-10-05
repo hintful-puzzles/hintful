@@ -12,7 +12,7 @@
  * requirement is about the player's eye — and a game that kept its own corner
  * fails however tidily it is written. The population is derived from the `Ui`
  * each `newUi` returns, so a game joins by having the mode
- * (`AGENTS.md` § "Convention over configuration"; `testing/enrollment.ts`).
+ * (`docs/doctrine.md` § "Convention over configuration"; `testing/enrollment.ts`).
  *
  * The frame is taken twice, with the mode off and on, and only the ops the
  * second frame adds are judged: that keeps the probe blind to what a game draws

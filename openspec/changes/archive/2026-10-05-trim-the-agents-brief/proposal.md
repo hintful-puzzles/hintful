@@ -1,8 +1,9 @@
 # trim-the-agents-brief
 
-**Status: sorted, waiting on the owner's read (2026-10-05).** `root-draft.md`
-is the proposed root file and `directives.md` lists what happens to each owner
-directive; nothing outside this change has been edited. Asked for by the owner:
+**Status: done (2026-10-05).** `AGENTS.md` is 175 lines. The owner handed the
+read of the draft to fresh-context subagents; `tasks.md` 2.2 quotes that, and
+`directives.md` lists seven cuts the owner has not confirmed. Asked for by the
+owner:
 *"AGENTS.md is almost 900 lines long! I don't think that really works well."*
 
 ## Why

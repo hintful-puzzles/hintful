@@ -2,7 +2,7 @@
  * A game ID upstream's own generator wrote still loads here.
  *
  * Compatibility with Simon Tatham's collection and the forks of it is
- * best-effort (AGENTS.md § "Upstream policy"): a player may paste a link to a
+ * best-effort (docs/doctrine.md § "Upstream"): a player may paste a link to a
  * game on Simon Tatham's site, and the descs are close enough that keeping them
  * loading costs little. Every game's frozen differential fixture holds descs the C
  * generated, so each one must load (`loadVerdict`): parse, and have the one answer

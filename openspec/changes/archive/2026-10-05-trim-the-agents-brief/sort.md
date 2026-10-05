@@ -9,13 +9,12 @@ awk 'BEGIN{RS="";FS="\n"} {n++; w=split($0,a,/[ \n\t]+/); print n "\t" w "\t" su
 ```
 
 It prints 155 paragraphs. A paragraph that is one list is split into lettered
-rows where its items go different ways. The proposed root file is
-`root-draft.md` beside this table: 171 lines and 9,809 bytes against a bound of
-200 and 20,000.
+rows where its items go different ways. The table was written against a draft
+of the root file, which became `AGENTS.md` at 175 lines after review.
 
 ## Dispositions
 
-- **root**: stated in `root-draft.md`, in the section named.
+- **root**: stated in the new `AGENTS.md`, in the section named.
 - **tree**: deleted. The file or command named states it.
 - **tool**: deleted. A third-party tool's behavior, which the tool documents.
 - **hist**: deleted as history. The rule it supported is named, with where
@@ -254,3 +253,13 @@ design D8's check on the finished move and belongs to 3.1; the rows above were
 classified by reading each paragraph once, and the "there" rows by one search
 each. A row marked "there" on a search hit has not been compared sentence by
 sentence with its paragraph.
+
+## After review
+
+A fresh-context subagent compared 22 "there" rows and the "tree" and "hist"
+rows with their sources. Where it found a rule the named source did not
+carry, the rule was written into the guide and the row above was not
+rewritten: rows 60, 64d, 72 (twice), 6d (the logo), 12 (numbered sections),
+132 (no script writes into a change directory) and 151 (the comment in
+`scripts/gate.sh` that said the LSP and the gate agree). Row 145 turned out
+to be "there".

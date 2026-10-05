@@ -30,7 +30,7 @@ export type { ForcingLink };
  * - `hidden` — a row/column no other empty cell of which can still take `n`.
  *
  * There is no third kind. A placement the notes show as neither rests on strikes
- * the plan never placed, which a hint may not narrate (AGENTS.md § "Hint quality
+ * the plan never placed, which a hint may not narrate (docs/games/hints.md § "The quality
  * bar", rule 6), so {@link classifyPlacementInRegions} throws instead. */
 export type SinglePlacement =
   | { kind: "naked" }

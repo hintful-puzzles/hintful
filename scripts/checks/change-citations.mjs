@@ -23,7 +23,7 @@
  * 1. **The key is a shape, and the superset is accepted.** Any backticked
  *    kebab-case token of three or more segments is a candidate; CSS features,
  *    git tags and DOM event names come with it, and they are *classified* in the
- *    ledger below rather than excluded by narrowing the pattern (`AGENTS.md`
+ *    ledger below rather than excluded by narrowing the pattern (`docs/method.md`
  *    § "A scan that keys on a name"). Narrowing is the error, every time.
  *
  * 2. **A citation has three legitimate homes, not one.** An open change, an
@@ -117,10 +117,6 @@ const SCANNED = /^(docs\/.*\.md|AGENTS\.md|src\/.*\.ts)$/;
 const NOT_A_LIVE_CHANGE = {
   "auto-mark-complete": "a `Ui` preference key (Bridges); named in rendering.md",
   "color-dark-check": "a test file, `scripts/checks/color-dark-check.test.ts`",
-  "prefers-color-scheme": "a CSS media feature",
-  "pre-ts-pivot": "a git tag bracketing the C in history",
-  "typescript-language-server":
-    "the npm tool the agent's default LSP plugin runs (AGENTS.md § Git)",
   "puzzle-key-unhandled": "a DOM event `view-interactive.ts` raises",
   "game-state-change":
     "a midend notification type (`NotifyGameStateChange`); named in mechanics.md",

@@ -9,7 +9,7 @@
  * because games mention `hint` without declaring one (an unused `redraw`
  * parameter, Guess's unrelated `ui.hint`).
  *
- * **A game with no `hint()` is a draft** (AGENTS.md § "Hint quality bar"), and
+ * **A game with no `hint()` is a draft** (docs/games/hints.md § "The quality bar"), and
  * joins every guard here the moment it gains one.
  *
  * Dev/test-only; never imported by production code.

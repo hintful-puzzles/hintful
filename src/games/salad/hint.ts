@@ -500,7 +500,7 @@ function cheapMarkers(w: Working, o: number, nums: number): MarkerFiring[] {
 /** Throw if the cube forces a marker the working board still lacks once every
  * recorded strike and placement is on it. No reason the plan can narrate
  * explains such a marker, so it rests on a strike the plan skipped: the marker
- * twin of `classifyPlacementInRegions`'s throw (AGENTS.md § "Hint quality bar",
+ * twin of `classifyPlacementInRegions`'s throw (docs/games/hints.md § "The quality bar",
  * rule 6). */
 function assertEveryMarkerExplained(
   w: Working,

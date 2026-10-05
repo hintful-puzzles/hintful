@@ -37,8 +37,8 @@ save-game / shared-ID compatibility from before the pivot. Going forward,
 game IDs stay stable (the RNG is bit-identical) so shared seeds keep
 reproducing boards.
 
-The code is still rough in places. The full strategic context lives in
-[`AGENTS.md`](AGENTS.md);
+The code is still rough in places. What the project is for is
+[`docs/doctrine.md`](docs/doctrine.md);
 the authoritative migration rules are the `ts-migration` capability spec
 at [`openspec/specs/ts-migration/spec.md`](openspec/specs/ts-migration/spec.md).
 
@@ -86,7 +86,7 @@ Everything below is for building or contributing.
 
 This replaced an earlier bottom-up, byte-identical-fidelity plan
 (preserved on branch `legacy/seam-by-seam-fidelity` + tag
-`pre-ts-pivot`). The why is in [`AGENTS.md`](AGENTS.md) "Approach".
+`pre-ts-pivot`).
 
 ## Structure
 
@@ -159,8 +159,9 @@ pages are committed markdown.
 ## Contributing / work tracking
 
 Work is tracked with **openspec** (`openspec/`): a change is proposed,
-specced, implemented, then archived. Durable context is
-[`AGENTS.md`](AGENTS.md) — how the project is built and what the rules are.
+specced, implemented, then archived. The rules every
+session works under are [`AGENTS.md`](AGENTS.md), and the guides under
+[`docs/`](docs) say how work is done.
 The rules of record are the capability specs under `openspec/specs/`; the record
 of what was built is `openspec/changes/archive/` and the git log.
 

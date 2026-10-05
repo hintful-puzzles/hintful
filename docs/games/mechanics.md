@@ -105,9 +105,8 @@ control-flow template.** Classes over handle-passing, iterators over
 C-array mirrors. **Comments and names pass one reading test**: a comment says
 what the code cannot, and a name changes only when a reader has to ask what it
 stands for — [`repo-layout`](../../openspec/specs/repo-layout/spec.md), "A
-comment says what the code cannot, and a name answers its own question". The
-bar and rationale live in
-[`AGENTS.md`](../../AGENTS.md) § "TS port style"; the payoff is measured
+comment says what the code cannot, and a name answers its own question". The C is a reference for the logic, never a template for control flow; the
+payoff is measured
 (Galaxies, 2026-09-11: 4,398 lines against upstream's 4,485, while also
 carrying an explained hint, mistake checking and a second drag gesture).
 
@@ -725,6 +724,9 @@ verdict entitles it to.
 
 ## Capability flags
 
+Printing has no implementation here. A "print this puzzle" feature would be
+written from scratch, so do not promise one without designing it.
+
 **A game offers a capability by having its method, never by declaring a flag
 beside it.** `Midend.getStaticProperties` derives the app's flags from the
 methods, so a game cannot claim a Solve button it has no `solve` behind:
@@ -837,7 +839,7 @@ reload while every test passed. The fix carries the encoding itself in the
 the app compares **is** the part of the save that would differ — and a game with
 no `encodeUi` sends nothing and costs nothing. `midend-ui-state.test.ts` holds
 the derivation; the reload is the half only a browser can tell you about, which
-is why AGENTS.md § "Acceptance bar" says to run the app.
+is why `AGENTS.md` says to run the app.
 
 ### Preferences
 
@@ -928,7 +930,7 @@ game offers.** If solving a tier needs a kind of mark (pencil candidates, an
 association arrow, a no-line cross, Loopy's corners and pairs of edges), the game
 gives the player that mark with every input it supports, and the hint's steps
 place it as a move. A hint that draws facts the player cannot record teaches
-nothing the player can reuse (`AGENTS.md` § "Hint quality bar", rule 6). Decide
+nothing the player can reuse ([`hints.md`](./hints.md) § "The quality bar", rule 6). Decide
 the notation when a game's deductions first need it, not when its hint is found
 to be drawing around the gap. Loopy's notes mode is the worked example: its
 corner and pair notes are state and moves beside the lines (`LoopyState.corners`
@@ -1197,7 +1199,7 @@ other.
 - **Do not reach for a scan here.** One was considered and declined: it would
   have to key on a name (`border`, `BORDER`, `margin`, `TLBORDER`), and Slant's
   copy was an unnamed inline expression — so the scan would have reported the
-  worst instance in the set as clean. See `AGENTS.md` § "Method", "A scan that
+  worst instance in the set as clean. See [`method.md`](../method.md), "A scan that
   keys on a name finds only the games that were named that way".
 - **And a scan keyed on *where* a thing is defined misses the copies that share
   a file.** The sweep that found the eight games above keyed on "defines the

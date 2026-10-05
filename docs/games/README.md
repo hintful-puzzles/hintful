@@ -15,7 +15,7 @@ standing obligation is stated in [`AGENTS.md`](../../AGENTS.md).
 
 **Where a guide offers you a choice, ask whether it should.** The collection's
 goal is *convention over configuration: one obvious way to do it, and no
-unnecessary decisions* ([`AGENTS.md`](../../AGENTS.md) § "Convention over
+unnecessary decisions* ([`doctrine.md`](../doctrine.md) § "Convention over
 configuration"). So a guide passage that reads *"games do this in a few
 different ways"* is describing accidental complexity, not documenting a feature —
 and **the fix belongs in the same change that hit it**, either by unifying the
@@ -34,7 +34,7 @@ acceptance gate, test discipline) ·
 the `Midend`, the hint system) ·
 [`repo-layout`](../../openspec/specs/repo-layout/spec.md) (where things live,
 the in-process test tiers) · per-game specs under `openspec/specs/<game>/`.
-Strategic narrative: [`AGENTS.md`](../../AGENTS.md). **Exemplar to read
+Doctrine: [`doctrine.md`](../doctrine.md). **Exemplar to read
 end-to-end before starting:** [`src/games/galaxies/`](../../src/games/galaxies/)
 (idiomatic six-file split, smaller than the C it replaced).
 
@@ -52,7 +52,12 @@ end-to-end before starting:** [`src/games/galaxies/`](../../src/games/galaxies/)
 
 Repo-wide and not game-specific: [`../test-strength.md`](../test-strength.md)
 — assessing whether a test would actually catch anything (`npm run probe`, the
-five-minute mutation probe, the instrument traps).
+five-minute mutation probe, the instrument traps);
+[`../method.md`](../method.md) — trusting a check, a census or a bulk edit;
+[`../doctrine.md`](../doctrine.md) — what the project is for, and how that
+decides a framework question; [`../work-management.md`](../work-management.md)
+— changes, acceptance, pushing; [`../help-pages.md`](../help-pages.md) — the
+rules for `help/`.
 
 ## The lifecycle of a game change
 
@@ -63,7 +68,7 @@ proposal-approval gate is off by default in this project; the gate that matters
 is owner acceptance at the *end*). The workflow ships as the `openspec-*` skills
 the pinned CLI installs (`propose`, `explore`, `apply`, `update`, `sync`,
 `archive`), with the project's own rules for it in
-[`AGENTS.md`](../../AGENTS.md) § "Work management".
+[`work-management.md`](../work-management.md).
 
 For a new game:
 
@@ -174,8 +179,8 @@ A game (or a change to one) is done when **all** of these hold:
 - [ ] Behavioral tests at the lowest fitting tier; new render code ships a
       tier-2.5 test; heavy tests are seed-deterministic and never clock-gated
       ([`testing.md`](./testing.md)).
-- [ ] An explained hint meeting the quality bar ([`hints.md`](./hints.md)) —
-      or its own follow-up change, opened, not implied.
+- [ ] An explained hint meeting the quality bar ([`hints.md`](./hints.md)).
+      A new game ships with its hint; a game without one is a draft.
 - [ ] A help page in the standard skeleton — rules, `## Controls`, `## Hints`
       when there is a hint, `## <Name> parameters` last — which
       `src/help-coverage.test.ts` holds to the game's `hint()` and
@@ -309,9 +314,8 @@ differential moved.
 ## Close out
 
 Keep the openspec change current as you go (tasks ticked, decisions recorded in
-`design.md`). The pre-commit gate must pass; **never bypass it**. Its steps are
-listed once, in `AGENTS.md` § "Git" — `npm run gate` runs them, and
-`scripts/gate.sh` is their definition. On owner acceptance, archive the change
+`design.md`). The pre-commit gate must pass; **never bypass it**. `npm run gate` runs its steps, and `scripts/gate.sh` is their definition,
+with the reason for each in a comment. On owner acceptance, archive the change
 (`openspec archive <change-id> --yes`), committing work and archive together.
 A follow-up the work surfaced gets its own change opened there and then, while
 the measurement is in hand.

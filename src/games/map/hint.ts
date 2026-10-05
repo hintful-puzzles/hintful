@@ -10,7 +10,7 @@
  * a region *might* be (its help page), a region with none is simply unmarked,
  * and a neighbor's color is on the board for anyone to see. So the Easy rung
  * needs no dots at all, and the hint places them only where a Normal or Hard
- * deduction removes a color no neighbor shows (AGENTS.md § "Hint quality bar",
+ * deduction removes a color no neighbor shows (docs/games/hints.md § "The quality bar",
  * rule 6).
  *
  * That is the candidate walk's implicit reading, and it is Map's default. The

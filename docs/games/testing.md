@@ -51,6 +51,9 @@ the sequencer's choice, not yours. Spy on the real export in a `beforeEach`
 scanning further.** The idiom for reaching a specific deduction or board state
 without knowing its desc is a fixed-seed scan — loop ids, keep the first whose
 state matches — pinned by a recorded first-hit (see "Right-sizing the gate").
+The position a *hint sentence* fires on is the exception: pin it through
+`describeHintPins` (§ "Pinning a hint's positions") and do not write a seed
+scan for it.
 
 ### Pinning a hint's positions
 
@@ -70,7 +73,7 @@ require a pin for every rung, so a new one does not compile until
 `npm run hint-scan -- <the test file>` has run. That walks hint-guided play
 over fixed seeds, taking each plan's first step and asking again, and writes
 the pins into the file, each under how many of the positions walked it held on.
-That count is the power argument the pin owes (AGENTS.md § "Method"): a rung
+That count is the power argument the pin owes ([`method.md`](../method.md)): a rung
 that held on 5 of 937 is the one to watch. What the command does with a pin
 already there:
 
@@ -98,8 +101,8 @@ ladder's late rung opens a plan only once every earlier one is spent.
 `kinds`, for what a rung id does not say: a step's shape (several cells, a
 journey), which of a rung's cases it is (`step.rung === "trap" && ownRival(step)`),
 or the board's. It reads the step's fields and never its sentence: a regex over
-`step.explanation` is the name-keyed scan aimed at our own output (AGENTS.md
-§ "Method"), and `HintKind` does not take one.
+`step.explanation` is the name-keyed scan aimed at our own output ([`method.md`](../method.md)
+§ "Our own code keys on a reference, a type or an id"), and `HintKind` does not take one.
 
 What a scan can be told:
 
@@ -510,6 +513,21 @@ cross-file leak.
 
 ## Right-sizing the gate
 
+**A test earns its runtime.** The bar is what it would catch in a refactor that
+no cheaper test would, and a test that cannot answer that is a candidate for
+retirement whatever it cost to write. Three things keep that from becoming an
+excuse:
+
+- **Retire by measurement, never by category.** "It was a porting test" is
+  not a reason: the frozen differentials are porting artifacts and the
+  strongest net under solver refactoring. Answer per fixture.
+- **Say what still covers the configuration**, at the site, when you defer or
+  delete the only case covering a mode, grid type or difficulty.
+- **A guard that catches what the author just wrote stays on the per-commit
+  path whatever it costs.** The answer to its cost is a cheaper walk, never a
+  later one. Only a check on *decay* may defer to push; the conditions are in
+  the `build-pipeline` spec.
+
 **The gate is paid on every commit; keep each test's cost proportional to what
 it catches.** Three treatments, in order of how little they lose:
 
@@ -573,7 +591,7 @@ results are worth not rediscovering:
 `hint-resume.test.ts` and `hint-quality.test.ts` as undifferentiated "engine"
 cost and hides which game makes them expensive — Sixteen reads as 17% by
 directory and 30% once its cases inside the cross-game guards are counted. The
-per-game `it` title is the join key; this is `AGENTS.md` § "A scan that keys on a
+per-game `it` title is the join key; this is [`method.md`](../method.md) § "A scan that keys on a
 name" aimed at a cost model.
 
 **The import graph alone cannot say which tests a change affects.** Measured
@@ -801,7 +819,7 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
    because a mention in prose is not a use: the check's first cut convicted Net
    for a comment explaining that it deliberately has no stylus branch. Key on
    the name and take the superset; narrowing the key is the error this repo
-   makes most (AGENTS.md, "A scan that keys on a name"). When the population is
+   makes most ([`method.md`](../method.md), "A scan that keys on a name"). When the population is
    *who uses a symbol*, skip the key altogether: `npm run refs -- <file> <Name |
    Type.member>` answers by reference, including the `latinSolver<Ctx>(` calls a
    grep misses. It is blind to source read as text, which is exactly what
@@ -1067,6 +1085,14 @@ Three rules, each learned by getting it wrong:
 
 ### Timing anything under vitest: two things to know first
 
+**Time a cost on an idle machine, and say which machine you timed.** A
+contended timing measures the contention. Record free memory and swap beside
+the load average: under paging, `sys` time is page-fault time, so a figure
+taken then is an upper bound. Ratios taken under comparable conditions survive
+where absolute seconds do not. A single test file that takes tens of minutes
+has been made unrunnable, not thorough; the fix is a cheaper configuration or
+a narrower invocation, never a longer wait.
+
 **An imported constant costs real time under the test transform, and nothing in
 the production build.** Vite's module-runner transform rewrites `DR[i]` to
 `__vite_ssr_import_0__.DR[i]`, and it defines every export as a **getter**, so a
@@ -1105,8 +1131,7 @@ It also attributes the cost, which is the part that changes decisions:
 `slice-presets-by-the-axes-a-game-varies` widened a walk from 88 boards to 141,
 and the one run showed the *modes* that motivated it costing 3–95 ms each while
 two line items carried almost all of the increase. Summing wall clock across
-separate runs is the instrument `AGENTS.md` § "Test discipline" records as 5×
-off.
+separate runs is an instrument that has read 5× off.
 
 Two calibration notes that recur: a raw madge cycle count is **not** a runtime
 cycle count here (`verbatimModuleSyntax` erases `import type`, which is the

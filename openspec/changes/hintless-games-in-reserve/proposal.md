@@ -50,7 +50,7 @@ Re-take the population from the registry (games without `hint`, as
 ## The decision point
 
 A game without a hint is a draft, and the goal is every game hinted by the end
-of October 2026 (AGENTS.md § "Hint quality bar"). **By mid-October, compare the
+of October 2026 (docs/games/hints.md § "The quality bar"). **By mid-October, compare the
 hintless games left against the weeks left.** If the reserve cannot be cleared
 one at a time in what remains, the owner decides between writing reserve hints
 for the target (each change then says it was written for the target, not as a

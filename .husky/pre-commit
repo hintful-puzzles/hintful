@@ -2,8 +2,8 @@
 # implementation (the build-pipeline spec requires they mirror each other).
 # A fail-fast prefix of cheap checks, then `vitest run` ∥ `vite build`
 # concurrently, failing the commit if either fails. The steps are the commands in
-# scripts/gate.sh; the readable list with the reason for each is `AGENTS.md`
-# § "Git". Deliberately not repeated here — this comment was one of six
+# scripts/gate.sh, where each carries its reason in a comment. Deliberately
+# not repeated here — this comment was one of six
 # transcriptions that had drifted apart (`state-the-gate-steps-once`).
 #
 # Two env vars scope this run by role, and both rely on CI as the backstop:

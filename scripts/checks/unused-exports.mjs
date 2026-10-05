@@ -34,7 +34,7 @@
  * its module graph stops at each entry file. Its zero was a scan of nothing, in
  * the one change that exists to stop checks reporting health over an empty set.
  * The workaround would be rewriting every import in the tree to suit the tool;
- * `AGENTS.md` § "Method" says to check the dependency before building around it,
+ * `docs/method.md` says to check the dependency before building around it,
  * and this is what that looks like when the answer is "don't".
  *
  * **What counts as a use**, each one a real way this tree reaches a symbol:
@@ -196,7 +196,7 @@ const isInternal = (spec) => spec.startsWith(".") || spec.startsWith("/src/");
  * **The counter is the floor's instrument, so it counts only what it can
  * resolve**: a bare `vitest` is not a failure to resolve, and counting one as
  * such made the first version of this floor read 86.5% when eleven specifiers of
- * 4826 actually failed — `AGENTS.md` § "Check the instrument before the finding",
+ * 4826 actually failed — `docs/method.md` § "Check the instrument before the finding",
  * inside the floor built to catch that very thing.
  */
 function resolveSpec(fromFile, spec) {

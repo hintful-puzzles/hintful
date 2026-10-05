@@ -13,27 +13,14 @@ context: |
   `npm install` is the entire setup.
 
   Read AGENTS.md at the repository root before proposing or implementing
-  anything. It is the authoritative brief on how work is done here — conventions,
-  constraints, the acceptance bar, the hint quality bar, test discipline, and the
-  method rules this project keeps rediscovering. `openspec/specs/` is what is
-  normatively true; `docs/games/` holds the followable procedures for game work;
-  the record of what was built is `openspec/changes/archive/` and the git log,
-  and is not required reading.
-
-  Points that most often need stating up front:
-
-  - Deliberate divergence from upstream is the point of this fork, not a
-    regression. Explained hints, mistake-checking, quick-save and per-game aids
-    are why it exists.
-  - One openspec change per coherent unit of work. Scaffold and implement in the
-    same session; there is no proposal-approval gate here. The gate that matters
-    is owner acceptance before archiving.
-  - Never bypass the pre-commit gate (`npm run gate`): tsc, biome, the probe
-    anchor check, openspec validate, vitest, and a production `vite build`.
-  - Game-facing work is done when the owner says it plays correctly, not when the
-    suite is green. A shortfall is never called "cosmetic" or "out of scope".
-  - Take ownership of everything in the repo. Never describe a problem as
-    "pre-existing", "unrelated", or "out of scope".
+  anything: it holds the rules that bind every session and a map of the guides.
+  Before planning a change, also read `docs/work-management.md` (how a change
+  is scoped, finished and accepted here), `docs/doctrine.md` (what the project
+  is for) and `docs/method.md` (how to trust a check or a number a proposal
+  argues from), then the guide the map names for the part of the tree the
+  change touches. `openspec/specs/` is what is normatively true; the record of
+  what was built is `openspec/changes/archive/` and the git log, and is not
+  required reading.
 
 # Per-artifact rules (optional)
 # Example:

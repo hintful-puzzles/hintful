@@ -74,7 +74,7 @@ function presetCases(
  * number equal to some sibling array's length is a cardinality field wherever
  * it appears, and a future game with the same shape is covered the day it
  * lands. An exemption roster would rot exactly as quietly as the membership
- * roster it replaces (AGENTS.md, "Convention over configuration").
+ * roster it replaces (docs/doctrine.md, "Convention over configuration").
  */
 function cardinalityFields(base: AnyParams): Set<string> {
   const lengths = new Set(

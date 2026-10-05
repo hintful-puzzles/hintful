@@ -24,7 +24,7 @@
  * in the file. A plain mention is what most of these files do: dozens cite
  * `docs/games/*.md` and `AGENTS.md` in prose, and a name-keyed scan would
  * convict all of them. (Keying on a name is this repo's most repeated
- * instrument failure; see AGENTS.md, "A scan that keys on a name".)
+ * instrument failure; see docs/method.md, "A scan that keys on a name".)
  *
  * The scan covers the test tree *and* the build side, because `vite build`
  * reads through `vite.config.ts` and `vite-plugins/` — `extra-pages.ts` globs

@@ -1317,7 +1317,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * was a per-game obligation until `derive-the-marks-key-from-having-notes`,
    * held by a guard that read `ui.pencilMode` — a *name*, so it saw only the
    * games that had spelled the mode that way, and Rome and Map carried notes
-   * for their whole lives with no key and nothing noticing (AGENTS.md § "A scan
+   * for their whole lives with no key and nothing noticing (docs/method.md § "A scan
    * that keys on a name finds only the games that were named that way").
    *
    * Appending here is what makes the discrepancy unreachable: the keypad the
@@ -1345,7 +1345,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * but Loopy and Slant take notes without one (their marks are edge and line
    * states), and they are known by the mode flag instead. A union is the right
    * answer here rather than a narrowing — every game either arm catches does
-   * want the key, so the superset is exact (AGENTS.md § "A scan that keys on a
+   * want the key, so the superset is exact (docs/method.md § "A scan that keys on a
    * name", on keying the shape and accepting the superset).
    */
   private takesNotes(): boolean {

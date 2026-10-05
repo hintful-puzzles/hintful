@@ -5,8 +5,8 @@
 **How this repository decides that a tree is fit to commit, publish and run —
 and what that decision is allowed to cost.**
 
-It governs the gate — defined by `scripts/gate.sh` and listed, with the reason
-for each step, in `AGENTS.md` § "Git" — which runs identically in the
+It governs the gate — defined by `scripts/gate.sh`, which gives the reason
+for each step in a comment — which runs identically in the
 pre-commit hook and in CI; the rule that no correctness check may be dropped or
 weakened to buy speed, and the narrow scopings that are permitted instead; how a
 test earns its place on the per-commit path, and how one is retired or deferred
@@ -83,12 +83,12 @@ or outputs) SHALL run **concurrently**, making the gate's wall-clock
 **This requirement deliberately does not list the checks, and the reason is that
 it used to.** It read "SHALL run all six checks (`tsc -b --noEmit`, biome,
 `npm run probe -- --verify`, the spelling guard, `vitest run`, `vite build`)" —
-a bare count in the present tense, which `AGENTS.md` § "Method" calls a census
+a bare count in the present tense, which `docs/method.md` calls a census
 nobody re-runs. By 2026-09-09 the gate ran eleven, the named compiler had been
 replaced by `tsgo` thirty-five days earlier, and four more prose copies of the
 same list elsewhere in the tree had each rotted differently. **The list has one
-executable definition (`scripts/gate.sh`) and one readable one (`AGENTS.md`
-§ "Git", which carries the per-step rationale); a spec states the gate's
+definition (`scripts/gate.sh`, which carries the per-step rationale in its
+comments); a spec states the gate's
 properties instead.**
 
 Membership is therefore normative *per check*: a guard belongs in the gate
@@ -1069,7 +1069,7 @@ Only the third is built.
 
 A condition means an `if`, and equally `if (…) continue;` or `if (…) return;` —
 the same guard written the other way round. Reading only the first spelling is
-the wrong-key failure `AGENTS.md` § "A scan that keys on a name" describes; it
+the wrong-key failure `docs/method.md` § "A scan that keys on a name" describes; it
 sees four of one game's five reason scans and misses the fifth.
 
 #### Scenario: a test scans for a case and finds none

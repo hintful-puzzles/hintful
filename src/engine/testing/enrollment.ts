@@ -258,7 +258,7 @@ export function membersNotMentioning(ids: string[], marker: string): string[] {
  *
  * The caller gets a superset — every match anywhere in the code, not only in a
  * narration string — and is expected to classify what it catches rather than
- * narrow the pattern (`AGENTS.md` § "A scan that keys on a name"). Narrowing to
+ * narrow the pattern (`docs/method.md` § "A scan that keys on a name"). Narrowing to
  * "string literals inside `explain()`" is how a sweep comes to miss the arm
  * that was written somewhere else.
  */

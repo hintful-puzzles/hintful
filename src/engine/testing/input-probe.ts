@@ -7,7 +7,7 @@
  * the same code path the frontend uses. None reads a game's source, and none
  * reads a declaration about a game — a game joins a population by **having** the
  * behavior, which is the enrollment rule the whole collection runs on
- * (AGENTS.md, "A game joins a shared mechanic by *having* it").
+ * (docs/doctrine.md § "One source of truth").
  */
 
 import type { Game } from "../game.ts";

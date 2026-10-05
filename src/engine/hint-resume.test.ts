@@ -38,7 +38,7 @@ import { itOverWholeSweep } from "./testing/slow.ts";
  *
  * `permitsSearch` says whether this board's tier is one whose boards may need
  * trial and error — derived from the tier's *name*, since `Unreasonable` is the
- * collection's promise about search (AGENTS.md § "Check / Tactic / Search").
+ * collection's promise about search (docs/games/solver-and-generator.md § "Check, Tactic, Search").
  * On such a board a refusal is the honest end of the road rather than a defect,
  * so the walk accepts it — but only with the collection's single wording for it,
  * because a refusal that does not tell the player trial and error is expected
@@ -135,7 +135,7 @@ const BOUNDED_SEARCH_HINTS = SEARCH_REACH_GAMES;
  * the gate walks whole says so. A new member joins the derivation by *having*
  * the refusal and fails the equality below until someone writes that sentence,
  * which is the point of deriving the population and attaching the reason to
- * the member (`AGENTS.md` § "Convention over configuration").
+ * the member (`docs/doctrine.md` § "Convention over configuration").
  */
 const SEARCH_REACH: Record<string, string> = {
   blackbox:
@@ -449,7 +449,7 @@ describe("a hint can solve from any mid-game position", () => {
         // wall clock without reporting. Two was tried next and was still north
         // of 20. A once-per-refactoring-round check that takes tens of minutes
         // has not been made thorough, it has been made unrunnable
-        // (`AGENTS.md` § "Test discipline": a slow tier nobody invokes is not
+        // (`docs/games/testing.md` § "Right-sizing the gate": a slow tier nobody invokes is not
         // coverage), and this walk is quadratic in board size twice over — one
         // full hint recompute per move, and more moves on a bigger board.
         //

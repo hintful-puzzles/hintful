@@ -16,7 +16,7 @@ on one line, and a file of them costs every reader that much. The queries:
 `git grep -l "describeHintPins(" -- src/games`.
 
 The same thing is missing for a player. The app hands out boards, never
-seeds (`AGENTS.md` § "Upstream policy"), and the board it hands out is the
+seeds (`docs/doctrine.md` § "Upstream"), and the board it hands out is the
 dealt one. A player cannot share where they have got to.
 
 ## What Changes
@@ -36,8 +36,8 @@ and the question is the format.
 - Whether a shared position is a new kind of ID or an extension of
   `params:desc`, and what loading one does to undo history and to the
   "restart" target.
-- Whether upstream-format IDs stay untouched (they should: `AGENTS.md`
-  § "Upstream policy" keeps them loading).
+- Whether upstream-format IDs stay untouched (they should: `docs/doctrine.md`
+  § "Upstream" keeps them loading).
 
 ## What to check before designing
 

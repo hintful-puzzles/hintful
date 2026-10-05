@@ -14,4 +14,4 @@
 - [ ] 3.1 The pages moved, every credit kept.
 - [ ] 3.2 `help-coverage.test.ts` holds the section's place, and fails a
       credit left in the opening where that can be told; say how it is told.
-- [ ] 3.3 AGENTS.md § "Documentation" names the section in the skeleton.
+- [ ] 3.3 docs/help-pages.md names the section in the skeleton.

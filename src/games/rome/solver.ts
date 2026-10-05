@@ -510,7 +510,7 @@ function solverLoops(board: RomeBoard, dsf: Dsf, rec: RomeRecording | null): num
 
 /**
  * The chain of arrows from `from` to `to`, inclusive of both — the walk a loop
- * sentence claims exists, computed rather than assumed (AGENTS.md § "Hint
+ * sentence claims exists, computed rather than assumed (docs/games/hints.md § "The
  * quality bar", rule 5).
  *
  * It always exists where {@link solverLoops} calls it, and the argument is the

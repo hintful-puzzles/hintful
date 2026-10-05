@@ -25,7 +25,7 @@
  *     sticky-mode left press onto a filled cell does not light a highlight no
  *     keystroke could act on.
  *
- * None is a decision about a puzzle, which is the test AGENTS.md sets for
+ * None is a decision about a puzzle, which is the test docs/doctrine.md sets for
  * whether a difference is real. The sticky arm is the one place the highlight
  * is deliberately left alone, and {@link pressNoteTakingCell} says why there.
  */
@@ -393,7 +393,7 @@ describe("the enrolled population is derived, not listed", () => {
   // `pressNoteTakingCell`, and a game whose press might become a drag resolves
   // at the release through `tapNoteTakingCell`. Keying on the first alone would
   // have convicted Rome and Map the day they moved to the second, which is
-  // `AGENTS.md` § "A scan that keys on a name" aimed at this file.
+  // `docs/method.md` § "A scan that keys on a name" aimed at this file.
   it("every enrolled game routes its pointer press through a shared arm", () => {
     const arms = ["pressNoteTakingCell(", "tapNoteTakingCell("];
     const missing = arms

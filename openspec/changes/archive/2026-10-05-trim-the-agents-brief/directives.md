@@ -1,6 +1,6 @@
 # Owner directives in `AGENTS.md`, and where each one goes (task 2.2)
 
-This is the list for the owner to read, with `root-draft.md`. Every passage of
+Written for the owner to read beside the draft of the new `AGENTS.md`. Every passage of
 `AGENTS.md` at commit `1f597366` that states something the owner decided is
 here once. The paragraph numbers are `sort.md`'s.
 

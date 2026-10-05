@@ -210,7 +210,7 @@ describe("every step stands on the board the player can see", () => {
    * real `executeMove`, and before each one compares it with the board the
    * deduction is reasoning from. Any bridge, cross or limit the deduction holds
    * and the player does not is a fact the step's sentence may be leaning on
-   * that the player has no way to see (AGENTS.md, hint rule 6).
+   * that the player has no way to see (docs/games/hints.md § "The quality bar", rule 6).
    */
   function walk(params: BridgesParams, desc: string) {
     const start = newStateFromDesc(params, desc);

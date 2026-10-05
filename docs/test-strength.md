@@ -616,7 +616,7 @@ is a claim about the *instrument's reach*, and a fuzz's reach is invisible —
 sequence that matters was ever assembled. The control costs one run (spread the
 game object, drop the fix, re-run) and it converted "the collection is clean"
 into "this instrument cannot answer the question", which is why the fuzz was not
-shipped. This is AGENTS.md's "prove a new guard fails before trusting it" aimed
+shipped. This is [`method.md`](./method.md)'s "see a guard fail before trusting it" aimed
 at a sweep rather than at a single assertion, and it applies hardest exactly
 where the sweep is broadest, because breadth is what makes a null result feel
 earned. What answered the question instead was reading the population: the 37

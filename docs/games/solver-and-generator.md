@@ -414,7 +414,7 @@ every elimination the solver makes, then ask the hint's engine, at the state
 where it stalled, whether it still holds what the solver just dropped: the
 first disagreement is the missing deduction. And a first sample of 1,510 Net
 boards read as a clean zero while one board in about 700 still stalled, which
-only 22,600 showed (`AGENTS.md` § "Method", on a census that finds zero).
+only 22,600 showed ([`method.md`](../method.md), on a census that finds zero).
 
 ### Check, Tactic, Search
 
@@ -852,8 +852,8 @@ not to improve a game, and "it would change every board" is a cost to weigh,
 not an objection that ends the discussion. Display code was never in scope at
 all (owner, 2026-07-04): rendering, layout, geometry, animation and colors
 target neat visuals and clean code, and deliberate visual improvements are
-the point of the fork. The full doctrine lives in
-[`AGENTS.md`](../../AGENTS.md) § "TS port style" and the
+the point of the fork. The doctrine is
+[`doctrine.md`](../doctrine.md) § "Upstream" and the
 [`ts-migration`](../../openspec/specs/ts-migration/spec.md) spec; the
 followable form is this section.
 

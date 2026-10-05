@@ -3,7 +3,7 @@
  * inputs, and found again by one command.
  *
  * A hint test needs a board on which each rung fires. A pin is the right shape
- * for it (an input, never a seed: AGENTS.md § "Method"), and the costly one to
+ * for it (an input, never a seed: docs/method.md), and the costly one to
  * keep, because the scan that found it used to be written for the occasion and
  * deleted. {@link describeHintPins} keeps the scan beside the pins: it pins one
  * position for every rung the game declares (`Game.hintRungs`), and a pin that

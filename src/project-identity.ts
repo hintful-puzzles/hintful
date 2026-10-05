@@ -11,6 +11,13 @@
  * credit a predecessor (puzzles-web, Simon Tatham's site, `puzzles-unreleased`)
  * are attribution, not support, and live beside the credits that use them.
  *
+ * The app presents itself as **maintained by** its maintainer, never "by": the
+ * puzzles are other people's designs. Outside the About dialog no surface
+ * names another project, and every player-facing sentence outside
+ * `help/games/` is this project's own writing; those pages keep upstream's
+ * wording on purpose. The logo (`public/favicon.svg`) is this project's own
+ * drawing, and no third-party logo ships.
+ *
  * Imported by `vite.config.ts` as well as the app, so it must stay a leaf:
  * constants only, no browser or Node imports.
  */

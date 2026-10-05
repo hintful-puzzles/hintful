@@ -75,7 +75,7 @@ solver-gated generator produces, what bit sequence a seed yields — so the
 recorded fixture is the only statement of them, and they are kept. `combi`
 enumerates the subsets of a set. There is no upstream quirk in it: the recorded
 enumeration is what the definition requires, so replaying it demonstrated only
-that C and TypeScript both implement combinations. `AGENTS.md` uses this exact
+that C and TypeScript both implement combinations. `AGENTS.md` used this exact
 function as its example of a property test worth having — *"combi emits exactly
 C(n,r) lex-ordered tuples"* — and the corpus is what stood in for it.
 

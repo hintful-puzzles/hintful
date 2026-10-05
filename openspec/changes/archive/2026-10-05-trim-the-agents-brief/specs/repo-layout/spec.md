@@ -1,4 +1,51 @@
+## REMOVED Requirements
+
+### Requirement: Agent-facing documentation is one AGENTS.md and no tool generates a second
+
+**Reason**: It said a rule established by a completed change SHALL appear in `AGENTS.md`, which is how the file reached 899 lines, and that project guidance about a tool belongs there too.
+
+**Migration**: "Agent instructions have one root file, and no record of completed work is hand-maintained" below keeps the symlink, the ban on a hand-kept record, the sweep before history is removed and the ban on a generated second file. Where a rule goes is in "The root brief is bounded, and the project's rules live in the README and the guides".
+
 ## ADDED Requirements
+
+### Requirement: Agent instructions have one root file, and no record of completed work is hand-maintained
+
+The repository SHALL keep one agent-facing instruction file at its root, `AGENTS.md`, and `CLAUDE.md` SHALL be a symbolic link to it so that tools reading either name see the same content.
+
+No record of work already completed SHALL be hand-maintained anywhere: not in `AGENTS.md`, not in `README.md`, not in a guide. The record is `openspec/changes/archive/`, `openspec/postmortems/` and the git log, all produced by the workflow as a side effect of doing the work.
+
+When history is removed from a maintained document, any rule stated only inside it SHALL be lifted out first. A sweep of the removed text for normative language is what catches a lesson embedded in an incident write-up.
+
+No tool SHALL generate a second agent-facing instruction file inside the repository. A generated file that must be edited to be correct is a file whose corrections have an expiry date.
+
+#### Scenario: CLAUDE.md and AGENTS.md never drift
+
+- **WHEN** a contributor reads `CLAUDE.md`
+- **THEN** the content is identical to `AGENTS.md`
+- **AND** `readlink CLAUDE.md` resolves to `AGENTS.md`
+
+#### Scenario: openspec generates no second instruction file
+
+- **WHEN** the repository is searched for an openspec-generated instruction file
+- **THEN** neither `openspec/AGENTS.md` nor `openspec/OPENSPEC_AGENTS.md` exists
+- **AND** the workflow is reached through the installed `openspec-*` skills
+
+#### Scenario: Running the tool's update does not silently overwrite
+
+- **WHEN** a contributor runs `openspec update`
+- **THEN** it reports what it would change and requires confirmation or `--force` rather than rewriting files unprompted
+- **AND** project-authored content in `AGENTS.md` survives the run untouched
+
+#### Scenario: A completed change is recorded by the workflow, not by hand
+
+- **WHEN** a change is archived
+- **THEN** its record is the archived change directory and the git log, with no digest of it written into any maintained document
+- **AND** whatever rule the change established is stated in the present tense in the guide for the part of the tree it binds
+
+#### Scenario: Removing history does not lose a rule
+
+- **WHEN** history is removed from a maintained document
+- **THEN** the removed text is first swept for normative statements, and each is either already present in a retained section, lifted into one, or confirmed to be a fact about the past rather than a rule
 
 ### Requirement: The root brief is bounded, and the project's rules live in the README and the guides
 
@@ -27,11 +74,6 @@ Material addressed to one tool SHALL be used only for what is inherently specifi
 
 - **WHEN** `AGENTS.md` is missing or `CLAUDE.md` no longer resolves to it
 - **THEN** the check fails and says so, rather than passing over nothing
-
-#### Scenario: a session reads the guide before it edits
-
-- **WHEN** a fresh session is asked to change a file in a part of the tree the map names
-- **THEN** it reads that part's guide before its first edit
 
 #### Scenario: a fact about the tree is asked of the tree
 

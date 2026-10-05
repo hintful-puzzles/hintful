@@ -5,16 +5,15 @@ a `hint()` — explained hints are a **core deliberate-divergence product
 value** of this fork, not a nicety — but coverage is not yet complete: the
 games still lacking one are the registered games that declare no `hint`, which
 [`engine/testing/hint-games.ts`](../../src/engine/testing/hint-games.ts) derives.
-A hintless game is a draft, and every game is to have a hint by the end of
-October 2026 (AGENTS.md § "Hint quality bar"); `characterize-the-hint-assessment-corpus`'s
-audit is where the order is chosen. Upstream's `'h'` returns one next move with
+A hintless game is a draft, and every game is to have a hint (§ "The quality
+bar"); [`work-management.md`](../work-management.md) § "Which hintless game
+comes next" says how the order is chosen. Upstream's `'h'` returns one next move with
 no explanation; that is below the bar. Adding a hint to a game is its **own
 openspec change** (`add-<game>-hint`), acceptance-gated like a port.
 
 Authoritative spec: the Hint System requirements in
 [`ts-engine`](../../openspec/specs/ts-engine/spec.md). Quality bar:
-[`palisade`](../../openspec/specs/palisade/spec.md) + the "Hint quality bar
-(exemplar: Palisade)" section of [`AGENTS.md`](../../AGENTS.md). **Exemplars to
+[`palisade`](../../openspec/specs/palisade/spec.md) + § "The quality bar" below. **Exemplars to
 read:** Palisade (grouped multi-leg deductions),
 [`src/games/range/`](../../src/games/range/) (`solver.ts` recording →
 `index.ts` `hint`/`hintKeepTrack` → `render.ts` highlight),
@@ -33,8 +32,9 @@ is part of "done", in the same change.
 
 ## The quality bar
 
-The full statement is in [`AGENTS.md`](../../AGENTS.md); the bar a `hint()`
-must clear:
+Explained hints are a core product value of this project, and the Palisade
+deduction hint is the exemplar. It is not enough to point at the next move.
+The bar a `hint()` must clear, cited elsewhere by these numbers:
 
 1. **Explain *why* the move is forced, not just *what* to do.** Narrate the
    actual deduction ("both edges border the same region, so they share a fate;
@@ -51,12 +51,11 @@ must clear:
 4. **Pace auto-hint uniformly.** `AUTO_HINT_STEP_MS` (1s) per step in
    [`src/puzzle/puzzle.ts`](../../src/puzzle/puzzle.ts), floored by the move's
    own animation so animated moves still play out fully.
-5. **One deductive step per hint; externalize the rest onto the board.** A
-   hint must land *at a glance* — at most one inferential step's worth of
-   reasoning. Multi-step reasoning (including single-level forcing) is spread
-   across **gradual board marks** — one mark per step, the accumulated marks
-   carrying the state — never crammed into one dense sentence. See
-   § "Cognitive load: one step per hint".
+5. **Claim only what you have checked, and make the plan recompute-stable.**
+   Every sentence a hint utters is a claim; one that is not verified in code
+   will be read by a player who trusts it. A heuristic plan must also be
+   stable across recomputes, because a plan is recomputed whenever the player
+   goes their own way. See § "Recompute-stable plans".
 6. **A hint relies only on marks the player can make.** Every fact a step
    rests on is on the board or can be put there by the player. If a deduction
    needs a mark the game does not offer, the game gains that mark and the
@@ -64,6 +63,19 @@ must clear:
    record. Where a notation would genuinely be too hard to manage, the tier that
    needs it becomes `Unreasonable` instead. See § "Facts the board has no
    notation for".
+7. **A hint asks only for what the pointer does.** A game with a hint declares
+   `hintGesture`, and the midend plays a step by sending that gesture through
+   `interpretMove`. See § "Every step is a gesture".
+8. **One deductive step per hint; externalize the rest onto the board.** A
+   hint must land *at a glance* — at most one inferential step's worth of
+   reasoning. Multi-step reasoning (including single-level forcing) is spread
+   across **gradual board marks** — one mark per step, the accumulated marks
+   carrying the state — never crammed into one dense sentence. See
+   § "Cognitive load: one step per hint".
+
+A non-deductive game is exempt only from deduction, not from the bar: see
+§ "Non-deductive (heuristic) hints". Every game is to have a hint, a game
+without one is a draft, and a new game ships with its hint.
 
 ## Guess-free generation is the precondition
 
@@ -1171,7 +1183,7 @@ preference.
 
 **Two reasons get given for parallel and only one of them is good.** *"The
 byte-match differential surface never calls any of this"* is the weak one —
-`AGENTS.md` § "Byte-parity was a tool" released that constraint, so it is a
+[`doctrine.md`](../doctrine.md) § "Upstream" released that constraint, so it is a
 convenience and not an argument. The strong one is that **the generator needs
 only *that* a deduction fires while the hint needs *why*, at which cell, on
 which premise, and often in a different order**: Clusters restarts its scan
@@ -1524,7 +1536,7 @@ wrong-but-legal entry, so the midend never hands its hint a doomed board. A
 deducing onward, answering with `CONTRADICTION_UNLOCALIZED`, which asks the
 player to undo rather than pointing at a highlight that never comes. Every game
 that needs the second check has one, verified by reading all of them, not by
-grepping for a name, which got the answer wrong twice (see AGENTS.md, "A scan
+grepping for a name, which got the answer wrong twice (see [`method.md`](../method.md), "A scan
 that keys on a name").
 
 ## Refusal couples to the mistake overlay
@@ -1976,7 +1988,7 @@ game's hint colors by reading the `COL_HINT` export out of its own `render.ts`.
 Bridges already exported that name, for upstream's *"show possible bridge
 locations"* bevel, so enrolling it would not have failed the guard — it would
 have pointed the guard at a color no hint ever paints. That constant is now
-`COL_POSSIBLE`. `AGENTS.md` § "A scan that keys on a name", from the end where
+`COL_POSSIBLE`. [`method.md`](../method.md) § "A scan that keys on a name", from the end where
 the name was already taken.
 
 #### Why a fill cannot work, whatever color it is
@@ -3597,7 +3609,7 @@ Two things to take from it if you meet the same shape:
 - **The escape is the game's own knowledge, and belongs to the game.** Netslide
   shares the whole planner and cannot have this term — its wire tiles are
   interchangeable, so "tiles in each other's cells" means nothing there. That is
-  the AGENTS.md test for a real per-game decision, answered.
+  the [`doctrine.md`](../doctrine.md) test for a real per-game decision, answered.
 
 ### Find with one search, prove with another (Pegs)
 
@@ -4319,7 +4331,7 @@ recording solver, its rungs and its own words and nothing else. Exemplar:
 [`mathrax/index.ts`](../../src/games/mathrax/index.ts)'s `buildSteps`.
 
 What it fills in, and why each one is not a parameter — the test being
-`AGENTS.md` § "Convention over configuration"'s *can we say what a game would
+[`doctrine.md`](../doctrine.md) § "Convention over configuration"'s *can we say what a game would
 legitimately want to do differently?*, asked **per field** rather than per
 helper:
 
@@ -4351,7 +4363,7 @@ source. That scan keyed on `runCandidatePlan(` and silently dropped six of its
 seven games the moment the preset arrived — `runLatinCandidatePlan` does not
 contain that string. It now keys on `CandidatePlan(`, the shape both entries
 share, and cross-checks against a second derivation (who imports the module).
-`AGENTS.md` § "A scan that keys on a name", in the engine rather than in a game.
+[`method.md`](../method.md) § "A scan that keys on a name", in the engine rather than in a game.
 
 **The `hint()` entry and the generic-Latin narration arms are shared.** (a)
 The `Game.hint` *entry* — completed-board refusal, `findMistakes` refusal,
@@ -4782,7 +4794,7 @@ reason is `single` — Towers' clue-driven placements keep their own reasons.
 **It throws when the placement is neither.** The notes then still show a
 candidate the solver has ruled out, which means the plan skipped a strike the
 placement rests on, and a hint may not narrate a fact the board does not show
-(AGENTS.md § "Hint quality bar", rule 6). There used to be a third answer,
+(§ "The quality bar", rule 6). There used to be a third answer,
 `forcedSingle` (*"Working through this cell's row and column together, only …
 can still go here"*), which said exactly that unmarked fact out loud.
 `strike-before-forced-singles` traced its hits to two skipped strikes in
@@ -5557,5 +5569,4 @@ Twice in one hint session a plausible mechanism diagnosis ("the second leg
 reads as off-plan", "the plan is being dropped") was wrong and dissolved by a
 ~20-line probe test. When a hint misbehaves, write the smallest probe that
 observes the actual `activeHintStep()`/state rather than reasoning forward
-from the suspected cause. See "Hint-UX session" in
-[`AGENTS.md`](../../AGENTS.md).
+from the suspected cause.

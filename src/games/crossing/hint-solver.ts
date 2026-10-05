@@ -37,7 +37,7 @@
  * die three implications away, because some crossing run ruled a digit out of
  * one of its squares. The solver's narrowing fixpoint ({@link fixpoint}) finds
  * such a placement, and the hint then does **not** assert it (a hint relies
- * only on marks the player can make — `AGENTS.md` § "Hint quality bar" rule 6).
+ * only on marks the player can make — `docs/games/hints.md` § "The quality bar" rule 6).
  * It traces the placement back to the narrowings it rests on ({@link support})
  * and places the earliest of them as notes, whose own premise is already on the
  * board. Each note step narrows some square's notes, so the walk ends at the

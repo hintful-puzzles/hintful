@@ -7,7 +7,7 @@
  * zero of the six guards, silently — by construction rather than by assertion:
  * there is no list to forget to edit, so no test here can meaningfully "check
  * that games are enrolled". **Asserting the derivation against its own
- * definition would be a tautology**, the shape AGENTS.md calls out (a guard must
+ * definition would be a tautology**, the shape docs/method.md calls out (a guard must
  * measure the thing it claims to guard, not restate it).
  *
  * What a derivation *can* fail at is finding nothing, or finding less. That is
@@ -135,7 +135,7 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
   });
 
   it("reaches the modes that keying on tier alone hid", () => {
-    // **The known positive** (AGENTS.md § "Method"). The two assertions above
+    // **The known positive** (docs/method.md). The two assertions above
     // both read `paramConfig`, so a single fault there — a renamed accessor, a
     // `get` that throws and is swallowed — could satisfy them while the slice
     // walked nothing but easy boards. These name a handful of modes by the
@@ -190,7 +190,7 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
  *
  * Keyed on the **shape** — the two calls themselves, anywhere in any test file,
  * comments stripped — and the superset is then classified by the ledger rather
- * than narrowed away (`AGENTS.md` § "A scan that keys on a name"). The ledger is
+ * than narrowed away (`docs/method.md` § "A scan that keys on a name"). The ledger is
  * the rule 3 shape from `docs/games/testing.md` § "How a cross-game guard finds
  * its population": the scan says *who*, each entry says *why*, and the equality
  * below means neither can rot.

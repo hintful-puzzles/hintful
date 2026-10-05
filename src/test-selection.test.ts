@@ -88,7 +88,7 @@ describe("the pre-commit test selector can see every coupling", () => {
     // line-oriented pass at this question could not see: it reported the tree
     // as uniformly single-pattern and missed both call sites. Scan for the
     // *call*, then classify what follows it — never grep for the shape you
-    // expect (`AGENTS.md` § "A scan that keys on a name").
+    // expect (`docs/method.md` § "A scan that keys on a name").
     const anyCall = /import\.meta\.glob\s*(?:<[^>]*>)?\s*\(/g;
     const offenders: string[] = [];
     let calls = 0;

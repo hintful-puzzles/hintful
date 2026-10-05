@@ -19,7 +19,7 @@
  * ```
  *
  * How a digit run is consumed is not about the puzzle, which is the test
- * AGENTS.md § "Convention over configuration" sets: *would two games ever
+ * docs/doctrine.md § "Convention over configuration" sets: *would two games ever
  * legitimately answer this differently?* What tag letter a field takes, yes —
  * that is fixed by upstream compatibility and belongs to the game.
  *

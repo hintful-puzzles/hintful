@@ -125,7 +125,7 @@ describe("HintFrontier", () => {
  * The key is the **shape both entry points share**, not either one's full
  * name: `runLatinCandidatePlan` does not contain `runCandidatePlan`, and when
  * the row/column preset arrived this derivation silently dropped six of its
- * seven games (`AGENTS.md` § "A scan that keys on a name"). The comment
+ * seven games (`docs/method.md` § "A scan that keys on a name"). The comment
  * stripper transpiles, which erases the type arguments, so a call written
  * `runCandidatePlan<M, H, …>({` reaches the scan as `runCandidatePlan({`.
  */

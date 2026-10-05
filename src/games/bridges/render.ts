@@ -69,7 +69,7 @@ export const COL_MARK = 5;
  * by reading the `COL_HINT` export out of its own `render.ts`, so a game that
  * already owns that identifier for something else does not fail the guard, it
  * **silently redirects it** at a color no hint ever paints. That is
- * `AGENTS.md` § "A scan that keys on a name" from the other end: the sweep keys
+ * `docs/method.md` § "A scan that keys on a name" from the other end: the sweep keys
  * on a name and the name was taken.
  */
 export const COL_POSSIBLE = 6;

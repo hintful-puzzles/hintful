@@ -67,7 +67,7 @@ export interface PresetAxis<Params> {
  * **Why `paramConfig` rather than the params object's own keys.** It is a value
  * a mechanism *consumes* (`Midend.getCustomParams` builds the dialog from it),
  * not a statement written for a guard's benefit, which is the distinction
- * AGENTS.md § "Convention over configuration" draws between a healthy
+ * docs/doctrine.md § "Convention over configuration" draws between a healthy
  * declaration and a manifest. It is also complete: `custom-params.test.ts`
  * fails a registered game whose `paramConfig` is missing or empty, so no game
  * can join the collection with its axes unstated. And it is *typed* — the game

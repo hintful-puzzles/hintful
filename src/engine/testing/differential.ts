@@ -22,7 +22,7 @@
  * That is by decision, not by accident. With no C build there is no asking
  * *"what would upstream have produced?"* about a new question, so a deliberate
  * divergence **retires or re-founds** its fixture rather than re-recording it —
- * and where a divergence is real, `AGENTS.md`'s released byte-parity doctrine
+ * and where a divergence is real, `docs/doctrine.md`'s released byte-parity doctrine
  * says changing every board is the point. What a fixture still does, and why
  * they are all kept, is act as the net under refactoring: a change that alters a
  * solver's verdict alters which boards exist, which is exactly what these catch.

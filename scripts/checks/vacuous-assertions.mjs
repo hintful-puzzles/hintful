@@ -41,7 +41,7 @@
  *
  * **The key is "conditional", and both spellings of it count.** `if (…) { … }`
  * and `if (…) continue; / if (…) return;` are the same guard written two ways,
- * and reading only the first is the wrong-key failure `AGENTS.md` § "A scan that
+ * and reading only the first is the wrong-key failure `docs/method.md` § "A scan that
  * keys on a name" describes: it sees four of Sticks' five reason scans and
  * misses the fifth, which is written with `continue`. Widening from one spelling
  * to both took the catch rate from 4 of 13 to 5 and the population from 24 to
@@ -55,8 +55,8 @@
  * is ever traced to an empty collection in a test.
  *
  * **Two exemptions, both derived from the syntax rather than ledgered**
- * (`AGENTS.md` § "Derive the exception from a declaration the game already
- * makes"). An `if`/`else` whose BOTH branches assert is not a vacuity risk,
+ * (`docs/doctrine.md` § "Convention over configuration": derive the exception
+ * from a declaration the game already makes). An `if`/`else` whose BOTH branches assert is not a vacuity risk,
  * because one of them always runs — that alone separates 24 from the 28 a first
  * pass reported. And a test whose last top-level statement is a `throw` has
  * already written its own vacuity guard in the other available form: the scan
@@ -147,7 +147,7 @@ function isEarlyOutGuard(st) {
 /**
  * Exported so the catch-rate measurement can run the SHIPPED rule over historical
  * file contents rather than a paraphrase of it; a measurement of a copy of the
- * guard measures the copy (`AGENTS.md` § "check the instrument before the
+ * guard measures the copy (`docs/method.md` § "Check the instrument before the
  * finding").
  *
  * @returns {{line: number, title: string, count: number}[]} one entry per test
@@ -229,7 +229,7 @@ export function offendersIn(file, text) {
 
 /**
  * The guard proves itself on every run, rather than having been proved once by
- * somebody who then deleted the evidence. `AGENTS.md` § "Method" requires a new
+ * somebody who then deleted the evidence. `docs/method.md` requires a new
  * guard be seen failing before it is trusted, and a guard *about* tests that
  * cannot fail has no business being one. Seven fixtures, one parse each, ~1 ms.
  *

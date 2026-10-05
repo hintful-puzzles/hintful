@@ -160,7 +160,7 @@ export function status(state: SixteenState): "solved" | "ongoing" {
 }
 /* No `serializeMove`/`deserializeMove`: `SixteenMove` is plain JSON, so saves
  * take the save codec's default identity path. Adding a codec now would change
- * the bytes of every existing Sixteen save, which is the owner's call (AGENTS.md,
+ * the bytes of every existing Sixteen save, which is the owner's call (docs/doctrine.md,
  * "Nothing is sacred"). */
 
 // --- text format ------------------------------------------------------

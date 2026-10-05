@@ -21,7 +21,7 @@ Expect it done much later, or not at all.
 Path and Numgame are the collection's **first two greenfield games** — built
 rather than ported — so whichever is written first is the best available answer
 to *"what does adding a new game cost today?"* That number is the baseline the
-framework work is judged against (AGENTS.md § "Goal", for the scale, and
+framework work is judged against (docs/doctrine.md § "The goal", for the scale, and
 § "Convention over configuration").
 
 **So keep a note, while building, of every question you have to stop and answer

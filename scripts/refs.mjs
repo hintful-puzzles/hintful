@@ -3,7 +3,7 @@
  * Who references a symbol — `npm run refs -- <file> <Name | Type.member>`.
  *
  * **The instrument for taking a population by reference rather than by name**
- * (`AGENTS.md` § "A scan that keys on a name"). A grep for `tierNames(<digit>`
+ * (`docs/method.md` § "A scan that keys on a name"). A grep for `tierNames(<digit>`
  * found 21 tiered games where references find 29, and a grep for `latinSolver(`
  * misses every call written `latinSolver<Ctx>(`.
  *

@@ -436,7 +436,7 @@ export const LATIN_RUNGS = [
  * rungs and its own words and nothing else.
  *
  * **What it fills in is what a row and a column *force*** — the test being
- * AGENTS.md § "Convention over configuration"'s, *can we say what a game would
+ * docs/doctrine.md § "Convention over configuration"'s, *can we say what a game would
  * legitimately want to do differently?*, asked per field:
  *
  * - `regionsOf` is {@link rowColRegions}. That is the one genuine choice, and

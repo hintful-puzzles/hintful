@@ -31,6 +31,10 @@ about that pipeline shape everything below:
   `puzzleKeyMap`, with consequences upstream never had — see § "The numeric
   keypad never arrives".
 
+**Don't map editor-only move letters from input.** Upstream guards them behind
+`#ifdef EDITOR`; a port simply doesn't wire them, and says so in its
+`design.md` so it isn't re-decided.
+
 ## The input-parity bar
 
 **Maximum parity between mouse, touch and keyboard is the collection-wide bar**
@@ -916,7 +920,7 @@ The fix is one conjunct — `isMouseDown(button) || isMouseDrag(button) ||
 isMouseRelease(button) &&` the coordinate test — **not** narrowing the tail. That
 tail is load-bearing (it repaints a moved cursor and a click that clears the UI),
 and comparing UI state before and after to decide whether to repaint is the
-deep-compare trap AGENTS.md forbids: suppress a no-op *locally*, in the arm that
+deep-compare trap `mechanics.md` forbids: suppress a no-op *locally*, in the arm that
 knows it is one.
 
 **Why upstream does not have this problem** and you cannot copy its shape here:
@@ -1097,7 +1101,7 @@ Normative: the on-screen-keys requirement in
   Two more things from it worth copying. The predicate for "this release wrote
   nothing, so select instead" is the **local** one — the peg already holds what
   the release would put there — never a compare of state before and after
-  (AGENTS.md § "Traps that catch new game work"). And a tap that was *worse*
+  ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE"). And a tap that was *worse*
   than a no-op is the best case you can find: Guess's tap on a filled slot put
   the same color back **and hid the cursor**, so selecting there was a fix
   rather than a divergence to argue for.

@@ -196,7 +196,7 @@ const LONG_NARRATIONS: {
     games: ["palisade"],
     rungs: ["equivalentEdges"],
     why:
-      "The collection's hint exemplar, quoted verbatim in AGENTS.md § \"Hint " +
+      "The collection's hint exemplar, quoted in docs/games/hints.md § \"The " +
       'quality bar" and owner-endorsed: the "share a fate" premise and its ' +
       "gloss are what made the conclusion follow.",
   },
@@ -935,7 +935,7 @@ const LINT_ROUNDS = 30;
  * the ledger's *rot* half can decide anything.
  *
  * **Off in the automatic per-commit hook, on everywhere else.** That is the
- * gate's existing third-scoping-by-role shape (`AGENTS.md` § "Git", `slow.ts`'s
+ * gate's existing third-scoping-by-role shape (`scripts/gate.sh`, `slow.ts`'s
  * {@link PRECOMMIT_HOOK_RUN}): CI runs `npm run gate` with the toggle unset on
  * every push to `main`, so this narrows what a *commit* costs and never what
  * protects the branch.
@@ -987,7 +987,7 @@ const CORNER_WALKED = !PRECOMMIT_HOOK_RUN;
  *
  * **"Hardest teachable" excludes a declared search tier**, which is where the
  * cost lives and where there is nothing to hear: a hint refuses on a board that
- * needs a guess (AGENTS.md § "Hint quality bar" rule 6), so the plan stops
+ * needs a guess (docs/games/hints.md § "The quality bar" rule 6), so the plan stops
  * early — Group's 6x6 yields 27 steps at Unreasonable against 253 at Hard — and
  * generation there is by far the most expensive thing in the cross product
  * (12x12 Unreasonable ran past 25 minutes for 12 boards and was abandoned;

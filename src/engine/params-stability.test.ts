@@ -80,7 +80,7 @@ describe("encoded params are byte-stable", () => {
       // Re-baselining this snapshot is a **compatibility decision**, not a
       // formatting one: every line that moves is a shared game ID that stops
       // resolving to the board it named. `vitest -u` here needs the owner's
-      // say-so, per AGENTS.md ("Nothing is sacred": player- and data-visible
+      // say-so, per docs/doctrine.md ("Nothing is sacred": player- and data-visible
       // changes are proposed, not just done).
       expect(table.join("\n")).toMatchSnapshot();
     });

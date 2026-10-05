@@ -19,7 +19,7 @@
  *    the walk cannot break is a game this half cannot see.
  *  - **The structural half** walks real states (fresh, and solved) and refuses
  *    the names the record went by. It keys on names, which is the weaker
- *    instrument (AGENTS.md, "A scan that keys on a name"), and it is here for
+ *    instrument (docs/method.md, "A scan that keys on a name"), and it is here for
  *    the games the behavioral half cannot see.
  *
  * WHY NOT "a board with a mistake is not solved", which was the first cut: it

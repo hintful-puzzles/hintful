@@ -130,7 +130,7 @@ describe("rome recording projection", () => {
    * `arrowPath` throws rather than returning a wrong path, so this is checking
    * the *claim the sentence makes* — that following the arrows from the named
    * neighbor arrives at the struck square — against the board it was recorded
-   * from (AGENTS.md § "Hint quality bar", rule 5).
+   * from (docs/games/hints.md § "The quality bar", rule 5).
    */
   /**
    * "Only this mark still leads into the striped group" is a claim about every

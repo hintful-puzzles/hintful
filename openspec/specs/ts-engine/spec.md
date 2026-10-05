@@ -3297,7 +3297,7 @@ nothing in the collection compared the tier a board was generated at with the
 tier the board needs: `difficulty-contract.test.ts` computed the lowest solving
 cap and used it only as the floor of a monotonicity sweep — an assertion sitting
 beside the very value that would have proved the point, measuring a neighbor of
-it (`AGENTS.md` § "Method").
+it (`docs/method.md`).
 
 A cross-game guard SHALL, over a population derived from the registry with no
 enrollment list, require that a board dealt from a preset whose tier the game's
@@ -3384,7 +3384,7 @@ already exists, and the 39 migrations it would cost buy a property one derived
 sweep now asserts.
 
 The figure carries its date and its change id because it is a measurement, not a
-claim (`AGENTS.md` § "A count written in prose is a census nobody re-runs"); a
+claim (`docs/method.md` § "A count written in prose is a census nobody re-runs"); a
 later proposal SHALL re-run the sweep rather than quote it.
 
 #### Scenario: A proposal argues the framework should own the accept loop
