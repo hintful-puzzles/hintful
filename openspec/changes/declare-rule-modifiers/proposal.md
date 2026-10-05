@@ -18,10 +18,20 @@ composed, and several sit mixed through a flat preset list.
 ## What the survey found
 
 Read 2026-10-05 from every game's `paramConfig`; the fields were judged from
-their `doc`, with the help page opened for the candidates. **Whether each
-combines freely with the others in its game has not been checked**, and that
-is task 1: the tell is a refusal in `validateParams` naming two of them, or a
-generator that ignores one when another is set.
+their `doc`, with the help page opened for the candidates.
+
+**They combine freely, so none is a ruleset in disguise** (measured
+2026-10-05). For each game, every combination of its candidate fields was
+written onto the first preset `paramsError` accepts it on, dealt through
+`Midend.newGameFromId`, and its params encoded and decoded to see that each
+field read back as set: 34 combinations in nine games, all dealt, none lost.
+The eight of Solo's X, Jigsaw and Killer are among them. No `validateParams`
+names two of these fields together. What each is coupled to is a size or a
+tier: Killer needs a grid under 10 and X one over 3, Group cannot hide its
+identity at Easy or on 3x3, ABCD's rule against diagonal touching needs five
+letters, a wrapping Net cannot have a side of 2, and Unruly's unique rows
+bound the board's proportions. The deals were of small boards, so this shows
+each combination is a board, and nothing about whether it is a good one.
 
 | Game | Field | Presets mix its values |
 |---|---|---|
@@ -44,10 +54,12 @@ hidden ends, Same Game's scoring.
 
 ## What Changes
 
-To be designed after task 1. The questions, in order:
+To be designed. Every label in the table already has one shape, which is the
+declaration's to take over: the field says its words when its rule departs
+from the plain game ("wrapping", "no loops", "identity hidden") and nothing
+otherwise. So a modifier is a checkbox, the value at which its rule applies,
+the words for a title, and the rule's sentence. The questions:
 
-- **Which of these are modifiers, and which are rulesets in disguise.** Two
-  fields that cannot both be set are one ruleset field with more choices.
 - **What consumes the declaration.** A mark nothing reads is a second copy
   (AGENTS.md § "One source of truth"). Candidates: the help's rules, which
   could list each modifier and its rule as `{{rulesets}}` lists rulesets, so a
