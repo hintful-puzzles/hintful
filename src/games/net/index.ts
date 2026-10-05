@@ -12,6 +12,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import {
   atof,
   dimensionParamConfig,
@@ -717,17 +718,20 @@ export const netGame: Game<
       doc: "Size of the grid in squares. At least one of them must be more than 1.",
       bounds: { min: 1 },
     }),
-    {
+    modifierItem<NetParams>({
       kw: "walls-wrap-around",
       name: "Walls wrap around",
       type: "boolean",
-      doc: "When on, the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall. The grid cannot then be exactly 2 squares wide or high, since such a grid can never have just one solution.",
-      label: { slot: "kind", words: (p) => (p.wrapping ? "wrapping" : null) },
+      when: true,
+      words: "wrapping",
+      slot: "kind",
+      rule: "the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall.",
+      note: "The grid cannot then be exactly 2 squares wide or high, since such a grid can never have just one solution.",
       get: (p) => p.wrapping,
       set: (p, v) => {
         p.wrapping = v;
       },
-    },
+    }),
     {
       kw: "barrier-probability",
       name: "Barrier probability",

@@ -30,6 +30,11 @@ equivalent to saying that the following conditions must be satisfied:
   column *c* by *e*. Then the letters in row *d*
   column *c* and in row *a* column *e* must be the same.
 
+One setting changes what you are given, and a board's name in the Type
+menu says when it is on:
+
+{{modifiers}}
+
 ## Controls
 
 To place a letter, click in a square to select it, then type the

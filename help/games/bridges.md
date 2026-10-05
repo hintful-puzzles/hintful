@@ -1,12 +1,15 @@
 # Bridges
 
 Draw horizontal or vertical bridges to link up all the islands.
-Bridges may be single or double (a custom board can allow anything
-from one to four between a pair of islands); they may not cross; the
+Bridges may be single or double; they may not cross; the
 islands must all end up connected to each other; the number in each
 island must match the number of bridges that end at that island
-(counting double bridges as two). Loops of bridges are permitted
-unless **Allow loops** is switched off.
+(counting double bridges as two). Loops of bridges are permitted.
+
+Two settings change these rules, and a board's name in the Type menu
+says when one does:
+
+{{modifiers}}
 
 ## Controls
 

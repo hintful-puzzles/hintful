@@ -7,8 +7,10 @@ Color every square either black or white, in such a way that:
 - each row and column contains the same number of black and white
   squares.
 
-With **Unique rows and columns** switched on (from ‘Custom type…’ on the
-‘Type’ menu), no two rows may be the same, and no two columns.
+One setting adds a rule: **Unique rows and columns**, from ‘Custom
+type…’ on the ‘Type’ menu. A board's name says when it is on:
+
+{{modifiers}}
 
 ## Controls
 

@@ -14,6 +14,7 @@ import { parseLeadingInt } from "../../engine/decimal.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { colorKeysZeroIsTen } from "../../engine/key-labels.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -546,17 +547,20 @@ export const guessGame: Game<
         p.allowBlank = v;
       },
     },
-    {
+    modifierItem<GuessParams>({
       kw: "allow-duplicates",
       name: "Allow duplicates",
       type: "boolean",
-      doc: "When on, a color may appear more than once in the answer, and in your guesses. When off, every peg of the answer is a different color, so there must be at least as many colors as pegs.",
-      label: { slot: "tail", words: (p) => (p.allowMultiple ? null : "no duplicates") },
+      when: false,
+      words: "no duplicates",
+      slot: "tail",
+      rule: "every peg of the answer is a different color, and so is every peg of a guess.",
+      note: "There must then be at least as many colors as pegs.",
       get: (p) => p.allowMultiple,
       set: (p, v) => {
         p.allowMultiple = v;
       },
-    },
+    }),
   ],
 
   newDesc,

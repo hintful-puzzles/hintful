@@ -15,6 +15,11 @@ every square in the grid (not just the endpoint blobs).
 Connecting across a red barrier line is forbidden. On harder levels,
 there are fewer barriers, which makes it harder rather than easier!
 
+One setting changes the rules, and a board's name in the Type menu
+says when it is on:
+
+{{modifiers}}
+
 ## Controls
 
 Click on the arrows at the edges of the grid to move a row or column

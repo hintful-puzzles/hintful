@@ -20,6 +20,7 @@ import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
 import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
+import { MODIFIERS_PLACEHOLDER, modifiersOf } from "./engine/modifier.ts";
 import { expandChoices, PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
 import { RULESETS_PLACEHOLDER, rulesetField } from "./engine/ruleset.ts";
@@ -176,6 +177,27 @@ describe("every game's page has the one skeleton", () => {
 
   itOverWholeSweep("is not vacuous — some games declare rulesets", () => {
     expect(withRulesets).toBeGreaterThanOrEqual(3);
+  });
+
+  // The same for a game with rule modifiers (`engine/modifier.ts`): its list
+  // of them is generated, in the rules, and no other page has the placeholder.
+  let withModifiers = 0;
+
+  it.each(puzzleIds)("%s: carries the modifiers placeholder iff it has them", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const game = getTsGame(id);
+    if (!game) throw new Error(`${id} is not registered`);
+    const declares = modifiersOf(game).length > 0;
+    if (declares) withModifiers++;
+    const rules = page.slice(0, page.indexOf("\n## "));
+    expect(rules.split(MODIFIERS_PLACEHOLDER).length - 1, `help/games/${id}.md`).toBe(
+      declares ? 1 : 0,
+    );
+    expect(page.split(MODIFIERS_PLACEHOLDER).length - 1).toBe(declares ? 1 : 0);
+  });
+
+  itOverWholeSweep("is not vacuous — some games declare modifiers", () => {
+    expect(withModifiers).toBeGreaterThanOrEqual(5);
   });
 
   // Where a page names a choice of one of its fields — a mode, a grid type —

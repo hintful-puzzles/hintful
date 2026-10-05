@@ -4,6 +4,11 @@ Try to guess the hidden combination of colors. You will be given
 limited information about each guess you make, enabling you to
 refine the next guess.
 
+One setting changes what the combination can be, and a board's name
+in the Type menu says when it is on:
+
+{{modifiers}}
+
 ## Controls
 
 Build a guess by pressing the color buttons below the grid. Each

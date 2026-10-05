@@ -1097,6 +1097,14 @@ than one puzzle (Seismic's Tectonic, Ascent's Edges): each ruleset a `name` and 
 `rule`. `rulesetField(game)` finds it, for the label, the menu's sections and
 the help; `rulesetsMarkdown` is the list a page's `{{rulesets}}` becomes.
 
+### `modifier.ts` — the settings that change one rule
+
+`modifierItem(spec)` is the `paramConfig` item of a setting that adds, removes
+or bounds a rule and combines with others (Net's wrapping, Solo's Killer): the
+value at which the rule applies, the words a title says then, and the rule.
+It writes the field's help entry and label words; `modifiersOf(game)` and
+`modifiersMarkdown` are the list a page's `{{modifiers}}` becomes.
+
 ### `param-help.ts` — the generated Parameters section
 
 `parametersMarkdown(config)` renders a game's help Parameters list from its

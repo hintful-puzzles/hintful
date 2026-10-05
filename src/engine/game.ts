@@ -18,6 +18,7 @@ import type { DifficultyContract } from "./difficulty.ts";
 import type { PointerAction } from "./hint-gesture.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
 import type { MarkRole, Sentence } from "./hint-words.ts";
+import type { Modifier } from "./modifier.ts";
 import type { RandomState } from "./random/index.ts";
 import type { Ruleset } from "./ruleset.ts";
 import type { NotApplicableReasons } from "./sections.ts";
@@ -239,6 +240,9 @@ interface ParamItemCommon<Params> {
   doc: string | { with: string };
   /** Where this field's words go when a params set is labeled, if anywhere. */
   label?: ParamLabel<Params>;
+  /** Set by `modifierItem` alone (`engine/modifier.ts`): the rule this field
+   * changes, and the words for a board it applies to. */
+  modifier?: Modifier;
 }
 
 /** Inclusive limits on a numeric field. */

@@ -6,9 +6,10 @@ connected network with no loops.
 Squares connected to the middle square are lit up. Aim to light up
 every square in the grid (not just the endpoint blobs).
 
-When this gets too easy, select a 'wrapping' variant from the Type
-menu to enable grid lines to run off one edge of the playing area
-and come back on the opposite edge!
+When this gets too easy, try the setting that changes the rules. A
+board's name in the Type menu says when it is on:
+
+{{modifiers}}
 
 ## Controls
 

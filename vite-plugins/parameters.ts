@@ -4,8 +4,9 @@
  * help build replaces it before the markdown is rendered.
  *
  * A game with rulesets (`engine/ruleset.ts`) has its list of them generated
- * too, where its page writes `{{rulesets}}`; a declaring game's page without
- * the placeholder, or another game's page with one, fails the build.
+ * too, where its page writes `{{rulesets}}`, and a game with rule modifiers
+ * (`engine/modifier.ts`) theirs at `{{modifiers}}`; a declaring game's page
+ * without the placeholder, or another game's page with one, fails the build.
  *
  * Where a page's prose names a choice of one of those fields it writes
  * `{{choice:kw:index}}`, which `expandChoices` replaces with the choice's name.
@@ -16,6 +17,11 @@
  */
 
 import path from "node:path";
+import {
+  MODIFIERS_PLACEHOLDER,
+  modifiersMarkdown,
+  modifiersOf,
+} from "../src/engine/modifier.ts";
 import {
   expandChoices,
   PARAMETERS_PLACEHOLDER,
@@ -30,6 +36,28 @@ import {
 import "../src/games/index.ts";
 import type { Transform } from "./extra-pages.ts";
 
+/**
+ * `source` with `list` where it writes `placeholder`. A game that declares
+ * `what` has a list, and its page carries the placeholder once; a game that
+ * declares none has `""`, and its page carries no placeholder.
+ */
+function withList(
+  id: string,
+  source: string,
+  placeholder: string,
+  list: string,
+  what: string,
+): string {
+  const written = source.split(placeholder).length - 1;
+  if (written !== (list ? 1 : 0))
+    throw new Error(
+      list
+        ? `help/games/${id}.md: the game declares ${what}, so its rules write ${placeholder} once, where their list goes`
+        : `help/games/${id}.md: ${placeholder} needs the game to declare ${what}`,
+    );
+  return list ? source.replace(placeholder, list) : source;
+}
+
 /** `source`, the help page of game `id`, with its parameters in place. */
 function expandParameters(id: string, source: string): string {
   const game = getTsGame(id);
@@ -39,18 +67,17 @@ function expandParameters(id: string, source: string): string {
       `help/games/${id}.md: its parameters section writes ${PARAMETERS_PLACEHOLDER} where the generated list goes`,
     );
   const config = game.paramConfig ?? [];
-  const rulesets = rulesetField(game)?.rulesets ?? null;
-  const lists = source.split(RULESETS_PLACEHOLDER).length - 1;
-  if (lists !== (rulesets ? 1 : 0))
-    throw new Error(
-      rulesets
-        ? `help/games/${id}.md: the game declares rulesets, so its rules write ${RULESETS_PLACEHOLDER} once, where their list goes`
-        : `help/games/${id}.md: ${RULESETS_PLACEHOLDER} needs the game to declare a rulesetItem`,
-    );
-  if (rulesets)
-    source = source.replace(RULESETS_PLACEHOLDER, rulesetsMarkdown(rulesets));
+  const rulesets = rulesetField(game)?.rulesets ?? [];
+  const modifiers = modifiersOf(game);
+  const listed = withList(
+    id,
+    withList(id, source, RULESETS_PLACEHOLDER, rulesetsMarkdown(rulesets), "rulesets"),
+    MODIFIERS_PLACEHOLDER,
+    modifiersMarkdown(modifiers),
+    "rule modifiers",
+  );
   try {
-    return expandChoices(config, source).replace(
+    return expandChoices(config, listed).replace(
       PARAMETERS_PLACEHOLDER,
       parametersMarkdown(config),
     );

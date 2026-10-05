@@ -5,9 +5,11 @@ numerical order starting from the top left.
 
 When you master the basic game, go to the Type menu to try it with
 larger rotating groups (for a 3×3 group you must click in the
-center of a square to rotate the block around it). Or select the
-'orientable' mode in which every square must end up the right way
-round as well as in the right place. Or both!
+center of a square to rotate the block around it). Or try a setting
+that changes the rules. Or both! A board's name in the Type menu says
+which it has:
+
+{{modifiers}}
 
 ## Controls
 

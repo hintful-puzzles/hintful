@@ -50,6 +50,7 @@ import type { Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
 import { rowColRegions, type SingleReason } from "../../engine/latin-hint.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -771,17 +772,20 @@ export const groupGame: Game<
       label: { slot: "size", words: squareSize("w") },
     }),
     difficultyItem(DIFF_NAMES, "diff"),
-    {
+    modifierItem<GroupParams>({
       kw: "show-identity",
       name: "Show identity",
       type: "boolean",
-      doc: "When enabled, the identity is always <em>e</em>, and its row and column are filled in for you. When disabled, you have to work out which letter is the identity. Easy puzzles and 3×3 grids must show it.",
-      label: { slot: "tail", words: (p) => (p.id ? null : "identity hidden") },
+      when: false,
+      words: "identity hidden",
+      slot: "tail",
+      rule: "you have to work out which letter is the identity.",
+      note: "When on, the identity is always <em>e</em>, and its row and column are filled in for you. Easy puzzles and 3×3 grids must show it.",
       get: (p) => p.id,
       set: (p, v) => {
         p.id = v;
       },
-    },
+    }),
   ],
 
   newDesc: newGameDesc,

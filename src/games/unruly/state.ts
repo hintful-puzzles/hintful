@@ -11,6 +11,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -102,17 +103,20 @@ export const paramConfig: ParamConfigItem<UnrulyParams>[] = [
     bounds: { min: 6 },
   }),
   difficultyItem(DIFF_NAMES, "diff"),
-  {
+  modifierItem<UnrulyParams>({
     kw: "unique-rows-and-columns",
     name: "Unique rows and columns",
     type: "boolean",
-    doc: "Adds the rule that no two rows may be the same, and no two columns. There are only so many different rows of a given width, so this limits how tall the grid can be for its width, and the other way round: a grid 6 squares wide can be at most 14 high, and one 8 wide at most 34.",
-    label: { slot: "tail", words: (p) => (p.unique ? "unique" : null) },
+    when: true,
+    words: "unique",
+    slot: "tail",
+    rule: "no two rows may be the same, and no two columns.",
+    note: "There are only so many different rows of a given width, so this limits how tall the grid can be for its width, and the other way round: a grid 6 squares wide can be at most 14 high, and one 8 wide at most 34.",
     get: (p) => p.unique,
     set: (p, v) => {
       p.unique = v;
     },
-  },
+  }),
 ];
 
 /** `WxH`, the unique-rows letter, then the generator-only difficulty letter. A

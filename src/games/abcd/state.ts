@@ -20,6 +20,7 @@ import {
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -111,18 +112,21 @@ export const paramConfig: ParamConfigItem<AbcdParams>[] = [
       p.removenums = v;
     },
   },
-  {
+  modifierItem<AbcdParams>({
     // The option is the inverse of the stored flag, as upstream's is.
     kw: "allow-diagonal-touching",
     name: "Allow diagonal touching",
     type: "boolean",
-    doc: "When disabled, letters cannot be diagonally adjacent (in addition to letters not being orthogonally adjacent). Counter-intuitively this <em>raises</em> the size limit described above rather than lowering it: the extra restriction gives you more to reason from, so larger boards still work out to a single solution.",
-    label: { slot: "tail", words: (p) => (p.diag ? "no diagonal" : null) },
+    when: false,
+    words: "no diagonal",
+    slot: "tail",
+    rule: "identical letters cannot be diagonally adjacent either.",
+    note: "Counter-intuitively this <em>raises</em> the size limit described above rather than lowering it: the extra restriction gives you more to reason from, so larger boards still work out to a single solution.",
     get: (p) => !p.diag,
     set: (p, v) => {
       p.diag = !v;
     },
-  },
+  }),
 ];
 
 /** `WxHn<letters>[D][R]`: a missing height is the width, missing digits are 0,

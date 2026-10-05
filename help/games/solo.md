@@ -4,12 +4,11 @@ Fill in a number in every square so that every number appears
 exactly once in each row, each column and each block marked by thick
 lines.
 
-When you master the basic game, try Jigsaw mode (irregularly shaped
-blocks), X mode (the two main diagonals of the grid must also
-contain every number once), Killer mode (instead of single-cell
-clues you are given regions of the grid each of which must add up to
-a given total, again without reusing any digits), or all of those at
-once!
+When you master the basic game, try a setting that changes the rules,
+or all of them at once! A board's name in the Type menu says which it
+has:
+
+{{modifiers}}
 
 ## Controls
 

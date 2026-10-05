@@ -9,6 +9,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -236,28 +237,32 @@ export const twiddleGame: Game<
         words: (p) => (p.n === 2 ? null : `rotating ${p.n}x${p.n} blocks`),
       },
     }),
-    {
+    modifierItem<TwiddleParams>({
       kw: "one-number-per-row",
       name: "One number per row",
       type: "boolean",
-      doc: "Every square in a row carries the same number, the row's own, so the puzzle is solved when each row holds only its own number and it doesn't matter which of those squares goes where.",
-      label: { slot: "kind", words: (p) => (p.rowsonly ? "rows only" : null) },
+      when: true,
+      words: "rows only",
+      slot: "kind",
+      rule: "every square in a row carries the same number, the row's own, so the puzzle is solved when each row holds only its own number and it doesn't matter which of those squares goes where.",
       get: (p) => p.rowsonly,
       set: (p, v) => {
         p.rowsonly = v;
       },
-    },
-    {
+    }),
+    modifierItem<TwiddleParams>({
       kw: "orientation-matters",
       name: "Orientation matters",
       type: "boolean",
-      doc: "The 'orientable' mode: each square turns with its block, and must also end up the right way round.",
-      label: { slot: "kind", words: (p) => (p.orientable ? "orientable" : null) },
+      when: true,
+      words: "orientable",
+      slot: "kind",
+      rule: "each square turns with its block, and must also end up the right way round.",
       get: (p) => p.orientable,
       set: (p, v) => {
         p.orientable = v;
       },
-    },
+    }),
     numberItem<TwiddleParams>(
       "number-of-shuffling-moves",
       "Number of shuffling moves",

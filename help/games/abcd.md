@@ -5,6 +5,10 @@ You're given an empty grid, and several rows of numbers on the side. You have to
 1. The numbers on the edge indicate how many instances of a specific letter appear in that row or column.
 2. Identical letters can not be horizontally or vertically adjacent.
 
+One setting adds to the second rule, and a board's name in the Type menu says when it is on:
+
+{{modifiers}}
+
 The inventor of this type is unknown. This puzzle is also known under the names *ABCD Puzzle*, *ABC-Kombi* or *ABCD-Rätsel*.
 
 More information: https://www.janko.at/Raetsel/Abc-Kombi/index.htm

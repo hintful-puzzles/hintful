@@ -834,6 +834,15 @@ and help once said one mode three ways; the how is
 [`docs/games/mechanics.md`](docs/games/mechanics.md) § "Params are declared
 once, on `paramConfig`".
 
+**A setting that changes one rule is a declared modifier.** Where rulesets
+exclude each other, modifiers combine: Solo's X, Jigsaw and Killer make eight
+boards between them. A game declares each with `modifierItem`
+(`engine/modifier.ts`), and the engine writes its entry in the parameters
+section, its words in a title, and its line of the list where the page's rules
+write `{{modifiers}}`, headed by the words the title uses. **Which of the two a
+field is gets measured, not judged**: deal every combination of the candidates,
+and two that cannot both be set are one ruleset.
+
 **A Hints section is checked for presence, not content.** It says what the hint's
 marks mean in that game, which of them are the player's own notation, and the
 words its sentences use for them; so a change to a hint's marks or words updates

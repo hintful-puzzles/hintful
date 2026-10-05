@@ -43,6 +43,7 @@ import type { Premise } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { SingleWhy } from "../../engine/latin-hint.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -690,22 +691,29 @@ export const soloGame: Game<
       doc: { with: "columns-of-sub-blocks" },
       bounds: { max: ORDER_MAX },
     }),
-    {
+    modifierItem<SoloParams>({
       kw: "x",
       name: '"X" (require every number in each main diagonal)',
       type: "boolean",
-      doc: "X mode: the two long diagonals must also hold every number once. The grid needs at least 4 numbers.",
-      label: { slot: "kind", words: (p) => (p.xtype ? "X" : null) },
+      when: true,
+      words: "X",
+      slot: "kind",
+      rule: "the two long diagonals must also hold every number once.",
+      note: "The grid needs at least 4 numbers.",
       get: (p) => p.xtype,
       set: (p, v) => {
         p.xtype = v;
       },
-    },
-    {
+    }),
+    modifierItem<SoloParams>({
       kw: "jigsaw",
       name: "Jigsaw (irregularly shaped sub-blocks)",
       type: "boolean",
-      doc: "Jigsaw mode: the grid keeps its size, but its blocks are random shapes rather than rectangles.",
+      when: true,
+      words: "Jigsaw",
+      // The size's words say it: a jigsaw is "9 Jigsaw" where a 3x3 is "3x3".
+      slot: null,
+      rule: "the grid keeps its size, but its blocks are random shapes rather than rectangles.",
       get: (p) => p.r === 1,
       set: (p, v) => {
         if (v) {
@@ -713,18 +721,21 @@ export const soloGame: Game<
           p.r = 1;
         }
       },
-    },
-    {
+    }),
+    modifierItem<SoloParams>({
       kw: "killer",
       name: "Killer (digit sums)",
       type: "boolean",
-      doc: "Killer mode: instead of given numbers, the grid is divided into cages, each labeled with the total its numbers must add up to, and a number may not repeat within a cage. Killer grids hold at most 9 numbers.",
-      label: { slot: "kind", words: (p) => (p.killer ? "Killer" : null) },
+      when: true,
+      words: "Killer",
+      slot: "kind",
+      rule: "instead of given numbers, the grid is divided into cages, each labeled with the total its numbers must add up to, and a number may not repeat within a cage.",
+      note: "Killer grids hold at most 9 numbers.",
       get: (p) => p.killer,
       set: (p, v) => {
         p.killer = v;
       },
-    },
+    }),
     {
       kw: "symmetry",
       name: "Symmetry",

@@ -14,6 +14,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { click } from "../../engine/hint-gesture.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import {
   atof,
   dimensionParamConfig,
@@ -248,17 +249,19 @@ export const netslideGame: Game<
       doc: "Size of the grid in squares.",
       bounds: { min: 2 },
     }),
-    {
+    modifierItem<NetslideParams>({
       kw: "walls-wrap-around",
       name: "Walls wrap around",
       type: "boolean",
-      doc: "When on, the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall.",
-      label: { slot: "kind", words: (p) => (p.wrapping ? "wrapping" : null) },
+      when: true,
+      words: "wrapping",
+      slot: "kind",
+      rule: "the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall.",
       get: (p) => p.wrapping,
       set: (p, v) => {
         p.wrapping = v;
       },
-    },
+    }),
     {
       kw: "barrier-probability",
       name: "Barrier probability",

@@ -16,6 +16,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
+import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
@@ -107,23 +108,26 @@ export const paramConfig: ParamConfigItem<BridgesParams>[] = [
   difficultyItem(DIFFICULTY_NAMES, "difficulty", {
     doc: "Tricky needs lines that can carry at least two bridges.",
   }),
-  {
+  modifierItem<BridgesParams>({
     kw: "allow-loops",
     name: "Allow loops",
     type: "boolean",
-    doc: "Whether the bridges may form a closed loop. When this is off, no solution contains one, and a board with a loop of bridges on it does not count as finished.",
-    label: { slot: "tail", words: (p) => (p.allowloops ? null : "no loops") },
+    when: false,
+    words: "no loops",
+    slot: "tail",
+    rule: "the bridges may not form a closed loop, so no solution contains one and a board with a loop of bridges on it does not count as finished.",
     get: (p) => p.allowloops,
     set: (p, v) => {
       p.allowloops = v;
     },
-  },
-  {
+  }),
+  modifierItem<BridgesParams>({
     kw: "max-bridges-per-direction",
     name: "Max. bridges per direction",
     type: "choices",
     choices: ["1", "2", "3", "4"],
-    doc: "The most bridges that may join one pair of islands.",
+    words: "max bridges",
+    rule: "the most bridges that may join one pair of islands is 2, unless the board's name gives another number.",
     label: {
       slot: "tail",
       words: (p) =>
@@ -133,7 +137,7 @@ export const paramConfig: ParamConfigItem<BridgesParams>[] = [
     set: (p, v) => {
       p.maxb = v + 1;
     },
-  },
+  }),
   {
     kw: "percentage-of-island-squares",
     name: "%age of island squares",

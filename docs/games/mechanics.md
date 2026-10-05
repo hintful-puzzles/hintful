@@ -301,6 +301,21 @@ ruleset. **A ruleset need not be a params field of its own**: Ascent keeps one
 grid-type items read and write that one value between them, refusing Edges on
 a grid it is not played on.
 
+**A setting that adds, removes or bounds one rule is a modifier**, declared
+with `modifierItem` ([`engine/modifier.ts`](../../src/engine/modifier.ts)):
+Net's wrapping, Solo's X, Jigsaw and Killer, Bridges' "no loops". It differs
+from a ruleset in that modifiers hold together, and the test is a deal: if
+every combination of a game's candidates is a board, they are modifiers, and
+if two exclude each other they are one ruleset field. A modifier is a
+checkbox, the value `when` its rule applies, the `words` a title says then
+("wrapping", "no loops"), and the `rule` as a sentence that starts lower-case.
+The engine builds the field's help entry ("When on, …", plus the game's
+`note` for a size or limit the rule brings), the label words, and the list
+where the help page writes `{{modifiers}}`, each line headed by those same
+words, so the word a player reads in the Type menu is the word the help
+explains. The rule is HTML where it needs markup, since it is read in both
+places. A setting that only tunes the generator or the look is neither.
+
 **A choice's name is typed once, in `choices`.** A sentence in the game's code
 reads it from the array, and a help page writes `{{choice:<kw>:<index>}}`,
 which the help build expands (`expandChoices`) and refuses when it names no
