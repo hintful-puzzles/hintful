@@ -278,21 +278,28 @@ tier accessors and the codec. Each item carries:
   `params-refusal.test.ts` reads every string a `validateParams` can return,
   through constants (`AREA_TOO_LARGE`) and helper calls.
 - **`label`** — which slot of the params label the field's words fill. A label
-  reads `[lead: ]size[ kind…][ tier][, tail…]`: "Seismic: 7x7 Easy", "10x10
+  reads `[ruleset: ]size[ kind…][ tier][, tail…]`: "Seismic: 7x7 Easy", "10x10
   Normal, strip clues". The slot order is the collection's; the words are the
   game's, and `words` returning `null` leaves a default unsaid. A checkbox must
   give words; a choices field says its choice's name by default.
 
-**A choices field in the `lead` slot is the game's ruleset**
-(`rulesetItem` in `param-label.ts`): each choice is a different puzzle on the
-same board, as Seismic's Tectonic is. Declaring it buys two things. Its
-choices have **one name each**, the type refuses `words` on a lead, so the
-dialog, a title and the help say the same word. And the engine **gives each
-ruleset its own section of the Type menu**, titled with the choice, so the
-game lists its presets flat and two puzzles' boards never share a list; a
-ruleset game that writes a section of its own is refused. A field that only
-changes the board's shape or look (Ascent's grid type, Flip's shapes) is a
-`kind`, not a ruleset.
+**A game that plays different puzzles on one board declares its rulesets**,
+with `rulesetItem(rulesets, field)` in `paramConfig`
+([`engine/ruleset.ts`](../../src/engine/ruleset.ts)), the way a tiered game
+calls `difficultyItem`. Each ruleset is a `name` and its `rule`, the sentence
+that sets it apart (Seismic's Tectonic: "Two equal numbers cannot be
+horizontally, vertically or diagonally adjacent."). The engine builds the rest:
+the dialog's "Game mode" field and its help entry, the name in front of a
+params label ("Tectonic: 7x7 Easy"), **a section of the Type menu for each
+ruleset**, and the list of rules where the help page writes `{{rulesets}}`. So
+the game lists its presets flat, two puzzles' boards never share a list, and a
+ruleset game that writes a section of its own is refused. No label slot puts a
+word in front of a title; only a ruleset does. A field that only changes the
+board's shape or look (Loopy's tilings, Cube's solids) is a `kind`, not a
+ruleset. **A ruleset need not be a params field of its own**: Ascent keeps one
+`mode` in which Edges is a fifth value beside four grids, and its ruleset and
+grid-type items read and write that one value between them, refusing Edges on
+a grid it is not played on.
 
 **A choice's name is typed once, in `choices`.** A sentence in the game's code
 reads it from the array, and a help page writes `{{choice:<kw>:<index>}}`,

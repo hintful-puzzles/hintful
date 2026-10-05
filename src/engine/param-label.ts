@@ -4,10 +4,11 @@
  * params are shown as words.
  *
  * A label is composed from the `paramConfig` items, each of which says which
- * slot its words fill (`ParamLabel`):
+ * slot its words fill (`ParamLabel`), behind the name of the game's ruleset if
+ * it has them (`ruleset.ts`):
  *
  * ```
- *   [lead: ]size[ kind…][ tier][, tail…]
+ *   [ruleset: ]size[ kind…][ tier][, tail…]
  *   Seismic: 7x7        Easy
  *            10x10 Squares Normal
  *            6x6          Normal, identity hidden
@@ -20,6 +21,7 @@
  */
 
 import type { ParamConfigItem, ParamLabel, PresetMenu } from "./game.ts";
+import { rulesetField } from "./ruleset.ts";
 
 type Slot = ParamLabel<unknown>["slot"];
 
@@ -56,7 +58,6 @@ export function describeParams<P>(
   p: P,
 ): string {
   const slots: Record<Slot, string[]> = {
-    lead: [],
     size: [],
     kind: [],
     tier: [],
@@ -69,7 +70,8 @@ export function describeParams<P>(
   const body = [...slots.size, ...slots.kind, ...slots.tier].join(" ");
   const tails = slots.tail.join(", ");
   const main = body && tails ? `${body}, ${tails}` : body || tails;
-  return slots.lead.length ? `${slots.lead.join(" ")}: ${main}` : main;
+  const ruleset = rulesetField(game);
+  return ruleset ? `${ruleset.choices[ruleset.get(p)]}: ${main}` : main;
 }
 
 /** A preset menu with every leaf titled. */
@@ -98,29 +100,15 @@ export function presetMenu<P>(game: {
 }
 
 /**
- * The game's **ruleset** field, if it has one: the choices field whose name
- * leads a label ("Tectonic: 7x7 Easy"). Each choice is a different puzzle on
- * the same board, with rules of its own, which is why its name stands in front
- * of the size instead of among the board's other properties.
- */
-function rulesetItem<P>(game: {
-  paramConfig?: readonly ParamConfigItem<P>[];
-}): Extract<ParamConfigItem<P>, { type: "choices" }> | null {
-  for (const item of game.paramConfig ?? [])
-    if (item.type === "choices" && item.label?.slot === "lead") return item;
-  return null;
-}
-
-/**
  * `menu` with a section for each ruleset its presets hold, in the field's
- * order and under the choice's name, so two puzzles' boards are never one
+ * order and under the ruleset's name, so two puzzles' boards are never one
  * list. The game writes its presets flat: a section of its own could mix them.
  */
 function byRuleset<P>(
   game: { paramConfig?: readonly ParamConfigItem<P>[] },
   menu: TitledPresetMenu<P>,
 ): TitledPresetMenu<P> {
-  const item = rulesetItem(game);
+  const item = rulesetField(game);
   const leaves = menu.submenu ?? [];
   if (item === null) return menu;
   if (leaves.some((m) => m.submenu))

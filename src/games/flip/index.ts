@@ -19,6 +19,7 @@ import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/params.ts";
 import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomUpto } from "../../engine/random/index.ts";
+import { RULESET_KW, rulesetItem } from "../../engine/ruleset.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
@@ -67,25 +68,31 @@ const paramConfig: ParamConfigItem<FlipParams>[] = [
     doc: "Size of the grid in squares.",
     bounds: { min: 1 },
   }),
-  {
-    kw: "shape-type",
-    name: "Shape type",
-    type: "choices",
-    choices: ["Crosses", "Random"],
-    doc: "Which squares a click flips. With <em>Crosses</em>, every square flips itself and the squares directly above, below and to either side. With <em>Random</em>, every square flips itself and its own random selection of the eight squares around it, as its diagram shows.",
-    label: { slot: "kind" },
-    get: (p) => (p.matrixType === "crosses" ? 0 : 1),
-    set: (p, v) => {
-      p.matrixType = v === 0 ? "crosses" : "random";
+  rulesetItem<FlipParams>(
+    [
+      {
+        name: "Crosses",
+        rule: "Pressing a square flips it and the squares directly above, below and to either side of it.",
+      },
+      {
+        name: "Random",
+        rule: "Pressing a square flips it and a selection of the eight squares around it. Every square has a selection of its own, which the diagram in the square shows.",
+      },
+    ],
+    {
+      get: (p) => (p.matrixType === "crosses" ? 0 : 1),
+      set: (p, v) => {
+        p.matrixType = v === 0 ? "crosses" : "random";
+      },
     },
-  },
+  ),
 ];
 
 /** `WxH`, plus the generator-only shape letter. A missing or unknown letter
  * leaves the default, Crosses. */
 const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
-  letters(paramConfig, "shape-type", ["c", "r"], { full: true }),
+  letters(paramConfig, RULESET_KW, ["c", "r"], { full: true }),
 ]);
 
 // --- input ----------------------------------------------------------

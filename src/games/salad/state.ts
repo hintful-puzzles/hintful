@@ -36,6 +36,7 @@ import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, letters, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -62,8 +63,17 @@ export const DIFF_HOLESONLY = DIFF_EASY - 1;
 export const GAMEMODE_LETTERS = 0;
 export const GAMEMODE_NUMBERS = 1;
 
-/** What the dialog, a title and a menu section call each mode. */
-const MODE_NAMES = ["Letters", "Numbers"];
+/** The two puzzles, indexed by `GAMEMODE_*`. */
+const RULESETS: Ruleset[] = [
+  {
+    name: "Letters",
+    rule: "The letters on the edge show which letter appears first when 'looking' into the grid.",
+  },
+  {
+    name: "Numbers",
+    rule: "Squares with a ball must contain a number. Squares with a cross must remain empty.",
+  },
+];
 
 // --- cell sentinels --------------------------------------------------------
 
@@ -123,18 +133,7 @@ export function symbolRange(p: SaladParams): string {
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SaladParams>[] = [
-  {
-    kw: "game-mode",
-    name: "Game Mode",
-    type: "choices",
-    choices: MODE_NAMES,
-    doc: `Switch between ${MODE_NAMES[GAMEMODE_LETTERS]}, the puzzle called ABC End View, and ${MODE_NAMES[GAMEMODE_NUMBERS]}, the puzzle called Number Ball.`,
-    label: { slot: "lead" },
-    get: (p) => p.mode,
-    set: (p, v) => {
-      p.mode = v === GAMEMODE_NUMBERS ? GAMEMODE_NUMBERS : GAMEMODE_LETTERS;
-    },
-  },
+  rulesetItem<SaladParams>(RULESETS, "mode"),
   numberItem<SaladParams>("size", "Size (s*s)", "order", {
     doc: "Size of the grid in squares.",
     bounds: { min: 3 },
@@ -146,7 +145,7 @@ export const paramConfig: ParamConfigItem<SaladParams>[] = [
     label: { slot: "kind", words: symbolRange },
   }),
   difficultyItem(DIFF_NAMES, "diff", {
-    doc: `A Normal puzzle always needs a technique the Easy level does not have, so the setting you choose is the difficulty you get. Normal ${MODE_NAMES[GAMEMODE_NUMBERS]} puzzles are rare, so one can take a few seconds to appear.`,
+    doc: `A Normal puzzle always needs a technique the Easy level does not have, so the setting you choose is the difficulty you get. Normal ${RULESETS[GAMEMODE_NUMBERS].name} puzzles are rare, so one can take a few seconds to appear.`,
   }),
 ];
 
@@ -157,7 +156,7 @@ export const paramConfig: ParamConfigItem<SaladParams>[] = [
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   size(paramConfig, "size"),
   num(paramConfig, "n", "symbols"),
-  letters(paramConfig, "game-mode", ["L", "B"]),
+  letters(paramConfig, RULESET_KW, ["L", "B"]),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
     full: true,
     invalid: DIFFCOUNT + 1,

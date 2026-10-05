@@ -17,22 +17,22 @@ flip:diag  full=5x5n4D"
 
 exports[`encoded params are byte-stable > ascent 1`] = `
 "default  full=6x7mRde  brief=6x7mR
-preset:Ascent/6x7 Normal  full=6x7mRdn  brief=6x7mR
-preset:Ascent/6x7 Tricky  full=6x7mRdt  brief=6x7mR
-preset:Ascent/6x7 Hard  full=6x7mRdh  brief=6x7mR
-preset:Ascent/8x10 Easy  full=8x10mRde  brief=8x10mR
-preset:Ascent/8x10 Normal  full=8x10mRdn  brief=8x10mR
-preset:Ascent/8x10 Tricky  full=8x10mRdt  brief=8x10mR
-preset:Ascent/8x10 Hard  full=8x10mRdh  brief=8x10mR
-preset:Ascent/Hex/6x8 Honeycomb Normal  full=6x8mCdn  brief=6x8mC
-preset:Ascent/Hex/6x8 Honeycomb Tricky  full=6x8mCdt  brief=6x8mC
-preset:Ascent/Hex/6x8 Honeycomb Hard  full=6x8mCdh  brief=6x8mC
-preset:Ascent/Hex/Size 7 Hexagon Normal  full=7x7mHdn  brief=7x7mH
-preset:Ascent/Hex/Size 7 Hexagon Tricky  full=7x7mHdt  brief=7x7mH
-preset:Ascent/Hex/Size 7 Hexagon Hard  full=7x7mHdh  brief=7x7mH
-preset:Ascent/Edges/5x5 Edges Normal  full=5x5mEEdn  brief=5x5mE
-preset:Ascent/Edges/5x5 Edges Tricky  full=5x5mEEdt  brief=5x5mE
-preset:Ascent/Edges/5x5 Edges Hard  full=5x5mEEdh  brief=5x5mE
+preset:Ascent/Ascent/Ascent: 6x7 Normal  full=6x7mRdn  brief=6x7mR
+preset:Ascent/Ascent/Ascent: 6x7 Tricky  full=6x7mRdt  brief=6x7mR
+preset:Ascent/Ascent/Ascent: 6x7 Hard  full=6x7mRdh  brief=6x7mR
+preset:Ascent/Ascent/Ascent: 8x10 Easy  full=8x10mRde  brief=8x10mR
+preset:Ascent/Ascent/Ascent: 8x10 Normal  full=8x10mRdn  brief=8x10mR
+preset:Ascent/Ascent/Ascent: 8x10 Tricky  full=8x10mRdt  brief=8x10mR
+preset:Ascent/Ascent/Ascent: 8x10 Hard  full=8x10mRdh  brief=8x10mR
+preset:Ascent/Ascent/Ascent: 6x8 Honeycomb Normal  full=6x8mCdn  brief=6x8mC
+preset:Ascent/Ascent/Ascent: 6x8 Honeycomb Tricky  full=6x8mCdt  brief=6x8mC
+preset:Ascent/Ascent/Ascent: 6x8 Honeycomb Hard  full=6x8mCdh  brief=6x8mC
+preset:Ascent/Ascent/Ascent: Size 7 Hexagon Normal  full=7x7mHdn  brief=7x7mH
+preset:Ascent/Ascent/Ascent: Size 7 Hexagon Tricky  full=7x7mHdt  brief=7x7mH
+preset:Ascent/Ascent/Ascent: Size 7 Hexagon Hard  full=7x7mHdh  brief=7x7mH
+preset:Ascent/Edges/Edges: 5x5 Normal  full=5x5mEEdn  brief=5x5mE
+preset:Ascent/Edges/Edges: 5x5 Tricky  full=5x5mEEdt  brief=5x5mE
+preset:Ascent/Edges/Edges: 5x5 Hard  full=5x5mEEdh  brief=5x5mE
 bump:w  full=7x7mRde  brief=7x7mR
 bump:h  full=6x8mRde  brief=6x8mR
 bump:mode  full=6x7mHde  brief=6x7mH
@@ -166,11 +166,11 @@ bump:h  full=9x14"
 
 exports[`encoded params are byte-stable > flip 1`] = `
 "default  full=5x5c  brief=5x5
-preset:Flip/3x3 Crosses  full=3x3c  brief=3x3
-preset:Flip/4x4 Crosses  full=4x4c  brief=4x4
-preset:Flip/3x3 Random  full=3x3r  brief=3x3
-preset:Flip/4x4 Random  full=4x4r  brief=4x4
-preset:Flip/5x5 Random  full=5x5r  brief=5x5
+preset:Flip/Crosses/Crosses: 3x3  full=3x3c  brief=3x3
+preset:Flip/Crosses/Crosses: 4x4  full=4x4c  brief=4x4
+preset:Flip/Random/Random: 3x3  full=3x3r  brief=3x3
+preset:Flip/Random/Random: 4x4  full=4x4r  brief=4x4
+preset:Flip/Random/Random: 5x5  full=5x5r  brief=5x5
 bump:w  full=6x5c  brief=6x5
 bump:h  full=5x6c  brief=5x6"
 `;

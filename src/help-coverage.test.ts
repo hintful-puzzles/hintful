@@ -22,6 +22,7 @@ import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
 import { expandChoices, PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
+import { RULESETS_PLACEHOLDER, rulesetField } from "./engine/ruleset.ts";
 import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
@@ -153,6 +154,28 @@ describe("every game's page has the one skeleton", () => {
     expect(section.split(PARAMETERS_PLACEHOLDER), `help/games/${id}.md`).toHaveLength(
       2,
     );
+  });
+
+  // A game with rulesets has its list of them generated from the declaration
+  // (`engine/ruleset.ts`), in the unheaded rules at the top of its page, and no
+  // other page carries the placeholder. The build refuses both mismatches too.
+  let withRulesets = 0;
+
+  it.each(puzzleIds)("%s: carries the rulesets placeholder iff it has them", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const game = getTsGame(id);
+    if (!game) throw new Error(`${id} is not registered`);
+    const declares = rulesetField(game) !== null;
+    if (declares) withRulesets++;
+    const rules = page.slice(0, page.indexOf("\n## "));
+    expect(rules.split(RULESETS_PLACEHOLDER).length - 1, `help/games/${id}.md`).toBe(
+      declares ? 1 : 0,
+    );
+    expect(page.split(RULESETS_PLACEHOLDER).length - 1).toBe(declares ? 1 : 0);
+  });
+
+  itOverWholeSweep("is not vacuous — some games declare rulesets", () => {
+    expect(withRulesets).toBeGreaterThanOrEqual(3);
   });
 
   // Where a page names a choice of one of its fields — a mode, a grid type —

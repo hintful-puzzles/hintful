@@ -8,6 +8,8 @@
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   LEFT_BUTTON,
@@ -92,6 +94,47 @@ describe("ascent generation + solving", () => {
       expect(encodeGridDesc(state.grid, state.w * state.h)).toBe(desc);
     });
   }
+});
+
+describe("ascent's dialog asks for the ruleset and the grid separately", () => {
+  const field = (kw: string) => {
+    const item = ascentGame.paramConfig?.find((i) => i.kw === kw);
+    if (item?.type !== "choices") throw new Error(`no choices field ${kw}`);
+    return item;
+  };
+  /** The dialog's submission: each field set in order on a copy. */
+  const submit = (ruleset: number, grid: number) => {
+    const p = ascentGame.defaultParams();
+    for (const item of ascentGame.paramConfig ?? []) {
+      if (item.kw === "ruleset") field("ruleset").set(p, ruleset);
+      else if (item.kw === "grid-type") field("grid-type").set(p, grid);
+    }
+    return p;
+  };
+
+  it("offers Edges as a ruleset and not as a grid", () => {
+    expect(field("ruleset").choices).toEqual(["Ascent", "Edges"]);
+    expect(field("grid-type").choices).not.toContain("Edges");
+  });
+
+  it("reads every mode back as the pair that makes it", () => {
+    for (let mode = 0; mode < 5; mode++) {
+      const p = { ...ascentGame.defaultParams(), mode };
+      const again = submit(field("ruleset").get(p), field("grid-type").get(p));
+      expect(again.mode).toBe(mode);
+    }
+  });
+
+  it("makes Edges of the Rectangle, and refuses it on any other grid", () => {
+    const edges = submit(1, MODE_RECT);
+    expect(edges.mode).toBe(MODE_EDGES);
+    expect(describeParams(ascentGame, { ...edges, diff: 1 })).toMatch(/^Edges: /);
+    const onHex = submit(1, MODE_HEXAGON);
+    expect(paramsError(ascentGame, onHex, false)).toBe(
+      "Edges is played on the Rectangle grid.",
+    );
+    expect(submit(0, MODE_HEXAGON).mode).toBe(MODE_HEXAGON);
+  });
 });
 
 describe("ascent desc parsing", () => {

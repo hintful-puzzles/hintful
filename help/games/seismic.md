@@ -2,12 +2,11 @@
 
 You're given a grid that has been divided into areas. Fill each empty cell with a number so each area of size N contains one instance of each number between 1 and N. Depending on the game mode, the following rule is added:
 
-* {{choice:game-mode:0}}: Two equal numbers N in the same row or column must have at least N spaces between them.
-* {{choice:game-mode:1}}: Two equal numbers cannot be horizontally, vertically or diagonally adjacent.
+{{rulesets}}
 
-{{choice:game-mode:0}} mode is an implementation of *Hakyuu*, a puzzle invented by [Nikoli](https://www.nikoli.co.jp/). It's also known as *Ripple Effect*. More information: http://www.janko.at/Raetsel/Hakyuu/index.htm
+{{choice:ruleset:0}} mode is an implementation of *Hakyuu*, a puzzle invented by [Nikoli](https://www.nikoli.co.jp/). It's also known as *Ripple Effect*. More information: http://www.janko.at/Raetsel/Hakyuu/index.htm
 
-The inventor of {{choice:game-mode:1}} is unknown.
+The inventor of {{choice:ruleset:1}} is unknown.
 
 ## Controls
 

@@ -7037,7 +7037,8 @@ that item.
 
 A set of params SHALL be named for a player by one engine function,
 `describeParams(game, p)`, composing the items' label words in the order
-`[lead: ]size[ kind…][ tier][, tail…]`. The preset menu's titles, the type
+`[ruleset: ]size[ kind…][ tier][, tail…]`, the ruleset being the name of the
+game's declared ruleset when it has them. The preset menu's titles, the type
 header of a board matching no preset, and every test reading a title SHALL go
 through it — a preset leaf is its params, and its title is their label.
 
@@ -8266,18 +8267,19 @@ name known boards by the params they carry.
 - **THEN** it deals nothing the menu leaves out, which is right only for a
   sweep whose subject is the menu or the slicing rule
 
-### Requirement: A game's ruleset is declared, named once and sectioned by the engine
+### Requirement: A game declares its rulesets with rulesetItem
 
-A game whose params choose between different puzzles on the same board SHALL declare that choice as a `"choices"` item in the `lead` label slot, which is the game's **ruleset** field (`rulesetItem`). A lead item SHALL NOT carry label `words`, so each ruleset has one name, the choice's own, and the Custom dialog, a params label and a menu section say the same word.
+A game whose params choose between different puzzles on the same board SHALL declare them with `rulesetItem(rulesets, field)` in its `paramConfig` (`engine/ruleset.ts`), each ruleset a `name` and the `rule` that sets it apart. The item SHALL be a `"choices"` field with the keyword `ruleset`, labeled "Game mode" in every game, offering each ruleset by its name. No label slot SHALL put a word in front of a params label: only a declared ruleset does.
 
-`presetMenu` SHALL place the presets of each ruleset in a section of their own, titled with the choice's name and ordered as the field lists its choices, keeping each ruleset's presets in the order the game wrote them. A game with a ruleset field SHALL list its presets flat, and a menu whose presets all hold one ruleset SHALL stay flat.
+From the declaration the engine SHALL build the name in front of a params label and the sections of the preset menu. `presetMenu` SHALL place the presets of each ruleset in a section of their own, titled with the ruleset's name and ordered as declared, keeping each ruleset's presets in the order the game wrote them. A game with rulesets SHALL list its presets flat, and a menu whose presets all hold one ruleset SHALL stay flat.
 
-Each game used to decide this for itself: Salad named its modes one way in the dialog and another in its titles, and Seismic and Unequal interleaved two puzzles' boards in one list.
+Three games spelled this field three ways, and two of them interleaved two puzzles' boards in one list.
 
-#### Scenario: A lead is given a second word
+#### Scenario: A game gains a ruleset
 
-- **WHEN** a `"choices"` item in the `lead` slot declares label `words`
-- **THEN** the typechecker refuses it
+- **WHEN** a game adds an entry to the list it passes `rulesetItem`
+- **THEN** the Custom dialog offers it, a params label holding it starts with
+  its name, and its presets get a section of the Type menu
 
 #### Scenario: Presets of two rulesets are written interleaved
 
@@ -8287,5 +8289,10 @@ Each game used to decide this for itself: Salad named its modes one way in the d
 
 #### Scenario: A ruleset game writes a section of its own
 
-- **WHEN** a game with a ruleset field returns a preset menu containing a submenu
+- **WHEN** a game with rulesets returns a preset menu containing a submenu
 - **THEN** `presetMenu` throws
+
+#### Scenario: A field asks to lead a label
+
+- **WHEN** a `paramConfig` item declares the label slot `lead`
+- **THEN** the typechecker refuses it

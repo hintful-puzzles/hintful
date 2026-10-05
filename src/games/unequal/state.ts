@@ -28,6 +28,7 @@ import {
   isEraseKey,
   newCursor,
 } from "../../engine/pointer.ts";
+import type { Ruleset } from "../../engine/ruleset.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -62,8 +63,18 @@ function diffChar(d: Difficulty): string {
 
 export type Mode = "unequal" | "adjacent";
 
-/** What the dialog calls each mode, in the order its Mode field lists them. */
-export const MODE_NAMES = ["Unequal", "Adjacent"];
+/** The two puzzles: `"unequal"`, then `"adjacent"`. */
+export const RULESETS: Ruleset[] = [
+  {
+    name: "Unequal",
+    rule: "The clues are `<` signs, and all of them must represent true inequalities (i.e. the number at the pointed end is smaller than the number at the open end). Not every true inequality is shown, particularly at the harder difficulties.",
+  },
+  {
+    name: "Adjacent",
+    rule: "The clues are bars, and a bar means the two squares it separates hold consecutive numbers: one is exactly one higher than the other. Every bar the solution calls for is shown, so the *absence* of a bar between two squares tells you their numbers are definitely not consecutive.",
+  },
+];
+const ADJACENT = RULESETS[1].name;
 
 // --- flag bits (upstream F_*) ----------------------------------------------
 
@@ -160,7 +171,7 @@ export function decodeParams(s: string): UnequalParams {
 
 export function validateParams(p: UnequalParams, _full: boolean): string | null {
   if (p.order < 5 && p.mode === "adjacent" && diffToLevel(p.diff) >= DIFF_SET)
-    return `Size must be at least 5 for ${MODE_NAMES[1]} puzzles of this difficulty.`;
+    return `Size must be at least 5 for ${ADJACENT} puzzles of this difficulty.`;
   return null;
 }
 

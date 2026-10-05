@@ -21,6 +21,7 @@ import {
 } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import type { Point } from "../../engine/types.ts";
 import { newAscentDesc } from "./generator.ts";
 import {
@@ -45,8 +46,8 @@ import { ascentSolve, SolverScratch } from "./solver.ts";
 import {
   ASCENT_DIFFCHARS,
   ASCENT_DIFFNAMES,
+  ASCENT_GRID_NAMES,
   ASCENT_MODECHARS,
-  ASCENT_MODENAMES,
   type AscentMistake,
   type AscentMove,
   type AscentParams,
@@ -237,18 +238,40 @@ const EDGES_PRESETS: AscentParams[] = [
   mk(5, 5, 3, MODE_EDGES, true, false),
 ];
 
-/** What the dialog calls the mode, for every sentence and title that names it. */
-const EDGES = ASCENT_MODENAMES[MODE_EDGES];
+/** The two puzzles: Hidato on any of the four grids, and 1to25 on the
+ * Rectangle. */
+const RULESETS: Ruleset[] = [
+  {
+    name: "Ascent",
+    rule: "Several numbers are already inside the grid. It can be played on a rectangular or hexagonal grid, and on a rectangular grid where the path may not move diagonally.",
+  },
+  {
+    name: "Edges",
+    rule: "The grid is surrounded by numbers placed inside arrows. An arrow points to the row, column or diagonal where this number appears in the path.",
+  },
+];
+const EDGES = RULESETS[1].name;
+
+/** Edges asked for on a grid other than the Rectangle. Only a Custom dialog's
+ * working copy ever holds it, and `validateParams` refuses it. */
+const MODE_EDGES_OFF_GRID = MODECOUNT;
+
+function isEdges(p: AscentParams): boolean {
+  return p.mode === MODE_EDGES || p.mode === MODE_EDGES_OFF_GRID;
+}
+
+/** The mode of a ruleset on a grid: the dialog's two fields are one `mode`. */
+function modeOf(edges: boolean, grid: number): number {
+  if (!edges) return grid;
+  return grid === MODE_RECT ? MODE_EDGES : MODE_EDGES_OFF_GRID;
+}
 
 function presets(): PresetMenu<AscentParams> {
-  const entries = (ps: AscentParams[]) => ps.map((p) => ({ params: p }));
   return {
     title: "Ascent",
-    submenu: [
-      ...entries(MAIN_PRESETS),
-      { title: "Hex", submenu: entries(HEX_PRESETS) },
-      { title: EDGES, submenu: entries(EDGES_PRESETS) },
-    ],
+    submenu: [...MAIN_PRESETS, ...HEX_PRESETS, ...EDGES_PRESETS].map((params) => ({
+      params,
+    })),
   };
 }
 
@@ -304,6 +327,8 @@ function decodeParams(s: string): AscentParams {
 
 function validateParams(p: AscentParams, full: boolean): string | null {
   const { w, h } = p;
+  if (p.mode === MODE_EDGES_OFF_GRID)
+    return `${EDGES} is played on the ${ASCENT_GRID_NAMES[MODE_RECT]} grid.`;
   if (w * h >= 1000) return "Width times height must be less than 1000.";
   if (p.mode === MODE_HEXAGON && (h & 1) === 0) return "Height must be an odd number.";
   if (p.mode === MODE_HEXAGON && w <= Math.trunc(h / 2))
@@ -324,10 +349,16 @@ const transposeSquareGrid = transposeDimensions<AscentParams>();
 function modeWords(p: AscentParams): string | null {
   if (p.mode === MODE_RECT) return null;
   if (p.mode === MODE_ORTHOGONAL) return "(no diagonals)";
-  return ASCENT_MODENAMES[p.mode] ?? null;
+  return ASCENT_GRID_NAMES[p.mode] ?? null;
 }
 
 const paramConfig: ParamConfigItem<AscentParams>[] = [
+  rulesetItem<AscentParams>(RULESETS, {
+    get: (p) => (isEdges(p) ? 1 : 0),
+    set: (p, v) => {
+      p.mode = modeOf(v === 1, isEdges(p) ? MODE_RECT : p.mode);
+    },
+  }),
   ...dimensionParamConfig<AscentParams>({
     doc: "Size of the grid in squares.",
     bounds: { min: 2, max: 50 },
@@ -369,12 +400,12 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
     kw: "grid-type",
     name: "Grid type",
     type: "choices",
-    choices: ASCENT_MODENAMES,
-    doc: `Choose between ${ASCENT_MODENAMES.map((n) => `'${n}'`).join(", ")}.`,
+    choices: ASCENT_GRID_NAMES,
+    doc: `Choose between ${ASCENT_GRID_NAMES.map((n) => `'${n}'`).join(", ")}. ${EDGES} is played on '${ASCENT_GRID_NAMES[MODE_RECT]}'.`,
     label: { slot: "kind", words: modeWords },
-    get: (p) => p.mode,
+    get: (p) => (isEdges(p) ? MODE_RECT : p.mode),
     set: (p, v) => {
-      p.mode = v;
+      p.mode = modeOf(isEdges(p), v);
     },
   },
   difficultyItem(ASCENT_DIFFNAMES, "diff", {

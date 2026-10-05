@@ -19,6 +19,7 @@ import type { PointerAction } from "./hint-gesture.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
 import type { MarkRole, Sentence } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
+import type { Ruleset } from "./ruleset.ts";
 import type { NotApplicableReasons } from "./sections.ts";
 import type { SolveFailure } from "./solve-failure.ts";
 import type { TargetVerbs } from "./target-verb.ts";
@@ -218,11 +219,9 @@ export type ParamConfigItem<Params> =
   | (ParamItemCommon<Params> & {
       type: "choices";
       choices: string[];
-      /** A lead is the mode's name standing alone ("Tectonic: 7x7 Easy"), and a
-       * mode has one name, the choice's own, so a lead takes no `words`. */
-      label?:
-        | (ParamLabel<Params> & { slot: Exclude<ParamLabel<Params>["slot"], "lead"> })
-        | { slot: "lead"; words?: never };
+      /** Set by `rulesetItem` alone (`engine/ruleset.ts`): the puzzles these
+       * choices are, in order. */
+      rulesets?: readonly Ruleset[];
       /** How many indices past `choices` an old game ID or save may still
        * carry: accepted when loading a board, refused when generating one, and
        * never offered. Bricks' retired Tricky tier (`dt`) is the case. */
@@ -250,12 +249,13 @@ export interface ParamBounds {
 
 /**
  * Where a field's words go in a params label, which reads
- * `[lead: ]size[ kind…][ tier][, tail…]` — "Seismic: 7x7 Easy",
+ * `[ruleset: ]size[ kind…][ tier][, tail…]` — "Seismic: 7x7 Easy",
  * "10x10 Normal, strip clues". The slot is the engine's convention; the words
- * are the game's.
+ * are the game's. The ruleset in front is not a slot a field can ask for: it
+ * is the game's `rulesetItem`, by name.
  */
 export interface ParamLabel<Params> {
-  slot: "lead" | "size" | "kind" | "tier" | "tail";
+  slot: "size" | "kind" | "tier" | "tail";
   /** The words, or `null` to leave the field out: a default the player need
    * not be told. Absent, a choices field says its choice's name and a text
    * field its value. */

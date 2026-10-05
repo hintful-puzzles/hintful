@@ -439,19 +439,6 @@ technique SHALL change a hint on a board of any other mode.
 - **WHEN** a hint is asked on a Rectangle, Hexagon or Honeycomb board
 - **THEN** neither Edges technique is tried
 
-### Requirement: Ascent's presets are grouped by kind of board
-
-The Type menu SHALL list the rectangle presets at the top level, the Honeycomb
-and Hexagon presets under one heading "Hex", and the Edges presets under their
-own heading "Edges". It SHALL offer one size of each hexagonal shape, Normal to
-Hard; other sizes are Custom's.
-
-#### Scenario: Edges has its own heading
-
-- **WHEN** the player opens Ascent's Type menu
-- **THEN** the Edges presets are under an "Edges" heading after "Hex", not
-  among the rectangle presets
-
 ### Requirement: Ascent's Edges hint names a number's own line by its shape
 
 In Edges mode, every hint sentence that rests on a number's own arrow line SHALL
@@ -489,3 +476,26 @@ A tap otherwise places only the number before or after a highlighted one, beside
 #### Scenario: A missing number is written by taps and the keypad alone
 - **WHEN** the player taps an empty square, presses the keypad digits of a number missing from the board, presses a wrong digit and Clear, and taps another square
 - **THEN** the square holds that number
+
+### Requirement: Ascent's rulesets are Ascent and Edges
+
+Ascent SHALL declare two rulesets: Ascent, played on any of its four grids, and Edges, played on the Rectangle. The Custom dialog SHALL ask for the ruleset and the grid type as separate fields, the grid type offering the four grids and not Edges, and SHALL refuse Edges on any grid but the Rectangle with a sentence saying so. The params encoding SHALL be unchanged: one mode letter, `E` for Edges.
+
+The Type menu SHALL hold a section for each ruleset. It SHALL offer one size of each hexagonal shape, Normal to Hard, in the Ascent section; other sizes are Custom's.
+
+#### Scenario: Edges has its own section
+
+- **WHEN** the player opens Ascent's Type menu
+- **THEN** the Edges presets are in an "Edges" section of their own, and every
+  other preset is in the "Ascent" section
+
+#### Scenario: Edges is asked for on the Hexagon
+
+- **WHEN** the Custom dialog is submitted with the game mode Edges and the grid
+  type Hexagon
+- **THEN** it is refused: "Edges is played on the Rectangle grid."
+
+#### Scenario: A game ID from before the split
+
+- **WHEN** a params string with the mode letter `E`, `H` or any other is decoded
+- **THEN** it names the board it always did

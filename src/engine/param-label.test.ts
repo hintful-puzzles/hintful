@@ -4,6 +4,7 @@ import type { ParamConfigItem } from "./game.ts";
 import { expandChoices, parametersMarkdown } from "./param-help.ts";
 import { describeParams, presetMenu } from "./param-label.ts";
 import { dimensionParamConfig, numberItem } from "./params.ts";
+import { rulesetField, rulesetItem, rulesetsMarkdown } from "./ruleset.ts";
 
 interface P {
   w: number;
@@ -17,18 +18,13 @@ interface P {
 const base: P = { w: 7, h: 7, diff: 1, mode: 0, loops: true, count: 5 };
 
 const config: ParamConfigItem<P>[] = [
-  {
-    kw: "mode",
-    name: "Mode",
-    type: "choices",
-    choices: ["Plain", "Fancy"],
-    doc: "Plain or Fancy.",
-    label: { slot: "lead" },
-    get: (p) => p.mode,
-    set: (p, v) => {
-      p.mode = v;
-    },
-  },
+  rulesetItem<P>(
+    [
+      { name: "Plain", rule: "nothing is added." },
+      { name: "Fancy", rule: "corners count *twice*." },
+    ],
+    "mode",
+  ),
   ...dimensionParamConfig<P>({ doc: "Size of the grid.", bounds: { min: 3 } }),
   difficultyItem<P>(tierNames(3), "diff"),
   {
@@ -121,16 +117,39 @@ describe("presetMenu gives each ruleset a section", () => {
   });
 });
 
+describe("a ruleset declaration is what every surface reads", () => {
+  it("is found on the game, with each ruleset's rule", () => {
+    const field = rulesetField({ paramConfig: config });
+    expect(field?.choices).toEqual(["Plain", "Fancy"]);
+    expect(field?.rulesets[1]?.rule).toBe("corners count *twice*.");
+    expect(rulesetField({ paramConfig: config.slice(1) })).toBeNull();
+  });
+
+  it("lists the rulesets for the help, one line each", () => {
+    expect(
+      rulesetsMarkdown(rulesetField({ paramConfig: config })?.rulesets ?? []),
+    ).toBe("* Plain: nothing is added.\n* Fancy: corners count *twice*.");
+  });
+
+  it("names every ruleset in the field's own help entry", () => {
+    expect(parametersMarkdown(config)).toContain(
+      "<dt>Game mode</dt>\n\t<dd>Which puzzle to play: Plain or Fancy.",
+    );
+  });
+});
+
 describe("choiceName and expandChoices say a choice in the dialog's word", () => {
   it("expands a placeholder to the choice's name", () => {
-    expect(expandChoices(config, "In {{choice:mode:1}} mode.")).toBe("In Fancy mode.");
+    expect(expandChoices(config, "In {{choice:ruleset:1}} mode.")).toBe(
+      "In Fancy mode.",
+    );
   });
 
   it.each([
-    ["{{choice:mode:2}}", /no choice 2/],
+    ["{{choice:ruleset:2}}", /no choice 2/],
     ["{{choice:loops:0}}", /no choices field "loops"/],
-    ["{{choice:mode:Fancy}}", /by index/],
-    ["{{choice:mode}}", /is not \{\{choice/],
+    ["{{choice:ruleset:Fancy}}", /by index/],
+    ["{{choice:ruleset}}", /is not \{\{choice/],
   ])("refuses %s", (source, why) => {
     expect(() => expandChoices(config, source)).toThrow(why);
   });

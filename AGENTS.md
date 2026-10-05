@@ -821,14 +821,16 @@ never was**: filtering sizes and tier names out of preset titles still flagged 1
 games for one real gap, because a title is a label someone composed, not the
 field it sets. Key on the field.
 
-**A mode has one name, typed once.** A game's ruleset is the choices field in
-the `lead` slot of its `paramConfig`: each choice a different puzzle on the same
-board, as Salad's Letters and Numbers are. Its names are the field's `choices`
-and nothing else: the type refuses a second word for one, the engine gives each
-ruleset its own section of the Type menu so their boards never share a list,
-and a help page that names any field's choice writes `{{choice:<kw>:<index>}}`,
-which the build expands. `help-coverage.test.ts` fails a page that types the
-name. Salad's dialog, menu and help once said one mode three ways; the how is
+**A game's rulesets are declared once, and a mode's name is typed once.** A
+game that plays different puzzles on one board, as Salad plays Letters and
+Numbers, declares them with `rulesetItem` in its `paramConfig`
+(`engine/ruleset.ts`): each a name and the rule that sets it apart. The engine
+builds the dialog's field, the name in front of a title, a section of the Type
+menu for each ruleset, so their boards never share a list, and the list of
+rules where the help page writes `{{rulesets}}`. A page that names any field's
+choice elsewhere writes `{{choice:<kw>:<index>}}`, which the build expands, and
+`help-coverage.test.ts` fails a page that types the name. Salad's dialog, menu
+and help once said one mode three ways; the how is
 [`docs/games/mechanics.md`](docs/games/mechanics.md) § "Params are declared
 once, on `paramConfig`".
 

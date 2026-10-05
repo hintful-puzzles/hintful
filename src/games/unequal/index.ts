@@ -76,6 +76,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { rulesetItem } from "../../engine/ruleset.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
@@ -122,10 +123,10 @@ import {
   F_SPENT_LEFT,
   F_SPENT_RIGHT,
   F_SPENT_UP,
-  MODE_NAMES,
   newState,
   newUi,
   PRESETS,
+  RULESETS,
   status,
   textFormat,
   type UnequalMove,
@@ -541,20 +542,14 @@ export const unequalGame: Game<
   decodeParams,
   validateParams,
   paramConfig: [
-    {
-      kw: "mode",
-      name: "Mode",
-      type: "choices",
-      choices: MODE_NAMES,
-      doc: `${MODE_NAMES[0]}, where the clues are <code>&lt;</code> signs, or ${MODE_NAMES[1]}, where they are bars between consecutive numbers (both described above).`,
-      label: { slot: "lead" },
+    rulesetItem<UnequalParams>(RULESETS, {
       get: (p) => (p.mode === "adjacent" ? 1 : 0),
       set: (p, v) => {
         p.mode = v === 1 ? "adjacent" : "unequal";
       },
-    },
+    }),
     numberItem<UnequalParams>("size", "Size", "order", {
-      doc: `Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. ${MODE_NAMES[1]} puzzles at Tricky or above need a size of at least 5.`,
+      doc: `Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. ${RULESETS[1].name} puzzles at Tricky or above need a size of at least 5.`,
       // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
       bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
       label: { slot: "size", words: squareSize("order") },

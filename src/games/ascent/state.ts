@@ -73,12 +73,13 @@ export const MODE_HEXAGON = 2;
 export const MODE_HONEYCOMB = 3;
 export const MODE_EDGES = 4;
 export const MODECOUNT = 5;
-export const ASCENT_MODENAMES = [
+/** The four grids, by mode. {@link MODE_EDGES} is a ruleset on the Rectangle
+ * and has no grid of its own. */
+export const ASCENT_GRID_NAMES = [
   "Rectangle (No diagonals)",
   "Rectangle",
   "Hexagon",
   "Honeycomb",
-  "Edges",
 ];
 export const ASCENT_MODECHARS = "ORHCE";
 

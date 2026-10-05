@@ -1081,14 +1081,21 @@ Call it wherever you would have asked `game.validateParams`.
 ### `param-label.ts` — the one label of a params set
 
 `describeParams(game, p)` composes a label from the items' `label` slots
-(`[lead: ]size[ kind…][ tier][, tail…]`), and `presetMenu(game)` titles every
+(`[ruleset: ]size[ kind…][ tier][, tail…]`), and `presetMenu(game)` titles every
 unnamed preset with it. The preset menu, the type header of a custom board and
 every test that reads a title go through here, so the menu and the header
-cannot name one board two ways. `rulesetItem(game)` is the choices field in
-the `lead` slot, and `presetMenu` gives each of its choices a section.
+cannot name one board two ways. A game with rulesets has its ruleset's name in
+front of the label and a section of the menu for each.
 `choiceName(config, kw, index)` is a choice's one name. Declaring:
 [`mechanics.md`](./mechanics.md) § "Params are declared once, on
 `paramConfig`".
+
+### `ruleset.ts` — the puzzles a game plays on one board
+
+`rulesetItem(rulesets, field)` is the `paramConfig` item of a game with more
+than one puzzle (Seismic's Tectonic, Ascent's Edges): each ruleset a `name` and its
+`rule`. `rulesetField(game)` finds it, for the label, the menu's sections and
+the help; `rulesetsMarkdown` is the list a page's `{{rulesets}}` becomes.
 
 ### `param-help.ts` — the generated Parameters section
 

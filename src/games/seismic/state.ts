@@ -35,6 +35,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import {
   encodeRegionWalls,
   gapLetters,
@@ -58,7 +59,19 @@ const DIFF_CHARS = "eh";
 export const MODE_SEISMIC = 0;
 export const MODE_TECTONIC = 1;
 
-export const MODE_NAMES: readonly string[] = ["Seismic", "Tectonic"];
+/** The two puzzles, indexed by `MODE_*`. */
+const RULESETS: Ruleset[] = [
+  {
+    name: "Seismic",
+    rule: "Two equal numbers N in the same row or column must have at least N spaces between them.",
+  },
+  {
+    name: "Tectonic",
+    rule: "Two equal numbers cannot be horizontally, vertically or diagonally adjacent.",
+  },
+];
+
+export const MODE_NAMES: readonly string[] = RULESETS.map((r) => r.name);
 
 // --- cell flags ------------------------------------------------------------
 
@@ -125,18 +138,7 @@ export const paramConfig: ParamConfigItem<SeismicParams>[] = [
   difficultyItem(DIFF_NAMES, "diff", {
     doc: "Higher difficulties require more complex reasoning.",
   }),
-  {
-    kw: "game-mode",
-    name: "Game mode",
-    type: "choices",
-    choices: [...MODE_NAMES],
-    doc: `Switch between ${MODE_NAMES.join(" and ")} mode.`,
-    label: { slot: "lead" },
-    get: (p) => p.mode,
-    set: (p, v) => {
-      p.mode = v === MODE_TECTONIC ? MODE_TECTONIC : MODE_SEISMIC;
-    },
-  },
+  rulesetItem<SeismicParams>(RULESETS, "mode"),
 ];
 
 /** `WxH`, a `T` for Tectonic (Seismic writes nothing), then the generator-only
@@ -144,7 +146,7 @@ export const paramConfig: ParamConfigItem<SeismicParams>[] = [
  * so that it is refused with a reason rather than silently defaulted. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
-  letters(paramConfig, "game-mode", ["", "T"]),
+  letters(paramConfig, RULESET_KW, ["", "T"]),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
     full: true,
     invalid: DIFFCOUNT + 1,
