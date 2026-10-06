@@ -70,14 +70,19 @@ before new product work starts, and a session does not add to them. Changes
 were being opened as fast as they were closed, about ten a day each way, and a
 well-scoped change goes stale when the code moves under it.
 
-- **A session ends with its change archived and nothing new filed.** It takes
-  as long as the change needs.
-- **A new change is filed only where the benefit is unambiguously strong**: a
+- **A session ends one of two ways.** Its change is archived and it hands an
+  existing change to a fresh session; or it found a new issue, and it asks the
+  owner. It takes as long as the change needs.
+- **A session files no change on its own.** The ask says what the issue is
+  and what it costs a player, and offers three answers with a recommendation:
+  take it on in this session, in a new session (the owner's yes is what files
+  the change), or not at all.
+- **Only an issue whose benefit is unambiguously strong is worth the ask**: a
   player hits the defect, or data is at risk. That several games write the
   same thing is not such a benefit while the backlog drains, however true.
-- **What does not clear that bar is not filed.** If it is small and the
-  change's own goal needs it, fix it there. Otherwise raise it to the owner in
-  the closing message, with a recommendation, and leave it.
+  What is small and needed by the change's own goal is fixed there, unasked.
+- **Finish the change before asking.** The ask comes with the change
+  archived, unless the issue blocks it.
 - **A change does not grow to hold what would have been filed.** It absorbs
   what its goal requires and no more.
 - **Game ports and hints wait.** `add-*-ts-port`, a game's hint and
