@@ -15,6 +15,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 import {
   type DeductiveResult,
   EASY_MAX_ARC_PASSES,
@@ -254,7 +255,10 @@ export function newUndeadDesc(
 
     return { desc: encodeDesc(common), aux };
   }
-  throw new Error(`undead: failed to generate a ${params.w}x${params.h} board`);
+  throw new RetryLimitExceeded(
+    `undead: generation (${params.w}x${params.h})`,
+    MAX_REGENERATE,
+  );
 }
 
 /** Encode the accepted board to a desc (totals + run-length grid + sightings). */

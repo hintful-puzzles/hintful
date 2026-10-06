@@ -7,6 +7,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 import type { Point } from "../../engine/types.ts";
 import { layoutsUpTo2, OutOfReach } from "./hint.ts";
 import {
@@ -88,7 +89,8 @@ export function newDesc(p: BlackboxParams, rng: RandomState): { desc: string } {
     const desc = buildDesc(p, rng);
     if (desc !== null) return { desc };
   }
-  throw new Error(
-    `blackbox: no board with one answer in ${MAX_BUILDS} builds at w${p.w}h${p.h}m${p.minballs}M${p.maxballs}`,
+  throw new RetryLimitExceeded(
+    `blackbox: a board with one answer (w${p.w}h${p.h}m${p.minballs}M${p.maxballs})`,
+    MAX_BUILDS,
   );
 }

@@ -16,6 +16,7 @@
  */
 import { divvyRectangle } from "../../engine/divvy.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { SOLVED, SolverScratch, STUCK, solverAttempt } from "./solver.ts";
 import { encodeDesc, type SeparateParams } from "./state.ts";
@@ -76,5 +77,5 @@ export function newSeparateDesc(p: SeparateParams, rng: RandomState): { desc: st
 
     if (m === SOLVED) return { desc: encodeDesc(grid, wh) };
   }
-  throw new Error(`separate generate: no board after ${MAX_REGENERATE} attempts`);
+  throw new RetryLimitExceeded("separate: generation", MAX_REGENERATE);
 }

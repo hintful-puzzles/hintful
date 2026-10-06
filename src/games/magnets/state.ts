@@ -22,7 +22,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
@@ -155,7 +155,7 @@ export function presets(): PresetMenu<MagnetsParams> {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<MagnetsParams>[] = [
   ...dimensionParamConfig<MagnetsParams>({
-    doc: "Size of the grid in squares. At least one of them must be 3 or more, or 5 or more for the harder of the two difficulties.",
+    doc: "Size of the grid in squares. At least one of them must be 3 or more, or 5 or more for the harder of the two difficulties, which a 3x6 does not have either.",
     // A row clue counts up to `w` magnets and a column clue up to `h`, each
     // written as one desc-alphabet character. Upstream bounds neither, so a
     // 62-wide board wrote a desc its own parser rejected.
@@ -183,10 +183,14 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   flag(paramConfig, "S", "strip-clues", { full: true }),
 ]);
 
-export function validateParams(p: MagnetsParams, _full: boolean): string | null {
+export function validateParams(p: MagnetsParams, full: boolean): string | null {
   if (p.diff >= DIFF_TRICKY) {
     if (p.w < 5 && p.h < 5)
       return `Either width or height must be at least five for ${DIFF_NAMES[DIFF_TRICKY]}.`;
+    // Measured 2026-10-06: none in 900,000 boards built, with the clues
+    // stripped or not. A 3x5 is found once in 1,000 and a 3x7 once in 400.
+    if (full && Math.min(p.w, p.h) === 3 && Math.max(p.w, p.h) === 6)
+      return noSuchTier(`${p.w}x${p.h} puzzle`, DIFF_NAMES[DIFF_TRICKY]);
   } else {
     if (p.w < 3 && p.h < 3) return "Either width or height must be at least three.";
   }

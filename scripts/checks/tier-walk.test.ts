@@ -19,8 +19,8 @@
  * - **refused**, with the sentence a player is shown.
  *
  * **The sizes are a sample, and the report says which.** Every numeric field
- * with a declared lower bound runs from that bound up to the largest value a
- * preset holds, once with the fields stepped together (4x4, 5x5, …) and once
+ * runs from its declared lower bound, or from 1 where it declares none, up to
+ * the largest value a preset holds, once with the fields stepped together (4x4, 5x5, …) and once
  * each alone on every menu shape. Sizes past the largest preset are
  * `bound-custom-sizes-by-their-deal`'s question, and so is a deal that is
  * slow: once a tier takes longer than `TIER_WALK_SLOW_MS` on a shape, the
@@ -60,6 +60,11 @@ const ONLY = process.env["TIER_WALK_GAMES"]?.split(",") ?? null;
 const SEEDS = Number(process.env["TIER_WALK_SEEDS"] ?? 3);
 const SLOW_MS = Number(process.env["TIER_WALK_SLOW_MS"] ?? 3000);
 
+/** Where a field that declares no lower bound starts. Its real bound is in
+ * `validateParams`, often against another field (Clusters, Loopy), so the walk
+ * starts under any of them and the sizes too small come out as refused. */
+const UNDECLARED_MIN = 1;
+
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 type AnyGame = Game<any, any, any, any, any, any>;
 type Params = Record<string, unknown>;
@@ -91,13 +96,12 @@ function sizesToWalk(game: AnyGame): { shape: number; params: Params }[] {
   const presets = leafPresets(game).map((e) => e.params as Params);
   const numeric = (game.paramConfig ?? []).filter(
     (item: ParamConfigItem<Params>): item is NumericItem =>
-      item.type === "string" &&
-      item.bounds?.min !== undefined &&
-      presets.every((p) => Number.isInteger(Number(item.get(p)))),
+      // Digits, and not `Number()`: a list field left empty reads as 0.
+      item.type === "string" && presets.every((p) => /^\d+$/.test(item.get(p))),
   );
   const range = numeric.map((item) => ({
     item,
-    lo: item.bounds?.min ?? 0,
+    lo: item.bounds?.min ?? UNDECLARED_MIN,
     hi: Math.max(...presets.map((p) => Number(item.get(p)))),
   }));
 

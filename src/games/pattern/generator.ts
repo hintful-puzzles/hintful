@@ -15,6 +15,7 @@
  * § "Byte-match: fidelity where there is a right answer").
  */
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 import { isSoluble } from "./solver.ts";
 import {
   computeRuns,
@@ -107,5 +108,5 @@ export function newPatternDesc(p: PatternParams, rng: RandomState): { desc: stri
     const clues = cluesOf(grid, w, h);
     if (isSoluble(w, h, clues)) return { desc: encodeClues(clues) };
   }
-  throw new Error(`pattern generator exceeded ${MAX_REGENERATE} attempts`);
+  throw new RetryLimitExceeded("pattern: generation", MAX_REGENERATE);
 }

@@ -13,15 +13,17 @@
 ## 2. Gave up
 
 - [x] 2.1 Bridges and Map, with section 1.
-- [ ] 2.2 Each other cell the proposal lists, counted as rare or absent, then
+- [x] 2.2 Each other cell the proposal lists, counted as rare or absent, then
       refused, given a budget its tail fits under, or left to a run-out with
       its count recorded: Ascent, Galaxies, Keen, Light Up, Magnets, Salad,
       Solo, Spokes, Tracks.
+- [x] 2.3 Every generator's run-out is `RetryLimitExceeded`, and the
+      retry-bound scan holds it.
 
 ## 3. The walk
 
-- [ ] 3.1 Sizes for a game whose fields declare no minimum.
-- [ ] 3.2 The whole walk run again.
+- [x] 3.1 Sizes for a game whose fields declare no minimum.
+- [x] 3.2 The whole walk run again.
 
 ## 4. Close
 

@@ -13,6 +13,7 @@
 
 import { Dsf } from "./dsf.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
+import { RetryLimitExceeded } from "./retry-limit.ts";
 import { shuffle } from "./shuffle.ts";
 
 /**
@@ -222,5 +223,5 @@ export function divvyRectangle(w: number, h: number, k: number, rng: RandomState
     const ret = divvyRectangleAttempt(w, h, k, rng);
     if (ret) return ret;
   }
-  throw new Error(`divvyRectangle: no partition after ${MAX_DIVVY_ATTEMPTS} attempts`);
+  throw new RetryLimitExceeded("divvyRectangle: a partition", MAX_DIVVY_ATTEMPTS);
 }

@@ -768,6 +768,25 @@ size and lets a small board try hundreds of thousands of times. **Time the
 run-out at the costliest corner before trusting the unit**: Map's first
 budget counted squares alone, and a 3x30 of 75 regions ran for two minutes.
 
+**A tier is a rung a board needs, not a height it reaches, so count every
+tier at a size.** A 3x3 Ascent on the Rectangle grid has Tricky and Hard
+boards and no Normal one, and a 2x3 has only Tricky. "Nothing above Normal
+here" is a guess about nesting that the generator does not share. The same
+holds across a choice field: Ascent's four grids lose different cells, and
+Light Up's 3x3 loses a tier to each symmetry, because its center square is
+its own mirror image.
+
+**Count tries only where tries are alike.** Lifting the retry bound and
+counting boards over tries measures a rate when every try draws from the same
+population. Light Up's generator adds black squares each time twenty tries
+fail, so its tries are not alike: a deal found its 4x4 Unreasonable in the
+first climb or, as it was written, sat at 90% black for the rest of its bound
+and found nothing. With the bound lifted that read as "absent"; dealt under
+its real bound it was one deal in ten. Where a generator changes what it
+tries, count deals under the real bound first, and ask what the later tries
+are still able to find. There the fix was neither a refusal nor a budget: the
+ramp starts over at the top.
+
 **Where no line can be named, the generator runs out and the engine says
 so.** Boats takes a fleet as a list, and which fleets lack a tier has no line
 through it: one boat never has one, two single boats on a 3x3 do not, two on
@@ -785,9 +804,12 @@ placed, and that is safe only because its solver's verdict does not depend on
 the order: § "A fixpoint is order-independent only if every rule is monotone".
 
 **The instrument is the tier walk**, `scripts/checks/tier-walk.test.ts`: every
-tiered game, every numeric field from its declared minimum to the menu's
-largest, every tier, a few deals a cell, each board's lowest solving cap beside
-the tier asked. `difficulty-contract.test.ts` holds the presets to that and
+tiered game, every numeric field from its declared minimum (or from 1) to the
+menu's largest, every tier, a few deals a cell, each board's lowest solving cap
+beside the tier asked. It steps the fields together and each alone on the
+menu's shapes, and takes a choice field only as a preset has it: so it deals a
+3x3 and a 3x7 and never a 3x4, and never an Ascent grid or a Light Up symmetry
+that no preset uses. The cells beside a refusal are yours to count. `difficulty-contract.test.ts` holds the presets to that and
 deliberately not a tier written onto a small size; the walk is the half it
 leaves out. It is a report, minutes long, and not a gate:
 
@@ -930,6 +952,13 @@ The guard is the scan's own vocabulary: it looks for a call to a variable
 initialized from `retryLimit`, in the loop's own body, so a hand-rolled
 counter inside an open loop needs a ledger line and a counting `for` header
 needs nothing.
+
+**A bound that runs out throws `RetryLimitExceeded`, whatever counted it.**
+The midend answers that one class with a sentence and keeps the board in play
+(§ "A size that cannot carry a tier"); any other error is a fault and
+propagates, which leaves the player with a deal that never ends. A counting
+`for` that ends in its own `throw new Error(…)` is the shape, and the same
+test refuses it: a `throw` standing straight after a loop that draws.
 
 ### Unlucky, impossible, and load-bearing validation
 

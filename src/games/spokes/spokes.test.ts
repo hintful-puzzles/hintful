@@ -33,6 +33,10 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -159,7 +163,7 @@ describe("spokes params", () => {
     // Upstream never checks this and would index its difficulty table out of
     // bounds; the port rejects it instead.
     expect(error(decodeParams("4x4dz"))).toMatch(/^Difficulty must be one of/);
-    expect(error({ w: 2, h: 2, diff: "hard" })).toBeNull();
+    expect(error({ w: 2, h: 2, diff: "tricky" })).toBeNull();
   });
 
   // The top tier reads `Unreasonable` where upstream says `Hard`, but keeps the
@@ -300,6 +304,27 @@ describe("spokes solver", () => {
     expect(spokesSolve(b, null, DIFF_EASY)).toBe("valid");
   });
 });
+
+// The boards of 8 squares or fewer at Unreasonable.
+describeAbsentTiers(spokesGame, ["2x2dh", "2x3dh", "3x2dh", "2x4dh"], { budgets: 1 });
+
+describe("spokes two wide at Unreasonable, where a board is a minute away", () => {
+  const refusal = (id: string): string | null =>
+    paramsError(spokesGame, decodeParams(id), true);
+
+  it("says rare, and not absent", () => {
+    expect(refusal("2x5dh")).toBe("Unreasonable 2x5 puzzles are too rare to deal.");
+    expect(refusal("6x2dh")).toBe("Unreasonable 6x2 puzzles are too rare to deal.");
+    expect(paramsError(spokesGame, decodeParams("2x5dh"), false)).toBeNull();
+  });
+
+  it.each(["2x7dh", "3x4dh", "2x6dt"])("%s is dealt", (id) => {
+    expect(refusal(id)).toBeNull();
+  });
+});
+
+// The tier under it there, and the first size that has it.
+describeDealtTiers(spokesGame, ["2x2dt", "2x3dt", "3x3dh"]);
 
 describe("spokes generator", () => {
   it("is reproducible from a seed", () => {

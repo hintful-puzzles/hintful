@@ -268,6 +268,15 @@ export function validateParams(p: SoloParams, full: boolean): string | null {
     const size = p.r === 1 ? `${p.c} Jigsaw` : `${p.c}x${p.r}`;
     return noSuchTier(`${size} puzzle`, DIFF_NAMES[p.diff]);
   }
+  // Measured 2026-10-06, with the diagonals and without: none in 220,000 to
+  // 370,000 boards built at each tier above Tricky, which is found once in
+  // 950. A 5 Jigsaw has every tier. Killer cages were not counted.
+  if (full && p.r === 1 && p.c === 4 && !p.killer && p.diff > DIFF_INTERSECT)
+    return noSuchTier("4 Jigsaw puzzle", DIFF_NAMES[p.diff]);
+  // Measured 2026-10-06: none in 4,850,000 boards built. A 3 Jigsaw and a 2x2
+  // with Killer cages deal at once.
+  if (full && p.killer && p.r === 1 && p.c === 2)
+    return noSuchTier("2 Jigsaw Killer puzzle", DIFF_NAMES[p.diff]);
   return null;
 }
 

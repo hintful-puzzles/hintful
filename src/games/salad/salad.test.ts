@@ -28,6 +28,10 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { axisSlice, leafPresets } from "../../engine/testing/presets.ts";
@@ -280,6 +284,37 @@ describe("salad solver", () => {
       diff: DIFF_EASY,
     };
     expect(saladSolve(scratchBoard(newState(p, "y")), DIFF_HARD)).toBe(false);
+  });
+});
+
+// Two symbols at Normal: Letters clued on the border alone, and the two
+// smallest Numbers boards. One run of the generator's bound is the search.
+describeAbsentTiers(saladGame, ["3n2Ldx", "6n2Ldx", "3n2Bdx", "4n2Bdx"], {
+  budgets: 1,
+});
+
+// The first Letters size that may clue its grid, and the Easy cell rare
+// enough to have set the border-only bound.
+describeDealtTiers(saladGame, ["8n2Ldx", "7n2Lde"], { deals: 2 });
+
+describe("salad with two symbols at Normal", () => {
+  const refusal = (id: string): string | null =>
+    paramsError(saladGame, decodeParams(id), true);
+
+  it("says absent where no board was found, and rare where one was", () => {
+    expect(refusal("5n2Ldx")).toBe("No 5x5 Letters puzzle with 2 symbols is Normal.");
+    expect(refusal("4n2Bdx")).toBe("No 4x4 Numbers puzzle with 2 symbols is Normal.");
+    expect(refusal("5n2Bdx")).toBe(
+      "Normal 5x5 Numbers puzzles with 2 symbols are too rare to deal.",
+    );
+  });
+
+  it.each(["8n2Ldx", "6n2Bdx", "5n2Lde", "5n3Ldx", "5n2Bde"])("%s is dealt", (id) => {
+    expect(refusal(id)).toBeNull();
+  });
+
+  it("still loads a rare board that arrives with its desc", () => {
+    expect(paramsError(saladGame, decodeParams("5n2Bdx"), false)).toBeNull();
   });
 });
 

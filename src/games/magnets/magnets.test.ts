@@ -9,6 +9,10 @@ import {
 } from "../../engine/desc-error.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import { magnetsGame } from "./index.ts";
 import { MagnetsSolver } from "./solver.ts";
@@ -32,6 +36,12 @@ const P = (
   diff = DIFF_TRICKY,
   stripclues = false,
 ): MagnetsParams => ({ w, h, diff, stripclues });
+
+// A 3x6 at the harder tier, either way round and with the clues stripped.
+describeAbsentTiers(magnetsGame, ["3x6dt", "6x3dt", "3x6dtS"]);
+
+// The sizes either side of it.
+describeDealtTiers(magnetsGame, ["3x5dt", "3x7dt", "7x3dt"]);
 
 describe("magnets params", () => {
   it("round-trips full encode/decode", () => {

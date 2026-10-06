@@ -29,7 +29,12 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import {
+  difficultyItem,
+  noSuchTier,
+  tierNames,
+  tooRareToDeal,
+} from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
@@ -141,7 +146,7 @@ export const paramConfig: ParamConfigItem<SaladParams>[] = [
     label: { slot: "size", words: squareSize("order") },
   }),
   numberItem<SaladParams>("symbols", "Symbols", "nums", {
-    doc: "The amount of different symbols that appear in each row.",
+    doc: "The amount of different symbols that appear in each row. With 2 symbols there is no Normal puzzle on a Letters board smaller than 8x8 or a Numbers board smaller than 5x5, and a 5x5 Numbers one is too rare to deal.",
     bounds: { min: 2, max: 9 },
     label: { slot: "kind", words: symbolRange },
   }),
@@ -164,9 +169,35 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   }),
 ]);
 
-export function validateParams(p: SaladParams, _full: boolean): string | null {
+/** Below this size a {@link GAMEMODE_LETTERS} board is dealt with clues on its
+ * border alone; from it up, the grid may hold clues too. */
+export const LETTERS_GRID_CLUES_FROM = 8;
+
+/**
+ * The refusal for a board of two symbols at Normal, or `null`. Measured
+ * 2026-10-06, in boards built:
+ *
+ * - Letters with border clues alone: none in 80,000 to 440,000 at each size
+ *   from 3x3 to 7x7. An 8x8, which may clue its grid, is found once in 16.
+ * - Numbers: none in 700,000 at 3x3 and in 230,000 at 4x4. A 5x5 is found
+ *   once in 36,000, which was 48 seconds, and a 6x6 once in 1,700.
+ */
+function twoSymbolRefusal(p: SaladParams): string | null {
+  if (p.nums !== 2 || p.diff !== DIFF_HARD) return null;
+  const tier = DIFF_NAMES[p.diff] ?? "";
+  const what = `${p.order}x${p.order} ${RULESETS[p.mode]?.name} puzzle`;
+  if (p.mode === GAMEMODE_LETTERS) {
+    return p.order < LETTERS_GRID_CLUES_FROM
+      ? noSuchTier(`${what} with 2 symbols`, tier)
+      : null;
+  }
+  if (p.order <= 4) return noSuchTier(`${what} with 2 symbols`, tier);
+  return p.order === 5 ? tooRareToDeal(`${what}s with 2 symbols`, tier) : null;
+}
+
+export function validateParams(p: SaladParams, full: boolean): string | null {
   if (p.nums >= p.order) return "Symbols must be lower than the size.";
-  return null;
+  return full ? twoSymbolRefusal(p) : null;
 }
 
 // --- state -----------------------------------------------------------------

@@ -480,7 +480,7 @@ export const lightupGame: Game<
   transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<LightupParams>({
-      doc: "Size of the grid in squares.",
+      doc: "Size of the grid in squares. A 2x2 has only Easy puzzles, and a board needs nine squares to have an Unreasonable one. A 3x3 has none with symmetry, and no Normal one with 4-way symmetry; a 4x4 with 4-way symmetry has none it can deal.",
       bounds: { min: 2 },
     }),
     numberItem<LightupParams>(
@@ -488,7 +488,7 @@ export const lightupGame: Game<
       "%age of black squares",
       "blackpc",
       {
-        doc: "Roughly what share of the grid is black squares, from 5 to 100. If no good puzzle turns up with that many, the generator adds more, 5% at a time, up to 90%.",
+        doc: "Roughly what share of the grid is black squares, from 5 to 100. If no good puzzle turns up with that many, the generator adds more, 5% at a time, up to 90%, and then starts again.",
         label: {
           slot: "tail",
           words: (p) => (p.blackpc === 20 ? null : `${p.blackpc}% black squares`),

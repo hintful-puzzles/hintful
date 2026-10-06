@@ -14,6 +14,7 @@
  */
 
 import type { RandomState } from "../../engine/random/index.ts";
+import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { findGemCandidates } from "./solver.ts";
 import {
@@ -98,7 +99,7 @@ export function newInertiaDesc(p: InertiaParams, rng: RandomState): { desc: stri
     return { desc: encodeBoard(board, startSquare) };
   }
 
-  throw new Error(`inertia: failed to generate a ${w}x${h} grid`);
+  throw new RetryLimitExceeded(`inertia: generation (${w}x${h})`, MAX_ATTEMPTS);
 }
 
 /** The furthest any square is from the nearest gem candidate, counting a

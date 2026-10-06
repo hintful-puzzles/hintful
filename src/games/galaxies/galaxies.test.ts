@@ -13,6 +13,10 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
   opsOfKind,
@@ -86,6 +90,13 @@ describe("Galaxies generator integration", () => {
     expect(checkComplete(fresh, false).complete).toBe(true);
   });
 });
+
+// One run of the generator's budget is 27,000 regenerations at this size.
+describeAbsentTiers(galaxiesGame, ["3x3du"], { budgets: 1 });
+
+// The small boards beside it, where Unreasonable is rare enough to have set
+// the retry budget.
+describeDealtTiers(galaxiesGame, ["3x4du", "4x4du", "5x5du"], { deals: 6 });
 
 describe("Galaxies game flow", () => {
   it("newDesc → newState → solve → executeMove(solve) completes the puzzle", () => {

@@ -18,6 +18,10 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { type AnyGame, probeBoard } from "../../engine/testing/input-probe.ts";
 import {
   type DrawOp,
@@ -161,6 +165,37 @@ describe("ascent desc parsing", () => {
     // A `_` anywhere but between two adjacent numbers.
     expect(validateDesc(ascentGame, p, "_1_2eA9")).toMatch(/"_"/);
     expect(validateDesc(ascentGame, p, "1_2e_A9")).toMatch(/"_"/);
+  });
+});
+
+// The smallest boards, by grid: O is the Rectangle without diagonals, R with
+// them, C the Honeycomb and H the Hexagon.
+describeAbsentTiers(ascentGame, [
+  ...["2x2mO", "2x3mO", "3x2mO", "2x2mR", "2x2mC", "2x3mH"].flatMap((size) =>
+    [..."nth"].map((d) => `${size}d${d}`),
+  ),
+  ...["2x4mOdh", "5x2mOdh"],
+  ...["2x3mRdn", "3x3mRdn", "2x3mRdh", "2x7mRdh", "10x2mRdh"],
+  ...["2x3mCdn", "2x3mCdh", "3x2mCdt", "3x2mCdh", "4x2mCdh"],
+  ...["3x3mHdn"],
+]);
+
+// The tiers those sizes do have, and the sizes beside them.
+describeDealtTiers(ascentGame, [
+  ...["2x4mOdn", "2x6mOdh", "3x3mOdn"],
+  ...["2x3mRdt", "3x3mRdt", "3x3mRdh", "2x4mRdn", "3x4mRdn"],
+  ...["2x3mCdt", "3x2mCdn", "2x4mCdh", "5x2mCdh"],
+  ...["3x3mHdt", "3x3mHdh", "4x3mHdn"],
+  ...["2x3mEdn", "2x5mEdh"],
+]);
+
+describe("ascent says which grid a missing tier is missing on", () => {
+  it("names the size, the grid and the tier", () => {
+    const refusal = (id: string): string | null =>
+      paramsError(ascentGame, ascentGame.decodeParams(id), true);
+    expect(refusal("3x3mRdn")).toBe("No 3x3 Rectangle puzzle is Normal.");
+    expect(refusal("2x9mRdh")).toBe("No 2x9 Rectangle puzzle is Hard.");
+    expect(refusal("3x3mOdn")).toBeNull();
   });
 });
 

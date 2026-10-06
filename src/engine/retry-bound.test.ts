@@ -193,6 +193,31 @@ interface Loop {
   guarded: boolean;
 }
 
+/** A `throw new X(…)` standing straight after a loop that draws: the loop's
+ * bound running out, in any loop shape. */
+interface GiveUp {
+  where: string;
+  /** Whether `X` is `RetryLimitExceeded`, the one error the midend answers. */
+  answered: boolean;
+}
+
+interface Scan {
+  loops: Loop[];
+  giveUps: GiveUp[];
+}
+
+/** The class a `throw new X(…)` right after `loop` throws, or `null`. */
+function thrownAfter(loop: ts.Node): string | null {
+  const block = loop.parent;
+  if (!ts.isBlock(block) && !ts.isSourceFile(block)) return null;
+  const next = block.statements[block.statements.indexOf(loop as ts.Statement) + 1];
+  if (!next || !ts.isThrowStatement(next)) return null;
+  const thrown = next.expression;
+  return ts.isNewExpression(thrown) && ts.isIdentifier(thrown.expression)
+    ? thrown.expression.text
+    : null;
+}
+
 interface FileFacts {
   sf: ts.SourceFile;
   /** Local name → `file#exportedName`, for each relative named import. */
@@ -237,7 +262,7 @@ function nameOf(fn: ts.Node): string | null {
   return null;
 }
 
-function scan(files: Record<string, string>): Loop[] {
+function scan(files: Record<string, string>): Scan {
   const facts = new Map<string, FileFacts>();
   for (const [path, text] of Object.entries(files)) {
     const sf = ts.createSourceFile(path, text, ts.ScriptTarget.ESNext, true);
@@ -356,6 +381,7 @@ function scan(files: Record<string, string>): Loop[] {
   }
 
   const loops: Loop[] = [];
+  const giveUps: GiveUp[] = [];
   for (const [path, f] of facts) {
     const enclosingFunction = (n: ts.Node): ts.Node => {
       let p: ts.Node = n.parent;
@@ -391,19 +417,29 @@ function scan(files: Record<string, string>): Loop[] {
       return "(top level)";
     };
     const visit = (n: ts.Node): void => {
-      if (isOpenLoop(n) && draws(path, n)) {
+      if (isAnyLoop(n) && draws(path, n)) {
         const line = f.sf.getLineAndCharacterOfPosition(n.getStart(f.sf)).line + 1;
-        loops.push({
-          owner: `${path} › ${ownerName(n)}`,
-          where: `${path}:${line}`,
-          guarded: guarded(n),
-        });
+        const where = `${path}:${line}`;
+        if (isOpenLoop(n)) {
+          loops.push({
+            owner: `${path} › ${ownerName(n)}`,
+            where,
+            guarded: guarded(n),
+          });
+        }
+        const thrown = thrownAfter(n);
+        if (thrown !== null) {
+          giveUps.push({
+            where,
+            answered: refersTo(path, thrown, RETRY_LIMIT, "RetryLimitExceeded"),
+          });
+        }
       }
       ts.forEachChild(n, visit);
     };
     visit(f.sf);
   }
-  return loops;
+  return { loops, giveUps };
 }
 
 /** What the ledger and the scan disagree about, one line per owner. */
@@ -429,7 +465,19 @@ function disagreements(
 }
 
 describe("an open loop that draws randomness", () => {
-  const loops = scan(sources());
+  const { loops, giveUps } = scan(sources());
+
+  // The midend answers a `RetryLimitExceeded` with a sentence and the board
+  // in play; any other error from a generator is a fault and propagates, which
+  // for a bound that merely ran out leaves the player with a deal that never
+  // ends.
+  it("throws RetryLimitExceeded where a throw follows a loop that draws", () => {
+    expect(
+      giveUps.filter((g) => !g.answered).map((g) => g.where),
+      "a bound that runs out throws RetryLimitExceeded, for the midend to answer",
+    ).toEqual([]);
+    expect(giveUps.length).toBeGreaterThanOrEqual(4);
+  });
 
   it("calls a retryLimit guard, or the ledger says what bounds it", () => {
     expect(
@@ -488,7 +536,7 @@ describe("the scan, on loops written to be found", () => {
     ].join("\n"),
   });
   const found = (body: string) =>
-    scan(game(body)).map(
+    scan(game(body)).loops.map(
       (l) => `${l.owner.split(" › ")[1]}:${l.guarded ? "guarded" : "bare"}`,
     );
 
@@ -584,8 +632,25 @@ describe("the scan, on loops written to be found", () => {
     expect(found("function a() { for (;;) { if (solved()) break; } }")).toEqual([]);
   });
 
+  it("finds a throw after a counted loop that draws, and reads its class", () => {
+    const answered = (thrown: string) =>
+      scan(
+        game(
+          `${importing("RetryLimitExceeded as Spent", "../../engine/retry-limit.ts")}\nfunction a(rng: RandomState) { for (let i = 0; i < 9; i++) { if (randomUpto(rng, 2)) return; } throw new ${thrown}("a"); }`,
+        ),
+      ).giveUps.map((g) => g.answered);
+    expect(answered("Error")).toEqual([false]);
+    expect(answered("Spent")).toEqual([true]);
+    // A throw after a loop that draws nothing is not a retry running out.
+    expect(
+      scan(
+        game('function a() { for (let i = 0; i < 9; i++) {} throw new Error("a"); }'),
+      ).giveUps,
+    ).toEqual([]);
+  });
+
   it("reports a ledger that says too much, and one that says too little", () => {
-    const loops = scan(
+    const { loops } = scan(
       game(
         "function a(rng: RandomState) { for (;;) { if (randomUpto(rng, 2)) break; } }",
       ),

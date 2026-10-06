@@ -25,7 +25,12 @@ import {
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
+import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -33,7 +38,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
-import { puzzleIsGood } from "./generator.ts";
+import { newLightupDesc, puzzleIsGood } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";
 import { COL_BLACK, COL_ERROR, COL_LIGHT, COL_LIT, COL_RULED_OUT } from "./render.ts";
 import { solveUnique } from "./solver.ts";
@@ -87,6 +92,51 @@ function mark(x: number, y: number): LightupMove {
 function px(cell: number): number {
   return 16 + cell * 32 + 16;
 }
+
+// The boards too small for a tier: a 2x2, fewer than nine squares at
+// Unreasonable, and the 3x3 under a symmetry.
+describeAbsentTiers(
+  lightupGame,
+  [
+    ...["2x2b20s0d1", "2x2b20s2d2", "2x3b20s0d2", "2x4b20s0d2", "4x2b20s2d2"],
+    ...["3x3b20s1d2", "3x3b20s2d2", "3x3b20s4d2", "3x3b20s3d1", "3x3b20s4d1"],
+    "4x4b20s3d2",
+  ],
+  { budgets: 2 },
+);
+
+// The cells beside them, and the rare one the round budget is sized to.
+describeDealtTiers(lightupGame, [
+  ...["2x3b20s0d1", "3x3b20s0d2", "2x5b20s0d2", "3x3b20s1d1"],
+  ...["3x3b20s2d1", "4x4b20s2d2", "5x5b20s4d2"],
+]);
+
+describe("lightup's 4x4 under a 4-way symmetry at Unreasonable", () => {
+  const refusal = (id: string): string | null =>
+    paramsError(lightupGame, decodeParams(id), true);
+
+  it("says absent mirrored, where no board was found, and rare turned", () => {
+    expect(refusal("4x4b20s3d2")).toBe(
+      "No 4x4 puzzle with 4-way mirror symmetry is Unreasonable.",
+    );
+    expect(refusal("4x4b20s4d2")).toBe(
+      "Unreasonable 4x4 puzzles with 4-way rotational symmetry are too rare to deal.",
+    );
+    expect(refusal("4x4b20s4d1")).toBeNull();
+    expect(paramsError(lightupGame, decodeParams("4x4b20s4d2"), false)).toBeNull();
+  });
+});
+
+describe("lightup's ramp of black squares", () => {
+  it("starts over at the top, so a small board is found on a later climb", () => {
+    // A climb from 20% finds a 4x4 Unreasonable about nine times in ten, and
+    // a round at 90% never does: twenty deals all ending is the restart.
+    const p = decodeParams("4x4b20s2d2");
+    for (let seed = 0; seed < 20; seed++) {
+      expect(() => newLightupDesc(p, randomNew(`ramp-${seed}`))).not.toThrow();
+    }
+  });
+});
 
 describe("lightup params", () => {
   it("full encode/decode round-trips", () => {

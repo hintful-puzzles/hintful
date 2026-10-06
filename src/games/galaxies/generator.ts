@@ -5,6 +5,7 @@
  */
 
 import type { RandomState } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import type { Point } from "../../engine/types.ts";
 import { clearForSolve, type GalaxiesDiff, solverState } from "./solver.ts";
@@ -340,6 +341,15 @@ function isWiggle(
 const GENERATE_TRIES = 10;
 const MAX_REGENERATIONS = 200;
 
+/**
+ * The retry budget of a small board, in regenerations times squares, which is
+ * what one costs: about forty microseconds a square. Unreasonable is rarer the
+ * smaller the board, once in 26 regenerations at 7x7, in 150 at 5x5 and in 830
+ * at 4x4, so a bound of 200 gave up on three 4x4 deals in four with the board
+ * half a second away. A board of more than 1,250 squares keeps the 200.
+ */
+const WORK_BUDGET = 250_000;
+
 /** A desc for `params`, retried until the solver grades it at `params.diff`. */
 export function newGameDesc(
   params: { w: number; h: number; diff: GalaxiesDiff },
@@ -347,7 +357,12 @@ export function newGameDesc(
 ): string {
   const { w, h } = params;
 
-  for (let regen = 0; regen < MAX_REGENERATIONS; regen++) {
+  const regeneration = retryLimit(
+    "galaxies: generation",
+    Math.max(MAX_REGENERATIONS, Math.floor(WORK_BUDGET / (w * h))),
+  );
+  for (;;) {
+    regeneration();
     // Keep the wiggliest of several boards.
     let best: GalaxiesState | null = null;
     let bestW = -1;
@@ -383,5 +398,4 @@ export function newGameDesc(
 
     return encodeGame(best);
   }
-  throw new Error(`Galaxies generator: gave up after ${MAX_REGENERATIONS} attempts`);
 }

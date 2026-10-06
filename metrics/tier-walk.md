@@ -4,23 +4,24 @@
 
 ## ascent
 
-317 cells dealt, 74 refused, 9 left out as slow.
+314 cells dealt, 86 refused, 0 left out as slow.
 
-- `2x2mRdn` asked Normal: gave up on 3
-- `2x2mRdt` asked Tricky: gave up on 3
-- `2x2mRdh` asked Hard: gave up on 3
-- `3x3mRdn` asked Normal: gave up on 3
-- `2x7mRdh` asked Hard: gave up on 3
-- `6x2mRdh` asked Hard: gave up on 3
-- `2x10mRdh` asked Hard: gave up on 1; 6.3 s
-- `2x2mCdn` asked Normal: gave up on 3
-- `2x2mCdt` asked Tricky: gave up on 3
-- `2x2mCdh` asked Hard: gave up on 3
-- `3x3mHdn` asked Normal: gave up on 3
+- `2x2mRdn` refused: No 2x2 Rectangle puzzle is Normal.
+- `2x2mRdt` refused: No 2x2 Rectangle puzzle is Tricky.
+- `2x2mRdh` refused: No 2x2 Rectangle puzzle is Hard.
+- `3x3mRdn` refused: No 3x3 Rectangle puzzle is Normal.
+- `2x7mRdh` refused: No 2x7 Rectangle puzzle is Hard.
+- `6x2mRdh` refused: No 6x2 Rectangle puzzle is Hard.
+- `2x10mRdh` refused: No 2x10 Rectangle puzzle is Hard.
+- `8x2mRdh` refused: No 8x2 Rectangle puzzle is Hard.
+- `2x2mCdn` refused: No 2x2 Honeycomb puzzle is Normal.
+- `2x2mCdt` refused: No 2x2 Honeycomb puzzle is Tricky.
+- `2x2mCdh` refused: No 2x2 Honeycomb puzzle is Hard.
 - `2x2mHde` refused: Height must be an odd number.
 - `2x2mHdn` refused: Height must be an odd number.
 - `2x2mHdt` refused: Height must be an odd number.
 - `2x2mHdh` refused: Height must be an odd number.
+- `3x3mHdn` refused: No 3x3 Hexagon puzzle is Normal.
 - `4x4mHde` refused: Height must be an odd number.
 - `4x4mHdn` refused: Height must be an odd number.
 - `4x4mHdt` refused: Height must be an odd number.
@@ -91,7 +92,6 @@
 - `5x8mEEde` refused: Difficulty for Edges mode must be at least Normal.
 - `5x9mEEde` refused: Difficulty for Edges mode must be at least Normal.
 - `5x10mEEde` refused: Difficulty for Edges mode must be at least Normal.
-- left out: `3x10mRdh` `4x10mRdh` `5x10mRdh` `7x10mRdh` `8x2mRdh` `8x3mRdh` `8x4mRdh` `8x5mRdh` `8x6mRdh`
 
 ## boats
 
@@ -100,7 +100,7 @@
 - `3x3f2dn,2,1` asked Normal: gave up on 3
 - `3x3f2dt,2,1` asked Tricky: gave up on 3
 - `3x3f2dh,2,1` asked Hard: gave up on 3
-- `10x10f2dn,2,1` asked Normal: 4.0 s
+- `10x10f2dn,2,1` asked Normal: 5.4 s
 - `2x2f1dn,1` refused: No puzzle with one boat is Normal.
 - `2x2f1dt,1` refused: No puzzle with one boat is Tricky.
 - `2x2f1dh,1` refused: No puzzle with one boat is Hard.
@@ -242,14 +242,31 @@
 
 ## clusters
 
-8 cells dealt, 0 refused, 0 left out as slow.
+104 cells dealt, 13 refused, 23 left out as slow.
+
+- `10x10dt` asked Normal: 3.1 s
+- `10x8dt` asked Normal: 5.6 s
+- `1x1de` refused: Width times height must be at least 2.
+- `1x1dt` refused: Width times height must be at least 2.
+- `2x2de` refused: Width or height must be at least three.
+- `2x2dt` refused: Width or height must be at least three.
+- `3x3dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- `1x7dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- `7x1dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- `1x8dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- `8x1dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- `1x9dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- `9x1dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- `1x10dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- `10x1dt` refused: Normal needs a board of at least 12 squares, at least two wide.
+- left out: `2x7dt` `3x7dt` `4x7dt` `5x7dt` `6x7dt` `8x7dt` `9x7dt` `10x7dt` `7x2dt` `7x3dt` `7x4dt` `7x5dt` `7x6dt` `7x8dt` `7x9dt` `7x10dt` `8x2dt` `8x3dt` `8x4dt` `8x5dt` `8x6dt` `8x9dt` `8x10dt`
 
 ## dominosa
 
 30 cells dealt, 5 refused, 1 left out as slow.
 
-- `8tde` asked Unreasonable: 4.7 s
-- `9tdh` asked Tricky: 3.4 s
+- `8tde` asked Unreasonable: 9.6 s
+- `9tdh` asked Tricky: 6.9 s
 - `1tdb` refused: No Order 1 puzzle is Normal.
 - `1tdh` refused: No Order 1 puzzle is Tricky.
 - `1tde` refused: No Order 1 puzzle is Unreasonable.
@@ -259,24 +276,18 @@
 
 ## galaxies
 
-158 cells dealt, 0 refused, 0 left out as slow.
+157 cells dealt, 1 refused, 0 left out as slow.
 
-- `3x3du` asked Unreasonable: gave up on 3
-- `4x4du` asked Unreasonable: gave up on 3
-- `4x7du` asked Unreasonable: gave up on 3
-- `5x7du` asked Unreasonable: gave up on 1
-- `7x3du` asked Unreasonable: gave up on 2
-- `10x3du` asked Unreasonable: gave up on 1
-- `4x15du` asked Unreasonable: gave up on 1
+- `3x3du` refused: No 3x3 puzzle is Unreasonable.
 
 ## group
 
-63 cells dealt, 30 refused, 7 left out as slow.
+58 cells dealt, 30 refused, 12 left out as slow.
 
-- `7dx` asked Hard: 3.5 s
-- `11du` asked Unreasonable: 25.6 s
-- `10dui` asked Unreasonable: 7.1 s
-- `12dxi` asked Hard: 15.8 s
+- `7dx` asked Hard: 4.8 s
+- `10du` asked Unreasonable: 6.5 s
+- `8dxi` asked Hard: 3.3 s
+- `10dui` asked Unreasonable: 11.1 s
 - `3dn` refused: No 3x3 puzzle is Normal.
 - `3dh` refused: No 3x3 puzzle is Tricky.
 - `3dx` refused: No 3x3 puzzle is Hard.
@@ -307,47 +318,51 @@
 - `10dti` refused: Easy puzzles must have an identity.
 - `11dti` refused: Easy puzzles must have an identity.
 - `12dti` refused: Easy puzzles must have an identity.
-- left out: `9dx` `10dx` `11dx` `12dx` `12du` `11dui` `12dui`
+- left out: `9dx` `10dx` `11dx` `11du` `12dx` `12du` `9dxi` `10dxi` `11dxi` `11dui` `12dxi` `12dui`
 
 ## keen
 
-61 cells dealt, 6 refused, 3 left out as slow.
+54 cells dealt, 15 refused, 1 left out as slow.
 
-- `4dxm` asked Hard: gave up on 2
-- `4dum` asked Unreasonable: gave up on 2
-- `5dxm` asked Hard: gave up on 3
-- `5dum` asked Unreasonable: gave up on 3
-- `7dxm` asked Hard: gave up on 2
-- `7dum` asked Unreasonable: gave up on 2
-- `8dhm` asked Tricky: gave up on 1; 3.4 s
-- `8dxm` asked Hard: gave up on 1; 3.8 s
-- `8dum` asked Unreasonable: gave up on 1; 4.8 s
-- `9dnm` asked Normal: 3.5 s
+- `4dum` asked Unreasonable: 4.5 s
+- `8dhm` asked Tricky: 6.3 s
+- `9dnm` asked Normal: 4.5 s
 - `3dh` refused: No 3x3 puzzle is Tricky.
 - `3dx` refused: No 3x3 puzzle is Hard.
 - `3du` refused: No 3x3 puzzle is Unreasonable.
 - `3dhm` refused: No 3x3 puzzle is Tricky.
 - `3dxm` refused: No 3x3 puzzle is Hard.
 - `3dum` refused: No 3x3 puzzle is Unreasonable.
-- left out: `9dhm` `9dxm` `9dum`
+- `5dxm` refused: Hard 5x5 puzzles with multiplication only are too rare to deal.
+- `5dum` refused: Unreasonable 5x5 puzzles with multiplication only are too rare to deal.
+- `7dxm` refused: Hard 7x7 puzzles with multiplication only are too rare to deal.
+- `7dum` refused: Unreasonable 7x7 puzzles with multiplication only are too rare to deal.
+- `8dxm` refused: Hard 8x8 puzzles with multiplication only are too rare to deal.
+- `8dum` refused: Unreasonable 8x8 puzzles with multiplication only are too rare to deal.
+- `9dhm` refused: Tricky 9x9 puzzles with multiplication only are too rare to deal.
+- `9dxm` refused: Hard 9x9 puzzles with multiplication only are too rare to deal.
+- `9dum` refused: Unreasonable 9x9 puzzles with multiplication only are too rare to deal.
+- left out: `6dum`
 
 ## lightup
 
-213 cells dealt, 75 refused, 0 left out as slow.
+268 cells dealt, 132 refused, 80 left out as slow.
 
-- `3x3b20s4d1` asked Normal: gave up on 3
-- `3x3b20s4d2` asked Unreasonable: gave up on 3
-- `4x4b20s4d2` asked Unreasonable: gave up on 2
-- `2x2b20s2d1` asked Normal: gave up on 3
-- `2x2b20s2d2` asked Unreasonable: gave up on 3
-- `3x3b20s2d2` asked Unreasonable: gave up on 3
-- `4x4b20s2d2` asked Unreasonable: gave up on 1
-- `2x10b20s2d2` asked Unreasonable: gave up on 1
-- `10x2b20s2d2` asked Unreasonable: gave up on 1
-- `14x2b20s2d2` asked Unreasonable: gave up on 1
-- `2x2b20s4d0` refused: Width or height must be at least 3 for 4-way symmetry.
-- `2x2b20s4d1` refused: Width or height must be at least 3 for 4-way symmetry.
-- `2x2b20s4d2` refused: Width or height must be at least 3 for 4-way symmetry.
+- `12x12b11s4d2` asked Unreasonable: 3.6 s
+- `11x11b10s2d2` asked Unreasonable: 3.3 s
+- `14x14b5s2d2` asked Unreasonable: 10.7 s
+- `2x2b1s4d0` refused: Percentage of black squares must be between 5% and 100%.
+- `2x2b1s4d1` refused: Percentage of black squares must be between 5% and 100%.
+- `2x2b1s4d2` refused: Percentage of black squares must be between 5% and 100%.
+- `3x3b2s4d0` refused: Percentage of black squares must be between 5% and 100%.
+- `3x3b2s4d1` refused: Percentage of black squares must be between 5% and 100%.
+- `3x3b2s4d2` refused: Percentage of black squares must be between 5% and 100%.
+- `4x4b3s4d0` refused: Percentage of black squares must be between 5% and 100%.
+- `4x4b3s4d1` refused: Percentage of black squares must be between 5% and 100%.
+- `4x4b3s4d2` refused: Percentage of black squares must be between 5% and 100%.
+- `5x5b4s4d0` refused: Percentage of black squares must be between 5% and 100%.
+- `5x5b4s4d1` refused: Percentage of black squares must be between 5% and 100%.
+- `5x5b4s4d2` refused: Percentage of black squares must be between 5% and 100%.
 - `2x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
 - `2x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
 - `2x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
@@ -420,33 +435,581 @@
 - `7x14b20s4d0` refused: 4-fold symmetry is only available with square grids.
 - `7x14b20s4d1` refused: 4-fold symmetry is only available with square grids.
 - `7x14b20s4d2` refused: 4-fold symmetry is only available with square grids.
+- `7x7b1s4d0` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b1s4d1` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b1s4d2` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b2s4d0` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b2s4d1` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b2s4d2` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b3s4d0` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b3s4d1` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b3s4d2` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b4s4d0` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b4s4d1` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b4s4d2` refused: Percentage of black squares must be between 5% and 100%.
+- `2x2b1s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `2x2b1s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `2x2b1s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `3x3b2s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `3x3b2s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `3x3b2s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `4x4b3s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `4x4b3s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `4x4b3s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `5x5b4s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `5x5b4s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `5x5b4s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b1s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b1s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b1s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b2s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b2s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b2s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b3s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b3s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b3s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b4s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b4s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `10x10b4s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b1s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b1s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b1s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b2s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b2s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b2s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b3s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b3s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b3s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b4s2d0` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b4s2d1` refused: Percentage of black squares must be between 5% and 100%.
+- `14x14b4s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- left out: `13x13b12s4d2` `14x14b13s4d2` `14x14b14s4d2` `14x14b15s4d2` `14x14b16s4d2` `14x14b17s4d2` `14x14b18s4d2` `14x14b19s4d2` `14x14b20s4d2` `7x7b20s4d2` `7x7b5s4d2` `7x7b7s4d2` `7x7b8s4d2` `7x7b9s4d2` `7x7b10s4d2` `7x7b11s4d2` `7x7b12s4d2` `7x7b13s4d2` `7x7b14s4d2` `7x7b15s4d2` `7x7b16s4d2` `7x7b17s4d2` `7x7b18s4d2` `7x7b19s4d2` `12x12b11s2d2` `13x13b12s2d2` `14x14b13s2d2` `14x14b14s2d2` `14x14b15s2d2` `14x14b16s2d2` `14x14b17s2d2` `14x14b18s2d2` `14x14b19s2d2` `14x14b20s2d2` `2x10b20s2d2` `3x10b20s2d2` `4x10b20s2d2` `5x10b20s2d2` `6x10b20s2d2` `7x10b20s2d2` `8x10b20s2d2` `9x10b20s2d2` `10x10b20s2d2` `11x10b20s2d2` `12x10b20s2d2` `13x10b20s2d2` `14x10b20s2d2` `10x2b20s2d2` `10x3b20s2d2` `10x4b20s2d2` `10x5b20s2d2` `10x6b20s2d2` `10x7b20s2d2` `10x8b20s2d2` `10x9b20s2d2` `10x11b20s2d2` `10x12b20s2d2` `10x13b20s2d2` `10x14b20s2d2` `10x10b5s2d2` `10x10b6s2d2` `10x10b7s2d2` `10x10b8s2d2` `10x10b10s2d2` `10x10b11s2d2` `10x10b12s2d2` `10x10b13s2d2` `10x10b14s2d2` `10x10b15s2d2` `10x10b16s2d2` `10x10b17s2d2` `10x10b18s2d2` `10x10b19s2d2` `14x14b6s2d2` `14x14b7s2d2` `14x14b8s2d2` `14x14b9s2d2` `14x14b10s2d2` `14x14b11s2d2` `14x14b12s2d2`
 
 ## loopy
 
-76 cells dealt, 0 refused, 0 left out as slow.
+1334 cells dealt, 464 refused, 758 left out as slow.
+
+- `8x8t7dh` asked Hard: 3.1 s
+- `9x9t7dt` asked Tricky: 4.3 s
+- `10x10t7dn` asked Normal: 3.4 s
+- `10x12t7de` asked Easy: 3.1 s
+- `4x4t11dn` asked Normal: 7.4 s
+- `4x4t11dh` asked Hard: 7.3 s
+- `3x3t12dn` asked Normal: gave up on 1; 6.6 s
+- `9x9t5dh` asked Hard: 3.3 s
+- `10x10t5dn` asked Normal: 3.3 s
+- `10x10t5dt` asked Tricky: 5.0 s
+- `10x14t5de` asked Easy: 3.1 s
+- `10x13t14dh` asked Hard: 3.8 s
+- `10x14t6dh` asked Hard: 3.1 s
+- `9x9t8dn` asked Normal: 3.4 s
+- `9x9t8dt` asked Tricky: 3.1 s
+- `9x9t8dh` asked Hard: 4.8 s
+- `10x12t8de` asked Easy: 3.5 s
+- `10x10t9dh` asked Hard: 3.2 s
+- `10x11t9de` asked Easy: 8.0 s
+- `10x12t9dn` asked Normal: 3.2 s
+- `10x12t9dt` asked Tricky: 3.8 s
+- `8x8t10dt` asked Tricky: 3.6 s
+- `8x8t10dh` asked Hard: 4.1 s
+- `9x9t10dn` asked Normal: 3.5 s
+- `10x11t10de` asked Easy: 3.2 s
+- `6x6t13dh` asked Hard: 3.5 s
+- `7x7t13dt` asked Tricky: 3.5 s
+- `8x8t13dn` asked Normal: 4.4 s
+- `9x9t13de` asked Easy: 3.4 s
+- `9x9t15de` asked Easy: 4.2 s
+- `9x9t15dn` asked Normal: 10.5 s
+- `9x9t15dh` asked Hard: 6.6 s
+- `10x10t15dt` asked Tricky: 6.1 s
+- `1x1t0de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t0dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t0dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t0dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t0de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t0dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t0dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t0dh` refused: Width and height for this grid type must both be at least 3.
+- `1x7t0de` refused: Width and height for this grid type must both be at least 3.
+- `1x7t0dn` refused: Width and height for this grid type must both be at least 3.
+- `1x7t0dt` refused: Width and height for this grid type must both be at least 3.
+- `1x7t0dh` refused: Width and height for this grid type must both be at least 3.
+- `2x7t0de` refused: Width and height for this grid type must both be at least 3.
+- `2x7t0dn` refused: Width and height for this grid type must both be at least 3.
+- `2x7t0dt` refused: Width and height for this grid type must both be at least 3.
+- `2x7t0dh` refused: Width and height for this grid type must both be at least 3.
+- `7x1t0de` refused: Width and height for this grid type must both be at least 3.
+- `7x1t0dn` refused: Width and height for this grid type must both be at least 3.
+- `7x1t0dt` refused: Width and height for this grid type must both be at least 3.
+- `7x1t0dh` refused: Width and height for this grid type must both be at least 3.
+- `7x2t0de` refused: Width and height for this grid type must both be at least 3.
+- `7x2t0dn` refused: Width and height for this grid type must both be at least 3.
+- `7x2t0dt` refused: Width and height for this grid type must both be at least 3.
+- `7x2t0dh` refused: Width and height for this grid type must both be at least 3.
+- `1x10t0de` refused: Width and height for this grid type must both be at least 3.
+- `1x10t0dn` refused: Width and height for this grid type must both be at least 3.
+- `1x10t0dt` refused: Width and height for this grid type must both be at least 3.
+- `1x10t0dh` refused: Width and height for this grid type must both be at least 3.
+- `2x10t0de` refused: Width and height for this grid type must both be at least 3.
+- `2x10t0dn` refused: Width and height for this grid type must both be at least 3.
+- `2x10t0dt` refused: Width and height for this grid type must both be at least 3.
+- `2x10t0dh` refused: Width and height for this grid type must both be at least 3.
+- `10x1t0de` refused: Width and height for this grid type must both be at least 3.
+- `10x1t0dn` refused: Width and height for this grid type must both be at least 3.
+- `10x1t0dt` refused: Width and height for this grid type must both be at least 3.
+- `10x1t0dh` refused: Width and height for this grid type must both be at least 3.
+- `10x2t0de` refused: Width and height for this grid type must both be at least 3.
+- `10x2t0dn` refused: Width and height for this grid type must both be at least 3.
+- `10x2t0dt` refused: Width and height for this grid type must both be at least 3.
+- `10x2t0dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t1de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t1dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t1dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t1dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t1de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t1dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t1dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t1dh` refused: Width and height for this grid type must both be at least 3.
+- `1x14t1de` refused: Width and height for this grid type must both be at least 3.
+- `1x14t1dn` refused: Width and height for this grid type must both be at least 3.
+- `1x14t1dt` refused: Width and height for this grid type must both be at least 3.
+- `1x14t1dh` refused: Width and height for this grid type must both be at least 3.
+- `2x14t1de` refused: Width and height for this grid type must both be at least 3.
+- `2x14t1dn` refused: Width and height for this grid type must both be at least 3.
+- `2x14t1dt` refused: Width and height for this grid type must both be at least 3.
+- `2x14t1dh` refused: Width and height for this grid type must both be at least 3.
+- `9x1t1de` refused: Width and height for this grid type must both be at least 3.
+- `9x1t1dn` refused: Width and height for this grid type must both be at least 3.
+- `9x1t1dt` refused: Width and height for this grid type must both be at least 3.
+- `9x1t1dh` refused: Width and height for this grid type must both be at least 3.
+- `9x2t1de` refused: Width and height for this grid type must both be at least 3.
+- `9x2t1dn` refused: Width and height for this grid type must both be at least 3.
+- `9x2t1dt` refused: Width and height for this grid type must both be at least 3.
+- `9x2t1dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t3de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t3dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t3dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t3dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t3de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t3dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t3dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t3dh` refused: Width and height for this grid type must both be at least 3.
+- `1x7t3de` refused: Width and height for this grid type must both be at least 3.
+- `1x7t3dn` refused: Width and height for this grid type must both be at least 3.
+- `1x7t3dt` refused: Width and height for this grid type must both be at least 3.
+- `1x7t3dh` refused: Width and height for this grid type must both be at least 3.
+- `2x7t3de` refused: Width and height for this grid type must both be at least 3.
+- `2x7t3dn` refused: Width and height for this grid type must both be at least 3.
+- `2x7t3dt` refused: Width and height for this grid type must both be at least 3.
+- `2x7t3dh` refused: Width and height for this grid type must both be at least 3.
+- `7x1t3de` refused: Width and height for this grid type must both be at least 3.
+- `7x1t3dn` refused: Width and height for this grid type must both be at least 3.
+- `7x1t3dt` refused: Width and height for this grid type must both be at least 3.
+- `7x1t3dh` refused: Width and height for this grid type must both be at least 3.
+- `7x2t3de` refused: Width and height for this grid type must both be at least 3.
+- `7x2t3dn` refused: Width and height for this grid type must both be at least 3.
+- `7x2t3dt` refused: Width and height for this grid type must both be at least 3.
+- `7x2t3dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t4de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t4dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t4dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t4dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t4de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t4dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t4dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t4dh` refused: Width and height for this grid type must both be at least 3.
+- `3x3t4de` refused: At least one of width and height for this grid type must be at least 4.
+- `3x3t4dn` refused: At least one of width and height for this grid type must be at least 4.
+- `3x3t4dt` refused: At least one of width and height for this grid type must be at least 4.
+- `3x3t4dh` refused: At least one of width and height for this grid type must be at least 4.
+- `1x9t4de` refused: Width and height for this grid type must both be at least 3.
+- `1x9t4dn` refused: Width and height for this grid type must both be at least 3.
+- `1x9t4dt` refused: Width and height for this grid type must both be at least 3.
+- `1x9t4dh` refused: Width and height for this grid type must both be at least 3.
+- `2x9t4de` refused: Width and height for this grid type must both be at least 3.
+- `2x9t4dn` refused: Width and height for this grid type must both be at least 3.
+- `2x9t4dt` refused: Width and height for this grid type must both be at least 3.
+- `2x9t4dh` refused: Width and height for this grid type must both be at least 3.
+- `9x1t4de` refused: Width and height for this grid type must both be at least 3.
+- `9x1t4dn` refused: Width and height for this grid type must both be at least 3.
+- `9x1t4dt` refused: Width and height for this grid type must both be at least 3.
+- `9x1t4dh` refused: Width and height for this grid type must both be at least 3.
+- `9x2t4de` refused: Width and height for this grid type must both be at least 3.
+- `9x2t4dn` refused: Width and height for this grid type must both be at least 3.
+- `9x2t4dt` refused: Width and height for this grid type must both be at least 3.
+- `9x2t4dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t7de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t7dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t7dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t7dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t7de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t7dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t7dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t7dh` refused: Width and height for this grid type must both be at least 3.
+- `1x6t7de` refused: Width and height for this grid type must both be at least 3.
+- `1x6t7dn` refused: Width and height for this grid type must both be at least 3.
+- `1x6t7dt` refused: Width and height for this grid type must both be at least 3.
+- `1x6t7dh` refused: Width and height for this grid type must both be at least 3.
+- `2x6t7de` refused: Width and height for this grid type must both be at least 3.
+- `2x6t7dn` refused: Width and height for this grid type must both be at least 3.
+- `2x6t7dt` refused: Width and height for this grid type must both be at least 3.
+- `2x6t7dh` refused: Width and height for this grid type must both be at least 3.
+- `4x1t7de` refused: Width and height for this grid type must both be at least 3.
+- `4x1t7dn` refused: Width and height for this grid type must both be at least 3.
+- `4x1t7dt` refused: Width and height for this grid type must both be at least 3.
+- `4x1t7dh` refused: Width and height for this grid type must both be at least 3.
+- `4x2t7de` refused: Width and height for this grid type must both be at least 3.
+- `4x2t7dn` refused: Width and height for this grid type must both be at least 3.
+- `4x2t7dt` refused: Width and height for this grid type must both be at least 3.
+- `4x2t7dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t11de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t11dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t11dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t11dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t11de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t11dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t11dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t11dh` refused: Width and height for this grid type must both be at least 3.
+- `3x3t11de` refused: Width for Penrose (kite/dart) must be at least 4.
+- `3x3t11dn` refused: Width for Penrose (kite/dart) must be at least 4.
+- `3x3t11dt` refused: Width for Penrose (kite/dart) must be at least 4.
+- `3x3t11dh` refused: Width for Penrose (kite/dart) must be at least 4.
+- `1x10t11de` refused: Width and height for this grid type must both be at least 3.
+- `1x10t11dn` refused: Width and height for this grid type must both be at least 3.
+- `1x10t11dt` refused: Width and height for this grid type must both be at least 3.
+- `1x10t11dh` refused: Width and height for this grid type must both be at least 3.
+- `2x10t11de` refused: Width and height for this grid type must both be at least 3.
+- `2x10t11dn` refused: Width and height for this grid type must both be at least 3.
+- `2x10t11dt` refused: Width and height for this grid type must both be at least 3.
+- `2x10t11dh` refused: Width and height for this grid type must both be at least 3.
+- `3x10t11de` refused: Width for Penrose (kite/dart) must be at least 4.
+- `3x10t11dn` refused: Width for Penrose (kite/dart) must be at least 4.
+- `3x10t11dt` refused: Width for Penrose (kite/dart) must be at least 4.
+- `3x10t11dh` refused: Width for Penrose (kite/dart) must be at least 4.
+- `10x1t11de` refused: Width and height for this grid type must both be at least 3.
+- `10x1t11dn` refused: Width and height for this grid type must both be at least 3.
+- `10x1t11dt` refused: Width and height for this grid type must both be at least 3.
+- `10x1t11dh` refused: Width and height for this grid type must both be at least 3.
+- `10x2t11de` refused: Width and height for this grid type must both be at least 3.
+- `10x2t11dn` refused: Width and height for this grid type must both be at least 3.
+- `10x2t11dt` refused: Width and height for this grid type must both be at least 3.
+- `10x2t11dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t12de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t12dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t12dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t12dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t12de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t12dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t12dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t12dh` refused: Width and height for this grid type must both be at least 3.
+- `1x10t12de` refused: Width and height for this grid type must both be at least 3.
+- `1x10t12dn` refused: Width and height for this grid type must both be at least 3.
+- `1x10t12dt` refused: Width and height for this grid type must both be at least 3.
+- `1x10t12dh` refused: Width and height for this grid type must both be at least 3.
+- `2x10t12de` refused: Width and height for this grid type must both be at least 3.
+- `2x10t12dn` refused: Width and height for this grid type must both be at least 3.
+- `2x10t12dt` refused: Width and height for this grid type must both be at least 3.
+- `2x10t12dh` refused: Width and height for this grid type must both be at least 3.
+- `10x1t12de` refused: Width and height for this grid type must both be at least 3.
+- `10x1t12dn` refused: Width and height for this grid type must both be at least 3.
+- `10x1t12dt` refused: Width and height for this grid type must both be at least 3.
+- `10x1t12dh` refused: Width and height for this grid type must both be at least 3.
+- `10x2t12de` refused: Width and height for this grid type must both be at least 3.
+- `10x2t12dn` refused: Width and height for this grid type must both be at least 3.
+- `10x2t12dt` refused: Width and height for this grid type must both be at least 3.
+- `10x2t12dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t2de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t2dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t2dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t2dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t2de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t2dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t2dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t2dh` refused: Width and height for this grid type must both be at least 3.
+- `1x10t2de` refused: Width and height for this grid type must both be at least 3.
+- `1x10t2dn` refused: Width and height for this grid type must both be at least 3.
+- `1x10t2dt` refused: Width and height for this grid type must both be at least 3.
+- `1x10t2dh` refused: Width and height for this grid type must both be at least 3.
+- `2x10t2de` refused: Width and height for this grid type must both be at least 3.
+- `2x10t2dn` refused: Width and height for this grid type must both be at least 3.
+- `2x10t2dt` refused: Width and height for this grid type must both be at least 3.
+- `2x10t2dh` refused: Width and height for this grid type must both be at least 3.
+- `10x1t2de` refused: Width and height for this grid type must both be at least 3.
+- `10x1t2dn` refused: Width and height for this grid type must both be at least 3.
+- `10x1t2dt` refused: Width and height for this grid type must both be at least 3.
+- `10x1t2dh` refused: Width and height for this grid type must both be at least 3.
+- `10x2t2de` refused: Width and height for this grid type must both be at least 3.
+- `10x2t2dn` refused: Width and height for this grid type must both be at least 3.
+- `10x2t2dt` refused: Width and height for this grid type must both be at least 3.
+- `10x2t2dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t5de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t5dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t5dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t5dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t5de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t5dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t5dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t5dh` refused: Width and height for this grid type must both be at least 3.
+- `1x5t5de` refused: Width and height for this grid type must both be at least 3.
+- `1x5t5dn` refused: Width and height for this grid type must both be at least 3.
+- `1x5t5dt` refused: Width and height for this grid type must both be at least 3.
+- `1x5t5dh` refused: Width and height for this grid type must both be at least 3.
+- `2x5t5de` refused: Width and height for this grid type must both be at least 3.
+- `2x5t5dn` refused: Width and height for this grid type must both be at least 3.
+- `2x5t5dt` refused: Width and height for this grid type must both be at least 3.
+- `2x5t5dh` refused: Width and height for this grid type must both be at least 3.
+- `4x1t5de` refused: Width and height for this grid type must both be at least 3.
+- `4x1t5dn` refused: Width and height for this grid type must both be at least 3.
+- `4x1t5dt` refused: Width and height for this grid type must both be at least 3.
+- `4x1t5dh` refused: Width and height for this grid type must both be at least 3.
+- `4x2t5de` refused: Width and height for this grid type must both be at least 3.
+- `4x2t5dn` refused: Width and height for this grid type must both be at least 3.
+- `4x2t5dt` refused: Width and height for this grid type must both be at least 3.
+- `4x2t5dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t14de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t14dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t14dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t14dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t14de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t14dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t14dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t14dh` refused: Width and height for this grid type must both be at least 3.
+- `1x6t14de` refused: Width and height for this grid type must both be at least 3.
+- `1x6t14dn` refused: Width and height for this grid type must both be at least 3.
+- `1x6t14dt` refused: Width and height for this grid type must both be at least 3.
+- `1x6t14dh` refused: Width and height for this grid type must both be at least 3.
+- `2x6t14de` refused: Width and height for this grid type must both be at least 3.
+- `2x6t14dn` refused: Width and height for this grid type must both be at least 3.
+- `2x6t14dt` refused: Width and height for this grid type must both be at least 3.
+- `2x6t14dh` refused: Width and height for this grid type must both be at least 3.
+- `3x1t14de` refused: Width and height for this grid type must both be at least 3.
+- `3x1t14dn` refused: Width and height for this grid type must both be at least 3.
+- `3x1t14dt` refused: Width and height for this grid type must both be at least 3.
+- `3x1t14dh` refused: Width and height for this grid type must both be at least 3.
+- `3x2t14de` refused: Width and height for this grid type must both be at least 3.
+- `3x2t14dn` refused: Width and height for this grid type must both be at least 3.
+- `3x2t14dt` refused: Width and height for this grid type must both be at least 3.
+- `3x2t14dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t6de` refused: Width and height for this grid type must both be at least 3.
+- `1x1t6dn` refused: Width and height for this grid type must both be at least 3.
+- `1x1t6dt` refused: Width and height for this grid type must both be at least 3.
+- `1x1t6dh` refused: Width and height for this grid type must both be at least 3.
+- `2x2t6de` refused: Width and height for this grid type must both be at least 3.
+- `2x2t6dn` refused: Width and height for this grid type must both be at least 3.
+- `2x2t6dt` refused: Width and height for this grid type must both be at least 3.
+- `2x2t6dh` refused: Width and height for this grid type must both be at least 3.
+- `1x7t6de` refused: Width and height for this grid type must both be at least 3.
+- `1x7t6dn` refused: Width and height for this grid type must both be at least 3.
+- `1x7t6dt` refused: Width and height for this grid type must both be at least 3.
+- `1x7t6dh` refused: Width and height for this grid type must both be at least 3.
+- `2x7t6de` refused: Width and height for this grid type must both be at least 3.
+- `2x7t6dn` refused: Width and height for this grid type must both be at least 3.
+- `2x7t6dt` refused: Width and height for this grid type must both be at least 3.
+- `2x7t6dh` refused: Width and height for this grid type must both be at least 3.
+- `7x1t6de` refused: Width and height for this grid type must both be at least 3.
+- `7x1t6dn` refused: Width and height for this grid type must both be at least 3.
+- `7x1t6dt` refused: Width and height for this grid type must both be at least 3.
+- `7x1t6dh` refused: Width and height for this grid type must both be at least 3.
+- `7x2t6de` refused: Width and height for this grid type must both be at least 3.
+- `7x2t6dn` refused: Width and height for this grid type must both be at least 3.
+- `7x2t6dt` refused: Width and height for this grid type must both be at least 3.
+- `7x2t6dh` refused: Width and height for this grid type must both be at least 3.
+- `1x1t8de` refused: At least one of width and height for this grid type must be at least 2.
+- `1x1t8dn` refused: At least one of width and height for this grid type must be at least 2.
+- `1x1t8dt` refused: At least one of width and height for this grid type must be at least 2.
+- `1x1t8dh` refused: At least one of width and height for this grid type must be at least 2.
+- `1x1t9de` refused: Width and height for this grid type must both be at least 2.
+- `1x1t9dn` refused: Width and height for this grid type must both be at least 2.
+- `1x1t9dt` refused: Width and height for this grid type must both be at least 2.
+- `1x1t9dh` refused: Width and height for this grid type must both be at least 2.
+- `1x6t9de` refused: Width and height for this grid type must both be at least 2.
+- `1x6t9dn` refused: Width and height for this grid type must both be at least 2.
+- `1x6t9dt` refused: Width and height for this grid type must both be at least 2.
+- `1x6t9dh` refused: Width and height for this grid type must both be at least 2.
+- `3x1t9de` refused: Width and height for this grid type must both be at least 2.
+- `3x1t9dn` refused: Width and height for this grid type must both be at least 2.
+- `3x1t9dt` refused: Width and height for this grid type must both be at least 2.
+- `3x1t9dh` refused: Width and height for this grid type must both be at least 2.
+- `1x1t10de` refused: Width and height for this grid type must both be at least 2.
+- `1x1t10dn` refused: Width and height for this grid type must both be at least 2.
+- `1x1t10dt` refused: Width and height for this grid type must both be at least 2.
+- `1x1t10dh` refused: Width and height for this grid type must both be at least 2.
+- `1x6t10de` refused: Width and height for this grid type must both be at least 2.
+- `1x6t10dn` refused: Width and height for this grid type must both be at least 2.
+- `1x6t10dt` refused: Width and height for this grid type must both be at least 2.
+- `1x6t10dh` refused: Width and height for this grid type must both be at least 2.
+- `3x1t10de` refused: Width and height for this grid type must both be at least 2.
+- `3x1t10dn` refused: Width and height for this grid type must both be at least 2.
+- `3x1t10dt` refused: Width and height for this grid type must both be at least 2.
+- `3x1t10dh` refused: Width and height for this grid type must both be at least 2.
+- `1x1t13de` refused: Width and height for this grid type must both be at least 2.
+- `1x1t13dn` refused: Width and height for this grid type must both be at least 2.
+- `1x1t13dt` refused: Width and height for this grid type must both be at least 2.
+- `1x1t13dh` refused: Width and height for this grid type must both be at least 2.
+- `1x5t13de` refused: Width and height for this grid type must both be at least 2.
+- `1x5t13dn` refused: Width and height for this grid type must both be at least 2.
+- `1x5t13dt` refused: Width and height for this grid type must both be at least 2.
+- `1x5t13dh` refused: Width and height for this grid type must both be at least 2.
+- `3x1t13de` refused: Width and height for this grid type must both be at least 2.
+- `3x1t13dn` refused: Width and height for this grid type must both be at least 2.
+- `3x1t13dt` refused: Width and height for this grid type must both be at least 2.
+- `3x1t13dh` refused: Width and height for this grid type must both be at least 2.
+- `1x1t15de` refused: Width and height for this grid type must both be at least 2.
+- `1x1t15dn` refused: Width and height for this grid type must both be at least 2.
+- `1x1t15dt` refused: Width and height for this grid type must both be at least 2.
+- `1x1t15dh` refused: Width and height for this grid type must both be at least 2.
+- `1x5t15de` refused: Width and height for this grid type must both be at least 2.
+- `1x5t15dn` refused: Width and height for this grid type must both be at least 2.
+- `1x5t15dt` refused: Width and height for this grid type must both be at least 2.
+- `1x5t15dh` refused: Width and height for this grid type must both be at least 2.
+- `4x1t15de` refused: Width and height for this grid type must both be at least 2.
+- `4x1t15dn` refused: Width and height for this grid type must both be at least 2.
+- `4x1t15dt` refused: Width and height for this grid type must both be at least 2.
+- `4x1t15dh` refused: Width and height for this grid type must both be at least 2.
+- `1x1t16de` refused: Width and height for this grid type must both be at least 6.
+- `1x1t16dn` refused: Width and height for this grid type must both be at least 6.
+- `1x1t16dt` refused: Width and height for this grid type must both be at least 6.
+- `1x1t16dh` refused: Width and height for this grid type must both be at least 6.
+- `2x2t16de` refused: Width and height for this grid type must both be at least 6.
+- `2x2t16dn` refused: Width and height for this grid type must both be at least 6.
+- `2x2t16dt` refused: Width and height for this grid type must both be at least 6.
+- `2x2t16dh` refused: Width and height for this grid type must both be at least 6.
+- `3x3t16de` refused: Width and height for this grid type must both be at least 6.
+- `3x3t16dn` refused: Width and height for this grid type must both be at least 6.
+- `3x3t16dt` refused: Width and height for this grid type must both be at least 6.
+- `3x3t16dh` refused: Width and height for this grid type must both be at least 6.
+- `4x4t16de` refused: Width and height for this grid type must both be at least 6.
+- `4x4t16dn` refused: Width and height for this grid type must both be at least 6.
+- `4x4t16dt` refused: Width and height for this grid type must both be at least 6.
+- `4x4t16dh` refused: Width and height for this grid type must both be at least 6.
+- `5x5t16de` refused: Width and height for this grid type must both be at least 6.
+- `5x5t16dn` refused: Width and height for this grid type must both be at least 6.
+- `5x5t16dt` refused: Width and height for this grid type must both be at least 6.
+- `5x5t16dh` refused: Width and height for this grid type must both be at least 6.
+- `1x11t16de` refused: Width and height for this grid type must both be at least 6.
+- `1x11t16dn` refused: Width and height for this grid type must both be at least 6.
+- `1x11t16dt` refused: Width and height for this grid type must both be at least 6.
+- `1x11t16dh` refused: Width and height for this grid type must both be at least 6.
+- `2x11t16de` refused: Width and height for this grid type must both be at least 6.
+- `2x11t16dn` refused: Width and height for this grid type must both be at least 6.
+- `2x11t16dt` refused: Width and height for this grid type must both be at least 6.
+- `2x11t16dh` refused: Width and height for this grid type must both be at least 6.
+- `3x11t16de` refused: Width and height for this grid type must both be at least 6.
+- `3x11t16dn` refused: Width and height for this grid type must both be at least 6.
+- `3x11t16dt` refused: Width and height for this grid type must both be at least 6.
+- `3x11t16dh` refused: Width and height for this grid type must both be at least 6.
+- `4x11t16de` refused: Width and height for this grid type must both be at least 6.
+- `4x11t16dn` refused: Width and height for this grid type must both be at least 6.
+- `4x11t16dt` refused: Width and height for this grid type must both be at least 6.
+- `4x11t16dh` refused: Width and height for this grid type must both be at least 6.
+- `5x11t16de` refused: Width and height for this grid type must both be at least 6.
+- `5x11t16dn` refused: Width and height for this grid type must both be at least 6.
+- `5x11t16dt` refused: Width and height for this grid type must both be at least 6.
+- `5x11t16dh` refused: Width and height for this grid type must both be at least 6.
+- `9x1t16de` refused: Width and height for this grid type must both be at least 6.
+- `9x1t16dn` refused: Width and height for this grid type must both be at least 6.
+- `9x1t16dt` refused: Width and height for this grid type must both be at least 6.
+- `9x1t16dh` refused: Width and height for this grid type must both be at least 6.
+- `9x2t16de` refused: Width and height for this grid type must both be at least 6.
+- `9x2t16dn` refused: Width and height for this grid type must both be at least 6.
+- `9x2t16dt` refused: Width and height for this grid type must both be at least 6.
+- `9x2t16dh` refused: Width and height for this grid type must both be at least 6.
+- `9x3t16de` refused: Width and height for this grid type must both be at least 6.
+- `9x3t16dn` refused: Width and height for this grid type must both be at least 6.
+- `9x3t16dt` refused: Width and height for this grid type must both be at least 6.
+- `9x3t16dh` refused: Width and height for this grid type must both be at least 6.
+- `9x4t16de` refused: Width and height for this grid type must both be at least 6.
+- `9x4t16dn` refused: Width and height for this grid type must both be at least 6.
+- `9x4t16dt` refused: Width and height for this grid type must both be at least 6.
+- `9x4t16dh` refused: Width and height for this grid type must both be at least 6.
+- `9x5t16de` refused: Width and height for this grid type must both be at least 6.
+- `9x5t16dn` refused: Width and height for this grid type must both be at least 6.
+- `9x5t16dt` refused: Width and height for this grid type must both be at least 6.
+- `9x5t16dh` refused: Width and height for this grid type must both be at least 6.
+- `1x1t17de` refused: Width and height for this grid type must both be at least 6.
+- `1x1t17dn` refused: Width and height for this grid type must both be at least 6.
+- `1x1t17dt` refused: Width and height for this grid type must both be at least 6.
+- `1x1t17dh` refused: Width and height for this grid type must both be at least 6.
+- `2x2t17de` refused: Width and height for this grid type must both be at least 6.
+- `2x2t17dn` refused: Width and height for this grid type must both be at least 6.
+- `2x2t17dt` refused: Width and height for this grid type must both be at least 6.
+- `2x2t17dh` refused: Width and height for this grid type must both be at least 6.
+- `3x3t17de` refused: Width and height for this grid type must both be at least 6.
+- `3x3t17dn` refused: Width and height for this grid type must both be at least 6.
+- `3x3t17dt` refused: Width and height for this grid type must both be at least 6.
+- `3x3t17dh` refused: Width and height for this grid type must both be at least 6.
+- `4x4t17de` refused: Width and height for this grid type must both be at least 6.
+- `4x4t17dn` refused: Width and height for this grid type must both be at least 6.
+- `4x4t17dt` refused: Width and height for this grid type must both be at least 6.
+- `4x4t17dh` refused: Width and height for this grid type must both be at least 6.
+- `5x5t17de` refused: Width and height for this grid type must both be at least 6.
+- `5x5t17dn` refused: Width and height for this grid type must both be at least 6.
+- `5x5t17dt` refused: Width and height for this grid type must both be at least 6.
+- `5x5t17dh` refused: Width and height for this grid type must both be at least 6.
+- `1x10t17de` refused: Width and height for this grid type must both be at least 6.
+- `1x10t17dn` refused: Width and height for this grid type must both be at least 6.
+- `1x10t17dt` refused: Width and height for this grid type must both be at least 6.
+- `1x10t17dh` refused: Width and height for this grid type must both be at least 6.
+- `2x10t17de` refused: Width and height for this grid type must both be at least 6.
+- `2x10t17dn` refused: Width and height for this grid type must both be at least 6.
+- `2x10t17dt` refused: Width and height for this grid type must both be at least 6.
+- `2x10t17dh` refused: Width and height for this grid type must both be at least 6.
+- `3x10t17de` refused: Width and height for this grid type must both be at least 6.
+- `3x10t17dn` refused: Width and height for this grid type must both be at least 6.
+- `3x10t17dt` refused: Width and height for this grid type must both be at least 6.
+- `3x10t17dh` refused: Width and height for this grid type must both be at least 6.
+- `4x10t17de` refused: Width and height for this grid type must both be at least 6.
+- `4x10t17dn` refused: Width and height for this grid type must both be at least 6.
+- `4x10t17dt` refused: Width and height for this grid type must both be at least 6.
+- `4x10t17dh` refused: Width and height for this grid type must both be at least 6.
+- `5x10t17de` refused: Width and height for this grid type must both be at least 6.
+- `5x10t17dn` refused: Width and height for this grid type must both be at least 6.
+- `5x10t17dt` refused: Width and height for this grid type must both be at least 6.
+- `5x10t17dh` refused: Width and height for this grid type must both be at least 6.
+- `10x1t17de` refused: Width and height for this grid type must both be at least 6.
+- `10x1t17dn` refused: Width and height for this grid type must both be at least 6.
+- `10x1t17dt` refused: Width and height for this grid type must both be at least 6.
+- `10x1t17dh` refused: Width and height for this grid type must both be at least 6.
+- `10x2t17de` refused: Width and height for this grid type must both be at least 6.
+- `10x2t17dn` refused: Width and height for this grid type must both be at least 6.
+- `10x2t17dt` refused: Width and height for this grid type must both be at least 6.
+- `10x2t17dh` refused: Width and height for this grid type must both be at least 6.
+- `10x3t17de` refused: Width and height for this grid type must both be at least 6.
+- `10x3t17dn` refused: Width and height for this grid type must both be at least 6.
+- `10x3t17dt` refused: Width and height for this grid type must both be at least 6.
+- `10x3t17dh` refused: Width and height for this grid type must both be at least 6.
+- `10x4t17de` refused: Width and height for this grid type must both be at least 6.
+- `10x4t17dn` refused: Width and height for this grid type must both be at least 6.
+- `10x4t17dt` refused: Width and height for this grid type must both be at least 6.
+- `10x4t17dh` refused: Width and height for this grid type must both be at least 6.
+- `10x5t17de` refused: Width and height for this grid type must both be at least 6.
+- `10x5t17dn` refused: Width and height for this grid type must both be at least 6.
+- `10x5t17dt` refused: Width and height for this grid type must both be at least 6.
+- `10x5t17dh` refused: Width and height for this grid type must both be at least 6.
+- left out: `9x9t7dh` `10x10t7dt` `10x10t7dh` `10x11t7dn` `10x11t7dt` `10x11t7dh` `10x12t7dn` `10x12t7dt` `10x12t7dh` `10x13t7de` `10x13t7dn` `10x13t7dt` `10x13t7dh` `10x14t7de` `10x14t7dn` `10x14t7dt` `10x14t7dh` `3x6t7de` `3x6t7dn` `3x6t7dt` `3x6t7dh` `4x6t7de` `4x6t7dn` `4x6t7dt` `4x6t7dh` `5x6t7de` `5x6t7dn` `5x6t7dt` `5x6t7dh` `7x6t7de` `7x6t7dn` `7x6t7dt` `7x6t7dh` `8x6t7de` `8x6t7dn` `8x6t7dt` `8x6t7dh` `9x6t7de` `9x6t7dn` `9x6t7dt` `9x6t7dh` `10x6t7de` `10x6t7dn` `10x6t7dt` `10x6t7dh` `4x3t7de` `4x3t7dn` `4x3t7dt` `4x3t7dh` `4x5t7de` `4x5t7dn` `4x5t7dt` `4x5t7dh` `4x7t7de` `4x7t7dn` `4x7t7dt` `4x7t7dh` `4x8t7de` `4x8t7dn` `4x8t7dt` `4x8t7dh` `4x9t7de` `4x9t7dn` `4x9t7dt` `4x9t7dh` `4x10t7de` `4x10t7dn` `4x10t7dt` `4x10t7dh` `4x11t7de` `4x11t7dn` `4x11t7dt` `4x11t7dh` `4x12t7de` `4x12t7dn` `4x12t7dt` `4x12t7dh` `4x13t7de` `4x13t7dn` `4x13t7dt` `4x13t7dh` `4x14t7de` `4x14t7dn` `4x14t7dt` `4x14t7dh` `5x5t11dn` `5x5t11dh` `6x6t11dn` `6x6t11dh` `7x7t11dn` `7x7t11dh` `8x8t11dn` `8x8t11dh` `9x9t11dn` `9x9t11dh` `10x10t11dn` `10x10t11dh` `10x11t11dn` `10x11t11dh` `10x12t11dn` `10x12t11dh` `10x13t11dn` `10x13t11dh` `10x14t11dn` `10x14t11dh` `4x10t11dn` `4x10t11dh` `5x10t11dn` `5x10t11dh` `6x10t11dn` `6x10t11dh` `7x10t11dn` `7x10t11dh` `8x10t11dn` `8x10t11dh` `9x10t11dn` `9x10t11dh` `10x3t11dn` `10x3t11dh` `10x4t11dn` `10x4t11dh` `10x5t11dn` `10x5t11dh` `10x6t11dn` `10x6t11dh` `10x7t11dn` `10x7t11dh` `10x8t11dn` `10x8t11dh` `10x9t11dn` `10x9t11dh` `4x4t12dn` `5x5t12dn` `6x6t12dn` `7x7t12dn` `8x8t12dn` `9x9t12dn` `10x10t12dn` `10x11t12dn` `10x12t12dn` `10x13t12dn` `10x14t12dn` `3x10t12dn` `4x10t12dn` `5x10t12dn` `6x10t12dn` `7x10t12dn` `8x10t12dn` `9x10t12dn` `10x3t12dn` `10x4t12dn` `10x5t12dn` `10x6t12dn` `10x7t12dn` `10x8t12dn` `10x9t12dn` `10x10t5dh` `10x11t5dn` `10x11t5dt` `10x11t5dh` `10x12t5dn` `10x12t5dt` `10x12t5dh` `10x13t5dn` `10x13t5dt` `10x13t5dh` `10x14t5dn` `10x14t5dt` `10x14t5dh` `3x5t5de` `3x5t5dn` `3x5t5dt` `3x5t5dh` `4x5t5de` `4x5t5dn` `4x5t5dt` `4x5t5dh` `6x5t5de` `6x5t5dn` `6x5t5dt` `6x5t5dh` `7x5t5de` `7x5t5dn` `7x5t5dt` `7x5t5dh` `8x5t5de` `8x5t5dn` `8x5t5dt` `8x5t5dh` `9x5t5de` `9x5t5dn` `9x5t5dt` `9x5t5dh` `10x5t5de` `10x5t5dn` `10x5t5dt` `10x5t5dh` `4x3t5de` `4x3t5dn` `4x3t5dt` `4x3t5dh` `4x6t5de` `4x6t5dn` `4x6t5dt` `4x6t5dh` `4x7t5de` `4x7t5dn` `4x7t5dt` `4x7t5dh` `4x8t5de` `4x8t5dn` `4x8t5dt` `4x8t5dh` `4x9t5de` `4x9t5dn` `4x9t5dt` `4x9t5dh` `4x10t5de` `4x10t5dn` `4x10t5dt` `4x10t5dh` `4x11t5de` `4x11t5dn` `4x11t5dt` `4x11t5dh` `4x12t5de` `4x12t5dn` `4x12t5dt` `4x12t5dh` `4x13t5de` `4x13t5dn` `4x13t5dt` `4x13t5dh` `4x14t5de` `4x14t5dn` `4x14t5dt` `4x14t5dh` `10x14t14dh` `3x6t14dh` `4x6t14dh` `5x6t14dh` `7x6t14dh` `8x6t14dh` `9x6t14dh` `10x6t14dh` `3x4t14dh` `3x5t14dh` `3x7t14dh` `3x8t14dh` `3x9t14dh` `3x10t14dh` `3x11t14dh` `3x12t14dh` `3x13t14dh` `3x14t14dh` `3x7t6dh` `4x7t6dh` `5x7t6dh` `6x7t6dh` `8x7t6dh` `9x7t6dh` `10x7t6dh` `7x3t6dh` `7x4t6dh` `7x5t6dh` `7x6t6dh` `7x8t6dh` `7x9t6dh` `7x10t6dh` `7x11t6dh` `7x12t6dh` `7x13t6dh` `7x14t6dh` `10x10t8dn` `10x10t8dt` `10x10t8dh` `10x11t8dn` `10x11t8dt` `10x11t8dh` `10x12t8dn` `10x12t8dt` `10x12t8dh` `10x13t8de` `10x13t8dn` `10x13t8dt` `10x13t8dh` `10x14t8de` `10x14t8dn` `10x14t8dt` `10x14t8dh` `1x5t8de` `1x5t8dn` `1x5t8dt` `1x5t8dh` `2x5t8de` `2x5t8dn` `2x5t8dt` `2x5t8dh` `3x5t8de` `3x5t8dn` `3x5t8dt` `3x5t8dh` `4x5t8de` `4x5t8dn` `4x5t8dt` `4x5t8dh` `6x5t8de` `6x5t8dn` `6x5t8dt` `6x5t8dh` `7x5t8de` `7x5t8dn` `7x5t8dt` `7x5t8dh` `8x5t8de` `8x5t8dn` `8x5t8dt` `8x5t8dh` `9x5t8de` `9x5t8dn` `9x5t8dt` `9x5t8dh` `10x5t8de` `10x5t8dn` `10x5t8dt` `10x5t8dh` `5x1t8de` `5x1t8dn` `5x1t8dt` `5x1t8dh` `5x2t8de` `5x2t8dn` `5x2t8dt` `5x2t8dh` `5x3t8de` `5x3t8dn` `5x3t8dt` `5x3t8dh` `5x4t8de` `5x4t8dn` `5x4t8dt` `5x4t8dh` `5x6t8de` `5x6t8dn` `5x6t8dt` `5x6t8dh` `5x7t8de` `5x7t8dn` `5x7t8dt` `5x7t8dh` `5x8t8de` `5x8t8dn` `5x8t8dt` `5x8t8dh` `5x9t8de` `5x9t8dn` `5x9t8dt` `5x9t8dh` `5x10t8de` `5x10t8dn` `5x10t8dt` `5x10t8dh` `5x11t8de` `5x11t8dn` `5x11t8dt` `5x11t8dh` `5x12t8de` `5x12t8dn` `5x12t8dt` `5x12t8dh` `5x13t8de` `5x13t8dn` `5x13t8dt` `5x13t8dh` `5x14t8de` `5x14t8dn` `5x14t8dt` `5x14t8dh` `10x11t9dh` `10x12t9de` `10x12t9dh` `10x13t9de` `10x13t9dn` `10x13t9dt` `10x13t9dh` `10x14t9de` `10x14t9dn` `10x14t9dt` `10x14t9dh` `2x6t9de` `2x6t9dn` `2x6t9dt` `2x6t9dh` `3x6t9de` `3x6t9dn` `3x6t9dt` `3x6t9dh` `4x6t9de` `4x6t9dn` `4x6t9dt` `4x6t9dh` `5x6t9de` `5x6t9dn` `5x6t9dt` `5x6t9dh` `7x6t9de` `7x6t9dn` `7x6t9dt` `7x6t9dh` `8x6t9de` `8x6t9dn` `8x6t9dt` `8x6t9dh` `9x6t9de` `9x6t9dn` `9x6t9dt` `9x6t9dh` `10x6t9de` `10x6t9dn` `10x6t9dt` `10x6t9dh` `3x2t9de` `3x2t9dn` `3x2t9dt` `3x2t9dh` `3x4t9de` `3x4t9dn` `3x4t9dt` `3x4t9dh` `3x5t9de` `3x5t9dn` `3x5t9dt` `3x5t9dh` `3x7t9de` `3x7t9dn` `3x7t9dt` `3x7t9dh` `3x8t9de` `3x8t9dn` `3x8t9dt` `3x8t9dh` `3x9t9de` `3x9t9dn` `3x9t9dt` `3x9t9dh` `3x10t9de` `3x10t9dn` `3x10t9dt` `3x10t9dh` `3x11t9de` `3x11t9dn` `3x11t9dt` `3x11t9dh` `3x12t9de` `3x12t9dn` `3x12t9dt` `3x12t9dh` `3x13t9de` `3x13t9dn` `3x13t9dt` `3x13t9dh` `3x14t9de` `3x14t9dn` `3x14t9dt` `3x14t9dh` `9x9t10dt` `9x9t10dh` `10x10t10dn` `10x10t10dt` `10x10t10dh` `10x11t10dn` `10x11t10dt` `10x11t10dh` `10x12t10de` `10x12t10dn` `10x12t10dt` `10x12t10dh` `10x13t10de` `10x13t10dn` `10x13t10dt` `10x13t10dh` `10x14t10de` `10x14t10dn` `10x14t10dt` `10x14t10dh` `2x6t10de` `2x6t10dn` `2x6t10dt` `2x6t10dh` `3x6t10de` `3x6t10dn` `3x6t10dt` `3x6t10dh` `4x6t10de` `4x6t10dn` `4x6t10dt` `4x6t10dh` `5x6t10de` `5x6t10dn` `5x6t10dt` `5x6t10dh` `7x6t10de` `7x6t10dn` `7x6t10dt` `7x6t10dh` `8x6t10de` `8x6t10dn` `8x6t10dt` `8x6t10dh` `9x6t10de` `9x6t10dn` `9x6t10dt` `9x6t10dh` `10x6t10de` `10x6t10dn` `10x6t10dt` `10x6t10dh` `3x2t10de` `3x2t10dn` `3x2t10dt` `3x2t10dh` `3x4t10de` `3x4t10dn` `3x4t10dt` `3x4t10dh` `3x5t10de` `3x5t10dn` `3x5t10dt` `3x5t10dh` `3x7t10de` `3x7t10dn` `3x7t10dt` `3x7t10dh` `3x8t10de` `3x8t10dn` `3x8t10dt` `3x8t10dh` `3x9t10de` `3x9t10dn` `3x9t10dt` `3x9t10dh` `3x10t10de` `3x10t10dn` `3x10t10dt` `3x10t10dh` `3x11t10de` `3x11t10dn` `3x11t10dt` `3x11t10dh` `3x12t10de` `3x12t10dn` `3x12t10dt` `3x12t10dh` `3x13t10de` `3x13t10dn` `3x13t10dt` `3x13t10dh` `3x14t10de` `3x14t10dn` `3x14t10dt` `3x14t10dh` `7x7t13dh` `8x8t13dt` `8x8t13dh` `9x9t13dn` `9x9t13dt` `9x9t13dh` `10x10t13de` `10x10t13dn` `10x10t13dt` `10x10t13dh` `10x11t13de` `10x11t13dn` `10x11t13dt` `10x11t13dh` `10x12t13de` `10x12t13dn` `10x12t13dt` `10x12t13dh` `10x13t13de` `10x13t13dn` `10x13t13dt` `10x13t13dh` `10x14t13de` `10x14t13dn` `10x14t13dt` `10x14t13dh` `2x5t13de` `2x5t13dn` `2x5t13dt` `2x5t13dh` `3x5t13de` `3x5t13dn` `3x5t13dt` `3x5t13dh` `4x5t13de` `4x5t13dn` `4x5t13dt` `4x5t13dh` `6x5t13de` `6x5t13dn` `6x5t13dt` `6x5t13dh` `7x5t13de` `7x5t13dn` `7x5t13dt` `7x5t13dh` `8x5t13de` `8x5t13dn` `8x5t13dt` `8x5t13dh` `9x5t13de` `9x5t13dn` `9x5t13dt` `9x5t13dh` `10x5t13de` `10x5t13dn` `10x5t13dt` `10x5t13dh` `3x2t13de` `3x2t13dn` `3x2t13dt` `3x2t13dh` `3x4t13de` `3x4t13dn` `3x4t13dt` `3x4t13dh` `3x6t13de` `3x6t13dn` `3x6t13dt` `3x6t13dh` `3x7t13de` `3x7t13dn` `3x7t13dt` `3x7t13dh` `3x8t13de` `3x8t13dn` `3x8t13dt` `3x8t13dh` `3x9t13de` `3x9t13dn` `3x9t13dt` `3x9t13dh` `3x10t13de` `3x10t13dn` `3x10t13dt` `3x10t13dh` `3x11t13de` `3x11t13dn` `3x11t13dt` `3x11t13dh` `3x12t13de` `3x12t13dn` `3x12t13dt` `3x12t13dh` `3x13t13de` `3x13t13dn` `3x13t13dt` `3x13t13dh` `3x14t13de` `3x14t13dn` `3x14t13dt` `3x14t13dh` `10x10t15de` `10x10t15dn` `10x10t15dh` `10x11t15de` `10x11t15dn` `10x11t15dt` `10x11t15dh` `10x12t15de` `10x12t15dn` `10x12t15dt` `10x12t15dh` `10x13t15de` `10x13t15dn` `10x13t15dt` `10x13t15dh` `10x14t15de` `10x14t15dn` `10x14t15dt` `10x14t15dh` `2x5t15de` `2x5t15dn` `2x5t15dt` `2x5t15dh` `3x5t15de` `3x5t15dn` `3x5t15dt` `3x5t15dh` `4x5t15de` `4x5t15dn` `4x5t15dt` `4x5t15dh` `6x5t15de` `6x5t15dn` `6x5t15dt` `6x5t15dh` `7x5t15de` `7x5t15dn` `7x5t15dt` `7x5t15dh` `8x5t15de` `8x5t15dn` `8x5t15dt` `8x5t15dh` `9x5t15de` `9x5t15dn` `9x5t15dt` `9x5t15dh` `10x5t15de` `10x5t15dn` `10x5t15dt` `10x5t15dh` `4x2t15de` `4x2t15dn` `4x2t15dt` `4x2t15dh` `4x3t15de` `4x3t15dn` `4x3t15dt` `4x3t15dh` `4x6t15de` `4x6t15dn` `4x6t15dt` `4x6t15dh` `4x7t15de` `4x7t15dn` `4x7t15dt` `4x7t15dh` `4x8t15de` `4x8t15dn` `4x8t15dt` `4x8t15dh` `4x9t15de` `4x9t15dn` `4x9t15dt` `4x9t15dh` `4x10t15de` `4x10t15dn` `4x10t15dt` `4x10t15dh` `4x11t15de` `4x11t15dn` `4x11t15dt` `4x11t15dh` `4x12t15de` `4x12t15dn` `4x12t15dt` `4x12t15dh` `4x13t15de` `4x13t15dn` `4x13t15dt` `4x13t15dh` `4x14t15de` `4x14t15dn` `4x14t15dt` `4x14t15dh`
 
 ## magnets
 
-172 cells dealt, 8 refused, 0 left out as slow.
+170 cells dealt, 10 refused, 0 left out as slow.
 
-- `3x6dt` asked Normal: gave up on 3
-- `3x6dtS` asked Normal: gave up on 3
 - `2x2de` refused: Either width or height must be at least three.
 - `2x2dt` refused: Either width or height must be at least five for Normal.
 - `3x3dt` refused: Either width or height must be at least five for Normal.
 - `4x4dt` refused: Either width or height must be at least five for Normal.
+- `3x6dt` refused: No 3x6 puzzle is Normal.
 - `2x2deS` refused: Either width or height must be at least three.
 - `2x2dtS` refused: Either width or height must be at least five for Normal.
 - `3x3dtS` refused: Either width or height must be at least five for Normal.
 - `4x4dtS` refused: Either width or height must be at least five for Normal.
+- `3x6dtS` refused: No 3x6 puzzle is Normal.
 
 ## map
 
-816 cells dealt, 69 refused, 203 left out as slow.
+839 cells dealt, 69 refused, 180 left out as slow.
 
-- `3x20n30du` asked Unreasonable: 3.0 s
-- `3x30n75du` asked Unreasonable: gave up on 1; 8.0 s
-- `25x30n11dh` asked Tricky: 3.7 s
+- `15x3n30du` asked Unreasonable: 7.1 s
+- `3x30n75du` asked Unreasonable: gave up on 1; 7.6 s
+- `25x30n11dh` asked Tricky: 3.5 s
 - `2x2n5de` refused: There must be no more regions than squares.
 - `2x2n5dn` refused: There must be no more regions than squares.
 - `2x2n5dh` refused: There must be no more regions than squares.
@@ -516,7 +1079,7 @@
 - `25x30n9du` refused: Unreasonable maps of 9 regions are too rare to deal.
 - `25x30n10dh` refused: Tricky maps of 10 regions are too rare to deal.
 - `25x30n10du` refused: Unreasonable maps of 10 regions are too rare to deal.
-- left out: `4x20n30du` `5x20n30du` `6x20n30du` `7x20n30du` `8x20n30du` `9x20n30du` `10x20n30du` `11x20n30du` `12x20n30du` `13x20n30du` `14x20n30du` `15x20n30du` `16x20n30du` `17x20n30du` `18x20n30du` `19x20n30du` `20x20n30du` `21x20n30du` `22x20n30du` `23x20n30du` `24x20n30du` `25x20n30du` `15x3n30du` `15x4n30du` `15x5n30du` `15x6n30du` `15x7n30du` `15x8n30du` `15x9n30du` `15x10n30du` `15x11n30du` `15x12n30du` `15x13n30du` `15x14n30du` `15x15n30du` `15x16n30du` `15x17n30du` `15x18n30du` `15x19n30du` `15x21n30du` `15x22n30du` `15x23n30du` `15x24n30du` `15x25n30du` `15x26n30du` `15x27n30du` `15x28n30du` `15x29n30du` `15x30n30du` `15x20n11du` `15x20n12du` `15x20n13du` `15x20n14du` `15x20n15du` `15x20n16du` `15x20n17du` `15x20n18du` `15x20n19du` `15x20n20du` `15x20n21du` `15x20n22du` `15x20n23du` `15x20n24du` `15x20n25du` `15x20n26du` `15x20n27du` `15x20n28du` `15x20n29du` `15x20n31du` `15x20n32du` `15x20n33du` `15x20n34du` `15x20n35du` `15x20n36du` `15x20n37du` `15x20n38du` `15x20n39du` `15x20n40du` `15x20n41du` `15x20n42du` `15x20n43du` `15x20n44du` `15x20n45du` `15x20n46du` `15x20n47du` `15x20n48du` `15x20n49du` `15x20n50du` `15x20n51du` `15x20n52du` `15x20n53du` `15x20n54du` `15x20n55du` `15x20n56du` `15x20n57du` `15x20n58du` `15x20n59du` `15x20n60du` `15x20n61du` `15x20n62du` `15x20n63du` `15x20n64du` `15x20n65du` `15x20n66du` `15x20n67du` `15x20n68du` `15x20n69du` `15x20n70du` `15x20n71du` `15x20n72du` `15x20n73du` `15x20n74du` `15x20n75du` `4x30n75du` `5x30n75du` `6x30n75du` `7x30n75du` `8x30n75du` `9x30n75du` `10x30n75du` `11x30n75du` `12x30n75du` `13x30n75du` `14x30n75du` `15x30n75du` `16x30n75du` `17x30n75du` `18x30n75du` `19x30n75du` `20x30n75du` `21x30n75du` `22x30n75du` `23x30n75du` `24x30n75du` `25x4n75du` `25x5n75du` `25x6n75du` `25x7n75du` `25x8n75du` `25x9n75du` `25x10n75du` `25x11n75du` `25x12n75du` `25x13n75du` `25x14n75du` `25x15n75du` `25x16n75du` `25x17n75du` `25x18n75du` `25x19n75du` `25x20n75du` `25x21n75du` `25x22n75du` `25x23n75du` `25x24n75du` `25x25n75du` `25x26n75du` `25x27n75du` `25x28n75du` `25x29n75du` `25x30n11du` `25x30n12dh` `25x30n12du` `25x30n13dh` `25x30n13du` `25x30n14dh` `25x30n14du` `25x30n15dh` `25x30n15du` `25x30n16dh` `25x30n16du` `25x30n17dh` `25x30n17du` `25x30n18dh` `25x30n18du` `25x30n19dh` `25x30n19du` `25x30n20dh` `25x30n20du` `25x30n21dh` `25x30n21du` `25x30n22dh` `25x30n22du` `25x30n23dh` `25x30n23du` `25x30n24dh` `25x30n24du` `25x30n25dh` `25x30n25du` `25x30n26dh` `25x30n26du` `25x30n27dh` `25x30n27du` `25x30n28dh` `25x30n28du` `25x30n29dh` `25x30n29du` `25x30n30dh` `25x30n30du` `25x30n31dh` `25x30n31du` `25x30n32dh` `25x30n32du`
+- left out: `15x4n30du` `15x5n30du` `15x6n30du` `15x7n30du` `15x8n30du` `15x9n30du` `15x10n30du` `15x11n30du` `15x12n30du` `15x13n30du` `15x14n30du` `15x15n30du` `15x16n30du` `15x17n30du` `15x18n30du` `15x19n30du` `15x21n30du` `15x22n30du` `15x23n30du` `15x24n30du` `15x25n30du` `15x26n30du` `15x27n30du` `15x28n30du` `15x29n30du` `15x30n30du` `15x20n11du` `15x20n12du` `15x20n13du` `15x20n14du` `15x20n15du` `15x20n16du` `15x20n17du` `15x20n18du` `15x20n19du` `15x20n20du` `15x20n21du` `15x20n22du` `15x20n23du` `15x20n24du` `15x20n25du` `15x20n26du` `15x20n27du` `15x20n28du` `15x20n29du` `15x20n31du` `15x20n32du` `15x20n33du` `15x20n34du` `15x20n35du` `15x20n36du` `15x20n37du` `15x20n38du` `15x20n39du` `15x20n40du` `15x20n41du` `15x20n42du` `15x20n43du` `15x20n44du` `15x20n45du` `15x20n46du` `15x20n47du` `15x20n48du` `15x20n49du` `15x20n50du` `15x20n51du` `15x20n52du` `15x20n53du` `15x20n54du` `15x20n55du` `15x20n56du` `15x20n57du` `15x20n58du` `15x20n59du` `15x20n60du` `15x20n61du` `15x20n62du` `15x20n63du` `15x20n64du` `15x20n65du` `15x20n66du` `15x20n67du` `15x20n68du` `15x20n69du` `15x20n70du` `15x20n71du` `15x20n72du` `15x20n73du` `15x20n74du` `15x20n75du` `4x30n75du` `5x30n75du` `6x30n75du` `7x30n75du` `8x30n75du` `9x30n75du` `10x30n75du` `11x30n75du` `12x30n75du` `13x30n75du` `14x30n75du` `15x30n75du` `16x30n75du` `17x30n75du` `18x30n75du` `19x30n75du` `20x30n75du` `21x30n75du` `22x30n75du` `23x30n75du` `24x30n75du` `25x4n75du` `25x5n75du` `25x6n75du` `25x7n75du` `25x8n75du` `25x9n75du` `25x10n75du` `25x11n75du` `25x12n75du` `25x13n75du` `25x14n75du` `25x15n75du` `25x16n75du` `25x17n75du` `25x18n75du` `25x19n75du` `25x20n75du` `25x21n75du` `25x22n75du` `25x23n75du` `25x24n75du` `25x25n75du` `25x26n75du` `25x27n75du` `25x28n75du` `25x29n75du` `25x30n11du` `25x30n12dh` `25x30n12du` `25x30n13dh` `25x30n13du` `25x30n14dh` `25x30n14du` `25x30n15dh` `25x30n15du` `25x30n16dh` `25x30n16du` `25x30n17dh` `25x30n17du` `25x30n18dh` `25x30n18du` `25x30n19dh` `25x30n19du` `25x30n20dh` `25x30n20du` `25x30n21dh` `25x30n21du` `25x30n22dh` `25x30n22du` `25x30n23dh` `25x30n23du` `25x30n24dh` `25x30n24du` `25x30n25dh` `25x30n25du` `25x30n26dh` `25x30n26du` `25x30n27dh` `25x30n27du` `25x30n28dh` `25x30n28du` `25x30n29dh` `25x30n29du` `25x30n30dh` `25x30n30du` `25x30n31dh` `25x30n31du` `25x30n32dh` `25x30n32du`
 
 ## mathrax
 
@@ -531,9 +1094,9 @@
 
 - `10x10de` asked Easy: 4.2 s
 - `10x10dt` asked Normal: 3.9 s
-- `9x10de` asked Easy: 6.8 s
-- `9x12de` asked Easy: 17.2 s
-- `9x12dt` asked Normal: 9.3 s
+- `9x10de` asked Easy: 6.7 s
+- `9x12de` asked Easy: 17.0 s
+- `9x12dt` asked Normal: 9.2 s
 - `5x5dt` refused: Width plus height must be at least 11 for Normal.
 - left out: `10x11de` `10x11dt` `10x12de` `10x12dt` `5x6de` `5x6dt` `7x6de` `7x6dt` `8x6de` `8x6dt` `9x6de` `9x6dt` `10x6de` `10x6dt` `6x5de` `6x5dt` `6x7de` `6x7dt` `6x8de` `6x8dt` `6x9de` `6x9dt` `6x10de` `6x10dt` `6x11de` `6x11dt` `6x12de` `6x12dt` `10x5de` `10x7de` `10x9de`
 
@@ -541,35 +1104,38 @@
 
 156 cells dealt, 0 refused, 0 left out as slow.
 
+
 ## salad
 
-50 cells dealt, 24 refused, 20 left out as slow.
+50 cells dealt, 31 refused, 13 left out as slow.
 
-- `3n2Ldx` asked Normal: gave up on 1; 4.2 s
-- `5n2Ldx` asked Normal: gave up on 1; 3.3 s
-- `6n2Ldx` asked Normal: gave up on 1; 4.8 s
-- `7n2Lde` asked Easy: gave up on 1
-- `7n2Ldx` asked Normal: gave up on 1; 10.0 s
-- `3n2Bdx` asked Normal: gave up on 3
+- `8n5Ldx` asked Normal: 3.5 s
 - `4n3Bdx` asked Normal: 4.8 s
-- `7n4Bdx` asked Normal: 3.7 s
-- `6n2Bdx` asked Normal: 4.1 s
-- `7n2Bdx` asked Normal: 6.8 s
-- `8n2Bdx` asked Normal: 129.6 s
+- `7n4Bdx` asked Normal: 3.8 s
+- `6n2Bdx` asked Normal: 4.2 s
+- `7n2Bdx` asked Normal: 7.0 s
+- `8n2Bdx` asked Normal: 133.6 s
+- `3n2Ldx` refused: No 3x3 Letters puzzle with 2 symbols is Normal.
 - `3n3Lde` refused: Symbols must be lower than the size.
 - `3n3Ldx` refused: Symbols must be lower than the size.
+- `4n2Ldx` refused: No 4x4 Letters puzzle with 2 symbols is Normal.
 - `4n4Lde` refused: Symbols must be lower than the size.
 - `4n4Ldx` refused: Symbols must be lower than the size.
 - `4n5Lde` refused: Symbols must be lower than the size.
 - `4n5Ldx` refused: Symbols must be lower than the size.
+- `5n2Ldx` refused: No 5x5 Letters puzzle with 2 symbols is Normal.
 - `5n5Lde` refused: Symbols must be lower than the size.
 - `5n5Ldx` refused: Symbols must be lower than the size.
 - `3n4Lde` refused: Symbols must be lower than the size.
 - `3n4Ldx` refused: Symbols must be lower than the size.
+- `6n2Ldx` refused: No 6x6 Letters puzzle with 2 symbols is Normal.
+- `7n2Ldx` refused: No 7x7 Letters puzzle with 2 symbols is Normal.
 - `3n5Lde` refused: Symbols must be lower than the size.
 - `3n5Ldx` refused: Symbols must be lower than the size.
+- `3n2Bdx` refused: No 3x3 Numbers puzzle with 2 symbols is Normal.
 - `3n3Bde` refused: Symbols must be lower than the size.
 - `3n3Bdx` refused: Symbols must be lower than the size.
+- `5n2Bdx` refused: Normal 5x5 Numbers puzzles with 2 symbols are too rare to deal.
 - `5n5Bde` refused: Symbols must be lower than the size.
 - `5n5Bdx` refused: Symbols must be lower than the size.
 - `3n4Bde` refused: Symbols must be lower than the size.
@@ -580,11 +1146,12 @@
 - `3n5Bdx` refused: Symbols must be lower than the size.
 - `4n5Bde` refused: Symbols must be lower than the size.
 - `4n5Bdx` refused: Symbols must be lower than the size.
-- left out: `4n3Ldx` `5n4Ldx` `6n5Ldx` `7n5Ldx` `8n5Ldx` `5n3Ldx` `6n3Ldx` `7n3Ldx` `8n3Ldx` `4n2Ldx` `5n4Bdx` `6n5Bdx` `7n5Bdx` `8n5Bdx` `5n3Bdx` `6n3Bdx` `7n3Bdx` `8n3Bdx` `5n2Bdx` `8n4Bdx`
+- left out: `5n3Ldx` `6n3Ldx` `7n3Ldx` `8n3Ldx` `5n4Bdx` `6n5Bdx` `7n5Bdx` `8n5Bdx` `5n3Bdx` `6n3Bdx` `7n3Bdx` `8n3Bdx` `8n4Bdx`
 
 ## seismic
 
 100 cells dealt, 0 refused, 0 left out as slow.
+
 
 ## singles
 
@@ -597,36 +1164,62 @@
 
 114 cells dealt, 0 refused, 0 left out as slow.
 
+
 ## solo
 
-109 cells dealt, 46 refused, 37 left out as slow.
+123 cells dealt, 76 refused, 47 left out as slow.
 
 - `5x3du` asked Unreasonable: 3.5 s
-- `6x3de` asked Extreme: 5.4 s
-- `7x3da` asked Hard: 3.2 s
+- `6x3de` asked Extreme: 5.3 s
+- `7x3da` asked Hard: 3.1 s
 - `8x3di` asked Tricky: 4.8 s
-- `9x3` asked Easy: 3.2 s
+- `9x3` asked Easy: 3.1 s
 - `9x3db` asked Normal: 28.6 s
-- `4x3xdu` asked Unreasonable: 26.0 s
-- `6x3xde` asked Extreme: 5.0 s
+- `4x3xdu` asked Unreasonable: 25.9 s
+- `6x3xde` asked Extreme: 3.0 s
 - `7x3xda` asked Hard: 5.4 s
-- `8x3x` asked Easy: 5.1 s
-- `8x3xdi` asked Tricky: 7.5 s
-- `9x3xdb` asked Normal: 8.5 s
-- `4jda` asked Hard: gave up on 1; 4.0 s
-- `4jde` asked Extreme: gave up on 1; 5.0 s
-- `4jdu` asked Unreasonable: gave up on 1; 8.0 s
-- `3x3kade` asked Extreme: 16.4 s
+- `8x3x` asked Easy: 5.2 s
+- `8x3xdi` asked Tricky: 7.6 s
+- `9x3xdb` asked Normal: 8.6 s
+- `9x2de` asked Extreme: 4.4 s
+- `9x2du` asked Unreasonable: 38.6 s
+- `2jka` asked Easy: gave up on 3
+- `3x3kade` asked Extreme: 16.3 s
 - `2jdb` refused: No 2 Jigsaw puzzle is Normal.
 - `2jdi` refused: No 2 Jigsaw puzzle is Tricky.
 - `2jda` refused: No 2 Jigsaw puzzle is Hard.
 - `2jde` refused: No 2 Jigsaw puzzle is Extreme.
 - `2jdu` refused: No 2 Jigsaw puzzle is Unreasonable.
+- `2x2db` refused: No 2x2 puzzle is Normal.
+- `2x2di` refused: No 2x2 puzzle is Tricky.
+- `2x2da` refused: No 2x2 puzzle is Hard.
+- `2x2de` refused: No 2x2 puzzle is Extreme.
+- `2x2du` refused: No 2x2 puzzle is Unreasonable.
 - `3jdb` refused: No 3 Jigsaw puzzle is Normal.
 - `3jdi` refused: No 3 Jigsaw puzzle is Tricky.
 - `3jda` refused: No 3 Jigsaw puzzle is Hard.
 - `3jde` refused: No 3 Jigsaw puzzle is Extreme.
 - `3jdu` refused: No 3 Jigsaw puzzle is Unreasonable.
+- `2jx` refused: X-type puzzle dimensions must be larger than 3.
+- `2jxdb` refused: X-type puzzle dimensions must be larger than 3.
+- `2jxdi` refused: X-type puzzle dimensions must be larger than 3.
+- `2jxda` refused: X-type puzzle dimensions must be larger than 3.
+- `2jxde` refused: X-type puzzle dimensions must be larger than 3.
+- `2jxdu` refused: X-type puzzle dimensions must be larger than 3.
+- `3jx` refused: X-type puzzle dimensions must be larger than 3.
+- `3jxdb` refused: X-type puzzle dimensions must be larger than 3.
+- `3jxdi` refused: X-type puzzle dimensions must be larger than 3.
+- `3jxda` refused: X-type puzzle dimensions must be larger than 3.
+- `3jxde` refused: X-type puzzle dimensions must be larger than 3.
+- `3jxdu` refused: X-type puzzle dimensions must be larger than 3.
+- `4jda` refused: No 4 Jigsaw puzzle is Hard.
+- `4jde` refused: No 4 Jigsaw puzzle is Extreme.
+- `4jdu` refused: No 4 Jigsaw puzzle is Unreasonable.
+- `2jkadb` refused: No 2 Jigsaw puzzle is Normal.
+- `2jkadi` refused: No 2 Jigsaw puzzle is Tricky.
+- `2jkada` refused: No 2 Jigsaw puzzle is Hard.
+- `2jkade` refused: No 2 Jigsaw puzzle is Extreme.
+- `2jkadu` refused: No 2 Jigsaw puzzle is Unreasonable.
 - `4x3ka` refused: Killer puzzle dimensions must be smaller than 10.
 - `4x3kadb` refused: Killer puzzle dimensions must be smaller than 10.
 - `4x3kadi` refused: Killer puzzle dimensions must be smaller than 10.
@@ -663,20 +1256,30 @@
 - `9x3kada` refused: Killer puzzle dimensions must be smaller than 10.
 - `9x3kade` refused: Killer puzzle dimensions must be smaller than 10.
 - `9x3kadu` refused: Killer puzzle dimensions must be smaller than 10.
-- left out: `6x3du` `7x3de` `7x3du` `8x3da` `8x3de` `8x3du` `9x3di` `9x3da` `9x3de` `9x3du` `5x3xdu` `6x3xdu` `7x3xde` `7x3xdu` `8x3xda` `8x3xde` `8x3xdu` `9x3x` `9x3xdi` `9x3xda` `9x3xde` `9x3xdu` `5jda` `5jde` `5jdu` `6jda` `6jde` `6jdu` `7jda` `7jde` `7jdu` `8jda` `8jde` `8jdu` `9jda` `9jde` `9jdu`
+- `3jkadb` refused: No 3 Jigsaw puzzle is Normal.
+- `3jkadi` refused: No 3 Jigsaw puzzle is Tricky.
+- `3jkada` refused: No 3 Jigsaw puzzle is Hard.
+- `3jkade` refused: No 3 Jigsaw puzzle is Extreme.
+- `3jkadu` refused: No 3 Jigsaw puzzle is Unreasonable.
+- left out: `6x3du` `7x3de` `7x3du` `8x3da` `8x3de` `8x3du` `9x3di` `9x3da` `9x3de` `9x3du` `2x3` `2x3db` `2x3di` `2x3da` `2x3de` `2x3du` `3x3` `3x3db` `3x3di` `3x3da` `3x3de` `3x3du` `2x2` `5x3xdu` `6x3xdu` `7x3xde` `7x3xdu` `8x3xda` `8x3xde` `8x3xdu` `9x3x` `9x3xdi` `9x3xda` `9x3xde` `9x3xdu` `2x3x` `2x3xdb` `2x3xdi` `2x3xda` `2x3xde` `2x3xdu` `3x3x` `3x3xdb` `3x3xdi` `3x3xda` `3x3xde` `3x3xdu`
 
 ## spokes
 
-44 cells dealt, 0 refused, 13 left out as slow.
+46 cells dealt, 5 refused, 6 left out as slow.
 
-- `2x2dh` asked Unreasonable: gave up on 3
-- `6x6dh` asked Unreasonable: 3.7 s
-- `2x6dh` asked Unreasonable: 6.5 s
-- left out: `2x4dh` `3x4dh` `5x4dh` `6x4dh` `4x2dh` `4x3dh` `4x5dh` `4x6dh` `3x6dh` `5x6dh` `6x2dh` `6x3dh` `6x5dh`
+- `6x6dh` asked Unreasonable: 3.6 s
+- `6x5dh` asked Unreasonable: 3.4 s
+- `2x2dh` refused: No 2x2 puzzle is Unreasonable.
+- `2x4dh` refused: No 2x4 puzzle is Unreasonable.
+- `4x2dh` refused: No 4x2 puzzle is Unreasonable.
+- `2x6dh` refused: Unreasonable 2x6 puzzles are too rare to deal.
+- `6x2dh` refused: Unreasonable 6x2 puzzles are too rare to deal.
+- left out: `3x4dh` `5x4dh` `6x4dh` `4x3dh` `4x5dh` `4x6dh`
 
 ## subsets
 
 2 cells dealt, 0 refused, 0 left out as slow.
+
 
 ## tents
 
@@ -701,6 +1304,7 @@
 ## undead
 
 69 cells dealt, 0 refused, 0 left out as slow.
+
 
 ## unequal
 
@@ -863,3 +1467,4 @@
 - `8x13udt` refused: Width and height must both be even.
 - `8x13ude` refused: Width and height must both be even.
 - `8x13udn` refused: Width and height must both be even.
+

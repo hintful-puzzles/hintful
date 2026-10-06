@@ -19,6 +19,7 @@ import { descValue } from "../../engine/desc-error.ts";
 import {
   type DifficultyContract,
   difficultyItem,
+  noSuchTier,
   tierNames,
 } from "../../engine/difficulty.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
@@ -1013,7 +1014,7 @@ function defaultParams(): GalaxiesParams {
 
 const paramConfig: ParamConfigItem<GalaxiesParams>[] = [
   ...dimensionParamConfig<GalaxiesParams>({
-    doc: "Size of the grid in squares.",
+    doc: "Size of the grid in squares. A 3x3 has no Unreasonable puzzles.",
     bounds: { min: 3, max: 100 },
   }),
   difficultyItem(GALAXIES_TIERS, "diff"),
@@ -1024,6 +1025,13 @@ const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", "nu", { full: true }),
 ]);
+
+function validateParams(p: GalaxiesParams, full: boolean): string | null {
+  // Measured 2026-10-06: none in 600,000 boards built. A 3x4 has them.
+  if (full && p.w === 3 && p.h === 3 && p.diff === GalaxiesDiff.Unreasonable)
+    return noSuchTier("3x3 puzzle", GALAXIES_TIERS[p.diff]);
+  return null;
+}
 
 /** The last board's difficulty verdict, keyed by its dot layout: the verdict
  * depends only on the dots, and a solve per status-bar update would be paid
@@ -1094,6 +1102,7 @@ export const galaxiesGame: Game<
 
   encodeParams,
   decodeParams,
+  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
 

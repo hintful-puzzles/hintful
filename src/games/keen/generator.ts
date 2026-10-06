@@ -49,6 +49,15 @@ const DEAL_ORDER = [
   [C_ADD, F_ADD],
 ] as const;
 
+/**
+ * The retry budget, in tries times the cube of the width, which is what a try
+ * costs: about a microsecond a unit, so a run-out is some ten seconds at every
+ * size. A count of tries would not do. A 3x3 Normal with multiplication alone
+ * is found once in 7,700 tries of 26 microseconds, and a 4x4 Unreasonable once
+ * in 58,000, so the house bound of 10,000 gave up on a board a second away.
+ */
+const WORK_BUDGET = 15_000_000;
+
 export function newKeenDesc(
   p: KeenParams,
   rng: RandomState,
@@ -89,7 +98,10 @@ export function newKeenDesc(
     return false;
   };
 
-  const attempt = retryLimit(`keen: generation (${w}d${diff})`);
+  const attempt = retryLimit(
+    `keen: generation (${w}d${diff})`,
+    Math.floor(WORK_BUDGET / w ** 3),
+  );
   while (true) {
     attempt();
 

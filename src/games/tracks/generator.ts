@@ -9,7 +9,7 @@
 
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
+import { MAX_REGENERATE, retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
@@ -171,6 +171,14 @@ function addClues(b: Board, rs: RandomState, diff: number): number {
   return 1;
 }
 
+/**
+ * The retry budget of a small board, in tries times squares. A 4x5 at Hard is
+ * found once in 6,500 tries of 44 microseconds, so the house bound gave up on
+ * one deal in five with the board a third of a second away; this gives it
+ * 100,000. A board of more than 200 squares keeps the house bound.
+ */
+const WORK_BUDGET = 2_000_000;
+
 export function newDesc(
   p: TracksParams,
   rs: RandomState,
@@ -179,7 +187,10 @@ export function newDesc(
   const diff = p.diff;
 
   const b = blankBoard(w, h);
-  const attempt = retryLimit("tracks: generation");
+  const attempt = retryLimit(
+    "tracks: generation",
+    Math.max(MAX_REGENERATE, Math.floor(WORK_BUDGET / (w * h))),
+  );
   for (;;) {
     attempt();
 

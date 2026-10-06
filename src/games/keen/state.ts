@@ -25,7 +25,7 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -107,6 +107,18 @@ export function validateParams(p: KeenParams, full: boolean): string | null {
   // Normal, with every operation and with multiplication alone.
   if (full && p.w === 3 && level > DIFF_NORMAL)
     return noSuchTier("3x3 puzzle", DIFF_NAMES[level]);
+  // Measured 2026-10-06, in tries a board with multiplication alone. Above
+  // Tricky: 4,000 at 6x6 and 15,000 to 60,000 at 4x4, which the generator's
+  // budget reaches in a second or two; 20,000 to 300,000 at 5x5, 7x7, 8x8 and
+  // 9x9, which is ten to thirty seconds a board. Tricky is 400 to 10,000 up
+  // to 8x8 and 47,000 at 9x9.
+  const rare =
+    level > DIFF_HARD ? p.w !== 4 && p.w !== 6 : level === DIFF_HARD && p.w === 9;
+  if (full && p.multiplicationOnly && rare)
+    return tooRareToDeal(
+      `${p.w}x${p.w} puzzles with multiplication only`,
+      DIFF_NAMES[level],
+    );
   return null;
 }
 

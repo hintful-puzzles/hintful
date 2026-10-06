@@ -3,7 +3,11 @@
  * unreleased `ascent.c` (© 2015 Lennard Sprong).
  */
 
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import {
+  type DifficultyContract,
+  difficultyItem,
+  noSuchTier,
+} from "../../engine/difficulty.ts";
 import type {
   Game,
   GamePref,
@@ -54,7 +58,10 @@ import {
   type AscentState,
   CELL_NONE,
   checkCompletion,
+  DIFF_EASY,
+  DIFF_HARD,
   DIFF_NORMAL,
+  DIFF_TRICKY,
   DIFFCOUNT,
   fromNumberEdge,
   isHexagonal,
@@ -321,6 +328,41 @@ function decodeParams(s: string): AscentParams {
   return p;
 }
 
+/**
+ * Does no board of this size, on this grid, need the tier asked for?
+ *
+ * Measured 2026-10-06 over every size of 18 squares or fewer and the boards
+ * two wide up to 12 long: none in 40,000 to 800,000 tries a cell, and none in
+ * 10,000 at the longest. The tiers are rungs a board needs and not a ladder of
+ * size, so a tier is missing under one that is there: a 3x3 Rectangle has
+ * Tricky and Hard boards and no Normal one. With diagonal moves a board two
+ * wide has no Hard at any length counted, which past 12 is 3,500 tries at 16
+ * long, 1,900 at 20 and 600 at 30. The honeycomb is not the same grid
+ * turned round, so its 2x3 and 3x2 differ. {@link EDGES} had none missing.
+ */
+function lacksTier({ w, h, mode, diff }: AscentParams): boolean {
+  const is = (a: number, b: number): boolean => w === a && h === b;
+  const either = (a: number, b: number): boolean => is(a, b) || is(b, a);
+  switch (mode) {
+    case MODE_ORTHOGONAL:
+      if (either(2, 2) || either(2, 3)) return true;
+      return diff === DIFF_HARD && (either(2, 4) || either(2, 5));
+    case MODE_RECT:
+      if (either(2, 2)) return true;
+      if (diff === DIFF_HARD) return Math.min(w, h) === 2;
+      return diff === DIFF_NORMAL && (either(2, 3) || is(3, 3));
+    case MODE_HONEYCOMB:
+      if (is(2, 2)) return true;
+      if (is(2, 3)) return diff !== DIFF_TRICKY;
+      if (is(3, 2)) return diff !== DIFF_NORMAL;
+      return diff === DIFF_HARD && is(4, 2);
+    case MODE_HEXAGON:
+      return is(2, 3) || (diff === DIFF_NORMAL && is(3, 3));
+    default:
+      return false;
+  }
+}
+
 function validateParams(p: AscentParams, full: boolean): string | null {
   const { w, h } = p;
   if (p.mode === MODE_EDGES_OFF_GRID)
@@ -335,6 +377,11 @@ function validateParams(p: AscentParams, full: boolean): string | null {
     return `Difficulty for ${EDGES} mode must be at least Normal.`;
   if (full && p.symmetrical && p.mode === MODE_EDGES)
     return `Symmetrical clues must be disabled for ${EDGES} mode.`;
+  if (full && p.diff > DIFF_EASY && lacksTier(p))
+    return noSuchTier(
+      `${w}x${h} ${ASCENT_GRID_NAMES[p.mode]} puzzle`,
+      ASCENT_DIFFNAMES[p.diff],
+    );
   return null;
 }
 
@@ -356,7 +403,7 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
     },
   }),
   ...dimensionParamConfig<AscentParams>({
-    doc: "Size of the grid in squares.",
+    doc: "Size of the grid in squares. The smallest boards lack some difficulties: a 2x2 has only Easy puzzles, a 3x3 Rectangle or Hexagon has none at Normal, and a Rectangle two squares wide has none at Hard.",
     bounds: { min: 2, max: 50 },
     size: (p) => (p.mode === MODE_HEXAGON ? `Size ${p.w}` : `${p.w}x${p.h}`),
   }),

@@ -20,7 +20,10 @@ import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -31,8 +34,36 @@ import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
 
-// A 3x3 above Normal, with every operation and with multiplication alone.
-describeAbsentTiers(keenGame, ["3dh", "3dx", "3du", "3dhm", "3dxm", "3dum"]);
+// A 3x3 above Normal, with every operation and with multiplication alone. One
+// run of the generator's budget is 550,000 tries at this size.
+describeAbsentTiers(keenGame, ["3dh", "3dx", "3du", "3dhm", "3dxm", "3dum"], {
+  budgets: 1,
+});
+
+// The rarest cells the budget is sized to reach.
+describeDealtTiers(keenGame, ["3dnm", "4dxm", "6dum"]);
+
+describe("multiplication alone, where a tier is too rare to deal", () => {
+  const refusal = (id: string): string | null =>
+    paramsError(keenGame, keenGame.decodeParams(id), true);
+
+  it.each(["5dxm", "5dum", "7dxm", "8dum", "9dhm", "9dum"])("%s is refused", (id) => {
+    expect(refusal(id)).toMatch(
+      / puzzles with multiplication only are too rare to deal\.$/,
+    );
+    expect(paramsError(keenGame, keenGame.decodeParams(id), false)).toBeNull();
+  });
+
+  it("says rare, and not absent", () => {
+    expect(refusal("5dxm")).toBe(
+      "Hard 5x5 puzzles with multiplication only are too rare to deal.",
+    );
+  });
+
+  it.each(["4dum", "6dxm", "8dhm", "9dnm", "5dx", "9du"])("%s is dealt", (id) => {
+    expect(refusal(id)).toBeNull();
+  });
+});
 
 import {
   COL_ERROR,

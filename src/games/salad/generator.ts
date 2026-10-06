@@ -34,6 +34,7 @@ import {
   DIFF_EASY,
   DIFF_HOLESONLY,
   GAMEMODE_NUMBERS,
+  LETTERS_GRID_CLUES_FROM,
   letterChar,
   type SaladBoard,
   type SaladParams,
@@ -56,6 +57,15 @@ import {
  * reaching it means a tier has become unreachable rather than merely thin.
  */
 const MAX_ATTEMPTS = 50_000;
+
+/**
+ * The bound for a Letters board clued on its border alone, where a try that
+ * fails is forty microseconds: most squares have more than one solution from
+ * their border, and are thrown away at the first solve. A 7x7 of two letters
+ * at Easy is found once in 42,000, so {@link MAX_ATTEMPTS} gave up on one deal
+ * in three with the board two seconds away.
+ */
+const MAX_BORDER_ONLY_ATTEMPTS = 250_000;
 
 function blankBoard(p: SaladParams): SaladBoard {
   const o2 = p.order * p.order;
@@ -174,8 +184,11 @@ function newLettersDesc(p: SaladParams, rs: RandomState): string {
   const nums = p.nums;
   const diff = p.diff;
   // Quality check: with a small grid, force the puzzle to be border-clues-only.
-  const nogrid = o < 8;
-  const attempt = retryLimit("salad: ABC End View generation", MAX_ATTEMPTS);
+  const nogrid = o < LETTERS_GRID_CLUES_FROM;
+  const attempt = retryLimit(
+    "salad: ABC End View generation",
+    nogrid ? MAX_BORDER_ONLY_ATTEMPTS : MAX_ATTEMPTS,
+  );
 
   for (;;) {
     attempt();

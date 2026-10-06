@@ -30,7 +30,12 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import {
+  difficultyItem,
+  noSuchTier,
+  tierNames,
+  tooRareToDeal,
+} from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -135,7 +140,7 @@ export function defaultParams(): SpokesParams {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SpokesParams>[] = [
   ...dimensionParamConfig<SpokesParams>({
-    doc: "Size of the grid in squares.",
+    doc: "Size of the grid in squares. A board of 8 squares or fewer has no Unreasonable puzzles, and on a 2x5 or a 2x6 they are too rare to deal.",
     bounds: { min: 2 },
   }),
   difficultyItem(DIFF_NAMES, {
@@ -145,6 +150,20 @@ export const paramConfig: ParamConfigItem<SpokesParams>[] = [
     },
   }),
 ];
+
+export function validateParams(p: SpokesParams, full: boolean): string | null {
+  // Measured 2026-10-06: none in 440,000 boards built at 2x2, and in 100,000
+  // at 2x3 and at 2x4. A 3x3 is found once in 140. Two wide and longer, the
+  // boards exist and take too long: once in 26,000 tries at 2x5, a minute a
+  // board, and once in 4,100 at 2x6, half a minute. Past 2x6 was not counted.
+  if (!full || p.diff !== "hard") return null;
+  const tier = DIFF_NAMES[DIFF_HARD] ?? "";
+  const squares = p.w * p.h;
+  if (squares <= 8) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
+  if (Math.min(p.w, p.h) === 2 && squares <= 12)
+    return tooRareToDeal(`${p.w}x${p.h} puzzles`, tier);
+  return null;
+}
 
 /** `WxH`, plus the generator-only difficulty letter. A missing or unknown
  * letter leaves the difficulty invalid (see `diffFromLevel`). */

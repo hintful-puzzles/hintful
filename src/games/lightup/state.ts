@@ -19,12 +19,17 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
-import { SYMM_REF4, SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
+import {
+  SYMM_NONE,
+  SYMM_REF4,
+  SYMM_ROT2,
+  SYMM_ROT4,
+} from "../../engine/symmetric-blacks.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 
 // --- cell flags (upstream values) -------------------------------------------
@@ -147,6 +152,43 @@ export function encodeParams(p: LightupParams, full: boolean): string {
     : `${p.w}x${p.h}`;
 }
 
+/**
+ * The refusal for a board too small to need the tier asked for, or `null`.
+ *
+ * Measured 2026-10-06 at 5%, 20% and 50% black, with the generator's ramp
+ * running over and over: none in 70,000 to 900,000 boards built a cell. A 3x3
+ * without symmetry has Unreasonable boards and a 2x5 has them, so the line is
+ * nine squares; the 3x3's center is its own mirror image, which is why
+ * symmetry costs it a tier.
+ *
+ * A 2x5 turned half round gave no Unreasonable board in 450,000 either, and
+ * is left for the generator to run out on: no line was found through it.
+ */
+function absentTier(p: LightupParams): string | null {
+  const tier = DIFF_NAMES[p.difficulty] ?? "";
+  const squares = p.w * p.h;
+  const is3x3 = p.w === 3 && p.h === 3;
+  if (p.difficulty === 0) return null;
+  if (squares <= 4) return noSuchTier("2x2 puzzle", tier);
+  if (p.difficulty === 1) {
+    return is3x3 && (p.symm === SYMM_REF4 || p.symm === SYMM_ROT4)
+      ? noSuchTier("3x3 puzzle with 4-way symmetry", tier)
+      : null;
+  }
+  if (squares < 9) return noSuchTier("puzzle of fewer than 9 squares", tier);
+  if (is3x3 && p.symm !== SYMM_NONE)
+    return noSuchTier("3x3 puzzle with symmetry", tier);
+  if (p.w === 4 && p.h === 4) {
+    // Mirrored: none in 170,000 boards built. Turned: 8 in 170,000, and none
+    // at all starting from 50% black, at five milliseconds a round.
+    if (p.symm === SYMM_REF4)
+      return noSuchTier("4x4 puzzle with 4-way mirror symmetry", tier);
+    if (p.symm === SYMM_ROT4)
+      return tooRareToDeal("4x4 puzzles with 4-way rotational symmetry", tier);
+  }
+  return null;
+}
+
 export function validateParams(p: LightupParams, full: boolean): string | null {
   if (p.w * p.h > 0x7fffffff) return AREA_TOO_LARGE;
   if (full) {
@@ -156,6 +198,7 @@ export function validateParams(p: LightupParams, full: boolean): string | null {
       return "4-fold symmetry is only available with square grids.";
     if ((p.symm === SYMM_ROT4 || p.symm === SYMM_REF4) && p.w < 3 && p.h < 3)
       return "Width or height must be at least 3 for 4-way symmetry.";
+    return absentTier(p);
   }
   return null;
 }

@@ -561,6 +561,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "targetVerbs",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1834,6 +1835,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "targetVerbs",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",

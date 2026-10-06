@@ -1,10 +1,11 @@
 # settle-the-cells-the-tier-walk-still-lists
 
-**Status: in progress (2026-10-05).** What
+**Status: done (2026-10-06).** What
 `deal-the-tier-a-custom-size-asks-for` measured and did not fix. The four
-games that dealt below the tier asked are settled, and a generator that gives
-up is now answered and not thrown; the cells under "The generator gave up"
-are still to count, game by game. "What was done" below has the detail.
+games that dealt below the tier asked are settled, a generator that gives up
+is answered and not thrown, and every cell under "The generator gave up" has
+been counted and refused, budgeted for, or left to a run-out with its count.
+"What was done" below has the detail, and "Left to a run-out" the remainder.
 
 ## Why
 
@@ -114,22 +115,85 @@ solver can make.
 - **The walk** grades Boats, by lowest solving cap. `describeDealtTiers`
   pins cells that deal at their tier.
 
-## What is left
+The rest was counted on 2026-10-06, each cell dealt with its retry bound
+lifted for 15 to 90 seconds on a loaded machine, so a time below is an upper
+bound. Each game's count is in a comment at its refusal or its budget.
 
-Every cell under "The generator gave up" except Bridges' and Map's, and the
-walk's sizes for a game whose fields declare no minimum. Three things learned
-here that apply to them:
+- **Ascent.** Absent, in 40,000 to 800,000 tries a cell: a 2x2 above Easy on
+  every grid; on the Rectangle, Normal at 2x3 and 3x3 and Hard on any board
+  two wide; without diagonals, a 2x3 above Easy and Hard at 2x4 and 2x5; on
+  the Honeycomb, Normal and Hard at 2x3, Tricky and Hard at 3x2, Hard at 4x2;
+  on the Hexagon, a 2x3 above Easy and Normal at 3x3. The cells are a table
+  (`lacksTier`): a 3x3 Rectangle has Tricky and Hard and no Normal, so no
+  line through size holds. Edges had none missing.
+- **Galaxies.** A 3x3 has no Unreasonable (none in 600,000 boards). The other
+  cells were rare against a bound of 200 regenerations: once in 830 at 4x4,
+  half a second away. The bound is now regenerations times squares. Its
+  run-out was a plain `Error`, which the midend did not answer.
+- **Keen**, multiplication only. Too rare to deal, at ten to thirty seconds a
+  board: Hard and Unreasonable at 5x5, 7x7, 8x8 and 9x9, and Tricky at 9x9.
+  A 4x4 and a 6x6 are found in a second or two and are dealt, as is a 3x3
+  Normal, once the bound is tries times the cube of the width.
+- **Light Up.** The cells were not rare by tries. The generator adds black
+  squares after each twenty failures and stayed at 90% for the rest of its
+  bound, where a small board has no tier above Easy, so one deal in ten of a
+  4x4 Unreasonable gave up whatever the bound. The ramp now starts over at
+  the top. Absent, at 5%, 20% and 50% black: a 2x2 above Easy, fewer than
+  nine squares at Unreasonable, a 3x3 with any symmetry at Unreasonable and
+  with 4-way symmetry at Normal, a 4x4 with 4-way mirror symmetry at
+  Unreasonable. Too rare: that 4x4 with 4-way rotational symmetry.
+- **Magnets.** A 3x6 has no board at the harder tier (none in 900,000),
+  where a 3x5 and a 3x7 do.
+- **Salad**, with 2 symbols at Normal. Absent on a Letters board smaller than
+  8x8, which is clued on its border alone, and on a 3x3 and a 4x4 Numbers
+  board; a 5x5 Numbers one is once in 36,000 tries and 48 seconds, and is
+  refused as too rare. A 7x7 Letters Easy with 2 symbols is once in 42,000
+  tries of forty microseconds, and the border-only bound was raised to it.
+- **Solo.** A 4 Jigsaw has nothing above Tricky, with the diagonals or
+  without (none in 220,000 to 370,000); with Killer cages it was not counted
+  and is not refused. A 2 Jigsaw with Killer cages has no board at all (none
+  in 4,850,000), which the walk reached only once it walked the rows field,
+  after the run whose report is committed here: `metrics/tier-walk.md` still
+  lists `2jka` as giving up, and the refusal is pinned in `solo.test.ts`.
+- **Spokes.** A board of 8 squares or fewer has no Unreasonable (none in
+  440,000 at 2x2 and in 100,000 at 2x3 and at 2x4). A 2x5 has them once in
+  26,000 tries, a minute a board, and a 2x6 once in 4,100, half a minute:
+  both are refused as too rare. A 3x3 is once in 140.
+- **Tracks.** A 4x5 Hard is once in 6,500 tries of 44 microseconds. The bound
+  on a small board is now tries times squares.
+- **A run-out is the one class.** Galaxies was not alone: Inertia, Pattern,
+  Separate, Undead, Black Box and `divvyRectangle` each ended a counted loop
+  with a plain `Error`. All throw `RetryLimitExceeded` now, and
+  `retry-bound.test.ts` refuses a `throw` standing straight after a loop that
+  draws unless it is that class. It found the last two, which a search of the
+  files named `generator.ts` had missed.
+- **The walk** starts a field that declares no minimum at 1 (Clusters and
+  Loopy; Subsets has one size, so its two cells were its whole population),
+  and no longer takes an empty list field for a number.
 
-- Ask what the tier follows before tabulating sizes. Bridges looked like a
-  table of sizes and was a count of islands.
-- Time a try first. Where it is microseconds the fix is a budget in work and
-  not a refusal.
-- Boats' three-boat fleet on a 3x3 (`3x3f2dn,2,1`) and Map's cells that take
-  seconds are what a run-out now answers; whether any deserves a sentence of
-  its own is a count nobody has made. Map's, timed 2026-10-05 under load:
-  `3x30n75du` ran out on 3 of 3, ten seconds each; `25x30n11dh` on 3 of 6,
-  four seconds a board when found; `10x10n85du` on 1 of 7 and `25x4n75du`
-  on 1 of 8. `6x6n30dh` dealt 7 of 7 at four seconds each.
+## Left to a run-out
+
+Counted, with no line found to name, or outside what this change measured:
+
+- **Boats**: a three-boat fleet on a 3x3 (`3x3f2dn,2,1`) above Easy.
+- **Light Up**: a 2x5 with 2-way rotational symmetry at Unreasonable, none in
+  450,000 boards. It runs out in about four seconds.
+- **Loopy**: a 3x3 and a 3x4 Penrose (rhombs) at Normal, none in 500,000
+  boards over 50 patches, six seconds a run-out. The widened walk found it,
+  and `count-loopys-smallest-penrose-boards` holds it.
+- **Map**, timed 2026-10-05 under load: `3x30n75du` ran out on 3 of 3, ten
+  seconds each; `25x30n11dh` on 3 of 6, four seconds a board when found;
+  `10x10n85du` on 1 of 7 and `25x4n75du` on 1 of 8.
+- **Salad**: Normal on a Numbers board is slow at every size past 5x5 (an
+  8x8 with 2 symbols took 130 seconds once), and the walk leaves twenty of
+  its cells out as slow. That is a question of time and not of tier, and
+  `bound-custom-sizes-by-their-deal` holds it.
+- **Spokes**: Unreasonable two wide past 2x6 was not counted, and the walk
+  leaves those cells out as slow. A try there is seven milliseconds or more,
+  so a run-out is over a minute; `bound-custom-sizes-by-their-deal` again.
+- **What the walk does not deal**: a choice field as no preset has it (an
+  Ascent grid, a Light Up symmetry) and a size between its steps (a 3x4).
+  The cells beside each refusal here were counted by hand for that reason.
 
 ## Hints to pull in
 
