@@ -196,6 +196,10 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
  * below means neither can rot.
  */
 const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
+  "scripts/checks/deal-walk.test.ts":
+    "It asks what a size past the menu costs to deal, so it writes every tier " +
+    "onto each menu's largest size and onto multiples of it, which no menu " +
+    "offers, and it is a report outside the gate.",
   "scripts/checks/tier-walk.test.ts":
     "Its question is the one a menu cannot be asked: whether a size the menu " +
     "does not offer can carry the tier written onto it. So it writes every tier " +

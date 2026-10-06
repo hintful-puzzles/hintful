@@ -70,6 +70,7 @@ import {
   status,
   TARGET,
   targetize,
+  validateParams,
   WALL,
 } from "./state.ts";
 
@@ -339,6 +340,7 @@ export const sokobanGame: Game<
   decodeParams,
   transposeParams: transposeDimensions(),
   paramConfig,
+  validateParams,
 
   newDesc: newSokobanDesc,
   newState,

@@ -67,6 +67,15 @@ const MAX_ATTEMPTS = 50_000;
  */
 const MAX_BORDER_ONLY_ATTEMPTS = 250_000;
 
+/**
+ * The bound for a 4x4 Number Ball board, five times the mean of its rarest
+ * cell. Measured 2026-10-06: with three numbers at Normal, 29 deals in 80 ran
+ * {@link MAX_ATTEMPTS} out, nine seconds each, which is a board once in
+ * 49,000 tries. A try there is a fifth of a millisecond, so this bound runs
+ * out once in 150 deals and takes three quarters of a minute to do it.
+ */
+const MAX_SMALL_NUMBERS_ATTEMPTS = 250_000;
+
 function blankBoard(p: SaladParams): SaladBoard {
   const o2 = p.order * p.order;
   return {
@@ -134,7 +143,10 @@ function newNumbersDesc(p: SaladParams, rs: RandomState): string {
   const o2 = o * o;
   const nums = p.nums;
   const diff = p.diff;
-  const attempt = retryLimit("salad: Number Ball generation", MAX_ATTEMPTS);
+  const attempt = retryLimit(
+    "salad: Number Ball generation",
+    o === 4 ? MAX_SMALL_NUMBERS_ATTEMPTS : MAX_ATTEMPTS,
+  );
 
   for (;;) {
     attempt();

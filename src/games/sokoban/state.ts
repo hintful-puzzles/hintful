@@ -87,12 +87,28 @@ export function defaultParams(): SokobanParams {
   return { w: 10, h: 12 };
 }
 
+/**
+ * The largest board a level is dealt on. A deal generates levels until the
+ * hint's search can finish one (`generator.ts`, `dealTries`), and both the
+ * levels that takes and the cost of each grow with the area. Measured
+ * 2026-10-06: the mean deal is 4.5 s at 30×30, 12 s at 30×40 and 30 s at
+ * 40×40, where the search finished 3 levels in 100. A board that arrives with
+ * its desc is any size.
+ */
+const MAX_DEAL_AREA = 1200;
+
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SokobanParams>[] =
   dimensionParamConfig<SokobanParams>({
-    doc: "Size of the grid in squares.",
+    doc: `Size of the grid in squares. A new level has ${MAX_DEAL_AREA} squares at most, since a larger one the hint can follow takes too long to find.`,
     bounds: { min: 4 },
   });
+
+export function validateParams(p: SokobanParams, full: boolean): string | null {
+  return full && p.w * p.h > MAX_DEAL_AREA
+    ? `Width times height must be at most ${MAX_DEAL_AREA} to deal a level; a larger one takes too long to find.`
+    : null;
+}
 
 /** Upstream `decode_params`: `W` or `WxH`, square fallback on a bare number. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [

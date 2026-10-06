@@ -337,6 +337,11 @@ describe("salad with two symbols at Normal", () => {
   describeDealtTiers(saladGame, ["6n2Bdx", "7n2Bdx"], { seldom: true });
 });
 
+// Nine seconds a board, and one deal in three past the bound every other
+// Numbers size has. Seven deals, since the seventh is the first of these
+// that the shorter bound gives up on: with it planted, six passed.
+describeDealtTiers(saladGame, ["4n3Bdx"], { seldom: true, deals: 7 });
+
 describe("salad generator", () => {
   it("is deterministic: the same seed gives the same description", () => {
     const p = PRESETS[2];

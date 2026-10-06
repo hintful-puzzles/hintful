@@ -1073,6 +1073,34 @@ raised, repeat the sizes near it across several seeds first. Two corollaries:
   `MAX_REGENERATE` cap of 10,000. That predicts 5.7% of deals failing, and
   7 of 100 and 11 of 200 were observed. Every other preset measured below `10^−15`.
 
+**The instrument past the menu is the deal walk**, `npm run deal-walk`
+([`scripts/deal-walk.ts`](../../scripts/deal-walk.ts)): every game, each
+menu's largest size at every tier and then 1.5 to 8 times it, a few deals a
+cell, each in a watched process so that a deal which never returns is killed
+and written down. It writes `metrics/deal-walk.md`. Three things it has shown,
+which a new generator should expect of itself:
+
+- **Few games are quick at every size their dialog takes.** Run across the
+  collection on 2026-10-06 it found some whose deal stayed quick out to eight
+  times the menu (the shuffles, Mines, Map, Guess and Cube among them) and,
+  in most of the others, a ladder that passed ten seconds a board or gave no
+  answer in a minute between 1.5 and 4 times the menu's largest. None ran out
+  of memory first.
+- **The walls differ by tier, by a choice field and by more than size.** Boats
+  at Easy is quick at 80x80 and at Normal takes 26 seconds at 30x30; Loopy's
+  line is in a different place on each tiling. A bound written as one maximum
+  width is wrong for most of what it covers, so write it in the unit the cost
+  follows and for the cell it was measured at.
+- **A size inside the menu's range can hold a deal that never ends.**
+  Mathrax's 9x9 at its top tier was dealt quickly three times by the tier walk
+  and gave no answer in ten minutes on the next seed. A few quick deals clear
+  nothing where the solver searches: name the cell and count a dozen
+  (`DEAL_WALK_CELLS`, in the script's header).
+
+A cell the walk lists is a few deals, enough to find where a ladder leaves a
+second and not enough to place a line. Before a bound is written, count the
+sizes each side of it.
+
 ### Solver-gated generation
 
 **When a generator strips or accepts clues by re-running the solver, the

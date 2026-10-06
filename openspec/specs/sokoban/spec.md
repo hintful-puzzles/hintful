@@ -155,7 +155,9 @@ so that a given seed always produces the same board
 and shared game IDs remain reproducible. A level SHALL be generated exactly as upstream
 generates it, and the board dealt SHALL be the first such level from the seed's stream that
 the hint's search finishes from its opening within a fixed budget, so that the hint does not
-refuse a board as dealt. A deal SHALL generate no more than a fixed number of levels, and
+refuse a board as dealt. A deal SHALL generate no more than a number of levels fixed by the
+board's area, eight at every menu size and more on a larger board in proportion to how
+seldom the search finishes a level there, and
 where the search finishes none of those before the last, it SHALL deal the last as generated,
 which can be solved like every level, so that a deal ends at every size.
 
@@ -172,8 +174,14 @@ which can be solved like every level, so that a deal ends at every size.
 
 #### Scenario: A deal ends where the search finishes no level
 
-- **WHEN** a deal is made with a budget in which the search finishes no level
+- **WHEN** a deal is made at a menu size with a budget in which the search finishes no level
 - **THEN** the board dealt is the eighth level of the seed's stream
+
+#### Scenario: A larger board is given more levels
+
+- **WHEN** a deal is made on a board larger than the menu's with a budget in which the
+  search finishes no level
+- **THEN** the board dealt is a later level of the seed's stream than the eighth
 
 ### Requirement: Sokoban's hint offers one push, set against the barrel's other pushes
 
@@ -308,3 +316,21 @@ that a position's verdict is the same on every machine.
   finish within 300,000 positions before pushes were ordered by their distance from what is
   out of place
 - **THEN** it finds a line within the budget a deal allows
+
+### Requirement: Sokoban deals no level past the area its search can open
+
+Sokoban SHALL refuse to deal a level on a board of more than 1200 squares, with a sentence
+that names the limit, since the levels a deal must generate there to find one the hint can
+open take longer than a player would wait. The refusal SHALL apply only when a level is to
+be dealt: a board that arrives with its description SHALL load at any size.
+
+#### Scenario: A board past the limit is refused when dealing
+
+- **WHEN** the Custom dialog or a type link asks for a board whose width times height is
+  more than 1200
+- **THEN** no level is dealt and the refusal says the limit
+
+#### Scenario: A board past the limit loads from its description
+
+- **WHEN** a game ID carries a description for a board of more than 1200 squares
+- **THEN** its params are accepted

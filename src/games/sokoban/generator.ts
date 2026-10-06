@@ -206,11 +206,22 @@ function sokobanGenerate(w: number, h: number, rs: RandomState): Uint8Array {
  * (`strengthen-the-sokoban-solver` design D8). */
 const DEAL_BUDGET = 20_000;
 
-/** Levels a deal may generate. At 16×20 the search finishes about three
- * levels in four, so the last is dealt unchecked about once in 35,000 deals;
- * a Custom board of 40×40 finishes about one in 85, and without the bound its
- * deal ran for minutes. */
-const DEAL_TRIES = 8;
+/**
+ * Levels a deal may generate on a board of `area` squares: five times the
+ * mean the search needs there, and eight at least. How often the search
+ * finishes a level follows the area. Measured 2026-10-06 over 100 to 200
+ * levels a size, it finished 74 in 100 at 16×20, 47 at 20×20, 31 at 20×24, 14
+ * at 24×25 and at 24×30, 9 at 30×30, 5 at 30×40 and 3 at 40×40, and the levels
+ * to a finished one are within a fifth of `(area / 260)²` at each. Eight
+ * levels at every size would deal a 30×30 unchecked one time in two.
+ *
+ * A level the search gives up on costs 0.1 s at 16×20 and 0.6 s at 30×40, so
+ * the mean deal there is 12 s and one that generates every level it may is
+ * a minute.
+ */
+export function dealTries(area: number): number {
+  return Math.max(8, Math.ceil(5 * (area / 260) ** 2));
+}
 
 /** A level as upstream generates it, unchecked: what the frozen C reference
  * pins (`sokoban-differential.test.ts`). */
@@ -229,7 +240,7 @@ export function sokobanLevel(p: SokobanParams, rng: RandomState): SokobanState {
  * Every level can be solved, being made by playing backwards, but some are
  * past the search, and a board the hint refuses from its opening is one whose
  * hint never helps (`judge-rivals-for-search-hints` design D5). After
- * `DEAL_TRIES` levels the last is dealt as it is, since it can still be
+ * {@link dealTries} levels the last is dealt as it is, since it can still be
  * solved and a deal has to end.
  */
 export function dealtLevel(
@@ -238,7 +249,8 @@ export function dealtLevel(
   budget = DEAL_BUDGET,
 ): SokobanState {
   let state = sokobanLevel(p, rng);
-  for (let tries = 1; tries < DEAL_TRIES; tries++) {
+  const limit = dealTries(p.w * p.h);
+  for (let tries = 1; tries < limit; tries++) {
     if (search(state, budget).kind === "found") break;
     state = sokobanLevel(p, rng);
   }

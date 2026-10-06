@@ -5,7 +5,8 @@
 
 import { describe, expect, it } from "vitest";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
-import { dealtLevel, sokobanLevel } from "./generator.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
+import { dealTries, dealtLevel, sokobanLevel } from "./generator.ts";
 import { sokobanGame } from "./index.ts";
 import {
   type Position,
@@ -170,6 +171,21 @@ describe("a deal", () => {
     for (let i = 1; i < 8; i++) eighth = sokobanLevel(p, rng);
     const dealt = dealtLevel(p, randomNew("no-budget"), 0);
     expect(encodeBoard(dealt)).toBe(encodeBoard(eighth));
+  });
+
+  it("generates more levels on a larger board, where the search finishes fewer", () => {
+    // Every menu size keeps its eight, so a seed deals the board it did.
+    const menu = leafPresets(sokobanGame);
+    expect(menu.length).toBeGreaterThan(0);
+    for (const { params } of menu) expect(dealTries(params.w * params.h)).toBe(8);
+    expect(dealTries(30 * 30)).toBe(60);
+    // And the deal uses them: with no budget it ends at the last it may make.
+    const big = { w: 20, h: 24 };
+    const rng = randomNew("no-budget-big");
+    let last = sokobanLevel(big, rng);
+    for (let i = 1; i < dealTries(20 * 24); i++) last = sokobanLevel(big, rng);
+    const dealt = dealtLevel(big, randomNew("no-budget-big"), 0);
+    expect(encodeBoard(dealt)).toBe(encodeBoard(last));
   });
 });
 

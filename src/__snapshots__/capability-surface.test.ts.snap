@@ -1749,6 +1749,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "solvedFlash",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "aim",

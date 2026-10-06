@@ -22,9 +22,11 @@
  * runs from its declared lower bound, or from 1 where it declares none, up to
  * the largest value a preset holds, once with the fields stepped together (4x4, 5x5, …) and once
  * each alone on every menu shape. Sizes past the largest preset are
- * `bound-custom-sizes-by-their-deal`'s question, and so is a deal that is
- * slow: once a tier takes longer than `TIER_WALK_SLOW_MS` on a shape, the
- * larger sizes of that shape are left out at that tier and listed as such.
+ * `npm run deal-walk`'s question (`scripts/deal-walk.ts`), and so is a deal
+ * that is slow: once a tier takes longer than `TIER_WALK_SLOW_MS` on a shape,
+ * the larger sizes of that shape are left out at that tier and listed as
+ * such, and a cell it was quick at three times can still hold a deal that
+ * never ends (Mathrax's 9x9 at its top tier did).
  *
  * **A cell that passes is not cleared.** A few deals convict a cell that fails
  * and say little about one that does not: a tier a generator misses one time

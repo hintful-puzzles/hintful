@@ -130,6 +130,14 @@ describe("Sokoban params", () => {
     );
     expect(paramsError(sokobanGame, { w: 4, h: 4 }, true)).toBeNull();
   });
+
+  it("deals no level of more than 1200 squares, and loads one", () => {
+    expect(paramsError(sokobanGame, { w: 30, h: 40 }, true)).toBeNull();
+    expect(paramsError(sokobanGame, { w: 40, h: 31 }, true)).toBe(
+      "Width times height must be at most 1200 to deal a level; a larger one takes too long to find.",
+    );
+    expect(paramsError(sokobanGame, { w: 40, h: 31 }, false)).toBeNull();
+  });
 });
 
 // --- desc codec -------------------------------------------------------
