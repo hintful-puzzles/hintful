@@ -55,13 +55,36 @@ down and implemented, not asked.
 Saying something in a reply, or filing it in an agent's own memory, persists
 nothing. The next session starts from the repo.
 
-- A follow-up becomes a scaffolded change under `openspec/changes/`. Verify
-  the defect is real before filing: an audit proposed on an unchecked
-  suspicion costs the next reader an investigation.
+- A follow-up that clears the bar below becomes a scaffolded change under
+  `openspec/changes/`. Verify the defect is real before filing: an audit
+  proposed on an unchecked suspicion costs the next reader an investigation.
 - A rule goes in the guide for the part of the tree it binds, and in
   `AGENTS.md` only when it binds every session.
 - If it is not worth a commit, say plainly that you looked and found nothing.
 - Never cite an agent-private note to the owner. They cannot read it.
+
+## The backlog is being drained
+
+The owner's decision (2026-10-07): the open changes are worked down to none
+before new product work starts, and a session does not add to them. Changes
+were being opened as fast as they were closed, about ten a day each way, and a
+well-scoped change goes stale when the code moves under it.
+
+- **A session ends with its change archived and nothing new filed.** It takes
+  as long as the change needs.
+- **A new change is filed only where the benefit is unambiguously strong**: a
+  player hits the defect, or data is at risk. That several games write the
+  same thing is not such a benefit while the backlog drains, however true.
+- **What does not clear that bar is not filed.** If it is small and the
+  change's own goal needs it, fix it there. Otherwise raise it to the owner in
+  the closing message, with a recommendation, and leave it.
+- **A change does not grow to hold what would have been filed.** It absorbs
+  what its goal requires and no more.
+- **Game ports and hints wait.** `add-*-ts-port`, a game's hint and
+  `hintless-games-in-reserve` are not part of the drain, and a session picking
+  its next change passes over them.
+
+Retire this section when the owner says the drain is over.
 
 ## Before archiving
 

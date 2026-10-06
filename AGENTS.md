@@ -40,8 +40,7 @@ incident only what a later session acts on: the rule, and the shape to look for.
   cost. Breaking compatibility is allowed, and it is the owner's call. An
   internal design decision is yours: change it and record the reason.
 - **Own everything in the repo.** Never call a problem "pre-existing",
-  "unrelated" or "out of scope". Fix it, file it as a change, or raise it with
-  a recommendation.
+  "unrelated" or "out of scope". Fix it, or raise it with a recommendation.
 - **Continue by default.** Do not ask whether to continue, commit or move on.
   Ask only for a real decision: a trade-off with no clear winner, two readings
   that produce different work, or something irreversible.
@@ -52,9 +51,12 @@ incident only what a later session acts on: the rule, and the shape to look for.
   specific concern. The owner's word is needed for three things only:
   player-visible work where you are genuinely unsure which answer is better,
   anything they asked for by name, and a compatibility break (asked before).
-- **A decision or a follow-up is persisted by a commit, or it did not happen.**
-  A follow-up becomes a change under `openspec/changes/`, once you have
-  confirmed the defect is real. Never cite an agent-private note to the owner.
+- **A decision is persisted by a commit, or it did not happen.** Never cite an
+  agent-private note to the owner.
+- **Finish with the change archived and nothing new filed.** A session takes
+  as long as its change needs. File a new change only for what a player hits
+  or what puts data at risk; raise anything else to the owner in the closing
+  message (`docs/work-management.md` § "The backlog is being drained").
 - **Update the guide in the change that taught you something**, and the help
   page in the change that alters what it describes. The guides under `docs/`
   are a live wiki. Cite a section by file and heading name; only
