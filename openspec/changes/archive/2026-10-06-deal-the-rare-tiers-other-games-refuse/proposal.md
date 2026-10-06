@@ -1,7 +1,35 @@
 # deal-the-rare-tiers-other-games-refuse
 
-**Status: scaffolded, not started (2026-10-06).** A follow-up from
+**Status: done (2026-10-06).** A follow-up from
 `keep-a-board-ready-for-the-next-deal`.
+
+## What was found
+
+The line taken is half a minute a board on average: under it a cell is dealt,
+over it refused with the wait written beside the refusal
+(`docs/games/solver-and-generator.md`, "Rare is not absent"). The figures are
+beside each refusal and each bound in the source.
+
+Three things the list below did not have, all from timing the cells beside a
+refusal:
+
+- Spokes dealt a 2x7 and longer at Unreasonable at 100 seconds a board and
+  more, and Salad dealt an 8x8 Numbers board of two symbols at Normal at 75
+  seconds and a 9x9 at five minutes. Both are refused now, which a link naming
+  only such a type will meet; a link carrying its board still loads.
+- Map's maps of 8 to 10 regions are a second or two at 6x6, and the cells
+  with no board to find are the ones under five squares wide.
+- Keen's figures below ("ten to thirty seconds") were 4 to 20 seconds for all
+  but the 9x9 above Tricky.
+
+Two things seen and not confirmed, so not filed:
+
+- Light Up's turned 4x4 at Unreasonable is found in a deal's first twenty
+  rounds or not at all in the next 89 seconds. The order clue numbers are
+  removed in is shuffled once a deal, which may be what a deal is stuck with.
+- Salad's Number Ball bound is 50,000 tries at every size, and a try on a
+  9x9 is 0.3 to 0.9 seconds, so a cell with no board would run for hours. No
+  such cell is known.
 
 ## Why
 

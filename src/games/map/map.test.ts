@@ -37,7 +37,7 @@ import {
 } from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { newMapDesc } from "./generator.ts";
+import { newMapDesc, retryBudget } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { BE, TE } from "./map-data.ts";
 import {
@@ -177,19 +177,40 @@ describe("map params codec", () => {
     budgets: 2,
   });
 
+  const refusal = (id: string): string | null =>
+    paramsError(mapGame, decodeParams(id), true);
+
   it("says rare, and not absent, where a board exists", () => {
-    const refusal = (id: string): string | null =>
-      paramsError(mapGame, decodeParams(id), true);
-    expect(refusal("6x6n8dn")).toBe("Normal maps of 8 regions are too rare to deal.");
-    expect(refusal("6x6n10du")).toBe(
-      "Unreasonable maps of 10 regions are too rare to deal.",
+    expect(refusal("4x5n8dn")).toBe(
+      "Normal maps of 8 regions less than 5 squares wide are too rare to deal.",
+    );
+    expect(refusal("8x4n10du")).toBe(
+      "Unreasonable maps of 10 regions less than 5 squares wide are too rare to deal.",
     );
     expect(refusal("3x20n30dh")).toBe(
       "Tricky maps three squares wide are too rare to deal.",
     );
     expect(refusal("3x20n30du")).toBeNull();
-    expect(refusal("6x6n8de")).toBeNull();
-    expect(paramsError(mapGame, decodeParams("6x6n8dn"), false)).toBeNull();
+    expect(refusal("4x5n8de")).toBeNull();
+    expect(refusal("4x5n9dn")).toBeNull();
+    expect(paramsError(mapGame, decodeParams("4x5n8dn"), false)).toBeNull();
+  });
+
+  describe("few regions, where a tier is found seldom", () => {
+    const SELDOM = ["5x5n8dn", "6x6n9dh", "6x6n10du", "15x20n10dh"];
+
+    it("is dealt from five squares wide, with nine times the work budget", () => {
+      for (const id of SELDOM) expect(refusal(id)).toBeNull();
+      const budget = (id: string): number => retryBudget(decodeParams(id));
+      expect(budget("6x6n8de")).toBe(277_777);
+      expect(budget("6x6n8dn")).toBe(2_500_000);
+      expect(budget("6x6n10dn")).toBe(222_222);
+      expect(budget("6x6n10dh")).toBe(2_000_000);
+      expect(budget("6x6n11dh")).toBe(budget("6x6n11dn"));
+    });
+
+    // One to ten seconds a board on average.
+    describeDealtTiers(mapGame, SELDOM, { seldom: true });
   });
 
   // Two cells beside the refusals, and two a count of fifty tries used to

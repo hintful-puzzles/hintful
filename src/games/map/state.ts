@@ -135,20 +135,34 @@ function tierRefusal(p: MapParams): string | null {
   if (Math.min(p.w, p.h) === 2) return noSuchTier("map two squares wide", tier);
   // 3,400,000, from 3x3 to 10x10.
   if (p.n === p.w * p.h) return noSuchTier("map whose every square is a region", tier);
-  if (p.n === 8) {
-    // Normal once in 35,000 to 120,000, which is seconds; above it, 4,000,000.
-    return p.diff === DIFF_NORMAL
-      ? tooRareToDeal("maps of 8 regions", tier)
-      : noSuchTier("map of 8 regions", tier);
-  }
-  if (p.diff >= DIFF_HARD) {
-    // Once in 20,000 to 95,000: a second at 6x6 and seven at 15x20.
-    if (p.n <= 10) return tooRareToDeal(`maps of ${p.n} regions`, tier);
-    // Once in 60,000 to 335,000. Unreasonable is found within 45,000.
-    if (p.diff === DIFF_HARD && Math.min(p.w, p.h) === 3)
-      return tooRareToDeal("maps three squares wide", tier);
-  }
+  // 4,000,000.
+  if (p.n === 8 && p.diff > DIFF_NORMAL) return noSuchTier("map of 8 regions", tier);
+  const narrowest = Math.min(p.w, p.h);
+  // Measured 2026-10-06 at 3x4, 4x4, 4x5 and 4x8: none in 1,000,000 to
+  // 3,600,000 at most cells, and at the rest a board in five to thirty
+  // seconds. From five wide they are dealt (`fewRegionsTierIsSeldom`).
+  if (fewRegionsTierIsSeldom(p) && narrowest < 5)
+    return tooRareToDeal(`maps of ${p.n} regions less than 5 squares wide`, tier);
+  // Measured 2026-10-06 over a minute a cell: a 3x10 of 20 regions and a 3x30
+  // of 30 gave a board in ten to fifteen seconds, a 3x10 of 11 gave one in
+  // 1,550,000 maps, and a 3x5 of 11 and a 3x30 of 75 gave none. No bound is
+  // sized to that. Unreasonable is found within 45,000.
+  if (p.diff === DIFF_HARD && narrowest === 3)
+    return tooRareToDeal("maps three squares wide", tier);
   return null;
+}
+
+/**
+ * Whether the map has few enough regions that its tier is found seldom: 8 at
+ * Normal, and 9 or 10 above it. Measured 2026-10-06 from 5x5 to 30x25 with
+ * the generator's bound lifted, 2 to 51 boards a cell: a board takes one to
+ * three seconds at 5x6 and 6x6, up to fifteen at 5x5, and ten to eighteen at
+ * 15x20. The worst was a 30x25 of 9 regions at Tricky, at 45 seconds over two
+ * boards. The generator gives these a budget of their own, and they are dealt
+ * because the app keeps the next board ready (`src/puzzle/deal-ahead.ts`).
+ */
+export function fewRegionsTierIsSeldom(p: MapParams): boolean {
+  return p.n === 8 ? p.diff === DIFF_NORMAL : p.n <= 10 && p.diff >= DIFF_HARD;
 }
 
 // --- moves -----------------------------------------------------------

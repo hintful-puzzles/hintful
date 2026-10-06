@@ -50,27 +50,35 @@ interface DealingGame<Params> {
  * the lowest cap that solves it is that tier. For the cells beside a refusal,
  * and for a tier rare enough at its size that the retry bound was sized to it.
  * `deals` boards a cell, from fixed seeds.
+ *
+ * `seldom` is for the cells whose board takes seconds to find and whose bound
+ * was sized to that: one board each, in the slow tier.
  */
 export function describeDealtTiers<Params>(
   game: DealingGame<Params> & { difficulty?: DifficultyContract<Params> },
   cells: readonly string[],
-  opts: { readonly deals?: number } = {},
+  opts: { readonly deals?: number; readonly seldom?: boolean } = {},
 ): void {
-  const deals = opts.deals ?? 3;
-  describe("a size that carries its tier", () => {
-    it.each(cells)(`%s deals ${deals} boards that need it`, (cell) => {
-      const { difficulty } = game;
-      if (!difficulty) throw new Error("expected a difficulty contract");
-      const p = game.decodeParams(cell);
-      const tiers = difficultyTiers(game)?.length ?? 0;
-      expect(paramsError(game, p, true)).toBeNull();
-      for (let seed = 0; seed < deals; seed++) {
-        const { desc } = game.newDesc(p, randomNew(`dealt-${cell}-${seed}`));
-        expect(lowestSolvingCap(cappedSolveFor(difficulty, p, desc), tiers)).toBe(
-          tierOf(game, p),
-        );
-      }
-    });
+  const seldom = opts.seldom ?? false;
+  const deals = opts.deals ?? (seldom ? 1 : 3);
+  const title = seldom ? "a tier found seldom" : "a size that carries its tier";
+  describe(title, () => {
+    (seldom ? itSlow : it).each(cells)(
+      `%s deals ${deals} boards that need it`,
+      (cell) => {
+        const { difficulty } = game;
+        if (!difficulty) throw new Error("expected a difficulty contract");
+        const p = game.decodeParams(cell);
+        const tiers = difficultyTiers(game)?.length ?? 0;
+        expect(paramsError(game, p, true)).toBeNull();
+        for (let seed = 0; seed < deals; seed++) {
+          const { desc } = game.newDesc(p, randomNew(`dealt-${cell}-${seed}`));
+          expect(lowestSolvingCap(cappedSolveFor(difficulty, p, desc), tiers)).toBe(
+            tierOf(game, p),
+          );
+        }
+      },
+    );
   });
 }
 

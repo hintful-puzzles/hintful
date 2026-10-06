@@ -533,7 +533,7 @@ export const mapGame: Game<
       bounds: { min: 2 },
     }),
     numberItem<MapParams>("regions", "Regions", "n", {
-      doc: "How many regions the map is divided into, which can be no more than the grid has squares. A map of fewer than 8 regions, or with a region to every square, has only Easy puzzles. Normal ones are too rare to deal at 8 regions, and Tricky and Unreasonable ones below 11.",
+      doc: "How many regions the map is divided into, which can be no more than the grid has squares. A map of fewer than 8 regions, or with a region to every square, has only Easy puzzles. Normal ones are rare at 8 regions, and Tricky and Unreasonable ones below 11: the first can take a quarter of a minute to appear, and on a grid less than 5 squares wide they are too rare to deal.",
       bounds: { min: 5 },
       label: { slot: "tail", words: (p) => `${p.n} regions` },
     }),

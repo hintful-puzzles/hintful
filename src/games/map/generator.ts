@@ -14,7 +14,7 @@ import { shuffle } from "../../engine/shuffle.ts";
 import { gengraph, graphVertexStart } from "./graph.ts";
 import { encodeMapDesc } from "./map-data.ts";
 import { mapSolver, SOLVER_UNIQUE } from "./solver.ts";
-import type { MapParams } from "./state.ts";
+import { fewRegionsTierIsSeldom, type MapParams } from "./state.ts";
 
 const FOUR = 4;
 const FIVE = 5;
@@ -275,6 +275,23 @@ function fourcolor(
 
 const WORK_BUDGET = 80_000_000;
 
+/**
+ * The budget where few regions make the tier seldom found
+ * (`fewRegionsTierIsSeldom`): five times the most work a board took on
+ * average, which a deal runs out once in 150 (`e^-5`), after a minute and a
+ * half. Measured 2026-10-06 in squares times regions times maps built: 9 to
+ * 144 million from 5x5 to 15x20, the most at a 15x20 of 8 regions at Normal.
+ * A 30x25 of 9 regions at Tricky took 358 million over two boards, and runs
+ * this out about one deal in eight.
+ */
+const FEW_REGIONS_WORK_BUDGET = 720_000_000;
+
+/** How many maps the generator builds before it gives up. */
+export function retryBudget(p: MapParams): number {
+  const work = fewRegionsTierIsSeldom(p) ? FEW_REGIONS_WORK_BUDGET : WORK_BUDGET;
+  return Math.max(MAX_REGENERATE, Math.floor(work / (p.w * p.h * p.n)));
+}
+
 export function newMapDesc(
   p: MapParams,
   rs: RandomState,
@@ -291,10 +308,7 @@ export function newMapDesc(
   // microseconds, and at some sizes a tier is found once in tens of
   // thousands. Squares times regions tracks what a try costs: budgeted by
   // squares alone, a 3x30 of 75 regions ran for two minutes before giving up.
-  const attempt = retryLimit(
-    "map: generation",
-    Math.max(MAX_REGENERATE, Math.floor(WORK_BUDGET / (wh * n))),
-  );
+  const attempt = retryLimit("map: generation", retryBudget(p));
   for (;;) {
     attempt();
 

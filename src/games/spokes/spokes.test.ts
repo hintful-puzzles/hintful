@@ -313,12 +313,15 @@ describe("spokes two wide at Unreasonable, where a board is a minute away", () =
     paramsError(spokesGame, decodeParams(id), true);
 
   it("says rare, and not absent", () => {
-    expect(refusal("2x5dh")).toBe("Unreasonable 2x5 puzzles are too rare to deal.");
-    expect(refusal("6x2dh")).toBe("Unreasonable 6x2 puzzles are too rare to deal.");
-    expect(paramsError(spokesGame, decodeParams("2x5dh"), false)).toBeNull();
+    for (const id of ["2x5dh", "6x2dh", "2x7dh", "10x2dh"]) {
+      expect(refusal(id)).toBe(
+        "Unreasonable puzzles two squares wide are too rare to deal.",
+      );
+      expect(paramsError(spokesGame, decodeParams(id), false)).toBeNull();
+    }
   });
 
-  it.each(["2x7dh", "3x4dh", "2x6dt"])("%s is dealt", (id) => {
+  it.each(["3x4dh", "3x5dh", "2x6dt", "2x10dt"])("%s is dealt", (id) => {
     expect(refusal(id)).toBeNull();
   });
 });

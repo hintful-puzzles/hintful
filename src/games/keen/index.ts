@@ -434,7 +434,7 @@ export const keenGame: Game<
       kw: "multiplication-only",
       name: "Multiplication only",
       type: "boolean",
-      doc: "When enabled, every cage's clue is a product: no sums, differences or ratios. Above Tricky such puzzles are too rare to deal except at 4x4 and 6x6, and a 9x9 is too rare above Normal.",
+      doc: "When enabled, every cage's clue is a product: no sums, differences or ratios. Such puzzles are rare above Tricky, and at 9x9 above Normal: except at 4x4 and 6x6 the first can take a quarter of a minute to appear, and a 9x9 above Tricky is too rare to deal.",
       label: {
         slot: "tail",
         words: (p) => (p.multiplicationOnly ? "multiplication only" : null),

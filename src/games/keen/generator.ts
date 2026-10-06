@@ -24,6 +24,8 @@ import {
   C_SUB,
   clueOp,
   clueVal,
+  DIFF_EXTREME,
+  DIFF_HARD,
   DIFF_NORMAL,
   diffToLevel,
   encodeBlockStructure,
@@ -57,6 +59,46 @@ const DEAL_ORDER = [
  * in 58,000, so the house bound of 10,000 gave up on a board a second away.
  */
 const WORK_BUDGET = 15_000_000;
+
+/**
+ * The tries a board takes, on average, where multiplication alone makes a
+ * tier seldom found, or 0. Measured 2026-10-06 over 13 to 24 boards a cell
+ * with the bound lifted:
+ *
+ * | size | tier | tries | seconds a board | worst |
+ * | --- | --- | --- | --- | --- |
+ * | 5x5 | Hard | 163,000 | 13 | 59 |
+ * | 5x5 | Unreasonable | 170,000 | 18 | 40 |
+ * | 7x7 | Hard | 14,000 | 4 | 18 |
+ * | 7x7 | Unreasonable | 18,000 | 7 | 40 |
+ * | 8x8 | Hard | 27,000 | 13 | 32 |
+ * | 8x8 | Unreasonable | 29,000 | 15 | 81 |
+ * | 9x9 | Tricky | 37,000 | 20 | 69 |
+ *
+ * A 4x4 takes 17,000 and 59,000 and a 6x6 4,000, which {@link WORK_BUDGET}
+ * covers.
+ */
+function seldomTries({ w, diff, multiplicationOnly }: KeenParams): number {
+  if (!multiplicationOnly) return 0;
+  const level = diffToLevel(diff);
+  if (level === DIFF_HARD) return w === 9 ? 37_000 : 0;
+  if (level < DIFF_EXTREME) return 0;
+  if (w === 5) return 170_000;
+  if (w === 7) return 18_000;
+  if (w === 8) return 29_000;
+  return 0;
+}
+
+/**
+ * How many boards the generator tries before it gives up: {@link WORK_BUDGET}
+ * over what a try costs, and five times the mean where a tier is found
+ * seldom, which a deal runs out once in 150 (`e^-5`). Those are dealt because
+ * the app keeps the next board ready (`src/puzzle/deal-ahead.ts`), so the
+ * wait is the first board's only.
+ */
+export function retryBudget(p: KeenParams): number {
+  return Math.max(Math.floor(WORK_BUDGET / p.w ** 3), 5 * seldomTries(p));
+}
 
 export function newKeenDesc(
   p: KeenParams,
@@ -98,10 +140,7 @@ export function newKeenDesc(
     return false;
   };
 
-  const attempt = retryLimit(
-    `keen: generation (${w}d${diff})`,
-    Math.floor(WORK_BUDGET / w ** 3),
-  );
+  const attempt = retryLimit(`keen: generation (${w}d${diff})`, retryBudget(p));
   while (true) {
     attempt();
 

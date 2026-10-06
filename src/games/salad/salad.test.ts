@@ -307,15 +307,34 @@ describe("salad with two symbols at Normal", () => {
     expect(refusal("5n2Bdx")).toBe(
       "Normal 5x5 Numbers puzzles with 2 symbols are too rare to deal.",
     );
+    expect(refusal("8n2Bdx")).toBe(
+      "Normal 8x8 Numbers puzzles with 2 symbols are too rare to deal.",
+    );
+    expect(refusal("10n2Bdx")).toBe(
+      "Normal 10x10 Numbers puzzles with 2 symbols are too rare to deal.",
+    );
   });
 
-  it.each(["8n2Ldx", "6n2Bdx", "5n2Lde", "5n3Ldx", "5n2Bde"])("%s is dealt", (id) => {
+  it.each([
+    "8n2Ldx",
+    "6n2Bdx",
+    "7n2Bdx",
+    "8n3Bdx",
+    "8n2Bde",
+    "5n2Lde",
+    "5n3Ldx",
+    "5n2Bde",
+  ])("%s is dealt", (id) => {
     expect(refusal(id)).toBeNull();
   });
 
   it("still loads a rare board that arrives with its desc", () => {
-    expect(paramsError(saladGame, decodeParams("5n2Bdx"), false)).toBeNull();
+    for (const id of ["5n2Bdx", "8n2Bdx"])
+      expect(paramsError(saladGame, decodeParams(id), false)).toBeNull();
   });
+
+  // A third of a minute a board on average.
+  describeDealtTiers(saladGame, ["6n2Bdx", "7n2Bdx"], { seldom: true });
 });
 
 describe("salad generator", () => {

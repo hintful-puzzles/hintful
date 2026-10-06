@@ -31,7 +31,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
-import { newKeenDesc } from "./generator.ts";
+import { newKeenDesc, retryBudget } from "./generator.ts";
 import { keenGame } from "./index.ts";
 
 // A 3x3 above Normal, with every operation and with multiplication alone. One
@@ -47,22 +47,43 @@ describe("multiplication alone, where a tier is too rare to deal", () => {
   const refusal = (id: string): string | null =>
     paramsError(keenGame, keenGame.decodeParams(id), true);
 
-  it.each(["5dxm", "5dum", "7dxm", "8dum", "9dhm", "9dum"])("%s is refused", (id) => {
-    expect(refusal(id)).toMatch(
-      / puzzles with multiplication only are too rare to deal\.$/,
+  it("says rare, and not absent, at 9x9 above Tricky", () => {
+    expect(refusal("9dxm")).toBe(
+      "Hard 9x9 puzzles with multiplication only are too rare to deal.",
     );
-    expect(paramsError(keenGame, keenGame.decodeParams(id), false)).toBeNull();
-  });
-
-  it("says rare, and not absent", () => {
-    expect(refusal("5dxm")).toBe(
-      "Hard 5x5 puzzles with multiplication only are too rare to deal.",
+    expect(refusal("9dum")).toBe(
+      "Unreasonable 9x9 puzzles with multiplication only are too rare to deal.",
     );
+    for (const id of ["9dxm", "9dum"])
+      expect(paramsError(keenGame, keenGame.decodeParams(id), false)).toBeNull();
   });
 
   it.each(["4dum", "6dxm", "8dhm", "9dnm", "5dx", "9du"])("%s is dealt", (id) => {
     expect(refusal(id)).toBeNull();
   });
+});
+
+describe("multiplication alone, where a tier is found seldom", () => {
+  const SELDOM = ["5dxm", "5dum", "7dxm", "7dum", "8dxm", "8dum", "9dhm"];
+  const house = (w: number): number => Math.floor(15_000_000 / w ** 3);
+
+  it("is dealt, and only it is given more tries than the work budget", () => {
+    const raised: string[] = [];
+    for (let w = 3; w <= 9; w++) {
+      for (const tier of "enhxu") {
+        for (const m of ["", "m"]) {
+          const id = `${w}d${tier}${m}`;
+          if (retryBudget(keenGame.decodeParams(id)) !== house(w)) raised.push(id);
+        }
+      }
+    }
+    expect(raised).toEqual(SELDOM);
+    for (const id of SELDOM)
+      expect(paramsError(keenGame, keenGame.decodeParams(id), true)).toBeNull();
+  });
+
+  // Four to twenty seconds a board on average.
+  describeDealtTiers(keenGame, SELDOM, { seldom: true });
 });
 
 import {

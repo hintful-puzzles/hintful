@@ -1380,7 +1380,8 @@ all-no-op callbacks, which the midend does not need),
 `absent-tiers.ts` (`describeAbsentTiers` — the cells a game refuses because no
 board of that size needs the tier: refused when dealing, accepted with a desc,
 and in the slow tier the generator run out at each; and `describeDealtTiers`,
-the cells that deal boards whose lowest solving cap is the tier asked for),
+the cells that deal boards whose lowest solving cap is the tier asked for,
+with `seldom` for a cell that takes seconds a board, dealt in the slow tier),
 `differential.ts` (`describeDescDifferential`, the byte-for-byte desc shape +
 the one statement that fixtures are frozen and unregenerable),
 `enrollment.ts` + `hint-games.ts` (**how a cross-game guard finds its

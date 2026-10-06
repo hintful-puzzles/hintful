@@ -758,6 +758,27 @@ is longer than a player would sit through once, and then with
 `tooRareToDeal`: *"Hard 6x6 puzzles that show their identity are too rare to
 deal."* Never `noSuchTier` for one of these: the board may exist.
 
+**The line is half a minute a board on average.** Under it a cell is dealt:
+Keen with multiplication alone at 4 to 20 seconds, Map's maps of 8 to 10
+regions at 1 to 18, Salad's 6x6 and 7x7 Numbers boards of two symbols at about
+20. Over it the cell is refused and the wait is written beside the refusal:
+Keen's 9x9 at 50 seconds, Spokes two squares wide at 25 seconds to four
+minutes, Light Up's turned 4x4 at a minute and more. Pin a dealt one with
+`describeDealtTiers(game, cells, { seldom: true })`, which deals one board a
+cell in the slow tier.
+
+**Time the cells beside a refusal, not only the refused ones.** A refusal
+written from a count of tries stops where the counting stopped, and the cells
+past it go on being dealt whatever they cost. Spokes refused a 2x5 and a 2x6
+and dealt a 2x7 at 100 seconds a board; Salad refused a 5x5 Numbers board of
+two symbols at 34 seconds and dealt an 8x8 at 75 and a 9x9 at five minutes.
+The other way round, Map refused every map of 8 regions at Normal for a rate
+that is a second at 6x6, and the boards it could not carry were the ones under
+five squares wide, which no count had separated. So walk the axis the refusal
+sits on to both ends, in seconds a board, and give a cell at least a dozen
+boards before a line is drawn through it: two boards in 100 seconds place
+nothing.
+
 **Name the line in the units the tier follows, which are often not the
 size's.** Bridges' tiers follow the number of islands, so a 10x10 at 5% and a
 5x5 at 20% are one population: `islandTarget(p)` is the one function its

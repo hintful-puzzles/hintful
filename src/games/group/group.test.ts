@@ -19,9 +19,11 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { MAX_REGENERATE } from "../../engine/retry-limit.ts";
-import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { itSlow } from "../../engine/testing/slow.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
 import { colors, coord, newDrawState, PREFERRED_TILE_SIZE, redraw } from "./render.ts";
@@ -188,14 +190,12 @@ describe("a tier found seldom, with the budget to find it", () => {
   // Ten seconds a board on average, so the slow tier's: from these seeds the
   // 6x6 came in a fifth of a second and the 8x8 in thirteen (2026-10-06, six
   // seeds a cell, where the slowest 6x6 took 47 on a loaded machine and none
-  // ran out). What is held is the tier of the board dealt.
-  itSlow.each(SELDOM)("$w x $w at tier $diff deals a board that needs it", (p) => {
-    const cell = encodeParams(p, true);
-    const { desc } = newGameDesc(p, randomNew(`dealt-${cell}-0`));
-    expect(
-      lowestSolvingCap(cappedSolveFor(difficulty, p, desc), DIFF_NAMES.length),
-    ).toBe(p.diff);
-  });
+  // ran out).
+  describeDealtTiers(
+    groupGame,
+    SELDOM.map((p) => encodeParams(p, true)),
+    { seldom: true },
+  );
 });
 
 describe("generation", () => {

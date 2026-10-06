@@ -140,7 +140,7 @@ export function defaultParams(): SpokesParams {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SpokesParams>[] = [
   ...dimensionParamConfig<SpokesParams>({
-    doc: "Size of the grid in squares. A board of 8 squares or fewer has no Unreasonable puzzles, and on a 2x5 or a 2x6 they are too rare to deal.",
+    doc: "Size of the grid in squares. A board of 8 squares or fewer has no Unreasonable puzzles, and on a longer board two squares wide they are too rare to deal.",
     bounds: { min: 2 },
   }),
   difficultyItem(DIFF_NAMES, {
@@ -153,15 +153,18 @@ export const paramConfig: ParamConfigItem<SpokesParams>[] = [
 
 export function validateParams(p: SpokesParams, full: boolean): string | null {
   // Measured 2026-10-06: none in 440,000 boards built at 2x2, and in 100,000
-  // at 2x3 and at 2x4. A 3x3 is found once in 140. Two wide and longer, the
-  // boards exist and take too long: once in 26,000 tries at 2x5, a minute a
-  // board, and once in 4,100 at 2x6, half a minute. Past 2x6 was not counted.
+  // at 2x3 and at 2x4. A 3x3 is found once in 140, and a 3x4 and a 3x5 in
+  // under a second. Two wide and longer the boards exist and the wait is too
+  // long to sit through once. With the bound lifted for 60 to 350 seconds a
+  // size: a 2x5 and a 5x2 gave one board between them in 90,000 tries and
+  // seven minutes; a 2x6 and a 6x2 one every 25 seconds, the slowest of ten
+  // at two minutes; a 2x7 and a 2x10 one every 100 seconds; and a 2x8 one in
+  // 260. A try grows from 4 milliseconds at 2x5 to 40 at 2x10, so no longer
+  // board was counted.
   if (!full || p.diff !== "hard") return null;
   const tier = DIFF_NAMES[DIFF_HARD] ?? "";
-  const squares = p.w * p.h;
-  if (squares <= 8) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
-  if (Math.min(p.w, p.h) === 2 && squares <= 12)
-    return tooRareToDeal(`${p.w}x${p.h} puzzles`, tier);
+  if (p.w * p.h <= 8) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
+  if (Math.min(p.w, p.h) === 2) return tooRareToDeal("puzzles two squares wide", tier);
   return null;
 }
 
