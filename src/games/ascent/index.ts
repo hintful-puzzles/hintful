@@ -4,6 +4,7 @@
  */
 
 import {
+  DIFFICULTY_KW,
   type DifficultyContract,
   difficultyItem,
   noSuchTier,
@@ -251,23 +252,14 @@ const RULESETS: Ruleset[] = [
   {
     name: "Edges",
     rule: "The grid is surrounded by numbers placed inside arrows. An arrow points to the row, column or diagonal where this number appears in the path.",
+    only: {
+      "grid-type": [MODE_RECT],
+      "symmetrical-clues": false,
+      [DIFFICULTY_KW]: [DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD],
+    },
   },
 ];
 const EDGES = RULESETS[1].name;
-
-/** Edges asked for on a grid other than the Rectangle. Only a Custom dialog's
- * working copy ever holds it, and `validateParams` refuses it. */
-const MODE_EDGES_OFF_GRID = MODECOUNT;
-
-function isEdges(p: AscentParams): boolean {
-  return p.mode === MODE_EDGES || p.mode === MODE_EDGES_OFF_GRID;
-}
-
-/** The mode of a ruleset on a grid: the dialog's two fields are one `mode`. */
-function modeOf(edges: boolean, grid: number): number {
-  if (!edges) return grid;
-  return grid === MODE_RECT ? MODE_EDGES : MODE_EDGES_OFF_GRID;
-}
 
 function presets(): PresetMenu<AscentParams> {
   return {
@@ -365,18 +357,12 @@ function lacksTier({ w, h, mode, diff }: AscentParams): boolean {
 
 function validateParams(p: AscentParams, full: boolean): string | null {
   const { w, h } = p;
-  if (p.mode === MODE_EDGES_OFF_GRID)
-    return `${EDGES} is played on the ${ASCENT_GRID_NAMES[MODE_RECT]} grid.`;
   if (w * h >= 1000) return "Width times height must be less than 1000.";
   if (p.mode === MODE_HEXAGON && (h & 1) === 0) return "Height must be an odd number.";
   if (p.mode === MODE_HEXAGON && w <= Math.trunc(h / 2))
     return "Width must be more than half the height for a hexagon grid.";
   if (p.mode === MODE_EDGES && w === 2 && h === 2)
     return `${EDGES} mode needs a grid bigger than 2x2.`;
-  if (full && p.mode === MODE_EDGES && p.diff < DIFF_NORMAL)
-    return `Difficulty for ${EDGES} mode must be at least Normal.`;
-  if (full && p.symmetrical && p.mode === MODE_EDGES)
-    return `Symmetrical clues must be disabled for ${EDGES} mode.`;
   if (full && p.diff > DIFF_EASY && lacksTier(p))
     return noSuchTier(
       `${w}x${h} ${ASCENT_GRID_NAMES[p.mode]} puzzle`,
@@ -397,9 +383,10 @@ function modeWords(p: AscentParams): string | null {
 
 const paramConfig: ParamConfigItem<AscentParams>[] = [
   rulesetItem<AscentParams>(RULESETS, {
-    get: (p) => (isEdges(p) ? 1 : 0),
+    get: (p) => (p.mode === MODE_EDGES ? 1 : 0),
     set: (p, v) => {
-      p.mode = modeOf(v === 1, isEdges(p) ? MODE_RECT : p.mode);
+      if (v === 1) p.mode = MODE_EDGES;
+      else if (p.mode === MODE_EDGES) p.mode = MODE_RECT;
     },
   }),
   ...dimensionParamConfig<AscentParams>({
@@ -444,16 +431,16 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
     name: "Grid type",
     type: "choices",
     choices: ASCENT_GRID_NAMES,
-    doc: `Choose between ${ASCENT_GRID_NAMES.map((n) => `'${n}'`).join(", ")}. ${EDGES} is played on '${ASCENT_GRID_NAMES[MODE_RECT]}'.`,
+    doc: `Choose between ${ASCENT_GRID_NAMES.map((n) => `'${n}'`).join(", ")}.`,
     label: { slot: "kind", words: modeWords },
-    get: (p) => (isEdges(p) ? MODE_RECT : p.mode),
+    // One `mode` holds the ruleset and the grid, and Edges is its own value of
+    // it, so there the grid is the Rectangle and is not this field's to set.
+    get: (p) => (p.mode === MODE_EDGES ? MODE_RECT : p.mode),
     set: (p, v) => {
-      p.mode = modeOf(isEdges(p), v);
+      if (p.mode !== MODE_EDGES) p.mode = v;
     },
   },
-  difficultyItem(ASCENT_DIFFNAMES, "diff", {
-    doc: `${EDGES} mode needs at least Normal.`,
-  }),
+  difficultyItem(ASCENT_DIFFNAMES, "diff"),
 ];
 
 /** Ascent's difficulty contract (`engine/difficulty.ts`). `ascentSolve` reports

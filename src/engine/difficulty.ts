@@ -178,7 +178,8 @@ export type TierField<P> =
   | TierKey<P>
   | { get(p: P): number; set(p: P, tier: number): void };
 
-const DIFFICULTY_KW = "difficulty";
+/** The keyword of every difficulty field, which is how the engine finds one. */
+export const DIFFICULTY_KW = "difficulty";
 
 /** What the help says of every difficulty field, before a game's own words. */
 const DIFFICULTY_DOC =

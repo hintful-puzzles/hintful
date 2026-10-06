@@ -6,6 +6,7 @@ import { css, html, LitElement, nothing } from "lit";
 import { query } from "lit/decorators/query.js";
 import { customElement, property, queryAll, state } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
+import { offeredOf, offeredValues } from "../../engine/config-narrowing.ts";
 import type {
   ConfigDescription,
   ConfigItem,
@@ -111,8 +112,22 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
     `;
   }
 
+  /** The values as the player set them. */
+  private get chosen(): ConfigValues {
+    return { ...this.values, ...this.changes };
+  }
+
+  /** The values the form shows and submits: {@link chosen}, with a field that
+   * another narrows at a value it is offered. */
+  protected get shown(): ConfigValues {
+    return this.config ? offeredValues(this.config, this.chosen) : this.chosen;
+  }
+
   private renderConfigItem(id: string, config: ConfigItem) {
-    const value = this.changes[id] ?? this.values[id];
+    const value = this.shown[id];
+    const offered = this.config ? offeredOf(this.config, this.chosen, id) : null;
+    const narrowed = (choice: number) =>
+      Array.isArray(offered) && !offered.includes(choice);
     // A leading "%" reads badly (Bridges), and "Size (s*s)" better as
     // "Size (s × s)" (Unequal).
     const label = config.name.replace(/^%/, "Percent").replace("s*s", "s × s");
@@ -135,6 +150,7 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
           <wa-checkbox 
             name=${id}
             ?checked=${value}
+            ?disabled=${offered !== null}
             @change=${this.updateCheckboxValue}
           >${label}</wa-checkbox>
         `;
@@ -152,11 +168,12 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
             class=${showButtonGroup ? "hidden" : nothing}
             label=${label}
             value=${value}
+            ?disabled=${Array.isArray(offered) && offered.length === 1}
             @change=${this.updateSelectValue}
           >
             ${config.choicenames.map(
               (choice, value) => html`
-              <wa-option value=${value}>${choice}</wa-option>
+              <wa-option value=${value} ?disabled=${narrowed(value)}>${choice}</wa-option>
             `,
             )}
           </wa-select>
@@ -184,7 +201,7 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
             >
               ${config.choicenames.map(
                 (choice, value) => html`
-                  <wa-radio value=${value} appearance="button">${choice}</wa-radio>
+                  <wa-radio value=${value} appearance="button" ?disabled=${narrowed(value)}>${choice}</wa-radio>
                 `,
               )}
             </wa-radio-group>
@@ -202,8 +219,9 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
   private resetFormItemValues() {
     // If the form has already been rendered, re-rendering with new value attributes
     // won't update input element state. Flush current values into item properties.
+    const shown = this.shown;
     for (const [id, { type }] of Object.entries(this.config?.items ?? [])) {
-      const value = this.changes[id] ?? this.values[id];
+      const value = shown[id];
       if (value !== undefined) {
         for (const element of this.shadowRoot?.querySelectorAll<HTMLInputElement>(
           `[name="${id}"]`,
@@ -242,6 +260,12 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
   private async updateSelectValue(event: CustomEvent) {
     const target = event.target as HTMLInputElement;
     this.changes[target.name] = Number.parseInt(target.value, 10); // doesn't force redraw
+    if (this.config?.narrowing?.some(({ by }) => by === target.name)) {
+      // What the other fields offer has changed, and with it what they show.
+      this.requestUpdate();
+      await this.updateComplete;
+      this.resetFormItemValues();
+    }
     if (this.autosubmit) {
       await this.submit();
     }
@@ -254,7 +278,13 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
   public async submit(event?: Event) {
     event?.preventDefault();
 
-    const result = await this.setValues(this.changes);
+    // A narrowed field goes as it is shown, whether or not the player set it.
+    const { chosen, shown } = this;
+    const submitted = { ...this.changes };
+    for (const [id, value] of Object.entries(shown)) {
+      if (value !== chosen[id]) submitted[id] = value;
+    }
+    const result = await this.setValues(submitted);
     if (result) {
       // If there's a result string, it's an error message
       this.error = result;
@@ -267,14 +297,14 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
             composed: true,
             detail: {
               puzzle: this.puzzle,
-              changes: this.changes,
+              changes: submitted,
               value: this.values,
             },
           }),
         );
       }
 
-      this.values = { ...this.values, ...this.changes };
+      this.values = { ...this.values, ...submitted };
       this.changes = {};
     }
   }
@@ -414,10 +444,7 @@ export class PuzzleCustomParamsForm extends PuzzleConfigForm {
    */
   async getParams(): Promise<string | null> {
     if (this.puzzle) {
-      const result = await this.puzzle.encodeCustomParams({
-        ...this.values,
-        ...this.changes,
-      });
+      const result = await this.puzzle.encodeCustomParams(this.shown);
       if (result.ok) {
         return result.params;
       }

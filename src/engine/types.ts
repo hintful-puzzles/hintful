@@ -165,10 +165,25 @@ export type ConfigItem =
   | { type: "boolean"; name: string }
   | { type: "choices"; name: string; choicenames: string[] };
 
+/**
+ * A field whose value decides what other fields of the form offer, as a
+ * game's ruleset does (`Ruleset.only`). A form shows a narrowed field at a
+ * value it is offered, and submits that value (`config-narrowing.ts`).
+ */
+export interface ConfigNarrowing {
+  /** The deciding field's id: a `choices` field, which nothing narrows. */
+  by: string;
+  /** For each choice of `by`, in order, the fields it narrows by id: the
+   * choice indices it leaves of a `choices` field, or the one value of a
+   * checkbox. */
+  only: Record<string, number[] | boolean>[];
+}
+
 /** A whole config form: its fields, keyed by field id. It carries no title
  * because a game's display name is not the engine's to know. */
 export type ConfigDescription = {
   items: { [id: string]: ConfigItem };
+  narrowing?: ConfigNarrowing[];
 };
 
 /** The values of a `ConfigDescription`'s fields, keyed by the same ids.

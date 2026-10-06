@@ -59,6 +59,7 @@ import {
   RIGHT_RELEASE,
 } from "./pointer.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
+import { onlyError, rulesetNarrowing } from "./ruleset.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import type {
   ChangeNotification,
@@ -89,6 +90,9 @@ const HINT_ANIM_S = 1.0;
 /** The preference key of the solve timer, which the engine offers in every
  * game beside the game's own `prefs`. */
 export const SHOW_TIMER_PREF = "show-timer";
+
+/** A checkbox's value as a config form submits it. */
+const asChecked = (v: unknown): boolean => v === true || v === "true" || v === 1;
 
 export type NotifyChange = (message: ChangeNotification) => void;
 export type NotifyTimerState = (isActive: boolean) => void;
@@ -1438,7 +1442,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
             ? { type: "choices", name: item.name, choicenames: item.choices }
             : { type: "string", name: item.name };
     }
-    return { items };
+    const narrowing = rulesetNarrowing(this.game.paramConfig ?? []);
+    return narrowing ? { items, narrowing: [narrowing] } : { items };
   }
 
   /** Current custom-params values read off the live params: a string for
@@ -1478,7 +1483,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       const v = values[item.kw];
       if (v === undefined) continue;
       if (item.type === "boolean") {
-        item.set(draft, v === true || v === "true" || v === 1);
+        item.set(draft, asChecked(v));
       } else if (item.type === "choices") {
         const n = Number(v);
         if (!Number.isNaN(n)) item.set(draft, n);
@@ -1489,10 +1494,25 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return draft;
   }
 
+  /**
+   * Why the form's `values` cannot be played, or `null`: the `draft` they
+   * make, and before it the values as submitted against what the chosen
+   * ruleset offers. A game may hold two fields in one of its params (Ascent's
+   * ruleset and grid type), where a pair it has no value for never reaches the
+   * draft, so the draft alone would pass it.
+   */
+  private customValuesError(values: ConfigValues, draft: Params): string | null {
+    const submitted = onlyError(this.game.paramConfig ?? [], (item) => {
+      const v = values[item.kw] ?? item.get(this.params);
+      return item.type === "boolean" ? asChecked(v) : v;
+    });
+    return submitted ?? paramsError(this.game, draft, true);
+  }
+
   setCustomParams(values: ConfigValues): string | null {
     if (!this.game.paramConfig?.length) return null;
     const draft = this.paramsFromCustomValues(values);
-    const err = paramsError(this.game, draft, true);
+    const err = this.customValuesError(values, draft);
     if (err) return err;
     this.params = draft;
     this.emitParamsChange();
@@ -1504,7 +1524,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       return { ok: true, params: this.game.encodeParams(this.params, true) };
     }
     const draft = this.paramsFromCustomValues(values);
-    const error = paramsError(this.game, draft, true);
+    const error = this.customValuesError(values, draft);
     if (error) return { ok: false, error };
     return { ok: true, params: this.game.encodeParams(draft, true) };
   }
@@ -1545,7 +1565,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // `Ui`, so it is read here and never reaches `applyPrefs`.
     const showTimer = values[SHOW_TIMER_PREF];
     if (showTimer !== undefined) {
-      this.showTimer = showTimer === true || showTimer === "true" || showTimer === 1;
+      this.showTimer = asChecked(showTimer);
       this.syncTimer();
     }
     if (this.history.length > 0) {
@@ -1578,7 +1598,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       const v = this.prefValues[p.kw];
       if (v === undefined) continue;
       if (p.type === "boolean") {
-        p.set(this.ui, v === true || v === "true" || v === 1);
+        p.set(this.ui, asChecked(v));
       } else {
         const n = Number(v);
         if (!Number.isNaN(n)) p.set(this.ui, n);

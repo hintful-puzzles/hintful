@@ -1125,7 +1125,19 @@ grid".
 `rulesetItem(rulesets, field)` is the `paramConfig` item of a game with more
 than one puzzle (Seismic's Tectonic, Ascent's Edges): each ruleset a `name` and its
 `rule`. `rulesetField(game)` finds it, for the label, the menu's sections and
-the help; `rulesetsMarkdown` is the list a page's `{{rulesets}}` becomes.
+the help; `rulesetsMarkdown` is the list a page's `{{rulesets}}` becomes. A
+ruleset's `only` is what it offers of the other fields, and its three readers
+are here: `onlyError` (the refusal, called by `paramsError` and by the midend
+on a dialog's values), `rulesetNarrowing` (the dialog's side, carried on
+`ConfigDescription.narrowing`) and `onlySentences` (the help).
+
+### `config-narrowing.ts` — what a form offers of a narrowed field
+
+`offeredOf(description, values, id)` is what the deciding fields leave of one
+field, and `offeredValues(description, values)` the values a form shows and
+submits. It reads the `ConfigDescription` alone, so the form on the page and a
+test in the engine work out one answer. Held for every declaring game by
+`ruleset-only.test.ts`.
 
 ### `modifier.ts` — the settings that change one rule
 

@@ -133,11 +133,30 @@ describe("ascent's dialog asks for the ruleset and the grid separately", () => {
     const edges = submit(1, MODE_RECT);
     expect(edges.mode).toBe(MODE_EDGES);
     expect(describeParams(ascentGame, { ...edges, diff: 1 })).toMatch(/^Edges: /);
-    const onHex = submit(1, MODE_HEXAGON);
-    expect(paramsError(ascentGame, onHex, false)).toBe(
-      "Edges is played on the Rectangle grid.",
-    );
+    const onHex = new Midend(ascentGame).encodeCustomParams({
+      ruleset: 1,
+      "grid-type": MODE_HEXAGON,
+      difficulty: 1,
+    });
+    expect(onHex).toEqual({
+      ok: false,
+      error: "Grid type must be Rectangle for Edges.",
+    });
     expect(submit(0, MODE_HEXAGON).mode).toBe(MODE_HEXAGON);
+  });
+
+  it("refuses a game ID asking Edges for what it does not offer", () => {
+    const easy = mk(5, 5, 0, MODE_EDGES, true);
+    expect(paramsError(ascentGame, easy, true)).toBe(
+      "Difficulty must be Normal, Tricky or Hard for Edges.",
+    );
+    const symmetric = mk(5, 5, 1, MODE_EDGES, true, true);
+    expect(paramsError(ascentGame, symmetric, true)).toBe(
+      "Symmetrical clues must be off for Edges.",
+    );
+    // A board that arrives written out is not held to what a deal offers.
+    expect(paramsError(ascentGame, easy, false)).toBeNull();
+    expect(paramsError(ascentGame, symmetric, false)).toBeNull();
   });
 });
 

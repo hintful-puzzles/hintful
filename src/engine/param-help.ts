@@ -4,13 +4,15 @@
  * heading and the help build puts this list there
  * (`vite-plugins/parameters.ts`).
  *
- * What a field is called, what range it takes and what the difficulty names
- * mean are the items' own facts, so the page cannot disagree with the dialog
+ * What a field is called, what range it takes, what a ruleset offers of it and
+ * what the difficulty names mean are the items' own facts, so the page cannot
+ * disagree with the dialog
  * beside it. What a field *means* is its `doc`, which the game writes.
  */
 
 import type { ParamBounds, ParamConfigItem } from "./game.ts";
 import { choiceName } from "./param-label.ts";
+import { onlySentences } from "./ruleset.ts";
 
 export const PARAMETERS_PLACEHOLDER = "{{parameters}}";
 
@@ -22,6 +24,9 @@ interface Entry {
   names: string[];
   doc: string;
   bounds: (ParamBounds | null)[];
+  /** What the rulesets that narrow these fields offer of them, a sentence
+   * each (`Ruleset.only`). */
+  only: string[];
 }
 
 /** The range sentence for an entry, or `""` when nothing is bounded. */
@@ -59,13 +64,15 @@ function entries<P>(config: readonly ParamConfigItem<P>[]): Entry[] {
   const out: Entry[] = [];
   for (const item of config) {
     const bounds = item.type === "string" ? (item.bounds ?? null) : null;
+    const only = onlySentences(config, item.kw);
     const last = out.at(-1);
     if (typeof item.doc === "object") {
       if (!last) throw new Error(`${item.kw} shares a doc with nothing before it`);
       last.names.push(item.name);
       last.bounds.push(bounds);
+      last.only.push(...only);
     } else {
-      out.push({ names: [item.name], doc: item.doc, bounds: [bounds] });
+      out.push({ names: [item.name], doc: item.doc, bounds: [bounds], only });
     }
   }
   return out;
@@ -74,7 +81,7 @@ function entries<P>(config: readonly ParamConfigItem<P>[]): Entry[] {
 /** The Parameters section's body for a game with these fields. */
 export function parametersMarkdown<P>(config: readonly ParamConfigItem<P>[]): string {
   const items = entries(config).map((e) => {
-    const text = [e.doc, boundsSentence(e)].filter((s) => s).join(" ");
+    const text = [e.doc, boundsSentence(e), ...e.only].filter((s) => s).join(" ");
     return `\t<dt>${e.names.join(", ")}</dt>\n\t<dd>${text}</dd>`;
   });
   return `${INTRO}\n\n<dl>\n${items.join("\n")}\n</dl>`;

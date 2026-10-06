@@ -304,8 +304,17 @@ name anywhere else. A test naming a preset reads the `label`, which is what
 board's shape or look (Loopy's tilings, Cube's solids) is a `kind`, not a
 ruleset. **A ruleset need not be a params field of its own**: Ascent keeps one
 `mode` in which Edges is a fifth value beside four grids, and its ruleset and
-grid-type items read and write that one value between them, refusing Edges on
-a grid it is not played on.
+grid-type items read and write that one value between them.
+
+**A ruleset that does not take every value of another setting says so, with
+`only`**: by the field's `kw`, the choice indices it offers or the one value
+of a checkbox (Edges: the Rectangle alone, symmetrical clues off, Normal and
+up). The engine builds the rest: the dialog disables what the chosen ruleset
+does not offer and submits each narrowed field at a value it does, `paramsError`
+refuses a deal that asks for anything else, and the field's help entry says it.
+So write no `validateParams` branch, no `doc` sentence and no params value for
+such a pair. A limit on a typed number (Seismic's area by ruleset) is not this:
+a text box cannot show it before OK, and it stays in `validateParams`.
 
 **A setting that adds, removes or bounds one rule is a modifier**, declared
 with `modifierItem` ([`engine/modifier.ts`](../../src/engine/modifier.ts)):
