@@ -13,7 +13,10 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { newSticksDesc } from "./generator.ts";
 import { STICKS_RUNGS, sticksGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL, COL_LINE } from "./render.ts";
@@ -377,9 +380,7 @@ describe("sticks hint — recording stays off the solve path", () => {
 describe("sticks hint — render frames (tier 2.5)", () => {
   for (const kind of KINDS) {
     it(`draws the forced line and its evidence for a ${kind} deduction`, () => {
-      const { id, moves, step } = pinned(kind);
-      const result = renderScenario({ game: sticksGame, id, moves, showHint: true });
-      expect(result.hint?.explanation).toBe(step.explanation);
+      const result = renderPinnedHint(sticksGame, pinned(kind));
       const ops = result.recording.ops;
       // The forced square is drawn as a bar in the hint color — the game's own
       // line shape, which a plain tint could not give an orientation.

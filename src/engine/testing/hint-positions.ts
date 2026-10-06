@@ -12,7 +12,7 @@
  *
  * A step says which rung it is (`HintStep.rung`), so a rung's pin is keyed on
  * that id and never on the sentence. A game's further kinds, about a step's
- * shape or its board, are predicates over the step.
+ * shape, its board or its plan, are predicates over the step.
  *
  * The scan walks hint-guided play as `hint-resume.test.ts` does, taking the
  * plan's first step and asking again, so a position it reports is one a player
@@ -48,20 +48,32 @@ function pinSource<M>(pin: HintPin<M>): string {
   return `{ id: ${JSON.stringify(pin.id)}, moves: ${written} }`;
 }
 
+/** Whether a step is of a kind, given the board its plan was asked from and
+ * the plan it is a step of. The board is the one asked from even where the
+ * step is a later leg: the legs before it are not played on it. */
+export type HintPredicate<State, Move, Highlights, Rung extends string> = (
+  step: HintStep<Move, Highlights, Rung>,
+  state: State,
+  steps: readonly HintStep<Move, Highlights, Rung>[],
+) => boolean;
+
 /**
  * What a position is pinned for:
  *
  * - a **rung id**: some step of the plan a hint gives there is of that rung;
- * - a **predicate** over the step the plan opens with and the board it is
- *   asked from, for what a rung id does not say: a step's shape (several
- *   cells, a journey), or the board's.
+ * - a **predicate** over the step the plan opens with, for what a rung id does
+ *   not say: a step's shape (several cells), the board's, or the plan's (a
+ *   journey is `steps[1]?.continuesPrevious`);
+ * - a predicate as **`leg`**, held by some step of the plan as a rung id is,
+ *   for a step that is only ever a later leg.
  *
  * A predicate reads the step's fields, `step.rung` first among them, and never
  * its sentence.
  */
 export type HintKind<State, Move, Highlights, Rung extends string> =
   | Rung
-  | ((step: HintStep<Move, Highlights, Rung>, state: State) => boolean);
+  | HintPredicate<State, Move, Highlights, Rung>
+  | { readonly leg: HintPredicate<State, Move, Highlights, Rung> };
 
 /** How a scan deals its boards and walks them. */
 export interface HintPositionScan<
@@ -116,7 +128,9 @@ function stepOfKind<S, M, H, R extends string>(
   state: S,
 ): number {
   if (typeof kind === "string") return steps.findIndex((s) => s.rung === kind);
-  return steps.length > 0 && kind(steps[0], state) ? 0 : -1;
+  if (typeof kind === "function")
+    return steps.length > 0 && kind(steps[0], state, steps) ? 0 : -1;
+  return steps.findIndex((s) => kind.leg(s, state, steps));
 }
 
 /** The board a pin names, and the plan a hint gives there. */
@@ -238,8 +252,9 @@ export interface PinnedPosition<State, Move, Highlights, Rung extends string = s
   id: string;
   moves: readonly Move[];
   state: State;
-  /** The step of the pin's kind: the first of its rung in the plan, or the
-   * step the plan opens with when the kind is a predicate. */
+  /** The step of the pin's kind: the first of its rung in the plan or the
+   * first its `leg` accepts, or the step the plan opens with when the kind is
+   * a bare predicate. */
   step: HintStep<Move, Highlights, Rung>;
   /** Where {@link step} is in {@link steps}. */
   index: number;
@@ -361,9 +376,10 @@ function declarePins<P, S, M, U, D, H, R extends string>(
  * (`Game.hintRungs`) and one for each further kind, and return the loader a
  * test reads them through.
  *
- * It declares one test: every pin's plan still fires its kind. A rung's pin is
- * a position whose plan holds a step of that rung; a further kind's is one
- * whose plan opens with a step the predicate accepts. `npm run hint-scan --
+ * It declares two tests: every pin's plan still fires its kind, and what each
+ * pin's step says. A rung's pin is a position whose plan holds a step of that
+ * rung; a further kind's is one whose plan opens with a step the predicate
+ * accepts, or holds one where the kind is a `leg`. `npm run hint-scan --
  * <this file>` scans again and writes the pins.
  *
  * The types require a pin for every rung, so a game that adds a rung does not
@@ -409,7 +425,7 @@ export function describeHintPins<
 /**
  * Pin positions for kinds of a test file's own, beside the game's
  * {@link describeHintPins}: a frame a render test reads, a board shape. A kind
- * is a rung id or a predicate ({@link HintKind}).
+ * is a rung id, a predicate or a `leg` ({@link HintKind}).
  */
 export function describeHintKindPins<
   P,

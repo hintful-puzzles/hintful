@@ -19,6 +19,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
+  renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { dlineEnds } from "./dlines.ts";
@@ -1131,9 +1132,8 @@ describe("Loopy mistakes", () => {
 describe("Loopy hint frames", () => {
   /** The frame a pinned position's hint draws, through a real `Midend`. */
   function frame(kind: PinKind) {
-    const { id, moves, step } = pinned(kind);
-    const result = renderScenario({ game: loopyGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(loopyGame, pinned(kind));
+    const { step } = result;
     return { result, step };
   }
 
@@ -1261,9 +1261,8 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
     // The sentence says "both outlined dots"; with one ring the reader cannot tell
     // which pair of edges is meant to be blocked. Judged on where the pixels
     // land rather than on the marks the step carries.
-    const { id, moves, step } = pinned("clueBlockedPair");
-    const result = renderScenario({ game: loopyGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(loopyGame, pinned("clueBlockedPair"));
+    const { step } = result;
 
     const rings = result.recording.ops.filter(
       (o) =>

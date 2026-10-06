@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { SlantHint } from "./hint.ts";
 import { slantGame } from "./index.ts";
 import { COL_GRID, COL_HINT, COL_HINT_CELL, COL_HINT_REF } from "./render.ts";
@@ -30,6 +30,9 @@ const pinned = describeHintKindPins({
     // A clue firing: it carries a driving clue.
     clue: (step) => lit(step).clues?.length === 1,
     loop: (step) => step.rung === "loop",
+    // Always a plan's second step: asked afresh, the square it decides is
+    // explained by another rung.
+    equivalence: "equiv",
   },
   pins: {
     /** Held on 1060 of 1156 positions walked. */
@@ -40,15 +43,15 @@ const pinned = describeHintKindPins({
       moves:
         '[{"type":"set","x":0,"y":7,"v":1},{"type":"set","x":1,"y":7,"v":-1},{"type":"set","x":3,"y":3,"v":-1},{"type":"set","x":4,"y":3,"v":1},{"type":"alike","x":0,"y":1,"dir":"right","on":true},{"type":"set","x":0,"y":0,"v":-1},{"type":"set","x":1,"y":0,"v":1},{"type":"set","x":1,"y":1,"v":1},{"type":"set","x":0,"y":1,"v":1},{"type":"set","x":2,"y":1,"v":-1},{"type":"set","x":2,"y":0,"v":1},{"type":"set","x":0,"y":2,"v":1},{"type":"set","x":1,"y":2,"v":-1}]',
     },
+    /** Held on 560 of 1156 positions walked. */
+    equivalence: "8x8dh:1a111111a12c1e11c3112a21c1a13211a1b3b3b11b23a2d13131a1b1d1b",
   },
 });
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({ game: slantGame, id, moves, showHint: true });
-  expect(result.hint?.explanation).toBe(step.explanation);
-  return { ...result, h: lit(step) };
+  const result = renderPinnedHint(slantGame, pinned(kind));
+  return { ...result, h: lit(result.step) };
 }
 
 describe("Slant hint render scenarios", () => {
@@ -84,18 +87,9 @@ describe("Slant hint render scenarios", () => {
   });
 
   it("equivalence frame: the cited anchor rings COL_HINT_REF", () => {
-    // Walked within one plan because the equivalence sentence cannot be
-    // pinned: it opened 0 of 2456 hints. It is always a plan's second step,
-    // and the recompute after the first explains the square by another rung.
-    const { recording, hint } = renderScenario({
-      game: slantGame,
-      id: "12x10dh:d1a1g1a2a123a2a2b222c2223a1b1a2b33b2b1213e3c2b2a11a2a1112b3b322a3b3a32b23b1g2b3a11a11a21222b2b1c11c1b",
-      showHint: true,
-      hintUntil: (step) => step.rung === "equiv",
-    });
+    const { recording, h } = hintFrame("equivalence");
 
-    const h = hint ? lit(hint) : null;
-    expect(h?.ref).toBeDefined();
+    expect(h.ref).toBeDefined();
     expectRing(recording.ops, COL_HINT);
     expect(recording.ops.some((o) => "color" in o && o.color === COL_HINT_REF)).toBe(
       true,

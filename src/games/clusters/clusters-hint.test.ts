@@ -24,6 +24,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
+  renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
@@ -399,9 +400,8 @@ describe("hint rendering (tier 2.5)", () => {
   });
 
   it("a chain frame paints the what-if marks and the danger double ring", () => {
-    const { id, moves, step } = pinned("chainWithDanger");
-    const result = renderScenario({ game: clustersGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(clustersGame, pinned("chainWithDanger"));
+    const { step } = result;
     const hl = step.highlights as ClustersHintHighlights;
     expect(hl.chain.length).toBeGreaterThan(0);
     const ops = result.recording.ops;

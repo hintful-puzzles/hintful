@@ -15,6 +15,7 @@ import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.t
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
+  renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
@@ -97,9 +98,8 @@ describe("group render scenarios", () => {
   });
 
   it("an associativity hint frame rings the target and shades the known products", () => {
-    const { id, moves, step } = pinned("associativityPairAndOne");
-    const frame = renderScenario({ game: groupGame, id, moves, showHint: true });
-    expect(frame.hint?.explanation).toBe(step.explanation);
+    const frame = renderPinnedHint(groupGame, pinned("associativityPairAndOne"));
+    const { step } = frame;
 
     // The forced cell is **ringed** COL_HINT — four thin rects, no fill — and
     // the three known products are outlined COL_HINT_CELL as evidence.

@@ -14,7 +14,7 @@ import { decodeSave, encodeSave } from "../../engine/save.ts";
 import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { DEAD_BOARD, type MinesHint, type MinesRung } from "./hint.ts";
 import { minesGame } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
@@ -360,9 +360,7 @@ describe("Mines hint: a board that needs a guess", () => {
 
 describe("Mines hint: render (tier 2.5)", () => {
   it("rings what a two-number step decides, outlines the numbers and stripes the shared squares", () => {
-    const { id, moves, step } = pinned("twoNumbers");
-    const found = renderScenario({ game: minesGame, id, moves, showHint: true });
-    expect(found.hint?.explanation).toBe(step.explanation);
+    const found = renderPinnedHint(minesGame, pinned("twoNumbers"));
     const ops = found.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_EVIDENCE)).toBe(

@@ -18,7 +18,7 @@ import {
 import { expectContour, expectRing } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { unequalGame } from "./index.ts";
@@ -464,15 +464,9 @@ const pinned = describeHintKindPins({
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({
-    game: unequalGame,
-    id,
+  const result = renderPinnedHint(unequalGame, pinned(kind), {
     defaultBackground: DEFAULT_BACKGROUND,
-    moves,
-    showHint: true,
   });
-  expect(result.hint?.explanation).toBe(step.explanation);
   return result;
 }
 

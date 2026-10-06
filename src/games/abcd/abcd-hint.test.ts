@@ -15,7 +15,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import {
   type AbcdHint,
   type AbcdRung,
@@ -478,9 +478,8 @@ describe("the sentences at their extremes", () => {
 
 describe("the frames a hint draws", () => {
   it("hatches the runs line, outlines its stretches, rings the cell and colors the count", () => {
-    const { id, moves, step } = pinned("runs");
-    const result = renderScenario({ game: abcdGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(abcdGame, pinned("runs"));
+    const { step } = result;
     const hl = step.highlights as AbcdHint;
     const ops = result.recording.ops;
 

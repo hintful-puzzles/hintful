@@ -27,6 +27,7 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
+  renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newBoatsDesc } from "./generator.ts";
@@ -678,9 +679,7 @@ describe("boats hint — rendering", () => {
   it("shades or rings the evidence the deduction reasons over", () => {
     // `allWaterPlaced` is the one honestly-global technique and declares none,
     // so the frame is a step that carries some.
-    const { id, moves, step } = pinned("evidence");
-    const result = renderScenario({ game: boatsGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(boatsGame, pinned("evidence"));
     expect(usesColor(result.recording.ops, COL_HINT_CELL)).toBe(true);
   });
 

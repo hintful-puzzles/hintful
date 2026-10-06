@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
 import {
   type Crossing,
@@ -248,9 +248,8 @@ describe("rect hint keep-track", () => {
 
 describe("rect hint frame", () => {
   it("rings the rectangle as one contour and outlines the clue that blocks it", () => {
-    const { id, moves, step } = pinned("blockedByClue");
-    const result = renderScenario({ game: rectGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(rectGame, pinned("blockedByClue"));
+    const { step } = result;
     if (step.move.type !== "rect") throw new Error("unreachable");
     const { w, h } = step.move;
     const ops = result.recording.ops;
@@ -263,9 +262,8 @@ describe("rect hint frame", () => {
   });
 
   it("stripes the squares another clue is sure to cover, one hatch per square", () => {
-    const { id, moves, step } = pinned("overlap");
-    const result = renderScenario({ game: rectGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(rectGame, pinned("overlap"));
+    const { step } = result;
     const striped = stepMarks(step).of("stripes", CELL);
     expect(striped.length).toBeGreaterThan(0);
     const hatches = result.recording.ops.filter((o) => o.op === "hatch");

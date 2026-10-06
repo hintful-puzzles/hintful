@@ -18,7 +18,7 @@ import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.t
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newTowersDesc } from "./generator.ts";
 import { towersGame } from "./index.ts";
@@ -553,15 +553,9 @@ describe("towers hintKeepTrack", () => {
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({
-    game: towersGame,
-    id,
+  const result = renderPinnedHint(towersGame, pinned(kind), {
     defaultBackground: DEFAULT_BACKGROUND,
-    moves,
-    showHint: true,
   });
-  expect(result.hint?.explanation).toBe(step.explanation);
   return result;
 }
 

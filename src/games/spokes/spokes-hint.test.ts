@@ -16,7 +16,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
 import { newSpokesDesc } from "./generator.ts";
@@ -328,15 +328,9 @@ describe("boards the midend refuses a hint on", () => {
 describe("the hint frame paints the overlay", () => {
   /** The frame a pinned position's hint draws, through a real `Midend`. */
   function hintFrame(kind: Parameters<typeof pinned>[0]) {
-    const { id, moves, step } = pinned(kind);
-    const result = renderScenario({
-      game: spokesGame,
-      id,
-      moves,
-      showHint: true,
+    const result = renderPinnedHint(spokesGame, pinned(kind), {
       defaultBackground: DEFAULT_BACKGROUND,
     });
-    expect(result.hint?.explanation).toBe(step.explanation);
     return result;
   }
 

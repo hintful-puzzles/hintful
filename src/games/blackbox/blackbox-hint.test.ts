@@ -10,7 +10,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { answerCount } from "./answer.ts";
 import { type BlackboxRung, deduce, type Firing } from "./hint.ts";
 import { blackboxGame as game } from "./index.ts";
@@ -244,9 +244,7 @@ describe("Black Box's hint", () => {
   });
 
   it("rings the square it settles and outlines the laser's ends", () => {
-    const { id, moves, step } = pinned("ray");
-    const { hint, recording } = renderScenario({ game, id, moves, showHint: true });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording } = renderPinnedHint(game, pinned("ray"));
     const rects = recording.ops.filter((o) => o.op === "rect");
     expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
     expect(rects.some((o) => o.color === COL_HINT_EVIDENCE)).toBe(true);

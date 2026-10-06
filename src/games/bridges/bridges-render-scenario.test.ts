@@ -11,7 +11,10 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { bridgesGame } from "./index.ts";
 import {
@@ -67,9 +70,8 @@ const pinned = describeHintKindPins({
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({ game: bridgesGame, id, moves, showHint: true });
-  expect(result.hint?.explanation).toBe(step.explanation);
+  const result = renderPinnedHint(bridgesGame, pinned(kind));
+  const { step } = result;
   return { recording: result.recording, step };
 }
 

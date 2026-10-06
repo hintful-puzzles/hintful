@@ -8,7 +8,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
 import { mosaicGame } from "./index.ts";
@@ -53,14 +53,7 @@ describe("Mosaic's hint", () => {
     ["white", "met", STATE_BLANK, /already has its|allows no/],
     ["black", "needsAll", STATE_MARKED, /needs/],
   ] as const)("a step that makes squares %s is drawn and said", (_, rung, mark, words) => {
-    const { id, moves, step } = pinned(rung);
-    const { recording, hint } = renderScenario({
-      game: mosaicGame,
-      id,
-      moves,
-      showHint: true,
-    });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording, hint } = renderPinnedHint(mosaicGame, pinned(rung));
     const hl = hint?.highlights as MosaicHint;
     expect(hl.mark).toBe(mark);
     expect(hint?.explanation).toMatch(words);

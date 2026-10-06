@@ -35,7 +35,6 @@ import {
   type PalisadeHint,
   type PalisadeMove,
   type PalisadeParams,
-  type PalisadeState,
 } from "./state.ts";
 
 const PRESETS: PalisadeParams[] = [
@@ -284,20 +283,14 @@ describe("palisade hint", () => {
     return lo * 2 + (Math.max(i, j) - lo === 1 ? 0 : 1);
   };
 
-  /** Whether the plan from `state` opens a journey: a first leg with a
-   * continuation after it. */
-  const opensJourney = (state: PalisadeState): boolean => {
-    const r = palisadeGame.hint?.(state);
-    return r?.ok === true && r.steps[1]?.continuesPrevious === true;
-  };
-
   /** The steps the tests below read, each pinned on a position whose hint
    * opens with one. */
   const pinned = describeHintPins({
     game: palisadeGame,
     params: [P, { w: 8, h: 6, k: 6 }],
     kinds: {
-      journey: (_, state) => opensJourney(state),
+      // A first leg with a continuation after it.
+      journey: (_step, _state, steps) => steps[1]?.continuesPrevious === true,
       noWall: (step) => hlOf(step).kind === "nowall",
     },
     pins: {

@@ -9,8 +9,12 @@
 import { describe, expect, it } from "vitest";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import type { PearlHint } from "./hint.ts";
 import { SQUARE } from "./hint-text.ts";
 import { pearlGame } from "./index.ts";
@@ -38,6 +42,33 @@ const P: PearlParams = { w: 6, h: 6, difficulty: 0 };
 // a real 6x6 Easy board with both black (B) and white (W) pearls.
 const DESC = "dWbWWcBaWaWdBhBbBaB";
 const ID = `${pearlGame.encodeParams(P, true)}:${DESC}`;
+
+/** The hint frames below. Each step is found along a plan, where a later leg
+ * may be the first of its kind. */
+const pinned = describeHintKindPins({
+  game: pearlGame,
+  params: [P],
+  kinds: {
+    // A black pearl read off its own edges, drawing a line.
+    blackPearlArm: {
+      leg: (step, state) =>
+        step.rung === "square" &&
+        (step.highlights as PearlHint).targets.some((t) => t.line) &&
+        stepMarks(step)
+          .of("outline", SQUARE)
+          .every((sq) => state.clues[sq] === CORNER),
+    },
+    rulesAnEdgeOut: {
+      leg: (step) => (step.highlights as PearlHint).targets.some((t) => !t.line),
+    },
+  },
+  pins: {
+    /** Held on 211 of 321 positions walked. */
+    blackPearlArm: ID,
+    /** Held on 243 of 321 positions walked. */
+    rulesAnEdgeOut: ID,
+  },
+});
 
 /** A reciprocal one-edge line flip (what a one-cell drag commits). */
 const flipR = (x: number, y: number): PearlMove => ({
@@ -94,19 +125,8 @@ describe("Pearl render scenarios", () => {
   });
 
   it("a hint draws a black pearl's whole arm and outlines the pearl it reasons from", () => {
-    const { recording, hint } = renderScenario({
-      game: pearlGame,
-      id: ID,
-      showHint: true,
-      // A black pearl read off its own edges, drawing a line.
-      hintUntil: (step) =>
-        step.rung === "square" &&
-        (step.highlights as PearlHint).targets.some((t) => t.line) &&
-        stepMarks(step)
-          .of("outline", SQUARE)
-          .every((sq) => newState(P, DESC).clues[sq] === CORNER),
-    });
-    const hl = hint?.highlights as PearlHint | undefined;
+    const { recording, hint } = renderPinnedHint(pearlGame, pinned("blackPearlArm"));
+    const hl = hint.highlights as PearlHint | undefined;
     expect(stepMarks(hint).of("outline", SQUARE)).toHaveLength(1);
     // The pearl's whole arm, its own edge and the run-on past the next square,
     // and on out through the white pearl that run-on enters.
@@ -130,13 +150,7 @@ describe("Pearl render scenarios", () => {
   });
 
   it("a hint that rules an edge out draws the cross it asks for", () => {
-    const { recording, hint } = renderScenario({
-      game: pearlGame,
-      id: ID,
-      showHint: true,
-      hintUntil: (step) => (step.highlights as PearlHint).targets.some((t) => !t.line),
-    });
-    expect(hint).not.toBeNull();
+    const { recording } = renderPinnedHint(pearlGame, pinned("rulesAnEdgeOut"));
     const crosses = recording.ops.filter(
       (o) => o.op === "line" && o.color === COL_HINT,
     );

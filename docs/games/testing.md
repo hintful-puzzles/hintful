@@ -91,16 +91,34 @@ already there:
 **A rung's pin is a position whose plan speaks the rung; a further kind's is one
 whose plan opens with it.** Of the positions a rung holds on, the scan takes one
 where its step opens the plan before one where it comes later (`index` says
-where), and then the fewest moves in. A game whose mid-game board is itself a
+where), and then the fewest moves in. Some steps are only ever a later leg: the
+sentence that follows a placement inside a plan opens none, because asked
+afresh the same square is explained by another rung.
+
+**The frame of a pin is `renderPinnedHint(game, pinned(kind))`**
+([`render-scenario.ts`](../../src/engine/testing/render-scenario.ts)), and not
+a `renderScenario` fed the pin's `id` and `moves`, which shows the step the
+plan opens with whatever the pin is for. It plays the legs before the pin's
+step through the midend, so a later leg is drawn on the board the player meets
+it on, and it throws when the step on show is not the pin's, by its sentence
+and its move (a journey's legs can all say one thing). Its result carries the
+pin's `step`, typed as the game's. A game whose mid-game board is itself a
 desc passes `descOf`, and its pins are bare `params:desc` strings; otherwise a
 pin is a board and the moves played on it, which the scan writes as their JSON
 in one string once there are more than a few. A deep pin is long, because a
 ladder's late rung opens a plan only once every earlier one is spent.
 
-**A further kind is a predicate over the opening step and its board**, under
-`kinds`, for what a rung id does not say: a step's shape (several cells, a
-journey), which of a rung's cases it is (`step.rung === "trap" && ownRival(step)`),
-or the board's. It reads the step's fields and never its sentence: a regex over
+**A further kind is a predicate over the opening step, its board and its
+plan**, under `kinds`, for what a rung id does not say: a step's shape (several
+cells), which of a rung's cases it is (`step.rung === "trap" && ownRival(step)`),
+the board's, or the plan's. The plan is the third argument, so a journey is
+`(_step, _state, steps) => steps[1]?.continuesPrevious === true`; a predicate
+that calls the game's `hint` to see it pays for the plan twice, and for a
+search that is the scan's whole cost. **Written as `{ leg: predicate }` the
+kind is held by any step of the plan**, as a rung id is, for a case of a rung
+that is only a later leg (`pearl-render-scenario.test.ts`). The board a `leg`
+is given is still the one the plan was asked from, so it reads what play does
+not change (the clues). It reads the step's fields and never its sentence: a regex over
 `step.explanation` is the name-keyed scan aimed at our own output ([`method.md`](../method.md)
 § "Our own code keys on a reference, a type or an id"), and `HintKind` does not take one.
 
@@ -167,9 +185,10 @@ an unquoted `$VAR`, and `vitest run $LIST` then finds no tests at all.
 **The default for any highlight / overlay / animation-frame work.**
 [`render-scenario.ts`](../../src/engine/testing/render-scenario.ts) exposes
 `renderScenario({ game, id, moves?, presses?, at?, settle?, showHint?,
-hintUntil?, showMistakes? })`: it drives a real `Midend` to a target frame by
+showMistakes? })`: it drives a real `Midend` to a target frame by
 replaying game `Move`s directly (no pointer events, no coordinate maths),
-optionally walks a hint plan to the step of interest, then captures `redraw`
+optionally shows the hint's opening step (a pinned step, at any leg, is
+`renderPinnedHint`: § "Pinning a hint's positions"), then captures `redraw`
 through the shared
 [`recording-drawing.ts`](../../src/engine/testing/recording-drawing.ts).
 

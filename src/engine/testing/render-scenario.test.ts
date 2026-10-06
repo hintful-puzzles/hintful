@@ -8,7 +8,7 @@ import { COL_GRID, COL_HINT } from "../../games/palisade/render.ts";
 import { newDesc } from "../../games/palisade/solver.ts";
 import { BORDER } from "../border-grid.ts";
 import { randomNew } from "../random/index.ts";
-import { renderScenario } from "./render-scenario.ts";
+import { renderPinnedHint, renderScenario } from "./render-scenario.ts";
 import { toSvg } from "./svg-drawing.ts";
 
 const P = { w: 5, h: 5, k: 5 };
@@ -79,27 +79,32 @@ describe("renderScenario", () => {
     );
   });
 
-  it("walks the plan to a step matching hintUntil", () => {
-    // Predicate matches the first step → no walking; the displayed step
-    // is the plan opener.
-    const opener = renderScenario({
-      game: palisadeGame,
-      id: ID,
-      showHint: true,
-      hintUntil: () => true,
+  it("shows a pinned plan's later leg, with the legs before it played", () => {
+    const state = palisadeGame.newState(P, ID.slice(ID.indexOf(":") + 1));
+    const plan = palisadeGame.hint?.(state);
+    if (!plan?.ok) throw new Error("the board has a plan");
+    const { steps } = plan;
+    expect(steps.length).toBeGreaterThan(1);
+    const pin = { id: ID, moves: [] };
+
+    const leg = renderPinnedHint(palisadeGame, { ...pin, step: steps[1], index: 1 });
+    expect(leg.hint.move).toEqual(steps[1].move);
+    expect(leg.step).toBe(steps[1]);
+    // The leg before it is on the board it is shown on: the save holds a move
+    // the opener's does not.
+    const opener = renderPinnedHint(palisadeGame, {
+      ...pin,
+      step: steps[0],
+      index: 0,
     });
-    // Predicate matches the second step → exactly one executeHint.
-    let seen = 0;
-    const second = renderScenario({
-      game: palisadeGame,
-      id: ID,
-      showHint: true,
-      hintUntil: () => seen++ >= 1,
-    });
-    expect(opener.hint).toBeDefined();
-    expect(second.hint).toBeDefined();
-    // The two steps differ (the walk advanced the displayed step).
-    expect(JSON.stringify(second.hint)).not.toBe(JSON.stringify(opener.hint));
+    expect(opener.hint.move).toEqual(steps[0].move);
+    expect(leg.midend.saveGame().length).toBeGreaterThan(
+      opener.midend.saveGame().length,
+    );
+    // A pin whose step the midend does not show is refused, not rendered.
+    expect(() =>
+      renderPinnedHint(palisadeGame, { ...pin, step: steps[1], index: 0 }),
+    ).toThrow(/the midend shows/);
   });
 
   it("toSvg renders the same record as a well-formed SVG", () => {

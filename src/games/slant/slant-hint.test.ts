@@ -34,25 +34,17 @@ function applyPlan(state: SlantState): SlantState {
   return s;
 }
 
-/** Whether a plan's second step is a square continuing its first square's
- * firing. A firing's first leg continues the marks placed for it, so only a
- * square after a square is a clue's continuation. */
-function secondSquareContinues(state: SlantState): boolean {
-  const res = slantGame.hint?.(state);
-  if (!res?.ok || res.steps.length < 2) return false;
-  const [first, second] = res.steps;
-  return (
-    second.continuesPrevious === true &&
-    second.move.type === "set" &&
-    first.move.type === "set"
-  );
-}
-
 const pinned = describeHintPins({
   game: slantGame,
   params: [{ w: 8, h: 8, diff: DIFF_HARD }],
   kinds: {
-    clueWithSecondSquare: (_step, state) => secondSquareContinues(state),
+    // A plan whose second step is a square continuing its first square's
+    // firing. A firing's first leg continues the marks placed for it, so only
+    // a square after a square is a clue's continuation.
+    clueWithSecondSquare: (first, _state, steps) =>
+      steps[1]?.continuesPrevious === true &&
+      steps[1].move.type === "set" &&
+      first.move.type === "set",
   },
   pins: {
     /** Held on 270 of 856 positions walked. */

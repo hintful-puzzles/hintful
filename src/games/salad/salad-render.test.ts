@@ -15,6 +15,7 @@ import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.t
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
+  renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import type { SaladHint } from "./hint.ts";
@@ -205,6 +206,8 @@ const pinned = describeHintKindPins({
       state.mode === GAMEMODE_NUMBERS && hlOf(step).ghost === "circle",
     placement: (step, state) =>
       state.mode === GAMEMODE_NUMBERS && typeof hlOf(step).ghost === "number",
+    // The strike that follows a placement inside a plan: a later leg, always.
+    strikeAfterPlacing: "dup",
   },
   pins: {
     /** Held on 53 of 966 positions walked. */
@@ -225,17 +228,15 @@ const pinned = describeHintKindPins({
       moves:
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":1,"y":0,"n":1},{"x":1,"y":0,"n":2},{"x":3,"y":0,"n":2},{"x":3,"y":0,"n":3},{"x":4,"y":0,"n":2},{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":2,"y":1,"n":1},{"x":2,"y":1,"n":2},{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":3},{"x":4,"y":1,"n":1},{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":1},{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":2},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":0,"y":3,"n":1},{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":3},{"x":4,"y":3,"n":1},{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":2,"y":4,"n":2},{"x":3,"y":4,"n":2},{"x":3,"y":4,"n":3},{"x":4,"y":4,"n":2}]}]',
     },
+    /** Held on 833 of 966 positions walked. */
+    strikeAfterPlacing: "4n3Lde:bBcAAaBf,p",
   },
 });
 
 describe("salad hint frames", () => {
   /** The frame a pinned position's hint draws, through a real `Midend`. */
-  const hintFrame = (kind: Parameters<typeof pinned>[0]) => {
-    const { id, moves, step } = pinned(kind);
-    const result = renderScenario({ game: saladGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
-    return result;
-  };
+  const hintFrame = (kind: Parameters<typeof pinned>[0]) =>
+    renderPinnedHint(saladGame, pinned(kind));
 
   it("outlines the run a clue's symbol is confined to, and lights the clue", () => {
     // The far arm: the clue's own symbol can sit only within the line's hole
@@ -313,14 +314,7 @@ describe("salad hint frames", () => {
   it("crosses a struck candidate through, keeping the note itself legible", () => {
     // The Towers convention: the struck note keeps COL_PENCIL (so it still reads
     // as a real note) and gains a strikethrough in the same color.
-    // A walk down one plan on a fixed board, not a pin: the strike follows a
-    // placement inside a plan and opened none of 966 hints asked afresh.
-    const { recording } = renderScenario({
-      game: saladGame,
-      id: NUMBERS_ID,
-      showHint: true,
-      hintUntil: (step) => step.rung === "dup",
-    });
+    const { recording } = hintFrame("strikeAfterPlacing");
     const notes = recording.ops.filter(
       (o) => o.op === "text" && o.color === COL_PENCIL,
     );

@@ -4,7 +4,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { type SignpostHint, type SignpostRung, signpostKeepTrack } from "./hint.ts";
 import { signpostGame } from "./index.ts";
@@ -125,9 +125,8 @@ const pinned = describeHintPins({
 
 describe("signpost hint frame", () => {
   it("draws the arrow in the hint color, rings its target and stripes the line", () => {
-    const { id, moves, step } = pinned("onlyNextOfSeveral");
-    const result = renderScenario({ game: signpostGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(signpostGame, pinned("onlyNextOfSeveral"));
+    const { step } = result;
     const h = step.highlights as SignpostHint;
     const ops = result.recording.ops;
 

@@ -21,6 +21,7 @@ import {
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
+  renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import type { MagnetsHighlights } from "./hint.ts";
@@ -164,9 +165,8 @@ describe("magnets render scenarios", () => {
 
   /** The frame a pinned position's hint draws, through a real `Midend`. */
   function hintFrame(kind: Parameters<typeof pinned>[0]) {
-    const { id, moves, step } = pinned(kind);
-    const result = renderScenario({ game: magnetsGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(magnetsGame, pinned(kind));
+    const { step } = result;
     return { ...result, step };
   }
 

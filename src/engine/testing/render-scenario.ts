@@ -8,8 +8,9 @@
  * (rather than calling a game's `redraw` against a hand-built state)
  * guarantees the captured frame is the one that ships: the hint /
  * mistake / animation lifecycle is the production one. It needs no worker,
- * no OffscreenCanvas `getImageData` and no Auto-Hint timing: reaching a
- * specific hint step is just `showHint` + `hintUntil`.
+ * no OffscreenCanvas `getImageData` and no Auto-Hint timing: a hint's opening
+ * step is `showHint`, and a pinned position's step, at whichever leg of its
+ * plan, is {@link renderPinnedHint}.
  *
  * Dev/test-only; never imported by production code.
  */
@@ -25,9 +26,6 @@ import { RecordingDrawing } from "./recording-drawing.ts";
  * colors snapshot deterministically. */
 export const DEFAULT_BACKGROUND: Color = [0.827, 0.827, 0.827];
 
-/** Bounds the `hintUntil` walk, should a plan never run out. */
-const MAX_HINT_STEPS = 1000;
-
 /** Longer than any game's animation or flash, so one tick settles the clock. */
 const SETTLE_SECONDS = 60;
 
@@ -41,15 +39,8 @@ export interface RenderScenario<Params, State, Move, Ui, DrawState, Mistake> {
   moves?: readonly Move[];
   /** Compute and show the mistake overlay (the `findMistakes` hook). */
   showMistakes?: boolean;
-  /** Compute and show a hint (its first step, unless `hintUntil`
-   * advances further). */
+  /** Compute and show a hint: the step its plan opens with. */
   showHint?: boolean;
-  /** With `showHint`, walk the plan via `executeHint` until a step
-   * satisfies this predicate (e.g. one carrying sibling-edge
-   * highlights), leaving that step *displayed but not yet applied*.
-   * Returns the matched step in the result's `hint`; if no step matches
-   * within the plan, `hint` is the last step reached. */
-  hintUntil?: (step: HintStep<Move>) => boolean;
   /** Spotlight a reference-aid item before capture (the `reference` /
    * `selectReference` hooks) — the key of the item to highlight, or null. */
   selectReference?: string | null;
@@ -96,6 +87,54 @@ export interface RenderResult<Params, State, Move, Ui, DrawState> {
 }
 
 /**
+ * The frame of a pinned position's step (`describeHintPins`'s loader gives the
+ * position), through a real `Midend`. A step that is a later leg of its plan is
+ * shown as the player meets it: on the board `executeHint` leaves once the legs
+ * before it are played. Throws if the midend shows another step than the pin's,
+ * which is a plan asked under another `Ui`, or one a leg's play has refreshed.
+ * The result carries the pin's `step`, which is the one typed as the game's.
+ */
+export function renderPinnedHint<
+  Params,
+  State,
+  Move,
+  Ui,
+  DrawState,
+  Mistake,
+  Step extends HintStep<Move>,
+>(
+  game: Game<Params, State, Move, Ui, DrawState, Mistake>,
+  pin: {
+    readonly id: string;
+    readonly moves: readonly Move[];
+    readonly step: Step;
+    readonly index: number;
+  },
+  more?: Pick<
+    RenderScenario<Params, State, Move, Ui, DrawState, Mistake>,
+    "defaultBackground" | "settle"
+  >,
+): RenderResult<Params, State, Move, Ui, DrawState> & {
+  hint: HintStep<Move>;
+  step: Step;
+} {
+  const result = capture(
+    { ...more, game, id: pin.id, moves: pin.moves, showHint: true },
+    pin.index,
+  );
+  const { hint } = result;
+  // The move as well as the sentence: a journey's legs may all say one thing.
+  const told = (step: HintStep<Move>): string =>
+    `"${step.explanation}" (${JSON.stringify(step.move)})`;
+  if (!hint || told(hint) !== told(pin.step))
+    throw new Error(
+      `${game.id}: step ${pin.index} of the pinned plan is ${told(pin.step)}, ` +
+        `and the midend shows ${hint ? told(hint) : "no hint"}`,
+    );
+  return { ...result, hint, step: pin.step };
+}
+
+/**
  * Drive a real `Midend` to the scenario's frame and capture its render.
  * Throws if the id is invalid (a test wants that surfaced, not a silent
  * empty frame).
@@ -103,7 +142,16 @@ export interface RenderResult<Params, State, Move, Ui, DrawState> {
 export function renderScenario<Params, State, Move, Ui, DrawState, Mistake>(
   scenario: RenderScenario<Params, State, Move, Ui, DrawState, Mistake>,
 ): RenderResult<Params, State, Move, Ui, DrawState> {
-  const { game, id, moves, showMistakes, showHint, hintUntil } = scenario;
+  return capture(scenario, 0);
+}
+
+/** {@link renderScenario}, with `legs` steps of the hint's plan played before
+ * the capture, so that the step after them is the one on display. */
+function capture<Params, State, Move, Ui, DrawState, Mistake>(
+  scenario: RenderScenario<Params, State, Move, Ui, DrawState, Mistake>,
+  legs: number,
+): RenderResult<Params, State, Move, Ui, DrawState> {
+  const { game, id, moves, showMistakes, showHint } = scenario;
   const defaultBackground = scenario.defaultBackground ?? DEFAULT_BACKGROUND;
 
   const midend = new Midend(game);
@@ -126,15 +174,15 @@ export function renderScenario<Params, State, Move, Ui, DrawState, Mistake>(
   if (showHint) {
     const hintErr = midend.hint();
     if (hintErr) throw new Error(`renderScenario: hint failed: ${hintErr}`);
-    hint = midend.activeHintStep();
-    // Apply the displayed step and advance, until the plan runs out
-    // (`executeHint` clears it, so `activeHintStep()` is null). A
-    // no-animation game (e.g. Palisade) settles synchronously, so the next
-    // step is on display immediately.
-    for (let steps = 0; hintUntil && hint && !hintUntil(hint); steps++) {
-      if (steps >= MAX_HINT_STEPS || midend.executeHint()) break;
-      hint = midend.activeHintStep();
+    // Play the displayed step as the midend plays a hint, and run its
+    // animation out: the plan advances when the move settles, and the next
+    // step is then the one on display.
+    for (let played = 0; played < legs; played++) {
+      const playErr = midend.executeHint();
+      if (playErr) throw new Error(`renderScenario: hint failed: ${playErr}`);
+      midend.timer(SETTLE_SECONDS);
     }
+    hint = midend.activeHintStep();
   }
 
   // One generous tick is enough: `Midend.timer` clamps a finished animation

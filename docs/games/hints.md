@@ -1041,7 +1041,7 @@ The `Game` hooks and the `Midend` lifecycle are in
 reads its sentence to find out.** Everything that needs to know which deduction
 a step is keys on the id: the pins a game's tests read
 ([`testing.md`](./testing.md) § "Pinning a hint's positions"), the narration
-ledger in `hint-quality.test.ts`, a `hintUntil`. So rewording a sentence moves
+ledger in `hint-quality.test.ts`. So rewording a sentence moves
 only what asserts the wording, and a rung with no pinned board does not
 compile.
 
@@ -4130,8 +4130,8 @@ flip (the side-effect form).
 
 Use the tier-2.5 render-scenario harness
 ([`render-scenario.ts`](../../src/engine/testing/render-scenario.ts)):
-`renderScenario({ game, id, moves?, showHint?, hintUntil? })` drives a real
-`Midend` to the hint frame (walk a multi-step plan with `hintUntil`), then
+`renderPinnedHint(game, pinned(kind))` drives a real `Midend` to the frame of
+a pinned position's step, whichever leg of its plan that is, then
 assert targeted ops (`COL_HINT` present, clues still drawn) **plus**
 `toMatchSnapshot`. Seed: `palisade-render-scenario.test.ts` reaches the
 `equivalentEdges` frame the browser harness couldn't. See
@@ -4146,10 +4146,13 @@ Do not write a scan of your own; the followable form is
 
 Two testing gotchas worth internalizing:
 
-- **Stop a `hintUntil` on a rung, never on a phrase.**
-  `hintUntil: (step) => step.rung === "adjBlack"`. A phrase matches more than
-  one deduction (several Singles narrations share generic words), stops on the
-  wrong frame, and goes blind when the sentence is reworded.
+- **A hint frame is a pin's, never a walk down a plan on a board kept by
+  hand.** `renderPinnedHint(game, pinned("adjBlack"))` goes to the pin's step,
+  whichever leg of its plan it is, and the pin is found again by one command
+  when the board stops saying it. The pin is keyed on a rung, never on a
+  phrase: a phrase matches more than one deduction (several Singles narrations
+  share generic words), stops on the wrong frame, and goes blind when the
+  sentence is reworded.
 - **The easiest rule pre-empts hand-crafted boards.** A solver that tries
   techniques easiest-first means a crafted board often fires a *different*
   rule than intended (an alternating Unruly row is a three-in-a-row deduction,

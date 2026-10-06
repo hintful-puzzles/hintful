@@ -10597,6 +10597,7 @@ exports[`salad: pinned hint positions > says, at each pin 1`] = `
   "emptyMarker": "We already know which 3 squares of this row hold its numbers, so this square and the rest of it must be empty.",
   "nearestSquare": "This column's bottom clue sees B first and this square is nearest to it, which leaves only B for this square, so we must cross out A and C.",
   "placement": "Every other number has been ruled out in this square, so it can only be 3.",
+  "strikeAfterPlacing": "The A just placed can't repeat in its row and column, so we must cross out the A from the other squares there.",
   "symbolMarker": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",
 }
 `;

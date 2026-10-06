@@ -9,7 +9,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type FillingHint, fillingGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { deduceHintPlan, solveFilling } from "./solver.ts";
@@ -213,14 +213,7 @@ const pinned = describeHintPins({
 
 describe("filling hint render scenario", () => {
   it("rings the target(s) and hatches the region the sentence names", () => {
-    const { id, moves, step } = pinned("stripedRegion");
-    const { recording, hint } = renderScenario({
-      game: fillingGame,
-      id,
-      moves,
-      showHint: true,
-    });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording, step } = renderPinnedHint(fillingGame, pinned("stripedRegion"));
     const marks = stepMarks(step);
     expect(marks.of("stripes", CELL).length).toBeGreaterThan(0);
     expectRing(recording.ops, COL_HINT, marks.of("ring", CELL).length);

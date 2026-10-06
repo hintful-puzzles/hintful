@@ -11,7 +11,10 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { LINK, NUMBER } from "./hint-marks.ts";
 import { tentsGame } from "./index.ts";
 import { COL_ERROR, COL_GRID, COL_HINT, COL_MISTAKE, COL_TREELEAF } from "./render.ts";
@@ -119,9 +122,7 @@ describe("tents render scenarios", () => {
 
   /** The frame a pinned position's hint draws, through a real `Midend`. */
   const frame = (kind: Parameters<typeof pinned>[0]) => {
-    const { id, moves, step } = pinned(kind);
-    const result = renderScenario({ game: tentsGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(tentsGame, pinned(kind));
     return result;
   };
 

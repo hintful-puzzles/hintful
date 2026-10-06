@@ -12,7 +12,10 @@ import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import type { AscentRung } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-text.ts";
 import { ascentGame } from "./index.ts";
@@ -197,9 +200,8 @@ const pinned = describeHintKindPins({
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({ game: ascentGame, id, moves, showHint: true });
-  expect(result.hint?.explanation).toBe(step.explanation);
+  const result = renderPinnedHint(ascentGame, pinned(kind));
+  const { step } = result;
   return { recording: result.recording, hint: step, marks: hl(step) };
 }
 

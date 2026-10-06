@@ -13,7 +13,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { lightupGame } from "./index.ts";
 import {
   COL_GRID,
@@ -74,9 +74,8 @@ const pinned = describeHintKindPins({
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({ game: lightupGame, id, moves, showHint: true });
-  expect(result.hint?.explanation).toBe(step.explanation);
+  const result = renderPinnedHint(lightupGame, pinned(kind));
+  const { step } = result;
   if (!step.highlights) throw new Error("a Light Up step always has highlights");
   return { recording: result.recording, size: result.size, h: step.highlights };
 }

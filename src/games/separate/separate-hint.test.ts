@@ -19,7 +19,7 @@ import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { type SeparateRung, separateGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
@@ -274,9 +274,7 @@ const pinned = describeHintPins({
 
 describe("separate hint frame", () => {
   it("paints the edges blue, hatches one region and outlines the other", () => {
-    const { id, moves, step } = pinned("namesTwo");
-    const result = renderScenario({ game: separateGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(separateGame, pinned("namesTwo"));
 
     const ops = result.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);

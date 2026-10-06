@@ -18,7 +18,7 @@ import { CURSOR_DOWN, LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { subsetsGame } from "./index.ts";
@@ -630,10 +630,7 @@ describe("collapse exclusion (#2 — why not X)", () => {
 describe("hint rendering (tier 2.5)", () => {
   /** The frame a pinned position's hint draws, through a real `Midend`. */
   function hintFrame(kind: Parameters<typeof pinned>[0]) {
-    const { id, moves, steps } = pinned(kind);
-    const result = renderScenario({ game: subsetsGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(steps[0].explanation);
-    return result;
+    return renderPinnedHint(subsetsGame, pinned(kind));
   }
 
   it("an arrow hint frame paints the COL_HINT target slot and the COL_HINT_CELL neighbor", () => {

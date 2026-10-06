@@ -10,7 +10,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
 import { REGION, WALK_MAX } from "./hint-text.ts";
@@ -614,14 +614,7 @@ describe("map hint bookkeeping", () => {
 
 describe("map hint rendering", () => {
   it("a chain's regions carry their numbers, and the target its band", () => {
-    const { id, moves, step } = pinned("chainMark");
-    const { recording, hint } = renderScenario({
-      game: mapGame,
-      id,
-      moves,
-      showHint: true,
-    });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording, hint } = renderPinnedHint(mapGame, pinned("chainMark"));
     const rgb = (c: readonly number[]) =>
       `rgb(${c.map((v) => Math.round(v * 255)).join(", ")})`;
     const numbers = new Set(

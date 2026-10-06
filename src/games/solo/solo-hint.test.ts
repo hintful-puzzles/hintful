@@ -18,7 +18,7 @@ import {
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newSoloDesc } from "./generator.ts";
 import { noRepeatRegionNames, regionsOf, soloGame } from "./index.ts";
@@ -909,15 +909,11 @@ describe("solo hintKeepTrack", () => {
 
 describe("solo hint render", () => {
   it("a deductive elimination hatches its region and strikes the candidate", () => {
-    const { id, moves, step } = pinnedPopulated("regionStrike");
-    const { recording, hint } = renderScenario({
-      game: soloGame,
-      id,
-      defaultBackground: DEFAULT_BACKGROUND,
-      moves,
-      showHint: true,
-    });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording, step } = renderPinnedHint(
+      soloGame,
+      pinnedPopulated("regionStrike"),
+      { defaultBackground: DEFAULT_BACKGROUND },
+    );
     // The region the sentence names ("in this block", "in this row") is
     // hatched, one hatch per cell of it.
     const region = (step.highlights as { hatch?: unknown[] }).hatch ?? [];

@@ -13,7 +13,10 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { palisadeGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 
@@ -44,9 +47,7 @@ const pinned = describeHintKindPins({
 
 describe("Palisade render scenarios", () => {
   it("reaches the equivalentEdges hint frame in-process and paints it", () => {
-    const { id, moves, step } = pinned("equivalentEdges");
-    const result = renderScenario({ game: palisadeGame, id, moves, showHint: true });
-    expect(result.hint?.explanation).toBe(step.explanation);
+    const result = renderPinnedHint(palisadeGame, pinned("equivalentEdges"));
     const ops = result.recording.ops;
     const rectsOf = (color: number): number =>
       ops.filter((o) => o.op === "rect" && o.color === color).length;

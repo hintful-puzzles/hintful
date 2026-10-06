@@ -14,7 +14,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import {
   areasOf,
   hiddenSingles,
@@ -628,9 +628,8 @@ describe("the sentences at their extremes", () => {
 
 describe("the frames a hint draws", () => {
   it("rings each struck cell, hatches the starved area, and strikes each note through", () => {
-    const { id, moves, step } = pinned("starvedArea");
-    const found = renderScenario({ game: seismicGame, id, moves, showHint: true });
-    expect(found.hint?.explanation).toBe(step.explanation);
+    const found = renderPinnedHint(seismicGame, pinned("starvedArea"));
+    const { step } = found;
     const hl = step.highlights as SeismicHint;
     const ops = found.recording.ops;
 

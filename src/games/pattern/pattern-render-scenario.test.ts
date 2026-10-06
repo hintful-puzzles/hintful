@@ -9,7 +9,10 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { cellAt, LINE } from "./hint-marks.ts";
 import { type PatternHint, patternGame } from "./index.ts";
 import { COL_GRID, COL_HINT, COL_HINT_BLACKREF } from "./render.ts";
@@ -78,16 +81,10 @@ describe("Pattern hint render scenarios", () => {
   it("ringed-premise frame: a cited black mark rings COL_HINT_BLACKREF", () => {
     // A step that cites an already-placed black mark (an overlap anchored by
     // an earlier deduction) rings it teal.
-    const { id, moves, state, step } = pinned("citesBlack");
-    const [cited] = deduceHintPlan(state);
-    const { recording, hint } = renderScenario({
-      game: patternGame,
-      id,
-      moves,
-      showHint: true,
-    });
+    const position = pinned("citesBlack");
+    const [cited] = deduceHintPlan(position.state);
+    const { recording, hint } = renderPinnedHint(patternGame, position);
 
-    expect(hint?.explanation).toBe(step.explanation);
     expect((hint?.highlights as PatternHint).cells).toEqual(cited.cells);
     expect(stepMarks(hint).of("outline", CELL)).toEqual(
       expect.arrayContaining(cited.blackRefs.map((i) => cellAt(i, P.w))),

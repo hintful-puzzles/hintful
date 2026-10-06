@@ -6,7 +6,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectPieceRing } from "../../engine/testing/mark-shape.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { SPOT } from "./hint-text.ts";
 import { type DominosaHint, dominosaGame } from "./index.ts";
@@ -87,9 +87,8 @@ const pinned = describeHintPins({
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({ game: dominosaGame, id, moves, showHint: true });
-  expect(result.hint?.explanation).toBe(step.explanation);
+  const result = renderPinnedHint(dominosaGame, pinned(kind));
+  const { step } = result;
   return { recording: result.recording, size: result.size, hint: step };
 }
 

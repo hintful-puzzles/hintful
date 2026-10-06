@@ -13,7 +13,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { type DrawOp, opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { GalaxiesHint } from "./hint.ts";
 import { type GalaxiesMove, galaxiesGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
@@ -75,12 +75,8 @@ const pinned = describeHintKindPins({
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({ game: galaxiesGame, id, moves, showHint: true });
-  // The midend asks for its own hint at that position, so it shows the step
-  // the pin opens with.
-  expect(result.hint?.explanation).toBe(step.explanation);
-  return { ...result, hl: lit(step) };
+  const result = renderPinnedHint(galaxiesGame, pinned(kind));
+  return { ...result, hl: lit(result.step) };
 }
 
 const rects = (ops: DrawOp[], color: number) =>

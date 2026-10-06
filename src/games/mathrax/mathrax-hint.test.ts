@@ -20,7 +20,7 @@ import {
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
@@ -491,15 +491,11 @@ describe("mathrax hint resumes to solved", () => {
 
 describe("mathrax hint render", () => {
   it("an arithmetic clue rings its diagonal pair and strikes the candidate", () => {
-    const { id, moves, step } = pinned("arithmeticClue");
-    const { recording, hint } = renderScenario({
-      game: mathraxGame,
-      id,
-      defaultBackground: DEFAULT_BACKGROUND,
-      moves,
-      showHint: true,
-    });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording, hint } = renderPinnedHint(
+      mathraxGame,
+      pinned("arithmeticClue"),
+      { defaultBackground: DEFAULT_BACKGROUND },
+    );
     expect(hint?.explanation).toMatch(/ clue/);
     // Two **separate** rings, not one contour: the pair is diagonal, so the two
     // cells share no edge and joining them would outline board the clue does not
@@ -517,15 +513,9 @@ describe("mathrax hint render", () => {
   });
 
   it("an even/odd clue outlines the block of four it constrains", () => {
-    const { id, moves, step } = pinned("parityClue");
-    const { recording, hint } = renderScenario({
-      game: mathraxGame,
-      id,
+    const { recording, hint } = renderPinnedHint(mathraxGame, pinned("parityClue"), {
       defaultBackground: DEFAULT_BACKGROUND,
-      moves,
-      showHint: true,
     });
-    expect(hint?.explanation).toBe(step.explanation);
     expect(hint?.explanation).toMatch(/all four numbers around it are (even|odd)/);
     // A 2x2 block's contour is its eight outer sides — four per-cell rings would
     // be sixteen, so the count still tells the two apart.

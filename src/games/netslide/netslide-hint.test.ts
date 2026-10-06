@@ -93,10 +93,7 @@ const pinned = describeHintPins({
       marksOf(step).tile % state.w === state.cx,
     // A tile that needs more than one slide to get home: the opening step's
     // plan has a continuation leg straight after it.
-    journey: (_, state) => {
-      const res = netslideGame.hint?.(state);
-      return res?.ok === true && res.steps[1]?.continuesPrevious === true;
-    },
+    journey: (_step, _state, steps) => steps[1]?.continuesPrevious === true,
     // A step that moves a tile and aims at a cell on the line being slid, the
     // only case where a cell mark riding the shift would be visible.
     aimsAlongItsSlide: (step, state) =>

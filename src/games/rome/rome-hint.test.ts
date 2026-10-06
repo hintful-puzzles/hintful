@@ -26,7 +26,7 @@ import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newRomeDesc } from "./generator.ts";
 import { buildSteps } from "./hint.ts";
@@ -429,17 +429,12 @@ const pinned = describeHintPins({
 
 describe("rome hint render", () => {
   it("rings the square, hatches its area, and crosses the marks it rules out", () => {
-    // A walk down one plan on a fixed board, not a pin: the sentence follows a
-    // placement inside a plan and opened none of 1823 hints asked afresh.
-    const { recording, hint } = renderScenario({
-      game: romeGame,
-      id: "6x6dn:3a3aa1a8aab1b1a1c1a2da5a,RaLcRhLUUaDRXaLUaDaLDaUd",
+    // The sentence follows a placement inside a plan, so its step is a later
+    // leg and the frame is the board with the legs before it played.
+    const { recording, hint } = renderPinnedHint(romeGame, pinned("dup"), {
       defaultBackground: DEFAULT_BACKGROUND,
-      moves: MARK_ALL,
-      showHint: true,
-      hintUntil: (s) => s.rung === "dup",
     });
-    expect(hint?.explanation).toMatch(/^This area now has/);
+    expect(hint.explanation).toMatch(/^This area now has/);
     // The marks it rules out keep their own pencil color and take a
     // strikethrough in it, rather than being crossed off for the player.
     expect(
@@ -462,15 +457,9 @@ describe("rome hint render", () => {
    * claim the player has to be able to walk.
    */
   it("numbers the arrow chain a loop deduction walks", () => {
-    const { id, moves, step } = pinned("opensOnLoop");
-    const { recording, hint } = renderScenario({
-      game: romeGame,
-      id,
+    const { recording, hint } = renderPinnedHint(romeGame, pinned("opensOnLoop"), {
       defaultBackground: DEFAULT_BACKGROUND,
-      moves,
-      showHint: true,
     });
-    expect(hint?.explanation).toBe(step.explanation);
     const area = (hint?.highlights as { area: { order?: number }[] }).area;
     expect(area.length).toBeGreaterThanOrEqual(2);
     // Every evidence square carries its place in the walk, numbered from the

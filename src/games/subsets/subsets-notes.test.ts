@@ -21,7 +21,7 @@ import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { TALLY_SET } from "./hint-marks.ts";
@@ -437,9 +437,7 @@ describe("the hint places the rule-outs it rests on", () => {
   });
 
   it("the rule-out hint frame boxes the set and the neighbor's sets, and frames the cell", () => {
-    const { id, moves, step } = pinned("ruleOut");
-    const frame = renderScenario({ game: subsetsGame, id, moves, showHint: true });
-    expect(frame.hint?.explanation).toBe(step.explanation);
+    const frame = renderPinnedHint(subsetsGame, pinned("ruleOut"));
     const ops = frame.recording.ops;
     const rects = ops.filter((o) => o.op === "rect");
     expect(rects.some((o) => o.color === COL_HINT)).toBe(true);

@@ -2033,18 +2033,28 @@ whose plan holds a step of that rung. A rung that no known board fires SHALL be
 excused only by listing it with the reason, and the scan SHALL walk the excused
 rungs too and say when one fires.
 
-A test MAY pin further kinds, each a predicate over the step a plan opens with
-and the board it is asked from, for what a rung id does not say: a step's
-shape, which of a rung's cases it is, or the board's. A kind SHALL read the
-step's fields and SHALL NOT be a pattern matched against its sentence; the
-harness's type for a kind does not admit one. A test file that pins positions
-of its own beside the game's rungs SHALL do so through the same harness, with
-kinds that are rung ids or predicates.
+A test MAY pin further kinds, each a predicate over the step a plan opens with,
+the board it is asked from and the plan, for what a rung id does not say: a
+step's shape, which of a rung's cases it is, the board's, or the plan's. A
+predicate SHALL be given the plan and SHALL NOT ask the game's hint for it. A
+kind MAY name its predicate as a leg, and is then held by any step of the plan
+as a rung id is; the board it is given is still the one the plan was asked
+from. A kind SHALL read the step's fields and SHALL NOT be a pattern matched
+against its sentence; the harness's type for a kind does not admit one. A test
+file that pins positions of its own beside the game's rungs SHALL do so through
+the same harness, with kinds that are rung ids, predicates or legs.
 
 The harness SHALL declare the test that every pin's plan still fires its kind,
 and SHALL fail a pin that does not with the command that finds another. It
 SHALL also hold the sentence said at each pin as a snapshot, which is where a
 rung's wording is asserted now that no pin reads it.
+
+The harness SHALL provide the frame of a pinned position's step
+(`renderPinnedHint`, `src/engine/testing/render-scenario.ts`), drawn through
+the midend with the legs before that step played as the midend plays a hint. It
+SHALL fail where the step the midend shows is not the pin's, by its sentence
+and its move. A test SHALL NOT reach a hint's frame by walking a plan on a
+board it keeps by hand.
 
 The scan SHALL walk hint-guided play over fixed seeds, taking each plan's
 first step and asking again, and SHALL report for every kind how many of the
@@ -2093,6 +2103,25 @@ scan for a position, and is not covered by this requirement.
   is not
 - **THEN** it is pinned on a position whose plan holds a step of it, and the
   loader says where in the plan that step is
+
+#### Scenario: A case of a rung that is only ever a later leg
+
+- **WHEN** a test wants one case of a rung, which a predicate tells apart, and
+  that case is not the step a plan opens with
+- **THEN** the kind names the predicate as a leg, and the loader returns the
+  first step of the plan it accepts and where that step is
+
+#### Scenario: A kind about the plan
+
+- **WHEN** a kind is a plan whose opening step has a continuation after it
+- **THEN** its predicate reads the plan it is given, and the hint is asked
+  once for that position
+
+#### Scenario: The frame of a later leg
+
+- **WHEN** a render test wants the frame of a pin whose step is a later leg
+- **THEN** the frame shows that step on the board the legs before it leave
+- **AND** a pin whose opening step says the same sentence is not taken for it
 
 #### Scenario: A reworded sentence
 

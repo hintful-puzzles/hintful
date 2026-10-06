@@ -17,7 +17,7 @@ import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { type SinglesHint, type SinglesRung, singlesGame } from "./index.ts";
 import {
@@ -402,9 +402,8 @@ describe("hintKeepTrack", () => {
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({ game: singlesGame, id, moves, showHint: true });
-  expect(result.hint?.explanation).toBe(step.explanation);
+  const result = renderPinnedHint(singlesGame, pinned(kind));
+  const { step } = result;
   return { ...result, step };
 }
 

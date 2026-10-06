@@ -18,7 +18,7 @@ import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
@@ -471,15 +471,11 @@ describe("keen hint resumes to solved", () => {
 
 describe("keen hint render", () => {
   it("a cage elimination hatches the cage and strikes the candidate", () => {
-    const { id, moves, step } = pinnedMarked("cageRuledOut");
-    const { recording, hint } = renderScenario({
-      game: keenGame,
-      id,
-      defaultBackground: DEFAULT_BACKGROUND,
-      moves,
-      showHint: true,
-    });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording, hint } = renderPinnedHint(
+      keenGame,
+      pinnedMarked("cageRuledOut"),
+      { defaultBackground: DEFAULT_BACKGROUND },
+    );
     // "This cage" is hatched, one hatch per cell of it, and nothing in it is
     // outlined: the cage is the region, not a particular cell.
     const cage = (hint?.highlights as { hatch?: unknown[] }).hatch ?? [];
@@ -502,15 +498,11 @@ describe("keen hint render", () => {
   });
 
   it("a hidden-single placement hatches the whole line and rings the target", () => {
-    const { id, moves, step } = pinnedFresh("hiddenSingleSmall");
-    const { recording, hint } = renderScenario({
-      game: keenGame,
-      id,
-      defaultBackground: DEFAULT_BACKGROUND,
-      moves,
-      showHint: true,
-    });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording, hint } = renderPinnedHint(
+      keenGame,
+      pinnedFresh("hiddenSingleSmall"),
+      { defaultBackground: DEFAULT_BACKGROUND },
+    );
     expect(hint?.explanation).toMatch(/in this (row|column) rules out/);
     // One hatch per cell of the line, all in one strip, and no outline: the
     // line is the hatch, and nothing in it is a particular reason.

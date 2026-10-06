@@ -5615,3 +5615,10 @@ exports[`Pearl render scenarios > the loopy appearance draws center-dot grid ins
   },
 ]
 `;
+
+exports[`pearl: pinned hint positions > says, at each pin 1`] = `
+{
+  "blackPearlArm": "This black pearl must turn, and the board's edge is opposite, so its line must run this way through the next square. It runs straight on through the next white pearl too.",
+  "rulesAnEdgeOut": "This black pearl must turn, and the opposite edge is a line, so this edge can't be one.",
+}
+`;

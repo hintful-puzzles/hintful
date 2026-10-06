@@ -17,7 +17,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
-  renderScenario,
+  renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { undeadGame } from "./index.ts";
@@ -365,15 +365,11 @@ describe("undead hint resume (per tier)", () => {
 
 describe("undead hint render (tier 2.5)", () => {
   it("a sightline-elimination frame outlines the path, struck candidate, clues drawn", () => {
-    const { id, moves, step } = pinned("sightlineStrike");
-    const { recording, hint } = renderScenario({
-      game: undeadGame,
-      id,
-      moves,
-      showHint: true,
-      defaultBackground: DEFAULT_BACKGROUND,
-    });
-    expect(hint?.explanation).toBe(step.explanation);
+    const { recording, hint } = renderPinnedHint(
+      undeadGame,
+      pinned("sightlineStrike"),
+      { defaultBackground: DEFAULT_BACKGROUND },
+    );
     const ops = recording.ops;
     // The sightline's bounce path is **outlined** COL_HINT_CELL, not shaded —
     // the cells on it carry penciled monsters the player has to read.

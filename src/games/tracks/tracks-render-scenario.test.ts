@@ -10,7 +10,10 @@ import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT2 } from "../../engine/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { LINE, PIECE } from "./hint-text.ts";
 import { tracksGame } from "./index.ts";
 import { COL_CURSOR, COL_ERROR, COL_HINT, COL_HINT_CELL } from "./render.ts";
@@ -50,9 +53,8 @@ const pinned = describeHintKindPins({
 
 /** The frame a pinned position's hint draws, through a real `Midend`. */
 function hintFrame(kind: Parameters<typeof pinned>[0]) {
-  const { id, moves, step } = pinned(kind);
-  const result = renderScenario({ game: tracksGame, id, moves, showHint: true });
-  expect(result.hint?.explanation).toBe(step.explanation);
+  const result = renderPinnedHint(tracksGame, pinned(kind));
+  const { step } = result;
   return { ...result, step };
 }
 
