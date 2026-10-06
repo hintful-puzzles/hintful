@@ -68,6 +68,7 @@ afterEach(() => {
 // only that this file's own fake was called — the shape of guard this repo keeps
 // catching (a check aimed at a neighbor of the thing it claims to check).
 import type { CheckVerdict } from "../engine/types.ts";
+import type { DealOutcome } from "../puzzle/puzzle.ts";
 import { CHECK_OUT_OF_REACH, justSaved } from "../puzzle/quick-save-actions.ts";
 import { settings } from "../store/settings.ts";
 import { sleep } from "../utils/timing.ts";
@@ -423,10 +424,10 @@ function makeLoadPuzzle(opts: { rejectId?: (id: string) => string | null } = {})
       { title: "4x4 Easy", params: "4x4n4d0" },
       { title: "5x5 Normal", params: "5x5n4d1" },
     ]),
-    newGame: vi.fn(async (): Promise<string | null> => {
+    newGame: vi.fn(async (): Promise<DealOutcome> => {
       dealt += 1;
       puzzle.currentGameId = `5x5n4d1:fresh-${dealt}`;
-      return null;
+      return "dealt";
     }),
     newGameFromId: vi.fn(async (id: string) => {
       const error = opts.rejectId?.(id);
@@ -551,7 +552,9 @@ describe("which board a puzzle page opens with", () => {
   it("says so and starts on the first preset when the remembered type deals nothing", async () => {
     const puzzle = makeLoadPuzzle();
     await settings.setParams(puzzle.puzzleId, "9x9n4d3");
-    puzzle.newGame.mockImplementationOnce(async () => "No Hard puzzle was found.");
+    puzzle.newGame.mockImplementationOnce(async () => ({
+      refusal: "No Hard puzzle was found.",
+    }));
     await load(puzzle);
 
     expect(showAlert).toHaveBeenCalledOnce();
@@ -559,6 +562,19 @@ describe("which board a puzzle page opens with", () => {
       message: "No Hard puzzle was found.",
     });
     expect(puzzle.setParams).toHaveBeenLastCalledWith("4x4n4d0");
+    expect(puzzle.newGame).toHaveBeenCalledTimes(2);
+  });
+
+  it("starts on the first preset, with no word, when the search for the remembered type is stopped", async () => {
+    const puzzle = makeLoadPuzzle();
+    await settings.setParams(puzzle.puzzleId, "9x9n4d3");
+    puzzle.newGame.mockImplementationOnce(async () => "stopped");
+    await load(puzzle);
+
+    expect(showAlert).not.toHaveBeenCalled();
+    expect(puzzle.setParams).toHaveBeenLastCalledWith("4x4n4d0");
+    // There is nothing to go back to from the first preset's own deal.
+    expect(puzzle.newGame).toHaveBeenLastCalledWith({ canStop: false });
     expect(puzzle.newGame).toHaveBeenCalledTimes(2);
   });
 
@@ -615,7 +631,7 @@ describe("which board a puzzle page opens with", () => {
     let rendersBeforeDeal = -1;
     puzzle.newGame.mockImplementationOnce(async () => {
       rendersBeforeDeal = requestUpdate.mock.calls.length;
-      return null;
+      return "dealt";
     });
     const loaded = (
       screen as unknown as { handlePuzzleLoaded: (e: unknown) => Promise<void> }

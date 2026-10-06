@@ -77,6 +77,9 @@ function fullyCapablePuzzle(overrides: Record<string, unknown> = {}) {
     wantsStatusbar: true,
     statusbarText: "3 lights placed",
     autoHintActive: false,
+    // A deal is being looked for, which is when its way out has a row.
+    dealMessage: "Looking for a board…",
+    canStopDeal: true,
     helpMessage: "",
     activeHintExplanation: "",
     currentMove: 3,

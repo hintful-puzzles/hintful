@@ -1,8 +1,9 @@
 /**
- * Dealing a board, apart from playing one. The midend deals the board a player
- * is waiting for, and the app deals the next one ahead in a second worker, so
- * that a type whose boards take seconds to find is waited for once. Both come
- * through {@link generate}.
+ * Dealing a board, apart from playing one. The app deals in a second worker:
+ * the next board ahead, so that a type whose boards take seconds to find is
+ * waited for once, and the board a player is waiting for, so that the wait can
+ * be stopped. The midend deals where it is handed no board. Both come through
+ * {@link generate}.
  */
 
 import type { Game } from "./game.ts";

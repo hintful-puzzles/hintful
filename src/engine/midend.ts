@@ -117,6 +117,13 @@ export interface EngineCore {
   /** The params `newGame(fitTo)` would deal at, in their full encoding: what
    * a board dealt ahead for it has to be dealt at. */
   dealParams(fitTo?: Size): EncodedParams;
+  /** A deal at `dealParams(fitTo)`, run off this thread, found no board. What
+   * `newGame` does where its own generator gives up: the sentence to show, and
+   * the type chosen put back to the board's. */
+  dealFoundNone(fitTo?: Size): string;
+  /** Put the type chosen back to that of the board in play, where there is
+   * one: the deal that was to replace it has been given up. */
+  returnToBoardType(): void;
   newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;
@@ -381,6 +388,19 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return this.game.encodeParams(this.paramsToDeal(fitTo), true);
   }
 
+  dealFoundNone(fitTo?: Size): string {
+    const params = this.paramsToDeal(fitTo);
+    this.returnToBoardType();
+    return dealGaveUp(tierNameOf(this.game, params));
+  }
+
+  /** So the menu does not name a type the player is not looking at. */
+  returnToBoardType(): void {
+    if (this.history.length === 0) return;
+    this.params = this.boardParams;
+    this.emitParamsChange();
+  }
+
   private paramsToDeal(fitTo?: Size): Params {
     return fitTo ? this.paramsToFit(fitTo) : this.params;
   }
@@ -394,10 +414,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private deal(params: Params, rng: RandomState, chosen: Params): string | null {
     const dealt = generate(this.game, params, rng);
     if (dealt === null) {
-      if (this.history.length > 0) {
-        this.params = this.boardParams;
-        this.emitParamsChange();
-      }
+      this.returnToBoardType();
       return dealGaveUp(tierNameOf(this.game, params));
     }
     this.begin(params, dealt.desc, dealt.aux ?? null, chosen);

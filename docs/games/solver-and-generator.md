@@ -1101,6 +1101,25 @@ A cell the walk lists is a few deals, enough to find where a ladder leaves a
 second and not enough to place a line. Before a bound is written, count the
 sizes each side of it.
 
+**A Custom size is not refused for its wait.** The app runs every deal beside
+the board in play and the player can stop it
+([`deal-ahead.ts`](../../src/puzzle/deal-ahead.ts), `Puzzle.stopDeal`), so a
+large size is a wait they chose and can leave, and the line a table of
+refusals would need is in a different place at every tier, on every machine.
+A size bound in `validateParams` is for what a wait does not fix:
+
+- a deal that takes the worker down, since memory is not a wait;
+- a size no board exists at, or whose generator fails more often than it
+  finds (Seismic's fill past 64 cells);
+- a deal whose time goes on boards it then throws away, so that what arrives
+  at the end is not what was searched for (Sokoban past 1,200 squares deals
+  the level its hint cannot open).
+
+The preset menu is held to more than this: a preset is a wait sprung on
+whoever opens the menu. A generator that never ends is still a defect at any
+size, since a player who stops it has learned nothing about whether to ask
+again.
+
 ### Solver-gated generation
 
 **When a generator strips or accepts clues by re-running the solver, the

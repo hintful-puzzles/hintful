@@ -136,8 +136,12 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
           throw new Error(`Invalid puzzle-view gameid="${this.gameId}": ${error}`);
         }
       } else {
-        const refusal = await this._puzzle.newGame();
-        if (refusal) throw new Error(`puzzle-view could not deal: ${refusal}`);
+        // Nothing here offers the way out of a deal, and there is no board
+        // to go back to.
+        const outcome = await this._puzzle.newGame({ canStop: false });
+        if (outcome !== "dealt") {
+          throw new Error(`puzzle-view could not deal: ${JSON.stringify(outcome)}`);
+        }
       }
     }
   }

@@ -22,7 +22,9 @@ called `puzzle`.
 - **`deal-ahead.ts`** — deals the board after this one in a second,
   short-lived instance of the worker and keeps it in `src/store/kept-boards.ts`,
   so New game plays a board that is already found. A type whose deal was slow
-  keeps several. **A board you see after New
+  keeps several. A New game with none kept waits on a deal there too, which
+  is what lets the board in play be played meanwhile and the player stop the
+  search (`Puzzle.stopDeal`). **A board you see after New
   game may have been dealt minutes or visits earlier**, by this build; on the
   dev server, since the page loaded.
 - **`drawing.ts`** — the `Drawing` class implementing the puzzle drawing API,

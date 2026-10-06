@@ -247,6 +247,21 @@ The [hint](#hints) knows about all this. On an Unreasonable board it will tell
 you when deduction has run out rather than making a choice for you and calling
 it a deduction.
 
+## Boards that take a while to find {#slow-deals}
+
+Most boards are dealt at once. A large *Custom type…* size, or a rare
+combination of size and difficulty, can take seconds or minutes to find. After
+a second the app says *Looking for a board…*, and the board you were on stays
+where it is: you can go on playing it, hints and all, until the new one
+arrives.
+
+**Stop** beside those words ends the search. You keep the board you have,
+and the type menu goes back to its type. Nothing is lost by stopping, and
+asking for the same type again starts a fresh search.
+
+Once a board of a type has been found the app looks for the next one while
+you play, so the wait is mostly the first board's.
+
 ## Boards that fit your screen {#board-shape}
 
 Boards that aren't square come taller than they are wide, to suit a phone held

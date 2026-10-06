@@ -267,6 +267,26 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
   }
 
   /**
+   * A New game that is still looking for its board, under the row that asked
+   * for it, with the way out. The board in play takes moves meanwhile, so
+   * this is a note beside it and not a state of the whole surface.
+   */
+  private renderDealPending() {
+    if (!this.puzzle?.dealMessage) return nothing;
+    return html`
+      <div part="deal-pending">
+        <span role="status">${this.puzzle.dealMessage}</span>
+        ${
+          this.puzzle.canStopDeal
+            ? html`<button part="deal-stop" type="button" data-command="stop-deal">
+                Stop
+              </button>`
+            : nothing
+        }
+      </div>`;
+  }
+
+  /**
    * Auto-solve: one button whose label and icon say what pressing it will do.
    * Not a switch: a switch says "a setting you leave in a position", and this
    * is something running right now that a player will want to stop.
@@ -287,6 +307,7 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
     return html`
       <section part="group" aria-label="This puzzle">
         ${this.renderRow({ command: "new-game", icon: "new-game", label: "New game" })}
+        ${this.renderDealPending()}
         ${this.renderRow({
           command: "restart-game",
           icon: "restart-game",
@@ -561,6 +582,41 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
         color: var(--app-color-hint-ink);
         font-size: var(--app-font-size-support);
         line-height: var(--wa-line-height-normal);
+      }
+
+      [part="deal-pending"] {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-block: 0.25rem;
+        padding: 0.25rem 0.25rem 0.25rem 0.625rem;
+        border: 1px solid var(--app-color-hairline);
+        border-radius: var(--app-radius-hint);
+        color: var(--app-color-text-secondary);
+        font-size: var(--app-font-size-support);
+        line-height: var(--wa-line-height-normal);
+      }
+
+      [part="deal-stop"] {
+        flex: 0 0 auto;
+        min-height: var(--app-row-rail);
+        padding-inline: 0.75rem;
+        border: 1px solid var(--app-color-hairline);
+        border-radius: var(--app-radius-control);
+        background: none;
+        color: var(--app-color-text);
+        font: inherit;
+        cursor: pointer;
+
+        &:focus-visible {
+          outline: var(--wa-focus-ring);
+          outline-offset: var(--wa-focus-ring-offset);
+        }
+      }
+
+      :host([variant="sheet"]) [part="deal-stop"] {
+        min-height: var(--app-tap-min);
       }
 
       [part="hint-journey"] {

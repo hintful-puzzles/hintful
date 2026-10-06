@@ -10,6 +10,7 @@ import type {
   ConfigDescription,
   ConfigValues,
   CustomParamsEncoding,
+  DealtBoard,
   FontInfo,
   GameStatus,
   KeyLabel,
@@ -54,16 +55,24 @@ export const HINT_PENDING_MS = 300;
 export const HINT_PENDING_MESSAGE = "Thinking…";
 
 /**
- * How long a New game may go unanswered before the app says what it is doing.
- * Most types deal in well under this, and a kept board (`DealAhead`) is played
- * at once, so the words are seen where a type's boards are rare and none is
- * kept: the first deal of it, or a run of them pressed faster than boards are
- * found. A deal this long is also what makes a type slow, which has more
- * boards kept for it.
+ * How long a New game may go unanswered before the app says what it is doing
+ * (`Puzzle.dealPending`). Most types deal in well under this, and a kept board
+ * (`DealAhead`) is played at once, so the words are seen where a type's boards
+ * are rare and none is kept: the first deal of it, or a run of them pressed
+ * faster than boards are found. A deal this long is also what makes a type
+ * slow, which has more boards kept for it.
  */
 export const DEAL_PENDING_MS = SLOW_DEAL_MS;
 
-export const DEAL_PENDING_MESSAGE = "Looking for a board…";
+/** The chrome's wording for a pending deal (`Puzzle.dealMessage`). */
+const DEAL_PENDING_MESSAGE = "Looking for a board…";
+
+/**
+ * How a New game ended: with a board, with the sentence to show where the
+ * generator found none, or stopped while it was still looking. The board on
+ * screen is the one that was there in both of the last two.
+ */
+export type DealOutcome = "dealt" | "stopped" | { refusal: string };
 
 /**
  * Public API to the puzzle engine running in a worker.
@@ -449,29 +458,90 @@ export class Puzzle {
     return this._generatingGame.get();
   }
 
+  /**
+   * Whether a New game has gone `DEAL_PENDING_MS` without a board. The chrome
+   * says so in a place of its own and not in `helpMessage`: the board in play
+   * goes on answering input through the wait, so a hint asked for meanwhile
+   * would write over the words and take the way out with them.
+   */
+  private _dealPending = signal(false);
+  /** Counts the New games asked for, so that each knows whether it is still
+   * the one the chrome is speaking of. */
+  private dealsAsked = 0;
+  private dealStoppable = false;
+
+  public get dealPending(): boolean {
+    return this._dealPending.get();
+  }
+
+  /** What the chrome says of a pending deal, and empty when there is none.
+   * Handed over as `helpMessage` is, so that the chrome imports no value from
+   * this module and the store behind it. */
+  public get dealMessage(): string {
+    return this._dealPending.get() ? DEAL_PENDING_MESSAGE : "";
+  }
+
+  /** Whether the pending deal has a way out (`stopDeal`). */
+  public get canStopDeal(): boolean {
+    return this._dealPending.get() && this.dealStoppable;
+  }
+
   // Methods
-  /** Deal a new board. Resolves to the sentence to show where the generator
-   * found none; the board on screen is then the one that was there. */
-  public async newGame(): Promise<string | null> {
+  /**
+   * Deal a new board. The search for it runs off the thread that serves the
+   * board in play (`DealAhead.next`), which goes on taking moves until the new
+   * one arrives, and the player can end the search with `stopDeal`.
+   *
+   * `canStop: false` is for a caller with nothing to go back to: no board on
+   * screen, and no other type to try.
+   */
+  public async newGame({ canStop = true } = {}): Promise<DealOutcome> {
     this.stopAutoHint("");
     this.setHelpMessage("");
     this._activeHintExplanation.set("");
-    this._generatingGame.set(true);
-    const pendingTimer = setTimeout(
-      () => this.setHelpMessage(DEAL_PENDING_MESSAGE),
-      DEAL_PENDING_MS,
-    );
+    const turn = ++this.dealsAsked;
+    this.dealStoppable = canStop && this.dealAhead !== null;
+    const pendingTimer = setTimeout(() => this._dealPending.set(true), DEAL_PENDING_MS);
     try {
       const area = this.boardArea ?? undefined;
-      const kept = this.dealAhead
-        ? await this.dealAhead.take(await this.workerPuzzle.dealParams(area))
-        : null;
-      return await this.workerPuzzle.newGame(area, kept);
+      for (;;) {
+        let found: DealtBoard | null = null;
+        if (this.dealAhead) {
+          const waited = await this.dealAhead.next(
+            await this.workerPuzzle.dealParams(area),
+          );
+          if (waited === "stopped") return "stopped";
+          if (waited === null)
+            return { refusal: await this.workerPuzzle.dealFoundNone(area) };
+          // Another type was chosen during the wait. Handed a board of the
+          // type left, the engine would run the generator on its own thread.
+          if (waited.params !== (await this.workerPuzzle.dealParams(area))) continue;
+          found = waited;
+          // The board in play was played on through the wait.
+          this.stopAutoHint("");
+          this.setHelpMessage("");
+        }
+        this._generatingGame.set(true);
+        const refusal = await this.workerPuzzle.newGame(area, found);
+        return refusal === null ? "dealt" : { refusal };
+      }
     } finally {
       clearTimeout(pendingTimer);
-      if (this._helpMessage.get() === DEAL_PENDING_MESSAGE) this.setHelpMessage("");
       this._generatingGame.set(false);
+      // A New game asked for since has its own wait to speak of.
+      if (turn === this.dealsAsked) this._dealPending.set(false);
     }
+  }
+
+  /**
+   * The way out of a pending deal: the search is ended, the board on screen
+   * stays, and the type chosen goes back to that board's. The type is not
+   * dealt again until a New game asks for it.
+   */
+  public async stopDeal(): Promise<void> {
+    if (!this.canStopDeal) return;
+    this.dealAhead?.stopWaiting();
+    await this.workerPuzzle.returnToBoardType();
   }
 
   /** The space the board is drawn in, as `<puzzle-view>` last measured it.
@@ -500,6 +570,8 @@ export class Puzzle {
   }
 
   public async newGameFromId(id: string): Promise<string | null> {
+    // The player has gone to another board than the one being looked for.
+    this.dealAhead?.stopWaiting();
     this.stopAutoHint("");
     this.setHelpMessage("");
     this._activeHintExplanation.set("");
@@ -855,6 +927,7 @@ export class Puzzle {
     // Loading a saved game (e.g. quick-load) replaces the board; a Hint press
     // after it must show against the loaded state, not apply a stale step.
     this.disarmHintApply();
+    this.dealAhead?.stopWaiting();
     return this.workerPuzzle.loadGame(transfer(data, [data.buffer]));
   }
 

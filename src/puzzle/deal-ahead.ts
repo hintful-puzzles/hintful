@@ -12,8 +12,11 @@
  * type whose deal was seen to be slow keeps `SLOW_TYPE_BOARDS`. A quick type
  * keeps one: a press that finds none kept there waits milliseconds.
  *
- * **The deal runs in a second worker.** A generator owns its thread until it
- * returns, and the board in play needs the first one to answer input.
+ * **Every deal runs in a second worker**, the one a player is waiting for
+ * included. A generator owns its thread until it returns, and the board in
+ * play needs the first one to answer input. A worker can also be ended where a
+ * generator cannot, which is how a player stops a deal they are tired of
+ * waiting for (`DealAhead.stopWaiting`).
  */
 
 import type { DealtBoard, EncodedParams, PuzzleId } from "../engine/types.ts";
@@ -55,17 +58,29 @@ const dealInWorker: StartDeal = (puzzleId, params) => {
   };
 };
 
+/** How a wait for a board ended: with the board, with `null` where the
+ * generator found none, or `"stopped"` where the wait was ended first. */
+export type WaitedDeal = DealtBoard | null | "stopped";
+
 export class DealAhead {
   /** The type the next New game deals, as last heard. */
   private wanted: EncodedParams | null = null;
+  /** A player waiting for a board, and the type they asked for. */
+  private waiter: {
+    params: EncodedParams;
+    settle(found: WaitedDeal): void;
+    fail(error: unknown): void;
+  } | null = null;
+  /** Counts the boards asked for, so that one asked for meanwhile is seen. */
+  private asked = 0;
   /** The deal under way, and the type it is for. */
   private dealing: { params: EncodedParams; deal: RunningDeal } | null = null;
-  /** The type whose last deal here found no board. It is not dealt again
-   * until a board of it has been asked for, or a resize would start another
-   * search of seconds each time it reported. */
-  private fruitless: EncodedParams | null = null;
+  /** The type that is not dealt until a board of it is asked for: its last
+   * deal here found no board, or the player stopped it. Without this a resize
+   * would start another search of seconds each time it reported. */
+  private unasked: EncodedParams | null = null;
   /**
-   * The types a kept board was slow to find. One deal says little about the next,
+   * The types a deal was slow for. One deal says little about the next,
    * since a search for a rare board ends at the first one it meets (Group's
    * 6x6 Tricky was found in under a second and in 35), so a type seen slow
    * once stays slow for the visit.
@@ -79,10 +94,48 @@ export class DealAhead {
     private readonly startDeal: StartDeal = dealInWorker,
   ) {}
 
-  /** The board kept for `params`, for the deal that is about to be made. */
-  async take(params: EncodedParams): Promise<DealtBoard | null> {
-    this.fruitless = null;
-    return this.boards.take(this.puzzleId, params);
+  /**
+   * The next board of `params`, for a player who is waiting for it: the one
+   * kept, or else the one a deal finds. That deal is the deal ahead already
+   * under way for the type where there is one, so a type just chosen is
+   * searched once and not twice. A wait begun earlier ends as stopped.
+   */
+  async next(params: EncodedParams): Promise<WaitedDeal> {
+    const turn = ++this.asked;
+    this.unasked = null;
+    this.endWait();
+    const kept = await this.boards.take(this.puzzleId, params);
+    // A board taken is handed on whatever was asked for meanwhile: it is gone
+    // from the store.
+    if (kept !== null) return kept;
+    if (turn !== this.asked) return "stopped";
+    return new Promise((settle, fail) => {
+      this.waiter = { params, settle, fail };
+      void this.prepare(params);
+    });
+  }
+
+  /**
+   * The player's way out of a wait: the deal is ended, and its type is not
+   * dealt again until a board of it is asked for.
+   */
+  stopWaiting(): void {
+    this.asked++;
+    if (this.waiter === null) return;
+    this.unasked = this.waiter.params;
+    this.endWait();
+    this.abandon();
+  }
+
+  private endWait(): void {
+    this.waiter?.settle("stopped");
+    this.waiter = null;
+  }
+
+  /** The type to deal now. A player who is waiting comes before the board
+   * after theirs. */
+  private get target(): EncodedParams | null {
+    return this.waiter?.params ?? this.wanted;
   }
 
   /**
@@ -99,35 +152,68 @@ export class DealAhead {
 
   private async prepareNow(params: EncodedParams): Promise<void> {
     // Another type was chosen while this waited its turn, and has its own.
-    if (this.wanted !== params) return;
-    if (this.dealing?.params === params || this.fruitless === params) return;
+    if (this.target !== params) return;
+    if (this.dealing?.params === params) return;
+    const waiter = this.waiter;
+    if (waiter === null && this.unasked === params) return;
     this.abandon();
-    const kept = await this.boards.dealTimes(this.puzzleId, params);
-    // Each kept board says how long it took, which is how a slow deal is
-    // heard of: the one just kept, or one of an earlier visit.
-    if (kept.some((ms) => ms >= SLOW_DEAL_MS)) this.slow.add(params);
-    if (kept.length >= (this.slow.has(params) ? SLOW_TYPE_BOARDS : 1)) return;
+    if (waiter !== null) {
+      // The deal ahead may have ended between this player's look in the
+      // store and their wait beginning: with a board, which is theirs, or
+      // with none, which is no reason to keep them from a deal of their own.
+      const kept = await this.boards.take(this.puzzleId, params);
+      if (this.waiter !== waiter) return;
+      if (kept !== null) {
+        this.waiter = null;
+        waiter.settle(kept);
+        return;
+      }
+    } else {
+      const kept = await this.boards.dealTimes(this.puzzleId, params);
+      // Each kept board says how long it took, which is how a slow deal of an
+      // earlier visit is heard of.
+      if (kept.some((ms) => ms >= SLOW_DEAL_MS)) this.slow.add(params);
+      if (kept.length >= (this.slow.has(params) ? SLOW_TYPE_BOARDS : 1)) return;
+    }
     const deal = this.startDeal(this.puzzleId, params);
     const dealing = { params, deal };
     this.dealing = dealing;
-    void deal.dealt.then(async ({ board, ms }) => {
-      if (this.dealing !== dealing) return;
-      this.dealing = null;
-      if (board === null) {
-        this.fruitless = params;
-        return;
-      }
-      await this.boards.keep(this.puzzleId, board, ms);
-      // Round again, for the next board of a slow type. A type chosen
-      // meanwhile has asked for its own.
-      if (this.wanted === params) void this.prepare(params);
-    });
+    void deal.dealt.then(
+      async ({ board, ms }) => {
+        if (this.dealing !== dealing) return;
+        this.dealing = null;
+        if (ms >= SLOW_DEAL_MS) this.slow.add(params);
+        if (board === null) this.unasked = params;
+        const waiter = this.waiter;
+        if (waiter?.params === params) {
+          this.waiter = null;
+          waiter.settle(board);
+          return;
+        }
+        if (board === null) return;
+        await this.boards.keep(this.puzzleId, board, ms);
+        // Round again, for the next board of a slow type. A type chosen
+        // meanwhile has asked for its own.
+        if (this.wanted === params) void this.prepare(params);
+      },
+      (error: unknown) => {
+        if (this.dealing !== dealing) return;
+        this.dealing = null;
+        const waiter = this.waiter;
+        // With nobody waiting the failure is the page's to report.
+        if (waiter?.params !== params) throw error;
+        this.waiter = null;
+        waiter.fail(error);
+      },
+    );
   }
 
-  /** Abandon the deal under way, if there is one, and deal no further until
-   * asked again. */
+  /** Abandon the deal under way and any wait for it, and deal no further
+   * until asked again. */
   stop(): void {
     this.wanted = null;
+    this.asked++;
+    this.endWait();
     this.abandon();
   }
 

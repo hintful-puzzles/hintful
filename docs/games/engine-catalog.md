@@ -501,8 +501,8 @@ calls it.
 
 [`deal.ts`](../../src/engine/deal.ts) is dealing apart from playing:
 `generate` runs a game's `newDesc` and answers `null` for a run-out, and
-`dealBoard` is what the app's second worker calls to deal the next board
-ahead. A game calls neither.
+`dealBoard` is what the app's second worker calls for every board a New game
+plays, dealt ahead or waited for. A game calls neither.
 
 ### `sections.ts` — contract sections and the draft label
 

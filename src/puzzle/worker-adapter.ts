@@ -82,6 +82,12 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   dealParams(fitTo?: Size): EncodedParams {
     return this.engine.dealParams(fitTo);
   }
+  dealFoundNone(fitTo?: Size): string {
+    return this.engine.dealFoundNone(fitTo);
+  }
+  returnToBoardType(): void {
+    this.engine.returnToBoardType();
+  }
   newGameFromId(id: string): string | null {
     return this.engine.newGameFromId(id);
   }

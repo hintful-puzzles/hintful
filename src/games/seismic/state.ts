@@ -191,7 +191,10 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * near two seconds. Its exhaustive sweep passed up to 72 cells, but on
  * single-seed timings already reaching 5.5 s, with no tail measurement behind
  * them. Do not raise it without repeating the slow sizes over several seeds: a
- * median-based bound has been shipped here and retracted once already.
+ * median-based bound has been shipped here and retracted once already. A deal
+ * the player can stop makes the wait theirs to choose, as Tectonic's is, so
+ * what those seeds have to show is that every one of them ends in a board:
+ * between 64 cells and 100 nobody has counted where the fill starts to fail.
  *
  * Refusing in `validateParams`, where the Custom dialog can show a reason, is
  * docs/games/solver-and-generator.md § "Unlucky, impossible, and load-bearing

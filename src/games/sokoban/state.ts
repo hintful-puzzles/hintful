@@ -94,6 +94,11 @@ export function defaultParams(): SokobanParams {
  * 2026-10-06: the mean deal is 4.5 s at 30×30, 12 s at 30×40 and 30 s at
  * 40×40, where the search finished 3 levels in 100. A board that arrives with
  * its desc is any size.
+ *
+ * A player can stop a deal, so the wait alone would not earn a refusal. What
+ * does is that last figure: past here the time goes on levels the search
+ * gives up on, and the deal that ends it is likely the level dealt as it is
+ * once the tries run out (`dealtLevel`), which the hint cannot open.
  */
 const MAX_DEAL_AREA = 1200;
 

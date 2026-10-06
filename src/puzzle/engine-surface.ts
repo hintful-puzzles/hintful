@@ -40,6 +40,10 @@ export interface PuzzleEngineSurface {
   newGame(fitTo?: Size, kept?: DealtBoard | null): string | null;
   /** See `EngineCore.dealParams`. */
   dealParams(fitTo?: Size): EncodedParams;
+  /** See `EngineCore.dealFoundNone`. */
+  dealFoundNone(fitTo?: Size): string;
+  /** See `EngineCore.returnToBoardType`. */
+  returnToBoardType(): void;
   newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;

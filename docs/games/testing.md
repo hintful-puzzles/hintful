@@ -30,7 +30,11 @@ only.** The tiers are codified in the
   [`src/engine/testing/`](../../src/engine/testing/): a real `Midend` driven to
   a target frame. **New render code SHOULD ship one** (see below).
 - **Tier 3** — components + persistence: opt a file into `happy-dom` for Lit
-  components, import `src/test-setup/indexeddb.ts` for Dexie round-trips.
+  components, import `src/test-setup/indexeddb.ts` for Dexie round-trips,
+  and in any file whose imports reach `src/store/db.ts`, which is most that
+  mount a component: the database is made as that module loads and every
+  later file in the worker shares it, so a file without the setup fails some
+  other file, in one run in several, as `MissingAPIError`.
   Mounting Web Awesome controls needs `src/test-setup/element-internals.ts`,
   and opening a `wa-dialog` that holds a config form needs
   `src/test-setup/resize-and-animations.ts` too — Lit resolves its `node`

@@ -280,6 +280,21 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
             </div>`
           : nothing
       }
+      ${
+        // Above the bar with the hint, and apart from it: the board in play
+        // takes moves and hints while a deal is looked for, and the way out
+        // stays in reach through them.
+        puzzle?.dealMessage
+          ? html`<div class="phone-deal" @click=${this.handleChromeClick}>
+              <span role="status">${puzzle.dealMessage}</span>
+              ${
+                puzzle.canStopDeal
+                  ? html`<button type="button" data-command="stop-deal">Stop</button>`
+                  : nothing
+              }
+            </div>`
+          : nothing
+      }
       <nav class="phone-bar" aria-label="Puzzle commands" @click=${this.handleChromeClick}>
         ${this.renderPhoneAction("undo", "undo", "Undo", !puzzle?.canUndo)}
         ${this.renderPhoneAction("redo", "redo", "Redo", !puzzle?.canRedo)}
@@ -489,6 +504,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       "enter-gameid": this.showEnterGameIDDialog,
       "load-game": this.showLoadGameDialog,
       "new-game": () => this.puzzle && dealNewGame(this.puzzle),
+      "stop-deal": () => this.puzzle?.stopDeal(),
       redraw: () => this.shadowRoot?.querySelector("puzzle-view-interactive")?.redraw(),
       "restart-game": () => this.puzzle?.restartGame(),
       "save-game": this.showSaveGameDialog,
@@ -1029,13 +1045,14 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     }
 
     if (!hasGame && !(await dealNewGame(puzzle))) {
-      // The remembered type found no board, and there is none on screen to
-      // keep. The first preset always deals.
+      // The remembered type found no board, or the player stopped the search
+      // for one, and there is none on screen to keep. The first preset always
+      // deals, and its deal has no way out: there is nothing to go back to.
       await this.chooseFirstPreset(puzzle);
-      const refusal = await puzzle.newGame();
-      if (refusal) {
+      const outcome = await puzzle.newGame({ canStop: false });
+      if (outcome !== "dealt") {
         throw new Error(
-          `${puzzle.puzzleId} could not deal its first preset: ${refusal}`,
+          `${puzzle.puzzleId} could not deal its first preset: ${JSON.stringify(outcome)}`,
         );
       }
     }
@@ -1386,6 +1403,33 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         border-radius: var(--app-radius-hint);
         background-color: var(--app-color-hint-surface);
         color: var(--app-color-hint-ink);
+      }
+
+      .phone-deal {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-inline: var(--app-spacing);
+        margin-block-end: var(--wa-space-2xs);
+        padding-inline-start: 0.625rem;
+        border: 1px solid var(--app-color-hairline);
+        border-radius: var(--app-radius-hint);
+        color: var(--app-color-text-secondary);
+        font-size: var(--app-font-size-support);
+
+        button {
+          min-width: var(--app-tap-min);
+          min-height: var(--app-tap-min);
+          padding-inline: 1rem;
+          border: none;
+          border-inline-start: 1px solid var(--app-color-hairline);
+          background: none;
+          color: var(--app-color-text);
+          font: inherit;
+          cursor: pointer;
+        }
       }
 
       .phone-hint-journey {

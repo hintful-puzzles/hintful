@@ -1,7 +1,8 @@
 # let-a-player-stop-a-deal
 
-**Status: scaffolded, not started (2026-10-06).** A follow-up from
-`bound-custom-sizes-by-their-deal`.
+**Status: implemented (2026-10-06).** A follow-up from
+`bound-custom-sizes-by-their-deal`. What the work found, and the decisions it
+took, are at the end.
 
 ## Why
 
@@ -80,3 +81,46 @@ asked for from the Custom dialog; the board in play still takes moves while
 the page looks; the way out returns to it at once; and asking again deals.
 `npm run deal-walk` is unchanged by this and stays the instrument for where
 the waits are.
+
+## What was found (2026-10-06)
+
+- **A reload mid-deal was never a trap.** Before this change, a Bricks 16x20
+  asked for and the page reloaded three seconds in came back to the board that
+  had been on screen, with its type: the page reopens the board it last
+  showed, and that sets the type. So this was not urgent. The one page with no
+  board to reopen is a link that names a type (`?type=`), which waits again on
+  every load; its Stop deals the game's first preset.
+- **The board in play is given back untouched**: its moves, the type chip and
+  the type the next New game deals. Stopping uses what a deal that found no
+  board already did (`Midend.returnToBoardType`).
+- **Bricks at "Normal" is the tier this app calls Unreasonable**, and a 16x20
+  of it came back in a few seconds when asked for here, against no answer in
+  a minute in the walk. Pearl 15x15 Easy was the board the checks ran on: it
+  never came back in the time any of them waited.
+- **A race worth its test.** A deal ahead that ended between a New game's look
+  in the store and its wait beginning left the wait unserved where it had
+  found nothing. `DealAhead.prepareNow` looks again for a waiting player.
+
+## Decisions
+
+- **No count of the time spent looking.** The words sit in a live region, and
+  one that changes every second is read out every second.
+- **The words moved out of the hint's place**, to under New game on the rail
+  and a strip of their own above the phone's bar. The board in play takes
+  hints during a wait, and a hint written over the words took Stop with it.
+- **A waited-for deal now pays for starting a worker**, which the board's own
+  thread did not. Measured on the production build on this machine: 60 ms,
+  six runs of 58 to 64. Keeping one worker alive between deals would remove
+  it, at the cost of a second copy of every game held for the whole visit;
+  declined, since a type pays it once and has boards kept from then on.
+- **Sokoban's and Seismic's bounds both stay**, and neither is for wait alone:
+  each says at its constant what a stoppable deal changed about its reason.
+- **A hint or Solve that searches is not served by this arrangement as it
+  stands.** A deal needs only the type; a hint needs the position, and its
+  plan lives in the engine that plays the board, so a second worker would
+  have to be sent the game and send a plan back. `_hintPending`'s comment
+  still holds.
+- **One board can be thrown away**: where the type is changed during a wait
+  and no New game follows, the board found for the type left is dropped and
+  the wait goes on for the new one. Keeping it would need its deal time,
+  which a board handed to a waiting player does not carry.
