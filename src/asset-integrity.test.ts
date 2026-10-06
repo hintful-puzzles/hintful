@@ -239,7 +239,7 @@ describe("every cataloged puzzle has its generated icons", () => {
  *
  * It was written, and it worked — renaming the About dialog made it fail with a
  * clear message. Then the instrument was checked against something outside
- * itself, and `tsgo` reports the same rename as `TS2307` from the *first* step
+ * itself, and the typechecker reports the same rename as `TS2307` from the *first* step
  * of the gate, well before vitest runs. A literal `import("…")` specifier is
  * statically analyzable, so the typechecker already owns it.
  *

@@ -21,9 +21,9 @@
  * It answers "who references this symbol", never "who has this mechanic".
  *
  * It runs on the `typescript` 5.9 compiler API, as the other build-side scripts
- * do, because `tsgo` publishes no stable API before TypeScript 7.1. So its
+ * do, because TypeScript 7 publishes no stable API before 7.1. So its
  * reading of the tree is 5.9's, not the gate's. On the five reference queries
- * `weigh-a-semantic-code-server` put to both, `tsgo --lsp` gave the same answers.
+ * `weigh-a-semantic-code-server` put to both, the TypeScript 7 preview's language server gave the same answers.
  *
  * Output: one line per file with its reference lines, then the totals and the
  * number of distinct games. `--files` prints only the paths; `--json` the lot.

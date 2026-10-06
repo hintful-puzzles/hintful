@@ -266,7 +266,7 @@ describe("ascent edge-drag guide line", () => {
   // What makes the names `dragColumn`/`dragRow` checkable rather than a claim.
   // They were `dragx`/`dragy`, which said pixels and held grid lines, and
   // nothing in the suite touched them — so the only thing standing behind the
-  // new names is this. The mutation it exists to catch is the one tsgo cannot
+  // new names is this. The mutation it exists to catch is the one a typechecker cannot
   // see: swapping `i % w` for `trunc(i / w)` in the render comparison, which
   // silently turns each guide line into the other.
   const paint = (set: (ui: ReturnType<typeof ascentGame.newUi>) => void) => {

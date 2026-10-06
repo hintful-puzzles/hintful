@@ -165,7 +165,8 @@ coherent unit of work.
 - **The LSP tool's diagnostics are not the gate's**, which come from
   `npm run typecheck`. It also answers short, with no error, while its server
   loads, so give it a known positive first, or take a symbol's population with
-  `npm run refs -- <file> <Name>`.
+  `npm run refs -- <file> <Name>`. An edit's errors arrive seconds later, on a
+  later tool result; `npm run agent-diagnostics` checks that they still do.
 - **When a change is archived and another is ready, hand it to a fresh
   session.** Commit, push and leave the tree clean, then call
   `mcp__continue-session__continueInNewSession` with the prompt

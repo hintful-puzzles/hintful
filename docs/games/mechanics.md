@@ -92,8 +92,8 @@ Why `null` rather than the word the language produces by itself:
 **A respelling is the one edit the compiler will not check.** `x === null`
 compiles against `number | undefined` and is always false. Moving the digit
 codecs and the key map to `null` left Loopy's and Mosaic's `validateDesc`
-accepting any character and an unmapped key reaching the game, with tsgo and the
-suite green; the same guard fails a strict comparison against a word the value's
+accepting any character and an unmapped key reaching the game, with the typechecker
+and the suite green; the same guard fails a strict comparison against a word the value's
 type cannot hold. **Assertions move with it**: `toBeDefined()` passes on `null`,
 so assert a present answer with `not.toBeNull()`.
 

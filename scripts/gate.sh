@@ -53,11 +53,13 @@ set -e
 sh "$(dirname -- "$0")/reap-orphaned-workers.sh" || true
 
 # --- 1. Fast fail-fast prefix. ---
-# `tsgo` (@typescript/native-preview), not `tsc`: the Go-native compiler checks
-# this tree in ~2.5s against ~13s for tsc 5.9, and the same binary can serve an
-# editor's language server (`.lsp.json`). `typescript` (5.x) is still installed — see the madge
-# section of metrics.sh for the ten packages that need its programmatic API.
-npx tsgo -b --noEmit
+# `npm run tsc` is TypeScript 7's compiler, installed under the alias
+# `typescript-7` and run by path: it checks this tree in ~2.5s against ~13s for
+# tsc 5.9. By path and never `npx tsc`, because `typescript` (5.x) is installed
+# beside it and declares the same bin, and which of the two npm links there is
+# an accident of install order. 5.x stays for its programmatic API — see the
+# madge section of metrics.sh for the ten packages that need it.
+npm run -s tsc -- -b --noEmit
 # The build-side TypeScript — `vite.config.ts`, `vitest.config.ts`,
 # `vite-plugins/` and the advisory checks under `scripts/checks/` — is a second
 # project because it runs in Node, and `tsconfig.json` is deliberately
@@ -66,7 +68,7 @@ npx tsgo -b --noEmit
 # `include`, and the first pass over it found a dead `output.validate` (a rollup
 # option rolldown neither declares nor reads) and a `defineConfig` overload
 # failure. Same strictness, different runtime.
-npx tsgo --noEmit -p tsconfig.node.json
+npm run -s tsc -- --noEmit -p tsconfig.node.json
 
 # Biome checks lint rules AND formatting AND import order in one read-only pass
 # (the `check`/`ci` form — not `lint`, which misses formatting; not
@@ -180,7 +182,7 @@ node scripts/checks/unused-exports.mjs
 # `undefined` written into a union, and a strict comparison testing for an
 # absent word its value cannot hold. The second half is why this is a gate
 # rather than a lint: moving a helper from `undefined` to `null` leaves
-# `=== undefined` behind it, always false, and tsgo accepts it. The dearest step
+# `=== undefined` behind it, always false, and the typechecker accepts it. The dearest step
 # in the prefix, because that half reads types and so builds a program over the
 # whole tree; build-side work for the same reason as the step above.
 node scripts/checks/absence-spelling.mjs
@@ -239,7 +241,7 @@ fi
 
 # --- 1d. Documentation-only commits skip the heavy branches. ---
 #
-# The fast prefix above costs ~28s (tsgo 5s, biome 2s, openspec 1s, probe 0s,
+# The fast prefix above costs ~28s (typecheck 5s, biome 2s, openspec 1s, probe 0s,
 # and the build 20s); `vitest run` is the other eight to ten minutes, and it ran
 # in full for a commit touching one markdown file.
 #

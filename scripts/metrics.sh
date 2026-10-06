@@ -70,9 +70,10 @@ npx jscpd src \
 # version file — the classic compiler API moved to `./unstable/*` and is not
 # stable until 7.1. Ten packages in this tree consume that API; all cap at <7.
 # That is why `typescript` stays on 5.x even though the compiler in the gate is
-# now tsgo: the two coexist deliberately — tsgo does the checking (and serves
-# the language server via .lsp.json), while `typescript` is kept purely as the
-# programmatic API those ten packages import. Do not "tidy" it away.
+# TypeScript 7: the two coexist deliberately — 7 does the checking, installed
+# as `typescript-7`, while `typescript` is kept as the programmatic API those
+# ten packages import and the `tsserver.js` a language server runs, neither of
+# which 7's package ships. Do not "tidy" it away.
 # Its exit code cannot be the discriminator — `--circular` exits 1 when it
 # *finds* cycles too — so the crash is detected by signature. The point of the
 # loud arm: a plain `|| true` leaves an empty cycles.txt, which reads exactly

@@ -27,7 +27,11 @@ measured 2026-10-05:
   typescript@~5.9.0 typescript-7@npm:typescript@7.0.2` in an empty directory
   left `node_modules/.bin/tsc` and `tsserver` linked to 5.9.3 and
   `require("typescript")` on the 5.9 API, with 7.0.2 runnable as
-  `node node_modules/typescript-7/bin/tsc`.
+  `node node_modules/typescript-7/bin/tsc`. **In this repository the link went
+  the other way** (2026-10-06): after the real install `node_modules/.bin/tsc`
+  is the alias's 7.0.2 and only `tsserver` is 5.9's. Which package wins a bin
+  name both declare follows install order, so neither measurement is a
+  promise.
 
 ## Goals / Non-Goals
 
@@ -74,12 +78,24 @@ existed; they do not show what a session with no TypeScript plugin does. One
 headless session with `typescript-lsp` disabled settles it: if the LSP tool
 finds a server, the file is live and this decision is revisited.
 
-**D5. The diagnostics check is a recipe in `AGENTS.md`, with its expected
-answer.** A fresh headless session edits one line of
+**D5. The diagnostics check is a script, `scripts/agent-diagnostics.sh`, with
+its expected answer in its header.** A fresh headless session edits one line of
 `src/engine/combi/index.ts` to `let result: string = 1;`, waits, and reports
 what it was shown; the answer is four errors at 63:7, 65:5, 65:15 and 67:3,
-and the tree is restored afterwards. It is written beside the sentence it
-verifies so the two are read together.
+and the tree is restored afterwards. The script fails unless all four are in
+the report and the file matches HEAD.
+
+It was first to be a recipe in `AGENTS.md`. Two things changed that
+(2026-10-06). `AGENTS.md` has since been cut to what binds every session and
+tells its editor to turn a rule into a check before adding a line. And the
+recipe as written was wrong in the way prose cannot show: a session that
+edits, reads and reverts at once is shown nothing, because the errors arrive
+about fifteen seconds later on a later tool result. A script holds the wait;
+a paragraph leaves it to the reader. `AGENTS.md` gains one sentence, on the
+bullet about the LSP tool, that says when the errors arrive and names the
+script.
+
+It stays out of the gate (Non-Goals): it starts a real agent session.
 
 ## Risks / Trade-offs
 
