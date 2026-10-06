@@ -1214,7 +1214,7 @@ Its exceptions SHALL be derived from syntax and never listed: a cast describes a
 #### Scenario: a respelled helper leaves a dead comparison
 
 - **WHEN** a function's declared return moves from `T | undefined` to `T | null` and a caller still tests `=== undefined`
-- **THEN** the gate fails naming the comparison and the operand's type, although `tsgo` passes
+- **THEN** the gate fails naming the comparison and the operand's type, although the typechecker passes
 
 #### Scenario: a cast is not a declaration
 

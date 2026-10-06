@@ -1,7 +1,6 @@
 # move-the-gate-to-typescript-7
 
-**Status: implemented 2026-10-06, except deleting `.lsp.json`, which waits on
-the owner (tasks.md 2.2).** A follow-up from retiring the `tsgo-lsp` plugin
+**Status: implemented 2026-10-06.** A follow-up from retiring the `tsgo-lsp` plugin
 (commit `d7547260`). Where this page says the diagnostics check goes into
 `AGENTS.md`, design.md D5 says where it went and why.
 

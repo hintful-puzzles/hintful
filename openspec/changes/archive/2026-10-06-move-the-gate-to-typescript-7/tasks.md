@@ -29,10 +29,9 @@
       `node_modules/.bin/tsgo` and task 1.1 had already removed it. It was
       repeated with the file pointed at `node_modules/.bin/tsc`, which was
       first shown to answer an LSP `initialize`, and the answer was the same.
-- [ ] 2.2 Delete `.lsp.json`. **Waiting on the owner**: the session's
-      permission classifier refused the removal, so it is theirs to run or to
-      allow. Until then the file names a binary that no longer exists, and
-      2.1 shows nothing reads it.
+- [x] 2.2 Delete `.lsp.json`. Done a commit after the rest: the session's
+      permission classifier refused the removal, and the owner approved it
+      when asked.
 - [x] 2.3 Rewrite the sentences that name `tsgo`, `@typescript/native-preview`
       or `.lsp.json` in `scripts/gate.sh`, `scripts/metrics.sh`,
       `.github/workflows/ci.yml`, `docs/games/mechanics.md`,
@@ -65,6 +64,8 @@
 - [x] 4.1 The `build-pipeline` delta's heading matches the live requirement as
       a whole line, and its body differs from the live one in the one scenario
       line it means to change.
-- [ ] 4.2 Full gate on the new compiler, commit, push, and watch CI until the
-      typecheck step passes on the Linux runner.
-- [ ] 4.3 Archive, once 2.2 is done.
+- [x] 4.2 The full gate passed on the new compiler (commit `03479ad3`), and on
+      the Linux runner `npm ci`, the gate's fast checks and the build passed.
+      CI's full gate job was already red, on `hint-quality.test.ts` and since
+      `6ccb03bb`; `2112baca` is the fix.
+- [x] 4.3 Archive.
