@@ -167,10 +167,10 @@ coherent unit of work.
   loads, so give it a known positive first, or take a symbol's population with
   `npm run refs -- <file> <Name>`. An edit's errors arrive seconds later, on a
   later tool result; `npm run agent-diagnostics` checks that they still do.
-- **When a change is archived and another is ready, hand it to a fresh
-  session.** Commit, push and leave the tree clean, then call
-  `mcp__continue-session__continueInNewSession` with the prompt
-  `Hi, please take on openspec/changes/<id>` as the last action of the turn.
-  Nothing carries over but the repo. A change is ready when it can start
-  without an answer from the owner; a session that still owes the owner a
-  question or a result ends the ordinary way, as does one without the tool.
+- **When a change is archived, pick the next one yourself and hand it to a
+  fresh session; never ask which.** Read the open changes, take one that can
+  start without an answer from the owner, commit, push and leave the tree
+  clean, then call `mcp__continue-session__continueInNewSession` with the
+  prompt `Hi, please take on openspec/changes/<id>` as the last action of the
+  turn. Nothing carries over but the repo. Only a session that owes the owner
+  a decision, or has no such change or no tool, ends the ordinary way.
