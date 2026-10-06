@@ -787,6 +787,20 @@ tries, count deals under the real bound first, and ask what the later tries
 are still able to find. There the fix was neither a refusal nor a budget: the
 ramp starts over at the top.
 
+**Where a board is drawn in stages, count each stage apart and budget the
+later one short.** Loopy on an aperiodic tiling draws a patch and then boards
+on it, and the tier follows the patch's shape: three rhombs around a point
+carry Easy, Tricky and Hard and never Normal. "None in 500,000 boards" there
+was none in fifty patches, and one size up it was a patch in twenty that
+could. Two counts settle it, how often a patch can carry the tier and how
+many boards such a patch needs, and they came out far apart: a patch that can
+needs under 500, and one that cannot had been given 10,000 before the next was
+drawn. So the deal went from ten patches of 10,000 boards to two hundred of
+500 ([`loopy/generator.ts`](../../src/games/loopy/generator.ts)), the same
+run-out, and only the sizes whose every patch is the one shape are refused.
+Key the count on the drawn thing's shape and not its size, and read which
+shapes fail: it was four of them, across two tilings.
+
 **Where no line can be named, the generator runs out and the engine says
 so.** Boats takes a fleet as a list, and which fleets lack a tier has no line
 through it: one boat never has one, two single boats on a 3x3 do not, two on

@@ -405,10 +405,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * at a larger tile in `area`. Decided at deal time only: `this.params` keeps
    * the orientation the player chose, so the next deal on a screen held the
    * other way round turns back. A tie keeps the chosen orientation, which is
-   * what leaves a square board alone. */
+   * what leaves a square board alone. A size the game would refuse to deal is
+   * never turned to: a bound may hold on one of width and height alone. */
   private paramsToFit(area: Size): Params {
     const turned = this.game.transposeParams?.(this.params) ?? null;
-    if (turned === null) return this.params;
+    if (turned === null || paramsError(this.game, turned, true) !== null)
+      return this.params;
     return this.largestTile(turned, area) > this.largestTile(this.params, area)
       ? turned
       : this.params;

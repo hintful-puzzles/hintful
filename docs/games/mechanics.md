@@ -235,7 +235,9 @@ else that is laid out on the grid too (Mines' forced first click), return
 `null` for a mode that must not turn (Ascent's hexagonal modes, Loopy's
 `LOOPY_GRIDS[].turns`), and give a game whose size is not two fields a flag
 of its own (Dominosa's `tall`, which decodes absent as the old wide board so
-existing ids keep loading).
+existing ids keep loading). A bound that holds on width or height alone needs
+nothing here: the midend never turns to a size `validateParams` refuses to
+deal (Loopy's Penrose kite/dart deals 4x3 and has no 3x4).
 
 **Leave it out only when a tall board is a different game**, gravity (Same
 Game, Bricks) or a goal on a fixed side (Slide), **or the same one**, a square

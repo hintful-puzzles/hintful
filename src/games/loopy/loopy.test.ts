@@ -21,6 +21,10 @@ import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { DELETE, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
 import { newDesc } from "./generator.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
 import { type LoopyMove, loopyGame, nextLineState } from "./index.ts";
@@ -617,6 +621,19 @@ describe("generation", () => {
       expect(solveGame(s, DIFF_EASY).status, e.title).toBe("solved");
     }
   }, 120000);
+});
+
+describe("the smallest Penrose boards", () => {
+  // The four Penrose (rhombs) sizes whose every patch is three rhombs around a
+  // point, which have no Normal puzzle.
+  describeAbsentTiers(loopyGame, ["3x3t12dn", "3x4t12dn", "3x5t12dn", "4x3t12dn"]);
+
+  // Tricky and Hard on the same three rhombs, since the tiers do not nest, and
+  // the Normal of the size beside the refusals. Then a deal that is mostly a
+  // wait for a patch that can carry the tier: a 4x3 kite/dart draws one for
+  // Hard about one patch in seven, so it needs many patches and an early exit
+  // from each that cannot. Seen red at ten patches of 10,000 boards.
+  describeDealtTiers(loopyGame, ["3x3t12dt", "3x3t12dh", "5x3t12dn", "4x3t11dh"]);
 });
 
 describe("text format", () => {

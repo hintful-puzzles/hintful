@@ -56,6 +56,20 @@ describe("dealing to fit the board area", () => {
     expect(board()).toBe(chosen);
   });
 
+  it("never turns to a size the game refuses to deal", () => {
+    // Penrose (kite/dart) is bounded on its width alone: 4x3 deals, and the
+    // 3x4 that fits an upright screen better has no board at all.
+    const { m, board } = engine("loopy");
+    expect(m.setParams("4x3t11de")).toBeNull();
+    expect(m.turnParams("4x3t11de")).toBe("3x4t11de");
+    expect(m.newGame(UPRIGHT_PHONE)).toBeNull();
+    expect(board()).toBe("4x3t11de");
+    // The same tiling a size up turns, so the refusal is what held it.
+    m.setParams("5x4t11de");
+    m.newGame(UPRIGHT_PHONE);
+    expect(board()).toBe("4x5t11de");
+  });
+
   it("deals the chosen orientation when no area is known", () => {
     const { m, board } = engine("magnets");
     m.setParams("5x6dt");

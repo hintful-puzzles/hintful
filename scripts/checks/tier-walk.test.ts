@@ -38,7 +38,7 @@
  *     TIER_WALK_GAMES=group,unequal npx vitest run \
  *       -c scripts/checks/diff.vitest.config.mts tier-walk
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import "../../src/games/index.ts";
 import {
@@ -199,44 +199,67 @@ function finding(cell: Cell, tiers: readonly string[]): string | null {
   return parts.length > 0 ? parts.join("; ") : null;
 }
 
-function render(sections: readonly Section[]): string {
+const HEADING = "## ";
+
+/** The report's sections as they stand on disk, by game, each without its
+ * heading. A walk of some games rewrites theirs and keeps the rest, so the
+ * file stays the whole collection's. */
+function sectionsOnDisk(): Map<string, string> {
+  const out = new Map<string, string>();
+  if (!existsSync(OUT)) return out;
+  const [, ...blocks] = `\n${readFileSync(OUT, "utf8")}`.split(`\n${HEADING}`);
+  for (const block of blocks) {
+    const end = block.indexOf("\n");
+    out.set(block.slice(0, end), block.slice(end + 1).trim());
+  }
+  return out;
+}
+
+function render(sections: readonly Section[], kept: Map<string, string>): string {
+  const bodies = new Map(kept);
+  for (const section of sections) bodies.set(section.id, renderSection(section));
   const lines: string[] = [
     "# Tier walk",
     "",
     `${SEEDS} deals a cell. A cell not listed dealt every board at its tier.`,
     "",
   ];
-  for (const { id, tiers, cells } of sections) {
-    const dealt = cells.filter((c) => c.refusal === null && !c.skipped);
-    const skipped = cells.filter((c) => c.skipped);
-    const refused = cells.filter((c) => c.refusal !== null);
-    lines.push(`## ${id}`, "");
-    lines.push(
-      `${dealt.length} cells dealt, ${refused.length} refused, ` +
-        `${skipped.length} left out as slow.`,
-      "",
-    );
-    for (const cell of dealt) {
-      const found = finding(cell, tiers);
-      if (found !== null) {
-        lines.push(`- \`${cell.label}\` asked ${tiers[cell.tier]}: ${found}`);
-      }
-    }
-    for (const cell of refused) {
-      lines.push(`- \`${cell.label}\` refused: ${cell.refusal}`);
-    }
-    if (skipped.length > 0) {
-      lines.push(`- left out: ${skipped.map((c) => `\`${c.label}\``).join(" ")}`);
-    }
-    lines.push("");
+  for (const id of [...bodies.keys()].sort()) {
+    lines.push(`${HEADING}${id}`, "", bodies.get(id) ?? "", "");
   }
   return `${lines.join("\n")}\n`;
+}
+
+function renderSection({ tiers, cells }: Section): string {
+  const lines: string[] = [];
+  const dealt = cells.filter((c) => c.refusal === null && !c.skipped);
+  const skipped = cells.filter((c) => c.skipped);
+  const refused = cells.filter((c) => c.refusal !== null);
+  lines.push(
+    `${dealt.length} cells dealt, ${refused.length} refused, ` +
+      `${skipped.length} left out as slow.`,
+    "",
+  );
+  for (const cell of dealt) {
+    const found = finding(cell, tiers);
+    if (found !== null) {
+      lines.push(`- \`${cell.label}\` asked ${tiers[cell.tier]}: ${found}`);
+    }
+  }
+  for (const cell of refused) {
+    lines.push(`- \`${cell.label}\` refused: ${cell.refusal}`);
+  }
+  if (skipped.length > 0) {
+    lines.push(`- left out: ${skipped.map((c) => `\`${c.label}\``).join(" ")}`);
+  }
+  return lines.join("\n").trimEnd();
 }
 
 it("walks every tier at sizes below the menu's largest", () => {
   const sections: Section[] = [];
   mkdirSync("metrics", { recursive: true });
-  const report = (): void => writeFileSync(OUT, render(sections));
+  const kept = ONLY === null ? new Map<string, string>() : sectionsOnDisk();
+  const report = (): void => writeFileSync(OUT, render(sections, kept));
 
   for (const id of registeredGameIds().sort()) {
     if (ONLY !== null && !ONLY.includes(id)) continue;

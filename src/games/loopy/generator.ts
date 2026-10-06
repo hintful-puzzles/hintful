@@ -11,7 +11,11 @@ import { descVerdict } from "../../engine/desc-error.ts";
 import { APERIODIC_GRID_TYPES, type GridType } from "../../engine/grid/index.ts";
 import { FACE_BLACK, FACE_GRAY, generateLoop } from "../../engine/loopgen.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { RetryLimitExceeded, retryLimit } from "../../engine/retry-limit.ts";
+import {
+  MAX_REGENERATE,
+  RetryLimitExceeded,
+  retryLimit,
+} from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
 import { gridTypeOf, type LoopyParams } from "./params.ts";
@@ -76,6 +80,31 @@ function removeClues(state: LoopyState, rng: RandomState, diff: number): void {
 }
 
 /**
+ * How an aperiodic tiling's deal is budgeted: this many patches, and this many
+ * boards on each before another is drawn.
+ *
+ * **Whether a small patch can carry a tier is a property of its shape, and a
+ * shape that cannot is common.** Counted 2026-10-06 with each patch given
+ * 10,000 boards: three faces around a point carry Easy, Tricky and Hard on the
+ * first board and never Normal; a ring of four, five or six faces around a
+ * point never carries Hard, and the ring of four never Normal. At 3x8 Penrose
+ * (rhombs) 96% of patches are the three faces, and at 4x3 Penrose (kite/dart)
+ * 85% are a ring, so a Normal deal there, or a Hard one, is mostly a wait for
+ * the patch that can.
+ *
+ * **A patch that can carry the tier says so early.** Over some 80,000 of them,
+ * from 3x3 to the 10x10 presets and on all four tilings, the most boards one
+ * needed was 489 (the kite/dart ring of five, at Normal, whose median is 63),
+ * and half needed under ten. So a patch gets 500, a twentieth of the house
+ * bound, and the deal twenty times the patches: the run-out is the 100,000
+ * boards it would be at ten patches of the house bound, and the rarest size
+ * counted that has the tier at all (3x6 at Normal, one patch in 28) runs out
+ * about one deal in 1,500. A patch cut off early costs only the next draw.
+ */
+const PATCHES = 200;
+const PATCH_BOARDS = 500;
+
+/**
  * Generate a fresh puzzle description for these params.
  *
  * **Two nested retry loops, and the nesting order is not negotiable.**
@@ -97,12 +126,8 @@ function removeClues(state: LoopyState, rng: RandomState, diff: number): void {
  * the inner loop exhausts its budget on an aperiodic grid, the *patch* is
  * unfavorable rather than the params. Upstream concedes the hazard in a
  * comment — *"this can loop for ever if the params are suitably unfavorable"* —
- * and simply hangs. Measured on the smallest legal Penrose sizes, drawing a
- * fresh patch rescues most of them (Penrose kite/dart 4x4 at Normal took 25
- * patches; the same size at Hard succeeded on the first), so the outer loop
- * re-draws. That only ever engages where upstream would hang, because the inner
- * budget stays at the house default: any board upstream *would* have found is
- * still found before we give up on a patch.
+ * and simply hangs. Here the outer loop draws another patch, and the budget is
+ * split to suit ({@link PATCHES}, {@link PATCH_BOARDS}).
  *
  * For the deterministic tilings a fresh draw is the *same* grid, so exhaustion
  * there means the params genuinely admit no puzzle, and it propagates.
@@ -112,7 +137,8 @@ export function newDesc(p: LoopyParams, rng: RandomState): { desc: string } {
   // Only these tilings' descriptions consume randomness, so only for these can
   // a fresh draw produce a different grid to try.
   const gridVaries = (APERIODIC_GRID_TYPES as readonly GridType[]).includes(type);
-  const patch = retryLimit("loopy: unfavorable grid patch", gridVaries ? 10 : 1);
+  const patch = retryLimit("loopy: unfavorable grid patch", gridVaries ? PATCHES : 1);
+  const boards = gridVaries ? PATCH_BOARDS : MAX_REGENERATE;
 
   for (;;) {
     patch();
@@ -133,7 +159,7 @@ export function newDesc(p: LoopyParams, rng: RandomState): { desc: string } {
     };
 
     try {
-      generateOnGrid(state, p, rng);
+      generateOnGrid(state, p, rng, boards);
     } catch (e) {
       // An unfavorable patch, not unfavorable params: try another one.
       if (e instanceof RetryLimitExceeded && gridVaries) continue;
@@ -149,8 +175,13 @@ export function newDesc(p: LoopyParams, rng: RandomState): { desc: string } {
  * already-built grid until the result is uniquely solvable at this difficulty
  * and not solvable one rung easier. Only `state.clues` changes from attempt to
  * attempt, because the solver works on its own copy of the board. */
-function generateOnGrid(state: LoopyState, p: LoopyParams, rng: RandomState): void {
-  const board = retryLimit("loopy: board generation");
+function generateOnGrid(
+  state: LoopyState,
+  p: LoopyParams,
+  rng: RandomState,
+  boards: number,
+): void {
+  const board = retryLimit("loopy: board generation", boards);
   for (;;) {
     board();
 

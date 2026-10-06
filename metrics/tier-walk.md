@@ -487,41 +487,37 @@
 
 ## loopy
 
-1334 cells dealt, 464 refused, 758 left out as slow.
+1419 cells dealt, 465 refused, 672 left out as slow.
 
 - `8x8t7dh` asked Hard: 3.1 s
-- `9x9t7dt` asked Tricky: 4.3 s
+- `9x9t7dt` asked Tricky: 4.4 s
 - `10x10t7dn` asked Normal: 3.4 s
 - `10x12t7de` asked Easy: 3.1 s
-- `4x4t11dn` asked Normal: 7.4 s
-- `4x4t11dh` asked Hard: 7.3 s
-- `3x3t12dn` asked Normal: gave up on 1; 6.6 s
-- `9x9t5dh` asked Hard: 3.3 s
+- `9x9t5dh` asked Hard: 3.4 s
 - `10x10t5dn` asked Normal: 3.3 s
 - `10x10t5dt` asked Tricky: 5.0 s
-- `10x14t5de` asked Easy: 3.1 s
-- `10x13t14dh` asked Hard: 3.8 s
-- `10x14t6dh` asked Hard: 3.1 s
-- `9x9t8dn` asked Normal: 3.4 s
+- `10x13t14dh` asked Hard: 4.1 s
+- `10x14t6dh` asked Hard: 3.2 s
+- `9x9t8dn` asked Normal: 3.5 s
 - `9x9t8dt` asked Tricky: 3.1 s
-- `9x9t8dh` asked Hard: 4.8 s
-- `10x12t8de` asked Easy: 3.5 s
-- `10x10t9dh` asked Hard: 3.2 s
-- `10x11t9de` asked Easy: 8.0 s
-- `10x12t9dn` asked Normal: 3.2 s
-- `10x12t9dt` asked Tricky: 3.8 s
-- `8x8t10dt` asked Tricky: 3.6 s
+- `9x9t8dh` asked Hard: 4.9 s
+- `10x12t8de` asked Easy: 3.4 s
+- `10x10t9dt` asked Tricky: 6.2 s
+- `10x10t9dh` asked Hard: 3.4 s
+- `10x11t9de` asked Easy: 7.9 s
+- `10x12t9dn` asked Normal: 3.3 s
+- `8x8t10dt` asked Tricky: 3.7 s
 - `8x8t10dh` asked Hard: 4.1 s
-- `9x9t10dn` asked Normal: 3.5 s
-- `10x11t10de` asked Easy: 3.2 s
-- `6x6t13dh` asked Hard: 3.5 s
-- `7x7t13dt` asked Tricky: 3.5 s
-- `8x8t13dn` asked Normal: 4.4 s
-- `9x9t13de` asked Easy: 3.4 s
+- `9x9t10dn` asked Normal: 3.6 s
+- `10x11t10de` asked Easy: 3.1 s
+- `6x6t13dh` asked Hard: 3.6 s
+- `7x7t13dt` asked Tricky: 3.6 s
+- `8x8t13dn` asked Normal: 4.5 s
+- `9x9t13de` asked Easy: 3.5 s
 - `9x9t15de` asked Easy: 4.2 s
-- `9x9t15dn` asked Normal: 10.5 s
-- `9x9t15dh` asked Hard: 6.6 s
-- `10x10t15dt` asked Tricky: 6.1 s
+- `9x9t15dn` asked Normal: 10.7 s
+- `9x9t15dh` asked Hard: 7.1 s
+- `10x10t15dt` asked Tricky: 6.3 s
 - `1x1t0de` refused: Width and height for this grid type must both be at least 3.
 - `1x1t0dn` refused: Width and height for this grid type must both be at least 3.
 - `1x1t0dt` refused: Width and height for this grid type must both be at least 3.
@@ -702,6 +698,7 @@
 - `2x2t12dn` refused: Width and height for this grid type must both be at least 3.
 - `2x2t12dt` refused: Width and height for this grid type must both be at least 3.
 - `2x2t12dh` refused: Width and height for this grid type must both be at least 3.
+- `3x3t12dn` refused: No 3x3 Penrose (rhombs) puzzle is Normal.
 - `1x10t12de` refused: Width and height for this grid type must both be at least 3.
 - `1x10t12dn` refused: Width and height for this grid type must both be at least 3.
 - `1x10t12dt` refused: Width and height for this grid type must both be at least 3.
@@ -986,7 +983,7 @@
 - `10x5t17dn` refused: Width and height for this grid type must both be at least 6.
 - `10x5t17dt` refused: Width and height for this grid type must both be at least 6.
 - `10x5t17dh` refused: Width and height for this grid type must both be at least 6.
-- left out: `9x9t7dh` `10x10t7dt` `10x10t7dh` `10x11t7dn` `10x11t7dt` `10x11t7dh` `10x12t7dn` `10x12t7dt` `10x12t7dh` `10x13t7de` `10x13t7dn` `10x13t7dt` `10x13t7dh` `10x14t7de` `10x14t7dn` `10x14t7dt` `10x14t7dh` `3x6t7de` `3x6t7dn` `3x6t7dt` `3x6t7dh` `4x6t7de` `4x6t7dn` `4x6t7dt` `4x6t7dh` `5x6t7de` `5x6t7dn` `5x6t7dt` `5x6t7dh` `7x6t7de` `7x6t7dn` `7x6t7dt` `7x6t7dh` `8x6t7de` `8x6t7dn` `8x6t7dt` `8x6t7dh` `9x6t7de` `9x6t7dn` `9x6t7dt` `9x6t7dh` `10x6t7de` `10x6t7dn` `10x6t7dt` `10x6t7dh` `4x3t7de` `4x3t7dn` `4x3t7dt` `4x3t7dh` `4x5t7de` `4x5t7dn` `4x5t7dt` `4x5t7dh` `4x7t7de` `4x7t7dn` `4x7t7dt` `4x7t7dh` `4x8t7de` `4x8t7dn` `4x8t7dt` `4x8t7dh` `4x9t7de` `4x9t7dn` `4x9t7dt` `4x9t7dh` `4x10t7de` `4x10t7dn` `4x10t7dt` `4x10t7dh` `4x11t7de` `4x11t7dn` `4x11t7dt` `4x11t7dh` `4x12t7de` `4x12t7dn` `4x12t7dt` `4x12t7dh` `4x13t7de` `4x13t7dn` `4x13t7dt` `4x13t7dh` `4x14t7de` `4x14t7dn` `4x14t7dt` `4x14t7dh` `5x5t11dn` `5x5t11dh` `6x6t11dn` `6x6t11dh` `7x7t11dn` `7x7t11dh` `8x8t11dn` `8x8t11dh` `9x9t11dn` `9x9t11dh` `10x10t11dn` `10x10t11dh` `10x11t11dn` `10x11t11dh` `10x12t11dn` `10x12t11dh` `10x13t11dn` `10x13t11dh` `10x14t11dn` `10x14t11dh` `4x10t11dn` `4x10t11dh` `5x10t11dn` `5x10t11dh` `6x10t11dn` `6x10t11dh` `7x10t11dn` `7x10t11dh` `8x10t11dn` `8x10t11dh` `9x10t11dn` `9x10t11dh` `10x3t11dn` `10x3t11dh` `10x4t11dn` `10x4t11dh` `10x5t11dn` `10x5t11dh` `10x6t11dn` `10x6t11dh` `10x7t11dn` `10x7t11dh` `10x8t11dn` `10x8t11dh` `10x9t11dn` `10x9t11dh` `4x4t12dn` `5x5t12dn` `6x6t12dn` `7x7t12dn` `8x8t12dn` `9x9t12dn` `10x10t12dn` `10x11t12dn` `10x12t12dn` `10x13t12dn` `10x14t12dn` `3x10t12dn` `4x10t12dn` `5x10t12dn` `6x10t12dn` `7x10t12dn` `8x10t12dn` `9x10t12dn` `10x3t12dn` `10x4t12dn` `10x5t12dn` `10x6t12dn` `10x7t12dn` `10x8t12dn` `10x9t12dn` `10x10t5dh` `10x11t5dn` `10x11t5dt` `10x11t5dh` `10x12t5dn` `10x12t5dt` `10x12t5dh` `10x13t5dn` `10x13t5dt` `10x13t5dh` `10x14t5dn` `10x14t5dt` `10x14t5dh` `3x5t5de` `3x5t5dn` `3x5t5dt` `3x5t5dh` `4x5t5de` `4x5t5dn` `4x5t5dt` `4x5t5dh` `6x5t5de` `6x5t5dn` `6x5t5dt` `6x5t5dh` `7x5t5de` `7x5t5dn` `7x5t5dt` `7x5t5dh` `8x5t5de` `8x5t5dn` `8x5t5dt` `8x5t5dh` `9x5t5de` `9x5t5dn` `9x5t5dt` `9x5t5dh` `10x5t5de` `10x5t5dn` `10x5t5dt` `10x5t5dh` `4x3t5de` `4x3t5dn` `4x3t5dt` `4x3t5dh` `4x6t5de` `4x6t5dn` `4x6t5dt` `4x6t5dh` `4x7t5de` `4x7t5dn` `4x7t5dt` `4x7t5dh` `4x8t5de` `4x8t5dn` `4x8t5dt` `4x8t5dh` `4x9t5de` `4x9t5dn` `4x9t5dt` `4x9t5dh` `4x10t5de` `4x10t5dn` `4x10t5dt` `4x10t5dh` `4x11t5de` `4x11t5dn` `4x11t5dt` `4x11t5dh` `4x12t5de` `4x12t5dn` `4x12t5dt` `4x12t5dh` `4x13t5de` `4x13t5dn` `4x13t5dt` `4x13t5dh` `4x14t5de` `4x14t5dn` `4x14t5dt` `4x14t5dh` `10x14t14dh` `3x6t14dh` `4x6t14dh` `5x6t14dh` `7x6t14dh` `8x6t14dh` `9x6t14dh` `10x6t14dh` `3x4t14dh` `3x5t14dh` `3x7t14dh` `3x8t14dh` `3x9t14dh` `3x10t14dh` `3x11t14dh` `3x12t14dh` `3x13t14dh` `3x14t14dh` `3x7t6dh` `4x7t6dh` `5x7t6dh` `6x7t6dh` `8x7t6dh` `9x7t6dh` `10x7t6dh` `7x3t6dh` `7x4t6dh` `7x5t6dh` `7x6t6dh` `7x8t6dh` `7x9t6dh` `7x10t6dh` `7x11t6dh` `7x12t6dh` `7x13t6dh` `7x14t6dh` `10x10t8dn` `10x10t8dt` `10x10t8dh` `10x11t8dn` `10x11t8dt` `10x11t8dh` `10x12t8dn` `10x12t8dt` `10x12t8dh` `10x13t8de` `10x13t8dn` `10x13t8dt` `10x13t8dh` `10x14t8de` `10x14t8dn` `10x14t8dt` `10x14t8dh` `1x5t8de` `1x5t8dn` `1x5t8dt` `1x5t8dh` `2x5t8de` `2x5t8dn` `2x5t8dt` `2x5t8dh` `3x5t8de` `3x5t8dn` `3x5t8dt` `3x5t8dh` `4x5t8de` `4x5t8dn` `4x5t8dt` `4x5t8dh` `6x5t8de` `6x5t8dn` `6x5t8dt` `6x5t8dh` `7x5t8de` `7x5t8dn` `7x5t8dt` `7x5t8dh` `8x5t8de` `8x5t8dn` `8x5t8dt` `8x5t8dh` `9x5t8de` `9x5t8dn` `9x5t8dt` `9x5t8dh` `10x5t8de` `10x5t8dn` `10x5t8dt` `10x5t8dh` `5x1t8de` `5x1t8dn` `5x1t8dt` `5x1t8dh` `5x2t8de` `5x2t8dn` `5x2t8dt` `5x2t8dh` `5x3t8de` `5x3t8dn` `5x3t8dt` `5x3t8dh` `5x4t8de` `5x4t8dn` `5x4t8dt` `5x4t8dh` `5x6t8de` `5x6t8dn` `5x6t8dt` `5x6t8dh` `5x7t8de` `5x7t8dn` `5x7t8dt` `5x7t8dh` `5x8t8de` `5x8t8dn` `5x8t8dt` `5x8t8dh` `5x9t8de` `5x9t8dn` `5x9t8dt` `5x9t8dh` `5x10t8de` `5x10t8dn` `5x10t8dt` `5x10t8dh` `5x11t8de` `5x11t8dn` `5x11t8dt` `5x11t8dh` `5x12t8de` `5x12t8dn` `5x12t8dt` `5x12t8dh` `5x13t8de` `5x13t8dn` `5x13t8dt` `5x13t8dh` `5x14t8de` `5x14t8dn` `5x14t8dt` `5x14t8dh` `10x11t9dh` `10x12t9de` `10x12t9dh` `10x13t9de` `10x13t9dn` `10x13t9dt` `10x13t9dh` `10x14t9de` `10x14t9dn` `10x14t9dt` `10x14t9dh` `2x6t9de` `2x6t9dn` `2x6t9dt` `2x6t9dh` `3x6t9de` `3x6t9dn` `3x6t9dt` `3x6t9dh` `4x6t9de` `4x6t9dn` `4x6t9dt` `4x6t9dh` `5x6t9de` `5x6t9dn` `5x6t9dt` `5x6t9dh` `7x6t9de` `7x6t9dn` `7x6t9dt` `7x6t9dh` `8x6t9de` `8x6t9dn` `8x6t9dt` `8x6t9dh` `9x6t9de` `9x6t9dn` `9x6t9dt` `9x6t9dh` `10x6t9de` `10x6t9dn` `10x6t9dt` `10x6t9dh` `3x2t9de` `3x2t9dn` `3x2t9dt` `3x2t9dh` `3x4t9de` `3x4t9dn` `3x4t9dt` `3x4t9dh` `3x5t9de` `3x5t9dn` `3x5t9dt` `3x5t9dh` `3x7t9de` `3x7t9dn` `3x7t9dt` `3x7t9dh` `3x8t9de` `3x8t9dn` `3x8t9dt` `3x8t9dh` `3x9t9de` `3x9t9dn` `3x9t9dt` `3x9t9dh` `3x10t9de` `3x10t9dn` `3x10t9dt` `3x10t9dh` `3x11t9de` `3x11t9dn` `3x11t9dt` `3x11t9dh` `3x12t9de` `3x12t9dn` `3x12t9dt` `3x12t9dh` `3x13t9de` `3x13t9dn` `3x13t9dt` `3x13t9dh` `3x14t9de` `3x14t9dn` `3x14t9dt` `3x14t9dh` `9x9t10dt` `9x9t10dh` `10x10t10dn` `10x10t10dt` `10x10t10dh` `10x11t10dn` `10x11t10dt` `10x11t10dh` `10x12t10de` `10x12t10dn` `10x12t10dt` `10x12t10dh` `10x13t10de` `10x13t10dn` `10x13t10dt` `10x13t10dh` `10x14t10de` `10x14t10dn` `10x14t10dt` `10x14t10dh` `2x6t10de` `2x6t10dn` `2x6t10dt` `2x6t10dh` `3x6t10de` `3x6t10dn` `3x6t10dt` `3x6t10dh` `4x6t10de` `4x6t10dn` `4x6t10dt` `4x6t10dh` `5x6t10de` `5x6t10dn` `5x6t10dt` `5x6t10dh` `7x6t10de` `7x6t10dn` `7x6t10dt` `7x6t10dh` `8x6t10de` `8x6t10dn` `8x6t10dt` `8x6t10dh` `9x6t10de` `9x6t10dn` `9x6t10dt` `9x6t10dh` `10x6t10de` `10x6t10dn` `10x6t10dt` `10x6t10dh` `3x2t10de` `3x2t10dn` `3x2t10dt` `3x2t10dh` `3x4t10de` `3x4t10dn` `3x4t10dt` `3x4t10dh` `3x5t10de` `3x5t10dn` `3x5t10dt` `3x5t10dh` `3x7t10de` `3x7t10dn` `3x7t10dt` `3x7t10dh` `3x8t10de` `3x8t10dn` `3x8t10dt` `3x8t10dh` `3x9t10de` `3x9t10dn` `3x9t10dt` `3x9t10dh` `3x10t10de` `3x10t10dn` `3x10t10dt` `3x10t10dh` `3x11t10de` `3x11t10dn` `3x11t10dt` `3x11t10dh` `3x12t10de` `3x12t10dn` `3x12t10dt` `3x12t10dh` `3x13t10de` `3x13t10dn` `3x13t10dt` `3x13t10dh` `3x14t10de` `3x14t10dn` `3x14t10dt` `3x14t10dh` `7x7t13dh` `8x8t13dt` `8x8t13dh` `9x9t13dn` `9x9t13dt` `9x9t13dh` `10x10t13de` `10x10t13dn` `10x10t13dt` `10x10t13dh` `10x11t13de` `10x11t13dn` `10x11t13dt` `10x11t13dh` `10x12t13de` `10x12t13dn` `10x12t13dt` `10x12t13dh` `10x13t13de` `10x13t13dn` `10x13t13dt` `10x13t13dh` `10x14t13de` `10x14t13dn` `10x14t13dt` `10x14t13dh` `2x5t13de` `2x5t13dn` `2x5t13dt` `2x5t13dh` `3x5t13de` `3x5t13dn` `3x5t13dt` `3x5t13dh` `4x5t13de` `4x5t13dn` `4x5t13dt` `4x5t13dh` `6x5t13de` `6x5t13dn` `6x5t13dt` `6x5t13dh` `7x5t13de` `7x5t13dn` `7x5t13dt` `7x5t13dh` `8x5t13de` `8x5t13dn` `8x5t13dt` `8x5t13dh` `9x5t13de` `9x5t13dn` `9x5t13dt` `9x5t13dh` `10x5t13de` `10x5t13dn` `10x5t13dt` `10x5t13dh` `3x2t13de` `3x2t13dn` `3x2t13dt` `3x2t13dh` `3x4t13de` `3x4t13dn` `3x4t13dt` `3x4t13dh` `3x6t13de` `3x6t13dn` `3x6t13dt` `3x6t13dh` `3x7t13de` `3x7t13dn` `3x7t13dt` `3x7t13dh` `3x8t13de` `3x8t13dn` `3x8t13dt` `3x8t13dh` `3x9t13de` `3x9t13dn` `3x9t13dt` `3x9t13dh` `3x10t13de` `3x10t13dn` `3x10t13dt` `3x10t13dh` `3x11t13de` `3x11t13dn` `3x11t13dt` `3x11t13dh` `3x12t13de` `3x12t13dn` `3x12t13dt` `3x12t13dh` `3x13t13de` `3x13t13dn` `3x13t13dt` `3x13t13dh` `3x14t13de` `3x14t13dn` `3x14t13dt` `3x14t13dh` `10x10t15de` `10x10t15dn` `10x10t15dh` `10x11t15de` `10x11t15dn` `10x11t15dt` `10x11t15dh` `10x12t15de` `10x12t15dn` `10x12t15dt` `10x12t15dh` `10x13t15de` `10x13t15dn` `10x13t15dt` `10x13t15dh` `10x14t15de` `10x14t15dn` `10x14t15dt` `10x14t15dh` `2x5t15de` `2x5t15dn` `2x5t15dt` `2x5t15dh` `3x5t15de` `3x5t15dn` `3x5t15dt` `3x5t15dh` `4x5t15de` `4x5t15dn` `4x5t15dt` `4x5t15dh` `6x5t15de` `6x5t15dn` `6x5t15dt` `6x5t15dh` `7x5t15de` `7x5t15dn` `7x5t15dt` `7x5t15dh` `8x5t15de` `8x5t15dn` `8x5t15dt` `8x5t15dh` `9x5t15de` `9x5t15dn` `9x5t15dt` `9x5t15dh` `10x5t15de` `10x5t15dn` `10x5t15dt` `10x5t15dh` `4x2t15de` `4x2t15dn` `4x2t15dt` `4x2t15dh` `4x3t15de` `4x3t15dn` `4x3t15dt` `4x3t15dh` `4x6t15de` `4x6t15dn` `4x6t15dt` `4x6t15dh` `4x7t15de` `4x7t15dn` `4x7t15dt` `4x7t15dh` `4x8t15de` `4x8t15dn` `4x8t15dt` `4x8t15dh` `4x9t15de` `4x9t15dn` `4x9t15dt` `4x9t15dh` `4x10t15de` `4x10t15dn` `4x10t15dt` `4x10t15dh` `4x11t15de` `4x11t15dn` `4x11t15dt` `4x11t15dh` `4x12t15de` `4x12t15dn` `4x12t15dt` `4x12t15dh` `4x13t15de` `4x13t15dn` `4x13t15dt` `4x13t15dh` `4x14t15de` `4x14t15dn` `4x14t15dt` `4x14t15dh`
+- left out: `9x9t7dh` `10x10t7dt` `10x10t7dh` `10x11t7dn` `10x11t7dt` `10x11t7dh` `10x12t7dn` `10x12t7dt` `10x12t7dh` `10x13t7de` `10x13t7dn` `10x13t7dt` `10x13t7dh` `10x14t7de` `10x14t7dn` `10x14t7dt` `10x14t7dh` `3x6t7de` `3x6t7dn` `3x6t7dt` `3x6t7dh` `4x6t7de` `4x6t7dn` `4x6t7dt` `4x6t7dh` `5x6t7de` `5x6t7dn` `5x6t7dt` `5x6t7dh` `7x6t7de` `7x6t7dn` `7x6t7dt` `7x6t7dh` `8x6t7de` `8x6t7dn` `8x6t7dt` `8x6t7dh` `9x6t7de` `9x6t7dn` `9x6t7dt` `9x6t7dh` `10x6t7de` `10x6t7dn` `10x6t7dt` `10x6t7dh` `4x3t7de` `4x3t7dn` `4x3t7dt` `4x3t7dh` `4x5t7de` `4x5t7dn` `4x5t7dt` `4x5t7dh` `4x7t7de` `4x7t7dn` `4x7t7dt` `4x7t7dh` `4x8t7de` `4x8t7dn` `4x8t7dt` `4x8t7dh` `4x9t7de` `4x9t7dn` `4x9t7dt` `4x9t7dh` `4x10t7de` `4x10t7dn` `4x10t7dt` `4x10t7dh` `4x11t7de` `4x11t7dn` `4x11t7dt` `4x11t7dh` `4x12t7de` `4x12t7dn` `4x12t7dt` `4x12t7dh` `4x13t7de` `4x13t7dn` `4x13t7dt` `4x13t7dh` `4x14t7de` `4x14t7dn` `4x14t7dt` `4x14t7dh` `10x10t5dh` `10x11t5dn` `10x11t5dt` `10x11t5dh` `10x12t5dn` `10x12t5dt` `10x12t5dh` `10x13t5dn` `10x13t5dt` `10x13t5dh` `10x14t5dn` `10x14t5dt` `10x14t5dh` `3x5t5dn` `3x5t5dt` `3x5t5dh` `4x5t5dn` `4x5t5dt` `4x5t5dh` `6x5t5dn` `6x5t5dt` `6x5t5dh` `7x5t5dn` `7x5t5dt` `7x5t5dh` `8x5t5dn` `8x5t5dt` `8x5t5dh` `9x5t5dn` `9x5t5dt` `9x5t5dh` `10x5t5dn` `10x5t5dt` `10x5t5dh` `4x3t5dn` `4x3t5dt` `4x3t5dh` `4x6t5dn` `4x6t5dt` `4x6t5dh` `4x7t5dn` `4x7t5dt` `4x7t5dh` `4x8t5dn` `4x8t5dt` `4x8t5dh` `4x9t5dn` `4x9t5dt` `4x9t5dh` `4x10t5dn` `4x10t5dt` `4x10t5dh` `4x11t5dn` `4x11t5dt` `4x11t5dh` `4x12t5dn` `4x12t5dt` `4x12t5dh` `4x13t5dn` `4x13t5dt` `4x13t5dh` `4x14t5dn` `4x14t5dt` `4x14t5dh` `10x14t14dh` `3x6t14dh` `4x6t14dh` `5x6t14dh` `7x6t14dh` `8x6t14dh` `9x6t14dh` `10x6t14dh` `3x4t14dh` `3x5t14dh` `3x7t14dh` `3x8t14dh` `3x9t14dh` `3x10t14dh` `3x11t14dh` `3x12t14dh` `3x13t14dh` `3x14t14dh` `3x7t6dh` `4x7t6dh` `5x7t6dh` `6x7t6dh` `8x7t6dh` `9x7t6dh` `10x7t6dh` `7x3t6dh` `7x4t6dh` `7x5t6dh` `7x6t6dh` `7x8t6dh` `7x9t6dh` `7x10t6dh` `7x11t6dh` `7x12t6dh` `7x13t6dh` `7x14t6dh` `10x10t8dn` `10x10t8dt` `10x10t8dh` `10x11t8dn` `10x11t8dt` `10x11t8dh` `10x12t8dn` `10x12t8dt` `10x12t8dh` `10x13t8de` `10x13t8dn` `10x13t8dt` `10x13t8dh` `10x14t8de` `10x14t8dn` `10x14t8dt` `10x14t8dh` `1x5t8de` `1x5t8dn` `1x5t8dt` `1x5t8dh` `2x5t8de` `2x5t8dn` `2x5t8dt` `2x5t8dh` `3x5t8de` `3x5t8dn` `3x5t8dt` `3x5t8dh` `4x5t8de` `4x5t8dn` `4x5t8dt` `4x5t8dh` `6x5t8de` `6x5t8dn` `6x5t8dt` `6x5t8dh` `7x5t8de` `7x5t8dn` `7x5t8dt` `7x5t8dh` `8x5t8de` `8x5t8dn` `8x5t8dt` `8x5t8dh` `9x5t8de` `9x5t8dn` `9x5t8dt` `9x5t8dh` `10x5t8de` `10x5t8dn` `10x5t8dt` `10x5t8dh` `5x1t8de` `5x1t8dn` `5x1t8dt` `5x1t8dh` `5x2t8de` `5x2t8dn` `5x2t8dt` `5x2t8dh` `5x3t8de` `5x3t8dn` `5x3t8dt` `5x3t8dh` `5x4t8de` `5x4t8dn` `5x4t8dt` `5x4t8dh` `5x6t8de` `5x6t8dn` `5x6t8dt` `5x6t8dh` `5x7t8de` `5x7t8dn` `5x7t8dt` `5x7t8dh` `5x8t8de` `5x8t8dn` `5x8t8dt` `5x8t8dh` `5x9t8de` `5x9t8dn` `5x9t8dt` `5x9t8dh` `5x10t8de` `5x10t8dn` `5x10t8dt` `5x10t8dh` `5x11t8de` `5x11t8dn` `5x11t8dt` `5x11t8dh` `5x12t8de` `5x12t8dn` `5x12t8dt` `5x12t8dh` `5x13t8de` `5x13t8dn` `5x13t8dt` `5x13t8dh` `5x14t8de` `5x14t8dn` `5x14t8dt` `5x14t8dh` `10x11t9dt` `10x11t9dh` `10x12t9de` `10x12t9dt` `10x12t9dh` `10x13t9de` `10x13t9dn` `10x13t9dt` `10x13t9dh` `10x14t9de` `10x14t9dn` `10x14t9dt` `10x14t9dh` `2x6t9de` `2x6t9dn` `2x6t9dt` `2x6t9dh` `3x6t9de` `3x6t9dn` `3x6t9dt` `3x6t9dh` `4x6t9de` `4x6t9dn` `4x6t9dt` `4x6t9dh` `5x6t9de` `5x6t9dn` `5x6t9dt` `5x6t9dh` `7x6t9de` `7x6t9dn` `7x6t9dt` `7x6t9dh` `8x6t9de` `8x6t9dn` `8x6t9dt` `8x6t9dh` `9x6t9de` `9x6t9dn` `9x6t9dt` `9x6t9dh` `10x6t9de` `10x6t9dn` `10x6t9dt` `10x6t9dh` `3x2t9de` `3x2t9dn` `3x2t9dt` `3x2t9dh` `3x4t9de` `3x4t9dn` `3x4t9dt` `3x4t9dh` `3x5t9de` `3x5t9dn` `3x5t9dt` `3x5t9dh` `3x7t9de` `3x7t9dn` `3x7t9dt` `3x7t9dh` `3x8t9de` `3x8t9dn` `3x8t9dt` `3x8t9dh` `3x9t9de` `3x9t9dn` `3x9t9dt` `3x9t9dh` `3x10t9de` `3x10t9dn` `3x10t9dt` `3x10t9dh` `3x11t9de` `3x11t9dn` `3x11t9dt` `3x11t9dh` `3x12t9de` `3x12t9dn` `3x12t9dt` `3x12t9dh` `3x13t9de` `3x13t9dn` `3x13t9dt` `3x13t9dh` `3x14t9de` `3x14t9dn` `3x14t9dt` `3x14t9dh` `9x9t10dt` `9x9t10dh` `10x10t10dn` `10x10t10dt` `10x10t10dh` `10x11t10dn` `10x11t10dt` `10x11t10dh` `10x12t10de` `10x12t10dn` `10x12t10dt` `10x12t10dh` `10x13t10de` `10x13t10dn` `10x13t10dt` `10x13t10dh` `10x14t10de` `10x14t10dn` `10x14t10dt` `10x14t10dh` `2x6t10de` `2x6t10dn` `2x6t10dt` `2x6t10dh` `3x6t10de` `3x6t10dn` `3x6t10dt` `3x6t10dh` `4x6t10de` `4x6t10dn` `4x6t10dt` `4x6t10dh` `5x6t10de` `5x6t10dn` `5x6t10dt` `5x6t10dh` `7x6t10de` `7x6t10dn` `7x6t10dt` `7x6t10dh` `8x6t10de` `8x6t10dn` `8x6t10dt` `8x6t10dh` `9x6t10de` `9x6t10dn` `9x6t10dt` `9x6t10dh` `10x6t10de` `10x6t10dn` `10x6t10dt` `10x6t10dh` `3x2t10de` `3x2t10dn` `3x2t10dt` `3x2t10dh` `3x4t10de` `3x4t10dn` `3x4t10dt` `3x4t10dh` `3x5t10de` `3x5t10dn` `3x5t10dt` `3x5t10dh` `3x7t10de` `3x7t10dn` `3x7t10dt` `3x7t10dh` `3x8t10de` `3x8t10dn` `3x8t10dt` `3x8t10dh` `3x9t10de` `3x9t10dn` `3x9t10dt` `3x9t10dh` `3x10t10de` `3x10t10dn` `3x10t10dt` `3x10t10dh` `3x11t10de` `3x11t10dn` `3x11t10dt` `3x11t10dh` `3x12t10de` `3x12t10dn` `3x12t10dt` `3x12t10dh` `3x13t10de` `3x13t10dn` `3x13t10dt` `3x13t10dh` `3x14t10de` `3x14t10dn` `3x14t10dt` `3x14t10dh` `7x7t13dh` `8x8t13dt` `8x8t13dh` `9x9t13dn` `9x9t13dt` `9x9t13dh` `10x10t13de` `10x10t13dn` `10x10t13dt` `10x10t13dh` `10x11t13de` `10x11t13dn` `10x11t13dt` `10x11t13dh` `10x12t13de` `10x12t13dn` `10x12t13dt` `10x12t13dh` `10x13t13de` `10x13t13dn` `10x13t13dt` `10x13t13dh` `10x14t13de` `10x14t13dn` `10x14t13dt` `10x14t13dh` `2x5t13de` `2x5t13dn` `2x5t13dt` `2x5t13dh` `3x5t13de` `3x5t13dn` `3x5t13dt` `3x5t13dh` `4x5t13de` `4x5t13dn` `4x5t13dt` `4x5t13dh` `6x5t13de` `6x5t13dn` `6x5t13dt` `6x5t13dh` `7x5t13de` `7x5t13dn` `7x5t13dt` `7x5t13dh` `8x5t13de` `8x5t13dn` `8x5t13dt` `8x5t13dh` `9x5t13de` `9x5t13dn` `9x5t13dt` `9x5t13dh` `10x5t13de` `10x5t13dn` `10x5t13dt` `10x5t13dh` `3x2t13de` `3x2t13dn` `3x2t13dt` `3x2t13dh` `3x4t13de` `3x4t13dn` `3x4t13dt` `3x4t13dh` `3x6t13de` `3x6t13dn` `3x6t13dt` `3x6t13dh` `3x7t13de` `3x7t13dn` `3x7t13dt` `3x7t13dh` `3x8t13de` `3x8t13dn` `3x8t13dt` `3x8t13dh` `3x9t13de` `3x9t13dn` `3x9t13dt` `3x9t13dh` `3x10t13de` `3x10t13dn` `3x10t13dt` `3x10t13dh` `3x11t13de` `3x11t13dn` `3x11t13dt` `3x11t13dh` `3x12t13de` `3x12t13dn` `3x12t13dt` `3x12t13dh` `3x13t13de` `3x13t13dn` `3x13t13dt` `3x13t13dh` `3x14t13de` `3x14t13dn` `3x14t13dt` `3x14t13dh` `10x10t15de` `10x10t15dn` `10x10t15dh` `10x11t15de` `10x11t15dn` `10x11t15dt` `10x11t15dh` `10x12t15de` `10x12t15dn` `10x12t15dt` `10x12t15dh` `10x13t15de` `10x13t15dn` `10x13t15dt` `10x13t15dh` `10x14t15de` `10x14t15dn` `10x14t15dt` `10x14t15dh` `2x5t15de` `2x5t15dn` `2x5t15dt` `2x5t15dh` `3x5t15de` `3x5t15dn` `3x5t15dt` `3x5t15dh` `4x5t15de` `4x5t15dn` `4x5t15dt` `4x5t15dh` `6x5t15de` `6x5t15dn` `6x5t15dt` `6x5t15dh` `7x5t15de` `7x5t15dn` `7x5t15dt` `7x5t15dh` `8x5t15de` `8x5t15dn` `8x5t15dt` `8x5t15dh` `9x5t15de` `9x5t15dn` `9x5t15dt` `9x5t15dh` `10x5t15de` `10x5t15dn` `10x5t15dt` `10x5t15dh` `4x2t15de` `4x2t15dn` `4x2t15dt` `4x2t15dh` `4x3t15de` `4x3t15dn` `4x3t15dt` `4x3t15dh` `4x6t15de` `4x6t15dn` `4x6t15dt` `4x6t15dh` `4x7t15de` `4x7t15dn` `4x7t15dt` `4x7t15dh` `4x8t15de` `4x8t15dn` `4x8t15dt` `4x8t15dh` `4x9t15de` `4x9t15dn` `4x9t15dt` `4x9t15dh` `4x10t15de` `4x10t15dn` `4x10t15dt` `4x10t15dh` `4x11t15de` `4x11t15dn` `4x11t15dt` `4x11t15dh` `4x12t15de` `4x12t15dn` `4x12t15dt` `4x12t15dh` `4x13t15de` `4x13t15dn` `4x13t15dt` `4x13t15dh` `4x14t15de` `4x14t15dn` `4x14t15dt` `4x14t15dh`
 
 ## magnets
 
@@ -1104,7 +1101,6 @@
 
 156 cells dealt, 0 refused, 0 left out as slow.
 
-
 ## salad
 
 50 cells dealt, 31 refused, 13 left out as slow.
@@ -1152,7 +1148,6 @@
 
 100 cells dealt, 0 refused, 0 left out as slow.
 
-
 ## singles
 
 180 cells dealt, 2 refused, 0 left out as slow.
@@ -1163,7 +1158,6 @@
 ## slant
 
 114 cells dealt, 0 refused, 0 left out as slow.
-
 
 ## solo
 
@@ -1280,7 +1274,6 @@
 
 2 cells dealt, 0 refused, 0 left out as slow.
 
-
 ## tents
 
 143 cells dealt, 1 refused, 0 left out as slow.
@@ -1304,7 +1297,6 @@
 ## undead
 
 69 cells dealt, 0 refused, 0 left out as slow.
-
 
 ## unequal
 

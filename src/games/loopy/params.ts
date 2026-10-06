@@ -9,7 +9,7 @@
  * names, the encode char and the min-size error messages are *derived* from it.
  */
 
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { type GridType, gridValidateParams } from "../../engine/grid/index.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -126,7 +126,7 @@ export function defaultParams(): LoopyParams {
   return { w: 10, h: 10, diff: DIFF_EASY, type: 0 };
 }
 
-export function validateParams(p: LoopyParams, _full: boolean): string | null {
+export function validateParams(p: LoopyParams, full: boolean): string | null {
   const { amin, omin, type } = LOOPY_GRIDS[p.type];
   if (p.w < amin || p.h < amin)
     return `Width and height for this grid type must both be at least ${amin}.`;
@@ -142,12 +142,32 @@ export function validateParams(p: LoopyParams, _full: boolean): string | null {
   // generate fine.
   if (type === "penrose_p2_kite" && p.w < 4)
     return "Width for Penrose (kite/dart) must be at least 4.";
+  if (
+    full &&
+    type === "penrose_p3_thick" &&
+    p.diff === DIFF_NORMAL &&
+    THREE_RHOMB_SIZES.has(`${p.w}x${p.h}`)
+  )
+    return noSuchTier(
+      `${p.w}x${p.h} ${LOOPY_GRIDS[p.type].title} puzzle`,
+      LOOPY_DIFFS[p.diff],
+    );
   return gridValidateParams(type, p.w, p.h);
 }
 
+/**
+ * The Penrose (rhombs) sizes whose every patch is the same three rhombs
+ * around a point: over 100,000 patches of each drew no other (2026-10-06),
+ * where 3x6, 5x3 and 4x4 draw a larger one about one patch in twenty. That
+ * board has an Easy, a Tricky and a Hard puzzle and no Normal one: none in
+ * four million boards on it, which is each of its seven loops many times
+ * over. Not a rule on width and height, since 3x5 is here and 5x3 is not.
+ */
+const THREE_RHOMB_SIZES: ReadonlySet<string> = new Set(["3x3", "3x4", "3x5", "4x3"]);
+
 export const paramConfig: ParamConfigItem<LoopyParams>[] = [
   ...dimensionParamConfig<LoopyParams>({
-    doc: "Size of the board, counted in the chosen tiling's own repeating units rather than in faces, so the same numbers make boards of quite different sizes on different tilings. Each tiling has a smallest size it allows: at least 3 by 3 for most (with one side at least 4 for Cairo), 2 by 2 for the four dodecagonal ones, 1 by 2 for Floret, 6 by 6 for Hats and Spectres, and a width of at least 4 for Penrose (kite/dart).",
+    doc: "Size of the board, counted in the chosen tiling's own repeating units rather than in faces, so the same numbers make boards of quite different sizes on different tilings. Each tiling has a smallest size it allows: at least 3 by 3 for most (with one side at least 4 for Cairo), 2 by 2 for the four dodecagonal ones, 1 by 2 for Floret, 6 by 6 for Hats and Spectres, and a width of at least 4 for Penrose (kite/dart). The four smallest Penrose (rhombs) boards (3 by 3, 3 by 4, 3 by 5 and 4 by 3) are always the same three rhombs, which have no Normal puzzle.",
   }),
   {
     kw: "type",
