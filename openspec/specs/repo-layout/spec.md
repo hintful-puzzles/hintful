@@ -1411,7 +1411,7 @@ on someone else's desk, and a queue with one server is where work goes to wait.
 
 - **WHEN** a change alters how a game plays, renders or reads to a player
 - **THEN** owner acceptance is required before archiving, on the terms in
-  "Acceptance bar"
+  `docs/work-management.md` § "What the owner accepts"
 
 #### Scenario: A compatibility break is raised before the work, not after
 

@@ -49,12 +49,10 @@ Re-take the population from the registry (games without `hint`, as
 
 ## The decision point
 
-A game without a hint is a draft, and the goal is every game hinted by the end
-of October 2026 (docs/games/hints.md § "The quality bar"). **By mid-October, compare the
-hintless games left against the weeks left.** If the reserve cannot be cleared
-one at a time in what remains, the owner decides between writing reserve hints
-for the target (each change then says it was written for the target, not as a
-check) and moving the target.
+A game without a hint is a draft (docs/games/hints.md § "The quality bar").
+The owner manages the timeline for clearing the reserve, and no deadline is
+tracked here. If the owner asks for reserve hints written ahead of a framework
+change, each such change says it was written for that reason, not as a check.
 
 The search games in it (Cube, Same Game, Slide) start with a short
 design pass on what the hint can *prove* (docs/games/hints.md §
