@@ -13,6 +13,7 @@
 
 import { Dsf } from "../../engine/dsf.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
@@ -624,7 +625,9 @@ export function generateGrid(p: RangeParams, rng: RandomState): Int8Array {
   const { w, h } = p;
   const grid = new Int8Array(w * h);
   const order = Array.from({ length: w * h }, (_, i) => i);
+  const attempt = retryLimit(`range: generation (${w}x${h})`);
   for (;;) {
+    attempt();
     shuffle(order, rng);
     chooseBlackSquares(grid, w, h, order);
     computeClues(grid, w, h);

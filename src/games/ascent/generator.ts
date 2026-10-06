@@ -311,7 +311,9 @@ export function newAscentDesc(
     sc.end = w * h - 1;
 
     grid = null;
+    const path = retryLimit("ascent: a path through every cell");
     while (!grid) {
+      path();
       grid = generateHamiltonianPath(w, h, rng, params);
     }
 

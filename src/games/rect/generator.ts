@@ -21,6 +21,7 @@
 
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import type { Point, Rect } from "../../engine/types.ts";
 import { rungsFinish } from "./hint.ts";
 import { newState } from "./moves.ts";
@@ -130,7 +131,9 @@ export function newDesc(
   const { expandfactor } = params;
   let { w: pw, h: ph } = params;
 
+  const attempt = retryLimit(`rect: generation (${pw}x${ph})`);
   for (;;) {
+    attempt();
     // Base-grid dimensions. C computes `(float)size / (1.0F + expandfactor)` in
     // single precision then casts to int, so round through `Math.fround`.
     const denom = Math.fround(1 + expandfactor);

@@ -5,6 +5,7 @@ import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 
 // --- types -----------------------------------------------------------
 
@@ -318,7 +319,9 @@ export function newDesc(p: TwiddleParams, rng: RandomState): { desc: string } {
   const rw = w - n + 1; // width of the rotation-origin space
   const rh = h - n + 1;
 
+  const attempt = retryLimit("twiddle: a shuffle that is not already solved");
   do {
+    attempt();
     const prevmoves = new Int32Array(rw * rh);
 
     for (let i = 0; i < totalMoves; i++) {

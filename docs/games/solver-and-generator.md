@@ -907,6 +907,30 @@ into it and let an outer `retryLimit` bound the recovery (Net's `shuffle`
 reshuffles on a stalled tie rather than throwing). Read the module header —
 it also explains why the bound is a guard call, not a `for…of` iterator.
 
+**The gate holds you to it, in its fast pass.**
+[`retry-bound.test.ts`](../../src/engine/retry-bound.test.ts) reads every
+loop under `src/games/` and `src/engine/` whose header does not count
+(`while`, `do…while`, a `for` missing its condition or its step) and whose
+body draws from the RNG, and requires one of two answers: the loop calls a
+`retryLimit` guard once per pass, or the test's `BOUNDED_OTHERWISE` ledger
+says what ends it. So a new generator meets three cases:
+
+- **It deals a whole board again until one is good** ⇒ a guard. "It nearly
+  always works" is the case the rule is for, and the reject-a-solved-shuffle
+  loops (Fifteen, Flood, Flip, Twiddle) take one like any other.
+- **It uses something up each pass** (a frontier, a counter, free cells) ⇒ a
+  ledger line naming what.
+- **It is rejection sampling for one item** (a free square, an unused color)
+  ⇒ a ledger line saying what keeps an acceptable draw on offer, usually a
+  `validateParams` bound. Do *not* reach for a default-budget guard here: a
+  board with one free square in 1,600 refuses 10,000 draws running about
+  once in 500 deals, and the guard would throw on a legal board.
+
+The guard is the scan's own vocabulary: it looks for a call to a variable
+initialized from `retryLimit`, in the loop's own body, so a hand-rolled
+counter inside an open loop needs a ledger line and a counting `for` header
+needs nothing.
+
 ### Unlucky, impossible, and load-bearing validation
 
 **A `validateParams` that does real work is load-bearing — port it before

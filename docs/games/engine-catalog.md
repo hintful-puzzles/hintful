@@ -348,6 +348,9 @@ orphan and spin a core forever). `retryLimit` turns "hangs the machine" into
 seed that used to converge can quietly produce a different desc. Its header
 also records when a cap is *not* the answer (a legal-but-rare seed wants a
 recovery path, with the cap outside it — Net's stalled-tie reshuffle).
+`retry-bound.test.ts` scans for the loops that owe one
+([solver-and-generator.md](solver-and-generator.md) § "Every retry loop is
+bounded").
 
 ### `divvy.ts` — random equal-omino partition
 

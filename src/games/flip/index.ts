@@ -19,6 +19,7 @@ import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/params.ts";
 import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { RULESET_KW, rulesetItem } from "../../engine/ruleset.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
@@ -218,7 +219,9 @@ export const flipGame: Game<
     // input space and pushing through the matrix is equiprobable over
     // the image space (flip.c's vector-space argument).
     const grid = new Uint8Array(wh);
+    const attempt = retryLimit("flip: a grid with a light on");
     do {
+      attempt();
       grid.fill(0);
       for (let i = 0; i < wh; i++) {
         if (randomUpto(rng, 2)) {

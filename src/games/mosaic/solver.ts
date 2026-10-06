@@ -10,6 +10,7 @@
  */
 
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import {
   countAround,
@@ -295,7 +296,9 @@ export function newDesc(p: MosaicParams, rng: RandomState): { desc: string } {
     empty: new Uint8Array(size),
   };
 
+  const attempt = retryLimit(`mosaic: generation (${width}x${height})`);
   do {
+    attempt();
     for (let i = 0; i < size; i++) image[i] = randomBits(rng, 1);
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {

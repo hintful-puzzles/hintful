@@ -4,6 +4,7 @@ import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { permParity } from "../../engine/shuffle.ts";
 
 // --- types -----------------------------------------------------------
@@ -143,7 +144,9 @@ export function newDesc(p: FifteenParams, rng: RandomState): { desc: string } {
   const tiles = new Int32Array(n);
   const used = new Uint8Array(n);
 
+  const attempt = retryLimit("fifteen: a layout that is not already solved");
   do {
+    attempt();
     tiles.fill(-1);
     used.fill(0);
 

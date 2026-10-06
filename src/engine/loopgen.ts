@@ -19,6 +19,7 @@
 
 import type { Grid, GridFace } from "./grid/index.ts";
 import { type RandomState, randomBits, randomUpto } from "./random/index.ts";
+import { retryLimit } from "./retry-limit.ts";
 import { shuffle } from "./shuffle.ts";
 import { SortedMultiset } from "./sorted-multiset.ts";
 
@@ -268,7 +269,9 @@ export function generateLoop(
   // Normal passes grow 'tendrils' (flip a face adjacent to exactly one
   // opposite-colored face) until no flip occurs, then one final random pass.
   let doRandomPass = false;
+  const pass = retryLimit("loopgen: tendril passes");
   while (true) {
+    pass();
     let flipped = false;
     for (let idx = 0; idx < numFaces; idx++) {
       const jf = faceList[idx];

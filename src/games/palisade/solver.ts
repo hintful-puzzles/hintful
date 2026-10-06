@@ -19,6 +19,7 @@ import {
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { bitcount, EMPTY, encodeDesc, isSolved, type PalisadeParams } from "./state.ts";
@@ -474,7 +475,9 @@ export function newDesc(p: PalisadeParams, rng: RandomState): { desc: string } {
 
   // Divide into k-ominoes, derive clues + the solution walls, retry
   // until the full-clue board is solver-solvable (it nearly always is).
+  const attempt = retryLimit(`palisade: generation (${w}x${h} k${k})`);
   do {
+    attempt();
     const dsf = divvyRectangle(w, h, k, rng);
     for (let r = 0; r < h; r++) {
       for (let c = 0; c < w; c++) {

@@ -9,6 +9,7 @@ import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import { choosemove, completed, fill, SolverScratch } from "./solver.ts";
 
@@ -192,7 +193,9 @@ export function newDesc(p: FloodParams, rng: RandomState): { desc: string } {
   const scratch = new SolverScratch(w, h);
 
   const grid = new Uint8Array(wh);
+  const attempt = retryLimit("flood: a grid that is not already one color");
   do {
+    attempt();
     for (let i = 0; i < wh; i++) grid[i] = randomUpto(rng, colors);
   } while (completed(grid));
 
