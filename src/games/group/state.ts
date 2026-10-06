@@ -29,6 +29,7 @@ import { noSuchTier, tierNames, tooRareToDeal } from "../../engine/difficulty.ts
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import { MAX_REGENERATE } from "../../engine/retry-limit.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 
 // --- difficulty ------------------------------------------------------------
@@ -94,9 +95,10 @@ const upTo = (w: number, last: number): GroupParams[] =>
 
 /**
  * Each size at the tiers its boards need, and one board with its identity
- * hidden. A 6x6 above Normal and an 8x8 at Hard are refused
- * ({@link validateParams}), and a 12x12 took up to two seconds at Tricky and
- * eleven at Hard, measured 2026-10-05 over three deals each.
+ * hidden. A 6x6 at Tricky and an 8x8 at Hard take ten seconds a board
+ * ({@link retryBudget}) and are left to the Custom dialog, and a 12x12 took up
+ * to two seconds at Tricky and eleven at Hard, measured 2026-10-05 over three
+ * deals each.
  */
 export const PRESETS: readonly GroupParams[] = [
   ...upTo(6, DIFF_NORMAL),
@@ -193,19 +195,28 @@ function sizeLacksTier({ w, diff, id }: GroupParams): boolean {
 }
 
 /**
- * Whether boards of this size at this tier are too few to find: refused by
- * the owner's decision, 2026-10-05, where the spec would have a rare tier
- * dealt by retrying. Measured that day over 75 seconds a cell, the identity
- * shown: a 6x6 at Tricky took 48,000 tries a board, ten seconds on average and
- * 28 at worst; an 8x8 at Hard took 6,400 tries, nine seconds and 17 at worst;
- * and a 6x6 at Hard gave none in 290,000.
+ * Whether boards of this size at this tier are too few to find. A 6x6 at Hard,
+ * its identity shown, gave none in 290,000 tries (2026-10-05, 75 seconds), so
+ * nothing says one exists and no budget would be sized to it.
  */
 function tierTooRare({ w, diff, id }: GroupParams): boolean {
-  if (!id) return false;
-  return (
-    (w === 6 && (diff === DIFF_HARD || diff === DIFF_EXTREME)) ||
-    (w === 8 && diff === DIFF_EXTREME)
-  );
+  return id && w === 6 && diff === DIFF_EXTREME;
+}
+
+/**
+ * How many boards the generator tries before it gives up. Two cells have a
+ * tier found seldom, measured 2026-10-05 over 75 seconds a cell with the
+ * identity shown: a 6x6 at Tricky took 48,000 tries a board, ten seconds on
+ * average and 28 at worst, and an 8x8 at Hard took 6,400 tries, nine seconds
+ * and 17 at worst. Each is given five times that, which a deal runs out once
+ * in 150 (`e^-5`), and the house bound would run out four times in five at the
+ * first. They are dealt because the app keeps the next board ready
+ * (`src/puzzle/deal-ahead.ts`), so the wait is the first board's only.
+ */
+export function retryBudget({ w, diff, id }: GroupParams): number {
+  if (id && w === 6 && diff === DIFF_HARD) return 5 * 48_000;
+  if (id && w === 8 && diff === DIFF_EXTREME) return 5 * 6_400;
+  return MAX_REGENERATE;
 }
 
 // --- move model --------------------------------------------------------------

@@ -10,7 +10,7 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { StaleBuildError } from "../utils/errors.ts";
-import { unlessWorkerFailsToStart } from "./puzzle.ts";
+import { unlessWorkerFailsToStart } from "./spawn-worker.ts";
 
 /** Only the event surface is read, so an `EventTarget` stands in for a Worker. */
 function fakeWorker() {

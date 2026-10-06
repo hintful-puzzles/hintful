@@ -144,8 +144,8 @@ const LONG_NARRATIONS: {
     // **Hard only** (measured 2026-10-06 over 12 deals a cell: 26 times at
     // 12x12 Hard and 9 at 8x8 Hard, and zero at 8x8, 10x10 and 12x12 Normal
     // and Tricky, at 10x10 Hard, and at 12x12 Tricky with the identity
-    // hidden). Neither Hard board is a shipped preset: 8x8 Hard is refused as
-    // too rare to deal, and 12x12 Hard is reachable through the Custom dialog.
+    // hidden). Neither Hard board is a shipped preset: both are reachable
+    // through the Custom dialog alone.
     // So the board is pinned. `lintCases`' last-preset rule used to reach it,
     // until the preset list was regrouped and its last entry became an 8x8.
     games: ["group", "keen", "salad", "solo", "towers", "unequal"],

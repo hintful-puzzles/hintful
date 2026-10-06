@@ -17,6 +17,13 @@ called `puzzle`.
   `PuzzleEngineSurface`.
 - **`worker-adapter.ts`** — the Comlink-side adapter between that surface and
   the engine.
+- **`spawn-worker.ts`** — starts an instance of that worker, with its error
+  reporting wired to the page's.
+- **`deal-ahead.ts`** — deals the board after this one in a second,
+  short-lived instance of the worker and keeps it in `src/store/kept-boards.ts`,
+  so New game plays a board that is already found. **A board you see after New
+  game may have been dealt minutes or visits earlier**, by this build; on the
+  dev server, since the page loaded.
 - **`drawing.ts`** — the `Drawing` class implementing the puzzle drawing API,
   running in the worker.
 - **`catalog.ts` / `catalog-data.ts`** — the committed game catalog and the

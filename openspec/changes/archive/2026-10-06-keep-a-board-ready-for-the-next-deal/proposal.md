@@ -1,8 +1,9 @@
 # keep-a-board-ready-for-the-next-deal
 
-**Status: scaffolded, not started (2026-10-05).** The owner's idea, raised
-while `deal-the-tier-a-custom-size-asks-for` was refusing three Group cells
-for being too slow to deal.
+**Status: built 2026-10-06.** The owner's idea, raised while
+`deal-the-tier-a-custom-size-asks-for` was refusing three Group cells for
+being too slow to deal. `design.md` holds what was decided; the sections below
+are the proposal as scaffolded on 2026-10-05.
 
 ## Why
 

@@ -9,7 +9,10 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 }
 
 import { expose, proxy, type Remote } from "comlink";
+import { dealBoard } from "../engine/deal.ts";
 import { createTsEngine } from "../engine/index.ts";
+import { getTsGame } from "../engine/registry.ts";
+import type { DealtBoard, EncodedParams } from "../engine/types.ts";
 import { TsWorkerPuzzle } from "./worker-adapter.ts";
 // Side-effect import: registers every game.
 import "../games/index.ts";
@@ -20,6 +23,10 @@ installErrorHandlersInWorker();
 
 interface WorkerPuzzleFactory {
   create(puzzleId: string): Promise<PuzzleEngineSurface>;
+  /** Deal one board at `params` and play nothing: what a second instance of
+   * this worker is started for (`deal-ahead.ts`), since a generator owns its
+   * thread until it returns. See `dealBoard`. */
+  deal(puzzleId: string, params: EncodedParams): Promise<DealtBoard | null>;
 }
 const workerPuzzleFactory: WorkerPuzzleFactory = {
   async create(puzzleId: string): Promise<PuzzleEngineSurface> {
@@ -29,15 +36,21 @@ const workerPuzzleFactory: WorkerPuzzleFactory = {
     }
     return proxy(new TsWorkerPuzzle(puzzleId, engine));
   },
+  async deal(puzzleId: string, params: EncodedParams): Promise<DealtBoard | null> {
+    const game = getTsGame(puzzleId);
+    if (!game) {
+      throw new Error(`No game is registered for puzzleId "${puzzleId}"`);
+    }
+    return dealBoard(game, params);
+  },
 };
 
 expose(workerPuzzleFactory);
 
-type ComlinkRemoteFactory<T> = {
-  [K in keyof T]: T[K] extends (...args: infer A) => Promise<infer R>
-    ? (...args: A) => Promise<Remote<R>>
-    : T[K];
-};
-
 export type RemoteWorkerPuzzle = Remote<PuzzleEngineSurface>;
-export type RemoteWorkerPuzzleFactory = ComlinkRemoteFactory<WorkerPuzzleFactory>;
+/** The factory as the main thread holds it: a puzzle comes back as a proxy,
+ * and a dealt board as a copy. */
+export interface RemoteWorkerPuzzleFactory {
+  create(puzzleId: string): Promise<RemoteWorkerPuzzle>;
+  deal: WorkerPuzzleFactory["deal"];
+}

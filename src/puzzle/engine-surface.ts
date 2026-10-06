@@ -15,6 +15,8 @@ import type {
   ConfigDescription,
   ConfigValues,
   CustomParamsEncoding,
+  DealtBoard,
+  EncodedParams,
   FontInfo,
   KeyLabel,
   Point,
@@ -33,8 +35,11 @@ export interface PuzzleEngineSurface {
   ): void;
   getStaticProperties(): PuzzleStaticAttributes;
 
-  /** `fitTo` is the board area; see `EngineCore.newGame`. */
-  newGame(fitTo?: Size): string | null;
+  /** `fitTo` is the board area and `kept` a board dealt ahead; see
+   * `EngineCore.newGame`. */
+  newGame(fitTo?: Size, kept?: DealtBoard | null): string | null;
+  /** See `EngineCore.dealParams`. */
+  dealParams(fitTo?: Size): EncodedParams;
   newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;

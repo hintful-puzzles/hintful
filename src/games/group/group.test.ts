@@ -18,8 +18,10 @@ import {
   MOD_SHFT,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { MAX_REGENERATE } from "../../engine/retry-limit.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { itSlow } from "../../engine/testing/slow.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
 import { colors, coord, newDrawState, PREFERRED_TILE_SIZE, redraw } from "./render.ts";
@@ -39,6 +41,7 @@ import {
   newState,
   newUi,
   PRESETS,
+  retryBudget,
 } from "./state.ts";
 
 const P = (w: number, diff: number, id: boolean): GroupParams => ({ w, diff, id });
@@ -150,19 +153,49 @@ describe("a size with no board at a tier", () => {
   });
 
   it("is refused where its boards are too rare to deal", () => {
-    expect(refusal(P(6, DIFF_HARD, true))).toBe(
-      "Tricky 6x6 puzzles that show their identity are too rare to deal.",
+    expect(refusal(P(6, DIFF_EXTREME, true))).toBe(
+      "Hard 6x6 puzzles that show their identity are too rare to deal.",
     );
-    expect(labels(rare)).toEqual(["6dh", "6dx", "8dx"]);
+    expect(labels(rare)).toEqual(["6dx"]);
   });
 
   it("still loads a rare board that arrives with its desc", () => {
     for (const p of rare) expect(paramsError(groupGame, p, false)).toBeNull();
   });
 
-  // The rare cells are not held to the run-out: a 6x6 at Tricky is found once
-  // in 48,000 tries, so it would pass most of the time and prove nothing.
+  // The rare cell is not held to the run-out: none was found in 290,000
+  // tries, and that says only that its boards are rarer than the count saw.
   describeAbsentTiers(groupGame, labels(absent));
+});
+
+describe("a tier found seldom, with the budget to find it", () => {
+  const SELDOM = [P(6, DIFF_HARD, true), P(8, DIFF_EXTREME, true)];
+
+  it("is dealt, and only it is given more tries than the house bound", () => {
+    for (const p of SELDOM) expect(paramsError(groupGame, p, true)).toBeNull();
+    const raised: string[] = [];
+    for (let w = 3; w <= 12; w++) {
+      for (const id of [true, false]) {
+        for (let diff = 0; diff < DIFF_NAMES.length; diff++) {
+          const p = P(w, diff, id);
+          if (retryBudget(p) !== MAX_REGENERATE) raised.push(encodeParams(p, true));
+        }
+      }
+    }
+    expect(raised).toEqual(SELDOM.map((p) => encodeParams(p, true)));
+  });
+
+  // Ten seconds a board on average, so the slow tier's: from these seeds the
+  // 6x6 came in a fifth of a second and the 8x8 in thirteen (2026-10-06, six
+  // seeds a cell, where the slowest 6x6 took 47 on a loaded machine and none
+  // ran out). What is held is the tier of the board dealt.
+  itSlow.each(SELDOM)("$w x $w at tier $diff deals a board that needs it", (p) => {
+    const cell = encodeParams(p, true);
+    const { desc } = newGameDesc(p, randomNew(`dealt-${cell}-0`));
+    expect(
+      lowestSolvingCap(cappedSolveFor(difficulty, p, desc), DIFF_NAMES.length),
+    ).toBe(p.diff);
+  });
 });
 
 describe("generation", () => {

@@ -15,6 +15,7 @@
 import { paletteSchemeOf, resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
 import { completionStatus } from "./completion-status.ts";
+import { freshSeed, generate } from "./deal.ts";
 import { DESC_MALFORMED, loadDesc, loadVerdict } from "./desc-error.ts";
 import {
   cappedSolveFor,
@@ -58,7 +59,6 @@ import {
   RIGHT_RELEASE,
 } from "./pointer.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
-import { RetryLimitExceeded } from "./retry-limit.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import type {
   ChangeNotification,
@@ -67,6 +67,8 @@ import type {
   ConfigDescription,
   ConfigValues,
   CustomParamsEncoding,
+  DealtBoard,
+  EncodedParams,
   GameStatus,
   KeyLabel,
   Point,
@@ -108,8 +110,13 @@ export interface EngineCore {
    * can turn them and the turned board draws at a larger tile in `fitTo`, the
    * board area. Without `fitTo` the chosen orientation is dealt as it stands.
    * Returns the sentence to show where the generator gave up, with the board
-   * on screen left as it was. */
-  newGame(fitTo?: Size): string | null;
+   * on screen left as it was. `kept` is a board dealt ahead: it is played
+   * where its params are the ones this deal is for, with no generator run, and
+   * is otherwise ignored. */
+  newGame(fitTo?: Size, kept?: DealtBoard | null): string | null;
+  /** The params `newGame(fitTo)` would deal at, in their full encoding: what
+   * a board dealt ahead for it has to be dealt at. */
+  dealParams(fitTo?: Size): EncodedParams;
   newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;
@@ -215,14 +222,6 @@ export interface EngineCore {
    * lays first. */
   forceRedraw(dr: GameDrawing): void;
   delete(): void;
-}
-
-/** A random 128-bit seed string for a fresh game (upstream seeds from system
- * entropy; `random.ts` makes the id reproducible from it). */
-function freshSeed(): string {
-  const b = new Uint8Array(16);
-  crypto.getRandomValues(b);
-  return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 }
 
 export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
@@ -369,36 +368,53 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.notifyRedraw = notifyRedraw;
   }
 
-  newGame(fitTo?: Size): string | null {
-    const params = fitTo ? this.paramsToFit(fitTo) : this.params;
+  newGame(fitTo?: Size, kept: DealtBoard | null = null): string | null {
+    const params = this.paramsToDeal(fitTo);
+    if (kept !== null && kept.params === this.game.encodeParams(params, true)) {
+      this.begin(params, kept.desc, kept.aux, this.params);
+      return null;
+    }
     return this.deal(params, randomNew(freshSeed()), this.params);
   }
 
+  dealParams(fitTo?: Size): EncodedParams {
+    return this.game.encodeParams(this.paramsToDeal(fitTo), true);
+  }
+
+  private paramsToDeal(fitTo?: Size): Params {
+    return fitTo ? this.paramsToFit(fitTo) : this.params;
+  }
+
   /**
-   * Deal a board at `params` and begin play on it. A generator that runs its
-   * retry budget out has found no board, which is an answer and not a fault:
-   * the tier may be rare at this size, or absent where nobody has counted. The
-   * board on screen stays, and the type chosen goes back to that board's, so
-   * the menu does not name a type the player is not looking at. `chosen` is
-   * what the next New game deals at once this one has dealt, which is not
-   * `params` where the board was turned to fit.
+   * Deal a board at `params` and begin play on it. Where the generator found
+   * none (`generate`), the board on screen stays, and the type chosen goes
+   * back to that board's, so the menu does not name a type the player is not
+   * looking at.
    */
   private deal(params: Params, rng: RandomState, chosen: Params): string | null {
-    let dealt: { desc: string; aux?: string };
-    try {
-      dealt = this.game.newDesc(params, rng);
-    } catch (e) {
-      if (!(e instanceof RetryLimitExceeded)) throw e;
+    const dealt = generate(this.game, params, rng);
+    if (dealt === null) {
       if (this.history.length > 0) {
         this.params = this.boardParams;
         this.emitParamsChange();
       }
       return dealGaveUp(tierNameOf(this.game, params));
     }
-    this.params = chosen;
-    const { desc, aux } = dealt;
-    this.startFrom(params, desc, this.game.newState(params, desc), aux);
+    this.begin(params, dealt.desc, dealt.aux ?? null, chosen);
     return null;
+  }
+
+  /** Begin play on a board the generator dealt at `params`. `chosen` is what
+   * the next New game deals at, which is not `params` where the board was
+   * turned to fit. */
+  private begin(
+    params: Params,
+    desc: string,
+    aux: string | null,
+    chosen: Params,
+  ): void {
+    this.params = chosen;
+    this.startFrom(params, desc, this.game.newState(params, desc), aux ?? undefined);
   }
 
   /** The chosen params, or the same board turned on its side when that draws

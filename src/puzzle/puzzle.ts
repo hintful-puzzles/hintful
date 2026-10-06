@@ -1,6 +1,6 @@
 import { computed, type Signal, signal } from "@lit-labs/signals";
 import * as Sentry from "@sentry/browser";
-import { proxy, releaseProxy, transfer, wrap } from "comlink";
+import { proxy, releaseProxy, transfer } from "comlink";
 import { assertNever } from "../engine/assert-never.ts";
 import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
 import type {
@@ -21,22 +21,17 @@ import type {
   Size,
   TimerReadout,
 } from "../engine/types.ts";
-import {
-  installWorkerErrorReceivers,
-  StaleBuildError,
-  uninstallWorkerErrorReceivers,
-} from "../utils/errors.ts";
+import { keptBoards } from "../store/kept-boards.ts";
 import { nextAnimationFrame } from "../utils/timing.ts";
 import { puzzleDataMap } from "./catalog.ts";
+import { DealAhead } from "./deal-ahead.ts";
+import {
+  type PuzzleWorker,
+  spawnPuzzleWorker,
+  unlessWorkerFailsToStart,
+} from "./spawn-worker.ts";
 import { sameTimer } from "./timer.ts";
-import type { RemoteWorkerPuzzle, RemoteWorkerPuzzleFactory } from "./worker.ts";
-
-const sentryWebWorkerIntegration = import.meta.env.VITE_SENTRY_DSN
-  ? Sentry.webWorkerIntegration({ worker: [] })
-  : null;
-if (sentryWebWorkerIntegration) {
-  Sentry.addIntegration(sentryWebWorkerIntegration);
-}
+import type { RemoteWorkerPuzzle } from "./worker.ts";
 
 /**
  * Uniform dwell per auto-hint step (ms). Every game's auto-play paces at
@@ -59,38 +54,14 @@ export const HINT_PENDING_MS = 300;
 export const HINT_PENDING_MESSAGE = "Thinking…";
 
 /**
- * `request`, unless the worker fails to start first.
- *
- * A worker whose script never runs never answers, so without this a Comlink
- * call to it waits for ever: the board stays blank, the chips say "Type…", and
- * nothing is reported. That reached the owner's phone as a deploy landed
- * (2026-09-27): the page named the previous build's worker file, which
- * Cloudflare Pages had stopped serving. A failed script load arrives as a plain
- * `Event`, and is a stale page; an `ErrorEvent` is the worker's own code
- * throwing as it starts, and is a bug. `puzzle-worker-start.test.ts` holds both.
+ * How long a New game may go unanswered before the app says what it is doing.
+ * Most types deal in well under this, and a kept board (`DealAhead`) is played
+ * at once, so the words are seen where a type's boards are rare and none is
+ * kept yet: the first deal of it, or a second pressed straight after.
  */
-export async function unlessWorkerFailsToStart<T>(
-  worker: Worker,
-  request: Promise<T>,
-): Promise<T> {
-  let onError = (_event: Event) => {};
-  const failed = new Promise<never>((_, reject) => {
-    onError = (event) =>
-      reject(
-        event instanceof ErrorEvent
-          ? new Error(`The puzzle worker failed as it started: ${event.message}`)
-          : new StaleBuildError("The puzzle worker's script could not be loaded"),
-      );
-    worker.addEventListener("error", onError);
-  });
-  try {
-    return await Promise.race([request, failed]);
-  } finally {
-    // Once the worker has answered, a later error is not a failure to start;
-    // left attached, it would reject a promise nobody is waiting on.
-    worker.removeEventListener("error", onError);
-  }
-}
+export const DEAL_PENDING_MS = 1000;
+
+export const DEAL_PENDING_MESSAGE = "Looking for a board…";
 
 /**
  * Public API to the puzzle engine running in a worker.
@@ -103,36 +74,20 @@ export class Puzzle {
     if (import.meta.env.VITE_SENTRY_DSN) {
       Sentry.setTag("puzzleId", puzzleId);
     }
-    const worker = new Worker(new URL("./worker.ts", import.meta.url), {
-      type: "module",
-      name: `puzzle-worker-${puzzleId}`,
-    });
-    if (sentryWebWorkerIntegration) {
-      sentryWebWorkerIntegration.addWorker(worker);
-      // Handle forwarded event enrichment data from worker
-      worker.addEventListener("message", (event: MessageEvent<unknown>) => {
-        if (
-          typeof event.data === "object" &&
-          event.data !== null &&
-          "type" in event.data &&
-          event.data.type === "sentry-breadcrumb" &&
-          "breadcrumb" in event.data &&
-          typeof event.data.breadcrumb === "object" &&
-          event.data.breadcrumb !== null
-        ) {
-          Sentry.addBreadcrumb(event.data.breadcrumb);
-        }
-      });
-    }
-    installWorkerErrorReceivers(worker);
-    const workerFactory = wrap<RemoteWorkerPuzzleFactory>(worker);
+    const worker = spawnPuzzleWorker(`puzzle-worker-${puzzleId}`);
     const workerPuzzle = await unlessWorkerFailsToStart(
-      worker,
-      workerFactory.create(puzzleId),
+      worker.worker,
+      worker.factory.create(puzzleId),
     );
 
     const staticProps = await workerPuzzle.getStaticProperties();
-    const puzzle = new Puzzle(puzzleId, worker, workerPuzzle, staticProps);
+    const puzzle = new Puzzle(
+      puzzleId,
+      worker,
+      workerPuzzle,
+      staticProps,
+      new DealAhead(puzzleId, keptBoards),
+    );
     await puzzle.initialize();
     return puzzle;
   }
@@ -140,7 +95,7 @@ export class Puzzle {
   // Private constructor; use Puzzle.create(puzzleId) to instantiate a Puzzle.
   private constructor(
     public readonly puzzleId: string,
-    private readonly worker: Worker,
+    private readonly worker: Pick<PuzzleWorker, "terminate">,
     private readonly workerPuzzle: RemoteWorkerPuzzle,
     {
       canSolve,
@@ -152,6 +107,8 @@ export class Puzzle {
       wantsStatusbar,
       paletteScheme,
     }: PuzzleStaticAttributes,
+    /** `null` deals nothing ahead: every New game runs the generator. */
+    private readonly dealAhead: DealAhead | null = null,
   ) {
     // The catalog is the only place a display name lives.
     // `catalog-registry.test.ts` holds the catalog and the registry equal in both
@@ -177,10 +134,10 @@ export class Puzzle {
 
   public async delete(): Promise<void> {
     this.stopAutoHint();
+    this.dealAhead?.stop();
     await this.detachCanvas();
     await this.workerPuzzle.delete();
     this.workerPuzzle[releaseProxy]();
-    uninstallWorkerErrorReceivers(this.worker);
     this.worker.terminate();
   }
 
@@ -210,6 +167,8 @@ export class Puzzle {
     switch (message.type) {
       case "game-id-change": {
         update(this._currentGameId, message.currentGameId);
+        // A new board may be the kept one, played.
+        this.prepareNextDeal();
         break;
       }
       case "game-state-change":
@@ -224,6 +183,7 @@ export class Puzzle {
         break;
       case "params-change":
         update(this._params, message.params);
+        this.prepareNextDeal();
         break;
       case "status-bar-change":
         update(this._statusbarText, message.statusBarText);
@@ -495,9 +455,19 @@ export class Puzzle {
     this.setHelpMessage("");
     this._activeHintExplanation.set("");
     this._generatingGame.set(true);
+    const pendingTimer = setTimeout(
+      () => this.setHelpMessage(DEAL_PENDING_MESSAGE),
+      DEAL_PENDING_MS,
+    );
     try {
-      return await this.workerPuzzle.newGame(this.boardArea ?? undefined);
+      const area = this.boardArea ?? undefined;
+      const kept = this.dealAhead
+        ? await this.dealAhead.take(await this.workerPuzzle.dealParams(area))
+        : null;
+      return await this.workerPuzzle.newGame(area, kept);
     } finally {
+      clearTimeout(pendingTimer);
+      if (this._helpMessage.get() === DEAL_PENDING_MESSAGE) this.setHelpMessage("");
       this._generatingGame.set(false);
     }
   }
@@ -508,7 +478,23 @@ export class Puzzle {
   private boardArea: Size | null = null;
 
   public setBoardArea(area: Size): void {
+    const same = this.boardArea?.w === area.w && this.boardArea.h === area.h;
     this.boardArea = area;
+    // A screen turned round may turn the next deal with it.
+    if (!same) this.prepareNextDeal();
+  }
+
+  /**
+   * See that the board the next New game deals is kept or on its way
+   * (`DealAhead`). Called wherever what that deal is for may have changed. It
+   * waits for the board area, since until the view has measured it the page
+   * does not know which way round the next board will be dealt.
+   */
+  private prepareNextDeal(): void {
+    const { dealAhead, boardArea } = this;
+    if (dealAhead === null || boardArea === null) return;
+    void (async () =>
+      dealAhead.prepare(await this.workerPuzzle.dealParams(boardArea)))();
   }
 
   public async newGameFromId(id: string): Promise<string | null> {

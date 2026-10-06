@@ -138,6 +138,20 @@ export interface NotifyStatusBarChange {
 export type PuzzleId = string;
 export type EncodedParams = string;
 
+/**
+ * A board a generator dealt that nobody has played: what `Game.newDesc`
+ * returned, with the params it was dealt at in their full encoding. The app
+ * deals one ahead of each New game and hands it back through
+ * `EngineCore.newGame`. It is what the generator wrote and nothing has read
+ * it since, so it is good only for the build that dealt it.
+ */
+export interface DealtBoard {
+  params: EncodedParams;
+  desc: string;
+  /** The generator's `aux`, or `null` where it returns none. */
+  aux: string | null;
+}
+
 /** The Custom dialog's preview of the params its values describe, or why they
  * are refused. A result rather than a string, because the answer on success is
  * itself a string and the refusal would otherwise have to hide inside it. */

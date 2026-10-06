@@ -25,6 +25,8 @@ import type {
   ConfigDescription,
   ConfigValues,
   CustomParamsEncoding,
+  DealtBoard,
+  EncodedParams,
   FontInfo,
   KeyLabel,
   Point,
@@ -74,8 +76,11 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     return this.engine.getStaticProperties();
   }
 
-  newGame(fitTo?: Size): string | null {
-    return this.engine.newGame(fitTo);
+  newGame(fitTo?: Size, kept?: DealtBoard | null): string | null {
+    return this.engine.newGame(fitTo, kept);
+  }
+  dealParams(fitTo?: Size): EncodedParams {
+    return this.engine.dealParams(fitTo);
   }
   newGameFromId(id: string): string | null {
     return this.engine.newGameFromId(id);

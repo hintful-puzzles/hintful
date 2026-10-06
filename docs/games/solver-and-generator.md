@@ -743,13 +743,20 @@ times in five, and a test that ran it once passed. The count that found it was
 power of whatever keeps it true: `e^(-tries/n)` is the chance of missing a
 tier found once in `n`.
 
-**Rare is not absent, and it gets a different sentence.** The spec has a rare
-tier dealt by retrying, which is right where the retry is quick: Unequal's
-rarest cell takes 119 tries and a hundredth of a second. Where the retry is
-ten seconds a board with a tail past twenty, the owner's call (2026-10-05) is
-to refuse it and say so: *"Tricky 6x6 puzzles that show their identity are too
-rare to deal."* Say it with `tooRareToDeal`, and never `noSuchTier` for one of these: the
-board exists.
+**Rare is not absent: deal it where a bound can be sized to it, and give it a
+different sentence where not.** The spec has a rare tier dealt by retrying.
+Where the retry is quick that needs nothing: Unequal's rarest cell takes 119
+tries and a hundredth of a second. Where it is ten seconds a board, deal it
+too, and size the bound to the measured rate: the app deals the next board
+ahead in a second worker and keeps it
+([`deal-ahead.ts`](../../src/puzzle/deal-ahead.ts)), so the wait is the first
+board's only. Group's `retryBudget` is the shape: five times the mean tries at
+each of its two such cells, which a deal runs out once in 150, where the house
+bound would run out four times in five. Keep such a type off the preset menu.
+Refuse only where a count found no board to size a bound to, or the first wait
+is longer than a player would sit through once, and then with
+`tooRareToDeal`: *"Hard 6x6 puzzles that show their identity are too rare to
+deal."* Never `noSuchTier` for one of these: the board may exist.
 
 **Name the line in the units the tier follows, which are often not the
 size's.** Bridges' tiers follow the number of islands, so a 10x10 at 5% and a
