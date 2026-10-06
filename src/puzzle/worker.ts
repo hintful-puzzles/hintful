@@ -26,7 +26,16 @@ interface WorkerPuzzleFactory {
   /** Deal one board at `params` and play nothing: what a second instance of
    * this worker is started for (`deal-ahead.ts`), since a generator owns its
    * thread until it returns. See `dealBoard`. */
-  deal(puzzleId: string, params: EncodedParams): Promise<DealtBoard | null>;
+  deal(puzzleId: string, params: EncodedParams): Promise<TimedDeal>;
+}
+
+/** What a deal found, and how long the generator took over it. */
+export interface TimedDeal {
+  /** `null` where the generator found no board. */
+  board: DealtBoard | null;
+  /** Timed in the worker, so that starting the worker is no part of it: on a
+   * slow device that would make every type's deal look slow. */
+  ms: number;
 }
 const workerPuzzleFactory: WorkerPuzzleFactory = {
   async create(puzzleId: string): Promise<PuzzleEngineSurface> {
@@ -36,12 +45,14 @@ const workerPuzzleFactory: WorkerPuzzleFactory = {
     }
     return proxy(new TsWorkerPuzzle(puzzleId, engine));
   },
-  async deal(puzzleId: string, params: EncodedParams): Promise<DealtBoard | null> {
+  async deal(puzzleId: string, params: EncodedParams): Promise<TimedDeal> {
     const game = getTsGame(puzzleId);
     if (!game) {
       throw new Error(`No game is registered for puzzleId "${puzzleId}"`);
     }
-    return dealBoard(game, params);
+    const started = performance.now();
+    const board = dealBoard(game, params);
+    return { board, ms: performance.now() - started };
   },
 };
 

@@ -8387,9 +8387,20 @@ as before.
 A deal is slow once a board, and some types take seconds to find one. Kept
 ahead, the wait is paid by the first board of a type and by no later one.
 
-The board SHALL be dealt ahead for every type, whatever its deal costs: the
-cost is one board more than the player plays for each type they open, and the
-app has no measure of a type's deal until it has dealt there.
+A board SHALL be dealt ahead for every type, whatever its deal costs, and one
+board SHALL be kept for a type whose deals are quick: a New game that finds
+none kept there waits milliseconds.
+
+A type SHALL keep three boards once a deal ahead of it was slow, so that a
+board passed over, by New game pressed again straight away, is followed by one
+already found. A deal is slow where its generator ran for as long as a New
+game may go unanswered before the app says it is looking for a board; the time
+SHALL be the generator's alone, and SHALL NOT count starting the thread it ran
+on. One slow deal makes the type slow for the rest of the visit, and for a
+later visit while a board that was slow to find is still kept: a search for a
+rare board ends at the first one it meets, so one quick deal says little about
+the next. The boards SHALL be dealt one at a time, and of several kept for a
+type New game SHALL play the one kept longest.
 
 A kept board SHALL be keyed by its puzzle and by the full encoding of the
 params it was dealt at, which are the params the deal would use after turning
@@ -8412,6 +8423,20 @@ of it is asked for.
   the board dealt ahead has been found
 - **THEN** New game plays the kept board without running the generator
 - **AND** another board of that type is dealt ahead
+
+#### Scenario: Boards of a slow type passed over are each followed by a kept one
+
+- **WHEN** three boards are kept for a type whose deal ahead was slow, and New
+  game is pressed three times running
+- **THEN** each press plays a kept board, the one kept longest first, and none
+  runs the generator
+- **AND** boards of that type are dealt ahead until three are kept again
+
+#### Scenario: A quick type keeps one board
+
+- **WHEN** a type's deal ahead took less than the time that makes a deal slow
+- **THEN** one board is kept for it and no further board is dealt ahead until
+  that one is played
 
 #### Scenario: A kept board is for the board as it will be dealt
 

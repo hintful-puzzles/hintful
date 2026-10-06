@@ -1,6 +1,7 @@
 # keep-more-boards-ready-for-a-slow-type
 
-**Status: scaffolded, not started (2026-10-06).** A follow-up from
+**Status: built and verified (2026-10-06); `design.md` holds what was
+decided.** A follow-up from
 `keep-a-board-ready-for-the-next-deal`, raised with the owner the day it
 landed: they asked whether keeping more than one board makes sense.
 
@@ -24,7 +25,7 @@ buy nothing.
 
 ## What Changes
 
-To be designed. The shape discussed:
+The shape discussed, which is the shape built:
 
 - **One board for every type, as now, and up to three where the deal is
   slow.** The deal ahead can time itself, which is the measure of slow that
@@ -47,6 +48,8 @@ What is known, so the design does not have to find it again:
   build that dealt it. More boards kept is more thrown away then.
 
 ## Open questions
+
+Each is answered in `design.md`.
 
 - The threshold for slow, and whether three is the number: both are guesses.
 - Whether the depth should follow what the player does (a type they skip

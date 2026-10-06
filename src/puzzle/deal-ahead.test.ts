@@ -15,9 +15,14 @@ import type {
   PuzzleStaticAttributes,
 } from "../engine/types.ts";
 import { KeptBoards } from "../store/kept-boards.ts";
-import { DealAhead, type RunningDeal } from "./deal-ahead.ts";
+import {
+  DealAhead,
+  type RunningDeal,
+  SLOW_DEAL_MS,
+  SLOW_TYPE_BOARDS,
+} from "./deal-ahead.ts";
 import { DEAL_PENDING_MESSAGE, DEAL_PENDING_MS, Puzzle } from "./puzzle.ts";
-import type { RemoteWorkerPuzzle } from "./worker.ts";
+import type { RemoteWorkerPuzzle, TimedDeal } from "./worker.ts";
 import { TsWorkerPuzzle } from "./worker-adapter.ts";
 
 const UPRIGHT_PHONE = { w: 390, h: 640 };
@@ -29,9 +34,14 @@ const store = new KeptBoards("this-build");
 interface AskedDeal {
   params: string;
   stopped: boolean;
-  /** Let it end: with a board the game really deals, or with none. */
-  finish(found?: "a board" | "nothing"): DealtBoard | null;
+  /** Let it end: with a board the game really deals, or with none. `ms` is
+   * how long the worker says the generator took. */
+  finish(found?: "a board" | "nothing", ms?: number): DealtBoard | null;
 }
+
+/** How many boards the store holds for a type. */
+const kept = async (puzzleId: string, params: string) =>
+  (await store.dealTimes(puzzleId, params)).length;
 
 async function waitFor(predicate: () => boolean | Promise<boolean>): Promise<void> {
   const deadline = Date.now() + 2000;
@@ -54,19 +64,19 @@ function puzzleOf(id: string) {
   );
   const asked: AskedDeal[] = [];
   const startDeal = (_puzzleId: string, params: string): RunningDeal => {
-    let settle = (_board: DealtBoard | null) => {};
+    let settle = (_dealt: TimedDeal) => {};
     const deal: AskedDeal = {
       params,
       stopped: false,
-      finish(found = "a board") {
+      finish(found = "a board", ms = 0) {
         const board = found === "a board" ? dealBoard(game, params) : null;
-        settle(board);
+        settle({ board, ms });
         return board;
       },
     };
     asked.push(deal);
     return {
-      board: new Promise((resolve) => {
+      dealt: new Promise((resolve) => {
         settle = resolve;
       }),
       stop() {
@@ -115,7 +125,7 @@ describe("the next board, dealt ahead", () => {
     await waitFor(() => asked.length === 1);
     expect(asked[0].params).toBe("5x6dt");
     const board = asked[0].finish();
-    await waitFor(() => store.has("magnets", "5x6dt"));
+    await waitFor(async () => (await kept("magnets", "5x6dt")) === 1);
     expect(board).not.toBeNull();
   });
 
@@ -125,14 +135,68 @@ describe("the next board, dealt ahead", () => {
     puzzle.setBoardArea(UPRIGHT_PHONE);
     await puzzle.newGame();
     await waitFor(() => asked.length === 1);
-    const kept = asked[0].finish();
-    await waitFor(() => store.has("magnets", "5x6dt"));
+    const ahead = asked[0].finish();
+    await waitFor(async () => (await kept("magnets", "5x6dt")) === 1);
 
     expect(await puzzle.newGame()).toBeNull();
-    expect(gameId()).toBe(`5x6dt:${kept?.desc}`);
-    expect(await store.has("magnets", "5x6dt")).toBe(false);
+    expect(gameId()).toBe(`5x6dt:${ahead?.desc}`);
+    expect(await kept("magnets", "5x6dt")).toBe(0);
     await waitFor(() => asked.length === 2);
     expect(asked[1].params).toBe("5x6dt");
+  });
+
+  it("keeps one board of a type whose deal was quick", async () => {
+    const { puzzle, asked } = puzzleOf("magnets");
+    await puzzle.setParams("5x6dt");
+    puzzle.setBoardArea(UPRIGHT_PHONE);
+    await waitFor(() => asked.length === 1);
+    asked[0].finish("a board", SLOW_DEAL_MS - 1);
+    await waitFor(async () => (await kept("magnets", "5x6dt")) === 1);
+    await idle();
+    expect(asked.length).toBe(1);
+  });
+
+  it("keeps dealing a type whose deal was slow, and New game plays them in turn", async () => {
+    const { puzzle, asked, gameId } = puzzleOf("magnets");
+    await puzzle.setParams("5x6dt");
+    puzzle.setBoardArea(UPRIGHT_PHONE);
+    const ahead: (DealtBoard | null)[] = [];
+    // One slow deal makes the type slow, however quick the ones after it.
+    for (const ms of [SLOW_DEAL_MS, 0, 0]) {
+      await waitFor(() => asked.length === ahead.length + 1);
+      ahead.push(asked[ahead.length].finish("a board", ms));
+      await waitFor(async () => (await kept("magnets", "5x6dt")) === ahead.length);
+    }
+    expect(ahead.length).toBe(SLOW_TYPE_BOARDS);
+    await idle();
+    expect(asked.length).toBe(SLOW_TYPE_BOARDS);
+
+    // Three New games running, each a kept board and none a wait. The deal
+    // behind them is held, so none of the three is one dealt meanwhile.
+    for (const board of ahead) {
+      expect(await puzzle.newGame()).toBeNull();
+      expect(gameId()).toBe(`5x6dt:${board?.desc}`);
+    }
+    expect(await kept("magnets", "5x6dt")).toBe(0);
+    await waitFor(() => asked.length === SLOW_TYPE_BOARDS + 1);
+
+    // The slow board is played and gone, and the type is slow still.
+    asked[SLOW_TYPE_BOARDS].finish("a board", 0);
+    await waitFor(() => asked.length === SLOW_TYPE_BOARDS + 2);
+  });
+
+  it("knows on a later visit that a type is slow, from a board kept for it", async () => {
+    await store.keep("magnets", { params: "5x6dt", desc: "unplayed", aux: null }, 7000);
+    const { puzzle, asked } = puzzleOf("magnets");
+    await puzzle.setParams("5x6dt");
+    puzzle.setBoardArea(UPRIGHT_PHONE);
+    await waitFor(() => asked.length === 1);
+    asked[0].finish();
+    await waitFor(() => asked.length === 2);
+    asked[1].finish();
+    await waitFor(async () => (await kept("magnets", "5x6dt")) === SLOW_TYPE_BOARDS);
+    await idle();
+    expect(asked.length).toBe(2);
   });
 
   it("is not asked for twice while one is on its way or kept", async () => {
@@ -145,7 +209,7 @@ describe("the next board, dealt ahead", () => {
     expect(asked.length).toBe(1);
 
     asked[0].finish();
-    await waitFor(() => store.has("magnets", asked[0].params));
+    await waitFor(async () => (await kept("magnets", asked[0].params)) === 1);
     puzzle.setBoardArea({ w: 410, h: 640 });
     await idle();
     expect(asked.length).toBe(1);

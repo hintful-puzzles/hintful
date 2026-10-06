@@ -24,7 +24,7 @@ import type {
 import { keptBoards } from "../store/kept-boards.ts";
 import { nextAnimationFrame } from "../utils/timing.ts";
 import { puzzleDataMap } from "./catalog.ts";
-import { DealAhead } from "./deal-ahead.ts";
+import { DealAhead, SLOW_DEAL_MS } from "./deal-ahead.ts";
 import {
   type PuzzleWorker,
   spawnPuzzleWorker,
@@ -57,9 +57,11 @@ export const HINT_PENDING_MESSAGE = "Thinking…";
  * How long a New game may go unanswered before the app says what it is doing.
  * Most types deal in well under this, and a kept board (`DealAhead`) is played
  * at once, so the words are seen where a type's boards are rare and none is
- * kept yet: the first deal of it, or a second pressed straight after.
+ * kept: the first deal of it, or a run of them pressed faster than boards are
+ * found. A deal this long is also what makes a type slow, which has more
+ * boards kept for it.
  */
-export const DEAL_PENDING_MS = 1000;
+export const DEAL_PENDING_MS = SLOW_DEAL_MS;
 
 export const DEAL_PENDING_MESSAGE = "Looking for a board…";
 
