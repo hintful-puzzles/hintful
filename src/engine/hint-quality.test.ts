@@ -76,6 +76,13 @@ const NARRATION_LIMIT = 120;
 /** The hard ceiling: what a ledgered sentence is held to instead. */
 const MAX_NARRATION_CHARS = 300;
 
+/** Why Boats' placing steps run long; two ledger entries share it. */
+const BOATS_RINGS_THE_WATER =
+  "A step that places a boat segment also rings the water boats never " +
+  "touch, by the owner's choice to show that rule on the board rather than " +
+  "spend a step restating it; a bound step names every mark it draws, so " +
+  "the sentence carries one clause for it.";
+
 /**
  * The override: the rungs whose sentences are allowed past
  * {@link NARRATION_LIMIT}, an entry per reason they need the room. An entry
@@ -134,14 +141,19 @@ const LONG_NARRATIONS: {
     //
     // Group is the near-miss in the other direction, and is listed on the
     // measurement rather than on the inference: it reaches this sentence at
-    // **12x12 Hard only** (44 times in 2,007 steps over 12 seeds), and at no
-    // other point of its 7 presets × 5 tiers — 6x6 and 8x8 are zero at every
-    // tier, and 12x12 is zero at every tier but Hard. 12x12 Hard is not a
-    // shipped preset; it is reachable through the Custom dialog, and it is why
-    // `lintCases` walks the last preset at the hardest teachable tier. Delete
-    // that rule and this listing reads as dead.
+    // **Hard only** (measured 2026-10-06 over 12 deals a cell: 26 times at
+    // 12x12 Hard and 9 at 8x8 Hard, and zero at 8x8, 10x10 and 12x12 Normal
+    // and Tricky, at 10x10 Hard, and at 12x12 Tricky with the identity
+    // hidden). Neither Hard board is a shipped preset: 8x8 Hard is refused as
+    // too rare to deal, and 12x12 Hard is reachable through the Custom dialog.
+    // So the board is pinned. `lintCases`' last-preset rule used to reach it,
+    // until the preset list was regrouped and its last entry became an 8x8.
     games: ["group", "keen", "salad", "solo", "towers", "unequal"],
     rungs: ["forcing"],
+    spokenOn: {
+      group:
+        "12dx:1_2_3_4_5_6_7_8_9_10_11_12_2k3a7g9a4f9a3b5k6b2c1c9_7k8h6b9k10_5b9g11k12f5d",
+    },
     why:
       "The Latin chain Tactic (`latin-hint.ts`). ts-engine requires a narrated " +
       "chain to name both ends, cite its links by position and say when the " +
@@ -149,7 +161,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["solo"],
-    rungs: ["cageMinMax"],
+    rungs: ["cageMinMax", "cageSums"],
     why:
       "Killer's region rule under a cage-sum strike is two premises: what the " +
       "row, column or block leaves its open cells, which the player needs to " +
@@ -185,12 +197,22 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["boats"],
-    rungs: ["centerForced", "givenClue", "lineForced", "onlyRunsLeft", "refuted"],
-    why:
-      "A step that places a boat segment also rings the water boats never " +
-      "touch, by the owner's choice to show that rule on the board rather than " +
-      "spend a step restating it; a bound step names every mark it draws, so " +
-      "the sentence carries one clause for it.",
+    rungs: ["centerForced", "givenClue", "lineForced", "refuted"],
+    why: BOATS_RINGS_THE_WATER,
+  },
+  {
+    // An entry of its own because a pin excuses every rung of its entry from
+    // the walk, and the board speaks only this one. Measured 2026-10-06 over 6
+    // deals a preset, the sentence ran over the limit on 3 of them at 10x10
+    // Normal and 2 at 10x10 Tricky, and on none at 10x10 Hard or below 10x10:
+    // live on shipped boards, and missed by the one seed those presets walk.
+    games: ["boats"],
+    rungs: ["onlyRunsLeft"],
+    spokenOn: {
+      boats:
+        "10x10f4dn,4,3,2,1:3,2,0,2,1,5,1,2,2,2,1,5,1,4,3,2,0,3,0,1,mWgWmBlCxWWoWSaWbW",
+    },
+    why: BOATS_RINGS_THE_WATER,
   },
   {
     games: ["palisade"],
