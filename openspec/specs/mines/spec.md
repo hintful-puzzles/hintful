@@ -27,10 +27,14 @@ require `n ≥ 1`, `n ≤ w·h − 9`, and `w > 2 && h > 2` for a board about to
 The game SHALL provide `solve`, `textFormat` and `statusbarText`. It SHALL implement
 `finishesByDeduction` as its hint's plan, played from the first click, opening every safe
 square. A board not laid out yet SHALL pass: it will be laid out to finish from
-whichever square is opened first. A layout that names no first square SHALL NOT
-pass: it was made to finish from one square it does not say, and opening any other
-is a guess. That is the description a save keeps beside its public one, which
-names the square, and it SHALL NOT load as a game ID.
+whichever square is opened first.
+
+A description that gives a layout and no first square SHALL read as a board not
+laid out yet. It is what a save written before the layout moved into the first
+move kept as its private description, and the layout SHALL be the one such a
+save's replayed first open takes. A first square the player opens on that board
+SHALL lay out afresh, since the layout was made to finish from one square it
+does not name.
 
 #### Scenario: Params round-trip
 
@@ -45,31 +49,15 @@ names the square, and it SHALL NOT load as a game ID.
 #### Scenario: A layout with no first square is typed as a game ID
 
 - **WHEN** a game ID gives a mine layout and no first square (`9x9n10:m…`)
-- **THEN** it is refused as a board that needs trial and error
-- **AND** a save that carries the same layout as its private description, with
-  the public one beside it, still restores
+- **THEN** it opens a board not laid out yet, and the first square opened
+  lays one out to finish from there
 
-### Requirement: The first click is never a mine
+#### Scenario: A save written before the layout moved into the first move
 
-The mine layout SHALL NOT exist until the player's first click, and SHALL be generated
-around that click so that the clicked square and its eight neighbors are all free of mines.
-The game SHALL then supersede its description (`Game.supersededDesc`) so that the shareable
-game ID, a restart and a save all name the board actually being played.
-
-The layout SHALL be generated **at most once per game**, and SHALL survive undo: undoing past
-the first click and clicking a different square SHALL use the layout already generated, not a
-fresh one. A player SHALL NOT be able to obtain a new board by undoing.
-
-#### Scenario: The first click generates the board
-
-- **WHEN** the player makes their first click on a board whose description names no layout
-- **THEN** a layout is generated in which neither the clicked square nor any of its
-  neighbors holds a mine, and the game's description is superseded with the real board
-
-#### Scenario: Undo does not reroll the board
-
-- **WHEN** the player dies, undoes back past their first click, and clicks a different square
-- **THEN** the mines are exactly where they already were — the board is not regenerated
+- **WHEN** a save carries a layout alone as its private description, and a move
+  log whose first open brings no layout
+- **THEN** it restores to the board it was saved on
+- **AND** saved again from any position of its history, it restores again
 
 ### Requirement: Generated boards are solvable without guessing
 
@@ -192,3 +180,49 @@ SHALL refuse with the collection's deduction-exhausted words.
 
 - **WHEN** a hint is asked for after the player opened a mine
 - **THEN** the hint refuses, telling the player to undo that move
+
+### Requirement: The first click is never a mine, and undoing it un-lays the board
+
+The mine layout SHALL NOT exist until the player's first click, and SHALL be generated
+around that click so that the clicked square and its eight neighbors are all free of mines.
+The game SHALL then answer `Game.supersededDesc` with the board laid out and its
+first square, so that the shareable game ID, a restart and a save all name the
+board actually being played.
+
+The layout SHALL belong to the position the first click made. Undoing the first
+click SHALL return to the board not laid out yet, with the game ID it started
+from, and the square opened next SHALL lay a board out around itself from the
+same seed: the same board for the same square every time. A player can
+therefore choose among the boards one seed gives; nothing in the app counts or
+rewards a board, and the alternative left a player who undid the first click on
+a board made to be finished from a square they were no longer standing on.
+
+The move that opens the first square SHALL carry the layout it laid out, and
+replaying it SHALL take that layout and generate nothing, so a save restores
+its board whatever the generator has since become. An open that brings no
+layout SHALL be refused on a board not laid out yet, a save written before this
+aside. A first move whose layout holds a mine in its square or beside it SHALL
+be refused.
+
+#### Scenario: The first click generates the board
+
+- **WHEN** the player makes their first click on a board whose description names no layout
+- **THEN** a layout is generated in which neither the clicked square nor any of its
+  neighbors holds a mine, and the game's description is superseded with the real board
+
+#### Scenario: Undoing the first click un-lays the board
+
+- **WHEN** the player undoes their first click and opens a different square
+- **THEN** a board is laid out around that square, with no mine in it or beside
+  it, that finishes by deduction from there
+- **AND** its game ID names that square, and a save of it restores
+
+#### Scenario: The same square lays out the same board
+
+- **WHEN** the player undoes their first click and opens the same square again
+- **THEN** the board is the one that square laid out before
+
+#### Scenario: A save with the first click undone
+
+- **WHEN** the player undoes their first click and the game is saved and restored
+- **THEN** the board is not laid out, and Redo returns the board the click made
