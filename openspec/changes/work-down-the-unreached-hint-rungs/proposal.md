@@ -1,7 +1,11 @@
 # work-down-the-unreached-hint-rungs
 
 **Status: scaffolded, not started (2026-10-05).** A follow-up from
-`name-the-rung-a-hint-step-speaks`.
+`name-the-rung-a-hint-step-speaks`. The owner kept it whole on 2026-10-07, as
+a correctness and consistency gap: an excused rung's sentence, marks and move
+are checked on no real board, and a rung a game cannot speak is a list that
+says more than the game does. A board hunt ends in a pinned board or in the
+finding that the rung never fires, and then the rung goes.
 
 ## Why
 
@@ -29,7 +33,10 @@ then excusing the list, not a shortfall of the scan.
   list only because `LATIN_RUNGS` holds them and `PlanRung<Reason>` types them
   in. That is a question for the engine: whether a game on the populate
   reading alone should be able to say so and have its list and its step type
-  lose those ids. Check who else is in Salad's position before building it.
+  lose those ids. Check who else is in Salad's position, and then **ask the
+  owner before building it** (2026-10-07): it is new engine work, and
+  `docs/work-management.md` § "The backlog is being drained" makes it theirs
+  to place. Finish the rest of this change first.
 - Bricks `localBreak`: argued unreachable from `validateThrees`,
   `validateGravity`, `validateCounts` and the symmetric `BRICKS_STEPS`. An
   argument from reading, not a proof. If it holds, the rung and

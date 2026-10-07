@@ -27,10 +27,12 @@ this: `let-a-ruleset-say-what-it-offers` declined those, with the reason.
   deciding fields, `offeredOf` leaves of a field what all of them offer, and
   the form disables on it. A deciding field there is a `choices` field read by
   index; a checkbox would index as 0 and 1, which nothing does yet.
-- **Which field gives way is not decided.** A ruleset is plainly the one that
-  decides. Hidden identity and Easy exclude each other, and either could be the
-  one disabled. Unticking the box with Easy chosen would move the tier to
-  Normal in front of the player, which is the same thing a ruleset does.
+- **Which field gives way: the tier, unless building it shows otherwise.**
+  Hidden identity and Easy exclude each other, and either could be the one
+  disabled. A modifier is a rule, as a ruleset is, and a ruleset is plainly
+  the one that decides: unticking the box with Easy chosen moves the tier to
+  Normal in front of the player, grayed as a ruleset's is. Start there, and
+  look at it in the app before keeping it.
 - **The two differ on `full`.** `onlyError` holds a deal and not a written
   board. Bridges' refusal is the same; Group's holds a written board too, and
   whether it needs to has not been read.

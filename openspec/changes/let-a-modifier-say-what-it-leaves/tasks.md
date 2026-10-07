@@ -1,7 +1,7 @@
 ## 1. Decide
 
-- [ ] 1.1 Which field gives way when a modifier and a tier exclude each
-      other, and whether that is one answer for every modifier.
+- [ ] 1.1 Confirm in the app that the tier gives way to the modifier, as it
+      does to a ruleset, and that it is one answer for both games.
 - [ ] 1.2 Whether Group's refusal needs to hold a written board, read at the
       commit that wrote it.
 
