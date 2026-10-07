@@ -4,15 +4,14 @@
  * heading and the help build puts this list there
  * (`vite-plugins/parameters.ts`).
  *
- * What a field is called, what range it takes, what a ruleset offers of it and
- * what the difficulty names mean are the items' own facts, so the page cannot
- * disagree with the dialog
- * beside it. What a field *means* is its `doc`, which the game writes.
+ * What a field is called, what range it takes, what another setting leaves of
+ * it and what the difficulty names mean are the items' own facts, so the page
+ * cannot disagree with the dialog beside it. What a field *means* is its `doc`, which the game writes.
  */
 
 import type { ParamBounds, ParamConfigItem } from "./game.ts";
+import { onlySentences } from "./only.ts";
 import { choiceName } from "./param-label.ts";
-import { onlySentences } from "./ruleset.ts";
 
 export const PARAMETERS_PLACEHOLDER = "{{parameters}}";
 
@@ -24,8 +23,8 @@ interface Entry {
   names: string[];
   doc: string;
   bounds: (ParamBounds | null)[];
-  /** What the rulesets that narrow these fields offer of them, a sentence
-   * each (`Ruleset.only`). */
+  /** What the settings that narrow these fields leave of them, a sentence
+   * each (`only.ts`). */
   only: string[];
 }
 

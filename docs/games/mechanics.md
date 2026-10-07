@@ -331,6 +331,13 @@ words, so the word a player reads in the Type menu is the word the help
 explains. The rule is HTML where it needs markup, since it is read in both
 places. A setting that only tunes the generator or the look is neither.
 
+**A modifier that takes a tier away says so with the same `only`** (Group's
+hidden identity has no Easy, Bridges at one bridge a line no Tricky): a
+checkbox's applies while its rule does, and a choice's is keyed by the
+choice's index. The tier gives way to the modifier, as it does to a ruleset,
+and the same three things are built. A field that decides others is narrowed
+by none, and the declaration throws if it is.
+
 **A choice's name is typed once, in `choices`.** A sentence in the game's code
 reads it from the array, and a help page writes `{{choice:<kw>:<index>}}`,
 which the help build expands (`expandChoices`) and refuses when it names no

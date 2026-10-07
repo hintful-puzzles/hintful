@@ -46,6 +46,7 @@ import {
   SEARCH_OUT_OF_REACH,
 } from "./hint-refusal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
+import { configNarrowing, onlyError } from "./only.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import {
@@ -59,7 +60,6 @@ import {
   RIGHT_RELEASE,
 } from "./pointer.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
-import { onlyError, rulesetNarrowing } from "./ruleset.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import type {
   ChangeNotification,
@@ -1442,8 +1442,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
             ? { type: "choices", name: item.name, choicenames: item.choices }
             : { type: "string", name: item.name };
     }
-    const narrowing = rulesetNarrowing(this.game.paramConfig ?? []);
-    return narrowing ? { items, narrowing: [narrowing] } : { items };
+    const narrowing = configNarrowing(this.game.paramConfig ?? []);
+    return narrowing.length > 0 ? { items, narrowing } : { items };
   }
 
   /** Current custom-params values read off the live params: a string for
@@ -1496,8 +1496,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   /**
    * Why the form's `values` cannot be played, or `null`: the `draft` they
-   * make, and before it the values as submitted against what the chosen
-   * ruleset offers. A game may hold two fields in one of its params (Ascent's
+   * make, and before it the values as submitted against what the deciding
+   * fields leave (`only.ts`). A game may hold two fields in one of its params (Ascent's
    * ruleset and grid type), where a pair it has no value for never reaches the
    * draft, so the draft alone would pass it.
    */

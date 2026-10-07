@@ -1,8 +1,9 @@
 /*
- * What a ruleset offers (`Ruleset.only`) is declared once, and the dialog, the
- * refusal and the help are built from it.
+ * What a ruleset offers (`Ruleset.only`) and what a modifier leaves
+ * (`modifierItem`'s `only`) are declared once, and the dialog, the refusal and
+ * the help are built from it.
  *
- * The first half reads a small config of its own. The second holds every game
+ * The first half reads small configs of its own. The second holds every game
  * that declares an `only` to the claim the declaration exists for: **the
  * Custom dialog cannot submit what the refusal would refuse**. Its population
  * is every game whose `getCustomParamsConfig` carries a narrowing, so a game
@@ -14,16 +15,12 @@ import { offeredOf, offeredValues } from "./config-narrowing.ts";
 import { difficultyItem, tierNames } from "./difficulty.ts";
 import type { Game, ParamConfigItem } from "./game.ts";
 import { Midend } from "./midend.ts";
+import { modifierItem } from "./modifier.ts";
+import { configNarrowing, onlyError, onlySentences } from "./only.ts";
 import { parametersMarkdown } from "./param-help.ts";
 import { paramsError } from "./params.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
-import {
-  onlyError,
-  onlySentences,
-  type Ruleset,
-  rulesetItem,
-  rulesetNarrowing,
-} from "./ruleset.ts";
+import { type Ruleset, rulesetItem } from "./ruleset.ts";
 import { leafPresets } from "./testing/presets.ts";
 import type { ConfigDescription, ConfigItem, ConfigValues } from "./types.ts";
 
@@ -115,7 +112,7 @@ describe("a declaration that names what the game does not have throws", () => {
   ])("%o", (only, why) => {
     const bad = configOf({ ...FANCY, only });
     expect(() => paramsError({ paramConfig: bad }, fancy, true)).toThrow(why);
-    expect(() => rulesetNarrowing(bad)).toThrow(why);
+    expect(() => configNarrowing(bad)).toThrow(why);
     expect(() => parametersMarkdown(bad)).toThrow(why);
   });
 });
@@ -137,7 +134,7 @@ describe("the help says what a ruleset offers of a field, in that field's entry"
 });
 
 describe("a form shows and submits a narrowed field at a value it is offered", () => {
-  const narrowing = rulesetNarrowing(config);
+  const narrowing = configNarrowing(config);
   const form: ConfigDescription = {
     items: Object.fromEntries(
       config.map((i): [string, ConfigItem] => [
@@ -147,15 +144,17 @@ describe("a form shows and submits a narrowed field at a value it is offered", (
           : { type: "boolean", name: i.name },
       ]),
     ),
-    narrowing: narrowing ? [narrowing] : [],
+    narrowing,
   };
 
   it("carries each ruleset's `only`, and nothing for a game that has none", () => {
-    expect(narrowing).toEqual({
-      by: "ruleset",
-      only: [{}, { difficulty: [1, 2], kind: [0], mirror: false }],
-    });
-    expect(rulesetNarrowing(configOf({ ...FANCY, only: undefined }))).toBeNull();
+    expect(narrowing).toEqual([
+      {
+        by: "ruleset",
+        only: [{}, { difficulty: [1, 2], kind: [0], mirror: false }],
+      },
+    ]);
+    expect(configNarrowing(configOf({ ...FANCY, only: undefined }))).toEqual([]);
   });
 
   it("offers a field whole until its ruleset is chosen", () => {
@@ -180,6 +179,135 @@ describe("a form shows and submits a narrowed field at a value it is offered", (
   });
 });
 
+interface M {
+  diff: number;
+  shown: boolean;
+  max: number;
+  mirror: boolean;
+}
+
+/** A checkbox whose rule applies when off, and a choice, each leaving out a
+ * tier: `shown` off has no Easy, and `max` at 1 has no Tricky. */
+function modifierConfig(
+  maxOnly: Record<number, Record<string, number[] | boolean>> = {
+    0: { difficulty: [0, 1] },
+  },
+): ParamConfigItem<M>[] {
+  return [
+    difficultyItem<M>(tierNames(3), "diff"),
+    modifierItem<M>({
+      kw: "shown",
+      name: "Show corners",
+      type: "boolean",
+      when: false,
+      words: "corners hidden",
+      slot: "tail",
+      rule: "the corners are yours to find.",
+      only: { difficulty: [1, 2] },
+      get: (p) => p.shown,
+      set: (p, v) => {
+        p.shown = v;
+      },
+    }),
+    modifierItem<M>({
+      kw: "max",
+      name: "Most lines",
+      type: "choices",
+      choices: ["1", "2"],
+      words: "most lines",
+      rule: "at most two lines join a pair.",
+      label: { slot: "tail", words: (p) => (p.max === 1 ? null : "one line") },
+      only: maxOnly,
+      get: (p) => p.max,
+      set: (p, v) => {
+        p.max = v;
+      },
+    }),
+    {
+      kw: "mirror",
+      name: "Mirrored clues",
+      type: "boolean",
+      doc: "Whether the clues mirror.",
+      label: { slot: "tail", words: (p) => (p.mirror ? "mirrored" : null) },
+      get: (p) => p.mirror,
+      set: (p, v) => {
+        p.mirror = v;
+      },
+    },
+  ];
+}
+
+describe("a modifier says what it leaves, as a ruleset says what it offers", () => {
+  const modifiers = modifierConfig();
+  const plain: M = { diff: 1, shown: true, max: 1, mirror: false };
+  const error = (change: Partial<M>, full = true) =>
+    paramsError({ paramConfig: modifiers }, { ...plain, ...change }, full);
+
+  it("refuses a deal the tier a modifier leaves out, naming the field and its value", () => {
+    expect(error({})).toBeNull();
+    expect(error({ diff: 0 })).toBeNull();
+    expect(error({ shown: false, diff: 0 })).toBe(
+      "Difficulty must be Normal or Tricky while Show corners is off.",
+    );
+    expect(error({ max: 0, diff: 2 })).toBe(
+      "Difficulty must be Easy or Normal while Most lines is 1.",
+    );
+    expect(error({ shown: false, diff: 0 }, false)).toBeNull();
+  });
+
+  it("carries a checkbox as a deciding field, off then on", () => {
+    expect(configNarrowing(modifiers)).toEqual([
+      { by: "shown", only: [{ difficulty: [1, 2] }, {}] },
+      { by: "max", only: [{ difficulty: [0, 1] }, {}] },
+    ]);
+  });
+
+  it("leaves of a field what both deciding fields do", () => {
+    const form: ConfigDescription = {
+      items: {
+        difficulty: { type: "choices", name: "Difficulty", choicenames: tierNames(3) },
+      },
+      narrowing: configNarrowing(modifiers),
+    };
+    const at = (shown: boolean, max: number) =>
+      offeredOf(form, { shown, max }, "difficulty");
+    expect(at(true, 1)).toBeNull();
+    expect(at(false, 1)).toEqual([1, 2]);
+    expect(at(true, 0)).toEqual([0, 1]);
+    expect(at(false, 0)).toEqual([1]);
+    expect(offeredValues(form, { shown: false, max: 0, difficulty: 2 })).toEqual({
+      shown: false,
+      max: 0,
+      difficulty: 1,
+    });
+  });
+
+  it("says it in the narrowed field's help entry", () => {
+    expect(onlySentences(modifiers, "difficulty")).toEqual([
+      "While Show corners is off, only Normal and Tricky are offered.",
+      "While Most lines is 1, only Easy and Normal are offered.",
+    ]);
+    expect(
+      onlySentences(modifierConfig({ 0: { difficulty: [1] } }), "difficulty"),
+    ).toContain("While Most lines is 1, only Normal is offered.");
+    expect(onlySentences(modifierConfig({ 1: { mirror: true } }), "mirror")).toEqual([
+      "While Most lines is 2, it is always on.",
+    ]);
+  });
+
+  it.each([
+    [{ 2: { difficulty: [0] } }, /choice 2 leaves, and has none/],
+    [{ 0: { max: [1] } }, /no other field/],
+    [{ 0: { shown: true } }, /narrows fields itself/],
+    [{ 0: { difficulty: [0] } }, /leave nothing of "difficulty" between them/],
+  ])("throws on a declaration no form could show: %o", (only, why) => {
+    expect(() => configNarrowing(modifierConfig(only))).toThrow(why);
+    expect(() =>
+      paramsError({ paramConfig: modifierConfig(only) }, plain, true),
+    ).toThrow(why);
+  });
+});
+
 type AnyGame = Game<unknown, unknown, unknown>;
 
 /** Every game whose dialog narrows a field. */
@@ -199,9 +327,11 @@ function assignments(axes: [string, (number | boolean)[]][]): ConfigValues[] {
   );
 }
 
-describe("the Custom dialog cannot submit what a ruleset's refusal would refuse", () => {
+describe("the Custom dialog cannot submit what an `only` refusal would refuse", () => {
   it("has a game to hold", () => {
-    expect(narrowing.map((n) => n.id)).toContain("ascent");
+    expect(narrowing.map((n) => n.id)).toEqual(
+      expect.arrayContaining(["ascent", "bridges", "group"]),
+    );
   });
 
   it.each(narrowing)("$id", ({ g, form }) => {
@@ -218,7 +348,7 @@ describe("the Custom dialog cannot submit what a ruleset's refusal would refuse"
       throw new Error(`${id} is not a field a form narrows`);
     });
 
-    /** Every sentence a ruleset's refusal says of this game. */
+    /** Every sentence an `only` refusal says of this game. */
     const refusals = new Set<string>();
     /** What the engine answered a form's submission with, where it refused. */
     const answers = new Set<string>();
@@ -248,7 +378,7 @@ describe("the Custom dialog cannot submit what a ruleset's refusal would refuse"
     expect(refusals.size).toBeGreaterThan(0);
     expect(submitted).toBeGreaterThan(0);
     // What the engine still refuses is the game's own to say, about a size or
-    // a tier: never a field at a value its ruleset lacks.
+    // a tier: never a field at a value another field does not leave of it.
     expect([...answers].filter((a) => refusals.has(a))).toEqual([]);
   });
 });

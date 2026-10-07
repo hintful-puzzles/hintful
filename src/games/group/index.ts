@@ -115,6 +115,7 @@ import {
   type GroupParams,
   type GroupState,
   type GroupUi,
+  HIDDEN_IDENTITY_TIERS,
   isChar,
   moveInSequence,
   newState,
@@ -780,7 +781,8 @@ export const groupGame: Game<
       words: "identity hidden",
       slot: "tail",
       rule: "you have to work out which letter is the identity.",
-      note: "When on, the identity is always <em>e</em>, and its row and column are filled in for you. Easy puzzles and 3×3 grids must show it.",
+      note: "When on, the identity is always <em>e</em>, and its row and column are filled in for you. 3×3 grids must show it.",
+      only: { difficulty: HIDDEN_IDENTITY_TIERS },
       get: (p) => p.id,
       set: (p, v) => {
         p.id = v;

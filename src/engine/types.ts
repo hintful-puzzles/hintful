@@ -167,15 +167,17 @@ export type ConfigItem =
 
 /**
  * A field whose value decides what other fields of the form offer, as a
- * game's ruleset does (`Ruleset.only`). A form shows a narrowed field at a
- * value it is offered, and submits that value (`config-narrowing.ts`).
+ * game's ruleset does and a rule modifier may (`only.ts`). A form shows a
+ * narrowed field at a value it is offered, and submits that value
+ * (`config-narrowing.ts`).
  */
 export interface ConfigNarrowing {
-  /** The deciding field's id: a `choices` field, which nothing narrows. */
+  /** The deciding field's id: a `choices` field or a checkbox, which nothing
+   * narrows. */
   by: string;
-  /** For each choice of `by`, in order, the fields it narrows by id: the
-   * choice indices it leaves of a `choices` field, or the one value of a
-   * checkbox. */
+  /** For each value of `by`, in order (a checkbox's are off, then on), the
+   * fields it narrows by id: the choice indices it leaves of a `choices`
+   * field, or the one value of a checkbox. */
   only: Record<string, number[] | boolean>[];
 }
 

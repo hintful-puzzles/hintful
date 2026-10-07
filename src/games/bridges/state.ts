@@ -107,9 +107,7 @@ export const paramConfig: ParamConfigItem<BridgesParams>[] = [
     doc: "Size of the grid in squares.",
     bounds: { min: 3 },
   }),
-  difficultyItem(DIFFICULTY_NAMES, "difficulty", {
-    doc: "Tricky needs lines that can carry at least two bridges.",
-  }),
+  difficultyItem(DIFFICULTY_NAMES, "difficulty"),
   modifierItem<BridgesParams>({
     kw: "allow-loops",
     name: "Allow loops",
@@ -130,6 +128,10 @@ export const paramConfig: ParamConfigItem<BridgesParams>[] = [
     choices: ["1", "2", "3", "4"],
     words: "max bridges",
     rule: "the most bridges that may join one pair of islands is 2, unless the board's name gives another number.",
+    // With one bridge a line no "at most" limit can exist, and sealing a group
+    // off is Normal's, so Tricky has almost nothing left that a Normal board
+    // could not need: measured, generation gave up on most seeds.
+    only: { 0: { difficulty: [0, 1] } },
     label: {
       slot: "tail",
       words: (p) =>
@@ -237,12 +239,6 @@ export function validateParams(p: BridgesParams, full: boolean): string | null {
       return "%age of island squares must be between 1% and 30%.";
     if (p.expansion < 0 || p.expansion > 100)
       return "Expansion factor must be between 0 and 100.";
-    // With one bridge per line no "at most" limit can exist, and sealing a
-    // group off is Normal's, so Tricky has almost nothing left that a Normal
-    // board could not need: measured, generation gave up on most seeds. A
-    // generation-only bound, so a board already dealt this way still opens.
-    if (p.maxb === 1 && p.difficulty >= 2)
-      return "Tricky needs lines that can carry at least two bridges.";
     return sparseRefusal(p);
   }
   return null;

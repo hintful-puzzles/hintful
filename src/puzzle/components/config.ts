@@ -252,6 +252,7 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
   private async updateCheckboxValue(event: CustomEvent) {
     const target = event.target as HTMLInputElement;
     this.changes[target.name] = target.checked; // doesn't force redraw
+    await this.showNarrowedBy(target.name);
     if (this.autosubmit) {
       await this.submit();
     }
@@ -260,15 +261,19 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
   private async updateSelectValue(event: CustomEvent) {
     const target = event.target as HTMLInputElement;
     this.changes[target.name] = Number.parseInt(target.value, 10); // doesn't force redraw
-    if (this.config?.narrowing?.some(({ by }) => by === target.name)) {
-      // What the other fields offer has changed, and with it what they show.
-      this.requestUpdate();
-      await this.updateComplete;
-      this.resetFormItemValues();
-    }
+    await this.showNarrowedBy(target.name);
     if (this.autosubmit) {
       await this.submit();
     }
+  }
+
+  /** After the field `name` changed: if it decides what other fields offer,
+   * show them at what they are offered now. */
+  private async showNarrowedBy(name: string) {
+    if (!this.config?.narrowing?.some(({ by }) => by === name)) return;
+    this.requestUpdate();
+    await this.updateComplete;
+    this.resetFormItemValues();
   }
 
   public get hasErrors(): boolean {

@@ -10,6 +10,7 @@
  */
 
 import type { ParamConfigItem, ParamLabel } from "./game.ts";
+import type { OnlyOf } from "./only.ts";
 
 /** What a modifier item carries beside its dialog field. */
 export interface Modifier {
@@ -22,6 +23,9 @@ export interface Modifier {
   /** For a checkbox, the value at which the rule applies. A choice bounds its
    * rule at every value and has none. */
   readonly when?: boolean;
+  /** What the field leaves of the other fields, by the value it has: a
+   * choice's index, or 0 and 1 for a checkbox off and on (`only.ts`). */
+  readonly only?: Readonly<Record<number, OnlyOf>>;
 }
 
 type Slot = ParamLabel<unknown>["slot"];
@@ -44,6 +48,10 @@ type CheckboxModifier<P> = ModifierCommon & {
   /** Where the words go in a params label, or `null` when another field's
    * words already say them. */
   slot: Slot | null;
+  /** The settings the rule does not take whole while it applies, by the
+   * field's `kw`, as a ruleset's `only` says them. The dialog, the refusal
+   * and the help are built from it (`only.ts`). */
+  only?: OnlyOf;
   get(p: P): boolean;
   set(p: P, value: boolean): void;
 };
@@ -53,6 +61,9 @@ type ChoiceModifier<P> = ModifierCommon & {
   type: "choices";
   choices: string[];
   label: ParamLabel<P>;
+  /** What a choice leaves of the other settings, by the choice's index and
+   * then the field's `kw`. */
+  only?: Readonly<Record<number, OnlyOf>>;
   get(p: P): number;
   set(p: P, value: number): void;
 };
@@ -74,7 +85,7 @@ export function modifierItem<P>(
       name,
       type: "choices",
       choices: spec.choices,
-      modifier,
+      modifier: spec.only ? { ...modifier, only: spec.only } : modifier,
       doc: `${capitalized(rule)}${note}`,
       label: spec.label,
       get: spec.get,
@@ -86,7 +97,11 @@ export function modifierItem<P>(
     kw,
     name,
     type: "boolean",
-    modifier: { ...modifier, when },
+    modifier: {
+      ...modifier,
+      when,
+      ...(spec.only ? { only: { [Number(when)]: spec.only } } : {}),
+    },
     doc: `When ${when ? "on" : "off"}, ${rule}${note}`,
     ...(slot === null
       ? {}

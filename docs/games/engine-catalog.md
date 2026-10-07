@@ -1126,10 +1126,17 @@ grid".
 than one puzzle (Seismic's Tectonic, Ascent's Edges): each ruleset a `name` and its
 `rule`. `rulesetField(game)` finds it, for the label, the menu's sections and
 the help; `rulesetsMarkdown` is the list a page's `{{rulesets}}` becomes. A
-ruleset's `only` is what it offers of the other fields, and its three readers
-are here: `onlyError` (the refusal, called by `paramsError` and by the midend
-on a dialog's values), `rulesetNarrowing` (the dialog's side, carried on
-`ConfigDescription.narrowing`) and `onlySentences` (the help).
+ruleset's `only` is what it offers of the other fields (`only.ts`).
+
+### `only.ts` — what one setting leaves of the others
+
+A ruleset's `only` and a `modifierItem`'s `only` are one declaration with
+three readers: `onlyError` (the refusal, called by `paramsError` for a deal
+and by the midend on a dialog's values), `configNarrowing` (the dialog's side,
+one entry per deciding field on `ConfigDescription.narrowing`) and
+`onlySentences` (the help). A declaration no form could show throws wherever
+it is read: a field that is not there or is the wrong kind, a deciding field
+narrowed by another, two deciding fields that leave nothing of a third.
 
 ### `config-narrowing.ts` — what a form offers of a narrowed field
 
@@ -1137,13 +1144,14 @@ on a dialog's values), `rulesetNarrowing` (the dialog's side, carried on
 field, and `offeredValues(description, values)` the values a form shows and
 submits. It reads the `ConfigDescription` alone, so the form on the page and a
 test in the engine work out one answer. Held for every declaring game by
-`ruleset-only.test.ts`.
+`only.test.ts`.
 
 ### `modifier.ts` — the settings that change one rule
 
 `modifierItem(spec)` is the `paramConfig` item of a setting that adds, removes
 or bounds a rule and combines with others (Net's wrapping, Solo's Killer): the
-value at which the rule applies, the words a title says then, and the rule.
+value at which the rule applies, the words a title says then, the rule, and
+with `only` what the rule leaves of the other fields (`only.ts`).
 It writes the field's help entry and label words; `modifiersOf(game)` and
 `modifiersMarkdown` are the list a page's `{{modifiers}}` becomes.
 

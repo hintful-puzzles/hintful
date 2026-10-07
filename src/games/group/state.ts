@@ -49,6 +49,13 @@ const DIFF_CHARS = "tnhxu";
 /** The per-level display title. */
 export const DIFF_NAMES = tierNames(5, { search: true });
 
+/** The tiers a board that hides its identity has. Such a board always has two
+ * entirely blank rows and columns, and no Latin-square deduction can tell them
+ * apart, so an Easy (Latin-only) puzzle can't hide its identity. */
+export const HIDDEN_IDENTITY_TIERS: readonly number[] = DIFF_NAMES.map(
+  (_, diff) => diff,
+).filter((diff) => diff !== DIFF_TRIVIAL);
+
 // --- element numbering / character mapping (E_TO_FRONT / E_FROM_FRONT) ------
 // In identity mode the elements read e,a,b,c,d,f,g,... (the identity pulled to
 // the front); otherwise a,b,c,d,e,... in order. The remap touches only elements
@@ -146,16 +153,10 @@ export function decodeParams(s: string): GroupParams {
 }
 
 export function validateParams(p: GroupParams, full: boolean): string | null {
-  if (!p.id && p.diff === DIFF_TRIVIAL) {
-    // Identityless puzzles always have two entirely-blank rows and columns, and
-    // no Latin-square deduction can distinguish them — so an Easy (Latin-only)
-    // puzzle can't hide its identity.
-    return `${DIFF_NAMES[DIFF_TRIVIAL]} puzzles must have an identity.`;
-  }
   if (!p.id && p.w === 3) {
     // 3x3 puzzles can never be harder than Easy (every 3x3 Latin square is
-    // already a valid group table, so group deductions rule nothing out), and —
-    // as above — Easy puzzles can't lack an identity.
+    // already a valid group table, so group deductions rule nothing out), and
+    // an Easy puzzle can't lack an identity (`HIDDEN_IDENTITY_TIERS`).
     return "3x3 puzzles must have an identity.";
   }
   if (full && sizeLacksTier(p)) {

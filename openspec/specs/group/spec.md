@@ -19,9 +19,12 @@ served by the TypeScript engine.
 
 Group SHALL accept a grid size (group order) between 3 and 26, a difficulty of
 Easy, Normal, Tricky, Hard or Unreasonable, and a "show identity" flag. It
-SHALL reject an identity-hidden Easy puzzle and an identity-hidden 3×3 puzzle,
-because such puzzles cannot be made: identity-hidden puzzles leave two rows and
-columns blank, and only a deduction above Easy can distinguish them.
+SHALL reject an identity-hidden 3×3 puzzle, and SHALL declare that hiding the
+identity leaves every tier but Easy (the modifier's `only`), because such
+puzzles cannot be made: identity-hidden puzzles leave two rows and columns
+blank, and only a deduction above Easy can distinguish them. The engine builds
+the refusal of an identity-hidden Easy deal from that declaration, and a board
+that arrives already written is not held to it, since nothing reads its tier.
 
 The element-numbering used for display and keyboard input SHALL depend on the
 "show identity" flag — with identity shown, the identity element is presented
@@ -37,9 +40,15 @@ SHALL NOT affect the grid description.
 
 #### Scenario: Impossible identity-hidden parameters are rejected
 
-- **WHEN** parameters request an identity-hidden Easy puzzle, or an
-  identity-hidden 3×3 puzzle
+- **WHEN** parameters about to deal a board request an identity-hidden Easy
+  puzzle, or an identity-hidden 3×3 puzzle
 - **THEN** validation rejects them with a reason
+
+#### Scenario: The Custom dialog hides the identity with Easy chosen
+
+- **WHEN** the player unticks "Show identity" while Easy is chosen
+- **THEN** Easy is disabled and the difficulty shows Normal, and OK deals a
+  board with no refusal
 
 ### Requirement: Group descriptions use the upstream run-length encoding
 

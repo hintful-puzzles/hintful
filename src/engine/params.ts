@@ -8,7 +8,7 @@
 
 import { parseLeadingInt } from "./decimal.ts";
 import type { ParamBounds, ParamConfigItem, ParamLabel } from "./game.ts";
-import { onlyError } from "./ruleset.ts";
+import { onlyError } from "./only.ts";
 
 /**
  * Parse an upstream `WxH`-or-square dimension prefix starting at
@@ -207,7 +207,7 @@ export const AREA_TOO_LARGE = "Width times height must not be unreasonably large
  *
  * It checks what the `paramConfig` items declare first: a numeric field inside
  * its `bounds`, a choice inside its list, and every field at a value the
- * chosen ruleset offers (`Ruleset.only`). Then the game's own
+ * chosen ruleset and modifiers leave of it (`only.ts`). Then the game's own
  * `validateParams`, for what else depends on more than one field. The messages here
  * name the field by the label the Custom dialog shows it with, so a refusal
  * always says which box to change.
@@ -229,8 +229,8 @@ export function paramsError<P>(
     const error = itemError(item, p, full);
     if (error !== null) return error;
   }
-  // What a ruleset offers is what it deals: a board that arrives already
-  // written is not held to it.
+  // What a ruleset or a modifier leaves is what it deals: a board that arrives
+  // already written is not held to it.
   const only = full ? onlyError(game.paramConfig ?? [], (item) => item.get(p)) : null;
   if (only !== null) return only;
   return game.validateParams?.(p, full) ?? null;
