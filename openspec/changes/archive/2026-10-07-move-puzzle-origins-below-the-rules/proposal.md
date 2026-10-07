@@ -1,6 +1,6 @@
 # move-puzzle-origins-below-the-rules
 
-**Status: scaffolded, not started (2026-10-05).** The owner asked for it on
+**Status: done (2026-10-07).** The owner asked for it on
 Salad's page: who invented a puzzle and what else it is called *"really isn't
 of interest to readers just looking to understand the game"*, and belongs in
 a footnote-like paragraph below. Salad's moved in
@@ -30,7 +30,8 @@ Jeff Widderich"; "The inventor of Tectonic is unknown"), as Salad did.
 
 ## What Changes
 
-To be designed; small.
+What was built is in "What was decided" at the end; the three points below
+are the scaffold's.
 
 - **One place and one heading** for a page's origins, after the controls and
   any section of the game's own and before the hints, as Salad's is now.
@@ -48,6 +49,23 @@ To be designed; small.
 ## Hints to pull in
 
 None.
+
+## What was decided
+
+- **The twelve were the whole list.** All 57 openings were read; no page
+  credits its puzzle in other words, and none does under a heading.
+- **Two headings, read off the game.** "Where the puzzle comes from", and
+  "Where the puzzles come from" for a game that declares rulesets. Salad's
+  plural reads wrongly on a page with one puzzle, where "the puzzles" would be
+  taken for the boards.
+- **A ruleset does not carry its origin.** Tried on Salad, a generated list
+  needs each credit recast as a "Name: …" line, which rewords it, and Ascent's
+  main credit is to the whole game and belongs to neither ruleset. What
+  generation would have bought, a renamed ruleset keeping its credit,
+  `{{choice:ruleset:<index>}}` already gives.
+- **A credit in the rules is told by its words**, because nothing else tells
+  one from a rule: a link does not, since Group's rules link to Wikipedia.
+  That makes the check a floor, and the test and the guide both say so.
 
 ## What would show it worked
 

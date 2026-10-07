@@ -4,10 +4,6 @@ Your objective is to place each number in the grid exactly once, so a path is fo
 
 {{rulesets}}
 
-This puzzle is invented by Gyora Benedek, and is known as *Hidato* (or the non-trademarked name *Hidoku*). {{choice:ruleset:1}} mode is an implementation of *1to25* invented by Jeff Widderich.
-
-More information: http://www.janko.at/Raetsel/Hidoku/index.htm
-
 ## Controls
 
 There are three ways to enter a number:
@@ -25,6 +21,12 @@ It's also possible to draw a path while the numbers inside the path are still un
 If a path has only a single number, the endpoints will display one or two smaller numbers, which represent the numbers which are valid for this cell.
 
 Where a cell has exactly two candidate numbers like that, right-clicking (on a touch screen, a long press) cycles through them instead of clearing — empty, then the lower number, then the higher, then empty again — so an either-or square can be tried both ways without typing.
+
+## Where the puzzles come from
+
+This puzzle is invented by Gyora Benedek, and is known as *Hidato* (or the non-trademarked name *Hidoku*). {{choice:ruleset:1}} mode is an implementation of *1to25* invented by Jeff Widderich.
+
+More information: http://www.janko.at/Raetsel/Hidoku/index.htm
 
 ## Hints
 

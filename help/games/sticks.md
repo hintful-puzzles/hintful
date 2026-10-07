@@ -13,15 +13,17 @@ horizontal line above it — does not connect to it, and can never come to.
 That is why a black cell can run out of usable sides long before its number is
 met.
 
-This puzzle type was invented by [Nikoli](https://www.nikoli.co.jp/), and is known as *Tatebo-Yokobo*.
-
-More information: https://www.janko.at/Raetsel/Tateboo-Yokoboo/index.htm
-
 ## Controls
 
 {{controls}}
 
 You can also drag horizontally or vertically across the squares to draw a line that way through each of them; a drag that starts along a line already there clears the lines it passes over instead. Hold Shift or Ctrl while moving the cursor to draw a line through the square it leaves and the square it enters (Shift across the way it moves, Ctrl along it), or both to clear them.
+
+## Where the puzzle comes from
+
+This puzzle type was invented by [Nikoli](https://www.nikoli.co.jp/), and is known as *Tatebo-Yokobo*.
+
+More information: https://www.janko.at/Raetsel/Tateboo-Yokoboo/index.htm
 
 ## Hints
 

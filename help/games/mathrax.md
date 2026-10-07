@@ -9,10 +9,6 @@ The following clues can appear:
 * An '=' indicates that diagonally adjacent digits are equal.
 * A number indicates the result of the given operation when applied to each pair of diagonally adjacent digits. (topleft * bottomright) = (topright * bottomleft)
 
-The inventor of Mathrax is unknown.
-
-More information: https://www.janko.at/Raetsel/Mathrax/index.htm
-
 ## Controls
 
 Mathrax uses the same control scheme as Solo.
@@ -24,6 +20,12 @@ Right-click a cell, then type a number to add a pencil mark. Pencil marks can be
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering numbers and entering pencil marks.
 
 Press the 'M' key to fill every empty cell with all possible pencil marks.
+
+## Where the puzzle comes from
+
+The inventor of Mathrax is unknown.
+
+More information: https://www.janko.at/Raetsel/Mathrax/index.htm
 
 ## Hints
 

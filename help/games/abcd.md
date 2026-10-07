@@ -9,10 +9,6 @@ One setting adds to the second rule, and a board's name in the Type menu says wh
 
 {{modifiers}}
 
-The inventor of this type is unknown. This puzzle is also known under the names *ABCD Puzzle*, *ABC-Kombi* or *ABCD-Rätsel*.
-
-More information: https://www.janko.at/Raetsel/Abc-Kombi/index.htm
-
 ## Controls
 
 ABCD uses the same control scheme as Solo, but with letters instead of numbers.
@@ -24,6 +20,12 @@ Right-click a cell, then type a letter to add a pencil mark. Pencil marks can be
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering letters and entering pencil marks.
 
 Press the 'M' key to fill every empty cell with all possible pencil marks.
+
+## Where the puzzle comes from
+
+The inventor of this type is unknown. This puzzle is also known under the names *ABCD Puzzle*, *ABC-Kombi* or *ABCD-Rätsel*.
+
+More information: https://www.janko.at/Raetsel/Abc-Kombi/index.htm
 
 ## Hints
 

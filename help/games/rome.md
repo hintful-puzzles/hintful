@@ -5,10 +5,6 @@ You're given a grid that has been divided into areas, containing arrows and one 
 1. Every outlined area contains different arrows.
 2. Following the arrows must lead to one of the circled goals.
 
-This type was invented by [Nikoli](https://www.nikoli.co.jp/), who name it *Roma*.
-
-More information: http://www.janko.at/Raetsel/Nikoli/Roma.htm
-
 ## Controls
 
 Click and hold a square, then drag in one of the four directions to place an arrow. Or tap a square to select it and press one of the four arrow buttons below the grid, which is the same thing without the drag; the Clear button empties the selected square.
@@ -18,6 +14,12 @@ Right-click and drag to place a pencil mark, or press the Marks button below the
 Squares whose arrows already lead to a goal are shaded, so you can see how much of the grid is settled. A second preference shades squares caught in a loop instead, which can never reach a goal; it is off by default. Both are in the game's preferences.
 
 The keyboard can also be used. Move the cursor with the arrow keys, and press Enter followed with an arrow key to place an arrow. Use Space to add pencil marks. A question mark shows in the square while it waits for the arrow key. Alternatively, use the arrows on the numpad to enter arrows directly.
+
+## Where the puzzle comes from
+
+This type was invented by [Nikoli](https://www.nikoli.co.jp/), who name it *Roma*.
+
+More information: http://www.janko.at/Raetsel/Nikoli/Roma.htm
 
 ## Hints
 

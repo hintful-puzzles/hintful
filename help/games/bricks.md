@@ -7,8 +7,6 @@ You're given a hexagonal grid with numbers in some of its cells. Your objective 
 3. A number indicates the amount of shaded cells around it.
 4. Cells with numbers cannot be shaded.
 
-This genre was invented by [Nikoli](https://www.nikoli.co.jp/) under the name *Tawamurenga*.
-
 ## Controls
 
 {{controls}}
@@ -16,6 +14,10 @@ This genre was invented by [Nikoli](https://www.nikoli.co.jp/) under the name *T
 Drag across several cells to give them all the color the first one took.
 
 You can also use the numpad (keys 1, 3, 7, 9) to move the cursor diagonally. Hold Ctrl while moving the cursor to shade the cells it leaves and enters, Shift to unshade them, or both to empty them.
+
+## Where the puzzle comes from
+
+This genre was invented by [Nikoli](https://www.nikoli.co.jp/) under the name *Tawamurenga*.
 
 ## Hints
 

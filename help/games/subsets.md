@@ -5,8 +5,6 @@ You are given a grid and a list of sets. Place every set into the grid exactly o
 1. A horseshoe symbol ⊃ points from a superset to a subset. In other words, the set on the open end must contain every letter in the set on the closed rounded end.
 2. All possible horseshoe symbols are given. This means that each set must contain a letter that doesn't appear in the adjacent set, if there is no symbol between them.
 
-This puzzle type was invented by Inaba Naoki under the name *サブセットリンク*, released as a [Java Applet](http://inabapuzzle.com/honkaku/subset.html) with a puzzle generator.
-
 ## Controls
 
 Every letter has a fixed position in each cell.
@@ -26,6 +24,10 @@ Some deductions are about whole sets rather than letters: "{A,C} can't go in thi
 With a keyboard, move the cursor down past the bottom row of the grid into the tally, keeping the cell you were on in focus. The arrow keys move between sets, Enter or Space rules one out, Backspace takes a rule-out back, and moving up from the tally's top row returns to the grid.
 
 Check & Save treats a set ruled out of the cell it belongs in as a mistake.
+
+## Where the puzzle comes from
+
+This puzzle type was invented by Inaba Naoki under the name *サブセットリンク*, released as a [Java Applet](http://inabapuzzle.com/honkaku/subset.html) with a puzzle generator.
 
 ## Hints
 

@@ -8,10 +8,6 @@ Some boat segments are given (corner pieces, centers, or single-length boats), a
 
 At the bottom of the puzzle is a list of every boat that must be placed in the grid. When a boat is found, it is automatically crossed off of this list. Make sure a boat is surrounded by water on all sides, to indicate that it cannot possibly grow any further.
 
-This puzzle is best known as *Battleships*.
-
-More information: https://www.janko.at/Raetsel/Battleships/index.htm
-
 ## Controls
 
 {{controls}}
@@ -19,6 +15,12 @@ More information: https://www.janko.at/Raetsel/Battleships/index.htm
 Unknown boat segments are represented by a small rectangle, and will automatically change into the correct shape when the surrounding cells are filled in.
 
 Drag along a row or column to fill every square it passes over the way the first one changed. Hold Ctrl while moving the cursor to place boat segments on the empty squares it passes over, Shift to place water, or both to empty them.
+
+## Where the puzzle comes from
+
+This puzzle is best known as *Battleships*.
+
+More information: https://www.janko.at/Raetsel/Battleships/index.htm
 
 ## Hints
 

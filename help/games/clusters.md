@@ -5,13 +5,15 @@ You're given a grid, with several dots inside colored squares. Your objective is
 1. Tiles which are adjacent to 1 other tile of the same color are denoted with a dot. All of these tiles are given.
 2. All other tiles must be adjacent to 2 or more tiles of the same color.
 
-This puzzle type was invented by Inaba Naoki under the name *クラスター*, or literally *Kurasuta*, which Google Translate names 'Cluster'. The original puzzles are available here: http://www.inabapuzzle.com/honkaku/kura.html
-
 ## Controls
 
 {{controls}}
 
 Drag from a square to paint every square you pass over the color the press gave the first one. Hold Shift while moving the cursor to paint the squares it passes over red, Ctrl to paint them blue, or both to clear them.
+
+## Where the puzzle comes from
+
+This puzzle type was invented by Inaba Naoki under the name *クラスター*, or literally *Kurasuta*, which Google Translate names 'Cluster'. The original puzzles are available here: http://www.inabapuzzle.com/honkaku/kura.html
 
 ## Hints
 

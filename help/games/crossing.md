@@ -2,10 +2,6 @@
 
 You're given a grid with several blocked squares, and a list of numbers. Your objective is to fill every empty square with a digit, so each number appears once in the grid when reading from left-to-right or from top-to-bottom.
 
-This is an implementation of *Nansuke*, which was invented by Nikoli. It's sometimes known as *Number Skeleton*.
-
-More information: https://www.nikoli.co.jp/en/puzzles/nansuke/
-
 ## Controls
 
 Crossing uses the same control scheme as Solo.
@@ -29,6 +25,12 @@ The number list is an input surface, not just a reference. Click a number to pic
 Across and down runs are drawn in two different colors, and each number in the list is written in the color of the run a click would send it to — so the list always tells you where the number is going. Numbers already written into the grid stay distinguishable from ones that simply don't fit the square you have selected.
 
 Both the auto-advance and the two clue-list aids — highlighting the runs through the selected cell, and coloring the list by where each number could go — can be switched off in the game's preferences.
+
+## Where the puzzle comes from
+
+This is an implementation of *Nansuke*, which was invented by Nikoli. It's sometimes known as *Number Skeleton*.
+
+More information: https://www.nikoli.co.jp/en/puzzles/nansuke/
 
 ## Hints
 

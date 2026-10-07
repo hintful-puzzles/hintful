@@ -4,10 +4,6 @@ You're given a grid that has been divided into areas. Fill each empty cell with 
 
 {{rulesets}}
 
-{{choice:ruleset:0}} mode is an implementation of *Hakyuu*, a puzzle invented by [Nikoli](https://www.nikoli.co.jp/). It's also known as *Ripple Effect*. More information: http://www.janko.at/Raetsel/Hakyuu/index.htm
-
-The inventor of {{choice:ruleset:1}} is unknown.
-
 ## Controls
 
 Seismic uses the same control scheme as Solo, but the interface automatically enforces the maximum number on each area, so it's not possible to enter numbers that are out of range.
@@ -19,6 +15,12 @@ Right-click a cell, then type a number to add a pencil mark. Pencil marks can be
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering numbers and entering pencil marks.
 
 Press the 'M' key to fill every empty cell with all possible pencil marks.
+
+## Where the puzzles come from
+
+{{choice:ruleset:0}} mode is an implementation of *Hakyuu*, a puzzle invented by [Nikoli](https://www.nikoli.co.jp/). It's also known as *Ripple Effect*. More information: http://www.janko.at/Raetsel/Hakyuu/index.htm
+
+The inventor of {{choice:ruleset:1}} is unknown.
 
 ## Hints
 

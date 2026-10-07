@@ -121,6 +121,55 @@ describe("every game's page has the one skeleton", () => {
     if (hinted.has(id)) expect(where("Hints")).toBe(have.length - 2);
   });
 
+  // Who invented a puzzle, what else it is called and where more of it is to
+  // be found is a credit worth keeping, and nothing a reader needs on the way
+  // from the rules to the controls. A page that has one gives it a section of
+  // its own, after the game's own sections and before Hints. A game with
+  // rulesets is several puzzles, and its heading says so.
+  const ORIGINS = /^Where the puzzles? comes? from$/;
+
+  function originsHeading(id: string): string {
+    const game = getTsGame(id);
+    if (!game) throw new Error(`${id} is not registered`);
+    return rulesetField(game) === null
+      ? "Where the puzzle comes from"
+      : "Where the puzzles come from";
+  }
+
+  // A credit is told from a rule by its WORDS, which is the only way a test
+  // can tell one: these are the words every credit on these pages used when
+  // they were moved (2026-10-07). It is a floor. A credit written in other
+  // words passes, so the count below holds the pattern to the sections it was
+  // read from.
+  const CREDIT = /\binvent|\bdesigner\b|\bknown (?:as|under)\b|\bimplementation of\b/i;
+  let credited = 0;
+
+  it.each(puzzleIds)("%s: its origins are in their own section", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const have = sections(page);
+    const heading = originsHeading(id);
+    const found = have.filter((h) => ORIGINS.test(h));
+    const body = sectionBody(page, heading);
+    if (CREDIT.test(body)) credited++;
+
+    if (found.length > 0) {
+      expect(found, `help/games/${id}.md`).toEqual([heading]);
+      expect(
+        have.indexOf(heading),
+        `"## ${heading}" comes after the game's own sections, before Hints`,
+      ).toBe(have.length - (hinted.has(id) ? 3 : 2));
+    }
+    const credit = CREDIT.exec(page.replace(body, ""));
+    expect(
+      credit?.[0],
+      `help/games/${id}.md credits its puzzle outside "## ${heading}"`,
+    ).toBeUndefined();
+  });
+
+  itOverWholeSweep("is not vacuous — the credit words find the credits", () => {
+    expect(credited).toBeGreaterThanOrEqual(10);
+  });
+
   // A bound game's list of marks is generated from its legend
   // (`vite-plugins/hint-marks.ts`), so its Hints section carries the
   // placeholder the build fills, and no other page does. The build refuses both

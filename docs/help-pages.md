@@ -25,9 +25,23 @@ the words: site-level pages at the top of `help/`, one page per game in
 ## A game's page
 
 One skeleton: the rules, unheaded; `## Controls`; any sections of the game's
-own; `## Hints` exactly when the game has a `hint()`; and
-`## <Name> parameters` last, naming every field the Custom dialog offers and
-every choice that is a word.
+own; `## Where the puzzle comes from` when the page credits its puzzle;
+`## Hints` exactly when the game has a `hint()`; and `## <Name> parameters`
+last, naming every field the Custom dialog offers and every choice that is a
+word.
+
+- **A puzzle's inventor, its other names and a link to more of it go under
+  "Where the puzzle comes from"**, never in the rules: a reader on the way to
+  the controls wants to know how to play. A game with rulesets is several
+  puzzles, so its heading is "Where the puzzles come from", and it names each
+  one by `{{choice:ruleset:<index>}}`. The words are a credit to the people
+  who designed the puzzle: move them, do not rewrite them.
+- **The check finds a credit left in the rules by its words**, which is a
+  floor: a credit phrased in none of them passes. Read the page.
+- **A ruleset does not carry its origin.** A generated list would need each
+  credit recast as a "Name: …" line, and a credit can belong to the whole game
+  (Ascent's does). The placeholder already keeps a renamed ruleset's credit
+  with it.
 
 - **The page names every mode the game's Type menu offers.** The pages
   adopted from upstream describe the headline rule only. An omission
