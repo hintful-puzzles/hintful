@@ -27,4 +27,12 @@ catalog, straight after Unruly.
 
 ## 4. Acceptance
 
-- [ ] 4.1 The owner looks at each changed game in both schemes.
+The owner's sequence, 2026-10-07:
+
+- [ ] 4.1 A subagent with no part in the work reviews screenshots of every
+      game in both schemes, and what it finds is addressed until it and the
+      implementing session are both satisfied.
+- [ ] 4.2 The owner reviews every game in both schemes.
+- [ ] 4.3 Once the owner is satisfied, the catalog thumbnails
+      (`src/assets/icons/`) are recaptured for every game whose look changed,
+      Unruly's among them so the set is of one kind.
