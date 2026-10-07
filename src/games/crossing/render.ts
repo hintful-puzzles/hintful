@@ -38,7 +38,6 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
-  GRID_DARK,
   givenSurface,
   highlightWash,
   INK,
@@ -46,6 +45,7 @@ import {
   PENCIL_BODY,
   pencilColor,
   surfaceGrid,
+  wallFill,
 } from "../../engine/color/palette.ts";
 import { crossingGhost } from "../../engine/color/palette-games.ts";
 import {
@@ -182,9 +182,7 @@ export function colors(background: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
-  // A wall is not a thing the player moves, so it has no bevel: the strong
-  // gray that is dark on a light board and light on a dark one.
-  out[COL_WALL] = GRID_DARK;
+  out[COL_WALL] = wallFill(background);
 
   // A muted blue-gray for pencil marks, the collection's convention (ABCD,
   // Towers): clearly subordinate to an entered digit without vanishing.
@@ -887,7 +885,7 @@ export function redraw(
       const i = y * w + x;
       let flags = 0;
       if (cursorShown && walls[i]) {
-        // Only arrow keys can put the cursor on a wall, and a wall is a raised
+        // Only arrow keys can put the cursor on a wall, and a wall is a flat
         // block with no background to wash — so there it is the corner brackets.
         if (highlightIsOn(ui, x, y)) flags |= DF_KEYCUR;
       } else if (cursorShown) {

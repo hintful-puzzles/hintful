@@ -139,7 +139,7 @@ export const say = {
   ): Sentence => {
     const { bad, move } = frame(to, m);
     const black = (cap: boolean) =>
-      clueRef(m, `${cap ? "The" : "the"} black ${reason.value}`);
+      clueRef(m, `${cap ? "The" : "the"} ${reason.value} block`);
     const lines = cellsRef(
       m,
       `its ${reason.value} line${reason.value === 1 ? "" : "s"}`,
@@ -161,11 +161,11 @@ export const say = {
 
   starved: (reason: R<"starved">, to: To, m: SticksMarks, later: boolean): Sentence => {
     const { bad, move } = frame(to, m);
-    const black = clueRef(m, `The black ${reason.value}`);
+    const black = clueRef(m, `The ${reason.value} block`);
     if (later)
       return continues(
         move,
-        phrase`a ${bad} line would close a side ${clueRef(m, `the black ${reason.value}`)} needs, like ${mark.the("outline", CELL, m.cells, ["one", "ones"])}`,
+        phrase`a ${bad} line would close a side ${clueRef(m, `the ${reason.value} block`)} needs, like ${mark.the("outline", CELL, m.cells, ["one", "ones"])}`,
       );
     return opens(
       reason.value === 1

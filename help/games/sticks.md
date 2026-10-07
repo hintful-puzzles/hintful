@@ -1,16 +1,16 @@
 # Sticks
 
-You are given a grid with several black cells. Fill every blank cell with a line, which connects two cell edges and goes horizontally or vertically through the center of the cell. The lines must follow these rules:
+You are given a grid with several blocks. Fill every blank cell with a line, which connects two cell edges and goes horizontally or vertically through the center of the cell. The lines must follow these rules:
 
 1. A number overlapping a line indicates the length of that line.
 2. A line can't overlap more than one number.
-3. Numbers in black cells indicate the amount of lines connected to the cell.
+3. Numbers in blocks indicate the amount of lines connected to the cell.
 
-A line is connected to a black cell when it *runs into* it: a horizontal line
+A line is connected to a block when it *runs into* it: a horizontal line
 in the cell to its left or right, or a vertical line in the cell above or
-below. A line lying alongside a black cell — a vertical line beside it, or a
+below. A line lying alongside a block — a vertical line beside it, or a
 horizontal line above it — does not connect to it, and can never come to.
-That is why a black cell can run out of usable sides long before its number is
+That is why a block can run out of usable sides long before its number is
 met.
 
 ## Controls
@@ -36,12 +36,12 @@ asks you to fix the highlighted mistakes first.
 
 Every step rules one direction out and so leaves the other. The hint
 names the square by its number when it has one ("this 2 must be
-vertical"), and a black cell's number as "the black 2". The reasons it
+vertical"), and a block's number as "the 2 block". The reasons it
 gives are the rules: a line that would grow too long for its number, one
 that would leave a number too little room to reach its length, one that
 would join two numbers into a single line, one that would run into a
-black cell that already has all its lines, and one that would close off a
-side a black cell still needs, which the hint calls an *open side*. When
+block that already has all its lines, and one that would close off a
+side a block still needs, which the hint calls an *open side*. When
 one number rules out several squares, the hint walks through them one at
 a time as a single step.
 

@@ -8,7 +8,7 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { HINT_ACTION, INK } from "../../engine/color/palette.ts";
+import { CURSOR, givenSurface, HINT_ACTION, INK } from "../../engine/color/palette.ts";
 import {
   drawRecessedBorder as drawBevel,
   drawRaisedTile,
@@ -38,6 +38,15 @@ export const paletteScheme: Partial<PaletteScheme> = {
   darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
 };
 const COL_HINT = 4;
+/** A tile's face: the lifted surface, so the object the player moves stands
+ * off the board in both schemes. */
+const COL_TILE = 5;
+/** A slide arrow's fill. The bevel's lowlight in a slot of its own, so the
+ * bevel's dark-scheme swap leaves it alone and the arrows are the gray
+ * Netslide's are in both schemes. */
+const COL_ARROW = 6;
+/** The arrow the keyboard cursor is on. */
+const COL_CURSOR = 7;
 
 // --- hint highlights --------------------------------------------------
 
@@ -97,7 +106,7 @@ export function newDrawState(state: SixteenState, tileSize: number): SixteenDraw
     started: false,
     w: state.w,
     h: state.h,
-    bgcolor: COL_BACKGROUND,
+    bgcolor: COL_TILE,
     tiles: new Int32Array(state.n).fill(-1),
     tileSize,
     curX: -1,
@@ -122,6 +131,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
   out[COL_HINT] = HINT_ACTION;
+  out[COL_TILE] = givenSurface(background);
+  out[COL_ARROW] = lowlight;
+  out[COL_CURSOR] = CURSOR;
   return out;
 }
 
@@ -140,7 +152,7 @@ export function redraw(
   const ts = ds.tileSize;
   const hw = raisedBevelWidth(ts);
 
-  let bgcolor = COL_BACKGROUND;
+  let bgcolor = COL_TILE;
   if (flashTime > 0) {
     const frame = Math.floor(flashTime / FLASH_FRAME);
     bgcolor = frame % 2 ? COL_LOWLIGHT : COL_HIGHLIGHT;
@@ -149,12 +161,12 @@ export function redraw(
   if (!ds.started) {
     drawRecessedBorder(dr, state, ts, hw);
     for (let i = 0; i < state.w; i++) {
-      drawArrow(dr, ts, coord(i, ts), coord(0, ts), 1, 0, COL_LOWLIGHT);
-      drawArrow(dr, ts, coord(i + 1, ts), coord(state.h, ts), -1, 0, COL_LOWLIGHT);
+      drawArrow(dr, ts, coord(i, ts), coord(0, ts), 1, 0, COL_ARROW);
+      drawArrow(dr, ts, coord(i + 1, ts), coord(state.h, ts), -1, 0, COL_ARROW);
     }
     for (let i = 0; i < state.h; i++) {
-      drawArrow(dr, ts, coord(state.w, ts), coord(i, ts), 0, 1, COL_LOWLIGHT);
-      drawArrow(dr, ts, coord(0, ts), coord(i + 1, ts), 0, -1, COL_LOWLIGHT);
+      drawArrow(dr, ts, coord(state.w, ts), coord(i, ts), 0, 1, COL_ARROW);
+      drawArrow(dr, ts, coord(0, ts), coord(i + 1, ts), 0, -1, COL_ARROW);
     }
     ds.started = true;
   }
@@ -228,7 +240,7 @@ export function redraw(
     // Erase old arrow highlight.
     if (ds.hintArrowX !== null && ds.hintArrowY !== null) {
       const isCur = ds.hintArrowX === curX && ds.hintArrowY === curY;
-      const fill = isCur ? COL_HIGHLIGHT : COL_LOWLIGHT;
+      const fill = isCur ? COL_CURSOR : COL_ARROW;
       drawArrowAt(dr, ts, state.w, state.h, ds.hintArrowX, ds.hintArrowY, fill);
     }
     // Draw new arrow highlight.
@@ -552,10 +564,10 @@ function drawArrowForCursor(
 ): void {
   if (curX === -1 && curY === -1) return;
   const fill = cur
-    ? COL_HIGHLIGHT
+    ? COL_CURSOR
     : curX === ds.hintArrowX && curY === ds.hintArrowY
       ? COL_HINT
-      : COL_LOWLIGHT;
+      : COL_ARROW;
   drawArrowAt(dr, ts, ds.w, ds.h, curX, curY, fill);
 }
 

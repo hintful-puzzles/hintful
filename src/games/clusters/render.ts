@@ -62,8 +62,8 @@ export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
 // Hint legend: the forced cell is ringed COL_HINT; the tile the refuted
 // coloring would break — the one element the narration calls "outlined" — gets a
-// double COL_HINT_DANGER ring (an outline, because the tile's own color *is*
-// part of the premise; doubled so it cannot be confused with the single red
+// COL_HINT_DANGER ring (an outline, because the tile's own color *is*
+// part of the premise; thin and orange so it cannot be confused with the red
 // live-error frame); a lookahead chain's what-if cells are outlined
 // COL_HINT_CELL with a small piece of the color each would be forced to.
 export const COL_HINT = 8;
@@ -120,7 +120,7 @@ const F_CUR = 1 << 9;
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
 // the diff key (docs/games/rendering.md § "Overlay sidecars").
 const HB_TARGET = 1; // the forced cell — COL_HINT mark
-const HB_DANGER = 1 << 1; // tile that would break — double COL_HINT_DANGER ring
+const HB_DANGER = 1 << 1; // tile that would break — COL_HINT_DANGER ring
 const HB_CHAIN_0 = 1 << 2; // what-if cell forced `F_COLOR_0` in the hypothetical
 const HB_CHAIN_1 = 1 << 3; // what-if cell forced `F_COLOR_1` in the hypothetical
 //
@@ -246,21 +246,20 @@ function drawTile(
     dr.drawRect({ x: px, y: py + ts - 1 - t, w: ts - 1, h: t }, COL_CURSOR);
   }
 
-  // The danger ring, last so nothing paints over it. Doubled — structure,
-  // not just hue, distinguishes it from the single red live-error frame.
+  // The danger ring, last so nothing paints over it. One thin ring at the
+  // cell's edge, beside the piece: doubled, it has to cross the piece, and two
+  // rings a pixel apart read as an orange fill. It is told from the red
+  // live-error frame by hue and by being half as thick.
   const rt = Math.max(2, Math.floor(ts / 12));
   if (hintBits & HB_DANGER) {
-    // A pixel apart, so both rings stay at the cell's edge, beside the piece.
-    for (const inset of [1, 2 + rt]) {
-      const side = ts - 1 - 2 * inset;
-      drawThickRectOutline(dr, px + inset, py + inset, side, side, rt, COL_HINT_DANGER);
-    }
+    const side = ts - 3;
+    drawThickRectOutline(dr, px + 1, py + 1, side, side, rt, COL_HINT_DANGER);
   }
 
   // The order this consequence falls in, drawn after the ring and inside it
   // when there is one: the break lands on the last forced cell often enough
   // that "ringed *and* numbered" is a common frame, and at the shared inset the
-  // doubled ring covered the digit outright.
+  // ring would cover the digit.
   if (hintOrder > 0) {
     drawHintOrdinal(
       dr,
@@ -268,7 +267,7 @@ function drawTile(
       ts - 1,
       hintOrder,
       COL_HINT_CELL,
-      hintBits & HB_DANGER ? 2 + 2 * rt : undefined,
+      hintBits & HB_DANGER ? 2 + rt : undefined,
     );
   }
 

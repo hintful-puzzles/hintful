@@ -326,7 +326,11 @@ function drawSquare(
     const c = lflags & DS_FLASH ? COL_FLASH : clue === STRAIGHT ? COL_WHITE : COL_BLACK;
     if (lflags & DS_ERROR_CLUE)
       dr.drawCircle({ x: cx, y: cy }, ((m.tile * 3) / 8) | 0, COL_ERROR, COL_ERROR);
-    dr.drawCircle({ x: cx, y: cy }, (m.tile / 4) | 0, c, COL_BLACK);
+    // A white pearl is parted from the loop by a black rim. A black pearl's
+    // rim is ink: nothing in the light scheme, and in the dark one the ring
+    // that lifts a black disc off a near-black square.
+    const rim = clue === STRAIGHT ? COL_BLACK : COL_LINE;
+    dr.drawCircle({ x: cx, y: cy }, (m.tile / 4) | 0, c, rim);
   }
 
   // Out at the corners of the square, clear of the pearl and the loop.

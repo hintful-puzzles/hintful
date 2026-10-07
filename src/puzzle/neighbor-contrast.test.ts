@@ -26,16 +26,20 @@ import {
 /** `kind:a:b` to what the pair is, per game. */
 const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   ascent: {
-    "area:2:13": "the board's own path where it meets an endpoint disc",
     "mark:13:2":
       "an endpoint disc's ring, which the disc itself carries in the dark scheme",
-    "mark:2:13": "a grid line inside a highlighted guide row or column",
+  },
+  fifteen: {
+    "mark:2:5":
+      "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
+    "area:3:6": "a tile's shadow edge beside the gap",
+    "mark:3:6": "a tile's shadow edge beside the gap",
   },
   filling: {
     "mark:1:3": "a grid line inside a completed region, which its border closes",
   },
   galaxies: {
-    "area:3:13": "a white dot's fill on an unclaimed cell; its ink outline carries it",
+    "mark:14:3": "a white dot's ink rim, white in the dark scheme; the dot carries it",
   },
   guess: {
     "mark:1:17": "the outline of a white peg, which is white",
@@ -43,8 +47,16 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   pearl: {
     "area:4:16": "a white pearl on the loop; its black outline carries it",
   },
+  sixteen: {
+    "mark:2:5":
+      "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
+  },
   slide: {
     "area:0:20": "a block's lowlight edge beside the floor; its face clears it",
+  },
+  twiddle: {
+    "mark:2:8":
+      "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
   },
   undead: {
     "area:0:8": "a vampire's body on the board; its ink outline carries it",

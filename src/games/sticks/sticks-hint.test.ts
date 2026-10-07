@@ -135,7 +135,7 @@ describe("sticks hint — narration", () => {
         const { reason } = firings[i];
         if (reason.kind === "overConnected" && reason.value === 0) {
           expect(s.rung).toBe("overConnected");
-          expect(s.explanation).toMatch(/[Tt]he black 0/);
+          expect(s.explanation).toMatch(/[Tt]he 0 block/);
           expect(s.explanation).not.toMatch(/as well|another/);
           seen++;
         }

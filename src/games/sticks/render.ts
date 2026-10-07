@@ -1,9 +1,9 @@
 /**
  * Sticks rendering: a per-tile diffed loop on the collection's quiet surface.
- * A white cell is the cell surface inside a thin grid line; a black cell is a
- * solid block over its whole tile, so a run of them is one block. On top go a
- * green center bar for a placed line, the clue number as text (white on black
- * cells, ink on white cells, red when its constraint is currently violated),
+ * An open cell is the cell surface inside a thin grid line; a block is the
+ * collection's wall over its whole tile, so a run of them is one mass. On top go a
+ * green center bar for a placed line, the clue number as text (white on a
+ * block, ink on an open cell, red when its constraint is currently violated),
  * and a purple frame under the keyboard cursor. The in-flight drag previews its accreted cells; on a fresh win the
  * lines blink off on alternate 0.1 s flash frames. `findMistakes` cells get
  * an inset red frame via an `OverlaySidecar` (docs/games/rendering.md § "Overlay sidecars" — the overlay is
@@ -15,14 +15,16 @@
  * meet the outer grid line.
  */
 
-import { BLACK, GREEN, PURPLE, WHITE } from "../../engine/color/colors.ts";
+import { GREEN, PURPLE, WHITE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   ERROR,
+  ERROR_TEXT,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
   surfaceGrid,
+  wallFill,
 } from "../../engine/color/palette.ts";
 import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -58,11 +60,12 @@ export const COL_CURSOR = 5;
 // Fork additions beyond upstream's COL_* enum: the explained hint.
 export const COL_HINT = 6; // the forced square's line, in the game's own bar shape
 export const COL_HINT_CELL = 7; // the deduction's evidence — an inset ring
-/** A black cell. A piece, not ink: the help, the hint and the Custom dialog all
- * call it black, so it stays black in the dark scheme. */
+/** A block: the collection's wall. */
 export const COL_BLOCK = 8;
 export const COL_CELL = 9; // the surface of a white cell
-export const COL_TEXT = 10; // a clue's number on a white cell
+export const COL_TEXT = 10; // a clue's number on an open cell
+/** A violated clue's digit on a block, on its badge. */
+export const COL_ERROR_TEXT = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -73,10 +76,12 @@ export function colors(defaultBackground: Color): Color[] {
   // A placed stick is a bar filling a fifth of its cell — a piece, not a glyph,
   // so the named green rather than the entry green a digit takes.
   out[COL_LINE] = GREEN;
-  // The digit on a black cell, pinned with the cell it sits on.
+  // The digit on a block, pinned: the wall is a dark enough gray in both
+  // schemes to carry white.
   out[COL_NUMBER] = WHITE;
-  out[COL_BLOCK] = BLACK;
+  out[COL_BLOCK] = wallFill(defaultBackground);
   out[COL_ERROR] = ERROR;
+  out[COL_ERROR_TEXT] = ERROR_TEXT;
   // Purple, because Sticks has spent the usual two: its lines are green and the
   // hint's forced square is blue. Upstream's cursor was that blue, which would
   // give one hue two roles in a square holding both.
@@ -150,12 +155,12 @@ function drawTile(
   const py = y * ts + b;
   const black = (tile & F_BLOCK) !== 0;
 
-  // A black cell takes its whole tile, the grid line on its right and bottom
+  // A block takes its whole tile, the grid line on its right and bottom
   // included: the block's own edge is the boundary there.
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, black ? COL_BLOCK : COL_GRID);
-  // Evidence is an inset **ring** on every square, black or white — one rule and
-  // one shape for one role. A fill on a black square hides the very blackness
-  // the argument is about; on a white one it is the wash itself that loses, since
+  // Evidence is an inset **ring** on every square, block or open — one rule and
+  // one shape for one role. A fill on a block hides the very block
+  // the argument is about; on an open one it is the wash itself that loses, since
   // a fill pale enough to leave the clue digit legible is too faint to read as a
   // mark (`hint-mark.ts`). A white evidence square is not empty either: it
   // carries the clue the deduction counts with, and often a line.
@@ -185,13 +190,27 @@ function drawTile(
       MARK_ALL,
       COL_HINT_CELL,
     );
+    // On a block the ring is close to the block's own gray in the light scheme,
+    // so a line in the digit's white parts the two.
+    if (black) {
+      const t = m + Math.max(2, Math.floor(ts / 10));
+      drawRectOutline(dr, px + t, py + t, ts - 1 - 2 * t, ts - 1 - 2 * t, COL_NUMBER);
+    }
   }
 
   if (clue !== -1) {
+    const center = {
+      x: Math.floor((x + 0.5) * ts) + b,
+      y: Math.floor((y + 0.5) * ts) + b,
+    };
+    // A violated clue on a block is a badge: the error color as a digit is as
+    // light as the block in the dark scheme, and is told from it by hue alone.
+    const badge = error && black;
+    if (badge) dr.drawCircle(center, Math.floor(ts * 0.38), COL_ERROR, COL_ERROR);
     dr.drawText(
-      { x: Math.floor((x + 0.5) * ts) + b, y: Math.floor((y + 0.5) * ts) + b },
+      center,
       glyphFont(Math.floor(ts * 0.7)),
-      error ? COL_ERROR : black ? COL_NUMBER : COL_TEXT,
+      badge ? COL_ERROR_TEXT : error ? COL_ERROR : black ? COL_NUMBER : COL_TEXT,
       String(clue),
     );
   }

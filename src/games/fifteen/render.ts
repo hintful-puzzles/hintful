@@ -7,7 +7,12 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { HINT_ACTION, INK } from "../../engine/color/palette.ts";
+import {
+  cellSurface,
+  givenSurface,
+  HINT_ACTION,
+  INK,
+} from "../../engine/color/palette.ts";
 import {
   drawRaisedTile,
   drawRecessedBorder,
@@ -37,6 +42,11 @@ export const paletteScheme: Partial<PaletteScheme> = {
   darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
 };
 const COL_HINT = 4;
+/** A tile's face: the lifted surface, so the object the player moves stands
+ * off the well it slides in, in both schemes. */
+const COL_TILE = 5;
+/** The well: the gap, and whatever a sliding tile uncovers. */
+const COL_WELL = 6;
 
 // --- coordinate helpers -----------------------------------------------
 
@@ -73,7 +83,7 @@ export interface FifteenDrawState {
 export function newDrawState(state: FifteenState, tileSize: number): FifteenDrawState {
   return {
     started: false,
-    bgcolor: COL_BACKGROUND,
+    bgcolor: COL_TILE,
     tiles: new Int32Array(state.n).fill(-1),
     tileSize,
     hintTile: null,
@@ -93,6 +103,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
   out[COL_HINT] = HINT_ACTION;
+  out[COL_TILE] = givenSurface(background);
+  out[COL_WELL] = cellSurface(background);
   return out;
 }
 
@@ -105,7 +117,7 @@ function drawTile(
   bgColor: number,
 ): void {
   if (tile === 0) {
-    dr.drawRect({ x, y, w: ts, h: ts }, bgColor);
+    dr.drawRect({ x, y, w: ts, h: ts }, COL_WELL);
   } else {
     drawRaisedTile(
       dr,
@@ -161,7 +173,7 @@ export function redraw(
   const { w, h, n } = state;
   const hw = raisedBevelWidth(ts);
 
-  let bgcolor = COL_BACKGROUND;
+  let bgcolor = COL_TILE;
   if (flashTime > 0) {
     const frame = Math.floor(flashTime / FLASH_FRAME);
     bgcolor = frame % 2 ? COL_LOWLIGHT : COL_HIGHLIGHT;

@@ -353,10 +353,10 @@ describe("Sixteen move execution", () => {
 // --- colors ----------------------------------------------------------
 
 describe("Sixteen colors", () => {
-  it("returns 5 colors from the game (including hint)", () => {
+  it("returns 8 colors from the game (the hint, the tile face and the arrows included)", () => {
     const bg: [number, number, number] = [0.9, 0.9, 0.9];
     const palette = sixteenGame.colors(bg);
-    expect(palette).toHaveLength(5);
+    expect(palette).toHaveLength(8);
   });
 });
 

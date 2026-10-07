@@ -261,13 +261,19 @@ export { correctRegionColor } from "./color-mkhighlight.ts";
  * clearly *subordinate* to a placed digit, but still legible at the quarter-size
  * a pencil mark is drawn at.
  *
- * Darkening two channels and leaving blue at full strength is upstream's answer
- * and a good one — it reads as "a note" by hue rather than by contrast alone, so
- * it survives being small. Note it is deliberately **not** a neutral gray: a gray
+ * Darkening two channels and leaving blue strong is upstream's answer and a
+ * good one — it reads as "a note" by hue rather than by contrast alone, so it
+ * survives being small. Note it is deliberately **not** a neutral gray: a gray
  * at this lightness competes with the grid lines it sits between.
+ *
+ * Deeper than upstream's half-and-full, which was tuned to sit on the board
+ * itself: a mark is drawn on {@link cellSurface} and on a selected cell
+ * ({@link highlightWash}), both darker than the board, and there it measured
+ * 2.6:1 and 1.9:1. This is 4.6:1 on a plain cell and 3.5:1 on a selected one,
+ * and still a blue no one takes for {@link INK}.
  */
 export function pencilColor(background: Color): Color {
-  return [0.5 * background[0], 0.5 * background[1], background[2]];
+  return [0.3 * background[0], 0.3 * background[1], 0.85 * background[2]];
 }
 
 /**
@@ -285,13 +291,24 @@ export function playerEntryColor(background: Color): Color {
 
 /** A gently emphasized cell — the "you are here" / "this line is selected" wash
  * that must stay a *background*, not become a foreground: `COL_HIGHLIGHT` in
- * Solo's family and Filling. */
+ * Solo's family and Filling.
+ *
+ * In the light scheme it is told from the cells round it **by hue**, a warm
+ * tone a little below {@link cellSurface}, because lightness alone has no room
+ * left: a gray far enough below the cell to be unmistakable lands on
+ * `correctRegionColor` (Filling paints a selected cell beside a finished
+ * region), and one clear of that swallows the player's own digit
+ * ({@link playerEntryColor} is 1.4:1 on it). Warm, because every glyph drawn on
+ * the cell is cool or neutral: ink, the green entry, the blue pencil mark. */
 export function highlightWash(background: Color): Color {
   // The dark value is authored so the cell sinks, as it does in the light
   // scheme. Derived, it rises to the lightness of `givenSurface`, and a
   // selected entry reads as a given. It sinks below `surfaceGrid` too, far
   // enough that the line beside a selected cell still shows.
-  return token(scale(background, 0.78), [0.01, 0.01, 0.01]);
+  return token(
+    [0.86 * background[0], 0.8 * background[1], 0.5 * background[2]],
+    [0.01, 0.01, 0.01],
+  );
 }
 
 /**
@@ -407,11 +424,20 @@ export function clueDoneColor(background: Color): Color {
 }
 
 /**
- * An impassable **wall** in a movement game — Inertia's and Sokoban's
- * `COL_WALL`: a flat fill, with no bevel, that stands well clear of the floor
- * (`cellSurface`) in both schemes. A wall a quarter of the way from the floor
- * toward its bevel could not be told from the floor on a phone in the dark
- * scheme (owner, 2026-10-03), and the floor has since moved to where that wall
- * was; the mid gray is a tone no surface holds.
+ * A **wall**: a cell that is structure and never the player's to work, such as
+ * Inertia's and Sokoban's walls, Crossing's blocked squares, and Light Up's
+ * and Sticks' blocks. A flat fill with no bevel, one role in every game that
+ * has one.
+ *
+ * Both values are authored, because no surface may hold its tone: darker than
+ * anything else on a light board, and in the dark scheme a mid gray above the
+ * lifted cell, which the settled surface must not be taken for. Not black
+ * there, where a black block reads as a cell that has sunk (a selected one),
+ * and not ink, which would make the walls the brightest thing on a dark
+ * board. A wall a quarter of the way from the floor toward its bevel could not
+ * be told from the floor on a phone (owner, 2026-10-03). A digit on a wall is
+ * the pinned `WHITE`.
  */
-export const WALL_FILL: Color = GRAY;
+export function wallFill(background: Color): Color {
+  return token(scale(background, 0.25), [0.4, 0.4, 0.4]);
+}

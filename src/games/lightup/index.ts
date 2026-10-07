@@ -485,13 +485,13 @@ export const lightupGame: Game<
     }),
     numberItem<LightupParams>(
       "percentage-of-black-squares",
-      "%age of black squares",
+      "%age of walls",
       "blackpc",
       {
-        doc: "Roughly what share of the grid is black squares, from 5 to 100. If no good puzzle turns up with that many, the generator adds more, 5% at a time, up to 90%, and then starts again.",
+        doc: "Roughly what share of the grid is walls, from 5 to 100. If no good puzzle turns up with that many, the generator adds more, 5% at a time, up to 90%, and then starts again.",
         label: {
           slot: "tail",
-          words: (p) => (p.blackpc === 20 ? null : `${p.blackpc}% black squares`),
+          words: (p) => (p.blackpc === 20 ? null : `${p.blackpc}% walls`),
         },
       },
     ),
@@ -500,7 +500,7 @@ export const lightupGame: Game<
       name: "Symmetry",
       type: "choices",
       choices: SYMMETRY_CHOICES,
-      doc: "How the black squares are arranged: <em>None</em>, <em>2-way mirror</em> (the bottom half reflects the top), <em>2-way rotational</em> (the same after a half turn), <em>4-way mirror</em> (reflected both left to right and top to bottom) or <em>4-way rotational</em> (the same after a quarter turn). 4-way rotational needs a square grid, and both 4-way settings need a grid at least 3 squares across in one direction. Only the black squares follow the symmetry; the numbers in them need not.",
+      doc: "How the walls are arranged: <em>None</em>, <em>2-way mirror</em> (the bottom half reflects the top), <em>2-way rotational</em> (the same after a half turn), <em>4-way mirror</em> (reflected both left to right and top to bottom) or <em>4-way rotational</em> (the same after a quarter turn). 4-way rotational needs a square grid, and both 4-way settings need a grid at least 3 squares across in one direction. Only the black squares follow the symmetry; the numbers in them need not.",
       label: {
         slot: "tail",
         // The presets' own: 4-way rotational on the small square board, 2-way
@@ -541,7 +541,7 @@ export const lightupGame: Game<
     roles: {
       ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a dot.',
       outline:
-        "what the step reasons from, told apart by the sentence's nouns and drawn three ways: “the outlined clue” has its number in the hint color; “the outlined dark square”, which still has to be lit, has a pink double ring; and the other squares the reason rests on, such as a clue's bulbs, are shaded when dark and have a green double ring when lit.",
+        "what the step reasons from, told apart by the sentence's nouns and drawn three ways: “the outlined clue” has a ring round its wall; “the outlined dark square”, which still has to be lit, has a pink double ring; and the other squares the reason rests on, such as a clue's bulbs, are shaded when dark and have a green double ring when lit.",
     },
   },
   hintKeepTrack,

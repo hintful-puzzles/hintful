@@ -19,8 +19,10 @@ import {
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
+  COL_HINT_CLUE,
   COL_HINT_DARKREF,
   COL_HINT_LITERF,
+  COL_LIGHT,
 } from "./render.ts";
 import type { LightupParams } from "./state.ts";
 
@@ -81,7 +83,7 @@ function hintFrame(kind: Parameters<typeof pinned>[0]) {
 }
 
 describe("Light Up hint render scenarios", () => {
-  it("opener frame: grouped ringed targets, recolored clue digit, board intact", () => {
+  it("opener frame: grouped ringed targets, ringed clue, board intact", () => {
     const { recording, h, size } = hintFrame("clueSaturated");
     expect(h.targets.length).toBeGreaterThan(1);
     expect(h.clue).toBeDefined();
@@ -89,12 +91,12 @@ describe("Light Up hint render scenarios", () => {
     // Every target is **ringed** COL_HINT (a mark, not the bulb the player must
     // place) — four thin rects each, and no solid one.
     expectRing(recording.ops, COL_HINT, h.targets.length);
-    // The driving clue's digit recolors COL_HINT (the clue↔move tie).
+    // The driving clue's wall is ringed, and no digit takes a hint color.
+    expectRing(recording.ops, COL_HINT_CLUE);
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(
-      true,
+      false,
     );
-    // Clue digits elsewhere still drawn; the grid frame is present.
-    expect(recording.ops.some((o) => o.op === "text" && o.color !== COL_HINT)).toBe(
+    expect(recording.ops.some((o) => o.op === "text" && o.color === COL_LIGHT)).toBe(
       true,
     );
     expect(recording.ops.some((o) => "color" in o && o.color === COL_GRID)).toBe(true);

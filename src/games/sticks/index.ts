@@ -546,7 +546,7 @@ export const sticksGame: Game<
     roles: {
       ring: "the square the step decides, as the line it asks you to place, drawn in the hint color and running the way it must go: across for horizontal, up and down for vertical.",
       outline:
-        "the cells the step reasons from: the cells a numbered line runs through or could still reach, or a black cell together with the lines already running into it or the cells beside it where one still could.",
+        "the cells the step reasons from: the cells a numbered line runs through or could still reach, or a block together with the lines already running into it or the cells beside it where one still could.",
     },
   },
   hintKeepTrack,

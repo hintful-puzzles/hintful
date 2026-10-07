@@ -29,7 +29,7 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { newAscentDesc } from "./generator.ts";
 import { ascentGame } from "./index.ts";
-import { COL_GRID, COL_HIGHLIGHT } from "./render.ts";
+import { COL_HIGHLIGHT, COL_PATH } from "./render.ts";
 import {
   ascentSolve,
   SolverScratch,
@@ -408,7 +408,7 @@ describe("ascent typed-number line preview", () => {
       const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
       const rec = new RecordingDrawing(ascentGame.colors([0.83, 0.83, 0.83]));
       ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, 0);
-      return rec.ops.filter((o) => o.op === "line" && o.color === COL_GRID).length;
+      return rec.ops.filter((o) => o.op === "line" && o.color === COL_PATH).length;
     };
 
     // The preview must add at least one line in the board's own path color.

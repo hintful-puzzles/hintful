@@ -2,7 +2,7 @@
 
 Place light bulbs in the grid so as to light up all the blank
 squares. A light illuminates its own square and all the squares in
-the same row or column unless blocked by walls (black squares).
+the same row or column unless blocked by walls.
 Lights may not illuminate each other. Each numbered square must be
 orthogonally adjacent to exactly the given number of lights.
 

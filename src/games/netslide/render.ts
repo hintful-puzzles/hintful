@@ -180,15 +180,31 @@ function rectCoords(
   dr.drawRect({ x, y, w: Math.abs(x2 - x1) + 1, h: Math.abs(y2 - y1) + 1 }, color);
 }
 
-/** A wire: a colored line cored inside a black outline, drawn as four offset
- * black lines with the colored one over the top (upstream
- * `draw_filled_line`). */
-function filledLine(dr: GameDrawing, p1: Point, p2: Point, color: number): void {
-  dr.drawLine({ x: p1.x - 1, y: p1.y }, { x: p2.x - 1, y: p2.y }, COL_WIRE, 1);
-  dr.drawLine({ x: p1.x + 1, y: p1.y }, { x: p2.x + 1, y: p2.y }, COL_WIRE, 1);
-  dr.drawLine({ x: p1.x, y: p1.y - 1 }, { x: p2.x, y: p2.y - 1 }, COL_WIRE, 1);
-  dr.drawLine({ x: p1.x, y: p1.y + 1 }, { x: p2.x, y: p2.y + 1 }, COL_WIRE, 1);
-  dr.drawLine(p1, p2, color, 1);
+/** The unit every wire width is a multiple of. Net's, so the two games draw
+ * one network at one weight: a wire is `2 * lineThick - 1` either side of its
+ * center line, and its powered core `lineThick - 1`. */
+const lineThick = (ts: number): number => Math.floor((ts + 47) / 48);
+
+/** One arm of a wire, from the tile's center to `end`, `half` wide either side
+ * of the line between them and square at the center, so two arms meet in a
+ * clean corner. */
+function wireArm(
+  dr: GameDrawing,
+  center: Point,
+  end: Point,
+  half: number,
+  color: number,
+): void {
+  const across = end.x === center.x ? { x: half, y: 0 } : { x: 0, y: half };
+  const from = {
+    x: Math.min(center.x, end.x) - (across.x || (end.x < center.x ? 0 : half)),
+    y: Math.min(center.y, end.y) - (across.y || (end.y < center.y ? 0 : half)),
+  };
+  const to = {
+    x: Math.max(center.x, end.x) + (across.x || (end.x > center.x ? 0 : half)),
+    y: Math.max(center.y, end.y) + (across.y || (end.y > center.y ? 0 : half)),
+  };
+  rectCoords(dr, from.x, from.y, to.x, to.y, color);
 }
 
 /**
@@ -242,8 +258,21 @@ function drawTile(
     x: bx + Math.trunc(cx + arm * dirX(dir)),
     y: by + Math.trunc(cy + arm * dirY(dir)),
   }));
-  for (const end of ends) filledLine(dr, center, end, COL_WIRE);
-  for (const end of ends) dr.drawLine(center, end, wireColor, 1);
+  const lt = lineThick(ts);
+  const outer = 2 * lt - 1;
+  const core = lt - 1;
+  // The ink runs one pixel past the arm, onto the border this tile shares with
+  // its neighbor: the same pixels the neighbor paints there for a wire that
+  // reaches it, so whichever of the two repaints last leaves the border alike.
+  for (const end of ends) {
+    const onBorder = {
+      x: end.x + Math.sign(end.x - center.x),
+      y: end.y + Math.sign(end.y - center.y),
+    };
+    wireArm(dr, center, onBorder, outer, COL_WIRE);
+  }
+  if (wireColor !== COL_WIRE)
+    for (const end of ends) wireArm(dr, center, end, core, wireColor);
 
   // The box in the middle: black at the centerpiece, and at a dead end either
   // cyan (powered) or blue (not). Nothing at all on a through-tile.
@@ -259,11 +288,17 @@ function drawTile(
       [-1, -1],
       [-1, +1],
     ];
-    const points: Point[] = corners.map(([sx, sy]) => ({
-      x: bx + Math.trunc(cx + ts * 0.24 * sx),
-      y: by + Math.trunc(cy + ts * 0.24 * sy),
-    }));
-    dr.drawPolygon(points, boxColor, COL_WIRE);
+    // An outline pass as heavy as a wire's, then the fill.
+    for (const [boxr, color] of [
+      [ts * 0.24 + lt - 1, COL_WIRE],
+      [ts * 0.24, boxColor],
+    ]) {
+      const points: Point[] = corners.map(([sx, sy]) => ({
+        x: bx + Math.trunc(cx + boxr * sx),
+        y: by + Math.trunc(cy + boxr * sy),
+      }));
+      dr.drawPolygon(points, color, COL_WIRE);
+    }
   }
 
   // Where a neighbor's wire reaches into our border: draw the join across the
@@ -281,17 +316,27 @@ function drawTile(
     const py = by + (dy > 0 ? ts + TILE_BORDER - 1 : dy < 0 ? 0 : Math.trunc(cy));
     const lx = dx * (TILE_BORDER - 1);
     const ly = dy * (TILE_BORDER - 1);
+    // The wire's two half-widths, across the direction it runs in.
     const vx = dy ? 1 : 0;
     const vy = dx ? 1 : 0;
+    const wx = vx * outer;
+    const wy = vy * outer;
 
     if (xshift === 0 && yshift === 0 && tile & dir) {
       // Fully connected: draw right across the tile border. Our own ACTIVE
       // state is the right color to use — if we are connected to the other
       // tile then the two ACTIVE states agree.
-      rectCoords(dr, px - vx, py - vy, px + lx + vx, py + ly + vy, COL_WIRE);
-      rectCoords(dr, px, py, px + lx, py + ly, tile & ACTIVE ? COL_POWERED : COL_WIRE);
+      rectCoords(dr, px - wx, py - wy, px + lx + wx, py + ly + wy, COL_WIRE);
+      rectCoords(
+        dr,
+        px - vx * core,
+        py - vy * core,
+        px + lx + vx * core,
+        py + ly + vy * core,
+        tile & ACTIVE ? COL_POWERED : COL_WIRE,
+      );
     } else {
-      rectCoords(dr, px, py, px, py, COL_WIRE);
+      rectCoords(dr, px - wx, py - wy, px + wx, py + wy, COL_WIRE);
     }
   }
 

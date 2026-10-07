@@ -9,7 +9,9 @@ appearance the center dots and the lines between them SHALL be that same
 color. A black pearl and a white pearl SHALL be drawn in a black and a white
 that are the same in both schemes. The loop the player draws SHALL be drawn in
 ink, which inverts with the scheme, so it stands off the surface in both; a
-white pearl on it is parted from it by the pearl's black outline. The keyboard
+white pearl on it is parted from it by the pearl's black outline. A black
+pearl SHALL carry a rim in ink, so it stands off the surface in the dark
+scheme. The keyboard
 cursor SHALL be brackets at the corners of its square, which the loop never
 crosses, and SHALL NOT fill the square.
 
@@ -18,6 +20,11 @@ crosses, and SHALL NOT fill the square.
 - **WHEN** a loop segment is drawn in the dark scheme
 - **THEN** it is drawn in ink, the scheme's maximum contrast against the
   surface, and a black pearl on it stays black
+
+#### Scenario: A black pearl reads on a fresh dark board
+
+- **WHEN** a black pearl with no line through it is drawn in the dark scheme
+- **THEN** its fill is black and its rim is ink, a light ring round it
 
 #### Scenario: The cursor leaves the square's surface alone
 

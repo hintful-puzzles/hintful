@@ -12,6 +12,16 @@ The completion flash SHALL lift a tile to the collection's lifted surface on
 its lit beats, the surface Net lifts its tiles to, a step that reads in both
 schemes. The slide arrows SHALL stay on the board, outlined in ink.
 
+A wire and an endpoint SHALL be drawn at the weight Net draws them at the same
+tile size: the wire's width and the endpoint's outline scale with the tile, and
+a powered wire is a core of the powered color inside the ink.
+
+#### Scenario: The network is as heavy as Net's
+
+- **WHEN** a board is drawn at a tile size at which Net's wires are several
+  pixels wide
+- **THEN** Netslide's wires are that wide, and are not hairlines
+
 #### Scenario: A tile's face is the cell surface
 
 - **WHEN** a board is drawn at rest

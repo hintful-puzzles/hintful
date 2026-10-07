@@ -198,7 +198,7 @@ export function validateParams(p: LightupParams, full: boolean): string | null {
   if (p.w * p.h > 0x7fffffff) return AREA_TOO_LARGE;
   if (full) {
     if (p.blackpc < 5 || p.blackpc > 100)
-      return "Percentage of black squares must be between 5% and 100%.";
+      return "Percentage of walls must be between 5% and 100%.";
     if (p.w !== p.h && p.symm === SYMM_ROT4)
       return "4-fold symmetry is only available with square grids.";
     if ((p.symm === SYMM_ROT4 || p.symm === SYMM_REF4) && p.w < 3 && p.h < 3)

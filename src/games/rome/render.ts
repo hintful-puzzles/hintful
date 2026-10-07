@@ -293,7 +293,9 @@ export function drawArrow(
   data: number,
   ink: number,
 ): void {
-  const thick = size <= 8 ? 1 : 2;
+  // A pencil arrow is 0.12 of a tile, and a hairline one is hard to see on
+  // the cell surface: two pixels from a 34-pixel tile up.
+  const thick = size <= 4 ? 1 : 2;
   const sd = size * SIDE_SIZE;
   const color =
     ink !== -1

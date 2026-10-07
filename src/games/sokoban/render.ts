@@ -18,7 +18,7 @@ import {
   HINT_EVIDENCE,
   INK,
   surfaceGrid,
-  WALL_FILL,
+  wallFill,
 } from "../../engine/color/palette.ts";
 import { sokobanPit } from "../../engine/color/palette-games.ts";
 import { drawMoveArrow, glyphFont } from "../../engine/draw.ts";
@@ -89,9 +89,7 @@ export function colors(defaultBackground: Color): Color[] {
   // which is one brown in both schemes.
   out[COL_TEXT] = WHITE;
   out[COL_GRID] = surfaceGrid(defaultBackground);
-  // A flat block a clear step off the floor in both schemes: darker than it
-  // on a light board, lighter on a dark one.
-  out[COL_WALL] = WALL_FILL;
+  out[COL_WALL] = wallFill(defaultBackground);
   out[COL_FLASH] = FLASH;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;

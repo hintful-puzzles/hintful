@@ -8,11 +8,12 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLUE, YELLOW_WASH } from "../../engine/color/colors.ts";
+import { YELLOW_WASH } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
   ERROR,
+  GRID_DARK,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -67,10 +68,17 @@ import {
 export const COL_MIDLIGHT = 0; // the board, and the margin an edge number sits in
 export const COL_LOWLIGHT = 1;
 export const COL_HIGHLIGHT = 2;
-/** Ink: a wall, and a number the player placed. */
+/** Ink: a wall, and a number the puzzle fixed. */
 export const COL_BORDER = 3;
+/** The player's own: the number they placed and the line they drew. */
 export const COL_LINE = 4;
-export const COL_IMMUTABLE = 5;
+/**
+ * The path the board draws for itself between consecutive numbers. It runs
+ * through plain cells and lifted ones, and has to carry across both: the
+ * strong gray, dark on a light board and light on a dark one, where the grid
+ * line's tone sank into a plain dark cell.
+ */
+export const COL_PATH = 5;
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
 export const COL_ARROW = 8;
@@ -83,13 +91,8 @@ export const COL_HINT_CELL = 10;
 export const COL_CELL = 11;
 /** The lifted surface under a number the puzzle fixed. */
 export const COL_GIVEN = 12;
-/**
- * The line between two cells, and the path the board draws for itself
- * between consecutive numbers (the player's own line is `COL_LINE`). One
- * color because both need the one thing it has: it is darker than the plain
- * surface and the lifted one in both schemes, and that path runs through
- * both.
- */
+/** The line between two cells, and the ring round the disc under the first
+ * and the last number. */
 export const COL_GRID = 13;
 /** The cell the player is holding, typing into or has selected: the
  * collection's "you are here" wash, which sinks below a plain cell and a
@@ -317,7 +320,7 @@ export function ascentColors(defaultBackground: Color): Color[] {
   ret[COL_LOWLIGHT] = lowlight;
   ret[COL_BORDER] = INK;
   ret[COL_LINE] = playerEntryColor(background);
-  ret[COL_IMMUTABLE] = BLUE;
+  ret[COL_PATH] = GRID_DARK;
   ret[COL_ERROR] = ERROR;
   ret[COL_CURSOR] = CURSOR;
   // Not `HELD`: the held cell is a fill under its number, which is the wash.
@@ -673,7 +676,7 @@ export function redrawAscent(
         dr.drawHatch(rect, COL_HINT, hatchPeriod(tileSize));
 
     if (ui.typingCell !== i) {
-      const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_GRID;
+      const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_PATH;
 
       if (!hex) {
         for (let dy = -1; dy <= 1; dy += 2) {
@@ -692,26 +695,10 @@ export function redrawAscent(
                 ty2 + movement.dirs[dir].dy * tileSize,
                 tx2,
                 ty2,
-                ds.path[i2] & FLAG_USER ? COL_LINE : COL_GRID,
+                ds.path[i2] & FLAG_USER ? COL_LINE : COL_PATH,
               );
           }
         }
-      }
-
-      /* Circle on the beginning/end of the path. */
-      if (
-        (sn === 0 || sn === state.last) &&
-        (state.immutable[i] || positions[sn] !== CELL_MULTIPLE)
-      ) {
-        if (fn & NUMBER_FLAG_MOVE) {
-          dr.drawCircle(center, tileSize * 0.4, COL_LOWLIGHT, COL_LOWLIGHT);
-          dr.drawCircle(center, tileSize * 0.3, COL_HIGHLIGHT, COL_HIGHLIGHT);
-        } else {
-          // Ringed, so the disc is told from a lifted cell as from a plain one.
-          dr.drawCircle(center, Math.trunc(tileSize / 3), COL_HIGHLIGHT, COL_GRID);
-        }
-      } else if (ds.path[i] & ~FLAG_COMPLETE) {
-        dr.drawCircle(center, Math.trunc(ds.thickness / 2), linecolor, linecolor);
       }
 
       /* Path lines to neighbors. In hex modes draw to the shared-edge
@@ -726,6 +713,23 @@ export function redrawAscent(
         const ey = hex ? (cy + nc.cy) / 2 : nc.cy;
         thickLine(dr, ds.thickness, tx1, ty1, ex, ey, linecolor);
       }
+
+      /* Circle on the beginning/end of the path, over the line into it, so
+       * the number on it is read against the disc. */
+      if (
+        (sn === 0 || sn === state.last) &&
+        (state.immutable[i] || positions[sn] !== CELL_MULTIPLE)
+      ) {
+        if (fn & NUMBER_FLAG_MOVE) {
+          dr.drawCircle(center, tileSize * 0.4, COL_LOWLIGHT, COL_LOWLIGHT);
+          dr.drawCircle(center, tileSize * 0.3, COL_HIGHLIGHT, COL_HIGHLIGHT);
+        } else {
+          // Ringed, so the disc is told from a lifted cell as from a plain one.
+          dr.drawCircle(center, Math.trunc(tileSize / 3), COL_HIGHLIGHT, COL_GRID);
+        }
+      } else if (ds.path[i] & ~FLAG_COMPLETE) {
+        dr.drawCircle(center, Math.trunc(ds.thickness / 2), linecolor, linecolor);
+      }
     } else if (i === ui.typingCell) {
       /* The typing cell skips the block above (it shows the typed number on a
        * clean background), but still draws its half of any preview connecting
@@ -736,7 +740,7 @@ export function redrawAscent(
         const nc = cellCenter(i2, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
         const ex = hex ? (cx + nc.cx) / 2 : nc.cx;
         const ey = hex ? (cy + nc.cy) / 2 : nc.cy;
-        thickLine(dr, ds.thickness, tx1, ty1, ex, ey, COL_GRID);
+        thickLine(dr, ds.thickness, tx1, ty1, ex, ey, COL_PATH);
       }
     }
 
@@ -771,8 +775,9 @@ export function redrawAscent(
       dr.drawCircle(center, Math.trunc(tileSize / 3), color, COL_LOWLIGHT);
     }
 
-    /* Background circle over lines so numbers stay readable. */
-    if (sn > 0 && sn < state.last && state.path && state.path[i] & ~FLAG_COMPLETE) {
+    /* Background circle over lines so numbers stay readable: the player's
+     * line and the board's own path alike. */
+    if (sn > 0 && sn < state.last && ds.path[i] & ~FLAG_COMPLETE) {
       dr.drawCircle(center, Math.trunc(tileSize / 3), color, color);
       if (fn > 0 && fn & NUMBER_FLAG_MOVE)
         dr.drawCircle(center, tileSize * 0.22, COL_LOWLIGHT, COL_LOWLIGHT);
@@ -810,12 +815,12 @@ export function redrawAscent(
         center,
         glyphFont(Math.trunc(tileSize / 2)),
         state.immutable[i]
-          ? COL_IMMUTABLE
+          ? COL_BORDER
           : state.grid[i] === NUMBER_EMPTY && ui.typingCell !== i
             ? COL_LOWLIGHT
             : sn <= state.last && positions[sn] === -2 && ui.typingCell !== i
               ? COL_ERROR
-              : COL_BORDER,
+              : COL_LINE,
         String(sn + 1),
       );
       if (ds.path[i] & FLAG_ERROR)

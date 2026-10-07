@@ -40,7 +40,15 @@ import {
 import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
 import { newLightupDesc, puzzleIsGood } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";
-import { COL_BLACK, COL_ERROR, COL_LIGHT, COL_LIT, COL_RULED_OUT } from "./render.ts";
+import {
+  COL_BULB_RIM,
+  COL_ERROR,
+  COL_ERROR_TEXT,
+  COL_LIGHT,
+  COL_LIT,
+  COL_RULED_OUT,
+  COL_WALL,
+} from "./render.ts";
 import { solveUnique } from "./solver.ts";
 import {
   decodeParams,
@@ -179,7 +187,7 @@ describe("lightup params", () => {
     const base = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
     expect(describeParams(lightupGame, base)).toBe("7x7 Easy");
     expect(describeParams(lightupGame, { ...base, blackpc: 30, symm: 0 })).toBe(
-      "7x7 Easy, 30% black squares, no symmetry",
+      "7x7 Easy, 30% walls, no symmetry",
     );
     expect(describeParams(lightupGame, { ...base, w: 12, h: 8, symm: SYMM_ROT2 })).toBe(
       "12x8 Easy",
@@ -529,10 +537,10 @@ describe("lightup rendering", () => {
   it("draws the opener frame: black tiles, clue digits, grid", () => {
     const result = renderScenario({ game: lightupGame, id: EASY_ID });
     const ops = result.recording.ops;
-    // Black squares are filled COL_BLACK.
-    expect(
-      ops.some((o) => o.op === "rect" && o.color === COL_BLACK && o.w === 32),
-    ).toBe(true);
+    // Walls are filled COL_WALL.
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_WALL && o.w === 32)).toBe(
+      true,
+    );
     // Clue digits (the fixture has 0/1/3 clues) in COL_LIGHT.
     expect(
       ops.some((o) => o.op === "text" && o.color === COL_LIGHT && o.text === "3"),
@@ -560,23 +568,27 @@ describe("lightup rendering", () => {
       id: EASY_ID,
       moves: [light(0, 0), light(3, 0)],
     });
+    // A bulb keeps its rim, which tells it from a wrong clue's badge.
     expect(
-      recording.ops.filter((o) => o.op === "circle" && o.fill === COL_ERROR).length,
+      recording.ops.filter(
+        (o) => o.op === "circle" && o.fill === COL_ERROR && o.outline === COL_BULB_RIM,
+      ).length,
     ).toBe(2);
   });
 
-  it("a provably-wrong clue digit turns red", () => {
+  it("a provably-wrong clue is a badge in the error color", () => {
     // (1,1) holds clue 0; a bulb beside it exceeds the clue.
     const { recording } = renderScenario({
       game: lightupGame,
       id: EASY_ID,
       moves: [light(1, 0)],
     });
-    expect(
-      recording.ops.some(
-        (o) => o.op === "text" && o.color === COL_ERROR && o.text === "0",
-      ),
-    ).toBe(true);
+    const badge = recording.ops.findIndex(
+      (o) => o.op === "circle" && o.fill === COL_ERROR && o.outline === COL_ERROR,
+    );
+    expect(badge).toBeGreaterThanOrEqual(0);
+    const digit = recording.ops[badge + 1];
+    expect(digit).toMatchObject({ op: "text", color: COL_ERROR_TEXT, text: "0" });
   });
 
   it("Check & Save highlights a mistake even when the cell was already drawn", () => {

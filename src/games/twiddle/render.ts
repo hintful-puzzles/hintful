@@ -5,7 +5,7 @@
  * `draw_tile` / `rotate` / `highlight_colour`.
  */
 
-import { CURSOR, INK } from "../../engine/color/palette.ts";
+import { CURSOR, cellSurface, givenSurface, INK } from "../../engine/color/palette.ts";
 import {
   twiddleGentleHighlight,
   twiddleGentleLowlight,
@@ -33,7 +33,12 @@ export const COL_LOWLIGHT = 4;
 export const COL_LOWLIGHT_GENTLE = 5;
 export const COL_HIGHCURSOR = 6;
 export const COL_LOWCURSOR = 7;
-export const NCOLORS = 8;
+/** A tile's face: the lifted surface, so the object the player moves stands
+ * off the well it turns in, in both schemes. */
+export const COL_TILE = 8;
+/** The well: what a turning block uncovers. */
+export const COL_WELL = 9;
+export const NCOLORS = 10;
 
 // --- cursor edge flags ------------------------------------------------
 
@@ -83,7 +88,7 @@ export interface TwiddleDrawState {
 export function newDrawState(state: TwiddleState, tileSize: number): TwiddleDrawState {
   return {
     started: false,
-    bgcolor: COL_BACKGROUND,
+    bgcolor: COL_TILE,
     cache: new Int32Array(state.w * state.h).fill(-1),
     tileSize,
     curX: -state.n,
@@ -270,7 +275,7 @@ export function redraw(
   const cy = ui.cursor.visible ? ui.cursor.y : -n;
   const cmoved = cx !== ds.curX || cy !== ds.curY;
 
-  let bgcolor = COL_BACKGROUND;
+  let bgcolor = COL_TILE;
   if (flashTime > 0) {
     const frame = Math.floor(flashTime / FLASH_FRAME);
     bgcolor = frame % 2 ? COL_LOWLIGHT : COL_HIGHLIGHT;
@@ -293,7 +298,7 @@ export function redraw(
   }
 
   // Set up the rotation parameters if we're animating, and clear the
-  // rotated region to the background color first.
+  // rotated region to the well first.
   let rot: Rotation | null = null;
   let lastx = -1;
   let lasty = -1;
@@ -324,7 +329,7 @@ export function redraw(
         topColor: highlightColor(Math.PI / 2 + angle),
         bottomColor: highlightColor(-Math.PI / 2 + angle),
       };
-      dr.drawRect(block, bgcolor);
+      dr.drawRect(block, COL_WELL);
     }
   }
 
@@ -408,5 +413,7 @@ export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
   // swap table keys them by index.
   out[COL_HIGHCURSOR] = CURSOR;
   out[COL_LOWCURSOR] = CURSOR;
+  out[COL_TILE] = givenSurface(bg);
+  out[COL_WELL] = cellSurface(bg);
   return out;
 }

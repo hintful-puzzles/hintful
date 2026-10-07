@@ -20,7 +20,7 @@ import {
   HINT_ACTION,
   INK,
   surfaceGrid,
-  WALL_FILL,
+  wallFill,
 } from "../../engine/color/palette.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
@@ -84,9 +84,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_MINE] = BLACK;
   ret[COL_GLINT] = WHITE;
   ret[COL_GEM] = TEAL;
-  // A flat block a clear step off the floor in both schemes: darker than it
-  // on a light board, lighter on a dark one.
-  ret[COL_WALL] = WALL_FILL;
+  ret[COL_WALL] = wallFill(defaultBackground);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_AIM] = DRAG_ADD;
   // The subgoal is neither action nor evidence, so no hint role names it;

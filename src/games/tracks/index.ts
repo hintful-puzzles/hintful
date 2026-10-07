@@ -204,12 +204,15 @@ type TracksVerb = TargetVerb<TracksState, TracksUi, Point, TracksMove>;
 const trackVerb: TracksVerb = {
   does:
     "lay track there: on an edge, a segment joining the two squares; in a square, " +
-    "a mark that it holds track, even before you know which edges it crosses. " +
+    "a block of sleeper wood that says it holds track, even before you know " +
+    "which edges it crosses. " +
     "Click it again to take the track away",
   apply: flipAt(false),
 };
 const noTrackVerb: TracksVerb = {
-  does: "cross it out, as holding no track, or take the cross away again",
+  does:
+    "mark it as holding no track (a dot in a square, a cross on an edge), " +
+    "or take the mark away again",
   apply: flipAt(true),
 };
 
@@ -441,7 +444,7 @@ export const tracksGame: Game<
   hint: tracksHint,
   hintMarks: {
     roles: {
-      ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a cross in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",
+      ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a dot in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",
       outline:
         "what the step reasons from, in a second color: an outline round the squares it counts, a short bar on a side whose state is part of the argument, and the clue number it counts with, recolored in the margin.",
       stripes:

@@ -33,7 +33,7 @@ import {
   HINT_EVIDENCE,
   INK,
 } from "../../engine/color/palette.ts";
-import { drawRectCorners } from "../../engine/draw.ts";
+import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
@@ -450,12 +450,7 @@ export function redraw(
 
       dr.drawText(
         { x: tx, y: ty },
-        {
-          align: "center",
-          baseline: "mathematical",
-          fontType: "fixed",
-          size: (ts / 2.5) | 0,
-        },
+        glyphFont((ts / 2.5) | 0),
         txt,
         String(state.numbers[i]),
       );

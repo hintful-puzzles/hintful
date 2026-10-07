@@ -586,11 +586,11 @@ describe("netslide rendering", () => {
     });
     const { ops } = recording;
 
-    // Wires are lines. The center tile is powered by definition, so some wire is
-    // always drawn in the powered color — and on a scrambled board, most are
-    // not.
-    expect(ops.some((o) => o.op === "line" && o.color === COL_POWERED)).toBe(true);
-    expect(ops.some((o) => o.op === "line" && o.color === COL_WIRE)).toBe(true);
+    // Wires are rects, as wide as the tile size makes them. The center tile is
+    // powered by definition, so some wire is always drawn in the powered color —
+    // and on a scrambled board, most are not.
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_POWERED)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_WIRE)).toBe(true);
 
     // A barrier-probability-1 non-wrapping board is walled all the way round.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_BARRIER)).toBe(true);

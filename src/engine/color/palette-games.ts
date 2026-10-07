@@ -216,11 +216,9 @@ export const slideBlockBase = (background: Color): Color => scale(background, 0.
  * **down**, the exact dual of the exit below. The block you have to move is a
  * *weight* on the board, and the square it has to reach is a *light* on it.
  *
- * The arithmetic is exactly `palette.ts`'s `pencilColor`, which is why
- * `metrics/color-inventory.md` attributes this entry to that function (it
- * matches by value). It is deliberately **not** that role: a pencil mark is a
- * note *subordinate* to a placed digit, and a key block is the one thing on the
- * board that is not subordinate to anything.
+ * A blue close to `palette.ts`'s `pencilColor`, and deliberately **not** that
+ * role: a pencil mark is a note *subordinate* to a placed digit, and a key
+ * block is the one thing on the board that is not subordinate to anything.
  */
 export const slideMainBlockBase = (background: Color): Color => [
   background[0] * 0.5,

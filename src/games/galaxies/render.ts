@@ -55,7 +55,10 @@ export const COL_HINT = 11;
 export const COL_HINT_CELL = 12;
 /** The surface of a cell no galaxy has claimed yet. */
 export const COL_CELL = 13;
-export const NCOLORS = 14;
+/** The line round a dot: ink, so a white dot is closed on a light surface and
+ * a black one on a dark surface. */
+export const COL_DOT_RIM = 14;
+export const NCOLORS = 15;
 
 // --- DrawState ------------------------------------------------------
 
@@ -352,7 +355,8 @@ function drawSquare(
     );
 
   // Grid lines (top-left only — neighbors will draw their own)
-  const gridCol = flags & DRAW_BLACK ? COL_BLACKDOT : COL_GRID;
+  // Ink inside a black dot's region, whose fill the surface grid sinks into.
+  const gridCol = flags & DRAW_BLACK ? COL_EDGE : COL_GRID;
   dr.drawRect({ x: lx, y: ly, w: 1, h: tileSize }, gridCol);
   dr.drawRect({ x: lx, y: ly, w: tileSize, h: 1 }, gridCol);
 
@@ -474,7 +478,7 @@ function drawSquare(
           { x: lx + ((dx0 * tileSize) >> 1), y: ly + ((dy0 * tileSize) >> 1) },
           dotSize,
           val === 1 ? COL_WHITEDOT : COL_BLACKDOT,
-          COL_BLACKDOT,
+          COL_DOT_RIM,
         );
       }
     }
@@ -531,7 +535,7 @@ function drawSquare(
             center,
             dotSize,
             val === DOT_WHITE ? COL_WHITEDOT : COL_BLACKDOT,
-            COL_BLACKDOT,
+            COL_DOT_RIM,
           );
         }
       }

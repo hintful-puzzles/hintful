@@ -128,24 +128,19 @@ export const paramConfig: ParamConfigItem<SticksParams>[] = [
     doc: "Size of the grid in squares.",
     bounds: { min: 2 },
   }),
-  numberItem<SticksParams>(
-    "percentage-of-black-squares",
-    "%age of black squares",
-    "blackpc",
-    {
-      doc: "Rough percentage of black squares in the grid, from 5 to 100.",
-      label: {
-        slot: "tail",
-        words: (p) => (p.blackpc === 20 ? null : `${p.blackpc}% black squares`),
-      },
+  numberItem<SticksParams>("percentage-of-black-squares", "%age of blocks", "blackpc", {
+    doc: "Rough percentage of blocks in the grid, from 5 to 100.",
+    label: {
+      slot: "tail",
+      words: (p) => (p.blackpc === 20 ? null : `${p.blackpc}% blocks`),
     },
-  ),
+  }),
   {
     kw: "symmetry",
     name: "Symmetry",
     type: "choices",
     choices: SYMMETRY_CHOICES,
-    doc: "The pattern the black squares follow. <em>None</em> places them freely. <em>2-way mirror</em> makes the bottom half a mirror image of the top half, and <em>2-way rotational</em> makes the grid look the same turned upside down. <em>4-way mirror</em> mirrors top to bottom and left to right, and <em>4-way rotational</em> makes the grid look the same after a quarter turn, which needs a square grid.",
+    doc: "The pattern the blocks follow. <em>None</em> places them freely. <em>2-way mirror</em> makes the bottom half a mirror image of the top half, and <em>2-way rotational</em> makes the grid look the same turned upside down. <em>4-way mirror</em> mirrors top to bottom and left to right, and <em>4-way rotational</em> makes the grid look the same after a quarter turn, which needs a square grid.",
     label: {
       slot: "tail",
       words: (p) =>
@@ -186,7 +181,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 export function validateParams(p: SticksParams, full: boolean): string | null {
   if (full) {
     if (p.blackpc < 5 || p.blackpc > 100)
-      return "%age of black squares must be between 5% and 100%.";
+      return "%age of blocks must be between 5% and 100%.";
     if (p.w !== p.h && p.symm === SYMM_ROT4)
       return "4-fold symmetry is only available with square grids.";
   }

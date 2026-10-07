@@ -474,7 +474,7 @@ export const clustersGame: Game<
     roles: {
       ring: "the square the step colors. It is drawn empty: the sentence says which color it must be.",
       outline:
-        "the squares the step reasons from. A double orange ring is on the dot or square where the other color would break a rule. On Normal boards, numbered outlined squares, each holding a small piece of the color it would be, show what supposing the other color would force, in order, and to which color: they are only a supposition, and nothing is placed there.",
+        "the squares the step reasons from. An orange ring is on the dot or square where the other color would break a rule. On Normal boards, numbered outlined squares, each holding a small piece of the color it would be, show what supposing the other color would force, in order, and to which color: they are only a supposition, and nothing is placed there.",
     },
   },
   hintRungs: CLUSTERS_RUNGS,

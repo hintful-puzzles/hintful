@@ -4,7 +4,7 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import { PURPLE } from "../../engine/color/colors.ts";
+import { BLACK, PURPLE, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -13,7 +13,6 @@ import {
   givenSurface,
   HINT_EVIDENCE,
   INK,
-  PAPER,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
@@ -89,6 +88,7 @@ import {
   COL_BLACKDOT,
   COL_CELL,
   COL_CURSOR,
+  COL_DOT_RIM,
   COL_DRAG,
   COL_EDGE,
   COL_GRID,
@@ -1193,8 +1193,12 @@ export const galaxiesGame: Game<
     // the dark scheme lands a faint step below the cell surface.
     ret[COL_WHITEBG] = givenSurface(bg);
     ret[COL_BLACKBG] = galaxiesBlackRegion(bg);
-    ret[COL_WHITEDOT] = PAPER;
-    ret[COL_BLACKDOT] = INK;
+    // The dots are the clues and a hint calls them white and black, so they
+    // are pinned: paper inverts, and a "white dot" was a near-black disc on a
+    // near-black cell in the dark scheme. The rim is what inverts.
+    ret[COL_WHITEDOT] = WHITE;
+    ret[COL_BLACKDOT] = BLACK;
+    ret[COL_DOT_RIM] = INK;
     ret[COL_GRID] = surfaceGrid(bg);
     ret[COL_CELL] = cellSurface(bg);
     ret[COL_EDGE] = INK;

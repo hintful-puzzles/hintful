@@ -791,7 +791,7 @@ decision:
   `INK`, `PAPER`, plus the background-derived functions (`pencilColor`, `playerEntryColor`,
   `highlightWash`, `lineMaybeColor`, `lineNoColor`, `clueDoneColor`,
   `correctRegionColor`, and the surfaces `cellSurface`, `surfaceGrid` and
-  `givenSurface`), and `WALL_FILL` and `SHADED`. Each is a *reference* to a named
+  `givenSurface`, and `wallFill`), and `SHADED`. Each is a *reference* to a named
   color, so restyling red restyles every meaning built on red.
 
   Three of these are worth naming by the mistake they replace. **The
@@ -874,7 +874,8 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
   yellow, a square and a disc (`TWO_SHAPES`). Not blue, green, orange or red,
   which the marks drawn on a board have spent.
 - **Shaded or not is one color, not two** (owner, 2026-10-07; Pattern, Mosaic,
-  Range, Singles, Bricks). The states are not equals: the shaded cells are
+  Range, Singles, Bricks; in Singles the mark for a cell kept clear is the
+  puzzle's own ring round its number, not the dot). The states are not equals: the shaded cells are
   what the puzzle is about, and "not shaded" is a note. A shaded cell is the
   `SHADED` piece (`SHADED_SHAPE`, `SHADED_NAME`), a cell ruled out is quiet
   surface with `drawRuledOutDot`, and an undecided one is plain surface, so a
@@ -894,8 +895,9 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
 - **The dark board stays where it was** (the proposal's question 7). Cells
   sink below it and a settled cell rises to about its tone, which opened the
   contrast the question was after without moving every game's board.
-- **A wall is a flat strong fill** (`WALL_FILL`), not a bevel: Inertia,
-  Sokoban.
+- **A wall is one flat strong fill** (`wallFill`), not a bevel and not a
+  game's own black: Inertia, Sokoban, Crossing, Light Up, Sticks. A digit on
+  it is the pinned `WHITE`.
 - **A glyph that sits on a piece is a badge**: its own disc, with the glyph in
   the fill's text color (Unruly's count `!` is `ERROR` under `ERROR_TEXT`). Ink
   of one hue on a piece of another differs in hue and not in lightness.

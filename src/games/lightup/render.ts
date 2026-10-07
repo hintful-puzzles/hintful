@@ -1,7 +1,7 @@
 /**
  * Light Up rendering: a per-tile diffed loop over a packed display-flag word
  * per cell (docs/games/rendering.md § "The tile cache and the diff key"), on
- * the collection's quiet surface. A wall is a solid black block with its clue
+ * the collection's quiet surface. A wall is a solid block (`wallFill`) with its clue
  * (red when provably wrong); an open square is the cell surface, washed yellow
  * when lit; a bulb is a white disc (red when lit by another bulb); the
  * impossible-mark is the ruled-out dot; and the completion flash blinks the
@@ -13,13 +13,16 @@ import {
   CURSOR,
   cellSurface,
   ERROR,
+  ERROR_TEXT,
   givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
+  HINT_EVIDENCE,
   HINT_EVIDENCE_WASH,
   HINT_WHITEREF,
   RULED_OUT,
   surfaceGrid,
+  wallFill,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -47,24 +50,28 @@ export const FLASH_TIME = 0.3;
 
 export const COL_BACKGROUND = 0;
 export const COL_GRID = 1; // the line between two cells, and the frame
-export const COL_BLACK = 2;
+export const COL_WALL = 2;
 export const COL_LIGHT = 3; // white: bulbs and clue digits
 export const COL_LIT = 4; // yellow lit-square fill
 export const COL_ERROR = 5;
 export const COL_CURSOR = 6;
-// Fork hint colors. The digit of a driving clue recolors COL_HINT (the
-// Pattern clue↔move tie).
+// Fork hint colors.
 export const COL_HINT = 7; // forced cell(s), blue fill (highlight only)
 export const COL_HINT_CELL = 8; // evidence: the shade on a *dark* square
 export const COL_HINT_LITERF = 9; // cited lit/bulb premise (green ring)
 export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (pink ring)
-/** The player's "no light here" dot. Its own slot rather than upstream's wall
- * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
+/** The player's "no light here" dot. Upstream drew it in the wall's color. */
 export const COL_RULED_OUT = 11;
 export const COL_CELL = 12; // the surface of an open square no bulb lights
 /** What a lit square blinks to in the completion flash: a lifted surface,
  * which is a step off the yellow in both schemes. */
 export const COL_FLASH = 13;
+/** The line round a bulb. */
+export const COL_BULB_RIM = 14;
+/** The ring round a hint's driving clue, on its wall. */
+export const COL_HINT_CLUE = 15;
+/** A wrong clue's digit, on its badge. */
+export const COL_ERROR_TEXT = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -72,21 +79,24 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_FLASH] = givenSurface(defaultBackground);
-  // Pinned: a wall *is* black and a bulb *is* white, in either scheme.
-  out[COL_BLACK] = BLACK;
+  out[COL_WALL] = wallFill(defaultBackground);
+  // Pinned: a bulb *is* white with a black rim, in either scheme, and a clue
+  // is that white on its wall.
   out[COL_LIGHT] = WHITE;
+  out[COL_BULB_RIM] = BLACK;
   // The **wash** step, not plain yellow: a lit square is a large fill under
   // bulbs and digits and must read as *the board, lit*, not as an object on it.
   // Plain yellow is a near-board tint under a light scheme and a bright patch
   // under a dark one.
   out[COL_LIT] = YELLOW_WASH;
-  // The full red, not its wash: it is a clue's digit on a black wall and the
-  // disc of a bulb another bulb lights, and the wash is as dark as the wall
-  // in the dark scheme.
+  // The full red, not its wash: it is the badge under a wrong clue and the
+  // disc of a bulb another bulb lights.
   out[COL_ERROR] = ERROR;
+  out[COL_ERROR_TEXT] = ERROR_TEXT;
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE_WASH;
+  out[COL_HINT_CLUE] = HINT_EVIDENCE;
   out[COL_HINT_LITERF] = HINT_BLACKREF;
   // The unlit square is the *empty* reference cell, so it takes the white-ref
   // premise color (Pattern's and Singles' empty reference is the same pink).
@@ -123,7 +133,7 @@ const DF_BLOBS_PREF = 1024;
 const DF_HINT_TARGET = 2048; // forced cell — blue COL_HINT fill
 const DF_HINT_AREA = 4096; // evidence — shade when dark, green ring when lit
 const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — pink ring
-const DF_HINT_CLUE = 16384; // driving clue — digit recolored
+const DF_HINT_CLUE = 16384; // driving clue: its wall ringed
 
 export interface LightupDrawState {
   started: boolean;
@@ -199,24 +209,42 @@ function tileRedraw(
 
   if (dsFlags & DF_BLACK) {
     // The whole tile, grid lines included, so a run of walls is one block.
-    dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_BLACK);
+    dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_WALL);
     if (dsFlags & DF_NUMBERED) {
-      // A hint's driving clue recolors its digit COL_HINT (the Pattern
-      // clue↔move tie; the light COL_HINT_CELL would be unreadable as a
-      // cue — nearly white on black). A provably-wrong clue stays red.
-      const ccol =
-        dsFlags & DF_NUMBERWRONG
-          ? COL_ERROR
-          : dsFlags & DF_HINT_CLUE
-            ? COL_HINT
-            : COL_LIGHT;
+      const center = { x: dx + Math.floor(ts / 2), y: dy + Math.floor(ts / 2) };
+      // A provably-wrong clue is a badge: the error color as a digit is as
+      // light as the wall in the dark scheme, and is told from it by hue alone.
+      const wrong = (dsFlags & DF_NUMBERWRONG) !== 0;
+      if (wrong) dr.drawCircle(center, Math.floor(ts * 0.34), COL_ERROR, COL_ERROR);
       // The clue value never changes over the game, so it is not part of
       // the diff key (upstream's observation).
       dr.drawText(
-        { x: dx + Math.floor(ts / 2), y: dy + Math.floor(ts / 2) },
+        center,
         glyphFont(Math.floor((ts * 3) / 5)),
-        ccol,
+        wrong ? COL_ERROR_TEXT : COL_LIGHT,
         String(state.lights[idx(x, y, state.w)]),
+      );
+    }
+    if (dsFlags & DF_HINT_CLUE) {
+      // A hint's driving clue is ringed at the wall's edge and keeps its white
+      // digit: no hint hue reads as a glyph on the wall's gray in both schemes.
+      // The white line inside the ring is what parts it from the wall.
+      const m = Math.floor(ts / 12);
+      const t = Math.max(2, Math.floor(ts / 10));
+      const side = ts - 2 * m;
+      drawMarkSides(
+        dr,
+        { box: { x: dx + m, y: dy + m, w: side, h: side }, outer: 0, inner: t },
+        MARK_ALL,
+        COL_HINT_CLUE,
+      );
+      drawRectOutline(
+        dr,
+        dx + m + t,
+        dy + m + t,
+        side - 2 * t,
+        side - 2 * t,
+        COL_LIGHT,
       );
     }
   } else {
@@ -249,7 +277,7 @@ function tileRedraw(
         { x: dx + Math.floor(ts / 2), y: dy + Math.floor(ts / 2) },
         ds.crad,
         lcol,
-        COL_BLACK,
+        COL_BULB_RIM,
       );
     } else if (
       dsFlags & DF_IMPOSSIBLE &&

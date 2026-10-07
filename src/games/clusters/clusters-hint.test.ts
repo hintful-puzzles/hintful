@@ -405,7 +405,7 @@ describe("hint rendering (tier 2.5)", () => {
     expect(result.recording.ops).toMatchSnapshot();
   });
 
-  it("a chain frame paints the what-if marks and the danger double ring", () => {
+  it("a chain frame paints the what-if marks and the danger ring", () => {
     const result = renderPinnedHint(clustersGame, pinned("chainWithDanger"));
     const { step } = result;
     const hl = step.highlights as ClustersHintHighlights;
@@ -422,7 +422,10 @@ describe("hint rendering (tier 2.5)", () => {
     };
     const widths = ops.map(width).filter((v): v is number => v !== null);
     expect(Math.min(...widths)).toBeLessThan(Math.max(...widths) / 2);
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_DANGER)).toBe(true);
+    // One ring, which is four bands: doubled, it crossed the piece.
+    expect(
+      ops.filter((o) => o.op === "rect" && o.color === COL_HINT_DANGER),
+    ).toHaveLength(4);
 
     // …and each carries its **ordinal**: an unordered set of shaded cells
     // cannot be checked against a narration that says they fall one after
