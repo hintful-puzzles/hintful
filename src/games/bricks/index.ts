@@ -31,6 +31,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import { UNSHADED_NAME } from "../../engine/piece.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -231,11 +232,11 @@ const geometry: TargetGeometry<BricksState, BricksUi, BricksDrawState, Point> = 
 
 type BricksVerb = TargetVerb<BricksState, BricksUi, Point, BricksMove>;
 const shadeVerb: BricksVerb = {
-  does: "cycle it from empty to shaded, then unshaded, then empty again",
+  does: `cycle it from empty to shaded, then ${UNSHADED_NAME}, then empty again`,
   apply: paintCell((old) => cycleColor(LEFT_BUTTON, old)),
 };
 const unshadeVerb: BricksVerb = {
-  does: "cycle it the other way, from empty to unshaded, then shaded",
+  does: `cycle it the other way, from empty to ${UNSHADED_NAME}, then shaded`,
   apply: paintCell((old) => cycleColor(RIGHT_BUTTON, old)),
 };
 
@@ -259,7 +260,7 @@ const targetVerbs: TargetVerbs<
       pointer: { kind: "cycle", button: "primary" },
     },
     {
-      does: "unshade it",
+      does: `mark it ${UNSHADED_NAME}`,
       keys: [digitKey(0), digitKey(2)],
       apply: paintCell(() => F_UNSHADE),
       pointer: { kind: "cycle", button: "primary" },

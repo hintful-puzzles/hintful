@@ -1,8 +1,11 @@
 # Flip
 
 Try to light up all the squares in the grid by flipping combinations
-of them. Pressing a square flips a group of squares, and which group
-depends on the game mode. The Type menu has a section for each:
+of them. An unlit square holds a {{pair:0}} square and a lit one holds a
+{{pair:1}} disc, so the board is done when every piece is a {{pair:1}}
+disc. Pressing a square flips a group of squares, each from one piece to
+the other, and which group depends on the game mode. The Type menu has a
+section for each:
 
 {{rulesets}}
 
@@ -10,7 +13,7 @@ depends on the game mode. The Type menu has a section for each:
 
 {{controls}}
 
-In either mode, the diagram in each square indicates which other
+In either mode, the diagram on each piece indicates which other
 squares will flip.
 
 ## Hints
@@ -22,11 +25,11 @@ left to right along the top row, then along the next row down. A square
 it has gone past is never pressed again.
 
 That order is what gives a press a reason. Once the hint has gone past
-every other square that flips some dark square, the one square left is
+every other square that flips some unlit square, the one square left is
 the only one that can still light it, so it has to be pressed: *"Row by
 row, only this square can still light the outlined square, so it must
 be pressed. It flips the striped ones too."* With {{choice:ruleset:0}} this is the
-square directly below a dark one, which is the whole method: get the top
+square directly below an unlit one, which is the whole method: get the top
 row right and each row after it is settled by the row above.
 
 {{hint-marks}}

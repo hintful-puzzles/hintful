@@ -1,0 +1,110 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Shading mock-ups</title>
+<!--
+  Mock-ups for task 3: what a shaded and a ruled-out cell look like in the
+  games where a cell is shaded or not (Pattern, Mosaic, Range, Singles, Bricks,
+  Flip). Self-contained; open it in a browser. The board is drawn by the script
+  below and is not any game's renderer.
+-->
+<style>
+  body { font: 13px system-ui, sans-serif; background: #777; color: #fff; margin: 12px; }
+  p { margin: 0 0 8px; max-width: 70em; }
+  .row { display: grid; grid-template-columns: repeat(2, max-content); gap: 10px; }
+  figure { margin: 0; background: #555; padding: 5px; }
+  figcaption { padding-bottom: 4px; }
+  figcaption b { font-size: 14px; }
+  .pair { display: flex; gap: 4px; }
+  svg { display: block; }
+</style>
+<body>
+<p>
+  A cell is shaded (#), known not to be (.), or undecided (blank). The picture
+  is a nonogram part-way through; the same choice would carry to Mosaic, Range,
+  Singles, Bricks and Flip.
+</p>
+<script>
+  const BOARD = [
+    "..##..  ",
+    ".####.  ",
+    "##.##.##",
+    "######  ",
+    ".####   ",
+    "..##  ..",
+    "  ##    ",
+    " ####   ",
+  ];
+  const TS = 30;
+  const SURFACE = {
+    light: { board: 0.871, cell: 0.81, grid: 0.63, ink: 0.15 },
+    dark: { board: 0.355, cell: 0.27, grid: 0.17, ink: 0.93 },
+  };
+  const PURPLE = { h: 308, light: [0.53, 0.22], dark: [0.6, 0.22] };
+  const YELLOW = { h: 100, light: [0.86, 0.168], dark: [0.8, 0.156] };
+  const gray = (l) => `oklch(${l} 0 0)`;
+  const hue = (s, scheme) => `oklch(${s[scheme][0]} ${s[scheme][1]} ${s.h})`;
+
+  /**
+   * shaded: "black" (a black piece in both schemes), "ink" (black on a light
+   * board, white on a dark one) or "purple".
+   * out: "dot" (a small ink dot), "disc" (the pair's yellow disc) or "paper"
+   * (a white piece, as the games paint a known-empty cell today).
+   */
+  function board(scheme, shaded, out) {
+    const s = SURFACE[scheme];
+    const n = BOARD.length;
+    const pad = TS / 2;
+    const size = n * TS + 2 * pad;
+    const parts = [
+      `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">`,
+      `<rect width="${size}" height="${size}" fill="${gray(s.board)}"/>`,
+      `<rect x="${pad - 1}" y="${pad - 1}" width="${n * TS + 1}" height="${n * TS + 1}" fill="${gray(s.grid)}"/>`,
+    ];
+    const fill =
+      shaded === "purple" ? hue(PURPLE, scheme) : shaded === "ink" ? gray(s.ink) : gray(0.05);
+    BOARD.forEach((line, y) => {
+      [...line].forEach((ch, x) => {
+        const px = pad + x * TS;
+        const py = pad + y * TS;
+        const w = TS - 1;
+        const cx = px + w / 2;
+        const cy = py + w / 2;
+        parts.push(`<rect x="${px}" y="${py}" width="${w}" height="${w}" fill="${gray(s.cell)}"/>`);
+        if (ch === "#") {
+          const rim = shaded === "black" && scheme === "dark" ? ` stroke="${gray(0.5)}"` : "";
+          parts.push(
+            `<rect x="${px + 3}" y="${py + 3}" width="${w - 6}" height="${w - 6}" rx="4" fill="${fill}"${rim}/>`,
+          );
+        } else if (ch === ".") {
+          if (out === "dot")
+            parts.push(`<circle cx="${cx}" cy="${cy}" r="2.6" fill="${gray(s.ink)}" opacity="0.7"/>`);
+          else if (out === "disc")
+            parts.push(`<circle cx="${cx}" cy="${cy}" r="${w / 2 - 3}" fill="${hue(YELLOW, scheme)}"/>`);
+          else
+            parts.push(
+              `<rect x="${px + 3}" y="${py + 3}" width="${w - 6}" height="${w - 6}" rx="4" fill="${gray(0.98)}"/>`,
+            );
+        }
+      });
+    });
+    parts.push("</svg>");
+    return parts.join("");
+  }
+
+  const figure = (label, caption, shaded, out) =>
+    `<figure><figcaption><b>${label}</b> ${caption}</figcaption><div class="pair">` +
+    board("light", shaded, out) +
+    board("dark", shaded, out) +
+    "</div></figure>";
+
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `<div class="row">${[
+      figure("S1", "Purple square, and a small dot for a cell ruled out", "purple", "dot"),
+      figure("S2", "The whole pair: purple square, yellow disc", "purple", "disc"),
+      figure("S3", "Ink piece (black on light, white on dark), and a dot", "ink", "dot"),
+      figure("S4", "Black and white pieces in both schemes, as the words say today", "black", "paper"),
+    ].join("")}</div>`,
+  );
+</script>
+</body>

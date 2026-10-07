@@ -4,7 +4,7 @@
  * run-length clues listed for every row and column.
  *
  * Cell values are upstream's: a cell is `GRID_UNKNOWN` (undecided),
- * `GRID_FULL` (black) or `GRID_EMPTY` (white/background). The immutable
+ * `GRID_FULL` (shaded) or `GRID_EMPTY` (known clear). The immutable
  * clue arrays live on a frozen `common` object shared by reference across
  * a game's states (upstream's refcounted `game_state_common`); only the
  * `grid` clones per move.
@@ -31,11 +31,11 @@ export const GRID_FULL = 1;
 export const GRID_UNKNOWN = 2;
 export type GridVal = typeof GRID_EMPTY | typeof GRID_FULL | typeof GRID_UNKNOWN;
 
-/** What a click makes of a square: gray to black to white to gray. The drag
+/** What a click makes of a square: undecided to full to empty to undecided. The drag
  * paints what its first square's click made, and the declared verb is the
  * same click, so the two cannot disagree. */
 export const clickBlack = (v: number): GridVal => ((v + 2) % 3) as GridVal;
-/** What a right-click makes of a square: gray to white to black to gray. */
+/** What a right-click makes of a square: undecided to empty to full to undecided. */
 export const clickWhite = (v: number): GridVal => ((v + 1) % 3) as GridVal;
 
 // --- types ---------------------------------------------------------------

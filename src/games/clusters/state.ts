@@ -34,8 +34,12 @@ const DIFF_CHARS = "et";
 
 // --- cell flag bits (upstream) ---------------------------------------------
 
-export const F_COLOR_0 = 0x01; // red
-export const F_COLOR_1 = 0x02; // blue
+export const F_COLOR_0 = 0x01; // upstream's red
+export const F_COLOR_1 = 0x02; // upstream's blue
+/** Which member of the collection's two-state pair (`TWO`, `TWO_NAMES`,
+ * `TWO_SHAPES`) a colored cell is. `F_COLOR_1` is the first, as the color the
+ * primary button gives. */
+export const pairIndex = (cell: number): 0 | 1 => (cell & F_COLOR_1 ? 0 : 1);
 export const F_SINGLE = 0x04; // a "dot": touches exactly one same-color cell
 /** Transient rule-violation bit. Upstream `clusters_validate` mutates this
  * into the grid; the solver/generator reproduce that (it decides which boards a
@@ -43,8 +47,8 @@ export const F_SINGLE = 0x04; // a "dot": touches exactly one same-color cell
 export const F_ERROR = 0x08;
 export const COLMASK = F_COLOR_0 | F_COLOR_1;
 
-/** The color part of a move edit / solve cell: 0 empty, `F_COLOR_0` red,
- * `F_COLOR_1` blue — the same byte value the grid stores (givens excepted,
+/** The color part of a move edit / solve cell: 0 empty, `F_COLOR_0` or
+ * `F_COLOR_1` — the same byte value the grid stores (givens excepted,
  * which additionally carry `F_SINGLE`). */
 export type ClustersFill = 0 | typeof F_COLOR_0 | typeof F_COLOR_1;
 

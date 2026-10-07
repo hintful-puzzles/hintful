@@ -9,25 +9,36 @@
  * uses upstream's `NARROW_BORDERS` layout: no border, and `computeSize` adds
  * one pixel for the right/bottom edges.
  *
+ * The board is pieces on a quiet surface (`engine/piece.ts`): a shaded brick
+ * is the collection's shaded piece inset on its cell, a ruled-out one carries
+ * a dot, a clue sits on a lifted cell, and every mark drawn at a cell's edge
+ * lands beside the piece. A cell is a square whatever the row's offset, so the
+ * piece is the square one.
+ *
  * Rule-violation marks (three-in-a-row bars, gravity diamonds, over-count red
  * clues) display the validity pass `findMistakes` exposes. As upstream, they
  * show live only while a drag is in flight; a committed board carries none
  * until Check & Save passes the `mistakes` overlay.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   ERROR,
-  GRID_DARK,
+  ERROR_TEXT,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
+  INK,
+  RULED_OUT,
+  SHADED,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
+import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { drawPiece, drawRuledOutDot, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { BricksHint } from "./index.ts";
 import { bricksValidate } from "./solver.ts";
@@ -41,6 +52,7 @@ import {
   F_BOUND,
   F_EMPTY,
   F_SHADE,
+  F_UNSHADE,
   FE_CURSOR,
   FE_ERROR,
   FE_LINE_LEFT,
@@ -54,40 +66,41 @@ export const PREFERRED_TILE_SIZE = 48;
 const FLASH_FRAME = 0.12;
 export const FLASH_TIME = FLASH_FRAME * 5;
 
-// --- palette (upstream COL_* enum, index-for-index) -------------------------
+// --- palette ----------------------------------------------------------------
 
-export const COL_MIDLIGHT = 0;
-export const COL_LOWLIGHT = 1;
-export const COL_HIGHLIGHT = 2;
-export const COL_BORDER = 3;
+/** The ground beside the sheared rows, where no cell is. */
+export const COL_BACKGROUND = 0;
+export const COL_GRID = 1;
+/** The surface of a cell, which is all an undecided cell is. */
+export const COL_EMPTY = 2;
+/** The surface under a clue. */
+export const COL_GIVEN = 3;
 export const COL_SHADE = 4;
 export const COL_ERROR = 5;
 export const COL_CURSOR = 6;
-// Fork additions (beyond upstream's COL_* enum): the explained hint.
 export const COL_HINT = 7; // the forced cell — ringed on its own border
-export const COL_HINT_CELL = 8; // the deduction's evidence — an inset ring
-/** The digit on a numbered cell, which sits on {@link COL_HIGHLIGHT}'s pinned
- * white and so is pinned black. */
+export const COL_HINT_CELL = 8; // the deduction's evidence — a ring inside it
+/** The digit on a clue's lifted cell. */
 export const COL_NUMBER = 9;
+/** The dot in a cell the player has ruled out. */
+export const COL_RULED_OUT = 10;
+/** The `!` on a gravity diamond, and the diamond's rim. */
+export const COL_ERROR_TEXT = 11;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, lowlight } = mkhighlight(defaultBackground);
   const out: Color[] = [];
-  out[COL_MIDLIGHT] = background;
-  out[COL_LOWLIGHT] = lowlight;
-  // A cell that stays clear *is* white and a shaded one *is* black: pieces, so
-  // both are pinned. The bevel's highlight inverts with the scheme, and in the
-  // dark one it put a clear cell a step from a shaded one.
-  out[COL_HIGHLIGHT] = WHITE;
-  out[COL_NUMBER] = BLACK;
-  // Not ink, which is white in the dark scheme and would close a run of clear
-  // cells into one bar.
-  out[COL_BORDER] = GRID_DARK;
-  out[COL_SHADE] = BLACK;
+  out[COL_BACKGROUND] = defaultBackground;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_EMPTY] = cellSurface(defaultBackground);
+  out[COL_GIVEN] = givenSurface(defaultBackground);
+  out[COL_SHADE] = SHADED;
   out[COL_ERROR] = ERROR;
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_NUMBER] = INK;
+  out[COL_RULED_OUT] = RULED_OUT;
+  out[COL_ERROR_TEXT] = ERROR_TEXT;
   return out;
 }
 
@@ -154,7 +167,9 @@ function drawErrRectangle(
 }
 
 /** A diamond with an exclamation mark (upstream `bricks_draw_err_gravity`,
- * itself copied from tents.c). */
+ * itself copied from tents.c). It straddles the edge between two cells and so
+ * overlaps their pieces: the rim is what parts its red from a piece, where the
+ * two differ in hue and hardly in lightness. */
 function drawErrGravity(dr: GameDrawing, ts: number, x: number, y: number): void {
   const e = ((ts * 2) / 5) | 0;
   dr.drawPolygon(
@@ -165,17 +180,17 @@ function drawErrGravity(dr: GameDrawing, ts: number, x: number, y: number): void
       { x, y: y + e },
     ],
     COL_ERROR,
-    COL_BORDER,
+    COL_ERROR_TEXT,
   );
   const xext = (ts / 16) | 0;
   const yext = e - (xext * 2 + 2);
   dr.drawRect(
     { x: x - xext, y: y - yext, w: xext * 2 + 1, h: yext * 2 + 1 - xext * 3 },
-    COL_HIGHLIGHT,
+    COL_ERROR_TEXT,
   );
   dr.drawRect(
     { x: x - xext, y: y + yext - xext * 2 + 1, w: xext * 2 + 1, h: xext * 2 },
-    COL_HIGHLIGHT,
+    COL_ERROR_TEXT,
   );
 }
 
@@ -198,9 +213,11 @@ function drawTile(
   // the board what the narration is still proposing. (`redraw` never passes a
   // bound cell.)
   const color = n & COL_MASK;
-  const fill =
-    color === F_SHADE ? COL_SHADE : color === F_EMPTY ? COL_MIDLIGHT : COL_HIGHLIGHT;
-  dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, fill);
+  // A cell with no play color is a clue, which the puzzle gave.
+  const inner = { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 };
+  dr.drawRect(inner, color ? COL_EMPTY : COL_GIVEN);
+  if (color === F_SHADE) drawPiece(dr, inner, SHADED_SHAPE, COL_SHADE);
+  else if (color === F_UNSHADE) drawRuledOutDot(dr, inner, COL_RULED_OUT);
 
   // Square border.
   dr.drawPolygon(
@@ -211,7 +228,7 @@ function drawTile(
       { x: tx, y: ty + ts },
     ],
     -1,
-    COL_BORDER,
+    COL_GRID,
   );
 
   // Three-in-a-row bar (extends toward the shaded neighbor(s)).
@@ -242,22 +259,26 @@ function drawTile(
   if (n & FE_TOPLEFT) drawErrGravity(dr, ts, tx, ty);
   if (n & FE_TOPRIGHT) drawErrGravity(dr, ts, tx + ts, ty);
 
-  if (n & FE_CURSOR) drawRectCorners(dr, cx, cy, (ts / 3) | 0, COL_CURSOR);
-
-  // Evidence ring: an inset COL_HINT_CELL outline that leaves the cell's own
-  // content (shade / clue) visible beneath it.
+  // The cursor and the evidence ring are frames just inside the cell's border,
+  // in the margin a piece leaves round itself, so neither lands on the piece.
+  // The evidence ring is the thinner of the two rings a hint draws and stays
+  // off the border line, which the acted-on cell's ring covers.
   if (n & HINT_EVID) {
-    const m = (ts / 12) | 0;
-    const t = Math.max(2, m);
-    drawThickRectOutline(dr, tx + m, ty + m, ts - 2 * m, ts - 2 * m, t, COL_HINT_CELL);
+    const t = Math.max(2, (ts / 16) | 0);
+    drawThickRectOutline(dr, inner.x, inner.y, inner.w, inner.h, t, COL_HINT_CELL);
+  }
+
+  if (n & FE_CURSOR) {
+    const t = Math.max(2, (ts / 12) | 0);
+    drawThickRectOutline(dr, inner.x, inner.y, inner.w, inner.h, t, COL_CURSOR);
   }
 
   dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
 }
 
 /**
- * The acted-on cell's ring, on the square's own border — where the evidence
- * ring is *inset*, so a cell that is both keeps both marks legible.
+ * The acted-on cell's ring, on the square's own border and reaching no
+ * further in than the margin a piece leaves round itself.
  *
  * Stamped after the tile loop on every frame, because the border lines are
  * shared: a neighbor repainting strokes its own border over the ring's outer
@@ -355,12 +376,12 @@ export function redraw(
     if (x === 0 || shown[i - 1] & F_BOUND) {
       clipX -= ts;
       clipW += ts;
-      dr.drawRect({ x: tx - ts + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, COL_MIDLIGHT);
+      dr.drawRect({ x: tx - ts + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, COL_BACKGROUND);
       dr.drawUpdate({ x: tx - ts + 1, y: ty, w: ts + 1, h: ts + 1 });
     }
     if (x === w - 1 || shown[i + 1] & F_BOUND) {
       clipW += ts;
-      dr.drawRect({ x: tx + ts + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, COL_MIDLIGHT);
+      dr.drawRect({ x: tx + ts + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, COL_BACKGROUND);
       dr.drawUpdate({ x: tx + ts + 1, y: ty, w: ts + 1, h: ts + 1 });
     }
     dr.clip({ x: clipX, y: ty, w: clipW, h: ts + 1 });

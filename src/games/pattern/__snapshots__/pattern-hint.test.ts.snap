@@ -2,10 +2,10 @@
 
 exports[`pattern: pinned hint positions > says, at each pin 1`] = `
 {
-  "intersection": "Every way this row's runs can fit covers this cell, so it must be black.",
-  "lineEmpty": "This column has no clues, so these cells must be white.",
-  "overlap": "This column's run of 6 has nowhere to slide, so these cells must be black.",
-  "severalCells": "This column's run of 6 has nowhere to slide, so these cells must be black.",
-  "unreachable": "No run of this column's clue can reach this cell, so it must be white.",
+  "intersection": "Every way this row's runs can fit covers this cell, so it must be purple.",
+  "lineEmpty": "This column has no clues, so these cells must be clear.",
+  "overlap": "This column's run of 6 has nowhere to slide, so these cells must be purple.",
+  "severalCells": "This column's run of 6 has nowhere to slide, so these cells must be purple.",
+  "unreachable": "No run of this column's clue can reach this cell, so it must be clear.",
 }
 `;

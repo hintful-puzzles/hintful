@@ -18,6 +18,31 @@ export type PieceShape = "square" | "disc";
 export const TWO_SHAPES: readonly [PieceShape, PieceShape] = ["square", "disc"];
 
 /**
+ * **Shaded**, in a game where a cell is shaded or is not (Pattern, Range,
+ * Singles): the pair's first member, alone. The two states of such a game are
+ * not equals, since the shaded cells are what the puzzle is about and "not
+ * shaded" is a note, so one color carries the board and a finished picture
+ * still reads as one. The color is `SHADED` (`palette.ts`); these are its
+ * shape and the word a hint says for it.
+ */
+export const SHADED_SHAPE: PieceShape = TWO_SHAPES[0];
+/** @see SHADED_SHAPE */
+export const SHADED_NAME: string = TWO_NAMES[0];
+/** The word for a cell known not to be shaded, which holds no piece. One word
+ * for every such game, so "clear" means one thing across them. */
+export const UNSHADED_NAME = "clear";
+
+/**
+ * The mark for a cell the player has ruled out of being shaded: a small dot
+ * in the middle of `cell`, in `color` (the `RULED_OUT` role). Small on
+ * purpose, so a board half ruled out is still mostly quiet surface.
+ */
+export function drawRuledOutDot(dr: GameDrawing, cell: Rect, color: number): void {
+  const r = Math.max(1.5, cell.w / 11);
+  dr.drawCircle({ x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 }, r, color, color);
+}
+
+/**
  * `source`, a help page, with each `{{pair:0}}` and `{{pair:1}}` replaced by
  * that member's name. A page names a piece's color this way and never types
  * it, so the page follows the pair as a hint's sentence does.

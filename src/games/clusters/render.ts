@@ -1,8 +1,8 @@
 /**
- * Clusters rendering — port of `game_redraw` / `draw_tile` in
- * `puzzles/unreleased/clusters.c`. A per-tile diffed loop: each cell is a
- * `COL_GRID` rect under a slightly smaller color rect (red `COL_0` / blue
- * `COL_1` / background), a dot circle for a given, a red four-sided outline
+ * Clusters rendering. A per-tile diffed loop: each cell is a `COL_GRID` rect
+ * under a slightly smaller surface, lifted under a given, with the cell's
+ * color as a piece of the collection's two-state pair (`engine/piece.ts`), a
+ * dot on a given's piece, a red four-sided outline
  * for a rule violation, and a green frame under the keyboard cursor. Rule
  * violations are recomputed every frame from the current grid and shown live
  * (upstream behavior); the in-flight paint drag previews its cells in the
@@ -14,13 +14,15 @@
  * `tileSize / 2` — and `computeSize` subtracts 1 to meet the outer grid line.
  */
 
-import { BLUE, ORANGE, PINK_WASH, PURPLE } from "../../engine/color/colors.ts";
+import { BLACK, ORANGE, TWO, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   ERROR,
+  givenSurface,
+  HINT_ACTION,
   HINT_EVIDENCE,
-  INK,
-  PAPER,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -28,6 +30,7 @@ import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { ClustersHintHighlights } from "./index.ts";
 import { findErrors } from "./solver.ts";
@@ -40,54 +43,55 @@ import {
   F_COLOR_0,
   F_COLOR_1,
   F_SINGLE,
+  pairIndex,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
 const FLASH_FRAME = 0.1;
 export const FLASH_TIME = FLASH_FRAME * 3;
 
-// --- palette (upstream COL_* enum, index-for-index) ------------------------
+// --- palette ---------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
-export const COL_0 = 2; // red tile
-export const COL_1 = 3; // blue tile
-export const COL_0_DOT = 4; // dot on a red tile (dark)
-export const COL_1_DOT = 5; // dot on a blue tile (white)
+export const COL_0 = 2; // an `F_COLOR_0` piece
+export const COL_1 = 3; // an `F_COLOR_1` piece
+export const COL_0_DOT = 4; // the dot on a given `F_COLOR_0` piece
+export const COL_1_DOT = 5; // the dot on a given `F_COLOR_1` piece
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
-// Hint legend: the forced cell is marked COL_HINT; the tile the refuted
+// Hint legend: the forced cell is ringed COL_HINT; the tile the refuted
 // coloring would break — the one element the narration calls "outlined" — gets a
 // double COL_HINT_DANGER ring (an outline, because the tile's own color *is*
 // part of the premise; doubled so it cannot be confused with the single red
 // live-error frame); a lookahead chain's what-if cells are outlined
-// COL_HINT_CELL with a small mark of the color each would be forced to.
-//
-// **COL_HINT is PURPLE here, not the collection's `HINT_ACTION`**, because
-// `HINT_ACTION` *is* `BLUE`, one of the two colors a Clusters player paints: the
-// cell the whole deduction starts from would look like a placed blue tile, and
-// on a firing that concludes *red* the board would say blue while the sentence
-// says red. The cross-game role normally wins a collision and the local one
-// yields, but the local role here is a rule of the game, named to the player by
-// `help/games/clusters.md`, so it cannot move. PURPLE is the substitute this
-// repo already reaches for when blue is spoken for (Sticks', Subsets' cursors).
+// COL_HINT_CELL with a small piece of the color each would be forced to.
 export const COL_HINT = 8;
 /** The chain's outline, **and** a chain cell's ordinal — one index, because the
  * number indexes the evidence. */
 export const COL_HINT_CELL = 9;
 export const COL_HINT_DANGER = 10;
+/** The surface of a cell. */
+export const COL_CELL = 11;
+/** The surface under a given. */
+export const COL_GIVEN = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = INK;
-  out[COL_0] = PINK_WASH;
-  out[COL_1] = BLUE;
-  out[COL_0_DOT] = INK;
-  out[COL_1_DOT] = PAPER;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_GIVEN] = givenSurface(defaultBackground);
+  out[COL_0] = TWO[pairIndex(F_COLOR_0)];
+  out[COL_1] = TWO[pairIndex(F_COLOR_1)];
+  // Pinned and not ink or paper: each dot is read against a piece whose own
+  // lightness barely moves between the schemes, the lighter of the pair
+  // taking the dark dot.
+  out[COL_0_DOT] = BLACK;
+  out[COL_1_DOT] = WHITE;
   out[COL_ERROR] = ERROR;
   out[COL_CURSOR] = CURSOR;
-  out[COL_HINT] = PURPLE; // not `HINT_ACTION` — see `COL_HINT`
+  out[COL_HINT] = HINT_ACTION;
   // The chain is outlined rather than washed, so it takes the mark form of the
   // evidence role, which covers the chain ordinal too (see `HINT_EVIDENCE`).
   out[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -117,8 +121,8 @@ const F_CUR = 1 << 9;
 // the diff key (docs/games/rendering.md § "Overlay sidecars").
 const HB_TARGET = 1; // the forced cell — COL_HINT mark
 const HB_DANGER = 1 << 1; // tile that would break — double COL_HINT_DANGER ring
-const HB_CHAIN_0 = 1 << 2; // what-if cell forced red in the hypothetical
-const HB_CHAIN_1 = 1 << 3; // what-if cell forced blue in the hypothetical
+const HB_CHAIN_0 = 1 << 2; // what-if cell forced `F_COLOR_0` in the hypothetical
+const HB_CHAIN_1 = 1 << 3; // what-if cell forced `F_COLOR_1` in the hypothetical
 //
 // A chain cell's **1-based position in the chain** is not a bit here: it rides
 // the sidecar's own ordinal lane (`OverlaySidecar.order`). See `drawHintOrdinal`
@@ -198,30 +202,29 @@ function drawTile(
   // question — it says with the board what the narration is still proposing, and
   // it buries the what-if mark's color, which is the whole content of a chain
   // cell.
-  const fill = tile & F_COLOR_1 ? COL_1 : tile & F_COLOR_0 ? COL_0 : COL_BACKGROUND;
-  dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
-  dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, fill);
-
-  // The small mark of the color a what-if cell would be forced to — a
-  // deliberately tile-unlike size, so it reads as hypothetical, not placed.
-  if (hintBits & (HB_CHAIN_0 | HB_CHAIN_1)) {
-    const m = Math.floor(ts / 3);
-    dr.drawRect(
-      {
-        x: px + Math.floor((ts - m) / 2),
-        y: py + Math.floor((ts - m) / 2),
-        w: m,
-        h: m,
-      },
-      hintBits & HB_CHAIN_0 ? COL_0 : COL_1,
+  const surface = { x: px, y: py, w: ts - 1, h: ts - 1 };
+  const piece = (fill: number, grown: number): void =>
+    drawPiece(
+      dr,
+      surface,
+      TWO_SHAPES[pairIndex(fill)],
+      fill & F_COLOR_1 ? COL_1 : COL_0,
+      grown,
     );
-  }
+  dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
+  dr.drawRect(surface, tile & F_SINGLE ? COL_GIVEN : COL_CELL);
+  if (tile & COLMASK) piece(tile, 1);
+
+  // The small piece of the color a what-if cell would be forced to — a
+  // deliberately piece-unlike size, so it reads as hypothetical, not placed.
+  if (hintBits & (HB_CHAIN_0 | HB_CHAIN_1))
+    piece(hintBits & HB_CHAIN_0 ? F_COLOR_0 : F_COLOR_1, 0.4);
 
   if (tile & F_SINGLE) {
     const dot = tile & F_COLOR_1 ? COL_1_DOT : COL_0_DOT;
     dr.drawCircle(
       { x: px + Math.floor(ts / 2), y: py + Math.floor(ts / 2) },
-      Math.floor(ts / 5),
+      Math.floor(ts / 7),
       dot,
       dot,
     );
@@ -247,7 +250,8 @@ function drawTile(
   // not just hue, distinguishes it from the single red live-error frame.
   const rt = Math.max(2, Math.floor(ts / 12));
   if (hintBits & HB_DANGER) {
-    for (const inset of [1, 1 + 2 * rt]) {
+    // A pixel apart, so both rings stay at the cell's edge, beside the piece.
+    for (const inset of [1, 2 + rt]) {
       const side = ts - 1 - 2 * inset;
       drawThickRectOutline(dr, px + inset, py + inset, side, side, rt, COL_HINT_DANGER);
     }
@@ -264,7 +268,7 @@ function drawTile(
       ts - 1,
       hintOrder,
       COL_HINT_CELL,
-      hintBits & HB_DANGER ? 1 + 4 * rt : undefined,
+      hintBits & HB_DANGER ? 2 + 2 * rt : undefined,
     );
   }
 
@@ -289,11 +293,9 @@ export function redraw(
   const b = border(ts);
 
   if (!ds.started) {
-    const fullW = w * ts + 2 * b;
-    const fullH = h * ts + 2 * b;
-    // Outer grid frame; the per-tile COL_GRID rects draw the interior lines
-    // (upstream game_redraw's first-draw block, COORD(0) − tilesize/10 == 0).
-    dr.drawRect({ x: 0, y: 0, w: fullW - 1, h: fullH - 1 }, COL_GRID);
+    // The frame closes the grid on its top and left and is no heavier than
+    // it; the per-tile COL_GRID rects draw the interior lines.
+    dr.drawRect({ x: b - 1, y: b - 1, w: w * ts + 1, h: h * ts + 1 }, COL_GRID);
     ds.started = true;
   }
 

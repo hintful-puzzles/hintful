@@ -3,15 +3,25 @@
  * (width+1)×(height+1) per-cell diffed loop, whose extra margin row and
  * column draw the closing grid lines and cursor edges. The completion
  * flash inverts marked/blank in its first and last thirds.
+ *
+ * The board is pieces on a quiet surface (`engine/piece.ts`): a marked cell
+ * holds the shaded piece, a blank one the ruled-out dot, and a cell's number
+ * is drawn over whichever it holds.
  */
 
-import { BLACK, TEAL_BOLD, TEAL_WASH, WHITE } from "../../engine/color/colors.ts";
+import { GRAY_WASH, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   clueDoneColor,
   ERROR,
+  ERROR_TEXT,
   HINT_ACTION,
   HINT_EVIDENCE,
+  INK,
+  RULED_OUT,
+  SHADED,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -22,6 +32,7 @@ import {
   MarkOutlines,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { drawPiece, drawRuledOutDot, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
@@ -43,27 +54,42 @@ export const FLASH_TIME = 0.5;
 // --- palette ---------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-export const COL_UNMARKED = 1;
+/** The surface of a cell, whatever it holds. */
+export const COL_CELL = 1;
 export const COL_GRID = 2;
-export const COL_MARKED = 3;
-export const COL_BLANK = 4;
-export const COL_TEXT_SOLVED = 5;
-export const COL_ERROR = 6;
-export const COL_CURSOR = 7;
-export const COL_HINT = 8;
-export const COL_HINT_EVIDENCE = 9;
-const COL_TEXT_DARK = COL_MARKED;
-const COL_TEXT_LIGHT = COL_BLANK;
+/** The piece in a marked cell. */
+export const COL_SHADED = 3;
+/** The dot in a blank cell. */
+export const COL_RULED_OUT = 4;
+/** A number on bare surface, and one the board has satisfied. */
+export const COL_TEXT = 5;
+export const COL_TEXT_SOLVED = 6;
+/** The same two on the shaded piece. */
+export const COL_TEXT_ON_PIECE = 7;
+export const COL_TEXT_SOLVED_ON_PIECE = 8;
+export const COL_ERROR = 9;
+export const COL_ERROR_TEXT = 10;
+export const COL_CURSOR = 11;
+export const COL_HINT = 12;
+export const COL_HINT_EVIDENCE = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
-  out[COL_UNMARKED] = TEAL_WASH;
-  out[COL_GRID] = TEAL_BOLD;
-  out[COL_MARKED] = BLACK;
-  out[COL_BLANK] = WHITE;
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_SHADED] = SHADED;
+  out[COL_RULED_OUT] = RULED_OUT;
+  out[COL_TEXT] = INK;
   out[COL_TEXT_SOLVED] = clueDoneColor(defaultBackground);
+  // Pinned and not ink: it is read against the piece, whose own lightness
+  // barely moves between the schemes.
+  out[COL_TEXT_ON_PIECE] = WHITE;
+  // A gray between the piece and its white number in both schemes, which
+  // `clueDoneColor` is not: in the light scheme it is the piece's lightness.
+  out[COL_TEXT_SOLVED_ON_PIECE] = GRAY_WASH;
   out[COL_ERROR] = ERROR;
+  out[COL_ERROR_TEXT] = ERROR_TEXT;
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
@@ -145,30 +171,24 @@ function drawCell(
   }
 
   if (!(cell & (DRAWFLAG_MARGIN_R | DRAWFLAG_MARGIN_D))) {
-    let color: number;
-    let textColor: number;
-    if (cell & STATE_MARKED) {
-      color = COL_MARKED;
-      textColor = COL_TEXT_LIGHT;
+    const box = { x: startX, y: startY, w: ts - 1, h: ts - 1 };
+    const shaded = (cell & STATE_MARKED) !== 0;
+    dr.drawRect(box, COL_CELL);
+    if (shaded) {
+      drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
     } else if (cell & STATE_BLANK) {
-      color = COL_BLANK;
-      textColor = COL_TEXT_DARK;
-    } else {
-      color = COL_UNMARKED;
-      textColor = COL_TEXT_DARK;
+      // In the corner where the cell has a number, which takes the middle.
+      const off = clueVal >= 0 ? Math.round(box.w * 0.29) : 0;
+      drawRuledOutDot(dr, { ...box, x: box.x + off, y: box.y - off }, COL_RULED_OUT);
     }
-    if (cell & STATE_ERROR) textColor = COL_ERROR;
-    else if (cell & STATE_SOLVED) textColor = COL_TEXT_SOLVED;
-
-    dr.drawRect({ x: startX, y: startY, w: ts - 1, h: ts - 1 }, color);
 
     if (cell & DRAWFLAG_MISTAKE) {
-      // Mistake overlay: an inset error-colored outline.
+      // Mistake overlay: an error-colored outline at the cell's edge, beside
+      // the piece.
       const t = Math.max(1, Math.floor(ts / 16));
-      const inset = Math.max(1, Math.floor(ts / 8));
-      const sx = startX + inset;
-      const sy = startY + inset;
-      const span = ts - 1 - 2 * inset;
+      const sx = startX + 1;
+      const sy = startY + 1;
+      const span = ts - 3;
       dr.drawRect({ x: sx, y: sy, w: span, h: t }, COL_ERROR);
       dr.drawRect({ x: sx, y: sy + span - t, w: span, h: t }, COL_ERROR);
       dr.drawRect({ x: sx, y: sy, w: t, h: span }, COL_ERROR);
@@ -176,19 +196,29 @@ function drawCell(
     }
 
     if (clueVal >= 0) {
-      dr.drawText(
-        { x: startX + Math.floor(ts / 2) - 1, y: startY + Math.floor(ts / 2) - 1 },
-        glyphFont(Math.floor((ts * 3) / 5)),
-        textColor,
-        String(clueVal),
-      );
+      const at = {
+        x: startX + Math.floor(ts / 2) - 1,
+        y: startY + Math.floor(ts / 2) - 1,
+      };
+      let textColor: number;
+      if (cell & STATE_ERROR) {
+        // On the piece a contradicted number is a badge: red ink on the piece
+        // is a difference of hue with none of lightness.
+        if (shaded) dr.drawCircle(at, ts * 0.32, COL_ERROR, COL_ERROR);
+        textColor = shaded ? COL_ERROR_TEXT : COL_ERROR;
+      } else if (cell & STATE_SOLVED) {
+        textColor = shaded ? COL_TEXT_SOLVED_ON_PIECE : COL_TEXT_SOLVED;
+      } else {
+        textColor = shaded ? COL_TEXT_ON_PIECE : COL_TEXT;
+      }
+      dr.drawText(at, glyphFont(Math.floor((ts * 3) / 5)), textColor, String(clueVal));
     }
 
     // The hint's marks lie inside the square, over its edge, so its own
     // repaint undoes them: the block's outline, then the ring on top of it.
     const sides = cell >>> HINT_SIDES_SHIFT;
     const band: MarkBand = {
-      box: { x: startX, y: startY, w: ts - 1, h: ts - 1 },
+      box,
       outer: 0,
       inner: Math.max(2, ts >> 4),
     };

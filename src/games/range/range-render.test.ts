@@ -1,6 +1,6 @@
 // Tier-2 / tier-2.5 render tests for Range: a direct `redraw` against
 // the shared recording double for the live error highlight and the
-// white dot, plus a `renderScenario` snapshot of a generated board
+// pieces and surfaces, plus a `renderScenario` snapshot of a generated board
 // (grid outline, clue text, background) so a render regression is a
 // reviewable text diff.
 import { describe, expect, it } from "vitest";
@@ -13,12 +13,15 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { CLUE, say } from "./hint-text.ts";
 import { type RangeHint, rangeGame } from "./index.ts";
 import {
-  COL_BLACK,
+  COL_CELL,
   COL_ERROR,
+  COL_GIVEN,
   COL_GRID,
   COL_HINT,
-  COL_HINT_BLACKREF,
   COL_HINT_CELL,
+  COL_HINT_SHADEDREF,
+  COL_RULED_OUT,
+  COL_SHADED,
   colors,
   newDrawState,
   redraw,
@@ -52,7 +55,7 @@ function makeState(w: number, h: number, grid: number[]): RangeState {
 }
 
 describe("hint color legend", () => {
-  it("rings a cited black premise in COL_HINT_BLACKREF, distinct from the COL_HINT target", () => {
+  it("rings a cited black premise in COL_HINT_SHADEDREF, distinct from the COL_HINT target", () => {
     // The adjacency deduction shape: a black square (the premise) at the center
     // forces a neighbor white (the target). The element-type legend must draw
     // the cited black square and the forced cell in *different* colors.
@@ -75,9 +78,9 @@ describe("hint color legend", () => {
     const rec = new RecordingDrawing(palette);
     const ds = newDrawState(state, 32);
     redraw(rec, ds, null, state, 1, noCursor, 0, 0, step);
-    // The cited black square rings COL_HINT_BLACKREF (an outline — `line` ops,
+    // The cited black square rings COL_HINT_SHADEDREF (an outline — `line` ops,
     // not a body fill).
-    expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_BLACKREF)).toBe(
+    expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_SHADEDREF)).toBe(
       true,
     );
     // The forced cell is ringed in COL_HINT (drawn as `rect` sides) — a
@@ -117,16 +120,42 @@ describe("live error highlight", () => {
   });
 });
 
-describe("white dot", () => {
-  it("draws a small black dot for a white mark", () => {
-    // A white (dotted) cell draws a centered dot rect in COL_BLACK — pinned, like
-    // the white cell it sits on.
-    const recWhite = renderState(makeState(3, 1, [WHITE, EMPTY, EMPTY]), noCursor);
-    const recEmpty = renderState(makeState(3, 1, [EMPTY, EMPTY, EMPTY]), noCursor);
-    const dots = (rec: RecordingDrawing) =>
-      rec.ops.filter((o) => o.op === "rect" && o.color === COL_BLACK && o.w < 32)
-        .length;
-    expect(dots(recWhite)).toBeGreaterThan(dots(recEmpty));
+describe("pieces on a quiet surface", () => {
+  const surfaces = (rec: RecordingDrawing) =>
+    rec.ops.flatMap((o) => (o.op === "rect" && o.w === 31 ? [o.color] : []));
+
+  it("draws a shaded cell as a piece on the same surface as an undecided one", () => {
+    const rec = renderState(makeState(3, 1, [BLACK, EMPTY, EMPTY]), noCursor);
+    expect(surfaces(rec)).toEqual([COL_CELL, COL_CELL, COL_CELL]);
+    const pieces = rec.ops.filter((o) => o.op === "polygon");
+    expect(pieces.map((o) => o.fill)).toEqual([COL_SHADED]);
+  });
+
+  it("draws a cell marked clear as a dot, with no fill of its own", () => {
+    const rec = renderState(makeState(3, 1, [WHITE, EMPTY, EMPTY]), noCursor);
+    expect(surfaces(rec)).toEqual([COL_CELL, COL_CELL, COL_CELL]);
+    const dots = rec.ops.filter((o) => o.op === "circle");
+    expect(dots.map((o) => o.fill)).toEqual([COL_RULED_OUT]);
+  });
+
+  it("lifts the surface under a clue and nowhere else", () => {
+    const rec = renderState(makeState(3, 1, [EMPTY, 3, EMPTY]), noCursor);
+    expect(surfaces(rec)).toEqual([COL_CELL, COL_GIVEN, COL_CELL]);
+  });
+
+  it("lifts every cell on a lit beat of the solved flash", () => {
+    const state = makeState(3, 1, [BLACK, WHITE, EMPTY]);
+    const rec = new RecordingDrawing(palette);
+    // A fifth of the way in is the first lit beat.
+    redraw(rec, newDrawState(state, 32), null, state, 1, noCursor, 0, 0.2);
+    expect(surfaces(rec)).toEqual([COL_GIVEN, COL_GIVEN, COL_GIVEN]);
+    expect(rec.ops.filter((o) => o.op === "polygon")).toHaveLength(1);
+  });
+
+  it("keeps a shaded piece its color under an error, and frames the cell", () => {
+    const rec = renderState(makeState(3, 1, [BLACK, BLACK, EMPTY]), noCursor);
+    const pieces = rec.ops.filter((o) => o.op === "polygon");
+    expect(pieces.map((o) => o.fill)).toEqual([COL_SHADED, COL_SHADED]);
   });
 });
 

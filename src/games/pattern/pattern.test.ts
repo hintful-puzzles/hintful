@@ -25,7 +25,7 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newPatternDesc } from "./generator.ts";
 import { patternGame } from "./index.ts";
-import { COL_UNKNOWN } from "./render.ts";
+import { COL_CELL, COL_FULL } from "./render.ts";
 import { findMistakes, solveState } from "./solver.ts";
 import {
   computeRuns,
@@ -421,8 +421,9 @@ describe("pattern render", () => {
     });
     const ops = recording.ops;
     expect(ops.length).toBeGreaterThan(0);
-    // Some tiles are still undecided (COL_UNKNOWN = palette index 4).
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_UNKNOWN)).toBe(true);
+    // An undecided tile is plain surface, and a fresh board holds no piece.
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "polygon" && o.fill === COL_FULL)).toBe(false);
     // Clue numbers are drawn as text.
     expect(ops.some((o) => o.op === "text")).toBe(true);
     expect(ops).toMatchSnapshot();

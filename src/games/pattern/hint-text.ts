@@ -17,6 +17,7 @@ import {
   type Sentence,
   so,
 } from "../../engine/hint-words.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import type { Point } from "../../engine/types.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
 
@@ -53,25 +54,25 @@ export const say = {
           : phrase`${thisLine(m)}'s ${clue(m, `run of ${run}`)} can slide only ${slack} cell${
               slack > 1 ? "s" : ""
             }${given(m)}`,
-      move: phrase`${theseCells(m)} must be black`,
+      move: phrase`${theseCells(m)} must be ${SHADED_NAME}`,
     }),
 
   unreachable: (m: Marked): Sentence =>
     so({
       look: phrase`No run of ${thisLine(m)}'s ${clue(m, "clue")} can reach ${theseCells(m)}`,
-      move: phrase`${they(m)} must be white`,
+      move: phrase`${they(m)} must be ${UNSHADED_NAME}`,
     }),
 
   lineEmpty: (m: Marked): Sentence =>
     so({
       look: phrase`${thisLine(m)} has no clues`,
-      move: phrase`${theseCells(m)} must be white`,
+      move: phrase`${theseCells(m)} must be ${UNSHADED_NAME}`,
     }),
 
-  /** Every fit of the line's runs agrees these cells are `black`, or white. */
-  intersection: (m: Marked, black: boolean): Sentence =>
+  /** Every fit of the line's runs agrees these cells are `shaded`, or clear. */
+  intersection: (m: Marked, shaded: boolean): Sentence =>
     so({
-      look: phrase`Every way ${thisLine(m)}'s ${clue(m, "runs")} can fit ${black ? "covers" : "leaves out"} ${theseCells(m)}`,
-      move: phrase`${they(m)} must be ${black ? "black" : "white"}`,
+      look: phrase`Every way ${thisLine(m)}'s ${clue(m, "runs")} can fit ${shaded ? "covers" : "leaves out"} ${theseCells(m)}`,
+      move: phrase`${they(m)} must be ${shaded ? SHADED_NAME : UNSHADED_NAME}`,
     }),
 };

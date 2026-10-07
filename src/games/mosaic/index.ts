@@ -1,7 +1,7 @@
 /**
  * Mosaic (upstream's `mosaic.c`, Fill-a-Pix): numeric clues count the
- * black cells of their 3×3 neighborhood (itself included); mark every
- * cell black or white. Click toggles unmarked→black→white→unmarked
+ * shaded cells of their 3×3 neighborhood (itself included); mark every
+ * cell shaded or clear. Click toggles unmarked→shaded→clear→unmarked
  * (right-click cycles the other way); aligned drags paint the click's
  * mark across a straight run.
  */
@@ -9,6 +9,7 @@
 import type { Game, UiUpdate } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import {
   cursorDelta,
   LEFT_BUTTON,
@@ -100,11 +101,11 @@ const targetVerbs: TargetVerbs<
     border: (ts) => Math.floor(ts / 2),
   }),
   primary: {
-    does: "turn it black, then white, then empty again",
+    does: `turn it ${SHADED_NAME}, then ${UNSHADED_NAME}, then empty again`,
     apply: toggle(false),
   },
   secondary: {
-    does: "turn it white, then black, then empty again",
+    does: `turn it ${UNSHADED_NAME}, then ${SHADED_NAME}, then empty again`,
     apply: toggle(true),
   },
 };
@@ -271,7 +272,7 @@ export const mosaicGame: Game<
       : [],
   hintMarks: {
     roles: {
-      ring: "the squares the step decides; the sentence says whether they must be black or white.",
+      ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
       outline:
         "the number the step reasons from and its block: the number's own square and the eight around it.",
     },

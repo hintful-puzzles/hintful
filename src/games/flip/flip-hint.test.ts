@@ -1,6 +1,6 @@
 /**
  * Flip's hint: the shortest answer pressed in reading order, each press either
- * some dark square's last chance or supplied by the answer.
+ * some unlit square's last chance or supplied by the answer.
  *
  * Each sentence is pinned by a position it fires on, through
  * `testing/hint-positions.ts`, which also holds the scan that finds them.
@@ -65,7 +65,7 @@ const pinned = describeHintPins({
     /** Held on 57 of 494 positions walked. */
     lastChanceOfTwo: "3x3c:d074191345d1644c17058,0e0",
     /** Held on 2 of 494 positions walked: only a Random board has a square
-     * whose every flip is a dark square's last. */
+     * whose every flip is a unlit square's last. */
     lastChanceFlippingNoMore:
       "4x4r:c800e000710032008cc0c600131033000cc80ce801370031008c004e00070033,33f4",
     /** Held on 43 of 494 positions walked. */
@@ -77,7 +77,7 @@ const pinned = describeHintPins({
     lastPressOfOthers: "3x3c:d074191345d1644c17058,058",
     /** Held on 0 of 494 positions walked: it takes a square that flips only
      * itself, so the board is built by hand, each square flipping itself
-     * alone and the first one dark. */
+     * alone and the first one unlit. */
     lastPressOfItself: "3x3r:802008020080200802008,800",
     lastPress: "3x3c:d074191345d1644c17058,058",
     lastChance: "3x3c:d074191345d1644c17058,f68",
@@ -167,16 +167,16 @@ describe("Flip hint plan", () => {
           const others = flippedBy(s, at).filter((j) => j !== at);
           if (rest.length === 0) {
             finishing++;
-            // The last press: the outline is every dark square but its own,
+            // The last press: the outline is every unlit square but its own,
             // and it flips them all.
             expect(step.explanation).toMatch(/finishes the board\.$/);
-            const dark = [...s.grid.keys()].filter((j) => s.grid[j] && j !== at);
-            expect(owed).toEqual(dark);
+            const unlit = [...s.grid.keys()].filter((j) => s.grid[j] && j !== at);
+            expect(owed).toEqual(unlit);
             for (const j of owed) expect(others).toContain(j);
             expect(also).toEqual([]);
           } else if (owed.length > 0) {
             forced++;
-            // Dark, and nothing after this square flips them.
+            // Unlit, and nothing after this square flips them.
             for (const j of owed) {
               expect(s.grid[j]).toBe(1);
               expect(last[j]).toBe(at);
@@ -235,7 +235,7 @@ describe("Flip hint plan", () => {
 });
 
 describe("Flip hint frame", () => {
-  it("rings the square to press, outlines the dark squares it is for and stripes the rest it flips", () => {
+  it("rings the square to press, outlines the unlit squares it is for and stripes the rest it flips", () => {
     const { id, step } = pinned("lastChanceOfTwo");
     const result = renderScenario({ game: G, id, showHint: true });
     expect(result.hint?.explanation).toBe(step.explanation);

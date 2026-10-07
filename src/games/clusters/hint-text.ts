@@ -22,6 +22,7 @@
  * unambiguous there and a disambiguating phrase would be noise.
  */
 
+import { TWO_NAMES } from "../../engine/color/colors.ts";
 import {
   CELL,
   mark,
@@ -32,7 +33,7 @@ import {
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import type { ClustersDeduction } from "./solver.ts";
-import { type ClustersFill, F_COLOR_0 } from "./state.ts";
+import { type ClustersFill, pairIndex } from "./state.ts";
 
 /** The cells a step marks: the one it colors, the tile the refuted color would
  * break (null when that is the target itself), and a chain's forced cells. */
@@ -42,7 +43,8 @@ export interface Marked {
   chain: readonly Point[];
 }
 
-const colorName = (fill: ClustersFill): string => (fill === F_COLOR_0 ? "red" : "blue");
+/** The word for a color: the palette's, so it is the color the piece is. */
+export const colorName = (fill: ClustersFill): string => TWO_NAMES[pairIndex(fill)];
 
 const thisCell = (m: Marked): Narration => mark.this("ring", CELL, [m.target], "cell");
 const thisVeryCell = (m: Marked): Narration =>
@@ -128,7 +130,7 @@ export const say = {
     const neighbor = mark.as("outline", CELL, danger(m), `its outlined ${f} neighbor`);
     if (at.kind === "surrounded") {
       return so({
-        look: phrase`Painting ${thisCell(m)} ${t} would seal ${neighbor} off from every other ${f} tile`,
+        look: phrase`Painting ${thisCell(m)} ${t} would seal ${neighbor} off from its own color`,
         move: thisMust,
       });
     }

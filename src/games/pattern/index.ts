@@ -1,8 +1,8 @@
 /**
  * Pattern (Nonograms) — native TS port of `pattern.c`. Reconstruct a
- * black/white picture from the run-length clues listed beside every row and
- * column. A press cycles a cell's value — left towards black (FULL), right
- * towards white (EMPTY) — exactly as Enter and Space do at the cursor, and a
+ * two-state picture from the run-length clues listed beside every row and
+ * column. A press cycles a cell's value — left towards shaded (FULL), right
+ * towards clear (EMPTY) — exactly as Enter and Space do at the cursor, and a
  * drag paints the pressed cell's new value along a line. The keyboard cursor
  * paints with Ctrl/Shift held.
  */
@@ -23,6 +23,7 @@ import {
 import { trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import {
   endDrag,
   isCursorMove,
@@ -108,12 +109,12 @@ const setSquare =
   };
 
 type PatternVerb = TargetVerb<PatternState, PatternUi, Point, PatternMove>;
-const blackVerb: PatternVerb = {
-  does: "turn it black, then white, then back to gray (meaning undecided)",
+const shadeVerb: PatternVerb = {
+  does: `turn it ${SHADED_NAME}, then ${UNSHADED_NAME} (a dot), then back to undecided`,
   apply: setSquare(clickBlack),
 };
-const whiteVerb: PatternVerb = {
-  does: "go the other way round, white first",
+const clearVerb: PatternVerb = {
+  does: `go the other way round, ${UNSHADED_NAME} first`,
   apply: setSquare(clickWhite),
 };
 
@@ -150,7 +151,7 @@ const targetVerbs: TargetVerbs<
   PatternDrawState,
   Point,
   PatternMove
-> = { geometry, primary: blackVerb, secondary: whiteVerb };
+> = { geometry, primary: shadeVerb, secondary: clearVerb };
 
 function newUi(_state: PatternState): PatternUi {
   return {
@@ -189,7 +190,7 @@ function interpretMove(
   ) {
     // A press cycles the square it lands on, as Enter and Space do at the
     // cursor, and a drag paints that square's new state along the line: so a
-    // drag from a white square returns the line to gray.
+    // drag from a clear square returns the line to undecided.
     const curr = grid[y * w + x];
     if (button === LEFT_BUTTON) {
       ui.dragButton = LEFT_DRAG;
@@ -299,10 +300,10 @@ export interface PatternHint {
 }
 
 /** Narrate *why* the cells are forced, naming the marks the renderer draws for
- * them: the target cells ringed, never pre-filled (the narration says black vs
- * white); the row or column hatched and its clue in the action color; and the
- * already-placed marks the deduction leans on, outlined in their own color's
- * reference color (the cross-game element-type legend). The words are
+ * them: the target cells ringed, never pre-filled (the narration says shaded
+ * or clear); the row or column hatched and its clue in the action color; and
+ * the already-placed marks the deduction leans on, outlined in their own
+ * kind's reference color (the cross-game element-type legend). The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
 function narrate(m: PatternHintMove, w: number): Sentence {
   const at = (i: number) => cellAt(i, w);
@@ -467,9 +468,8 @@ export const patternGame: Game<
   hint,
   hintMarks: {
     roles: {
-      ring: "the cells the step decides; the sentence says whether they must be black or white.",
-      outline:
-        "what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked black or white that hold a run in place, outlined in a color of their own.",
+      ring: `the cells the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
+      outline: `what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked ${SHADED_NAME} or ${UNSHADED_NAME} that hold a run in place, outlined in a color of their own.`,
       stripes: "the row or column the sentence names, running on through its numbers.",
     },
   },

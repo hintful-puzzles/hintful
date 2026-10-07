@@ -4,7 +4,7 @@
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads. Every word that points at
  * the board is a reference to the mark it points at (`engine/hint-words.ts`):
- * the cell the step decides is ringed, the cells and the black square it
+ * the cell the step decides is ringed, the cells and the shaded square it
  * reasons from are outlined, the clue it counts from is redrawn in the action
  * color, and the run a `reach` sentence names is striped.
  *
@@ -16,7 +16,7 @@
  *   the clue's four directions (past the clue itself where the run is empty).
  * - `reach` stripes the whole path behind the target, so the target is the
  *   run's **far end**.
- * - `connect` outlines exactly the target's own non-black neighbors, so they
+ * - `connect` outlines exactly the target's own unshaded neighbors, so they
  *   are the cells **around it**.
  *
  * The clue is "this 5" rather than "clue 5" because a clue lies inside its own
@@ -35,13 +35,14 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import type { Point } from "../../engine/types.ts";
 
 /** A clue's number, redrawn in the action color: an element apart from its
  * cell, whose outline is the line of sight's. */
 export const CLUE: MarkKind<Point> = { name: "clue", key: (p) => `${p.x},${p.y}` };
 
-/** What a step marks: the cell it decides, the cells and black squares it
+/** What a step marks: the cell it decides, the cells and shaded squares it
  * reasons from, the run it names and the clue it counts from. */
 export interface Marked {
   target: Point;
@@ -58,31 +59,31 @@ const theClue = (m: Marked, n: number): Narration =>
 export const say = {
   adjacency: (m: Marked): Sentence =>
     so({
-      look: phrase`${thisCell(m)} touches ${mark.the("outline", CELL, m.blacks, "black square")}, and no two black squares may touch`,
-      move: phrase`it must be white`,
+      look: phrase`${thisCell(m)} touches ${mark.the("outline", CELL, m.blacks, `${SHADED_NAME} square`)}, and no two ${SHADED_NAME} squares may touch`,
+      move: phrase`it must be ${UNSHADED_NAME}`,
     }),
 
   // Read at the small extremes (docs/games/hints.md § "Sanity-read at the
   // degenerate extremes"): a 1 sees only its own cell, and "all 2 of" reads
   // wrong where "both" is the word — Salad's line counts say it the same way.
-  /** The clue `n` already sees all its white cells. */
+  /** The clue `n` already sees all its clear cells. */
   satisfied: (m: Marked, n: number): Sentence => {
     const seen =
       n === 1
-        ? "its one white cell"
+        ? `its one ${UNSHADED_NAME} cell`
         : n === 2
-          ? "both of its white cells"
-          : `all ${n} of its white cells`;
+          ? `both of its ${UNSHADED_NAME} cells`
+          : `all ${n} of its ${UNSHADED_NAME} cells`;
     return so({
       look: phrase`${theClue(m, n)} already sees ${mark.paren("outline", CELL, m.area, seen)}`,
-      move: phrase`${mark.as("ring", CELL, [m.target], `the cell just past ${pronoun(CELL, m.area)}`)} must be black`,
+      move: phrase`${mark.as("ring", CELL, [m.target], `the cell just past ${pronoun(CELL, m.area)}`)} must be ${SHADED_NAME}`,
     });
   },
 
   overrun: (m: Marked, n: number): Sentence =>
     so({
-      look: phrase`if ${thisCell(m)}, just past ${mark.the("outline", CELL, m.area, "cell")}, were white, ${theClue(m, n)} would see more than ${n}`,
-      move: phrase`it must be black`,
+      look: phrase`if ${thisCell(m)}, just past ${mark.the("outline", CELL, m.area, "cell")}, were ${UNSHADED_NAME}, ${theClue(m, n)} would see more than ${n}`,
+      move: phrase`it must be ${SHADED_NAME}`,
     }),
 
   // The solver forces the run because the clue's other directions, even at
@@ -95,20 +96,20 @@ export const say = {
       ? so({
           look: phrase`${theClue(m, n)} needs more than ${mark.the("outline", CELL, m.area, "cell")}`,
           follows: phrase`it must see along ${run}`,
-          move: phrase`${target} must be white`,
+          move: phrase`${target} must be ${UNSHADED_NAME}`,
         })
       : so({
           look: phrase`${theClue(m, n)} can't see ${n} without seeing along ${run} to ${target}`,
-          move: phrase`that cell must be white`,
+          move: phrase`that cell must be ${UNSHADED_NAME}`,
         });
   },
 
   // Both `ruleConnectedness` call sites record WHITE, so there is no
-  // black-target sentence to write: a cut vertex of the white region is
-  // forced *white*, never black.
+  // shaded-target sentence to write: a cut vertex of the unshaded region is
+  // forced *clear*, never shaded.
   connect: (m: Marked): Sentence =>
     so({
-      look: phrase`painting ${thisCell(m)} black would cut some of ${mark.the("outline", CELL, m.area, "cell")} around it off from the rest`,
-      move: phrase`it must stay white`,
+      look: phrase`making ${thisCell(m)} ${SHADED_NAME} would cut some of ${mark.the("outline", CELL, m.area, "cell")} around it off from the rest`,
+      move: phrase`it must stay ${UNSHADED_NAME}`,
     }),
 };

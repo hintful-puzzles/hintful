@@ -1591,6 +1591,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "cache",
+      "frame",
       "h",
       "started",
       "tileSize",

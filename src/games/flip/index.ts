@@ -283,8 +283,8 @@ export const flipGame: Game<
     roles: {
       ring: "the square to press.",
       outline:
-        "the dark squares the press is for: the ones only it can still light, no square further on flipping them, or on the last press every dark square left.",
-      stripes: "the other squares that press flips, dark or lit.",
+        "the unlit squares the press is for: the ones only it can still light, no square further on flipping them, or on the last press every unlit square left.",
+      stripes: "the other squares that press flips, unlit or lit.",
     },
   },
   hintKeepTrack,

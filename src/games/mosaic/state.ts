@@ -78,7 +78,7 @@ export type MosaicMove =
       paintState: number;
     }
   | { type: "solve"; solution: string }
-  /** A hint step's squares, all given `mark` (black or white). The pointer
+  /** A hint step's squares, all given `mark` (shaded or clear). The pointer
    * makes it one square at a time, with toggles. */
   | { type: "fill"; cells: number[]; mark: number };
 

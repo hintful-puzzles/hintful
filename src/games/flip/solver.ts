@@ -4,7 +4,7 @@
  * A press is its own undo and presses commute, so an answer is a set of
  * squares, and the sets that work are the solutions of a linear system over
  * GF(2): one equation a square, saying the presses that flip it are odd in
- * number exactly when it is dark.
+ * number exactly when it is unlit.
  */
 
 import type { FlipState } from "./state.ts";

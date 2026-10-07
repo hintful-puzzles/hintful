@@ -7,6 +7,7 @@
  * color-legend roles are disjoint, and refusal and keep-track behave.
  */
 import { describe, expect, it } from "vitest";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -136,7 +137,9 @@ describe("pattern hint — narration", () => {
         // Opens by naming the board pattern (the row/column being reasoned over).
         expect(t, `bad opener: "${t}"`).toMatch(/^(This|No run|Every way)\b/);
         // Concludes with a modal of necessity, never a bare state-of-being verb.
-        expect(t, `no necessity modal: "${t}"`).toMatch(/must (be|stay) (black|white)/);
+        expect(t, `no necessity modal: "${t}"`).toMatch(
+          new RegExp(`must be (${SHADED_NAME}|${UNSHADED_NAME})`),
+        );
         expect(t, `flat state-of-being verb: "${t}"`).not.toMatch(
           /\b(is|are|stays|it's)\b/,
         );
@@ -184,7 +187,9 @@ describe("pattern hint — narration", () => {
     // fits").
     const t = pinned("intersection").step.explanation;
     expect(t, `bad intersection narration: "${t}"`).toMatch(
-      /^Every way this (row|column)'s runs can fit (covers|leaves out) .*, so (it|they) must be (black|white)\.$/,
+      new RegExp(
+        `^Every way this (row|column)'s runs can fit (covers|leaves out) .*, so (it|they) must be (${SHADED_NAME}|${UNSHADED_NAME})\\.$`,
+      ),
     );
     expect(t).not.toMatch(/only one arrangement/i);
   });

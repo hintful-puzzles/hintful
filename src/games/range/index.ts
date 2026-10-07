@@ -24,6 +24,7 @@ import {
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
+import { SHADED_NAME } from "../../engine/piece.ts";
 import {
   cursorDelta,
   MOD_SHFT,
@@ -114,9 +115,9 @@ function cycleAt(forwards: boolean) {
 const targetVerbs: TargetVerbs<RangeState, RangeUi, RangeDrawState, Point, RangeMove> =
   {
     geometry: squareGrid({ size: (s) => s, border }),
-    primary: { does: "color it black", apply: cycleAt(false) },
+    primary: { does: `color it ${SHADED_NAME}`, apply: cycleAt(false) },
     secondary: {
-      does: "mark it with a dot, if you know it should not be black",
+      does: `mark it with a dot, if you know it should not be ${SHADED_NAME}`,
       apply: cycleAt(true),
     },
   };
@@ -440,8 +441,7 @@ export const rangeGame: Game<
   hintMarks: {
     roles: {
       ring: "the cell the step decides.",
-      outline:
-        "what the step reasons from: the cells a clue already sees, the cells around one that black would cut off, or a black square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color.",
+      outline: `what the step reasons from: the cells a clue already sees, the cells around one that ${SHADED_NAME} would cut off, or a ${SHADED_NAME} square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color.`,
       stripes:
         "the run a clue has to see along, from the clue as far as the ringed cell.",
     },

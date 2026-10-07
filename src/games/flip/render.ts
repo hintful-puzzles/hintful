@@ -1,22 +1,28 @@
 /**
- * Flip's renderer: the two-faced tiles, the diagonal marks that show which
- * neighbors a click will flip, the cursor ring, the win flash and the hint's
- * marks.
+ * Flip's renderer: the piece in each square, the diagram on it that shows
+ * which squares a click there flips, the cursor ring, the win flash and the
+ * hint's marks.
+ *
+ * The board is pieces on a quiet surface (`engine/piece.ts`). A square's two
+ * states are the collection's two-state pair: an unlit square holds the first
+ * member and a lit one the second, so the aim reads as one kind of piece.
  */
 
-import { WHITE } from "../../engine/color/colors.ts";
+import { BLACK, TWO, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
-  GRID_MID,
+  cellSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { flipWrongFace } from "../../engine/color/palette-games.ts";
+import { drawThickRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, type MarkBand, MarkOutlines } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
+import type { Color, Rect, Size } from "../../engine/types.ts";
 import type { FlipMove, FlipParams, FlipState, FlipUi } from "./state.ts";
 
 export interface FlipDrawState {
@@ -36,16 +42,24 @@ const MARK_SHIFT = 8;
 /** A square the hint's words stripe, above the byte of mark sides. */
 const STRIPED = 1 << 16;
 
-// Color palette indices (upstream's enum).
+// Color palette indices.
 const COL_BACKGROUND = 0;
-const COL_WRONG = 1;
-const COL_RIGHT = 2;
+const COL_UNLIT = 1;
+const COL_LIT = 2;
 const COL_GRID = 3;
-const COL_DIAG = 4;
+/** The diagram on an unlit square's piece; {@link COL_LIT_DIAG} on a lit one's. */
+const COL_UNLIT_DIAG = 4;
 const COL_CURSOR = 5;
 export const COL_HINT = 6; // the square to press, ringed; what else it flips, striped
-export const COL_HINT_CELL = 7; // the dark squares the press is for: outlined
-const NCOLORS = 8;
+export const COL_HINT_CELL = 7; // the unlit squares the press is for: outlined
+const COL_LIT_DIAG = 8;
+/** The surface of a square, which the piece sits inset on. */
+const COL_SURFACE = 9;
+const NCOLORS = 10;
+
+/** Which member of the two-state pair a square holds: the first while it is
+ * still to be lit, the second once it is. */
+const pairIndex = (unlit: boolean): 0 | 1 => (unlit ? 0 : 1);
 
 export const PREFERRED_TILE_SIZE = 48;
 export const ANIM_TIME = 0.25;
@@ -69,13 +83,15 @@ export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
   const ret: Color[] = new Array(NCOLORS);
   ret[COL_BACKGROUND] = bg;
-  ret[COL_WRONG] = flipWrongFace(bg);
-  // A lit square *is* light, in either scheme: the goal is to light them all.
-  ret[COL_RIGHT] = WHITE;
-  // The mid step, not the dark one: the diagonal marks sit on both the
-  // paper face and the dark face, and only a mid gray shows on each.
-  ret[COL_GRID] = GRID_MID;
-  ret[COL_DIAG] = ret[COL_GRID];
+  ret[COL_SURFACE] = cellSurface(bg);
+  ret[COL_GRID] = surfaceGrid(bg);
+  ret[COL_UNLIT] = TWO[pairIndex(true)];
+  ret[COL_LIT] = TWO[pairIndex(false)];
+  // Pinned and not ink or paper: each diagram is read against a piece whose
+  // own lightness barely moves between the schemes, the lighter of the pair
+  // taking the dark one.
+  ret[COL_UNLIT_DIAG] = WHITE;
+  ret[COL_LIT_DIAG] = BLACK;
   ret[COL_CURSOR] = CURSOR;
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -179,36 +195,32 @@ function drawTile(
   const ts = ds.tileSize;
   const bx = x * ts + border(ts);
   const by = y * ts + border(ts);
-  const dcol = v & 4 ? COL_CURSOR : COL_DIAG;
+  const inner: Rect = { x: bx + 1, y: by + 1, w: ts - 1, h: ts - 1 };
+  const unlit = (v & 1) !== 0;
 
-  dr.clip({ x: bx + 1, y: by + 1, w: ts - 1, h: ts - 1 });
-  dr.drawRect(
-    { x: bx + 1, y: by + 1, w: ts - 1, h: ts - 1 },
-    anim ? COL_BACKGROUND : v & 1 ? COL_WRONG : COL_RIGHT,
-  );
+  dr.clip(inner);
+  dr.drawRect(inner, COL_SURFACE);
 
-  if (anim) {
-    const at = Math.floor(ts * progress);
-    const coords: Point[] = [
-      { x: bx + ts, y: by },
-      { x: bx + at, y: by + at },
-      { x: bx, y: by + ts },
-      { x: bx + ts - at, y: by + ts - at },
-    ];
-    let color = v & 1 ? COL_WRONG : COL_RIGHT;
-    if (progress < 0.5) color = COL_WRONG + COL_RIGHT - color;
-    dr.drawPolygon(coords, color, COL_GRID);
-  }
+  // Under the piece: the bands mark the square, and the piece is what it holds.
+  if (stripes) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
 
-  // Under the diagram, which is drawn over the bands and stays readable.
-  if (stripes)
-    dr.drawHatch(
-      { x: bx + 1, y: by + 1, w: ts - 1, h: ts - 1 },
-      COL_HINT,
-      hatchPeriod(ts),
+  const piece = (isUnlit: boolean, grown: number): void =>
+    drawPiece(
+      dr,
+      inner,
+      TWO_SHAPES[pairIndex(isUnlit)],
+      isUnlit ? COL_UNLIT : COL_LIT,
+      grown,
     );
+  // A flip is the old piece shrinking into the middle of its square and the
+  // new one growing out of it, one after the other: two shapes in one square
+  // at once read as neither.
+  if (anim && progress < 0.5) piece(!unlit, 1 - 2 * progress);
+  else piece(unlit, anim ? 2 * progress - 1 : 1);
 
-  for (let i = 0; i < h; i++) {
+  // The diagram is sized to a whole piece, so a piece mid-flip carries none.
+  const dcol = unlit ? COL_UNLIT_DIAG : COL_LIT_DIAG;
+  for (let i = 0; !anim && i < h; i++) {
     for (let j = 0; j < w; j++) {
       if (!s.matrix[(y * w + x) * wh + i * w + j]) continue;
       const ox = j - x;
@@ -237,10 +249,17 @@ function drawTile(
     }
   }
 
-  // The hint's marks, on the tile's own edge and clear of the diagram in its
-  // middle. The ring last, so it wins a square that is both.
+  // The cursor, at the square's edge and beside the piece. Wider than a hint
+  // mark, so a square that has both shows the cursor inside the mark.
+  if (v & 4) {
+    const t = Math.max(3, Math.floor(ts / 12));
+    drawThickRectOutline(dr, inner.x, inner.y, inner.w, inner.h, t, COL_CURSOR);
+  }
+
+  // The hint's marks, on the square's own edge and beside the piece. The ring
+  // last, so it wins a square that is both.
   const band: MarkBand = {
-    box: { x: bx + 1, y: by + 1, w: ts - 1, h: ts - 1 },
+    box: inner,
     outer: 0,
     inner: Math.max(2, ts >> 4),
   };
@@ -248,5 +267,5 @@ function drawTile(
   drawMarkSides(dr, band, marks.targetSides(x, y), COL_HINT);
 
   dr.unclip();
-  dr.drawUpdate({ x: bx + 1, y: by + 1, w: ts - 1, h: ts - 1 });
+  dr.drawUpdate(inner);
 }

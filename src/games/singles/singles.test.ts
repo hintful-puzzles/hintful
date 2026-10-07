@@ -181,13 +181,13 @@ describe("singles save round-trip", () => {
 });
 
 describe("singles render", () => {
-  it("draws the initial frame with a grid outline", () => {
+  it("draws the initial frame with the grid's lines", () => {
     const { recording } = renderScenario({
       game: singlesGame,
       id: "5x5de#singles-render",
     });
     expect(recording.ops.length).toBeGreaterThan(0);
-    expect(recording.ops.some((o) => o.op === "line" && o.color === COL_GRID)).toBe(
+    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_GRID)).toBe(
       true,
     );
     expect(recording.ops).toMatchSnapshot();

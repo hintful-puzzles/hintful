@@ -1,8 +1,8 @@
 /**
  * Mosaic's hint: the game's one deduction rule, read off the player's own
- * marks. A number whose block already holds its black squares makes the rest
- * of the block white; a number whose block has only as many squares left that
- * are not white as it needs makes those black. Generation keeps a board only
+ * marks. A number whose block already holds its shaded squares makes the rest
+ * of the block clear; a number whose block has only as many squares left that
+ * are not clear as it needs makes those shaded. Generation keeps a board only
  * when these two alone solve it (`solver.ts`'s `solveCell`), so a board whose
  * marks are all correct always has a next step.
  */
@@ -35,7 +35,7 @@ export interface MosaicHint {
   w: number;
 }
 
-/** The game's two rules: a number that has its black squares, and a number
+/** The game's two rules: a number that has its shaded squares, and a number
  * that needs every square it has left. */
 export const MOSAIC_RUNGS = ["met", "needsAll"] as const;
 export type MosaicRung = (typeof MOSAIC_RUNGS)[number];

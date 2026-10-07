@@ -16,6 +16,7 @@
  * from `engine/testing/hint-games.ts` enrollment, not here.
  */
 import { describe, expect, it } from "vitest";
+import { TWO_NAMES } from "../../engine/color/colors.ts";
 import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { CELL, mark, phrase, stepMarks, unshaped } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -228,10 +229,14 @@ describe("hint", () => {
       ]);
       const kind = d.reason.at.kind;
       if (d.reason.kind === "chain") {
-        expect(step.explanation).toMatch(/^Suppose this cell were (red|blue):/);
+        expect(step.explanation).toMatch(
+          new RegExp(`^Suppose this cell were (${TWO_NAMES.join("|")}):`),
+        );
         expect(hl.chain.length).toBe(d.reason.steps.length);
       } else if (kind === "dotOvercount") {
-        expect(step.explanation).toMatch(/already touches its one (?:red|blue) tile/);
+        expect(step.explanation).toMatch(
+          new RegExp(`already touches its one (?:${TWO_NAMES.join("|")}) tile`),
+        );
         expect(hl.danger).toBeDefined();
       } else if (kind === "surrounded" && d.reason.at.cell !== d.index) {
         expect(step.explanation).toContain("seal");
@@ -254,9 +259,10 @@ describe("hint", () => {
           `${step.explanation} — a second mark is shown but "this cell" is not tied to it`,
         ).toBe(true);
       }
-      // The conclusion names the forced color in the necessity voice.
+      // The conclusion names the forced color in the necessity voice, in the
+      // palette's word for the piece the cell is drawn as.
       expect(step.explanation).toContain(
-        `must be ${d.fill === F_COLOR_0 ? "red" : "blue"}`,
+        `must be ${TWO_NAMES[d.fill === F_COLOR_0 ? 1 : 0]}`,
       );
     });
   });
@@ -405,12 +411,17 @@ describe("hint rendering (tier 2.5)", () => {
     const hl = step.highlights as ClustersHintHighlights;
     expect(hl.chain.length).toBeGreaterThan(0);
     const ops = result.recording.ops;
-    // Every what-if cell shades COL_HINT_CELL and carries its small mark in
-    // the tile color the hypothesis would force.
+    // Every what-if cell is outlined COL_HINT_CELL and carries a small piece
+    // of the color the hypothesis would force: smaller than any placed piece.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
-    expect(
-      ops.some((o) => o.op === "rect" && (o.color === COL_0 || o.color === COL_1)),
-    ).toBe(true);
+    const width = (o: (typeof ops)[number]): number | null => {
+      if (o.op === "circle" && o.fill === COL_0) return 2 * o.r;
+      if (o.op !== "polygon" || o.fill !== COL_1) return null;
+      const xs = o.points.map((p) => p[0]);
+      return Math.max(...xs) - Math.min(...xs);
+    };
+    const widths = ops.map(width).filter((v): v is number => v !== null);
+    expect(Math.min(...widths)).toBeLessThan(Math.max(...widths) / 2);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_DANGER)).toBe(true);
 
     // …and each carries its **ordinal**: an unordered set of shaded cells

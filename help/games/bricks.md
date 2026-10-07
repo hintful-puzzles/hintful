@@ -7,13 +7,15 @@ You're given a hexagonal grid with numbers in some of its cells. Your objective 
 3. A number indicates the amount of shaded cells around it.
 4. Cells with numbers cannot be shaded.
 
+A shaded cell holds a {{pair:0}} square. A cell you have decided is not shaded is *clear*, and shows a dot. The numbers sit on lighter cells.
+
 ## Controls
 
 {{controls}}
 
-Drag across several cells to give them all the color the first one took.
+Drag across several cells to make them all what the first one became.
 
-You can also use the numpad (keys 1, 3, 7, 9) to move the cursor diagonally. Hold Ctrl while moving the cursor to shade the cells it leaves and enters, Shift to unshade them, or both to empty them.
+You can also use the numpad (keys 1, 3, 7, 9) to move the cursor diagonally. Hold Ctrl while moving the cursor to shade the cells it leaves and enters, Shift to mark them clear, or both to empty them.
 
 ## Where the puzzle comes from
 
@@ -21,11 +23,11 @@ This genre was invented by [Nikoli](https://www.nikoli.co.jp/) under the name *T
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. Each step decides one cell: either it must be shaded, or it must *stay clear*, which means marking it unshaded (right-click, or Space). The hint reasons from the numbers and your own shaded and unshaded cells, so it carries on from wherever you are.
+**Hint** explains the next step rather than simply making it. Each step decides one cell: either it must be shaded, or it must *stay clear*, which means giving it the dot (right-click, or Space). The hint reasons from the numbers and your own shaded and clear cells, so it carries on from wherever you are.
 
 {{hint-marks}}
 
-A *shaded brick*, in the hint's words, is a shaded cell. Where a sentence says "this cell", it means the ringed one; the smaller rings inside cells are the "outlined" cells it names.
+A *shaded brick*, in the hint's words, is a cell holding a {{pair:0}} square. Where a sentence says "this cell", it means the ringed one; the thinner rings in another color are the "outlined" cells it names.
 
 Each step is one of the rules at work on a single cell: shading it would make three in a row, leave it with nothing shaded beneath it to rest on, or give a number too many shaded neighbors; or clearing it would leave a shaded brick above with nothing to rest on, or leave a number unable to reach its count.
 

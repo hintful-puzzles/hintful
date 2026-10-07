@@ -1,32 +1,35 @@
 /**
- * Singles (Hitori) rendering — port of `game_redraw` / `tile_redraw` in
- * `singles.c`. A per-tile diffed loop draws a grid-outlined tile (black or
- * error fill for a blackened cell, the flash fill on completion,
- * otherwise the background), a circle ring for a white mark, the cell
- * number (always for a white cell; on a black cell only when the
- * show-black-numbers preference is on), cursor corner brackets, and a red
- * grid outline when the board is in an impossible state. Cells flagged by
- * Check & Save (`findMistakes`) get an inset error outline.
+ * Singles (Hitori) rendering. A per-tile diffed loop draws each cell as pieces
+ * on a quiet surface (`engine/piece.ts`): a blacked-out cell holds the shaded
+ * piece, a cell the player has marked as kept holds a ring round its number,
+ * and an undecided cell is plain surface. Every cell shows its number, except
+ * a blacked-out one while the show-black-numbers preference is off. The cursor
+ * brackets, the hint's marks and the Check & Save outline (`findMistakes`) all
+ * sit at the cell's edge, beside the piece and the ring.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLACK, GRAY, ORANGE, WHITE } from "../../engine/color/colors.ts";
+import { ORANGE, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   ERROR,
-  FLASH,
-  GRID_MID,
+  ERROR_TEXT,
+  givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE,
   HINT_WHITEREF,
   INK,
+  RULED_OUT,
+  SHADED,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
+import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { SinglesHint } from "./index.ts";
 import {
@@ -41,50 +44,53 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_TIME = 0.7;
 
-// --- palette (index-for-index with the upstream COL_* enum) ----------------
+// --- palette ---------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-/** Upstream's COL_HIGHLIGHT slot, which it never draws. Here: the ink of a
- * white cell's number and circle — split from {@link COL_BLACK}, which is a
- * piece and stays black in the dark scheme where ink inverts. */
-export const COL_TEXT = 1;
-export const COL_FLASH = 2; // upstream's COL_LOWLIGHT slot: the solved flash
-export const COL_BLACK = 3;
-export const COL_WHITE = 4;
-export const COL_BLACKNUM = 5;
-export const COL_GRID = 6;
-export const COL_CURSOR = 7;
-export const COL_ERROR = 8;
-// Fork additions (beyond upstream's COL_* enum): the explained hint.
-export const COL_HINT = 9; // the cell(s) the displayed hint forces (blue)
-export const COL_HINT_CELL = 10; // the deduction's premise/evidence (light blue)
-export const COL_HINT_STRAND = 11; // the corner a corner-deduction protects (amber)
-// Element-type legend: a decided premise cell the reason *cites* rings in a
-// color fixed by its type, so "a shaded square" and "the ringed white square"
-// read as distinct from the blue forced cell (and from each other) — paired
-// with the cell's own black/white appearance as the non-color cue.
-export const COL_HINT_BLACKREF = 12; // a cited shaded (black) premise (teal ring)
-export const COL_HINT_WHITEREF = 13; // a cited ringed-white premise (violet ring)
+export const COL_GRID = 1;
+/** The surface of a cell, which is all an undecided cell is. */
+export const COL_EMPTY = 2;
+/** The surface under every cell that holds no piece while the board flashes. */
+export const COL_FLASH = 3;
+/** The number of a cell that holds no piece. */
+export const COL_TEXT = 4;
+export const COL_SHADED = 5;
+/** The number on the shaded piece: pinned, because the piece is one color in
+ * both schemes and ink is not. */
+export const COL_SHADED_NUM = 6;
+/** The ring round a number the player has marked as kept. */
+export const COL_KEPT = 7;
+export const COL_CURSOR = 8;
+export const COL_ERROR = 9;
+/** The number on a piece drawn in {@link COL_ERROR}. */
+export const COL_ERROR_TEXT = 10;
+export const COL_HINT = 11; // the cell(s) the displayed hint forces
+export const COL_HINT_CELL = 12; // an undecided cell the deduction reasons from
+export const COL_HINT_STRAND = 13; // the corner a corner-deduction protects
+// A decided premise cell the reason *cites* is outlined in a color fixed by
+// its kind, so a cited blacked-out square and a cited kept one read as
+// distinct from the forced cell and from each other. The cell's own piece or
+// ring is the cue that is not a color.
+export const COL_HINT_BLACKREF = 14;
+export const COL_HINT_WHITEREF = 15;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background } = mkhighlight(defaultBackground);
   const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  out[COL_BACKGROUND] = defaultBackground;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_EMPTY] = cellSurface(defaultBackground);
+  out[COL_FLASH] = givenSurface(defaultBackground);
   out[COL_TEXT] = INK;
-  out[COL_FLASH] = FLASH;
-  // A shaded cell *is* black: a piece, pinned in both schemes, not ink.
-  out[COL_BLACK] = BLACK;
-  // Its white counterpart, likewise pinned. The renderer never draws it — a
-  // white cell shows the board — but the slot keeps the upstream index.
-  out[COL_WHITE] = WHITE;
-  out[COL_BLACKNUM] = GRAY;
-  out[COL_GRID] = GRID_MID;
+  out[COL_SHADED] = SHADED;
+  out[COL_SHADED_NUM] = WHITE;
+  out[COL_KEPT] = RULED_OUT;
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
+  out[COL_ERROR_TEXT] = ERROR_TEXT;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
-  // A third hint part with its own hue: the corner cell a corner deduction keeps
-  // white, which is neither the acted-on cell (blue) nor the evidence (teal).
+  // A third hint part with its own hue: the corner cell a corner deduction
+  // keeps open, which is neither the acted-on cell nor the evidence.
   out[COL_HINT_STRAND] = ORANGE;
   out[COL_HINT_BLACKREF] = HINT_BLACKREF;
   out[COL_HINT_WHITEREF] = HINT_WHITEREF;
@@ -97,13 +103,16 @@ export function colors(defaultBackground: Color): Color[] {
  * the painter does — one function, both callers
  * ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
 export const border = (ts: number): number => Math.floor(ts / 2);
-const crad = (ts: number): number => Math.floor(ts / 2) - 1;
-const textsz = (ts: number): number => Math.floor((14 * crad(ts)) / 10) - 1;
 const coord = (v: number, ts: number): number => v * ts + border(ts);
-/** A hint mark's thickness: it replaces the cell's own grid outline, and reads
- * as a highlight by color rather than by weight. Bounded by the number the cell
- * always carries, which is drawn at `textsz(ts)` centered. */
+/** The thickness of a mark at the cell's edge (the cursor's brackets, a hint's
+ * ring or outline): it reads as a highlight by color rather than by weight. */
 const markT = (ts: number): number => Math.max(2, ts >> 4);
+/** The radius of a kept cell's ring. It stands in from the cell's edge by more
+ * than {@link markT}, so an edge mark lands beside the ring and never on it. */
+const ringRadius = (ts: number): number =>
+  (ts - 1) / 2 - Math.max(markT(ts) + 1, Math.round(ts / 10));
+/** The number's size, which fits inside the ring. */
+const textsz = (ts: number): number => Math.floor(1.5 * ringRadius(ts));
 
 export function computeSize(p: { w: number; h: number }, ts: number): Size {
   return { w: ts * p.w + 2 * border(ts), h: ts * p.h + 2 * border(ts) };
@@ -119,9 +128,9 @@ const DS_ERROR = 0x10;
 const DS_FLASH = 0x20;
 const DS_IMPOSSIBLE = 0x40;
 const DS_MISTAKE = 0x80;
-// Hint overlay (fork addition): a forced cell, an evidence cell (outlined if
-// undecided, ringed if it is a decided black/circle premise — the color is
-// then the reason), and a corner-deduction's protected corner (amber).
+// Hint overlay: a forced cell, an evidence cell (outlined, in a color of its
+// kind when it is a decided premise, whose state is then the reason), and a
+// corner-deduction's protected corner.
 const DS_HINT_TARGET = 0x100;
 const DS_HINT_EVID = 0x200;
 const DS_HINT_STRAND = 0x400;
@@ -133,6 +142,9 @@ export interface SinglesDrawState {
   w: number;
   h: number;
   cache: Int32Array;
+  /** The color the frame round the grid was last drawn in, or null before the
+   * first frame. */
+  frame: number | null;
 }
 
 export function newDrawState(state: SinglesState, tileSize: number): SinglesDrawState {
@@ -142,6 +154,7 @@ export function newDrawState(state: SinglesState, tileSize: number): SinglesDraw
     w: state.w,
     h: state.h,
     cache: new Int32Array(state.n).fill(-1),
+    frame: null,
   };
 }
 
@@ -155,85 +168,94 @@ function tileRedraw(
   num: number,
   f: number,
 ): void {
-  let bg: number;
-  let tcol: number;
-  let dnum: boolean;
+  const shaded = f & DS_BLACK;
+  const error = f & DS_ERROR;
+  // What is drawn on the surface is ink, and what is drawn on the piece is
+  // pinned with it. An error takes both over: the piece turns to the error
+  // color, and so do a number and a ring that stand on the surface.
+  const tcol = shaded
+    ? error
+      ? COL_ERROR_TEXT
+      : COL_SHADED_NUM
+    : error
+      ? COL_ERROR
+      : COL_TEXT;
+  const dnum = !shaded || f & DS_BLACK_NUM;
 
-  if (f & DS_BLACK) {
-    bg = f & DS_ERROR ? COL_ERROR : COL_BLACK;
-    tcol = COL_BLACKNUM;
-    dnum = !!(f & DS_BLACK_NUM);
-  } else {
-    bg = f & DS_FLASH ? COL_FLASH : COL_BACKGROUND;
-    tcol = f & DS_ERROR ? COL_ERROR : COL_TEXT;
-    dnum = true;
+  // Grid edge first, so the cell can overwrite it: the line is the tile's
+  // right and bottom pixel, and the frame closes the top and left.
+  dr.drawRect({ x, y, w: ts, h: ts }, f & DS_IMPOSSIBLE ? COL_ERROR : COL_GRID);
+  const inner = { x, y, w: ts - 1, h: ts - 1 };
+  const c = { x: x + inner.w / 2, y: y + inner.h / 2 };
+  dr.drawRect(inner, !shaded && f & DS_FLASH ? COL_FLASH : COL_EMPTY);
+  // The hatch goes under the piece: it marks the line, and the piece is what
+  // the line holds.
+  if (f & DS_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
+
+  if (shaded) {
+    drawPiece(dr, inner, SHADED_SHAPE, error ? COL_ERROR : COL_SHADED);
+  } else if (f & DS_CIRCLE) {
+    // Unfilled, so the surface (and a hatch on it) shows through: a kept cell
+    // is the board with a mark on it, and holds no piece.
+    const ring = error ? COL_ERROR : COL_KEPT;
+    const r = ringRadius(ts);
+    const weight = Math.max(2, Math.round(ts / 24));
+    // Half-pixel steps: one-pixel strokes a whole pixel apart leave specks of
+    // surface between them.
+    for (let i = 0; i < 2 * weight - 1; i++) dr.drawCircle(c, r - i / 2, -1, ring);
   }
 
-  // A forced cell is never pre-filled with the black square / circle the player
+  // A forced cell is never pre-filled with the piece or the ring the player
   // must place themselves: the mark says "act here", the narration says which
   // action. (Auto-hint applies the move for real, so animation mode renders the
   // actual mark.)
   //
   // Every Singles cell carries a **number**, so no hint role can be a fill; all
-  // of them are marks on the cell's own border, drawn below. The band lies
-  // inside the cell (`outer` 0), so this cell's own repaint — which its hint
-  // bits are part of the cache key for — is what erases a mark that moves.
-  const target = f & DS_HINT_TARGET;
-  const decided = f & (DS_BLACK | DS_CIRCLE);
-
-  const cx = x + Math.floor(ts / 2);
-  const cy = y + Math.floor(ts / 2);
-  const cr = crad(ts);
-
-  dr.drawRect({ x, y, w: ts, h: ts }, bg);
-  if (f & DS_HINT_LINE) dr.drawHatch({ x, y, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
-  drawRectOutline(dr, x, y, ts, ts, f & DS_IMPOSSIBLE ? COL_ERROR : COL_GRID);
-
-  if (f & DS_CIRCLE) {
-    dr.drawCircle({ x: cx, y: cy }, cr, tcol, tcol);
-    dr.drawCircle({ x: cx, y: cy }, cr - 1, bg, tcol);
-  }
-
-  // A decided premise cell (its black/circle color is the reason): ring
-  // it rather than shading over it. The ring color follows the legend —
-  // strand amber for a protected corner, else by the cell's type so a cited
-  // shaded square and a cited ringed-white square read distinct from each
-  // other and from the blue forced cell.
-  if ((f & DS_HINT_EVID || f & DS_HINT_STRAND) && f & (DS_BLACK | DS_CIRCLE)) {
-    const ringCol =
-      f & DS_HINT_STRAND
-        ? COL_HINT_STRAND
-        : f & DS_BLACK
-          ? COL_HINT_BLACKREF
-          : COL_HINT_WHITEREF;
-    drawRectOutline(dr, x + 1, y + 1, ts - 2, ts - 2, ringCol);
-    drawRectOutline(dr, x + 2, y + 2, ts - 4, ts - 4, ringCol);
-  }
-
-  // The acted-on cell's ring, and an undecided premise's outline. Drawn last so
-  // they sit over the cell's own grid outline, which is what they replace.
-  const band = { box: { x, y, w: ts, h: ts }, outer: 0, inner: markT(ts) };
-  if (!target && !decided && f & DS_HINT_STRAND)
-    drawMarkSides(dr, band, MARK_ALL, COL_HINT_STRAND);
-  else if (!target && !decided && f & DS_HINT_EVID)
-    drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
-  if (target) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
+  // of them are bands at the cell's edge, beside the piece and the ring. The
+  // band lies inside the cell (`outer` 0), so this cell's own repaint — which
+  // its hint bits are part of the cache key for — is what erases a mark that
+  // moves. A decided premise cell is the reason by its state, and its band
+  // takes the color of its kind.
+  const band = { box: inner, outer: 0, inner: markT(ts) };
+  if (f & DS_HINT_TARGET) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
+  else if (f & DS_HINT_STRAND) drawMarkSides(dr, band, MARK_ALL, COL_HINT_STRAND);
+  else if (f & DS_HINT_EVID)
+    drawMarkSides(
+      dr,
+      band,
+      MARK_ALL,
+      shaded ? COL_HINT_BLACKREF : f & DS_CIRCLE ? COL_HINT_WHITEREF : COL_HINT_CELL,
+    );
 
   if (dnum) {
     const buf = String(num);
-    const tsz = buf.length === 1 ? textsz(ts) : Math.floor((cr * 2 - 1) / buf.length);
-    dr.drawText({ x: cx, y: cy }, glyphFont(tsz), tcol, buf);
+    const full =
+      buf.length === 1 ? textsz(ts) : Math.floor((ringRadius(ts) * 2 - 1) / buf.length);
+    // A number the player has blacked out is out of the puzzle: it is shown
+    // on request, and smaller, so the piece stays the thing the cell holds.
+    const tsz = shaded ? Math.floor((full * 3) / 4) : full;
+    dr.drawText(c, glyphFont(tsz), tcol, buf);
   }
 
-  if (f & DS_CURSOR)
-    drawRectCorners(dr, cx, cy, Math.floor(textsz(ts) / 2), COL_CURSOR);
+  // Brackets at the cell's corners, so the cursor is beside the piece and
+  // leaves the sides of a hint's band showing on a cell that carries both.
+  if (f & DS_CURSOR) {
+    const t = markT(ts);
+    drawRectCorners(dr, c.x, c.y, (inner.w - t) / 2, COL_CURSOR, t);
+  }
 
   // Check & Save: an inset error outline marks a cell contradicting the
-  // unique solution (the fork's mistake overlay; not in upstream).
-  if (f & DS_MISTAKE) {
-    drawRectOutline(dr, x + 2, y + 2, ts - 4, ts - 4, COL_ERROR);
-    drawRectOutline(dr, x + 3, y + 3, ts - 6, ts - 6, COL_ERROR);
-  }
+  // unique solution.
+  if (f & DS_MISTAKE)
+    drawThickRectOutline(
+      dr,
+      x + 1,
+      y + 1,
+      inner.w - 2,
+      inner.h - 2,
+      markT(ts),
+      COL_ERROR,
+    );
 
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
@@ -268,16 +290,16 @@ export function redraw(
   const hintLine = new Set(marks.of("stripes", CELL).map(index));
   const mistakeSet = new Set(mistakes?.map((m) => m.y * w + m.x));
 
-  if (!ds.started) {
-    // The outer grid frame (one pixel outside the tile grid).
-    drawRectOutline(
-      dr,
-      coord(0, ts) - 1,
-      coord(0, ts) - 1,
-      ts * w + 2,
-      ts * h + 2,
-      COL_GRID,
-    );
+  // The frame closes the grid on its top and left, where no tile draws a
+  // line, and is no heavier than a grid line. It takes the grid's color, the
+  // error color included.
+  const frame = state.impossible ? COL_ERROR : COL_GRID;
+  if (ds.frame !== frame) {
+    const o = coord(0, ts) - 1;
+    dr.drawRect({ x: o, y: o, w: ts * w + 1, h: 1 }, frame);
+    dr.drawRect({ x: o, y: o, w: 1, h: ts * h + 1 }, frame);
+    dr.drawUpdate({ x: o, y: o, w: ts * w + 1, h: ts * h + 1 });
+    ds.frame = frame;
   }
 
   const flash = flashTime > 0 && Math.floor((flashTime * 5) / FLASH_TIME) % 2 === 1;

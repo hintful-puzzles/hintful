@@ -29,6 +29,7 @@ import {
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { isMouseDown, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
@@ -133,9 +134,9 @@ const targetVerbs: TargetVerbs<
   SinglesMove
 > = {
   geometry,
-  primary: { does: "black it out", apply: mark("black") },
+  primary: { does: `turn it ${SHADED_NAME}`, apply: mark("black") },
   secondary: {
-    does: "circle it, marking a square you are sure should not be blacked out",
+    does: `circle it, marking a square you are sure should stay ${UNSHADED_NAME}`,
     apply: mark("circle"),
   },
 };
@@ -544,7 +545,7 @@ export const singlesGame: Game<
   prefs: [
     {
       kw: "show-black-nums",
-      name: "Show numbers on black squares",
+      name: `Show numbers on ${SHADED_NAME} squares`,
       type: "boolean",
       get: (ui) => ui.showBlackNums,
       set: (ui, v) => {

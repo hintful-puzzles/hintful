@@ -1,6 +1,6 @@
 # Clusters
 
-You're given a grid, with several dots inside colored squares. Your objective is to fill every empty space with one of two colors while following these rules:
+You're given a grid, with several dotted pieces on lighter squares. Your objective is to fill every empty space with one of two pieces, a {{pair:0}} square or a {{pair:1}} disc, while following these rules:
 
 1. Tiles which are adjacent to 1 other tile of the same color are denoted with a dot. All of these tiles are given.
 2. All other tiles must be adjacent to 2 or more tiles of the same color.
@@ -9,7 +9,7 @@ You're given a grid, with several dots inside colored squares. Your objective is
 
 {{controls}}
 
-Drag from a square to paint every square you pass over the color the press gave the first one. Hold Shift while moving the cursor to paint the squares it passes over red, Ctrl to paint them blue, or both to clear them.
+Drag from a square to paint every square you pass over the color the press gave the first one. Hold Shift while moving the cursor to paint the squares it passes over {{pair:1}}, Ctrl to paint them {{pair:0}}, or both to clear them.
 
 ## Where the puzzle comes from
 
@@ -17,7 +17,7 @@ This puzzle type was invented by Inaba Naoki under the name *クラスター*, o
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. Each step decides the color of one square, by showing that the other color would break a rule. It reasons from the dots and the squares you have colored, so it carries on from wherever you are. Because blue is one of the colors you paint with, the hint's own marks here are purple and orange, never blue.
+**Hint** explains the next step rather than simply making it. Each step decides the color of one square, by showing that the other color would break a rule. It reasons from the dots and the squares you have colored, so it carries on from wherever you are.
 
 {{hint-marks}}
 

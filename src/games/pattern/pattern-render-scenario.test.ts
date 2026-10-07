@@ -53,7 +53,7 @@ describe("Pattern hint render scenarios", () => {
     expect(hl).toBeDefined();
 
     // The forced cell(s) are **ringed** COL_HINT — never filled with it, and
-    // never pre-filled with the black/white the move will place.
+    // never pre-filled with the piece or dot the move will place.
     expectRing(recording.ops, COL_HINT, hl?.cells.length);
     // The reasoned line is hatched, every square of it and its clue strip, in
     // one strip.

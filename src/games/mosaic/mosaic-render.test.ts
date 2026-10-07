@@ -1,6 +1,6 @@
 // Tier-2 render-ops: drive Mosaic's `redraw` against the engine's shared
-// `RecordingDrawing` — tile colors per mark state, clue text and its
-// state-dependent color, cursor edge recolor, margin closing lines,
+// `RecordingDrawing` — the piece or dot each mark state draws on the cell's
+// surface, clue text and its state-dependent color, cursor edge recolor, margin closing lines,
 // the completion-flash inversion, the mistake outline, and the cache
 // suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
@@ -9,13 +9,17 @@ import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { mosaicGame } from "./index.ts";
 import {
-  COL_BLANK,
+  COL_CELL,
   COL_CURSOR,
   COL_ERROR,
+  COL_ERROR_TEXT,
   COL_GRID,
-  COL_MARKED,
+  COL_RULED_OUT,
+  COL_SHADED,
+  COL_TEXT,
+  COL_TEXT_ON_PIECE,
   COL_TEXT_SOLVED,
-  COL_UNMARKED,
+  COL_TEXT_SOLVED_ON_PIECE,
   type MosaicDrawState,
   newDrawState,
   redraw,
@@ -44,6 +48,17 @@ function freshDs(state: MosaicState): MosaicDrawState {
   return newDrawState(state, TS);
 }
 
+type Ops = RecordingDrawing["ops"];
+/** The shaded pieces drawn. */
+const pieces = (ops: Ops) =>
+  ops.filter((o) => o.op === "polygon" && o.fill === COL_SHADED);
+/** The ruled-out dots drawn. */
+const dots = (ops: Ops) =>
+  ops.filter((o) => o.op === "circle" && o.fill === COL_RULED_OUT);
+/** The cell surfaces drawn. */
+const surfaces = (ops: Ops) =>
+  ops.filter((o) => o.op === "rect" && o.color === COL_CELL && o.w === TS - 1);
+
 describe("Mosaic redraw", () => {
   it("paints unmarked tiles and clue text on first draw", () => {
     const state = newState(P3, ALL_BLACK_DESC);
@@ -51,15 +66,13 @@ describe("Mosaic redraw", () => {
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
 
-    // 9 full tiles in the unmarked teal.
-    const tiles = ops.filter(
-      (o) => o.op === "rect" && o.color === COL_UNMARKED && o.w === TS - 1,
-    );
-    expect(tiles.length).toBe(9);
-    // Every clue drawn, dark text on unmarked.
+    // 9 cells of plain surface, holding nothing.
+    expect(surfaces(ops).length).toBe(9);
+    expect(pieces(ops).length + dots(ops).length).toBe(0);
+    // Every clue drawn, in ink on the bare surface.
     const texts = ops.filter((o) => o.op === "text");
     expect(texts.length).toBe(9);
-    expect(texts.every((o) => o.color === COL_MARKED)).toBe(true);
+    expect(texts.every((o) => o.color === COL_TEXT)).toBe(true);
     expect(texts.map((o) => o.text).join("")).toBe(ALL_BLACK_DESC);
     // Grid lines present.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_GRID && o.h === 1)).toBe(
@@ -85,19 +98,48 @@ describe("Mosaic redraw", () => {
     ).toBe(true);
   });
 
-  it("recolors marked and blank tiles, with solved/error text colors", () => {
+  it("draws a marked cell as a piece and a blank one as a dot, on the same surface", () => {
     let state = newState(P3, "000000000");
     // Marking (1,1) contradicts every zero clue around it.
     state = executeMove(state, { type: "toggle", x: 1, y: 1, double: false });
+    state = executeMove(state, { type: "toggle", x: 0, y: 0, double: true });
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
-    // The marked cell body.
+    expect(surfaces(ops).length).toBe(9);
+    expect(pieces(ops).length).toBe(1);
+    expect(dots(ops).length).toBe(1);
+    // Every clue is contradicted: red text on bare surface, and on the piece
+    // a red badge under text in the badge's own text color.
+    const texts = ops.filter((o) => o.op === "text");
+    expect(texts.filter((o) => o.color === COL_ERROR).length).toBe(8);
+    expect(texts.filter((o) => o.color === COL_ERROR_TEXT).length).toBe(1);
+    expect(ops.filter((o) => o.op === "circle" && o.fill === COL_ERROR).length).toBe(1);
+  });
+
+  it("moves a blank cell's dot off the middle, where its number is", () => {
+    let state = newState(P3, ALL_BLACK_DESC);
+    state = executeMove(state, { type: "toggle", x: 1, y: 1, double: true });
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, 0);
+    const [dot] = dots(ops);
+    const text = ops.find((o) => o.op === "text" && o.text === "9");
+    if (dot?.op !== "circle" || text?.op !== "text") throw new Error("not drawn");
+    // Further from the number's middle than the dot is wide, on both axes.
+    expect(dot.cx - text.x).toBeGreaterThan(2 * dot.r);
+    expect(text.y - dot.cy).toBeGreaterThan(2 * dot.r);
+  });
+
+  it("draws a number on a piece in the piece's text color", () => {
+    let state = newState(P3, ALL_BLACK_DESC);
+    state = executeMove(state, { type: "toggle", x: 1, y: 1, double: false });
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, 0);
+    const texts = ops.filter((o) => o.op === "text");
     expect(
-      ops.some((o) => o.op === "rect" && o.color === COL_MARKED && o.w === TS - 1),
-    ).toBe(true);
-    // Every clue is contradicted → red clue text appears.
-    expect(ops.some((o) => o.op === "text" && o.color === COL_ERROR)).toBe(true);
+      texts.filter((o) => o.color === COL_TEXT_ON_PIECE).map((o) => o.text),
+    ).toEqual(["9"]);
+    expect(texts.filter((o) => o.color === COL_TEXT).length).toBe(8);
   });
 
   it("grays out a solved clue's text", () => {
@@ -110,6 +152,21 @@ describe("Mosaic redraw", () => {
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
+    const texts = ops.filter((o) => o.op === "text");
+    expect(texts.length).toBe(9);
+    // Every cell is shaded, so each solved number is on a piece.
+    expect(texts.every((o) => o.color === COL_TEXT_SOLVED_ON_PIECE)).toBe(true);
+  });
+
+  it("grays out a solved clue's text on bare surface", () => {
+    let state = newState(P3, "000000000");
+    for (let y = 0; y < 3; y++) {
+      for (let x = 0; x < 3; x++) {
+        state = executeMove(state, { type: "toggle", x, y, double: true });
+      }
+    }
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, 0);
     const texts = ops.filter((o) => o.op === "text");
     expect(texts.length).toBe(9);
     expect(texts.every((o) => o.color === COL_TEXT_SOLVED)).toBe(true);
@@ -142,15 +199,12 @@ describe("Mosaic redraw", () => {
     const { dr, ops } = recordingDrawing();
     // flashTime 0.1 ≤ FLASH_TIME/3 → inverted: every marked cell draws blank.
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0.1);
-    const bodies = (record: RecordingDrawing["ops"], color: number) =>
-      record.filter((o) => o.op === "rect" && o.w === TS - 1 && o.color === color)
-        .length;
-    expect(bodies(ops, COL_BLANK)).toBe(9);
-    expect(bodies(ops, COL_MARKED)).toBe(0);
+    expect(dots(ops).length).toBe(9);
+    expect(pieces(ops).length).toBe(0);
     // Mid-flash (middle third) the board draws normally again.
     const second = recordingDrawing();
     redraw(second.dr, ds, null, state, 1, freshUi(), 0, 0.25);
-    expect(bodies(second.ops, COL_MARKED)).toBe(9);
+    expect(pieces(second.ops).length).toBe(9);
   });
 
   it("outlines mistake cells in the error color", () => {
@@ -176,8 +230,7 @@ describe("Mosaic redraw", () => {
     const moved = executeMove(state, { type: "toggle", x: 0, y: 0, double: false });
     const third = recordingDrawing();
     redraw(third.dr, ds, null, moved, 1, freshUi(), 0, 0);
-    const redrawn = third.ops.filter((o) => o.op === "rect" && o.w === TS - 1);
-    expect(redrawn.length).toBe(1);
-    expect(redrawn[0]).toMatchObject({ op: "rect", color: COL_MARKED });
+    expect(surfaces(third.ops).length).toBe(1);
+    expect(pieces(third.ops).length).toBe(1);
   });
 });

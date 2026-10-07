@@ -23,7 +23,7 @@ export interface FlipState {
    * fixed for the game and shared by reference across its states (upstream
    * reference-counts it), so a move clones only the grid. */
   readonly matrix: Uint8Array;
-  /** wh cells; 1 = dark, still to be lit. */
+  /** wh cells; 1 = unlit, still to be lit. */
   readonly grid: Uint8Array;
   readonly moves: number;
 }

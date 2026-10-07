@@ -21,6 +21,7 @@ import { describe, expect, it } from "vitest";
 import "./games/index.ts";
 import { mkhighlightBackground } from "./engine/color/color-mkhighlight.ts";
 import { darkValue } from "./engine/color/color-token.ts";
+import { SHADED } from "./engine/color/palette.ts";
 import { getTsGame } from "./engine/registry.ts";
 import { colorToOKLCH } from "./engine/testing/oklch.ts";
 import type { Color } from "./engine/types.ts";
@@ -55,8 +56,11 @@ const NOT_A_PIECE: Record<string, Partial<Record<Kind, string>>> = {
 };
 
 /** Whether the palette holds a color that is `kind` in both schemes by its own
- * authored values. */
+ * authored values. A shaded cell is a piece in the `SHADED` role, whose color
+ * is the same piece in both schemes whatever its lightness, so a palette that
+ * holds that very token answers a page that says "shaded". */
 function holdsPinned(palette: readonly Color[], kind: Kind): boolean {
+  if (kind === "dark" && palette.includes(SHADED)) return true;
   const is = (c: Color): boolean => {
     const l = colorToOKLCH(c)[0];
     return kind === "dark" ? l < 0.45 : l > 0.8;

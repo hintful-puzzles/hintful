@@ -137,7 +137,7 @@ describe("hint", () => {
     // on the board" forbids as scheme-relative and invisible to a color-blind
     // reader.
     const TIE =
-      /touches the outlined black square|just past (?:it|them|the outlined cells?)|along the striped run(?: to|:) the ringed cell|the outlined cells? around it/;
+      /touches the outlined \S+ square|just past (?:it|them|the outlined cells?)|along the striped run(?: to|:) the ringed cell|the outlined cells? around it/;
     const kinds = new Set<string>();
     let checked = 0;
     for (const seed of ["range-hint-plan", "range-evidence-2", "range-evidence-3"]) {

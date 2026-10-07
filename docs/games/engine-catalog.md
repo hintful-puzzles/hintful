@@ -766,7 +766,10 @@ rounded square or a disc, with `grown` for one being placed or taken away.
 `TWO_NAMES` (`colors.ts`), and `expandPair` is what a help page's `{{pair:0}}`
 becomes. A game takes all three by index and names neither a hue nor a shape
 of its own ([`rendering.md`](./rendering.md) § "What a board looks like: pieces
-on a quiet surface"). Consumer: Unruly.
+on a quiet surface"). `SHADED_SHAPE`, `SHADED_NAME`, `UNSHADED_NAME` and
+`drawRuledOutDot` are the same for a game whose cells are shaded or not.
+Consumers: Unruly, Clusters and Flip (the pair); Pattern, Mosaic, Range,
+Singles and Bricks (shaded or not).
 
 ### `hint-mark.ts` — the ring and the outline
 

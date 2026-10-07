@@ -1,10 +1,10 @@
 /**
  * Clusters — native TS port of `puzzles/unreleased/clusters.c`. Fill the grid
- * with red and blue tiles so that every plain tile touches **two or more**
+ * with tiles of two colors so that every plain tile touches **two or more**
  * tiles of its own color, and the given "dot" tiles touch exactly one (all
  * exactly-one tiles are given as dots — upstream's rule statement).
- * Left-click/-drag paints blue (cycling to red, then clear); right-click/-drag
- * paints red; a keyboard cursor places colors with Enter/Space/0/1/2/
+ * Left-click/-drag paints `F_COLOR_1` (cycling to `F_COLOR_0`, then clear);
+ * right-click/-drag paints `F_COLOR_0`; a keyboard cursor places colors with Enter/Space/0/1/2/
  * backspace. Rule violations are shown live (upstream behavior), and Check &
  * Save additionally refuses to save while any violation stands
  * (`findMistakes`). The explained hint narrates the solver's proof by
@@ -59,7 +59,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
-import { type Marked, say } from "./hint-text.ts";
+import { colorName, type Marked, say } from "./hint-text.ts";
 import {
   border,
   type ClustersDrawState,
@@ -134,12 +134,14 @@ const paintWith =
   };
 
 type ClustersVerb = TargetVerb<ClustersState, ClustersUi, Point, ClustersMove>;
-const blueVerb: ClustersVerb = {
-  does: "color it blue (click again for red, and again to clear it)",
+const FIRST = colorName(F_COLOR_1);
+const SECOND = colorName(F_COLOR_0);
+const firstVerb: ClustersVerb = {
+  does: `color it ${FIRST} (click again for ${SECOND}, and again to clear it)`,
   apply: paintWith((old) => cycleFill(old, F_COLOR_1)),
 };
-const redVerb: ClustersVerb = {
-  does: "color it red (again for blue, and again to clear it)",
+const secondVerb: ClustersVerb = {
+  does: `color it ${SECOND} (again for ${FIRST}, and again to clear it)`,
   apply: paintWith((old) => cycleFill(old, F_COLOR_0)),
 };
 
@@ -151,17 +153,17 @@ const targetVerbs: TargetVerbs<
   ClustersMove
 > = {
   geometry: squareGrid({ size: (s) => s, border: (ts) => border(ts) }),
-  primary: blueVerb,
-  secondary: redVerb,
+  primary: firstVerb,
+  secondary: secondVerb,
   keyOnly: [
     {
-      does: "color it blue",
+      does: `color it ${FIRST}`,
       keys: [digitKey(1)],
       apply: paintWith(() => F_COLOR_1),
       pointer: { kind: "cycle", button: "primary" },
     },
     {
-      does: "color it red",
+      does: `color it ${SECOND}`,
       keys: [digitKey(0), digitKey(2)],
       apply: paintWith(() => F_COLOR_0),
       pointer: { kind: "cycle", button: "secondary" },
@@ -247,7 +249,7 @@ function interpretMove(
     }
     ui.cursor.visible = true;
 
-    // Shift = red ('A'), Ctrl = blue ('B'), Shift+Ctrl = clear ('C').
+    // Shift = F_COLOR_0 ('A'), Ctrl = F_COLOR_1 ('B'), Shift+Ctrl = clear ('C').
     const fill: ClustersFill = shift && control ? 0 : control ? F_COLOR_1 : F_COLOR_0;
     const i1 = oy * w + ox;
     const i2 = ui.cursor.y * w + ui.cursor.x;
@@ -470,9 +472,9 @@ export const clustersGame: Game<
   hint,
   hintMarks: {
     roles: {
-      ring: "the square the step colors. It is drawn in purple, never blue, so it cannot be mistaken for a painted square: the sentence says which color it must be.",
+      ring: "the square the step colors. It is drawn empty: the sentence says which color it must be.",
       outline:
-        "the squares the step reasons from. A double orange ring is on the dot or square where the other color would break a rule. On Normal boards, numbered outlined squares, each holding a small square of red or blue, show what supposing the other color would force, in order, and to which color: they are only a supposition, and nothing is placed there.",
+        "the squares the step reasons from. A double orange ring is on the dot or square where the other color would break a rule. On Normal boards, numbered outlined squares, each holding a small piece of the color it would be, show what supposing the other color would force, in order, and to which color: they are only a supposition, and nothing is placed there.",
     },
   },
   hintRungs: CLUSTERS_RUNGS,

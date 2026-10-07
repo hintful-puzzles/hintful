@@ -872,6 +872,14 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
 - **Two states where neither is the important one are `TWO`**: purple and
   yellow, a square and a disc (`TWO_SHAPES`). Not blue, green, orange or red,
   which the marks drawn on a board have spent.
+- **Shaded or not is one color, not two** (owner, 2026-10-07; Pattern, Mosaic,
+  Range, Singles, Bricks). The states are not equals: the shaded cells are
+  what the puzzle is about, and "not shaded" is a note. A shaded cell is the
+  `SHADED` piece (`SHADED_SHAPE`, `SHADED_NAME`), a cell ruled out is quiet
+  surface with `drawRuledOutDot`, and an undecided one is plain surface, so a
+  finished picture still reads as a picture. The words are `SHADED_NAME` and
+  `UNSHADED_NAME`, never "black" and "white". Flip is not one of these: lit
+  and unlit are both states the player makes, and it takes the pair.
 - **A given is told by the cell under it** (`givenSurface`, lifted toward
   white), not by a mark on the piece: a given piece is the same piece.
 - **A glyph that sits on a piece is a badge**: its own disc, with the glyph in

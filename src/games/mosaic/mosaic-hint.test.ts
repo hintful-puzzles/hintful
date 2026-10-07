@@ -50,8 +50,8 @@ describe("Mosaic's hint", () => {
   });
 
   it.each([
-    ["white", "met", STATE_BLANK, /already has its|allows no/],
-    ["black", "needsAll", STATE_MARKED, /needs/],
+    ["clear", "met", STATE_BLANK, /already has its|allows no/],
+    ["shaded", "needsAll", STATE_MARKED, /needs/],
   ] as const)("a step that makes squares %s is drawn and said", (_, rung, mark, words) => {
     const { recording, hint } = renderPinnedHint(mosaicGame, pinned(rung));
     const hl = hint?.highlights as MosaicHint;

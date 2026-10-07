@@ -1,33 +1,39 @@
 /**
- * Range rendering — port of `draw_cell` / `game_redraw` in `range.c`: a
- * per-cell diffed loop drawing a grid-outlined tile (black fill for a
- * black square, the flash fill on completion, white for a known-white
- * cell, otherwise the background), corner brackets under the keyboard
- * cursor, a small centered dot for a white mark, and the clue number.
- * Rule violations are recomputed every frame via `findErrors` and drawn in
- * the error color — Range highlights errors live, which is upstream
- * behavior, not the fork's Check & Save.
+ * Range rendering: a per-cell diffed loop over pieces on a quiet surface
+ * (`engine/piece.ts`). A cell is a grid-outlined surface, lifted under a clue
+ * and, on the lit beats of the completion flash, under every cell; a shaded
+ * cell holds the shaded piece, a cell marked clear holds the ruled-out dot,
+ * and a clue holds its number. The keyboard cursor is corner brackets, out at
+ * the cell's corners. Rule violations are
+ * recomputed every frame via `findErrors` and framed in the error color —
+ * Range highlights errors live, which is upstream behavior, not the fork's
+ * Check & Save.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import {
-  BLACK as BLACK_PIECE,
-  WHITE as WHITE_PIECE,
-} from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   ERROR,
-  FLASH,
-  GRID_DARK,
+  givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE,
+  INK,
+  RULED_OUT,
+  SHADED,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
+import {
+  drawRectCorners,
+  drawRectOutline,
+  drawThickRectOutline,
+  glyphFont,
+} from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { drawPiece, drawRuledOutDot, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { CLUE } from "./hint-text.ts";
 import type { RangeHint } from "./index.ts";
@@ -46,47 +52,40 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_TIME = 0.7;
 
-// --- palette (upstream COL_* enum) -----------------------------------------
+// --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0; // an undecided (EMPTY) cell — a soft gray
-/** Grid lines, and a glyph on the flash fill. Upstream aliases COL_BLACK,
- * COL_TEXT and COL_USER onto this slot; the black square is split off into
- * {@link COL_BLACK} because it is a *piece*, not ink. */
-export const COL_GRID = 1;
-export const COL_ERROR = 2;
-export const COL_FLASH = 3; // upstream's COL_LOWLIGHT slot: the solved flash
-export const COL_HINT = 4; // the cell the displayed hint forces — ringed
-export const COL_HINT_CELL = 5; // the deduction's premise/area cells — outlined
-export const COL_WHITEBG = 6; // a known-white cell: a clue or the player's white mark
-export const COL_HINT_BLACKREF = 7; // a cited decided-black premise (ring)
-// Appended past the upstream enum (Range has no index-keyed dark overrides).
-export const COL_CURSOR = 8; // the keyboard cursor, upstream's COL_LOWLIGHT alias
-/** A shaded square — and the ink of the dot or digit on a known-white cell,
- * which sits on {@link COL_WHITEBG}'s pinned white and so must be pinned too. */
-export const COL_BLACK = 9;
+export const COL_BACKGROUND = 0; // the board around the grid
+export const COL_GRID = 1; // the line between two cells, and the frame
+export const COL_CELL = 2; // the surface of a cell the puzzle left open
+/** The surface under a clue, and under every cell while the board flashes. */
+export const COL_GIVEN = 3;
+export const COL_SHADED = 4; // the piece in a shaded cell
+export const COL_RULED_OUT = 5; // the dot in a cell marked clear
+export const COL_TEXT = 6; // a clue's number
+export const COL_ERROR = 7;
+export const COL_CURSOR = 8;
+export const COL_HINT = 9; // the cell the displayed hint forces — ringed
+export const COL_HINT_CELL = 10; // the deduction's premise/area cells — outlined
+export const COL_HINT_SHADEDREF = 11; // a cited shaded premise (doubled outline)
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background } = mkhighlight(defaultBackground);
   const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
-  // Not ink: a clue counts the white cells it can see, and ink is white in the
-  // dark scheme, where a run of pinned-white cells would close into one bar.
-  out[COL_GRID] = GRID_DARK;
+  out[COL_BACKGROUND] = defaultBackground;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_GIVEN] = givenSurface(defaultBackground);
+  out[COL_SHADED] = SHADED;
+  out[COL_RULED_OUT] = RULED_OUT;
+  // Ink, which inverts: the number is read against a surface, never
+  // against a piece, since a clue cell is never shaded.
+  out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
-  out[COL_FLASH] = FLASH;
+  out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
-  // A known-white cell *is* white and a shaded square *is* black — pieces, not
-  // contrast — so both are pinned and survive the dark scheme un-inverted.
-  // `mkhighlight` has shifted COL_BACKGROUND off pure white, so a known-white
-  // cell still reads as visibly white against undecided cells.
-  out[COL_WHITEBG] = WHITE_PIECE;
-  out[COL_BLACK] = BLACK_PIECE;
-  out[COL_CURSOR] = CURSOR;
-  // Cited decided-black premise ring — the cross-game "a shaded black square is
-  // the reason" hue (matches Singles' COL_HINT_BLACKREF), distinct from the blue
-  // target fill so premise and move don't read as the same color.
-  out[COL_HINT_BLACKREF] = HINT_BLACKREF;
+  // The cross-game "a shaded square is the reason" hue (Singles' too), apart
+  // from the action ring so premise and move don't read as the same color.
+  out[COL_HINT_SHADEDREF] = HINT_BLACKREF;
   return out;
 }
 
@@ -113,11 +112,11 @@ const F_HINT_CLUE = 1 << 21; // the clue driving the deduction — digit in COL_
 const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
 
 /** A cell's role in the displayed hint, with its cache flag. The `target` is
- * the forced cell, black or white alike (the narration says which mark),
+ * the forced cell, shaded or clear alike (the narration says which mark),
  * ringed in COL_HINT; the `area` is the deduction's evidence, outlined in
- * COL_HINT_CELL; a `blackRef` is a black premise cell, kept black and ringed
- * in COL_HINT_BLACKREF. */
-const HINT_FLAG = { none: 0, target: 1 << 20, area: 1 << 22, blackRef: 1 << 23 };
+ * COL_HINT_CELL; a `shadedRef` is a shaded premise cell, which keeps its piece
+ * and takes a doubled outline in COL_HINT_SHADEDREF. */
+const HINT_FLAG = { none: 0, target: 1 << 20, area: 1 << 22, shadedRef: 1 << 23 };
 type HintKind = keyof typeof HINT_FLAG;
 
 export interface RangeDrawState {
@@ -160,72 +159,51 @@ function drawCell(
   const y = b + ts * r;
   const tx = x + Math.floor(ts / 2);
   const ty = y + Math.floor(ts / 2);
-  const dotsz = Math.floor((ts + 9) / 10);
+  const box = { x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 };
 
-  // Fill precedence: a black square keeps its identity; the solved flash is a
-  // fill; a known-white cell (clue or white mark) is pure white; an undecided
-  // cell is the soft-gray background. The cursor is corner brackets, not a
-  // fill, so a clue cell under it keeps its white and its digit keeps its ink.
-  // No hint role is a fill either: a Range premise area runs along a clue's
-  // arms and takes in the clue cell itself, whose digit the deduction counts.
-  const fill =
-    value === BLACK
-      ? error
-        ? COL_ERROR
-        : COL_BLACK
-      : flash
-        ? COL_FLASH
-        : value === WHITE || value > 0
-          ? COL_WHITEBG
-          : COL_BACKGROUND;
-  // A glyph on the pinned-white cell is pinned black; anywhere else it is ink.
-  const glyph = fill === COL_WHITEBG ? COL_BLACK : COL_GRID;
+  // The surface says who put the cell's content there and never what state it
+  // is in: lifted under a clue, plain everywhere else. The solved flash lifts
+  // every cell, which reads in both schemes where a paper fill would sink into
+  // a dark board. The cursor is corner brackets and no hint role is a
+  // fill: a Range premise area runs along a clue's arms and takes in the clue
+  // cell itself, whose digit the deduction counts.
+  const surface = flash || value > 0 ? COL_GIVEN : COL_CELL;
 
   drawRectOutline(dr, x, y, ts + 1, ts + 1, COL_GRID);
-  dr.drawRect({ x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 }, fill);
-  if (hatched)
-    dr.drawHatch(
-      { x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 },
-      COL_HINT,
-      hatchPeriod(ts),
-    );
-  if (error) drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_ERROR);
-  if (cursor) drawRectCorners(dr, tx, ty, Math.floor((ts * 3) / 10), COL_CURSOR);
+  dr.drawRect(box, surface);
+  if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
 
-  // The hint marks sit on the cell's own border. A black premise gets a doubled
-  // inset outline so "this shaded square is the reason" reads distinct from the
-  // blue ring of the forced move. The target is never previewed with its mark:
-  // a placed square or dot would read as already done, so the narration says
-  // which mark and auto-hint applies it for real.
-  const band = {
-    box: { x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 },
-    outer: 0,
-    inner: Math.max(2, ts >> 4),
-  };
-  if (hintKind === "area") drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
-  if (hintKind === "target") drawMarkSides(dr, band, MARK_ALL, COL_HINT);
-  if (hintKind === "blackRef") {
-    drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_HINT_BLACKREF);
-    drawRectOutline(dr, x + 2, y + 2, ts - 3, ts - 3, COL_HINT_BLACKREF);
-  }
-
-  if (value === WHITE) {
-    dr.drawRect(
-      {
-        x: tx - Math.floor(dotsz / 2),
-        y: ty - Math.floor(dotsz / 2),
-        w: dotsz,
-        h: dotsz,
-      },
-      error ? COL_ERROR : glyph,
-    );
+  // Content before the marks, which sit at the cell's edge beside it. A
+  // violation is told by the frame below, so a shaded piece keeps its color.
+  if (value === BLACK) {
+    drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
+  } else if (value === WHITE) {
+    drawRuledOutDot(dr, box, error ? COL_ERROR : COL_RULED_OUT);
   } else if (value > 0) {
     dr.drawText(
       { x: tx, y: ty },
       glyphFont(Math.floor((ts * 3) / 5)),
-      error ? COL_ERROR : clueRef ? COL_HINT : glyph,
+      error ? COL_ERROR : clueRef ? COL_HINT : COL_TEXT,
       String(value),
     );
+  }
+
+  const thick = Math.max(2, ts >> 4);
+  if (error) drawThickRectOutline(dr, box.x, box.y, box.w, box.h, thick, COL_ERROR);
+  // Out at the corners of the cell, clear of the piece.
+  if (cursor) drawRectCorners(dr, tx, ty, Math.floor(ts / 2) - 2, COL_CURSOR, thick);
+
+  // The hint marks sit on the cell's own border. A shaded premise gets a
+  // doubled inset outline so "this shaded square is the reason" reads distinct
+  // from the ring of the forced move. The target is never previewed with its
+  // mark: a placed piece or dot would read as already done, so the narration
+  // says which mark and auto-hint applies it for real.
+  const band = { box, outer: 0, inner: thick };
+  if (hintKind === "area") drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
+  if (hintKind === "target") drawMarkSides(dr, band, MARK_ALL, COL_HINT);
+  if (hintKind === "shadedRef") {
+    drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_HINT_SHADEDREF);
+    drawRectOutline(dr, x + 2, y + 2, ts - 3, ts - 3, COL_HINT_SHADEDREF);
   }
 
   dr.drawUpdate({ x, y, w: ts + 1, h: ts + 1 });
@@ -248,7 +226,7 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h, grid } = state;
 
-  // Whole-board flash pulse: lowlight every non-black cell on alternate
+  // Whole-board flash pulse: lift every cell on alternate
   // beats of the flash.
   const flash = flashTime > 0 && Math.floor((flashTime * 5) / FLASH_TIME) % 2 === 1;
 
@@ -273,13 +251,13 @@ export function redraw(
       const error = errors[i];
       const mistake = mistakeSet?.has(i) ?? false;
       const cursor = ui.cursor.visible && r === ui.cursor.y && c === ui.cursor.x;
-      // An outlined black square is a premise, which keeps its black and
+      // An outlined shaded square is a premise, which keeps its piece and
       // takes the doubled outline.
       const hintKind: HintKind = hintTarget.has(i)
         ? "target"
         : hintOutline.has(i)
           ? value === BLACK
-            ? "blackRef"
+            ? "shadedRef"
             : "area"
           : "none";
       const clueRef = hintClue.has(i);

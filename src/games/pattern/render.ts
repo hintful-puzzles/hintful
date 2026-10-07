@@ -1,21 +1,24 @@
 /**
- * Pattern rendering, a port of `game_redraw` / `grid_square` / `draw_numbers`
- * in pattern.c. A per-cell cache keyed on the displayed value (drag- and
- * flash-adjusted) plus overlay bits, and a per-line cache of the clue color,
- * which turns red when a completed line contradicts its clue (`check_errors`).
+ * Pattern rendering, after `game_redraw` / `grid_square` / `draw_numbers` in
+ * pattern.c. The board is pieces on a quiet surface (`engine/piece.ts`): a
+ * full cell holds the shaded piece, a cell known to be empty holds the
+ * ruled-out dot, and an undecided cell is plain surface. A per-cell cache
+ * keyed on the displayed value (drag- and flash-adjusted) plus overlay bits,
+ * and a per-line cache of the clue color, which turns red when a completed
+ * line contradicts its clue (`check_errors`).
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   ERROR,
-  GRID_DARK,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_WHITEREF,
   INK,
-  UNDECIDED,
+  RULED_OUT,
+  SHADED,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -23,6 +26,7 @@ import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { drawPiece, drawRuledOutDot, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
 import type { PatternHint } from "./index.ts";
@@ -41,34 +45,34 @@ import {
 export const PREFERRED_TILE_SIZE = 24;
 export const FLASH_TIME = 0.13;
 
-// --- palette (mirrors the pattern.c color enum index-for-index) ---------
+// --- palette -------------------------------------------------------------
 export const COL_BACKGROUND = 0;
-export const COL_EMPTY = 1;
+/** The dot in a cell known to be empty. */
+export const COL_RULED_OUT = 1;
+/** The piece in a full cell. */
 export const COL_FULL = 2;
 export const COL_TEXT = 3;
-export const COL_UNKNOWN = 4;
+/** The surface of a cell, whatever it holds. */
+export const COL_CELL = 4;
 export const COL_GRID = 5;
 export const COL_CURSOR = 6;
 export const COL_ERROR = 7;
 export const COL_CURSOR_GUIDE = 8;
-// Hint colors, appended past the C enum (0–8). The forced cell is ringed
-// COL_HINT, the reasoned line is hatched in it, and cited black / white marks
-// ring COL_HINT_BLACKREF / COL_HINT_WHITEREF (the cross-game element-type
-// legend).
+// Hint colors. The forced cell is ringed COL_HINT, the reasoned line is
+// hatched in it, and a cited full / empty cell is outlined COL_HINT_BLACKREF /
+// COL_HINT_WHITEREF (the cross-game element-type legend).
 export const COL_HINT = 9;
 export const COL_HINT_BLACKREF = 10;
 export const COL_HINT_WHITEREF = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
-  // Upstream pattern.c shifts COL_BACKGROUND off pure white via mkhighlight
-  // so a pure-white empty cell stays distinguishable from the surround.
-  out[COL_BACKGROUND] = mkhighlight(defaultBackground).background;
-  out[COL_GRID] = GRID_DARK;
-  out[COL_UNKNOWN] = UNDECIDED;
+  out[COL_BACKGROUND] = defaultBackground;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_TEXT] = INK;
-  out[COL_FULL] = BLACK;
-  out[COL_EMPTY] = WHITE;
+  out[COL_FULL] = SHADED;
+  out[COL_RULED_OUT] = RULED_OUT;
   // The clue numbers of the cursor's own row and column: the cursor, projected
   // into the margin, so it takes the cursor's color rather than a gray of its own.
   out[COL_CURSOR_GUIDE] = CURSOR;
@@ -137,8 +141,8 @@ const K_MISTAKE = 1 << 3;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
 const K_HINT_TARGET = 1 << 4; // a forced cell (COL_HINT highlight)
 const K_HINT_LINE = 1 << 5; // a cell of the reasoned line (hatched)
-const K_HINT_BLACKREF = 1 << 6; // a cited black mark (COL_HINT_BLACKREF ring)
-const K_HINT_WHITEREF = 1 << 7; // a cited white mark (COL_HINT_WHITEREF ring)
+const K_HINT_BLACKREF = 1 << 6; // a cited full cell (COL_HINT_BLACKREF outline)
+const K_HINT_WHITEREF = 1 << 7; // a cited empty cell (COL_HINT_WHITEREF outline)
 
 function gridSquare(
   dr: GameDrawing,
@@ -157,11 +161,12 @@ function gridSquare(
 
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, COL_GRID);
 
-  // Thicker separators every fifth cell and at the far edges.
-  const xl = x % 5 === 0 ? 1 : 0;
-  const yt = y % 5 === 0 ? 1 : 0;
-  const xr = x % 5 === 4 || x === w - 1 ? 1 : 0;
-  const yb = y % 5 === 4 || y === h - 1 ? 1 : 0;
+  // A doubled line every fifth cell, to count along a clue by. Not at the
+  // edges: the frame round the grid is no heavier than a line inside it.
+  const xl = x % 5 === 0 && x > 0 ? 1 : 0;
+  const yt = y % 5 === 0 && y > 0 ? 1 : 0;
+  const xr = x % 5 === 4 && x < w - 1 ? 1 : 0;
+  const yb = y % 5 === 4 && y < h - 1 ? 1 : 0;
 
   const dx = tx + 1 + xl;
   const dy = ty + 1 + yt;
@@ -169,16 +174,19 @@ function gridSquare(
   const dh = ts - yt - yb - 1;
 
   // A hint target is ringed below, never filled: where the move is exactly
-  // "make this square black or white", a fill would state the answer the
-  // narration is proposing. Every cell of the reasoned line is hatched, filled
-  // or not, so the line reads as one strip. A cited mark keeps its own color
-  // (the premise) and gets a ring below.
-  const fill =
-    val === GRID_FULL ? COL_FULL : val === GRID_EMPTY ? COL_EMPTY : COL_UNKNOWN;
-  dr.drawRect({ x: dx, y: dy, w: dw, h: dh }, fill);
+  // "shade this square, or rule it out", a piece would state the answer the
+  // narration is proposing. Every cell of the reasoned line is hatched, under
+  // whatever it holds, so the line reads as one strip. A cited cell keeps its
+  // own content (the premise) and gets an outline below, beside the piece.
+  dr.drawRect({ x: dx, y: dy, w: dw, h: dh }, COL_CELL);
   if (hintBits & K_HINT_LINE) {
     dr.drawHatch({ x: dx, y: dy, w: dw, h: dh }, COL_HINT, hatchPeriod(ts));
   }
+  // One box for every cell's content, the size of a cell beside a doubled
+  // line, so the pieces of a picture are all one size.
+  const content = { x: dx, y: dy, w: ts - 2, h: ts - 2 };
+  if (val === GRID_FULL) drawPiece(dr, content, SHADED_SHAPE, COL_FULL);
+  else if (val === GRID_EMPTY) drawRuledOutDot(dr, content, COL_RULED_OUT);
 
   if (hintBits & K_HINT_TARGET) {
     drawMarkSides(
@@ -207,8 +215,11 @@ function gridSquare(
   }
 
   if (mistake) {
-    const t = Math.max(1, Math.floor(ts / 12));
-    const inset = Math.max(1, Math.floor(ts / 8));
+    // At the cell's edge, beside the piece, where red is read against the
+    // surface and not against the piece; stepped in under the cursor's frame,
+    // which takes the edge itself.
+    const t = Math.max(2, Math.floor(ts / 12));
+    const inset = cur ? 2 : 0;
     drawThickRectOutline(
       dr,
       dx + inset,
@@ -320,7 +331,7 @@ export function redraw(
       : null;
 
   // Hint overlay: forced targets, the reasoned line's cells (line of sight),
-  // and the cited marks, outlined by their own color.
+  // and the cited cells, outlined by what they hold.
   const marks = stepMarks(hint);
   const index = (c: Point): number => c.y * w + c.x;
   const hintTargets = new Set(marks.of("ring", CELL).map(index));
@@ -331,14 +342,10 @@ export function redraw(
     hintLines.some((l) => (l < w ? x === l : y === l - w));
 
   if (!ds.started) {
-    // The grid outline frame.
+    // The frame closes the grid on its right and bottom, one line thick; each
+    // cell draws the line on its own top and left.
     dr.drawRect(
-      {
-        x: toCoord(ts, w, 0) - 1,
-        y: toCoord(ts, h, 0) - 1,
-        w: w * ts + 3,
-        h: h * ts + 3,
-      },
+      { x: toCoord(ts, w, 0), y: toCoord(ts, h, 0), w: w * ts + 1, h: h * ts + 1 },
       COL_GRID,
     );
     ds.started = true;
@@ -363,7 +370,7 @@ export function redraw(
   const cx = ui.cursor.visible ? ui.cursor.x : -1;
   const cy = ui.cursor.visible ? ui.cursor.y : -1;
 
-  // Invert filled cells twice during the completion flash (upstream).
+  // Swap full and empty cells twice during the completion flash (upstream).
   const flashing =
     flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
 

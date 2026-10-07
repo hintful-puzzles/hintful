@@ -2,9 +2,9 @@
  * Flip's hint: the shortest answer, pressed in reading order.
  *
  * Nothing on a Flip board forces a press by itself, but an order does. Once
- * the squares before a square are left alone for good, a dark square that no
+ * the squares before a square are left alone for good, a unlit square that no
  * later square flips can only be lit by this one. So a step is one of two
- * kinds: a press that is some dark square's last chance, which is a deduction,
+ * kinds: a press that is some unlit square's last chance, which is a deduction,
  * and a press nothing in the sweep decides, which is offered as one of the
  * fewest presses the board takes. The last press is said as what it is.
  */
@@ -46,7 +46,7 @@ export function hint(state: FlipState): HintResult<FlipMove, unknown, FlipRung> 
   const wh = w * state.h;
   const at = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
   const last = lastFlippers(state);
-  // Each step's dark squares are read off the board it is shown on: the one
+  // Each step's unlit squares are read off the board it is shown on: the one
   // the presses before it leave.
   const grid = state.grid.slice();
   const steps: Step[] = [];
@@ -57,19 +57,19 @@ export function hint(state: FlipState): HintResult<FlipMove, unknown, FlipRung> 
     if (!answer.presses[i]) continue;
     const owed: Point[] = [];
     const also: Point[] = [];
-    const dark: Point[] = [];
+    const unlit: Point[] = [];
     for (let j = 0; j < wh; j++) {
-      if (j !== i && grid[j]) dark.push(at(j));
+      if (j !== i && grid[j]) unlit.push(at(j));
       if (last[j] === i && grid[j]) owed.push(at(j));
       else if (j !== i && matrix[i * wh + j]) also.push(at(j));
     }
     // The last press says it finishes the board, whichever kind it is: every
-    // square still dark is one it flips.
+    // square still unlit is one it flips.
     const rung: FlipRung =
       left === 1 ? "lastPress" : owed.length > 0 ? "lastChance" : "fromTheAnswer";
     const words =
       rung === "lastPress"
-        ? say.lastPress(at(i), dark)
+        ? say.lastPress(at(i), unlit)
         : rung === "lastChance"
           ? say.lastChance(at(i), owed, also)
           : say.fromTheAnswer(at(i), left, answer.only);

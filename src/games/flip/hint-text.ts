@@ -2,7 +2,7 @@
  * Every sentence Flip's hint speaks.
  *
  * The square to press is what the step decides, so it is the ring in the roles
- * of `engine/hint-words.ts`. The dark squares the press is for are what it
+ * of `engine/hint-words.ts`. The unlit squares the press is for are what it
  * reasons from, the outline. Whatever else the press flips is striped, so no
  * square a step changes goes unmarked.
  */
@@ -23,7 +23,7 @@ const thisSquare = (press: Point): Narration =>
 
 export const say = {
   /** `press` is the last square in reading order that flips each of `owed`,
-   * and they are dark; `also` is every other square it flips. "Row by row" is
+   * and they are unlit; `also` is every other square it flips. "Row by row" is
    * the order, said on the step because "can still" is false without it: an
    * earlier square could light them if the player went back to one. */
   lastChance: (
@@ -53,7 +53,7 @@ export const say = {
       relation: { kind: "oneOf" },
     }),
 
-  /** The press that leaves no square dark. `lit` is every dark square but
+  /** The press that leaves no square unlit. `lit` is every unlit square but
    * `press` itself, all of which it flips. */
   lastPress: (press: Point, lit: readonly Point[]): Sentence =>
     sentence({

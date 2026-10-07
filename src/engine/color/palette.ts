@@ -44,11 +44,12 @@ import {
   GRAY,
   GRAY_BOLD,
   GREEN,
-  PURPLE,
+  PINK,
   RED,
   RED_WASH,
   TEAL_BOLD,
   TEAL_WASH_QUIET,
+  TWO,
   YELLOW,
 } from "./colors.ts";
 
@@ -239,8 +240,10 @@ export const HINT_BLACKREF: Color = GREEN;
 
 /** The counterpart premise color, referring to a **white/empty** reference
  * cell. Distinct in hue from {@link HINT_BLACKREF} so the two premises are
- * never confused with each other. */
-export const HINT_WHITEREF: Color = PURPLE;
+ * never confused with each other, and not purple: that is {@link SHADED},
+ * and an outline in the piece's color round a cell that holds no piece says
+ * the opposite of what it cites. */
+export const HINT_WHITEREF: Color = PINK;
 
 // --- pencil marks -----------------------------------------------------
 
@@ -350,6 +353,14 @@ export function cellSurface(background: Color): Color {
 export function givenSurface(background: Color): Color {
   return token(mix(background, PAPER, 0.6), [0.31, 0.31, 0.31]);
 }
+
+/**
+ * **Shaded**: the piece in a cell the player has shaded, in a game where a
+ * cell is shaded or is not. The two-state pair's first member, so a shaded
+ * cell here and the first kind of piece in Unruly are one color; `piece.ts`
+ * has its shape and its word.
+ */
+export const SHADED: Color = TWO[0];
 
 /**
  * **The line between two cells of a surface**, thin and quiet: the grid is

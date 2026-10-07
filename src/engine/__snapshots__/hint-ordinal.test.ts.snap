@@ -2,7 +2,7 @@
 
 exports[`an ordered hint chain carries its order to the canvas > clusters: pinned hint positions > says, at each pin 1`] = `
 {
-  "numberedChain": "Suppose this cell were blue: cells 1 to 3 are then forced from it, and by 3 the outlined dot would touch a second tile of its own color, so this cell must be red.",
+  "numberedChain": "Suppose this cell were purple: cells 1 to 3 are then forced from it, and by 3 the outlined dot would touch a second tile of its own color, so this cell must be yellow.",
 }
 `;
 

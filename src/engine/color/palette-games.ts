@@ -164,17 +164,6 @@ export const blackboxCover = (background: Color): Color => scale(background, 0.5
  * dark enough to read at all. */
 export const crossingGhost = (background: Color): Color => scale(background, 0.55);
 
-// --- flip ---------------------------------------------------------------
-
-/** **This tile is wrong side up** — the dark face of a Flip tile, a third of the
- * board's brightness.
- *
- * The dark value is authored because the face has to stay the dark one: the
- * goal is to light every square, and derivation inverts this into the lighter
- * of the two faces. */
-export const flipWrongFace = (background: Color): Color =>
-  token(divide(background, 3), [0.1, 0.1, 0.1]);
-
 // --- galaxies -----------------------------------------------------------
 
 /** **This region is black** — one of Galaxies' two region fills, at three tenths
