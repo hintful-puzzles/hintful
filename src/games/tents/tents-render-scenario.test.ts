@@ -17,7 +17,14 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { LINK, NUMBER } from "./hint-marks.ts";
 import { tentsGame } from "./index.ts";
-import { COL_ERROR, COL_GRID, COL_HINT, COL_MISTAKE, COL_TREELEAF } from "./render.ts";
+import {
+  COL_ERROR,
+  COL_GRID,
+  COL_HINT,
+  COL_LINK,
+  COL_MISTAKE,
+  COL_TREELEAF,
+} from "./render.ts";
 import { tentsSolve } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -195,7 +202,7 @@ describe("tents render scenarios", () => {
       showMistakes: true,
     });
     expect(right.mistakeCount).toBe(0);
-    expect(thin(right.recording.ops, COL_GRID).length).toBeGreaterThanOrEqual(2);
+    expect(thin(right.recording.ops, COL_LINK).length).toBeGreaterThanOrEqual(2);
 
     // The tent joined to no tree beside it at all would be refused by the
     // move, so a wrong link is made from a tree whose tent lies elsewhere: join

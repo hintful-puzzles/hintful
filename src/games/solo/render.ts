@@ -2,15 +2,17 @@
  * Solo (Sudoku) rendering — port of `game_redraw` / `draw_number` /
  * `game_colours` from `solo.c`.
  *
- * The board is a `cr × cr` grid drawn on a `COL_GRID` backing rectangle so the
- * thin grid lines show between cells. Each cell's background is widened by
+ * The board is a `cr × cr` grid drawn on a `COL_GRID` backing rectangle, which
+ * shows as the blocks' boundaries and the frame; a cell paints the quiet
+ * `COL_LINE` it shares with a neighbor in its block. A cell is `COL_CELL`, or
+ * `COL_GIVEN` under a given digit. Each cell's background is widened by
  * `GRIDEXTRA` toward same-*block* neighbors (so a sub-block reads as one merged
  * region), with explicit corner-jut squares where a diagonal neighbor is a
  * different block — exactly Keen's cage drawing, but driven by
  * `blocks.whichblock` (rectangular or jigsaw) rather than a cage dsf. On top of
  * that, four composable variants add their own marks:
  *
- *  - **X** (`xtype`) — the two main diagonals are shaded `COL_XDIAGONALS`.
+ *  - **X** (`xtype`) — the two main diagonals are stroked `COL_XDIAGONALS`.
  *  - **killer** — a second cage partition drawn as inset `COL_KILLER` lines
  *    (offset `GRIDEXTRA*3` from the cell edge), plus the cage-sum clue text.
  *  - givens render `COL_CLUE` (black), player digits `COL_USER` (green); a
@@ -26,7 +28,9 @@
 
 import { valueBit } from "../../engine/candidate-bits.ts";
 import {
+  cellSurface,
   ERROR,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -34,8 +38,9 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { soloKiller, soloXDiagonals } from "../../engine/color/palette-games.ts";
+import { soloKiller } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -91,12 +96,17 @@ export const COL_HINT = 10; // the acted-on cell's ring (drawn in redraw's last 
 /** The driving region's outline (same block), **and** a forcing chain's ordinal —
  * one index, because they are one role: the number indexes the evidence. */
 export const COL_HINT_CELL = 11;
+export const COL_CELL = 12; // the surface of a cell the player fills
+export const COL_GIVEN = 13; // the lifted surface under a given digit
+/** The thin line between two cells of one block. A block's own edge is
+ * content and stays `COL_GRID`. */
+export const COL_LINE = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = bg;
-  out[COL_XDIAGONALS] = soloXDiagonals(bg);
+  out[COL_XDIAGONALS] = surfaceGrid(bg);
   out[COL_GRID] = INK;
   out[COL_CLUE] = INK;
   out[COL_USER] = playerEntryColor(bg);
@@ -111,6 +121,9 @@ export function colors(defaultBackground: Color): Color[] {
   // against one cell's ring. `HINT_EVIDENCE` covers the chain ordinal too; see
   // its doc comment for why the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
+  out[COL_LINE] = surfaceGrid(bg);
   return out;
 }
 
@@ -283,6 +296,16 @@ function drawNumber(
   }
   if (y + 1 < cr && wb[cell] === wb[cell + cr]) ch += ge;
 
+  // The one-pixel line this cell shares with a same-block neighbor to its left
+  // and above is the quiet grid line, and so is the pixel where four cells of
+  // one block meet. A block's edge is left to the backing rectangle.
+  const sameLeft = cx < tx;
+  const sameTop = cy < ty;
+  if (sameLeft) dr.drawRect({ x: cx - 1, y: cy, w: 1, h: ch }, COL_LINE);
+  if (sameTop) dr.drawRect({ x: cx, y: cy - 1, w: cw, h: 1 }, COL_LINE);
+  if (sameLeft && sameTop && wb[cell] === wb[cell - cr - 1])
+    dr.drawRect({ x: cx - 1, y: cy - 1, w: 1, h: 1 }, COL_LINE);
+
   dr.clip({ x: cx, y: cy, w: cw, h: ch });
 
   // Background. No hint role appears here: the target's ring and the evidence
@@ -293,10 +316,29 @@ function drawNumber(
     { x: cx, y: cy, w: cw, h: ch },
     (hl & 15) as CellHighlight,
     COL_HIGHLIGHT,
-    ds.xtype && (onDiag0(cell, cr) || onDiag1(cell, cr))
-      ? COL_XDIAGONALS
-      : COL_BACKGROUND,
+    state.immutable[cell] ? COL_GIVEN : COL_CELL,
   );
+  // The X variant's diagonals, as a stroke between the cell's grid corners
+  // under its content: a mark, since a shade of the surface would be a step of
+  // gray beside a given's lifted cell.
+  if (ds.xtype) {
+    const lo = -ge - 1;
+    const hi = inner + ge;
+    if (onDiag0(cell, cr))
+      dr.drawLine(
+        { x: tx + lo, y: ty + lo },
+        { x: tx + hi, y: ty + hi },
+        COL_XDIAGONALS,
+        1,
+      );
+    if (onDiag1(cell, cr))
+      dr.drawLine(
+        { x: tx + hi, y: ty + lo },
+        { x: tx + lo, y: ty + hi },
+        COL_XDIAGONALS,
+        1,
+      );
+  }
   ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
   // Corner juts: a GRIDEXTRA square where the diagonal neighbor is a different
@@ -427,7 +469,7 @@ function drawNumber(
     drawHintOrdinal(dr, { x: tx, y: ty }, ts - 2 * ge, hintOrder, COL_HINT_CELL);
 
   dr.unclip();
-  dr.drawUpdate({ x: cx, y: cy, w: cw, h: ch });
+  dr.drawUpdate({ x: cx - 1, y: cy - 1, w: cw + 1, h: ch + 1 });
 }
 
 /** The auto-sized pencil-mark grid for an empty cell (draw_number's else branch). */

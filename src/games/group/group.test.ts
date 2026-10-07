@@ -409,8 +409,9 @@ describe("rendering smoke", () => {
     const pal = colors([0.9, 0.9, 0.9]);
     // 8 upstream + COL_HINT / COL_HINT_CELL + COL_PENCIL_BODY. The chain ordinal
     // shares `COL_HINT_CELL`: a number saying where a cell falls in the chain is
-    // an index into the evidence, not a hint role of its own.
-    expect(pal).toHaveLength(11);
+    // an index into the evidence, not a hint role of its own. Then the three
+    // surfaces: the cell, a given's lifted cell and the line between cells.
+    expect(pal).toHaveLength(14);
 
     const ds = newDrawState(state, 48);
     const dr = new RecordingDrawing(pal);

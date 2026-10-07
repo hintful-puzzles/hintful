@@ -15,10 +15,10 @@
  * corner to itself.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
+  cellSurface,
   ERROR,
-  GRID_MID,
+  givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE,
@@ -26,6 +26,7 @@ import {
   INK,
   PENCIL_BODY,
   pencilColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { slantGrounded } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
@@ -55,7 +56,7 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_TIME = 0.3;
 
-// --- palette (mirrors the slant.c color enum index-for-index) -----------
+// --- palette --------------------------------------------------------------
 export const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 export const COL_INK = 2;
@@ -63,28 +64,32 @@ export const COL_SLANT1 = 3;
 export const COL_SLANT2 = 4;
 export const COL_ERROR = 5;
 export const COL_CURSOR = 6;
-export const COL_FILLEDSQUARE = 7;
+/** The surface of a square, slashed or not: the slash is the content. */
+export const COL_CELL = 7;
 export const COL_GROUNDED = 8;
-// Fork hint palette, appended past the upstream enum.
 export const COL_HINT = 9; // forced square(s), ringed on their own border
 export const COL_HINT_CELL = 10; // evidence area, outlined
 export const COL_HINT_REF = 11; // a cited filled anchor (a doubled ring)
 export const COL_PENCIL = 12; // the player's same-slant marks
 export const COL_PENCIL_BODY = 13; // the notes-mode indicator's pencil
+/** The lifted disc under a clue, and every square on the solved flash. */
+export const COL_GIVEN = 14;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background } = mkhighlight(defaultBackground);
+  const background = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
-  out[COL_GRID] = GRID_MID;
+  out[COL_GRID] = surfaceGrid(background);
   out[COL_INK] = INK;
   out[COL_SLANT1] = INK;
   out[COL_SLANT2] = INK;
   out[COL_ERROR] = ERROR;
   // A tile fill under the slash: the "you are here" wash, not the green mark
-  // (palette.ts, `CURSOR`), as Rectangles' is.
+  // (palette.ts, `CURSOR`), whose brackets would land on the clue discs at the
+  // square's corners.
   out[COL_CURSOR] = highlightWash(background);
-  out[COL_FILLEDSQUARE] = background;
+  out[COL_CELL] = cellSurface(background);
+  out[COL_GIVEN] = givenSurface(background);
   out[COL_GROUNDED] = slantGrounded(background);
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -201,12 +206,7 @@ function drawClue(
   if (v < 0) return;
   const ccol = (x ^ y) & 1 ? COL_SLANT1 : COL_SLANT2;
   const tcol = err ? COL_ERROR : hint ? COL_HINT : COL_INK;
-  dr.drawCircle(
-    { x: coord(x, ts), y: coord(y, ts) },
-    clueRadius(ts),
-    COL_BACKGROUND,
-    ccol,
-  );
+  dr.drawCircle({ x: coord(x, ts), y: coord(y, ts) }, clueRadius(ts), COL_GIVEN, ccol);
   dr.drawText(
     { x: coord(x, ts), y: coord(y, ts) },
     glyphFont(clueTextSize(ts)),
@@ -242,11 +242,11 @@ function drawTile(
   dr.drawRect(
     { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
     v & FLASH
-      ? COL_GRID
+      ? COL_GIVEN
       : v & CURSOR
         ? COL_CURSOR
-        : v & (BACKSLASH | FORWSLASH)
-          ? COL_FILLEDSQUARE
+        : x >= 0 && x < w && y >= 0 && y < h
+          ? COL_CELL
           : COL_BACKGROUND,
   );
 

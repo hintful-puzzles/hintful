@@ -419,7 +419,7 @@ class Solver {
       if (!(st.gridAt(is.x, is.y) & G_MARK)) {
         st.islandTogglemark(is);
         // No reason: the island's own digit against its own bridges says this,
-        // and the fork's auto-mark aid grays it. The plan hides the firing and
+        // and the fork's auto-mark aid lifts it. The plan hides the firing and
         // never asks the player for the `M` move.
         rec?.ops.push({ op: "M", x: is.x, y: is.y });
         didsth = true;

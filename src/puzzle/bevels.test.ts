@@ -106,11 +106,10 @@ const DRAWING = GAMES.filter((g) => g.bevels.length > 0);
 describe("the bevels on the frames", () => {
   it("finds the games that draw one", () => {
     const drawing = DRAWING.map((g) => g.id);
-    expect(drawing.length).toBeGreaterThanOrEqual(8);
-    // One through each shared helper, and the two games these guards were
-    // written for.
-    for (const id of ["fifteen", "samegame", "crossing", "pegs"])
-      expect(drawing).toContain(id);
+    // The games whose tiles the player moves, which are the ones that keep a
+    // bevel (`docs/games/rendering.md` § "What a board looks like: pieces on a
+    // quiet surface").
+    expect(drawing.sort()).toEqual(["fifteen", "sixteen", "twiddle"]);
   });
 });
 
@@ -137,8 +136,8 @@ describe("a bevel is drawn by the shared helper", () => {
 
 describe("a bevel keeps its lit side across the schemes", () => {
   // Inverting lightness for the dark scheme turns an emboss into an inset
-  // unless the bevel's two colors trade dark values. Pegs drew its board's
-  // relief with two colors that did not, and was lit from the top-left in one
+  // unless the bevel's two colors trade dark values. Pegs once drew a
+  // board's relief with two colors that did not, and was lit from the top-left in one
   // scheme and the bottom-right in the other, with nothing failing.
   for (const { id, bevels } of DRAWING) {
     it(`${id}: each bevel's lighter color is the lighter one in both schemes`, () => {

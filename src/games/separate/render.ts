@@ -31,12 +31,10 @@ import {
   newBorderGridDrawState,
 } from "../../engine/border-grid-render.ts";
 import {
+  cellSurface,
   correctRegionColor,
-  mkhighlight,
-} from "../../engine/color/color-mkhighlight.ts";
-import {
   ERROR,
-  FLASH,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -71,17 +69,21 @@ export const COL_ERROR = 5;
 export const COL_CORRECT = 6; // a completed, correct region (shared gray shade)
 export const COL_HINT = 7; // the edges a hint step sets, and its hatched region
 export const COL_HINT_CELL = 8; // the outline on a square a hint step cites
+export const COL_CELL = 9; // the surface of every cell
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background } = mkhighlight(defaultBackground);
+  const background = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
-  out[COL_FLASH] = FLASH;
+  out[COL_CELL] = cellSurface(background);
+  // The solved flash lifts every cell, a step that reads in both schemes.
+  out[COL_FLASH] = givenSurface(background);
   out[COL_GRID] = INK;
   out[COL_ERROR] = ERROR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
-  out[COL_CORRECT] = correctRegionColor(background);
+  // Shaded from the surface the cells are painted in.
+  out[COL_CORRECT] = correctRegionColor(cellSurface(background));
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);
   return out;
@@ -90,7 +92,7 @@ export function colors(defaultBackground: Color): Color[] {
 /** Separate's palette indices, in the shared renderer's terms. Its cursor is
  * drawn in the grid's own ink. */
 const PALETTE: BorderGridColors = {
-  background: COL_BACKGROUND,
+  background: COL_CELL,
   flash: COL_FLASH,
   correct: COL_CORRECT,
   grid: COL_GRID,

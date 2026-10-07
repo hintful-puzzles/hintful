@@ -22,7 +22,7 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newFillingDesc } from "./generator.ts";
 import { fillingGame } from "./index.ts";
-import { COL_CORRECT, COL_ERROR, COL_GRID } from "./render.ts";
+import { COL_CELL, COL_CORRECT, COL_ERROR, COL_GIVEN, COL_INK } from "./render.ts";
 import { solveFilling } from "./solver.ts";
 import {
   decodeParams,
@@ -237,10 +237,18 @@ describe("filling render scenario", () => {
       game: fillingGame,
       id: "9x7#filling-seed-3",
     });
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_GRID)).toBe(
+    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_INK)).toBe(
       true,
     );
     expect(recording.ops.some((o) => o.op === "text")).toBe(true);
+    // A clue is told by the cell under it: every clue's cell is lifted or in
+    // a completed region's shade, and every empty cell is the plain surface.
+    const rects = (color: number) =>
+      recording.ops.filter((o) => o.op === "rect" && o.color === color).length;
+    const clues = recording.ops.filter((o) => o.op === "text").length;
+    expect(rects(COL_GIVEN)).toBeGreaterThan(0);
+    expect(rects(COL_GIVEN) + rects(COL_CORRECT)).toBe(clues);
+    expect(rects(COL_CELL)).toBe(9 * 7 - clues);
     expect(recording.ops).toMatchSnapshot();
   });
 

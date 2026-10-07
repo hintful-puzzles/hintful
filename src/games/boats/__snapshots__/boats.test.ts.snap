@@ -264,10 +264,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y": 176,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 0,
     "y": 0,
@@ -275,7 +275,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 32,
@@ -285,7 +285,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -295,7 +295,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 0,
@@ -305,7 +305,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 0,
@@ -313,10 +313,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 0,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 0,
     "y": 32,
@@ -324,7 +324,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 32,
@@ -334,7 +334,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -344,7 +344,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 0,
@@ -354,7 +354,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 0,
@@ -362,10 +362,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 32,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 0,
     "y": 64,
@@ -373,7 +373,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 32,
@@ -383,7 +383,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -393,7 +393,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 0,
@@ -403,7 +403,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 0,
@@ -411,10 +411,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 64,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 0,
     "y": 96,
@@ -422,7 +422,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 32,
@@ -432,7 +432,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -442,7 +442,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 0,
@@ -452,7 +452,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 0,
@@ -460,10 +460,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 96,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 0,
     "y": 128,
@@ -471,7 +471,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 32,
@@ -481,7 +481,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -491,7 +491,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 0,
@@ -501,7 +501,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 0,
@@ -509,10 +509,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 128,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 0,
     "y": 160,
@@ -520,7 +520,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 32,
@@ -530,7 +530,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -540,7 +540,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 0,
@@ -550,7 +550,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 0,
     "x2": 0,
@@ -558,10 +558,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 160,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 32,
     "y": 0,
@@ -569,7 +569,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 64,
@@ -579,7 +579,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -589,7 +589,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 32,
@@ -599,7 +599,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -607,10 +607,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 0,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 32,
     "y": 32,
@@ -618,7 +618,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 64,
@@ -628,7 +628,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -638,7 +638,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 32,
@@ -648,7 +648,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -656,10 +656,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 32,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 32,
     "y": 64,
@@ -667,7 +667,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 64,
@@ -677,7 +677,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -687,7 +687,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 32,
@@ -697,7 +697,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -705,10 +705,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 64,
   },
   {
-    "color": 4,
+    "color": 18,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(165, 195, 239)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 32,
     "x": 32,
     "y": 96,
@@ -716,7 +716,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 64,
@@ -726,7 +726,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -736,7 +736,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 32,
@@ -746,7 +746,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -789,10 +789,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     ],
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 32,
     "y": 128,
@@ -800,7 +800,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 64,
@@ -810,7 +810,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -820,7 +820,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 32,
@@ -830,7 +830,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -838,10 +838,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 128,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 32,
     "y": 160,
@@ -849,7 +849,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 64,
@@ -859,7 +859,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -869,7 +869,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 32,
@@ -879,7 +879,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 32,
     "x2": 32,
@@ -887,10 +887,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 160,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 64,
     "y": 0,
@@ -898,7 +898,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 96,
@@ -908,7 +908,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -918,7 +918,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 64,
@@ -928,7 +928,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -936,10 +936,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 0,
   },
   {
-    "color": 4,
+    "color": 18,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(165, 195, 239)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 32,
     "x": 64,
     "y": 32,
@@ -947,7 +947,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 96,
@@ -957,7 +957,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -967,7 +967,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 64,
@@ -977,7 +977,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -1020,10 +1020,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     ],
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 64,
     "y": 64,
@@ -1031,7 +1031,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 96,
@@ -1041,7 +1041,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1051,7 +1051,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 64,
@@ -1061,7 +1061,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -1069,10 +1069,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 64,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 64,
     "y": 96,
@@ -1080,7 +1080,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 96,
@@ -1090,7 +1090,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1100,7 +1100,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 64,
@@ -1110,7 +1110,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -1118,10 +1118,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 96,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 64,
     "y": 128,
@@ -1129,7 +1129,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 96,
@@ -1139,7 +1139,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1149,7 +1149,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 64,
@@ -1159,7 +1159,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -1167,10 +1167,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 128,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 64,
     "y": 160,
@@ -1178,7 +1178,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 96,
@@ -1188,7 +1188,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1198,7 +1198,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 64,
@@ -1208,7 +1208,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 64,
     "x2": 64,
@@ -1216,10 +1216,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 160,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 96,
     "y": 0,
@@ -1227,7 +1227,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 128,
@@ -1237,7 +1237,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1247,7 +1247,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 96,
@@ -1257,7 +1257,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1265,10 +1265,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 0,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 96,
     "y": 32,
@@ -1276,7 +1276,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 128,
@@ -1286,7 +1286,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1296,7 +1296,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 96,
@@ -1306,7 +1306,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1314,10 +1314,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 32,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 96,
     "y": 64,
@@ -1325,7 +1325,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 128,
@@ -1335,7 +1335,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1345,7 +1345,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 96,
@@ -1355,7 +1355,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1363,10 +1363,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 64,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 96,
     "y": 96,
@@ -1374,7 +1374,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 128,
@@ -1384,7 +1384,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1394,7 +1394,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 96,
@@ -1404,7 +1404,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1412,10 +1412,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 96,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 96,
     "y": 128,
@@ -1423,7 +1423,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 128,
@@ -1433,7 +1433,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1443,7 +1443,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 96,
@@ -1453,7 +1453,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1461,10 +1461,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 128,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 96,
     "y": 160,
@@ -1472,7 +1472,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 128,
@@ -1482,7 +1482,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1492,7 +1492,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 96,
@@ -1502,7 +1502,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 96,
     "x2": 96,
@@ -1510,10 +1510,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 160,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 128,
     "y": 0,
@@ -1521,7 +1521,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 160,
@@ -1531,7 +1531,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1541,7 +1541,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 128,
@@ -1551,7 +1551,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1559,10 +1559,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 0,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 128,
     "y": 32,
@@ -1570,7 +1570,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 160,
@@ -1580,7 +1580,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1590,7 +1590,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 128,
@@ -1600,7 +1600,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1608,10 +1608,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 32,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 128,
     "y": 64,
@@ -1619,7 +1619,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 160,
@@ -1629,7 +1629,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1639,7 +1639,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 128,
@@ -1649,7 +1649,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1657,10 +1657,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 64,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 128,
     "y": 96,
@@ -1668,7 +1668,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 160,
@@ -1678,7 +1678,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1688,7 +1688,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 128,
@@ -1698,7 +1698,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1706,10 +1706,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 96,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 128,
     "y": 128,
@@ -1717,7 +1717,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 160,
@@ -1727,7 +1727,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1737,7 +1737,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 128,
@@ -1747,7 +1747,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1755,10 +1755,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 128,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 128,
     "y": 160,
@@ -1766,7 +1766,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 160,
@@ -1776,7 +1776,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1786,7 +1786,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 128,
@@ -1796,7 +1796,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 128,
     "x2": 128,
@@ -1804,10 +1804,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 160,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 160,
     "y": 0,
@@ -1815,7 +1815,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 192,
@@ -1825,7 +1825,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 192,
@@ -1835,7 +1835,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 160,
@@ -1845,7 +1845,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1853,10 +1853,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 0,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 160,
     "y": 32,
@@ -1864,7 +1864,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 192,
@@ -1874,7 +1874,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 192,
@@ -1884,7 +1884,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 160,
@@ -1894,7 +1894,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1902,10 +1902,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 32,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 160,
     "y": 64,
@@ -1913,7 +1913,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 192,
@@ -1923,7 +1923,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 192,
@@ -1933,7 +1933,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 160,
@@ -1943,7 +1943,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -1951,10 +1951,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 64,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 160,
     "y": 96,
@@ -1962,7 +1962,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 192,
@@ -1972,7 +1972,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 192,
@@ -1982,7 +1982,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 160,
@@ -1992,7 +1992,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -2000,10 +2000,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 96,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 160,
     "y": 128,
@@ -2011,7 +2011,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 192,
@@ -2021,7 +2021,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 192,
@@ -2031,7 +2031,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 160,
@@ -2041,7 +2041,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,
@@ -2049,10 +2049,10 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
     "y2": 128,
   },
   {
-    "color": 0,
+    "color": 17,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 160,
     "y": 160,
@@ -2060,7 +2060,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 192,
@@ -2070,7 +2070,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 192,
@@ -2080,7 +2080,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 192,
     "x2": 160,
@@ -2090,7 +2090,7 @@ exports[`boats rendering > draws an opening frame with water, numbers and the fl
   {
     "color": 1,
     "op": "line",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
     "x1": 160,
     "x2": 160,

@@ -26,6 +26,7 @@ import {
 import { hint, hintKeepTrack, PEGS_RUNGS, type PegsRung } from "./hint.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import { pegsGame } from "./index.ts";
+import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import { findFinish, frozenPegs, legalJumps, provedLost } from "./solver.ts";
 import { GRID_HOLE, GRID_PEG, type PegsMove, type PegsState, status } from "./state.ts";
 
@@ -502,10 +503,6 @@ describe("pegs hint", () => {
     if (!other) throw new Error("expected a rival jump");
     expect(hintKeepTrack(jumpMove(s, other), step, s)).toBe("off");
   });
-
-  // COL_HINT and COL_HINT_EVIDENCE.
-  const COL_HINT = 6;
-  const COL_HINT_EVIDENCE = 7;
 
   it("draws a trap's rings, outline and stripes (tier 2.5)", () => {
     const { recording } = renderScenario({

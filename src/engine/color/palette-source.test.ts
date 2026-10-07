@@ -18,7 +18,7 @@
  * 2. **no channel-indexing the background** — `bg[0] * 0.9` is the same decision
  *    written as arithmetic, and it is how most of the collection's derived
  *    colors were originally spelled;
- * 3. **no importing the color combinators** — `mix`/`scale`/`divide`/`fraction`
+ * 3. **no importing the color combinators** — `mix`/`scale`/`divide`
  *    are how the *table* builds one color out of others; a game reaching for
  *    them is a game deciding a color.
  *
@@ -178,7 +178,7 @@ describe("a game contains no color value", () => {
     it(`${rel} does not combine colors itself`, () => {
       expect(
         COMBINATOR_IMPORT.test(src) ? rel : null,
-        "mix/scale/divide/fraction build one color out of others, which is the " +
+        "mix/scale/divide build one color out of others, which is the " +
           "token table's job — put the combination there under a name",
       ).toBeNull();
     });

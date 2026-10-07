@@ -14,6 +14,8 @@
  */
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import * as inertia from "../games/inertia/render.ts";
+import * as sokoban from "../games/sokoban/render.ts";
 import { puzzleIds } from "./catalog.ts";
 import {
   MIN_DARK_DISTANCE,
@@ -23,35 +25,26 @@ import {
 
 /** `kind:a:b` to what the pair is, per game. */
 const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
-  abcd: {
-    "mark:2:11": "a grid line beside the cursor's fill, which itself clears the cell",
+  ascent: {
+    "area:2:13": "the board's own path where it meets an endpoint disc",
+    "mark:13:2":
+      "an endpoint disc's ring, which the disc itself carries in the dark scheme",
+    "mark:2:13": "a grid line inside a highlighted guide row or column",
   },
-  blackbox: {
-    "mark:5:7": "a bevel's highlight edge beside a grid line",
+  filling: {
+    "mark:1:3": "a grid line inside a completed region, which its border closes",
   },
-  crossing: {
-    "mark:4:8": "a grid line beside the highlight edge of a blocked square",
-  },
-  group: {
-    "area:0:6": "the diagonal's tint, a decoration as faint in the light scheme",
+  galaxies: {
+    "area:3:13": "a white dot's fill on an unclaimed cell; its ink outline carries it",
   },
   guess: {
     "mark:1:17": "the outline of a white peg, which is white",
   },
-  mines: {
-    "area:0:1": "a covered square beside an opened one; the bevel carries it",
-  },
-  signpost: {
-    "area:0:12": "an unchained square beside the board's margin, which is no state",
+  pearl: {
+    "area:4:16": "a white pearl on the loop; its black outline carries it",
   },
   slide: {
     "area:0:20": "a block's lowlight edge beside the floor; its face clears it",
-  },
-  sokoban: {
-    "mark:7:9": "a bevel's highlight edge beside a grid line",
-  },
-  tracks: {
-    "area:0:2": "the grid's broad lines, as quiet in the light scheme",
   },
   undead: {
     "area:0:8": "a vampire's body on the board; its ink outline carries it",
@@ -78,13 +71,14 @@ describe("neighbors stand apart in the dark scheme", () => {
 
   // The pair this guard exists for is on the frames it reads, so the floor is
   // being applied to it and not merely to its neighbors.
-  for (const [id, wall] of [
-    ["sokoban", 11],
-    ["inertia", 8],
+  for (const [id, wall, floor] of [
+    ["sokoban", sokoban.COL_WALL, sokoban.COL_FLOOR],
+    ["inertia", inertia.COL_WALL, inertia.COL_FLOOR],
   ] as const) {
     it(`${id}: the wall beside the floor is one of the pairs measured`, () => {
       const pair = schemeNeighbors(id).find(
-        (p) => p.kind === "area" && p.a === 0 && p.b === wall,
+        (p) =>
+          p.kind === "area" && [p.a, p.b].includes(wall) && [p.a, p.b].includes(floor),
       );
       expect(pair?.dark).toBeGreaterThanOrEqual(MIN_DARK_DISTANCE);
     });

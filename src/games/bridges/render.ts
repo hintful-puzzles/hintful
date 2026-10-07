@@ -13,8 +13,10 @@
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
+  cellSurface,
   ERROR_WASH,
   GRID_MID,
+  givenSurface,
   HELD,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -53,12 +55,15 @@ export function border(tileSize: number): number {
   return Math.floor(tileSize / 8) + 1;
 }
 
-// --- Color enum (bridges.c lines 103-112), index-for-index with C ---
+// --- Colors ---
 export const COL_BACKGROUND = 0;
 export const COL_FOREGROUND = 1;
 export const COL_HIGHLIGHT = 2;
 export const COL_LOWLIGHT = 3;
 export const COL_SELECTED = 4;
+/** **Settled**: the face of an island marked completed, or whose count is
+ * met, and the band under a bridge such a mark has locked. The lifted
+ * surface, since a settled island is fixed as a given is. */
 export const COL_MARK = 5;
 /**
  * Upstream's `COL_HINT`, renamed. It is the bevel shade the "Show possible
@@ -80,6 +85,9 @@ export const COL_CURSOR = 9;
 export const COL_HINT = 10;
 /** The hint's evidence color: the islands and bridges the argument counts. */
 export const COL_HINT_CELL = 11;
+/** The face of an island that still has bridges to take: the quiet surface,
+ * a step off the board, so a settled island's lift reads against it. */
+export const COL_ISLAND = 12;
 
 // --- Packed draw-word fields (bridges.c lines 2262-2297) ---
 // Line data (6 bits per direction).
@@ -205,7 +213,7 @@ export function colors(defaultBackground: Color): Color[] {
     highlight, // COL_HIGHLIGHT
     lowlight, // COL_LOWLIGHT
     HELD, // COL_SELECTED
-    highlight, // COL_MARK (= HIGHLIGHT)
+    givenSurface(background), // COL_MARK
     lowlight, // COL_POSSIBLE (= LOWLIGHT): the "possible bridge" bevel line
     GRID_MID, // COL_GRID
     ERROR_WASH, // COL_WARNING (also the mistake overlay color)
@@ -215,6 +223,7 @@ export function colors(defaultBackground: Color): Color[] {
     highlightWash(background),
     HINT_ACTION, // COL_HINT
     HINT_EVIDENCE, // COL_HINT_CELL
+    cellSurface(background), // COL_ISLAND
   ];
 }
 
@@ -531,7 +540,7 @@ function drawIsland(
       ? COL_CURSOR
       : (idata & DI_BGMASK) === DI_BG_MARK
         ? COL_MARK
-        : COL_BACKGROUND;
+        : COL_ISLAND;
 
   dr.drawCircle({ x: ox + half, y: oy + half }, orad, fg, fg);
   dr.drawCircle({ x: ox + half, y: oy + half }, irad, bg, bg);
@@ -935,7 +944,7 @@ export function redrawBridges(
         if (ui.cursor.visible && ui.cursor.x === is.x && ui.cursor.y === is.y)
           idata |= DI_BG_CURSOR;
         else if (v & G_MARK) idata |= DI_BG_MARK;
-        // Fork aid: auto-gray a satisfied island (visual only — no lock).
+        // Fork aid: lift a satisfied island (visual only — no lock).
         // A satisfied island is never impossible, so this never fights the red.
         else if (ui.autoMark && s.islandCountbridges(is) === is.count)
           idata |= DI_BG_MARK;

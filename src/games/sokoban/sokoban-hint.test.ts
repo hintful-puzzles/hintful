@@ -21,6 +21,7 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { hint, hintKeepTrack, pushMove, type SokobanRung } from "./hint.ts";
 import { BARREL, GOAL, PUSH, type Stuck } from "./hint-text.ts";
 import { executeMove, sokobanGame } from "./index.ts";
+import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import { DIRS, SokobanBoard, search, searchFrom } from "./solver.ts";
 import {
   encodeBoard,
@@ -510,9 +511,6 @@ describe("Solve", () => {
 });
 
 describe("rendering the marks (tier 2.5)", () => {
-  // COL_HINT and COL_HINT_EVIDENCE.
-  const COL_HINT = 13;
-  const COL_HINT_EVIDENCE = 14;
   const rings = (ops: readonly { op: string }[], color: number) =>
     ops.filter((o) => {
       const c = o as { op: string; fill?: number; outline?: number };

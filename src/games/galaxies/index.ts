@@ -7,12 +7,14 @@ import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { PURPLE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   DRAG_ADD,
   ERROR,
-  GRID_MID,
+  givenSurface,
   HINT_EVIDENCE,
   INK,
   PAPER,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
 import { descValue } from "../../engine/desc-error.ts";
@@ -85,6 +87,7 @@ import {
   COL_BACKGROUND,
   COL_BLACKBG,
   COL_BLACKDOT,
+  COL_CELL,
   COL_CURSOR,
   COL_DRAG,
   COL_EDGE,
@@ -1182,17 +1185,18 @@ export const galaxiesGame: Game<
   statusbarText,
 
   colors(defaultBackground: Color): Color[] {
-    // The background arrives already shifted off pure white (the midend's
-    // `resolvePalette`), so `COL_WHITEBG` below is visibly brighter than it
-    // and a closed white region never disappears into the page.
     const bg = defaultBackground;
     const ret = new Array<Color>(NCOLORS);
     ret[COL_BACKGROUND] = bg;
-    ret[COL_WHITEBG] = PAPER;
+    // A closed region is a lifted surface against the plain cells around it,
+    // brighter than them in both schemes. Paper is not: it inverts, and in
+    // the dark scheme lands a faint step below the cell surface.
+    ret[COL_WHITEBG] = givenSurface(bg);
     ret[COL_BLACKBG] = galaxiesBlackRegion(bg);
     ret[COL_WHITEDOT] = PAPER;
     ret[COL_BLACKDOT] = INK;
-    ret[COL_GRID] = GRID_MID;
+    ret[COL_GRID] = surfaceGrid(bg);
+    ret[COL_CELL] = cellSurface(bg);
     ret[COL_EDGE] = INK;
     ret[COL_ARROW] = INK;
     // Both transient affordances take authored colors rather than

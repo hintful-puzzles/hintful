@@ -14,12 +14,15 @@
  */
 
 import { BLACK, PINK_WASH, TEAL_WASH, TEN, WHITE } from "../../engine/color/colors.ts";
-import { ERROR, HINT_ACTION, HINT_EVIDENCE, INK } from "../../engine/color/palette.ts";
 import {
-  guessAnswerWell,
-  guessBoard,
-  guessEmptySlot,
-} from "../../engine/color/palette-games.ts";
+  cellSurface,
+  ERROR,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+  surfaceGrid,
+} from "../../engine/color/palette.ts";
+import { guessAnswerWell, guessBoard } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -63,7 +66,10 @@ export const COL_HINT_CELL = 19;
 const COL_WELL = 20;
 /** A mistake: the frame round an answer slot ruling out its own color. */
 export const COL_WRONG = 21;
-export const NCOLORS = 22;
+/** The rim of an empty hole, which with {@link COL_EMPTY} inside it is a cell
+ * of the collection's quiet surface, drawn round. */
+export const COL_HOLE_RIM = 22;
+export const NCOLORS = 23;
 
 // --- peg overlay flags (upstream PEG_*) -------------------------------
 
@@ -462,8 +468,12 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_HOLD] = PINK_WASH;
   ret[COL_CORRECTPLACE] = BLACK;
   ret[COL_CORRECTCOLOR] = WHITE;
-  ret[COL_BACKGROUND] = guessBoard(defaultBackground);
-  ret[COL_EMPTY] = guessEmptySlot(defaultBackground);
+  const board = guessBoard(defaultBackground);
+  ret[COL_BACKGROUND] = board;
+  // An empty hole is where a peg goes and no state of its own, so it is the
+  // quiet surface inside its thin line and the pegs are the color on the board.
+  ret[COL_EMPTY] = cellSurface(board);
+  ret[COL_HOLE_RIM] = surfaceGrid(board);
   ret[COL_WELL] = guessAnswerWell(defaultBackground);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -504,7 +514,7 @@ function drawPeg(
       pt(cx + ds.pegrad, cy + ds.pegrad),
       ds.pegrad,
       COL_EMPTY + col,
-      col ? COL_FRAME : COL_EMPTY,
+      col ? COL_FRAME : COL_HOLE_RIM,
     );
   } else {
     dr.drawRect(rect(cx, cy, ts, ts), COL_EMPTY + col);
@@ -648,7 +658,7 @@ function hintRedraw(
         pt(rowx + ds.hintrad, rowy + ds.hintrad),
         ds.hintrad,
         col,
-        col === emptycol ? emptycol : COL_FRAME,
+        col === COL_EMPTY ? COL_HOLE_RIM : col === emptycol ? emptycol : COL_FRAME,
       );
     } else {
       dr.drawRect(rect(rowx, rowy, ds.hintsz, ds.hintsz), col);

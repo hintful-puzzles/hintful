@@ -31,7 +31,7 @@ const key = (c: Color): string => c.map((v) => Math.round(v * 1000) / 1000).join
 /**
  * Call a derived role, whatever it takes.
  *
- * Most roles are a function of the background alone; `wallColor` also needs the
+ * Every role today is a function of the background alone; one once needed the
  * highlight, because "a quarter of the way from the floor toward its bevel" is
  * what the color *means*. Dispatching on arity keeps that one exception from
  * needing a hand-maintained list here — a new role is picked up automatically.

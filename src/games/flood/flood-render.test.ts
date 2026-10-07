@@ -30,26 +30,28 @@ function freshDs(state: FloodState): FloodDrawState {
 }
 
 describe("Flood redraw", () => {
-  it("paints play-color tiles and a recessed bevel on first draw", () => {
+  it("paints play-color tiles in a frame one separator wide, and no bevel", () => {
     const state = newState({ w: 2, h: 2, colors: 3, leniency: 0 }, "0112,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, UI, 0, 0);
 
-    // Two recessed-bevel polygons (highlight + lowlight).
-    expect(ops.filter((o) => o.op === "polygon").length).toBe(2);
+    expect(ops.some((o) => o.op === "polygon")).toBe(false);
+    // The frame (COL_GRID = palette index 12): the field and a separator
+    // (1 pixel at this size) on each side.
+    expect(ops[0]).toMatchObject({ op: "rect", color: 12, w: 2 * TS + 2 });
     // A full-tile rect in a play color (COL_1 = palette index 2) for the
     // corner cell (color 0).
     expect(ops.some((o) => o.op === "rect" && o.color === 2 && o.w === TS)).toBe(true);
   });
 
-  it("draws separator borders (COL_SEPARATOR) between differing cells", () => {
+  it("draws separator borders (COL_GRID) between differing cells", () => {
     const state = newState({ w: 2, h: 1, colors: 3, leniency: 0 }, "01,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, UI, 0, 0);
-    // A thin (w = sepWidth = 1) separator-color rect appears.
-    expect(ops.some((o) => o.op === "rect" && o.color === 1 && o.w === 1)).toBe(true);
+    // A thin (w = sepWidth = 1) rect in the grid's color appears.
+    expect(ops.some((o) => o.op === "rect" && o.color === 12 && o.w === 1)).toBe(true);
   });
 
   it("draws the cursor outline when the cursor is visible", () => {
@@ -57,7 +59,7 @@ describe("Flood redraw", () => {
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, { cursor: newCursor(0, 0, true) }, 0, 0);
-    // The cursor outline is four separator-color lines.
+    // The cursor outline is four lines in the mark color (COL_MARK = 1).
     expect(ops.filter((o) => o.op === "line" && o.color === 1).length).toBe(4);
   });
 
@@ -98,14 +100,14 @@ describe("Flood redraw", () => {
     expect(new Set(tiles.map((o) => o.color)).size).toBeGreaterThan(1);
   });
 
-  it("blinks the board to the separator color on a defeat flash", () => {
+  it("blinks the board to the mark color on a defeat flash", () => {
     const base = newState({ w: 3, h: 3, colors: 3, leniency: 0 }, "012120201,1");
     // Lost: moves at the limit, not complete.
     const state: FloodState = { ...base, moves: 1 };
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     // flashTime / DEFEAT_FLASH_FRAME(0.1) = 0 (≠ 1) → BADFLASH → every
-    // tile painted in the separator color at full size.
+    // tile painted in the mark color at full size.
     redraw(dr, ds, null, state, 1, UI, 0, 0.05);
     const tiles = opsOfKind(ops, "rect").filter((o) => o.w === TS && o.h === TS);
     expect(tiles).toHaveLength(9);

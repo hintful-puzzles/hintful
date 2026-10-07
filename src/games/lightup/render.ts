@@ -1,31 +1,31 @@
 /**
- * Light Up rendering — port of `tile_flags` / `tile_redraw` /
- * `game_redraw` in `lightup.c`: a per-tile diffed loop over a packed
- * display-flag word per cell (docs/games/rendering.md § "The tile cache and
- * the diff key"). Black squares show their clue (red when provably wrong),
- * open squares fill yellow when lit, bulbs are circles (red when lit by
- * another bulb), the impossible-mark is a small black blob, and the
- * completion flash is a 3-phase background blink.
- *
- * The palette stays index-for-index with the upstream color enum, and the
- * fork's hint colors are appended past it.
+ * Light Up rendering: a per-tile diffed loop over a packed display-flag word
+ * per cell (docs/games/rendering.md § "The tile cache and the diff key"), on
+ * the collection's quiet surface. A wall is a solid black block with its clue
+ * (red when provably wrong); an open square is the cell surface, washed yellow
+ * when lit; a bulb is a white disc (red when lit by another bulb); the
+ * impossible-mark is the ruled-out dot; and the completion flash blinks the
+ * lit squares to the lifted surface.
  */
 
 import { BLACK, WHITE, YELLOW_WASH } from "../../engine/color/colors.ts";
 import {
   CURSOR,
-  ERROR_WASH,
-  GRID_MID,
+  cellSurface,
+  ERROR,
+  givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_EVIDENCE_WASH,
   HINT_WHITEREF,
   RULED_OUT,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
+import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { drawRuledOutDot } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { LightupHint, LightupMistake } from "./index.ts";
 import {
@@ -43,10 +43,10 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_TIME = 0.3;
 
-// --- palette (upstream COL_* enum, index-for-index) --------------------------
+// --- palette -------------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+export const COL_GRID = 1; // the line between two cells, and the frame
 export const COL_BLACK = 2;
 export const COL_LIGHT = 3; // white: bulbs and clue digits
 export const COL_LIT = 4; // yellow lit-square fill
@@ -57,15 +57,21 @@ export const COL_CURSOR = 6;
 export const COL_HINT = 7; // forced cell(s), blue fill (highlight only)
 export const COL_HINT_CELL = 8; // evidence: the shade on a *dark* square
 export const COL_HINT_LITERF = 9; // cited lit/bulb premise (green ring)
-export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (violet ring)
+export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (pink ring)
 /** The player's "no light here" dot. Its own slot rather than upstream's wall
  * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
 export const COL_RULED_OUT = 11;
+export const COL_CELL = 12; // the surface of an open square no bulb lights
+/** What a lit square blinks to in the completion flash: a lifted surface,
+ * which is a step off the yellow in both schemes. */
+export const COL_FLASH = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = GRID_MID;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_FLASH] = givenSurface(defaultBackground);
   // Pinned: a wall *is* black and a bulb *is* white, in either scheme.
   out[COL_BLACK] = BLACK;
   out[COL_LIGHT] = WHITE;
@@ -74,13 +80,16 @@ export function colors(defaultBackground: Color): Color[] {
   // Plain yellow is a near-board tint under a light scheme and a bright patch
   // under a dark one.
   out[COL_LIT] = YELLOW_WASH;
-  out[COL_ERROR] = ERROR_WASH;
+  // The full red, not its wash: it is a clue's digit on a black wall and the
+  // disc of a bulb another bulb lights, and the wash is as dark as the wall
+  // in the dark scheme.
+  out[COL_ERROR] = ERROR;
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE_WASH;
   out[COL_HINT_LITERF] = HINT_BLACKREF;
   // The unlit square is the *empty* reference cell, so it takes the white-ref
-  // premise color (Pattern's and Singles' empty reference is the same violet).
+  // premise color (Pattern's and Singles' empty reference is the same pink).
   out[COL_HINT_DARKREF] = HINT_WHITEREF;
   out[COL_RULED_OUT] = RULED_OUT;
   return out;
@@ -113,7 +122,7 @@ const DF_BLOBS_PREF = 1024;
 // Fork additions: the displayed hint step, in the key so hint changes repaint.
 const DF_HINT_TARGET = 2048; // forced cell — blue COL_HINT fill
 const DF_HINT_AREA = 4096; // evidence — shade when dark, green ring when lit
-const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — violet ring
+const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — pink ring
 const DF_HINT_CLUE = 16384; // driving clue — digit recolored
 
 export interface LightupDrawState {
@@ -178,7 +187,10 @@ function tileRedraw(
   const dsFlags = ds.cache[idx(x, y, state.w)];
   const dx = coord(x, ts);
   const dy = coord(y, ts);
-  const lit = dsFlags & DF_FLASH ? COL_GRID : COL_LIT;
+  const lit = dsFlags & DF_FLASH ? COL_FLASH : COL_LIT;
+  // An open square's surface, inside the grid line on its top and left. The
+  // lines on its other two sides are its neighbors', or the frame's.
+  const box = { x: dx + 1, y: dy + 1, w: ts - 1, h: ts - 1 };
   /** A doubled inset ring. */
   const ring = (color: number): void => {
     drawRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, color);
@@ -186,6 +198,7 @@ function tileRedraw(
   };
 
   if (dsFlags & DF_BLACK) {
+    // The whole tile, grid lines included, so a run of walls is one block.
     dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_BLACK);
     if (dsFlags & DF_NUMBERED) {
       // A hint's driving clue recolors its digit COL_HINT (the Pattern
@@ -217,13 +230,13 @@ function tileRedraw(
         ? COL_HINT_CELL
         : dsFlags & DF_LIT
           ? lit
-          : COL_BACKGROUND;
-    dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, fill);
-    drawRectOutline(dr, dx, dy, ts, ts, COL_GRID);
+          : COL_CELL;
+    dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_GRID);
+    dr.drawRect(box, fill);
     if (dsFlags & DF_HINT_TARGET) {
       drawMarkSides(
         dr,
-        { box: { x: dx, y: dy, w: ts, h: ts }, outer: 0, inner: Math.max(2, ts >> 4) },
+        { box, outer: 0, inner: Math.max(2, ts >> 4) },
         MARK_ALL,
         COL_HINT,
       );
@@ -242,16 +255,7 @@ function tileRedraw(
       dsFlags & DF_IMPOSSIBLE &&
       (!(dsFlags & DF_LIT) || ui.drawBlobsWhenLit)
     ) {
-      const rlen = Math.floor(ts / 4);
-      dr.drawRect(
-        {
-          x: dx + Math.floor(ts / 2) - Math.floor(rlen / 2),
-          y: dy + Math.floor(ts / 2) - Math.floor(rlen / 2),
-          w: rlen,
-          h: rlen,
-        },
-        COL_RULED_OUT,
-      );
+      drawRuledOutDot(dr, box, COL_RULED_OUT);
     }
   }
 
@@ -260,8 +264,15 @@ function tileRedraw(
   if (dsFlags & DF_WRONG) ring(COL_ERROR);
 
   if (dsFlags & DF_CURSOR) {
-    const coff = Math.floor(ts / 8);
-    drawRectOutline(dr, dx + coff, dy + coff, ts - coff * 2, ts - coff * 2, COL_CURSOR);
+    // Out at the corners of the tile, clear of a bulb.
+    drawRectCorners(
+      dr,
+      dx + Math.floor(ts / 2),
+      dy + Math.floor(ts / 2),
+      Math.floor(ts / 2) - 2,
+      COL_CURSOR,
+      Math.max(2, ts >> 4),
+    );
   }
 
   dr.drawUpdate({ x: dx, y: dy, w: ts, h: ts });
@@ -312,14 +323,9 @@ export function redraw(
   const flashing = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_TIME) !== 1;
 
   if (!ds.started) {
-    drawRectOutline(
-      dr,
-      coord(0, ts) - 1,
-      coord(0, ts) - 1,
-      ts * w + 2,
-      ts * h + 2,
-      COL_GRID,
-    );
+    // One line wide, like the grid: its top and left lie under the first
+    // row's and column's own lines, its right and bottom close the last.
+    drawRectOutline(dr, coord(0, ts), coord(0, ts), ts * w + 1, ts * h + 1, COL_GRID);
     ds.started = true;
   }
 

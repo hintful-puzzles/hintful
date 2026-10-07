@@ -269,10 +269,10 @@ describe("solo render (initial frame)", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("X variant: shades the diagonals with COL_XDIAGONALS", () => {
+  it("X variant: strokes the diagonals with COL_XDIAGONALS", () => {
     const { recording } = renderScenario({ game: soloGame, id: idOf(XTYPE) });
     expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_XDIAGONALS),
+      recording.ops.some((o) => o.op === "line" && o.color === COL_XDIAGONALS),
     ).toBe(true);
     expect(recording.ops).toMatchSnapshot();
   });

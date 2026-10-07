@@ -121,8 +121,7 @@ export function drawRaisedTile(
  * The raised block alone: a `lowlight` triangle over the bottom-right half and
  * a `highlight` triangle over the top-left. {@link drawRecessedBorder}'s
  * sibling, in the opposite direction. A tile with a face over its middle is
- * {@link drawRaisedTile}; this is for a relief that is not one, which is
- * Pegs' board.
+ * {@link drawRaisedTile}; this is for a relief that is not one.
  *
  * Lowlight is drawn first, then highlight. The two share their diagonal, so the
  * order decides a hairline, fixed here so it is one decision.

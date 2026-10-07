@@ -7,24 +7,29 @@
  * Two per-tile `Int32Array`s (`flags` + `flagsDrag`) mirror upstream's
  * committed-vs-drag-preview drawstate; the `findMistakes` overlay rides an
  * `OverlaySidecar` so it is part of the diff key (docs/games/rendering.md
- * § "Overlay sidecars"). The palette is index-for-index with the C color enum.
+ * § "Overlay sidecars").
+ *
+ * An undecided square is the quiet cell surface with the thin surface grid; a
+ * square the puzzle laid track in is the lifted surface of a given; a square
+ * the player has said carries track is the bed, with a dot until it has rails.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BROWN, GRAY } from "../../engine/color/colors.ts";
+import { BROWN } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   DRAG_ADD,
   DRAG_REMOVE,
   ERROR,
   FLASH,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
   PAPER,
   RULED_OUT,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { tracksGrid } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -65,14 +70,15 @@ import {
 export const PREFERRED_TILE_SIZE = 33;
 export const FLASH_TIME = 0.5;
 
-// --- palette (mirrors the tracks.c color enum index-for-index) -----------
+// --- palette --------------------------------------------------------------
 export const COL_BACKGROUND = 0;
+/** The bed under a square the player has said carries track. */
 export const COL_TRACK_BACKGROUND = 1;
 export const COL_GRID = 2;
 export const COL_CLUE = 3;
 export const COL_CURSOR = 4;
 export const COL_TRACK = 5;
-export const COL_TRACK_CLUE = 6;
+export const COL_CELL = 6; // the surface of a square not yet decided
 export const COL_SLEEPER = 7;
 export const COL_DRAGON = 8;
 export const COL_DRAGOFF = 9;
@@ -99,21 +105,24 @@ export const COL_HINT = 13;
  * action so the words map to the picture. */
 export const COL_HINT_CELL = 14;
 /** The player's no-track crosses, on squares and edges. Their own slot rather
- * than the rails' `COL_TRACK`, which upstream shared: a gray rail is the
- * picture, a gray cross was a mark too faint to find. */
+ * than the rails' `COL_TRACK`, which upstream shared: a rail is the
+ * picture and a cross is a note beside it. */
 export const COL_NOTRACK = 15;
+export const COL_GIVEN = 16; // the lifted surface under track the puzzle laid
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight } = mkhighlight(defaultBackground);
+  const background = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
-  out[COL_TRACK_BACKGROUND] = highlight;
-  // Kept a derivation: the grid sits between the board and the track bed drawn
-  // in its highlight, and the rails below are gray, which a gray grid would be.
-  out[COL_GRID] = tracksGrid(background, highlight);
-  out[COL_TRACK_CLUE] = INK;
-  // The rails are gray; that is the color, not a grid role.
-  out[COL_TRACK] = GRAY;
+  out[COL_CELL] = cellSurface(background);
+  out[COL_GIVEN] = givenSurface(background);
+  // The board's own tone, a step above the cell surface in both schemes and
+  // below a given's lift.
+  out[COL_TRACK_BACKGROUND] = background;
+  out[COL_GRID] = surfaceGrid(background);
+  // Ink for every rail: track the puzzle laid is told by the surface under
+  // it, and the rail itself is the same rail.
+  out[COL_TRACK] = INK;
   out[COL_CLUE] = INK;
   out[COL_CURSOR] = CURSOR;
   // White behind a red clue digit, so the red pops; a red wash would sit red
@@ -176,7 +185,8 @@ export function metrics(tileSize: number): Metrics {
   // difference between the board filling the width and not.
   const half = Math.floor(tileSize / 2);
   const tile = half * 2;
-  const gridLineAll = Math.max(Math.floor(tile / 16), 1);
+  // The thin line of the surface grid, at every tile size.
+  const gridLineAll = 1;
   const gridLineBr = Math.floor(gridLineAll / 2);
   return {
     half,
@@ -500,8 +510,8 @@ function drawHintMarks(
   const ox = coord(x, m);
   const oy = coord(y, m);
   const t2 = m.half; // HALFSZ
-  const band = m.gridLineAll;
   const lineThick = Math.max(Math.floor(m.tile / 16), 1);
+  const band = lineThick;
   const box = { x: ox, y: oy, w: m.tile, h: m.tile };
 
   // Evidence first, so a target's ring wins any border the two share.
@@ -562,7 +572,7 @@ function drawSquare(
   const bg = bestBits(
     flags & DS_TRACK ? 1 : 0,
     flagsDrag & DS_TRACK ? 1 : 0,
-    flags & DS_TRACK ? COL_TRACK_BACKGROUND : COL_BACKGROUND,
+    flags & DS_CLUE ? COL_GIVEN : flags & DS_TRACK ? COL_TRACK_BACKGROUND : COL_CELL,
   ).col;
   dr.drawRect({ x: ox, y: oy, w: m.tile, h: m.tile }, COL_GRID);
   const inner = {
@@ -594,20 +604,23 @@ function drawSquare(
       curx = ox + m.tile - off;
       curw = 2 * off + 1;
     }
-    rectOutline(dr, { x: curx, y: cury, w: curw, h: curh }, COL_CURSOR);
+    // As thick as the marks it sits among: a hairline is lost on the surface.
+    for (let k = 0; k < Math.max(2, lineThick); k++)
+      rectOutline(
+        dr,
+        { x: curx + k, y: cury + k, w: curw - 2 * k, h: curh - 2 * k },
+        COL_CURSOR,
+      );
   }
 
   // Tracks.
-  const c =
-    flags & DS_ERROR
-      ? COL_ERROR
-      : flags & DS_FLASH
-        ? COL_FLASH
-        : flags & DS_CLUE
-          ? COL_TRACK_CLUE
-          : COL_TRACK;
+  const c = flags & DS_ERROR ? COL_ERROR : flags & DS_FLASH ? COL_FLASH : COL_TRACK;
   const track = bestBits(flags, flagsDrag, c);
   drawTracksSpecific(dr, m, x, y, track.bits, track.col, COL_SLEEPER);
+  // A square marked as track with no rail yet: a dot, so the state is a mark
+  // and not the bed's tone alone.
+  if (flags & DS_TRACK && !track.bits)
+    dr.drawCircle({ x: cx, y: cy }, Math.max(2, t16), track.col, track.col);
 
   // No-track square mark (a central cross).
   const sq = bestBits(

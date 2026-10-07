@@ -10,7 +10,15 @@ import { describe, expect, it } from "vitest";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { blackboxGame } from "./index.ts";
-import { type BlackboxDrawState, COL_BUTTON, COL_COVER, redraw } from "./render.ts";
+import {
+  type BlackboxDrawState,
+  COL_BALL,
+  COL_BUTTON,
+  COL_CELL,
+  COL_KNOWN,
+  COL_SETTLED,
+  redraw,
+} from "./render.ts";
 import {
   BALL_CORRECT,
   type BlackboxState,
@@ -66,7 +74,23 @@ describe("Black Box redraw", () => {
     const ds = freshDs(s);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, s, 1, freshUi(s), 0, 0);
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_COVER)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
+    // Nothing is settled yet: no square is marked, fired or revealed.
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_SETTLED)).toBe(false);
+  });
+
+  it("lifts a square marked as known, and dots it only where it has no ball", () => {
+    let s = makeState(5, 5, []);
+    s = blackboxGame.executeMove(s, { type: "toggleBall", x: 1, y: 1 });
+    s = blackboxGame.executeMove(s, { type: "toggleLock", x: 1, y: 1 });
+    s = blackboxGame.executeMove(s, { type: "toggleLock", x: 3, y: 3 });
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, freshDs(s), null, s, 1, freshUi(s), 0, 0);
+    const lifted = ops.filter((o) => o.op === "rect" && o.color === COL_SETTLED);
+    expect(lifted.length).toBe(2);
+    // One disc for the ball and one, much smaller, for the dot.
+    const discs = ops.filter((o) => o.op === "circle").map((o) => o.fill);
+    expect(discs.sort()).toEqual([COL_KNOWN, COL_BALL].sort());
   });
 
   it("draws a fired laser's number text", () => {

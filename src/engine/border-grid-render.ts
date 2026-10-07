@@ -85,13 +85,20 @@ export const EDGE_HINT = (border: number): number => border << 24;
 export const F_HINT_CELL = 1 << 28;
 /** A square of the one region the displayed hint's sentence is about, hatched. */
 export const F_HINT_REGION = 1 << 29;
+/** The puzzle put this cell's content here, so it sits on the lifted surface
+ * of a given. */
+export const F_GIVEN = 1 << 30;
 /** The first bit a game may use for something of its own. Kept as a named
  * floor so a new flag here and a new flag in a game cannot silently collide. */
-export const GAME_FLAG_SHIFT = 30;
+export const GAME_FLAG_SHIFT = 31;
 
 /** Colors the shared parts draw with, by each game's own palette index. */
 export interface BorderGridColors {
+  /** The surface of a cell. */
   background: number;
+  /** The lifted surface under a cell flagged {@link F_GIVEN}; omit in a game
+   * that flags none. */
+  given?: number;
   flash: number;
   correct: number;
   /** A wall, and the grid's ink generally. */
@@ -307,7 +314,9 @@ export function drawBorderTile(
       ? colors.flash
       : flags & F_CORRECT
         ? colors.correct
-        : colors.background,
+        : colors.given !== undefined && flags & F_GIVEN
+          ? colors.given
+          : colors.background,
   );
 
   // The hint's evidence sits under the game's content: a region is hatched, a

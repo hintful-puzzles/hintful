@@ -6,19 +6,24 @@
  * region DSF. Plus the fork's mistake overlay (Check & Save), an inset error
  * outline distinct from the live overfull shade, and its hint marks.
  *
- * `COL_BACKGROUND` is the frontend default background, as in C (Filling has
- * no near-white tiles, so no `mkhighlightSpecific` is needed).
+ * A cell is the quiet cell surface, a clue's lifted, with the thin line
+ * between cells in the surface's grid color. A region's border is content and
+ * stays in ink. The completed-region shade, the error shade and the selection
+ * each replace the surface, a clue's included.
  */
 
 import { PURPLE } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   correctRegionColor,
   ERROR_WASH,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
   INK,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -39,9 +44,9 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_TIME = 0.4;
 
-// --- palette (the filling.c color enum, then the fork's two hint roles) ---
-export const COL_BACKGROUND = 0;
-export const COL_GRID = 1; // grid lines and clue digits (COL_CLUE = COL_GRID)
+// --- palette --------------------------------------------------------------
+export const COL_BACKGROUND = 0; // the board around the grid
+export const COL_GRID = 1; // the thin line between two cells, and the frame
 export const COL_HIGHLIGHT = 2; // selected-cell background
 export const COL_CORRECT = 3; // completed-region background
 export const COL_ERROR = 4; // overfull / boxed-in region background
@@ -49,12 +54,18 @@ export const COL_USER = 5; // player-filled digit
 export const COL_CURSOR = 6;
 export const COL_HINT = 7; // the cell to fill — ringed on its own border
 export const COL_HINT_CELL = 8; // the deduction's evidence cells — outlined
+export const COL_INK = 9; // a clue's digit, and a region's border
+export const COL_CELL = 10; // the surface of a cell the player fills
+export const COL_GIVEN = 11; // the lifted surface under a clue
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = bg;
-  out[COL_GRID] = INK;
+  out[COL_GRID] = surfaceGrid(bg);
+  out[COL_INK] = INK;
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_CORRECT] = correctRegionColor(bg);
   out[COL_ERROR] = ERROR_WASH;
@@ -179,7 +190,9 @@ function drawSquare(
         ? COL_ERROR
         : flags & CORRECT_BG
           ? COL_CORRECT
-          : COL_BACKGROUND;
+          : flags & USER_COL
+            ? COL_CELL
+            : COL_GIVEN;
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, bg);
   if (flags & HINT_LINE)
     dr.drawHatch({ x: px, y: py, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
@@ -193,27 +206,24 @@ function drawSquare(
     dr.drawText(
       { x: px + Math.floor(ts / 2), y: py + Math.floor(ts / 2) },
       glyphFont(Math.floor(ts / 2)),
-      flags & USER_COL ? COL_USER : COL_GRID,
+      flags & USER_COL ? COL_USER : COL_INK,
       String(n),
     );
   }
 
-  // Bold region borders.
-  if (flags & BORDER_L)
-    dr.drawRect({ x: px + 1, y: py + 1, w: bw, h: ts - 1 }, COL_GRID);
-  if (flags & BORDER_U)
-    dr.drawRect({ x: px + 1, y: py + 1, w: ts - 1, h: bw }, COL_GRID);
-  if (flags & BORDER_R)
-    dr.drawRect({ x: px + ts - bw, y: py + 1, w: bw, h: ts - 1 }, COL_GRID);
-  if (flags & BORDER_D)
-    dr.drawRect({ x: px + 1, y: py + ts - bw, w: ts - 1, h: bw }, COL_GRID);
-  if (flags & BORDER_UL) dr.drawRect({ x: px + 1, y: py + 1, w: bw, h: bw }, COL_GRID);
-  if (flags & BORDER_UR)
-    dr.drawRect({ x: px + ts - bw, y: py + 1, w: bw, h: bw }, COL_GRID);
-  if (flags & BORDER_DL)
-    dr.drawRect({ x: px + 1, y: py + ts - bw, w: bw, h: bw }, COL_GRID);
+  // Bold region borders. One on the top or left edge takes the grid line's
+  // own pixel too, so a border between two regions is one solid stroke and
+  // not two with the quiet line showing between them.
+  const bl = bw + 1;
+  if (flags & BORDER_L) dr.drawRect({ x: px, y: py, w: bl, h: ts }, COL_INK);
+  if (flags & BORDER_U) dr.drawRect({ x: px, y: py, w: ts, h: bl }, COL_INK);
+  if (flags & BORDER_R) dr.drawRect({ x: px + ts - bw, y: py, w: bw, h: ts }, COL_INK);
+  if (flags & BORDER_D) dr.drawRect({ x: px, y: py + ts - bw, w: ts, h: bw }, COL_INK);
+  if (flags & BORDER_UL) dr.drawRect({ x: px, y: py, w: bl, h: bl }, COL_INK);
+  if (flags & BORDER_UR) dr.drawRect({ x: px + ts - bw, y: py, w: bw, h: bl }, COL_INK);
+  if (flags & BORDER_DL) dr.drawRect({ x: px, y: py + ts - bw, w: bl, h: bw }, COL_INK);
   if (flags & BORDER_DR)
-    dr.drawRect({ x: px + ts - bw, y: py + ts - bw, w: bw, h: bw }, COL_GRID);
+    dr.drawRect({ x: px + ts - bw, y: py + ts - bw, w: bw, h: bw }, COL_INK);
 
   // Mistake overlay (Check & Save): an inset error outline.
   if (flags & FF_MISTAKE) {
@@ -265,18 +275,15 @@ export function redrawFilling(
   const ts = ds.tileSize;
   const { w, h, board, clues } = state;
   const sz = w * h;
-  const bw = borderWidth(ts);
 
   if (!ds.started) {
-    // The black grid frame the cells draw on top of.
+    // The cells draw on top of this, which leaves the one line past the last
+    // row and column. The board's edge is always a region's border, so the
+    // line is ink, and with each edge cell's own border the frame is as heavy
+    // as a border between two regions and no heavier.
     dr.drawRect(
-      {
-        x: border(ts) - bw,
-        y: border(ts) - bw,
-        w: w * ts + 2 * bw + 1,
-        h: h * ts + 2 * bw + 1,
-      },
-      COL_GRID,
+      { x: border(ts), y: border(ts), w: w * ts + 1, h: h * ts + 1 },
+      COL_INK,
     );
     ds.started = true;
   }

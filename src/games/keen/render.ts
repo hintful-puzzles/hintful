@@ -1,8 +1,10 @@
 /**
  * Keen rendering — port of `game_redraw` / `draw_tile` from `keen.c`.
  *
- * The board is a `w × w` grid drawn on a `COL_GRID` backing rectangle so the
- * thin grid lines show between cells. Each cell's background is widened by
+ * The board is a `w × w` grid drawn on a `COL_GRID` backing rectangle, which
+ * shows as the cages' boundaries and the frame; a cell paints the quiet
+ * `COL_LINE` it shares with a neighbor in its cage, on the `COL_CELL` surface
+ * every cell has. Each cell's background is widened by
  * `GRIDEXTRA` toward same-cage neighbors (so a cage reads as one merged
  * region), with explicit corner-jut squares where a diagonal neighbor is a
  * different cage. Each cage's clue (target + operation symbol) is drawn at the
@@ -15,6 +17,7 @@
 
 import { valueBit } from "../../engine/candidate-bits.ts";
 import {
+  cellSurface,
   ERROR,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -23,6 +26,7 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -81,6 +85,10 @@ export const COL_HINT = 7; // the acted-on cell's ring (drawn in redraw's last b
 /** The driving cage's outline (same block), **and** a forcing chain's ordinal —
  * one index, because they are one role: the number indexes the evidence. */
 export const COL_HINT_CELL = 8;
+export const COL_CELL = 9; // the surface of a cell the player fills
+/** The thin line between two cells of one cage. A cage's own edge is content
+ * and stays `COL_GRID`. */
+export const COL_LINE = 10;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -98,6 +106,8 @@ export function colors(defaultBackground: Color): Color[] {
   // one cell's ring. `HINT_EVIDENCE` covers the chain ordinal too; see its doc
   // comment for why the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_LINE] = surfaceGrid(bg);
   return out;
 }
 
@@ -237,6 +247,16 @@ function drawTile(
   }
   if (y + 1 < w && dsf.equivalent(cell, cell + w)) ch += ge;
 
+  // The one-pixel line this cell shares with a same-cage neighbor to its left
+  // and above is the quiet grid line, and so is the pixel where four cells of
+  // one cage meet. A cage's edge is left to the backing rectangle.
+  const sameLeft = cx < tx;
+  const sameTop = cy < ty;
+  if (sameLeft) dr.drawRect({ x: cx - 1, y: cy, w: 1, h: ch }, COL_LINE);
+  if (sameTop) dr.drawRect({ x: cx, y: cy - 1, w: cw, h: 1 }, COL_LINE);
+  if (sameLeft && sameTop && dsf.equivalent(cell, cell - w - 1))
+    dr.drawRect({ x: cx - 1, y: cy - 1, w: 1, h: 1 }, COL_LINE);
+
   dr.clip({ x: cx, y: cy, w: cw, h: ch });
 
   drawCellBackground(
@@ -244,7 +264,7 @@ function drawTile(
     { x: cx, y: cy, w: cw, h: ch },
     ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
     COL_HIGHLIGHT,
-    COL_BACKGROUND,
+    COL_CELL,
   );
   ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
@@ -373,7 +393,7 @@ function drawTile(
     drawHintOrdinal(dr, { x: tx, y: ty }, ts - 2 * ge, hintOrder, COL_HINT_CELL);
 
   dr.unclip();
-  dr.drawUpdate({ x: cx, y: cy, w: cw, h: ch });
+  dr.drawUpdate({ x: cx - 1, y: cy - 1, w: cw + 1, h: ch + 1 });
 }
 
 /**

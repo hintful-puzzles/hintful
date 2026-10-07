@@ -22,8 +22,16 @@
 Owner, 2026-10-07: the same colors and style choices across the entire
 catalog, straight after Unruly.
 
-- [ ] 3.1 The order, family by family, from the contact sheet.
-- [ ] 3.2 Where the dark board sits (the proposal's question 7).
+- [x] 3.1 The pair: Clusters, Flip.
+- [x] 3.2 Shaded or not (owner, 2026-10-07: S1, the purple square and a dot):
+      Pattern, Mosaic, Range, Singles, Bricks.
+- [x] 3.3 The rest, each taking what of the look fits it: the entry grids, the
+      games that had bevels on things the player does not move, and the other
+      grid games. Loopy, Untangle and Dominosa are unchanged, having no cells
+      for a surface to act on; Fifteen, Sixteen, Twiddle and Slide keep their
+      bevels by the rule.
+- [x] 3.4 Where the dark board sits (the proposal's question 7): it stays.
+      Cells sink below it and a settled cell rises to about its tone.
 
 ## 4. Acceptance
 

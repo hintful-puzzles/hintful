@@ -43,7 +43,6 @@ import {
   flashLength,
   newDrawState,
   PREFERRED_TILE_SIZE,
-  paletteScheme,
   redraw,
 } from "./render.ts";
 import {
@@ -448,7 +447,6 @@ export const blackboxGame: Game<
   statusbarText,
 
   colors,
-  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

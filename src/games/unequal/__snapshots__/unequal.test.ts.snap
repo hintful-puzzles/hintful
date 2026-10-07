@@ -12,10 +12,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 24,
@@ -24,8 +24,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -64,10 +64,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 62,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 72,
@@ -76,8 +76,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -116,10 +116,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 110,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 120,
@@ -128,8 +128,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -168,10 +168,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 158,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 168,
@@ -180,8 +180,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -220,10 +220,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 206,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 216,
@@ -232,8 +232,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -272,10 +272,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 254,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 24,
@@ -284,8 +284,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -324,10 +324,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 62,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 72,
@@ -336,8 +336,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -376,10 +376,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 110,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 120,
@@ -388,8 +388,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -428,10 +428,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 158,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 168,
@@ -440,8 +440,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -480,10 +480,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 206,
   },
   {
-    "color": 0,
+    "color": 14,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 32,
     "x": 72,
     "y": 216,
@@ -492,8 +492,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -544,10 +544,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 232,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 24,
@@ -556,8 +556,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -596,10 +596,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 62,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 72,
@@ -608,8 +608,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -648,10 +648,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 110,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 120,
@@ -660,8 +660,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -700,10 +700,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 158,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 168,
@@ -712,8 +712,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -752,10 +752,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 206,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 216,
@@ -764,8 +764,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -804,10 +804,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 254,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 24,
@@ -816,8 +816,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -856,10 +856,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 62,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 72,
@@ -868,8 +868,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -908,10 +908,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 110,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 120,
@@ -920,8 +920,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -960,10 +960,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 158,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 168,
@@ -972,8 +972,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1012,10 +1012,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 206,
   },
   {
-    "color": 0,
+    "color": 14,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 32,
     "x": 168,
     "y": 216,
@@ -1024,8 +1024,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1076,10 +1076,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 232,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 24,
@@ -1088,8 +1088,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -1128,10 +1128,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 62,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 72,
@@ -1140,8 +1140,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -1180,10 +1180,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 110,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 120,
@@ -1192,8 +1192,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -1232,10 +1232,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 158,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 168,
@@ -1244,8 +1244,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -1284,10 +1284,10 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "y": 206,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 216,
@@ -1296,8 +1296,8 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -1359,10 +1359,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 24,
@@ -1371,8 +1371,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -1435,10 +1435,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 72,
@@ -1447,8 +1447,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -1469,10 +1469,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 120,
@@ -1481,8 +1481,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -1545,10 +1545,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 168,
@@ -1557,8 +1557,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -1579,10 +1579,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 216,
@@ -1591,8 +1591,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -1613,10 +1613,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 24,
@@ -1625,8 +1625,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -1647,10 +1647,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 72,
@@ -1659,8 +1659,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -1681,10 +1681,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 120,
@@ -1693,8 +1693,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -1715,10 +1715,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 168,
@@ -1727,8 +1727,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -1749,10 +1749,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 216,
@@ -1761,8 +1761,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -1783,10 +1783,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 24,
@@ -1795,8 +1795,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1859,10 +1859,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 72,
@@ -1871,8 +1871,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1893,10 +1893,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 120,
@@ -1905,8 +1905,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1927,10 +1927,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 168,
@@ -1939,8 +1939,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1961,10 +1961,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 216,
@@ -1973,8 +1973,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -2037,10 +2037,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 14,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 32,
     "x": 168,
     "y": 24,
@@ -2049,8 +2049,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -2125,10 +2125,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "y": 40,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 72,
@@ -2137,8 +2137,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -2159,10 +2159,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 120,
@@ -2171,8 +2171,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -2235,10 +2235,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 168,
@@ -2247,8 +2247,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -2269,10 +2269,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 216,
@@ -2281,8 +2281,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -2303,10 +2303,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 24,
@@ -2315,8 +2315,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2379,10 +2379,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 72,
@@ -2391,8 +2391,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2413,10 +2413,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 120,
@@ -2425,8 +2425,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2447,10 +2447,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 168,
@@ -2459,8 +2459,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2481,10 +2481,10 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 216,
@@ -2493,8 +2493,8 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,

@@ -8,6 +8,7 @@
 import { FOUR_FILLS } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   ERROR,
   ERROR_TEXT,
   HINT_ACTION,
@@ -63,6 +64,8 @@ export const COL_HINT = 10;
 /** The regions a hint step's premise rests on: their band, and a chain's
  * numbers. */
 export const COL_HINT_CELL = 11;
+/** A region with no color yet: the quiet cell surface. */
+export const COL_UNCOLORED = 12;
 
 const FOUR = 4;
 const FIVE = 5;
@@ -70,6 +73,7 @@ const FIVE = 5;
 export function colors(defaultBackground: Color): Color[] {
   const ret: Color[] = [];
   ret[COL_BACKGROUND] = defaultBackground;
+  ret[COL_UNCOLORED] = cellSurface(defaultBackground);
   ret[COL_GRID] = INK;
   ret[COL_0] = FOUR_FILLS[0];
   ret[COL_1] = FOUR_FILLS[1];
@@ -734,10 +738,7 @@ function drawSquare(
   dr.clip({ x: cx, y: cy, w: ts, h: ts });
 
   // Base (top) region color.
-  dr.drawRect(
-    { x: cx, y: cy, w: ts, h: ts },
-    tv === FOUR ? COL_BACKGROUND : COL_0 + tv,
-  );
+  dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, tv === FOUR ? COL_UNCOLORED : COL_0 + tv);
 
   // Second region color if this is a diagonally-divided square.
   if (M[TE * wh + y * w + x] !== M[BE * wh + y * w + x]) {
@@ -751,7 +752,7 @@ function drawSquare(
         { x: p2x, y: coord(y, ts) - 1 },
         { x: coord(x + 1, ts) + 1, y: coord(y + 1, ts) + 1 },
       ],
-      bv === FOUR ? COL_BACKGROUND : COL_0 + bv,
+      bv === FOUR ? COL_UNCOLORED : COL_0 + bv,
       COL_GRID,
     );
   }
@@ -1006,7 +1007,7 @@ export function redraw(
   // The selection itself is the band `drawBands` paints; the blob is only
   // what is being carried.
   if (ui.dragColor > -2) {
-    const bg = ui.dragColor >= 0 ? COL_0 + ui.dragColor : COL_BACKGROUND;
+    const bg = ui.dragColor >= 0 ? COL_0 + ui.dragColor : COL_UNCOLORED;
 
     let cursorX: number;
     let cursorY: number;

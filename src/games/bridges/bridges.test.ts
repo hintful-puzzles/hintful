@@ -29,7 +29,7 @@ import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
-import { COL_MARK, newDrawState } from "./render.ts";
+import { COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
   BRIDGES_PRESETS,
@@ -497,7 +497,7 @@ describe("bridges solve + findMistakes", () => {
 describe("bridges auto-mark aid", () => {
   const p3 = { ...BRIDGES_PRESETS[0], w: 3, h: 3 };
 
-  it("grays a satisfied island only when the pref is on, without locking it", () => {
+  it("lifts a satisfied island only when the pref is on, without locking it", () => {
     const s0 = newStateFromDesc(p3, "1a1f"); // two count-1 islands
     // One bridge satisfies both count-1 islands.
     const s1 = bridgesGame.executeMove(s0, {
@@ -512,8 +512,24 @@ describe("bridges auto-mark aid", () => {
       return rec.ops.filter((o) => o.op === "circle" && o.fill === COL_MARK).length;
     };
 
-    expect(markCircles(true)).toBeGreaterThan(0); // satisfied islands grayed
-    expect(markCircles(false)).toBe(0); // no auto-gray when the pref is off
+    expect(markCircles(true)).toBeGreaterThan(0); // satisfied islands lifted
+    expect(markCircles(false)).toBe(0); // no lift when the pref is off
+    // An island with bridges still to take has the quiet surface.
+    const fresh = new RecordingDrawing(palette);
+    bridgesGame.redraw?.(
+      fresh,
+      newDrawState(s0, 24),
+      null,
+      s0,
+      0,
+      bridgesGame.newUi(s0),
+      0,
+      0,
+    );
+    const faces = (fill: number) =>
+      fresh.ops.filter((o) => o.op === "circle" && o.fill === fill).length;
+    expect(faces(COL_ISLAND)).toBeGreaterThan(0);
+    expect(faces(COL_MARK)).toBe(0);
     // Purely visual: the island is NOT actually marked/locked in the state.
     expect(s1.gridAt(0, 0) & G_MARK).toBeFalsy();
   });

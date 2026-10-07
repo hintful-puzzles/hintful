@@ -39,18 +39,19 @@ import { crossingGame } from "./index.ts";
 import {
   COL_ACROSS,
   COL_ACROSSFIT,
+  COL_CELL,
+  COL_DONE,
   COL_DOWN,
   COL_DOWNFIT,
   COL_ERROR,
+  COL_FLASH,
   COL_GHOST,
-  COL_GRID,
   COL_HELD,
-  COL_HIGHLIGHT,
-  COL_INNERBG,
-  COL_LOWLIGHT,
   COL_OUTERBG,
+  COL_PLACED,
   COL_SELECTED,
-  COL_WALL_M,
+  COL_TEXT,
+  COL_WALL,
   layoutNumbers,
   NCOLORS,
   newDrawState,
@@ -810,8 +811,7 @@ describe("crossing number-list placement", () => {
     return dr;
   }
 
-  /** How many *cells* carry the candidate wash (a beveled tile paints its mid
-   * color twice, so count distinct tiles rather than rects). */
+  /** How many *cells* carry the candidate wash, counted as distinct tiles. */
   const washedCells = (dr: RecordingDrawing): number =>
     new Set(
       dr.ops.flatMap((o) =>
@@ -929,7 +929,7 @@ describe("crossing number-list placement", () => {
     };
 
     // Nothing selected: every clue reads as available.
-    for (const c of textColors(newUi()).values()) expect(c).toBe(COL_GRID);
+    for (const c of textColors(newUi()).values()) expect(c).toBe(COL_TEXT);
 
     // Select a cell that lies in both a horizontal and a vertical run.
     const puzzle = state.puzzle;
@@ -956,7 +956,7 @@ describe("crossing number-list placement", () => {
         // so it takes that dimension's color rather than being dimmed away.
         expect(color).toBe(COL_DOWNFIT);
       } else {
-        expect(color).toBe(COL_LOWLIGHT);
+        expect(color).toBe(COL_DONE);
       }
     }
     // Both directions really are represented (the cell is a crossing).
@@ -965,7 +965,7 @@ describe("crossing number-list placement", () => {
 
     // The preference turns the whole aid off.
     const off = textColors({ ...ui, fitHighlight: false });
-    for (const c of off.values()) expect(c).toBe(COL_GRID);
+    for (const c of off.values()) expect(c).toBe(COL_TEXT);
   });
 
   it("paints the two dimensions at equal perceived strength", () => {
@@ -1047,12 +1047,12 @@ describe("crossing number-list placement", () => {
     const after = crossingGame.executeMove(state, { kind: "place", run, number });
 
     const before = paintWith(state, newUi());
-    expect(
-      before.ops.filter((o) => o.op === "line" && o.color === COL_LOWLIGHT),
-    ).toEqual([]);
+    expect(before.ops.filter((o) => o.op === "line" && o.color === COL_DONE)).toEqual(
+      [],
+    );
 
     const dr = paintWith(after, newUi());
-    const struck = dr.ops.filter((o) => o.op === "line" && o.color === COL_LOWLIGHT);
+    const struck = dr.ops.filter((o) => o.op === "line" && o.color === COL_DONE);
     expect(struck).toHaveLength(1);
     // The strike sits on the clue that was placed.
     const { slots } = layoutNumbers(TS, 5, 5, after.puzzle.numbers);
@@ -1322,15 +1322,15 @@ describe("crossing rendering", () => {
       ...newUi(),
       cursor: newCursor(open % 5, Math.floor(open / 5), true),
     };
-    // Its own color, NOT the bevel highlight: the highlight is mkhighlight's
-    // near-white and the dark-mode pass inverts it, so the one square that should
-    // be the most inviting on the board would come out pure black.
+    // Its own color, NOT the flash's near-white, which the dark-mode pass
+    // inverts, so the one square that should be the most inviting on the board
+    // would come out pure black.
     expect(
       paint(selected).ops.filter((o) => o.op === "rect" && o.color === COL_SELECTED)
         .length,
     ).toBe(1);
     expect(
-      paint(selected).ops.filter((o) => o.op === "rect" && o.color === COL_HIGHLIGHT),
+      paint(selected).ops.filter((o) => o.op === "rect" && o.color === COL_FLASH),
     ).toHaveLength(0);
 
     // The keyboard cursor on an open square is the same highlight as the mouse's.
@@ -1339,11 +1339,11 @@ describe("crossing rendering", () => {
       keyedOps.filter((o) => o.op === "rect" && o.color === COL_SELECTED),
     ).toHaveLength(1);
     const brackets = (ops: typeof keyedOps) =>
-      ops.filter((o) => o.op === "line" && o.color === COL_HIGHLIGHT);
+      ops.filter((o) => o.op === "line" && o.color === COL_FLASH);
     expect(brackets(keyedOps)).toHaveLength(0);
 
     // On a wall, which only the arrow keys reach, it is the corner brackets: a
-    // wall is a raised block with no background for a wash.
+    // wall is a strong fill with no surface for a wash.
     const wall = state.puzzle.walls.indexOf(1);
     const onWall = paint({
       ...newUi(),
@@ -1372,7 +1372,7 @@ describe("crossing rendering", () => {
     expect(dr.ops.some((o) => o.op === "text" && o.text === "4")).toBe(true);
   });
 
-  it("sweeps highlight/lowlight across the board during the completion flash", () => {
+  it("sweeps a bright and a dim beat across the board during the completion flash", () => {
     const solved = solutionMoves().reduce(
       (s2, mv) => crossingGame.executeMove(s2, mv),
       newState(P5, FIX.desc),
@@ -1389,18 +1389,18 @@ describe("crossing rendering", () => {
     // A settled board paints no tile in the flash colors; two different flash
     // phases paint *different* cells with them, so the wave is really moving.
     const settled = frameColors(0);
-    expect(settled).not.toContain(COL_HIGHLIGHT);
+    expect(settled).not.toContain(COL_FLASH);
     const early = frameColors(0.7);
     const late = frameColors(0.3);
-    expect(early).toContain(COL_HIGHLIGHT);
-    expect(late).toContain(COL_HIGHLIGHT);
+    expect(early).toContain(COL_FLASH);
+    expect(late).toContain(COL_FLASH);
 
     const litCells = (flashTime: number): string[] => {
       const ds = newDrawState(solved, TS);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, solved, 1, newUi(), 0, flashTime);
       return dr.ops.flatMap((o) =>
-        o.op === "rect" && o.color === COL_HIGHLIGHT ? [`${o.x},${o.y}`] : [],
+        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
       );
     };
     expect(litCells(0.7)).not.toEqual(litCells(0.3));
@@ -1424,20 +1424,19 @@ describe("crossing rendering", () => {
       o.op === "text" && /^[1-9]$/.test(o.text) && o.size > TS / 3 ? [o.color] : [],
     );
     expect(digitColors.length).toBeGreaterThan(0);
-    expect(new Set(digitColors)).toEqual(new Set([COL_GRID]));
+    expect(new Set(digitColors)).toEqual(new Set([COL_TEXT]));
     // …and no tile is painted in anything outside the neutral palette.
     const tileColors = new Set(
       dr.ops.flatMap((o) => (o.op === "rect" ? [o.color] : [])),
     );
     for (const c of tileColors) {
-      expect([
-        COL_OUTERBG,
-        COL_INNERBG,
-        COL_HIGHLIGHT,
-        COL_LOWLIGHT,
-        COL_WALL_M,
-        COL_ERROR,
-      ]).toContain(c);
+      expect([COL_OUTERBG, COL_CELL, COL_PLACED, COL_WALL, COL_ERROR]).toContain(c);
     }
+    // No bevel: a wall and a square holding a digit are each one flat fill.
+    expect(dr.ops.filter((o) => o.op === "polygon" && o.fill >= 0)).toEqual([]);
+    const fills = (color: number) =>
+      dr.ops.filter((o) => o.op === "rect" && o.color === color).length;
+    expect(fills(COL_WALL)).toBe(withDigits.puzzle.walls.filter((v) => v).length);
+    expect(fills(COL_PLACED)).toBe(withDigits.grid.filter((d) => d).length);
   });
 });

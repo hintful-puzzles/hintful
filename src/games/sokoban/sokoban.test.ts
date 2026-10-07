@@ -37,7 +37,14 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newSokobanDesc } from "./generator.ts";
 import { executeMove, sokobanGame } from "./index.ts";
-import type { SokobanDrawState } from "./render.ts";
+import {
+  COL_AIM,
+  COL_BARREL,
+  COL_FLOOR,
+  COL_PLAYER,
+  COL_WALL,
+  type SokobanDrawState,
+} from "./render.ts";
 import {
   BARREL,
   BARRELTARGET,
@@ -497,8 +504,9 @@ describe("Sokoban render", () => {
     const ops = recording.ops;
     // Grid lines (drawn once in the first-draw branch).
     expect(ops.some((o) => o.op === "line")).toBe(true);
-    // Wall bevel triangles (polygons).
-    expect(ops.some((o) => o.op === "polygon")).toBe(true);
+    // A wall is a flat block, and nothing on the board is a bevel.
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_WALL)).toBe(true);
+    expect(ops.some((o) => o.op === "polygon")).toBe(false);
     // The player is a green disc — a circle with a fill color.
     expect(ops.some((o) => o.op === "circle")).toBe(true);
     expect(recording.ops).toMatchSnapshot();
@@ -513,7 +521,6 @@ describe("Sokoban render", () => {
     renderOps(me);
     me.processInput(48, 48, LEFT_BUTTON);
     me.processInput(48 + 64, 48, LEFT_DRAG);
-    const COL_AIM = 15;
     const heads = (ops: ReturnType<typeof renderOps>) =>
       ops.filter((o) => o.op === "polygon" && o.fill === COL_AIM).length;
     // The ghost: rings in the aim color, all on the square the barrel stops on.
@@ -555,8 +562,6 @@ describe("Sokoban render", () => {
     me.processInput(2 * 32 + 16, 48, LEFT_BUTTON);
     me.processInput(4 * 32 + 16, 48, LEFT_DRAG);
     me.processInput(4 * 32 + 16, 48, LEFT_RELEASE);
-    const COL_PLAYER = 5;
-    const COL_BARREL = 4;
     const at = (ops: ReturnType<typeof renderOps>, fill: number) =>
       ops.flatMap((o) => (o.op === "circle" && o.fill === fill ? [o.cx] : []));
     // A third of the way: the player has reached the square behind the barrel,
@@ -602,12 +607,13 @@ describe("Sokoban render", () => {
       moves: [move(1, 0)],
       settle: true,
     });
-    // The barrel now on the target cell (3,1) draws as the target disc
-    // (palette index 1) with the barrel disc (index 4) over it.
+    // The barrel now on the target cell (3,1) draws as the target's ring (a
+    // disc in palette index 1, then the floor inside it) with the
+    // barrel disc over it.
     const ts = (size.w - 1) / 5;
     const fills = recording.ops
       .filter((o) => o.op === "circle" && o.cx === 3.5 * ts && o.cy === 1.5 * ts)
       .map((o) => (o.op === "circle" ? o.fill : -1));
-    expect(fills).toEqual([1, 4]);
+    expect(fills).toEqual([1, COL_FLOOR, COL_BARREL]);
   });
 });

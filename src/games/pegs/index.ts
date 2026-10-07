@@ -43,7 +43,6 @@ import {
   newDrawState,
   type PegsDrawState,
   PREFERRED_TILE_SIZE,
-  paletteScheme,
   redraw,
   tileCenter,
 } from "./render.ts";
@@ -329,7 +328,6 @@ export const pegsGame: Game<
   deserializeMove,
 
   colors,
-  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

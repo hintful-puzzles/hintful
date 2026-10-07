@@ -12,10 +12,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 24,
@@ -24,8 +24,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -112,10 +112,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 46,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 72,
@@ -124,8 +124,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -224,10 +224,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 120,
@@ -236,8 +236,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -324,10 +324,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 142,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 168,
@@ -336,8 +336,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -436,10 +436,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 216,
@@ -448,8 +448,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -548,10 +548,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 238,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 24,
@@ -560,8 +560,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -648,10 +648,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 46,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 72,
@@ -660,8 +660,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -760,10 +760,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 120,
@@ -772,8 +772,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -860,10 +860,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 142,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 168,
@@ -872,8 +872,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -972,10 +972,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 216,
@@ -984,8 +984,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -1084,10 +1084,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 238,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 24,
@@ -1096,8 +1096,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1172,10 +1172,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 33,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 72,
@@ -1184,8 +1184,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1282,10 +1282,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 14,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 32,
     "x": 120,
     "y": 120,
@@ -1294,8 +1294,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1346,10 +1346,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 136,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 168,
@@ -1358,8 +1358,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1446,10 +1446,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 216,
@@ -1458,8 +1458,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1546,10 +1546,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 238,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 24,
@@ -1558,8 +1558,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1646,10 +1646,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 46,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 72,
@@ -1658,8 +1658,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1758,10 +1758,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 120,
@@ -1770,8 +1770,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1858,10 +1858,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 142,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 168,
@@ -1870,8 +1870,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1970,10 +1970,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 216,
@@ -1982,8 +1982,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -2082,10 +2082,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 238,
   },
   {
-    "color": 0,
+    "color": 14,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 32,
     "x": 216,
     "y": 24,
@@ -2094,8 +2094,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2146,10 +2146,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 40,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 72,
@@ -2158,8 +2158,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2246,10 +2246,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 120,
@@ -2258,8 +2258,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2334,10 +2334,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 129,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 168,
@@ -2346,8 +2346,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2434,10 +2434,10 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 216,
@@ -2446,8 +2446,8 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -2647,10 +2647,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 24,
@@ -2659,8 +2659,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -2741,10 +2741,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 46,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 72,
@@ -2753,8 +2753,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -2835,10 +2835,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 120,
@@ -2847,8 +2847,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -2929,10 +2929,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 142,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 168,
@@ -2941,8 +2941,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -3023,10 +3023,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 24,
     "y": 216,
@@ -3035,8 +3035,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         24,
@@ -3117,10 +3117,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 238,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 24,
@@ -3129,8 +3129,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -3211,10 +3211,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 46,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 72,
@@ -3223,8 +3223,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -3305,10 +3305,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 120,
@@ -3317,8 +3317,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -3451,10 +3451,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 142,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 168,
@@ -3463,8 +3463,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -3545,10 +3545,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 72,
     "y": 216,
@@ -3557,8 +3557,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         72,
@@ -3681,10 +3681,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 238,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 24,
@@ -3693,8 +3693,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -3775,10 +3775,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 46,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 72,
@@ -3787,8 +3787,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -3869,10 +3869,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 120,
@@ -3881,8 +3881,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -4005,10 +4005,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 142,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 168,
@@ -4017,8 +4017,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -4099,10 +4099,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 120,
     "y": 216,
@@ -4111,8 +4111,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -4193,10 +4193,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 238,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 24,
@@ -4205,8 +4205,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -4287,10 +4287,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 46,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 72,
@@ -4299,8 +4299,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -4381,10 +4381,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 120,
@@ -4393,8 +4393,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -4517,10 +4517,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 142,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 168,
@@ -4529,8 +4529,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -4695,10 +4695,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 168,
     "y": 216,
@@ -4707,8 +4707,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -4831,10 +4831,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 238,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 24,
@@ -4843,8 +4843,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -4925,10 +4925,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 46,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 72,
@@ -4937,8 +4937,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -5019,10 +5019,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 94,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 120,
@@ -5031,8 +5031,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -5155,10 +5155,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 142,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 168,
@@ -5167,8 +5167,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,
@@ -5291,10 +5291,10 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "y": 190,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 32,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 32,
     "x": 216,
     "y": 216,
@@ -5303,8 +5303,8 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 1,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         216,

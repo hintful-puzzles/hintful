@@ -570,10 +570,10 @@ export const spokesGame: Game<
   newUi,
   prefs: [
     {
-      // Fork aid: gray a hub once its clue is met (visual only, no lock), the
+      // Fork aid: lift a hub once its clue is met (visual only, no lock), the
       // cue Bridges offers on a satisfied island; see `COL_SATISFIED`.
       kw: "mark-satisfied",
-      name: "Gray out hubs once their spoke count is met",
+      name: "Highlight hubs once their spoke count is met",
       type: "boolean",
       get: (ui) => ui.markSatisfied,
       set: (ui, v) => {

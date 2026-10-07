@@ -1,6 +1,9 @@
 /**
- * Pegs' renderer: the beveled board, the pegs, the cursor ring, the held-peg
- * ring, and the blitter-backed drag.
+ * Pegs' renderer: pieces on a quiet surface (`engine/piece.ts`). The board is
+ * a field of flat cells with the grid's thin line between them, a peg is a
+ * disc on its cell and a hole is a small ring. The cursor is corner brackets,
+ * a peg picked up from the keyboard wears a ring, and a dragged peg rides a
+ * blitter.
  *
  * The board's pixel origin lives here and `interpretMove` imports its
  * `fromCoordWithTileSize` — one function, both callers
@@ -9,16 +12,25 @@
  * form a runtime cycle (`module-layering.test.ts`).
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLUE, PURPLE } from "../../engine/color/colors.ts";
-import { HELD, HINT_ACTION, HINT_EVIDENCE } from "../../engine/color/palette.ts";
-import { drawMoveArrow, drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
+import { TWO } from "../../engine/color/colors.ts";
+import {
+  CURSOR,
+  cellSurface,
+  GRID_DARK,
+  givenSurface,
+  HELD,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  surfaceGrid,
+} from "../../engine/color/palette.ts";
+import { drawMoveArrow, drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { MOVE, stepMarks } from "../../engine/hint-words.ts";
-import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
+import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
+import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import {
   GRID_HOLE,
@@ -43,21 +55,22 @@ const GRID_HINT_OUTLINE = 80;
 
 // --- color indices --------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_HIGHLIGHT = 1;
-const COL_LOWLIGHT = 2;
-const COL_PEG = 3;
-const COL_CURSOR = 4;
-/** Appended past the C enum: the ring round a peg the keyboard has picked up
- * to jump with, which upstream drew in the cursor color. */
-const COL_HELD = 5;
-const COL_HINT = 6;
-const COL_HINT_EVIDENCE = 7;
+const COL_BACKGROUND = 0; // the board around the cells
+const COL_GRID = 1; // the line between two cells, and round the board
+const COL_CELL = 2; // the surface of a cell
+/** The surface of every cell on the lit beats of the completion flash. */
+const COL_LIT = 3;
+const COL_HOLE = 4; // the ring that marks an empty hole
+const COL_PEG = 5;
+const COL_CURSOR = 6;
+/** The ring round a peg the keyboard has picked up to jump with. */
+const COL_HELD = 7;
+export const COL_HINT = 8;
+export const COL_HINT_EVIDENCE = 9;
 
-/** The board's relief. */
-export const paletteScheme: Partial<PaletteScheme> = {
-  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
-};
+/** A peg is the pair's disc: the one piece on the board, in a color no mark
+ * drawn round it has spent. */
+const PAIR_DISC = 1;
 
 // --- flash timing ----------------------------------------------------
 
@@ -97,24 +110,21 @@ export function tileCenter(x: number, ts: number): number {
 // --- colors ---------------------------------------------------------
 
 export function colors(defaultBackground: Color): Color[] {
-  const {
-    background: bg,
-    highlight: hi,
-    lowlight: lo,
-  } = mkhighlight(defaultBackground);
-
-  // The cursor paints the whole cursor cell — the peg under it, or the hole
-  // under it, which upstream showed as a raised bevel instead.
-  return [
-    bg, // COL_BACKGROUND
-    hi, // COL_HIGHLIGHT
-    lo, // COL_LOWLIGHT
-    BLUE, // COL_PEG — the piece's own color, as upstream paints it
-    PURPLE, // COL_CURSOR — not CURSOR: green is the held ring; purple as Spokes
-    HELD, // COL_HELD — a peg picked up to jump with
-    HINT_ACTION, // COL_HINT
-    HINT_EVIDENCE, // COL_HINT_EVIDENCE
-  ];
+  const out: Color[] = [];
+  out[COL_BACKGROUND] = defaultBackground;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_LIT] = givenSurface(defaultBackground);
+  // Strong enough to be a mark on the cell and not a step of its gray.
+  out[COL_HOLE] = GRID_DARK;
+  out[COL_PEG] = TWO[PAIR_DISC];
+  // The cursor's brackets and the held ring are one green and never on the
+  // board together: picking a peg up turns the one into the other.
+  out[COL_CURSOR] = CURSOR;
+  out[COL_HELD] = HELD;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  return out;
 }
 
 // --- computeSize -----------------------------------------------------
@@ -169,13 +179,19 @@ function drawTile(
   let jumping = false;
   let cursor = false;
 
+  // The cell's surface, inside the grid line along its top and left. Its
+  // width is even at an odd tile size, so the disc on it has a whole-pixel
+  // center.
+  const face: Rect = { x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 };
+
   // A hint jump spans three squares, so each square paints only its own piece
   // of it, and the piece leaves with the square's own repaint.
   dr.clip({ x, y, w: ts, h: ts });
   if (bgColor >= 0) {
-    dr.drawRect({ x, y, w: ts, h: ts }, bgColor);
+    dr.drawRect({ x, y, w: ts, h: ts }, COL_GRID);
+    dr.drawRect(face, bgColor);
   }
-  if (jumps.striped) dr.drawHatch({ x, y, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+  if (jumps.striped) dr.drawHatch(face, COL_HINT, hatchPeriod(ts));
 
   let outlined = false;
   let ringed = false;
@@ -202,19 +218,23 @@ function drawTile(
   // drag sprite's flush TILESIZE blitter off the tile it has to erase.
   const half = Math.floor(ts / 2);
   if (v === GRID_HOLE) {
-    const bg = cursor ? COL_CURSOR : COL_LOWLIGHT;
-    dr.drawCircle({ x: x + half, y: y + half }, Math.floor(ts / 4), bg, bg);
+    // A hole is a ring, and the cell inside it is the cell.
+    const r = Math.floor(ts / 6);
+    for (const d of [0, 1])
+      dr.drawCircle({ x: x + half, y: y + half }, r - d, -1, COL_HOLE);
   } else if (v === GRID_PEG) {
-    // Under the cursor the whole peg takes the cursor color; picked up to
-    // jump, it keeps its own color inside a held ring.
-    const outerBg = cursor ? COL_CURSOR : jumping ? COL_HELD : COL_PEG;
-    const innerBg = cursor ? COL_CURSOR : COL_PEG;
-    dr.drawCircle({ x: x + half, y: y + half }, Math.floor(ts / 3), outerBg, outerBg);
-    dr.drawCircle({ x: x + half, y: y + half }, Math.floor(ts / 4), innerBg, innerBg);
+    // Picked up to jump, the peg keeps its own color inside a held ring.
+    if (jumping) {
+      drawPiece(dr, face, TWO_SHAPES[PAIR_DISC], COL_HELD);
+      drawPiece(dr, face, TWO_SHAPES[PAIR_DISC], COL_PEG, 0.72);
+    } else drawPiece(dr, face, TWO_SHAPES[PAIR_DISC], COL_PEG);
   }
+  // Out at the corners of the cell, clear of the peg.
+  if (cursor)
+    drawRectCorners(dr, x + half, y + half, half - 2, COL_CURSOR, Math.max(2, ts >> 4));
 
-  // The hint's rings sit in the margin outside the peg, so they read on the
-  // peg's own blue; an outline inside a ring when one cell carries both.
+  // The hint's rings sit in the margin outside the peg, beside it; an
+  // outline inside a ring when one cell carries both.
   const ring = (r: number, color: number) => {
     dr.drawCircle({ x: x + half, y: y + half }, r, -1, color);
     dr.drawCircle({ x: x + half, y: y + half }, r - 1, -1, color);
@@ -258,7 +278,6 @@ export function redraw(
       : []),
   ]);
   const outlined = new Set(marks.of("outline", PEG));
-  const hw = raisedBevelWidth(ts);
   const center = (i: number): Point => ({
     x: tileCenter(i % w, ts),
     y: tileCenter(Math.floor(i / w), ts),
@@ -274,13 +293,10 @@ export function redraw(
   for (const j of marks.of("outline", JUMP))
     for (const i of across(j)) arrowsAt.set(i, [...(arrowsAt.get(i) ?? []), j]);
 
-  let bgColor: number;
-  if (flashTime > 0) {
-    const frame = Math.floor(flashTime / FLASH_FRAME);
-    bgColor = frame % 2 ? COL_LOWLIGHT : COL_HIGHLIGHT;
-  } else {
-    bgColor = COL_BACKGROUND;
-  }
+  // The completion flash lifts every cell on its lit beats, a step that reads
+  // in both schemes.
+  const lit = flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) % 2 === 0;
+  const bgColor = lit ? COL_LIT : COL_CELL;
 
   // Erase the sprite currently being dragged, if any.
   if (ds.dragging) {
@@ -292,94 +308,15 @@ export function redraw(
   }
 
   if (!ds.started) {
-    // First draw: the relief round the playable cells, in upstream's four
-    // passes. Each pass covers every cell before the next begins, because a
-    // cell's relief overlaps its neighbors'.
-
-    // Pass 1: diagonal corner triangles.
+    // First draw: the grid line round every playable cell. A cell paints the
+    // line along its own top and left, so this is what closes the right and
+    // the bottom of the board, whatever its shape.
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        if (s.grid[y * w + x] !== GRID_OBST) {
-          const cx = coord(x, ts);
-          const cy = coord(y, ts);
-          // The relief extends `hw` *outside* the cell, unlike the other
-          // raised-bevel games, because Pegs bevels the gaps between playable
-          // cells rather than the cells themselves.
-          drawRaisedBevel(
-            dr,
-            {
-              left: cx - hw,
-              top: cy - hw,
-              right: cx + ts + hw - 1,
-              bottom: cy + ts + hw - 1,
-            },
-            COL_HIGHLIGHT,
-            COL_LOWLIGHT,
-          );
-        }
+        if (s.grid[y * w + x] !== GRID_OBST)
+          drawRectOutline(dr, coord(x, ts), coord(y, ts), ts + 1, ts + 1, COL_GRID);
       }
     }
-
-    // Pass 2: overlapping rectangles to fill the edges.
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (s.grid[y * w + x] !== GRID_OBST) {
-          const cx = coord(x, ts);
-          const cy = coord(y, ts);
-          dr.drawRect(
-            { x: cx - hw, y: cy - hw, w: ts + hw, h: ts + hw },
-            COL_HIGHLIGHT,
-          );
-          dr.drawRect({ x: cx, y: cy, w: ts + hw, h: ts + hw }, COL_LOWLIGHT);
-        }
-      }
-    }
-
-    // Pass 3: trapezoids on each edge.
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (s.grid[y * w + x] !== GRID_OBST) {
-          const cx = coord(x, ts);
-          const cy = coord(y, ts);
-          for (let ddx = 0; ddx < 2; ddx++) {
-            const ddy = 1 - ddx;
-            for (let si = 0; si < 2; si++) {
-              const sn = 2 * si - 1;
-              const c = si ? COL_LOWLIGHT : COL_HIGHLIGHT;
-              const coords: Point[] = [
-                { x: cx + si * ddx * (ts - 1), y: cy + si * ddy * (ts - 1) },
-                {
-                  x: cx + (si * ddx + ddy) * (ts - 1),
-                  y: cy + (si * ddy + ddx) * (ts - 1),
-                },
-                {
-                  x: cx + (si * ddx + ddy) * (ts - 1) - hw * (ddy - sn * ddx),
-                  y: cy + (si * ddy + ddx) * (ts - 1) - hw * (ddx - sn * ddy),
-                },
-                {
-                  x: cx + si * ddx * (ts - 1) + hw * (ddy + sn * ddx),
-                  y: cy + si * ddy * (ts - 1) + hw * (ddx + sn * ddy),
-                },
-              ];
-              dr.drawPolygon(coords, c, c);
-            }
-          }
-        }
-      }
-    }
-
-    // Pass 4: fill playable cells with background color.
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (s.grid[y * w + x] !== GRID_OBST) {
-          dr.drawRect(
-            { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
-            COL_BACKGROUND,
-          );
-        }
-      }
-    }
-
     ds.started = true;
   }
 

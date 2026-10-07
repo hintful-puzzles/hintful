@@ -1,15 +1,18 @@
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { TEN } from "../../engine/color/colors.ts";
-import { INK, PAPER } from "../../engine/color/palette.ts";
-import { drawRecessedBorder } from "../../engine/draw.ts";
+import { BLACK, TEN, WHITE } from "../../engine/color/colors.ts";
+import {
+  cellSurface,
+  givenSurface,
+  INK,
+  surfaceGrid,
+} from "../../engine/color/palette.ts";
+import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
-import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
+import type { Color, Size } from "../../engine/types.ts";
 import type { SamegameState, SamegameUi } from "./state.ts";
 
 // --- tile-size metrics ------------------------------------------------
 
 export const PREFERRED_TILE_SIZE = 32;
-const HIGHLIGHT_WIDTH = 2;
 export const FLASH_FRAME = 0.13;
 
 /** `TILE_GAP` for a given full tile size (`game_set_size`). */
@@ -33,24 +36,34 @@ const TILE_IMPOSSIBLE = 0x2000;
 
 const COL_BACKGROUND = 0;
 const COL_1 = 1; // COL_1..COL_9 are 1..9
-const COL_IMPOSSIBLE = 10;
+/** The middle of every tile on a stuck board, and the cursor on an emptied
+ * cell. */
+const COL_INK = 10;
+/** The body of a selected tile, whose color shrinks to its middle. */
 const COL_SEL = 11;
-const COL_HIGHLIGHT = 12;
-const COL_LOWLIGHT = 13;
-export const paletteScheme: Partial<PaletteScheme> = {
-  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
-};
-const NCOLORS = 14;
+/** The field: an emptied cell, and the gap between two tiles. */
+const COL_CELL = 12;
+/** The field on the lit beats of the flash. */
+const COL_FLASH = 13;
+/** The frame round the field. */
+const COL_GRID = 14;
+/** The cursor on a tile. */
+const COL_ON_TILE = 15;
+const NCOLORS = 16;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
   const out: Color[] = new Array<Color>(NCOLORS);
-  out[COL_BACKGROUND] = background;
+  out[COL_BACKGROUND] = defaultBackground;
   for (let i = 0; i < 9; i++) out[COL_1 + i] = TEN[i];
-  out[COL_IMPOSSIBLE] = INK;
-  out[COL_SEL] = PAPER;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_INK] = INK;
+  // `WHITE` and `BLACK`, not `PAPER` and `INK`: both are read against a
+  // tile, which is one color in both schemes, and a selected tile that
+  // inverted would sink into the dark scheme's field.
+  out[COL_SEL] = WHITE;
+  out[COL_ON_TILE] = BLACK;
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_FLASH] = givenSurface(defaultBackground);
+  out[COL_GRID] = surfaceGrid(defaultBackground);
   return out;
 }
 
@@ -64,7 +77,6 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
 // --- draw state -------------------------------------------------------
 
 export interface SamegameDrawState {
-  started: boolean;
   /** Full tile size (`TILE_SIZE`). */
   tileSize: number;
   tileinner: number;
@@ -81,7 +93,6 @@ export function newDrawState(
   tileSize: number,
 ): SamegameDrawState {
   return {
-    started: false,
     tileSize,
     tileinner: tileSize - gap(tileSize),
     tilegap: gap(tileSize),
@@ -118,7 +129,7 @@ function tileRedraw(
   if (col) {
     if (tile & TILE_IMPOSSIBLE) {
       outerCol = col;
-      innerCol = COL_IMPOSSIBLE;
+      innerCol = COL_INK;
     } else if (tile & TILE_SELECTED) {
       outerCol = COL_SEL;
       innerCol = col;
@@ -161,34 +172,39 @@ function tileRedraw(
     dr.drawRect({ x: cx + inner, y: cy + inner, w: tgap, h: tgap }, bgcolor);
 
   if (tile & TILE_HASSEL) {
-    const sx = cx + 2;
-    const sy = cy + 2;
-    const ssz = inner - 5;
-    const scol = outerCol === COL_SEL ? COL_LOWLIGHT : COL_HIGHLIGHT;
-    dr.drawLine({ x: sx, y: sy }, { x: sx + ssz, y: sy }, scol, 1);
-    dr.drawLine({ x: sx + ssz, y: sy }, { x: sx + ssz, y: sy + ssz }, scol, 1);
-    dr.drawLine({ x: sx + ssz, y: sy + ssz }, { x: sx, y: sy + ssz }, scol, 1);
-    dr.drawLine({ x: sx, y: sy + ssz }, { x: sx, y: sy }, scol, 1);
+    drawRectOutline(
+      dr,
+      cx + 2,
+      cy + 2,
+      inner - 4,
+      inner - 4,
+      col ? COL_ON_TILE : COL_INK,
+    );
   }
 
   dr.drawUpdate({ x: cx, y: cy, w: ts, h: ts });
 }
 
-/** The recessed bevel around the whole playfield (cloned from fifteen). */
-function drawRecessedFrame(dr: GameDrawing, w: number, h: number, ts: number): void {
+/**
+ * The field's margin and the frame round it: the tiles stand one gap in from
+ * a frame one pixel wide, so the edge of the field is spaced as two tiles are.
+ * The margin is field, and flashes with it.
+ */
+function drawFrame(
+  dr: GameDrawing,
+  w: number,
+  h: number,
+  ts: number,
+  bgcolor: number,
+): void {
   const g = gap(ts);
-  drawRecessedBorder(
-    dr,
-    {
-      left: coord(0, ts) - HIGHLIGHT_WIDTH,
-      top: coord(0, ts) - HIGHLIGHT_WIDTH,
-      right: coord(w, ts) + HIGHLIGHT_WIDTH - 1 - g,
-      bottom: coord(h, ts) + HIGHLIGHT_WIDTH - 1 - g,
-    },
-    ts,
-    COL_HIGHLIGHT,
-    COL_LOWLIGHT,
-  );
+  const x = coord(0, ts) - g;
+  const y = coord(0, ts) - g;
+  const fw = w * ts + g;
+  const fh = h * ts + g;
+  dr.drawRect({ x: x - 1, y: y - 1, w: fw + 2, h: fh + 2 }, COL_GRID);
+  dr.drawRect({ x, y, w: fw, h: fh }, bgcolor);
+  dr.drawUpdate({ x: x - 1, y: y - 1, w: fw + 2, h: fh + 2 });
 }
 
 export function redraw(
@@ -204,19 +220,11 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h } = state;
 
-  if (!ds.started) {
-    drawRecessedFrame(dr, w, h, ts);
-    ds.started = true;
-  }
-
-  let bgcolor: number;
-  if (flashTime > 0) {
-    const frame = Math.floor(flashTime / FLASH_FRAME);
-    bgcolor = frame % 2 ? COL_LOWLIGHT : COL_HIGHLIGHT;
-  } else {
-    bgcolor = COL_BACKGROUND;
-  }
+  // The field lifts on the flash's even beats and rests on its odd ones.
+  const lit = flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) % 2 === 0;
+  const bgcolor = lit ? COL_FLASH : COL_CELL;
   const bgChanged = ds.bgcolor !== bgcolor;
+  if (bgChanged) drawFrame(dr, w, h, ts, bgcolor);
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {

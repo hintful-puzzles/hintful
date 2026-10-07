@@ -38,9 +38,10 @@ import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "j
 import { generateCandidate, newSubsetsDesc } from "./generator.ts";
 import { subsetsGame } from "./index.ts";
 import {
+  COL_CELL,
   COL_ERROR,
-  COL_HIGHLIGHT,
-  COL_INNERBG,
+  COL_GIVEN,
+  COL_RULED_OUT,
   newDrawState,
   redraw,
 } from "./render.ts";
@@ -604,10 +605,22 @@ describe("subsets rendering (tier 2.5)", () => {
   it("opening frame: slots, arrows, tally; snapshot", () => {
     const result = renderScenario({ game: subsetsGame, id: FIX_ID });
     const ops = result.recording.ops;
-    // Bevel-highlight slots for decided (given) letters exist.
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(true);
-    // Undecided slots use the inner background.
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_INNERBG)).toBe(true);
+    // A given cell is told by the surface under it: four lifted slots for
+    // each given set, and the plain surface for every other slot.
+    const start = newState(PARAMS, FIX.desc);
+    const givens = start.immutable.filter((v) => v !== 0).length;
+    const slots = (color: number) =>
+      ops.filter((o) => o.op === "rect" && o.color === color).length;
+    expect(givens).toBeGreaterThan(0);
+    expect(slots(COL_GIVEN)).toBe(4 * givens);
+    expect(slots(COL_CELL)).toBe(4 * (start.immutable.length - givens));
+    // A slot's state is what it holds: a given's absent letter is the dot.
+    const absent = Array.from(start.immutable, (v, i) =>
+      v === 0 ? 0 : [0, 1, 2, 3].filter((b) => !(start.known[i] & (1 << b))).length,
+    ).reduce((a, b) => a + b, 0);
+    expect(
+      ops.filter((o) => o.op === "circle" && o.fill === COL_RULED_OUT),
+    ).toHaveLength(absent);
     // Horseshoe arrows are drawn (circles) and no error color yet.
     expect(ops.some((o) => o.op === "circle")).toBe(true);
     expect(ops.some((o) => "color" in o && o.color === COL_ERROR)).toBe(false);
@@ -646,26 +659,22 @@ describe("subsets rendering (tier 2.5)", () => {
     expect(result.recording.ops).toMatchSnapshot();
   });
 
-  it("completion flash: slots blink to the inner background on a flash beat", () => {
+  it("completion flash: every slot lifts on a flash beat", () => {
     // Drive redraw directly at a mid-flash time (tier 2, recording double —
     // renderScenario captures settled frames, never a mid-flash one).
     const solution = fixtureSolution();
     const ds = newDrawState(solution, 36);
     const ui = newUi();
     const dr = new RecordingDrawing(subsetsGame.colors([1, 1, 1]));
-    // Flash-on beat: floor(0.15 / 0.12) = 1 -> odd -> slots blink off.
+    // Flash-on beat: floor(0.15 / 0.12) = 1 -> odd -> every slot is lifted.
     redraw(dr, ds, null, solution, 1, ui, 0, 0.15);
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_INNERBG)).toBe(true);
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(
-      false,
-    );
-    // A flash-off beat shows the bevel again (same drawstate — the flash
-    // bit is in the diff key, so the repaint actually happens).
+    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_GIVEN)).toBe(true);
+    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(false);
+    // A flash-off beat shows the player's own surface again (same drawstate —
+    // the flash bit is in the diff key, so the repaint actually happens).
     const dr2 = new RecordingDrawing(subsetsGame.colors([1, 1, 1]));
     redraw(dr2, ds, null, solution, 1, ui, 0, 0.05);
-    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(
-      true,
-    );
+    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
     expect(dr.ops).toMatchSnapshot();
   });
 

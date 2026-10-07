@@ -20,6 +20,7 @@
 import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
+  cellSurface,
   ERROR,
   GRID_MID,
   HINT_ACTION,
@@ -29,6 +30,7 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { abcdBorderLetter } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
@@ -96,6 +98,10 @@ export const COL_CURSOR = 11;
 export const COL_HINT = 12;
 /** The hint's evidence color: the outline of the squares a reason rests on. */
 export const COL_HINT_CELL = 13;
+export const COL_CELL = 14; // the surface of a cell the player fills
+/** The line between two cells, and the frame. The diagonal-mode corner crosses
+ * are a rule and stay `COL_GRID`. */
+export const COL_LINE = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const outer = defaultBackground;
@@ -117,6 +123,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = highlightWash(inner);
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_CELL] = cellSurface(outer);
+  out[COL_LINE] = surfaceGrid(outer);
   return out;
 }
 
@@ -368,7 +376,7 @@ function drawTile(
       ? COL_HIGHLIGHT
       : flashing && (x + y + 2) % 3 === flash
         ? COL_LOWLIGHT
-        : COL_INNERBG,
+        : COL_CELL,
   );
   ds.hint.drawHatch(dr, i, box, COL_HINT, ts);
 
@@ -392,7 +400,7 @@ function drawTile(
       { x: tx, y: ty + ts - 1 },
     ],
     -1,
-    COL_GRID,
+    COL_LINE,
   );
 
   // Diagonal-mode corner crosses (interior corners only).

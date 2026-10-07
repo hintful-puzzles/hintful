@@ -128,7 +128,7 @@ const prefs: GamePref<BridgesUi>[] = [
     },
   },
   {
-    // Fork aid: auto-gray islands whose clue is satisfied (visual only, no lock).
+    // Fork aid: lift islands whose clue is satisfied (visual only, no lock).
     kw: "auto-mark-complete",
     name: "Highlight islands once their bridge count is met",
     type: "boolean",

@@ -12,10 +12,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 0,
   },
   {
-    "color": 3,
+    "color": 1,
     "h": 201,
     "op": "rect",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "w": 201,
     "x": 27,
     "y": 26,
@@ -28,10 +28,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 27,
@@ -40,8 +40,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -132,10 +132,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 67,
     "y": 27,
@@ -144,8 +144,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -236,10 +236,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 27,
@@ -248,8 +248,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -340,10 +340,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 27,
@@ -352,8 +352,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -436,8 +436,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 187,
     "cy": 67,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -466,10 +466,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 27,
@@ -478,8 +478,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -562,8 +562,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 187,
     "cy": 67,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -592,10 +592,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 67,
@@ -604,8 +604,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -696,10 +696,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 67,
     "y": 67,
@@ -708,8 +708,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -792,8 +792,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 107,
     "cy": 107,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -822,10 +822,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 67,
@@ -834,8 +834,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -918,8 +918,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 107,
     "cy": 107,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -948,10 +948,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 67,
@@ -960,8 +960,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -1044,8 +1044,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 187,
     "cy": 67,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1074,10 +1074,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 67,
@@ -1086,8 +1086,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -1170,8 +1170,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 187,
     "cy": 67,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1200,10 +1200,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 107,
@@ -1212,8 +1212,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -1296,8 +1296,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 67,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1326,10 +1326,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 67,
     "y": 107,
@@ -1338,8 +1338,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -1422,8 +1422,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 107,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1444,8 +1444,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 107,
     "cy": 107,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1466,8 +1466,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 67,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1496,10 +1496,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 107,
@@ -1508,8 +1508,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -1592,8 +1592,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 107,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1614,8 +1614,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 107,
     "cy": 107,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1644,10 +1644,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 107,
@@ -1656,8 +1656,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -1748,10 +1748,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 107,
@@ -1760,8 +1760,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -1852,10 +1852,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 147,
@@ -1864,8 +1864,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -1948,8 +1948,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 67,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1970,8 +1970,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 67,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2000,10 +2000,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 67,
     "y": 147,
@@ -2012,8 +2012,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -2096,8 +2096,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 107,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2118,8 +2118,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 67,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2140,8 +2140,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 67,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2170,10 +2170,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 147,
@@ -2182,8 +2182,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -2266,8 +2266,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 147,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2288,8 +2288,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 107,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2318,10 +2318,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 147,
@@ -2330,8 +2330,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -2414,8 +2414,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 147,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2444,10 +2444,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 147,
@@ -2456,8 +2456,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -2548,10 +2548,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 187,
@@ -2560,8 +2560,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -2644,8 +2644,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 67,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2674,10 +2674,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 67,
     "y": 187,
@@ -2686,8 +2686,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -2722,8 +2722,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 67,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2752,10 +2752,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 187,
@@ -2764,8 +2764,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -2848,8 +2848,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 147,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2878,10 +2878,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 187,
@@ -2890,8 +2890,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -2974,8 +2974,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   {
     "cx": 147,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3004,10 +3004,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 187,
@@ -3016,8 +3016,8 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -3124,10 +3124,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 0,
   },
   {
-    "color": 3,
+    "color": 1,
     "h": 201,
     "op": "rect",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(139, 139, 139)",
     "w": 201,
     "x": 27,
     "y": 26,
@@ -3140,10 +3140,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 27,
@@ -3152,8 +3152,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -3184,10 +3184,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 67,
     "y": 27,
@@ -3196,8 +3196,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -3228,10 +3228,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 27,
@@ -3240,8 +3240,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -3272,10 +3272,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 27,
@@ -3284,8 +3284,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -3308,8 +3308,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 187,
     "cy": 67,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3338,10 +3338,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 27,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 27,
@@ -3350,8 +3350,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -3374,8 +3374,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 187,
     "cy": 67,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3404,10 +3404,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 67,
@@ -3416,8 +3416,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -3448,10 +3448,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 67,
     "y": 67,
@@ -3460,8 +3460,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -3484,8 +3484,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 107,
     "cy": 107,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3514,10 +3514,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 67,
@@ -3526,8 +3526,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -3550,8 +3550,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 107,
     "cy": 107,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3580,10 +3580,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 67,
@@ -3592,8 +3592,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -3616,8 +3616,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 187,
     "cy": 67,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3646,10 +3646,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 67,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 67,
@@ -3658,8 +3658,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -3682,8 +3682,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 187,
     "cy": 67,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3712,10 +3712,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 107,
@@ -3724,8 +3724,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -3748,8 +3748,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 67,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3778,10 +3778,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 67,
     "y": 107,
@@ -3790,8 +3790,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -3814,8 +3814,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 107,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3836,8 +3836,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 107,
     "cy": 107,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3858,8 +3858,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 67,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3888,10 +3888,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 107,
@@ -3900,8 +3900,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -3924,8 +3924,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 107,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3946,8 +3946,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 107,
     "cy": 107,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3976,10 +3976,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 107,
@@ -3988,8 +3988,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -4020,10 +4020,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 107,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 107,
@@ -4032,8 +4032,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -4064,10 +4064,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 147,
@@ -4076,8 +4076,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -4100,8 +4100,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 67,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4122,8 +4122,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 67,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4152,10 +4152,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 67,
     "y": 147,
@@ -4164,8 +4164,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -4188,8 +4188,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 107,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4210,8 +4210,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 67,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4232,8 +4232,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 67,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4262,10 +4262,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 147,
@@ -4274,8 +4274,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -4298,8 +4298,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 147,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4320,8 +4320,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 107,
     "cy": 147,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4350,10 +4350,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 147,
@@ -4362,8 +4362,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -4386,8 +4386,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 147,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4416,10 +4416,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 147,
@@ -4428,8 +4428,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,
@@ -4460,10 +4460,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 27,
     "y": 187,
@@ -4472,8 +4472,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         27,
@@ -4496,8 +4496,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 67,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4526,10 +4526,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 13,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 67,
     "y": 187,
@@ -4538,8 +4538,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         67,
@@ -4574,8 +4574,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 67,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4604,10 +4604,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 107,
     "y": 187,
@@ -4616,8 +4616,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         107,
@@ -4640,8 +4640,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 147,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4670,10 +4670,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 147,
     "y": 187,
@@ -4682,8 +4682,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         147,
@@ -4706,8 +4706,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   {
     "cx": 147,
     "cy": 187,
-    "fill": 1,
-    "fillRgb": "rgb(253, 253, 253)",
+    "fill": 13,
+    "fillRgb": "rgb(237, 237, 237)",
     "op": "circle",
     "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4736,10 +4736,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "y": 187,
   },
   {
-    "color": 0,
+    "color": 2,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 187,
     "y": 187,
@@ -4748,8 +4748,8 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outline": 1,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         187,

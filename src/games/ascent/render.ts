@@ -11,11 +11,15 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, YELLOW_WASH } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   ERROR,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
+  highlightWash,
   INK,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -58,11 +62,12 @@ import {
   validatePathMove,
 } from "./ui.ts";
 
-// --- palette (upstream enum order) ---------------------------------
+// --- palette -------------------------------------------------------
 
-export const COL_MIDLIGHT = 0;
+export const COL_MIDLIGHT = 0; // the board, and the margin an edge number sits in
 export const COL_LOWLIGHT = 1;
 export const COL_HIGHLIGHT = 2;
+/** Ink: a wall, and a number the player placed. */
 export const COL_BORDER = 3;
 export const COL_LINE = 4;
 export const COL_IMMUTABLE = 5;
@@ -74,7 +79,23 @@ export const COL_ARROW = 8;
 export const COL_HINT = 9;
 /** The hint's evidence outline. */
 export const COL_HINT_CELL = 10;
-export const NCOLORS = 11;
+/** The surface of a cell the player fills. */
+export const COL_CELL = 11;
+/** The lifted surface under a number the puzzle fixed. */
+export const COL_GIVEN = 12;
+/**
+ * The line between two cells, and the path the board draws for itself
+ * between consecutive numbers (the player's own line is `COL_LINE`). One
+ * color because both need the one thing it has: it is darker than the plain
+ * surface and the lifted one in both schemes, and that path runs through
+ * both.
+ */
+export const COL_GRID = 13;
+/** The cell the player is holding, typing into or has selected: the
+ * collection's "you are here" wash, which sinks below a plain cell and a
+ * lifted one in both schemes. */
+export const COL_HELD = 14;
+export const NCOLORS = 15;
 
 /** A cell's part in the displayed hint, one bit per mark: its diff key. */
 const HINT_TARGET = 1;
@@ -299,9 +320,14 @@ export function ascentColors(defaultBackground: Color): Color[] {
   ret[COL_IMMUTABLE] = BLUE;
   ret[COL_ERROR] = ERROR;
   ret[COL_CURSOR] = CURSOR;
+  // Not `HELD`: the held cell is a fill under its number, which is the wash.
+  ret[COL_HELD] = highlightWash(background);
   ret[COL_ARROW] = YELLOW_WASH;
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
+  ret[COL_CELL] = cellSurface(background);
+  ret[COL_GIVEN] = givenSurface(background);
+  ret[COL_GRID] = surfaceGrid(background);
   return ret;
 }
 
@@ -601,12 +627,14 @@ export function redrawAscent(
             : ui.held === i ||
                 ui.typingCell === i ||
                 (mouseCursor(ui) && ui.cursor.y * w + ui.cursor.x === i)
-              ? COL_LOWLIGHT
+              ? COL_HELD
               : oldNextTarget >= 0 && positions[oldNextTarget] === i
                 ? COL_HIGHLIGHT
                 : oldPrevTarget >= 0 && positions[oldPrevTarget] === i
                   ? COL_HIGHLIGHT
-                  : COL_MIDLIGHT;
+                  : state.immutable[i]
+                    ? COL_GIVEN
+                    : COL_CELL;
 
     if (ds.colors[i] === color) continue;
 
@@ -645,7 +673,7 @@ export function redrawAscent(
         dr.drawHatch(rect, COL_HINT, hatchPeriod(tileSize));
 
     if (ui.typingCell !== i) {
-      const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_HIGHLIGHT;
+      const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_GRID;
 
       if (!hex) {
         for (let dy = -1; dy <= 1; dy += 2) {
@@ -664,7 +692,7 @@ export function redrawAscent(
                 ty2 + movement.dirs[dir].dy * tileSize,
                 tx2,
                 ty2,
-                ds.path[i2] & FLAG_USER ? COL_LINE : COL_HIGHLIGHT,
+                ds.path[i2] & FLAG_USER ? COL_LINE : COL_GRID,
               );
           }
         }
@@ -679,7 +707,8 @@ export function redrawAscent(
           dr.drawCircle(center, tileSize * 0.4, COL_LOWLIGHT, COL_LOWLIGHT);
           dr.drawCircle(center, tileSize * 0.3, COL_HIGHLIGHT, COL_HIGHLIGHT);
         } else {
-          dr.drawCircle(center, Math.trunc(tileSize / 3), COL_HIGHLIGHT, COL_HIGHLIGHT);
+          // Ringed, so the disc is told from a lifted cell as from a plain one.
+          dr.drawCircle(center, Math.trunc(tileSize / 3), COL_HIGHLIGHT, COL_GRID);
         }
       } else if (ds.path[i] & ~FLAG_COMPLETE) {
         dr.drawCircle(center, Math.trunc(ds.thickness / 2), linecolor, linecolor);
@@ -707,7 +736,7 @@ export function redrawAscent(
         const nc = cellCenter(i2, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
         const ex = hex ? (cx + nc.cx) / 2 : nc.cx;
         const ey = hex ? (cy + nc.cy) / 2 : nc.cy;
-        thickLine(dr, ds.thickness, tx1, ty1, ex, ey, COL_HIGHLIGHT);
+        thickLine(dr, ds.thickness, tx1, ty1, ex, ey, COL_GRID);
       }
     }
 
@@ -734,7 +763,7 @@ export function redrawAscent(
       const outline = hex
         ? hexVertices(cx, cy, tileSize)
         : squareCorners(tx, ty, tileSize);
-      dr.drawPolygon(outline, -1, COL_BORDER);
+      dr.drawPolygon(outline, -1, COL_GRID);
     }
 
     /* Light circle on possible endpoints. */

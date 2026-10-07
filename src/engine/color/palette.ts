@@ -69,8 +69,8 @@ export const INK: Color = [0, 0, 0];
  * frame. The counterpart to {@link INK}, and likewise not {@link WHITE}. */
 export const PAPER: Color = [1, 1, 1];
 
-/** A mid-gray grid line, for games that want the grid to recede rather than
- * carry the drawing (Blackbox, Guess, Tents). */
+/** A mid-gray line, for a mark that should recede rather than carry the
+ * drawing. The line between two cells of a surface is {@link surfaceGrid}. */
 export const GRID_MID: Color = GRAY;
 
 /** A grid line dark enough to survive a board made mostly of *dark cells* —
@@ -113,10 +113,11 @@ export const RULED_OUT: Color = INK;
  *   Mathrax, Magnets, Pearl) is {@link highlightWash}, the "you are here"
  *   wash, because a saturated green fill under a digit or a pearl shouts and
  *   hides what it is pointing at.
- * - **When green is spent, the second choice is `PURPLE`** — Spokes, Pegs,
- *   Filling, Sticks, Subsets all answer the same collision the same way, so a
- *   purple cursor reads as "the cursor, on a board that uses green" rather than
- *   as a sixth color to learn.
+ * - **When green is spent, the second choice is `PURPLE`** — several games
+ *   answer the same collision the same way, so a purple cursor reads as "the
+ *   cursor, on a board that uses green" rather than as a sixth color to
+ *   learn. Not on a board of pieces, where purple is a piece ({@link SHADED},
+ *   `TWO`).
  */
 export const CURSOR: Color = GREEN;
 
@@ -161,8 +162,7 @@ export const ERROR_TEXT: Color = PAPER;
  * A **red fill behind content that must stay readable** — the fill counterpart to
  * {@link ERROR}'s stroke, in the same way {@link HINT_EVIDENCE_WASH} is the fill
  * counterpart to {@link HINT_EVIDENCE}. Filling's `COL_ERROR`, Mathrax's and Rome's
- * `COL_ERRORBG`, Mines' contradicted count, Light Up's two-lamps-see-each-other
- * square.
+ * `COL_ERRORBG`, Mines' contradicted count.
  *
  * A named color rather than a function of the background, because `RED_WASH`
  * already follows the board's brightness: light in light mode, dark in dark.
@@ -287,7 +287,11 @@ export function playerEntryColor(background: Color): Color {
  * that must stay a *background*, not become a foreground: `COL_HIGHLIGHT` in
  * Solo's family and Filling. */
 export function highlightWash(background: Color): Color {
-  return scale(background, 0.78);
+  // The dark value is authored so the cell sinks, as it does in the light
+  // scheme. Derived, it rises to the lightness of `givenSurface`, and a
+  // selected entry reads as a given. It sinks below `surfaceGrid` too, far
+  // enough that the line beside a selected cell still shows.
+  return token(scale(background, 0.78), [0.01, 0.01, 0.01]);
 }
 
 /**
@@ -404,22 +408,10 @@ export function clueDoneColor(background: Color): Color {
 
 /**
  * An impassable **wall** in a movement game — Inertia's and Sokoban's
- * `COL_WALL`: the background nudged a quarter of the way toward its highlight,
- * so a wall reads as solid board rather than as a drawn object.
- *
- * Takes the highlight as well as the background because that is what the color
- * means: "not quite the floor, in the direction the bevel already goes". Deriving
- * it from a fixed gray instead would break the moment either game's background
- * changes.
- *
- * **The dark value is authored**: derivation keeps the light scheme's step,
- * inverted, and in the dark scheme that left the wall at lightness 0.32 on a
- * 0.355 floor, which a player on a phone could not tell apart (owner,
- * 2026-10-03). The light scheme's white bevel carries the wall's shape; the
- * dark scheme's dimmer bevel cannot, so the face itself has to step well clear
- * of the floor, and darker keeps the direction derivation gave it.
+ * `COL_WALL`: a flat fill, with no bevel, that stands well clear of the floor
+ * (`cellSurface`) in both schemes. A wall a quarter of the way from the floor
+ * toward its bevel could not be told from the floor on a phone in the dark
+ * scheme (owner, 2026-10-03), and the floor has since moved to where that wall
+ * was; the mid gray is a tone no surface holds.
  */
-export function wallColor(background: Color, highlight: Color): Color {
-  const mix = (i: number): number => (3 * background[i] + highlight[i]) / 4;
-  return token([mix(0), mix(1), mix(2)], [0.13, 0.13, 0.13]);
-}
+export const WALL_FILL: Color = GRAY;

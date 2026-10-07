@@ -27,9 +27,9 @@ describe("Flood midend lifecycle", () => {
     // 3×3, three colors, generous limit.
     expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
     const ops = h.painted();
-    // Background + recessed bevels + one rect per tile.
+    // Background + frame + one rect per tile, and no bevel.
     expect(opsOfKind(ops, "rect").length).toBeGreaterThanOrEqual(9);
-    expect(opsOfKind(ops, "polygon").length).toBe(2);
+    expect(opsOfKind(ops, "polygon").length).toBe(0);
   });
 
   it("a fill advances the move counter", () => {
@@ -79,8 +79,8 @@ describe("Flood midend lifecycle", () => {
     const h = harness();
     expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
     expect(h.m.hint()).toBeNull();
-    // The hint highlights the next-fill squares with a separator-color
-    // circle (palette index 1).
+    // The hint marks the next-fill squares with a circle in the mark color
+    // (palette index 1).
     expect(opsOfKind(h.painted(), "circle").some((o) => o.fill === 1)).toBe(true);
   });
 });

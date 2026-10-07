@@ -5,9 +5,9 @@
  * The board sits inside a **margin of about half a tile** on every side (so the
  * pointer conversion subtracts `border`, unlike the zero-border `NARROW_BORDERS`
  * geometry most ports use), with a three-tile **number-list panel** below it.
- * Every cell is a beveled tile: walls are drawn indented in gray, an entered
- * digit outdented on a neutral tile, and an empty cell shows the inner
- * background (or the selection highlight) plus its pencil marks. A run that is
+ * Every cell is flat: a wall is a strong fill, an empty square the cell
+ * surface (or the selection highlight) plus its pencil marks, and a square
+ * holding a digit the lifted surface, which is what says "placed". A run that is
  * full but reads as no listed number gets a thick red frame drawn around the
  * whole run, one clipped tile at a time.
  *
@@ -20,7 +20,7 @@
  * mark changes.
  *
  * Two deliberate display divergences: the completion flash sweeps a diagonal
- * highlight/lowlight wave (upstream declares its frame counter `bool`, so its
+ * bright/dim wave (upstream declares its frame counter `bool`, so its
  * "flash" is a single static color shift — clearly not the intent of
  * `FLASH_TIME = 9 × FLASH_FRAME`), and the sticky pencil mode adds the
  * collection's mode-indicator glyph, in the margin corner the engine picks.
@@ -28,27 +28,27 @@
 
 import { valueBit } from "../../engine/candidate-bits.ts";
 import {
-  mkhighlight,
-  mkhighlightSpecific,
-} from "../../engine/color/color-mkhighlight.ts";
-import {
   BLUE_BOLD,
   GREEN,
   GREEN_BOLD,
   ORANGE_BOLD,
 } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
+  clueDoneColor,
   ERROR,
+  FLASH,
   GRID_DARK,
+  givenSurface,
   highlightWash,
   INK,
   PAPER,
   PENCIL_BODY,
   pencilColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { crossingGhost } from "../../engine/color/palette-games.ts";
 import {
-  drawRaisedTile,
   drawRectCorners,
   drawRectOutline,
   drawThickRectOutline,
@@ -66,7 +66,6 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
-  HIGHLIGHT_ENTRY,
   highlightFill,
   highlightIsOn,
 } from "../../engine/note-taking-cell.ts";
@@ -81,13 +80,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import type {
-  Color,
-  DrawTextOptions,
-  PaletteScheme,
-  Point,
-  Size,
-} from "../../engine/types.ts";
+import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { LISTED } from "./hint-text.ts";
 import type { CrossingMistake } from "./solver.ts";
 import {
@@ -106,18 +99,23 @@ export const PREFERRED_TILE_SIZE = 40;
 const FLASH_FRAME = 0.08;
 export const FLASH_TIME = FLASH_FRAME * 9;
 
-// --- palette (index-for-index with the upstream COL_* enum) -----------------
+// --- palette ----------------------------------------------------------------
 
-export const COL_OUTERBG = 0;
-export const COL_LOWLIGHT = 1;
-export const COL_INNERBG = 2;
-export const COL_HIGHLIGHT = 3;
-export const COL_GRID = 4;
+export const COL_OUTERBG = 0; // the board around the grid, and the clue list's
+/** A clue that is used up or fits nowhere in the selection, grayed back. */
+export const COL_DONE = 1;
+/** The surface of an empty square. */
+export const COL_CELL = 2;
+/** The completion wave's bright beat, and the cursor's corners on a wall. */
+export const COL_FLASH = 3;
+export const COL_GRID = 4; // the line between two squares, and the frame
 export const COL_ERROR = 5;
-export const COL_WALL_L = 6;
-export const COL_WALL_M = 7;
-export const COL_WALL_H = 8;
-/** Fork additions, appended past the upstream enum. */
+/** The lifted surface of a square that holds a digit. */
+export const COL_PLACED = 6;
+/** A blocked square: a flat, strong fill. */
+export const COL_WALL = 7;
+/** Ink: a placed digit, and a clue in the list. */
+export const COL_TEXT = 8;
 export const COL_PENCIL = 9;
 export const COL_PENCIL_BODY = 10;
 /** The preview of a held clue number, ghosted into the runs it still fits. */
@@ -150,19 +148,19 @@ export const COL_HINT_CELL = 18;
  *
  * The run colors are the same values the clue list inks its numbers in, so the
  * highlight is a *strong* fill — light under a dark scheme, dark under a light
- * one — and `COL_GRID` is exactly the wrong ink on it in both. This is `PAPER`,
+ * one — and `COL_TEXT` is exactly the wrong ink on it in both. This is `PAPER`,
  * which adapts the other way round from ink and is therefore right in both.
  */
 export const COL_RUNTEXT = 19;
 /**
- * **Type here** — the selected square's wash, on an empty square and on a
- * digit tile's face alike, and its notes triangle.
+ * **Type here** — the selected square's wash, on an empty square and under a
+ * placed digit alike, and its notes triangle. Also the completion wave's dim
+ * beat.
  *
- * Its own color rather than `COL_HIGHLIGHT`: the highlight is `mkhighlight`'s
- * near-white, which the app's dark-mode pass inverts to **pure black**, so the
- * one square that should be the most inviting on the board would read as a
- * hole. Anything defined as "brightest" has that problem, because brightest is
- * relative to the scheme; only an authored color is prominent in both.
+ * Not a near-white: the app's dark-mode pass inverts that to **pure black**,
+ * so the one square that should be the most inviting on the board would read
+ * as a hole. Anything defined as "brightest" has that problem, because
+ * brightest is relative to the scheme.
  *
  * `highlightWash`, the collection's "type here" wash (Solo's family): a step
  * *down* from the board survives the dark-mode pass, where a step up inverts.
@@ -172,33 +170,21 @@ export const COL_RUNTEXT = 19;
  * an error.
  */
 export const COL_SELECTED = 20;
-/** A placed digit's bevel. Its own pair, because `COL_HIGHLIGHT` and
- * `COL_LOWLIGHT` are also tints (the flash, the cursor's corners, a struck
- * clue), and a tint must not trade dark values the way a bevel does. */
-export const COL_TILE_HIGH = 21;
-export const COL_TILE_LOW = 22;
-export const NCOLORS = 23;
+export const NCOLORS = 21;
 
-export const paletteScheme: Partial<PaletteScheme> = {
-  darkSwaps: [[COL_TILE_HIGH, COL_TILE_LOW]],
-};
-
-export function colors(defaultBackground: Color): Color[] {
+export function colors(background: Color): Color[] {
   const out: Color[] = new Array(NCOLORS);
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
-  out[COL_OUTERBG] = defaultBackground;
-  out[COL_INNERBG] = background;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
-  out[COL_TILE_HIGH] = highlight;
-  out[COL_TILE_LOW] = lowlight;
-  out[COL_GRID] = INK;
+  out[COL_OUTERBG] = background;
+  out[COL_CELL] = cellSurface(background);
+  out[COL_PLACED] = givenSurface(background);
+  out[COL_GRID] = surfaceGrid(background);
+  out[COL_DONE] = clueDoneColor(background);
+  out[COL_FLASH] = FLASH;
+  out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
-
-  const wall = mkhighlightSpecific(GRID_DARK);
-  out[COL_WALL_M] = wall.base;
-  out[COL_WALL_H] = wall.highlight;
-  out[COL_WALL_L] = wall.lowlight;
+  // A wall is not a thing the player moves, so it has no bevel: the strong
+  // gray that is dark on a light board and light on a dark one.
+  out[COL_WALL] = GRID_DARK;
 
   // A muted blue-gray for pencil marks, the collection's convention (ABCD,
   // Towers): clearly subordinate to an entered digit without vanishing.
@@ -358,9 +344,9 @@ export function newDrawState(
  *
  * Crossing's squares tile exactly, so the band lies wholly inside the box
  * (`outer` 0) and a square whose overlay changes repaints itself and takes its
- * mark with it. Room comes from the bevel: a placed digit is drawn at half the
- * tile size in the center and the pencil-mark grid is inset inside the bevel
- * faces, so the outermost pixels are already frame rather than content.
+ * mark with it. There is room: a placed digit is drawn at half the tile size
+ * in the center and the pencil-mark grid is inset from the edge, so the
+ * outermost pixels hold no content.
  */
 function markBand(ds: CrossingDrawState, x: number, y: number): MarkBand {
   const ts = ds.tileSize;
@@ -499,14 +485,13 @@ function drawCell(
   const ty = tileOrigin(y, ts);
   const digit = state.grid[i];
   const highlight = ((flags >> K_HIGHLIGHT) & 3) as CellHighlight;
-  const selected = highlight === HIGHLIGHT_ENTRY;
   // The ring is drawn in `redraw` on the square's own border, and the run the
   // sentence names is hatched translucently here, so a hint never takes the
   // background from the run wash or from the penciled candidates it is ruling
   // out. What is left here besides is `struck`, packed at bit `n − 1` for digit
   // `n` so it indexes the same way as the pencil grid.
   const runWash = flags & DF_ACROSS ? COL_ACROSS : flags & DF_DOWN ? COL_DOWN : -1;
-  const wash = runWash >= 0 ? runWash : COL_INNERBG;
+  const wash = runWash >= 0 ? runWash : digit ? COL_PLACED : COL_CELL;
 
   if (!digit) {
     drawCellBackground(
@@ -522,34 +507,30 @@ function drawCell(
   // A tile's body: the square inside the grid lines `drawRectOutline` ends with.
   const body = { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 };
   if (walls[i]) {
-    // Pressed in: the lowlight takes the top and left.
-    drawRaisedTile(dr, body, ts, COL_WALL_M, COL_WALL_L, COL_WALL_H);
+    dr.drawRect(body, COL_WALL);
   } else if (digit) {
-    // An entered digit is a raised neutral tile: the bevel is what says
-    // "placed", and the digit is plain black on it. Upstream painted each digit
-    // its own saturated color — a leftover from a scrapped drag-and-drop design
-    // that its author asked to have removed.
+    // An entered digit sits on the lifted surface, which is what says
+    // "placed", and is plain ink on it. Upstream painted each digit its own
+    // saturated color — a leftover from a scrapped drag-and-drop design that
+    // its author asked to have removed.
     //
-    // The completion flash sweeps a diagonal wave of highlight/lowlight across
-    // the board (the shape ABCD uses) in place of upstream's color cycle. A
-    // selected tile takes the highlight's wash on its face, as an empty square
-    // does, and is pressed in as well.
+    // The completion flash sweeps a diagonal bright/dim wave across the board
+    // (the shape ABCD uses) in place of upstream's color cycle. A selected
+    // square takes the highlight's wash, as an empty square does.
     const mid =
       flash < 0
         ? highlightFill(highlight, COL_SELECTED, wash)
         : (x + y) % 3 === flash
-          ? COL_HIGHLIGHT
+          ? COL_FLASH
           : (x + y + 2) % 3 === flash
-            ? COL_LOWLIGHT
-            : COL_INNERBG;
-    const low = selected ? COL_TILE_HIGH : COL_TILE_LOW;
-    const high = selected ? COL_TILE_LOW : COL_TILE_HIGH;
-    drawRaisedTile(dr, body, ts, mid, high, low);
+            ? COL_SELECTED
+            : COL_PLACED;
+    dr.drawRect(body, mid);
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
     dr.drawText(
       { x: tileCenter(x, ts), y: tileCenter(y, ts) },
       textOpts(Math.floor(ts / 2), "center", "mathematical"),
-      mid === runWash ? COL_RUNTEXT : COL_GRID,
+      mid === runWash ? COL_RUNTEXT : COL_TEXT,
       String(digit),
     );
   }
@@ -589,13 +570,7 @@ function drawCell(
   // (`uiUpdateClearsHint` in `index.ts`): they have to see where they are about
   // to type.
   if (flags & DF_KEYCUR)
-    drawRectCorners(
-      dr,
-      (1 + x) * ts,
-      (1 + y) * ts,
-      Math.floor(ts * 0.35),
-      COL_HIGHLIGHT,
-    );
+    drawRectCorners(dr, (1 + x) * ts, (1 + y) * ts, Math.floor(ts * 0.35), COL_FLASH);
 
   if (wrong) drawMistake(dr, ts, tx, ty);
 
@@ -792,7 +767,7 @@ function drawNumbers(
 const PENCIL_STYLE: PencilIndicatorStyle = {
   background: COL_OUTERBG,
   body: COL_PENCIL_BODY,
-  ink: COL_GRID,
+  ink: COL_TEXT,
 };
 
 // --- redraw ----------------------------------------------------------------
@@ -998,11 +973,11 @@ export function redraw(
   // round the clue, so it rides in `panelState` as its own bit.
   const CLASS_COLOR = [
     COL_ACROSSFIT,
-    COL_LOWLIGHT,
+    COL_DONE,
     COL_ERROR,
-    COL_LOWLIGHT,
+    COL_DONE,
     COL_DOWNFIT,
-    COL_GRID,
+    COL_TEXT,
   ];
 
   // The hint's half of the evidence: the numbers the deduction reasons over

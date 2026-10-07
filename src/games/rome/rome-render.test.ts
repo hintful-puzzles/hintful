@@ -25,10 +25,9 @@ import {
   COL_BORDER,
   COL_CURSOR,
   COL_ERRORBG,
+  COL_FLASH,
   COL_GOAL,
   COL_GOALBG,
-  COL_HIGHLIGHT,
-  COL_LOWLIGHT,
   computeSize,
   newDrawState,
   origin,
@@ -344,10 +343,10 @@ describe("completion flash", () => {
       );
     expect(phase(0.65)).not.toBe(phase(0.55));
     const flashing = frame(state, newUi(), 0.65).dr;
-    expect(flashing.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(
+    expect(flashing.ops.some((o) => o.op === "rect" && o.color === COL_FLASH)).toBe(
       true,
     );
-    expect(flashing.ops.some((o) => o.op === "rect" && o.color === COL_LOWLIGHT)).toBe(
+    expect(flashing.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(
       true,
     );
   });

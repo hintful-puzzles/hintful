@@ -333,7 +333,7 @@ export interface BridgesUi {
    * bridge *could* run down. Not the hint system, whose colors and marks are
    * `render.ts`'s `COL_HINT`. */
   showPossible: boolean;
-  /** Fork aid: gray an island once its bridge count is met. Purely visual:
+  /** Fork aid: lift an island once its bridge count is met. Purely visual:
    * unlike a manual mark, it does not lock the island's bridges. */
   autoMark: boolean;
 }

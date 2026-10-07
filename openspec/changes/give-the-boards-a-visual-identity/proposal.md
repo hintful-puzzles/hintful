@@ -116,7 +116,27 @@ this change's to fix.
 - **Unruly's words follow the pieces**: hint sentences, the Controls verbs and
   the hint-marks legend take the pair's names, and the help page names them by
   placeholder and says the shapes.
-- **The rest of the catalog**, family by family (task 3).
+- **Clusters and Flip take the pair**; Clusters' hint ring returns to the
+  collection's blue, which is no longer one of its paints.
+- **Pattern, Mosaic, Range, Singles and Bricks** take the owner's second
+  choice (`reference/shading-mockups.html`, S1): a shaded cell is the pair's
+  purple square alone (`SHADED`), a cell ruled out is a small dot, an
+  undecided one is plain surface. Their words say `SHADED_NAME` and
+  `UNSHADED_NAME`.
+- **Every other game takes what of the look fits it**: cells on the quiet
+  surface with a thin grid, a given or otherwise settled cell on the lifted
+  surface, no state that is a step of gray alone, and no bevel on a thing the
+  player does not move (Mines, Pegs, Black Box, Flood, Same Game, Inertia,
+  Sokoban, Crossing lose theirs). A game's own identity stays: Flood's and
+  Guess's colors, Map's regions, Tents' trees, Undead's monsters.
+- **Shared colors that moved**: `HINT_WHITEREF` from purple to pink, since
+  purple is now a piece; `highlightWash` and `correctRegionColor` author dark
+  values below the cell, so a selected cell and a finished region are not
+  taken for a given; a wall is the flat `WALL_FILL`.
+
+A player who knew a board by its old colors meets new ones: a Clusters, Pegs
+or Black Box piece that was blue or red, a Sokoban target, a shaded cell that
+was black. Nothing a player has saved or shared changes.
 
 Not changed: the save and game-ID formats, and what any control does.
 

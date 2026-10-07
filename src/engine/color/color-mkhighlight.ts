@@ -118,9 +118,16 @@ export function paletteSchemeOf(game: {
  * `COL_CORRECT`: a settled gray rather than a per-game hue, so "done and
  * correct" reads the same everywhere. Pass the background the game actually
  * paints its cells with.
+ *
+ * The dark value is authored, below the cell as the light one is. Derived, it
+ * rises to the lightness of a given's lifted cell, and a finished region reads
+ * as a row of givens.
  */
 export function correctRegionColor(background: Color): Color {
-  return [background[0] * 0.75, background[1] * 0.75, background[2] * 0.75];
+  return token(
+    [background[0] * 0.75, background[1] * 0.75, background[2] * 0.75],
+    [0.08, 0.08, 0.08],
+  );
 }
 
 /**

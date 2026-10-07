@@ -1,9 +1,9 @@
 /**
- * Rendering for Mines (`game_redraw` + `draw_tile`, mines.c:2976/3119).
- *
- * The palette is index-for-index with the C `enum`. Geometry uses the web
- * build's `NARROW_BORDERS` variant (see {@link borderFor}), since that is what
- * the browser actually showed.
+ * Rendering for Mines: a per-tile diffed loop over two flat surfaces. A
+ * covered square is the lifted surface and an opened one the plain cell
+ * surface, with the grid's thin line between them; the count digits, the flag
+ * and the mine are the color on the board. Geometry uses upstream's
+ * `NARROW_BORDERS` variant (see {@link borderFor}).
  *
  * The two ui-derived overlays — the mouse-down highlight radius and the "too
  * many flags" wrong-number tint — are folded into each tile's cache value `v`
@@ -12,7 +12,7 @@
  * paint-twice test in `mines.test.ts` guards that.
  */
 
-import { drawRaisedTile, drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
+import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -31,31 +31,33 @@ import {
   QUERY,
 } from "./state.ts";
 
-// --- palette (upstream enum order, mines.c:24) -------------------------
-export const COL_BACKGROUND = 0;
-export const COL_BACKGROUND2 = 1;
-export const COL_1 = 2;
-export const COL_2 = 3;
-export const COL_3 = 4;
-export const COL_4 = 5;
-export const COL_5 = 6;
-export const COL_6 = 7;
-export const COL_7 = 8;
-export const COL_8 = 9;
-export const COL_MINE = 10;
-export const COL_BANG = 11;
-export const COL_FLAG = 12;
-export const COL_FLAGBASE = 13;
-export const COL_QUERY = 14;
-export const COL_HIGHLIGHT = 15;
-export const COL_LOWLIGHT = 16;
-export const COL_WRONGNUMBER = 17;
-export const COL_CURSOR = 18;
+// --- palette -------------------------------------------------------------
+export const COL_BACKGROUND = 0; // the board around the grid
+export const COL_GRID = 1; // the line between two squares, and the frame
+export const COL_OPEN = 2; // the surface of an opened square
+export const COL_COVERED = 3; // the surface of a covered square
+/** The eight count digits, in order from here. */
+export const COL_1 = 4;
+export const COL_2 = 5;
+export const COL_3 = 6;
+export const COL_4 = 7;
+export const COL_5 = 8;
+export const COL_6 = 9;
+export const COL_7 = 10;
+export const COL_8 = 11;
+export const COL_MINE = 12;
+export const COL_MINE_GLINT = 13;
+export const COL_BANG = 14;
+export const COL_FLAG = 15;
+export const COL_FLAGBASE = 16;
+export const COL_QUERY = 17;
+export const COL_WRONGNUMBER = 18;
+export const COL_CURSOR = 19;
 /** What a hint step decides: the ring on its border. */
-export const COL_HINT = 19;
+export const COL_HINT = 20;
 /** What a hint step reasons from: the outline on its border. */
-export const COL_HINT_EVIDENCE = 20;
-export const NCOLORS = 21;
+export const COL_HINT_EVIDENCE = 21;
+export const NCOLORS = 22;
 
 export const PREFERRED_TILE_SIZE = 20;
 export const FLASH_FRAME = 0.13;
@@ -74,8 +76,9 @@ export interface MinesDrawState {
   /** Per-tile cache of the last-drawn value `v` with the tile's hint marks
    * packed above it ({@link packTile}; -1 = never drawn). */
   grid: Int32Array;
-  /** Last-drawn flash background color index (-1 = undecided). */
-  bg: number;
+  /** The fill the last frame's flash gave every square ({@link NO_WASH} for
+   * none; -2 = never drawn). */
+  wash: number;
   /** Last-drawn cursor cell (-1,-1 = none), for the cursor-moved repaint. */
   curX: number;
   curY: number;
@@ -88,7 +91,7 @@ export function newDrawState(s: MinesState, tileSize: number): MinesDrawState {
     tileSize,
     started: false,
     grid: new Int32Array(s.w * s.h).fill(-1),
-    bg: -1,
+    wash: -2,
     curX: -1,
     curY: -1,
   };
@@ -102,7 +105,18 @@ export function computeSize(
   return { w: border * 2 + tileSize * p.w, h: border * 2 + tileSize * p.h };
 }
 
-// --- one tile (upstream draw_tile, mines.c:2976) -----------------------
+// --- one tile ------------------------------------------------------------
+
+/** No flash is filling the squares this frame. */
+const NO_WASH = -1;
+
+/** The square's surface, inside the grid line along its top and left. */
+const face = (ts: number, x: number, y: number) => ({
+  x: x + 1,
+  y: y + 1,
+  w: ts - 1,
+  h: ts - 1,
+});
 
 function setcoord(
   coords: number[],
@@ -144,15 +158,10 @@ function drawStripes(
   y: number,
   marks: number,
 ): void {
-  if (marks & MARK_STRIPES)
-    dr.drawHatch(
-      { x: x + 1, y: y + 1, w: ts - 2, h: ts - 2 },
-      COL_HINT,
-      hatchPeriod(ts),
-    );
+  if (marks & MARK_STRIPES) dr.drawHatch(face(ts, x, y), COL_HINT, hatchPeriod(ts));
 }
 
-/** A ring, an outline or a mistake's frame on the tile's border, over
+/** A ring, an outline or a mistake's frame at the edge of the tile's face, over
  * everything it draws. The check refuses a hint while it finds a mistake, so a
  * frame never shares a tile with a hint's mark. */
 function drawBand(
@@ -162,7 +171,7 @@ function drawBand(
   y: number,
   marks: number,
 ): void {
-  const band = { box: { x, y, w: ts, h: ts }, outer: 0, inner: Math.max(2, ts >> 3) };
+  const band = { box: face(ts, x, y), outer: 0, inner: Math.max(2, ts >> 3) };
   if (marks & MARK_RING) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
   else if (marks & MARK_OUTLINE) drawMarkSides(dr, band, MARK_ALL, COL_HINT_EVIDENCE);
   else if (marks & MARK_MISTAKE) drawMarkSides(dr, band, MARK_ALL, COL_BANG);
@@ -174,20 +183,28 @@ function drawTile(
   x: number,
   y: number,
   v: number,
-  bg: number,
+  /** The flash's fill for every square this frame, or {@link NO_WASH}. */
+  wash: number,
+  cursor: boolean,
   marks: number,
 ): void {
+  // A square repaints alone, so nothing it draws may reach its neighbor: a
+  // thick stroke at its edge is antialiased a pixel past it.
+  dr.clip({ x, y, w: ts, h: ts });
+  // The grid line along the top and left; the next square, or the frame,
+  // closes the other two sides.
+  dr.drawRect({ x, y, w: ts, h: ts }, COL_GRID);
+  const fill = (surface: number): void =>
+    dr.drawRect(face(ts, x, y), wash === NO_WASH ? surface : wash);
+
   if (v < 0) {
     const coords: number[] = [];
     if (v === -22 || v === -23 || v === -24) {
       v += 20;
-      // Highlighted (pressed): flat fill, no bevel.
-      dr.drawRect({ x, y, w: ts, h: ts }, bg === COL_BACKGROUND ? COL_BACKGROUND2 : bg);
-      dr.drawLine({ x, y }, { x: x + ts - 1, y }, COL_LOWLIGHT, 1);
-      dr.drawLine({ x, y }, { x, y: y + ts - 1 }, COL_LOWLIGHT, 1);
+      // Pressed: the surface it will have once opened.
+      fill(COL_OPEN);
     } else {
-      // Raised (covered) tile.
-      drawRaisedTile(dr, { x, y, w: ts, h: ts }, ts, bg, COL_HIGHLIGHT, COL_LOWLIGHT);
+      fill(COL_COVERED);
     }
     drawStripes(dr, ts, x, y, marks);
 
@@ -213,18 +230,12 @@ function drawTile(
       );
     }
   } else {
-    // Open tile. `v | 32` is the too-many-flags wrong-number tint.
-    let bgcol = bg;
-    if (v & 32) {
-      bgcol = COL_WRONGNUMBER;
-      v &= ~32;
-    }
-    dr.drawRect(
-      { x, y, w: ts, h: ts },
-      v === KILLED ? COL_BANG : bgcol === COL_BACKGROUND ? COL_BACKGROUND2 : bgcol,
-    );
-    dr.drawLine({ x, y }, { x: x + ts - 1, y }, COL_LOWLIGHT, 1);
-    dr.drawLine({ x, y }, { x, y: y + ts - 1 }, COL_LOWLIGHT, 1);
+    // Open tile. `v | 32` is the too-many-flags wrong-number tint, and the
+    // mine the player trod on keeps its red through a flash.
+    const tinted = (v & 32) !== 0;
+    v &= ~32;
+    if (v === KILLED) dr.drawRect(face(ts, x, y), COL_BANG);
+    else fill(tinted ? COL_WRONGNUMBER : COL_OPEN);
     drawStripes(dr, ts, x, y, marks);
 
     if (v > 0 && v <= 8) {
@@ -264,16 +275,28 @@ function drawTile(
           w: Math.floor(r / 3),
           h: Math.floor(r / 4),
         },
-        COL_HIGHLIGHT,
+        COL_MINE_GLINT,
       );
     }
   }
 
+  // Corner brackets, so the square under the cursor still says whether it is
+  // covered.
+  if (cursor)
+    drawRectCorners(
+      dr,
+      x + Math.floor(ts / 2),
+      y + Math.floor(ts / 2),
+      Math.floor(ts / 2) - 2,
+      COL_CURSOR,
+      Math.max(2, ts >> 4),
+    );
   drawBand(dr, ts, x, y, marks);
+  dr.unclip();
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
 
-// --- full redraw (upstream game_redraw, mines.c:3119) ------------------
+// --- full redraw -----------------------------------------------------------
 
 export function redraw(
   dr: GameDrawing,
@@ -300,30 +323,16 @@ export function redraw(
   const stripes = keys("stripes");
   const wrong = new Set((mistakes ?? []).map((p) => `${p.x},${p.y}`));
 
-  let bg: number;
-  if (flashTime) {
-    const frame = Math.floor(flashTime / FLASH_FRAME);
-    if (frame % 2) bg = ui.flashIsDeath ? COL_BACKGROUND : COL_LOWLIGHT;
-    else bg = ui.flashIsDeath ? COL_BANG : COL_HIGHLIGHT;
-  } else {
-    bg = COL_BACKGROUND;
-  }
+  // On a flash's lit beats every square takes one fill: the error color for
+  // a death, and the lifted surface for a win, a step that reads in both
+  // schemes.
+  const lit = flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) % 2 === 0;
+  const wash = lit ? (ui.flashIsDeath ? COL_BANG : COL_COVERED) : NO_WASH;
 
   if (!ds.started) {
-    // Recessed area framing the whole puzzle.
-    const ohw = Math.max(border - 1, 1); // upstream's OUTER_HIGHLIGHT_WIDTH
-    drawRecessedBorder(
-      dr,
-      {
-        left: cx0(0) - ohw,
-        top: cx0(0) - ohw,
-        right: cx0(s.w) + ohw - 1,
-        bottom: cx0(s.h) + ohw - 1,
-      },
-      ts,
-      COL_HIGHLIGHT,
-      COL_LOWLIGHT,
-    );
+    // The frame, no heavier than a grid line: each square draws the line along
+    // its own top and left, and this closes the right and the bottom.
+    drawRectOutline(dr, cx0(0), cx0(0), s.w * ts + 1, s.h * ts + 1, COL_GRID);
     ds.started = true;
   }
 
@@ -360,21 +369,22 @@ export function redraw(
         (stripes.has(key) ? MARK_STRIPES : 0) |
         (wrong.has(key) ? MARK_MISTAKE : 0);
       const packed = packTile(v, marks);
-      if (ds.grid[y * ds.w + x] !== packed || bg !== ds.bg || cc) {
+      if (ds.grid[y * ds.w + x] !== packed || wash !== ds.wash || cc) {
         drawTile(
           dr,
           ts,
           cx0(x),
           cx0(y),
           v,
-          x === cursorX && y === cursorY ? COL_CURSOR : bg,
+          wash,
+          x === cursorX && y === cursorY,
           marks,
         );
         ds.grid[y * ds.w + x] = packed;
       }
     }
   }
-  ds.bg = bg;
+  ds.wash = wash;
   ds.curX = cursorX;
   ds.curY = cursorY;
 }

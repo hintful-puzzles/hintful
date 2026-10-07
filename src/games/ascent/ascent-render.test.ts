@@ -21,11 +21,12 @@ import { PATH, SQUARE } from "./hint-text.ts";
 import { ascentGame } from "./index.ts";
 import {
   COL_ARROW,
-  COL_BORDER,
+  COL_CELL,
+  COL_GIVEN,
+  COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
   COL_LOWLIGHT,
-  COL_MIDLIGHT,
 } from "./render.ts";
 import {
   type AscentMove,
@@ -71,9 +72,15 @@ describe("ascent render", () => {
       id: id(RECT, "render-rect"),
     });
     const ops = recording.ops;
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_MIDLIGHT)).toBe(true);
-    expect(ops.some((o) => o.op === "polygon" && o.outline === COL_BORDER)).toBe(true);
-    expect(ops.some((o) => o.op === "text")).toBe(true);
+    // A given is told by the cell under it: a lifted cell for each number
+    // the puzzle fixed, and the plain surface for every other cell.
+    const fills = (color: number) =>
+      ops.filter((o) => o.op === "rect" && o.color === color).length;
+    const numbers = ops.filter((o) => o.op === "text").length;
+    expect(numbers).toBeGreaterThan(0);
+    expect(fills(COL_GIVEN)).toBe(numbers);
+    expect(fills(COL_CELL)).toBe(RECT.w * RECT.h - numbers);
+    expect(ops.some((o) => o.op === "polygon" && o.outline === COL_GRID)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 
@@ -83,11 +90,11 @@ describe("ascent render", () => {
       id: id(HEXAGON, "render-hex"),
     });
     const ops = recording.ops;
-    // A hexagon cell outline is a 6-vertex COL_BORDER polygon, not the
+    // A hexagon cell outline is a 6-vertex COL_GRID polygon, not the
     // 4-vertex square an offset-square rendering would emit.
     expect(
       ops.some(
-        (o) => o.op === "polygon" && o.outline === COL_BORDER && o.points.length === 6,
+        (o) => o.op === "polygon" && o.outline === COL_GRID && o.points.length === 6,
       ),
     ).toBe(true);
     expect(ops.some((o) => o.op === "text")).toBe(true);

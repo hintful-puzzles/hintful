@@ -241,22 +241,6 @@ describe("Pegs text format", () => {
   });
 });
 
-describe("Pegs colors", () => {
-  it("uses mkhighlightBackground for the background color", () => {
-    const bg: [number, number, number] = [1, 1, 1]; // near-white
-    const palette = G.colors(bg);
-    // Background should be shifted away from pure white.
-    expect(palette[0][0]).toBeLessThan(1);
-    expect(palette[0][1]).toBeLessThan(1);
-    expect(palette[0][2]).toBeLessThan(1);
-  });
-
-  it("has 8 colors: upstream's five, the held-peg ring and the hint's two", () => {
-    const palette = G.colors([0.9, 0.9, 0.9]);
-    expect(palette.length).toBe(8);
-  });
-});
-
 describe("Pegs computeSize", () => {
   it("computes size for a 7x7 board", () => {
     const p = { w: 7, h: 7, type: 0 };

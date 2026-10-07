@@ -6,7 +6,7 @@
  * the geometry — is
  * [`engine/border-grid-render.ts`](../../engine/border-grid-render.ts), shared
  * with Separate. What is Palisade's and stays here: a cell carries a **clue**
- * counting its walls, a clue the board already contradicts reddens, and a region
+ * counting its walls and sits on the lifted surface of a given, a clue the board already contradicts reddens, and a region
  * counts as finished when it is size `k` with every clue in it satisfied.
  */
 
@@ -24,19 +24,18 @@ import {
   F_CLUE_ERROR,
   F_CORRECT,
   F_FLASH,
+  F_GIVEN,
   hintTileBits,
   invalidateDanglingRegions,
   mistakeEdgeBits,
   newBorderGridDrawState,
 } from "../../engine/border-grid-render.ts";
 import {
-  correctRegionColor,
-  mkhighlight,
-} from "../../engine/color/color-mkhighlight.ts";
-import {
   CURSOR,
+  cellSurface,
+  correctRegionColor,
   ERROR,
-  FLASH,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -61,10 +60,12 @@ import {
 export const PREFERRED_TILE_SIZE = 48;
 export const FLASH_TIME = 0.7;
 
-// --- palette (upstream COL_* enum) ----------------------------------------
+// --- palette --------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-export const COL_FLASH = 1;
+/** The lifted surface under a clue, and under every cell on the solved
+ * flash's lit beats. */
+export const COL_GIVEN = 1;
 export const COL_GRID = 2; // == COL_CLUE == COL_LINE_YES
 export const COL_LINE_MAYBE = 3;
 export const COL_LINE_NO = 4;
@@ -74,18 +75,21 @@ export const COL_HINT_CELL = 7; // referenced-cell outline, inset inside the cel
 export const COL_CORRECT = 8; // a completed, correct region (shared gray shade)
 /** The keyboard cursor's box, which upstream drew in the grid's own ink. */
 export const COL_CURSOR = 9;
+export const COL_CELL = 10; // the surface of a cell with no clue
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background } = mkhighlight(defaultBackground);
+  const background = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
-  out[COL_FLASH] = FLASH;
+  out[COL_CELL] = cellSurface(background);
+  out[COL_GIVEN] = givenSurface(background);
   out[COL_GRID] = INK;
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
-  out[COL_CORRECT] = correctRegionColor(background);
+  // Shaded from the surface the cells are painted in.
+  out[COL_CORRECT] = correctRegionColor(cellSurface(background));
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);
   return out;
@@ -93,8 +97,9 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** Palisade's palette indices, in the shared renderer's terms. */
 const PALETTE: BorderGridColors = {
-  background: COL_BACKGROUND,
-  flash: COL_FLASH,
+  background: COL_CELL,
+  given: COL_GIVEN,
+  flash: COL_GIVEN,
   correct: COL_CORRECT,
   grid: COL_GRID,
   lineNo: COL_LINE_NO,
@@ -176,6 +181,7 @@ export function redraw(
       let flags = borders[i] | mistakeMask[i] | hintMask[i];
 
       if (validRoot.get(blackDsf.canonify(i))) flags |= F_CORRECT;
+      if (clue !== EMPTY) flags |= F_GIVEN;
       if (flash) flags |= F_FLASH;
 
       const on = bitcount(borders[i]);

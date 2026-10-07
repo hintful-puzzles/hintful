@@ -25,11 +25,13 @@ import {
   RED_BOLD,
 } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   ERROR,
   ERROR_TEXT,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
@@ -74,9 +76,9 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_TIME = 0.3;
 
-// --- palette (the tents.c color enum, index for index) -------------------
+// --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+export const COL_GRID = 1; // the line between two squares, and the frame
 export const COL_GRASS = 2;
 export const COL_TREETRUNK = 3;
 export const COL_TREELEAF = 4;
@@ -91,14 +93,19 @@ export const COL_MISTAKE = 9;
 export const COL_HINT = 10;
 /** The hint's evidence outline. */
 export const COL_HINT_CELL = 11;
-/** A link between a tent and its tree: the ink of the grid and the clues, the
- * color of the player's own notation. */
-const COL_LINK = COL_GRID;
+export const COL_CELL = 12; // the surface of a square not yet decided
+/** The clues, the keyboard cursor and the edge of an error diamond. */
+export const COL_INK = 13;
+/** A link between a tent and its tree: the ink of the clues, the color of the
+ * player's own notation. */
+export const COL_LINK = COL_INK;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = INK;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_INK] = INK;
   out[COL_GRASS] = GREEN_WASH;
   out[COL_TREETRUNK] = BROWN;
   out[COL_TREELEAF] = GREEN;
@@ -348,7 +355,7 @@ function drawErrAdj(dr: GameDrawing, ts: number, x: number, y: number): void {
       { x, y: y + d },
     ],
     COL_ERROR,
-    COL_GRID,
+    COL_INK,
   );
   // An exclamation mark, drawn by hand (draw_text looked off-center upstream).
   const xext = Math.floor(ts / 16);
@@ -409,7 +416,7 @@ function drawTile(
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-    v === BLANK ? COL_BACKGROUND : COL_GRASS,
+    v === BLANK ? COL_CELL : COL_GRASS,
   );
   // The line the hint's sentence names, under the content so it stays whole.
   if (hintWord & HINT_LINE_BIT) {
@@ -492,7 +499,7 @@ function drawTile(
     const coff = Math.floor(ts / 8);
     const span = ts - coff * 2 + 1;
     const thick = packed & ARMED_BIT ? Math.max(2, Math.floor(ts / 12)) : 1;
-    drawThickRectOutline(dr, tx + coff, ty + coff, span, span, thick, COL_GRID);
+    drawThickRectOutline(dr, tx + coff, ty + coff, span, span, thick, COL_INK);
   }
 
   dr.unclip();
@@ -641,7 +648,7 @@ export function redraw(
   const numberSize = Math.floor(ts / 2);
   for (let k = 0; k < w + h; k++) {
     const hatched = counted.has(k);
-    const color = errors.num[k] ? COL_ERROR : hatched ? COL_HINT : COL_GRID;
+    const color = errors.num[k] ? COL_ERROR : hatched ? COL_HINT : COL_INK;
     const key = errors.num[k] | (hatched ? 2 : 0);
     if (ds.numbersDrawn[k] === key) continue;
     const column = k < w;

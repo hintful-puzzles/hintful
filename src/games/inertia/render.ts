@@ -11,22 +11,22 @@
  * them, rather than all at once when the move lands.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLACK, GREEN, PURPLE, TEAL } from "../../engine/color/colors.ts";
+import { BLACK, GREEN, PURPLE, TEAL, WHITE } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   DRAG_ADD,
   ERROR,
   FLASH,
   HINT_ACTION,
   INK,
-  wallColor,
+  surfaceGrid,
+  WALL_FILL,
 } from "../../engine/color/palette.ts";
-import { drawRaisedTile } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
 import { ARROW, GEM as GEM_MARK } from "./hint-text.ts";
 import {
   BLANK,
@@ -43,15 +43,14 @@ import {
   WALL,
 } from "./state.ts";
 
-// --- palette (index-for-index with the C enum) ------------------------
+// --- palette ----------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
 export const COL_OUTLINE = 1;
-export const COL_HIGHLIGHT = 2;
-export const COL_LOWLIGHT = 3;
-export const paletteScheme: Partial<PaletteScheme> = {
-  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
-};
+/** The glint on a mine. */
+export const COL_GLINT = 2;
+/** The line between two squares. */
+export const COL_GRID = 3;
 export const COL_PLAYER = 4;
 export const COL_DEAD_PLAYER = 5;
 export const COL_MINE = 6;
@@ -66,23 +65,28 @@ export const COL_AIM = 10;
  * get two cues (docs/games/hints.md § "The element-type color legend"): the
  * direction is the hint's blue *arrow*, the subgoal gem a violet *ring*. */
 export const COL_HINT_GOAL = 11;
-/** Appended: the solved flash's tile fill. Its own slot because `COL_HIGHLIGHT`
- * is also the wall bevel and the mine's glint, which do not flash. */
+/** Appended: the solved flash's tile fill. */
 export const COL_FLASH = 12;
+/** A floor square. */
+export const COL_FLOOR = 13;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
-  const ret: Color[] = new Array(13);
+  const ret: Color[] = new Array(14);
 
-  ret[COL_BACKGROUND] = background;
-  ret[COL_HIGHLIGHT] = highlight;
-  ret[COL_LOWLIGHT] = lowlight;
+  ret[COL_BACKGROUND] = defaultBackground;
+  ret[COL_FLOOR] = cellSurface(defaultBackground);
+  ret[COL_GRID] = surfaceGrid(defaultBackground);
   ret[COL_OUTLINE] = INK;
   ret[COL_PLAYER] = GREEN;
   ret[COL_DEAD_PLAYER] = ERROR;
+  // `BLACK` and `WHITE`, not `INK` and `PAPER`: a mine is a black ball with a
+  // glint on it in both schemes.
   ret[COL_MINE] = BLACK;
+  ret[COL_GLINT] = WHITE;
   ret[COL_GEM] = TEAL;
-  ret[COL_WALL] = wallColor(background, highlight);
+  // A flat block a clear step off the floor in both schemes: darker than it
+  // on a light board, lighter on a dark one.
+  ret[COL_WALL] = WALL_FILL;
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_AIM] = DRAG_ADD;
   // The subgoal is neither action nor evidence, so no hint role names it;
@@ -146,35 +150,52 @@ export function newDrawState(s: InertiaState, tileSize: number): InertiaDrawStat
 
 // --- tiles -----------------------------------------------------------
 
-function drawTile(dr: GameDrawing, ts: number, x: number, y: number, v: number): void {
+/** Which of a wall's neighbors are walls too: the one to its left, the one
+ * above, and all three round its top-left corner. A wall paints over the grid
+ * line it shares with another, so walls that touch are one mass. */
+interface WallJoin {
+  readonly left: boolean;
+  readonly up: boolean;
+  readonly corner: boolean;
+}
+
+function drawTile(
+  dr: GameDrawing,
+  ts: number,
+  x: number,
+  y: number,
+  v: number,
+  join: WallJoin,
+): void {
   const tx = coord(x, ts);
   const ty = coord(y, ts);
-  const bg =
-    v & FLASH_DEAD ? COL_DEAD_PLAYER : v & FLASH_WIN ? COL_FLASH : COL_BACKGROUND;
+  const bg = v & FLASH_DEAD ? COL_DEAD_PLAYER : v & FLASH_WIN ? COL_FLASH : COL_FLOOR;
   const cell = v & ~(FLASH_DEAD | FLASH_WIN | HINT_GOAL);
 
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
   dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, bg);
 
   if (cell === WALL) {
-    // A beveled block, on the tile inside its grid line.
-    drawRaisedTile(
-      dr,
-      { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-      ts,
-      COL_WALL,
-      COL_HIGHLIGHT,
-      COL_LOWLIGHT,
-    );
+    // A flat block, on the tile inside its grid line.
+    dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, COL_WALL);
   } else if (cell === MINE) {
     const cx = tx + Math.floor(ts / 2);
     const cy = ty + Math.floor(ts / 2);
     const r = Math.floor(ts / 2) - 3;
     const spike = Math.floor(r / 6);
 
-    dr.drawCircle({ x: cx, y: cy }, Math.floor((5 * r) / 6), COL_MINE, COL_MINE);
-    dr.drawRect({ x: cx - spike, y: cy - r, w: 2 * spike + 1, h: 2 * r + 1 }, COL_MINE);
-    dr.drawRect({ x: cx - r, y: cy - spike, w: 2 * r + 1, h: 2 * spike + 1 }, COL_MINE);
+    // The mine's shape in the outline's ink a pixel proud of it, then the
+    // mine: a rim, so a black mine stands off the dark scheme's floor.
+    for (const [grow, color] of [
+      [1, COL_OUTLINE],
+      [0, COL_MINE],
+    ]) {
+      const s = spike + grow;
+      const reach = r + grow;
+      dr.drawCircle({ x: cx, y: cy }, Math.floor((5 * r) / 6) + grow, color, color);
+      dr.drawRect({ x: cx - s, y: cy - reach, w: 2 * s + 1, h: 2 * reach + 1 }, color);
+      dr.drawRect({ x: cx - reach, y: cy - s, w: 2 * reach + 1, h: 2 * s + 1 }, color);
+    }
     // A glint, so it reads as a shiny sphere.
     dr.drawRect(
       {
@@ -183,7 +204,7 @@ function drawTile(dr: GameDrawing, ts: number, x: number, y: number, v: number):
         w: Math.floor(r / 3),
         h: Math.floor(r / 4),
       },
-      COL_HIGHLIGHT,
+      COL_GLINT,
     );
   } else if (cell === STOP) {
     // A ring: an outlined circle with its horizontal and vertical bands erased.
@@ -222,6 +243,9 @@ function drawTile(dr: GameDrawing, ts: number, x: number, y: number, v: number):
   }
 
   dr.unclip();
+  if (join.left) dr.drawRect({ x: tx, y: ty + 1, w: 1, h: ts - 1 }, COL_WALL);
+  if (join.up) dr.drawRect({ x: tx + 1, y: ty, w: ts - 1, h: 1 }, COL_WALL);
+  if (join.corner) dr.drawRect({ x: tx, y: ty, w: 1, h: 1 }, COL_WALL);
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 }
 
@@ -351,7 +375,7 @@ export function redraw(
       dr.drawLine(
         { x: coord(0, ts), y: coord(y, ts) },
         { x: coord(w, ts), y: coord(y, ts) },
-        COL_LOWLIGHT,
+        COL_GRID,
         1,
       );
     }
@@ -359,7 +383,7 @@ export function redraw(
       dr.drawLine(
         { x: coord(x, ts), y: coord(0, ts) },
         { x: coord(x, ts), y: coord(h, ts) },
-        COL_LOWLIGHT,
+        COL_GRID,
         1,
       );
     }
@@ -395,7 +419,11 @@ export function redraw(
       v |= flashType;
 
       if (ds.grid[y * w + x] !== v) {
-        drawTile(dr, ts, x, y, v);
+        const wall = s.board.at(x, y) === WALL;
+        const left = wall && x > 0 && s.board.at(x - 1, y) === WALL;
+        const up = wall && y > 0 && s.board.at(x, y - 1) === WALL;
+        const corner = left && up && s.board.at(x - 1, y - 1) === WALL;
+        drawTile(dr, ts, x, y, v, { left, up, corner });
         ds.grid[y * w + x] = v;
       }
     }

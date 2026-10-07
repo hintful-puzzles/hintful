@@ -1,12 +1,10 @@
 /**
- * Sticks rendering — port of `game_redraw` in `puzzles/unreleased/sticks.c`.
- *
- * A per-tile diffed loop over a black grid backing: each cell is a full-tile
- * `COL_GRID` rect under a one-pixel-smaller fill (black for a wall,
- * background for a white cell), a green center bar for a placed line, the
- * clue number as text (white on black cells, dark on white cells, red when
- * its constraint is currently violated), and a blue frame under the keyboard
- * cursor. The in-flight drag previews its accreted cells; on a fresh win the
+ * Sticks rendering: a per-tile diffed loop on the collection's quiet surface.
+ * A white cell is the cell surface inside a thin grid line; a black cell is a
+ * solid block over its whole tile, so a run of them is one block. On top go a
+ * green center bar for a placed line, the clue number as text (white on black
+ * cells, ink on white cells, red when its constraint is currently violated),
+ * and a purple frame under the keyboard cursor. The in-flight drag previews its accreted cells; on a fresh win the
  * lines blink off on alternate 0.1 s flash frames. `findMistakes` cells get
  * an inset red frame via an `OverlaySidecar` (docs/games/rendering.md § "Overlay sidecars" — the overlay is
  * part of the diff key so Check & Save repaints an otherwise-unchanged
@@ -18,8 +16,15 @@
  */
 
 import { BLACK, GREEN, PURPLE, WHITE } from "../../engine/color/colors.ts";
-import { ERROR, HINT_ACTION, HINT_EVIDENCE, INK } from "../../engine/color/palette.ts";
-import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
+import {
+  cellSurface,
+  ERROR,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+  surfaceGrid,
+} from "../../engine/color/palette.ts";
+import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -42,10 +47,10 @@ export const PREFERRED_TILE_SIZE = 48;
 const FLASH_FRAME = 0.1;
 export const FLASH_TIME = FLASH_FRAME * 5;
 
-// --- palette (upstream COL_* enum, index-for-index) -------------------------
+// --- palette ----------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+export const COL_GRID = 1; // the line between two cells, and the frame
 export const COL_LINE = 2;
 export const COL_NUMBER = 3;
 export const COL_ERROR = 4;
@@ -56,11 +61,15 @@ export const COL_HINT_CELL = 7; // the deduction's evidence — an inset ring
 /** A black cell. A piece, not ink: the help, the hint and the Custom dialog all
  * call it black, so it stays black in the dark scheme. */
 export const COL_BLOCK = 8;
+export const COL_CELL = 9; // the surface of a white cell
+export const COL_TEXT = 10; // a clue's number on a white cell
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = INK;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_TEXT] = INK;
   // A placed stick is a bar filling a fifth of its cell — a piece, not a glyph,
   // so the named green rather than the entry green a digit takes.
   out[COL_LINE] = GREEN;
@@ -141,17 +150,16 @@ function drawTile(
   const py = y * ts + b;
   const black = (tile & F_BLOCK) !== 0;
 
-  dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
+  // A black cell takes its whole tile, the grid line on its right and bottom
+  // included: the block's own edge is the boundary there.
+  dr.drawRect({ x: px, y: py, w: ts, h: ts }, black ? COL_BLOCK : COL_GRID);
   // Evidence is an inset **ring** on every square, black or white — one rule and
   // one shape for one role. A fill on a black square hides the very blackness
   // the argument is about; on a white one it is the wash itself that loses, since
   // a fill pale enough to leave the clue digit legible is too faint to read as a
   // mark (`hint-mark.ts`). A white evidence square is not empty either: it
   // carries the clue the deduction counts with, and often a line.
-  dr.drawRect(
-    { x: px, y: py, w: ts - 1, h: ts - 1 },
-    black ? COL_BLOCK : COL_BACKGROUND,
-  );
+  if (!black) dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, COL_CELL);
 
   const bar = (bits: number, color: number): void => {
     const off = Math.floor((ts * 2) / 5);
@@ -183,7 +191,7 @@ function drawTile(
     dr.drawText(
       { x: Math.floor((x + 0.5) * ts) + b, y: Math.floor((y + 0.5) * ts) + b },
       glyphFont(Math.floor(ts * 0.7)),
-      error ? COL_ERROR : tile & F_BLOCK ? COL_NUMBER : COL_GRID,
+      error ? COL_ERROR : black ? COL_NUMBER : COL_TEXT,
       String(clue),
     );
   }
@@ -228,11 +236,9 @@ export function redraw(
   const b = border(ts);
 
   if (!ds.started) {
-    const fullW = w * ts + 2 * b;
-    const fullH = h * ts + 2 * b;
-    // Outer grid frame (upstream: COORD(0) − tilesize/10 == 0); the per-tile
-    // COL_GRID rects draw the interior lines.
-    dr.drawRect({ x: 0, y: 0, w: fullW - 1, h: fullH - 1 }, COL_GRID);
+    // The frame, one line wide like the grid: each tile draws the line on its
+    // right and bottom, so this is the top and left ones that are missing.
+    drawRectOutline(dr, b - 1, b - 1, w * ts + 1, h * ts + 1, COL_GRID);
     ds.started = true;
   }
 

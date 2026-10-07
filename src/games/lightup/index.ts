@@ -242,7 +242,7 @@ function findMistakes(state: LightupState): readonly LightupMistake[] {
 
 /** Plan data for a Light Up hint step. `kind` is the mark the step places on
  * its `targets`, which `hintKeepTrack` and `refreshHintStep` read. `dark` is
- * the unlit square the deduction is about (violet ring) and `clue` the driving
+ * the unlit square the deduction is about (pink ring) and `clue` the driving
  * clue, whose digit recolors: the words outline both alongside the rest of the
  * evidence, and the renderer reads them here to tell the three glyphs apart. */
 export interface LightupHint {
@@ -541,7 +541,7 @@ export const lightupGame: Game<
     roles: {
       ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a dot.',
       outline:
-        "what the step reasons from, told apart by the sentence's nouns and drawn three ways: “the outlined clue” has its number in the hint color; “the outlined dark square”, which still has to be lit, has a purple double ring; and the other squares the reason rests on, such as a clue's bulbs, are shaded when dark and have a green double ring when lit.",
+        "what the step reasons from, told apart by the sentence's nouns and drawn three ways: “the outlined clue” has its number in the hint color; “the outlined dark square”, which still has to be lit, has a pink double ring; and the other squares the reason rests on, such as a clue's bulbs, are shaded when dark and have a green double ring when lit.",
     },
   },
   hintKeepTrack,

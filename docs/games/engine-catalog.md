@@ -1231,7 +1231,7 @@ game's size limit from the constant rather than writing a number beside it.
 `drawRecessedBorder` (the two-pentagon playfield bevel), `drawRaisedTile` (the
 raised *tile*, its opposite number: bevel and face in one call, on the pixels
 the tile covers) with `raisedBevelWidth` (its border) and `drawRaisedBevel` (the
-two triangles alone, for a relief with no face, which is Pegs' board),
+two triangles alone, for a relief with no face),
 `drawRectOutline` (upstream `draw_rect_outline`), `drawThickRectOutline` (the
 "this is wrong" frame, four filled bands), `drawRectCorners` (the four corner
 brackets marking a keyboard cursor — promoted from **seven** byte-identical

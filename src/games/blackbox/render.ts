@@ -2,22 +2,34 @@
  * Black Box — palette, geometry, and the imperative `redraw`, over a
  * per-tile cache (`ds.grid` mirrors each tile's displayed value, cursor and
  * flash flags included).
+ *
+ * Pieces on a quiet surface (`engine/piece.ts`): a square of the box is the
+ * cell surface and a guessed ball is a disc on it. What is settled is lifted:
+ * a square marked as known, which holds a dot where it has no ball, a laser
+ * square once fired, and the whole box once revealed.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { GREEN, RED } from "../../engine/color/colors.ts";
+import { GREEN, RED, TWO } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   ERROR,
-  GRID_MID,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
+  RULED_OUT,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { blackboxCover, blackboxLock } from "../../engine/color/palette-games.ts";
-import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
+import {
+  drawRectCorners,
+  drawRectOutline,
+  drawThickRectOutline,
+  glyphFont,
+} from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import type { Color, PaletteScheme, Point, Rect, Size } from "../../engine/types.ts";
+import { drawPiece, drawRuledOutDot, TWO_SHAPES } from "../../engine/piece.ts";
+import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { BUTTON, LASER } from "./hint-text.ts";
 import {
   BALL_GUESS,
@@ -38,26 +50,27 @@ import {
   range2grid,
 } from "./state.ts";
 
-// --- color indices (upstream's order) ------------------------------------
+// --- color indices -------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_COVER = 1;
-const COL_LOCK = 2;
-const COL_TEXT = 3;
-const COL_FLASHTEXT = 4;
-const COL_HIGHLIGHT = 5;
-const COL_LOWLIGHT = 6;
-export const paletteScheme: Partial<PaletteScheme> = {
-  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
-};
-const COL_GRID = 7;
-const COL_BALL = 8;
-export const COL_WRONG = 9;
-export const COL_BUTTON = 10;
-const COL_CURSOR = 11;
-export const COL_HINT = 12;
-export const COL_HINT_EVIDENCE = 13;
-const NCOLORS = 14;
+export const COL_BACKGROUND = 0; // the board, and a laser square not fired yet
+const COL_GRID = 1; // the line between two squares
+export const COL_CELL = 2; // the surface of a square of the box
+/** The surface of what is settled: a square marked as known, a fired laser
+ * square, and every square of a revealed box. */
+export const COL_SETTLED = 3;
+export const COL_KNOWN = 4; // the dot in a square marked as known that has no ball
+const COL_TEXT = 5;
+const COL_FLASHTEXT = 6;
+export const COL_BALL = 7;
+export const COL_WRONG = 8;
+export const COL_BUTTON = 9;
+const COL_CURSOR = 10;
+export const COL_HINT = 11;
+export const COL_HINT_EVIDENCE = 12;
+const NCOLORS = 13;
+
+/** A ball is the pair's disc, in a color no mark drawn round it has spent. */
+const PAIR_DISC = 1;
 
 /** A tile the displayed hint step rings or outlines, in its cache word beside
  * the cursor's flag, so a mark coming or going repaints it. */
@@ -116,20 +129,21 @@ export function computeSize(p: BlackboxParams, tileSize: number): Size {
 }
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background: bg, highlight, lowlight } = mkhighlight(defaultBackground);
+  const bg = defaultBackground;
   const ret: Color[] = new Array(NCOLORS);
   ret[COL_BACKGROUND] = bg;
-  ret[COL_HIGHLIGHT] = highlight;
-  ret[COL_LOWLIGHT] = lowlight;
-  ret[COL_BALL] = INK;
+  ret[COL_GRID] = surfaceGrid(bg);
+  ret[COL_CELL] = cellSurface(bg);
+  // The lifted surface is the puzzle's word here as it is under a given: a
+  // laser's result is what the box said, and a known square is closed to play.
+  ret[COL_SETTLED] = givenSurface(bg);
+  ret[COL_KNOWN] = RULED_OUT;
+  ret[COL_BALL] = TWO[PAIR_DISC];
   ret[COL_WRONG] = ERROR;
   ret[COL_BUTTON] = GREEN;
   // Not `CURSOR`: green is spent on the reveal button and the fired laser's
   // text, and the cursor rings both.
   ret[COL_CURSOR] = RED;
-  ret[COL_GRID] = GRID_MID;
-  ret[COL_LOCK] = blackboxLock(bg);
-  ret[COL_COVER] = blackboxCover(bg);
   ret[COL_TEXT] = INK;
   // The laser you just fired, lit up for a beat — not the solved flash.
   ret[COL_FLASHTEXT] = GREEN;
@@ -138,8 +152,8 @@ export function colors(defaultBackground: Color): Color[] {
   return ret;
 }
 
-/** The hint's mark on a tile at `(dx, dy)`, inside its grid line so a
- * neighbor's repaint cannot cut it. */
+/** The hint's mark on a tile at `(dx, dy)`, at the edge of its surface and
+ * inside its grid line, so a neighbor's repaint cannot cut it. */
 function drawHintMark(
   dr: GameDrawing,
   ds: BlackboxDrawState,
@@ -150,11 +164,11 @@ function drawHintMark(
   const ts = ds.tileSize;
   const thick = Math.max(2, Math.floor(ts / 12));
   if (flags & HINT_OUTLINE)
-    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 2, ts - 2, thick, COL_HINT_EVIDENCE);
+    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_HINT_EVIDENCE);
   if (flags & HINT_RING)
-    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 2, ts - 2, thick, COL_HINT);
+    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_HINT);
   if (flags & MISTAKE)
-    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 2, ts - 2, thick, COL_WRONG);
+    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_WRONG);
 }
 
 /** Which tiles the displayed step's words ring or outline, by grid index. */
@@ -190,15 +204,34 @@ function todraw(ds: BlackboxDrawState, x: number): number {
   return ds.tileSize * x + Math.floor(ds.tileSize / 2);
 }
 
-function drawSquareCursor(
+/** The surface of the tile at `(dx, dy)`, inside its grid line. */
+const face = (ds: BlackboxDrawState, dx: number, dy: number): Rect =>
+  rect(dx + 1, dy + 1, ds.tileSize - 1, ds.tileSize - 1);
+
+/** A tile's grid line and its surface. The line is the tile's own on all four
+ * sides, shared with each neighbor, so the box needs no frame. The caller
+ * clips to the tile, line included: a tile repaints alone. */
+function drawSurface(
+  dr: GameDrawing,
+  ds: BlackboxDrawState,
+  dx: number,
+  dy: number,
+  surface: number,
+): void {
+  drawRectOutline(dr, dx, dy, ds.tileSize + 1, ds.tileSize + 1, COL_GRID);
+  dr.drawRect(face(ds, dx, dy), surface);
+}
+
+/** The cursor's brackets, out at the tile's corners and clear of a ball. */
+function drawCursor(
   dr: GameDrawing,
   ds: BlackboxDrawState,
   dx: number,
   dy: number,
 ): void {
   const ts = ds.tileSize;
-  const coff = Math.floor(ts / 8);
-  drawRectOutline(dr, dx + coff, dy + coff, ts - coff * 2, ts - coff * 2, COL_CURSOR);
+  const half = Math.floor(ts / 2);
+  drawRectCorners(dr, dx + half, dy + half, half - 3, COL_CURSOR, Math.max(2, ts >> 4));
 }
 
 // --- arena tile -------------------------------------------------------
@@ -226,32 +259,22 @@ function drawArenaTile(
     gsTile |= FLAG_CURSOR;
 
   if (gsTile !== dsTile || gs.reveal !== ds.reveal || force) {
-    const bg = gs.reveal ? COL_BACKGROUND : gsTile & BALL_LOCK ? COL_LOCK : COL_COVER;
+    const known = (gsTile & BALL_LOCK) !== 0;
+    dr.clip(rect(dx, dy, ts + 1, ts + 1));
+    drawSurface(dr, ds, dx, dy, gs.reveal || known ? COL_SETTLED : COL_CELL);
 
-    dr.drawRect(rect(dx, dy, ts, ts), bg);
-    drawRectOutline(dr, dx, dy, ts, ts, COL_GRID);
+    // A reveal shows guesses that are the real balls, so only guesses are
+    // drawn, and they blink out on the flash's beats.
+    if (gsTile & BALL_GUESS) {
+      if (!(gs.reveal && isflash))
+        drawPiece(dr, face(ds, dx, dy), TWO_SHAPES[PAIR_DISC], COL_BALL);
+    } else if (known && !gs.reveal) drawRuledOutDot(dr, face(ds, dx, dy), COL_KNOWN);
 
-    // A reveal shows guesses that are the real balls, so only guesses are drawn.
-    const bcol = gsTile & BALL_GUESS && !(gs.reveal && isflash) ? COL_BALL : bg;
-    const ocol = gsTile & FLAG_CURSOR && bcol !== bg ? COL_CURSOR : bcol;
-
-    dr.drawCircle(
-      pt(dx + Math.floor(ts / 2), dy + Math.floor(ts / 2)),
-      ds.ballRadius - 1,
-      ocol,
-      ocol,
-    );
-    dr.drawCircle(
-      pt(dx + Math.floor(ts / 2), dy + Math.floor(ts / 2)),
-      ds.ballRadius - 3,
-      bcol,
-      bcol,
-    );
-
-    if (gsTile & FLAG_CURSOR && bcol === bg) drawSquareCursor(dr, ds, dx, dy);
+    if (gsTile & FLAG_CURSOR) drawCursor(dr, ds, dx, dy);
     drawHintMark(dr, ds, dx, dy, gsTile);
 
-    dr.drawUpdate(rect(dx, dy, ts, ts));
+    dr.unclip();
+    dr.drawUpdate(rect(dx, dy, ts + 1, ts + 1));
   }
   ds.grid[gridIdx(ds.w, gx, gy)] = gsTile;
 }
@@ -296,12 +319,15 @@ function drawLaserTile(
     gsTile |= FLAG_CURSOR;
 
   if (gsTile !== dsTile || force) {
-    dr.drawRect(rect(dx, dy, ts, ts), COL_BACKGROUND);
-    drawRectOutline(dr, dx, dy, ts, ts, COL_GRID);
+    const fired =
+      (gsTile &
+        ~(LASER_WRONG | LASER_OMITTED | FLAG_CURSOR | HINT_RING | HINT_OUTLINE)) !==
+      0;
+    const surface = fired ? COL_SETTLED : COL_BACKGROUND;
+    dr.clip(rect(dx, dy, ts + 1, ts + 1));
+    drawSurface(dr, ds, dx, dy, surface);
 
-    if (
-      gsTile & ~(LASER_WRONG | LASER_OMITTED | FLAG_CURSOR | HINT_RING | HINT_OUTLINE)
-    ) {
+    if (fired) {
       const tcol = flash ? COL_FLASHTEXT : omitted ? COL_WRONG : COL_TEXT;
       const str = reflect || hit ? (reflect ? "R" : "H") : String(laserval);
 
@@ -315,7 +341,7 @@ function drawLaserTile(
         dr.drawCircle(
           pt(dx + Math.floor(ts / 2), dy + Math.floor(ts / 2)),
           ds.ringRadius - Math.floor(ts / 16),
-          COL_BACKGROUND,
+          surface,
           COL_WRONG,
         );
       }
@@ -327,10 +353,11 @@ function drawLaserTile(
         str,
       );
     }
-    if (gsTile & FLAG_CURSOR) drawSquareCursor(dr, ds, dx, dy);
+    if (gsTile & FLAG_CURSOR) drawCursor(dr, ds, dx, dy);
     drawHintMark(dr, ds, dx, dy, gsTile);
 
-    dr.drawUpdate(rect(dx, dy, ts, ts));
+    dr.unclip();
+    dr.drawUpdate(rect(dx, dy, ts + 1, ts + 1));
   }
   ds.grid[gridIdx(ds.w, gx, gy)] = gsTile;
 }
@@ -366,25 +393,6 @@ export function redraw(
   }
 
   if (!ds.started) {
-    const x0 = todraw(ds, 0) - 1;
-    const y0 = todraw(ds, 0) - 1;
-    const x1 = todraw(ds, state.w + 2);
-    const y1 = todraw(ds, state.h + 2);
-
-    // Beveled outline, clockwise from the point behind (1,1).
-    dr.drawLine(pt(x0 + ts, y0 + ts), pt(x0 + ts, y0), COL_HIGHLIGHT, 1);
-    dr.drawLine(pt(x0 + ts, y0), pt(x1 - ts, y0), COL_HIGHLIGHT, 1);
-    dr.drawLine(pt(x1 - ts, y0), pt(x1 - ts, y0 + ts), COL_LOWLIGHT, 1);
-    dr.drawLine(pt(x1 - ts, y0 + ts), pt(x1, y0 + ts), COL_HIGHLIGHT, 1);
-    dr.drawLine(pt(x1, y0 + ts), pt(x1, y1 - ts), COL_LOWLIGHT, 1);
-    dr.drawLine(pt(x1, y1 - ts), pt(x1 - ts, y1 - ts), COL_LOWLIGHT, 1);
-    dr.drawLine(pt(x1 - ts, y1 - ts), pt(x1 - ts, y1), COL_LOWLIGHT, 1);
-    dr.drawLine(pt(x1 - ts, y1), pt(x0 + ts, y1), COL_LOWLIGHT, 1);
-    dr.drawLine(pt(x0 + ts, y1), pt(x0 + ts, y1 - ts), COL_HIGHLIGHT, 1);
-    dr.drawLine(pt(x0 + ts, y1 - ts), pt(x0, y1 - ts), COL_LOWLIGHT, 1);
-    dr.drawLine(pt(x0, y1 - ts), pt(x0, y0 + ts), COL_HIGHLIGHT, 1);
-    dr.drawLine(pt(x0, y0 + ts), pt(x0 + ts, y0 + ts), COL_HIGHLIGHT, 1);
-
     force = true;
     ds.started = true;
   }
@@ -412,10 +420,10 @@ export function redraw(
     const outline =
       ui.cursor.visible && ui.cursor.x === 0 && ui.cursor.y === 0
         ? COL_CURSOR
-        : COL_BALL;
+        : COL_TEXT;
     dr.clip(rect(b0 - 1, b0 - 1, ts + 1, ts + 1));
-    // The square the no-button branch clears, and no wider: the bevel's line
-    // runs along its far edge and is painted only on the first frame.
+    // The square the no-button branch clears, and no wider: the laser squares
+    // beside it own the grid line along its far edges.
     dr.drawRect(rect(b0 - 1, b0 - 1, ts, ts), COL_BACKGROUND);
     drawHintMark(dr, ds, b0 - 1, b0 - 1, flagsAt(0, 0));
     dr.drawCircle(

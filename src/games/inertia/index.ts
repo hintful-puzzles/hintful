@@ -46,7 +46,6 @@ import {
   type InertiaDrawState,
   newDrawState,
   PREFERRED_TILE_SIZE,
-  paletteScheme,
   redraw,
   solvedFlash,
 } from "./render.ts";
@@ -319,7 +318,6 @@ export const inertiaGame: Game<
   },
 
   colors,
-  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

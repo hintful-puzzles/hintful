@@ -53,7 +53,9 @@ export const COL_HINT = 11;
 /** The displayed hint's *evidence*: the cells, walls and dots the deduction
  * reasons over. */
 export const COL_HINT_CELL = 12;
-export const NCOLORS = 13;
+/** The surface of a cell no galaxy has claimed yet. */
+export const COL_CELL = 13;
+export const NCOLORS = 14;
 
 // --- DrawState ------------------------------------------------------
 
@@ -337,14 +339,10 @@ function drawSquare(
   dr.clip({ x: lx, y: ly, w: tileSize, h: tileSize });
 
   // Background. A cell's fill *is* its association — white with one dot, black
-  // with the other, plain when unassociated — which is the very thing a hint
+  // with the other, the plain surface when unassociated — which is the very thing a hint
   // reasons about, so no hint role fills; its marks are inset rings, below.
   const bg =
-    flags & DRAW_WHITE
-      ? COL_WHITEBG
-      : flags & DRAW_BLACK
-        ? COL_BLACKBG
-        : COL_BACKGROUND;
+    flags & DRAW_WHITE ? COL_WHITEBG : flags & DRAW_BLACK ? COL_BLACKBG : COL_CELL;
   dr.drawRect({ x: lx, y: ly, w: tileSize, h: tileSize }, bg);
   if (hint & HINT_REGION_CELL)
     dr.drawHatch(

@@ -739,10 +739,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "y": 132,
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 169,
     "y": 168,
@@ -799,8 +799,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -821,10 +821,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 205,
     "y": 168,
@@ -881,8 +881,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         204,
@@ -903,10 +903,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 241,
     "y": 168,
@@ -963,8 +963,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         240,
@@ -985,10 +985,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 277,
     "y": 168,
@@ -1045,8 +1045,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         276,
@@ -1067,10 +1067,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 313,
     "y": 168,
@@ -1127,8 +1127,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         312,
@@ -1149,10 +1149,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 169,
     "y": 204,
@@ -1197,8 +1197,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1219,10 +1219,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 205,
     "y": 204,
@@ -1267,8 +1267,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         204,
@@ -1289,10 +1289,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 241,
     "y": 204,
@@ -1337,8 +1337,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         240,
@@ -1359,10 +1359,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 277,
     "y": 204,
@@ -1407,8 +1407,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         276,
@@ -1429,10 +1429,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 313,
     "y": 204,
@@ -1477,8 +1477,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         312,
@@ -1499,10 +1499,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 169,
     "y": 240,
@@ -1559,8 +1559,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1581,10 +1581,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 205,
     "y": 240,
@@ -1641,8 +1641,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         204,
@@ -1663,10 +1663,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 241,
     "y": 240,
@@ -1723,8 +1723,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         240,
@@ -1745,10 +1745,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 277,
     "y": 240,
@@ -1805,8 +1805,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         276,
@@ -1827,10 +1827,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 313,
     "y": 240,
@@ -1887,8 +1887,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         312,
@@ -1909,10 +1909,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 169,
     "y": 276,
@@ -1969,8 +1969,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -1991,10 +1991,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 205,
     "y": 276,
@@ -2051,8 +2051,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         204,
@@ -2073,10 +2073,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 241,
     "y": 276,
@@ -2133,8 +2133,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         240,
@@ -2155,10 +2155,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 277,
     "y": 276,
@@ -2215,8 +2215,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         276,
@@ -2237,10 +2237,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 313,
     "y": 276,
@@ -2297,8 +2297,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         312,
@@ -2319,10 +2319,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 169,
     "y": 312,
@@ -2389,8 +2389,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         168,
@@ -2411,10 +2411,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 205,
     "y": 312,
@@ -2481,8 +2481,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         204,
@@ -2503,10 +2503,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 241,
     "y": 312,
@@ -2573,8 +2573,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         240,
@@ -2595,10 +2595,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 277,
     "y": 312,
@@ -2665,8 +2665,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         276,
@@ -2687,10 +2687,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 14,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 35,
     "x": 313,
     "y": 312,
@@ -2757,8 +2757,8 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 2,
-    "outlineRgb": "rgb(128, 128, 128)",
+    "outline": 15,
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         312,

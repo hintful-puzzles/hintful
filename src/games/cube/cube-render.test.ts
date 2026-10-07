@@ -7,7 +7,14 @@ import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-draw
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { gridArea } from "./grid.ts";
 import { cubeGame, executeMove } from "./index.ts";
-import { COL_BACKGROUND, COL_BLUE } from "./render.ts";
+import {
+  COL_BACKGROUND,
+  COL_BLUE,
+  COL_BORDER,
+  COL_CELL,
+  COL_GRID,
+  COL_SOLID,
+} from "./render.ts";
 import { SOLIDS, SolidType } from "./solids.ts";
 import { type CubeParams, newState } from "./state.ts";
 
@@ -56,6 +63,18 @@ describe("Cube rendering", () => {
     // blue, so at least one square polygon uses COL_BLUE.
     const squarePolys = polys.slice(0, state.grid.length);
     expect(squarePolys.some((o) => o.fill === COL_BLUE)).toBe(true);
+
+    // Every other square is quiet surface inside a grid line, and the solid's
+    // plain faces are lifted off it, edged in ink.
+    expect(
+      squarePolys.every(
+        (o) => (o.fill === COL_BLUE || o.fill === COL_CELL) && o.outline === COL_GRID,
+      ),
+    ).toBe(true);
+    const facePolys = polys.slice(state.grid.length);
+    expect(
+      facePolys.every((o) => o.fill === COL_SOLID && o.outline === COL_BORDER),
+    ).toBe(true);
 
     // A final drawUpdate covering the canvas. The shared recorder keeps these
     // off `ops` (they are bookkeeping, not content) and counts them instead.

@@ -1,18 +1,19 @@
 /**
  * Subsets rendering — port of `game_redraw` in `puzzles/unreleased/subsets.c`.
  *
- * Each cell is a `CELL_WIDTH × CELL_HEIGHT` block of letter slots on a gray
- * backing: a slot is a bevel-highlight square when its letter is decided
- * (known or cleared) and an inner-background square while unknown, with the
- * letter drawn black for a given and green for a player mark. Horseshoe
+ * Each cell is a `CELL_WIDTH × CELL_HEIGHT` block of letter slots on a backing
+ * in the grid line's color. A slot is the cell surface, lifted where the
+ * puzzle gave the cell's set, and its state is what it holds: a letter marked
+ * present (ink for a given, green for a player mark), the ruled-out dot for a
+ * letter cleared, and nothing while unknown. Horseshoe
  * arrows sit in the gaps between cell blocks (red when their relation is
  * violated), a violated missing-arrow edge shows a red cross, and the band
  * below the grid tallies every set-value with a color for its placement
- * count (red = duplicated, lowlight = placed once, black = unplaced), and a
+ * count (red = duplicated, grayed back = placed once, ink = unplaced), and a
  * set ruled out of the cell in focus struck through in the player's ink. All
  * error verdicts are live (recomputed from the committed state each frame,
- * as upstream). On a fresh win the slots blink to the inner background on
- * alternate 0.12 s flash frames; there is no move animation.
+ * as upstream). On a fresh win every slot lifts on alternate 0.12 s flash
+ * frames; there is no move animation.
  *
  * Divergence from the C: the keyboard cursor's corner marks are drawn
  * through the per-cell diff (the cursor slot is part of the cache key)
@@ -24,15 +25,18 @@
  * edges are already red live, exactly as the C shows them.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { GREEN, ORANGE, PURPLE } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
+  clueDoneColor,
   ERROR,
-  GRID_MID,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
   playerEntryColor,
+  RULED_OUT,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -43,6 +47,7 @@ import {
   HINT_TARGET,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
+import { drawRuledOutDot } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
@@ -64,13 +69,17 @@ export const PREFERRED_TILE_SIZE = 36;
 const FLASH_FRAME = 0.12;
 export const FLASH_TIME = FLASH_FRAME * 5;
 
-// --- palette (upstream COL_* enum, index-for-index) -------------------------
+// --- palette ----------------------------------------------------------------
 
-export const COL_OUTERBG = 0;
-export const COL_INNERBG = 1;
-export const COL_GRID = 2;
-export const COL_HIGHLIGHT = 3;
-export const COL_LOWLIGHT = 4;
+export const COL_OUTERBG = 0; // the board around and between the cell blocks
+/** The surface of a letter slot in a cell the player fills. */
+export const COL_CELL = 1;
+export const COL_GRID = 2; // the line between two slots of a cell
+/** The lifted slot surface of a cell whose set the puzzle gave, and of every
+ * slot on a lit beat of the completion flash. */
+export const COL_GIVEN = 3;
+/** A tally entry placed once, and the idle inspect badge's ring. */
+export const COL_DONE = 4;
 export const COL_FIXED = 5;
 export const COL_GUESS = 6;
 export const COL_ERROR = 7;
@@ -85,6 +94,8 @@ export const COL_HINT_CELL = 10;
 export const COL_HINT_SPOT = 11;
 // The cell where a clicked, already *placed* set sits.
 export const COL_HINT_PLACED = 12;
+/** The dot in a slot whose letter is cleared. */
+export const COL_RULED_OUT = 13;
 
 /** Sidecar bit: a cell a spotlit set can still be placed in. */
 const HINT_SPOT = 4;
@@ -101,14 +112,14 @@ const HINT_SLOT_SHIFT = 5;
 
 const CODE_A = "A".charCodeAt(0);
 
-export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
+export function colors(background: Color): Color[] {
   const out: Color[] = [];
-  out[COL_OUTERBG] = defaultBackground;
-  out[COL_INNERBG] = background;
-  out[COL_GRID] = GRID_MID;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_OUTERBG] = background;
+  out[COL_CELL] = cellSurface(background);
+  out[COL_GRID] = surfaceGrid(background);
+  out[COL_GIVEN] = givenSurface(background);
+  out[COL_DONE] = clueDoneColor(background);
+  out[COL_RULED_OUT] = RULED_OUT;
   out[COL_FIXED] = INK;
   out[COL_GUESS] = playerEntryColor(background);
   out[COL_ERROR] = ERROR;
@@ -294,7 +305,7 @@ export function redraw(
     ds.tallyLook[ui.tallyCursor] |= TALLY_CURSOR;
 
   if (firstDraw) {
-    // Gray backing behind each cell block; the slot squares drawn one pixel
+    // The backing behind each cell block; the slot squares drawn one pixel
     // smaller leave it showing as the inner grid lines.
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
@@ -349,11 +360,11 @@ export function redraw(
           const ty = Math.floor((y * (ch + 1) + cy + 0.5) * ts);
           const bit = 1 << cn;
           const unknown = (state.known[i] ^ state.mask[i]) & bit;
+          const box = { x: tx, y: ty, w: ts - 1, h: ts - 1 };
 
-          dr.drawRect(
-            { x: tx, y: ty, w: ts - 1, h: ts - 1 },
-            flash || unknown ? COL_INNERBG : COL_HIGHLIGHT,
-          );
+          // The surface says who decided the cell and never what a slot
+          // holds: a letter, the dot, or nothing yet.
+          dr.drawRect(box, flash || state.immutable[i] & bit ? COL_GIVEN : COL_CELL);
           // The cell the hint's sentence names, under its letters.
           ds.hint.drawHatch(
             dr,
@@ -370,6 +381,8 @@ export function redraw(
               state.immutable[i] & bit ? COL_FIXED : COL_GUESS,
               String.fromCharCode(CODE_A + cn),
             );
+          } else if (!unknown) {
+            drawRuledOutDot(dr, box, COL_RULED_OUT);
           }
 
           if (slot === cn) {
@@ -410,7 +423,7 @@ export function redraw(
       dr.drawCircle(
         { x: icx, y: iconY },
         iconR,
-        active ? COL_HINT_SPOT : COL_LOWLIGHT,
+        active ? COL_HINT_SPOT : COL_DONE,
         active ? COL_HINT_SPOT : COL_OUTERBG,
       );
 
@@ -582,7 +595,7 @@ export function redraw(
         label += cn & (1 << cx) ? String.fromCharCode(CODE_A + cx) : "_";
 
       const color =
-        counts[cn] > 1 ? COL_ERROR : counts[cn] === 1 ? COL_LOWLIGHT : COL_FIXED;
+        counts[cn] > 1 ? COL_ERROR : counts[cn] === 1 ? COL_DONE : COL_FIXED;
 
       const entry = {
         x: tx - ts,

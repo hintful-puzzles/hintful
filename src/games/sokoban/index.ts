@@ -39,7 +39,6 @@ import {
   FLASH_LENGTH,
   newDrawState,
   PREFERRED_TILE_SIZE,
-  paletteScheme,
   redraw,
   type SokobanDrawState,
   tileCenter,
@@ -377,7 +376,6 @@ export const sokobanGame: Game<
   },
 
   colors,
-  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

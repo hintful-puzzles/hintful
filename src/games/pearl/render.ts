@@ -15,16 +15,19 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
+  CURSOR,
+  cellSurface,
   DRAG_ADD,
   DRAG_REMOVE,
   ERROR,
   FLASH,
-  GRID_DARK,
   HINT_ACTION,
   HINT_EVIDENCE,
-  highlightWash,
+  INK,
   RULED_OUT,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
+import { drawRectCorners } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -65,9 +68,9 @@ export const COL_FLASH = 7;
 export const COL_DRAGON = 8;
 export const COL_DRAGOFF = 9;
 export const COL_MISTAKE = 10; // appended past the C enum (findMistakes overlay)
-/** The keyboard cursor's cell fill — upstream aliased it to `COL_LOWLIGHT`, a
- * tint of the board. */
-export const COL_CURSOR_BACKGROUND = 11;
+/** The keyboard cursor: brackets at the square's corners, which the loop
+ * never crosses. */
+export const COL_CURSOR = 11;
 /** The player's edge crosses. Their own slot rather than upstream's pearl
  * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
 export const COL_RULED_OUT = 12;
@@ -75,6 +78,11 @@ export const COL_RULED_OUT = 12;
 export const COL_HINT = 13;
 /** The squares a hint step reasons from, outlined. */
 export const COL_HINT_CELL = 14;
+export const COL_CELL = 15; // the surface of a square
+/** The loop the player draws. Ink and not the black pearl's `COL_BLACK`: the
+ * loop is read against the surface, so it inverts with the scheme, and a
+ * pinned black sank into a dark board. */
+export const COL_LINE = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -84,15 +92,16 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_LOWLIGHT] = lowlight;
   out[COL_BLACK] = BLACK;
   out[COL_WHITE] = WHITE;
-  out[COL_GRID] = GRID_DARK;
+  // The grid is where the squares are and never the drawing: the loop is.
+  out[COL_GRID] = surfaceGrid(background);
+  out[COL_CELL] = cellSurface(background);
   out[COL_ERROR] = ERROR;
   out[COL_FLASH] = FLASH;
   out[COL_DRAGON] = DRAG_ADD;
   out[COL_DRAGOFF] = DRAG_REMOVE;
   out[COL_MISTAKE] = ERROR;
-  // A whole-cell fill under the pearls and lines: the "you are here" wash
-  // Solo's family uses, not the green mark, which as a cell fill would shout.
-  out[COL_CURSOR_BACKGROUND] = highlightWash(background);
+  out[COL_CURSOR] = CURSOR;
+  out[COL_LINE] = INK;
   out[COL_RULED_OUT] = RULED_OUT;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -247,10 +256,7 @@ function drawSquare(
   const cy = oy + t2;
 
   dr.clip({ x: ox, y: oy, w: m.tile, h: m.tile });
-  dr.drawRect(
-    { x: ox, y: oy, w: m.tile, h: m.tile },
-    lflags & DS_CURSOR ? COL_CURSOR_BACKGROUND : COL_BACKGROUND,
-  );
+  dr.drawRect({ x: ox, y: oy, w: m.tile, h: m.tile }, COL_CELL);
 
   if (guiStyle === GUI_LOOPY) {
     dr.drawCircle({ x: cx, y: cy }, t16, COL_GRID, COL_GRID);
@@ -309,7 +315,7 @@ function drawSquare(
       );
 
   // Laid lines. Order matters for the exposed end-cap colors.
-  drawLinesSpecific(dr, m, x, y, lflags, 0, lflags & DS_FLASH ? COL_FLASH : COL_BLACK);
+  drawLinesSpecific(dr, m, x, y, lflags, 0, lflags & DS_FLASH ? COL_FLASH : COL_LINE);
   drawLinesSpecific(dr, m, x, y, lflags, DS_ESHIFT, COL_ERROR);
   drawLinesSpecific(dr, m, x, y, lflags, DS_XSHIFT, COL_MISTAKE);
   drawLinesSpecific(dr, m, x, y, lflags, DS_DSHIFT, COL_DRAGOFF);
@@ -322,6 +328,10 @@ function drawSquare(
       dr.drawCircle({ x: cx, y: cy }, ((m.tile * 3) / 8) | 0, COL_ERROR, COL_ERROR);
     dr.drawCircle({ x: cx, y: cy }, (m.tile / 4) | 0, c, COL_BLACK);
   }
+
+  // Out at the corners of the square, clear of the pearl and the loop.
+  if (lflags & DS_CURSOR)
+    drawRectCorners(dr, cx, cy, t2 - 2, COL_CURSOR, Math.max(2, m.tile >> 4));
 
   dr.unclip();
   dr.drawUpdate({ x: ox, y: oy, w: m.tile, h: m.tile });
@@ -346,14 +356,11 @@ export function redraw(
 
   if (!ds.started) {
     if (guiStyle === GUI_MASYU) {
-      // The black rectangle behind the whole grid.
+      // The rectangle behind the whole grid, whose right and bottom edges
+      // show as the frame: one line, like the one each square draws on its
+      // top and left.
       dr.drawRect(
-        {
-          x: m.border - m.borderWidth,
-          y: m.border - m.borderWidth,
-          w: w * m.tile + 2 * m.borderWidth + 1,
-          h: h * m.tile + 2 * m.borderWidth + 1,
-        },
+        { x: m.border, y: m.border, w: w * m.tile + 1, h: h * m.tile + 1 },
         COL_GRID,
       );
     }

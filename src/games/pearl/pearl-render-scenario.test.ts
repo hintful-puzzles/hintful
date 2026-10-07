@@ -23,6 +23,7 @@ import {
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
+  COL_LINE,
   COL_MISTAKE,
   COL_WHITE,
 } from "./render.ts";
@@ -88,14 +89,14 @@ describe("Pearl render scenarios", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("a laid loop segment draws a thick black line rect", () => {
+  it("a laid loop segment draws a thick ink line rect", () => {
     const { recording } = renderScenario({
       game: pearlGame,
       id: ID,
       moves: [flipR(1, 1)],
     });
-    // draw_lines_specific lays the segment as filled rects in COL_BLACK.
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_BLACK)).toBe(
+    // The segment is filled rects in COL_LINE.
+    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_LINE)).toBe(
       true,
     );
   });

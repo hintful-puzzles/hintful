@@ -4,7 +4,7 @@
  * The board is a `w × w` Cayley table with a one-tile legend row/column showing
  * the element names, drawn in the current display `sequence` (which the player
  * can drag to reorder). Each cell shows its element (or pencil marks), with the
- * `x == y` diagonal shaded, subgroup dividers as thick edges, and a red outline
+ * `x == y` diagonal stroked, subgroup dividers as ink edges, and a red outline
  * on any cell that contradicts the unique solution (Check & Save). The renderer
  * diffs every cell against a per-display-cell cache (composed tile word +
  * pencil bitmap + error word + mistake bit).
@@ -12,7 +12,9 @@
 
 import { valueBit } from "../../engine/candidate-bits.ts";
 import {
+  cellSurface,
   ERROR,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -20,8 +22,8 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { groupDiagonal } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -72,6 +74,8 @@ export const COL_USER = 2;
 export const COL_HIGHLIGHT = 3;
 export const COL_ERROR = 4;
 export const COL_PENCIL = 5;
+/** The stroke through the cells where an element meets itself: a mark, since a
+ * shade of the surface would be a step of gray beside a given's lifted cell. */
 export const COL_DIAGONAL = 6;
 /** The Check & Save mistake outline. */
 export const COL_MISTAKE = 7;
@@ -83,6 +87,11 @@ export const COL_HINT = 8;
 export const COL_HINT_CELL = 9;
 /** The yellow body of the pencil-mode indicator glyph. */
 export const COL_PENCIL_BODY = 10;
+export const COL_CELL = 11; // the surface of a cell the player fills
+export const COL_GIVEN = 12; // the lifted surface under a given element
+/** The line between two cells, and the frame. A subgroup divider is the
+ * player's own mark and stays `COL_GRID`. */
+export const COL_LINE = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -93,7 +102,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
-  out[COL_DIAGONAL] = groupDiagonal(bg);
+  out[COL_DIAGONAL] = surfaceGrid(bg);
   out[COL_MISTAKE] = ERROR;
   out[COL_HINT] = HINT_ACTION;
   // Both hint marks are outlines on the cell's border, so both take a strong
@@ -101,6 +110,9 @@ export function colors(defaultBackground: Color): Color[] {
   // ordinal; its doc comment says why the index and what it indexes are one role.
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
+  out[COL_LINE] = surfaceGrid(bg);
   return out;
 }
 
@@ -237,7 +249,7 @@ const PENCIL_BOX = (w: number, ts: number) =>
  * line, one pixel of gutter and two of the cell's own edge.
  *
  * Group's cells are a `TILESIZE` pitch of `TILESIZE − 1` squares, so the grid the
- * player sees is a single pixel of the `COL_GRID` backing rectangle showing
+ * player sees is a single pixel of the `COL_LINE` backing rectangle showing
  * between them. That one pixel is real gutter and is what `HintMarks` paints back
  * when a mark moves; the rest of the band lies inside the cell, where the cell's
  * own repaint undoes it.
@@ -289,6 +301,9 @@ function drawTile(
   let cw = ts - 1;
   let ch = ts - 1;
 
+  // A legend letter sits on the board, outside the grid; a given is lifted.
+  const surface =
+    tile & DF_LEGEND ? COL_BACKGROUND : tile & DF_IMMUTABLE ? COL_GIVEN : COL_CELL;
   if (tile & DF_LEGEND) {
     cx += Math.trunc(ts / 10);
     cy += Math.trunc(ts / 10);
@@ -299,14 +314,17 @@ function drawTile(
 
   dr.clip({ x: cx, y: cy, w: cw, h: ch });
 
-  // Background: highlight > diagonal shade > plain, then the hint's line hatch.
+  // Background: the highlight or the cell's surface, the leading diagonal's
+  // stroke from corner to corner under the content, then the hint's line hatch.
   drawCellBackground(
     dr,
     { x: cx, y: cy, w: cw, h: ch },
     ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
     COL_HIGHLIGHT,
-    x === y ? COL_DIAGONAL : COL_BACKGROUND,
+    surface,
   );
+  if (x === y)
+    dr.drawLine({ x: cx, y: cy }, { x: cx + cw - 1, y: cy + ch - 1 }, COL_DIAGONAL, 1);
   if (hatched) dr.drawHatch({ x: cx, y: cy, w: cw, h: ch }, COL_HINT, hatchPeriod(ts));
 
   // Dividers.
@@ -440,16 +458,11 @@ export function redraw(
   const ts = ds.tileSize;
 
   if (!ds.started) {
-    // The grid rectangle (COL_GRID) the cells sit on top of.
-    const ge = gridextra(ts);
+    // The rectangle the cells sit on top of: one pixel of it shows between two
+    // cells and round the grid, so the frame is no heavier than a grid line.
     dr.drawRect(
-      {
-        x: coord(0, ts) - ge,
-        y: coord(0, ts) - ge,
-        w: w * ts + 1 + ge * 2,
-        h: w * ts + 1 + ge * 2,
-      },
-      COL_GRID,
+      { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: w * ts + 1 },
+      COL_LINE,
     );
     ds.marks.reset(); // the backing rect just erased every gutter
     ds.started = true;
@@ -500,7 +513,7 @@ export function redraw(
     targetColor: COL_HINT,
     evidenceColor: COL_HINT_CELL,
   };
-  ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
+  ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_LINE, (x, y) => {
     if (x >= 0 && x < w && y >= 0 && y < w) ds.tiles[y * w + x] = -1;
   });
 
@@ -538,11 +551,12 @@ export function redraw(
       }
       tile |= highlight << DF_HIGHLIGHT_SHIFT;
 
-      if (y <= 0 || state.dividers[ds.sequence[y - 1]] === sy) tile |= DF_DIVIDER_TOP;
-      if (y + 1 >= w || state.dividers[sy] === ds.sequence[y + 1])
+      // Only a divider the player placed: the grid's outer edge is the frame.
+      if (y > 0 && state.dividers[ds.sequence[y - 1]] === sy) tile |= DF_DIVIDER_TOP;
+      if (y + 1 < w && state.dividers[sy] === ds.sequence[y + 1])
         tile |= DF_DIVIDER_BOT;
-      if (x <= 0 || state.dividers[ds.sequence[x - 1]] === sx) tile |= DF_DIVIDER_LEFT;
-      if (x + 1 >= w || state.dividers[sx] === ds.sequence[x + 1])
+      if (x > 0 && state.dividers[ds.sequence[x - 1]] === sx) tile |= DF_DIVIDER_LEFT;
+      if (x + 1 < w && state.dividers[sx] === ds.sequence[x + 1])
         tile |= DF_DIVIDER_RIGHT;
 
       const gi = sy * w + sx;

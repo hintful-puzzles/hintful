@@ -31,7 +31,6 @@ import {
   joinedBy,
   newDrawState,
   PREFERRED_TILE_SIZE,
-  paletteScheme,
   redraw,
   VICTORY_FLASH_FRAME,
 } from "./render.ts";
@@ -288,7 +287,6 @@ export const floodGame: Game<
   statusbarText,
 
   colors,
-  paletteScheme,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,

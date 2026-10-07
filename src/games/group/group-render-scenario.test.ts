@@ -63,7 +63,7 @@ const pinned = describeHintKindPins({
 });
 
 describe("group render scenarios", () => {
-  it("opener frame draws the legend, the shaded diagonal, and digits", () => {
+  it("opener frame draws the legend, the stroked diagonal, and digits", () => {
     const { recording } = renderScenario({ game: groupGame, id: ID });
     const ops = recording.ops;
 
@@ -71,8 +71,8 @@ describe("group render scenarios", () => {
     const textOps = ops.filter((o) => o.op === "text");
     expect(textOps.length).toBeGreaterThan(0);
 
-    // The w cells on the main display diagonal are shaded COL_DIAGONAL.
-    const diagonal = rects(ops).filter((r) => r.color === COL_DIAGONAL);
+    // The w cells on the main display diagonal are stroked COL_DIAGONAL.
+    const diagonal = ops.filter((o) => o.op === "line" && o.color === COL_DIAGONAL);
     expect(diagonal.length).toBe(6);
 
     expect(recording.ops).toMatchSnapshot();

@@ -16,14 +16,17 @@
  */
 
 import {
+  cellSurface,
   clueDoneColor,
   ERROR,
   FLASH,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
   INK,
   PENCIL_BODY,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import {
   undeadGhost,
@@ -83,10 +86,10 @@ export const FLASH_TIME = 0.7;
 const f = Math.floor;
 const idiv = (a: number, b: number): number => Math.trunc(a / b);
 
-// --- palette (index-for-index with the upstream COL_* enum) ----------------
+// --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+export const COL_BACKGROUND = 0; // the board around the grid
+export const COL_GRID = 1; // the line between two cells, and the frame
 export const COL_TEXT = 2;
 export const COL_ERROR = 3;
 export const COL_HIGHLIGHT = 4;
@@ -95,17 +98,21 @@ export const COL_GHOST = 6;
 export const COL_ZOMBIE = 7;
 export const COL_VAMPIRE = 8;
 export const COL_DONE = 9;
-// Fork additions, appended past the upstream enum.
 export const COL_PENCIL_BODY = 10;
 // The explained-hint legend (docs/games/hints.md § "The element-type color legend").
 export const COL_HINT = 11; // the cell(s)/candidate(s) the deduction acts on
 export const COL_HINT_CELL = 12; // the driving sightline's bounce path (evidence)
+export const COL_CELL = 13; // the surface of a cell the player fills
+/** The lifted surface of what the puzzle fixed: a mirror, or a given monster. */
+export const COL_GIVEN = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = bg;
-  out[COL_GRID] = INK;
+  out[COL_GRID] = surfaceGrid(bg);
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
   out[COL_HIGHLIGHT] = highlightWash(bg);
@@ -696,7 +703,7 @@ function rectOutline(
 const PENCIL_STYLE: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
   body: COL_PENCIL_BODY,
-  ink: COL_GRID,
+  ink: COL_TEXT,
 };
 
 /** The margin `computeSize` grows for it, at the canvas's top-right. */
@@ -726,18 +733,9 @@ export function redraw(
   const hflash = Math.trunc((flashTime * 5) / FLASH_TIME) % 2 !== 0;
 
   if (!ds.started) {
-    dr.drawRect(
-      { x: b + ts - 1, y: b + 2 * ts - 1, w: w * ts + 3, h: h * ts + 3 },
-      COL_GRID,
-    );
-    for (let i = 0; i < w; i++) {
-      for (let j = 0; j < h; j++) {
-        dr.drawRect(
-          { x: b + ts * (i + 1) + 1, y: b + ts * (j + 2) + 1, w: ts - 1, h: ts - 1 },
-          COL_BACKGROUND,
-        );
-      }
-    }
+    // The backing the cells leave showing as the grid: one pixel between two
+    // cells, and one round the outside, so the frame is a grid line.
+    dr.drawRect({ x: b + ts, y: b + 2 * ts, w: w * ts + 1, h: h * ts + 1 }, COL_GRID);
     ds.marks.reset(); // the backing rect just erased every grid line
   }
 
@@ -868,12 +866,15 @@ export function redraw(
         // the cell paints its ordinary background and a marked cell keeps
         // showing the candidates the hint is reasoning about.
         const cell = cellRect(ds, x, y);
+        // A mirror and a given monster are the puzzle's, told by the cell
+        // under them.
+        const given = xi < 0 || common.fixed[xi] !== 0;
         drawCellBackground(
           dr,
           cell,
           cellHighlight(ui, x, y),
           COL_HIGHLIGHT,
-          COL_BACKGROUND,
+          given ? COL_GIVEN : COL_CELL,
         );
         dr.drawUpdate(cell);
         if (xi < 0) {

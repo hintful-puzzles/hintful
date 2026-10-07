@@ -6,8 +6,9 @@
  * list of every boat to be found, drawn as segments and struck through once the
  * player has completed one of that size.
  *
- * Each cell paints its own background (water blue for anything decided, the
- * host background for an undecided square), a grid outline, and the boat
+ * Each cell paints its own background (water blue for anything the player
+ * decided and for given water, the lifted surface under a given segment, the
+ * plain cell surface for an undecided square), a thin grid outline, and the boat
  * segment as a circle, a rectangle, or both — the six segment shapes are all
  * the same two primitives clipped differently, so there is one `drawSegment`
  * for the board and the fleet list alike.
@@ -27,20 +28,20 @@
  * § "The tile cache and the diff key"); the Check & Save overlay rides in an
  * `OverlaySidecar`, so it repaints a cell whose contents are otherwise
  * unchanged (the frame after the move that drew it).
- *
- * Palette indices are **index-for-index with the upstream `COL_*` enum**, so a
- * reader can check this table against upstream's slot by slot.
  */
 
 import { BLUE_WASH, GRAY_BOLD, GREEN } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   clueDoneColor,
   ERROR,
   ERROR_TEXT,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
   PAPER,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -87,10 +88,10 @@ export const PREFERRED_TILE_SIZE = 32;
 const FLASH_FRAME = 0.12;
 export const FLASH_TIME = FLASH_FRAME * 5;
 
-// --- palette (index-for-index with the upstream COL_* enum) ----------------
+// --- palette ---------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+export const COL_GRID = 1; // the line between two squares, and the frame
 export const COL_CURSOR_A = 2;
 export const COL_CURSOR_B = 3;
 export const COL_WATER = 4;
@@ -104,15 +105,20 @@ export const COL_COUNT = 11;
 export const COL_COUNT_ERROR = 12;
 export const COL_COLLISION_ERROR = 13;
 export const COL_COLLISION_TEXT = 14;
-/** The hint colors are appended **past** the upstream enum, keeping the indices
- * above index-for-index with it. */
 export const COL_HINT = 15;
 export const COL_HINT_CELL = 16;
+export const COL_CELL = 17; // the surface of an undecided square
+export const COL_GIVEN = 18; // the lifted surface under a segment the puzzle gave
+/** The waves on a given water square and the edge of a collision diamond. */
+export const COL_INK = 19;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = INK;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_GIVEN] = givenSurface(defaultBackground);
+  out[COL_INK] = INK;
   // Not `CURSOR`: green is the fleet panel's unplaced ships. The ring sits
   // inside the cell on its fill, and a ship's fill *is* ink, so it swaps to
   // paper there.
@@ -344,7 +350,7 @@ function drawCollision(dr: GameDrawing, ts: number, x: number, y: number): void 
       { x, y: y + ext },
     ],
     COL_COLLISION_ERROR,
-    COL_GRID,
+    COL_INK,
   );
 
   const xext = (ts / 16) | 0;
@@ -622,10 +628,11 @@ export function redraw(
       ds.tiles[i] = key;
 
       dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
-      dr.drawRect(
-        { x: tx, y: ty, w: ts, h: ts },
-        ship !== EMPTY ? COL_WATER : COL_BACKGROUND,
-      );
+      // A segment the puzzle gave is told by the lifted cell under it; given
+      // water keeps its blue and is told by its waves.
+      const surface =
+        ship === EMPTY ? COL_CELL : isShip(state.gridClues[i]) ? COL_GIVEN : COL_WATER;
+      dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, surface);
       if (hintBit & HINT_LINE)
         dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
       drawRectOutline(dr, tx, ty, ts + 1, ts + 1, COL_GRID);
@@ -641,7 +648,7 @@ export function redraw(
       } else if (!flash && state.gridClues[i] === WATER) {
         // A *given* water square is marked with waves; player water is the
         // plain blue fill.
-        drawWaves(dr, tx, ty, ts, COL_GRID);
+        drawWaves(dr, tx, ty, ts, COL_INK);
       }
 
       // The hint marks *where and which action* in the game's own vocabulary,

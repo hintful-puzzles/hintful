@@ -4,13 +4,13 @@
  *
  * ## The grid lines are negative space, not strokes
  *
- * Nothing here draws a grid line. The first frame floods the whole canvas with
- * `COL_BORDER`, and every square then paints its own background rect *inset*
- * by `GRIDEXTRA` on each side that borders a different outlined region (and by
+ * Nothing here draws a region outline. The first frame floods the board with
+ * `COL_BORDER`, and every square then paints its own surface *inset* by
+ * `GRIDEXTRA` on each side that borders a different outlined region (and by
  * one pixel everywhere else, since `cw = tileSize - 1`). What is left showing
- * through is the grid: a hairline between squares of one region, a double-width
- * line along a region boundary. So the region outlines cost no drawing code at
- * all — they fall out of four comparisons of the region forest.
+ * through along a region boundary is the outline, which is content and stays
+ * strong. The hairline between two squares of one region is not: each square
+ * paints it in `COL_GRID` on its own right and bottom edge.
  *
  * ## Borders
  *
@@ -25,23 +25,25 @@
  *
  * ## Colors
  *
- * The `COL_*` indices are upstream's; the colors are the shared palette's
- * meanings (docs/games/rendering.md § "The palette: three layers, meaning
+ * The colors are the shared palette's meanings (docs/games/rendering.md § "The palette: three layers, meaning
  * first").
  */
 
 import { valueBit } from "../../engine/candidate-bits.ts";
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, BLUE_BOLD } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   ERROR,
   ERROR_WASH,
+  FLASH,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
   INK,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { romeGoalBackground } from "../../engine/color/palette-games.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
@@ -121,11 +123,14 @@ export const FLASH_TIME = 0.7;
 /** Arrow head half-width, as a fraction of the arrow's half-length. */
 const SIDE_SIZE = 0.6;
 
-// --- palette (upstream COL_* enum, index for index) -------------------------
+// --- palette ----------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_HIGHLIGHT = 1;
-export const COL_LOWLIGHT = 2;
+export const COL_BACKGROUND = 0; // the board around the grid
+/** The surface of a square the player fills. */
+export const COL_CELL = 1;
+/** The lifted surface under an arrow the puzzle fixed, and under the goal. */
+export const COL_GIVEN = 2;
+/** A region's outline, and the frame, which is the outer regions' outline. */
 export const COL_BORDER = 3;
 export const COL_ARROW_FIXED = 4;
 export const COL_ARROW_GUESS = 5;
@@ -141,13 +146,18 @@ export const COL_HINT = 12;
 export const COL_HINT_CELL = 13;
 /** The selected square's wash, and its notes triangle. */
 export const COL_CURSOR = 14;
+/** The thin line between two squares of one region. */
+export const COL_GRID = 15;
+/** The completion wave's bright beat; its dim one is the selection's wash. */
+export const COL_FLASH = 16;
 
-export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
+export function colors(background: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_CELL] = cellSurface(background);
+  out[COL_GIVEN] = givenSurface(background);
+  out[COL_GRID] = surfaceGrid(background);
+  out[COL_FLASH] = FLASH;
   out[COL_BORDER] = INK;
   out[COL_ARROW_FIXED] = INK;
   out[COL_ARROW_GUESS] = playerEntryColor(background);
@@ -410,8 +420,10 @@ export function redraw(
       let cy = ox + y * ts;
       let cw = ts - 1;
       let ch = ts - 1;
-      dr.drawUpdate({ x: cx, y: cy, w: cw, h: ch });
+      dr.drawUpdate({ x: cx, y: cy, w: ts, h: ts });
 
+      // A given is told by the square under it.
+      const surface = grid[i1] & FM_FIXED ? COL_GIVEN : COL_CELL;
       let color: number;
       if (flash === -1) {
         color =
@@ -421,14 +433,14 @@ export function redraw(
               ? COL_GOALBG
               : grid[i1] & FE_BOUNDS
                 ? COL_ERRORBG
-                : COL_BACKGROUND;
+                : surface;
       } else {
         color =
           (x + y) % 3 === flash
-            ? COL_BACKGROUND
+            ? surface
             : (x + y + 1) % 3 === flash
-              ? COL_LOWLIGHT
-              : COL_HIGHLIGHT;
+              ? COL_CURSOR
+              : COL_FLASH;
       }
 
       // Inset each side that meets a different region, leaving the outline.
@@ -443,6 +455,22 @@ export function redraw(
       }
       if (y === h - 1 || !regions.equivalent(i1, i1 + w)) ch -= GRIDEXTRA * 2;
 
+      // The line on the square's right and bottom edge is the outline where
+      // the neighbor is another region, which the inset leaves in the flood's
+      // color, and the thin grid line where it is the same one.
+      const sameRight = x + 1 < w && regions.equivalent(i1, i1 + 1);
+      const sameBelow = y + 1 < h && regions.equivalent(i1, i1 + w);
+      if (sameRight) {
+        // Through the crossing below it, unless an outline turns there.
+        const through = sameBelow && regions.equivalent(i1, i1 + w + 1);
+        dr.drawRect(
+          { x: ox + x * ts + ts - 1, y: cy, w: 1, h: through ? ch + 1 : ch },
+          COL_GRID,
+        );
+      }
+      if (sameBelow)
+        dr.drawRect({ x: cx, y: ox + y * ts + ts - 1, w: cw, h: 1 }, COL_GRID);
+
       drawCellBackground(
         dr,
         { x: cx, y: cy, w: cw, h: ch },
@@ -451,6 +479,27 @@ export function redraw(
         color,
       );
       ds.hint.drawHatch(dr, i1, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
+
+      // A square whose *diagonal* neighbor is in another region owes that
+      // corner the piece of outline where the two outlines round it meet. An
+      // outline takes `near` of a tile's top and left and `far` of its right
+      // and bottom, so the piece is as large as the sides it sits on. Without
+      // it the turn is joined only by the grid line, which is too quiet to
+      // close it.
+      const tx = ox + x * ts;
+      const ty = ox + y * ts;
+      const near = GRIDEXTRA;
+      const far = GRIDEXTRA * 3;
+      const corner = (px: number, py: number, pw: number, ph: number) =>
+        dr.drawRect({ x: px, y: py, w: pw, h: ph }, COL_BORDER);
+      if (x > 0 && y > 0 && !regions.equivalent(i1, i1 - w - 1))
+        corner(tx, ty, near, near);
+      if (x + 1 < w && y > 0 && !regions.equivalent(i1, i1 - w + 1))
+        corner(tx + ts - far, ty, far, near);
+      if (x > 0 && y + 1 < h && !regions.equivalent(i1, i1 + w - 1))
+        corner(tx, ty + ts - far, near, far);
+      if (x + 1 < w && y + 1 < h && !regions.equivalent(i1, i1 + w + 1))
+        corner(tx + ts - far, ty + ts - far, far, far);
 
       const midX = ox + x * ts + Math.floor(ts / 2);
       const midY = ox + y * ts + Math.floor(ts / 2);

@@ -2,16 +2,22 @@
  * Signpost renderer — imperative per-tile draw with a packed-word cache,
  * a blitter-backed drag sprite, and the spin win-flash (upstream
  * `game_redraw` / `tile_redraw` / `game_colours`).
+ *
+ * A square with no chain is the quiet cell surface, a square whose number the
+ * puzzle fixed is the lifted surface of a given, and every other square takes
+ * its chain's color, with the thin surface grid between squares.
  */
 
 import { BLUE_BOLD, PURPLE } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   ERROR,
-  GRID_MID,
+  givenSurface,
   HELD,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import {
   SIGNPOST_NUMBER_SET_MID,
@@ -42,11 +48,13 @@ import {
   whichDir,
 } from "./state.ts";
 
-// --- color indices (index-for-index with the C enum) ----------------
+// --- color indices ----------------------------------------------------
 
 const COL_BACKGROUND = 0;
-const COL_HIGHLIGHT = 1;
-const COL_LOWLIGHT = 2;
+/** The surface of a square that is in no chain yet. */
+const COL_CELL = 1;
+/** The lifted surface of a square whose number the puzzle fixed. */
+const COL_GIVEN = 2;
 const COL_GRID = 3;
 const COL_CURSOR = 4;
 const COL_ERROR = 5;
@@ -99,30 +107,27 @@ const F_HINT_OUTLINE = 0x400;
  * is a token (the arithmetic that does not involve the host background lives
  * in `palette-games.ts`); what is left here is which slot each one occupies.
  */
-export function buildPalette(
-  background: Color,
-  highlight: Color,
-  lowlight: Color,
-): Color[] {
+export function buildPalette(background: Color): Color[] {
   const ret: Color[] = new Array(COL_HINT_CELL + 1);
 
   ret[COL_BACKGROUND] = background;
-  ret[COL_HIGHLIGHT] = highlight;
-  ret[COL_LOWLIGHT] = lowlight;
+  ret[COL_CELL] = cellSurface(background);
+  ret[COL_GIVEN] = givenSurface(background);
 
   ret[COL_NUMBER] = INK;
   ret[COL_ARROW] = INK;
   // Purple, because Signpost has spent the usual two: green is the arrow you
   // are dragging from (and a region wash), blue the fixed numbers.
   ret[COL_CURSOR] = PURPLE;
-  ret[COL_GRID] = GRID_MID;
+  ret[COL_GRID] = surfaceGrid(background);
   // **This square's number is fixed** — a clue you were given, or one the
   // chain has forced, as opposed to one still floating.
   ret[COL_NUMBER_SET] = BLUE_BOLD;
   ret[COL_NUMBER_SET_MID] = SIGNPOST_NUMBER_SET_MID;
   ret[COL_ERROR] = ERROR;
   ret[COL_DRAG_ORIGIN] = HELD;
-  ret[COL_ARROW_BG_DIM] = signpostArrowDim(background);
+  // A tenth off the surface the chainless square is painted in.
+  ret[COL_ARROW_BG_DIM] = signpostArrowDim(cellSurface(background));
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
 
@@ -197,13 +202,13 @@ function num2col(n: number, num: number): number {
 // --- tile drawing -----------------------------------------------------
 
 function dim(bg: number): number {
-  return bg === COL_BACKGROUND ? COL_ARROW_BG_DIM : bg + COL_D0 - COL_B0;
+  return bg === COL_CELL ? COL_ARROW_BG_DIM : bg + COL_D0 - COL_B0;
 }
-function mid(fg: number, bg: number): number {
-  return fg === COL_NUMBER_SET ? COL_NUMBER_SET_MID : bg + COL_M0 - COL_B0;
+function mid(bg: number): number {
+  return bg + COL_M0 - COL_B0;
 }
 function dimbg(bg: number): number {
-  return bg === COL_BACKGROUND ? COL_BACKGROUND : bg + COL_X0 - COL_B0;
+  return bg + COL_X0 - COL_B0;
 }
 
 /** A cell's number as displayed: the real number, or its color set's
@@ -238,32 +243,49 @@ function tileRedraw(
   const cb = Math.floor(ts / 16);
   const empty = num === 0 && !(f & F_ARROW_POINT) && !(f & F_ARROW_INPOINT);
 
-  const setcol = empty ? COL_BACKGROUND : num2col(n, num);
+  const setcol = empty ? COL_CELL : num2col(n, num);
 
   let arrowcol: number;
   if (f & F_HINT_ARROW) arrowcol = COL_HINT;
   else if (f & F_DRAG_SRC) arrowcol = COL_DRAG_ORIGIN;
   else if (f & F_DIM) arrowcol = dim(setcol);
-  else if (f & F_ARROW_POINT) arrowcol = mid(COL_ARROW, setcol);
+  else if (f & F_ARROW_POINT) arrowcol = mid(setcol);
   else arrowcol = COL_ARROW;
 
   let textcol: number;
   if (f & F_ERROR && !(f & F_IMMUTABLE)) {
     textcol = COL_ERROR;
   } else {
-    textcol = f & F_IMMUTABLE ? COL_NUMBER_SET : COL_NUMBER;
-    // upstream `dim()` ignores the fg and keys only off the background.
-    if (f & F_DIM) {
+    // A given's number is read against its lifted surface, which the faint
+    // strengths made for a region's fill do not clear in the dark scheme: it
+    // steps down once while a drag dims the board, and never when linked.
+    if (f & F_IMMUTABLE) {
+      textcol = f & F_DIM ? COL_NUMBER_SET_MID : COL_NUMBER_SET;
+    } else if (f & F_DIM) {
       textcol = dim(setcol);
     } else if ((f & F_ARROW_POINT || num === n) && (f & F_ARROW_INPOINT || num === 1)) {
-      textcol = mid(textcol, setcol);
+      textcol = mid(setcol);
+    } else {
+      textcol = COL_NUMBER;
     }
   }
 
   const sarrowcol = f & F_DIM ? dim(setcol) : COL_ARROW;
 
-  // Clear tile background.
-  dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, f & F_DIM ? dimbg(setcol) : setcol);
+  // The square's surface. A given keeps its lift while a drag dims the rest,
+  // since who put the number there does not change with the player's focus.
+  dr.drawRect(
+    { x: tx, y: ty, w: ts, h: ts },
+    empty || !(f & (F_IMMUTABLE | F_DIM))
+      ? setcol
+      : f & F_IMMUTABLE
+        ? COL_GIVEN
+        : dimbg(setcol),
+  );
+  // The grid line this square shares with its upper and left neighbors; the
+  // frame closes the first row and column.
+  if (ty > BORDER) dr.drawRect({ x: tx, y: ty, w: ts, h: 1 }, COL_GRID);
+  if (tx > BORDER) dr.drawRect({ x: tx, y: ty, w: 1, h: ts }, COL_GRID);
   // The line a hint's sentence names, under everything the square shows.
   if (f & F_HINT_LINE)
     dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));

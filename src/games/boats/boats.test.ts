@@ -53,6 +53,7 @@ import {
   type BoatsDrawState,
   COL_COLLISION_ERROR,
   COL_COLLISION_TEXT,
+  COL_GIVEN,
   COL_SHIP_ERROR,
   COL_SHIP_GUESS,
   COL_WATER,
@@ -754,9 +755,12 @@ describe("boats rendering", () => {
     const { id } = preset0();
     const result = renderScenario({ game: boatsGame, id });
 
-    // A given water/ship clue paints the water background.
+    // A given clue is told by its surface: water blue, or the lifted cell
+    // under a segment.
     expect(
-      result.recording.ops.some((o) => o.op === "rect" && o.color === COL_WATER),
+      result.recording.ops.some(
+        (o) => o.op === "rect" && (o.color === COL_WATER || o.color === COL_GIVEN),
+      ),
     ).toBe(true);
     // The row/column numbers are drawn as text.
     expect(result.recording.ops.some((o) => o.op === "text")).toBe(true);
@@ -804,7 +808,7 @@ describe("boats rendering", () => {
       0,
     );
 
-    // The diamond is a polygon filled COL_COLLISION_ERROR outlined COL_GRID,
+    // The diamond is a polygon filled COL_COLLISION_ERROR outlined COL_INK,
     // with the exclamation mark in COL_COLLISION_TEXT on top.
     expect(
       rec.ops.some((o) => o.op === "polygon" && o.fill === COL_COLLISION_ERROR),

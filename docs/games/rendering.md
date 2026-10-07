@@ -790,7 +790,8 @@ decision:
   `FLASH`, `UNDECIDED`, `RULED_OUT`, `GRID_MID`, `GRID_DARK`, `PENCIL_BODY`,
   `INK`, `PAPER`, plus the background-derived functions (`pencilColor`, `playerEntryColor`,
   `highlightWash`, `lineMaybeColor`, `lineNoColor`, `clueDoneColor`,
-  `wallColor`, `correctRegionColor`). Each is a *reference* to a named
+  `correctRegionColor`, and the surfaces `cellSurface`, `surfaceGrid` and
+  `givenSurface`), and `WALL_FILL` and `SHADED`. Each is a *reference* to a named
   color, so restyling red restyles every meaning built on red.
 
   Three of these are worth naming by the mistake they replace. **The
@@ -882,6 +883,19 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
   and unlit are both states the player makes, and it takes the pair.
 - **A given is told by the cell under it** (`givenSurface`, lifted toward
   white), not by a mark on the piece: a given piece is the same piece.
+- **The two surfaces mean one thing everywhere.** The plain cell is "still
+  yours to work"; the lifted one is "settled": a given (Solo, Range), a tile
+  the player locked (Net), a hub or island that has what it needs (Spokes,
+  Bridges), a closed region (Galaxies), a square still covered (Mines). A new
+  game that needs a second tone for a cell takes the lifted surface for the
+  settled side and says which reading it is at the assignment. A selected cell
+  (`highlightWash`) and a finished region (`correctRegionColor`) sink below
+  the cell in both schemes, so neither is taken for a given.
+- **The dark board stays where it was** (the proposal's question 7). Cells
+  sink below it and a settled cell rises to about its tone, which opened the
+  contrast the question was after without moving every game's board.
+- **A wall is a flat strong fill** (`WALL_FILL`), not a bevel: Inertia,
+  Sokoban.
 - **A glyph that sits on a piece is a badge**: its own disc, with the glyph in
   the fill's text color (Unruly's count `!` is `ERROR` under `ERROR_TEXT`). Ink
   of one hue on a piece of another differs in hue and not in lightness.
@@ -911,11 +925,10 @@ color that must stay legible against the board has to be a *function of the
 background*, and an absolute color should be a *named* one (a named color
 authors both schemes; a derivation handed pure white authors neither).
 
-Two arithmetic traps, both of which cost a diff: `scale(c, 2/3)` is **not**
-`(c * 2) / 3`, and `scale(c, 1/1.5)` is **not** `c / 1.5` — neither ratio is
-representable, so pre-computing it rounds once more. Use
-[`fraction(c, 2, 3)` and `divide(c, 1.5)`](../../src/engine/color/color-token.ts),
-which keep upstream's *operation*.
+An arithmetic trap that cost a diff: `scale(c, 1/1.5)` is **not** `c / 1.5`.
+The ratio is not representable, so pre-computing it rounds once more. Use
+[`divide(c, 1.5)`](../../src/engine/color/color-token.ts), which keeps
+upstream's *operation*.
 
 ### Black pieces stay black
 

@@ -36,8 +36,11 @@ import { maxGeneratedRegionSize, maxRegionSize, newSeismicDesc } from "./generat
 import { seismicGame } from "./index.ts";
 import {
   COL_BORDER,
-  COL_HIGHLIGHT,
-  COL_LOWLIGHT,
+  COL_CELL,
+  COL_CURSOR,
+  COL_FLASH,
+  COL_GIVEN,
+  COL_GRID,
   COL_NUM_ERROR,
   COL_NUM_FIXED,
   COL_NUM_GUESS,
@@ -972,12 +975,23 @@ describe("seismic midend lifecycle", () => {
 // --- rendering -------------------------------------------------------------
 
 describe("seismic rendering", () => {
-  it("draws the opening frame: black backing, the givens, and no cursor", () => {
+  it("draws the opening frame: wall backing, lifted givens, and no cursor", () => {
     const r = renderScenario({ game: seismicGame, id: idOf(SMALL) });
     const ops = r.recording.ops;
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_BORDER)).toBe(true);
+    const rects = (color: number) =>
+      ops.filter((o) => o.op === "rect" && o.color === color).length;
+    const state = stateOf(SMALL);
+    const givens = state.grid.filter((n) => n !== 0).length;
+    // One backing rectangle, plus the corner pixels of the walls.
+    expect(rects(COL_BORDER)).toBeGreaterThan(0);
+    expect(rects(COL_GRID)).toBeGreaterThan(0);
+    // A given is told by the cell under it: every given is lifted, and
+    // nothing else is.
+    expect(givens).toBeGreaterThan(0);
+    expect(rects(COL_GIVEN)).toBe(givens);
+    expect(rects(COL_CELL)).toBe(state.w * state.h - givens);
     expect(ops.some((o) => o.op === "text" && o.color === COL_NUM_FIXED)).toBe(true);
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(false);
+    expect(rects(COL_CURSOR)).toBe(0);
     expect(ops).toMatchSnapshot();
   });
 
@@ -1154,7 +1168,7 @@ describe("seismic rendering", () => {
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, state, 1, newUi(state), 0, 0.05);
     const colors = new Set(dr.ops.filter((o) => o.op === "rect").map((o) => o.color));
-    expect(colors.has(COL_HIGHLIGHT)).toBe(true);
-    expect(colors.has(COL_LOWLIGHT)).toBe(true);
+    expect(colors.has(COL_FLASH)).toBe(true);
+    expect(colors.has(COL_CURSOR)).toBe(true);
   });
 });

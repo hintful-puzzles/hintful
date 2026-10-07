@@ -27,6 +27,7 @@ import {
   F_CLUE_ERROR,
   F_CORRECT,
   F_FLASH,
+  F_GIVEN,
   F_HINT_CELL,
   F_HINT_REGION,
   GAME_FLAG_SHIFT,
@@ -111,6 +112,7 @@ describe("the packed flags do not collide", () => {
     EDGE_HINT: EDGE_HINT(0xf),
     F_HINT_CELL,
     F_HINT_REGION,
+    F_GIVEN,
   };
 
   it("lists every flag the module exports", () => {

@@ -10,10 +10,11 @@
 import { BLUE, RED, TEAL } from "../../engine/color/colors.ts";
 import {
   CURSOR,
-  FLASH,
-  GRID_MID,
+  cellSurface,
+  givenSurface,
   HINT_ACTION,
   INK,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { netslideLowlight } from "../../engine/color/palette-games.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -57,10 +58,12 @@ export function border(tileSize: number): number {
   return Math.floor((3 * tileSize) / 4) + 1;
 }
 
-// --- palette (mirrors the netslide.c color enum index-for-index) ---------
-export const COL_BACKGROUND = 0;
+// --- palette ---------------------------------------------------------------
+export const COL_BACKGROUND = 0; // the board around the grid, where the arrows are
+/** A tile's face on the lit beats of the completion flash: the lifted
+ * surface, as Net lifts its tiles. */
 export const COL_FLASHING = 1;
-export const COL_BORDER = 2;
+export const COL_BORDER = 2; // the line between two tiles, and the frame
 export const COL_WIRE = 3;
 export const COL_ENDPOINT = 4;
 export const COL_POWERED = 5;
@@ -68,12 +71,12 @@ export const COL_BARRIER = 6;
 export const COL_LOWLIGHT = 7;
 export const COL_TEXT = 8;
 
-/** The hint's colors, appended *past* upstream's enum so the palette above stays
- * index-for-index with it. */
+/** The hint's marks, and the arrow that slides the hinted tile. */
 export const COL_HINT = 9;
-/** Likewise appended: the keyboard cursor's gutter arrow, which upstream drew
- * in the powered-wire color. */
+/** The keyboard cursor's gutter arrow, which upstream drew in the
+ * powered-wire color. */
 export const COL_CURSOR = 10;
+export const COL_CELL = 11; // a tile's face
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -82,8 +85,9 @@ export function colors(defaultBackground: Color): Color[] {
   // paint (upstream's `frontend_default_colour` versus `game_mkhighlight` is not
   // a distinction a port gets to keep).
   out[COL_BACKGROUND] = defaultBackground;
-  out[COL_FLASHING] = FLASH;
-  out[COL_BORDER] = GRID_MID;
+  out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_FLASHING] = givenSurface(defaultBackground);
+  out[COL_BORDER] = surfaceGrid(defaultBackground);
   out[COL_WIRE] = INK;
   out[COL_ENDPOINT] = BLUE;
   out[COL_POWERED] = TEAL;
@@ -211,11 +215,11 @@ function drawTile(
   const bx = b + ts * x + Math.trunc(xshift * ts);
   const by = b + ts * y + Math.trunc(yshift * ts);
 
-  // Blank the tile: a border-colored rect with a background-colored one inset
-  // by the tile border. The tile the hint is placing takes no fill — it is
+  // Blank the tile: a border-colored rect with the tile's face inset by the
+  // tile border. The tile the hint is placing takes no fill — it is
   // **double-ringed** at the end of this function instead, so the wires that say
   // *which piece* this is keep their own color rather than sitting on blue.
-  const background = tile & FLASHING ? COL_FLASHING : COL_BACKGROUND;
+  const background = tile & FLASHING ? COL_FLASHING : COL_CELL;
   dr.drawRect({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER }, COL_BORDER);
   const face = {
     x: bx + TILE_BORDER,

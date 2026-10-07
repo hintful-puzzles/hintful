@@ -15,8 +15,10 @@
 import { valueBit } from "../../engine/candidate-bits.ts";
 import type { CandidateHighlights } from "../../engine/candidate-hint.ts";
 import {
+  cellSurface,
   clueDoneColor,
   ERROR,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -24,6 +26,7 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -79,6 +82,11 @@ export const COL_HINT = 8; // the acted-on cell's ring (drawn once per frame in 
 /** The driving clue's line of sight, outlined (same pass), **and** a forcing
  * chain's ordinal — one index, because the number indexes the evidence. */
 export const COL_HINT_CELL = 9;
+export const COL_CELL = 10; // the surface of a play cell, and of a tower built on it
+export const COL_GIVEN = 11; // the lifted surface of a given tower
+/** The line between two play cells. A tower's own edges are content and stay
+ * `COL_GRID`. */
+export const COL_LINE = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -97,6 +105,9 @@ export function colors(defaultBackground: Color): Color[] {
   // against one cell's ring. `HINT_EVIDENCE` covers the chain ordinal too; see
   // its doc comment for why the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
+  out[COL_LINE] = surfaceGrid(bg);
   return out;
 }
 
@@ -238,10 +249,13 @@ function drawTile(
   // a tile draws only `struck`, the candidate heights this firing rules out.
   const highlight = ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight;
   // The faces take the top's fill, so a raised tower reads as one selected cell.
-  const bg = highlightFill(highlight, COL_HIGHLIGHT, COL_BACKGROUND);
+  const surface =
+    tile & DF_IMMUTABLE ? COL_GIVEN : tile & DF_PLAYAREA ? COL_CELL : COL_BACKGROUND;
+  const bg = highlightFill(highlight, COL_HIGHLIGHT, surface);
+  const tower = threeD && (tile & DF_PLAYAREA) !== 0 && digit !== 0;
 
   // 3D tower: left + bottom faces, then offset to the top face.
-  if (threeD && tile & DF_PLAYAREA && digit) {
+  if (tower) {
     const xoff = x3d(digit, w, ts);
     const yoff = y3d(digit, w, ts);
     // left face
@@ -275,13 +289,16 @@ function drawTile(
     { x: tx, y: ty, w: ts, h: ts },
     highlight,
     COL_HIGHLIGHT,
-    COL_BACKGROUND,
+    surface,
   );
   // On a raised tower's top face, so the line reads at the height the tower is.
   if (hatched) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 
-  // box outline (play area only)
-  if (tile & DF_PLAYAREA) {
+  // A tower's top face is outlined as the tower is. A flat cell draws the grid
+  // line on its left and bottom edges only (and the frame where it is on the
+  // top row or the right column): its other two edges are a neighbor's, and a
+  // quiet line drawn there would cross the base of a tower standing next door.
+  if (tower) {
     dr.drawPolygon(
       [
         { x: tx, y: ty - 1 },
@@ -292,6 +309,15 @@ function drawTile(
       -1,
       COL_GRID,
     );
+  } else if (tile & DF_PLAYAREA) {
+    const l = tx;
+    const r = tx + ts;
+    const t = ty - 1;
+    const b = ty + ts - 1;
+    dr.drawLine({ x: l, y: t }, { x: l, y: b }, COL_LINE, 1);
+    dr.drawLine({ x: l, y: b }, { x: r, y: b }, COL_LINE, 1);
+    if (y === 0) dr.drawLine({ x: l, y: t }, { x: r, y: t }, COL_LINE, 1);
+    if (x === w - 1) dr.drawLine({ x: r, y: t }, { x: r, y: b }, COL_LINE, 1);
   }
 
   if (digit) {

@@ -64,7 +64,9 @@ describe("dark-mode palette swaps", () => {
   it("finds the swap pairs it means to check", () => {
     // The "how many things did I look at?" guard. Without it a refactor that
     // stopped finding any pair would leave every test below vacuously green.
-    expect(PAIRS.length).toBeGreaterThanOrEqual(12);
+    // Only a game whose tiles the player moves keeps a bevel, so the pairs
+    // are few.
+    expect(PAIRS.length).toBeGreaterThanOrEqual(8);
     expect(new Set(PAIRS.map(([id]) => id)).size).toBeGreaterThanOrEqual(3);
   });
 

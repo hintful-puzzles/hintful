@@ -14,9 +14,9 @@
  * sidecars"); the four-border clue colors diff parallel per-clue arrays.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLUE, GREEN, RED } from "../../engine/color/colors.ts";
+import { BLUE_BOLD, GREEN, RED } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   clueDoneColor,
   ERROR,
   FLASH,
@@ -61,10 +61,12 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const FLASH_TIME = 0.7;
 
-// --- palette (mirrors the magnets.c color enum index-for-index) ----------
+// --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0;
 export const COL_HIGHLIGHT = 1;
-export const COL_LOWLIGHT = 2;
+/** The surface of a domino the player has not decided: the collection's cell
+ * surface, so a decided domino is told by its color and never by a gray. */
+export const COL_CELL = 2;
 export const COL_TEXT = 3;
 export const COL_ERROR = 4;
 export const COL_CURSOR = 5;
@@ -84,12 +86,12 @@ export const COL_HINT = 12;
 export const COL_HINT_CELL = 13;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, lowlight } = mkhighlight(defaultBackground);
+  const background = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
   // The slot's only use is the solved flash's tile fill; nothing bevels with it.
   out[COL_HIGHLIGHT] = FLASH;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_CELL] = cellSurface(background);
   out[COL_TEXT] = INK;
   out[COL_ERROR] = ERROR;
   // The cursor is a tile *fill* under the tile's own content, so it is the
@@ -100,7 +102,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_NEUTRAL] = GREEN;
   out[COL_NEGATIVE] = INK;
   out[COL_POSITIVE] = RED;
-  out[COL_NOT] = BLUE;
+  // Blue's bold step: the `?` is thin, and on the cell surface the base blue
+  // lost a quarter of its contrast under the hint's hatch.
+  out[COL_NOT] = BLUE_BOLD;
   out[COL_MISTAKE] = ERROR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -300,7 +304,7 @@ function drawTile(
   else if (which === POSITIVE) bg = COL_POSITIVE;
   else if (which === NEGATIVE) bg = COL_NEGATIVE;
   else if (flags & DS_SET) bg = COL_NEUTRAL;
-  else bg = COL_LOWLIGHT;
+  else bg = COL_CELL;
 
   let fg: number;
   if (which === EMPTY && !(flags & DS_SET)) {

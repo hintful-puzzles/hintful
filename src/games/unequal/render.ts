@@ -15,9 +15,11 @@
 import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
+  cellSurface,
   ERROR,
   FLASH,
   GRID_MID,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -25,6 +27,7 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -94,6 +97,11 @@ export const COL_FLASH = 11;
 /** The keyboard cursor: the cell's fill (or its pencil-mode corner triangle).
  * Upstream drew it in the bevel highlight. */
 export const COL_CURSOR = 12;
+export const COL_CELL = 13; // the surface of a box the player fills
+export const COL_GIVEN = 14; // the lifted surface of a box holding a given
+/** A box's own outline. The adjacency bars between boxes are clues and stay
+ * `COL_GRID`. */
+export const COL_LINE = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background: bg, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -119,6 +127,9 @@ export function colors(defaultBackground: Color): Color[] {
   // against one cell's ring. `HINT_EVIDENCE` covers the chain ordinal too; see
   // its doc comment for why the index and the thing it indexes are one role.
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
+  out[COL_LINE] = surfaceGrid(bg);
   return out;
 }
 
@@ -448,11 +459,11 @@ function drawCell(
     { x: ox, y: oy, w: ts, h: ts },
     cellHighlight(ui, x, y),
     COL_CURSOR,
-    hflash ? COL_FLASH : COL_BACKGROUND,
+    hflash ? COL_FLASH : flags & DF_IMMUTABLE ? COL_GIVEN : COL_CELL,
   );
   if (hatched) dr.drawHatch({ x: ox, y: oy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 
-  rectOutline(dr, ox, oy, ts, ts, COL_GRID);
+  rectOutline(dr, ox, oy, ts, ts, COL_LINE);
   dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });
 
   // Inter-cell clue signs.

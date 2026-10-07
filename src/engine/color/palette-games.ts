@@ -26,7 +26,7 @@
  */
 
 import type { Color } from "../types.ts";
-import { divide, fraction, mix, scale, token } from "./color-token.ts";
+import { divide, mix, scale, token } from "./color-token.ts";
 import { BLUE_BOLD, EIGHT_FILLS } from "./colors.ts";
 import { INK } from "./palette.ts";
 
@@ -108,11 +108,6 @@ export const guessBoard = (defaultBackground: Color): Color => {
     : [...defaultBackground];
 };
 
-/** **No peg here** — an empty slot, sunk two-thirds of the way down from the
- * board so a hint can point at it. */
-export const guessEmptySlot = (defaultBackground: Color): Color =>
-  fraction(guessBoard(defaultBackground), 2, 3);
-
 /**
  * **The answer row's well** — the dark tray the color blocks sit in, darker
  * than every one of the ten in both schemes, so that no block (the gray and the
@@ -125,17 +120,6 @@ export const guessEmptySlot = (defaultBackground: Color): Color =>
 export const guessAnswerWell = (defaultBackground: Color): Color =>
   token(scale(guessBoard(defaultBackground), 0.3), [0.09, 0.09, 0.09]);
 
-// --- mines --------------------------------------------------------------
-
-/** **Not cleared yet** — the uncleared square's face, a twentieth darker than the
- * board so the grid of unknowns reads as slightly raised without a bevel. */
-export const minesUnclearedFace = (background: Color): Color =>
-  fraction(background, 19, 20);
-
-/** Mines' bevel lowlight — two-thirds of the board, deeper than the
- * `mkhighlight` trio's because an uncleared square is drawn tall. */
-export const minesLowlight = (background: Color): Color => fraction(background, 2, 3);
-
 // --- abcd ---------------------------------------------------------------
 
 /** ABCD's **border clue letters** — the letters ringing the grid, in a blue that
@@ -146,17 +130,6 @@ export const abcdBorderLetter = (outerBackground: Color): Color => [
   0,
   0.6 * outerBackground[1],
 ];
-
-// --- blackbox -----------------------------------------------------------
-
-/** **This square is locked** — a deduction you have committed to and asked the
- * game to hold, a third of the way down from the board. */
-export const blackboxLock = (background: Color): Color => scale(background, 0.7);
-
-/** **Hidden** — the shade covering a square whose contents you have not
- * established, half the board's brightness so the covered area reads as one
- * mass. */
-export const blackboxCover = (background: Color): Color => scale(background, 0.5);
 
 // --- crossing -----------------------------------------------------------
 
@@ -170,19 +143,7 @@ export const crossingGhost = (background: Color): Color => scale(background, 0.5
  * of the board so a black region reads as filled without becoming ink. */
 export const galaxiesBlackRegion = (background: Color): Color => scale(background, 0.3);
 
-// --- group --------------------------------------------------------------
-
-/** Group's **leading diagonal** — the cells where an element meets itself,
- * shaded a twentieth off the board because the hint is structural, not a state
- * the player set. */
-export const groupDiagonal = (background: Color): Color => scale(background, 0.95);
-
-// --- net / netslide -----------------------------------------------------
-
-/** **This tile is locked** — you have decided its orientation and asked the game
- * to hold it. Between the board and its border, so a locked tile reads as
- * settled rather than as marked. */
-export const netLocked = (background: Color): Color => scale(background, 0.75);
+// --- netslide -----------------------------------------------------------
 
 /** Netslide's bevel lowlight — it takes the host background as-is rather than
  * through `mkhighlight`, so it derives its own. */
@@ -283,10 +244,6 @@ export const sokobanPit = (lowlight: Color): Color => divide(lowlight, 2);
 
 // --- solo ---------------------------------------------------------------
 
-/** Solo's **X diagonals** — the two extra constrained lines in an X variant, a
- * tenth off the board because they are a rule, not a state. */
-export const soloXDiagonals = (background: Color): Color => scale(background, 0.9);
-
 /** Solo's **killer cages** — the dotted regions of a Killer grid. Half the board
  * in red and green with the blue pulled much further down, which is what makes
  * it a khaki that stays distinct from both the grid and the pencil marks. */
@@ -295,13 +252,6 @@ export const soloKiller = (background: Color): Color => [
   0.5 * background[1],
   0.1 * background[2],
 ];
-
-// --- tracks -------------------------------------------------------------
-
-/** Tracks' grid: halfway between the board and its highlight, because the track
- * bed is drawn in the highlight and the grid has to sit between the two. */
-export const tracksGrid = (background: Color, highlight: Color): Color =>
-  mix(background, highlight, 0.5);
 
 // --- twiddle ------------------------------------------------------------
 

@@ -26,7 +26,7 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { firstOpen, minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
-import { borderFor, COL_BANG } from "./render.ts";
+import { borderFor, COL_BANG, COL_COVERED, COL_OPEN } from "./render.ts";
 import { minesolve } from "./solver.ts";
 import {
   COVERED,
@@ -707,7 +707,7 @@ describe("mines timer", () => {
 // --- render (tier 2.5) -------------------------------------------------
 
 describe("mines render", () => {
-  it("paints the opened board: numbers, covered bevels, recessed border", () => {
+  it("paints the opened board: numbers on two flat surfaces, and no bevel", () => {
     const id = fresh(seedId("9x9n10", "render1")).gameId() ?? "";
     const { recording } = renderScenario({
       game: minesGame,
@@ -715,11 +715,12 @@ describe("mines render", () => {
       moves: [beginMove(id, 4, 4)],
     });
     const ops = recording.ops;
-    // A recessed frame (two filled pentagons) on the first frame.
-    expect(ops.some((o) => o.op === "polygon")).toBe(true);
-    // At least one number drawn (drawText) and covered tiles (bevel triangles).
     expect(ops.some((o) => o.op === "text")).toBe(true);
-    expect(ops.filter((o) => o.op === "rect").length).toBeGreaterThan(0);
+    // Covered and opened squares are each a flat fill, and with no flag down
+    // nothing on the board is a polygon.
+    for (const surface of [COL_COVERED, COL_OPEN])
+      expect(ops.some((o) => o.op === "rect" && o.color === surface)).toBe(true);
+    expect(ops.some((o) => o.op === "polygon")).toBe(false);
     expect(ops).toMatchSnapshot();
   });
 

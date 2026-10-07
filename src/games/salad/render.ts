@@ -19,7 +19,9 @@ import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { GREEN_WASH } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   ERROR,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -28,6 +30,7 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -105,6 +108,8 @@ export const COL_HINT_CELL = 20;
 /** Fork addition: the keyboard cursor's cell fill. Upstream used the bevel
  * lowlight, a tint of the board. */
 export const COL_CURSOR = 21;
+export const COL_CELL = 22; // the surface of a square the player fills
+export const COL_GIVEN = 23; // the lifted surface of a square the puzzle filled
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -112,7 +117,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = background;
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
-  out[COL_BORDER] = INK;
+  out[COL_BORDER] = surfaceGrid(background);
   out[COL_BORDERCLUE] = INK;
   out[COL_PENCIL] = pencilColor(background);
   out[COL_I_NUM] = INK;
@@ -142,6 +147,8 @@ export function colors(defaultBackground: Color): Color[] {
   // A cell fill under the letter and notes: the "you are here" wash the Latin
   // family draws its cursor cell with (palette.ts, `CURSOR`).
   out[COL_CURSOR] = highlightWash(background);
+  out[COL_CELL] = cellSurface(background);
+  out[COL_GIVEN] = givenSurface(background);
   return out;
 }
 
@@ -337,6 +344,10 @@ function setDrawFlags(
 
 // --- tile painting ---------------------------------------------------------
 
+/** The surface under square `i`: lifted where the puzzle filled it. */
+const surfaceOf = (s: SaladState, i: number): number =>
+  s.gridclues[i] ? COL_GIVEN : COL_CELL;
+
 function drawBall(
   dr: GameDrawing,
   ts: number,
@@ -364,7 +375,7 @@ function drawBall(
             : COL_G_BALLBG;
   } else {
     // Letters mode draws the ball "transparent" over whatever is behind it.
-    bg = highlightFill(highlightOf(flags), COL_CURSOR, COL_BACKGROUND);
+    bg = highlightFill(highlightOf(flags), COL_CURSOR, surfaceOf(s, i));
   }
   const color = s.gridclues[i] ? COL_I_BALL : COL_G_BALL;
 
@@ -504,7 +515,7 @@ function drawMistakeBox(dr: GameDrawing, tx: number, ty: number, ts: number): vo
 const PENCIL_STYLE: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
   body: COL_PENCIL_BODY,
-  ink: COL_BORDER,
+  ink: COL_BORDERCLUE,
 };
 // --- redraw ----------------------------------------------------------------
 
@@ -584,7 +595,7 @@ export function redraw(
         highlightOf(flags[i]),
         COL_CURSOR,
         !lettersFlash || (x + y) % 3 === flash
-          ? COL_BACKGROUND
+          ? surfaceOf(s, i)
           : (x + y + 1) % 3 === flash
             ? COL_LOWLIGHT
             : COL_HIGHLIGHT,

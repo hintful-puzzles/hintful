@@ -1,9 +1,9 @@
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLACK, TEN, TEN_NAMES } from "../../engine/color/colors.ts";
-import { drawRecessedBorder as drawBevel, drawRectOutline } from "../../engine/draw.ts";
+import { surfaceGrid } from "../../engine/color/palette.ts";
+import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
+import type { Color, Size } from "../../engine/types.ts";
 import { completed, fill } from "./solver.ts";
 import {
   FILLX,
@@ -21,7 +21,6 @@ export const PREFERRED_TILE_SIZE = 32;
 
 const sepWidth = (ts: number) => Math.floor(ts / 32);
 const cursorInset = (ts: number) => Math.floor(ts / 8);
-const highlightWidth = (ts: number) => Math.floor(ts / 10);
 const border = (ts: number) => Math.floor(ts / 2);
 const coord = (n: number, ts: number) => n * ts + border(ts);
 
@@ -31,13 +30,11 @@ export const DEFEAT_FLASH_FRAME = 0.1;
 // --- color palette indices -------------------------------------------
 
 const COL_BACKGROUND = 0;
-const COL_SEPARATOR = 1;
+/** A mark drawn on a tile: the cursor, the hint's dot, the lost board's blink. */
+const COL_MARK = 1;
 const COL_1 = 2; // COL_1..COL_10 are 2..11
-const COL_HIGHLIGHT = 12;
-const COL_LOWLIGHT = 13;
-export const paletteScheme: Partial<PaletteScheme> = {
-  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
-};
+/** The line between two regions, and the frame round the field. */
+const COL_GRID = 12;
 
 /**
  * The ten tiles, as the hint says them: *"Fill with orange"*. Re-exported from
@@ -48,15 +45,13 @@ export const paletteScheme: Partial<PaletteScheme> = {
 export const COLOR_NAMES = TEN_NAMES;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
   const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
-  // `BLACK`, not `INK`: the line between two tiles is drawn against the
-  // tiles, not the board, and stays black under both schemes.
-  out[COL_SEPARATOR] = BLACK;
+  out[COL_BACKGROUND] = defaultBackground;
+  // `BLACK`, not `INK`: a mark on a tile is drawn against the tile, not the
+  // board, and stays black under both schemes.
+  out[COL_MARK] = BLACK;
   for (let i = 0; i < 10; i++) out[COL_1 + i] = TEN[i];
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
   return out;
 }
 
@@ -106,27 +101,24 @@ function drawTile(
   const ty = coord(y, ts);
   const sep = sepWidth(ts);
 
-  const color = tile & BADFLASH ? COL_SEPARATOR : (tile >> COLOR_SHIFT) + COL_1;
+  const color = tile & BADFLASH ? COL_MARK : (tile >> COLOR_SHIFT) + COL_1;
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, color);
 
   if (sep > 0) {
-    if (tile & BORDER_L) dr.drawRect({ x: tx, y: ty, w: sep, h: ts }, COL_SEPARATOR);
+    if (tile & BORDER_L) dr.drawRect({ x: tx, y: ty, w: sep, h: ts }, COL_GRID);
     if (tile & BORDER_R)
-      dr.drawRect({ x: tx + ts - sep, y: ty, w: sep, h: ts }, COL_SEPARATOR);
-    if (tile & BORDER_U) dr.drawRect({ x: tx, y: ty, w: ts, h: sep }, COL_SEPARATOR);
+      dr.drawRect({ x: tx + ts - sep, y: ty, w: sep, h: ts }, COL_GRID);
+    if (tile & BORDER_U) dr.drawRect({ x: tx, y: ty, w: ts, h: sep }, COL_GRID);
     if (tile & BORDER_D)
-      dr.drawRect({ x: tx, y: ty + ts - sep, w: ts, h: sep }, COL_SEPARATOR);
+      dr.drawRect({ x: tx, y: ty + ts - sep, w: ts, h: sep }, COL_GRID);
 
-    if (tile & CORNER_UL) dr.drawRect({ x: tx, y: ty, w: sep, h: sep }, COL_SEPARATOR);
+    if (tile & CORNER_UL) dr.drawRect({ x: tx, y: ty, w: sep, h: sep }, COL_GRID);
     if (tile & CORNER_UR)
-      dr.drawRect({ x: tx + ts - sep, y: ty, w: sep, h: sep }, COL_SEPARATOR);
+      dr.drawRect({ x: tx + ts - sep, y: ty, w: sep, h: sep }, COL_GRID);
     if (tile & CORNER_DL)
-      dr.drawRect({ x: tx, y: ty + ts - sep, w: sep, h: sep }, COL_SEPARATOR);
+      dr.drawRect({ x: tx, y: ty + ts - sep, w: sep, h: sep }, COL_GRID);
     if (tile & CORNER_DR)
-      dr.drawRect(
-        { x: tx + ts - sep, y: ty + ts - sep, w: sep, h: sep },
-        COL_SEPARATOR,
-      );
+      dr.drawRect({ x: tx + ts - sep, y: ty + ts - sep, w: sep, h: sep }, COL_GRID);
   }
 
   if (tile & CURSOR) {
@@ -137,7 +129,7 @@ function drawTile(
       ty + inset,
       ts - inset * 2,
       ts - inset * 2,
-      COL_SEPARATOR,
+      COL_MARK,
     );
   }
 
@@ -145,33 +137,18 @@ function drawTile(
     dr.drawCircle(
       { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) },
       Math.floor(ts / 6),
-      COL_SEPARATOR,
-      COL_SEPARATOR,
+      COL_MARK,
+      COL_MARK,
     );
   }
 
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 }
 
-function drawRecessedFrame(dr: GameDrawing, w: number, h: number, ts: number): void {
-  const hw = highlightWidth(ts);
+/** The frame round the field, one separator wide: as heavy as the line a
+ * tile draws at a region's edge, and no heavier. */
+function drawFrame(dr: GameDrawing, w: number, h: number, ts: number): void {
   const sep = sepWidth(ts);
-
-  // Recessed bevel around the whole playfield (cloned from fifteen).
-  drawBevel(
-    dr,
-    {
-      left: coord(0, ts) - hw,
-      top: coord(0, ts) - hw,
-      right: coord(w, ts) + hw - 1,
-      bottom: coord(h, ts) + hw - 1,
-    },
-    ts,
-    COL_HIGHLIGHT,
-    COL_LOWLIGHT,
-  );
-
-  // Separator frame just outside the grid.
   dr.drawRect(
     {
       x: coord(0, ts) - sep,
@@ -179,7 +156,7 @@ function drawRecessedFrame(dr: GameDrawing, w: number, h: number, ts: number): v
       w: ts * w + 2 * sep,
       h: ts * h + 2 * sep,
     },
-    COL_SEPARATOR,
+    COL_GRID,
   );
 }
 
@@ -220,7 +197,7 @@ export function redraw(
   const { w, h, colors: ncolors } = state;
 
   if (!ds.started) {
-    drawRecessedFrame(dr, w, h, ts);
+    drawFrame(dr, w, h, ts);
     ds.started = true;
   }
 

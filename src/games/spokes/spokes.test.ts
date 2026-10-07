@@ -50,6 +50,7 @@ import { spokesGame } from "./index.ts";
 import {
   COL_ERROR,
   COL_HOLDING,
+  COL_HUB,
   COL_LINE,
   COL_SATISFIED,
   newDrawState,
@@ -665,7 +666,7 @@ describe("spokes rendering", () => {
     ).toBe(8);
   });
 
-  it("grays out a hub once its spoke count meets its clue", () => {
+  it("lifts a hub once its spoke count meets its clue", () => {
     // Hub 0 in the fixture has clue 1, so one line satisfies it — and its
     // partner at the far end of that line does not become satisfied by it.
     const { recording } = renderScenario({
@@ -679,14 +680,17 @@ describe("spokes rendering", () => {
     ).toBe(true);
   });
 
-  it("leaves every hub ungrayed on an untouched board", () => {
+  it("leaves every hub on the plain surface on an untouched board", () => {
     const { recording } = renderScenario({ game: spokesGame, id: FIX_ID });
     expect(
       recording.ops.some((o) => o.op === "circle" && o.fill === COL_SATISFIED),
     ).toBe(false);
+    expect(recording.ops.some((o) => o.op === "circle" && o.fill === COL_HUB)).toBe(
+      true,
+    );
   });
 
-  it("drops the gray when the preference is off", () => {
+  it("drops the lift when the preference is off", () => {
     const state = newState(FIX, FIX_DESC);
     const ui = newUi();
     ui.markSatisfied = false;

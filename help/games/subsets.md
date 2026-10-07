@@ -7,7 +7,7 @@ You are given a grid and a list of sets. Place every set into the grid exactly o
 
 ## Controls
 
-Every letter has a fixed position in each cell.
+Every letter has a fixed position in each cell. A position shows its letter once the letter is marked present, a dot once it is cleared, and nothing while it is undecided. A cell whose set is given sits on a lighter surface than the ones you fill.
 
 {{controls}}
 

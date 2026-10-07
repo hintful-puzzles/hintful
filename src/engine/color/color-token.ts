@@ -82,27 +82,12 @@ export function scale(color: Color, factor: number): Color {
 }
 
 /**
- * A color **divided** by a number — not `scale(c, 1 / k)`, for the same reason
- * as {@link fraction}: the reciprocal is usually not representable, so
- * pre-computing it rounds once more than upstream's `c / 1.5` does.
+ * A color **divided** by a number — not `scale(c, 1 / k)`: the reciprocal is
+ * usually not representable, so pre-computing it rounds once more than
+ * upstream's `c / 1.5` does.
  */
 export function divide(color: Color, divisor: number): Color {
   return [color[0] / divisor, color[1] / divisor, color[2] / divisor];
-}
-
-/**
- * A **fraction** of a color, multiplied before it is divided — not
- * `scale(c, num / den)`, because a ratio like `2/3` is not representable in
- * binary and pre-computing it rounds once more than upstream's `(c * 2) / 3`.
- * One ULP, invisible on screen, but keeping the operation keeps the resolved
- * palette bit-identical to the expression it came from.
- */
-export function fraction(color: Color, numerator: number, denominator: number): Color {
-  return [
-    (color[0] * numerator) / denominator,
-    (color[1] * numerator) / denominator,
-    (color[2] * numerator) / denominator,
-  ];
 }
 
 /**

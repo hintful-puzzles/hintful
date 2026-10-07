@@ -497,7 +497,7 @@ export interface SpokesUi {
    * sub-cell ≡ 0 (mod 3), and the two between each pair of hubs are that
    * pair's direction pickers. */
   cursor: GridCursor;
-  /** Fork aid: gray out a hub once its spoke count matches its clue. Visual
+  /** Fork aid: lift a hub once its spoke count matches its clue. Visual
    * only — a satisfied hub stays fully editable. */
   markSatisfied: boolean;
 }

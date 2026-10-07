@@ -747,8 +747,8 @@ export const MODULES = [
       {
         within: "correctRegionColor",
         why: "the completed-region shade equals the background, so a correct region reads as unfilled",
-        find: "  return [background[0] * 0.75, background[1] * 0.75, background[2] * 0.75];",
-        replace: "  return [background[0], background[1], background[2]];",
+        find: "    [background[0] * 0.75, background[1] * 0.75, background[2] * 0.75],",
+        replace: "    [background[0], background[1], background[2]],",
       },
     ],
   },

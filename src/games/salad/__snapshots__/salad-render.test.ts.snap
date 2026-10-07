@@ -12,10 +12,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 40,
@@ -25,7 +25,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -94,10 +94,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 68,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 40,
@@ -117,7 +117,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -196,10 +196,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 68,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 40,
@@ -209,7 +209,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -278,10 +278,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 68,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 40,
@@ -291,7 +291,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -360,10 +360,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 68,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 80,
@@ -373,7 +373,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -442,10 +442,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 108,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -465,7 +465,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -544,10 +544,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 108,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 80,
@@ -557,7 +557,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -626,10 +626,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 108,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 80,
@@ -639,7 +639,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -708,10 +708,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 108,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 120,
@@ -721,7 +721,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -790,10 +790,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 148,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 120,
@@ -813,7 +813,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -882,10 +882,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 148,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 120,
@@ -895,7 +895,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -964,10 +964,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 148,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 120,
@@ -977,7 +977,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -1046,10 +1046,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 148,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 160,
@@ -1059,7 +1059,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -1128,10 +1128,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 188,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -1151,7 +1151,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -1196,10 +1196,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 172,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 160,
@@ -1209,7 +1209,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1278,10 +1278,10 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "y": 188,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 160,
@@ -1291,7 +1291,7 @@ exports[`salad hint frames > outlines the run a clue's symbol is confined to, an
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -1593,10 +1593,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 40,
@@ -1606,7 +1606,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -1627,10 +1627,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 40,
@@ -1640,7 +1640,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -1661,10 +1661,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 40,
@@ -1674,7 +1674,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1695,10 +1695,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 40,
@@ -1708,7 +1708,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -1729,10 +1729,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 40,
@@ -1752,7 +1752,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -1793,10 +1793,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y2": 48,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 80,
@@ -1806,7 +1806,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -1827,10 +1827,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -1840,7 +1840,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -1861,10 +1861,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 80,
@@ -1874,7 +1874,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -1915,10 +1915,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y2": 88,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 80,
@@ -1928,7 +1928,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -1949,10 +1949,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 80,
@@ -1972,7 +1972,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -2013,10 +2013,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "r": 15,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 120,
@@ -2026,7 +2026,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -2079,10 +2079,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 120,
@@ -2092,7 +2092,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -2113,10 +2113,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 120,
@@ -2126,7 +2126,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -2179,10 +2179,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 120,
@@ -2192,7 +2192,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -2213,10 +2213,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 120,
@@ -2236,7 +2236,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -2277,10 +2277,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y2": 128,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 160,
@@ -2290,7 +2290,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -2343,10 +2343,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 180,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -2356,7 +2356,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -2377,10 +2377,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 160,
@@ -2390,7 +2390,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -2411,10 +2411,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 160,
@@ -2424,7 +2424,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -2465,10 +2465,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "r": 15,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 160,
@@ -2488,7 +2488,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -2509,10 +2509,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 200,
@@ -2522,7 +2522,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -2543,10 +2543,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 80,
     "y": 200,
@@ -2556,7 +2556,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -2609,10 +2609,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "y": 220,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 200,
@@ -2622,7 +2622,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -2643,10 +2643,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 200,
@@ -2656,7 +2656,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -2677,10 +2677,10 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 200,
@@ -2700,7 +2700,7 @@ exports[`salad hint frames > previews a holds-a-symbol marker as a ball in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -2780,10 +2780,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 40,
@@ -2793,7 +2793,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -2858,10 +2858,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 60,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 40,
@@ -2871,7 +2871,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -2916,10 +2916,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 52,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 40,
@@ -2929,7 +2929,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -2982,10 +2982,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 60,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 40,
@@ -2995,7 +2995,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -3040,10 +3040,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 52,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 40,
@@ -3053,7 +3053,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -3110,10 +3110,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 52,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 80,
@@ -3123,7 +3123,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -3176,10 +3176,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 100,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -3189,7 +3189,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -3234,10 +3234,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 92,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 80,
@@ -3247,7 +3247,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -3292,10 +3292,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 92,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 80,
@@ -3305,7 +3305,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -3358,10 +3358,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 93,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 80,
@@ -3371,7 +3371,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -3428,10 +3428,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 92,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 120,
@@ -3441,7 +3441,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -3486,10 +3486,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 132,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 120,
@@ -3499,7 +3499,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -3532,10 +3532,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 132,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 120,
@@ -3545,7 +3545,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -3590,10 +3590,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 132,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 120,
@@ -3603,7 +3603,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -3656,10 +3656,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 120,
@@ -3669,7 +3669,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -3726,10 +3726,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 132,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 160,
@@ -3739,7 +3739,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -3796,10 +3796,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 172,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -3809,7 +3809,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -3862,10 +3862,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 180,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 160,
@@ -3875,7 +3875,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -3916,10 +3916,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y2": 168,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 160,
@@ -3929,7 +3929,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -3974,10 +3974,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 172,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 160,
@@ -3987,7 +3987,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -4044,10 +4044,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 172,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 200,
@@ -4057,7 +4057,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -4102,10 +4102,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 212,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 80,
     "y": 200,
@@ -4115,7 +4115,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -4168,10 +4168,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 220,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 200,
@@ -4181,7 +4181,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -4238,10 +4238,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 212,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 200,
@@ -4251,7 +4251,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -4296,10 +4296,10 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "y": 212,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 200,
@@ -4309,7 +4309,7 @@ exports[`salad hint frames > previews a placement as its own symbol, and strikes
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -4433,10 +4433,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 40,
@@ -4446,7 +4446,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -4467,10 +4467,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 40,
@@ -4480,7 +4480,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -4501,10 +4501,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 40,
@@ -4514,7 +4514,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -4555,10 +4555,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y2": 48,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 40,
@@ -4568,7 +4568,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -4589,10 +4589,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 40,
@@ -4602,7 +4602,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -4623,10 +4623,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 80,
@@ -4636,7 +4636,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -4657,10 +4657,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -4670,7 +4670,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -4723,10 +4723,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y": 100,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 80,
@@ -4736,7 +4736,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -4777,10 +4777,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "r": 15,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 80,
@@ -4790,7 +4790,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -4811,10 +4811,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 80,
@@ -4824,7 +4824,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -4845,10 +4845,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 120,
@@ -4858,7 +4858,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -4899,10 +4899,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "r": 15,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 120,
@@ -4912,7 +4912,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -4933,10 +4933,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 120,
@@ -4946,7 +4946,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -4967,10 +4967,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 120,
@@ -4980,7 +4980,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -5001,10 +5001,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 120,
@@ -5014,7 +5014,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -5035,10 +5035,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 160,
@@ -5048,7 +5048,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -5069,10 +5069,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -5082,7 +5082,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -5103,10 +5103,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 160,
@@ -5116,7 +5116,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -5137,10 +5137,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 160,
@@ -5150,7 +5150,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -5203,10 +5203,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y": 180,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 160,
@@ -5216,7 +5216,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -5269,10 +5269,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y": 180,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 200,
@@ -5292,7 +5292,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -5345,10 +5345,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y": 220,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 80,
     "y": 200,
@@ -5368,7 +5368,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -5421,10 +5421,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y": 220,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 200,
@@ -5444,7 +5444,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -5485,10 +5485,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "r": 15,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 200,
@@ -5508,7 +5508,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -5549,10 +5549,10 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "y2": 208,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 200,
@@ -5572,7 +5572,7 @@ exports[`salad hint frames > previews an empty-square marker as a cross in the h
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -5652,10 +5652,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 40,
@@ -5665,7 +5665,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -5686,10 +5686,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 40,
@@ -5699,7 +5699,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -5720,10 +5720,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 40,
@@ -5733,7 +5733,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -5754,10 +5754,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 40,
@@ -5767,7 +5767,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -5788,10 +5788,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 40,
@@ -5801,7 +5801,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -5854,10 +5854,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 60,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 80,
@@ -5867,7 +5867,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -5888,10 +5888,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -5901,7 +5901,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -5922,10 +5922,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 80,
@@ -5935,7 +5935,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -5956,10 +5956,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 80,
@@ -5969,7 +5969,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -6010,10 +6010,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "r": 15,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 80,
@@ -6023,7 +6023,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -6076,10 +6076,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 100,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 120,
@@ -6089,7 +6089,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -6142,10 +6142,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 120,
@@ -6155,7 +6155,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -6176,10 +6176,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 120,
@@ -6189,7 +6189,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -6210,10 +6210,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 120,
@@ -6223,7 +6223,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -6276,10 +6276,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 120,
@@ -6289,7 +6289,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -6310,10 +6310,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 160,
@@ -6323,7 +6323,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -6364,10 +6364,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y2": 168,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -6377,7 +6377,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -6398,10 +6398,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 160,
@@ -6411,7 +6411,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -6464,10 +6464,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 180,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 160,
@@ -6477,7 +6477,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -6498,10 +6498,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 160,
@@ -6511,7 +6511,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -6532,10 +6532,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 200,
@@ -6545,7 +6545,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -6566,10 +6566,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 200,
@@ -6579,7 +6579,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -6600,10 +6600,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 200,
@@ -6613,7 +6613,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -6666,10 +6666,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "y": 220,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 200,
@@ -6679,7 +6679,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -6700,10 +6700,10 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 200,
@@ -6713,7 +6713,7 @@ exports[`salad render scenarios > draws Number Ball's balls and crosses 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -6757,10 +6757,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 40,
@@ -6770,7 +6770,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -6839,10 +6839,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 68,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 40,
@@ -6852,7 +6852,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -6921,10 +6921,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 68,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 40,
@@ -6934,7 +6934,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -7003,10 +7003,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 68,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 40,
@@ -7016,7 +7016,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -7085,10 +7085,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 68,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 40,
@@ -7098,7 +7098,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -7151,10 +7151,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 60,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 80,
@@ -7164,7 +7164,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -7233,10 +7233,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 108,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -7246,7 +7246,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -7315,10 +7315,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 108,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 80,
@@ -7328,7 +7328,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -7397,10 +7397,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 108,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 80,
@@ -7410,7 +7410,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -7487,10 +7487,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 93,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 80,
@@ -7500,7 +7500,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -7553,10 +7553,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 100,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 120,
@@ -7566,7 +7566,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -7619,10 +7619,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 120,
@@ -7632,7 +7632,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -7701,10 +7701,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 148,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 120,
@@ -7714,7 +7714,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -7783,10 +7783,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 148,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 120,
@@ -7796,7 +7796,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -7849,10 +7849,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 120,
@@ -7862,7 +7862,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -7931,10 +7931,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 148,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 160,
@@ -7944,7 +7944,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -7985,10 +7985,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y2": 168,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -7998,7 +7998,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -8067,10 +8067,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 188,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 160,
@@ -8080,7 +8080,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -8133,10 +8133,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 180,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 160,
@@ -8146,7 +8146,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -8215,10 +8215,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 188,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 160,
@@ -8228,7 +8228,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -8297,10 +8297,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 188,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 200,
@@ -8310,7 +8310,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -8379,10 +8379,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 228,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 200,
@@ -8392,7 +8392,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -8461,10 +8461,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 228,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 200,
@@ -8474,7 +8474,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -8527,10 +8527,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 220,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 200,
@@ -8540,7 +8540,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -8609,10 +8609,10 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "y": 228,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 200,
@@ -8622,7 +8622,7 @@ exports[`salad render scenarios > draws pencil marks after Mark all 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -8714,10 +8714,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 40,
@@ -8727,7 +8727,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -8748,10 +8748,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 40,
@@ -8761,7 +8761,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -8782,10 +8782,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 40,
@@ -8795,7 +8795,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -8816,10 +8816,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 40,
@@ -8829,7 +8829,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -8850,10 +8850,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 80,
@@ -8863,7 +8863,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -8884,10 +8884,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -8897,7 +8897,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -8918,10 +8918,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 80,
@@ -8931,7 +8931,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -8952,10 +8952,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 80,
@@ -8965,7 +8965,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -8986,10 +8986,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 120,
@@ -8999,7 +8999,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -9020,10 +9020,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 120,
@@ -9033,7 +9033,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -9054,10 +9054,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 120,
@@ -9067,7 +9067,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -9088,10 +9088,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 120,
@@ -9101,7 +9101,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -9122,10 +9122,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 160,
@@ -9135,7 +9135,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -9156,10 +9156,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -9169,7 +9169,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -9190,10 +9190,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 160,
@@ -9203,7 +9203,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -9224,10 +9224,10 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 160,
@@ -9237,7 +9237,7 @@ exports[`salad render scenarios > draws the ABC End View border clues in the mar
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -9386,10 +9386,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 40,
@@ -9399,7 +9399,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -9420,10 +9420,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 40,
@@ -9433,7 +9433,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -9566,10 +9566,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y2": 43,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 40,
@@ -9579,7 +9579,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -9600,10 +9600,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 40,
@@ -9613,7 +9613,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -9634,10 +9634,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 40,
@@ -9647,7 +9647,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -9700,10 +9700,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 60,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 80,
@@ -9713,7 +9713,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -9734,10 +9734,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 80,
@@ -9747,7 +9747,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -9768,10 +9768,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 80,
@@ -9781,7 +9781,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -9802,10 +9802,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 80,
@@ -9815,7 +9815,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -9856,10 +9856,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "r": 15,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 200,
     "y": 80,
@@ -9869,7 +9869,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -9922,10 +9922,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 100,
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 120,
@@ -9935,7 +9935,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -9988,10 +9988,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 120,
@@ -10001,7 +10001,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -10022,10 +10022,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 120,
     "y": 120,
@@ -10035,7 +10035,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -10056,10 +10056,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 160,
     "y": 120,
@@ -10069,7 +10069,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -10122,10 +10122,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 140,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 120,
@@ -10135,7 +10135,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -10156,10 +10156,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 40,
     "y": 160,
@@ -10169,7 +10169,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -10210,10 +10210,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y2": 168,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 160,
@@ -10223,7 +10223,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -10244,10 +10244,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 160,
@@ -10257,7 +10257,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -10310,10 +10310,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 180,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 160,
@@ -10323,7 +10323,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -10344,10 +10344,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 160,
@@ -10357,7 +10357,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,
@@ -10378,10 +10378,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 40,
     "y": 200,
@@ -10391,7 +10391,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         40,
@@ -10412,10 +10412,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 80,
     "y": 200,
@@ -10425,7 +10425,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         80,
@@ -10446,10 +10446,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 23,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(237, 237, 237)",
     "w": 40,
     "x": 120,
     "y": 200,
@@ -10459,7 +10459,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         120,
@@ -10512,10 +10512,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "y": 220,
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 160,
     "y": 200,
@@ -10525,7 +10525,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         160,
@@ -10546,10 +10546,10 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     ],
   },
   {
-    "color": 0,
+    "color": 22,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(194, 194, 194)",
     "w": 40,
     "x": 200,
     "y": 200,
@@ -10559,7 +10559,7 @@ exports[`salad render scenarios > outlines a Check & Save mistake in red 1`] = `
     "fillRgb": "color#-1",
     "op": "polygon",
     "outline": 3,
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
         200,

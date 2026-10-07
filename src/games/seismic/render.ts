@@ -1,12 +1,13 @@
 /**
  * Seismic rendering — port of `game_redraw` from `seismic.c`.
  *
- * The board is one black rectangle with each cell painted back over it, inset by
- * a pixel on any side that is a *region* boundary — so the region walls are the
- * black left showing through, and there is no wall-drawing code at all. The four
- * corner pixels each cell may owe (where its diagonal neighbor is in another
- * region) are painted after the cell, because the cell's own fill can cover
- * them.
+ * The board is one rectangle in the wall color with each cell painted back
+ * over it, inset by a pixel on any side that is a *region* boundary — so the
+ * region walls are the backing left showing through. The thin line between two
+ * cells of one region is not a wall: each tile paints it in the grid color
+ * under its own surface, a given's lifted. The four corner pixels each cell
+ * may owe (where its diagonal neighbor is in another region) are painted after
+ * the cell, because the cell's own fill can cover them.
  *
  * That geometry depends only on the region partition, which never changes for
  * the life of a game — so the per-tile cache (docs/games/rendering.md § "The tile
@@ -28,9 +29,11 @@
  */
 
 import { valueBit } from "../../engine/candidate-bits.ts";
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
+  cellSurface,
   ERROR,
+  FLASH,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -38,6 +41,7 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -83,44 +87,46 @@ const GRIDEXTRA = 1;
  * (docs/games/rendering.md § "Sizing": check the define, don't port the desktop default). */
 const BORDER = GRIDEXTRA * 2;
 
-// --- palette (index-for-index with the upstream COL_* enum) ----------------
+// --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_HIGHLIGHT = 1;
-export const COL_LOWLIGHT = 2;
+export const COL_BACKGROUND = 0; // the board around the grid
+/** The surface of a cell the player fills. */
+export const COL_CELL = 1;
+/** The lifted surface under a number the puzzle fixed. */
+export const COL_GIVEN = 2;
+/** A region's wall, and the frame, which is the outer regions' wall. */
 export const COL_BORDER = 3;
 export const COL_NUM_FIXED = 4;
 export const COL_NUM_GUESS = 5;
 export const COL_NUM_ERROR = 6;
 export const COL_NUM_PENCIL = 7;
-/** Present so the palette indices match upstream's enum; upstream's on-screen
- * renderer never reads it (a distance error is drawn in `COL_NUM_ERROR`, which
- * is the same red). */
-export const COL_ERRORDIST = 8;
-/** Fork addition, appended past the upstream enum: the pencil indicator's body. */
+/** The thin line between two cells of one region. */
+export const COL_GRID = 8;
+/** The pencil indicator's body. */
 export const COL_PENCIL_BODY = 9;
 /** Fork additions: the explained hint's two marks (docs/games/hints.md § "Shade vs
  * ring"), the ring on the cell a step acts on and the outline of what it reasons
  * from. Both are drawn on a cell's edge rather than behind its notes. */
 export const COL_HINT = 10;
 export const COL_HINT_CELL = 11;
-/** Fork addition: the highlight's wash, in both its full-cell and its corner
- * form. Upstream filled the cell with `COL_HIGHLIGHT` and drew the corner in
- * `COL_LOWLIGHT`; both stay the completion wave's colors. */
+/** The highlight's wash, in both its full-cell and its corner form, and the
+ * completion wave's dim beat. */
 export const COL_CURSOR = 12;
+/** The completion wave's bright beat. */
+export const COL_FLASH = 13;
 
-export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
+export function colors(background: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_CELL] = cellSurface(background);
+  out[COL_GIVEN] = givenSurface(background);
+  out[COL_GRID] = surfaceGrid(background);
+  out[COL_FLASH] = FLASH;
   out[COL_BORDER] = INK;
   out[COL_NUM_FIXED] = INK;
   out[COL_NUM_GUESS] = playerEntryColor(background);
   out[COL_NUM_ERROR] = ERROR;
   out[COL_NUM_PENCIL] = pencilColor(background);
-  out[COL_ERRORDIST] = ERROR;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -167,8 +173,8 @@ export interface SeismicDrawState {
   started: boolean;
   tileSize: number;
   /** Per-tile last-drawn contents (−1 = never drawn): the digit in bits 0–3, the
-   * pencil bitmask in bits 4–12, the cell flags in 13–15, the chosen background
-   * color in 16–17 and the pencil-cursor marker in bit 18. */
+   * pencil bitmask in bits 4–12, the cell flags in 13–15, the completion wave's
+   * beat in 16–17 and the cell's highlight from bit 18. */
   tiles: Int32Array;
   /** The Check-&-Save mistake overlay. */
   wrong: OverlaySidecar;
@@ -197,7 +203,7 @@ export function newDrawState(state: SeismicState, tileSize: number): SeismicDraw
 // --- tile drawing ----------------------------------------------------------
 
 /** The inset a cell's fill takes on each side that borders another region — the
- * gap that leaves the black backing showing as a wall. */
+ * gap that leaves the backing showing as a wall. */
 function cellRect(state: SeismicState, x: number, y: number, ts: number) {
   const { w, h, dsf } = state;
   const i = y * w + x;
@@ -224,7 +230,7 @@ function cellRect(state: SeismicState, x: number, y: number, ts: number) {
  * Where a hint mark sits around cell `(x, y)`: inside the box the cell paints,
  * over its edge (`outer` 0).
  *
- * Not in the gap between cells, because that gap is the black backing the region
+ * Not in the gap between cells, because that gap is the backing the region
  * walls are made of, and a colored band there would read as a wall. Inside, the
  * cell's own repaint undoes the mark. There is room: the pencil grid's first row
  * and column of glyphs sit about a tenth of a tile in from the box, against a band
@@ -304,21 +310,35 @@ function drawTile(
   dr.clip({ x: tx, y: ty, w: ts, h: ts });
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 
+  // The line on the tile's right and bottom edge is a wall where the neighbor
+  // is another region, which the fill's inset already leaves in the backing's
+  // color, and the thin grid line where it is the same one.
+  const sameRight = x + 1 < w && dsf.equivalent(i, i + 1);
+  const sameBelow = y + 1 < h && dsf.equivalent(i, i + w);
+  if (sameRight)
+    dr.drawRect({ x: tx + ts - 1, y: cy, w: 1, h: sameBelow ? ch + 1 : ch }, COL_GRID);
+  if (sameBelow) dr.drawRect({ x: cx, y: ty + ts - 1, w: cw, h: 1 }, COL_GRID);
+
   drawCellBackground(dr, { x: cx, y: cy, w: cw, h: ch }, highlight, COL_CURSOR, color);
   ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
-  // A cell whose *diagonal* neighbor is in another region owes that corner a
-  // black pixel — drawn after the fill, which can otherwise cover it.
-  const corner = (px: number, py: number) =>
-    dr.drawRect({ x: px, y: py, w: GRIDEXTRA, h: GRIDEXTRA }, COL_BORDER);
-  if (x > 0 && y > 0 && !dsf.equivalent(i, i - w - 1))
-    corner(1 + tx - GRIDEXTRA, 1 + ty - GRIDEXTRA);
+  // A cell whose *diagonal* neighbor is in another region owes that corner the
+  // piece of wall where the two walls round it meet — drawn after the fill,
+  // which can otherwise cover it. A wall takes `near` of a tile's top and left
+  // and `far` of its right and bottom, so the piece is as large as the sides
+  // it sits on. Without it the turn is joined only by the grid line, which is
+  // too quiet to close it.
+  const near = GRIDEXTRA;
+  const far = GRIDEXTRA * 3;
+  const corner = (px: number, py: number, pw: number, ph: number) =>
+    dr.drawRect({ x: px, y: py, w: pw, h: ph }, COL_BORDER);
+  if (x > 0 && y > 0 && !dsf.equivalent(i, i - w - 1)) corner(tx, ty, near, near);
   if (x + 1 < w && y > 0 && !dsf.equivalent(i, i - w + 1))
-    corner(tx + ts - 2 * GRIDEXTRA, 1 + ty - GRIDEXTRA);
+    corner(tx + ts - far, ty, far, near);
   if (x > 0 && y + 1 < h && !dsf.equivalent(i, i + w - 1))
-    corner(1 + tx - GRIDEXTRA, ty + ts - 2 * GRIDEXTRA);
+    corner(tx, ty + ts - far, near, far);
   if (x + 1 < w && y + 1 < h && !dsf.equivalent(i, i + w + 1))
-    corner(tx + ts - 2 * GRIDEXTRA, ty + ts - 2 * GRIDEXTRA);
+    corner(tx + ts - far, ty + ts - far, far, far);
 
   if (grid[i] === 0) {
     drawPencilMarks(dr, ts, cx, cy, pencil[i], struck);
@@ -386,7 +406,7 @@ export function redraw(
   const firstFrame = !ds.started;
 
   if (firstFrame) {
-    // The black rectangle the region walls show through.
+    // The rectangle the region walls show through.
     dr.drawRect(
       {
         x: origin(ts) - GRIDEXTRA * 2,
@@ -411,18 +431,22 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       const highlight = flash === -1 ? cellHighlight(ui, x, y) : HIGHLIGHT_NONE;
+      // The wave's three beats: the cell's own surface, a dim one, a bright one.
+      const beat = flash === -1 ? 0 : (x + y + 3 - flash) % 3;
       const color =
-        flash === -1 || (x + y) % 3 === flash
-          ? COL_BACKGROUND
-          : (x + y + 1) % 3 === flash
-            ? COL_LOWLIGHT
-            : COL_HIGHLIGHT;
+        beat === 2
+          ? COL_CURSOR
+          : beat === 1
+            ? COL_FLASH
+            : state.flags[i] & FM_FIXED
+              ? COL_GIVEN
+              : COL_CELL;
 
       const tile =
         state.grid[i] |
         (state.pencil[i] << 4) |
         (state.flags[i] << 13) |
-        (color << 16) |
+        (beat << 16) |
         (highlight << 18);
 
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {

@@ -18,16 +18,18 @@ import {
   RED,
   RED_BOLD,
   TEAL,
+  WHITE,
 } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   ERROR,
   ERROR_WASH,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
-  PAPER,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { minesLowlight, minesUnclearedFace } from "../../engine/color/palette-games.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import {
@@ -78,16 +80,17 @@ import {
   COL_7,
   COL_8,
   COL_BACKGROUND,
-  COL_BACKGROUND2,
   COL_BANG,
+  COL_COVERED,
   COL_CURSOR,
   COL_FLAG,
   COL_FLAGBASE,
-  COL_HIGHLIGHT,
+  COL_GRID,
   COL_HINT,
   COL_HINT_EVIDENCE,
-  COL_LOWLIGHT,
   COL_MINE,
+  COL_MINE_GLINT,
+  COL_OPEN,
   COL_QUERY,
   COL_WRONGNUMBER,
   computeSize,
@@ -585,20 +588,16 @@ export const minesGame: Game<
     return 2 * FLASH_FRAME;
   },
 
-  paletteScheme: {
-    darkSwaps: [
-      // An opened square and a covered one are a tone apart, and the tone has
-      // to step the same way off the board in both schemes.
-      [COL_BACKGROUND, COL_BACKGROUND2],
-      [COL_HIGHLIGHT, COL_LOWLIGHT],
-    ],
-  },
-
   colors(defaultBackground: Color): Color[] {
     const bg = defaultBackground;
     const ret: Color[] = new Array(NCOLORS);
     ret[COL_BACKGROUND] = bg;
-    ret[COL_BACKGROUND2] = minesUnclearedFace(bg);
+    ret[COL_GRID] = surfaceGrid(bg);
+    ret[COL_OPEN] = cellSurface(bg);
+    // The one place the lifted surface says "covered" and not "given": nothing
+    // on this board is the puzzle's piece or the player's, and a covered
+    // square has to stand off an opened one at a glance in both schemes.
+    ret[COL_COVERED] = givenSurface(bg);
     // Upstream's count colors, and by now most players' expectation of what a
     // minesweeper looks like: 1 blue, 2 green, 3 red, 4 navy, 5 maroon, 6 teal.
     // The two dark ones are why the palette has a bold step at all — a wash is a
@@ -611,18 +610,19 @@ export const minesGame: Game<
     ret[COL_6] = TEAL;
     ret[COL_7] = INK;
     ret[COL_8] = GRAY;
+    // A black mine with a white glint in either scheme: it is drawn on the
+    // error color and never on a surface.
     ret[COL_MINE] = BLACK;
+    ret[COL_MINE_GLINT] = WHITE;
     ret[COL_BANG] = ERROR;
     // Red because a flag is yours and deliberate, not because anything is
     // wrong — but the same red, which is what the collection has one of.
     ret[COL_FLAG] = RED;
     ret[COL_FLAGBASE] = INK;
     ret[COL_QUERY] = INK;
-    ret[COL_HIGHLIGHT] = PAPER;
-    ret[COL_LOWLIGHT] = minesLowlight(bg);
     ret[COL_WRONGNUMBER] = ERROR_WASH;
-    // Pink: it has to read on a cleared square and an uncleared one alike, and
-    // the board's own grays and the count digits have the rest spoken for.
+    // Pink: it has to read on an opened square and a covered one alike, and
+    // the count digits have the rest spoken for.
     ret[COL_CURSOR] = PINK;
     ret[COL_HINT] = HINT_ACTION;
     ret[COL_HINT_EVIDENCE] = HINT_EVIDENCE;

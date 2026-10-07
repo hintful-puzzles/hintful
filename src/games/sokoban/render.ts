@@ -1,7 +1,7 @@
 /**
  * Sokoban rendering (upstream `game_colours` / `game_redraw` / `draw_tile`):
  * a per-tile cache keyed on what the tile shows, grid lines drawn once, walls
- * with a bevel, targets / pits / deep pits / player / barrels as discs,
+ * as flat blocks, targets / pits / deep pits / player / barrels as discs,
  * capital-letter barrel labels, and the hint's marks.
  *
  * There is no border (upstream's is a tile wide): the board is
@@ -9,24 +9,24 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BROWN, GREEN } from "../../engine/color/colors.ts";
+import { BROWN, GREEN, WHITE, YELLOW } from "../../engine/color/colors.ts";
 import {
+  cellSurface,
   DRAG_ADD,
   FLASH,
-  GRID_MID,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
-  PAPER,
-  wallColor,
+  surfaceGrid,
+  WALL_FILL,
 } from "../../engine/color/palette.ts";
 import { sokobanPit } from "../../engine/color/palette-games.ts";
-import { drawMoveArrow, drawRaisedTile, glyphFont } from "../../engine/draw.ts";
+import { drawMoveArrow, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
 import { BARREL, GOAL, PUSH } from "./hint-text.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
@@ -58,43 +58,40 @@ const COL_BACKGROUND = 0;
 const COL_TARGET = 1;
 const COL_PIT = 2;
 const COL_DEEP_PIT = 3;
-const COL_BARREL = 4;
-const COL_PLAYER = 5;
+export const COL_BARREL = 4;
+export const COL_PLAYER = 5;
 const COL_TEXT = 6;
 const COL_GRID = 7;
 const COL_OUTLINE = 8;
-const COL_HIGHLIGHT = 9;
-const COL_LOWLIGHT = 10;
-export const paletteScheme: Partial<PaletteScheme> = {
-  darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
-};
-const COL_WALL = 11;
-/** Appended past the upstream enum, which flashed the floor to its own bevel
- * highlight; the index-keyed swap above never reaches it. */
-const COL_FLASH = 12;
-/** The hint's marks, appended for the same reason. */
-const COL_HINT = 13;
-const COL_HINT_EVIDENCE = 14;
+export const COL_WALL = 9;
+const COL_FLASH = 10;
+export const COL_HINT = 11;
+export const COL_HINT_EVIDENCE = 12;
 /** A drag's aimed push, as Inertia's aimed slide. */
-const COL_AIM = 15;
-const NCOLORS = 16;
+export const COL_AIM = 13;
+/** A floor square. */
+export const COL_FLOOR = 14;
+const NCOLORS = 15;
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
   const out: Color[] = new Array<Color>(NCOLORS);
-  out[COL_BACKGROUND] = background;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_BACKGROUND] = defaultBackground;
+  out[COL_FLOOR] = cellSurface(defaultBackground);
   out[COL_OUTLINE] = INK;
   out[COL_PLAYER] = GREEN;
   out[COL_BARREL] = BROWN;
-  // A target disc: sunk into the floor, in the floor's own shadow.
-  out[COL_TARGET] = lowlight;
-  out[COL_PIT] = sokobanPit(lowlight);
+  // A target is a place and not a state of the floor, so it has a hue: the
+  // one the board's pieces and the marks drawn on it have left unspent.
+  out[COL_TARGET] = YELLOW;
+  out[COL_PIT] = sokobanPit(mkhighlight(defaultBackground).lowlight);
   out[COL_DEEP_PIT] = INK;
-  out[COL_TEXT] = PAPER;
-  out[COL_GRID] = GRID_MID;
-  out[COL_WALL] = wallColor(background, highlight);
+  // `WHITE`, not `PAPER`: the letter is read against the barrel's brown,
+  // which is one brown in both schemes.
+  out[COL_TEXT] = WHITE;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  // A flat block a clear step off the floor in both schemes: darker than it
+  // on a light board, lighter on a dark one.
+  out[COL_WALL] = WALL_FILL;
   out[COL_FLASH] = FLASH;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
@@ -164,6 +161,17 @@ interface Sprite {
   readonly v: number;
 }
 
+/** Which of a wall's neighbors are walls too: the one to its left, the one
+ * above, and all three round its top-left corner. A wall paints over the grid
+ * line it shares with another, so walls that touch are one mass. */
+interface WallJoin {
+  readonly left: boolean;
+  readonly up: boolean;
+  readonly corner: boolean;
+}
+
+const NO_JOIN: WallJoin = { left: false, up: false, corner: false };
+
 function drawTile(
   dr: GameDrawing,
   ds: SokobanDrawState,
@@ -173,6 +181,7 @@ function drawTile(
   flash: boolean,
   marks: TileMarks,
   sprites: readonly Sprite[] = [],
+  join: WallJoin = NO_JOIN,
 ): void {
   const ts = ds.tileSize;
   const tx = x * ts;
@@ -185,7 +194,7 @@ function drawTile(
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
   dr.drawRect(
     { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-    flash ? COL_FLASH : COL_BACKGROUND,
+    flash ? COL_FLASH : COL_FLOOR,
   );
   if (marks.striped)
     dr.drawHatch(
@@ -195,21 +204,17 @@ function drawTile(
     );
 
   if (v === WALL) {
-    // A beveled block, on the tile inside its grid line.
-    drawRaisedTile(
-      dr,
-      { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-      ts,
-      COL_WALL,
-      COL_HIGHLIGHT,
-      COL_LOWLIGHT,
-    );
+    // A flat block, on the tile inside its grid line.
+    dr.drawRect({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, COL_WALL);
   } else if (v === PIT) {
     disc(floorDisc, COL_PIT);
   } else if (v === DEEP_PIT) {
     disc(floorDisc, COL_DEEP_PIT);
   } else if (isOnTarget(v)) {
+    // A ring the width a barrel leaves round itself, so an empty target and a
+    // filled one are the same ring with and without the barrel in it.
     disc(floorDisc, COL_TARGET);
+    disc(pieceDisc, flash ? COL_FLASH : COL_FLOOR);
   }
   // The player or a barrel standing here, then any crossing it in motion,
   // each painted under this tile's clip.
@@ -247,6 +252,9 @@ function drawTile(
     for (let k = 0; k < 3; k++) dr.drawCircle(center, pieceDisc + k, -1, COL_AIM);
 
   dr.unclip();
+  if (join.left) dr.drawRect({ x: tx, y: ty + 1, w: 1, h: ts - 1 }, COL_WALL);
+  if (join.up) dr.drawRect({ x: tx + 1, y: ty, w: ts - 1, h: 1 }, COL_WALL);
+  if (join.corner) dr.drawRect({ x: tx, y: ty, w: 1, h: 1 }, COL_WALL);
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 }
 
@@ -340,6 +348,9 @@ export function redraw(
       }
   }
 
+  // A hand-typed desc may carry generation's INITIAL; it draws as a wall.
+  const isWall = (i: number) => grid[i] === WALL || grid[i] === INITIAL;
+
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
@@ -348,8 +359,7 @@ export function redraw(
         v = v === TARGET ? PLAYERTARGET : PLAYER;
       }
       const here = spritesAt.get(i) ?? [];
-      // A hand-typed desc may carry generation's INITIAL; it draws as a wall.
-      if (v === INITIAL) v = WALL;
+      if (isWall(i)) v = WALL;
       const arrows = arrowsAt.get(i) ?? [];
       const tile: TileMarks =
         ringed.has(i) ||
@@ -379,7 +389,10 @@ export function redraw(
         here.map((s) => `${s.v}@${s.x},${s.y}`).join(","),
       ].join(":");
       if (ds.tiles[i] !== key) {
-        drawTile(dr, ds, x, y, v, flash, tile, here);
+        const left = v === WALL && x > 0 && isWall(i - 1);
+        const up = v === WALL && y > 0 && isWall(i - w);
+        const join = { left, up, corner: left && up && isWall(i - w - 1) };
+        drawTile(dr, ds, x, y, v, flash, tile, here, join);
         ds.tiles[i] = key;
       }
     }

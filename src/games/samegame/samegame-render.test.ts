@@ -1,8 +1,8 @@
 // Tier-2 render test: drive Same Game's `redraw` against a recording
-// `GameDrawing` double and assert the draw-call structure — the recessed
-// bevel, the seamless join fill between same-color neighbors, the
-// selection outer rect (COL_SEL), and the impossible-board inner recolor
-// (COL_IMPOSSIBLE).
+// `GameDrawing` double and assert the draw-call structure — the framed
+// field, the seamless join fill between same-color neighbors, the
+// selection outer rect (COL_SEL), and the stuck board's inner recolor
+// (COL_INK).
 import { describe, expect, it } from "vitest";
 import { newCursor } from "../../engine/pointer.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -43,12 +43,25 @@ function emptyUi(state: SamegameState): SamegameUi {
 }
 
 describe("Same Game redraw", () => {
-  it("paints a recessed bevel on first draw", () => {
+  it("frames the field with a line and no bevel", () => {
     const state = mkState("1,2");
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, 0);
-    // Two recessed-bevel polygons (highlight + lowlight).
-    expect(ops.filter((o) => o.op === "polygon").length).toBe(2);
+    expect(ops.some((o) => o.op === "polygon")).toBe(false);
+    // The frame (COL_GRID = 14), then the field one pixel inside it
+    // (COL_CELL = 12): 2 tiles and a gap wide, plus the frame's two pixels.
+    const [frame, field] = ops;
+    expect(frame).toMatchObject({ op: "rect", color: 14, w: 2 * TS + 2 + 2 });
+    expect(field).toMatchObject({ op: "rect", color: 12, w: 2 * TS + 2 });
+  });
+
+  it("draws an emptied cell as the field's own surface", () => {
+    const dealt = mkState("1,2");
+    const state = { ...dealt, tiles: dealt.tiles.map((t, i) => (i === 0 ? 0 : t)) };
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, 0);
+    const at = ops.filter((o) => o.op === "rect" && o.x === 16 && o.y === 16);
+    expect(at.map((o) => o.op === "rect" && o.color)).toEqual([12]);
   });
 
   it("fills the gap between same-color neighbors (a seamless join)", () => {
@@ -78,11 +91,11 @@ describe("Same Game redraw", () => {
     expect(ops.some((o) => o.op === "rect" && o.color === 11)).toBe(true);
   });
 
-  it("recolors tile innards to COL_IMPOSSIBLE on a stuck board", () => {
+  it("recolors tile innards to COL_INK on a stuck board", () => {
     const state: SamegameState = { ...mkState("1,2"), impossible: true };
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, 0);
-    // COL_IMPOSSIBLE = palette index 10 (drawn as the inner square).
+    // COL_INK = palette index 10 (drawn as the inner square).
     expect(ops.some((o) => o.op === "rect" && o.color === 10)).toBe(true);
   });
 });

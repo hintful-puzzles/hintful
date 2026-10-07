@@ -5,7 +5,6 @@
  * follows its cell's arrow and the numbers run consecutively.
  */
 
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import type { GamePref } from "../../engine/game.ts";
 import { drag } from "../../engine/hint-gesture.ts";
@@ -332,8 +331,7 @@ const prefs: GamePref<SignpostUi>[] = [
 // --- rendering plumbing ----------------------------------------------
 
 function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
-  return buildPalette(background, highlight, lowlight);
+  return buildPalette(defaultBackground);
 }
 
 function computeSize(p: SignpostParams, ts: number): Size {

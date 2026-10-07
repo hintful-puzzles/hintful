@@ -11,22 +11,25 @@
  * through the same cache. The drag preview is drawn into a scratch copy of the
  * edges before the corner pass, so it too lives entirely in the word.
  *
- * Palette is index-for-index with the C color enum, plus an appended
- * `COL_MISTAKE`.
+ * The look is the collection's: squares on the quiet cell surface with a thin
+ * grid, a number on the lifted surface of a given, and the rectangles' edges,
+ * the board's outer edge among them, in ink.
  */
 
 import {
+  CURSOR,
+  cellSurface,
   correctRegionColor,
   DRAG_ADD,
   DRAG_REMOVE,
   ERROR,
-  GRID_MID,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
-  highlightWash,
   INK,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
@@ -55,7 +58,7 @@ export const PREFERRED_TILE_SIZE = 24;
 export const BORDER = 1;
 export const FLASH_TIME = 0.13;
 
-// --- palette (mirrors the rect.c color enum index-for-index) --------------
+// --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0;
 export const COL_CORRECT = 1;
 export const COL_LINE = 2;
@@ -64,23 +67,27 @@ export const COL_GRID = 4;
 export const COL_DRAG = 5;
 export const COL_DRAGERASE = 6;
 export const COL_CURSOR = 7;
-export const COL_MISTAKE = 8; // appended past the C enum
+export const COL_MISTAKE = 8;
 export const COL_HINT = 9;
 export const COL_HINT_CELL = 10;
+export const COL_CELL = 11; // the surface of a square with no number
+export const COL_GIVEN = 12; // the lifted surface under a number
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
   const out: Color[] = [];
   out[COL_BACKGROUND] = bg;
-  out[COL_GRID] = GRID_MID;
+  out[COL_GRID] = surfaceGrid(bg);
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
   out[COL_DRAG] = DRAG_ADD;
   out[COL_DRAGERASE] = DRAG_REMOVE;
-  out[COL_CORRECT] = correctRegionColor(bg);
+  // Shaded from the surface the squares are painted in, so a finished
+  // rectangle is a step below an unfinished one.
+  out[COL_CORRECT] = correctRegionColor(cellSurface(bg));
   out[COL_LINE] = INK;
   out[COL_TEXT] = INK;
-  // A cell fill under the cell's clue: the "you are here" wash, not the green
-  // mark (palette.ts, `CURSOR`).
-  out[COL_CURSOR] = highlightWash(bg);
+  out[COL_CURSOR] = CURSOR;
   out[COL_MISTAKE] = ERROR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -136,17 +143,17 @@ function drawTile(
   const rect = (rx: number, ry: number, rw: number, rh: number, c: number) =>
     dr.drawRect({ x: rx, y: ry, w: rw, h: rh } satisfies Rect, c);
 
+  const num = state.grid[y * w + x];
+
+  // A finished rectangle shades whole, its number's square included; until
+  // then the number sits on the lifted surface of a given.
   rect(cx, cy, tile + 1, tile + 1, COL_GRID);
   rect(
     cx + 1,
     cy + 1,
     tile - 1,
     tile - 1,
-    bgflags & F_CURSOR
-      ? COL_CURSOR
-      : bgflags & F_CORRECT
-        ? COL_CORRECT
-        : COL_BACKGROUND,
+    bgflags & F_CORRECT ? COL_CORRECT : num ? COL_GIVEN : COL_CELL,
   );
   // The line or area the hint's sentence names, under the clue.
   if (bgflags & F_STRIPES)
@@ -156,7 +163,6 @@ function drawTile(
       hatchPeriod(tile),
     );
 
-  const num = state.grid[y * w + x];
   if (num) {
     dr.drawText(
       { x: cx + Math.floor(tile / 2), y: cy + Math.floor(tile / 2) },
@@ -243,6 +249,17 @@ function drawTile(
   });
   drawMarkSides(dr, band(2 + t), (bgflags >> OUTLINE_SHIFT) & 15, COL_HINT_CELL);
   drawMarkSides(dr, band(2), (bgflags >> RING_SHIFT) & 15, COL_HINT);
+
+  // The keyboard cursor: brackets at the square's corners, clear of its number.
+  if (bgflags & F_CURSOR)
+    drawRectCorners(
+      dr,
+      cx + Math.floor(tile / 2),
+      cy + Math.floor(tile / 2),
+      Math.floor(tile / 2) - 3,
+      COL_CURSOR,
+      t,
+    );
 
   dr.drawUpdate({ x: cx, y: cy, w: tile + 1, h: tile + 1 } satisfies Rect);
 }

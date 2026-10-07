@@ -3,7 +3,7 @@
  *
  * Each cell holds one hub: a filled circle carrying a small dot for every
  * spoke that could exist, the clue digit in the middle, and a thick line out
- * to each connected neighbor. A hub whose clue is satisfied grays out
+ * to each connected neighbor. A hub whose clue is satisfied lifts
  * ({@link COL_SATISFIED}); one whose group can draw no further line while the
  * board is still in pieces gets a red rim; the hub being dragged from (or to)
  * turns green.
@@ -23,10 +23,11 @@
 
 import { BLUE, PURPLE } from "../../engine/color/colors.ts";
 import {
-  correctRegionColor,
+  cellSurface,
   ERROR,
   FLASH,
   GRID_DARK,
+  givenSurface,
   HELD,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -80,21 +81,17 @@ export const COL_HOLDING = 2;
 export const COL_LINE = 3;
 export const COL_MARK = 4;
 /** The completion-flash rim. Upstream's white, which also filled a finished
- * hub; see {@link COL_SATISFIED} for why that fill is gray here. */
+ * hub; see {@link COL_SATISFIED} for that fill here. */
 export const COL_DONE = 5;
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
 /**
- * Fill for a hub that already has as many spokes as its clue asks for — the
- * "stop thinking about this one" cue, the same fork aid Bridges grays a
- * satisfied island with.
- *
- * Upstream fills such a hub with pure white, which is invisible in practice:
- * barely a shade off a near-white light-mode background, and in dark mode
- * `components/view.ts` hands the game *pure white* as its background, so the
- * "highlight" is exactly the background. The shared completed-region shade is a
- * clear step down from the background and reads in both modes, since the
- * dark-mode adaptation inverts gray lightness about the real background.
+ * The face of a hub that already has as many spokes as its clue asks for — the
+ * "stop thinking about this one" cue, the same fork aid Bridges lifts a
+ * satisfied island with. The lifted surface, against the quiet one of
+ * {@link COL_HUB}: a settled hub is fixed as a given is, and the pair is a
+ * step that holds in both schemes, where upstream's pure white sat on the
+ * light board's own tone.
  */
 export const COL_SATISFIED = 8;
 /** The forced spoke(s) of the displayed hint: a line to draw, or a rim dot for
@@ -103,6 +100,8 @@ export const COL_SATISFIED = 8;
 export const COL_HINT = 9;
 /** A ring around each evidence hub the hint reasons over. */
 export const COL_HINT_CELL = 10;
+/** The face of a hub that still has spokes to take: the quiet surface. */
+export const COL_HUB = 11;
 
 /**
  * Upstream takes the frontend background as-is (no `game_mkhighlight`) and
@@ -125,8 +124,8 @@ export function colors(defaultBackground: Color): Color[] {
   // Purple, because Spokes has spent the usual two: green is a held hub and
   // blue a ruled-out spoke.
   out[COL_CURSOR] = PURPLE;
-  // "This hub is complete" is the same cue as a finished region elsewhere.
-  out[COL_SATISFIED] = correctRegionColor(defaultBackground);
+  out[COL_HUB] = cellSurface(defaultBackground);
+  out[COL_SATISFIED] = givenSurface(defaultBackground);
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
@@ -356,7 +355,7 @@ export function redraw(
       const lines = ds.scratch.lines[i];
 
       const fill =
-        ui.markSatisfied && lines === state.numbers[i] ? COL_SATISFIED : COL_BACKGROUND;
+        ui.markSatisfied && lines === state.numbers[i] ? COL_SATISFIED : COL_HUB;
       const border = flash
         ? COL_DONE
         : i === ui.dragStart || i === ui.dragEnd

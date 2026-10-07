@@ -54,7 +54,7 @@ describe("net render", () => {
     const { recording } = renderScenario({ game: netGame, id });
     const ops = recording.ops;
 
-    // Grid lines are border-gray rects; wires are black-filled polygons.
+    // Grid lines are rects in the grid color; wires are ink-filled polygons.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_BORDER)).toBe(true);
     expect(ops.some((o) => o.op === "polygon" && o.fill === COL_WIRE)).toBe(true);
 
@@ -75,13 +75,14 @@ describe("net render", () => {
     );
   });
 
-  it("a locked tile is drawn on the locked-gray background", () => {
+  it("a locked tile, and no other, is drawn on the lifted surface", () => {
     const { id } = board(P5, "render-locked");
-    const lock: NetMove = { type: "lock", x: 2, y: 2 };
-    const { recording } = renderScenario({ game: netGame, id, moves: [lock] });
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_LOCKED)).toBe(
-      true,
-    );
+    const lifted = (moves: NetMove[]) =>
+      renderScenario({ game: netGame, id, moves }).recording.ops.filter(
+        (o) => o.op === "rect" && o.color === COL_LOCKED,
+      ).length;
+    expect(lifted([])).toBe(0);
+    expect(lifted([{ type: "lock", x: 2, y: 2 }])).toBe(1);
   });
 
   it("a barrier preset draws red barrier rectangles", () => {
