@@ -127,3 +127,20 @@ Solve was used).
 - **WHEN** the board reaches the solved arrangement by a player rotation
 - **THEN** the redraw flashes the background for the flash duration
 - **AND** when the board is solved via the solve move, no flash occurs
+
+### Requirement: A Twiddle tile stands off the well it turns in
+
+`redraw` SHALL draw a tile's face as the collection's lifted surface inside its
+bevel, and what a turning block uncovers as the collection's cell surface, so a
+tile is told from the well by more than its bevel in both schemes. The tile
+keeps its bevel: it is an object the player moves. Color 0 stays the board.
+
+#### Scenario: A tile is not the board's gray
+
+- **WHEN** a board is drawn at rest in either scheme
+- **THEN** every tile's face is the lifted surface
+
+#### Scenario: A turning block shows the well
+
+- **WHEN** a block is drawn part of the way through its turn
+- **THEN** the corners it uncovers are the cell surface

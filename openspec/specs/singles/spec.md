@@ -1,11 +1,11 @@
 # singles Specification
 
 ## Purpose
-Singles (Hitori), the puzzle of blacking out squares so that no number repeats
-in a row or column, no two black squares share an edge, and the white squares
-stay connected. This capability specifies its port to the TS engine, with
+Singles (Hitori), the puzzle of shading squares so that no number repeats
+in a row or column, no two shaded squares share an edge, and the squares left
+clear stay connected. This capability specifies its port to the TS engine, with
 difficulty-graded unique generation, the show-black-numbers preference,
-mistake-checking, and an explained deduction hint with its own color legend.
+mistake-checking, and an explained deduction hint with its own legend of marks.
 
 ## Requirements
 
@@ -103,29 +103,64 @@ solved-with-help.
 
 ### Requirement: Singles rendering
 
-`redraw` SHALL draw a grid-outlined tile per cell: black (or red on error) fill
-for a blackened cell, otherwise the background (or lowlight during the
-completion flash); a circle ring for a circled (white-marked) cell; the cell's
-number always for a white cell and, when the show-black-numbers preference is
-on, also for a black cell; cursor corners on the cursor cell; and a red grid
-outline when the board is in an impossible state. A genuine completion (not a
-solved-with-help) SHALL trigger the completion flash.
+`redraw` SHALL draw the board as pieces on a quiet surface. Every cell SHALL be
+the collection's cell surface, with the collection's surface grid line between
+cells and a frame round the grid no heavier than that line. A blackened cell
+SHALL hold the collection's shaded piece, inset on its cell. A circled cell
+SHALL hold a ring round its number in the collection's ruled-out color, with no
+fill of its own, and SHALL carry no other mark for that state. An undecided
+cell SHALL be plain surface. State SHALL never be told by a step of gray.
 
-#### Scenario: A blackened cell renders black with no number by default
+A cell that holds no piece SHALL always show its number, in ink. A blackened
+cell SHALL show its number only when the show-black-numbers preference is on,
+drawn on the piece in a color that is the same in both schemes, and smaller
+than the number of a cell that holds no piece.
+
+A cell `checkComplete` flags as an error SHALL be drawn in the error color: the
+piece of a blackened cell, and the number and the ring of any other. The cursor
+SHALL be brackets at the corners of the cursor cell, and the hint's marks and
+the Check & Save outline SHALL be bands at the cell's edge, so that each lands
+beside the piece and the ring and never on them. The grid lines and the frame
+SHALL be drawn in the error color when the board is in an impossible state. A
+genuine completion (not a solved-with-help) SHALL trigger the completion flash,
+which lifts the surface of every cell that holds no piece.
+
+The game SHALL name no hue of its own for a blackened cell: its hint
+sentences, its control words and its preference's label SHALL say the
+collection's word for the shaded color and its word for a cell that is not
+shaded, and its help page SHALL name the shaded color by placeholder.
+
+#### Scenario: A blackened cell holds the shaded piece with no number by default
 
 - **WHEN** a cell is blackened and the show-black-numbers preference is off
-- **THEN** the tile is filled with the black color and no number is drawn
+- **THEN** the cell holds the shaded piece and no number is drawn
 
 #### Scenario: An erroneous cell renders in the error color
 
 - **WHEN** `checkComplete` flags a cell as an error
-- **THEN** that cell is drawn in the error color
+- **THEN** that cell's piece, or its number and ring where it holds no piece,
+  is drawn in the error color
+
+#### Scenario: A circled cell is a ring on the surface
+
+- **WHEN** a cell is circled
+- **THEN** it is drawn as the cell surface with an unfilled ring round its
+  number
+- **AND** the ring stands in from the cell's edge by more than the thickness
+  of a hint's band
+
+#### Scenario: A hint names the color the piece is drawn in
+
+- **WHEN** a hint step concludes that a cell must be blackened
+- **THEN** its sentence says the collection's word for the shaded color
+- **AND** applying the step draws the shaded piece in that cell
 
 ### Requirement: Singles show-black-numbers preference
 
-The game SHALL expose a single boolean preference, "Show numbers on black
-squares" (keyword `show-black-nums`), via the engine `prefs` hook, stored on the
-`Ui` and read by `redraw`. It SHALL default to off.
+The game SHALL expose a single boolean preference (keyword `show-black-nums`),
+labeled "Show numbers on … squares" with the collection's word for the shaded
+color, via the engine `prefs` hook, stored on the `Ui` and read by `redraw`. It
+SHALL default to off.
 
 #### Scenario: Preference toggles numbers on black squares
 
@@ -176,31 +211,32 @@ forcing it shaded. A single deduction that forces **two cells at once** (the
 four-in-a-corner pair, an offset-pair's two whites) SHALL be emitted as **one**
 multi-cell `HintStep`, not two.
 
-`redraw` SHALL render the displayed step: the target cell(s) highlighted in the
-hint color with a preview of the forced mark (a shaded inset to blacken, a ring
-to keep white), and the deduction's **evidence** rendered so the narration's
-premise is visible — **shaded** in a lighter hint color where the evidence is
-an undecided number cell (its digit drawing on top), and **ringed** in the hint
-color where the evidence is an already-decided cell whose black or circled
-state is itself the reason (an adjacent shaded square; a circled white using up
-a number). Every step SHALL carry visible evidence — a non-empty shaded area or
-a ringed premise — never a bare conclusion.
+`redraw` SHALL render the displayed step: the target cell(s) ringed in the
+hint color at the cell's edge, drawn without the forced mark (the narration
+says whether to shade or circle), and the deduction's **evidence** outlined at
+the cell's edge so the narration's premise is visible — in the evidence color
+where the evidence is an undecided number cell, and in a color of its kind
+where the evidence is an already-decided cell whose black or circled state is
+itself the reason (an adjacent shaded square; a circled cell using up a
+number). The row or column a sentence names SHALL be striped. Every step SHALL
+carry visible evidence — at least one outlined cell — never a bare conclusion.
 
 Where a single deduction has premise cells in **distinct roles**, those roles
 SHALL be rendered in distinct colors, so the highlight does not imply cells
 share a role they do not. Specifically, a 2×2-corner deduction SHALL distinguish
-the **matching pair** (the cells that share a number, shaded as evidence) from
-the **protected corner** (the cell that would be sealed off, drawn in its own
+the **matching pair** (the cells that share a number, outlined as evidence) from
+the **protected corner** (the cell that would be sealed off, outlined in its own
 distinct color). The three roles (target, evidence, protected corner) SHALL be
 mutually disjoint — no cell carries two roles. The corner deduction's narration
 SHALL name the **actual numbers** involved (not generic "this square / its other
 neighbor") and follow the proof-by-contradiction order it embodies — the
 signal (the touching matching pair), the move being ruled out (shading the
 target), its consequence (the corner's other neighbor forced shaded, the corner
-boxed in), and the deduction (the target stays white) — e.g. "One of the two
-touching 3s must be shaded. Shading this 5 would force the 3 beside the corner 4
-shaded as well, leaving the corner boxed in on both sides — so the 5 stays
-white."
+boxed in), and the deduction (the target stays not shaded) — in the shape "A
+touching pair of 3s sits at the corner, so one must be *shaded*. Shading this 5
+would force the 3 beside the corner *shaded*, leaving the corner 4 boxed in, so
+it must stay *not shaded*", each italic word being the collection's word for
+that state.
 
 `hintKeepTrack` SHALL report `"completed"` when the player's move sets exactly
 the hinted cell(s) to the hinted value, `"onTrack"` (shrinking a multi-cell step
@@ -227,18 +263,18 @@ otherwise.
 
 - **WHEN** a 2×2-corner deduction fires (e.g. a top-left 2×2 of `[[4,3],[5,3]]`,
   where the two 3s match and the 4 corner would be sealed off)
-- **THEN** the matching pair is the shaded evidence, the corner is the distinct
+- **THEN** the matching pair is the outlined evidence, the corner is the distinct
   "protected corner" role in its own color, and the forced cell is the target —
   the three roles disjoint
 - **AND** the narration names the actual numbers and follows the contradiction
-  arc (e.g. "One of the two touching 3s must be shaded. Shading this 5 … leaving
-  the corner boxed in … — so the 5 stays white"), not the old "two corner squares"
+  arc ("A touching pair of 3s sits at the corner … Shading this 5 … leaving
+  the corner 4 boxed in …"), ending that the 5 must stay not shaded
 
 #### Scenario: Every hint step shows visible evidence
 
 - **WHEN** `hint` returns a plan for a generated board
-- **THEN** every step carries either a non-empty shaded area or a ringed premise
-  cell — never a bare conclusion
+- **THEN** every step carries at least one outlined cell — never a bare
+  conclusion
 
 #### Scenario: Hint refuses on a solved or mistaken board
 
@@ -257,44 +293,49 @@ otherwise.
 ### Requirement: Singles hint color legend
 
 When a Singles hint is displayed, `redraw` SHALL distinguish the element types
-the deduction names using a stable color legend, each color paired with a
-non-color cue:
+the deduction names using a stable color legend. Every cell carries a number,
+so no hint role SHALL be a fill: each SHALL be a band at the cell's edge,
+beside the piece and the ring, or stripes under the cell's content.
 
-- The **forced cell(s)** (the move) SHALL be filled `COL_HINT` with no
-  number/mark preview drawn.
+- The **forced cell(s)** (the move) SHALL be banded `COL_HINT` with no
+  mark preview drawn.
 - An **undecided number premise** (the matching numbers a deduction reasons
-  over) SHALL be shaded `COL_HINT_CELL`, the cell's digit drawn on top.
-- A cited **decided black ("shaded square") premise** SHALL be ringed
-  `COL_HINT_BLACKREF`; a cited **decided white/circle ("ringed white square")
-  premise** SHALL be ringed `COL_HINT_WHITEREF` — so a deduction that names both
-  a shaded/marked premise and the forced cell does not draw them in the same
-  color. The ring color SHALL be chosen from the cell's own decided state.
-- The **protected corner** of a corner deduction SHALL remain `COL_HINT_STRAND`.
+  over) SHALL be banded `COL_HINT_CELL`.
+- A cited **decided shaded premise** SHALL be banded `COL_HINT_BLACKREF`; a
+  cited **decided circled premise** SHALL be banded `COL_HINT_WHITEREF` — so a
+  deduction that names both a decided premise and the forced cell does not
+  draw them in the same color. The band's color SHALL be chosen from the
+  cell's own decided state, and the cell's own piece or ring SHALL stay drawn
+  as the cue that is not a color.
+- The **protected corner** of a corner deduction SHALL be banded
+  `COL_HINT_STRAND`.
+- The **row or column** a sentence names SHALL be striped in `COL_HINT`.
 
 The legend SHALL be consistent across deductions (a shaded-square premise is the
-same color in every hint that cites one). The `SinglesHint` payload
-(`targets`/`evidence`/`strand`) is unchanged; the legend is a render concern,
-and the three highlight roles remain disjoint.
+same color in every hint that cites one). Which cell takes which mark SHALL be
+read from the step's words, with the `SinglesHint` payload's `strand` telling
+the protected corner from the other outlined cells, and the three highlight
+roles SHALL be disjoint.
 
 #### Scenario: A cited shaded square rings distinct from the forced cell
 
 - **WHEN** an `adjBlack` hint is displayed (a shaded square forces an adjacent
-  cell white)
-- **THEN** the cited black premise is ringed `COL_HINT_BLACKREF` and the forced
-  cell is filled `COL_HINT`, in different colors
+  cell to be not shaded)
+- **THEN** the cited shaded premise is banded `COL_HINT_BLACKREF` and the forced
+  cell is banded `COL_HINT`, in different colors
 
 #### Scenario: A cited ringed white square uses the white-reference color
 
-- **WHEN** a `sameLine` or `boxedIn` hint is displayed (a ringed white square is
+- **WHEN** a `sameLine` or `boxedIn` hint is displayed (a circled square is
   the reason)
-- **THEN** the cited white/circle premise is ringed `COL_HINT_WHITEREF`
+- **THEN** the cited circled premise is banded `COL_HINT_WHITEREF`
 
-#### Scenario: Number premises and corners are unchanged
+#### Scenario: Number premises and corners take their own colors
 
 - **WHEN** a hint cites undecided matching numbers, or a corner deduction
   protects a corner
-- **THEN** the numbers shade `COL_HINT_CELL` (digits on top) and the protected
-  corner stays `COL_HINT_STRAND`, as before
+- **THEN** the numbers are banded `COL_HINT_CELL`, their digits untouched, and
+  the protected corner is banded `COL_HINT_STRAND`
 
 ### Requirement: Singles generates unique, difficulty-graded boards
 

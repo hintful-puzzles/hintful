@@ -55,12 +55,12 @@ selecting it with the keyboard cursor) SHALL toggle the cell and its
 matrix-defined neighbors; `executeMove` SHALL be pure (return a new
 state). Solve SHALL press every square of the solution in one move.
 Moving the keyboard cursor SHALL redraw without adding a
-history entry. The game SHALL report `solved` when all lights are off,
+history entry. The game SHALL report `solved` when every square is lit,
 upgraded to `solved-with-help` when the solver was used.
 
 #### Scenario: Solving and completion
 
-- **WHEN** the player flips cells until all lights are off
+- **WHEN** the player flips cells until every square is lit
 - **THEN** the game status becomes `solved`
 - **AND** if the built-in solver was used to get there it is
   `solved-with-help`
@@ -75,10 +75,28 @@ upgraded to `solved-with-help` when the solver was used.
 
 Flip SHALL render the grid, per-cell toggle diagram and keyboard
 cursor through `GameDrawing`, with a
-diagonal flip animation on a move and a win flash on completion, and
+flip animation on a move and a win flash on completion, and
 SHALL provide a statusbar string reporting move count and
 completed/auto-solved state, and a plain-text format of the board.
 Colors SHALL be derived from the supplied default background.
+
+`redraw` SHALL draw the board as pieces on a quiet surface. A square's two
+states SHALL be the two members of the collection's two-state pair: an unlit
+square holds the first member and a lit square the second, each drawn in that
+member's color and shape, inset on its square, so a finished board is every
+square holding the second member. No state SHALL be a step of gray. The toggle
+diagram SHALL be drawn on the piece, in a color pinned against that piece so
+that it reads in both schemes. The keyboard cursor and a hint's marks SHALL sit
+at the square's edge, beside the piece.
+
+A move SHALL animate each square it flips as the old piece shrinking away and
+the new one growing in its place, never both at once. The win flash SHALL be a
+ring of squares showing the first member, moving outward from the middle of
+the board.
+
+The game SHALL name no hue of its own for either state: its hint sentences and
+hint-mark legends SHALL say "lit" and "unlit", and its help page SHALL name the
+two pieces by placeholder and by shape.
 
 #### Scenario: Flip renders and animates through the engine
 
@@ -87,6 +105,14 @@ Colors SHALL be derived from the supplied default background.
   move count and completion wording, and the palette is derived from
   the host background
 - **AND** the board has a correct plain-text representation
+
+#### Scenario: A lit square is told from an unlit one by its piece
+
+- **WHEN** a board with lit and unlit squares is drawn, in either scheme
+- **THEN** every unlit square holds the pair's first piece and every lit square
+  the second, on the same surface
+- **AND** the diagram on each piece is drawn in a pinned color that the piece
+  is not
 
 ### Requirement: Flip is registered in the engine registry
 
@@ -103,15 +129,15 @@ engine registry, so the worker serves `flip` via the TS midend.
 Flip's hint SHALL plan the presses of the solver's shortest answer in reading
 order, one step a press, and SHALL say of each press before the last which of
 two kinds it is. Where the press is the last square in reading order that
-flips some dark square, the step SHALL say so as a deduction, naming the order
-in its own words, ring the square to press, outline those dark squares, and
+flips some unlit square, the step SHALL say so as a deduction, naming the order
+in its own words, ring the square to press, outline those unlit squares, and
 stripe and name every other square the press flips, so that no square the
 press changes is left unmarked. Where every square the press flips is also
 flipped by a later square, the step SHALL offer the press as one of the fewest
 presses that light the board the step is shown on, saying how many that is,
 and SHALL say there is only one way to light the board when no other set of
 presses does. The last press SHALL say that it finishes the board, whichever
-kind it is, and outline every other dark square. A step SHALL claim nothing
+kind it is, and outline every other unlit square. A step SHALL claim nothing
 the code has not checked on the board the step is shown on.
 
 The plan SHALL be the same plan after each of its presses: a hint asked again
@@ -119,13 +145,13 @@ once a step's square is pressed SHALL give the steps that were left, with the
 same words. A board no set of presses lights SHALL be refused as a puzzle
 whose solution cannot be determined.
 
-#### Scenario: A press that is a dark square's last chance
+#### Scenario: A press that is an unlit square's last chance
 
 - **WHEN** the hint's next press is the last square in reading order that
-  flips a dark square, and is not the plan's last press
+  flips an unlit square, and is not the plan's last press
 - **THEN** the step says that, row by row, only the ringed square can still
   light the outlined square, so it must be pressed
-- **AND** every outlined square is dark and is flipped by no square after the
+- **AND** every outlined square is unlit and is flipped by no square after the
   ringed one
 - **AND** every other square the press flips is striped, and the step says
   the press flips the striped ones too
@@ -144,7 +170,7 @@ whose solution cannot be determined.
 - **WHEN** one press is left in the plan
 - **THEN** the step says pressing the ringed square lights the outlined
   squares and finishes the board
-- **AND** the outlined squares are every dark square but the ringed one, and
+- **AND** the outlined squares are every unlit square but the ringed one, and
   the press flips each of them
 
 #### Scenario: Following the hint

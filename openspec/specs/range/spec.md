@@ -1,11 +1,11 @@
 # range Specification
 
 ## Purpose
-Range (Kurodoko), the puzzle of blacking out squares so that no two black
-squares touch, the white squares stay connected, and each number counts the
-white squares it sees in four directions, itself included. This capability
+Range (Kurodoko), the puzzle of shading squares so that no two shaded
+squares touch, the squares left clear stay connected, and each number counts
+the clear squares it sees in four directions, itself included. This capability
 specifies its port to the TS engine, with live error highlighting,
-mistake-checking, and an explained deduction hint with its own color legend.
+mistake-checking, and an explained deduction hint with its own legend of marks.
 
 ## Requirements
 
@@ -112,7 +112,7 @@ reported solved exactly while `findErrors` finds no error on it, judged from the
 non-clue cell SHALL cycle empty → black → white → empty; right-button /
 select2 SHALL cycle empty → white → black → empty; a clue cell SHALL be
 inert. A keyboard cursor SHALL move within the grid, and shift + a cursor
-direction SHALL place a white dot on the vacated and/or entered empty cells.
+direction SHALL mark the vacated and/or entered empty cells white.
 
 Range's grid is row-major and its own helpers take `(r, c)`. The keyboard
 cursor is nevertheless the collection's shared `(x, y)` shape, so `cursor.x` is
@@ -147,13 +147,13 @@ the main white component — recomputed each frame from `findErrors`, matching
 upstream's live error display. Separately, `findMistakes` SHALL re-solve the
 puzzle from its initial clues and return every player-marked non-clue cell
 whose mark contradicts the unique solution (black where the solution is white,
-or white-dotted where the solution is black), returning none when the marks
+or marked white where the solution is black), returning none when the marks
 are consistent or undecided.
 
 #### Scenario: A black-adjacency violation reddens live
 
 - **WHEN** two orthogonally adjacent cells are both painted black
-- **THEN** `redraw` draws both in the error color without any explicit check
+- **THEN** `redraw` frames both in the error color without any explicit check
   action
 
 #### Scenario: findMistakes flags a wrong black
@@ -181,23 +181,24 @@ overrun (the cell must be black), a clue that can only reach its count one way
 white to keep the white cells connected). `hintKeepTrack` SHALL report
 `"completed"` when the player's move sets the hinted cell to the hinted value
 and `"off"` otherwise. `redraw` SHALL render the displayed step: the target
-cell highlighted in the hint color with a preview of the forced mark, and the
-deduction's **evidence shaded as an area** in a lighter hint color — the
-clue's line of sight (satisfied/overrun), the run it must reach along (reach),
-or the non-black cells a cut would isolate (connect) — so the shaded picture
-the narration names is visible, not merely a single premise cell. A premise
-that cannot take the area shade (an adjacent **black** square, which must stay
-black) SHALL instead be **ringed** in the hint color. The shaded area SHALL be
+cell ringed in the hint color at its edge, with no preview of the forced mark
+(the narration says which mark), and the deduction's **evidence outlined as an
+area** in the evidence color — the clue's line of sight (satisfied/overrun),
+what the clue already sees along its other arms (reach), or the non-black
+cells a cut would isolate (connect) — so the picture the narration names is
+visible, not merely a single premise cell. A `reach` step SHALL also stripe
+the run the clue must see along, from the clue up to the target. A premise
+that is a **black** square (the adjacent one, which keeps its piece) SHALL
+take a doubled outline in a color of its own. The evidence SHALL be
 computed against the board state as each step's deduction fires (the prior
 steps applied), so the run grows as the player follows the plan, and SHALL
 never include the target cell itself.
 
-Independently of hints, `redraw` SHALL render a **known-white cell — a clue or
-a player white mark — with a distinct white fill** (clues are implicitly
-white), leaving only undecided cells the neutral background, so a beginner
-reads determined state at a glance. The white is derived from the
-background-shifting palette helper so it stays distinguishable from the
-background.
+Independently of hints, `redraw` SHALL render a **known-white cell so that it
+is told from an undecided one without a fill of its own**: a clue by the
+lifted surface under it (clues are implicitly white), and a player white mark
+by its dot, leaving an undecided cell the plain cell surface, so a beginner
+reads determined state at a glance.
 
 #### Scenario: Hint explains the next forced move
 
@@ -210,9 +211,9 @@ background.
 #### Scenario: Every hint step shows visible evidence
 
 - **WHEN** `hint` returns a plan for a generated board
-- **THEN** every step carries either a non-empty shaded area or a ringed black
-  premise cell — never a bare conclusion — and no step's area contains its own
-  target cell
+- **THEN** every step carries a non-empty outlined area, a striped run or an
+  outlined black premise cell — never a bare conclusion — and neither the
+  outline nor the run contains the step's own target cell
 
 #### Scenario: Hint refuses on a solved or mistaken board
 
@@ -230,34 +231,86 @@ background.
 ### Requirement: Range hint color legend
 
 When a Range hint is displayed, `redraw` SHALL distinguish the element types the
-deduction names using a stable color legend, each color paired with a
-non-color cue:
+deduction names using a stable legend of marks, none of them a fill that hides
+a cell's content:
 
-- The **forced cell** (the move) SHALL be filled `COL_HINT`, with the forced mark
-  previewed as a shape — an inset black square for a forced black, a dot for a
-  forced white.
-- **Undecided premise cells** the deduction reasons over (a clue's line of sight,
-  a reach run, the cells a cut would disconnect) SHALL be shaded `COL_HINT_CELL`.
-- A cited **decided black square** premise (the adjacent black in an `adjacency`
-  deduction) SHALL be ringed `COL_HINT_BLACKREF`, not `COL_HINT` — so a deduction
-  that names both a shaded black premise and the forced cell does not draw them
-  in the same color. The cell stays black underneath; the teal ring is
-  reinforcement.
+- The **forced cell** (the move) SHALL be ringed `COL_HINT`, the same whether
+  the step shades it or marks it not shaded, with no preview of the forced
+  mark.
+- **Premise cells that hold no shaded piece** (a clue's line of sight, the
+  cells a cut would disconnect) SHALL be outlined `COL_HINT_CELL`.
+- A cited **shaded square** premise (the adjacent one in an `adjacency`
+  deduction) SHALL take a doubled outline in `COL_HINT_SHADEDREF`, not
+  `COL_HINT` — so a deduction that names both a shaded premise and the forced
+  cell does not draw them in the same color. The cell keeps its shaded piece.
+- The **run** a `reach` deduction names SHALL be striped in `COL_HINT`.
+- The **clue** a deduction counts from SHALL have its number drawn in
+  `COL_HINT`.
 
-The legend SHALL be consistent across deductions. The `RangeHint` payload
-(`target`/`area`/`blackRefs`) and the narration text are unchanged; the legend is
-a render concern.
+The legend SHALL be consistent across deductions. Which cell takes which mark
+SHALL be read from the step's words, so the sentence and the picture name the
+same cells.
 
 #### Scenario: A cited black square rings distinct from the forced cell
 
-- **WHEN** an `adjacency` hint is displayed (a black square forces an adjacent
-  cell white)
-- **THEN** the cited black premise is ringed `COL_HINT_BLACKREF` and the forced
-  cell is filled `COL_HINT`, in different colors
+- **WHEN** an `adjacency` hint is displayed (a shaded square forces an adjacent
+  cell to be not shaded)
+- **THEN** the cited shaded premise takes a doubled outline in
+  `COL_HINT_SHADEDREF` and the forced cell is ringed `COL_HINT`, in different
+  colors
 
-#### Scenario: Undecided premises stay shaded
+#### Scenario: Premises that are not shaded are outlined
 
-- **WHEN** a `satisfied`, `overrun`, `reach`, or `connect` hint cites a clue's
-  visible white cells or the cells a cut would disconnect
-- **THEN** those undecided premise cells are shaded `COL_HINT_CELL`, distinct
-  from both the target and any cited black square
+- **WHEN** a `satisfied`, `overrun`, `reach`, or `connect` hint cites the cells
+  a clue sees or the cells a cut would disconnect
+- **THEN** those premise cells are outlined `COL_HINT_CELL`, distinct from
+  both the target and any cited shaded square
+
+### Requirement: Range draws a shaded cell as the collection's shaded piece
+
+`redraw` SHALL draw the board as pieces on a quiet surface. A cell the player
+has shaded (the state the other requirements call black, after upstream) SHALL
+hold the collection's shaded piece, in its color and shape, inset on its cell.
+A cell the player has marked as not shaded (the state they call white) SHALL
+hold the collection's ruled-out dot and take no fill of its own, and an
+undecided cell SHALL be the plain cell surface, so no state is told by a step
+of gray. A clue cell SHALL sit on the lifted surface of a given, with its
+number in ink. The line between cells and the frame round the grid SHALL be
+the surface's grid line.
+
+A cell in error SHALL keep its content and take a frame in the error color at
+its edge, with a clue's number or a dot drawn in the error color; a shaded
+piece keeps its own color. The completion flash SHALL lift every cell to the
+given's surface on its lit beats, a step that reads in both schemes, and leave
+the pieces standing. The keyboard cursor and every
+hint mark SHALL be drawn at the cell's edge, beside the piece.
+
+The game SHALL name no hue of its own: its hint sentences, its control words
+and its hint-mark legend SHALL say the collection's word for the shaded color
+and its word for a cell that is not shaded, and its help page SHALL name the
+shaded color by placeholder.
+
+#### Scenario: Three states on one surface
+
+- **WHEN** a board holds a shaded cell, a cell marked not shaded and an
+  undecided cell
+- **THEN** all three are drawn on the same cell surface
+- **AND** the first holds the shaded piece, the second the ruled-out dot and
+  the third nothing
+
+#### Scenario: A clue is told by the cell under it
+
+- **WHEN** a board with a clue is drawn
+- **THEN** the clue's cell is the lifted surface and no other cell is
+
+#### Scenario: A shaded cell in error is still a shaded piece
+
+- **WHEN** two orthogonally adjacent cells are both shaded
+- **THEN** each holds a piece in the shaded color
+- **AND** each cell is framed in the error color
+
+#### Scenario: A hint says the word for the color the piece is drawn in
+
+- **WHEN** a hint step concludes that a cell must be shaded
+- **THEN** its sentence says the collection's word for the shaded color
+- **AND** applying the step draws the shaded piece in the cell

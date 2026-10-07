@@ -500,7 +500,7 @@ export const lightupGame: Game<
       name: "Symmetry",
       type: "choices",
       choices: SYMMETRY_CHOICES,
-      doc: "How the walls are arranged: <em>None</em>, <em>2-way mirror</em> (the bottom half reflects the top), <em>2-way rotational</em> (the same after a half turn), <em>4-way mirror</em> (reflected both left to right and top to bottom) or <em>4-way rotational</em> (the same after a quarter turn). 4-way rotational needs a square grid, and both 4-way settings need a grid at least 3 squares across in one direction. Only the black squares follow the symmetry; the numbers in them need not.",
+      doc: "How the walls are arranged: <em>None</em>, <em>2-way mirror</em> (the bottom half reflects the top), <em>2-way rotational</em> (the same after a half turn), <em>4-way mirror</em> (reflected both left to right and top to bottom) or <em>4-way rotational</em> (the same after a quarter turn). 4-way rotational needs a square grid, and both 4-way settings need a grid at least 3 squares across in one direction. Only the walls follow the symmetry; the numbers in them need not.",
       label: {
         slot: "tail",
         // The presets' own: 4-way rotational on the small square board, 2-way

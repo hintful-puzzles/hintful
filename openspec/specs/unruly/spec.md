@@ -15,9 +15,10 @@ explained deduction hint with its own color legend.
 The engine SHALL provide a registered `unruly` game implementing
 `Game<UnrulyParams, UnrulyState, UnrulyMove, UnrulyUi, UnrulyDrawState>`: the
 binary puzzle (Binairo / Tohu-wa-Vohu) on a `w2 × h2` grid in which every cell
-is filled black (`one`) or white (`zero`) so that no row or column contains a
-run of three equal cells and each row and column holds equally many of each
-color; an optional `unique` variant additionally forbids two identical rows or
+is filled with one of two values (`one` or `zero`, the two members of the
+collection's two-state pair) so that no row or column contains a
+run of three equal cells and each row and column holds equally many of each;
+an optional `unique` variant additionally forbids two identical rows or
 two identical columns. Params SHALL be `w2`, `h2` (both even and at least 6),
 `unique` (boolean), and `diff` (Easy / Normal / Tricky), encoded `{w2}x{h2}`
 with an optional `u` for the unique variant and, when `full`, `d{c}` for the
@@ -143,20 +144,23 @@ target cell SHALL produce no history move.
 
 ### Requirement: Unruly renders the grid with live error highlighting and a completion flash
 
-`redraw` SHALL draw each cell in its color fill (white for zero, black for one,
-neutral for empty), an inset bevel on immutable clue cells, and — recomputed
-each frame — error overlays: a red bar spanning any three-in-a-row run, a `!`
-marker on cells of a row or column whose color count is exceeded, and (in
+`redraw` SHALL draw the board as pieces on a quiet surface: every cell a
+surface a small step off the board, a `one` as the first member of the
+collection's two-state pair and a `zero` as the second, each in that member's
+color and shape, inset on its cell. A cell the puzzle gave SHALL be told by a
+lifted surface under its piece and by no mark on the piece. The game SHALL name
+no hue of its own for either state.
+
+Recomputed each frame, `redraw` SHALL draw the error overlays: a red bar
+spanning any three-in-a-row run, a badge (a `!` on a disc of the error color)
+on the pieces of a row or column whose count of that kind is exceeded, and (in
 `unique` mode) a red bar across any pair of identical full rows or columns. A
 keyboard cursor SHALL be drawn as an outline on the focused cell. On completion
-a flash SHALL play, inverting filled tiles toward their highlight/lowlight in
-alternating frames. The palette SHALL use the upstream color-enum index layout
-so the app's dark-mode palette overrides apply unchanged, deriving the
-black/white highlight and lowlight from the shared `mkhighlightSpecific` helper.
+a flash SHALL play, lifting every cell's surface on its first and last frames.
 
 #### Scenario: A three-in-a-row reddens live
 
-- **WHEN** three consecutive same-color cells exist in a row or column
+- **WHEN** three consecutive cells of one kind exist in a row or column
 - **THEN** `redraw` draws an error-colored bar across them without any explicit
   check action
 
@@ -164,8 +168,15 @@ black/white highlight and lowlight from the shared `mkhighlightSpecific` helper.
 
 - **WHEN** a player move transitions the board from unsolved to solved (not the
   Solve command)
-- **THEN** a flash of positive duration plays and `redraw` inverts the filled
-  tiles during it
+- **THEN** a flash of positive duration plays and `redraw` lifts every cell's
+  surface during its lit frames
+
+#### Scenario: A given is told from a placed piece by its cell
+
+- **WHEN** a board holds a given and a piece of the same kind that the player
+  placed
+- **THEN** the two pieces are drawn alike
+- **AND** only the given's cell is drawn in the lifted surface
 
 ### Requirement: Unruly checks player marks against the unique solution
 
@@ -206,33 +217,30 @@ current marks, the ordered sequence of forced cells (run to fixpoint at the
 solver's full strength) and return one narrated `HintStep` per forced cell. Each
 step's narration SHALL state the deduction technique that forces the cell — two
 of three consecutive cells already equal (a third would be three in a row), a
-row or column whose count of one color is already complete (so the rest are the
-other color), a unique-rows conflict (a cell that would duplicate a full
-row/column), or a near-complete row whose single remaining odd-color cell is
-pinned to one window (so every other empty cell is forced). Moves that a single
-firing forces (a whole line completing to one color, a near-complete row's
+row or column whose count of one kind is already complete (so the rest are the
+other), a unique-rows conflict (a cell that would duplicate a full
+row/column), or a near-complete row whose single remaining odd cell is
+pinned to one window (so every other empty cell is forced). A sentence SHALL
+name a piece's color in the word the palette gives that member of the pair, so
+the word is the color the piece is drawn in. Moves that a single
+firing forces (a whole line completing to one kind, a near-complete row's
 forced remainder) SHALL be emitted as one journey via `continuesPrevious`, so
 they read and auto-play as a single coherent hint. `hintKeepTrack` SHALL report
 `"completed"` when the player's move sets the hinted cell to the hinted value and
 `"off"` otherwise.
 
-`redraw` SHALL render the displayed step: the target cell in the hint color with
-a preview of the forced color, and the deduction's **evidence made visible** —
-the sibling cells the same journey forces light-shaded in a lighter hint color
-(applied only to still-empty cells, so the shade tracks the live board as legs
-apply), and filled premise cells (the same-color pair, the near-complete
-reserved window) **ringed** in the hint color rather than shaded, since a light
-shade over a filled tile would hide the color that is the evidence. Every step
-SHALL carry visible evidence — a non-empty shaded area or a ring — never a bare
-conclusion.
+`redraw` SHALL render the displayed step with the marks its sentence refers
+to: a ring on the cell the step fills, an outline on each cell the step reasons
+from, and stripes on the row or column the sentence names. Every step SHALL
+carry visible evidence, never a bare conclusion.
 
 Independently of hints, the game SHALL implement `animLength` so that a `place`
-move which changes a cell animates: `redraw` SHALL grow the new color from the
-cell center to full over the animation, drawing the previous color beneath. The
-animation SHALL be geometric (palette-index based, no color tween), settle to
-the plain new color, and coexist with the completion flash. Because the base
+move which changes a cell animates: `redraw` SHALL grow a placed piece from the
+middle of its cell to full size over the animation, and shrink a piece that is
+taken away. The animation SHALL be geometric (no color tween), settle to the
+plain piece, and coexist with the completion flash. Because the base
 animation length is non-zero, a hint-executed move SHALL play stretched to the
-uniform hint-step duration, so auto-hint reads as continuous fills.
+uniform hint-step duration, so auto-hint reads as continuous placements.
 
 #### Scenario: Hint explains the next forced move
 
@@ -254,8 +262,8 @@ uniform hint-step duration, so auto-hint reads as continuous fills.
 #### Scenario: Every hint step shows visible evidence
 
 - **WHEN** `hint` returns a plan for a generated board
-- **THEN** every step carries either a non-empty shaded area or a ringed premise
-  cell — never a bare conclusion
+- **THEN** every step carries an outlined premise cell or a striped line — never
+  a bare conclusion
 
 #### Scenario: Hint refuses on a solved or mistaken board
 
@@ -272,45 +280,41 @@ uniform hint-step duration, so auto-hint reads as continuous fills.
 
 #### Scenario: A placement animates as a growing fill
 
-- **WHEN** a `place` move changes a cell and `redraw` runs mid-animation
-- **THEN** the cell draws its previous color beneath the new color growing from
-  the center
-- **AND** at rest the cell shows the plain new color
+- **WHEN** a `place` move fills a cell and `redraw` runs mid-animation
+- **THEN** the cell draws its piece smaller than at rest, centered, and larger
+  the further the animation has run
+- **AND** at rest the cell shows the plain piece
 
-### Requirement: Unruly hint color legend
+### Requirement: Unruly's hint marks are told apart by color and by place
 
 When an Unruly hint is displayed, `redraw` SHALL distinguish the element types
 the deduction names using a stable color legend, each color paired with a
 non-color cue:
 
-- The **forced cell** (the move) SHALL be filled `COL_HINT`, with the forced
-  color previewed as an inset square (and a grow animation while it is placed).
-- The deduction's other **forced empty cells** in the same journey SHALL be
-  shaded `COL_HINT_CELL` (applied only to still-empty cells).
+- The **forced cell** (the move) SHALL be ringed `COL_HINT` and SHALL NOT be
+  filled: a fill in a game whose move is to put one of two pieces in a cell
+  reads as a third piece already placed.
+- The **line** the sentence names SHALL be hatched `COL_HINT`, under the pieces
+  it holds.
 - The **cited premise / pivotal cells** the deduction reasons over (the
-  same-color pair in `threes`, the completed quota in `complete`, the full
+  like pair in `threes`, the completed quota in `complete`, the full
   reference line in `unique`, the reserved window in `nearcomplete`) SHALL be
   ringed `COL_HINT_REF`, not `COL_HINT` — so the cited premise is not drawn in
   the same color as the forced move. The cell keeps its own appearance (a
-  filled black/white cell stays visible; an empty reserved-window cell stays
-  empty) underneath the ring.
+  piece stays visible; an empty reserved-window cell stays empty) inside the
+  ring.
 
-Unruly uses a **single** premise ring color (not a per-color black/white
-split): its ringed cells are not uniformly one decided color — `unique` rings a
-balanced line holding both colors and `nearcomplete` rings empty cells — so a
+Every mark SHALL be drawn at the cell's edge, beside the piece and not on it.
+Unruly uses a **single** premise ring color (not one per kind of piece): its
+ringed cells are not uniformly one kind — `unique` rings a
+balanced line holding both and `nearcomplete` rings empty cells — so a
 state-derived ring color is ill-defined. The legend SHALL be consistent across
-the four techniques. The `UnrulyHint` payload (`target`/`area`/`ring`) is
-unchanged; the legend is a render concern.
+the four techniques.
 
 #### Scenario: A cited premise rings distinct from the forced cell
 
 - **WHEN** a `threes`, `complete`, or `unique` hint is displayed (filled premise
   cells force a move)
 - **THEN** the cited premise cells are ringed `COL_HINT_REF` and the forced cell
-  is filled `COL_HINT`, in different colors
-
-#### Scenario: Forced journey cells stay shaded
-
-- **WHEN** a hint forces several empty cells in one line (a `fillRow` journey)
-- **THEN** the still-empty forced cells are shaded `COL_HINT_CELL`, distinct from
-  both the `COL_HINT` target and the `COL_HINT_REF` premise ring
+  is ringed `COL_HINT`, in different colors
+- **AND** no cell is filled in either

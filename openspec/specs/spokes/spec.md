@@ -195,10 +195,14 @@ easier. Generation from a given seed SHALL be reproducible.
 ### Requirement: Spokes marks hubs whose spoke count is met
 
 Rendering SHALL distinguish a hub that already carries as many lines as its clue
-requires from one that does not, by a fill color clearly separated from the board
-background in both light and dark presentation. The distinction SHALL be visual
-only: a marked hub remains fully editable. A preference SHALL let the player turn
-the marking off.
+requires from one that does not, by the surface of its face: a hub with lines
+still to take SHALL have the collection's cell surface, and a hub whose count is
+met SHALL have the collection's lifted surface, the one a given sits on
+elsewhere, since such a hub is settled. The two are a pair the collection names,
+separated in both light and dark presentation, and never a step of gray of the
+game's own. The distinction SHALL be visual only: a marked hub remains fully
+editable. A preference SHALL let the player turn the marking off, and with it off
+every hub SHALL have the cell surface.
 
 Upstream nominally fills such a hub with pure white, which is indistinguishable
 from the background the application supplies in either color scheme; that is

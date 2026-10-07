@@ -308,3 +308,39 @@ the board flags as an error.
 - **WHEN** the hint is asked on the pinned board after its move log, which ends
   in the player's off-grid mark
 - **THEN** the hint answers instead of throwing
+
+### Requirement: Rome draws its squares on a quiet surface and keeps its outlines
+
+`redraw` SHALL draw every square the player fills on the collection's cell
+surface, and a square holding an arrow the puzzle fixed, or a goal, on the
+collection's lifted surface of a given, with the fixed arrow in ink and the
+player's in the entry color. The line between two squares of one region SHALL
+be the collection's surface grid line. A region's outline, the frame round the
+board included, is content: it SHALL stay in ink at its full width, and where
+two outlines turn round a square's corner they SHALL meet in a solid corner.
+
+A goal SHALL be a disc in the collection's color for where the player is going
+(the theme pair's second member), and the tint of a square whose arrows reach a
+goal SHALL be that color's wash, so the squares that are settled take the
+goal's hue. That tint, the error tint and the selected square's wash SHALL each
+replace the square's surface. The completion
+flash SHALL sweep a bright beat and a dim beat across the board over each
+square's own surface, in colors that read in both schemes.
+
+#### Scenario: A fixed arrow is told by the square under it
+
+- **WHEN** the opening frame of a board is drawn
+- **THEN** every square holding a fixed arrow is the lifted surface and every
+  empty square is the plain cell surface
+
+#### Scenario: An outline is stronger than a grid line
+
+- **WHEN** a board with a region of two or more squares is drawn
+- **THEN** the line between two squares of that region is the surface's grid
+  line
+- **AND** the line between two regions is ink
+
+#### Scenario: The flash moves
+
+- **WHEN** the completion flash is drawn at two different beats
+- **THEN** the frames differ, and a frame shows both the bright and the dim beat

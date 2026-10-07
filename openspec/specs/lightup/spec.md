@@ -14,10 +14,10 @@ and no tier below Unreasonable that requires guessing.
 The engine SHALL provide a registered `lightup` game implementing
 `Game<LightupParams, LightupState, LightupMove, LightupUi, LightupDrawState>`:
 place light bulbs on open squares of a `w × h` grid so that every open square
-is lit (bulbs shine along rows and columns until blocked by a black square),
-no bulb is lit by another bulb, and every numbered black square has exactly
+is lit (bulbs shine along rows and columns until blocked by a wall),
+no bulb is lit by another bulb, and every numbered wall has exactly
 that many orthogonally-adjacent bulbs. Params SHALL be `w`, `h`, `blackpc`
-(percentage of black squares), `symm` (none / 2-way mirror / 2-way rotational /
+(percentage of walls), `symm` (none / 2-way mirror / 2-way rotational /
 4-way mirror / 4-way rotational) and `difficulty` (Easy / Normal / Unreasonable),
 encoded `{w}x{h}b{blackpc}s{symm}d{difficulty}` (short form `{w}x{h}`). All 9
 upstream presets SHALL be offered. Decoding SHALL keep upstream's lenient
@@ -47,11 +47,11 @@ solve-completion flash.
 
 ### Requirement: Light Up descriptions use the upstream run-length encoding
 
-The desc SHALL encode the grid row-major, one character per black square
+The desc SHALL encode the grid row-major, one character per wall
 (`B` unnumbered, `0`–`4` numbered) with maximal runs of open squares
 compressed as `a`–`z` (run of 1–26). `validateDesc` SHALL reject unknown
 characters, short descs, and over-long descs. `newState` SHALL parse the desc
-into black/numbered flags and clue values with all open squares unlit.
+into wall and numbered flags and clue values with all open squares unlit.
 
 #### Scenario: A description round-trips
 
@@ -69,7 +69,7 @@ into black/numbered flags and clue values with all open squares unlit.
 `interpretMove` SHALL reproduce upstream input: left-click toggles a bulb on
 an open, unmarked square (clearing any mark when placing); right-click toggles
 the impossible-mark on an open, bulb-less square (placing a mark removes any
-bulb); clicks on black squares and out-of-grid are no-ops; a left-click on a
+bulb); clicks on walls and out-of-grid are no-ops; a left-click on a
 marked square (and a right-click on a bulb) is rejected without a history
 entry. Keyboard: arrow cursor movement (revealing the cursor), select/Enter
 toggles a bulb, select2/`i` toggles a mark, with the same rejection rules.
@@ -82,8 +82,8 @@ exact).
 
 - **WHEN** the player left-clicks an empty open square, then left-clicks it
   again
-- **THEN** a bulb appears (lighting its row/column to the nearest black
-  squares) and then disappears
+- **THEN** a bulb appears (lighting its row/column to the nearest
+  walls) and then disappears
 
 #### Scenario: Marks block bulbs
 
@@ -142,11 +142,12 @@ fallback.
 **A discount narration SHALL describe the set it is discounting as the
 deduction counts it.** The set of squares one of which must hold a bulb
 includes, for an unlit square, **that square itself** wherever a bulb could
-still be placed there — it lights itself. Because the display rings that square
-rather than shading it, a narration that says only "the shaded squares" can
-light it names fewer candidates than the deduction rests on, and is false on
-the boards where the ringed square is a member. The sentence SHALL therefore
-say which of the two shapes it means, and SHALL state the premise its
+still be placed there — it lights itself. Because the display marks that square
+as the outlined dark square, apart from the other outlined squares, a narration
+that says only the other outlined squares can light it names fewer candidates
+than the deduction rests on, and is false on the boards where the dark square
+is a member. The sentence SHALL therefore say which of the two it means, and
+SHALL state the premise its
 conclusion needs — that one of those squares must hold the bulb — rather than
 leaving the reader to supply it.
 
@@ -166,11 +167,11 @@ leaving the reader to supply it.
 
 #### Scenario: A discounted square's narration counts every candidate
 
-- **WHEN** a discount step's rule-out set contains the ringed unlit square
-  itself, so that only the *remaining* members are shaded
-- **THEN** the narration names the ringed square alongside the shaded ones as
-  a place the bulb could go, rather than attributing the whole set to the
-  shaded squares
+- **WHEN** a discount step's rule-out set contains the outlined dark square
+  itself, so that only the *remaining* members are the other outlined squares
+- **THEN** the narration names the dark square itself alongside the other
+  outlined ones as a place the bulb could go, rather than attributing the
+  whole set to the other outlined squares
 
 #### Scenario: Refusal on a wrong board
 
@@ -184,20 +185,23 @@ leaving the reader to supply it.
 
 ### Requirement: Light Up hint rendering follows the element-type legend
 
-The displayed hint SHALL highlight, not perform: target square(s) filled
-`COL_HINT` blue with no bulb/mark preview (bulb targets and mark targets look
-identical; the narration says which action), the deduction's evidence — the
-corridor of sight or the clue's free neighbors, computed against the board
-as that step fires — shaded `COL_HINT_CELL`, with the driving clue's digit
-visible on its shaded cell. Hint colors SHALL be appended past the upstream
-color enum (the dark-mode overrides target indices 2 and 3), and every hint
-bit SHALL participate in the per-tile render cache diff key.
+The displayed hint SHALL highlight, not perform: each target square SHALL be
+ringed `COL_HINT` at its edge with no bulb/mark preview (bulb targets and mark
+targets look identical; the narration says which action), so a bulb or dot
+already on it stays visible. The deduction's evidence SHALL be drawn by what
+it is: an evidence square no bulb lights SHALL be shaded `COL_HINT_CELL`; a
+lit one SHALL keep its lit fill and take a doubled ring in `COL_HINT_LITERF`;
+the unlit square the deduction is about SHALL take a doubled ring in
+`COL_HINT_DARKREF`; and the driving clue SHALL be ringed at its wall's edge in
+`COL_HINT_CLUE`, keeping its digit. Every hint bit SHALL participate in the
+per-tile render cache diff key.
 
 #### Scenario: Evidence is visible as an area
 
 - **WHEN** a forced-light step is displayed
-- **THEN** the target square renders `COL_HINT` with its content un-obscured
-  and the corridor it reasons over renders `COL_HINT_CELL`
+- **THEN** the target square is ringed `COL_HINT` with its content un-obscured
+  and each unlit square of the corridor it reasons over renders
+  `COL_HINT_CELL`
 
 #### Scenario: A hint step's marks stay inside its evidence
 
@@ -258,10 +262,10 @@ SHALL be reused by `solve()` and `findMistakes`.
 ### Requirement: Light Up generates solver-gated boards
 
 The generator SHALL build a board by symmetric
-black-square placement per the symmetry mode (including the center-square
+wall placement per the symmetry mode (including the center-square
 random draw for odd 4-way-rotational grids), a correct random light placement
 seeded by filling all open squares then removing lights via the marked-sweep,
-numbering all black squares, solver-gating at the target difficulty, stripping
+numbering all walls, solver-gating at the target difficulty, stripping
 unused numbers, removing surviving numbers one-by-one in the one-shot shuffled
 order while the puzzle stays good, rejecting boards that are still solvable
 one difficulty lower, and ramping `blackpc` by 5 (to at most 90) after 20
@@ -274,19 +278,16 @@ failed grids. Generation from a given seed SHALL be reproducible.
 
 ### Requirement: Light Up renders with live error feedback
 
-`redraw` SHALL draw: black squares (numbered ones showing their clue,
-in the error color when the clue is provably wrong — too many adjacent
+`redraw` SHALL draw: walls (numbered ones showing their clue,
+on a disc in the error color when the clue is provably wrong — too many adjacent
 bulbs, or too few even if all plausible neighbors were filled); open squares
 with lit squares filled yellow; bulbs as circles (error-colored when lit by
-another bulb); impossible-marks as small black blobs — suppressed on lit
-squares when the `show-lit-blobs` preference (default on, via the `Game.prefs`
-hook) is off; the keyboard cursor; and the 3-phase completion flash. The
-per-tile packed flags SHALL be the render cache key (`Int32Array`), and every
-overlay not in the packed value (the `findMistakes` highlight) SHALL be in a
-sidecar included in the diff key. The palette SHALL keep its indices fixed
-(0 background, 1 grid, 2 black, 3 light, 4 lit,
-5 error, 6 cursor) because the app's dark-mode overrides target indices 2
-and 3.
+another bulb); impossible-marks as the collection's ruled-out dot — suppressed
+on lit squares when the `show-lit-blobs` preference (default on, via the
+`Game.prefs` hook) is off; the keyboard cursor; and the 3-phase completion
+flash. The per-tile packed flags SHALL be the render cache key (`Int32Array`),
+and every overlay not in the packed value (the `findMistakes` highlight) SHALL
+be in a sidecar included in the diff key.
 
 #### Scenario: Overlapping bulbs render as errors
 
@@ -295,11 +296,46 @@ and 3.
 
 #### Scenario: A provably-wrong clue turns red
 
-- **WHEN** a numbered black square has more adjacent bulbs than its clue
-- **THEN** its number is drawn in the error color
+- **WHEN** a numbered wall has more adjacent bulbs than its clue
+- **THEN** its number is drawn on a disc in the error color
 
 #### Scenario: Lit blobs honor the preference
 
 - **WHEN** a marked square becomes lit and `show-lit-blobs` is off
 - **THEN** the blob is not drawn (and reappears when the preference is
   re-enabled)
+
+### Requirement: Light Up draws walls, bulbs and light on the collection's quiet surface
+
+`redraw` SHALL draw an open square no bulb lights as the collection's cell
+surface, with the collection's surface grid line between squares and a frame
+round the grid no heavier than that line. A lit square SHALL keep its yellow
+wash. A wall SHALL be a solid block in the collection's wall color, over its
+whole tile, so that adjacent walls read as one block, with its clue in a white
+that is the same in both schemes. A bulb SHALL be a disc in that same white,
+outlined in a black that is the same in both schemes, so it reads on a lit and
+an unlit square alike. The mark for a square that cannot hold a bulb SHALL be
+the collection's ruled-out dot. The clue a hint reasons from SHALL keep its
+white digit and be ringed at its wall's edge in the collection's evidence
+color, with a line in the digit's white inside the ring. The game's words (its
+help page and its Custom dialog) SHALL call the square a wall, never a black
+square.
+
+A clue that is provably wrong SHALL sit on a disc in the full error color,
+which stands off a wall in both schemes, with its digit in that color's text
+color, and a bulb another bulb lights SHALL be a disc in the full error color.
+The
+keyboard cursor SHALL be brackets at the corners of its square, clear of a
+bulb. The completion flash SHALL blink the lit squares to the lifted surface.
+
+#### Scenario: An unlit square is surface and a lit one is washed
+
+- **WHEN** a board with one bulb is drawn
+- **THEN** the squares the bulb lights are filled with the lit wash
+- **AND** every other open square is the cell surface
+
+#### Scenario: A wrong clue reads on its wall in the dark scheme
+
+- **WHEN** a numbered wall has more adjacent bulbs than its clue
+- **THEN** its number sits on a disc in the full error color, not that color's
+  wash

@@ -46,16 +46,6 @@ The engine SHALL provide a registered `pegs` game implementing `Game<PegsParams,
 - **WHEN** CURSOR_SELECT is pressed again while jumping
 - **THEN** jumping mode is canceled
 
-### Requirement: Pegs derives its palette via the shared mkhighlight helper
-
-The Pegs `colors()` method SHALL derive its background, highlight, and lowlight colors from the shared `mkhighlight` helper in `src/engine/color/color-mkhighlight.ts`, with no local copy of the derivation.
-
-#### Scenario: Pegs colors on a near-white host
-
-- **WHEN** the host background is near-white
-- **THEN** the shared helper shifts the background away from pure white
-- **AND** the Pegs palette's COL_HIGHLIGHT is visibly brighter than COL_BACKGROUND
-
 ### Requirement: Pegs discards a drag or an armed jump when the board changes under it
 Pegs SHALL clear its dragged peg and its armed keyboard jump whenever the midend
 replaces the game state, so that a pointer drag or a selected jump cannot act on
@@ -111,3 +101,40 @@ Pegs SHALL provide `solve`, whose move leaves one peg on the square the search's
 
 - **WHEN** the player's position cannot finish and the dealt board can
 - **THEN** Solve leaves the one peg where a line of jumps from the dealt board ends
+
+### Requirement: Pegs draws its pegs as pieces on a quiet board
+
+`redraw` SHALL draw the board as pieces on a quiet surface, with no bevel:
+the board is not a thing the player moves. Every playable cell SHALL be the
+plain cell surface, with the surface's grid line between two cells and round
+the board's outline, whatever its shape. A peg SHALL be the collection's disc
+piece, inset on its cell, in a color that none of the marks drawn on the board
+uses. An empty hole SHALL be a ring on the cell's surface and SHALL NOT be
+told by a fill of its own, so no state is a step of gray.
+
+The keyboard cursor SHALL be drawn at the corners of its cell, beside the peg
+or the hole, and SHALL NOT recolor either. A peg picked up from the keyboard
+SHALL keep its own color inside a ring in the held color. A hint's rings,
+outline, stripes and arrows SHALL be drawn as before, beside the peg. The
+completion flash SHALL lift every cell to the lifted surface on its lit beats.
+
+The game SHALL declare no palette swap for the dark scheme, and its hint
+sentences and help page SHALL name no hue.
+
+#### Scenario: A peg and a hole on one surface
+
+- **WHEN** a board holding pegs and one empty hole is drawn
+- **THEN** every playable cell is the same cell surface
+- **AND** each peg is a disc in the peg's color and the hole is an unfilled ring
+
+#### Scenario: The cursor is beside the peg
+
+- **WHEN** the keyboard cursor is on a peg
+- **THEN** the peg is drawn in the peg's color
+- **AND** the cursor's mark is at the corners of the cell
+
+#### Scenario: A held peg wears a ring
+
+- **WHEN** a peg is picked up from the keyboard
+- **THEN** it is drawn in its own color inside a ring in the held color
+- **AND** the cursor's corner mark is not drawn on that cell

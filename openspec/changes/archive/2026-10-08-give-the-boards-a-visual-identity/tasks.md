@@ -45,7 +45,14 @@ The owner's sequence, 2026-10-07:
       owner's eye, and the rest are fixed. It could not judge error states
       beyond Solo's, touch, animation, the flashes, or presets other than each
       game's default.
-- [ ] 4.2 The owner reviews every game in both schemes.
-- [ ] 4.3 Once the owner is satisfied, the catalog thumbnails
-      (`src/assets/icons/`) are recaptured for every game whose look changed,
-      Unruly's among them so the set is of one kind.
+- [x] 4.2 The owner reviews every game in both schemes. Owner, 2026-10-07:
+      "definitely better", with two asks: more of the theme colors where a
+      board is mostly gray or carries another hue (a second survey of all 57
+      games; fourteen changed, listed in the proposal), and Boats' hint ring,
+      which cut across a boat's round end. Then, 2026-10-08: no further
+      check needed; later thoughts on the colors are a separate session's.
+      Held for that session, not done: Magnets' poles as the pair (red and
+      black is the convention), Slide's key block and exit (the owner's
+      earlier choices), a yellow bulb in Light Up, a purple tent in Tents.
+- [x] 4.3 The catalog thumbnails (`src/assets/icons/`) are recaptured for all
+      57 games, as tight crops of a board in play, the framing the set had.
