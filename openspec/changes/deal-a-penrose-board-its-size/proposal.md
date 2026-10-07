@@ -1,6 +1,6 @@
 # deal-a-penrose-board-its-size
 
-**Status: scaffolded, not started (2026-10-06).** A follow-up from
+**Status: done (2026-10-07).** A follow-up from
 `count-loopys-smallest-penrose-boards`.
 
 ## Why
@@ -8,51 +8,112 @@
 That change counted the faces of a Penrose patch by size and found that a
 small size is not a small board so much as a lottery. A patch is cut from a
 random place in the tiling, and a good share of the cuts keep three faces
-around a point, which is a board of seven loops.
+around a point, which is a board of seven loops. A player who asked for a 5x5
+Penrose (rhombs) was dealt three rhombs one time in four, and eleven another
+time. Upstream does the same: the patches match its fixtures.
 
-Counted 2026-10-06, 20,000 descriptions a size, as the share of patches that
-are those three faces (`gridNewDesc` then `gridNew`, patches trimmed to
-nothing left out):
+## What a size promises
 
-| size | Penrose (rhombs) | Penrose (kite/dart) |
-| --- | --- | --- |
-| 3x3, 3x4, 3x5, 4x3 | all | refused, or 15% at 4x3 |
-| 4x4 | 94% | 22% |
-| 5x4 | 77% | 15% |
-| 5x5 | 27% | 1% |
-| 6x5 | 13% | none |
-| 7x5 | 7% | none |
-| 6x6 and up | none | none |
-
-So a player who asks for a 5x5 Penrose (rhombs) is dealt three rhombs one
-time in four, and eleven rhombs another time. Upstream does the same: the
-patches match its fixtures.
-
-The face count is not symmetric in width and height either (3x5 is always
-three rhombs, and 5x3 is five rhombs one patch in fifteen), though the tiling
-is marked as turning.
-
-## What is known and what is not
-
-- **The three faces are a legal board** at Easy, Tricky and Hard, and each
-  deals at once. Nothing gives up. This is about what the size promises.
-- **Whether a size should mean a face count is not decided.** The widest
-  spread counted is 5x7 Penrose (rhombs), 3 faces to 18.
-- **Hats and Spectres were counted at their smallest size only**, 6x6, where
-  the spread is 14 to 20 faces and 10 to 17.
+**A box, and a patch that fills it about as well as that box is usually
+filled.** Counted 2026-10-07 (2,000 patches a size), the median face count of
+both Penrose tilings from 6x6 to 12x12 fits 0.96 (w - 2.2)(h - 2.2): the box
+less a border one unit wide, which the trimming takes. Hats and Spectres sit
+within a fifth of it. So the usual count is `(w - 2)(h - 2)`, as arithmetic
+and with no table of sizes, and a patch is far under its size at half of that
+or less.
 
 ## What Changes
 
-To be designed. The cheap form is for the generator to draw another patch
-when one has far fewer faces than its size usually gives, which changes
-which board a seed deals and nothing else. The four sizes that are always
-three rhombs then have no other patch to draw, and refusing them outright
-would refuse sizes upstream deals: that part is the owner's call.
+- `loopy/grid-build.ts` draws a patch again while it has half the usual faces
+  or fewer, up to 400 draws, and then takes the largest it drew. Only which
+  description is drawn changes: what a description builds cannot, since saved
+  games and shared IDs carry descriptions. A seed deals another board at the
+  sizes below and the same board elsewhere, and upstream's fixtures still
+  match.
+- **No size is refused, and none gives up.** A Penrose (rhombs) box 3 or 4
+  wide stops growing with its length (6 faces at most, and 11), so a threshold
+  alone would have ended those deals. They deal the largest patch drawn.
+- **No tier is lost.** The tier follows the patch's shape, so every tier was
+  dealt at every Penrose size from 3x3 to 9x9 and at the long sizes the rule
+  changes most. Only the four cells already refused at Normal gave up.
+- `loopy.test.ts` holds the redraw and the largest-drawn fallback, both seen
+  red with the rule taken out.
+- docs/games/solver-and-generator.md § "Unlucky, impossible, and load-bearing
+  validation" has the case.
+
+## The four sizes that are always three rhombs
+
+3x3, 3x4, 3x5 and 4x3 Penrose (rhombs) are dealt as before. Their usual count
+is 1 to 3, so three rhombs are not under it: they are what a box that small
+holds. Refusing them would refuse sizes upstream deals and is the owner's
+call; this change does not need it, and the recommendation is to leave them.
+
+## What is left as it was
+
+- **Sizes where the three faces are the usual patch keep them**: Penrose
+  (rhombs) at 3x6, 3x7, 4x4 and 5x3 to 7x3 (nine patches in ten), and Penrose
+  (kite/dart) at 4x3, 4x4 and 5x3 to 7x3 (15% to 40%, where no patch has more
+  than 7 faces).
+- **The face count is not the same turned.** 4x16 Penrose (rhombs) deals 11
+  faces and 16x4 deals 14 to 21, though the tiling is marked as turning.
+- **A box 5 or under on a side is still a wide spread** where it is long:
+  5x16 Penrose (rhombs) is 22 to 42.
+
+## What shows it worked
+
+The spread of face counts, 2,000 boards a size, before (the first patch that
+is not empty) and after, as lowest..highest and the share that are three
+faces. Sizes not listed did not change: every size of both Penrose tilings
+with both sides 7 or more, and Hats and Spectres at 6x6, 6x7, 7x6, 7x7, 6x10,
+10x6, 6x16, 16x6 and 10x10.
+
+| Penrose (rhombs) | before | three | after | three |
+| --- | --- | --- | --- | --- |
+| 3x8 | 3..6 | 97% | 3..6 | 0.1% |
+| 4x5 | 3..8 | 83% | 6..8 | none |
+| 4x6 | 3..11 | 76% | 6..11 | none |
+| 4x7 | 3..11 | 63% | 6..11 | none |
+| 4x8 | 3..11 | 55% | 7..11 | none |
+| 5x4 | 3..9 | 78% | 5..9 | none |
+| 5x5 | 3..11 | 27% | 5..11 | none |
+| 5x6 | 3..13 | 10% | 7..13 | none |
+| 5x7 | 3..18 | 1% | 8..18 | none |
+| 5x8 | 7..21 | none | 10..21 | none |
+| 6x4 | 3..12 | 66% | 5..12 | none |
+| 6x5 | 3..16 | 12% | 7..16 | none |
+| 6x6 | 8..19 | none | 9..19 | none |
+| 6x7 | 8..25 | none | 12..25 | none |
+| 7x4 | 3..14 | 58% | 6..14 | none |
+| 7x5 | 3..17 | 6% | 8..17 | none |
+| 7x6 | 10..22 | none | 12..22 | none |
+| 8x3 | 3..6 | 87% | 5..6 | none |
+| 8x4 | 3..14 | 50% | 7..14 | none |
+| 8x5 | 3..21 | 3% | 10..21 | none |
+| 4x16 | 3..11 | 33% | 11 | none |
+| 16x4 | 3..21 | 25% | 14..21 | none |
+| 5x16 | 12..42 | none | 22..42 | none |
+| 16x5 | 5..46 | none | 22..46 | none |
+
+| Penrose (kite/dart) | before | three | after | three |
+| --- | --- | --- | --- | --- |
+| 4x5 | 3..9 | 9% | 4..9 | none |
+| 4x6 | 3..13 | 4% | 5..13 | none |
+| 4x7 | 3..15 | 2% | 6..15 | none |
+| 4x8 | 5..19 | none | 7..19 | none |
+| 5x4 | 3..9 | 14% | 4..9 | none |
+| 5x5 | 3..11 | 2% | 5..11 | none |
+| 5x6 | 6..15 | none | 7..15 | none |
+| 6x4 | 3..10 | 14% | 5..10 | none |
+| 6x5 | 6..16 | none | 7..16 | none |
+| 7x4 | 3..12 | 12% | 6..12 | none |
+| 8x3 | 3..7 | 42% | 5..7 | none |
+| 8x4 | 3..17 | 10% | 7..17 | none |
+| 4x16 | 8..42 | none | 18..43 | none |
+| 16x4 | 3..32 | 8% | 15..32 | none |
+
+In the app, nine 5x5 Penrose (rhombs) boards dealt one after another had five
+to ten rhombs each.
 
 ## Hints to pull in
 
 None.
-
-## What would show it worked
-
-The spread of face counts at each size, before and after.

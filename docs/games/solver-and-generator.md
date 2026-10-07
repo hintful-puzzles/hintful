@@ -1024,9 +1024,33 @@ unlucky seed" — check, because the two failure modes need opposite fixes:
   the sizes that work).
 
 Size the retry budget from the **worst measured success rate of a generable
-configuration** (Loopy's was ~20%, so 100 attempts fail at ~2e-10), never
+configuration** (Loopy's patch draw succeeds one time in 48 at its rarest, so
+400 draws miss one deal in 4,000), never
 from a house default: a generous bound is right for a runaway guard but
 turns an impossible configuration into a ten-second hang before its error.
+
+**A board cut at random can come out far under its size, and that is a third
+case: draw again, and keep the largest where nothing is large enough.** A
+Penrose patch is cut from a random place, and one 5x5 in four was three rhombs
+in a box that otherwise held five to eleven. Nothing fails there, since the
+three rhombs are a legal board, so neither a retry on error nor a refusal sees
+it; the spread of the drawn thing's size does. Four things made the fix small
+([`loopy/grid-build.ts`](../../src/games/loopy/grid-build.ts)):
+
+- **Say what the size usually gives as arithmetic, not as a table.** The
+  medians fit the box less a border, `(w - 2)(h - 2)`, on both Penrose
+  tilings and within a fifth on Hats and Spectres, and the line is half of
+  that.
+- **Change which description is drawn, never what one builds.** The trimmer's
+  tie-break is what picks three rhombs over five, and it cannot move: saved
+  games carry descriptions.
+- **Never refuse a size for it.** A rhombs box three wide holds six faces at
+  most however long it is, so a threshold alone would have ended those deals.
+  After a bounded number of draws the largest drawn is the board.
+- **Deal every tier at every size the rule changes before trusting it.** The
+  tier follows the patch's shape (§ "A size that cannot carry a tier"), so
+  turning a shape away can take a tier with it. Here it took none, and that
+  was a count and not a guess.
 
 **One game can be both failure modes, split by a parameter — measure the
 boundary and apply both fixes.** Seismic's upstream region grower collapses

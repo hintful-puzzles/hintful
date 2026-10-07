@@ -87,7 +87,7 @@ function removeClues(state: LoopyState, rng: RandomState, diff: number): void {
  * shape that cannot is common.** Counted 2026-10-06 with each patch given
  * 10,000 boards: three faces around a point carry Easy, Tricky and Hard on the
  * first board and never Normal; a ring of four, five or six faces around a
- * point never carries Hard, and the ring of four never Normal. At 3x8 Penrose
+ * point never carries Hard, and the ring of four never Normal. At 3x7 Penrose
  * (rhombs) 96% of patches are the three faces, and at 4x3 Penrose (kite/dart)
  * 85% are a ring, so a Normal deal there, or a Hard one, is mostly a wait for
  * the patch that can.
@@ -109,9 +109,9 @@ const PATCH_BOARDS = 500;
  *
  * **Two nested retry loops, and the nesting order is not negotiable.**
  *
- * - The **outer** loop draws a grid description and builds the grid, retrying
- *   when an aperiodic patch trims away to nothing. That recovery is this port's
- *   own (see `grid-build.ts`): upstream aborts instead.
+ * - The **outer** loop draws a grid description and builds the grid. Which
+ *   patch of an aperiodic tiling that is, past the one upstream would draw, is
+ *   `grid-build.ts`'s.
  * - The **inner** loop is upstream's `goto newboard_please`: it re-draws the
  *   loop and its clues over the **already-built grid** until the result is
  *   uniquely solvable at the requested difficulty and *not* solvable one
@@ -122,7 +122,7 @@ const PATCH_BOARDS = 500;
  * where it currently agrees. Upstream calls `grid_new_desc` exactly once,
  * outside its retry loop, and so do we.
  *
- * **The one recovery upstream lacks**, on top of the degenerate-patch retry: if
+ * **One more recovery upstream lacks**, on top of `grid-build.ts`'s: if
  * the inner loop exhausts its budget on an aperiodic grid, the *patch* is
  * unfavorable rather than the params. Upstream concedes the hazard in a
  * comment — *"this can loop for ever if the params are suitably unfavorable"* —

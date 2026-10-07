@@ -605,6 +605,40 @@ describe("generation", () => {
     expect(build().desc).toBe(first.desc);
   });
 
+  it("draws again a patch far under its size", () => {
+    // Each of these sizes cuts the three faces around a point, a 5x5 rhombs
+    // one patch in four and the rarest here (5x4 kite/dart) one in seven, so
+    // forty deals with the redraw gone miss it once in 500 at worst.
+    const sizes = [
+      ["penrose_p3_thick", 5, 5],
+      ["penrose_p3_thick", 4, 5],
+      ["penrose_p3_thick", 7, 5],
+      ["penrose_p2_kite", 5, 4],
+    ] as const;
+    for (const [type, w, h] of sizes) {
+      for (let i = 0; i < 40; i++) {
+        const { grid } = buildLoopyGrid(type, w, h, randomNew(`size-${i}`));
+        expect(
+          2 * grid.numFaces,
+          `${w}x${h} ${type} #${i}: ${grid.numFaces} faces`,
+        ).toBeGreaterThan((w - 2) * (h - 2));
+      }
+    }
+  });
+
+  it("deals the largest patch drawn at a size none reaches", () => {
+    // A rhombs box three wide holds three faces or six however long it is, and
+    // the six are one patch in eleven here: the first drawn is nearly always
+    // the three.
+    for (let i = 0; i < 5; i++) {
+      const rng = randomNew(`long-${i}`);
+      expect(buildLoopyGrid("penrose_p3_thick", 3, 14, rng).grid.numFaces).toBe(6);
+    }
+    // And where every patch is the three faces, they are the board.
+    const { grid } = buildLoopyGrid("penrose_p3_thick", 3, 3, randomNew("small"));
+    expect(grid.numFaces).toBe(3);
+  });
+
   it("generates a valid, solvable board for every grid type", () => {
     for (let type = 0; type < LOOPY_GRIDS.length; type++) {
       const e = LOOPY_GRIDS[type];
