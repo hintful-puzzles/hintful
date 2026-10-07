@@ -28,7 +28,6 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { CellColor } from "./state.ts";
 
 const thisCell = (target: Point): Narration =>
   mark.this("ring", CELL, [target], "cell");
@@ -88,30 +87,4 @@ export const say = {
       look: phrase`${outlined([clue], `The outlined ${n}`)} beside ${thisCell(target)} can't reach ${n} shaded neighbor${n === 1 ? "" : "s"} without it`,
       move: beShaded,
     }),
-
-  // The direct rung's *unclassified* case: one color placed, one validator
-  // call, the board breaks — but at a cell none of the four named arms
-  // above matched. Nothing is followed: the break is right there, outlined.
-  //
-  // This is the one arm with **no** guaranteed relation — `errorCells`
-  // reports wherever the validator flagged the break, which need not be
-  // near the target — so the sentence says only where the break is. (The
-  // sweep above never reached this arm at all: the four named reasons
-  // classify every single-cell contradiction Bricks' validator can raise. It
-  // stays because a classifier's default must.)
-  /** The opposite of `forced` breaks the board at the `evidence` cells. */
-  localBreak: (
-    target: Point,
-    forced: CellColor,
-    evidence: readonly Point[],
-  ): Sentence => {
-    const act = forced === "unshade" ? "Shading" : "Clearing";
-    return so({
-      look:
-        evidence.length === 0
-          ? phrase`${act} ${thisCell(target)} would break the board`
-          : phrase`${act} ${thisCell(target)} would break the board at ${mark.the("outline", CELL, evidence, "cell")}`,
-      move: forced === "unshade" ? stayClear : beShaded,
-    });
-  },
 };

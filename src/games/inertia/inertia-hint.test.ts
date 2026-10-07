@@ -96,11 +96,21 @@ describeHintPins({
     );
     return safe.length > 0 ? { type: "move", dir: safe[turn % safe.length] } : null;
   },
-  unreached: {
-    declined:
-      "in no plan of 6,244 positions on 80 boards (6x6 and 8x10, 40 seeds, the hint's line and the stray one), nor of 11,992 with 12x15 added. It takes a one-slide grab of the leg's goal that `nextLeg` turned down because no route collects the rest after it, while `unreachableGems` finds every gem still reachable after it: stranding that the reachability check cannot see.",
-  },
   pins: {
+    /** Kept by hand: in no plan of 11,992 positions on the generator's boards,
+     * which put a gem only where the ball can get back from. It takes a grab of
+     * the leg's goal after which every gem can still be reached and no order
+     * collects them all, and this is the one position that held it among
+     * 447,629 on 7,125 boards of scattered cells (5x5 to 7x7, 2026-10-07). */
+    declined: {
+      id: "7x7:sbbmbbbwbSwbgbbmbsbbbwbbgsbmbsbbbbbwmssbbbbbmbbbb",
+      moves: [
+        { type: "move", dir: 3 },
+        { type: "move", dir: 5 },
+        { type: "move", dir: 2 },
+        { type: "move", dir: 7 },
+      ],
+    },
     /** Held on 6244 of 6244 positions walked. */
     collect: "6x6:mmgbwswbgswbgwsgswsmgbgbsSbwgmbmwmms",
     /** Held on 2520 of 6244 positions walked. */

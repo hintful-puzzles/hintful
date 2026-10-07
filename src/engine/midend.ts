@@ -16,7 +16,7 @@ import { paletteSchemeOf, resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
 import { completionStatus } from "./completion-status.ts";
 import { freshSeed, generate } from "./deal.ts";
-import { DESC_MALFORMED, loadDesc, loadVerdict } from "./desc-error.ts";
+import { DESC_MALFORMED, loadDesc, loadVerdict, readBoard } from "./desc-error.ts";
 import {
   cappedSolveFor,
   dealGaveUp,
@@ -1731,15 +1731,19 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // (upstream midend.c:2663). The public desc is then restored over it, since
     // it, not the layout-only one, is what the game *is* (and what the id names);
     // the replay's own `applySupersede` will agree with it. Both must still
-    // load: a parser made stricter since the save was written refuses it here
+    // read: a parser made stricter since the save was written refuses it here
     // rather than throwing, and a restart rebuilds from the public one. The
-    // public desc is the one that says where play began, so it is the one
-    // asked whether its board can be finished.
+    // public desc is the one that says where play began, so it alone is asked
+    // whether its board can be finished: the private one describes a board
+    // with no first move, which a game may refuse as a board to start on.
     const stateDesc = env.privDesc ?? env.desc;
     const refused =
       env.privDesc === undefined ? null : loadVerdict(this.game, params, env.desc);
     if (refused !== null) return `Could not restore this saved game: ${refused}`;
-    const loaded = loadDesc(this.game, params, stateDesc);
+    const loaded =
+      env.privDesc === undefined
+        ? loadDesc(this.game, params, stateDesc)
+        : readBoard(this.game, params, stateDesc);
     if (!loaded.ok) return `Could not restore this saved game: ${loaded.error}`;
     // A save pins the tier its board was labeled at, which a build that
     // mislabeled the board got wrong; `withBoardTier` checks it.

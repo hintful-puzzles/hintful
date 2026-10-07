@@ -399,8 +399,6 @@ function evidenceOf(reason: BricksReason): number[] {
       return [reason.clue];
     case "strandSupport":
       return [reason.above];
-    case "localBreak":
-      return reason.conflict;
   }
 }
 
@@ -408,7 +406,6 @@ function evidenceOf(reason: BricksReason): number[] {
  * rather than the raw reason. The words are [`hint-text.ts`](./hint-text.ts)'s. */
 function narrate(
   reason: BricksReason,
-  forced: CellColor,
   state: BricksState,
   targetIndex: number,
   evidenceIndices: readonly number[],
@@ -428,8 +425,6 @@ function narrate(
       return say.strandSupport(target, at(reason.above));
     case "undercount":
       return say.undercount(target, at(reason.clue), clueVal(reason.clue));
-    case "localBreak":
-      return say.localBreak(target, forced, evidence);
   }
 }
 
@@ -440,7 +435,6 @@ export const BRICKS_RUNGS = [
   "overcount",
   "strandSupport",
   "undercount",
-  "localBreak",
 ] as const satisfies readonly BricksReason["kind"][];
 export type BricksRung = (typeof BRICKS_RUNGS)[number];
 
@@ -469,7 +463,7 @@ function hint(state: BricksState): HintResult<BricksMove, BricksHint, BricksRung
   const steps: HintStep<BricksMove, BricksHint, BricksRung>[] = plan.map((m) => {
     const evidence = evidenceOf(m.reason).filter((c) => c !== m.index);
     const highlights: BricksHint = { target: m.index, forced: m.to };
-    const words = narrate(m.reason, m.to, state, m.index, evidence);
+    const words = narrate(m.reason, state, m.index, evidence);
     return {
       move: { kind: "paint", cells: [{ index: m.index, to: m.to }] },
       rung: m.reason.kind,

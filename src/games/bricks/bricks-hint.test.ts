@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -19,7 +20,7 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { say } from "./hint-text.ts";
-import { type BricksHint, bricksGame } from "./index.ts";
+import { BRICKS_RUNGS, type BricksHint, bricksGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import {
   bricksValidate,
@@ -67,12 +68,6 @@ describeHintPins({
     { w: 8, h: 10, diff: DIFF_EASY },
   ],
   seeds: 40,
-  unreached: {
-    // Held on 0 of 3649 positions walked on 80 boards (6x7 and 8x10 Easy, 40
-    // seeds each).
-    localBreak:
-      "the classifier's fallback, for a rejected one-cell trial whose errors fit none of the five shapes. `hint` answers only a board that agrees with the solution, which has no error before the trial, so every error after it is on the target, on a brick the target held up, or on a number beside it, and an earlier branch takes each.",
-  },
   pins: {
     /** Held on 2824 of 3649 positions walked. */
     three: {
@@ -164,6 +159,33 @@ describe("bricks hint — Easy-tier reason classification", () => {
     ]);
     const m = nextForcedMove(g, w, h);
     expect(m).toMatchObject({ index: 2, to: "shade", reason: { kind: "undercount" } });
+  });
+
+  it("names every refutation on a board filled in any order", () => {
+    // The hint's own play fills cells in the order it deduces them, and a
+    // player does not. These are random shares of the answer, and the scan
+    // throws on a rejected trial that is none of the five reasons.
+    const p: BricksParams = { w: 6, h: 7, diff: DIFF_EASY };
+    const seen = new Set<string>();
+    let refuted = 0;
+    for (let k = 0; k < 4; k++) {
+      const rs = randomNew(`bricks-any-order-${k}`);
+      const st = newState(p, bricksGame.newDesc(p, rs).desc);
+      const answer = st.grid.slice();
+      solveGame(answer, st.w, st.h, DIFF_TRICKY, true, true);
+      for (let n = 0; n < 100; n++) {
+        const share = randomUpto(rs, 101);
+        const g = st.grid.map((v, i) =>
+          (v & COL_MASK) === F_EMPTY && randomUpto(rs, 100) < share ? answer[i] : v,
+        );
+        const m = nextForcedMove(g, st.w, st.h);
+        if (m === null) continue;
+        seen.add(m.reason.kind);
+        refuted++;
+      }
+    }
+    expect(refuted).toBeGreaterThan(300);
+    expect(seen.size).toBe(BRICKS_RUNGS.length);
   });
 });
 

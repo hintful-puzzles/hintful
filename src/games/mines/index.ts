@@ -623,10 +623,13 @@ export const minesGame: Game<
   newDrawState,
   redraw,
 
-  // The hint's own plan, played to its end. A layout with no square opened
-  // has no first click to reason from, so there is nothing to judge yet.
+  // The hint's own plan, played to its end. A board not laid out yet will be
+  // laid out to finish from whichever square is opened first. A layout that
+  // names no first square was made for one it does not say, and opening any
+  // other is a guess.
   finishesByDeduction(s: MinesState): boolean {
-    if (!s.layout.mines || s.clickedAt === null) return true;
+    if (!s.layout.mines) return true;
+    if (s.clickedAt === null) return false;
     const plan = minesHint(s, minesGame.executeMove);
     if (!plan.ok) return false;
     const end = plan.steps.reduce(

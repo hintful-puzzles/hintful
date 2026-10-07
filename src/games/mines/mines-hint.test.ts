@@ -350,6 +350,23 @@ describe("Mines hint: a board that needs a guess", () => {
     );
   });
 
+  it("is what a layout with no first square is, so one does not load as a game ID", () => {
+    // The layout was made to finish from one square, and a private desc does
+    // not say which: 311 of 486 first clicks on six such boards left a save
+    // that would not restore (2026-10-07).
+    const m = new Midend(minesGame);
+    expect(m.newGameFromId("9x9n10#bare")).toBeNull();
+    m.playMoves([open(4, 4)]);
+    const { desc, privDesc } = decodeSave(m.saveGame());
+    expect(privDesc).toBe(desc.slice("4,4,".length));
+    expect(new Midend(minesGame).newGameFromId(`9x9n10:${desc}`)).toBeNull();
+    expect(new Midend(minesGame).newGameFromId(`9x9n10:${privDesc}`)).toBe(
+      DESC_NOT_DEDUCIBLE,
+    );
+    // The save that carries it is judged by its public desc, and restores.
+    expect(new Midend(minesGame).loadGame(m.saveGame())).toBeNull();
+  });
+
   it("is not what the generator lays out", () => {
     for (let k = 0; k < 4; k++) {
       const s = minesGame.executeMove(fresh(16, 16, 60, `sound-${k}`), open(8, 8));

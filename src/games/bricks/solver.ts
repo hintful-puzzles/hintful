@@ -309,16 +309,23 @@ export function findMistakes(state: BricksState): BricksMistake[] {
 
 /**
  * Why the opposite color is impossible at a forced cell: a single-cell
- * (Easy-tier) contradiction read off the rejected trial's `FE_*` flags, with
- * `localBreak` the unclassified fallback. All cell fields are padded indices.
+ * (Easy-tier) contradiction read off the rejected trial's `FE_*` flags. All
+ * cell fields are padded indices.
+ *
+ * These five are every way one cell can break a board that had no error. No
+ * rule is broken by a mark being absent, so a board that agrees with the
+ * solution has none; a trial then changes one cell, and a shaded cell can only
+ * complete a row of three, rest on nothing, or over-fill a clue beside it,
+ * while a cleared one can only take the last support from a brick it held up
+ * or the last chance from a clue beside it. `BRICKS_STEPS` is symmetric, so
+ * the walk out from the target meets that clue.
  */
 export type BricksReason =
   | { kind: "three"; cells: number[] } // shading the target makes 3 shaded in a row
   | { kind: "unsupported"; below: number[] } // the shaded target would rest on nothing
   | { kind: "overcount"; clue: number } // shading the target over-fills this clue
   | { kind: "strandSupport"; above: number } // clearing the target strands this shaded brick
-  | { kind: "undercount"; clue: number } // clearing the target makes this clue unreachable
-  | { kind: "localBreak"; conflict: number[] }; // direct trial, contradiction unclassified
+  | { kind: "undercount"; clue: number }; // clearing the target makes this clue unreachable
 
 export interface ForcedMove {
   index: number;
@@ -328,10 +335,14 @@ export interface ForcedMove {
 
 const isClue = (v: number): boolean => !(v & COL_MASK) && !(v & F_BOUND);
 
-function errorCells(errors: Uint16Array): number[] {
-  const out: number[] = [];
-  for (let i = 0; i < errors.length; i++) if (errors[i] !== 0) out.push(i);
-  return out;
+/** A rejected trial that is none of {@link BricksReason}: the board had an
+ * error before it, which `nextForcedMove`'s caller promises it has not. */
+function unclassified(trial: string, target: number, errors: Uint16Array): never {
+  const at: number[] = [];
+  for (let i = 0; i < errors.length; i++) if (errors[i] !== 0) at.push(i);
+  throw new Error(
+    `bricks: ${trial} cell ${target} is rejected for none of the reasons one cell can be (errors at ${at.join(",")})`,
+  );
 }
 
 /** The maximal run of consecutive shaded cells in the target's row that
@@ -375,7 +386,7 @@ function classifyShadeTrial(
     const j = ny * w + nx;
     if (errors[j] & FE_ERROR && isClue(grid[j])) return { kind: "overcount", clue: j };
   }
-  return { kind: "localBreak", conflict: errorCells(errors) };
+  return unclassified("shading", target, errors);
 }
 
 /** Classify why clearing `target` (already set F_UNSHADE in `grid`) is impossible. */
@@ -403,7 +414,7 @@ function classifyUnshadeTrial(
     const j = ny * w + nx;
     if (errors[j] & FE_ERROR && isClue(grid[j])) return { kind: "undercount", clue: j };
   }
-  return { kind: "localBreak", conflict: errorCells(errors) };
+  return unclassified("clearing", target, errors);
 }
 
 /**

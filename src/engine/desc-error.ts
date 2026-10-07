@@ -155,8 +155,10 @@ interface Loadable<P, S> {
 
 /** The board a desc describes, or why it describes none: the game's own
  * `newState` reaching {@link descValue}, so the board and the verdict are one
- * reading and cannot disagree. */
-function readBoard<P, S>(
+ * reading and cannot disagree. It says nothing about the board's answers, so
+ * it is the whole reading only of a desc another one answers for: a save's
+ * private desc, whose public one is what {@link loadVerdict} is asked. */
+export function readBoard<P, S>(
   game: { newState(p: P, desc: string): S },
   p: P,
   desc: string,

@@ -1,15 +1,19 @@
 ## 1. Verify first
 
-- [ ] 1.1 Mines: load a bare private desc as a game ID through the midend and
-      ask for a hint. If the step opens `(-1,-1)`, fix that before anything
-      else here.
-- [ ] 1.2 Re-derive each entry's kind from the code and from the ledgers the
+- [x] 1.1 Mines: a bare private desc as a game ID loaded, and its hint opened
+      `(-1,-1)`. It no longer loads: `finishesByDeduction` refuses a layout
+      that names no first square, and a save's private desc is read without
+      being judged (its public one is). Two more routes into the same state
+      are the owner's to place, in 4.1.
+- [x] 1.2 Re-derive each entry's kind from the code and from the ledgers the
       Loopy and Tracks tests already keep. The proposal's sorting is one
       reading, dated.
 
 ## 2. Rungs the list should not hold
 
-- [ ] 2.1 Bricks `localBreak`: prove it dead or find its board.
+- [x] 2.1 Bricks `localBreak`: dead, by proof (the comment on `BricksReason`)
+      and by 0 of 12,776 refutations on random shares of 48 answers. The rung
+      and its sentence went, and the classifier's fallback throws.
 - [x] 2.2 Salad `repeatFull`: decided in `fix-salad-number-ball-hint-throw`.
       The plan teaches the hole-symbol strikes no count says, and the reason
       went.
@@ -19,8 +23,12 @@
 
 ## 3. Boards nobody built
 
-- [ ] 3.1 Inertia `declined`, by hand.
-- [ ] 3.2 Boats `mustGrow`: a board, or the finding that it is always shadowed.
+- [x] 3.1 Inertia `declined`: pinned, on the one position that held it among
+      447,629 on boards of scattered cells. The generator's boards do not
+      reach it.
+- [ ] 3.2 Boats `mustGrow`: neither rare nor shadowed. It cannot fire: it
+      reads the union-find's root as a boat's first square, and the root is
+      the second. Fix the read, then pin.
 - [ ] 3.3 Loopy's two and Tracks' two.
 - [x] 3.4 Salad `forcing`: pinned in `fix-salad-number-ball-hint-throw`.
 
