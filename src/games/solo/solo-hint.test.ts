@@ -541,30 +541,41 @@ describe("solo hint", () => {
   });
 
   it("a naked-single narration only ever appears on a genuine one-candidate cell", () => {
+    // Every step of a plan is read against the board it applies to, and the plan
+    // is asked for again only when it runs out: one ask solves each of these
+    // boards. Asking after every move reads only each plan's first step, at
+    // thirty-five times the cost (measured 2026-10-07, about 12 ms a board
+    // against 400 ms). Planted the same day, the classifier calling every
+    // placement a naked single, three of these four boards show it this way
+    // and two that way.
     let checked = 0;
     for (const seed of ["nk0", "nk1", "nk2", "nk3"]) {
       const { st, aux } = gen(ADV, seed);
       let state: SoloState = st;
       const cr = st.cr;
-      for (let i = 0; i < 2000 && soloStatus(state) === "ongoing"; i++) {
+      for (let ask = 0; ask < 200 && soloStatus(state) === "ongoing"; ask++) {
         const res = soloGame.hint?.(state, aux);
         if (!res?.ok) break;
-        const step = res.steps[0];
-        const m = step.move as AnyStep;
-        if (
-          m.type === "set" &&
-          !m.pencil &&
-          /ruled out in this cell/.test(step.explanation)
-        ) {
-          const pen = state.pencil[m.y * cr + m.x];
-          const ncand = Array.from({ length: cr }, (_, k) => k + 1).filter(
-            (n) => pen & (1 << n),
-          ).length;
-          expect(ncand, `naked-single narration on a ${ncand}-candidate cell`).toBe(1);
-          checked++;
+        for (const step of res.steps) {
+          const m = step.move as AnyStep;
+          if (
+            m.type === "set" &&
+            !m.pencil &&
+            /ruled out in this cell/.test(step.explanation)
+          ) {
+            const pen = state.pencil[m.y * cr + m.x];
+            const ncand = Array.from({ length: cr }, (_, k) => k + 1).filter(
+              (n) => pen & (1 << n),
+            ).length;
+            expect(ncand, `naked-single narration on a ${ncand}-candidate cell`).toBe(
+              1,
+            );
+            checked++;
+          }
+          state = soloGame.executeMove(state, step.move);
         }
-        state = soloGame.executeMove(state, step.move);
       }
+      expect(soloStatus(state), seed).toBe("solved");
     }
     expect(checked).toBeGreaterThan(0);
   });
@@ -683,16 +694,6 @@ describe("solo killer cages forbid repeats", () => {
     );
   }
 
-  it("walks to solved on recomputed hints", () => {
-    let state = newState(KILLER, DESC);
-    for (let i = 0; i < 2000 && soloStatus(state) === "ongoing"; i++) {
-      const res = soloGame.hint?.(state);
-      if (!res?.ok) throw new Error(`hint refused after ${i} moves`);
-      state = soloGame.executeMove(state, res.steps[0].move);
-    }
-    expect(soloStatus(state)).toBe("solved");
-  });
-
   /**
    * "Its other cells already make N" is a claim about the board the player is
    * looking at. It was false on about one Killer single in twenty (then "the
@@ -737,7 +738,13 @@ describe("solo killer cages forbid repeats", () => {
     expect(checked, "killer singles looked at").toBeGreaterThan(20);
   });
 
-  it("a hinted placement leaves no cage-mate noting its digit", () => {
+  it("a hinted placement leaves no cage-mate noting its digit, to the end of the board", () => {
+    // What this alone holds is this board, the one the hint threw on. Its first
+    // plan is the whole solution, so the plan is asked for once and followed.
+    // Asking again after every move costs ninety times as much (measured
+    // 2026-10-07: 61 ms against 5.6 s) and is `hint-resume.test.ts`'s walk, on
+    // Killer boards it deals. Planted the same day, the culls reading no cage,
+    // the throw comes at the first ask.
     let state = newState(KILLER, DESC);
     const res = soloGame.hint?.(state);
     if (!res?.ok) throw new Error("hint refused");
@@ -759,6 +766,7 @@ describe("solo killer cages forbid repeats", () => {
     }
     settle();
     expect(checked).toBeGreaterThan(20);
+    expect(soloStatus(state)).toBe("solved");
   });
 
   it("auto-pencil strikes a placed digit from its cage-mates' notes", () => {

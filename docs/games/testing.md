@@ -625,6 +625,35 @@ to vitest — `npm run test:slow -- src/games/seismic`,
 for when a refactor moves a solver, a generator or a hint planner: run the slow
 tier for the games it could have moved, when you move them.
 
+### Narrowing a game's own sweep
+
+Four shapes to look for in a game's expensive property test before choosing
+among the treatments above. Each is settled by timing the items inside one run
+and planting the defect the test is named for, never by reading the test.
+
+- **Time the dealing apart from the property.** A sweep that deals a board per
+  case can spend most of its time in the generator: a top-tier 4x4 Spokes
+  board takes up to 2.4 s to deal and 5 ms to plan on. A test that wants such
+  a board only to plan on writes its descriptions down. A description stays a
+  board of its tier whatever the generator later deals.
+- **"Systematic" is a claim about one rung, and it is planted, not argued.** A
+  seed count is a confidence dial only for a defect that shows on most boards.
+  Lift each guard the property rests on and count the boards that show it, per
+  tier. Where few do, write down boards on which that guard decides something;
+  where a tier shows nothing, it is not buying its cost.
+- **A rule that rarely decides anything needs a board where it does.** A test
+  named for a rule, walking boards on which the rule never changes the
+  outcome, stays green with the rule deleted. Lift the rule, scan for the
+  positions where the outcome changes, and write those down; have the test
+  hold a written-down board to being such a board where it can
+  ([`method.md`](../method.md) § "A sweep that finds zero owes a power
+  argument").
+- **A game's own walk follows the plan; asking again after every move is
+  `hint-resume.test.ts`'s.** Recomputing per move multiplies the cost by the
+  plan's length and reads only each plan's first step. Follow each plan to its
+  end and ask again when it runs out, unless what is under test is the
+  recomputation itself: a cycle, or a plan length that must fall by one.
+
 ### Where the cost actually is — measured 2026-09-09, so you need not re-derive it
 
 `retire-tests-that-do-not-earn-their-runtime` ranked all 301 test files. Two

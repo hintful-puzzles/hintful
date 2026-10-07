@@ -18,11 +18,16 @@ import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
-import { seedBudget } from "../../engine/testing/slow.ts";
+import { SLOW_TESTS_ENABLED, seedBudget } from "../../engine/testing/slow.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { type SpokesHint, spokesGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
-import { deduceSpokesPlan, type SpokesFiring, spokesSolve } from "./solver.ts";
+import {
+  deduceSpokesPlan,
+  type SpokesFiring,
+  spokesSolve,
+  spokesValidate,
+} from "./solver.ts";
 import {
   clearBoard,
   cloneBoard,
@@ -68,6 +73,36 @@ const TRICKY: SpokesParams = { w: 4, h: 4, diff: "tricky" };
  * a rung selector: its own rung is unreachable from the hint by design, which
  * the last test in this file proves rather than assumes. */
 const UNREASONABLE: SpokesParams = { w: 4, h: 4, diff: "hard" };
+
+/** Twelve boards the generator dealt at the top tier, as their descriptions,
+ * for the tests that need such a board only to plan on. Dealing is the
+ * expensive part: measured 2026-10-07, 0.07 to 2.4 s to deal one against about
+ * 5 ms to plan on it. A description stays a board of its tier whatever the
+ * generator goes on to deal, so these are written down. */
+const UNREASONABLE_BOARDS = [
+  "1121356433533242",
+  "1441364116522341",
+  "1111263416111331",
+  "1342246227621231",
+  "1331456425521442",
+  "1241174135511433",
+  "2131125325642122",
+  "1151351236431312",
+  "1133356336621331",
+  "1143263325211321",
+  "2131136312632341",
+  "3411146215621331",
+] as const;
+
+/** Normal boards on which the look-ahead comes to a spoke between two
+ * satisfied hubs before it comes to a useful one, so that its filter is what
+ * keeps the rule-out out of the plan. About one dealt Normal board in six is
+ * such a board (10 of 60, 2026-10-07), so three are written down. */
+const LOOK_AHEAD_FILTER_BOARDS = [
+  "1331161512531131",
+  "1312552134521111",
+  "1433121211411531",
+] as const;
 
 /** The unique solution as a board (the same one `hint`/`findMistakes` use). */
 function solutionOf(state: SpokesState) {
@@ -202,48 +237,61 @@ describe("narration states the premise, in the necessity voice", () => {
 
 describe("hints only rule out a spoke when it helps a hub still needing lines", () => {
   it("never marks a spoke whose both hubs are already satisfied", () => {
-    // Across many boards, walk the whole plan and assert every rule-out touches
-    // at least one hub that still needs lines.
+    // Walk a whole plan on each board and hold every rule-out to touching a hub
+    // that still needs lines.
     //
-    // The seed count is a confidence dial, not a threshold: a rule that emitted
-    // useless rule-outs would do so on nearly every board, so the gate's 8 seeds
-    // (× 3 difficulties = 24 full plan walks) catch a systematic violation just
-    // as surely as 60 did — at 238 s, this one test was **20% of the entire
-    // suite**. `npm run test:slow` still scans all 60 for the rare case.
-    let ruleOuts = 0;
+    // What this alone catches is the loss of either filter that keeps such a
+    // rule-out out of a plan, and the two show on different boards. Planted
+    // 2026-10-07 over 60 dealt boards of each tier: without the exhausted
+    // hub's filter, 51 Easy boards show a useless rule-out, 36 Normal and 4
+    // Unreasonable; without the look-ahead's, 10 Normal boards and no other,
+    // the first of them the tenth dealt. So the Easy and Normal boards are
+    // dealt, which costs milliseconds, and the look-ahead's boards and the top
+    // tier's are the ones written down above. `npm run test:slow` deals 60 of
+    // every tier.
+    const boards: { at: string; preset: SpokesParams; desc: string }[] = [];
+    const dealt = SLOW_TESTS_ENABLED ? [EASY, TRICKY, UNREASONABLE] : [EASY, TRICKY];
     for (let seed = 0; seed < seedBudget(8, 60); seed++) {
-      for (const preset of [EASY, TRICKY, UNREASONABLE]) {
+      for (const preset of dealt) {
         const { desc } = newSpokesDesc(
           preset,
           randomNew(`useful-${preset.diff}-${seed}`),
         );
-        const base = newState(preset, desc);
-        const board = cloneBoard(base);
-        for (let guard = 0; guard < 600; guard++) {
-          const plan = deduceSpokesPlan(board);
-          if (plan.length === 0) break;
-          const f = plan[0];
-          for (const sp of f.forced) {
-            if (sp.state === SPOKE_LINE) continue; // a connection always helps
-            const nx = (sp.index % board.w) + SPOKE_DIRS[sp.dir].dx;
-            const ny = ((sp.index / board.w) | 0) + SPOKE_DIRS[sp.dir].dy;
-            const j = ny * board.w + nx;
-            const aNeeds = linesDrawn(board, sp.index) < board.numbers[sp.index];
-            const bNeeds =
-              nx >= 0 &&
-              nx < board.w &&
-              ny >= 0 &&
-              ny < board.h &&
-              board.numbers[j] > 0 &&
-              linesDrawn(board, j) < board.numbers[j];
-            expect(
-              aNeeds || bNeeds,
-              `${preset.diff}/${seed}: ${f.kind} rules out a spoke between two satisfied hubs`,
-            ).toBe(true);
-            ruleOuts++;
-          }
-          applyForced(board, f.forced);
+        boards.push({ at: `${preset.diff}/${seed}`, preset, desc });
+      }
+    }
+    for (const desc of LOOK_AHEAD_FILTER_BOARDS)
+      boards.push({ at: desc, preset: TRICKY, desc });
+    for (const desc of UNREASONABLE_BOARDS)
+      boards.push({ at: desc, preset: UNREASONABLE, desc });
+
+    let ruleOuts = 0;
+    for (const { at, preset, desc } of boards) {
+      const board = cloneBoard(newState(preset, desc));
+      for (let guard = 0; guard < 600; guard++) {
+        const plan = deduceSpokesPlan(board);
+        if (plan.length === 0) break;
+        const f = plan[0];
+        for (const sp of f.forced) {
+          if (sp.state === SPOKE_LINE) continue; // a connection always helps
+          const nx = (sp.index % board.w) + SPOKE_DIRS[sp.dir].dx;
+          const ny = ((sp.index / board.w) | 0) + SPOKE_DIRS[sp.dir].dy;
+          const j = ny * board.w + nx;
+          const aNeeds = linesDrawn(board, sp.index) < board.numbers[sp.index];
+          const bNeeds =
+            nx >= 0 &&
+            nx < board.w &&
+            ny >= 0 &&
+            ny < board.h &&
+            board.numbers[j] > 0 &&
+            linesDrawn(board, j) < board.numbers[j];
+          expect(
+            aNeeds || bNeeds,
+            `${at}: ${f.kind} rules out a spoke between two satisfied hubs`,
+          ).toBe(true);
+          ruleOuts++;
         }
+        applyForced(board, f.forced);
       }
     }
     // A deduction engine that emitted only connections would walk every board
@@ -369,22 +417,39 @@ describe("the top tier's look-ahead never reaches a hint", () => {
    * identical, so `hint-quality.test.ts`'s vocabulary check cannot tell them
    * apart — the guarantee has to be structural. This is it, stated as the
    * consequence a player would feel: **asking for the top tier's reasoning buys
-   * the plan nothing.** The control below is what stops it passing vacuously.
+   * the plan nothing.** The two controls below are what stop it passing
+   * vacuously.
+   *
+   * What this alone catches is that rung reaching a plan. Planted 2026-10-07
+   * (the unbounded trial run after the bounded one, at the top tier only), the
+   * plan grew by 7 to 28 firings on every one of these boards and no other
+   * test in the file noticed.
    */
   it("planning at the top tier gives the same plan as planning at Normal", () => {
-    let sawTricky = false;
-    for (let seed = 0; seed < 12; seed++) {
-      const { desc } = newSpokesDesc(UNREASONABLE, randomNew(`no-search-rung-${seed}`));
+    for (const desc of UNREASONABLE_BOARDS) {
       const base = newState(UNREASONABLE, desc);
-      const kinds = (diff: number) =>
-        deduceSpokesPlan(cloneBoard(base), diff).map((f) => f.kind);
+      const plan = (diff: number) => deduceSpokesPlan(cloneBoard(base), diff);
+      const normal = plan(DIFF_TRICKY);
 
-      expect(kinds(DIFF_HARD), `seed ${seed}`).toEqual(kinds(DIFF_TRICKY));
-      if (kinds(DIFF_TRICKY).length > kinds(DIFF_EASY).length) sawTricky = true;
+      expect(
+        plan(DIFF_HARD).map((f) => f.kind),
+        desc,
+      ).toEqual(normal.map((f) => f.kind));
+
+      // The first control: the Normal rung adds firings an Easy plan lacks, so
+      // the equality is a fact about the top tier and not an artifact of every
+      // tier planning alike.
+      expect(normal.length, `${desc}: the Normal rung adds no firing`).toBeGreaterThan(
+        plan(DIFF_EASY).length,
+      );
+      // The second: the Normal plan stops short of solved, so a rung above it
+      // would have firings to add. A board this fails on has come within the
+      // hint's reach and no longer tells the tiers apart: replace it.
+      const after = cloneBoard(base);
+      for (const f of normal) applyForced(after, f.forced);
+      expect(spokesValidate(after), `${desc}: the Normal plan finishes it`).toBe(
+        "incomplete",
+      );
     }
-    // The control: the Normal rung really does add firings an Easy plan lacks,
-    // so the equality above is a live fact about the top tier rather than an
-    // artifact of every tier producing the same plan.
-    expect(sawTricky, "no board where the Normal rung adds a firing").toBe(true);
   });
 });

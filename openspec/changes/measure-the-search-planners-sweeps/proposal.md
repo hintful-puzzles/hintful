@@ -1,7 +1,8 @@
 # measure-the-search-planners-sweeps
 
-**Status: scaffolded, not started (2026-10-04).** A follow-up from
-`move-the-hint-scans-onto-the-harness`.
+**Status: done (2026-10-07).** A follow-up from
+`move-the-hint-scans-onto-the-harness`. What was measured and decided is
+`design.md`.
 
 ## Why
 

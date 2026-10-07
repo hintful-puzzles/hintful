@@ -13,6 +13,7 @@ import {
   isComplete,
   type NetslideMove,
   type NetslideParams,
+  type NetslideState,
   newState,
 } from "./state.ts";
 
@@ -103,38 +104,56 @@ describe("recovering the finished grid", () => {
     // set gives 20 160 = 8!/2, the alternating group exactly, and a board can easily
     // have valid finished grids outside it. `isReachable` is checked here against
     // brute force, not against theory.
+    const boards: NetslideState[] = [];
     for (const params of PRESETS.filter((p) => p.w === 3 && p.h === 3)) {
       for (const seed of ["reach-a", "reach-b", "reach-c"]) {
         const { desc } = netslideGame.newDesc(params, randomNew(seed));
-        const state = netslideGame.newState(params, desc);
-
-        const key = (t: ArrayLike<number>) => Array.from(t).join(",");
-        const reachable = new Set<string>([key(state.tiles)]);
-        let frontier = [state];
-        while (frontier.length > 0) {
-          const next: typeof frontier = [];
-          for (const board of frontier) {
-            for (const m of legalMoves(board.w, board.h, board.cx, board.cy)) {
-              const slid = netslideGame.executeMove(board, m);
-              const k = key(slid.tiles);
-              if (reachable.has(k)) continue;
-              reachable.add(k);
-              next.push(slid);
-            }
-          }
-          frontier = next;
-        }
-
-        for (const candidate of findSolutions(state, 200)) {
-          expect(
-            isReachable(state, candidate),
-            "the reachability test disagreed with brute force",
-          ).toBe(reachable.has(key(candidate)));
-        }
-
-        const picked = reconstructSolution(state) as Uint8Array;
-        expect(reachable.has(key(picked)), "picked an unreachable grid").toBe(true);
+        boards.push(netslideGame.newState(params, desc));
       }
+    }
+    // The pick is at stake only on a board whose first finished grid is out of
+    // reach, and a dealt board is rarely one: 14 of 900 were (2026-10-07), every
+    // one of them wrapping. So two are written down, and held to being such a
+    // board, or the last assertion below says nothing about the pick.
+    for (const desc of ["814cb9726", "3219ec847"]) {
+      const state = netslideGame.newState(
+        { ...REPORTED_PARAMS, wrapping: true, barrierProbability: 0 },
+        desc,
+      );
+      const [first] = findSolutions(state, 1);
+      expect(isReachable(state, first), `${desc}: its first grid is in reach`).toBe(
+        false,
+      );
+      boards.push(state);
+    }
+
+    for (const state of boards) {
+      const key = (t: ArrayLike<number>) => Array.from(t).join(",");
+      const reachable = new Set<string>([key(state.tiles)]);
+      let frontier = [state];
+      while (frontier.length > 0) {
+        const next: typeof frontier = [];
+        for (const board of frontier) {
+          for (const m of legalMoves(board.w, board.h, board.cx, board.cy)) {
+            const slid = netslideGame.executeMove(board, m);
+            const k = key(slid.tiles);
+            if (reachable.has(k)) continue;
+            reachable.add(k);
+            next.push(slid);
+          }
+        }
+        frontier = next;
+      }
+
+      for (const candidate of findSolutions(state, 200)) {
+        expect(
+          isReachable(state, candidate),
+          "the reachability test disagreed with brute force",
+        ).toBe(reachable.has(key(candidate)));
+      }
+
+      const picked = reconstructSolution(state) as Uint8Array;
+      expect(reachable.has(key(picked)), "picked an unreachable grid").toBe(true);
     }
   });
 });
@@ -166,6 +185,14 @@ describe("a board with no `aux` at all (the reported bug)", () => {
     // *Solve from any position*: every preset, the generator's answer withheld
     // throughout, and the hint followed the way the midend follows it — a plan is
     // kept while it is being followed, and recomputed when it runs out.
+    //
+    // Nine tenths of this is the three 5x5 presets (measured 2026-10-07), and
+    // they are what it alone catches: no other test follows a hint to the end on
+    // a 5x5 that is not wrapping, and `hint-resume.test.ts` names this walk as
+    // its cover for the board size it leaves out. Planted the same day, a hint
+    // with no exact search stopped finishing on one board of the eighteen, a
+    // 5x5 with neither wrapping nor barriers, and no other walk of Netslide's
+    // noticed.
     for (const params of PRESETS) {
       const label = `${params.w}x${params.h}${params.wrapping ? "w" : ""}`;
       for (const seed of ["walk-a", "walk-b"]) {

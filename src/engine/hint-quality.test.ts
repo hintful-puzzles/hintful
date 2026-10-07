@@ -56,7 +56,11 @@ import {
   SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
-import { PRECOMMIT_HOOK_RUN, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
+import {
+  itOverWholeSweep,
+  PRECOMMIT_HOOK_RUN,
+  SLOW_TESTS_ENABLED,
+} from "./testing/slow.ts";
 
 const SEEDS = ["hq-a", "hq-b", "hq-c"];
 
@@ -798,7 +802,7 @@ describe("a bound hint's words name exactly the marks it draws", () => {
     });
   }
 
-  it("met every form it checks on real steps", () => {
+  itOverWholeSweep("met every form it checks on real steps", () => {
     // Vacuity: each property the form checks hold steps to was held on some.
     // `bare` is not here: no walked board leaves a hint nothing to say, and
     // the games that can (Pegs, Flood) pin it in their own tests.

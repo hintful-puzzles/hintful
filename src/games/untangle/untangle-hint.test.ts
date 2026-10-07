@@ -214,16 +214,29 @@ describeHintPins({
 
 describe("Untangle hint", () => {
   it("narrates true counts and solves every board it is followed on", () => {
-    // Seed-deterministic but heavy: n=25 is the largest preset and the size at
-    // which greedy moves most often run out. Every size and every kind of
-    // start runs on each commit; the slow tier adds more seeds of each.
-    const seeds = SLOW_TESTS_ENABLED ? 4 : 2;
+    // What this alone catches is a sentence whose count is not the board's, on
+    // any kind of step and from any kind of start: the walk in
+    // `hint-resume.test.ts` reads no sentence, and starts only from a fresh
+    // board that has its `aux`.
+    //
+    // n=25 is the largest preset and nearly all of the cost (measured
+    // 2026-10-07, about 2.5 s a walk against 0.3 s at n=15). It is also where a
+    // plan rearranges in bulk, and the only size here at which a journey leaves
+    // crossings behind. Planted the same day, over four seeds of each size: a
+    // rearranging step that promises a move which does not repay it, and a
+    // placed point allowed to move again. Every n=25 seed showed both, and
+    // below that size one n=15 scatter showed both and one n=10 scatter the
+    // second. So a second n=25 seed repeats the first, and the gate walks one:
+    // the one on which both showed from a scatter and from a snapped board.
+    // The slow tier walks four seeds of every size.
+    const seedsOf = (n: number): readonly number[] =>
+      SLOW_TESTS_ENABLED ? [0, 1, 2, 3] : n === 25 ? [1] : [0, 1];
     let rebuilds = 0;
     let journeys = 0;
     let finishing = 0;
     let boards = 0;
     for (const n of [6, 10, 15, 25]) {
-      for (let i = 0; i < seeds; i++) {
+      for (const i of seedsOf(n)) {
         const { state, aux } = generated(n, `hint-${n}-${i}`);
         for (const [start, withAux] of [
           [state, aux],
@@ -239,7 +252,7 @@ describe("Untangle hint", () => {
         }
       }
     }
-    expect(boards).toBe(4 * seeds * 3);
+    expect(boards).toBe(SLOW_TESTS_ENABLED ? 48 : 21);
     // Vacuity: the fallback for "no single move helps" must actually have run,
     // or this test says nothing about the stall that made the old hint give up;
     // and journeys of both kinds, or their checks above checked nothing.

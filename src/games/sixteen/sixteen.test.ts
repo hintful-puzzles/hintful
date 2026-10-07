@@ -499,6 +499,13 @@ describe("Sixteen hint", () => {
     // the tile's own current cell, and applying the step's move lands
     // the tile exactly on its highlighted target. Plans are re-requested
     // only on exhaustion.
+    //
+    // The costliest hint test here that is not a pin, at about 1.4 s, and what
+    // it holds that the others do not is every step of whole playthroughs:
+    // each of the rest reads one plan on a board of its own, for one search
+    // of 0.5 to 1 s apiece, so this file has no sweep to narrow (measured
+    // 2026-10-07). Planted the same day, a tile leaving one edge given a
+    // target short of the other, this was one of twelve tests to go red.
     for (const [w, h, seeds] of [
       [3, 3, ["hint-geom-a", "hint-geom-b"]],
       [4, 4, ["hint-geom-c", "hint-geom-d"]],

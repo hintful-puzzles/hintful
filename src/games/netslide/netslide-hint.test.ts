@@ -135,6 +135,14 @@ function hintOf(state: NetslideState, aux?: string) {
  * rare shape (a frozen-line move, a beside-source placement, a multi-leg
  * journey) keep their own loops below.
  *
+ * What the corpus alone catches is a wording these three rules forbid on any
+ * sentence form: the cross-game narration guards hold Netslide to none of them
+ * but length. A 5×5 board is most of the cost and no likelier to show one:
+ * planted 2026-10-07, "center" in the frozen-row sentence and a second
+ * "belongs" in the beside-source one, the first showed on 14 of the 18 boards
+ * dealt at six a size and the second on 7, at every size. So the 5×5 takes two
+ * boards and the cheap sizes six.
+ *
  * Lazy module state, read-only and deterministic, so it is safe under
  * `isolate: false`.
  */
@@ -150,7 +158,7 @@ function narrationCorpus(): CorpusEntry[] {
   if (narrationCorpusCache) return narrationCorpusCache;
   const out: CorpusEntry[] = [];
   for (const params of [EASY_3X3, EVEN_4X4, HARD_5X5]) {
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < (params === HARD_5X5 ? 2 : 6); i++) {
       const { state, aux } = board(params, `corpus-${params.w}-${i}`);
       const res = hintOf(state, aux);
       if (res.ok) out.push({ params, state, aux, steps: res.steps });
@@ -296,43 +304,51 @@ describe("netslide hint", () => {
     expect(isComplete(at)).toBe(true);
   });
 
-  it("never opens by undoing a slide it has just talked the player into", () => {
-    // Following a hint and being told to undo it is the ping-pong shape, and it is
-    // ruled out: the heuristic search is forbidden from opening on the inverse of
-    // the player's last slide.
+  it("never opens by undoing the slide the player has just made", () => {
+    // Being told to undo the slide just made is useless advice, and it is the
+    // shape a hint ping-pong takes, so the heuristic search is forbidden from
+    // opening on the inverse of the player's last slide.
+    //
+    // The rule is what decides the opening only where the exact search is out of
+    // reach and the heuristic would rather go back, so each board here is one
+    // where it does. Measured 2026-10-07 with the rule lifted: the hint opened
+    // by undoing 3 of 96 slides a player made of their own on a fresh 5x5,
+    // these two among them, and none of 108 slides it had asked for itself.
     //
     // Note the *exact* endgame search is deliberately not bound by that rule. If
     // the player has just made a move that took them further away, the shortest
     // way home really does start by undoing it, and saying so is honest advice —
     // it also cannot loop, because a shortest plan strictly shortens the way home.
-    let compared = 0;
-    for (const seed of ["undo-a", "undo-b", "undo-c"]) {
-      const { state, aux } = board(HARD_5X5, seed);
-      const first = hintOf(state, aux);
-      if (!first.ok) continue;
-
-      const followed = first.steps[0].move;
-      const after = netslideGame.executeMove(state, followed);
-      if (isComplete(after)) continue;
-
-      const next = hintOf(after, aux);
-      if (!next.ok) continue;
+    const made: {
+      params: NetslideParams;
+      desc: string;
+      own: NetslideMove & { type: "slide" };
+    }[] = [
+      {
+        params: { ...HARD_5X5, wrapping: false },
+        desc: "9d6c21d5556e578551d1213e4",
+        own: { type: "slide", axis: "row", index: 0, dir: 1 },
+      },
+      {
+        params: { ...HARD_5X5, wrapping: false, barrierProbability: 1 },
+        desc: "9hdh6ch2h1hdh5h556eh5h7v8h5vh5h1dv1213ve4",
+        own: { type: "slide", axis: "row", index: 0, dir: 1 },
+      },
+    ];
+    const undone: boolean[] = [];
+    for (const { params, desc, own } of made) {
+      const after = netslideGame.executeMove(netslideGame.newState(params, desc), own);
+      const next = hintOf(after);
+      if (!next.ok) throw new Error(`${desc}: ${next.error}`);
       const proposed = next.steps[0].move;
-      if (proposed.type !== "slide" || followed.type !== "slide") continue;
-
-      const undoesIt =
-        proposed.axis === followed.axis &&
-        proposed.index === followed.index &&
-        proposed.dir === -followed.dir;
-      expect(
-        undoesIt,
-        `${seed}: the hint told the player to undo the slide it had just asked for`,
-      ).toBe(false);
-      compared++;
+      undone.push(
+        proposed.type === "slide" &&
+          proposed.axis === own.axis &&
+          proposed.index === own.index &&
+          proposed.dir === -own.dir,
+      );
     }
-    // Four `continue` guards stand between the seeds and the assertion; any one
-    // of them firing on every seed would leave this green over nothing.
-    expect(compared, "no seed reached a second hint to compare").toBeGreaterThan(0);
+    expect(undone).toEqual([false, false]);
   });
 });
 
@@ -499,35 +515,32 @@ describe("netslide hint convergence", () => {
   const seedsFor = (params: NetslideParams): readonly string[] =>
     params === HARD_5X5 ? SEEDS.slice(0, seedBudget(2, SEEDS.length)) : SEEDS;
 
-  for (const withAux of [true, false]) {
-    for (const params of [EASY_3X3, HARD_5X5]) {
-      const label = `${params.w}x${params.h}${params.wrapping ? " wrapping" : ""}`;
-      const aim = withAux
-        ? "with the generator's answer"
-        : "with no answer to work from";
+  // These walk a board that came with the generator's answer. The same walk with
+  // no answer to work from is `netslide-reconstruct.test.ts`'s, on every preset.
+  for (const params of [EASY_3X3, HARD_5X5]) {
+    const label = `${params.w}x${params.h}${params.wrapping ? " wrapping" : ""}`;
 
-      it(`${label}: following the hint finishes the board, ${aim}`, () => {
-        for (const seed of seedsFor(params)) {
-          const { desc, aux } = netslideGame.newDesc(
-            params,
-            randomNew(`${label}-${withAux}-${seed}`),
-          );
-          let at = netslideGame.newState(params, desc);
+    it(`${label}: following the hint finishes the board, with the generator's answer`, () => {
+      for (const seed of seedsFor(params)) {
+        const { desc, aux } = netslideGame.newDesc(
+          params,
+          randomNew(`${label}-true-${seed}`),
+        );
+        let at = netslideGame.newState(params, desc);
 
-          for (let ask = 0; ask < 40 && !isComplete(at); ask++) {
-            const res = hintOf(at, withAux ? aux : undefined);
-            expect(res.ok, `${seed}: hint gave up`).toBe(true);
-            if (!res.ok) break;
+        for (let ask = 0; ask < 40 && !isComplete(at); ask++) {
+          const res = hintOf(at, aux);
+          expect(res.ok, `${seed}: hint gave up`).toBe(true);
+          if (!res.ok) break;
 
-            for (const step of res.steps) {
-              at = netslideGame.executeMove(at, step.move);
-              if (isComplete(at)) break;
-            }
+          for (const step of res.steps) {
+            at = netslideGame.executeMove(at, step.move);
+            if (isComplete(at)) break;
           }
-          expect(isComplete(at), `${seed}: never finished`).toBe(true);
         }
-      });
-    }
+        expect(isComplete(at), `${seed}: never finished`).toBe(true);
+      }
+    });
   }
 
   it("3x3: recomputing from scratch after *every* move still finishes, and never loops", () => {
