@@ -607,22 +607,8 @@ function fleetConfigString(p: BoatsParams): string {
   return same ? "" : encodeFleet(p.fleetData, p.fleet);
 }
 
-/**
- * Boats' difficulty contract (`engine/difficulty.ts`) — **the collection's one
- * declared non-monotone solver**, and the reason the guard has a workaround
- * branch at all.
- *
- * `checkDsf`, which runs from Normal upward, counts an unfinished run of length
- * `k` as a completed size-`k` boat, so it can report a contradiction the board
- * does not have and leave most Easy boards *stuck at the maximum cap* while
- * they solve fine at Easy. The workaround every consumer applies is
- * `solveAtAnyTier` — ask each cap in turn and take the first success — and
- * declaring `nonMonotone` here is what points the cross-game guard at that
- * property instead of at monotonicity. `solveAtAnyTier`'s header has the
- * measurement.
- */
+/** Boats' difficulty contract (`engine/difficulty.ts`). */
 const difficulty: DifficultyContract<BoatsParams> = {
-  nonMonotone: true,
   solveAtCap: (p, desc, cap) => {
     const result = solveBoats(boardOf(newState(p, desc)), cap);
     return result.kind === "solved"

@@ -83,7 +83,7 @@ const pinned = describeHintPins({
   },
   unreached: {
     restart:
-      'spoken only on a laid-out board with no square open, which is a board undone back to its start: a pin is a desc and the moves played on it, and a laid-out desc opens its first square. "opens the crossed square after an undo back to the start" builds one',
+      'a board no pin can hold, and not one that is rare. It is spoken on a laid-out board with no square open, which play reaches only by undoing the first click. A pin is a desc and the moves played on it: the public desc opens its first square, and the layout alone names none and does not load. "opens the crossed square after an undo back to the start" builds one',
   },
   pins: {
     /** Held on 351 of 632 positions walked. */

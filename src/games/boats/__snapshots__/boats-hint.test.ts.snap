@@ -2587,6 +2587,7 @@ exports[`boats: pinned hint positions > says, at each pin 1`] = `
   "lineSatisfied": "This column's number is 0, so every square in it must be water.",
   "lineSatisfiedOfSeveral": "This column's number is 0, so every square in it must be water.",
   "mustExtend": "Every 1-boat is placed, and water or the edge closes three sides of this segment, so its boat must use the fourth, with the water around it.",
+  "mustGrow": "Every 2-boat is already placed, so this unfinished boat can't stop at 2: it must continue into this square.",
   "neverTouch": "Boats never touch, not even at a corner, so the squares diagonally beside this segment must be water.",
   "onlyRunsLeft": "Only one run can still hold the 4-boat, so it must go there: this square is covered wherever it sits.",
   "refuted": "If this square were water, it would make a boat the fleet has no room for (outlined), so it must hold a boat segment.",

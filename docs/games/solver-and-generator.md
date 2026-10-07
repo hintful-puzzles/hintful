@@ -869,28 +869,24 @@ matters.
 
 **A difficulty-capped solver must be monotone in its cap: a board solvable at
 cap `d` solves at every cap above `d`** (normative:
-`ts-migration` § "A difficulty-capped solver is monotone in its cap"). This
-is not theoretical — Boats disproved the reflex "solve at the maximum cap;
-more techniques can only help": its unfinished-boat dsf check runs only from
-Normal upward and counts a partial run of length `k` as a *finished* size-`k`
-boat, so it reports a contradiction the board doesn't have and the solver
-stops. Measured: 13–17 of 20 Easy boards stuck at the maximum cap while
-solving fine at Easy.
+`ts-migration` § "A difficulty-capped solver is monotone in its cap").
+Every technique is sound and a higher cap only adds some, so a solver that
+fails at a higher cap has a technique or a check that is wrong, and that is
+where to look.
 
 - **The consequence is severe and silent**: `findMistakes` re-solves, gets
   stuck, returns `[]` — the game still offers mistake-checking while Check &
   Save checks nothing and blesses a wrong board (the exact failure the
   [solvable-game contract](#the-solvable-game-contract) exists to prevent).
-- **Fix at the call site, not in the solver.** A false *abort* only makes a
-  solver weaker, never wrong, and a solver-gated generator re-verified every
-  board with the same solver — so the boards that exist are all correct.
-  Repairing the check would change every intermediate verdict, hence every
-  desc, hence the byte-match oracle, to fix something generation never got
-  wrong. Boats asks each cap in ascending order and takes the first that
-  solves ([`boats/solver.ts`](../../src/games/boats/solver.ts)
-  `solveAtAnyTier`); it declares `nonMonotone` on its contract, which **swaps**
-  the monotonicity guard for the workaround guard rather than skipping the
-  game — a skipped game is an untested game wearing a comment.
+- **Find the cause; do not solve at each cap in turn.** Boats was ported with
+  a check that called a board contradictory once its largest boats were all
+  placed, at Normal and above. It was read as upstream's own behavior, and
+  Boats asked each cap in ascending order and declared itself non-monotone for
+  as long as the byte-match oracle made a repair expensive. The cause was one
+  read: upstream took a boat's first square from the union-find's root, which
+  `dsf.c` had stopped guaranteeing before the port (§ "Solver-gated
+  generation", on root identity). The workaround also hid that the same read
+  left a whole technique unable to fire, and its hint rung excused as rare.
 - **Tell:** generate boards at the *lowest* tier and solve them at the
   *highest*; if that ever fails you have this bug, and a port that only tests
   "solves at its own difficulty" will never see it. You no longer write that
@@ -1178,7 +1174,13 @@ verdict. The lessons that stay live:
   exactly this. A game that uses the dsf only for connectivity won't notice;
   one that reads `canonify(i)` as an *element* (an index into something)
   does. Tell: a loop bounded by a canonify result used as an index value
-  rather than as an identity to compare.
+  rather than as an identity to compare. **Then ask which `dsf.c` the C was
+  written for.** The root was the class's smallest element until upstream
+  moved to union-by-size and gave the smallest its own call, `dsf_minimal`;
+  code that says "the canonical index is the first square" and still calls
+  `dsf_canonify` is broken upstream, and a faithful port of it is broken the
+  same way. `Dsf.withMinimal` answers `minimal(i)`
+  ([`boats/validate.ts`](../../src/games/boats/validate.ts) `checkDsf`).
 
 ### A divergence retires or re-founds its fixture
 

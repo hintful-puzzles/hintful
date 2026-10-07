@@ -74,20 +74,6 @@ export interface DifficultyContract<Params> {
    * scratch can carry state that weakens the solver (Ascent's retained
    * `foundEndpoints` does) and leaves side effects for the next caller. */
   solveAtCap(p: Params, desc: string, cap: number): DifficultyVerdict;
-
-  /**
-   * Declared only by a game whose solver is known **not** to be monotone in its
-   * cap, alongside the spec requirement that records why. Boats is the sole
-   * case: its `checkDsf` rung, which runs from Normal upward, counts an
-   * unfinished run of length `k` as a completed size-`k` boat, so it can report
-   * a contradiction the board does not have.
-   *
-   * Declaring this **swaps** the monotonicity guard for the workaround guard —
-   * it does not skip the game. A skipped game is an untested game wearing a
-   * comment, and the exemption has to be under test so that fixing the
-   * underlying defect becomes visible.
-   */
-  readonly nonMonotone?: true;
 }
 
 /**
@@ -381,13 +367,8 @@ export function solvableAtExactlyTier(solve: CappedSolve, tier: number): boolean
 
 /**
  * The lowest cap at which this board solves, or `null` if no cap up to
- * `tierCount - 1` does.
- *
- * Scanning upward is also the shape of Boats' `solveAtAnyTier` workaround, which
- * is why a non-monotone game's guard can be phrased in terms of this: on a
- * monotone solver "the lowest cap that works" and "every cap from there up
- * works" are the same statement, and on a non-monotone one only the first
- * survives.
+ * `tierCount - 1` does. Every solver is monotone in its cap
+ * (`difficulty-contract.test.ts`), so every cap from there up solves it too.
  */
 export function lowestSolvingCap(solve: CappedSolve, tierCount: number): number | null {
   for (let cap = 0; cap < tierCount; cap++) {

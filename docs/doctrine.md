@@ -45,12 +45,15 @@ form and its change says why.
 
 - Game-specific logic is never bent to fit a contract, and an exemplar hint
   never loses a word to an abstraction.
-- Swap a guard for the exception; do not skip it. `nonMonotone` is the shape
-  to copy, and the game declares it for its own reasons.
+- Swap a guard for the exception; do not skip it. A skipped game is an
+  untested game wearing a comment.
 - Derive the exception from a declaration the game already makes. An
   exemption roster rots as quietly as a membership roster.
 - Ask first whether the exception should exist. An override can excuse a
-  defect for a long time.
+  defect for a long time: Boats declared its solver non-monotone for as long
+  as one wrong read went unlooked for
+  ([`solver-and-generator.md`](./games/solver-and-generator.md) §
+  "Cap-monotonicity, and the game that broke it").
 
 **The framework owns a shared idiom.** When several games write the same
 loop, the same sequence of helper calls or the same bookkeeping, even

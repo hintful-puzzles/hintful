@@ -333,52 +333,20 @@ describe("the picture holds exactly the number the sentence states", () => {
   });
 });
 
-/**
- * Which premises the generator's boards actually reach, and why each of the
- * three they do not is still written.
- *
- * This is `tracks-ladder.test.ts`'s `unreached` ledger one level finer. That
- * one found a whole **rung** the corpus never reaches (`check-single`); measured
- * the same way over 119 boards — every shape, tier and `singleOnes` setting,
- * 10,356 firings, 2026-09-09 — three narratable *arms* are unreachable too, and
- * the tally the runner keeps on the generator's own recorder-free path agrees
- * (`check-loose-ends` fires 62 times there against 66 `looseEndSpans` recorded
- * here and no `looseEndsFill`; `check-loop` 198 against 264 recorded arms and no
- * `wouldFinishEarly`).
- *
- * **None of the three is deleted, and the reason is the same each time**: the
- * deduction itself is upstream's and cannot go (the generator is byte-matched
- * against it), so an arm without a reason would not vanish, it would be hidden
- * from the player instead of taught — which the first guard in "what the plan
- * hides" would then catch. What they lose by being unreachable is the corpus's check
- * on their wording, and § "reads correctly at the degenerate extremes" below is
- * where that is bought back: `narrate` is called on a hand-built reason, which
- * is the only instrument that can read a sentence no board produces.
- */
-const UNREACHED: Record<string, string> = {
-  looseEndsFill:
-    "Subsumed by cheaper rungs. Its premise is that a line's clue is fully " +
-    "accounted for, at which point `count-clues` has already marked every " +
-    "other square in that line empty and `update-flags` has blocked their " +
-    "sides, including the one this arm would block. Both run to exhaustion " +
-    "before `check-loose-ends` is reached, so it arrives with nothing left.",
-  wouldFinishEarly:
-    "Needs a join of the A run to the B run that strands no track elsewhere " +
-    "and still leaves a clue short. `wouldStrandTrack`, the same firing's " +
-    "other cause, fires 64 times over the corpus; this combination did not " +
-    "come up. Retire this entry by building a board that reaches it.",
-};
+/** A fresh board whose plan blocks a join of A's run to B's that would strand
+ * no track and leave a clue short. It takes a board with no given piece
+ * between the two runs, which the shapes above are too large to deal: none
+ * in 10,356 firings on 119 of them, and this one among 450 boards of 4x4 to
+ * 7x7 (2026-10-07). */
+const FINISHES_EARLY = "5x4dt:j5d9d,S2,3,3,3,3,3,3,S4,4";
 
-/** A position for every rung a step can be, but the two the ledger above
- * records no board reaching. */
+/** A position for every rung a step can be. */
 describeHintPins({
   game: tracksGame,
   params: SHAPES,
-  unreached: {
-    looseEndsFill: UNREACHED["looseEndsFill"],
-    wouldFinishEarly: UNREACHED["wouldFinishEarly"],
-  },
   pins: {
+    /** Kept by hand: see `FINISHES_EARLY`. */
+    wouldFinishEarly: FINISHES_EARLY,
     /** Held on 1324 of 1718 positions walked. */
     onlyOneSideLeft: "8x8de:k3l6c5e6v9f,4,S7,6,6,6,5,6,2,8,6,7,S6,6,5,2,2",
     /** Held on 1718 of 1718 positions walked. */
@@ -419,7 +387,7 @@ describeHintPins({
   },
 });
 
-describe("every narratable premise the corpus reaches is reached", () => {
+describe("every narratable premise is reached", () => {
   // Adding a variant to `TracksReason` breaks this object until it is listed,
   // which is what stops the census silently shrinking.
   const ALL_KINDS: Record<TracksReason["kind"], true> = {
@@ -430,45 +398,39 @@ describe("every narratable premise the corpus reaches is reached", () => {
     wouldCloseLoop: true,
     wouldStrandTrack: true,
     wouldFinishEarly: true,
-    looseEndsFill: true,
     looseEndSpans: true,
     sharedFate: true,
     crossingParity: true,
   };
 
-  it("reaches every premise but the ledgered ones, and ledgers nothing it reaches", () => {
+  it("reaches every premise", () => {
     const seen = new Set<string>();
     let firings = 0;
-    for (const params of SHAPES) {
-      for (const seed of SEEDS) {
-        const { desc } = tracksGame.newDesc(
+    const [small, smallDesc] = FINISHES_EARLY.split(":");
+    const boards = [
+      ...SHAPES.flatMap((params) =>
+        SEEDS.map((seed) => ({
           params,
-          randomNew(`cover-${params.w}-${params.diff}-${seed}`),
-        );
-        const board = stateToBoard(tracksGame.newState(params, desc));
-        const next = tracksRecordingPass(board, params.diff, stepBudget("cover"));
-        for (;;) {
-          const f = next();
-          if (!f) break;
-          firings++;
-          if (f.reason) seen.add(f.reason.kind);
-        }
+          desc: tracksGame.newDesc(
+            params,
+            randomNew(`cover-${params.w}-${params.diff}-${seed}`),
+          ).desc,
+        })),
+      ),
+      { params: tracksGame.decodeParams(small), desc: smallDesc },
+    ];
+    for (const { params, desc } of boards) {
+      const board = stateToBoard(tracksGame.newState(params, desc));
+      const next = tracksRecordingPass(board, params.diff, stepBudget("cover"));
+      for (;;) {
+        const f = next();
+        if (!f) break;
+        firings++;
+        if (f.reason) seen.add(f.reason.kind);
       }
     }
     expect(firings, "the census walked no firings").toBeGreaterThan(200);
-    for (const [id, why] of Object.entries(UNREACHED)) {
-      expect(id in ALL_KINDS, `${id} is ledgered but is not a premise`).toBe(true);
-      expect(why.length, `${id}'s ledger entry states no reason`).toBeGreaterThan(80);
-      expect(
-        seen.has(id),
-        `${id} is ledgered as unreached but the corpus reached it`,
-      ).toBe(false);
-    }
-    expect([...seen].sort()).toEqual(
-      Object.keys(ALL_KINDS)
-        .filter((k) => !(k in UNREACHED))
-        .sort(),
-    );
+    expect([...seen].sort()).toEqual(Object.keys(ALL_KINDS).sort());
   });
 
   it("each premise says something a player could tell apart", () => {
@@ -568,14 +530,11 @@ describe("narration reads correctly at the degenerate extremes", () => {
     ).toContain("and 1 crossing is marked");
   });
 
-  // The three arms the census above ledgers as unreachable. A sentence no board
-  // produces still has to be a sentence, and this is the only place that can
-  // say so — the cross-game narration guard walks *fired* steps, so it has
-  // never seen these either.
-  it("the unreachable arms are still English, and still in the necessity voice", () => {
+  // Two arms few boards reach: one firing among 450 small boards, and the
+  // both-ways form of `sharedFate`.
+  it("the rarest arms are still English, and still in the necessity voice", () => {
     const NECESSITY = /\bmust\b|\bcan(?:no|')t\b|\bcannot\b|\bno other\b|\bonly\b/;
     for (const reason of [
-      { kind: "looseEndsFill", line: 0, ev } as const,
       { kind: "wouldFinishEarly", x: 1, y: 1, dir: 8, unmet: 0, ev } as const,
       {
         kind: "sharedFate",

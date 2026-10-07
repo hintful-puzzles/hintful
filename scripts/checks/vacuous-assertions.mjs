@@ -96,11 +96,6 @@ const SCANS_FOR_A_CASE = {
     "it speaks only about a tier that FAILS to generate, and every tier " +
     "generating is the healthy state — a count floor here would demand a " +
     "broken game.",
-  "src/engine/difficulty-contract.test.ts :: deals boards that need the tier the preset claims":
-    "it already asserts its count, under the `nonMonotone` exemption a " +
-    "non-monotone game has no lowest cap to compare against; and the " +
-    "sweep-wide floor `boardsThatBound > 50` in the next describe block is the " +
-    "half this guard cannot see, because it spans tests.",
 };
 
 /** Below these the input is broken rather than the tree clean. */

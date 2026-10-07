@@ -16,9 +16,8 @@
  *     difficulty, and start over.
  *
  * So the published description depends on the solver's verdict on every board
- * along the way, and the differential's one byte-match assertion validates the
- * generator, all four solver tiers, the dsf root choice and the codec together
- * (docs/games/solver-and-generator.md § "Solver-gated generation").
+ * along the way (docs/games/solver-and-generator.md § "Solver-gated
+ * generation").
  *
  * **RNG draws must be reproduced in order, including the wasted ones.** The
  * fleet placement shuffles the run list and draws a position *per boat*, and

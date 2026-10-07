@@ -41,12 +41,10 @@ import {
   type BoatsState,
   boardOf,
   CORRUPT,
-  cloneBoard,
   DIFF_EASY,
   DIFF_HARD,
   DIFF_NORMAL,
   DIFF_TRICKY,
-  DIFFCOUNT,
   EMPTY,
   isShip,
   NO_CLUE,
@@ -381,8 +379,7 @@ function minExpandForward(
       const i1 = y * w + x;
       const i2 = i1 - d;
       if (grid[i1] !== EMPTY || dsf.canonify(i2) === end) continue;
-      // Reads the canonical root as an *element* — see `checkDsf`.
-      if (grid[dsf.canonify(i2)] !== ship) continue;
+      if (grid[dsf.minimal(i2)] !== ship) continue;
 
       const s = dsf.size(i2) - 1;
       if (s < 1 || s >= b.fleet || b.fleetData[s] !== fleetCount[s]) continue;
@@ -395,8 +392,8 @@ function minExpandForward(
 
 /**
  * Upstream `boats_solver_min_expand_dsf_back`: the mirror case — an end cap
- * pointing left/up means the boat can only grow the other way, and the square
- * to grow into is derived from the canonical (first) square of the run.
+ * pointing left/up means the boat can only grow the other way, into the square
+ * before the run's first.
  */
 function minExpandBack(
   b: BoatsBoard,
@@ -412,13 +409,12 @@ function minExpandBack(
     for (let x = 0; x < w; x++) {
       const i1 = y * w + x;
       if (grid[i1] !== ship) continue;
-      const c1 = dsf.canonify(i1);
-      if (c1 === end) continue;
+      if (dsf.canonify(i1) === end) continue;
 
       const s = dsf.size(i1) - 1;
       if (s < 1 || s >= b.fleet || b.fleetData[s] !== fleetCount[s]) continue;
 
-      const i2 = c1 - d;
+      const i2 = dsf.minimal(i1) - d;
       return placeShip(b, i2 % w, Math.floor(i2 / w));
     }
   }
@@ -883,7 +879,7 @@ export function solveBoats(b: BoatsBoard, maxDiff: number): BoatsSolveResult {
   const shipCounts = new Int32Array(w + h);
   const fleetCount = new Int32Array(b.fleet);
 
-  const dsf = maxDiff >= DIFF_NORMAL ? new Dsf(w * h + 1) : undefined;
+  const dsf = maxDiff >= DIFF_NORMAL ? Dsf.withMinimal(w * h + 1) : undefined;
 
   let diff = DIFF_EASY;
   // Optimization latches — see the module header; both are load-bearing.
@@ -974,58 +970,18 @@ export function solveBoats(b: BoatsBoard, maxDiff: number): BoatsSolveResult {
 // --- entry points for `solve()` and `findMistakes()` ------------------------
 
 /**
- * Solve a board with **whichever difficulty cap works**, lowest first.
- *
- * This exists because upstream's solver is *not monotone in `maxDiff`*: raising
- * the cap can turn a solved board into a stuck one. The cause is
- * `checkDsf`, which only runs from Normal upward and whose final loop counts an
- * **unfinished** run of length `k` as though it were a completed size-`k` boat.
- * When every size-`k` boat is already placed, that reports a contradiction the
- * board does not have — and `validateFullState` returning `STATUS_INVALID`
- * breaks the solve loop on the spot. Measured across the twelve presets, 20
- * seeds each: **13–17 of 20 Easy boards are stuck at the maximum cap** while
- * solving fine at Easy, and no board at Normal or above is affected (an
- * Easy board is the only kind never gated against these techniques). Not one
- * stuck board had a wrong square — the solver stops, it does not err. A
- * throwaway harness against the C showed the same, so this is upstream's
- * behavior and not a porting divergence.
- *
- * **The repair is here rather than in `checkDsf`**
- * (docs/games/solver-and-generator.md § "Divergence and what it costs", rule
- * 3). A false *abort* only ever makes the solver weaker, never wrong, and the
- * generator re-verifies every board with the same solver — so generated
- * puzzles are correct and uniquely solvable as they stand, and "fixing" the
- * solver would change which boards exist while buying nothing. Asking each cap
- * in turn costs at most four solves and leaves the solver byte-exact against
- * the C. Without it, Solve fails on most Easy boards and `findMistakes` returns
- * `[]`, so Check & Save would store a wrong board
- * (docs/games/solver-and-generator.md § "The solvable-game contract").
- */
-function solveAtAnyTier(b: BoatsBoard): BoatsSolveResult {
-  let sawInvalid = false;
-  for (let maxDiff = DIFF_EASY; maxDiff < DIFFCOUNT; maxDiff++) {
-    const attempt = cloneBoard(b);
-    const result = solveBoats(attempt, maxDiff);
-    if (result.kind === "solved") {
-      b.grid.set(attempt.grid);
-      return result;
-    }
-    if (result.kind === "invalid") sawInvalid = true;
-  }
-  return sawInvalid ? { kind: "invalid" } : { kind: "stuck" };
-}
-
-/**
  * Solve from the given clues alone and return the completed grid. Upstream
  * `solve_game`: any square the deduction never decided is filled with water, so
  * the returned move describes the whole board. The player's own marks play no
- * part, because `solveBoats` starts by wiping the grid.
+ * part, because `solveBoats` starts by wiping the grid. Every technique is
+ * sound and a higher cap only adds some, so the top cap solves whatever any
+ * cap does.
  */
 export function solveToGrid(
   state: BoatsState,
 ): { ok: true; grid: Int8Array } | { ok: false; error: SolveFailure } {
   const b = boardOf(state);
-  const result = solveAtAnyTier(b);
+  const result = solveBoats(b, DIFF_HARD);
   if (result.kind === "invalid") return { ok: false, error: NO_SOLUTION };
   if (result.kind === "stuck") return { ok: false, error: PUZZLE_NOT_REASONABLE };
 

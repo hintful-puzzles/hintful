@@ -7,10 +7,22 @@ export class Dsf {
   /** Tree size for union-by-size; only meaningful at a root. */
   private readonly classSize: Int32Array;
 
-  constructor(n: number) {
+  /** Each class's smallest element, kept at its root; only for a dsf made by
+   * {@link Dsf.withMinimal}. */
+  private readonly least: Int32Array | null;
+
+  constructor(n: number, trackMinimal = false) {
     this.parent = new Int32Array(n);
     this.classSize = new Int32Array(n);
+    this.least = trackMinimal ? new Int32Array(n) : null;
     this.reinit();
+  }
+
+  /** A dsf that also answers {@link minimal} (upstream `dsf_new_min`). The root
+   * is whichever element union-by-size left there, so a caller that wants a
+   * class's *first* element, in the order it numbers them, asks for this. */
+  static withMinimal(n: number): Dsf {
+    return new Dsf(n, true);
   }
 
   /** Restore the singleton partition (every element its own root). */
@@ -18,7 +30,14 @@ export class Dsf {
     for (let i = 0; i < this.parent.length; i++) {
       this.parent[i] = i;
       this.classSize[i] = 1;
+      if (this.least) this.least[i] = i;
     }
+  }
+
+  /** The smallest element of `i`'s class (upstream `dsf_minimal`). */
+  minimal(i: number): number {
+    if (!this.least) throw new Error("dsf: minimal() on a dsf not made withMinimal");
+    return this.least[this.canonify(i)];
   }
 
   /** Canonical root of `i`'s equivalence class. */
@@ -46,12 +65,15 @@ export class Dsf {
     const ra = this.canonify(a);
     const rb = this.canonify(b);
     if (ra === rb) return;
+    const least = this.least ? Math.min(this.least[ra], this.least[rb]) : 0;
     if (this.classSize[ra] > this.classSize[rb]) {
       this.parent[rb] = ra;
       this.classSize[ra] += this.classSize[rb];
+      if (this.least) this.least[ra] = least;
     } else {
       this.parent[ra] = rb;
       this.classSize[rb] += this.classSize[ra];
+      if (this.least) this.least[rb] = least;
     }
   }
 
@@ -68,9 +90,10 @@ export class Dsf {
   /** A deep copy: a fresh forest with the same partition, for a state that
    * clones its `Dsf` per move. */
   clone(): Dsf {
-    const copy = new Dsf(this.parent.length);
+    const copy = new Dsf(this.parent.length, this.least !== null);
     copy.parent.set(this.parent);
     copy.classSize.set(this.classSize);
+    if (this.least) copy.least?.set(this.least);
     return copy;
   }
 }

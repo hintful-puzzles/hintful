@@ -113,7 +113,10 @@ Two lessons, both byte-match surface:
   leaf; correct because generation never reads a minimal mid-merge, and
   byte-identical regardless of root choice because minimality is
   membership-determined. Exemplar: `buildMinimal` in
-  [`keen/state.ts`](../../src/games/keen/state.ts).
+  [`keen/state.ts`](../../src/games/keen/state.ts). A game that does read
+  one mid-merge makes its dsf with `Dsf.withMinimal(n)` and asks
+  `minimal(i)` (Boats' `checkDsf`, which asks whether a boat's first square is
+  an end cap while it is still joining boats up).
 - **Tell: a loop bounded by `dsf_canonify(...)` used as an index *value*
   rather than an identity to compare.** Rome's `rome_naked_pairs` skips region
   members below the canonical root — a real quirk baked into which puzzles its

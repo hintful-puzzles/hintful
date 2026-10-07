@@ -418,6 +418,18 @@ export const MODULES = [
           "  /** Restore the singleton partition (every element its own root). */\n  reinit(): void {\n    for (let i = 0; i < this.parent.length; i++) {\n      this.parent[i] = i;",
       },
       {
+        within: "Dsf.merge",
+        why: "the merged class keeps the new root's smallest element, not the smaller of the two",
+        find: "      if (this.least) this.least[ra] = least;",
+        replace: "      if (this.least) this.least[ra] = this.least[ra];",
+      },
+      {
+        within: "Dsf.minimal",
+        why: "minimal() answers the root, which is what its callers must not read",
+        find: "    return this.least[this.canonify(i)];",
+        replace: "    return this.canonify(i);",
+      },
+      {
         within: "Dsf.size",
         why: "size() reports the queried element's own count, not its root's",
         find: "    return this.classSize[this.canonify(i)];",

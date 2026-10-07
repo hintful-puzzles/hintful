@@ -178,13 +178,6 @@ export const say = {
       move: phrase`${thisSide(m)} must be blocked`,
     }),
 
-  looseEndsFill: (axis: Axis, target: number, m: Marked): Sentence =>
-    so({
-      look: phrase`${cells(m, "The outlined squares")} fill ${line(m, `this ${axis}`)}'s ${clue(m, `clue of ${target}`)}`,
-      follows: phrase`no loose end can run along it`,
-      move: phrase`${thisSide(m)} must be blocked`,
-    }),
-
   // "No way across it": every unfinished square has a side blocked across the
   // line, which is what the outlined squares and their bars show.
   looseEndSpans: (axis: Axis, m: Marked): Sentence =>

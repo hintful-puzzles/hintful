@@ -108,7 +108,6 @@ function namedLine(reason: TracksReason): number | null {
   switch (reason.kind) {
     case "clueFull":
     case "clueExact":
-    case "looseEndsFill":
     case "looseEndSpans":
     case "sharedFate":
       return reason.line;
@@ -167,10 +166,6 @@ export function narrate(
       return say.wouldStrandTrack(m);
     case "wouldFinishEarly":
       return say.wouldFinishEarly(lineOf(b, reason.unmet).axis, m);
-    case "looseEndsFill": {
-      const { axis, target } = lineOf(b, reason.line);
-      return say.looseEndsFill(axis, target, m);
-    }
     case "looseEndSpans":
       return say.looseEndSpans(lineOf(b, reason.line).axis, m);
     case "sharedFate": {
@@ -289,7 +284,6 @@ export const TRACKS_RUNGS = [
   "wouldCloseLoop",
   "wouldStrandTrack",
   "wouldFinishEarly",
-  "looseEndsFill",
   "looseEndSpans",
   "sharedFate",
   "crossingParity",

@@ -113,6 +113,27 @@ describe("Dsf", () => {
     }
   });
 
+  it("answers a class's smallest element where the root is another", () => {
+    // Merged in scan order, as a caller walking a grid does: the root of a run
+    // is its second element from the first tie on, and never its first.
+    const d = Dsf.withMinimal(6);
+    d.merge(2, 3);
+    d.merge(3, 4);
+    expect(d.canonify(2)).toBe(3);
+    expect([2, 3, 4].map((i) => d.minimal(i))).toEqual([2, 2, 2]);
+    expect(d.minimal(5)).toBe(5);
+    d.merge(4, 0); // the smaller class brings the smaller element
+    expect(d.canonify(0)).toBe(3);
+    expect(d.minimal(3)).toBe(0);
+    expect(d.clone().minimal(4)).toBe(0);
+    d.reinit();
+    expect(d.minimal(4)).toBe(4);
+  });
+
+  it("refuses to answer the smallest element unless it was asked to keep it", () => {
+    expect(() => new Dsf(2).minimal(0)).toThrow(/withMinimal/);
+  });
+
   it("breaks a size tie toward the second argument's root, as upstream does", () => {
     const d = new Dsf(4);
     d.merge(0, 1); // root 1

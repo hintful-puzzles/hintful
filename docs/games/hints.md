@@ -1329,26 +1329,23 @@ argument bounds the risk and only the measurement closes it.
 
 `<game>-ladder.test.ts`'s `unreached` ledger says which **rungs** a corpus
 reaches. Run the same census one level finer over the **reason kinds**, because
-an arm of a reachable rung can be just as unreachable: measured over 119 boards
-and 10,356 firings, three of Tracks' twelve premises fire on no board its
-generator produces, one of them because a cheaper rung always gets there first.
+an arm of a reachable rung can be just as unreached.
 
-The shape that works (`tracks-hint.test.ts`):
+The shape that works (`tracks-hint.test.ts`): a `Record<Reason["kind"], true>`
+const, so **adding a variant breaks compilation** until the census lists it,
+and a census that reaches every one of them, with a board added by hand for a
+premise the generated corpus does not deal.
 
-- A `Record<Reason["kind"], true>` const, so **adding a variant breaks
-  compilation** until the census lists it.
-- A ledger of the unreached, one entry per member with its reason, asserted to
-  be exactly disjoint from what the corpus reached — the `NO_KEYBOARD` shape
-  from [`testing.md`](./testing.md) § "How a cross-game guard finds its
-  population".
-- **Direct `narrate(reason)` unit tests for the ledgered arms.** They are the
-  only instrument that can read a sentence no board produces; the cross-game
-  narration guard walks *fired* steps, so it has never seen them either.
-
-Do not delete an unreachable narration arm for a deduction the solver still runs:
-the deduction stays either way, and without a reason its firing would be hidden
-from the player instead of taught — which the guards in § "Show only what the
-board does not already say" would then catch, since its conclusion is real.
+**An arm no board reaches is a finding to explain, and "a cheaper rung gets
+there first" is a guess until it is proved.** Three of Tracks' premises fired
+on none of 119 boards, and each was ledgered with that reason. One was dead by
+the ladder's order, which the code shows line by line, and it went. One fires on
+a 5x4 board, a size the corpus never dealt. The same reason excused Boats'
+`mustGrow`, which could not fire at all: a wrong read had disabled the
+technique in the solver too
+([`solver-and-generator.md`](./solver-and-generator.md) § "Cap-monotonicity,
+and the game that broke it"). How to tell the cases apart is
+[`testing.md`](./testing.md) § "Pinning a hint's positions".
 
 **A solver that *wipes the board* cannot be replayed as-is (Boats).** A
 recording solver written to run from empty is not automatically resumable;

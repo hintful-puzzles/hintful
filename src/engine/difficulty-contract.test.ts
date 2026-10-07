@@ -255,78 +255,56 @@ for (const { id, game, contract, tiers } of tiered) {
       }
     });
 
-    it(
-      contract.nonMonotone
-        ? "solves at some tier (non-monotone)"
-        : "is monotone in its cap",
-      () => {
-        // THE PROPERTY THIS WHOLE CONTRACT EXISTS FOR. Generate a real board at each
-        // reachable tier, find the lowest cap that solves it, and require every
-        // higher cap to solve it too.
-        //
-        // Seed-deterministic and bounded, never clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
-        //
-        // **Four boards per tier, and the number was measured rather than guessed.**
-        // The first version generated one, and it was proved insufficient the only
-        // way that counts: removing Boats' `nonMonotone` declaration and checking
-        // the guard fires. It did not — Boats' first tier-0 seed happens to be
-        // monotone, so the guard was passing on luck while claiming to hunt exactly
-        // that defect. A direct probe put the real rate at **7 of 8** Boats Easy
-        // boards non-monotone, so one sample misses it 1 time in 8 and four samples
-        // miss it about 1 time in 4,000. With four, removing the declaration fails
-        // on the first board.
-        //
-        // The general lesson, which is why this comment is long: *a guard that has
-        // never been shown to fail is not known to work*, and sampling is where a
-        // cross-game guard silently becomes decorative.
-        const boards = seedBudget(4, 12);
-        let checked = 0;
+    it("is monotone in its cap", () => {
+      // THE PROPERTY THIS WHOLE CONTRACT EXISTS FOR. Generate a real board at each
+      // reachable tier, find the lowest cap that solves it, and require every
+      // higher cap to solve it too.
+      //
+      // Seed-deterministic and bounded, never clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
+      //
+      // **Four boards per tier, and the number was measured rather than guessed.**
+      // One board a tier passed a solver that failed at a higher cap on 7 of 8
+      // of its easiest boards: the first seed happened to be one of the eighth.
+      // One sample misses that rate 1 time in 8, and four about 1 time in 4,000.
+      //
+      // The general lesson: *a guard that has never been shown to fail is not
+      // known to work*, and sampling is where a cross-game guard silently
+      // becomes decorative.
+      const boards = seedBudget(4, 12);
+      let checked = 0;
 
-        for (let tier = 0; tier < tiers.length; tier++) {
-          const p = paramsForTier({ id, game, contract, tiers }, tier);
-          if (p === null) continue; // an ungenerable tier; covered by the test above
+      for (let tier = 0; tier < tiers.length; tier++) {
+        const p = paramsForTier({ id, game, contract, tiers }, tier);
+        if (p === null) continue; // an ungenerable tier; covered by the test above
 
-          for (let seed = 0; seed < boards; seed++) {
-            const { desc } = game.newDesc(
-              p,
-              randomNew(`difficulty-${id}-${tier}-${seed}`),
-            );
-            const solve = cappedSolveFor(contract, p, desc);
-            const lowest = lowestSolvingCap(solve, tiers.length);
-            checked++;
+        for (let seed = 0; seed < boards; seed++) {
+          const { desc } = game.newDesc(
+            p,
+            randomNew(`difficulty-${id}-${tier}-${seed}`),
+          );
+          const solve = cappedSolveFor(contract, p, desc);
+          const lowest = lowestSolvingCap(solve, tiers.length);
+          checked++;
 
+          expect(
+            lowest,
+            `${id}: a board generated at tier ${tier} ("${tiers[tier]}", seed ${seed}) solves at no cap`,
+          ).not.toBeNull();
+          if (lowest === null) continue;
+
+          for (let cap = lowest; cap < tiers.length; cap++) {
             expect(
-              lowest,
-              `${id}: a board generated at tier ${tier} ("${tiers[tier]}", seed ${seed}) solves at no cap`,
-            ).not.toBeNull();
-            if (lowest === null) continue;
-
-            if (contract.nonMonotone) {
-              // Boats. Its solver really does fail at a higher cap what it solves at
-              // a lower one, so the property under test is the WORKAROUND its spec
-              // promises and every consumer applies — solve at each tier in turn and
-              // take the first success. Asserting that, rather than skipping the
-              // game, keeps the exemption itself under test: if the underlying
-              // `checkDsf` defect were ever fixed, the monotonicity branch below
-              // would start applying and this branch would have to be removed
-              // deliberately.
-              continue;
-            }
-
-            for (let cap = lowest; cap < tiers.length; cap++) {
-              expect(
-                solve(cap),
-                `${id}: tier ${tier} seed ${seed} solves at cap ${lowest} but not at cap ${cap}`,
-              ).toBe("solved");
-            }
+              solve(cap),
+              `${id}: tier ${tier} seed ${seed} solves at cap ${lowest} but not at cap ${cap}`,
+            ).toBe("solved");
           }
         }
+      }
 
-        // Per-game instrument guard: a game whose every tier turned out ungenerable
-        // would pass the loop above having solved nothing.
-        expect(checked, `${id}: no board was generated at any tier`).toBeGreaterThan(0);
-      },
-    );
+      // Per-game instrument guard: a game whose every tier turned out ungenerable
+      // would pass the loop above having solved nothing.
+      expect(checked, `${id}: no board was generated at any tier`).toBeGreaterThan(0);
+    });
 
     it("deals boards that need the tier the preset claims", () => {
       // THE PROPERTY `ts-migration` NAMED AND NOTHING CHECKED. "A difficulty tier
@@ -377,9 +355,6 @@ for (const { id, game, contract, tiers } of tiered) {
 
       for (const { title, params } of walked) {
         const tier = tierOf(game, params);
-        // Boats: its solver fails at a higher cap what it solves at a lower one,
-        // so there is no well-defined lowest cap to compare against.
-        if (contract.nonMonotone) continue;
 
         for (let seed = 0; seed < seeds; seed++) {
           const { desc } = game.newDesc(
@@ -423,10 +398,8 @@ for (const { id, game, contract, tiers } of tiered) {
       // Per-game vacuity: a contract whose `tierOf` stopped reporting a number
       // would leave this loop asserting nothing while reporting health. Every
       // tiered game has at least one preset naming a tier, by the menu assertions
-      // above — except a wholly non-monotone or non-unique one, which is exempt.
-      if (!contract.nonMonotone) {
-        expect(checked, `${id}: no preset named a tier to check`).toBeGreaterThan(0);
-      }
+      // above.
+      expect(checked, `${id}: no preset named a tier to check`).toBeGreaterThan(0);
     });
   });
 }

@@ -159,13 +159,27 @@ const pinned = describeHintPins({
     cornerCitingCorners: (s) =>
       s.move.kind === "corner" && marksOf(s).corners.length > 0,
   },
-  unreached: {
-    related:
-      "none in 1459 positions on 12 boards at 7x7 Hard squares, and none on the corpus below, whose UNREACHED says why",
-    closesLoop:
-      "none in 1459 positions on 12 boards at 7x7 Hard squares, and none on the corpus below, whose UNREACHED says why",
-  },
   pins: {
+    /** Kept by hand. The hint's own play places only a pair a cheaper rule
+     * also settles, so it never follows one; a pair the player noted is
+     * followed once nothing cheaper is left. It spoke on 201 of 16,196 steps
+     * of boards carrying thirty of the answer's pairs (2026-10-07), and this is
+     * one cut down to the lines drawn and the one note it follows. */
+    related: {
+      id: "4x4t1dh:0_2b0a212a1a0a1a2a02c1a1b1a1211a1a",
+      moves:
+        '[{"kind":"set","ops":[{"edge":0,"state":0},{"edge":1,"state":0},{"edge":2,"state":2},{"edge":3,"state":0},{"edge":4,"state":0},{"edge":5,"state":2},{"edge":6,"state":2},{"edge":7,"state":0},{"edge":8,"state":2},{"edge":9,"state":2},{"edge":10,"state":2},{"edge":11,"state":2},{"edge":12,"state":2},{"edge":13,"state":0},{"edge":14,"state":2},{"edge":15,"state":2},{"edge":16,"state":2},{"edge":17,"state":0},{"edge":18,"state":0},{"edge":19,"state":2},{"edge":20,"state":0},{"edge":21,"state":0},{"edge":22,"state":2},{"edge":23,"state":2},{"edge":24,"state":2},{"edge":25,"state":2},{"edge":26,"state":0},{"edge":27,"state":0},{"edge":28,"state":2},{"edge":29,"state":2},{"edge":30,"state":0},{"edge":32,"state":2},{"edge":33,"state":0},{"edge":34,"state":2},{"edge":35,"state":0},{"edge":36,"state":2},{"edge":37,"state":2},{"edge":38,"state":2},{"edge":39,"state":2},{"edge":42,"state":2},{"edge":44,"state":0},{"edge":47,"state":2},{"edge":48,"state":2},{"edge":49,"state":2},{"edge":51,"state":0},{"edge":58,"state":2},{"edge":60,"state":2},{"edge":61,"state":0}]},{"kind":"pair","a":2,"b":59,"relation":"opposite"}]',
+    },
+    /** Kept by hand. The whole loop drawn but one edge, where neither end of
+     * that edge has run out of other ways on: 13 of 17,852 such positions
+     * across the tilings (2026-10-07). Wherever a clue or a dot leaves the
+     * edge the only way on, that rule draws it first, as it does all through
+     * the hint's own play. */
+    closesLoop: {
+      id: "4x4t0dh:1a1b2b10d22",
+      moves:
+        '[{"kind":"set","ops":[{"edge":4,"state":2},{"edge":5,"state":2},{"edge":6,"state":0},{"edge":7,"state":2},{"edge":8,"state":0},{"edge":9,"state":2},{"edge":10,"state":0},{"edge":11,"state":0},{"edge":12,"state":2},{"edge":13,"state":2},{"edge":14,"state":2},{"edge":15,"state":0},{"edge":16,"state":0},{"edge":17,"state":2},{"edge":18,"state":0},{"edge":19,"state":0},{"edge":20,"state":0},{"edge":21,"state":2},{"edge":22,"state":2},{"edge":23,"state":2},{"edge":24,"state":0},{"edge":25,"state":2},{"edge":26,"state":2},{"edge":27,"state":2},{"edge":28,"state":2},{"edge":29,"state":0},{"edge":30,"state":0},{"edge":31,"state":2},{"edge":32,"state":0},{"edge":33,"state":0},{"edge":34,"state":2},{"edge":35,"state":0},{"edge":36,"state":0},{"edge":37,"state":0},{"edge":38,"state":2},{"edge":39,"state":2}]}]',
+    },
     /** Held on 233 of 1459 positions walked. */
     severalEdges: "7x7t0dh:b20a223b1b2a1b3a3a21e1b0b3a2b2b232a1a",
     /** Held on 195 of 1459 positions walked. */
@@ -831,33 +845,30 @@ const RELATION_WHYS: Record<Exclude<RelationWhy["kind"], "note">, true> = {
   dotLink: true,
 };
 
-/** Premises no board in the corpus fires, each with why. Their sentences are read
- * by the direct tests further down, since no walk reaches them. */
-const UNREACHED: Partial<Record<LoopyReason["kind"], string>> = {
-  related:
-    "The edge dsf's propagation step settles an edge from a related one whose state is known; a rung below it, or parity on three open edges, always settles the edge first.",
-  closesLoop:
-    "An edge closing a loop that meets every clue: on a uniquely solvable board the clue and dot rules draw that last edge before the loop rung looks at it.",
-};
-
 describe("Loopy hint: the premises the corpus reaches", () => {
-  it("fires every premise it names, and places every kind of note, except the ledgered ones", () => {
+  it("fires every premise it names, and places every kind of note", () => {
+    // The corpus is fresh boards, and two premises are met only on a board the
+    // player has drawn on: those are read off their pins.
     const reached = new Set<string>();
     const whys = new Set<string>();
-    for (const b of corpus()) {
-      const { plan, facts } = deduceLoopyPlan(b.state);
+    const states = [
+      ...corpus().map((b) => b.state),
+      pinned("related").state,
+      pinned("closesLoop").state,
+    ];
+    for (const state of states) {
+      const { plan, facts } = deduceLoopyPlan(state);
       for (const p of plan) {
         reached.add(p.reason.kind);
         for (const id of p.closure) whys.add(facts[id].why.kind);
       }
     }
-    const unreached = Object.keys(REASONS).filter((k) => !reached.has(k));
-    expect(unreached.sort()).toEqual(Object.keys(UNREACHED).sort());
+    expect(Object.keys(REASONS).filter((k) => !reached.has(k))).toEqual([]);
     for (const why of [...Object.keys(CORNER_WHYS), ...Object.keys(RELATION_WHYS)])
       expect(whys.has(why), why).toBe(true);
   });
 
-  it("speaks the ledgered premises' sentences in the necessity voice", () => {
+  it("says each way a pair can settle an edge in the necessity voice", () => {
     const m = {
       ...NO_MARKS,
       targets: [0],

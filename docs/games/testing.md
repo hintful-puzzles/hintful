@@ -92,6 +92,35 @@ already there:
   as it is for `describeLadderCensus`. The scan walks the excused rungs too and
   says when one fires.
 
+**An excused rung is one of four things, and the scan's zero cannot say
+which.** The scan follows the hint's own play, where the cheapest rung always
+goes first, on boards the generator deals at the sizes it was given. Twelve
+entries stood when these were sorted (2026-10-07), nearly all excused as rare
+or as "a cheaper rung gets there first", and that was true of one. Before an
+entry is written:
+
+- **Ask the hint from positions its own play does not visit.** A player fills
+  a board in any order: play random shares of the answer and ask from there,
+  and give the board the marks only a player makes. Loopy follows a pair note
+  on 1 step in 80 once the player has noted pairs, and on none of its own
+  line. Deal the sizes the scan was not given too: Tracks' premise fires on a
+  fresh 5x4 board. A game whose generator places pieces only where they are
+  safe needs boards it does not deal (Inertia, on scattered cells).
+- **Build the rung's shape and see what decides it.** Where nothing fires
+  across thousands of positions, construct the exact position the rung reads
+  and record which rung speaks in its place. A harder rung speaking there is a
+  defect: Boats' `mustGrow` was excused as rare on 672 boards and could not
+  fire on any, and the Hard refutation answered for it.
+- **A rung proved dead leaves the list**, with its sentence, and the proof is
+  the comment where its reason was (Bricks' `BricksReason`, Tracks'
+  `checkLooseSub`). Prove it from the code, then measure it off the hint's
+  line, since an argument from reading has been wrong here before.
+- **What may stay** is a rung on a board no pin can hold, saying so and
+  naming the test that builds the board (Mines' `restart`).
+
+A pin found this way is kept by hand, under a comment saying where it came
+from and out of how many.
+
 **A rung's pin is a position whose plan speaks the rung; a further kind's is one
 whose plan opens with it.** Of the positions a rung holds on, the scan takes one
 where its step opens the plan before one where it comes later (`index` says
@@ -777,8 +806,7 @@ while both of these were red.
   silently broke Check & Save on every Easy board), every tier generating or
   refusing with a reason, tier list matching the difficulty `paramConfig`
   choices, tiers surviving the params codec. Adapter gotchas (build the solver
-  input from the desc, never reuse scratch, seed the givens, declare
-  non-unique/non-monotone exemptions so the exemption is itself under test):
+  input from the desc, never reuse scratch, seed the givens):
   [`solver-and-generator.md`](./solver-and-generator.md).
 - **Registration**: [`catalog-registry.test.ts`](../../src/catalog-registry.test.ts)
   asserts catalog ≡ registry in both directions; adding a game is two edits

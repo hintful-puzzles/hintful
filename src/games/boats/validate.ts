@@ -425,14 +425,14 @@ export function validateGridClues(b: BoatsBoard, errs?: Int32Array): number {
  * into one big class anchored at the sentinel index `w·h`, so what is left is
  * exactly the partially-drawn boats.
  *
- * **This is why the shared {@link Dsf} must not be swapped for another
- * union-find** (docs/games/solver-and-generator.md § "Solver-gated
- * generation"). The finished-boat tests read `grid[dsf.canonify(i)]` as an
- * *element* — upstream's comment is "the canonical index always points to the
- * first square of a boat" — so the deduction branches on which square
- * union-by-size happened to make the root, not merely on connectivity. The
- * shared `Dsf` is aligned to `dsf.c`'s root choice for exactly this case; the
- * byte-match differential is what proves it.
+ * **A boat is finished when its first square and its last are both end caps**,
+ * and the first square is the class's smallest element (`dsf.minimal`), never
+ * its root: union-by-size roots a boat at its second square. Upstream reads the
+ * root here, under the comment "the canonical index always points to the first
+ * square of a boat", which held for the `dsf.c` it was written against and not
+ * for the one it is built with. Read that way no boat of two squares or more is
+ * ever finished, each is counted a second time as unfinished, and a board
+ * whose largest boats are all placed is called contradictory.
  */
 export function checkDsf(b: BoatsBoard, dsf: Dsf, fleetCount: Int32Array): number {
   const { w, h, fleet, grid, fleetData } = b;
@@ -455,9 +455,9 @@ export function checkDsf(b: BoatsBoard, dsf: Dsf, fleetCount: Int32Array): numbe
         dsf.merge(i, (y + 1) * w + x);
 
       if (grid[i] === SHIP_SINGLE) dsf.merge(i, end);
-      else if (grid[i] === SHIP_RIGHT && grid[dsf.canonify(i)] === SHIP_LEFT)
+      else if (grid[i] === SHIP_RIGHT && grid[dsf.minimal(i)] === SHIP_LEFT)
         dsf.merge(i, end);
-      else if (grid[i] === SHIP_BOTTOM && grid[dsf.canonify(i)] === SHIP_TOP)
+      else if (grid[i] === SHIP_BOTTOM && grid[dsf.minimal(i)] === SHIP_TOP)
         dsf.merge(i, end);
     }
   }

@@ -109,7 +109,6 @@ export type TracksReason = { ev: TracksEvidence } & (
   | { kind: "wouldCloseLoop"; x: number; y: number; dir: number }
   | { kind: "wouldStrandTrack"; x: number; y: number; dir: number }
   | { kind: "wouldFinishEarly"; x: number; y: number; dir: number; unmet: number }
-  | { kind: "looseEndsFill"; line: number }
   | { kind: "looseEndSpans"; line: number }
   | {
       kind: "sharedFate";
@@ -591,29 +590,15 @@ function checkLooseSub(
 
   if (nloose > target - e2count) b.impossible = true;
   if (nloose > 0 && nloose === target - e2count) {
+    // The finished squares and the loose ends account for the whole clue, so
+    // no loose end may run on along the line. On a board that agrees with its
+    // answer this blocks nothing, which is why it has no reason to record:
+    // every one of those squares is a track square (`updateFlags`), so the
+    // clue is full and `countClues` has blocked the rest of the line, whose
+    // sides `updateFlags` then blocked, as it did a finished square's. Both
+    // run to exhaustion before this rung. It acts only on a board with more
+    // track in the line than its clue allows.
     const before = did;
-    const rec = b.rec;
-    if (rec) {
-      // The `target` squares that account for the whole clue: the finished ones
-      // and the loose ends. The narration counts them, so the picture holds
-      // exactly that many cells.
-      rec.reason = {
-        kind: "looseEndsFill",
-        line,
-        ev: {
-          cells: lineCellsWhere(
-            si,
-            id,
-            n,
-            (i) =>
-              sECount(b, i % w, Math.floor(i / w), E_TRACK) === 2 ||
-              (b.sflags[i] & S_MARK) !== 0,
-          ),
-          edges: [],
-          clues: [line],
-        },
-      };
-    }
     for (let j = 0, i = si; j < n; j++, i += id) {
       if (!(b.sflags[i] & S_MARK)) continue;
       if (j > 0 && b.sflags[i - id] & S_MARK) continue;
@@ -627,8 +612,9 @@ function checkLooseSub(
         }
       }
     }
-    if (rec && did > before) return did;
-    if (rec) rec.reason = null;
+    // The hint is asked only of a board that agrees with its answer.
+    if (b.rec && did > before)
+      throw new Error(`tracks: a loose end in line ${line} had a side left to block`);
   }
   if (nloose === 1 && target - e2count === 2 && nperp === 0) {
     const before = did;

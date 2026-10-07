@@ -30,13 +30,11 @@
  *  - **It orders goal-first, not solver-first** (docs/games/hints.md § "Hint
  *    the move that advances the goal"): placements before rule-outs, cheaper
  *    tier before dearer.
- *  - **It never consults the dsf for the board's *status*.** `checkDsf` is the
- *    source of the solver's non-monotonicity (see `solveAtAnyTier`): it can
- *    report a contradiction the board does not have, which inside `solveBoats`
- *    aborts the solve. A hint that aborted there would simply stop advising, so
- *    the status check here is the dsf-less `validateFullState` — the same pass
- *    `solveBoats` uses for its own final verdict. The dsf is still built and
- *    used as a *tool* by the two expand techniques.
+ *  - **It does not ask the dsf for the board's *status*.** A board the player
+ *    has made contradictory is the mistake check's to report, before any hint
+ *    is asked, so the status here only says whether the board is finished:
+ *    the dsf-less `validateFullState`, the pass `solveBoats` takes its own
+ *    final verdict from. The dsf is built for the two expand techniques.
  */
 
 import { Dsf } from "../../engine/dsf.ts";
@@ -681,8 +679,7 @@ function findMustGrow(ctx: Ctx): BoatsFiring | null {
         const i1 = y * b.w + x;
         const i2 = i1 - d;
         if (b.grid[i1] !== EMPTY || dsf.canonify(i2) === end) continue;
-        // The canonical index is read as an *element* — see `checkDsf`.
-        if (b.grid[dsf.canonify(i2)] !== ship) continue;
+        if (b.grid[dsf.minimal(i2)] !== ship) continue;
         const length = dsf.size(i2);
         if (length - 1 < 1 || length - 1 >= b.fleet) continue;
         if (b.fleetData[length - 1] !== fleetCount[length - 1]) continue;
@@ -707,7 +704,7 @@ function findMustGrow(ctx: Ctx): BoatsFiring | null {
         const length = dsf.size(i1);
         if (length - 1 < 1 || length - 1 >= b.fleet) continue;
         if (b.fleetData[length - 1] !== fleetCount[length - 1]) continue;
-        const i2 = c1 - d;
+        const i2 = dsf.minimal(i1) - d;
         return firing(
           ctx,
           { kind: "mustGrow", length },
@@ -894,10 +891,14 @@ function findSharedDiagonal(ctx: Ctx): BoatsFiring | null {
  * the player can make. Each number recovered is recorded in `ctx.deduced`, so a
  * narration that later cites it says where it came from instead of quoting a
  * number the board does not show.
+ *
+ * Returns whether a number came back. One that did is new to every cheaper
+ * technique, so the caller asks them again before going on.
  */
-function recoverHiddenNumbers(ctx: Ctx): void {
+function recoverHiddenNumbers(ctx: Ctx): boolean {
   const { b, blankCounts, shipCounts } = ctx;
   let found = false;
+  let recovered = false;
 
   for (let i = 0; i < b.w + b.h; i++) {
     if (b.borderClues[i] !== NO_CLUE) continue;
@@ -906,6 +907,7 @@ function recoverHiddenNumbers(ctx: Ctx): void {
     if (shipCounts[i] + blankCounts[i] === span) {
       b.borderClues[i] = shipCounts[i];
       ctx.deduced[i] = true;
+      recovered = true;
     }
   }
   ctx.hasNoClue = found;
@@ -913,7 +915,11 @@ function recoverHiddenNumbers(ctx: Ctx): void {
   const before = Int32Array.from(b.borderClues);
   if (borderCluesLast(b))
     for (let i = 0; i < b.w + b.h; i++)
-      if (before[i] === NO_CLUE && b.borderClues[i] !== NO_CLUE) ctx.deduced[i] = true;
+      if (before[i] === NO_CLUE && b.borderClues[i] !== NO_CLUE) {
+        ctx.deduced[i] = true;
+        recovered = true;
+      }
+  return recovered;
 }
 
 // --- Hard tier: single-square refutation ------------------------------------
@@ -1148,27 +1154,23 @@ function nextBoatsFiring(ctx: Ctx): BoatsFiring | null {
   if (easy) return easy;
   if (maxDiff < DIFF_NORMAL) return null;
 
-  // Normal. The dsf is a *tool* here, so populate it before the two expand
-  // techniques read it (its status verdict is deliberately discarded — see the
-  // module header).
+  // Normal. Populate the dsf before the two expand techniques read it; its
+  // status verdict is not wanted (see the module header). The two placements
+  // come first, and of them the one that reads a single boat before the one
+  // that counts every run on the board.
   checkDsf(b, ctx.dsf, ctx.fleetCount);
   const runs = collectRuns(b);
   const normal =
+    findMustGrow(ctx) ??
     findOnlyRunsLeft(ctx, runs, true) ??
     findCenterCount(ctx) ??
     findGrowTooLong(ctx) ??
-    findRunTooShort(ctx, runs) ??
-    // Last in the rung deliberately: `mustGrow` is a **safety net, not a
-    // preferred technique**. Measured over 200 generated boards spanning every
-    // preset and both "remove numbers" settings it never fires — a cheaper
-    // rung, most often `allWaterPlaced`, reliably reaches its position first.
-    // It stays because dropping it could strand a board that sample missed.
-    findMustGrow(ctx);
+    findRunTooShort(ctx, runs);
   if (normal) return normal;
   if (maxDiff < DIFF_TRICKY) return null;
 
-  // Tricky.
-  if (ctx.hasNoClue) recoverHiddenNumbers(ctx);
+  // Tricky. Each restart recovers a number, and there are `w + h` of them.
+  if (ctx.hasNoClue && recoverHiddenNumbers(ctx)) return nextBoatsFiring(ctx);
   const tricky = findOnlyRunsLeft(ctx, runs, false) ?? findSharedDiagonal(ctx);
   if (tricky) return tricky;
   if (maxDiff < DIFF_HARD) return null;
@@ -1190,11 +1192,9 @@ export interface BoatsPlan {
 /**
  * The lowest difficulty cap at which this puzzle actually solves.
  *
- * The `boats` spec records that the solver is **not monotone in its cap**, so
- * "just replay at the maximum" is wrong twice over: it would inherit the
- * false-contradiction abort that strands most Easy boards, and it would teach a
- * Hard refutation on a board whose own difficulty admits a one-line count.
- * Derived from the puzzle's clues alone (`solveBoats` wipes the grid first), so
+ * A replay at the maximum would teach a Hard refutation on a board whose own
+ * difficulty admits a one-line count, wherever the player has left the cheaper
+ * techniques nothing to say. Derived from the puzzle's clues alone (`solveBoats` wipes the grid first), so
  * it does not move as the player plays — a hint plan must be recompute-stable,
  * not merely correct (docs/games/hints.md § "Recompute-stable plans").
  */
@@ -1212,7 +1212,7 @@ function planAt(state: BoatsState, maxDiff: number): BoatsPlan {
     blankCounts: new Int32Array(b.w + b.h),
     shipCounts: new Int32Array(b.w + b.h),
     fleetCount: new Int32Array(b.fleet),
-    dsf: new Dsf(b.w * b.h + 1),
+    dsf: Dsf.withMinimal(b.w * b.h + 1),
     deduced: new Array(b.w + b.h).fill(false),
     hasNoClue: b.borderClues.includes(NO_CLUE),
   };

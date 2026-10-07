@@ -4366,6 +4366,7 @@ exports[`Loopy hint frames > outlines the clue a step counts inside its face 1`]
 
 exports[`loopy: pinned hint positions > says, at each pin 1`] = `
 {
+  "closesLoop": "This edge closes the marked lines into one loop that meets every clue, so it must be a line.",
   "clueBlockedPair": "Both outlined dots already have a line, so joining them leaves this 2 short: that edge is out and the other 2 are lines.",
   "clueBound": "This 3's other edges can give it only 2, counting the marked corner as one, so this edge must be a line.",
   "clueFull": "This 0 takes no lines, so its edges can't be lines.",
@@ -4397,6 +4398,7 @@ exports[`loopy: pinned hint positions > says, at each pin 1`] = `
   "pairCitingPairs": "This 2 needs 2 more from four open edges, and the marked pair gives 0 or 2, so these two must match.",
   "pairNote": "Only these two of the outlined dot's edges are still open, and it has no line, so they must match.",
   "parity": "The outlined dot has no line; the marked pair makes two of its open edges give 0 or 2, so this edge can't be a line.",
+  "related": "The marked pair makes this edge the opposite of the marked ruled-out edge, so it must be a line.",
   "severalEdges": "This 0 takes no lines, so its edges can't be lines.",
 }
 `;

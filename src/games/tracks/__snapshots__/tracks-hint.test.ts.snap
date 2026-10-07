@@ -10,6 +10,7 @@ exports[`tracks: pinned hint positions > says, at each pin 1`] = `
   "onlyOneSideLeft": "Every side of this square but one is blocked, and track needs two, so it must be empty.",
   "sharedFate": "Track here would carry on to the right, but this row has room for one more track square, so this must be empty.",
   "wouldCloseLoop": "The outlined track already joins the squares this side separates, so crossing it would close a loop: it must be blocked.",
+  "wouldFinishEarly": "Joining A's run to B's here would finish the track with this column's clue short, so this side must be blocked.",
   "wouldStrandTrack": "Joining here would link A's run to B's and finish the track, stranding the outlined track, so this side must be blocked.",
 }
 `;

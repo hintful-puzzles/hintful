@@ -36,7 +36,7 @@ A few ideas are worth learning by name:
 
 * **A given end shows its boat's direction.** A boat's top end must continue downward and have water above it; a middle segment runs through, one way or the other.
 * **A full row is finished.** Once a row has as many boat segments as its number, everything else in it is water; once its free squares are exactly as many as it still needs, they are all boat segments.
-* **The fleet list counts too.** When every boat of some size is already placed, a square that would make another one, or make a boat longer than the largest still missing, must be water.
+* **The fleet list counts too.** When every boat of some size is already placed, a square that would make another one, or make a boat longer than the largest still missing, must be water. And an unfinished boat that has reached that size can't stop there: it must continue into the next square.
 * On harder boards, **if this square were water**: the hint tries the other choice for a square and shows which rule it would break, such as a row that could no longer reach its number.
 
 ## Boats parameters
