@@ -37,9 +37,14 @@ catalog, straight after Unruly.
 
 The owner's sequence, 2026-10-07:
 
-- [ ] 4.1 A subagent with no part in the work reviews screenshots of every
+- [x] 4.1 A subagent with no part in the work reviews screenshots of every
       game in both schemes, and what it finds is addressed until it and the
-      implementing session are both satisfied.
+      implementing session are both satisfied. It read all 114 frames and
+      drove the app where a frame did not show a state: 21 findings, of which
+      one was not a defect (Crossing's direction wash), six are left to the
+      owner's eye, and the rest are fixed. It could not judge error states
+      beyond Solo's, touch, animation, the flashes, or presets other than each
+      game's default.
 - [ ] 4.2 The owner reviews every game in both schemes.
 - [ ] 4.3 Once the owner is satisfied, the catalog thumbnails
       (`src/assets/icons/`) are recaptured for every game whose look changed,
