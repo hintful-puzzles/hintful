@@ -15,7 +15,7 @@ function driven(game: typeof fakeGame = fakeGame) {
 describe("save codec", () => {
   it("encodes a UTF-8 JSON envelope with a version field", () => {
     const env: SaveEnvelope = {
-      v: 2,
+      v: 3,
       puzzleId: "__fake__",
       params: "t3",
       desc: "g3-7",
@@ -42,11 +42,11 @@ describe("save codec", () => {
       usedSolve: true,
     };
     const round = decodeSave(encodeBytes(JSON.stringify(legacy)));
-    expect(round.v).toBe(2);
+    expect(round.v).toBe(3);
     expect(round.cheated).toBe(true);
     // …and nothing else was disturbed on the way through.
     expect(round).toEqual({
-      v: 2,
+      v: 3,
       puzzleId: "__fake__",
       params: "t3",
       desc: "g3-7",
@@ -57,6 +57,21 @@ describe("save codec", () => {
     });
     // The old key is *gone*, not carried alongside as a second name for one fact.
     expect(Object.hasOwn(round, "usedSolve")).toBe(false);
+  });
+
+  it("reads a v2 save, which is every save written before a restart was a step", () => {
+    const v2 = {
+      v: 2,
+      puzzleId: "__fake__",
+      params: "t3",
+      desc: "g3-7",
+      moves: ["inc", "inc"],
+      pos: 1,
+      timerElapsed: 12,
+      hinted: true,
+      cheated: false,
+    };
+    expect(decodeSave(encodeBytes(JSON.stringify(v2)))).toEqual({ ...v2, v: 3 });
   });
 
   it("upgrades a v1 save that also carries the optional fields", () => {
@@ -116,12 +131,13 @@ describe("save codec", () => {
   // truncated save and a game state rebuilt from nonsense.
   describe("rejects an envelope with any one field wrong", () => {
     const valid: SaveEnvelope = {
-      v: 2,
+      v: 3,
       puzzleId: "__fake__",
       params: "t3",
       desc: "g3-7",
       privDesc: "g3-0",
-      moves: ["inc"],
+      moves: ["inc", null],
+      restarts: [{ at: 1, cheated: true }],
       pos: 1,
       timerElapsed: 0,
       cheated: false,
@@ -134,9 +150,9 @@ describe("save codec", () => {
     });
 
     const cases: [name: string, corrupt: Record<string, unknown>][] = [
-      // A *future* version, which we cannot read (`v: 1` is upgraded instead).
-      ["v is a version we cannot read", { v: 3 }],
-      ["v is a string", { v: "2" }],
+      // A *future* version, which we cannot read (older ones are upgraded).
+      ["v is a version we cannot read", { v: 4 }],
+      ["v is a string", { v: "3" }],
       ["v is missing", { v: undefined }],
       ["puzzleId is not a string", { puzzleId: 7 }],
       ["puzzleId is missing", { puzzleId: undefined }],
@@ -145,6 +161,13 @@ describe("save codec", () => {
       ["privDesc is present but not a string", { privDesc: 12 }],
       ["moves is not an array", { moves: "inc" }],
       ["moves is missing", { moves: undefined }],
+      ["restarts is not an array", { restarts: { at: 1, cheated: true } }],
+      ["a restart is not an object", { restarts: [1] }],
+      ["a restart indexes no move", { restarts: [{ at: 2, cheated: true }] }],
+      ["a restart's index is not whole", { restarts: [{ at: 0.5, cheated: true }] }],
+      ["a restart's index is negative", { restarts: [{ at: -1, cheated: true }] }],
+      ["a restart's index is not a number", { restarts: [{ at: "1", cheated: true }] }],
+      ["a restart's flag is not a boolean", { restarts: [{ at: 1, cheated: 0 }] }],
       ["pos is not a number", { pos: "1" }],
       ["timerElapsed is not a number", { timerElapsed: null }],
       ["cheated is not a boolean", { cheated: "false" }],
@@ -163,11 +186,11 @@ describe("save codec", () => {
       });
     }
 
-    it("accepts the two optional fields being absent", () => {
-      // `privDesc` and `ui` are additive: a save written before desc
-      // supersession existed omits them, and most games still do. Their guards
-      // must reject a wrong *type* without rejecting absence.
-      const { privDesc: _p, ui: _u, ...without } = valid;
+    it("accepts the optional fields being absent", () => {
+      // `privDesc`, `ui` and `restarts` are additive: a save written before
+      // each existed omits it, and most saves still do. Their guards must
+      // reject a wrong *type* without rejecting absence.
+      const { privDesc: _p, ui: _u, restarts: _r, ...without } = valid;
       expect(decodeSave(encodeSave(without as SaveEnvelope))).toEqual(without);
     });
 
@@ -245,7 +268,7 @@ describe("Midend save/restore round-trip", () => {
       "an envelope whose params no longer decode",
       () =>
         encodeSave({
-          v: 2,
+          v: 3,
           puzzleId: "__fake__",
           params: "not-params",
           desc: "g3-1",
@@ -273,7 +296,7 @@ describe("Midend save/restore round-trip", () => {
     // puts the midend on a history index that does not exist, where `undo`
     // walks backwards through `undefined` states.
     const env: SaveEnvelope = {
-      v: 2,
+      v: 3,
       puzzleId: "__fake__",
       params: "t9",
       desc: "g9-1",
@@ -305,7 +328,7 @@ describe("Midend save/restore round-trip", () => {
 
   it("refuses a save belonging to a different puzzle", () => {
     const env: SaveEnvelope = {
-      v: 2,
+      v: 3,
       puzzleId: "galaxies",
       params: "t3",
       desc: "g3-1",

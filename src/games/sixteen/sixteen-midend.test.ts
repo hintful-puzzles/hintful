@@ -47,8 +47,13 @@ describe("Sixteen midend integration — lifecycle", () => {
     h.m.processInput(0, 0, 0x2000 | CURSOR_RIGHT); // shift + cursor_right
     const afterMove = h.state()?.currentMove ?? 0;
     expect(afterMove).toBeGreaterThan(initialMoveCount);
+    const moved = h.m.formatAsText();
+    h.m.undo();
+    const initial = h.m.formatAsText();
+    h.m.redo();
     h.m.restartGame();
-    expect(h.state()?.currentMove).toBe(0);
+    expect(h.m.formatAsText()).toBe(initial);
+    expect(h.m.formatAsText()).not.toBe(moved);
   });
 
   it("newGameFromId creates a game from a known id", () => {

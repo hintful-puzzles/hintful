@@ -36,6 +36,16 @@ function dragGames() {
   return builtGames().filter((g) => dragsOf(g.ui).length > 0);
 }
 
+/**
+ * Leave the board one Redo short of a state replacement that keeps its `Ui`:
+ * Solve's step, taken back. A restart will not do, since on a board nothing
+ * has been played on it replaces nothing.
+ */
+function stageReplacement(m: { solve(): string | null; undo(): void }, id: string) {
+  expect(m.solve(), `${id}: Solve is how this sweep replaces the state`).toBeNull();
+  m.undo();
+}
+
 describe("a drag does not survive a state replacement", () => {
   it("finds a non-trivial population, derived from what the games carry", () => {
     // The vacuity guard. An empty sweep would make every assertion below pass
@@ -50,6 +60,7 @@ describe("a drag does not survive a state replacement", () => {
     const checked: string[] = [];
     for (const { id, game } of dragGames()) {
       const { m, ui } = probeBoard(game, id);
+      stageReplacement(m, id);
 
       // Arm every drag the game carries, by hand: this asks about the engine's
       // cancel, not about any game's gesture vocabulary, so it must not depend
@@ -58,8 +69,7 @@ describe("a drag does not survive a state replacement", () => {
       expect(drags.length, `${id} kept its drag through the deal`).toBeGreaterThan(0);
       for (const d of drags) startDrag(d, 1, 1);
 
-      // Any state replacement will do; restart is the one every game has.
-      m.restartGame();
+      m.redo();
 
       for (const d of drags) {
         expect(d.live, `${id}: a drag survived the board being replaced`).toBe(false);
@@ -89,6 +99,7 @@ describe("a drag does not survive a state replacement", () => {
       let armed: Point | null = null;
       for (const p of probePoints(size)) {
         reset();
+        stageReplacement(m, id);
         m.processInput(p.x, p.y, LEFT_BUTTON);
         if (dragsOf(ui()).some((d) => d.live)) {
           armed = p;
@@ -99,7 +110,7 @@ describe("a drag does not survive a state replacement", () => {
       exercised++;
 
       // Replace the state under the live drag, then release where the drag is.
-      m.restartGame();
+      m.redo();
       const before = moves();
       m.processInput(armed.x, armed.y, LEFT_RELEASE);
       expect(

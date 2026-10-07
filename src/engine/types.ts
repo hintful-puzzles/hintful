@@ -87,6 +87,17 @@ export type NotifyGameStateChange = {
   totalMoves: number;
   canUndo: boolean;
   canRedo: boolean;
+  /** The positions in the history that a restart reached, in order: each is
+   * the board as it started, with what was played before it still behind it. */
+  restarts: number[];
+  /** Which board this is, among those this page has had in play. It changes
+   * when the board is replaced, and a board brought back by Undo or Redo
+   * comes back under the number it had. */
+  board: number;
+  /** The board this one replaced is kept, and Undo at move 0 brings it back. */
+  boardBefore: boolean;
+  /** The board an Undo left is kept, and Redo at the last move returns to it. */
+  boardAfter: boolean;
   /**
    * Whether any cell on the board carries a pencil mark, for a game that offers
    * the Mark-all press; always `false` for a game that does not. The chrome uses

@@ -324,16 +324,11 @@ describe("Midend moves / undo / redo", () => {
     expect(h.state()).toMatchObject({ currentMove: 1, totalMoves: 1 });
   });
 
-  it("restartGame returns to move 0 and clears redo", () => {
+  // Restart as a step of the history is `restart-step.test.ts`.
+  it("restartGame shows the board as it started", () => {
     h.m.processInput(0, 0, LEFT_BUTTON);
     h.m.processInput(0, 0, LEFT_BUTTON);
     h.m.restartGame();
-    expect(h.state()).toMatchObject({
-      currentMove: 0,
-      totalMoves: 0,
-      canUndo: false,
-      canRedo: false,
-    });
     expect(h.m.formatAsText()).toBe("count=0");
   });
 });
@@ -1120,7 +1115,7 @@ describe("Midend: a board carries the tier it needs", () => {
   it("a save pinning a tier below the board's is raised on load", () => {
     const h = harness(gradedGame());
     const stale = encodeSave({
-      v: 2,
+      v: 3,
       puzzleId: fakeGame.id,
       params: "t3d0",
       desc: "g3-2",

@@ -344,7 +344,13 @@ describe("mines supersede + midend", () => {
     h.m.playMoves([openMove(4, 4)]);
     const flag = coveredCell(h.m);
     h.m.playMoves([{ type: "ops", ops: [{ op: "F", x: flag.x, y: flag.y }] }]);
+    const flagged = h.m.formatAsText();
     h.m.restartGame();
+    expect(h.m.formatAsText()).not.toBe(flagged);
+    // The restart is a step: Undo returns the flag, and Redo restarts again.
+    h.m.undo();
+    expect(h.m.formatAsText()).toBe(flagged);
+    h.m.redo();
     // The (4,4) click is still open (row 4 is not all covered); only the flag
     // move is gone. Restarting to history[0] would have given a blank grid.
     const board = h.m.formatAsText() ?? "";

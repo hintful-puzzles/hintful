@@ -248,19 +248,19 @@ export const MODULES = [
         replace: "    const generating = true;",
       },
       {
-        within: "Midend.loadGame",
+        within: "Midend.load",
         why: "a corrupt save is loaded instead of refused",
         find: "      return `Could not read save: ${(e as Error).message}`;",
         replace: "      return undefined;",
       },
       {
-        within: "Midend.loadGame",
+        within: "Midend.load",
         why: "a save whose params no longer decode is loaded anyway",
         find: "      return `Invalid saved parameters: ${(e as Error).message}`;",
         replace: "      return undefined;",
       },
       {
-        within: "Midend.loadGame",
+        within: "Midend.load",
         why: "a save from a different puzzle is loaded into this game",
         find: '      return `Save is for "${env.puzzleId}", not "${this.game.id}"`;',
         replace: "      return undefined;",
@@ -278,7 +278,7 @@ export const MODULES = [
         replace: "      return undefined;",
       },
       {
-        within: "Midend.commitMove",
+        within: "Midend.record",
         why: "a new move after an undo no longer truncates the redo branch",
         find: "    this.history = this.history.slice(0, this.pos + 1);\n    this.moveLog = this.moveLog.slice(0, this.pos);",
         replace:
@@ -287,14 +287,14 @@ export const MODULES = [
       {
         within: "Midend.undo",
         why: "undo walks off the start of history instead of stopping at state 0",
-        find: "    if (this.pos === 0) return;",
-        replace: "    if (this.pos < 0) return;",
+        find: "    if (this.pos > 0) this.step(-1);",
+        replace: "    if (this.pos >= 0) this.step(-1);",
       },
       {
         within: "Midend.redo",
         why: "redo runs past the end of history",
-        find: "    if (this.pos >= this.history.length - 1) return;",
-        replace: "    if (this.pos >= this.history.length) return;",
+        find: "    if (this.pos < this.history.length - 1) this.step(1);",
+        replace: "    if (this.pos <= this.history.length - 1) this.step(1);",
       },
       {
         within: "Midend.commitMove",
@@ -303,7 +303,7 @@ export const MODULES = [
         replace: "    this.stateReplaced(prev, next);",
       },
       {
-        within: "Midend.loadGame",
+        within: "Midend.load",
         why: "a loaded save's undo position is not clamped to the replayed history",
         find: "    this.pos = Math.min(env.pos, this.history.length - 1);",
         replace: "    this.pos = env.pos;",
@@ -371,7 +371,7 @@ export const MODULES = [
       {
         within: "isSaveEnvelope",
         why: "a save-format version the decoder cannot read is accepted anyway",
-        find: '    v["v"] === 2 &&',
+        find: '    v["v"] === 3 &&',
         replace: "    true &&",
       },
       {

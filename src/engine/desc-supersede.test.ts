@@ -149,9 +149,47 @@ describe("desc supersession", () => {
     // move is gone. Restarting to `history[0]` would have given the blank board.
     expect(h.board()).toBe("layout=L4 clicked=4 opened=[4]");
     expect(h.board()).not.toBe(BLANK);
-    // …and nothing is left to undo: the restarted board is the new history[0].
+    // The restart is a step: Undo crosses it back to the board as played.
     h.m.undo();
-    expect(h.board()).toBe("layout=L4 clicked=4 opened=[4]");
+    expect(h.board()).toBe("layout=L4 clicked=4 opened=[4,7]");
+  });
+
+  it("a restart logged before the supersession replays to the blank board", () => {
+    // The save carries a private desc, so the game was superseded by the time
+    // it was written, and not yet when this restart was made. Replayed as a
+    // superseded restart it would open the first click over a board on which
+    // the logged click is still to come.
+    const flaggable: typeof minesish = {
+      ...minesish,
+      // A first step that generates nothing, as a flag set before any square
+      // is opened.
+      executeMove: (s, m) =>
+        m.click < 0 ? { ...s, opened: [...s.opened] } : minesish.executeMove(s, m),
+      // As Mines answers: nothing until the first click is on the state, which
+      // a board rebuilt from the private desc does not have.
+      supersededDesc: (s) =>
+        s.layout === null || s.clickedAt === null
+          ? null
+          : { desc: `${s.clickedAt},${s.layout}`, privDesc: s.layout },
+    };
+    const h = harness(flaggable);
+    h.m.newGame();
+    h.m.playMoves([{ click: -1 }]);
+    h.m.restartGame();
+    h.m.playMoves([{ click: 4 }]);
+    const saved = h.m.saveGame();
+    expect(decodeSave(saved)).toMatchObject({ privDesc: "L4", restarts: [{ at: 1 }] });
+
+    const b = harness(flaggable);
+    expect(b.m.loadGame(saved)).toBeNull();
+    expect(b.board()).toBe("layout=L4 clicked=4 opened=[4]");
+    b.m.undo();
+    expect(b.board()).toBe("layout=L4 clicked=null opened=[]");
+    // A restart made now is the superseded kind, in the loaded game as in play.
+    b.m.redo();
+    b.m.playMoves([{ click: 7 }]);
+    b.m.restartGame();
+    expect(b.board()).toBe("layout=L4 clicked=4 opened=[4]");
   });
 
   it("a save taken after supersession carries both descs", () => {

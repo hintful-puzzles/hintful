@@ -68,6 +68,10 @@ export const DEAL_PENDING_MS = SLOW_DEAL_MS;
 /** The chrome's wording for a pending deal (`Puzzle.dealMessage`). */
 const DEAL_PENDING_MESSAGE = "Looking for a board…";
 
+/** What Undo says when it was the board it brought back, not a move. */
+export const BOARD_BROUGHT_BACK =
+  "The board you left is back. Redo returns to the other one.";
+
 /**
  * How a New game ended: with a board, with the sentence to show where the
  * generator found none, or stopped while it was still looking. The board on
@@ -215,12 +219,18 @@ export class Puzzle {
         break;
       }
       case "game-state-change":
+        this.followBoard(message.board, message.boardAfter);
         this.purgeInvalidCheckpoints(message.totalMoves);
         update(this._status, message.status);
         update(this._currentMove, message.currentMove);
         update(this._totalMoves, message.totalMoves);
         update(this._canUndo, message.canUndo);
         update(this._canRedo, message.canRedo);
+        // Compared by value: the engine sends a fresh array each time.
+        if (this._restarts.get().join() !== message.restarts.join())
+          this._restarts.set(message.restarts);
+        update(this._boardBefore, message.boardBefore);
+        update(this._boardAfter, message.boardAfter);
         update(this._hasPencilMarks, message.hasPencilMarks);
         update(this._uiState, message.uiState ?? "");
         break;
@@ -281,6 +291,9 @@ export class Puzzle {
   private _totalMoves = signal<number>(0);
   private _canUndo = signal(false);
   private _canRedo = signal(false);
+  private _restarts = signal<readonly number[]>([]);
+  private _boardBefore = signal(false);
+  private _boardAfter = signal(false);
   /** Whether the board carries any pencil marks — what makes the Mark-all
    * control say `Fill` on a bare board and `Update` once there is something to
    * narrow. Always false for a game without the press. */
@@ -454,6 +467,21 @@ export class Puzzle {
     return this._canRedo.get();
   }
 
+  /** The moves at which the board was restarted (`NotifyGameStateChange`). */
+  public get restarts(): readonly number[] {
+    return this._restarts.get();
+  }
+
+  /** Whether Undo at move 0 brings back the board this one replaced. */
+  public get boardBefore(): boolean {
+    return this._boardBefore.get();
+  }
+
+  /** Whether Redo at the last move returns to the board an Undo left. */
+  public get boardAfter(): boolean {
+    return this._boardAfter.get();
+  }
+
   // The encoded game params that will be used for the next "new game".
   public get params(): string {
     return this._params.get();
@@ -625,6 +653,18 @@ export class Puzzle {
   public redo(): Promise<void> {
     this.stopAutoHint("Canceled by manual move");
     return this.enqueueInput(async () => (await this.board()).redo());
+  }
+
+  /** Go to the board one Undo before this board's first move, or one Redo
+   * after its last: the timeline's two ends. */
+  public async goToOtherBoard(which: "before" | "after"): Promise<void> {
+    if (which === "before") {
+      await this.goToCheckpoint(0);
+      await this.undo();
+    } else {
+      await this.goToCheckpoint(this.totalMoves);
+      await this.redo();
+    }
   }
 
   public async solve(): Promise<string | null> {
@@ -1026,6 +1066,37 @@ export class Puzzle {
     for (let i = 0; i < Math.abs(delta); i++) {
       await (delta < 0 ? this.undo() : this.redo());
     }
+  }
+
+  /** The engine's number for the board in play (`NotifyGameStateChange.board`). */
+  private boardSerial = 0;
+  /** The checkpoints of the board last left, under its number. One deep, as
+   * the engine keeps one board each way. */
+  private checkpointsLeft: { board: number; checkpoints: ReadonlySet<number> } = {
+    board: 0,
+    checkpoints: new Set(),
+  };
+
+  /**
+   * Checkpoints are move numbers on one board, so they go with it when it is
+   * replaced and come back when Undo or Redo brings it back. A board that
+   * arrives with none of its own kept here starts with none.
+   */
+  private followBoard(board: number, undoneTo: boolean) {
+    if (board === this.boardSerial) return;
+    const left = { board: this.boardSerial, checkpoints: this.checkpoints };
+    this._checkpoints.set(
+      this.checkpointsLeft.board === board
+        ? this.checkpointsLeft.checkpoints
+        : new Set(),
+    );
+    this.checkpointsLeft = left;
+    this.boardSerial = board;
+    // An Undo that changed the whole board, under a control that usually
+    // takes back one move, is answered in words as well. Said here and not
+    // where Undo is asked for, since this is where the answer arrives.
+    if (undoneTo) this.setHelpMessage(BOARD_BROUGHT_BACK, true);
+    else if (this._helpMessage.get() === BOARD_BROUGHT_BACK) this.setHelpMessage("");
   }
 
   private purgeInvalidCheckpoints(totalMoves: number) {

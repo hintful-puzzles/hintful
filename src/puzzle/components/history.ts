@@ -116,45 +116,62 @@ export class PuzzleHistory extends SignalWatcher(LitElement) {
     if (!this.puzzle) {
       return items;
     }
-    // TODO: Limit startMove/endMove/checkpoints to current "restart game" section
-    const startMove = 0;
     const endMove = this.puzzle.totalMoves;
-    const checkpoints = this.puzzle.checkpoints;
+    const restarts = new Set(this.puzzle.restarts);
 
-    if (!checkpoints.has(startMove)) {
-      items.push(
-        this.renderHistoryItem({
-          label: "Start",
-          move: startMove,
-        }),
-      );
+    // The named moves, each written over by a later line that names the same
+    // move more usefully. A restart is one step of the history, so the moves
+    // before it stay on the line above it.
+    const named = new Map<number, Parameters<typeof this.renderHistoryItem>[0]>();
+    if (endMove > 0) named.set(endMove, { label: "Last move", move: endMove });
+    named.set(0, { label: "Start", move: 0 });
+    for (const move of restarts) {
+      named.set(move, {
+        label: html`Restart <small>(${move + 1})</small>`,
+        move,
+        icon: "restart-game",
+      });
+    }
+    for (const move of this.puzzle.checkpoints) {
+      named.set(move, {
+        label: html`Checkpoint <small>(${move + 1})</small>${
+          restarts.has(move) ? ", at a restart" : nothing
+        }`,
+        move,
+        icon: "history-checkpoint",
+        canDelete: true,
+      });
     }
 
-    let lastMove = startMove;
-    for (const checkpoint of [...checkpoints].sort()) {
-      items.push(
-        ...this.renderHistorySpace({ start: lastMove + 1, end: checkpoint - 1 }),
-        this.renderHistoryItem({
-          label: html`Checkpoint <small>(${checkpoint + 1})</small>`,
-          move: checkpoint,
-          icon: "history-checkpoint",
-          canDelete: true,
-        }),
-      );
-      lastMove = checkpoint;
+    if (this.puzzle.boardBefore) {
+      items.push(this.renderOtherBoard("before", "Previous board", "undo"));
     }
-
-    items.push(...this.renderHistorySpace({ start: lastMove + 1, end: endMove - 1 }));
-    if (endMove > startMove && !checkpoints.has(endMove)) {
+    let lastMove = -1;
+    for (const move of [...named.keys()].sort((a, b) => a - b)) {
+      const item = named.get(move);
+      if (!item) continue;
       items.push(
-        this.renderHistoryItem({
-          label: "Last move",
-          move: endMove,
-        }),
+        ...this.renderHistorySpace({ start: lastMove + 1, end: move - 1 }),
+        this.renderHistoryItem(item),
       );
+      lastMove = move;
+    }
+    if (this.puzzle.boardAfter) {
+      items.push(this.renderOtherBoard("after", "Next board", "redo"));
     }
 
     return items;
+  }
+
+  /** The board kept one Undo before this one's start, or one Redo after its
+   * last move (`Puzzle.goToOtherBoard`). */
+  private renderOtherBoard(which: "before" | "after", label: string, icon: string) {
+    return html`
+      <wa-dropdown-item value=${which} role="listitem">
+        <wa-icon slot="icon" name=${icon}></wa-icon>
+        ${label}
+      </wa-dropdown-item>
+    `;
   }
 
   private renderHistoryItem({
@@ -238,6 +255,10 @@ export class PuzzleHistory extends SignalWatcher(LitElement) {
 
   private async handleSelectCheckpoint(event: CustomEvent<{ item: WaDropdownItem }>) {
     const value = event.detail.item.value;
+    if (value === "before" || value === "after") {
+      await this.puzzle?.goToOtherBoard(value);
+      return;
+    }
     const checkpoint = Number.parseInt(value, 10);
     if (Number.isFinite(checkpoint)) {
       await this.puzzle?.goToCheckpoint(checkpoint);

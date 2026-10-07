@@ -292,9 +292,10 @@ describe("a v1 save still loads", () => {
       // does), so it saves and restores as "ongoing".
       expect(status, `${id}: status changed across a v1 restore`).toBe(playedStatus);
 
-      // And what it saves back out is clean v2 — the old key gone, not carried.
+      // And what it saves back out is the current shape: the old key gone, not
+      // carried.
       const again = JSON.parse(new TextDecoder().decode(restored.saveGame()));
-      expect(again.v).toBe(2);
+      expect(again.v).toBe(3);
       expect(again.cheated).toBe(true);
       expect(Object.hasOwn(again, "usedSolve")).toBe(false);
     });

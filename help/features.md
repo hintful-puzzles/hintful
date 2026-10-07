@@ -350,6 +350,31 @@ than tracing. It is a mouse feature, since a touch screen has no notion of
 hovering — a finger is either pressing or absent — so on a phone or tablet you
 will not see it.
 
+## Taking back a Restart or a New game {#undo-reach}
+
+::undo:: Undo reaches past the two commands that put your work away.
+
+**Restart is a move like any other.** It steps to the board as it started and
+keeps everything you played behind that step. Undo straight afterwards and your
+moves are back; ::redo:: redo restarts again. Undo further and you walk back
+through the moves themselves. The ::history:: history panel shows where each
+restart was. Restarting a board you have played nothing on does nothing. (In
+Mines the board "as it started" is the one just after your first square
+opened, so you needn't remember where you began.)
+
+**The board you just left is kept, one board back.** When a new board replaces
+the one you were on, whether by *New game*, a choice in the ::puzzle-type::
+type menu, a shared game or a loaded one, the old board waits behind the new
+one's first position. Undo there, with no move of the new board left to take
+back, brings the old one back as you left it: its moves, its
+[checkpoints](#checkpoints) and its time. Redo, from the old board's last move,
+returns you to the new board. The history panel offers both as *Previous board*
+and *Next board*.
+
+Only one board is kept each way, and only until you make a move: your first
+move on a board lets go of the other one, and from then on undo and redo mean
+what they always have. Closing or reloading the app lets go of it too.
+
 ## Checkpoints {#checkpoints}
 
 A checkpoint marks a position in your move history so you can come back to it:
@@ -384,6 +409,8 @@ The clock starts with your first move, not when the board is dealt, and it
 stops while the app is out of sight. Once you have solved the board, the time
 is final: undoing afterwards will not restart it. If you lose (in Mines, say),
 the clock waits while the board stays lost and carries on if you undo.
+Restarting the board does not reset the clock or stop it: the time is how long
+you have spent on that board.
 
 When you solve the board, the time appears in the message that congratulates
 you. If the app helped on that board, the message says so beside the time. A
@@ -397,7 +424,8 @@ board is always free.
 Each puzzle keeps your game in progress and resumes it when you come back,
 whether you closed the tab, wandered off, or hit a bug. Starting a new game, or
 choosing another variation or difficulty in the ::puzzle-type:: type menu,
-replaces it.
+replaces it. Until you move on the new board, [undo](#undo-reach) brings the
+old game back.
 
 On the home screen, a puzzle with a game in progress wears a
 ::game-in-progress:: triangle on its icon.

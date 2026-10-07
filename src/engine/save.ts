@@ -11,7 +11,7 @@ export interface SaveEnvelope {
   /** Format version. Bump when the envelope shape changes, and teach
    * {@link decodeSave} to upgrade the old shape — a save a player already has
    * is not ours to invalidate when the fix is a few lines. */
-  v: 2;
+  v: 3;
   puzzleId: string;
   /** Fully-encoded game parameters. */
   params: string;
@@ -24,8 +24,16 @@ export interface SaveEnvelope {
    * log from it would re-apply a click already baked into the board. Absent ⇒
    * `desc` reconstructs state 0 faithfully, as it does for every other game. */
   privDesc?: string;
-  /** Serialized move log; `moves[i]` turns history[i] into history[i+1]. */
+  /** Serialized move log; `moves[i]` turns history[i] into history[i+1]. A
+   * restart's entry is `null`, and `restarts` says which entries those are. */
   moves: unknown[];
+  /** The restarts in the log, absent when there are none. `at` indexes
+   * `moves`. `cheated` is the solver record of the play on the far side of the
+   * restart from the cursor (`Midend`'s `Restart`), where the envelope's own
+   * `cheated` is that of the play the cursor is in. Listed apart from `moves`
+   * because a move is the game's own shape, which no marker inside the list
+   * could be told from. */
+  restarts?: { at: number; cheated: boolean }[];
   /** History cursor at save time (for save-then-undo round-trips). */
   pos: number;
   /** Accumulated timer seconds. */
@@ -34,8 +42,9 @@ export interface SaveEnvelope {
    * The key says `hinted` because saves players hold are written with it. */
   hinted?: boolean;
   /** Whether the solver was used on this board (drives "solved-with-help"):
-   * the midend's record, since no game's state keeps one. `v: 1` saves called
-   * it `usedSolve` and are upgraded on read. */
+   * the midend's record, since no game's state keeps one, for the play since
+   * the last restart before the cursor. `v: 1` saves called it `usedSolve` and
+   * are upgraded on read. */
   cheated: boolean;
   /** Serialized `Ui` state that must survive a save but cannot be rebuilt by
    * replaying the move log (upstream `encode_ui`; Mines' death counter).
@@ -61,28 +70,52 @@ export function encodeSave(envelope: SaveEnvelope): Uint8Array<ArrayBuffer> {
  * mean the same thing, and the whole migration is one key — so a save a player
  * already has keeps working rather than being thrown away for a rename.
  *
+ * `v: 2` had no restart in its log, since a restart emptied the log. It is a
+ * `v: 3` envelope with no `restarts`; the number went up so that a build
+ * which would replay a restart's `null` as a move refuses the save instead.
+ *
  * Runs *before* validation, so `isSaveEnvelope` only ever describes the current
  * shape and cannot drift into blessing both.
  */
 function upgrade(value: unknown): unknown {
   if (typeof value !== "object" || value === null) return value;
-  const v = value as Record<string, unknown>;
-  if (v["v"] !== 1) return value;
-  const { usedSolve, ...rest } = v;
-  return { ...rest, v: 2, cheated: usedSolve };
+  let v = value as Record<string, unknown>;
+  if (v["v"] === 1) {
+    const { usedSolve, ...rest } = v;
+    v = { ...rest, v: 2, cheated: usedSolve };
+  }
+  if (v["v"] === 2) v = { ...v, v: 3 };
+  return v;
+}
+
+function isRestartList(value: unknown, moves: number): boolean {
+  if (value === undefined) return true;
+  if (!Array.isArray(value)) return false;
+  return value.every((entry: unknown) => {
+    if (typeof entry !== "object" || entry === null) return false;
+    const { at, cheated } = entry as Record<string, unknown>;
+    return (
+      typeof at === "number" &&
+      Number.isInteger(at) &&
+      at >= 0 &&
+      at < moves &&
+      typeof cheated === "boolean"
+    );
+  });
 }
 
 function isSaveEnvelope(value: unknown): value is SaveEnvelope {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   return (
-    v["v"] === 2 &&
+    v["v"] === 3 &&
     typeof v["puzzleId"] === "string" &&
     typeof v["params"] === "string" &&
     typeof v["desc"] === "string" &&
     // Optional: only a desc-superseding game writes it.
     (v["privDesc"] === undefined || typeof v["privDesc"] === "string") &&
     Array.isArray(v["moves"]) &&
+    isRestartList(v["restarts"], v["moves"].length) &&
     typeof v["pos"] === "number" &&
     typeof v["timerElapsed"] === "number" &&
     (v["hinted"] === undefined || typeof v["hinted"] === "boolean") &&

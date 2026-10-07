@@ -90,7 +90,7 @@ describe("Pegs midend integration — lifecycle", () => {
     expect(h.m.getParams()).toBe("3x1cross");
   });
 
-  it("restartGame after a move resets to move 0", () => {
+  it("restartGame after a move steps to the board as it started", () => {
     const h = harness();
     h.m.newGameFromId(CROSS_7x7);
     // Make a drag-jump move.
@@ -100,9 +100,15 @@ describe("Pegs midend integration — lifecycle", () => {
     h.m.processInput(tgt.x, tgt.y, LEFT_DRAG);
     h.m.processInput(tgt.x, tgt.y, LEFT_RELEASE);
     expect(h.state()?.currentMove).toBe(1);
+    const jumped = h.m.formatAsText();
+    h.m.undo();
+    const start = h.m.formatAsText();
+    h.m.redo();
     h.m.restartGame();
-    expect(h.state()?.currentMove).toBe(0);
-    expect(h.state()?.canUndo).toBe(false);
+    expect(h.state()?.currentMove).toBe(2);
+    expect(h.m.formatAsText()).toBe(start);
+    h.m.undo();
+    expect(h.m.formatAsText()).toBe(jumped);
   });
 });
 
@@ -180,7 +186,9 @@ describe("Pegs midend integration — drag input", () => {
 
     h.m.newGame();
     expect(h.state()?.currentMove).toBe(0);
-    expect(h.state()?.canUndo).toBe(false);
+    expect(h.state()?.totalMoves).toBe(0);
+    // The board with the jump on it is kept, one Undo away.
+    expect(h.state()?.boardBefore).toBe(true);
   });
 });
 

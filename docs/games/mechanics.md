@@ -824,7 +824,12 @@ to one small `Ui` + a four-armed move union).
 
 `changedState(ui, oldState, newState)` reconciles a `Ui` that tracks state
 after every real move/undo/redo/solve/restart (never on a bare `UI_UPDATE` —
-the user is mid-edit then). **A drag-preview game must cancel a dangling drag
+the user is mid-edit then). **The two states need not be one move apart.** A
+restart is a step of the history, so Undo hands this hook the starting board
+and the board as it was played, in either order, as Solve hands it a board and
+its solution. Derive the `Ui` from `newState` alone; do not diff the pair. The
+engine plays no move animation across a restart, so `animLength` is not asked
+about that pair. **A drag-preview game must cancel a dangling drag
 here**: the board can change under a held pointer (an undo mid-drag), and
 a preview that then simulates its move against the new board throws where
 upstream asserted. See [rendering](./rendering.md) § "Drag previews and blitters" for the
@@ -917,7 +922,8 @@ supersede its game description mid-play"):
   bakes in the generating move (Mines' public desc names layout *and* first
   click; replaying the log from it would re-play a click already baked in).
 - Restart rebuilds from the *public* desc — the player restarts to just after
-  the generating move, not to a blank board.
+  the generating move, not to a blank board. That board is entered as the next
+  step of the history, so Undo returns the board as played.
 
 Make generation a deterministic function of state + move (the desc RNG rides
 in the state) or the move log will not replay. Keep it in **one controlled
