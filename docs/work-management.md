@@ -41,6 +41,10 @@ Three things, and no others:
   they decide whether you hit it.
 - **Anything that breaks compatibility with data a player already has**: save
   formats, preference keys, shared game IDs. Ask before, with the cost stated.
+  The promise runs one way (owner, 2026-10-07): what a player holds today
+  opens in every later version of the app. That an older copy of the app
+  cannot read what a newer one writes is not a cost and is never asked about;
+  the app is served, and there is one current version.
 
 During a run of framework refactoring the owner may defer testing to the end
 of the arc. Take that as said only when it is said.
