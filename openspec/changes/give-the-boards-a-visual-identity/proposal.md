@@ -38,6 +38,28 @@ The owner's verdict (2026-10-04): the *contrast* of B-hues is what is wanted,
 and **not that pair of colors**: blue and amber are Tango's own pair, and they
 are also close to Ukraine's flag. So the first decision is which two hues.
 
+## The mock-ups put to the owner (2026-10-07)
+
+`reference/unruly-mockups.html` draws them (open it in a browser; the `.png`
+beside it is a capture). It is a drawing of its own and not the game's
+renderer, so that it can vary shape as well as hue. Three sections, one per
+decision:
+
+- **A, the pair.** Unruly already draws in four hues that mean something: red
+  (errors), blue (the hint's ring and hatch), green (the cursor) and orange
+  (the hint's outline). A tile in one of them swallows that mark, so the pair
+  comes from teal, purple, pink and yellow. A6 keeps black and white, as
+  stones on a quiet board, which leaves the hint's words true.
+- **B, shape.** Hue only, a square and a disc, or a flat tile with a small
+  mark.
+- **C, the given-cell mark.** Today's bevel, a dot, a given that fills its cell
+  where a placed tile is inset, or Tango's lighter cell under the given.
+
+The two states stand apart in lightness in every pair, on purpose: that
+difference is what a color-blind player is left with when hue alone carries
+state. It is not the equal weight question 1 asks for, and where the two
+conflict the owner's eye decides.
+
 ## Questions this change has to answer
 
 1. **Which pair for a two-state game.** The palette ties blue's and orange's

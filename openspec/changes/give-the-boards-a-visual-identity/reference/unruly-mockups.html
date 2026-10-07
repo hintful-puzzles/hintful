@@ -1,0 +1,210 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Unruly mock-ups</title>
+<!--
+  Mock-ups for tasks 1.1, 1.2 and 2.1: the hue pair, whether state is also a
+  shape, and the given-cell mark. Self-contained; open it in a browser. Nothing
+  here is the game's renderer: the board is drawn by the script below, so it
+  shows a look and is not evidence of what the app paints.
+-->
+<style>
+  body { font: 13px system-ui, sans-serif; background: #777; color: #fff; margin: 12px; }
+  h2 { margin: 18px 0 2px; font-size: 16px; }
+  p { margin: 0 0 8px; max-width: 70em; }
+  .row { display: grid; grid-template-columns: repeat(2, max-content); gap: 10px; }
+  figure { margin: 0; background: #555; padding: 5px; }
+  figcaption { padding-bottom: 4px; }
+  figcaption b { font-size: 14px; }
+  .pair { display: flex; gap: 4px; }
+  svg { display: block; }
+</style>
+<body>
+<script>
+  // W/B are the two states, G is undecided; lower case is a given cell.
+  const BOARD = [
+    "GGwBwBww",
+    "bGGGBWGB",
+    "GGGGwbGw",
+    "GGwGbGWB",
+    "bBWBWGbw",
+    "GwGWbwBW",
+    "GWbbWGWb",
+    "GBGGGGGb",
+  ];
+  const TS = 30;
+
+  // Board, undecided cell and grid, per the B-hues mock-up.
+  const SURFACE = {
+    light: { board: 0.9, cell: 0.84, grid: 0.72 },
+    dark: { board: 0.2, cell: 0.26, grid: 0.36 },
+  };
+
+  // Each state: [lightness, chroma] per scheme, and a hue.
+  const PAIRS = {
+    bhues: {
+      name: "Blue and amber (the B-hues mock-up, for comparison; ruled out)",
+      one: { h: 258, light: [0.56, 0.17], dark: [0.62, 0.17] },
+      zero: { h: 75, light: [0.8, 0.15], dark: [0.8, 0.15] },
+    },
+    purpleYellow: {
+      name: "Purple and yellow",
+      one: { h: 308, light: [0.5, 0.2], dark: [0.58, 0.2] },
+      zero: { h: 100, light: [0.86, 0.16], dark: [0.82, 0.155] },
+    },
+    tealPink: {
+      name: "Teal and pink",
+      one: { h: 200, light: [0.55, 0.095], dark: [0.62, 0.105] },
+      zero: { h: 350, light: [0.78, 0.13], dark: [0.78, 0.14] },
+    },
+    purpleTeal: {
+      name: "Purple and teal",
+      one: { h: 308, light: [0.5, 0.2], dark: [0.58, 0.2] },
+      zero: { h: 195, light: [0.8, 0.11], dark: [0.8, 0.12] },
+    },
+    tealYellow: {
+      name: "Teal and yellow",
+      one: { h: 205, light: [0.52, 0.09], dark: [0.6, 0.1] },
+      zero: { h: 100, light: [0.86, 0.16], dark: [0.82, 0.155] },
+    },
+    pinkTeal: {
+      name: "Pink and deep teal (pink as the strong one)",
+      one: { h: 355, light: [0.6, 0.2], dark: [0.66, 0.19] },
+      zero: { h: 190, light: [0.84, 0.09], dark: [0.82, 0.1] },
+    },
+    stones: {
+      name: "Black and white stones (the words stay true)",
+      one: { h: 0, light: [0.22, 0], dark: [0.1, 0] },
+      zero: { h: 0, light: [0.99, 0], dark: [0.95, 0] },
+      rim: { light: 0.45, dark: 0.55 },
+    },
+  };
+
+  const gray = (l) => `oklch(${l} 0 0)`;
+  const hue = (s, scheme, dl = 0) => {
+    const [l, c] = s[scheme];
+    return `oklch(${Math.min(1, Math.max(0, l + dl))} ${c} ${s.h})`;
+  };
+
+  /**
+   * shape: "flat" fills the cell; "pieces" draws a rounded square for one state
+   * and a disc for the other, inset on the cell; "glyph" is flat with a small
+   * mark that differs by state.
+   * given: "bevel" (today's inset square), "dot", "printed" (a given fills its
+   * cell, a placed tile is inset and rounded), "underlay" (a given's cell is
+   * lighter and every tile is an inset piece, as in Tango).
+   */
+  function board(pair, scheme, shape, given) {
+    const s = SURFACE[scheme];
+    const n = BOARD.length;
+    const pad = TS / 2;
+    const size = n * TS + 2 * pad;
+    const out = [
+      `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">`,
+      `<rect width="${size}" height="${size}" fill="${gray(s.board)}"/>`,
+      `<rect x="${pad - 2}" y="${pad - 2}" width="${n * TS + 3}" height="${n * TS + 3}" fill="${gray(s.grid)}"/>`,
+    ];
+    BOARD.forEach((line, y) => {
+      [...line].forEach((ch, x) => {
+        const px = pad + x * TS;
+        const py = pad + y * TS;
+        const w = TS - 1;
+        const state = ch.toUpperCase();
+        const isGiven = ch !== state;
+        const st = state === "B" ? pair.one : state === "W" ? pair.zero : null;
+        const lift = scheme === "dark" ? 0.07 : 0.06;
+        const cellFill = gray(given === "underlay" && isGiven ? s.cell + lift : s.cell);
+        out.push(`<rect x="${px}" y="${py}" width="${w}" height="${w}" fill="${cellFill}"/>`);
+        if (!st) return;
+        const fill = hue(st, scheme);
+        const stroke = pair.rim ? ` stroke="${gray(pair.rim[scheme])}" stroke-width="1"` : "";
+        const cx = px + w / 2;
+        const cy = py + w / 2;
+        const piece = (inset) => {
+          const d = w - 2 * inset;
+          if (shape === "pieces" && state === "W")
+            return `<circle cx="${cx}" cy="${cy}" r="${d / 2}" fill="${fill}"${stroke}/>`;
+          return `<rect x="${px + inset}" y="${py + inset}" width="${d}" height="${d}" rx="${shape === "pieces" ? 5 : 3}" fill="${fill}"${stroke}/>`;
+        };
+        if (shape === "pieces" || given === "underlay") out.push(piece(3));
+        else if (given === "printed" && !isGiven) out.push(piece(3));
+        else out.push(`<rect x="${px}" y="${py}" width="${w}" height="${w}" fill="${fill}"/>`);
+
+        if (shape === "glyph") {
+          const ink = hue(st, scheme, state === "W" ? -0.22 : 0.22);
+          out.push(
+            state === "W"
+              ? `<circle cx="${cx}" cy="${cy}" r="5" fill="none" stroke="${ink}" stroke-width="2.5"/>`
+              : `<rect x="${cx - 5}" y="${cy - 5}" width="10" height="10" fill="${ink}"/>`,
+          );
+        }
+        if (!isGiven) return;
+        if (given === "bevel") {
+          const o = Math.floor(TS / 6);
+          const span = TS - 2 * o - 2;
+          const lo = hue(st, scheme, -0.08);
+          const hi = hue(st, scheme, 0.08);
+          out.push(
+            `<rect x="${px + o}" y="${py + o}" width="${span}" height="1" fill="${lo}"/>`,
+            `<rect x="${px + o}" y="${py + o}" width="1" height="${span}" fill="${lo}"/>`,
+            `<rect x="${px + o + 1}" y="${py + TS - o - 2}" width="${span}" height="1" fill="${hi}"/>`,
+            `<rect x="${px + TS - o - 2}" y="${py + o + 1}" width="1" height="${span}" fill="${hi}"/>`,
+          );
+        } else if (given === "dot") {
+          const ink = hue(st, scheme, state === "W" ? -0.3 : 0.3);
+          out.push(`<circle cx="${cx}" cy="${cy}" r="3.2" fill="${ink}"/>`);
+        }
+      });
+    });
+    out.push("</svg>");
+    return out.join("");
+  }
+
+  function figure(label, caption, pair, shape, given) {
+    return (
+      `<figure><figcaption><b>${label}</b> ${caption}</figcaption><div class="pair">` +
+      board(pair, "light", shape, given) +
+      board(pair, "dark", shape, given) +
+      "</div></figure>"
+    );
+  }
+
+  const section = (title, blurb, figures) =>
+    `<h2>${title}</h2><p>${blurb}</p><div class="row">${figures.join("")}</div>`;
+
+  const P = PAIRS;
+  const chosen = P.purpleYellow;
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    section(
+      "A. Which pair",
+      "Flat tiles and today's given-cell bevel, so only the hues differ. Red, blue, green and orange are " +
+        "left out because Unruly already draws its error marks, hint ring, cursor and hint outline in them.",
+      [
+        figure("A0", P.bhues.name, P.bhues, "flat", "bevel"),
+        figure("A1", P.purpleYellow.name, P.purpleYellow, "flat", "bevel"),
+        figure("A2", P.tealPink.name, P.tealPink, "flat", "bevel"),
+        figure("A3", P.purpleTeal.name, P.purpleTeal, "flat", "bevel"),
+        figure("A4", P.tealYellow.name, P.tealYellow, "flat", "bevel"),
+        figure("A5", P.pinkTeal.name, P.pinkTeal, "flat", "bevel"),
+        figure("A6", P.stones.name, P.stones, "pieces", "underlay"),
+      ],
+    ) +
+      section(
+        "B. Whether state is a shape too",
+        "Shown on A1; the question is the same for any pair. Given cells carry a dot here so the shapes are not confused with the bevel.",
+        [
+          figure("B1", "Hue only: flat tiles", chosen, "flat", "dot"),
+          figure("B2", "Pieces: a square and a disc", chosen, "pieces", "dot"),
+          figure("B3", "Flat tiles with a small mark: a square and a ring", chosen, "glyph", "printed"),
+        ],
+      ) +
+      section("C. The given-cell mark", "Shown on A1, flat tiles unless the mark needs otherwise.", [
+        figure("C1", "Today's inset bevel square", chosen, "flat", "bevel"),
+        figure("C2", "A dot in the middle", chosen, "flat", "dot"),
+        figure("C3", "Printed and placed: a given fills its cell, your tile is inset", chosen, "flat", "printed"),
+        figure("C4", "A lighter cell under the given, every tile inset (Tango's)", chosen, "flat", "underlay"),
+        figure("C5", "The same, with pieces (B2 + C4)", chosen, "pieces", "underlay"),
+      ]),
+  );
+</script>
+</body>
