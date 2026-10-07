@@ -10,8 +10,11 @@ be the collection's surface grid line. A region's outline, the frame round the
 board included, is content: it SHALL stay in ink at its full width, and where
 two outlines turn round a square's corner they SHALL meet in a solid corner.
 
-The tint of a square whose arrows reach a goal, the error tint and the selected
-square's wash SHALL each replace the square's surface as before. The completion
+A goal SHALL be a disc in the collection's color for where the player is going
+(the theme pair's second member), and the tint of a square whose arrows reach a
+goal SHALL be that color's wash, so the squares that are settled take the
+goal's hue. That tint, the error tint and the selected square's wash SHALL each
+replace the square's surface. The completion
 flash SHALL sweep a bright beat and a dim beat across the board over each
 square's own surface, in colors that read in both schemes.
 

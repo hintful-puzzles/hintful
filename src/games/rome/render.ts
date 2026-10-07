@@ -30,12 +30,14 @@
  */
 
 import { valueBit } from "../../engine/candidate-bits.ts";
-import { BLUE, BLUE_BOLD } from "../../engine/color/colors.ts";
+import { BLUE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   ERROR,
   ERROR_WASH,
   FLASH,
+  GOAL,
+  GOAL_WASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -45,7 +47,6 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { romeGoalBackground } from "../../engine/color/palette-games.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
@@ -165,8 +166,8 @@ export function colors(background: Color): Color[] {
   out[COL_ARROW_PENCIL] = pencilColor(background);
   out[COL_ARROW_ENTRY] = BLUE;
   out[COL_ERRORBG] = ERROR_WASH;
-  out[COL_GOALBG] = romeGoalBackground(background);
-  out[COL_GOAL] = BLUE_BOLD;
+  out[COL_GOALBG] = GOAL_WASH;
+  out[COL_GOAL] = GOAL;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   // A fill under the arrow and its marks: the note-taking cell's "you are

@@ -11,11 +11,12 @@
  * edge has somewhere to draw its outline.
  */
 
-import { BLUE, RED, TEAL } from "../../engine/color/colors.ts";
+import { TWO } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
   ERROR,
+  GRID_DARK,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -102,10 +103,10 @@ export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_WIRE] = INK;
-  out[COL_POWERED] = TEAL;
-  out[COL_BARRIER] = RED;
+  out[COL_POWERED] = TWO[1];
+  out[COL_BARRIER] = GRID_DARK;
   out[COL_ERR] = ERROR;
-  out[COL_ENDPOINT] = BLUE;
+  out[COL_ENDPOINT] = TWO[0];
   out[COL_BORDER] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_LOCKED] = givenSurface(defaultBackground);
@@ -213,7 +214,7 @@ function rotatedPoint(
 /**
  * Draw the wires of one color pass as a single filled polygon. `bitmap`
  * selects which wire types (by the 2-bit code) this pass paints, so the black
- * base, the cyan powered wires and the red error wires are three overlaid
+ * base, the powered wires and the error wires are three overlaid
  * polygons.
  */
 function drawWires(
@@ -266,6 +267,11 @@ function drawTile(
   const borderBr = Math.floor(lt / 2);
   const borderTl = lt - borderBr;
   const barrierOutline = Math.floor((lt + 1) / 2);
+  // A powered or looped wire is as wide in its color as a plain wire is in
+  // ink, inside the thinnest rim that closes it: the state is the wire, and a
+  // core between two heavy borders left a pixel of it on a small board.
+  const wireHalf = 2 * lt - 1;
+  const liveRim = wireHalf + 1;
 
   const m = boardMargin(ts);
   const tx = m + ts * x + borderBr;
@@ -385,7 +391,7 @@ function drawTile(
           : edgetype === 2
             ? COL_POWERED
             : COL_ERR;
-      const halfwidth = pass === 0 ? 2 * lt - 1 : lt - 1;
+      const halfwidth = pass === 0 && edgetype !== 1 ? liveRim : wireHalf;
 
       let rx: number;
       let rw: number;
@@ -426,10 +432,12 @@ function drawTile(
   matrix[3] = matrix[0];
   matrix[1] = -matrix[2];
 
-  // Wires: black base, then powered (cyan) and error (red) overlays.
-  drawWires(dr, cx, cy, radius, tile, 0xe, COL_WIRE, 2 * lt - 1, matrix);
-  drawWires(dr, cx, cy, radius, tile, 0x4, COL_POWERED, lt - 1, matrix);
-  drawWires(dr, cx, cy, radius, tile, 0x8, COL_ERR, lt - 1, matrix);
+  // Wires: the ink of a plain wire and the rim of a powered or looped one,
+  // then those two in their colors.
+  drawWires(dr, cx, cy, radius, tile, 0x2, COL_WIRE, wireHalf, matrix);
+  drawWires(dr, cx, cy, radius, tile, 0xc, COL_WIRE, liveRim, matrix);
+  drawWires(dr, cx, cy, radius, tile, 0x4, COL_POWERED, wireHalf, matrix);
+  drawWires(dr, cx, cy, radius, tile, 0x8, COL_ERR, wireHalf, matrix);
 
   // Central box (endpoint / source): an outline pass, then the fill.
   const endtype = (tile >> TILE_ENDPOINT_SHIFT) & 3;
@@ -517,35 +525,29 @@ function drawTile(
     dr.drawRect({ ...box, x: box.x + box.w - width, w: width }, ring);
   }
 
-  // Barriers along grid edges (outline pass then red pass).
-  for (let pass = 0; pass < 2; pass++) {
-    let btl = borderTl;
-    let bbr = borderBr;
-    let col = COL_BARRIER;
-    if (pass === 0) {
-      btl += barrierOutline;
-      bbr += barrierOutline;
-      col = COL_WIRE;
-    }
+  // Barriers along grid edges: one flat fill, wider than the line between
+  // tiles by `barrierOutline` on each side.
+  const btl = borderTl + barrierOutline;
+  const bbr = borderBr + barrierOutline;
+  const col = COL_BARRIER;
 
-    if (tile & (L << TILE_BARRIER_SHIFT))
-      dr.drawRect({ x: tx, y: ty, w: btl, h: ts }, col);
-    if (tile & (R << TILE_BARRIER_SHIFT))
-      dr.drawRect({ x: tx + ts - bbr, y: ty, w: bbr, h: ts }, col);
-    if (tile & (U << TILE_BARRIER_SHIFT))
-      dr.drawRect({ x: tx, y: ty, w: ts, h: btl }, col);
-    if (tile & (D << TILE_BARRIER_SHIFT))
-      dr.drawRect({ x: tx, y: ty + ts - bbr, w: ts, h: bbr }, col);
+  if (tile & (L << TILE_BARRIER_SHIFT))
+    dr.drawRect({ x: tx, y: ty, w: btl, h: ts }, col);
+  if (tile & (R << TILE_BARRIER_SHIFT))
+    dr.drawRect({ x: tx + ts - bbr, y: ty, w: bbr, h: ts }, col);
+  if (tile & (U << TILE_BARRIER_SHIFT))
+    dr.drawRect({ x: tx, y: ty, w: ts, h: btl }, col);
+  if (tile & (D << TILE_BARRIER_SHIFT))
+    dr.drawRect({ x: tx, y: ty + ts - bbr, w: ts, h: bbr }, col);
 
-    if (tile & (R << TILE_BARRIER_CORNER_SHIFT))
-      dr.drawRect({ x: tx + ts - bbr, y: ty, w: bbr, h: btl }, col);
-    if (tile & (U << TILE_BARRIER_CORNER_SHIFT))
-      dr.drawRect({ x: tx, y: ty, w: btl, h: btl }, col);
-    if (tile & (L << TILE_BARRIER_CORNER_SHIFT))
-      dr.drawRect({ x: tx, y: ty + ts - bbr, w: btl, h: bbr }, col);
-    if (tile & (D << TILE_BARRIER_CORNER_SHIFT))
-      dr.drawRect({ x: tx + ts - bbr, y: ty + ts - bbr, w: bbr, h: bbr }, col);
-  }
+  if (tile & (R << TILE_BARRIER_CORNER_SHIFT))
+    dr.drawRect({ x: tx + ts - bbr, y: ty, w: bbr, h: btl }, col);
+  if (tile & (U << TILE_BARRIER_CORNER_SHIFT))
+    dr.drawRect({ x: tx, y: ty, w: btl, h: btl }, col);
+  if (tile & (L << TILE_BARRIER_CORNER_SHIFT))
+    dr.drawRect({ x: tx, y: ty + ts - bbr, w: btl, h: bbr }, col);
+  if (tile & (D << TILE_BARRIER_CORNER_SHIFT))
+    dr.drawRect({ x: tx + ts - bbr, y: ty + ts - bbr, w: bbr, h: bbr }, col);
 
   dr.unclip();
   dr.drawUpdate({ x: clipx, y: clipy, w: clipw, h: cliph });

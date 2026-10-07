@@ -13,7 +13,7 @@ four-square regions, each holding one A, one B, one C and one D.
 The cursor moves by half a square, so it rests on the edges between
 squares as well as on the squares themselves.
 
-A region is shaded once it is complete and correct. Lines that close off
+A region turns {{pair:0}} once it is complete and correct. Lines that close off
 a region of the wrong size are shown in red, as is a letter that appears
 twice within one region.
 

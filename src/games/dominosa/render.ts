@@ -10,14 +10,15 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { GREEN, PURPLE, RED, RED_BOLD } from "../../engine/color/colors.ts";
+import { GREEN, RED, WHITE } from "../../engine/color/colors.ts";
 import {
   ERROR,
+  GOAL,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
   lineNoColor,
-  PAPER,
+  SHADED,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -63,9 +64,9 @@ export const COL_HIGHLIGHT_2 = 7;
 export const COL_MISTAKE = 8;
 export const COL_HINT = 9; // the acted-on square's ring / the suggested edge
 export const COL_HINT_CELL = 10; // the evidence squares' outline
-// The reference-panel spotlight boxing a domino's candidate placements: violet,
-// distinct from the mistake (red), hint (blue) and value-highlight (red/green)
-// colors.
+// The reference-panel spotlight boxing a domino's candidate placements: the
+// places the domino the player is after could go, so the goal's color, which
+// no domino, mistake, hint or value highlight takes.
 export const COL_REFERENCE = 11;
 
 export function colors(defaultBackground: Color): Color[] {
@@ -73,9 +74,11 @@ export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
   out[COL_TEXT] = INK;
-  out[COL_DOMINO] = INK;
-  out[COL_DOMINOCLASH] = RED_BOLD;
-  out[COL_DOMINOTEXT] = PAPER;
+  out[COL_DOMINO] = SHADED;
+  out[COL_DOMINOCLASH] = ERROR;
+  // Pinned: a domino's two fills keep their lightness across the schemes, so
+  // the number on them does.
+  out[COL_DOMINOTEXT] = WHITE;
   // A barrier edge is "no domino crosses here" — the player ruling an edge
   // out, which is what Loopy's and Palisade's ruled-out edges mean.
   out[COL_EDGE] = lineNoColor(background);
@@ -87,7 +90,7 @@ export function colors(defaultBackground: Color): Color[] {
   // strong color: every Dominosa square carries a number, so a fill behind one
   // is exactly what has no working value.
   out[COL_HINT_CELL] = HINT_EVIDENCE;
-  out[COL_REFERENCE] = PURPLE;
+  out[COL_REFERENCE] = GOAL;
   return out;
 }
 
@@ -278,6 +281,14 @@ function drawTile(
 
   if (flags & DF_HIGHLIGHT_1) nc = COL_HIGHLIGHT_1;
   else if (flags & DF_HIGHLIGHT_2) nc = COL_HIGHLIGHT_2;
+  // A highlighted number on a domino sits on a badge of the board's own
+  // color, so it reads there as it does on an open square: a hue on the
+  // domino's fill differs from it in hue and not in lightness.
+  if (type !== TYPE_BLANK && flags & (DF_HIGHLIGHT_1 | DF_HIGHLIGHT_2)) {
+    const center = { x: cx + Math.floor(ts / 2), y: cy + Math.floor(ts / 2) };
+    // Inside the mistake outline, which is inset an eighth of the square.
+    dr.drawCircle(center, Math.floor((ts * 5) / 16), COL_BACKGROUND, COL_BACKGROUND);
+  }
 
   // Fork findMistakes overlay: an inset red outline over the wrong domino.
   if (flags & DF_MISTAKE) {

@@ -149,16 +149,6 @@ export const galaxiesBlackRegion = (background: Color): Color => scale(backgroun
  * through `mkhighlight`, so it derives its own. */
 export const netslideLowlight = (background: Color): Color => scale(background, 0.8);
 
-// --- rome ---------------------------------------------------------------
-
-/** The goal square's fill: the board with its blue channel taken to full, so the
- * goal reads as *the board, but the destination* rather than as a placed object. */
-export const romeGoalBackground = (background: Color): Color => [
-  0.95 * background[0],
-  0.95 * background[1],
-  1,
-];
-
 // --- slant --------------------------------------------------------------
 
 /** **This end of the line is anchored** — a segment already connected to a

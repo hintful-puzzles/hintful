@@ -11,13 +11,16 @@
  * them, rather than all at once when the move lands.
  */
 
-import { BLACK, GREEN, PURPLE, TEAL, WHITE } from "../../engine/color/colors.ts";
+import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
+  CURSOR,
   cellSurface,
   DRAG_ADD,
   ERROR,
   FLASH,
+  GOAL,
   HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
   surfaceGrid,
   wallFill,
@@ -63,7 +66,8 @@ export const COL_HINT = 9;
 export const COL_AIM = 10;
 /** Appended: the ring round the gem a hint is going for. The hint's two roles
  * get two cues (docs/games/hints.md § "The element-type color legend"): the
- * direction is the hint's blue *arrow*, the subgoal gem a violet *ring*. */
+ * direction is the hint's *arrow* in its action color, the subgoal gem a
+ * *ring* in its evidence color. */
 export const COL_HINT_GOAL = 11;
 /** Appended: the solved flash's tile fill. */
 export const COL_FLASH = 12;
@@ -77,19 +81,20 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_FLOOR] = cellSurface(defaultBackground);
   ret[COL_GRID] = surfaceGrid(defaultBackground);
   ret[COL_OUTLINE] = INK;
-  ret[COL_PLAYER] = GREEN;
+  // The ball is the figure the player steers: "where you are".
+  ret[COL_PLAYER] = CURSOR;
   ret[COL_DEAD_PLAYER] = ERROR;
   // `BLACK` and `WHITE`, not `INK` and `PAPER`: a mine is a black ball with a
   // glint on it in both schemes.
   ret[COL_MINE] = BLACK;
   ret[COL_GLINT] = WHITE;
-  ret[COL_GEM] = TEAL;
+  ret[COL_GEM] = GOAL;
   ret[COL_WALL] = wallFill(defaultBackground);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_AIM] = DRAG_ADD;
-  // The subgoal is neither action nor evidence, so no hint role names it;
-  // purple is the hue the board has not spent.
-  ret[COL_HINT_GOAL] = PURPLE;
+  // The subgoal is an outline in role (`theGem`, hint-text.ts), so it takes
+  // the color an outline has in every game.
+  ret[COL_HINT_GOAL] = HINT_EVIDENCE;
   ret[COL_FLASH] = FLASH;
 
   return ret;

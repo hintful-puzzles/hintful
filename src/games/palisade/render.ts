@@ -33,7 +33,6 @@ import {
 import {
   CURSOR,
   cellSurface,
-  correctRegionColor,
   ERROR,
   givenSurface,
   HINT_ACTION,
@@ -41,6 +40,7 @@ import {
   INK,
   lineMaybeColor,
   lineNoColor,
+  REGION_DONE,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -72,7 +72,7 @@ export const COL_LINE_NO = 4;
 export const COL_ERROR = 5;
 export const COL_HINT = 6; // every edge the deduction forces this step (blue)
 export const COL_HINT_CELL = 7; // referenced-cell outline, inset inside the cell
-export const COL_CORRECT = 8; // a completed, correct region (shared gray shade)
+export const COL_CORRECT = 8; // a completed, correct region
 /** The keyboard cursor's box, which upstream drew in the grid's own ink. */
 export const COL_CURSOR = 9;
 export const COL_CELL = 10; // the surface of a cell with no clue
@@ -88,8 +88,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
-  // Shaded from the surface the cells are painted in.
-  out[COL_CORRECT] = correctRegionColor(cellSurface(background));
+  out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);
   return out;

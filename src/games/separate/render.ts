@@ -32,7 +32,6 @@ import {
 } from "../../engine/border-grid-render.ts";
 import {
   cellSurface,
-  correctRegionColor,
   ERROR,
   givenSurface,
   HINT_ACTION,
@@ -40,6 +39,7 @@ import {
   INK,
   lineMaybeColor,
   lineNoColor,
+  REGION_DONE,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -66,7 +66,7 @@ export const COL_GRID = 2; // == letter color == wall color
 export const COL_LINE_MAYBE = 3;
 export const COL_LINE_NO = 4;
 export const COL_ERROR = 5;
-export const COL_CORRECT = 6; // a completed, correct region (shared gray shade)
+export const COL_CORRECT = 6; // a completed, correct region
 export const COL_HINT = 7; // the edges a hint step sets, and its hatched region
 export const COL_HINT_CELL = 8; // the outline on a square a hint step cites
 export const COL_CELL = 9; // the surface of every cell
@@ -82,8 +82,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
-  // Shaded from the surface the cells are painted in.
-  out[COL_CORRECT] = correctRegionColor(cellSurface(background));
+  out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);
   return out;
@@ -164,7 +163,7 @@ export function redraw(
   }
 
   // A region is complete and correct when it has exactly `k` cells, no repeated
-  // letter and no wall interior to it. It shades with the shared completed-region
+  // letter and no wall interior to it. It takes the shared finished-region
   // color, the local-correctness feedback Galaxies and Rect give.
   const validRoot = new Map<number, boolean>();
   for (let i = 0; i < wh; i++) {

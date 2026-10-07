@@ -1,6 +1,6 @@
 # Sokoban
 
-Push each barrel (brown circle) into a target (yellow ring). Barrels can
+Push each barrel ({{pair:0}} square) into a target ({{pair:1}} ring). Barrels can
 be pushed up, down, left or right, but not into another barrel or the wall.
 
 ## Controls

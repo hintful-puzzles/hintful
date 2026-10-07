@@ -15,7 +15,6 @@
 import { PURPLE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  correctRegionColor,
   ERROR_WASH,
   givenSurface,
   HINT_ACTION,
@@ -23,6 +22,7 @@ import {
   highlightWash,
   INK,
   playerEntryColor,
+  REGION_DONE,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
@@ -67,7 +67,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_HIGHLIGHT] = highlightWash(bg);
-  out[COL_CORRECT] = correctRegionColor(bg);
+  out[COL_CORRECT] = REGION_DONE;
   out[COL_ERROR] = ERROR_WASH;
   out[COL_USER] = playerEntryColor(bg);
   // Not `CURSOR`: green is the player's own digits.

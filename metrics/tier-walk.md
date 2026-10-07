@@ -351,18 +351,18 @@
 - `12x12b11s4d2` asked Unreasonable: 3.6 s
 - `11x11b10s2d2` asked Unreasonable: 3.3 s
 - `14x14b5s2d2` asked Unreasonable: 10.7 s
-- `2x2b1s4d0` refused: Percentage of black squares must be between 5% and 100%.
-- `2x2b1s4d1` refused: Percentage of black squares must be between 5% and 100%.
-- `2x2b1s4d2` refused: Percentage of black squares must be between 5% and 100%.
-- `3x3b2s4d0` refused: Percentage of black squares must be between 5% and 100%.
-- `3x3b2s4d1` refused: Percentage of black squares must be between 5% and 100%.
-- `3x3b2s4d2` refused: Percentage of black squares must be between 5% and 100%.
-- `4x4b3s4d0` refused: Percentage of black squares must be between 5% and 100%.
-- `4x4b3s4d1` refused: Percentage of black squares must be between 5% and 100%.
-- `4x4b3s4d2` refused: Percentage of black squares must be between 5% and 100%.
-- `5x5b4s4d0` refused: Percentage of black squares must be between 5% and 100%.
-- `5x5b4s4d1` refused: Percentage of black squares must be between 5% and 100%.
-- `5x5b4s4d2` refused: Percentage of black squares must be between 5% and 100%.
+- `2x2b1s4d0` refused: Percentage of walls must be between 5% and 100%.
+- `2x2b1s4d1` refused: Percentage of walls must be between 5% and 100%.
+- `2x2b1s4d2` refused: Percentage of walls must be between 5% and 100%.
+- `3x3b2s4d0` refused: Percentage of walls must be between 5% and 100%.
+- `3x3b2s4d1` refused: Percentage of walls must be between 5% and 100%.
+- `3x3b2s4d2` refused: Percentage of walls must be between 5% and 100%.
+- `4x4b3s4d0` refused: Percentage of walls must be between 5% and 100%.
+- `4x4b3s4d1` refused: Percentage of walls must be between 5% and 100%.
+- `4x4b3s4d2` refused: Percentage of walls must be between 5% and 100%.
+- `5x5b4s4d0` refused: Percentage of walls must be between 5% and 100%.
+- `5x5b4s4d1` refused: Percentage of walls must be between 5% and 100%.
+- `5x5b4s4d2` refused: Percentage of walls must be between 5% and 100%.
 - `2x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
 - `2x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
 - `2x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
@@ -435,54 +435,54 @@
 - `7x14b20s4d0` refused: 4-fold symmetry is only available with square grids.
 - `7x14b20s4d1` refused: 4-fold symmetry is only available with square grids.
 - `7x14b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x7b1s4d0` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b1s4d1` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b1s4d2` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b2s4d0` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b2s4d1` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b2s4d2` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b3s4d0` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b3s4d1` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b3s4d2` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b4s4d0` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b4s4d1` refused: Percentage of black squares must be between 5% and 100%.
-- `7x7b4s4d2` refused: Percentage of black squares must be between 5% and 100%.
-- `2x2b1s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `2x2b1s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `2x2b1s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `3x3b2s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `3x3b2s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `3x3b2s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `4x4b3s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `4x4b3s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `4x4b3s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `5x5b4s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `5x5b4s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `5x5b4s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b1s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b1s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b1s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b2s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b2s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b2s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b3s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b3s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b3s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b4s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b4s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `10x10b4s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b1s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b1s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b1s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b2s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b2s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b2s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b3s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b3s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b3s2d2` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b4s2d0` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b4s2d1` refused: Percentage of black squares must be between 5% and 100%.
-- `14x14b4s2d2` refused: Percentage of black squares must be between 5% and 100%.
+- `7x7b1s4d0` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b1s4d1` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b1s4d2` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b2s4d0` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b2s4d1` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b2s4d2` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b3s4d0` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b3s4d1` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b3s4d2` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b4s4d0` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b4s4d1` refused: Percentage of walls must be between 5% and 100%.
+- `7x7b4s4d2` refused: Percentage of walls must be between 5% and 100%.
+- `2x2b1s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `2x2b1s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `2x2b1s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `3x3b2s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `3x3b2s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `3x3b2s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `4x4b3s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `4x4b3s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `4x4b3s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `5x5b4s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `5x5b4s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `5x5b4s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b1s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b1s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b1s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b2s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b2s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b2s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b3s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b3s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b3s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b4s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b4s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `10x10b4s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b1s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b1s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b1s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b2s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b2s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b2s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b3s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b3s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b3s2d2` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b4s2d0` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b4s2d1` refused: Percentage of walls must be between 5% and 100%.
+- `14x14b4s2d2` refused: Percentage of walls must be between 5% and 100%.
 - left out: `13x13b12s4d2` `14x14b13s4d2` `14x14b14s4d2` `14x14b15s4d2` `14x14b16s4d2` `14x14b17s4d2` `14x14b18s4d2` `14x14b19s4d2` `14x14b20s4d2` `7x7b20s4d2` `7x7b5s4d2` `7x7b7s4d2` `7x7b8s4d2` `7x7b9s4d2` `7x7b10s4d2` `7x7b11s4d2` `7x7b12s4d2` `7x7b13s4d2` `7x7b14s4d2` `7x7b15s4d2` `7x7b16s4d2` `7x7b17s4d2` `7x7b18s4d2` `7x7b19s4d2` `12x12b11s2d2` `13x13b12s2d2` `14x14b13s2d2` `14x14b14s2d2` `14x14b15s2d2` `14x14b16s2d2` `14x14b17s2d2` `14x14b18s2d2` `14x14b19s2d2` `14x14b20s2d2` `2x10b20s2d2` `3x10b20s2d2` `4x10b20s2d2` `5x10b20s2d2` `6x10b20s2d2` `7x10b20s2d2` `8x10b20s2d2` `9x10b20s2d2` `10x10b20s2d2` `11x10b20s2d2` `12x10b20s2d2` `13x10b20s2d2` `14x10b20s2d2` `10x2b20s2d2` `10x3b20s2d2` `10x4b20s2d2` `10x5b20s2d2` `10x6b20s2d2` `10x7b20s2d2` `10x8b20s2d2` `10x9b20s2d2` `10x11b20s2d2` `10x12b20s2d2` `10x13b20s2d2` `10x14b20s2d2` `10x10b5s2d2` `10x10b6s2d2` `10x10b7s2d2` `10x10b8s2d2` `10x10b10s2d2` `10x10b11s2d2` `10x10b12s2d2` `10x10b13s2d2` `10x10b14s2d2` `10x10b15s2d2` `10x10b16s2d2` `10x10b17s2d2` `10x10b18s2d2` `10x10b19s2d2` `14x14b6s2d2` `14x14b7s2d2` `14x14b8s2d2` `14x14b9s2d2` `14x14b10s2d2` `14x14b11s2d2` `14x14b12s2d2`
 
 ## loopy

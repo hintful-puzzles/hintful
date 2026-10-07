@@ -140,7 +140,7 @@ export const puzzleCatalog = {
   cube: {
     name: "Cube",
     description: "Rolling cube puzzle",
-    objective: "Pick up all the blue squares by rolling the cube over them.",
+    objective: "Pick up all the painted squares by rolling the cube over them.",
     collection: "original",
     family: "moves",
   },

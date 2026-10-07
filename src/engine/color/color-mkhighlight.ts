@@ -112,25 +112,6 @@ export function paletteSchemeOf(game: {
 }
 
 /**
- * The shared "this region / area is correctly completed" shade — the local
- * completion feedback a game gives a finished region, not a global solved
- * check. The cell background darkened to 75%, upstream Rectangles'
- * `COL_CORRECT`: a settled gray rather than a per-game hue, so "done and
- * correct" reads the same everywhere. Pass the background the game actually
- * paints its cells with.
- *
- * The dark value is authored, below the cell as the light one is. Derived, it
- * rises to the lightness of a given's lifted cell, and a finished region reads
- * as a row of givens.
- */
-export function correctRegionColor(background: Color): Color {
-  return token(
-    [background[0] * 0.75, background[1] * 0.75, background[2] * 0.75],
-    [0.08, 0.08, 0.08],
-  );
-}
-
-/**
  * Upstream's `game_mkhighlight_specific`: derive a highlight (toward white) and
  * lowlight (toward black) from an **arbitrary base color**, each a distance `K`
  * from the base.

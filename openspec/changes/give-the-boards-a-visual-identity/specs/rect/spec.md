@@ -9,10 +9,10 @@ by the cell under them, and the number itself stays in ink. The edges of the
 player's rectangles, and the board's outer edge, which bounds every rectangle
 that reaches it, are content and SHALL stay in ink at their full width.
 
-A rectangle the game counts as correct SHALL shade whole in the shared
-completed-region color, derived from the cell surface so it reads against an
-unfinished square in both schemes; the shade SHALL cover the number's square
-too. The keyboard cursor SHALL be brackets in the cursor color at the corners
+A rectangle the game counts as correct SHALL fill whole with the shared
+finished-region role, a wash of the theme pair's first hue, so it is told by
+hue from an unfinished square and from a number's lifted square in both
+schemes; the fill SHALL cover the number's square too. The keyboard cursor SHALL be brackets in the cursor color at the corners
 of its square, beside the number, and SHALL take no fill.
 
 #### Scenario: A number is told by the cell under it

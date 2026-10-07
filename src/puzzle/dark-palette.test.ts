@@ -21,7 +21,14 @@ import {
   resolvePalette,
 } from "../engine/color/color-mkhighlight.ts";
 import { darkValue } from "../engine/color/color-token.ts";
-import { correctRegionColor, lineNoColor } from "../engine/color/palette.ts";
+import {
+  cellSurface,
+  givenSurface,
+  highlightWash,
+  lineNoColor,
+  playerEntryColor,
+  REGION_DONE,
+} from "../engine/color/palette.ts";
 import { getTsGame, registeredGameIds } from "../engine/registry.ts";
 import type { Color, PuzzleId } from "../engine/types.ts";
 import {
@@ -127,7 +134,7 @@ describe("the ruled-out edge", () => {
     for (const host of [[0.827, 0.827, 0.827] as Color, DARK_INPUT]) {
       const board = mkhighlightBackground(host);
       const ruledOut = lineNoColor(board);
-      const finished = correctRegionColor(board);
+      const finished = REGION_DONE;
       // Light: a clear step below the board, well above ink.
       expect(L(board) - L(ruledOut)).toBeGreaterThan(0.2);
       expect(L(ruledOut)).toBeGreaterThan(0.4);
@@ -138,6 +145,46 @@ describe("the ruled-out edge", () => {
       expect(L(dark(ruledOut)) - darkBoard).toBeGreaterThan(0.16);
       expect(L(dark(ruledOut))).toBeLessThan(0.85);
       expect(Math.abs(L(dark(ruledOut)) - L(dark(finished)))).toBeGreaterThan(0.08);
+    }
+  });
+});
+
+describe("a finished region", () => {
+  it("is a hue on the board, told from every other cell, in both schemes", () => {
+    // What the role is for: a finished board is colored by the player's work.
+    // A step of gray fails this whichever way it steps: below the cell it is a
+    // hole in the dark board, and above it is a given's lifted cell. So the
+    // region is told by hue, and the distances are taken in OKLab, where a
+    // chroma counts as a lightness step does.
+    const dark = (c: Color) =>
+      darkValue(c) ?? oklchToColor(darkModeColor(colorToOKLCH(c), DARK_BG_L));
+    const lab = (c: Color) => {
+      const [l, chroma, h] = colorToOKLCH(c);
+      const rad = (h * Math.PI) / 180;
+      return [l, chroma * Math.cos(rad), chroma * Math.sin(rad)];
+    };
+    const apart = (a: Color, b: Color) =>
+      Math.hypot(...lab(a).map((v, i) => v - lab(b)[i]));
+    const board = mkhighlightBackground(DARK_INPUT);
+    for (const scheme of [(c: Color) => c, dark]) {
+      const finished = scheme(REGION_DONE);
+      const [l, chroma] = colorToOKLCH(finished);
+      expect(chroma).toBeGreaterThan(0.05);
+      // Not a hole: no darker than the cells round it.
+      const cell = scheme(cellSurface(board));
+      if (scheme === dark) expect(l).toBeGreaterThan(colorToOKLCH(cell)[0]);
+      // An unfinished cell, a given, and the selected cell Filling paints
+      // beside a finished region.
+      for (const other of [
+        cell,
+        scheme(givenSurface(board)),
+        scheme(highlightWash(board)),
+      ]) {
+        expect(apart(finished, other)).toBeGreaterThan(0.06);
+      }
+      // The player's digit is drawn on it.
+      const entry = colorToOKLCH(scheme(playerEntryColor(board)))[0];
+      expect(Math.abs(entry - l)).toBeGreaterThan(0.15);
     }
   });
 });

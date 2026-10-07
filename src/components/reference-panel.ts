@@ -231,9 +231,10 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
       border-color: var(--wa-color-brand-border-normal);
     }
     .chip.selected {
-      /* Match the board's COL_REFERENCE violet so panel and board agree. */
-      border-color: rgb(153, 51, 204);
-      box-shadow: 0 0 0 2px rgb(153, 51, 204);
+      /* The board's COL_REFERENCE yellow (colors.ts YELLOW, light base), so
+         panel and board agree. */
+      border-color: oklch(0.86 0.168 100);
+      box-shadow: 0 0 0 2px oklch(0.86 0.168 100);
     }
     .chip.placed {
       color: var(--wa-color-text-quiet);

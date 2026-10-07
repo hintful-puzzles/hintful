@@ -21,8 +21,15 @@
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BLUE, BLUE_WASH, ORANGE, PURPLE } from "../../engine/color/colors.ts";
-import { ERROR, FLASH, HELD, INK } from "../../engine/color/palette.ts";
+import { TWO } from "../../engine/color/colors.ts";
+import {
+  CURSOR,
+  ERROR,
+  FLASH,
+  HELD,
+  HINT_ACTION,
+  INK,
+} from "../../engine/color/palette.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { drag } from "../../engine/hint-gesture.ts";
@@ -463,16 +470,17 @@ export const untangleGame: Game<
       INK, // 2 COL_LINE
       ERROR, // 3 COL_CROSSEDLINE
       INK, // 4 COL_OUTLINE
-      BLUE, // 5 COL_POINT
+      TWO[1], // 5 COL_POINT — a ball the player moves
       HELD, // 6 COL_DRAGPOINT — the vertex you have picked up
-      // 7 COL_CURSORPOINT. Purple, because the board has spent the usual two:
-      // green is the held vertex (the cursor's own next state), blue a vertex.
-      PURPLE,
-      BLUE_WASH, // 8 COL_NEIGHBOR — the vertices joined to the held one
+      // 7 COL_CURSORPOINT. The held vertex's own green, which it is never
+      // shown beside: picking the vertex up is told by its neighbors, which
+      // take the pair's other color.
+      CURSOR,
+      // 8 COL_NEIGHBOR — the vertices joined to the held one, against the
+      // rest: the pair.
+      TWO[0],
       FLASH, // 9 COL_FLASH
-      // 10 COL_HINT. Orange rather than the hint blue: the vertices are blue,
-      // and the hint is a line and a marker among them.
-      ORANGE,
+      HINT_ACTION, // 10 COL_HINT
     ];
   },
   computeSize: (p: UntangleParams, tileSize: number): Size => {

@@ -53,7 +53,7 @@ export const idx = (x: number, y: number, w: number): number => y * w + x;
 export interface LightupParams {
   w: number;
   h: number;
-  /** Percentage of black squares, 5–100. */
+  /** Percentage of squares that are walls, 5–100. */
   blackpc: number;
   symm: number;
   difficulty: number;

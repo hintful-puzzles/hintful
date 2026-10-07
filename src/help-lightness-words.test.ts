@@ -44,11 +44,8 @@ const WORDS: Record<Kind, RegExp> = {
 const NOT_A_PIECE: Record<string, Partial<Record<Kind, string>>> = {
   blackbox: { dark: "the game's name" },
   bridges: { light: "'light up' is what a mistake does, in red" },
-  dominosa: { light: "'light up red' is what a clash does" },
   map: { light: "'light up' is what a mistake does, in red" },
-  netslide: { light: "a lit square is a powered one, drawn in teal" },
   rome: { dark: "a shaded square is a tint of the board, not a piece" },
-  separate: { dark: "a shaded region is a tint of the board, not a piece" },
   slide: { light: "'lights up' is the keyboard selection" },
   tents: { light: "'light up red' is what a miscount does" },
   tracks: { light: "'light up' is what a mistake does, in red" },

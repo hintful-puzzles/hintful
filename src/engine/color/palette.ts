@@ -45,12 +45,14 @@ import {
   GRAY_BOLD,
   GREEN,
   PINK,
+  PURPLE_WASH,
   RED,
   RED_WASH,
   TEAL_BOLD,
   TEAL_WASH_QUIET,
   TWO,
   YELLOW,
+  YELLOW_WASH,
 } from "./colors.ts";
 
 // --- ink and paper ----------------------------------------------------
@@ -252,10 +254,6 @@ export const PENCIL_BODY: Color = YELLOW;
 
 // --- background-derived roles -----------------------------------------
 
-/** @see correctRegionColor — re-exported from `color-mkhighlight.ts` so every
- * role is reachable from one import. */
-export { correctRegionColor } from "./color-mkhighlight.ts";
-
 /**
  * A pencil mark — the candidate values a player has noted but not committed:
  * clearly *subordinate* to a placed digit, but still legible at the quarter-size
@@ -295,11 +293,11 @@ export function playerEntryColor(background: Color): Color {
  *
  * In the light scheme it is told from the cells round it **by hue**, a warm
  * tone a little below {@link cellSurface}, because lightness alone has no room
- * left: a gray far enough below the cell to be unmistakable lands on
- * `correctRegionColor` (Filling paints a selected cell beside a finished
- * region), and one clear of that swallows the player's own digit
- * ({@link playerEntryColor} is 1.4:1 on it). Warm, because every glyph drawn on
- * the cell is cool or neutral: ink, the green entry, the blue pencil mark. */
+ * left: a gray far enough below the cell to be unmistakable swallows the
+ * player's own digit ({@link playerEntryColor} is 1.4:1 on it). Warm, because
+ * every glyph drawn on the cell is cool or neutral (ink, the green entry, the
+ * blue pencil mark), and so is {@link REGION_DONE}, which Filling paints
+ * beside a selected cell. */
 export function highlightWash(background: Color): Color {
   // The dark value is authored so the cell sinks, as it does in the light
   // scheme. Derived, it rises to the lightness of `givenSurface`, and a
@@ -343,8 +341,8 @@ export function lineMaybeColor(background: Color): Color {
  * because neither step fits: `GRAY`'s dark base (L 0.44) sits a tenth above the
  * board, which is the faintness to avoid, and `GRAY_BOLD` (L 0.84) is nearly
  * ink. The light value stays a function of the board so it tracks a lighter or
- * darker host; the dark value is a fixed mid gray. Both clear the
- * `correctRegionColor` fill Palisade and Separate paint under a finished
+ * darker host; the dark value is a fixed mid gray. Both clear
+ * {@link REGION_DONE}, which Palisade and Separate paint under a finished
  * region, so a ruled-out edge across a completed region still shows.
  */
 export function lineNoColor(background: Color): Color {
@@ -384,6 +382,36 @@ export function givenSurface(background: Color): Color {
 export const SHADED: Color = TWO[0];
 
 /**
+ * **A thing the player pushes or carries** to where it belongs: Sokoban's
+ * barrel, the paint on Cube's squares. The pair's first member, as a placed
+ * piece is, since it is the board's content and the player's to move. The
+ * figure the player steers is not this: it is {@link CURSOR}'s green, "where
+ * you are".
+ */
+export const MOVED: Color = TWO[0];
+
+/**
+ * **Where the player is going, or what they are after**: Sokoban's target,
+ * Inertia's gem, Rome's goal. The pair's second member, so a board of this
+ * kind shows both of the pair: the thing moved and the place it goes.
+ */
+export const GOAL: Color = TWO[1];
+
+/** **The cell a {@link GOAL} is in**, where the goal is a place and content is
+ * drawn on it. */
+export const GOAL_WASH: Color = YELLOW_WASH;
+
+/**
+ * **This region is finished and correct**: the surface of a region the player
+ * has closed, in a game whose regions are the answer (Rect, Filling, Palisade,
+ * Separate). A wash of the pair's first hue, so a finished board is colored by
+ * the player's work and its numbers stay readable on it. A step of gray could
+ * not be this: darker is a hole in the dark scheme, and lighter is a given's
+ * lifted cell ({@link givenSurface}).
+ */
+export const REGION_DONE: Color = PURPLE_WASH;
+
+/**
  * **The line between two cells of a surface**, thin and quiet: the grid is
  * where the cells are, and never the drawing.
  *
@@ -416,7 +444,7 @@ export const FLASH: Color = PAPER;
  * the clues that still have work in them.
  *
  * Upstream's `background / 1.5`, Magnets', Towers' and Undead's `COL_DONE`. Not
- * {@link correctRegionColor}: that one shades an area of the board as correct,
+ * {@link REGION_DONE}: that one colors an area of the board as correct,
  * this one retires a clue in the margin.
  */
 export function clueDoneColor(background: Color): Color {

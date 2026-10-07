@@ -118,7 +118,7 @@ export function validateParams(p: CubeParams, _full: boolean): string | null {
   const facesPerClass = solid.nfaces / nclasses;
   for (let i = 0; i < nclasses; i++) {
     if (counts[i] < facesPerClass)
-      return "The grid is too small to place all the blue faces.";
+      return "The grid is too small to place all the painted squares.";
   }
 
   if (gridArea(p.d1, p.d2, solid.order) < solid.nfaces + 1)

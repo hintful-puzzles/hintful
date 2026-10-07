@@ -30,8 +30,9 @@
  * unchanged (the frame after the move that drew it).
  */
 
-import { BLUE_WASH, GRAY_BOLD, GREEN } from "../../engine/color/colors.ts";
+import { BLUE_WASH } from "../../engine/color/colors.ts";
 import {
+  CURSOR,
   cellSurface,
   clueDoneColor,
   ERROR,
@@ -40,10 +41,10 @@ import {
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
-  PAPER,
+  SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
+import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -92,25 +93,24 @@ export const FLASH_TIME = FLASH_FRAME * 5;
 
 export const COL_BACKGROUND = 0;
 export const COL_GRID = 1; // the line between two squares, and the frame
-export const COL_CURSOR_A = 2;
-export const COL_CURSOR_B = 3;
-export const COL_WATER = 4;
-export const COL_SHIP_CLUE = 5;
-export const COL_SHIP_GUESS = 6;
-export const COL_SHIP_ERROR = 7;
-export const COL_SHIP_FLEET = 8;
-export const COL_SHIP_FLEET_DONE = 9;
-export const COL_SHIP_FLEET_STRIPE = 10;
-export const COL_COUNT = 11;
-export const COL_COUNT_ERROR = 12;
-export const COL_COLLISION_ERROR = 13;
-export const COL_COLLISION_TEXT = 14;
-export const COL_HINT = 15;
-export const COL_HINT_CELL = 16;
-export const COL_CELL = 17; // the surface of an undecided square
-export const COL_GIVEN = 18; // the lifted surface under a segment the puzzle gave
+export const COL_CURSOR = 2;
+export const COL_WATER = 3;
+/** A boat segment: the player's, the puzzle's, and a boat still to be found
+ * in the fleet tally, which is the same piece. */
+export const COL_SHIP = 4;
+export const COL_SHIP_ERROR = 5;
+export const COL_SHIP_FLEET_DONE = 6;
+export const COL_SHIP_FLEET_STRIPE = 7;
+export const COL_COUNT = 8;
+export const COL_COUNT_ERROR = 9;
+export const COL_COLLISION_ERROR = 10;
+export const COL_COLLISION_TEXT = 11;
+export const COL_HINT = 12;
+export const COL_HINT_CELL = 13;
+export const COL_CELL = 14; // the surface of an undecided square
+export const COL_GIVEN = 15; // the lifted surface under a segment the puzzle gave
 /** The waves on a given water square and the edge of a collision diamond. */
-export const COL_INK = 19;
+export const COL_INK = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -119,16 +119,11 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
   out[COL_INK] = INK;
-  // Not `CURSOR`: green is the fleet panel's unplaced ships. The ring sits
-  // inside the cell on its fill, and a ship's fill *is* ink, so it swaps to
-  // paper there.
-  out[COL_CURSOR_A] = INK;
-  out[COL_CURSOR_B] = PAPER; // on a ship cell, whose fill is ink
+  out[COL_CURSOR] = CURSOR;
   out[COL_WATER] = BLUE_WASH;
-  out[COL_SHIP_CLUE] = GRAY_BOLD;
-  out[COL_SHIP_GUESS] = INK;
+  // A segment the puzzle gave is the same piece: its lifted cell tells it.
+  out[COL_SHIP] = SHADED;
   out[COL_SHIP_ERROR] = ERROR;
-  out[COL_SHIP_FLEET] = GREEN;
   out[COL_SHIP_FLEET_DONE] = clueDoneColor(defaultBackground);
   out[COL_SHIP_FLEET_STRIPE] = INK;
   out[COL_COUNT] = INK;
@@ -399,7 +394,7 @@ function drawFleet(
     dr.drawRect(rect, COL_BACKGROUND);
 
     const found = copy < fleetCount[size];
-    const color = found ? COL_SHIP_FLEET_DONE : COL_SHIP_FLEET;
+    const color = found ? COL_SHIP_FLEET_DONE : COL_SHIP;
 
     let fx = startFx;
     for (let k = 0; k <= size; k++) {
@@ -416,7 +411,7 @@ function drawFleet(
     }
 
     if (found) {
-      // Red rather than black when more boats of this size are on the board
+      // Red rather than ink when more boats of this size are on the board
       // than the fleet holds.
       const stripe =
         fleetData[size] >= fleetCount[size] ? COL_SHIP_FLEET_STRIPE : COL_COUNT_ERROR;
@@ -639,11 +634,7 @@ export function redraw(
 
       if (!flash && isShip(ship)) {
         const color =
-          cellFlags[i] & FE_MISMATCH || ds.wrong.at(i)
-            ? COL_SHIP_ERROR
-            : state.gridClues[i] === EMPTY
-              ? COL_SHIP_GUESS
-              : COL_SHIP_CLUE;
+          cellFlags[i] & FE_MISMATCH || ds.wrong.at(i) ? COL_SHIP_ERROR : COL_SHIP;
         drawSegment(dr, tx, ty, ts + 1, ship, color);
       } else if (!flash && state.gridClues[i] === WATER) {
         // A *given* water square is marked with waves; player water is the
@@ -658,13 +649,15 @@ export function redraw(
       if (hintBit & HINT_SHIP) drawSegment(dr, tx, ty, ts + 1, SHIP_VAGUE, COL_HINT);
       else if (hintBit & HINT_WATER) drawWaves(dr, tx, ty, ts, COL_HINT);
 
-      // Every evidence square keeps its own color and gets an inset ring —
-      // undecided or not, one mark for one role. A fill over water or a segment
-      // would paint over the very thing that makes the square evidence, and a
-      // fill pale enough not to is too faint to read as a mark at all
-      // (`hint-mark.ts`), so neither kind of square gets one.
+      // Every evidence square keeps its own color and gets a ring at the cell's
+      // edge — undecided or not, one mark for one role. A fill over water or a
+      // segment would paint over the very thing that makes the square evidence,
+      // and a fill pale enough not to is too faint to read as a mark at all
+      // (`hint-mark.ts`), so neither kind of square gets one. The ring sits
+      // outside a segment's radius: one that crossed a round end cap read as a
+      // square drawn over it.
       if (hintBit & HINT_EVID) {
-        const inset = (ts / 6) | 0;
+        const inset = 1;
         drawMarkSides(
           dr,
           {
@@ -706,14 +699,16 @@ export function redraw(
       }
 
       if (cellFlags[i] & FD_CURSOR) {
-        const coff = (ts / 8) | 0;
-        drawRectOutline(
+        // At the cell's edge, outside a segment's radius, so the ring reads
+        // beside the piece on an empty, a water and a boat square alike.
+        drawThickRectOutline(
           dr,
-          tx + coff,
-          ty + coff,
-          ts - coff * 2 + 1,
-          ts - coff * 2 + 1,
-          state.grid[i] === EMPTY ? COL_CURSOR_A : COL_CURSOR_B,
+          tx + 1,
+          ty + 1,
+          ts - 1,
+          ts - 1,
+          Math.max(2, ts >> 4),
+          COL_CURSOR,
         );
       }
 

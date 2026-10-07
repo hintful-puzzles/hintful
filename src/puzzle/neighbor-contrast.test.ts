@@ -35,9 +35,6 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
     "area:3:6": "a tile's shadow edge beside the gap",
     "mark:3:6": "a tile's shadow edge beside the gap",
   },
-  filling: {
-    "mark:1:3": "a grid line inside a completed region, which its border closes",
-  },
   galaxies: {
     "mark:14:3": "a white dot's ink rim, white in the dark scheme; the dot carries it",
   },

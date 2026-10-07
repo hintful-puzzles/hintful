@@ -130,9 +130,20 @@ this change's to fix.
   Sokoban, Crossing lose theirs). A game's own identity stays: Flood's and
   Guess's colors, Map's regions, Tents' trees, Undead's monsters.
 - **Shared colors that moved**: `HINT_WHITEREF` from purple to pink, since
-  purple is now a piece; `highlightWash` and `correctRegionColor` author dark
-  values below the cell, so a selected cell and a finished region are not
-  taken for a given; a wall is the flat `WALL_FILL`.
+  purple is now a piece; `highlightWash` authors a dark value below the cell,
+  so a selected cell is not taken for a given; a wall is the flat `wallFill`.
+- **An independent review of every board** (task 4.1) changed Pearl, Ascent,
+  Tracks, Clusters, Galaxies, Fifteen, Sixteen, Twiddle, Netslide, Spokes and
+  the five wall games; the commit that made the fixes lists them.
+- **The pair goes further** (owner, 2026-10-07, on seeing the catalog: more of
+  the theme colors where a board is still mostly gray or carries a hue with no
+  reason). Three roles on the pair: `MOVED`, `GOAL` and `REGION_DONE`.
+  Cube's paint and Sokoban's barrel are `MOVED`; Sokoban's target, Inertia's
+  gem and Rome's goal are `GOAL`; a finished region in Rect, Filling,
+  Palisade and Separate is `REGION_DONE`, a wash of purple where it was a
+  darker gray. Net's and Netslide's endpoints and powered wire are the pair
+  and their barrier leaves the error's red. Dominosa's dominoes, Boats' ships
+  and Sticks' sticks are `SHADED`, and Untangle's points the pair's disc.
 
 A player who knew a board by its old colors meets new ones: a Clusters, Pegs
 or Black Box piece that was blue or red, a Sokoban target, a shaded cell that

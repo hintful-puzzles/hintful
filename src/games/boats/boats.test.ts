@@ -54,8 +54,8 @@ import {
   COL_COLLISION_ERROR,
   COL_COLLISION_TEXT,
   COL_GIVEN,
+  COL_SHIP,
   COL_SHIP_ERROR,
-  COL_SHIP_GUESS,
   COL_WATER,
   computeSize,
   FLASH_TIME,
@@ -872,7 +872,7 @@ describe("boats rendering", () => {
       const rec = new RecordingDrawing(palette);
       midend.forceRedraw(rec);
       counts.push(
-        rec.ops.filter((o) => o.op === "circle" && o.fill === COL_SHIP_GUESS).length,
+        rec.ops.filter((o) => o.op === "circle" && o.fill === COL_SHIP).length,
       );
     }
 

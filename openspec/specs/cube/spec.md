@@ -12,7 +12,7 @@ and how the solid and its rolling animation are drawn.
 
 The engine SHALL provide a registered `cube` game implementing
 `Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawState>`: a polyhedron
-rolled around a tiled arena to collect paint from blue grid squares onto the
+rolled around a tiled arena to collect paint from painted grid squares onto the
 solid's faces. Params SHALL be `solid` (one of tetrahedron/cube/octahedron/
 icosahedron), `d1`, `d2`, encoded `<t|c|o|i><d1>x<d2>` with lenient decode (a
 missing leading solid letter and a missing `x<d2>` both tolerated, `d2`

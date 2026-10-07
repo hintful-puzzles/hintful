@@ -19,7 +19,6 @@
 import {
   CURSOR,
   cellSurface,
-  correctRegionColor,
   DRAG_ADD,
   DRAG_REMOVE,
   ERROR,
@@ -27,6 +26,7 @@ import {
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
+  REGION_DONE,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
@@ -82,9 +82,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_DRAG] = DRAG_ADD;
   out[COL_DRAGERASE] = DRAG_REMOVE;
-  // Shaded from the surface the squares are painted in, so a finished
-  // rectangle is a step below an unfinished one.
-  out[COL_CORRECT] = correctRegionColor(cellSurface(bg));
+  out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE] = INK;
   out[COL_TEXT] = INK;
   out[COL_CURSOR] = CURSOR;

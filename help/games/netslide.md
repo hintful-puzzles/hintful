@@ -12,8 +12,9 @@ be built up around the source where it stands.
 Squares connected to the source are lit up. Aim to light up
 every square in the grid (not just the endpoint blobs).
 
-Connecting across a red barrier line is forbidden. On harder levels,
-there are fewer barriers, which makes it harder rather than easier!
+Connecting across a barrier, a heavy gray line between squares, is
+forbidden. On harder levels, there are fewer barriers, which makes it
+harder rather than easier!
 
 One setting changes the rules, and a board's name in the Type menu
 says when it is on:

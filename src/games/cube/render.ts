@@ -9,11 +9,11 @@
  * frame erases the last one.
  */
 
-import { BLUE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   givenSurface,
   INK,
+  MOVED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import type { GameDrawing } from "../../engine/game.ts";
@@ -27,7 +27,7 @@ export const PREFERRED_TILE_SIZE = 48;
 
 export const COL_BACKGROUND = 0; // the board around the arena
 export const COL_BORDER = 1; // the solid's edges
-export const COL_BLUE = 2; // a blue square, and a face that has picked one up
+export const COL_PAINT = 2; // a painted square, and a face that has picked one up
 export const COL_GRID = 3; // the line between two squares of the arena
 export const COL_CELL = 4; // a plain square
 /** A plain face of the solid, lifted: the one thing on the board that stands
@@ -47,7 +47,7 @@ export function colors(defaultBackground: Color): Color[] {
   const ret: Color[] = [];
   ret[COL_BACKGROUND] = defaultBackground;
   ret[COL_BORDER] = INK;
-  ret[COL_BLUE] = BLUE;
+  ret[COL_PAINT] = MOVED;
   ret[COL_GRID] = surfaceGrid(defaultBackground);
   ret[COL_CELL] = cellSurface(defaultBackground);
   ret[COL_SOLID] = givenSurface(defaultBackground);
@@ -135,7 +135,7 @@ export function redraw(
         y: Math.trunc(sq.points[2 * j + 1] * gs) + ds.oy,
       });
     }
-    dr.drawPolygon(coords, st.blue[i] ? COL_BLUE : COL_CELL, COL_GRID);
+    dr.drawPolygon(coords, st.blue[i] ? COL_PAINT : COL_CELL, COL_GRID);
   }
 
   // Compute and draw the polyhedron.
@@ -181,7 +181,7 @@ export function redraw(
         y: Math.floor(pts[j * 2 + 1] * gs) + ds.oy,
       });
     }
-    dr.drawPolygon(coords, st.faceColors[i] ? COL_BLUE : COL_SOLID, COL_BORDER);
+    dr.drawPolygon(coords, st.faceColors[i] ? COL_PAINT : COL_SOLID, COL_BORDER);
   }
 
   dr.drawUpdate({ x: 0, y: 0, w: xsize, h: ysize });

@@ -789,9 +789,9 @@ decision:
   `HINT_BLACKREF`/`HINT_WHITEREF`, `CURSOR`, `HELD`, `DRAG_ADD`/`DRAG_REMOVE`,
   `FLASH`, `UNDECIDED`, `RULED_OUT`, `GRID_MID`, `GRID_DARK`, `PENCIL_BODY`,
   `INK`, `PAPER`, plus the background-derived functions (`pencilColor`, `playerEntryColor`,
-  `highlightWash`, `lineMaybeColor`, `lineNoColor`, `clueDoneColor`,
-  `correctRegionColor`, and the surfaces `cellSurface`, `surfaceGrid` and
-  `givenSurface`, and `wallFill`), and `SHADED`. Each is a *reference* to a named
+  `highlightWash`, `lineMaybeColor`, `lineNoColor`, `clueDoneColor`, and the
+  surfaces `cellSurface`, `surfaceGrid` and `givenSurface`, and `wallFill`),
+  `SHADED` and `REGION_DONE`. Each is a *reference* to a named
   color, so restyling red restyles every meaning built on red.
 
   Three of these are worth naming by the mistake they replace. **The
@@ -801,7 +801,7 @@ decision:
   spent green, the collection's second choice is `PURPLE`, so a purple cursor
   reads as "the cursor, on a board that uses green" rather than as a new
   color — the doc on `CURSOR` says why. **"This clue is
-  done"** is `clueDoneColor` for retired *text* and `correctRegionColor` for
+  done"** is `clueDoneColor` for retired *text* and `REGION_DONE` for
   a completed *fill* — five games once encoded it five ways, from `INK` (Loopy,
   which made the distinction invisible) to a bespoke `bg × 0.85`. **The solved
   flash** is `FLASH` wherever a board flashes to a fill or line color; a bevel
@@ -875,13 +875,23 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
   which the marks drawn on a board have spent.
 - **Shaded or not is one color, not two** (owner, 2026-10-07; Pattern, Mosaic,
   Range, Singles, Bricks; in Singles the mark for a cell kept clear is the
-  puzzle's own ring round its number, not the dot). The states are not equals: the shaded cells are
-  what the puzzle is about, and "not shaded" is a note. A shaded cell is the
+  puzzle's own ring round its number, not the dot). The states are not equals:
+  the shaded cells are what the puzzle is about, and "not shaded" is a note. A shaded cell is the
   `SHADED` piece (`SHADED_SHAPE`, `SHADED_NAME`), a cell ruled out is quiet
   surface with `drawRuledOutDot`, and an undecided one is plain surface, so a
   finished picture still reads as a picture. The words are `SHADED_NAME` and
   `UNSHADED_NAME`, never "black" and "white". Flip is not one of these: lit
   and unlit are both states the player makes, and it takes the pair.
+- **The pair's hues are the board's content beyond two states** (owner,
+  2026-10-07: more of the theme where a board is mostly gray or carries a hue
+  with no reason). A thing the player pushes or carries is `MOVED` (Sokoban's
+  barrel, Cube's paint); where they are going or what they are after is `GOAL`
+  (Sokoban's target, Inertia's gem, Rome's goal); the figure they steer is
+  `CURSOR`'s green. A game whose content is one kind of placed thing takes
+  `SHADED` for it (Boats, Dominosa, Sticks). Not a drawn line (Loopy, Slant,
+  Pearl): a purple line beside the hint's blue line of the same width is the
+  pair a color-blind player cannot tell. Not text. A hue that is the puzzle's
+  own meaning stays (Map, Flood, Undead).
 - **A given is told by the cell under it** (`givenSurface`, lifted toward
   white), not by a mark on the piece: a given piece is the same piece.
 - **The two surfaces mean one thing everywhere.** The plain cell is "still
@@ -890,8 +900,10 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
   Bridges), a closed region (Galaxies), a square still covered (Mines). A new
   game that needs a second tone for a cell takes the lifted surface for the
   settled side and says which reading it is at the assignment. A selected cell
-  (`highlightWash`) and a finished region (`correctRegionColor`) sink below
-  the cell in both schemes, so neither is taken for a given.
+  (`highlightWash`) sinks below the cell in both schemes, and a finished
+  region (`REGION_DONE`) takes the wash of the pair's first hue, so neither is
+  taken for a given. A finished region is not a step of gray: darker is a hole
+  in the dark board, and lighter is the given.
 - **The dark board stays where it was** (the proposal's question 7). Cells
   sink below it and a settled cell rises to about its tone, which opened the
   contrast the question was after without moving every game's board.
@@ -1025,8 +1037,8 @@ same control). Exemplars:
 
 ### Completed regions share one color
 
-**Shade a completed-and-correct region with
-[`correctRegionColor(background)`](../../src/engine/color/palette.ts), not
+**Fill a completed-and-correct region with
+[`REGION_DONE`](../../src/engine/color/palette.ts), not
 an invented hue** — so "done and correct" reads the same across every game
 and is tuned in one place (a green invented for Separate/Palisade was the
 inconsistency this rule exists to prevent). Compute local validity per

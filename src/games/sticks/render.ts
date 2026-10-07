@@ -2,9 +2,9 @@
  * Sticks rendering: a per-tile diffed loop on the collection's quiet surface.
  * An open cell is the cell surface inside a thin grid line; a block is the
  * collection's wall over its whole tile, so a run of them is one mass. On top go a
- * green center bar for a placed line, the clue number as text (white on a
+ * center bar in the piece's color for a placed line, the clue number as text (white on a
  * block, ink on an open cell, red when its constraint is currently violated),
- * and a purple frame under the keyboard cursor. The in-flight drag previews its accreted cells; on a fresh win the
+ * and the cursor's frame under the keyboard cursor. The in-flight drag previews its accreted cells; on a fresh win the
  * lines blink off on alternate 0.1 s flash frames. `findMistakes` cells get
  * an inset red frame via an `OverlaySidecar` (docs/games/rendering.md § "Overlay sidecars" — the overlay is
  * part of the diff key so Check & Save repaints an otherwise-unchanged
@@ -15,14 +15,16 @@
  * meet the outer grid line.
  */
 
-import { GREEN, PURPLE, WHITE } from "../../engine/color/colors.ts";
+import { WHITE } from "../../engine/color/colors.ts";
 import {
+  CURSOR,
   cellSurface,
   ERROR,
   ERROR_TEXT,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
+  SHADED,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
@@ -74,18 +76,15 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_TEXT] = INK;
   // A placed stick is a bar filling a fifth of its cell — a piece, not a glyph,
-  // so the named green rather than the entry green a digit takes.
-  out[COL_LINE] = GREEN;
+  // so the piece's color rather than the entry green a digit takes.
+  out[COL_LINE] = SHADED;
   // The digit on a block, pinned: the wall is a dark enough gray in both
   // schemes to carry white.
   out[COL_NUMBER] = WHITE;
   out[COL_BLOCK] = wallFill(defaultBackground);
   out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  // Purple, because Sticks has spent the usual two: its lines are green and the
-  // hint's forced square is blue. Upstream's cursor was that blue, which would
-  // give one hue two roles in a square holding both.
-  out[COL_CURSOR] = PURPLE;
+  out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;

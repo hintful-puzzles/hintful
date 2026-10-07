@@ -1,7 +1,7 @@
 // Tier-2 render test (see the `repo-layout` spec): drive Cube's `redraw`
 // against the engine's shared `RecordingDrawing` and assert the structure of
-// the draw calls — a background fill, one polygon per grid square (blue
-// squares in COL_BLUE), the projected solid's faces, and a final update.
+// the draw calls — a background fill, one polygon per grid square (painted
+// squares in COL_PAINT), the projected solid's faces, and a final update.
 import { describe, expect, it } from "vitest";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -9,10 +9,10 @@ import { gridArea } from "./grid.ts";
 import { cubeGame, executeMove } from "./index.ts";
 import {
   COL_BACKGROUND,
-  COL_BLUE,
   COL_BORDER,
   COL_CELL,
   COL_GRID,
+  COL_PAINT,
   COL_SOLID,
 } from "./render.ts";
 import { SOLIDS, SolidType } from "./solids.ts";
@@ -60,15 +60,15 @@ describe("Cube rendering", () => {
     expect(polys.length).toBeGreaterThan(state.grid.length);
 
     // The first `grid.length` polygons are the grid squares; square 0 is
-    // blue, so at least one square polygon uses COL_BLUE.
+    // painted, so at least one square polygon uses COL_PAINT.
     const squarePolys = polys.slice(0, state.grid.length);
-    expect(squarePolys.some((o) => o.fill === COL_BLUE)).toBe(true);
+    expect(squarePolys.some((o) => o.fill === COL_PAINT)).toBe(true);
 
     // Every other square is quiet surface inside a grid line, and the solid's
     // plain faces are lifted off it, edged in ink.
     expect(
       squarePolys.every(
-        (o) => (o.fill === COL_BLUE || o.fill === COL_CELL) && o.outline === COL_GRID,
+        (o) => (o.fill === COL_PAINT || o.fill === COL_CELL) && o.outline === COL_GRID,
       ),
     ).toBe(true);
     const facePolys = polys.slice(state.grid.length);

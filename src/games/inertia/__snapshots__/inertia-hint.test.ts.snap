@@ -410,7 +410,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -440,7 +440,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "fillRgb": "color#-1",
     "op": "circle",
     "outline": 11,
-    "outlineRgb": "rgb(143, 53, 202)",
+    "outlineRgb": "rgb(14, 88, 91)",
     "r": 14,
   },
   {
@@ -450,7 +450,7 @@ exports[`inertia hint rendering > rings the marked gem and points the arrow the 
     "fillRgb": "color#-1",
     "op": "circle",
     "outline": 11,
-    "outlineRgb": "rgb(143, 53, 202)",
+    "outlineRgb": "rgb(14, 88, 91)",
     "r": 13,
   },
   {

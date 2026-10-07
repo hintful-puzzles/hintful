@@ -495,6 +495,16 @@ describe("Sokoban midend lifecycle", () => {
 
 // --- render -----------------------------------------------------------
 
+/** The middle of a polygon's bounding box: where a barrel's square stands. */
+function middle(points: ReadonlyArray<readonly [number, number]>): [number, number] {
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  return [
+    (Math.min(...xs) + Math.max(...xs)) / 2,
+    (Math.min(...ys) + Math.max(...ys)) / 2,
+  ];
+}
+
 describe("Sokoban render", () => {
   it("draws grid lines, walls and the player on a generated board", () => {
     const { recording } = renderScenario({
@@ -506,8 +516,10 @@ describe("Sokoban render", () => {
     expect(ops.some((o) => o.op === "line")).toBe(true);
     // A wall is a flat block, and nothing on the board is a bevel.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_WALL)).toBe(true);
-    expect(ops.some((o) => o.op === "polygon")).toBe(false);
-    // The player is a green disc — a circle with a fill color.
+    // The only polygons are the barrels' squares.
+    expect(ops.some((o) => o.op === "polygon" && o.fill === COL_BARREL)).toBe(true);
+    expect(ops.some((o) => o.op === "polygon" && o.fill !== COL_BARREL)).toBe(false);
+    // The player is a disc — a circle with a fill color.
     expect(ops.some((o) => o.op === "circle")).toBe(true);
     expect(recording.ops).toMatchSnapshot();
   });
@@ -523,10 +535,13 @@ describe("Sokoban render", () => {
     me.processInput(48 + 64, 48, LEFT_DRAG);
     const heads = (ops: ReturnType<typeof renderOps>) =>
       ops.filter((o) => o.op === "polygon" && o.fill === COL_AIM).length;
-    // The ghost: rings in the aim color, all on the square the barrel stops on.
+    // The ghost: square outlines in the aim color, all on the square the
+    // barrel stops on.
     const ghost = (ops: ReturnType<typeof renderOps>) =>
       ops.flatMap((o) =>
-        o.op === "circle" && o.fill === -1 && o.outline === COL_AIM ? [o.cx] : [],
+        o.op === "polygon" && o.fill === -1 && o.outline === COL_AIM
+          ? [middle(o.points)[0]]
+          : [],
       );
     const aiming = renderOps(me);
     // The barrel's square, the one it passes and the one it stops on.
@@ -562,8 +577,15 @@ describe("Sokoban render", () => {
     me.processInput(2 * 32 + 16, 48, LEFT_BUTTON);
     me.processInput(4 * 32 + 16, 48, LEFT_DRAG);
     me.processInput(4 * 32 + 16, 48, LEFT_RELEASE);
+    // The player is a disc and a barrel a square.
     const at = (ops: ReturnType<typeof renderOps>, fill: number) =>
-      ops.flatMap((o) => (o.op === "circle" && o.fill === fill ? [o.cx] : []));
+      ops.flatMap((o) =>
+        o.op === "circle" && o.fill === fill
+          ? [o.cx]
+          : o.op === "polygon" && o.fill === fill
+            ? [middle(o.points)[0]]
+            : [],
+      );
     // A third of the way: the player has reached the square behind the barrel,
     // and the barrel has not moved.
     me.timer(0.06);
@@ -582,7 +604,13 @@ describe("Sokoban render", () => {
     expect(fresh.newGameFromId(`7x4:${encodeBoard(pushed)}`)).toBeNull();
     const ref = renderOps(fresh);
     const circles = (ops: ReturnType<typeof renderOps>) =>
-      ops.flatMap((o) => (o.op === "circle" ? [`${o.cx},${o.cy},${o.fill}`] : []));
+      ops.flatMap((o) =>
+        o.op === "circle"
+          ? [`${o.cx},${o.cy},${o.fill}`]
+          : o.op === "polygon"
+            ? [`${middle(o.points).join(",")},${o.fill}`]
+            : [],
+      );
     expect(circles(warm.ops).length).toBeGreaterThan(0);
     for (const c of circles(warm.ops)) expect(circles(ref)).toContain(c);
   });
@@ -609,11 +637,16 @@ describe("Sokoban render", () => {
     });
     // The barrel now on the target cell (3,1) draws as the target's ring (a
     // disc in palette index 1, then the floor inside it) with the
-    // barrel disc over it.
+    // barrel's square over it.
     const ts = (size.w - 1) / 5;
-    const fills = recording.ops
-      .filter((o) => o.op === "circle" && o.cx === 3.5 * ts && o.cy === 1.5 * ts)
-      .map((o) => (o.op === "circle" ? o.fill : -1));
+    const here = (x: number, y: number) => x === 3.5 * ts && y === 1.5 * ts;
+    const fills = recording.ops.flatMap((o) =>
+      o.op === "circle" && here(o.cx, o.cy)
+        ? [o.fill]
+        : o.op === "polygon" && here(...middle(o.points))
+          ? [o.fill]
+          : [],
+    );
     expect(fills).toEqual([1, COL_FLOOR, COL_BARREL]);
   });
 });

@@ -321,7 +321,7 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
       name: "Type of solid",
       type: "choices",
       choices: ["Tetrahedron", "Cube", "Octahedron", "Icosahedron"],
-      doc: "Which solid you roll: a <em>Tetrahedron</em>, a <em>Cube</em>, an <em>Octahedron</em> or an <em>Icosahedron</em>. The cube rolls on a grid of squares; the other three roll on a grid of triangles. There are always as many blue squares as the solid has faces.",
+      doc: "Which solid you roll: a <em>Tetrahedron</em>, a <em>Cube</em>, an <em>Octahedron</em> or an <em>Icosahedron</em>. The cube rolls on a grid of squares; the other three roll on a grid of triangles. There are always as many painted squares as the solid has faces.",
       label: { slot: "kind" },
       get: (p) => p.solid,
       set: (p, v) => {
@@ -337,7 +337,7 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
       },
     }),
     numberItem<CubeParams>("height-bottom", "Height / bottom", "d2", {
-      doc: "For the cube, the height of the grid in squares. For the other solids, this sets the length of the patch's bottom edge. On a grid of squares both numbers must be at least 2; on a grid of triangles one of them may be 0, as long as the other is not. Either way the grid needs room for every blue square with a square to spare for the solid to start on.",
+      doc: "For the cube, the height of the grid in squares. For the other solids, this sets the length of the patch's bottom edge. On a grid of squares both numbers must be at least 2; on a grid of triangles one of them may be 0, as long as the other is not. Either way the grid needs room for every painted square with a square to spare for the solid to start on.",
       bounds: { min: 0 },
     }),
   ],

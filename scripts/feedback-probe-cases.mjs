@@ -744,12 +744,6 @@ export const MODULES = [
         find: "  const highlight: Color = dw < K ? [1, 1, 1] : colorMix(bg, white, K / dw);",
         replace: "  const highlight: Color = colorMix(bg, white, K / dw);",
       },
-      {
-        within: "correctRegionColor",
-        why: "the completed-region shade equals the background, so a correct region reads as unfilled",
-        find: "    [background[0] * 0.75, background[1] * 0.75, background[2] * 0.75],",
-        replace: "    [background[0], background[1], background[2]],",
-      },
     ],
   },
 

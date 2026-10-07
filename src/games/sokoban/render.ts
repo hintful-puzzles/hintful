@@ -1,22 +1,25 @@
 /**
  * Sokoban rendering (upstream `game_colours` / `game_redraw` / `draw_tile`):
  * a per-tile cache keyed on what the tile shows, grid lines drawn once, walls
- * as flat blocks, targets / pits / deep pits / player / barrels as discs,
- * capital-letter barrel labels, and the hint's marks.
+ * as flat blocks, targets / pits / deep pits / player as discs, barrels as
+ * squares, capital-letter barrel labels, and the hint's marks.
  *
  * There is no border (upstream's is a tile wide): the board is
  * `w * tileSize + 1` wide, the 1 for the closing grid line.
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { BROWN, GREEN, WHITE, YELLOW } from "../../engine/color/colors.ts";
+import { WHITE } from "../../engine/color/colors.ts";
 import {
+  CURSOR,
   cellSurface,
   DRAG_ADD,
   FLASH,
+  GOAL as GOAL_COLOR,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
+  MOVED,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
@@ -26,7 +29,8 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import { drawPiece } from "../../engine/piece.ts";
+import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { BARREL, GOAL, PUSH } from "./hint-text.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
@@ -78,15 +82,15 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_FLOOR] = cellSurface(defaultBackground);
   out[COL_OUTLINE] = INK;
-  out[COL_PLAYER] = GREEN;
-  out[COL_BARREL] = BROWN;
-  // A target is a place and not a state of the floor, so it has a hue: the
-  // one the board's pieces and the marks drawn on it have left unspent.
-  out[COL_TARGET] = YELLOW;
+  // The figure the player steers: "where you are".
+  out[COL_PLAYER] = CURSOR;
+  out[COL_BARREL] = MOVED;
+  // A target is a place and not a state of the floor, so it has a hue.
+  out[COL_TARGET] = GOAL_COLOR;
   out[COL_PIT] = sokobanPit(mkhighlight(defaultBackground).lowlight);
   out[COL_DEEP_PIT] = INK;
-  // `WHITE`, not `PAPER`: the letter is read against the barrel's brown,
-  // which is one brown in both schemes.
+  // `WHITE`, not `PAPER`: the letter is read against the barrel's fill,
+  // which is one color in both schemes.
   out[COL_TEXT] = WHITE;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_WALL] = wallFill(defaultBackground);
@@ -187,7 +191,17 @@ function drawTile(
   const center = tileCenter(x, y, ts);
   const disc = (r: number, fill: number) => dr.drawCircle(center, r, fill, COL_OUTLINE);
   const floorDisc = Math.floor((ts * 3) / 7); // a target or a pit
-  const pieceDisc = Math.floor(ts / 3); // the player or a barrel
+  const pieceDisc = Math.floor(ts / 3); // the player, and the hole in a target
+  // A barrel is a square where the player is a disc, so the two are told
+  // apart by shape. The box its piece is inset in is smaller than the tile,
+  // which keeps the square's corners inside a target's ring.
+  const barrelSide = Math.floor((ts * 3) / 4);
+  const barrelBox = (at: Point): Rect => ({
+    x: at.x - barrelSide / 2,
+    y: at.y - barrelSide / 2,
+    w: barrelSide,
+    h: barrelSide,
+  });
 
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
   dr.drawRect(
@@ -220,7 +234,7 @@ function drawTile(
     if (isPlayer(kind)) {
       dr.drawCircle(at, pieceDisc, COL_PLAYER, COL_OUTLINE);
     } else if (isBarrel(kind)) {
-      dr.drawCircle(at, pieceDisc, COL_BARREL, COL_OUTLINE);
+      drawPiece(dr, barrelBox(at), "square", COL_BARREL);
       const label = barrelLabel(kind);
       if (label) {
         dr.drawText(
@@ -235,8 +249,8 @@ function drawTile(
   if (v !== WALL && v !== PIT && v !== DEEP_PIT) piece(center, v);
   for (const s of sprites) piece({ x: s.x, y: s.y }, s.v);
 
-  // The rings sit in the margin round a piece, so they read on the barrel's
-  // brown; an outline inside a ring when one square carries both.
+  // The rings sit in the margin round a piece, so they read beside the
+  // barrel's fill; an outline inside a ring when one square carries both.
   const ring = (r: number, color: number) => {
     dr.drawCircle(center, r, -1, color);
     dr.drawCircle(center, r - 1, -1, color);
@@ -246,8 +260,22 @@ function drawTile(
   if (marks.outlined) ring(marks.ringed ? outer - 2 : outer, COL_HINT_EVIDENCE);
   for (const [a, b] of marks.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
   if (marks.aim) drawMoveArrow(dr, ts, marks.aim[0], marks.aim[1], COL_AIM);
-  if (marks.ghost)
-    for (let k = 0; k < 3; k++) dr.drawCircle(center, pieceDisc + k, -1, COL_AIM);
+  if (marks.ghost) {
+    // The barrel's square, as an outline: three nested, for a line that reads.
+    for (let k = 0; k < 3; k++) {
+      const r = Math.floor((ts * 2) / 7) + k;
+      dr.drawPolygon(
+        [
+          { x: center.x - r, y: center.y - r },
+          { x: center.x + r, y: center.y - r },
+          { x: center.x + r, y: center.y + r },
+          { x: center.x - r, y: center.y + r },
+        ],
+        -1,
+        COL_AIM,
+      );
+    }
+  }
 
   dr.unclip();
   if (join.left) dr.drawRect({ x: tx, y: ty + 1, w: 1, h: ts - 1 }, COL_WALL);

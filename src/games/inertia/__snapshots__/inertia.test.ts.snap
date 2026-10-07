@@ -425,7 +425,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -544,7 +544,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -831,7 +831,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1400,7 +1400,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1547,7 +1547,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -1816,7 +1816,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2093,7 +2093,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2287,7 +2287,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2331,7 +2331,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2403,7 +2403,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2607,7 +2607,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2651,7 +2651,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2892,7 +2892,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3366,7 +3366,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3570,7 +3570,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3633,7 +3633,7 @@ exports[`inertia rendering > draws the opening frame 1`] = `
   },
   {
     "fill": 7,
-    "fillRgb": "rgb(40, 186, 193)",
+    "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",

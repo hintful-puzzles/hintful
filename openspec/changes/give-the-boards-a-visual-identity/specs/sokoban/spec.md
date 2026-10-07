@@ -3,14 +3,17 @@
 ### Requirement: Sokoban rendering
 
 Sokoban SHALL render each cell as its content — walls as flat blocks, targets,
-pits, deep pits, the player and barrels as discs, and labeled barrels with their
-letter — over grid lines drawn once, on the ground the midend lays. The floor
+pits, deep pits and the player as discs, barrels as squares, and labeled barrels
+with their letter — over grid lines drawn once, on the ground the midend lays.
+A barrel SHALL be the collection's color for a thing the player pushes (the
+theme pair's first member) and a square, so that it is told from the player's
+disc by shape as well as color. The floor
 SHALL be the cell surface and the grid the surface's grid line. A wall SHALL
 have no bevel and SHALL be a gray that stands a clear step off the floor in
 both schemes: darker than the floor in the light scheme and lighter than it in
 the dark one. Walls that touch SHALL be drawn as one mass, with no grid line
-between them. A target SHALL be a ring in a hue of its own, as wide inside as
-a barrel, so that an empty target is told from the floor by color and a barrel
+between them. A target SHALL be a ring in the collection's color for where the player is
+going (the pair's second member), as wide inside as a barrel, so that an empty target is told from the floor by color and a barrel
 or the player standing on one fills the ring and leaves it showing. A
 barrel's letter SHALL be white in both schemes. A move SHALL
 animate: the player along the route it walks, square by square, and a pushed barrel

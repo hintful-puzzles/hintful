@@ -36,7 +36,7 @@ export const F_BLOCK = 0x04;
 export interface SticksParams {
   w: number;
   h: number;
-  /** Percentage of black squares (5..100). */
+  /** Percentage of squares that are blocks (5..100). */
   blackpc: number;
   /** One of the shared `SYMM_*` constants (engine/symmetric-blacks.ts). */
   symm: number;

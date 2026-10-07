@@ -7,10 +7,11 @@
  * drawn on a full-tile footprint and so overhang it slightly, as upstream's do.
  */
 
-import { BLUE, RED, TEAL } from "../../engine/color/colors.ts";
+import { TWO } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
+  GRID_DARK,
   givenSurface,
   HINT_ACTION,
   INK,
@@ -89,13 +90,13 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASHING] = givenSurface(defaultBackground);
   out[COL_BORDER] = surfaceGrid(defaultBackground);
   out[COL_WIRE] = INK;
-  out[COL_ENDPOINT] = BLUE;
-  out[COL_POWERED] = TEAL;
-  out[COL_BARRIER] = RED;
+  out[COL_ENDPOINT] = TWO[0];
+  out[COL_POWERED] = TWO[1];
+  out[COL_BARRIER] = GRID_DARK;
   out[COL_LOWLIGHT] = netslideLowlight(defaultBackground);
   out[COL_TEXT] = INK;
   // The same blue Sixteen marks a hinted tile with — the two are the same kind of
-  // game and should read the same way. Black wires and cyan powered wires both
+  // game and should read the same way. Ink wires and powered wires both
   // stay legible on it.
   out[COL_HINT] = HINT_ACTION;
   out[COL_CURSOR] = CURSOR;
@@ -259,23 +260,29 @@ function drawTile(
     y: by + Math.trunc(cy + arm * dirY(dir)),
   }));
   const lt = lineThick(ts);
-  const outer = 2 * lt - 1;
-  const core = lt - 1;
+  // A powered wire is as wide in its color as an unpowered one is in ink,
+  // inside the thinnest rim that closes it: the state is the wire, and a core
+  // between two heavy borders left a pixel of it on a small board.
+  const core = 2 * lt - 1;
+  const outer = tile & ACTIVE ? core + 1 : core;
   // The ink runs one pixel past the arm, onto the border this tile shares with
   // its neighbor: the same pixels the neighbor paints there for a wire that
   // reaches it, so whichever of the two repaints last leaves the border alike.
+  // It is a plain wire's width there whatever the tile's power, which the
+  // neighbor does not know.
   for (const end of ends) {
     const onBorder = {
       x: end.x + Math.sign(end.x - center.x),
       y: end.y + Math.sign(end.y - center.y),
     };
-    wireArm(dr, center, onBorder, outer, COL_WIRE);
+    wireArm(dr, center, onBorder, core, COL_WIRE);
+    wireArm(dr, center, end, outer, COL_WIRE);
   }
   if (wireColor !== COL_WIRE)
     for (const end of ends) wireArm(dr, center, end, core, wireColor);
 
-  // The box in the middle: black at the centerpiece, and at a dead end either
-  // cyan (powered) or blue (not). Nothing at all on a through-tile.
+  // The box in the middle: ink at the centerpiece, and at a dead end either
+  // `COL_POWERED` or `COL_ENDPOINT`. Nothing at all on a through-tile.
   let boxColor = -1;
   if (x === s.cx && y === s.cy) boxColor = COL_WIRE;
   else if (wireCount(tile) === 1) {
@@ -319,8 +326,8 @@ function drawTile(
     // The wire's two half-widths, across the direction it runs in.
     const vx = dy ? 1 : 0;
     const vy = dx ? 1 : 0;
-    const wx = vx * outer;
-    const wy = vy * outer;
+    const wx = vx * core;
+    const wy = vy * core;
 
     if (xshift === 0 && yshift === 0 && tile & dir) {
       // Fully connected: draw right across the tile border. Our own ACTIVE
@@ -421,9 +428,9 @@ function drawHintOutline(
   }
 }
 
-/** The quarter of a barrier junction that belongs to tile `(x, y)`. Drawn in
- * two phases so every junction's black outline is laid down before any red
- * barrier body, and the outlines therefore never cut into a body. */
+/** The quarter of a barrier junction that belongs to tile `(x, y)`. Phase 0
+ * is the pixel a wall takes from the tile beside it, phase 1 the grid line
+ * itself: together a wall twice as thick as the line between tiles. */
 function drawBarrierCorner(
   dr: GameDrawing,
   ds: NetslideDrawState,
@@ -451,7 +458,7 @@ function drawBarrierCorner(
       by + y1,
       bx + x1 - TILE_BORDER * dx,
       by + y1 - (TILE_BORDER - 1) * dy,
-      COL_WIRE,
+      COL_BARRIER,
     );
     rectCoords(
       dr,
@@ -459,7 +466,7 @@ function drawBarrierCorner(
       by + y1,
       bx + x1 - (TILE_BORDER - 1) * dx,
       by + y1 - TILE_BORDER * dy,
-      COL_WIRE,
+      COL_BARRIER,
     );
   } else {
     rectCoords(
@@ -495,7 +502,7 @@ function drawBarrier(
   const h = dy ? TILE_BORDER : ts - TILE_BORDER;
 
   if (phase === 0) {
-    dr.drawRect({ x: bx + x1 - dx, y: by + y1 - dy, w, h }, COL_WIRE);
+    dr.drawRect({ x: bx + x1 - dx, y: by + y1 - dy, w, h }, COL_BARRIER);
   } else {
     dr.drawRect({ x: bx + x1, y: by + y1, w, h }, COL_BARRIER);
   }
