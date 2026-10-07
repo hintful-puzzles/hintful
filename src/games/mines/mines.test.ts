@@ -19,12 +19,12 @@ import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { decodeSave } from "../../engine/save.ts";
+import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
-import { minegen } from "./generator.ts";
+import { firstOpen, minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
 import { borderFor, COL_BANG } from "./render.ts";
 import { minesolve } from "./solver.ts";
@@ -47,11 +47,22 @@ const openMove = (x: number, y: number): MinesMove => ({
   ops: [{ op: "O", x, y }],
 });
 
+/** The move that opens (x, y) first on the board not laid out yet that `id`
+ * names. */
+function beginMove(id: string, x: number, y: number): MinesMove {
+  const colon = id.indexOf(":");
+  const p = decodeParams(id.slice(0, colon));
+  return firstOpen(minesGame.newState(p, id.slice(colon + 1)), { x, y });
+}
+
 function fresh(id: string) {
   const h = driveMidend(minesGame);
   expect(h.midend.newGameFromId(id)).toBeNull();
   const gameId = () => h.last("game-id-change")?.currentGameId;
-  return { m: h.midend, gameId };
+  /** Open (x, y) as the first square of the board in play. */
+  const begin = (x: number, y: number) =>
+    h.midend.playMoves([beginMove(gameId() ?? "", x, y)]);
+  return { m: h.midend, gameId, begin };
 }
 
 /** A genuinely covered cell (`?` in the text format) — a flag on an opened
@@ -132,12 +143,14 @@ describe("mines desc", () => {
     expect(validateDesc(minesGame, p, desc)).toBeNull();
   });
 
-  it("decodes r-form to a null (not-yet-generated) layout", () => {
+  it("decodes r-form to a seed and no layout", () => {
     const p = decodeParams("9x9n10");
     const { desc } = minesGame.newDesc(p, randomNew("desc-seed"));
-    const { layout, openXY } = decodeDesc(p, desc);
-    expect(layout.mines).toBeNull();
-    expect(layout.n).toBe(10);
+    const { mines, n, openXY, seed, orphan } = decodeDesc(p, desc);
+    expect(mines).toBeNull();
+    expect(orphan).toBeNull();
+    expect(seed).not.toBeNull();
+    expect(n).toBe(10);
     expect(openXY).toBeNull();
   });
 
@@ -147,19 +160,22 @@ describe("mines desc", () => {
     expect(validateDesc(minesGame, p, desc.replace(",u,", ",a,"))).toBeNull();
   });
 
-  it("round-trips public and private layout descs (unmasked)", () => {
-    // Build a tiny known layout via decode of an unmasked public desc.
+  it("reads a layout with its first square, and one without as an older save's", () => {
     const p = decodeParams("3x3n1");
     // 3x3, one mine at index 0. Unmasked nibbles ((9+3)/4 = 3): bit MSB-first
     // in byte 0 (0x80 -> nibble "8"), rest 0 -> "800".
     const pub = decodeDesc(p, "1,1,u800");
     expect(pub.openXY).toEqual({ x: 1, y: 1 });
-    expect(pub.layout.mines?.[0]).toBe(1);
-    expect(Array.from(pub.layout.mines ?? []).reduce((a, b) => a + b, 0)).toBe(1);
-    // Private desc (layout only, no click).
-    const priv = decodeDesc(p, "u800");
-    expect(priv.openXY).toBeNull();
-    expect(priv.layout.mines?.[0]).toBe(1);
+    expect(Array.from(pub.mines ?? [])).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(pub.n).toBe(1);
+    // The layout alone is not a board laid out: it waits for the open that an
+    // older save's move log replays, with a seed for any other square.
+    const bare = decodeDesc(p, "u800");
+    expect(bare.openXY).toBeNull();
+    expect(bare.mines).toBeNull();
+    expect(Array.from(bare.orphan ?? [])).toEqual(Array.from(pub.mines ?? []));
+    expect(bare.seed).not.toBeNull();
+    expect(bare.n).toBe(1);
   });
 
   it("rejects a wrong-length desc", () => {
@@ -278,52 +294,145 @@ describe("mines supersede + midend", () => {
     const h = fresh(seedId("9x9n10", "sup1"));
     // The preliminary id names no layout…
     expect(h.gameId()).toContain("r10,u,");
-    h.m.playMoves([openMove(4, 4)]);
+    h.begin(4, 4);
     // …and after the first open it names the real board (x,y + masked layout).
     expect(h.gameId()).toMatch(/^9x9n10:4,4,m[0-9a-f]+$/);
   });
 
-  it("validates both descs supersededDesc writes", () => {
+  it("names a board that reads, with all its mines", () => {
     const p = decodeParams("9x9n10");
     const h = fresh(seedId("9x9n10", "sup-valid"));
-    h.m.playMoves([openMove(4, 4)]);
+    h.begin(4, 4);
     const publicDesc = (h.gameId() ?? "").replace(/^[^:]*:/, "");
-    const { privDesc } = decodeSave(h.m.saveGame());
-    expect(publicDesc).toMatch(/^4,4,m/);
     expect(validateDesc(minesGame, p, publicDesc)).toBeNull();
-    expect(privDesc).toMatch(/^m/);
-    expect(validateDesc(minesGame, p, privDesc ?? "")).toBeNull();
-    const pub = decodeDesc(p, publicDesc).layout.mines;
-    const priv = decodeDesc(p, privDesc ?? "").layout.mines;
-    expect(Array.from(pub ?? []).reduce((a, b) => a + b, 0)).toBe(10);
-    expect(Array.from(priv ?? [])).toEqual(Array.from(pub ?? []));
+    expect(decodeDesc(p, publicDesc).n).toBe(10);
   });
 
-  it("does NOT reroll the layout after undo + click elsewhere (design D1)", () => {
-    const h = fresh(seedId("9x9n10", "noreroll"));
-    h.m.playMoves([openMove(4, 4)]);
-    const hex1 = decodeSave(h.m.saveGame()).privDesc;
+  it("an open that brings no layout is refused on a board not laid out", () => {
+    const p = decodeParams("9x9n10");
+    const s = minesGame.newState(p, minesGame.newDesc(p, randomNew("bare")).desc);
+    expect(() => minesGame.executeMove(s, openMove(4, 4))).toThrow(/not laid out/);
+  });
+
+  it("refuses a first square whose layout puts a mine by it", () => {
+    const p = decodeParams("9x9n10");
+    const s = minesGame.newState(p, minesGame.newDesc(p, randomNew("near")).desc);
+    const at = firstOpen(s, { x: 0, y: 0 });
+    if (at.type !== "begin") return expect.unreachable();
+    // The corner's board has a mine by some other square.
+    const mined = minesGame.executeMove(s, at).mines?.indexOf(1) ?? -1;
+    const moved = { ...at, x: mined % 9, y: Math.floor(mined / 9) };
+    expect(() => minesGame.executeMove(s, moved)).toThrow(/never laid out/);
+  });
+
+  it("undoing the first click returns to the board not laid out, and each square lays out its own", () => {
+    const h = fresh(seedId("9x9n10", "relay"));
+    const start = h.gameId();
+    h.begin(4, 4);
+    const middle = h.gameId();
     h.m.undo();
-    h.m.playMoves([openMove(0, 0)]);
-    const hex2 = decodeSave(h.m.saveGame()).privDesc;
-    // Same layout box: the masked bitmap is identical, only the recorded first
-    // click differs — the whole point of the shared box (no board reroll).
-    expect(hex2).toBe(hex1);
+    expect(h.gameId()).toBe(start);
+    expect(h.m.formatAsText()?.replace(/\n/g, "")).toBe("?".repeat(81));
+    h.begin(0, 0);
     expect(h.gameId()).toMatch(/^9x9n10:0,0,m/);
+    expect(h.gameId()?.slice("9x9n10:0,0,".length)).not.toBe(
+      middle?.slice("9x9n10:4,4,".length),
+    );
+    // The same square lays out the same board every time.
+    h.m.undo();
+    h.begin(4, 4);
+    expect(h.gameId()).toBe(middle);
   });
 
-  it("a save after the first click carries both descs and the ui", () => {
+  it("opening a different first square after an undo strands nothing", () => {
+    // Every other square of three deals: the board each lays out names its
+    // own first square, saves to a file that restores, and is finished by the
+    // hint from where it stands.
+    let clicks = 0;
+    for (const seed of ["after-undo-a", "after-undo-b", "after-undo-c"]) {
+      const h = fresh(seedId("9x9n10", seed));
+      h.begin(4, 4);
+      for (let i = 0; i < 81; i++) {
+        const at = { x: i % 9, y: Math.floor(i / 9) };
+        if (at.x === 4 && at.y === 4) continue;
+        h.m.undo();
+        h.begin(at.x, at.y);
+        expect(h.gameId()).toMatch(new RegExp(`^9x9n10:${at.x},${at.y},m`));
+        expect(h.m.formatAsText()).not.toContain("!");
+        expect(new Midend(minesGame).loadGame(h.m.saveGame())).toBeNull();
+        clicks++;
+      }
+    }
+    expect(clicks).toBe(240);
+  });
+
+  it("a save after the first click carries the starting desc, the layout in its first move, and the ui", () => {
     const h = fresh(seedId("9x9n10", "save1"));
-    h.m.playMoves([openMove(4, 4)]);
+    const start = (h.gameId() ?? "").replace(/^[^:]*:/, "");
+    h.begin(4, 4);
     const save = decodeSave(h.m.saveGame());
     expect(save.desc).toMatch(/^4,4,m/);
-    expect(save.privDesc).toMatch(/^m/);
+    expect(save.privDesc).toBe(start);
+    expect(save.moves[0]).toEqual({
+      type: "begin",
+      x: 4,
+      y: 4,
+      mines: save.desc.slice("4,4,m".length),
+    });
     expect(save.ui).toBe("D0");
   });
 
-  it("a restored save replays to the same board against the private desc", () => {
+  it("a save with the first click undone restores to the board not laid out, the click ahead of it", () => {
+    const h = fresh(seedId("9x9n10", "undone"));
+    const start = h.gameId();
+    h.begin(4, 4);
+    const laid = h.m.formatAsText();
+    h.m.undo();
+    const save = decodeSave(h.m.saveGame());
+    expect(save.privDesc).toBeUndefined();
+
+    const b = driveMidend(minesGame);
+    expect(b.midend.loadGame(h.m.saveGame())).toBeNull();
+    expect(b.last("game-id-change")?.currentGameId).toBe(start);
+    b.midend.redo();
+    expect(b.midend.formatAsText()).toBe(laid);
+  });
+
+  it("a save written when the layout was the save's own still restores", () => {
+    // What a save was before the layout moved into the first move: the layout
+    // alone as its private desc, and opens that bring none.
+    const h = fresh(seedId("9x9n10", "older"));
+    h.begin(4, 4);
+    const flag = coveredCell(h.m);
+    const flagMove: MinesMove = { type: "ops", ops: [{ op: "F", ...flag }] };
+    h.m.playMoves([flagMove]);
+    const now = decodeSave(h.m.saveGame());
+    const older = encodeSave({
+      ...now,
+      privDesc: now.desc.slice("4,4,".length),
+      moves: [openMove(4, 4), flagMove],
+    });
+
+    const b = fresh(seedId("9x9n10", "elsewhere"));
+    expect(b.m.loadGame(older)).toBeNull();
+    expect(b.m.formatAsText()).toBe(h.m.formatAsText());
+    expect(decodeSave(b.m.saveGame()).desc).toBe(now.desc);
+    // It saves and restores again, from the start of its history too, where
+    // a different first square lays out a board of its own.
+    b.m.undo();
+    b.m.undo();
+    expect(new Midend(minesGame).loadGame(b.m.saveGame())).toBeNull();
+    const c = driveMidend(minesGame);
+    expect(c.midend.loadGame(b.m.saveGame())).toBeNull();
+    const id = c.last("game-id-change")?.currentGameId ?? "";
+    c.midend.playMoves([beginMove(id, 0, 0)]);
+    expect(c.last("game-id-change")?.currentGameId).toMatch(/^9x9n10:0,0,m/);
+    expect(new Midend(minesGame).loadGame(c.midend.saveGame())).toBeNull();
+  });
+
+  it("a restored save replays to the same board from the starting desc", () => {
     const h = fresh(seedId("9x9n10", "roundtrip"));
-    h.m.playMoves([openMove(4, 4)]);
+    h.begin(4, 4);
     const flag = coveredCell(h.m);
     h.m.playMoves([{ type: "ops", ops: [{ op: "F", x: flag.x, y: flag.y }] }]);
     const before = h.m.formatAsText();
@@ -332,7 +441,7 @@ describe("mines supersede + midend", () => {
     const m2 = new Midend(minesGame);
     expect(m2.loadGame(data)).toBeNull();
     expect(m2.formatAsText()).toBe(before);
-    // Undo to state 0: rebuilt from the private desc (layout, no click), so the
+    // Undo to state 0: rebuilt from the desc the board started from, so the
     // board is fully covered again — the click was not baked in.
     m2.undo();
     m2.undo();
@@ -341,7 +450,7 @@ describe("mines supersede + midend", () => {
 
   it("restart lands after the first click, not on a blank board (design D1)", () => {
     const h = fresh(seedId("9x9n10", "restart"));
-    h.m.playMoves([openMove(4, 4)]);
+    h.begin(4, 4);
     const flag = coveredCell(h.m);
     h.m.playMoves([{ type: "ops", ops: [{ op: "F", x: flag.x, y: flag.y }] }]);
     const flagged = h.m.formatAsText();
@@ -363,7 +472,7 @@ describe("mines supersede + midend", () => {
     // board is neither won nor blank. A left press + release on the mine cell
     // must emit an open and bump ui.deaths.
     const p = decodeParams("3x3n1");
-    const layout = decodeDesc(p, "u800").layout; // mine at (0,0)
+    const { mines } = decodeDesc(p, "1,1,u800"); // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
     grid[4] = 1; // (1,1) opened, showing 1 — leaves the board ongoing
     const s: MinesState = {
@@ -371,7 +480,9 @@ describe("mines supersede + midend", () => {
       h: 3,
       n: 1,
       dead: false,
-      layout,
+      mines,
+      seed: null,
+      orphan: null,
       clickedAt: { x: 1, y: 1 },
       grid,
     };
@@ -395,7 +506,7 @@ describe("mines supersede + midend", () => {
     // an open of *only* the true mine (0,0), not the whole neighborhood, and
     // bump the death counter.
     const p = decodeParams("3x3n1");
-    const layout = decodeDesc(p, "u800").layout; // mine at (0,0)
+    const { mines } = decodeDesc(p, "1,1,u800"); // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
     grid[4] = 1; // (1,1) open, showing 1 neighboring mine
     grid[1] = -1; // (1,0) wrongly flagged
@@ -404,7 +515,9 @@ describe("mines supersede + midend", () => {
       h: 3,
       n: 1,
       dead: false,
-      layout,
+      mines,
+      seed: null,
+      orphan: null,
       clickedAt: { x: 1, y: 1 },
       grid,
     };
@@ -443,7 +556,7 @@ describe("mines supersede + midend", () => {
 
   it("Solve after death shows the finished board", () => {
     const p = decodeParams("3x3n1");
-    const layout = decodeDesc(p, "u800").layout; // mine at (0,0)
+    const { mines } = decodeDesc(p, "1,1,u800"); // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
     grid[0] = 65; // trodden on the mine
     grid[1] = -1; // (1,0) wrongly flagged (no mine there)
@@ -452,7 +565,9 @@ describe("mines supersede + midend", () => {
       h: 3,
       n: 1,
       dead: true,
-      layout,
+      mines,
+      seed: null,
+      orphan: null,
       clickedAt: { x: 0, y: 0 },
       grid,
     };
@@ -488,7 +603,7 @@ describe("mines chord preview", () => {
     at: (x: number, y: number) => { x: number; y: number };
   } {
     const p = decodeParams("3x3n1");
-    const layout = decodeDesc(p, "u800").layout; // mine at (0,0)
+    const { mines } = decodeDesc(p, "1,1,u800"); // mine at (0,0)
     const grid = new Int8Array(9).fill(COVERED);
     grid[1 * 3 + 1] = 1; // (1,1) open, showing 1
     grid[0] = -1; // (0,0) flagged (the mine)
@@ -497,7 +612,9 @@ describe("mines chord preview", () => {
       h: 3,
       n: 1,
       dead: false,
-      layout,
+      mines,
+      seed: null,
+      orphan: null,
       clickedAt: { x: 1, y: 1 },
       grid,
     };
@@ -568,7 +685,7 @@ describe("mines timer", () => {
 
     expect(seconds()).toBe(0);
     expect(ticking()).toBe(false);
-    m.playMoves([openMove(4, 4)]);
+    m.playMoves([beginMove(last("game-id-change")?.currentGameId ?? "", 4, 4)]);
     expect(ticking()).toBe(true);
     m.timer(7);
     expect(seconds()).toBe(7);
@@ -591,10 +708,11 @@ describe("mines timer", () => {
 
 describe("mines render", () => {
   it("paints the opened board: numbers, covered bevels, recessed border", () => {
+    const id = fresh(seedId("9x9n10", "render1")).gameId() ?? "";
     const { recording } = renderScenario({
       game: minesGame,
-      id: seedId("9x9n10", "render1"),
-      moves: [openMove(4, 4)],
+      id,
+      moves: [beginMove(id, 4, 4)],
     });
     const ops = recording.ops;
     // A recessed frame (two filled pentagons) on the first frame.
@@ -644,13 +762,12 @@ describe("mines render", () => {
 
 describe("mines mistakes", () => {
   const p = decodeParams("9x9n10");
-  const opened = () =>
-    minesGame.executeMove(
-      minesGame.newState(p, minesGame.newDesc(p, randomNew("wrong-flag")).desc),
-      openMove(4, 4),
-    );
+  const opened = () => {
+    const s = minesGame.newState(p, minesGame.newDesc(p, randomNew("wrong-flag")).desc);
+    return minesGame.executeMove(s, firstOpen(s, { x: 4, y: 4 }));
+  };
   const flagAt = (s: MinesState, mine: boolean): Point => {
-    const mines = s.layout.mines as Int8Array;
+    const mines = s.mines as Int8Array;
     const i = s.grid.findIndex((v, j) => v === -2 && (mines[j] === 1) === mine);
     if (i < 0) throw new Error("no such covered square");
     return { x: i % s.w, y: Math.floor(i / s.w) };

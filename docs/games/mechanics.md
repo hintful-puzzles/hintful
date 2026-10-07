@@ -653,8 +653,8 @@ game's preferred size, rather than passing `null`.
 `executeMove(state, move)` returns a **new** state and throws on an illegal
 move. Purity is load-bearing three ways: saves replay the move log through it
 (never through `interpretMove`), hints simulate with it, and the desc-supersede
-pull below depends on it. The one sanctioned impurity in the collection is
-Mines' shared mine-layout box (below), commented at the mutation site.
+pull below depends on it. A move that would otherwise have to draw at random
+carries what it drew: Mines' first click holds its layout (below).
 
 ### Moves are discriminated unions
 
@@ -908,30 +908,35 @@ exercises.
 ## A board decided at first click
 
 **A game whose board isn't determined until play begins implements
-`supersededDesc(state)`** — the engine *pulls* a replacement desc after every
-committed move, so `executeMove` stays pure and no game holds a midend
-back-reference. Mines generates its layout on the first click (which is
+`supersededDesc(state)`** — the engine *pulls* the desc of the board in play
+from the state, so `executeMove` stays pure and no game holds a midend
+back-reference. Mines lays out its mines on the first click (which is
 therefore never a mine). The engine guarantees, so don't re-derive them
 (normative: [`ts-engine`](../../openspec/specs/ts-engine/spec.md), "A game can
 supersede its game description mid-play"):
 
-- `null` means "nothing to say" — **never** "revert". Undoing past the
-  generating move keeps the desc: a desc describes the *game*, not the
-  position.
-- `privDesc` is what a *save* rebuilds state 0 from, when the public desc
-  bakes in the generating move (Mines' public desc names layout *and* first
-  click; replaying the log from it would re-play a click already baked in).
-- Restart rebuilds from the *public* desc — the player restarts to just after
-  the generating move, not to a blank board. That board is entered as the next
+- The answer is a function of the state, and `null` means the desc the board
+  started from. The game ID **follows the position**: undoing past the move
+  that settled the board is back on the unsettled one, under its own ID.
+- A save is rebuilt from the desc the board *started* from, with the move log
+  replayed onto it. The answer here names the board as a shared ID opens it
+  (Mines': the layout *and* its first click, already opened), which would
+  re-play a click the log is about to make.
+- Restart rebuilds from the desc in play — the player restarts to just after
+  the settling move, not to a blank board. That board is entered as the next
   step of the history, so Undo returns the board as played.
 
-Make generation a deterministic function of state + move (the desc RNG rides
-in the state) or the move log will not replay. Keep it in **one controlled
-shared box**: Mines' layout is a mutable holder shared by reference across
-every cloned state, filled once, surviving undo — the sole deliberate
-`executeMove` impurity, commented at the mutation site as the memoization it
-is. Exemplars: [`mines/index.ts`](../../src/games/mines/index.ts) +
-[`mines/state.ts`](../../src/games/mines/state.ts) (`MineLayout`);
+**The settled board belongs to the state the settling move made, and the move
+carries it.** Mines' first click is a move of its own (`begin`) holding the
+layout laid out around it: `interpretMove` builds it from the seed in the
+state, and `executeMove` generates nothing. So undo un-settles the board with
+no bookkeeping, and a save's move log restores its board whatever the
+generator has since become, which a seed and a click alone would not. Do not
+keep the settled board in a holder shared across states:
+upstream's did, it outlived the undo of the move that filled it, and a player
+could then open a different square of a layout made for another. Exemplars:
+[`mines/index.ts`](../../src/games/mines/index.ts) +
+[`mines/state.ts`](../../src/games/mines/state.ts) (`MinesMove`'s `begin`);
 [`desc-supersede.test.ts`](../../src/engine/desc-supersede.test.ts) is the
 shape in miniature.
 

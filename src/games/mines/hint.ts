@@ -23,6 +23,7 @@ import { DEDUCTION_EXHAUSTED, puzzleDeadEnd } from "../../engine/hint-refusal.ts
 import { CELL, mark, Narration, type Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Firing, learn, nextFiring, type Side } from "./deduce.ts";
+import { firstOpen } from "./generator.ts";
 import {
   after,
   type Clue,
@@ -57,7 +58,6 @@ export interface MinesHint {
  * `deduce.ts`'s rungs. The legs of one firing share its rung. */
 export const MINES_RUNGS = [
   "firstClick",
-  "restart",
   "satisfied",
   "full",
   "pair",
@@ -288,23 +288,13 @@ export function minesHint(
   execute: Execute,
 ): HintResult<MinesMove, MinesHint, MinesRung> {
   if (state.dead) return { ok: false, error: DEAD_BOARD };
-  const { w, h, layout } = state;
+  const { w, h } = state;
 
   // No board yet: the first square opened is laid out to be safe.
-  if (!layout.mines) {
+  if (!state.mines) {
     const at = { x: w >> 1, y: h >> 1 };
-    return {
-      ok: true,
-      steps: [stepFor("firstClick", "open", [at], say.firstClick(at), false)],
-    };
-  }
-  // Undone back to the start of a laid-out board: its first square is safe.
-  if (!state.grid.some(isOpened)) {
-    const at = { x: layout.startx, y: layout.starty };
-    return {
-      ok: true,
-      steps: [stepFor("restart", "open", [at], say.restart(at), false)],
-    };
+    const step = stepFor("firstClick", "open", [at], say.firstClick(at), false);
+    return { ok: true, steps: [{ ...step, move: firstOpen(state, at) }] };
   }
 
   const known = new Int8Array(w * h);
@@ -369,7 +359,7 @@ export function minesHintKeepTrack(
   execute: Execute,
 ): HintTrackVerdict {
   const hl = step.highlights;
-  if (!hl || m.type !== "ops") return "off";
+  if (!hl || m.type === "solve") return "off";
   const after = execute(state, m);
   if (after.dead) return "off";
   const targets = new Set(hl.targets.map((t) => t.y * state.w + t.x));

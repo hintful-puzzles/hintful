@@ -277,18 +277,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * and the board reopened at a tier it was never dealt at. Upstream
    * `me->curparams`. */
   private boardParams: Params;
-  private desc = "";
-  /** The save-only description a desc-superseding game supplies alongside its
-   * public one (upstream `privdesc`; Mines: the mine layout with no first
-   * click). `undefined` for every other game — and for a superseding game
-   * before it supersedes. See {@link Game.supersededDesc}. */
-  private privDesc?: string;
-  /** Whether this game's desc has been superseded. Drives restart, which
-   * upstream deliberately rebuilds from the *public* desc so Mines restarts
-   * to just *after* the first click ("you don't have to remember where you
-   * clicked", midend.c:991) rather than to the blank pre-click board that
-   * `history[0]` holds. */
-  private descSuperseded = false;
+  /** The desc `history[0]` was built from, and so the one a save's move log
+   * replays onto. */
+  private startDesc = "";
+  /** The id last announced, so a step that moves the board onto another desc
+   * (see {@link Game.supersededDesc}) is announced once. */
+  private announcedId = "";
   /** The solved-layout hint a generator returns alongside `desc` (upstream
    * `aux_info`), handed to a game's `solve` and `hint`. Set only on a freshly
    * *generated* game,
@@ -651,9 +645,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.serial = serial;
     this.boards = Math.max(this.boards, serial);
     this.boardParams = params;
-    this.desc = desc;
-    this.privDesc = undefined;
-    this.descSuperseded = false;
+    this.startDesc = desc;
     this.aux = aux;
     this.history = [initial];
     this.moveLog = [];
@@ -699,11 +691,15 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** Enter the board as it started as the next step of the history. */
   private restart(entry: Restart): void {
     const prev = this.state;
-    // A superseded game restarts from its public desc (see `descSuperseded`);
-    // every other game's `history[0]` *is* `newState(params, desc)`.
-    const start = this.descSuperseded
-      ? this.game.newState(this.boardParams, this.desc)
-      : this.history[0];
+    // A board that has moved onto another desc restarts as that desc opens:
+    // Mines to just after its first click, upstream's "you don't have to
+    // remember where you clicked" (midend.c:991). Every other board's
+    // `history[0]` *is* `newState(params, desc)`.
+    const desc = this.desc;
+    const start =
+      desc === this.startDesc
+        ? this.history[0]
+        : this.game.newState(this.boardParams, desc);
     this.record(start, entry);
     this.stateReplaced(prev, start);
   }
@@ -876,30 +872,19 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
     const prev = this.state;
     this.record(next, move);
-    this.applySupersede();
     this.stateReplaced(prev, next);
     this.setupAnimation(prev, next, 1);
     this.afterTransition();
     return true;
   }
 
-  /** Upstream `midend_supersede_game_desc`, pulled rather than pushed: ask the
-   * game what desc describes the board it is now on, and adopt it if it has
-   * changed (see {@link Game.supersededDesc} for why the game cannot push).
-   *
-   * Called from `commitMove` only — never from undo/redo/restart. A desc
-   * describes the *game*, not the position: undoing past Mines' first click
-   * must not un-generate the layout the game ID now names. Answering `null`
-   * therefore means "nothing to say", never "revert", and a state that has
-   * gone backwards past the supersession simply says nothing. */
-  private applySupersede(): void {
-    const sup = this.game.supersededDesc?.(this.state);
-    if (!sup) return;
-    this.descSuperseded = true;
-    if (sup.desc === this.desc && sup.privDesc === this.privDesc) return;
-    this.desc = sup.desc;
-    this.privDesc = sup.privDesc;
-    this.emitIdChange();
+  /** The desc of the board in play. Upstream `midend_supersede_game_desc`,
+   * pulled rather than pushed (see {@link Game.supersededDesc} for why the
+   * game cannot push), and asked of the position: undoing past Mines' first
+   * click is back on the board not laid out yet, and the id says so. */
+  private get desc(): string {
+    if (this.history.length === 0) return this.startDesc;
+    return this.game.supersededDesc?.(this.state) ?? this.startDesc;
   }
 
   undo(): void {
@@ -1363,6 +1348,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // request) invalidates a displayed mistake overlay — the board has
     // changed, so the old "wrong here" marks no longer describe it.
     this.clearOverlays();
+    if (this.boardId !== this.announcedId) this.emitIdChange();
     this.emitStateChange();
     this.emitStatusBar();
     // A non-animated transition paints immediately (the C frontend
@@ -1823,12 +1809,15 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const restarts = this.moveLog.flatMap((entry, at) =>
       entry instanceof Restart ? [{ at, cheated: entry.cheated }] : [],
     );
+    // `desc` is the board in play, as its id names it. Where that is not the
+    // desc state 0 was built from, the move log needs the latter beside it.
+    const desc = this.desc;
     const envelope: SaveEnvelope = {
       v: 3,
       puzzleId: this.game.id,
       params: this.game.encodeParams(this.boardParams, true),
-      desc: this.desc,
-      ...(this.privDesc === undefined ? {} : { privDesc: this.privDesc }),
+      desc,
+      ...(desc === this.startDesc ? {} : { privDesc: this.startDesc }),
       moves: this.moveLog.map((entry) =>
         entry instanceof Restart ? null : serMove(entry),
       ),
@@ -1876,16 +1865,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     } catch (e) {
       return `Invalid saved parameters: ${(e as Error).message}`;
     }
-    // State 0 is rebuilt from the private desc when the save carries one — the
-    // public desc bakes in the first click the move log is about to replay
-    // (upstream midend.c:2663). The public desc is then restored over it, since
-    // it, not the layout-only one, is what the game *is* (and what the id names);
-    // the replay's own `applySupersede` will agree with it. Both must still
-    // read: a parser made stricter since the save was written refuses it here
-    // rather than throwing, and a restart rebuilds from the public one. The
-    // public desc is the one that says where play began, so it alone is asked
-    // whether its board can be finished: the private one describes a board
-    // with no first move, which a game may refuse as a board to start on.
+    // State 0 is rebuilt from the private desc when the save carries one: the
+    // desc the board started from, where the public one names a board the
+    // move log is about to arrive at (Mines' bakes in the first click, which
+    // the log replays). Both must still read: a parser made stricter since
+    // the save was written refuses it here rather than throwing, and a
+    // restart rebuilds from the public one. The public desc is the board in
+    // play, so it alone is asked whether its board can be finished.
     const stateDesc = env.privDesc ?? env.desc;
     const refused =
       env.privDesc === undefined ? null : loadVerdict(this.game, params, env.desc);
@@ -1911,13 +1897,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         undefined,
         serial,
       );
-      if (env.privDesc !== undefined) {
-        // `descSuperseded` is left for the replay to set, at the move that set
-        // it in play: a restart logged before that move went to state 0, and
-        // one logged after it to the public desc.
-        this.desc = env.desc;
-        this.privDesc = env.privDesc;
-      }
       env.moves.forEach((raw, at) => {
         const cheated = restarts.get(at);
         if (cheated === undefined) this.applyMove(deMove(raw));
@@ -1945,7 +1924,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     } finally {
       this.replaying = false;
     }
-    if (env.privDesc !== undefined) this.descSuperseded = true;
     // The replay made every step as a player's, which drops these.
     ({ replaced: this.replaced, undone: this.undone } = neighbors(left));
     this.pos = Math.min(env.pos, this.history.length - 1);
@@ -2105,6 +2083,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   private emitIdChange(): void {
+    this.announcedId = this.boardId;
     this.emit({
       type: "game-id-change",
       // One id for every job (`one-game-id`). The params are FULL, so the tier
@@ -2112,7 +2091,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // difficulty) is graded on the way in (`withBoardTier`). No seed is
       // emitted: a seed names a board only through the generator, which this
       // project changes (`share-boards-not-seeds`).
-      currentGameId: this.boardId,
+      currentGameId: this.announcedId,
     });
   }
 

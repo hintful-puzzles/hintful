@@ -2,9 +2,9 @@
  * Mines (Minesweeper) — native TS port of `puzzles/mines.c`.
  *
  * Mines is the collection's exemplar of desc supersession
- * (`Game.supersededDesc`): it generates its mine layout on the *first click*,
- * so the desc the player starts from names no layout at all, and must be
- * replaced once the real board exists.
+ * (`Game.supersededDesc`): its mines are laid out by the *first click*, so the
+ * desc the player starts from names no layout at all, and the board that
+ * click made is described by another.
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
@@ -34,7 +34,6 @@ import {
   type Game,
   registerGame,
   type SolveResult,
-  type SupersededDesc,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
@@ -59,7 +58,7 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Color, GameStatus, Point } from "../../engine/types.ts";
-import { minegen } from "./generator.ts";
+import { firstOpen } from "./generator.ts";
 import {
   MINES_RUNGS,
   type MinesHint,
@@ -104,6 +103,7 @@ import {
   COVERED,
   cloneState,
   decodeDesc,
+  decodeLayoutHex,
   decodeParams,
   decodeUi,
   defaultParams,
@@ -125,37 +125,29 @@ import {
 
 // --- the flood-open + first-click layout generation (open_square) ------
 
+/** Lay `state`, a fresh clone not laid out yet, out as `mines` around the
+ * first square opened. */
+function layOut(state: MinesState, mines: Int8Array, at: Point): void {
+  state.mines = mines;
+  state.clickedAt = at;
+  state.seed = null;
+  state.orphan = null;
+}
+
 /**
- * Open square (x, y), generating the mine layout on the first click if it does
- * not yet exist (upstream `open_square`, mines.c:2135). Mutates `state` (a
- * fresh clone from `executeMove`) and, on the first click only, the *shared*
- * {@link MinesState.layout} box.
+ * Open square (x, y) with its flood (upstream `open_square`, mines.c:2135).
+ * Mutates `state`, a fresh clone from `executeMove`.
  */
 function openSquare(state: MinesState, x: number, y: number): void {
-  const { w, h, grid, layout } = state;
+  const { w, h, grid } = state;
 
-  if (!layout.mines) {
-    // The single deliberate mutation of a shared object. The layout memoizes a
-    // deterministic function of the desc's RNG state and this click, so
-    // replaying the move log reproduces it exactly. The engine then pulls the
-    // new desc from `supersededDesc`; the game never pushes into the midend.
-    layout.mines = minegen(w, h, layout.n, x, y, layout.rs as RandomState);
-    layout.startx = x;
-    layout.starty = y;
-    layout.rs = null;
+  if (!state.mines) {
+    // An open that carries no layout is replayed from a save written when the
+    // layout was the save's own.
+    if (!state.orphan) throw new Error("the board is not laid out yet");
+    layOut(state, state.orphan, { x, y });
   }
-  const mines = layout.mines;
-
-  // Record the first click on the *state* whether or not the layout was
-  // generated here: a save restored from the private desc has the layout but
-  // not the click, and this replayed open must put it back.
-  if (state.clickedAt === null) state.clickedAt = { x, y };
-  // Likewise the layout's start square, which the hint and the "start here"
-  // cross read after an undo back to the start.
-  if (layout.startx < 0) {
-    layout.startx = x;
-    layout.starty = y;
-  }
+  const mines = state.mines as Int8Array;
 
   if (mines[y * w + x]) {
     // Trodden on a mine. Expose only it (so an undo can carry on).
@@ -203,7 +195,8 @@ function openSquare(state: MinesState, x: number, y: number): void {
 function openAt(s: MinesState, { x, y }: Point, ui: MinesUi): MinesMove | null {
   const v = s.grid[y * s.w + x];
   if (v !== COVERED && v !== QUERY) return null;
-  if (s.layout.mines?.[y * s.w + x]) ui.deaths++;
+  if (!s.mines) return firstOpen(s, { x, y });
+  if (s.mines[y * s.w + x]) ui.deaths++;
   return { type: "ops", ops: [{ op: "O", x, y }] };
 }
 
@@ -225,7 +218,7 @@ function chordAt(s: MinesState, { x, y }: Point, ui: MinesUi): MinesMove | null 
   if (!chordReady(s, x, y)) return null;
   const near = around(w, h, x, y);
   const ops: MineOp[] = near
-    .filter((q) => s.grid[q.y * w + q.x] !== FLAG && s.layout.mines?.[q.y * w + q.x])
+    .filter((q) => s.grid[q.y * w + q.x] !== FLAG && s.mines?.[q.y * w + q.x])
     .map((q) => ({ op: "O", x: q.x, y: q.y }));
   if (ops.length > 0) {
     ui.deaths++;
@@ -344,14 +337,16 @@ export const minesGame: Game<
     return { desc: `r${p.n},u,${randomStateEncode(rng)}` };
   },
   newState(p: MinesParams, desc: string): MinesState {
-    const { layout, openXY } = decodeDesc(p, desc);
+    const { n, mines, openXY, seed, orphan } = decodeDesc(p, desc);
     const state: MinesState = {
       w: p.w,
       h: p.h,
-      n: p.n,
+      n,
       dead: false,
-      layout,
-      clickedAt: null,
+      mines,
+      clickedAt: openXY,
+      seed,
+      orphan,
       grid: new Int8Array(p.w * p.h).fill(COVERED),
     };
     if (openXY) openSquare(state, openXY.x, openXY.y);
@@ -429,11 +424,11 @@ export const minesGame: Game<
   executeMove(s: MinesState, m: MinesMove): MinesState {
     const { w, h } = s;
     if (m.type === "solve") {
-      if (!s.layout.mines) throw new Error("Game has not been started yet");
+      if (!s.mines) throw new Error("Game has not been started yet");
       // The finished board, whatever was opened or flagged on the way: an
       // opened mine and a wrong flag are replaced like any wrong entry.
       const ret = { ...cloneState(s), dead: false };
-      const mines = s.layout.mines;
+      const mines = s.mines;
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
           ret.grid[y * w + x] = mines[y * w + x]
@@ -441,6 +436,21 @@ export const minesGame: Game<
             : around(w, h, x, y).filter((q) => mines[q.y * w + q.x]).length;
         }
       }
+      return ret;
+    }
+    if (m.type === "begin") {
+      const { x, y } = m;
+      if (s.mines) throw new Error("the board is already laid out");
+      if (x < 0 || x >= w || y < 0 || y >= h) {
+        throw new Error(`move out of range: begin ${x},${y}`);
+      }
+      const mines = decodeLayoutHex(m.mines, w * h);
+      if (around(w, h, x, y).some((q) => mines[q.y * w + q.x])) {
+        throw new Error("a board is never laid out with a mine by its first square");
+      }
+      const ret = cloneState(s);
+      layOut(ret, mines, { x, y });
+      openSquare(ret, x, y);
       return ret;
     }
     if (m.type !== "ops") return assertNever(m, "mines: executeMove");
@@ -475,16 +485,15 @@ export const minesGame: Game<
     return ret;
   },
 
-  supersededDesc(s: MinesState): SupersededDesc | null {
-    // Answer "nothing to say" until the layout exists AND the first click is
-    // recorded — both happen together on the first open.
-    if (!s.layout.mines || !s.clickedAt) return null;
-    const hex = encodeLayoutHex(s.layout.mines, s.w * s.h);
-    return { desc: `${s.clickedAt.x},${s.clickedAt.y},m${hex}`, privDesc: `m${hex}` };
+  supersededDesc(s: MinesState): string | null {
+    // A board not laid out yet is the one its starting desc describes.
+    if (!s.mines || !s.clickedAt) return null;
+    const hex = encodeLayoutHex(s.mines, s.w * s.h);
+    return `${s.clickedAt.x},${s.clickedAt.y},m${hex}`;
   },
 
   solve(_orig: MinesState, curr: MinesState): SolveResult<MinesMove> {
-    if (!curr.layout.mines) return { ok: false, error: NOT_STARTED };
+    if (!curr.mines) return { ok: false, error: NOT_STARTED };
     return { ok: true, move: { type: "solve" } };
   },
 
@@ -498,7 +507,7 @@ export const minesGame: Game<
   // A flag on a square with no mine under it. A mine the player opened is not
   // a mark to fix: the hint's dead-board refusal answers that.
   findMistakes(s: MinesState): readonly Point[] {
-    const mines = s.layout.mines;
+    const mines = s.mines;
     if (!mines) return [];
     const out: Point[] = [];
     for (let i = 0; i < s.w * s.h; i++)
@@ -521,9 +530,9 @@ export const minesGame: Game<
       const v = s.grid[i];
       if (v < 0) closed++;
       if (v === FLAG) markers++;
-      if (s.layout.mines?.[i]) mines++;
+      if (s.mines?.[i]) mines++;
     }
-    if (!s.layout.mines) mines = s.layout.n;
+    if (!s.mines) mines = s.n;
 
     // A win's words are the engine's.
     let sb = "";
@@ -624,12 +633,9 @@ export const minesGame: Game<
   redraw,
 
   // The hint's own plan, played to its end. A board not laid out yet will be
-  // laid out to finish from whichever square is opened first. A layout that
-  // names no first square was made for one it does not say, and opening any
-  // other is a guess.
+  // laid out to finish from whichever square is opened first.
   finishesByDeduction(s: MinesState): boolean {
-    if (!s.layout.mines) return true;
-    if (s.clickedAt === null) return false;
+    if (!s.mines) return true;
     const plan = minesHint(s, minesGame.executeMove);
     if (!plan.ok) return false;
     const end = plan.steps.reduce(

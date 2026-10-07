@@ -1,15 +1,13 @@
 /**
  * Types, codec and pure state helpers for Mines (`puzzles/mines.c`).
  *
- * The one deliberate impurity of this port lives here: {@link MineLayout} is a
- * mutable box shared *by reference* across every cloned {@link MinesState}
- * (upstream's refcounted `struct mine_layout`, mines.c:62). The mine bitmap
- * does not exist until the first click generates it (so the first click is
- * never a mine), and once generated it survives undo — clicking a *different*
- * square after undoing to the start uses the *old* layout. That is not a wart:
- * it is what stops the player rerolling the board. `(state, move)` cannot carry
- * that history, so the box is explicit and `index.ts`'s `openSquare` is its
- * single mutation site.
+ * The mines do not exist until the first square is opened, so that square is
+ * never one. The layout belongs to the state that click made: the board before
+ * it carries only the seed, and undoing the click returns to that board, from
+ * which any square lays a board out afresh. Upstream instead kept one layout
+ * across undo (`struct mine_layout`, mines.c:62), which left a player who
+ * undid the first click on a board made to be finished from a square they
+ * were no longer standing on.
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
@@ -27,6 +25,7 @@ import { AREA_TOO_LARGE } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import {
   type RandomState,
+  randomNew,
   randomStateDecode,
   randomStateEncode,
 } from "../../engine/random/index.ts";
@@ -65,23 +64,6 @@ export interface MinesParams {
   firstClickY: number;
 }
 
-// --- the shared mine-layout box ----------------------------------------
-
-export interface MineLayout {
-  /** The real mine positions (1 = mine), or `null` while the layout has not
-   * yet been generated (a preliminary `r…` game before the first click). */
-  mines: Int8Array | null;
-  /** Mine count, used before the bitmap exists (for the status bar's total). */
-  n: number;
-  /** The generator RNG, decoded from the preliminary desc; consumed (and
-   * nulled) when the layout is generated on the first click. */
-  rs: RandomState | null;
-  /** Where the first click landed (for the "start here" cross after an undo);
-   * -1 until the layout is generated. */
-  startx: number;
-  starty: number;
-}
-
 // --- state / ui / move -------------------------------------------------
 
 export interface MinesState {
@@ -89,11 +71,20 @@ export interface MinesState {
   h: number;
   n: number;
   dead: boolean;
-  /** Shared by reference across every clone. */
-  layout: MineLayout;
-  /** Where the first click landed, as this state knows it (see `openSquare`
-   * for why that is not `layout.startx`). Drives `supersededDesc`. */
+  /** The mine positions (1 = mine), or `null` on a board not laid out yet.
+   * Never written once set: every later state shares it. */
+  mines: Int8Array | null;
+  /** The first square opened, which `mines` was laid out around. Set exactly
+   * when `mines` is. */
   clickedAt: Point | null;
+  /** What the first square opened lays the board out from, on a board not
+   * laid out yet. Never advanced: laying out draws from a copy, so the same
+   * square gives the same board every time. */
+  seed: RandomState | null;
+  /** The layout of a save written when a layout outlived its first click and
+   * the save named no square. The first open replayed from that save's move
+   * log takes it; a square the player opens lays out afresh from `seed`. */
+  orphan: Int8Array | null;
   /** Player knowledge (the grid value encoding above); cloned per move. */
   grid: Int8Array;
 }
@@ -115,7 +106,13 @@ export interface MinesUi {
 /** One grid operation: `F` toggles a flag, `O` opens (with flood), `C` chords a
  * satisfied number. A player move is a list of these. */
 export type MineOp = { op: "F" | "O" | "C"; x: number; y: number };
-export type MinesMove = { type: "solve" } | { type: "ops"; ops: MineOp[] };
+/** `begin` is the first square opened. It carries the board laid out around
+ * `{ x, y }` (`encodeLayoutHex`), so a save's move log rebuilds that board
+ * whatever the generator has since become. */
+export type MinesMove =
+  | { type: "solve" }
+  | { type: "begin"; x: number; y: number; mines: string }
+  | { type: "ops"; ops: MineOp[] };
 
 // --- params codec ------------------------------------------------------
 
@@ -189,8 +186,8 @@ const HEX = "0123456789abcdef";
 const isHex = (c: string) => HEX.includes(c);
 
 /** Encode a mine bitmap as the obfuscated nibble string that follows the `m`
- * in a public/private desc (upstream `describe_layout`, mines.c:1981, with
- * `obfuscate = true`). Emits exactly `(wh+3)/4` nibbles. */
+ * in a desc and rides in a `begin` move (upstream `describe_layout`,
+ * mines.c:1981, with `obfuscate = true`). Emits exactly `(wh+3)/4` nibbles. */
 export function encodeLayoutHex(mines: Int8Array, wh: number): string {
   const bmp = new Uint8Array((wh + 7) >> 3);
   for (let i = 0; i < wh; i++) if (mines[i]) bmp[i >> 3] |= 0x80 >> (i & 7);
@@ -221,6 +218,17 @@ function readLayout(r: DescReader, wh: number, masked: boolean): Int8Array {
   return mines;
 }
 
+/** The mine bitmap {@link encodeLayoutHex} wrote as `hex`. */
+export function decodeLayoutHex(hex: string, wh: number): Int8Array {
+  return descValue(
+    readDesc(hex, (r) => {
+      const mines = readLayout(r, wh, true);
+      r.end();
+      return mines;
+    }),
+  );
+}
+
 /** Read the rest of the desc as an RNG state written by `randomStateEncode`,
  * which is the only text that round-trips through it. */
 function readRandomState(r: DescReader): RandomState {
@@ -238,33 +246,32 @@ function readRandomState(r: DescReader): RandomState {
 
 // --- desc (mines.c validate_desc:2081, new_game:2264) -------------------
 
-/** The parsed shape of a desc: the shared layout box, plus the first click
- * to open (a public desc bakes one in). */
+/** The parsed shape of a desc. Either `mines` is set with the first square
+ * to open, or `seed` is, on a board not laid out yet. */
 export interface DecodedDesc {
-  layout: MineLayout;
+  /** How many mines the board holds, laid out or not. */
+  n: number;
+  mines: Int8Array | null;
   openXY: Point | null;
+  seed: RandomState | null;
+  orphan: Int8Array | null;
 }
 
 /**
  * Three forms: the preliminary `r<n>,<u|a>,<rng>` that `newDesc` writes, whose
- * layout waits for the first click; and the public `x,y,m<hex>` and private
- * `m<hex>` that `supersededDesc` writes once it exists. `u` in place of `m` is
- * upstream's unobfuscated layout, kept for IDs typed by hand.
+ * layout waits for the first click; the public `x,y,m<hex>` that
+ * `supersededDesc` writes once it exists; and `m<hex>` alone, which an older
+ * save kept as the board its move log replays onto (`MinesState.orphan`). `u`
+ * in place of `m` is upstream's unobfuscated layout, kept for IDs typed by
+ * hand.
  */
 function parseDesc(p: MinesParams, desc: string): DescParse<DecodedDesc> {
   const wh = p.w * p.h;
   return readDesc(desc, (r) => {
-    const layout: MineLayout = {
-      mines: null,
-      n: p.n,
-      rs: null,
-      startx: -1,
-      starty: -1,
-    };
     if (r.accept("r")) {
       // The real bound is the puzzle's own rule, which has its own sentence.
-      layout.n = r.int(0, Number.MAX_SAFE_INTEGER);
-      if (layout.n > wh - 9) {
+      const n = r.int(0, Number.MAX_SAFE_INTEGER);
+      if (n > wh - 9) {
         r.fail(
           puzzleDescError(
             "This game ID has more mines than its board can hold around a safe first click.",
@@ -275,8 +282,8 @@ function parseDesc(p: MinesParams, desc: string): DescParse<DecodedDesc> {
       // `u` or upstream's `a`: either way the layout is made deducible.
       r.char((c) => c === "u" || c === "a");
       r.expect(",");
-      layout.rs = readRandomState(r);
-      return { layout, openXY: null };
+      const seed = readRandomState(r);
+      return { n, mines: null, openXY: null, seed, orphan: null };
     }
     let openXY: Point | null = null;
     if (r.peekIs(isDigit)) {
@@ -287,9 +294,12 @@ function parseDesc(p: MinesParams, desc: string): DescParse<DecodedDesc> {
       openXY = { x, y };
     }
     const masked = r.char((c) => c === "m" || c === "u") === "m";
-    layout.mines = readLayout(r, wh, masked);
+    const mines = readLayout(r, wh, masked);
     r.end();
-    return { layout, openXY };
+    const n = mines.reduce((sum, v) => sum + v, 0);
+    if (openXY) return { n, mines, openXY, seed: null, orphan: null };
+    // No seed came with the layout, so the layout stands in for one.
+    return { n, mines: null, openXY: null, seed: randomNew(desc), orphan: mines };
   });
 }
 
@@ -300,7 +310,7 @@ export function decodeDesc(p: MinesParams, desc: string): DecodedDesc {
 /** Won: the layout exists, the player is alive, and every square still
  * covered (flagged or not) is a mine, so every safe square is open. */
 export function isWon(s: MinesState): boolean {
-  const mines = s.layout.mines;
+  const mines = s.mines;
   if (!mines || s.dead) return false;
   for (let i = 0; i < s.w * s.h; i++) {
     if (s.grid[i] < 0 && !mines[i]) return false;
@@ -308,7 +318,7 @@ export function isWon(s: MinesState): boolean {
   return true;
 }
 
-/** The next move's state: its own `grid`, the same shared `layout`. */
+/** The next move's state: its own `grid`, the same `mines`. */
 export function cloneState(s: MinesState): MinesState {
   return { ...s, grid: new Int8Array(s.grid) };
 }

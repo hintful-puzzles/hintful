@@ -60,9 +60,6 @@ export const NCOLORS = 21;
 export const PREFERRED_TILE_SIZE = 20;
 export const FLASH_FRAME = 0.13;
 
-/** A covered square's tile value when it shows the "start here" cross. */
-const START = -4;
-
 /** The web build defines `NARROW_BORDERS`, so `BORDER = max(ts*3/20, 1)`
  * (mines.c:37) — not the desktop default of `ts*3/2`. */
 export function borderFor(tileSize: number): number {
@@ -214,12 +211,6 @@ function drawTile(
         COL_QUERY,
         "?",
       );
-    } else if (v === START) {
-      // The 'click here' cross marking the safe first-click location.
-      const c0 = Math.floor(ts / 4);
-      const c1 = ts - 1 - c0;
-      dr.drawLine({ x: x + c0, y: y + c0 }, { x: x + c1, y: y + c1 }, COL_MINE, 1);
-      dr.drawLine({ x: x + c0, y: y + c1 }, { x: x + c1, y: y + c0 }, COL_MINE, 1);
     }
   } else {
     // Open tile. `v | 32` is the too-many-flags wrong-number tint.
@@ -350,10 +341,8 @@ export function redraw(
         if (near.filter((q) => s.grid[q.y * ds.w + q.x] === FLAG).length > v) v |= 32;
       }
 
-      if (v === COVERED && x === s.layout.startx && y === s.layout.starty) v = START;
-
       if (
-        (v === COVERED || v === QUERY || v === START) &&
+        (v === COVERED || v === QUERY) &&
         Math.abs(x - ui.hx) <= ui.hradius &&
         Math.abs(y - ui.hy) <= ui.hradius
       ) {

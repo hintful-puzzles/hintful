@@ -14,10 +14,21 @@
  *   4. the never-assigned `prevret` in the solve-and-perturb loop (below).
  */
 
-import { type RandomState, randomBits, randomUpto } from "../../engine/random/index.ts";
+import {
+  type RandomState,
+  randomBits,
+  randomCopy,
+  randomUpto,
+} from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
+import type { Point } from "../../engine/types.ts";
 import { minesolve, type OpenCb, type Perturbation, type PerturbCb } from "./solver.ts";
-import { encodeLayoutHex, type MinesParams } from "./state.ts";
+import {
+  encodeLayoutHex,
+  type MinesMove,
+  type MinesParams,
+  type MinesState,
+} from "./state.ts";
 
 /** Solve/perturb rounds allowed within one layout attempt. Each round perturbs
  * and re-solves, and only a solve (0) or an unsolvable verdict (-1) ends it, so
@@ -384,6 +395,15 @@ export function minegen(
   } while (!success);
 
   return ret;
+}
+
+/** The move that opens `at` as the first square of `s`, a board not laid out
+ * yet: the board its seed lays out around that square, the same one each time
+ * it is asked. */
+export function firstOpen(s: MinesState, at: Point): MinesMove {
+  if (!s.seed) throw new Error("mines: the board is already laid out");
+  const mines = minegen(s.w, s.h, s.n, at.x, at.y, randomCopy(s.seed));
+  return { type: "begin", ...at, mines: encodeLayoutHex(mines, s.w * s.h) };
 }
 
 /**

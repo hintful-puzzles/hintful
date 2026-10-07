@@ -142,15 +142,6 @@ export const say = {
       move: phrase`open it to begin`,
     }),
 
-  /** Back at the start of a board already laid out: its first square is drawn
-   * with a cross. */
-  restart: (at: Point): Sentence =>
-    so({
-      look: phrase`the board began at ${mark.the("ring", CELL, [at], "square")}, drawn with a cross`,
-      follows: phrase`it can't hold a mine`,
-      move: phrase`open it`,
-    }),
-
   /** A number already touching all its mines. */
   satisfied: (w: Words, c: Clue, minesAt: readonly Point[]): Premise => ({
     proves: "safe",

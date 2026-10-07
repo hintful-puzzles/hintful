@@ -297,10 +297,10 @@ export const MODULES = [
         replace: "    if (this.pos <= this.history.length - 1) this.step(1);",
       },
       {
-        within: "Midend.commitMove",
-        why: "undo/restart adopt a superseded desc, un-generating Mines' first click",
-        find: "    this.applySupersede();\n    this.stateReplaced(prev, next);",
-        replace: "    this.stateReplaced(prev, next);",
+        within: "Midend.afterTransition",
+        why: "a step onto another desc is not announced, so the game ID names a board no longer in play",
+        find: "    if (this.boardId !== this.announcedId) this.emitIdChange();\n",
+        replace: "",
       },
       {
         within: "Midend.load",

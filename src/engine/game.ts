@@ -43,17 +43,6 @@ import type {
 export const UI_UPDATE: unique symbol = Symbol("ui-update");
 export type UiUpdate = typeof UI_UPDATE;
 
-/** A game's answer to {@link Game.supersededDesc}. */
-export interface SupersededDesc {
-  /** The public description — what a shared game ID and "Game → Specific"
-   * name, and what a restart rebuilds from. */
-  readonly desc: string;
-  /** The description a *save* rebuilds state 0 from, when the public one
-   * would not reconstruct it faithfully (Mines: same layout, no first
-   * click). Absent ⇒ the public desc is used for both. */
-  readonly privDesc?: string;
-}
-
 /** Result of a solver attempt — discriminated so a string `Move`
  * cannot be mistaken for an error message. The error is one of the
  * collection's own ({@link SolveFailure}), never a game's sentence. */
@@ -397,22 +386,22 @@ export interface Game<
    *
    * Upstream's game reaches into the midend and pushes a new desc from inside
    * `execute_move`; a TS game has no midend back-reference and `executeMove` is
-   * pure, so the engine **pulls** instead: after every committed move it asks
-   * this, and a game answers from its own state (Mines' post-click state
-   * carries the layout it just generated, so the desc is derivable).
+   * pure, so the engine **pulls** instead: it asks this of the state in play,
+   * and a game answers from that state alone (Mines' post-click state carries
+   * its layout and the square it was laid out around).
    *
-   * Two rules the engine enforces, both mirroring upstream:
-   * - **`null` means "nothing to say", never "revert".** A desc describes the
-   *   *game*, not the position, so undoing past the superseding move leaves it
-   *   superseded — which is why this may not be read as a bidirectional
-   *   derivation.
-   * - **`privDesc` is the desc a *save* is rebuilt from.** Mines' public desc
-   *   describes the layout *plus the first click* (so a shared game ID drops
-   *   you on an opened board); replaying the move log from that would re-play a
-   *   click already baked in. `privDesc` describes the same layout with no
-   *   click, and the engine restores state 0 from it. Omit it when the public
-   *   desc reconstructs state 0 faithfully. */
-  supersededDesc?(s: State): SupersededDesc | null;
+   * - **`null` means the desc the board started from still describes it.**
+   *   The answer follows the position: undoing past the move that settled the
+   *   board gives back the starting desc, and with it the unsettled board.
+   * - **The answer names the board as a shared game ID opens it**, which is
+   *   also what a restart rebuilds: Mines' names the layout *and* its first
+   *   click, already opened.
+   * - **A save is rebuilt from the starting desc**, and its move log is
+   *   replayed onto that. So the move that settles the board must settle it
+   *   the same way on replay, by carrying what it settled rather than deriving
+   *   it again: a seed names a board only through a generator, which this
+   *   project changes. */
+  supersededDesc?(s: State): string | null;
 
   /** Reconcile persisted Ui against a state transition (upstream
    * `game_changed_state`). The midend calls this — mutating `ui` in

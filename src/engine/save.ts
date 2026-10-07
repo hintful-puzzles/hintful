@@ -15,14 +15,16 @@ export interface SaveEnvelope {
   puzzleId: string;
   /** Fully-encoded game parameters. */
   params: string;
-  /** The board description the moves were played against — the *public* one,
-   * which is also what the shareable game ID names. */
+  /** The description of the board in play — the *public* one, which is also
+   * what the shareable game ID names. */
   desc: string;
-  /** Present only for a game that superseded its desc (upstream `privdesc`;
-   * Mines). The description state 0 is rebuilt from on restore: the public
-   * desc describes the layout *plus* the first click, so replaying the move
-   * log from it would re-apply a click already baked into the board. Absent ⇒
-   * `desc` reconstructs state 0 faithfully, as it does for every other game. */
+  /** Present only where the board in play has moved off the desc it started
+   * from (`Game.supersededDesc`; Mines, once laid out). The description state
+   * 0 is rebuilt from on restore: the public desc names the layout *plus* the
+   * first click, so replaying the move log from it would re-apply a click
+   * already baked into the board. A Mines save written before the layout rode
+   * in the first move holds the layout alone here. Absent ⇒ `desc`
+   * reconstructs state 0 faithfully, as it does for every other game. */
   privDesc?: string;
   /** Serialized move log; `moves[i]` turns history[i] into history[i+1]. A
    * restart's entry is `null`, and `restarts` says which entries those are. */

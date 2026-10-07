@@ -8,6 +8,10 @@ guaranteed to be able to solve the whole grid by deduction rather than
 guesswork. (Deductions may require you to think about
 the total number of mines.)
 
+The mines are laid out around the first square you open. If you undo
+that first move, the board is not laid out any more: whichever square
+you open next is safe in the same way, and gets a board of its own.
+
 If you think you've found a grid which can't be solved without
 guessing, **think harder!** Mines was written in 2005, and since it
 was written, I've had over 50 reports claiming that a grid had two

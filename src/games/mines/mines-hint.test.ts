@@ -15,6 +15,7 @@ import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import { firstOpen } from "./generator.ts";
 import { DEAD_BOARD, type MinesHint, type MinesRung } from "./hint.ts";
 import { minesGame } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
@@ -32,6 +33,20 @@ const params = (w: number, h: number, n: number) => ({
 function fresh(w: number, h: number, n: number, seed: string): MinesState {
   const p = params(w, h, n);
   return minesGame.newState(p, minesGame.newDesc(p, randomNew(seed)).desc);
+}
+
+/** `s`, a board not laid out yet, with (x, y) opened first. */
+const begun = (s: MinesState, x: number, y: number): MinesState =>
+  minesGame.executeMove(s, firstOpen(s, { x, y }));
+
+/** A midend on the board `seed` deals, with (x, y) opened first. */
+function dealt(w: number, h: number, n: number, seed: string, x: number, y: number) {
+  const p = params(w, h, n);
+  const desc = minesGame.newDesc(p, randomNew(seed)).desc;
+  const m = new Midend(minesGame);
+  expect(m.newGameFromId(`${minesGame.encodeParams(p, true)}:${desc}`)).toBeNull();
+  m.playMoves([firstOpen(minesGame.newState(p, desc), { x, y })]);
+  return m;
 }
 
 /** The public desc of a 16x16 board with 60 mines scattered at random around a
@@ -63,7 +78,7 @@ const flagged = (b: MinesState): number => b.grid.filter((v) => v === FLAG).leng
 const pinned = describeHintPins({
   game: minesGame,
   params: [params(9, 9, 10), params(9, 9, 35)],
-  opening: (): MinesMove[] => [open(4, 4)],
+  opening: (s): MinesMove[] => [firstOpen(s, { x: 4, y: 4 })],
   kinds: {
     open: (step) => step.highlights?.kind === "open",
     severalFlags: (step) =>
@@ -81,32 +96,28 @@ const pinned = describeHintPins({
       stepMarks(step).of("outline", CELL).length === 2 &&
       stepMarks(step).of("stripes", CELL).length > 0,
   },
-  unreached: {
-    restart:
-      'a board no pin can hold, and not one that is rare. It is spoken on a laid-out board with no square open, which play reaches only by undoing the first click. A pin is a desc and the moves played on it: the public desc opens its first square, and the layout alone names none and does not load. "opens the crossed square after an undo back to the start" builds one',
-  },
   pins: {
     /** Held on 351 of 632 positions walked. */
     open: {
       id: "9x9n10:r10,u,b5985f51ca0b0d130793b461c08d151bc905c2a2c3557702ac6e69f4a8be9a3fa9e10ca1eb20535440bf0cdd18db91fff447b724ed9a7c0ddbbf56ee02",
       moves:
-        '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]}]',
+        '[{"type":"begin","x":4,"y":4,"mines":"750a781f936c7f3d39ec8"},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]}]',
     },
     /** Held on 103 of 632 positions walked. */
     severalFlags: {
       id: "9x9n10:r10,u,33c21e9a927d75aecf9e760f2d2c50656c6416164cb8fb65f1693562b902dedd1a9b0a5147240437f3fd8e3dfcb7f38d77ed22bf940754d980af7b1602",
-      moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+      moves: [{ type: "begin", x: 4, y: 4, mines: "8b80e366c270b98d6f9e0" }],
     },
     /** Held on 14 of 632 positions walked. */
     winningOpenFlagsTheRest: {
       id: "9x9n10:r10,u,b5985f51ca0b0d130793b461c08d151bc905c2a2c3557702ac6e69f4a8be9a3fa9e10ca1eb20535440bf0cdd18db91fff447b724ed9a7c0ddbbf56ee02",
       moves:
-        '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]},{"type":"ops","ops":[{"op":"O","x":2,"y":0},{"op":"O","x":3,"y":0},{"op":"O","x":4,"y":0}]},{"type":"ops","ops":[{"op":"O","x":1,"y":0},{"op":"O","x":1,"y":1}]},{"type":"ops","ops":[{"op":"F","x":5,"y":0}]},{"type":"ops","ops":[{"op":"F","x":1,"y":6}]},{"type":"ops","ops":[{"op":"O","x":0,"y":4},{"op":"O","x":0,"y":5},{"op":"O","x":0,"y":6}]},{"type":"ops","ops":[{"op":"F","x":0,"y":3}]},{"type":"ops","ops":[{"op":"O","x":0,"y":1},{"op":"O","x":0,"y":2}]},{"type":"ops","ops":[{"op":"F","x":0,"y":0}]},{"type":"ops","ops":[{"op":"F","x":6,"y":4}]},{"type":"ops","ops":[{"op":"O","x":6,"y":2},{"op":"O","x":6,"y":3}]},{"type":"ops","ops":[{"op":"F","x":6,"y":1}]},{"type":"ops","ops":[{"op":"O","x":6,"y":0}]},{"type":"ops","ops":[{"op":"O","x":7,"y":0},{"op":"O","x":7,"y":1}]},{"type":"ops","ops":[{"op":"O","x":8,"y":0}]},{"type":"ops","ops":[{"op":"F","x":8,"y":6}]},{"type":"ops","ops":[{"op":"O","x":0,"y":7}]}]',
+        '[{"type":"begin","x":4,"y":4,"mines":"750a781f936c7f3d39ec8"},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]},{"type":"ops","ops":[{"op":"O","x":2,"y":0},{"op":"O","x":3,"y":0},{"op":"O","x":4,"y":0}]},{"type":"ops","ops":[{"op":"O","x":1,"y":0},{"op":"O","x":1,"y":1}]},{"type":"ops","ops":[{"op":"F","x":5,"y":0}]},{"type":"ops","ops":[{"op":"F","x":1,"y":6}]},{"type":"ops","ops":[{"op":"O","x":0,"y":4},{"op":"O","x":0,"y":5},{"op":"O","x":0,"y":6}]},{"type":"ops","ops":[{"op":"F","x":0,"y":3}]},{"type":"ops","ops":[{"op":"O","x":0,"y":1},{"op":"O","x":0,"y":2}]},{"type":"ops","ops":[{"op":"F","x":0,"y":0}]},{"type":"ops","ops":[{"op":"F","x":6,"y":4}]},{"type":"ops","ops":[{"op":"O","x":6,"y":2},{"op":"O","x":6,"y":3}]},{"type":"ops","ops":[{"op":"F","x":6,"y":1}]},{"type":"ops","ops":[{"op":"O","x":6,"y":0}]},{"type":"ops","ops":[{"op":"O","x":7,"y":0},{"op":"O","x":7,"y":1}]},{"type":"ops","ops":[{"op":"O","x":8,"y":0}]},{"type":"ops","ops":[{"op":"F","x":8,"y":6}]},{"type":"ops","ops":[{"op":"O","x":0,"y":7}]}]',
     },
     /** Held on 38 of 632 positions walked. */
     twoNumbers: {
       id: "9x9n35:r35,u,a0dba5e4ea00f0ab2d03b97355b4d34d6029eea9369f6d2f2b9a27d1bb251d2f93ab9d8bef2299dfd7cb11725e11f8be919d1d1b2af9c8422ce571b402",
-      moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+      moves: [{ type: "begin", x: 4, y: 4, mines: "36c8075caa925fd7f91a0" }],
     },
     /** A board not laid out yet, which the scan's opening click is past: kept
      * by hand, with no move played. */
@@ -116,23 +127,23 @@ const pinned = describeHintPins({
     satisfied: {
       id: "9x9n10:r10,u,b5985f51ca0b0d130793b461c08d151bc905c2a2c3557702ac6e69f4a8be9a3fa9e10ca1eb20535440bf0cdd18db91fff447b724ed9a7c0ddbbf56ee02",
       moves:
-        '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]}]',
+        '[{"type":"begin","x":4,"y":4,"mines":"750a781f936c7f3d39ec8"},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]}]',
     },
     /** Held on 582 of 632 positions walked. */
     full: {
       id: "9x9n10:r10,u,b5985f51ca0b0d130793b461c08d151bc905c2a2c3557702ac6e69f4a8be9a3fa9e10ca1eb20535440bf0cdd18db91fff447b724ed9a7c0ddbbf56ee02",
-      moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+      moves: [{ type: "begin", x: 4, y: 4, mines: "750a781f936c7f3d39ec8" }],
     },
     /** Held on 201 of 632 positions walked. */
     pair: {
       id: "9x9n35:r35,u,a0dba5e4ea00f0ab2d03b97355b4d34d6029eea9369f6d2f2b9a27d1bb251d2f93ab9d8bef2299dfd7cb11725e11f8be919d1d1b2af9c8422ce571b402",
-      moves: [{ type: "ops", ops: [{ op: "O", x: 4, y: 4 }] }],
+      moves: [{ type: "begin", x: 4, y: 4, mines: "36c8075caa925fd7f91a0" }],
     },
     /** Held on 122 of 632 positions walked. */
     count: {
       id: "9x9n10:r10,u,8c06a4442cfba80767c91c69ae55f206aa83611323495683336b351958dfd19388a2a63b6821a917dc303edce6f7b78d4289a412dcb2fa0ff747e70e02",
       moves:
-        '[{"type":"ops","ops":[{"op":"O","x":4,"y":4}]},{"type":"ops","ops":[{"op":"F","x":4,"y":1}]},{"type":"ops","ops":[{"op":"O","x":4,"y":0}]},{"type":"ops","ops":[{"op":"O","x":3,"y":0},{"op":"O","x":3,"y":1}]},{"type":"ops","ops":[{"op":"F","x":3,"y":6}]},{"type":"ops","ops":[{"op":"F","x":7,"y":6}]},{"type":"ops","ops":[{"op":"O","x":8,"y":6}]},{"type":"ops","ops":[{"op":"O","x":2,"y":6}]},{"type":"ops","ops":[{"op":"F","x":1,"y":6},{"op":"F","x":1,"y":7},{"op":"F","x":1,"y":8}]},{"type":"ops","ops":[{"op":"O","x":1,"y":5},{"op":"O","x":2,"y":5}]},{"type":"ops","ops":[{"op":"F","x":2,"y":4}]},{"type":"ops","ops":[{"op":"O","x":2,"y":2},{"op":"O","x":2,"y":3}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]},{"type":"ops","ops":[{"op":"O","x":2,"y":0}]},{"type":"ops","ops":[{"op":"O","x":1,"y":1},{"op":"O","x":1,"y":2},{"op":"O","x":1,"y":3}]},{"type":"ops","ops":[{"op":"F","x":1,"y":0}]},{"type":"ops","ops":[{"op":"O","x":0,"y":0},{"op":"O","x":0,"y":1},{"op":"O","x":0,"y":2}]},{"type":"ops","ops":[{"op":"O","x":0,"y":6}]},{"type":"ops","ops":[{"op":"F","x":0,"y":7}]}]',
+        '[{"type":"begin","x":4,"y":4,"mines":"2653c862298c45e0888b0"},{"type":"ops","ops":[{"op":"F","x":4,"y":1}]},{"type":"ops","ops":[{"op":"O","x":4,"y":0}]},{"type":"ops","ops":[{"op":"O","x":3,"y":0},{"op":"O","x":3,"y":1}]},{"type":"ops","ops":[{"op":"F","x":3,"y":6}]},{"type":"ops","ops":[{"op":"F","x":7,"y":6}]},{"type":"ops","ops":[{"op":"O","x":8,"y":6}]},{"type":"ops","ops":[{"op":"O","x":2,"y":6}]},{"type":"ops","ops":[{"op":"F","x":1,"y":6},{"op":"F","x":1,"y":7},{"op":"F","x":1,"y":8}]},{"type":"ops","ops":[{"op":"O","x":1,"y":5},{"op":"O","x":2,"y":5}]},{"type":"ops","ops":[{"op":"F","x":2,"y":4}]},{"type":"ops","ops":[{"op":"O","x":2,"y":2},{"op":"O","x":2,"y":3}]},{"type":"ops","ops":[{"op":"F","x":2,"y":1}]},{"type":"ops","ops":[{"op":"O","x":2,"y":0}]},{"type":"ops","ops":[{"op":"O","x":1,"y":1},{"op":"O","x":1,"y":2},{"op":"O","x":1,"y":3}]},{"type":"ops","ops":[{"op":"F","x":1,"y":0}]},{"type":"ops","ops":[{"op":"O","x":0,"y":0},{"op":"O","x":0,"y":1},{"op":"O","x":0,"y":2}]},{"type":"ops","ops":[{"op":"O","x":0,"y":6}]},{"type":"ops","ops":[{"op":"F","x":0,"y":7}]}]',
     },
   },
 });
@@ -164,7 +175,7 @@ describe("Mines hint: the start of a board", () => {
     const s = fresh(9, 9, 10, "start");
     const steps = plan(s);
     expect(steps).toHaveLength(1);
-    expect(steps[0].move).toEqual(open(4, 4));
+    expect(steps[0].move).toEqual(firstOpen(s, { x: 4, y: 4 }));
     expect(steps[0].highlights).toEqual({ kind: "open", targets: [{ x: 4, y: 4 }] });
     expect(steps[0].explanation).toMatch(/^No mine is ever laid in the first square/);
     expect(
@@ -172,32 +183,36 @@ describe("Mines hint: the start of a board", () => {
     ).toEqual([]);
   });
 
-  it("opens the crossed square after an undo back to the start", () => {
-    const s0 = fresh(9, 9, 10, "restart");
-    // Opening a corner lays the board out around it; s0 shares that layout.
-    minesGame.executeMove(s0, open(0, 0));
-    const steps = plan(s0);
-    expect(steps).toHaveLength(1);
-    expect(steps[0].move).toEqual(open(0, 0));
-    expect(steps[0].explanation).toMatch(/drawn with a cross/);
+  it("says the same of the board a first click was undone from", () => {
+    const s0 = fresh(9, 9, 10, "undone");
+    // Opening a corner lays a board out around it, and leaves s0 as it was.
+    const corner = begun(s0, 0, 0);
+    expect(corner.mines).not.toBeNull();
+    expect(s0.mines).toBeNull();
+    const [step] = plan(s0);
+    expect(step.rung).toBe("firstClick");
+    expect(step.move).toEqual(firstOpen(fresh(9, 9, 10, "undone"), { x: 4, y: 4 }));
+    // Any other square finishes from where it began.
+    expect(minesGame.finishesByDeduction?.(begun(s0, 8, 3))).toBe(true);
   });
 
-  it("still knows the crossed square after that board is saved and loaded", () => {
-    // A save rebuilds the board from its private desc, which holds the layout
-    // and not the first click; replaying the click is what puts it back.
-    const played = minesGame.executeMove(fresh(9, 9, 10, "restart-saved"), open(4, 4));
-    const priv = minesGame.supersededDesc?.(played)?.privDesc;
-    if (!priv) throw new Error("expected a private desc");
-    const loaded = minesGame.newState(params(9, 9, 10), priv);
-    minesGame.executeMove(loaded, open(4, 4));
-    const steps = plan(loaded);
-    expect(steps[0].rung).toBe("restart");
-    expect(steps[0].move).toEqual(open(4, 4));
+  it("says the same at the start of an older save, whose layout its own open takes", () => {
+    // A save once rebuilt the board from the layout alone, and its move log
+    // opened the first square with no layout of its own.
+    const played = begun(fresh(9, 9, 10, "older"), 4, 4);
+    const layout = minesGame.supersededDesc?.(played)?.slice("4,4,".length);
+    if (!layout) throw new Error("expected a layout");
+    const loaded = minesGame.newState(params(9, 9, 10), layout);
+    const replayed = minesGame.executeMove(loaded, open(4, 4));
+    expect(replayed.mines).toEqual(played.mines);
+    expect(replayed.grid).toEqual(played.grid);
+    expect(plan(loaded)[0].rung).toBe("firstClick");
+    expect(minesGame.finishesByDeduction?.(begun(loaded, 0, 0))).toBe(true);
   });
 
   it("refuses on a board whose last move opened a mine, telling the player to undo", () => {
-    const s1 = minesGame.executeMove(fresh(9, 9, 10, "dead"), open(4, 4));
-    const mines = s1.layout.mines as Int8Array;
+    const s1 = begun(fresh(9, 9, 10, "dead"), 4, 4);
+    const mines = s1.mines as Int8Array;
     const i = mines.indexOf(1);
     const dead = minesGame.executeMove(s1, open(i % 9, Math.floor(i / 9)));
     expect(dead.dead).toBe(true);
@@ -208,7 +223,7 @@ describe("Mines hint: the start of a board", () => {
 describe("Mines hint: the deductions", () => {
   // A dense preset reaches every rung within a few boards.
   const boards = Array.from({ length: 16 }, (_, k) =>
-    minesGame.executeMove(fresh(9, 9, 35, `rungs-${k}`), open(4, 4)),
+    begun(fresh(9, 9, 35, `rungs-${k}`), 4, 4),
   );
   const walked = boards.map(walk);
 
@@ -250,7 +265,7 @@ describe("Mines hint: the deductions", () => {
 
 describe("Mines hint: a flag is a premise only once proved", () => {
   it("never cites a flag it has not proved, so a lucky flag does not move a premise", () => {
-    const s1 = minesGame.executeMove(fresh(9, 9, 10, "decoy"), open(4, 4));
+    const s1 = begun(fresh(9, 9, 10, "decoy"), 4, 4);
     const before = plan(s1).map((st) => st.explanation);
     // A right flag on a mine no opened number touches.
     const touched = (i: number) =>
@@ -265,7 +280,7 @@ describe("Mines hint: a flag is a premise only once proved", () => {
         );
       });
     const far = s1.grid.findIndex(
-      (v, i) => v < 0 && (s1.layout.mines as Int8Array)[i] === 1 && !touched(i),
+      (v, i) => v < 0 && (s1.mines as Int8Array)[i] === 1 && !touched(i),
     );
     expect(far).toBeGreaterThanOrEqual(0);
     const decoy = minesGame.executeMove(s1, {
@@ -332,44 +347,36 @@ describe("Mines hint: a board that needs a guess", () => {
   });
 
   it("is not restored from a save either", () => {
-    // A save rebuilds from the private desc, which names no first click, so
-    // the midend asks the public one.
-    const m = new Midend(minesGame);
-    expect(m.newGameFromId("16x16n60#save")).toBeNull();
-    m.playMoves([open(8, 8)]);
-    const save = decodeSave(m.saveGame());
+    // A save rebuilds from the desc the board started from, which is not the
+    // board in play, so the midend asks the public one.
+    const save = decodeSave(dealt(16, 16, 60, "save", 8, 8).saveGame());
     const p = params(16, 16, 60);
     const desc = Array.from({ length: 10 }, (_, k) => scattered(`risky-${k}`)).find(
       (d) => loadVerdict(minesGame, p, d) !== null,
     );
     if (desc === undefined) return expect.unreachable("no board needing a guess");
-    const risky = encodeSave({ ...save, desc, privDesc: desc.slice("8,8,".length) });
+    const risky = encodeSave({ ...save, desc });
     expect(new Midend(minesGame).loadGame(encodeSave(save))).toBeNull();
     expect(new Midend(minesGame).loadGame(risky)).toBe(
       `Could not restore this saved game: ${DESC_NOT_DEDUCIBLE}`,
     );
   });
 
-  it("is what a layout with no first square is, so one does not load as a game ID", () => {
-    // The layout was made to finish from one square, and a private desc does
-    // not say which: 311 of 486 first clicks on six such boards left a save
-    // that would not restore (2026-10-07).
-    const m = new Midend(minesGame);
-    expect(m.newGameFromId("9x9n10#bare")).toBeNull();
-    m.playMoves([open(4, 4)]);
-    const { desc, privDesc } = decodeSave(m.saveGame());
-    expect(privDesc).toBe(desc.slice("4,4,".length));
+  it("is not what a layout with no first square opens as: no square of it is the one to open", () => {
+    // The layout was made to finish from one square, which the layout alone
+    // does not say, so a game ID that is one opens a board not laid out.
+    const m = dealt(9, 9, 10, "bare", 4, 4);
+    const { desc } = decodeSave(m.saveGame());
     expect(new Midend(minesGame).newGameFromId(`9x9n10:${desc}`)).toBeNull();
-    expect(new Midend(minesGame).newGameFromId(`9x9n10:${privDesc}`)).toBe(
-      DESC_NOT_DEDUCIBLE,
-    );
-    // The save that carries it is judged by its public desc, and restores.
-    expect(new Midend(minesGame).loadGame(m.saveGame())).toBeNull();
+    const bare = new Midend(minesGame);
+    expect(bare.newGameFromId(`9x9n10:${desc.slice("4,4,".length)}`)).toBeNull();
+    expect(bare.formatAsText()?.replace(/\n/g, "")).toBe("?".repeat(81));
+    expect(bare.solve()).not.toBeNull();
   });
 
   it("is not what the generator lays out", () => {
     for (let k = 0; k < 4; k++) {
-      const s = minesGame.executeMove(fresh(16, 16, 60, `sound-${k}`), open(8, 8));
+      const s = begun(fresh(16, 16, 60, `sound-${k}`), 8, 8);
       expect(minesGame.finishesByDeduction?.(s)).toBe(true);
     }
   });
