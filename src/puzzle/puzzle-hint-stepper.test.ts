@@ -25,11 +25,16 @@ const ATTRS: PuzzleStaticAttributes = {
 /** Build a Puzzle around a stub worker that records hint/executeHint calls.
  * The private constructor is bypassed via Reflect.construct (TS `private` is
  * compile-time only); we never call initialize()/delete() so no real worker is
- * needed. */
-function makePuzzle(overrides: Partial<Record<string, unknown>> = {}): {
+ * needed. `dealt: false` leaves the page where a load leaves it until its
+ * first board arrives; `dealBoard` is that arrival. */
+function makePuzzle(
+  overrides: Partial<Record<string, unknown>> = {},
+  { dealt = true } = {},
+): {
   puzzle: Puzzle;
   calls: string[];
   workerPuzzle: RemoteWorkerPuzzle;
+  dealBoard: () => void;
   setHintError: (e: string | null) => void;
   setExecuteError: (e: string | null) => void;
 } {
@@ -61,11 +66,21 @@ function makePuzzle(overrides: Partial<Record<string, unknown>> = {}): {
     workerPuzzle,
     ATTRS,
   ]) as Puzzle;
+  const dealBoard = () =>
+    void Reflect.get(
+      puzzle,
+      "notifyChange",
+    )({
+      type: "game-id-change",
+      currentGameId: "p:d",
+    });
+  if (dealt) dealBoard();
 
   return {
     puzzle,
     calls,
     workerPuzzle,
+    dealBoard,
     setHintError: (e) => {
       hintError = e;
     },
@@ -216,6 +231,8 @@ describe("Hint presses coalesce while one is in flight (coalesce-hint-requests)"
     // them, so a regression to queuing fails here rather than hanging on a
     // gate nothing releases (the file's test timeout is an hour).
     const dropped = [puzzle.hint(), puzzle.hint()];
+    // A press reaches the worker a tick after it is made (`Puzzle.board`).
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(calls).toEqual(["show"]);
     expect(puzzle.hintArmedToApply).toBe(false);
     await release();

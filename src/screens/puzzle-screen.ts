@@ -6,6 +6,7 @@ import { showAlert } from "../dialogs/alert-dialog.ts";
 import { showToast } from "../dialogs/toast.ts";
 import { assertNever } from "../engine/assert-never.ts";
 import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
+import { awaitsFirstBoard } from "../puzzle/board-commands.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import type { PuzzleEvent } from "../puzzle/components/context.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
@@ -305,7 +306,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                   class="phone-action hint"
                   type="button"
                   data-command="hint"
-                  ?disabled=${puzzle.isSolved}
+                  ?disabled=${puzzle.isSolved || awaitsFirstBoard("hint", puzzle)}
               >
                 <wa-icon name="hint"></wa-icon>
                 <span>${
@@ -374,7 +375,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           class="phone-action"
           type="button"
           data-command=${command}
-          ?disabled=${disabled}
+          ?disabled=${disabled || awaitsFirstBoard(command, this.puzzle)}
       >
         <wa-icon name=${icon}></wa-icon>
         <span>${label}</span>

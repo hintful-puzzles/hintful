@@ -26,25 +26,16 @@ import type {
   Size,
 } from "../engine/types.ts";
 
-export interface PuzzleEngineSurface {
-  readonly puzzleId: string;
-
-  setCallbacks(
-    notifyChange: (message: ChangeNotification) => void,
-    notifyTimerState: (isActive: boolean) => void,
-  ): void;
-  getStaticProperties(): PuzzleStaticAttributes;
-
-  /** `fitTo` is the board area and `kept` a board dealt ahead; see
-   * `EngineCore.newGame`. */
-  newGame(fitTo?: Size, kept?: DealtBoard | null): string | null;
-  /** See `EngineCore.dealParams`. */
-  dealParams(fitTo?: Size): EncodedParams;
-  /** See `EngineCore.dealFoundNone`. */
-  dealFoundNone(fitTo?: Size): string;
-  /** See `EngineCore.returnToBoardType`. */
-  returnToBoardType(): void;
-  newGameFromId(id: string): string | null;
+/**
+ * The methods that read or act on **the board in play**, and so have nothing
+ * to answer before the first board exists: the midend holds no state then, and
+ * a game handed none throws from inside its own code.
+ *
+ * Apart from the rest of the surface so that the app holds the two as two
+ * types (`Puzzle.board`): a method declared here cannot be called without
+ * waiting for the first board, and the compiler says so.
+ */
+export interface BoardSurface {
   restartGame(): void;
   undo(): void;
   redo(): void;
@@ -72,14 +63,39 @@ export interface PuzzleEngineSurface {
 
   processKey(key: number): boolean;
   processMouse(point: Point, button: number): boolean;
+  /** Pointer moved over the board with no button down, or left it
+   * (`null`). Repaints at most; never a move, never history. */
+  processHover(point: Point | null): boolean;
+
+  formatAsText(): string | null;
+  saveGame(): Uint8Array<ArrayBuffer>;
+}
+
+export interface PuzzleEngineSurface extends BoardSurface {
+  readonly puzzleId: string;
+
+  setCallbacks(
+    notifyChange: (message: ChangeNotification) => void,
+    notifyTimerState: (isActive: boolean) => void,
+  ): void;
+  getStaticProperties(): PuzzleStaticAttributes;
+
+  /** `fitTo` is the board area and `kept` a board dealt ahead; see
+   * `EngineCore.newGame`. */
+  newGame(fitTo?: Size, kept?: DealtBoard | null): string | null;
+  /** See `EngineCore.dealParams`. */
+  dealParams(fitTo?: Size): EncodedParams;
+  /** See `EngineCore.dealFoundNone`. */
+  dealFoundNone(fitTo?: Size): string;
+  /** See `EngineCore.returnToBoardType`. */
+  returnToBoardType(): void;
+  newGameFromId(id: string): string | null;
+
   /** Whether the running game tracks the pointer between presses
    * (`Game.hover`). Asked once per game so the app can send no hovers at
    * all for a game that has none. A method rather than a property because
    * this surface crosses Comlink, where a getter would not survive. */
   tracksHover(): boolean;
-  /** Pointer moved over the board with no button down, or left it
-   * (`null`). Repaints at most; never a move, never history. */
-  processHover(point: Point | null): boolean;
   requestKeys(): KeyLabel[];
 
   getParams(): string;
@@ -110,10 +126,8 @@ export interface PuzzleEngineSurface {
   darkPalette(defaultBackground: Color): Record<number, Color>;
   size(maxSize: Size): Size;
   preferredSize(): Size;
-  formatAsText(): string | null;
 
   loadGame(data: Uint8Array<ArrayBuffer>): string | null;
-  saveGame(): Uint8Array<ArrayBuffer>;
   /** Hold the solve timer while the page is hidden; see `EngineCore`. */
   setTimerPaused(paused: boolean): void;
 

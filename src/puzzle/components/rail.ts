@@ -23,6 +23,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { homePageUrl } from "../../routing.ts";
 import { savedGames } from "../../store/saved-games.ts";
 import { cssWATweaks } from "../../utils/css.ts";
+import { awaitsFirstBoard } from "../board-commands.ts";
 import { puzzleContext } from "../contexts.ts";
 import type { Puzzle } from "../puzzle.ts";
 import { justSaved } from "../quick-save-actions.ts";
@@ -374,7 +375,10 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
           entry === "divider"
             ? html`<wa-divider></wa-divider>`
             : html`
-              <wa-dropdown-item data-command=${entry.command}>
+              <wa-dropdown-item
+                  data-command=${entry.command}
+                  ?disabled=${awaitsFirstBoard(entry.command, this.puzzle ?? null)}
+              >
                 <wa-icon slot="icon" name=${entry.icon}></wa-icon>
                 ${entry.label}
               </wa-dropdown-item>`,
@@ -394,7 +398,7 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
           class=${row.quiet ? "quiet" : nothing}
           type="button"
           data-command=${row.command}
-          ?disabled=${row.disabled === true}
+          ?disabled=${row.disabled === true || awaitsFirstBoard(row.command, this.puzzle ?? null)}
       >
         <wa-icon part="row-icon" name=${row.icon}></wa-icon>
         <span part="row-label">${row.label}</span>

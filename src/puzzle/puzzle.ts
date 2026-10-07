@@ -1,6 +1,6 @@
 import { computed, type Signal, signal } from "@lit-labs/signals";
 import * as Sentry from "@sentry/browser";
-import { proxy, releaseProxy, transfer } from "comlink";
+import { proxy, type Remote, releaseProxy, transfer } from "comlink";
 import { assertNever } from "../engine/assert-never.ts";
 import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
 import type {
@@ -26,6 +26,7 @@ import { keptBoards } from "../store/kept-boards.ts";
 import { nextAnimationFrame } from "../utils/timing.ts";
 import { puzzleDataMap } from "./catalog.ts";
 import { DealAhead, SLOW_DEAL_MS } from "./deal-ahead.ts";
+import type { BoardSurface, PuzzleEngineSurface } from "./engine-surface.ts";
 import {
   type PuzzleWorker,
   spawnPuzzleWorker,
@@ -107,7 +108,7 @@ export class Puzzle {
   private constructor(
     public readonly puzzleId: string,
     private readonly worker: Pick<PuzzleWorker, "terminate">,
-    private readonly workerPuzzle: RemoteWorkerPuzzle,
+    remote: RemoteWorkerPuzzle,
     {
       canSolve,
       canHint,
@@ -134,6 +135,36 @@ export class Puzzle {
     this.ignoresSecondaryButton = ignoresSecondaryButton;
     this.wantsStatusbar = wantsStatusbar;
     this.paletteScheme = paletteScheme;
+    this.workerPuzzle = remote;
+    this.boardRemote = remote;
+  }
+
+  /** The worker's puzzle, less the methods that read the board in play: those
+   * are reached through {@link board}, which waits for there to be one. */
+  private readonly workerPuzzle: Remote<Omit<PuzzleEngineSurface, keyof BoardSurface>>;
+  private readonly boardRemote: Remote<BoardSurface>;
+  private firstBoardDealt: () => void = () => {};
+  private readonly firstBoard = new Promise<void>((resolve) => {
+    this.firstBoardDealt = resolve;
+  });
+
+  /**
+   * The methods that read the board in play, once there is a board.
+   *
+   * A deal is run off the worker that serves the board (`DealAhead`), so that
+   * worker is free to answer through the first deal of a page load, when it
+   * has no board to answer about. A command sent then waits here, and is
+   * answered about the board that arrives.
+   */
+  private async board(): Promise<Remote<BoardSurface>> {
+    await this.firstBoard;
+    return this.boardRemote;
+  }
+
+  /** Whether the first board has arrived. Until it has, the chrome offers no
+   * command that acts on one. */
+  public get hasBoard(): boolean {
+    return this._currentGameId.get() !== null;
   }
 
   private async initialize(): Promise<void> {
@@ -178,6 +209,7 @@ export class Puzzle {
     switch (message.type) {
       case "game-id-change": {
         update(this._currentGameId, message.currentGameId);
+        this.firstBoardDealt();
         // A new board may be the kept one, played.
         this.prepareNextDeal();
         break;
@@ -582,17 +614,17 @@ export class Puzzle {
     this.stopAutoHint("");
     this.setHelpMessage("");
     this._activeHintExplanation.set("");
-    await this.workerPuzzle.restartGame();
+    await (await this.board()).restartGame();
   }
 
   public undo(): Promise<void> {
     this.stopAutoHint("Canceled by manual move");
-    return this.enqueueInput(() => this.workerPuzzle.undo());
+    return this.enqueueInput(async () => (await this.board()).undo());
   }
 
   public redo(): Promise<void> {
     this.stopAutoHint("Canceled by manual move");
-    return this.enqueueInput(() => this.workerPuzzle.redo());
+    return this.enqueueInput(async () => (await this.board()).redo());
   }
 
   public async solve(): Promise<string | null> {
@@ -600,7 +632,7 @@ export class Puzzle {
     // Solve applies a move, so it queues behind any step Auto-Hint has in
     // flight. A refusal is the only answer the press gets ("Game has not been
     // started yet"), so it goes where a refused hint goes.
-    const err = await this.enqueueInput(() => this.workerPuzzle.solve());
+    const err = await this.enqueueInput(async () => (await this.board()).solve());
     if (err) this.setHelpMessage(err, true);
     return err;
   }
@@ -654,7 +686,7 @@ export class Puzzle {
     // uses (the midend also lights up any mistakes behind the message) and
     // never arms.
     this.stopAutoHint("Canceled by manual move");
-    const err = await this.workerPuzzle.hint();
+    const err = await (await this.board()).hint();
     if (err) {
       this.setHelpMessage(err, true);
       return err;
@@ -667,25 +699,25 @@ export class Puzzle {
   }
 
   public async executeHint(hideAfter = false): Promise<string | null> {
-    return this.enqueueInput(() => this.workerPuzzle.executeHint(hideAfter));
+    return this.enqueueInput(async () => (await this.board()).executeHint(hideAfter));
   }
 
   /** Check the board as Check & save does, displaying what the check finds:
    * its mistakes, or the cause of a dead end. */
   public async check(): Promise<CheckVerdict> {
-    return this.workerPuzzle.check();
+    return (await this.board()).check();
   }
 
   /** The active game's reference-aid model (inventory checklist with found
    * status), or null when the game has no reference aid. */
   public async getReference(): Promise<ReferenceModel | null> {
-    return this.workerPuzzle.getReference();
+    return (await this.board()).getReference();
   }
 
   /** Spotlight a reference item on the board (or clear it with null). A
    * `UI_UPDATE`-shaped change: the board repaints but no move is recorded. */
   public async selectReference(key: string | null): Promise<void> {
-    return this.workerPuzzle.selectReference(key);
+    return (await this.board()).selectReference(key);
   }
 
   public startAutoHint(): void {
@@ -736,7 +768,7 @@ export class Puzzle {
       // than the move's own slow-motion animation (stretched to
       // HINT_ANIM_S, which equals this dwell for animated games), so an
       // animated move plays out fully and flows straight into the next.
-      const animMs = await this.workerPuzzle.currentAnimationMs();
+      const animMs = await (await this.board()).currentAnimationMs();
       await new Promise((resolve) =>
         setTimeout(resolve, Math.max(animMs, AUTO_HINT_STEP_MS)),
       );
@@ -761,7 +793,9 @@ export class Puzzle {
    * `enqueueInput` queue: the auto-hint loop cannot slip a step in between.
    */
   public async processKey(key: number): Promise<boolean> {
-    const consumed = await this.enqueueInput(() => this.workerPuzzle.processKey(key));
+    const consumed = await this.enqueueInput(async () =>
+      (await this.board()).processKey(key),
+    );
     if (consumed) this.stopAutoHint("Canceled by manual move");
     return consumed;
   }
@@ -770,8 +804,8 @@ export class Puzzle {
    * corner — is not a move, and canceling on it would make Auto-Hint stop for
    * a click that did nothing. */
   public async processMouse({ x, y }: Point, button: number): Promise<boolean> {
-    const consumed = await this.enqueueInput(() =>
-      this.workerPuzzle.processMouse({ x, y }, button),
+    const consumed = await this.enqueueInput(async () =>
+      (await this.board()).processMouse({ x, y }, button),
     );
     if (consumed) this.stopAutoHint("Canceled by manual move");
     return consumed;
@@ -802,14 +836,14 @@ export class Puzzle {
     }
     this.hoverInFlight = true;
     try {
-      await this.workerPuzzle.processHover(p);
+      await (await this.board()).processHover(p);
       // `{ at: null }` is a queued "the pointer left", which is a real hover to
       // deliver; `null` is nothing queued. Two kinds of nothing, two states
       // (`docs/games/mechanics.md` § "Absence is `null`").
       while (this.hoverPending !== null) {
         const next = this.hoverPending.at;
         this.hoverPending = null;
-        await this.workerPuzzle.processHover(next);
+        await (await this.board()).processHover(next);
       }
     } finally {
       this.hoverInFlight = false;
@@ -920,7 +954,7 @@ export class Puzzle {
   }
 
   public async formatAsText(): Promise<string | null> {
-    return this.workerPuzzle.formatAsText();
+    return (await this.board()).formatAsText();
   }
 
   public async loadGame(data: Uint8Array<ArrayBuffer>): Promise<string | null> {
@@ -935,7 +969,7 @@ export class Puzzle {
     // Deliberately not attached to crash reports: the privacy notes promise a
     // report carries nothing the player has saved. `captureSentryContext` sends
     // the game ID and move count, which is enough to reproduce.
-    return this.workerPuzzle.saveGame();
+    return (await this.board()).saveGame();
   }
 
   //

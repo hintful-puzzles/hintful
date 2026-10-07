@@ -253,7 +253,8 @@ Most boards are dealt at once. A large *Custom type…* size, or a rare
 combination of size and difficulty, can take seconds or minutes to find. After
 a second the app says *Looking for a board…*, and the board you were on stays
 where it is: you can go on playing it, hints and all, until the new one
-arrives.
+arrives. When a page opens with no board yet, the commands that act on one
+(Hint, Check & save and the rest) are grayed out until it is there.
 
 **Stop** beside those words ends the search. You keep the board you have,
 and the type menu goes back to its type. Nothing is lost by stopping, and

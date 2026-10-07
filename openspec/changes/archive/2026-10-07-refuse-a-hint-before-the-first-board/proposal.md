@@ -1,6 +1,6 @@
 # refuse-a-hint-before-the-first-board
 
-**Status: scaffolded, not started (2026-10-07).** Found while checking
+**Status: done (2026-10-07).** Found while checking
 `work-down-the-unreached-hint-rungs` in the browser, and filed on the owner's
 yes that day.
 
