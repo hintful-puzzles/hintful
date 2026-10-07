@@ -46,7 +46,8 @@ or less.
 3x3, 3x4, 3x5 and 4x3 Penrose (rhombs) are dealt as before. Their usual count
 is 1 to 3, so three rhombs are not under it: they are what a box that small
 holds. Refusing them would refuse sizes upstream deals and is the owner's
-call; this change does not need it, and the recommendation is to leave them.
+call; this change does not need it, and the recommendation was to leave them.
+The owner agreed (2026-10-07): they stay dealt.
 
 ## What is left as it was
 
