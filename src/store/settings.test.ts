@@ -4,7 +4,6 @@
 // against `fake-indexeddb`, via the shared setup that also shims Dexie's IDB2
 // array `maxKey`. happy-dom because the `Settings` singleton registers a
 // `pageshow` listener in its constructor, so importing it needs a `window`.
-import "../test-setup/indexeddb.ts";
 import { describe, expect, it } from "vitest";
 import { settings } from "./settings.ts";
 

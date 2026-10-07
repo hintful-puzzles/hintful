@@ -10,9 +10,6 @@
 //    when the release beats the press's round-trip to the engine. That ordering
 //    lives entirely in this component, so a tier-1 engine test cannot see it.
 import { afterEach, describe, expect, it, vi } from "vitest";
-// The component's import chain opens a Dexie database at module load; give it a
-// fake IndexedDB so happy-dom doesn't reject on the missing API.
-import "../../test-setup/indexeddb.ts";
 import "./view-interactive.ts";
 import { PuzzleButton } from "../../engine/types.ts";
 import type { PuzzleViewInteractive } from "./view-interactive.ts";

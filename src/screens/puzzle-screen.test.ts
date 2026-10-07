@@ -7,10 +7,6 @@
 // under happy-dom with a fake `Puzzle` and mocked dialog/persistence; no worker,
 // no canvas, no full render (we invoke the command handlers directly rather than
 // mount Web Awesome). Visual/label rendering stays a Playwright smoke-check.
-// Provides a fake `indexedDB` global (and the Dexie maxKey shim) so the
-// transitive Dexie users in puzzle-screen's import graph (e.g. `settings.ts`)
-// open cleanly instead of throwing under happy-dom.
-//
 // NO `vi.mock` HERE, ON PURPOSE. Under `isolate: false` a worker keeps its
 // module graph from file to file, and a `vi.mock` reaches only the modules
 // evaluated after it. `help-command-links.test.ts` and
@@ -21,7 +17,6 @@
 // call time by every importer however early it loaded, and `restoreAllMocks`
 // hands the real function back to the next file in the worker.
 // `no-module-mocks.test.ts` keeps `vi.mock` out of the suite.
-import "../test-setup/indexeddb.ts";
 import {
   afterEach,
   beforeEach,

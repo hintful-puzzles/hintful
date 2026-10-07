@@ -11,10 +11,6 @@
  * the physical keyboard dead until the player clicked the board again.
  */
 import "../../test-setup/element-internals.ts";
-// The component's import chain makes a Dexie database as it loads, and every
-// later file in this worker shares it: made with no IndexedDB, it rejects
-// in whichever of them opens it.
-import "../../test-setup/indexeddb.ts";
 import "../../test-setup/resize-and-animations.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { KeyLabel } from "../../engine/types.ts";

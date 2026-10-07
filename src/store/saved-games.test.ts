@@ -1,8 +1,6 @@
 // Tier-3 persistence test (see the `repo-layout` spec): the quick-save
 // DB round-trip, run in-process against fake-indexeddb — the gap
 // `add-quick-save-check-save` deferred for lack of an IndexedDB harness.
-// `resetDb` (and its `fake-indexeddb/auto` side effect) must be imported
-// before `saved-games`/`db` so the global `indexedDB` is in place.
 
 import { Signal } from "@lit-labs/signals";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";

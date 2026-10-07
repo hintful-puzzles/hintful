@@ -28,7 +28,6 @@
  * bar, is held to the strict rule.
  */
 import "../test-setup/element-internals.ts";
-import "../test-setup/indexeddb.ts";
 import { render, type TemplateResult } from "lit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

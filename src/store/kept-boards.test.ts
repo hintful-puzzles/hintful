@@ -1,6 +1,4 @@
-// The kept-board store against fake-indexeddb. The setup import comes first,
-// so the global `indexedDB` is in place when the store opens its database.
-import "../test-setup/indexeddb.ts";
+// The kept-board store against fake-indexeddb (`test-setup/indexeddb.ts`).
 import Dexie from "dexie";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { DealtBoard } from "../engine/types.ts";

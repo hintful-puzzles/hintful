@@ -1,8 +1,7 @@
 // The next board dealt ahead and played, through the real `Puzzle`, the real
 // worker adapter over a real midend, and the real store on fake-indexeddb.
 // Only the second worker is stood in for: each deal it is asked for is held
-// until the test lets it finish. A New game with no board kept waits on one. The setup import comes first.
-import "../test-setup/indexeddb.ts";
+// until the test lets it finish. A New game with no board kept waits on one.
 import { releaseProxy } from "comlink";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "../games/index.ts";

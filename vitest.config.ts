@@ -138,6 +138,12 @@ export default defineConfig({
     ...passFiles(),
     ...gameScopeFilter(),
     environment: "node",
+    // Dexie reads `globalThis.indexedDB` once, when its module is first
+    // evaluated, and with `isolate: false` that module is shared by every file
+    // in a worker. So the fake has to be in place before any test file's
+    // imports run: a file that reached Dexie first, through `puzzle.ts`, left
+    // the store's own tests without a database whenever it ran ahead of them.
+    setupFiles: ["./src/test-setup/indexeddb.ts"],
     maxWorkers: maxWorkers(),
     // ONE generous ceiling for the whole suite; no test sets its own.
     //

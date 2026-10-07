@@ -1,14 +1,11 @@
 /**
  * In-process IndexedDB for persistence tests (tier 3).
  *
- * Importing this module installs `fake-indexeddb` as the global
- * `indexedDB`, so Dexie (`src/store/db.ts`) opens against an in-memory
- * store with no browser. Import it **before** any value import that
- * touches `db` (type-only imports are erased and don't count), so the
- * global and the maxKey shim below are in place when `db.ts` evaluates:
- *
- *   import { resetDb } from "./indexeddb.ts"; // first
- *   import { savedGames } from "../store/saved-games.ts"; // db.ts here
+ * This module installs `fake-indexeddb` as the global `indexedDB`, so Dexie
+ * (`src/store/db.ts`) opens against an in-memory store with no browser. It is
+ * a vitest setup file (`vitest.config.ts`), so the global and the maxKey shim
+ * below are in place before any test file's imports are evaluated. A test
+ * imports it only for {@link resetDb}.
  *
  * `fake-indexeddb/auto` sets the global as a side effect on import.
  */
