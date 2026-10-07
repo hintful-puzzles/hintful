@@ -4,7 +4,7 @@
  * in a row and each row/column holds equally many of each; an optional
  * variant also forbids two identical rows or columns.
  *
- * Left-click cycles a cell empty → one (black) → zero (white) → empty;
+ * Left-click cycles a cell empty → one → zero → empty;
  * right-click cycles the other way; number keys place directly.
  */
 
@@ -34,7 +34,7 @@ import {
 import type { Point } from "../../engine/types.ts";
 import { type Cell, EMPTY, ONE, ZERO } from "./constants.ts";
 import { newDesc, solvableAt } from "./generator.ts";
-import { type Marked, say } from "./hint-text.ts";
+import { colorName, type Marked, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -96,14 +96,14 @@ const targetVerbs: TargetVerbs<
   UnrulyMove
 > = {
   geometry: squareGrid({ size: (s) => ({ w: s.w2, h: s.h2 }), border }),
-  // empty → black → white → empty
+  // empty → one → zero → empty
   primary: {
-    does: "turn it black",
+    does: `turn it ${colorName(ONE)}`,
     apply: place((c) => (c === EMPTY ? ONE : c === ONE ? ZERO : EMPTY)),
   },
-  // empty → white → black → empty
+  // empty → zero → one → empty
   secondary: {
-    does: "turn it white",
+    does: `turn it ${colorName(ZERO)}`,
     apply: place((c) => (c === EMPTY ? ZERO : c === ZERO ? ONE : EMPTY)),
   },
   keyOnly: [
@@ -123,8 +123,8 @@ function interpretMove(
   p: Point,
   rawButton: number,
 ): UnrulyMove | null | UiUpdate {
-  // A digit sets the square under a shown cursor outright: 1 black, 0 or 2
-  // white.
+  // A digit sets the square under a shown cursor outright: 1 is ONE, 0 or 2
+  // is ZERO.
   const digit = digitOf(stripModifiers(rawButton));
   if (digit !== null && digit <= 2 && ui.cursor.visible)
     return place(digit === 1 ? ONE : ZERO)(state, ui.cursor);
@@ -319,7 +319,7 @@ export const unrulyGame: Game<
   hintRungs: UNRULY_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the square to color. It is drawn empty: the sentence says whether it must be black or white.",
+      ring: `the square to color. It is drawn empty: the sentence says whether it must be ${colorName(ONE)} or ${colorName(ZERO)}.`,
       outline:
         "the squares whose colors the step reasons from: the pair that would make three, the full quota, the only places the last one can go, or the row a match would copy.",
       stripes: 'the row or column the sentence calls "this row" or "this column".',

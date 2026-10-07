@@ -1868,7 +1868,7 @@ to a similar game:
 | --- | --- | --- |
 | Singles | forced cell, blue fill | matching number → `COL_HINT_CELL` shade + digit; cited **black** square → teal `COL_HINT_BLACKREF` ring; cited **white** circle → violet `COL_HINT_WHITEREF` ring; protected corner → amber `COL_HINT_STRAND` |
 | Range | forced cell, blue fill (no mark preview) | undecided premise → `COL_HINT_CELL` shade; cited **black** square → teal `COL_HINT_BLACKREF` ring (same hue as Singles) |
-| Unruly | forced cell, blue fill (grow anim only on auto-hint execution) | empty journey siblings → `COL_HINT_CELL` shade; cited premise / pivotal cells → orange `COL_HINT_REF` ring (**one** color, not the black/white split — its rings land on black cells, a balanced both-color row, *and* empty windows, so a state-derived color is ill-defined) |
+| Unruly | forced cell, blue `COL_HINT` ring (grow anim only on auto-hint execution) | the line the sentence names → `COL_HINT` hatch, under the pieces; cited premise / pivotal cells → orange `COL_HINT_REF` ring (**one** color, not the black/white split — its rings land on pieces of one kind, a balanced row of both, *and* empty windows, so a state-derived color is ill-defined) |
 | Palisade | forced edge(s), blue `COL_HINT` segments (equivalent edges share it) | region → `COL_HINT_CELL` shade; clue → its drawn digit on the shaded cell |
 | Filling | target square(s), *mild* `COL_HINT` fill, **no digit** | region premise → `COL_HINT_CELL` shade + digit on top |
 | Towers | struck candidate digit(s) `COL_HINT` + cross-through (on a *non*-`COL_HINT` cell so the digit shows); placement target `COL_HINT` fill (no digit to hide) | driving **clue cell(s)** *and* their line of sight → `COL_HINT_CELL` shade (clue + sightline read as one premise region) |

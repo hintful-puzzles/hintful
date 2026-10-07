@@ -1,7 +1,7 @@
 // Tier-2 render-ops: drive Unruly's `redraw` against a recording
-// `GameDrawing` double — tile fill per color, the 3-in-a-row error bars,
-// the count `!`, the immutable-clue bevel, the cursor outline, the
-// completion-flash highlight shift, and the cache suppressing unchanged tiles.
+// `GameDrawing` double — a piece per state, the 3-in-a-row error bars, the
+// count badge, the lifted cell under a given, the cursor outline, the
+// completion flash, and the cache suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
@@ -13,12 +13,12 @@ import type { UnrulyHint } from "./index.ts";
 import { unrulyGame } from "./index.ts";
 import {
   COL_0,
-  COL_0_HIGHLIGHT,
   COL_1,
-  COL_1_HIGHLIGHT,
   COL_CURSOR,
   COL_EMPTY,
   COL_ERROR,
+  COL_ERROR_TEXT,
+  COL_GIVEN,
   COL_HINT,
   COL_HINT_REF,
   newDrawState,
@@ -71,9 +71,21 @@ function place(state: UnrulyState, x: number, y: number, value: Cell): UnrulySta
   return executeMove(state, { type: "place", x, y, value });
 }
 
-/** The tile bodies of a frame: full-size rects, narrowed so their color reads. */
+/** The cell surfaces of a frame: full-size rects, narrowed so their color reads. */
 const bodies = (ops: RecordingDrawing["ops"]) =>
   opsOfKind(ops, "rect").filter((o) => o.w === TS - 1 && o.h === TS - 1);
+
+/** The square pieces of a frame, with how wide each is drawn. */
+const squares = (ops: RecordingDrawing["ops"]) =>
+  opsOfKind(ops, "polygon")
+    .filter((o) => o.fill === COL_1)
+    .map((o) => {
+      const xs = o.points.map((p) => p[0]);
+      return Math.max(...xs) - Math.min(...xs);
+    });
+/** The disc pieces of a frame. */
+const discs = (ops: RecordingDrawing["ops"]) =>
+  opsOfKind(ops, "circle").filter((o) => o.fill === COL_0);
 
 describe("Unruly redraw", () => {
   it("fills empty tiles neutral on first draw, plus the outer grid frame", () => {
@@ -87,15 +99,17 @@ describe("Unruly redraw", () => {
     expect(ops.some((o) => o.op === "rect" && o.color === 1)).toBe(true);
   });
 
-  it("fills one (black) and zero (white) tiles with their colors", () => {
+  it("draws a one as a square and a zero as a disc, on a surface that stays quiet", () => {
     let state = blank();
     state = place(state, 1, 1, ONE);
     state = place(state, 2, 2, ZERO);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
-    expect(bodies(ops).some((o) => o.color === COL_1)).toBe(true);
-    expect(bodies(ops).some((o) => o.color === COL_0)).toBe(true);
+    expect(squares(ops)).toHaveLength(1);
+    expect(discs(ops)).toHaveLength(1);
+    // The piece carries the state, so no cell is filled in a piece's color.
+    expect(bodies(ops).every((o) => o.color === COL_EMPTY)).toBe(true);
   });
 
   it("draws error bars across a three-in-a-row", () => {
@@ -122,19 +136,22 @@ describe("Unruly redraw", () => {
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
-    expect(
-      ops.some((o) => o.op === "text" && o.text === "!" && o.color === COL_ERROR),
-    ).toBe(true);
+    // A badge: the `!` in the error's text color, on a disc of the error color.
+    const marks = opsOfKind(ops, "text").filter((o) => o.text === "!");
+    expect(marks).toHaveLength(4);
+    for (const m of marks) expect(m.color).toBe(COL_ERROR_TEXT);
+    expect(opsOfKind(ops, "circle").filter((o) => o.fill === COL_ERROR)).toHaveLength(
+      4,
+    );
   });
 
-  it("draws the immutable-clue bevel in highlight/lowlight", () => {
-    const state = withClue(ONE);
+  it("lifts the cell under a given, and under no piece the player placed", () => {
+    const state = place(withClue(ONE), 3, 3, ONE);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
-    // COL_1 bevel uses val+1 (highlight) and val+2 (lowlight).
-    expect(ops.some((o) => "color" in o && o.color === COL_1_HIGHLIGHT)).toBe(true);
-    expect(ops.some((o) => "color" in o && o.color === COL_1 + 2)).toBe(true);
+    expect(squares(ops)).toHaveLength(2);
+    expect(bodies(ops).filter((o) => o.color === COL_GIVEN)).toHaveLength(1);
   });
 
   it("draws the cursor outline in the cursor color", () => {
@@ -151,16 +168,19 @@ describe("Unruly redraw", () => {
     ).toBeGreaterThanOrEqual(4);
   });
 
-  it("shifts filled tiles to highlight during the flash", () => {
+  it("lifts every cell on the flash's lit frames and none on the frame between", () => {
     let state = blank();
     state = place(state, 1, 1, ONE);
     state = place(state, 2, 2, ZERO);
-    const ds = freshDs(state);
-    const { dr, ops } = recordingDrawing();
-    // flashTime 0.3 → floor(0.3/0.12)=2 → FF_FLASH1 → +1 (highlight).
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0.3);
-    expect(bodies(ops).some((o) => o.color === COL_1_HIGHLIGHT)).toBe(true);
-    expect(bodies(ops).some((o) => o.color === COL_0_HIGHLIGHT)).toBe(true);
+    // flashTime / 0.12 floors to 0, 1, 2: lit, unlit, lit.
+    const surfaces = (flashTime: number) => {
+      const { dr, ops } = recordingDrawing();
+      redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, flashTime);
+      return new Set(bodies(ops).map((o) => o.color));
+    };
+    expect(surfaces(0.05)).toEqual(new Set([COL_GIVEN]));
+    expect(surfaces(0.15)).toEqual(new Set([COL_EMPTY]));
+    expect(surfaces(0.3)).toEqual(new Set([COL_GIVEN]));
   });
 
   it("outlines mistake cells in the error color", () => {
@@ -175,50 +195,42 @@ describe("Unruly redraw", () => {
     expect(errorRects.length).toBe(4);
   });
 
-  it("grows the new color from the center during a placement animation", () => {
-    const prev = blank();
-    const state = place(prev, 0, 0, ONE);
-    const ds = freshDs(state);
-    const { dr, ops } = recordingDrawing();
-    // Mid-animation: the previous color beneath, the new color as a smaller
-    // centered square (w < TS-1).
-    redraw(dr, ds, prev, state, 1, freshUi(), PLACE_ANIM_TIME / 2, 0);
-    // The from-color (EMPTY) is painted full-tile beneath at the cell.
-    expect(bodies(ops).some((o) => o.color === COL_EMPTY)).toBe(true);
-    // The new color appears as a partial (growing) square, not a full body.
-    const grow = ops.filter(
-      (o) =>
-        o.op === "rect" && o.color === COL_1 && (o.w ?? 0) > 0 && (o.w ?? 0) < TS - 1,
-    );
-    expect(grow.length).toBe(1);
-  });
-
-  it("settles to the plain new color once the animation ends (prev null)", () => {
-    const prev = blank();
-    const state = place(prev, 0, 0, ONE);
-    const ds = freshDs(state);
-    const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
-    expect(bodies(ops).some((o) => o.color === COL_1)).toBe(true);
-    // No partial growing square remains.
-    expect(
-      ops.some(
-        (o) =>
-          o.op === "rect" && o.color === COL_1 && (o.w ?? 0) < TS - 1 && (o.w ?? 0) > 0,
-      ),
-    ).toBe(false);
+  it("grows a placed piece from the middle, and shrinks one taken away", () => {
+    const empty = blank();
+    const filled = place(empty, 0, 0, ONE);
+    const widthAt = (
+      prev: UnrulyState | null,
+      state: UnrulyState,
+      animTime: number,
+    ): number[] => {
+      const { dr, ops } = recordingDrawing();
+      redraw(dr, freshDs(state), prev, state, 1, freshUi(), animTime, 0);
+      return squares(ops);
+    };
+    const [settled] = widthAt(null, filled, 0);
+    const [early] = widthAt(empty, filled, PLACE_ANIM_TIME / 4);
+    const [late] = widthAt(empty, filled, (PLACE_ANIM_TIME * 3) / 4);
+    expect(early).toBeGreaterThan(0);
+    expect(early).toBeLessThan(late);
+    expect(late).toBeLessThan(settled);
+    // Taken away: the piece that was there, getting smaller.
+    const [going] = widthAt(filled, empty, PLACE_ANIM_TIME / 4);
+    const [nearlyGone] = widthAt(filled, empty, (PLACE_ANIM_TIME * 3) / 4);
+    expect(going).toBeLessThan(settled);
+    expect(nearlyGone).toBeLessThan(going);
+    expect(widthAt(null, empty, 0)).toEqual([]);
   });
 
   it("renders a displayed hint: target ring, hatched line, premise ring", () => {
-    // A black clue at (0,0) (a ring premise) and an empty target at (2,0)
-    // forced black, both on row 0, which the sentence names.
+    // A clue at (0,0) (a ring premise) and an empty target at (2,0) forced to
+    // the same kind, both on row 0, which the sentence names.
     const state = withClue(ONE);
     const ds = freshDs(state);
     const target = { x: 2, y: 0, value: ONE as Cell };
     const row0 = Array.from({ length: state.w2 }, (_, x) => ({ x, y: 0 }));
     const words = so({
-      look: phrase`${mark.the("outline", CELL, [{ x: 0, y: 0 }], "cell")} is black`,
-      move: phrase`${mark.the("ring", CELL, [{ x: 2, y: 0 }], "cell")} on ${mark.the("stripes", CELL, row0, "row")} must be black`,
+      look: phrase`${mark.the("outline", CELL, [{ x: 0, y: 0 }], "cell")} is filled`,
+      move: phrase`${mark.the("ring", CELL, [{ x: 2, y: 0 }], "cell")} on ${mark.the("stripes", CELL, row0, "row")} must match it`,
     });
     const hint: HintStep<UnrulyMove, UnrulyHint> = {
       move: { type: "place", x: 2, y: 0, value: ONE },
@@ -230,8 +242,8 @@ describe("Unruly redraw", () => {
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0, hint);
     // Target cell: a COL_HINT **ring**, and no COL_HINT body. A fill in a game
-    // whose move is "make this cell black or white" reads as a third color
-    // already placed, so the cell keeps its own color under the mark.
+    // whose move is "put one of two pieces here" reads as a third piece
+    // already placed, so the cell keeps its own surface under the mark.
     expect(
       opsOfKind(ops, "rect").filter(
         (o) => o.color === COL_HINT && !(o.w === TS - 1 && o.h === TS - 1),

@@ -837,9 +837,8 @@ the role or a comment, and fails on a bare departure. Before
 cursors; the seventeen read as seventeen decisions and were one decision plus
 collisions. If nothing in the palette fits, that is an exception recorded in
 `palette-games.ts` under your game's prefix, with why no meaning and no named
-color serves — there is currently **one** in the collection (Unruly's tile
-colors, which are bevel *bases* where near-black/near-white is headroom).
-Aim to add none.
+color serves — there is currently **none** in the collection. Aim to add
+none.
 
 **Pick the replacement against the span of what it lands on, not against one
 material — and remember the span inverts.** A cursor is clamped to the whole
@@ -856,6 +855,39 @@ Purple was tried first and read as a smudge on that block for exactly that
 reason. This is `hand-author-dark-palette` F1's "'brightest' is scheme-relative"
 seen from the other side: it applies to *darkest* too, and to any argument that
 picks a color by where it sits in one scheme's ordering.
+
+### What a board looks like: pieces on a quiet surface
+
+The owner's decisions (2026-10-07, from the mock-ups in the archived change
+`give-the-boards-a-visual-identity`), which hold for every game they fit:
+
+- **The board recedes and the content carries the color.** A cell is
+  `cellSurface`, a small step off the board; the line between cells is
+  `surfaceGrid`, thin, and the frame round the grid is no heavier than it.
+- **A state is a piece, and a piece is a shape as well as a color**
+  ([`engine/piece.ts`](../../src/engine/piece.ts), `drawPiece`). It sits inset
+  on its cell, so the grid shows between neighbors of one kind and a mark at
+  the cell's edge (cursor, hint ring, outline) lands beside it. State is never
+  a step of gray alone.
+- **Two states where neither is the important one are `TWO`**: purple and
+  yellow, a square and a disc (`TWO_SHAPES`). Not blue, green, orange or red,
+  which the marks drawn on a board have spent.
+- **A given is told by the cell under it** (`givenSurface`, lifted toward
+  white), not by a mark on the piece: a given piece is the same piece.
+- **A glyph that sits on a piece is a badge**: its own disc, with the glyph in
+  the fill's text color (Unruly's count `!` is `ERROR` under `ERROR_TEXT`). Ink
+  of one hue on a piece of another differs in hue and not in lightness.
+- **A bevel is kept only where the tile is an object the player moves**
+  (Fifteen, Sixteen, Twiddle, Slide).
+
+**The game names no hue.** It takes `TWO[i]`, `TWO_NAMES[i]` for its hint
+words and verbs, and `TWO_SHAPES[i]`, and its help page writes `{{pair:0}}` and
+`{{pair:1}}` ([`help-pages.md`](../help-pages.md)). A different pair, or a
+theme a player picks, is then a change to `colors.ts` and `piece.ts` and to no
+game. A hue typed in a game, a hint sentence or a help page is the copy that
+change would leave behind. Exemplar:
+[`unruly/render.ts`](../../src/games/unruly/render.ts),
+[`unruly/hint-text.ts`](../../src/games/unruly/hint-text.ts).
 
 ### A relative color is a named function
 
@@ -905,7 +937,8 @@ things it can say:
   `[COL_HIGHLIGHT, COL_LOWLIGHT]` to stay lit from one side. A highlight you
   use as a cursor or a selection is not a bevel and stays out. A bevel built
   with `mkhighlightSpecific` from a base that authors its dark value needs no
-  swap, because the trio is derived again from the dark base (Unruly).
+  swap, because the trio is derived again from the dark base (Crossing's
+  wall).
 - `board` — the color the board is painted in, when it is not color 0
   (Untangle, whose color 0 is the dead space around the play area). The page
   around the canvas takes it.
@@ -938,8 +971,7 @@ not `mkhighlight`.**
 its trio from the frontend background and never extrapolates the base;
 `mkhighlightSpecific(base)` extrapolates a near-extreme base toward the
 opposite extreme, exactly as the C's `game_mkhighlight_specific`. Reach for
-it whenever a tile color isn't the host background (Unruly's near-white and
-dark-gray tiles).
+it whenever a tile color isn't the host background (Slide's blocks).
 
 ### Make determined state legible
 

@@ -37,7 +37,7 @@
  */
 
 import type { Color } from "../types.ts";
-import { divide, scale, token } from "./color-token.ts";
+import { divide, mix, scale, token } from "./color-token.ts";
 import {
   BLUE,
   BLUE_WASH,
@@ -73,12 +73,12 @@ export const PAPER: Color = [1, 1, 1];
 export const GRID_MID: Color = GRAY;
 
 /** A grid line dark enough to survive a board made mostly of *dark cells* —
- * Pattern, Unruly, Pearl's white pearls, Spokes' hub outline, Crossing's walls.
+ * Pattern, Pearl's white pearls, Spokes' hub outline, Crossing's walls.
  * {@link GRID_MID} would be swallowed by the cells it separates. */
 export const GRID_DARK: Color = GRAY_BOLD;
 
-/** **Undecided** — a cell the player has neither filled nor ruled out (Pattern,
- * Unruly). Sits between the two states it is not, which is why it is the mid
+/** **Undecided** — a cell the player has neither filled nor ruled out
+ * (Pattern). Sits between the two states it is not, which is why it is the mid
  * gray and not a color. */
 export const UNDECIDED: Color = GRAY;
 
@@ -325,6 +325,43 @@ export function lineMaybeColor(background: Color): Color {
  */
 export function lineNoColor(background: Color): Color {
   return token(scale(background, 0.6), [0.5, 0.5, 0.5]);
+}
+
+// --- the surface pieces sit on ------------------------------------------
+
+/**
+ * **A cell that holds a piece, or will**: the quiet surface of a board whose
+ * content is pieces (`engine/piece.ts`). A small step off the board, so the
+ * grid reads as a field of cells and the color on the board is all content.
+ *
+ * Darker than the board in both schemes. The dark value is authored because
+ * derivation inverts the step and would put the cell above the board, where a
+ * given's lifted cell ({@link givenSurface}) has to go.
+ */
+export function cellSurface(background: Color): Color {
+  return token(scale(background, 0.92), [0.15, 0.15, 0.15]);
+}
+
+/**
+ * **The puzzle put this piece here**: the cell under a given, lifted toward
+ * white from {@link cellSurface} so a given is told from the player's own
+ * piece by the cell it sits on and the piece itself stays the same piece.
+ */
+export function givenSurface(background: Color): Color {
+  return token(mix(background, PAPER, 0.6), [0.31, 0.31, 0.31]);
+}
+
+/**
+ * **The line between two cells of a surface**, thin and quiet: the grid is
+ * where the cells are, and never the drawing.
+ *
+ * Darker than both surfaces in both schemes, so one line closes a plain cell
+ * and a lifted one alike. {@link GRID_MID} cannot be it: in the dark scheme it
+ * sits on the lifted cell's own lightness, and the line beside a given
+ * vanishes.
+ */
+export function surfaceGrid(background: Color): Color {
+  return token(scale(background, 0.66), [0.06, 0.06, 0.06]);
 }
 
 // --- the solved flash ---------------------------------------------------

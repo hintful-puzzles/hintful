@@ -8,6 +8,7 @@
  * are outlined, and the row or column the sentence calls "this row" is striped.
  */
 
+import { TWO_NAMES } from "../../engine/color/colors.ts";
 import {
   CELL,
   mark,
@@ -18,7 +19,7 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import { ONE, ZERO } from "./constants.ts";
+import { ONE, pairIndex, ZERO } from "./constants.ts";
 import type { HintReason } from "./solver.ts";
 
 type R<K extends HintReason["kind"]> = Extract<HintReason, { kind: K }>;
@@ -31,7 +32,8 @@ export interface Marked {
   line: readonly Point[];
 }
 
-const colorName = (c: number): string => (c === ONE ? "black" : "white");
+/** The word for a piece: the palette's, so it is the color the piece is. */
+export const colorName = (c: number): string => TWO_NAMES[pairIndex(c)];
 const oppositeName = (c: number): string => colorName(c === ONE ? ZERO : ONE);
 const lineName = (horizontal: boolean): string => (horizontal ? "row" : "column");
 
@@ -49,7 +51,7 @@ export const say = {
 
   complete: (reason: R<"complete">, m: Marked): Sentence =>
     so({
-      look: phrase`${thisLine(m, reason.horizontal)} already holds ${mark.paren("outline", CELL, m.evidence, `all of its ${colorName(reason.full)} cells`)}`,
+      look: phrase`${thisLine(m, reason.horizontal)} already holds ${mark.paren("outline", CELL, m.evidence, `all its ${colorName(reason.full)} cells`)}`,
       move: phrase`${thisCell(m)} and every other empty one in it must be ${colorName(reason.fill)}`,
     }),
 

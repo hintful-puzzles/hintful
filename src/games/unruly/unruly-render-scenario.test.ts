@@ -9,7 +9,7 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type Cell, ONE, ZERO } from "./constants.ts";
 import { newDesc } from "./generator.ts";
 import { type UnrulyHint, unrulyGame } from "./index.ts";
-import { COL_0, COL_1, COL_ERROR, COL_GRID, COL_HINT } from "./render.ts";
+import { COL_0, COL_1, COL_ERROR, COL_GIVEN, COL_GRID, COL_HINT } from "./render.ts";
 import { solveToString } from "./solver.ts";
 import { newState, type UnrulyMove } from "./state.ts";
 
@@ -27,9 +27,12 @@ describe("Unruly render scenarios", () => {
         (o) => o.op === "rect" && o.color === color && o.w === ts - 1 && o.h === ts - 1,
       );
 
-    // The board has clues of both colors (black ones, white zeros).
-    expect(fullBody(COL_1)).toBe(true);
-    expect(fullBody(COL_0)).toBe(true);
+    // The board has clues of both kinds, each on a lifted cell.
+    expect(recording.ops.some((o) => o.op === "polygon" && o.fill === COL_1)).toBe(
+      true,
+    );
+    expect(recording.ops.some((o) => o.op === "circle" && o.fill === COL_0)).toBe(true);
+    expect(fullBody(COL_GIVEN)).toBe(true);
     // The outer grid frame is drawn.
     expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_GRID)).toBe(
       true,
@@ -101,7 +104,9 @@ describe("Unruly render scenarios", () => {
     // Clues are still drawn (the hint overlays, it doesn't erase the board).
     expect(
       recording.ops.some(
-        (o) => o.op === "rect" && (o.color === COL_0 || o.color === COL_1),
+        (o) =>
+          (o.op === "polygon" && o.fill === COL_1) ||
+          (o.op === "circle" && o.fill === COL_0),
       ),
     ).toBe(true);
 

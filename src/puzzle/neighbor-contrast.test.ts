@@ -56,11 +56,6 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   undead: {
     "area:0:8": "a vampire's body on the board; its ink outline carries it",
   },
-  unruly: {
-    "area:0:6": "a black tile beside the board's margin, which is no state",
-    // A defect, not a decision: two white tiles side by side close up.
-    "mark:1:3": "the grid line between two white tiles",
-  },
 };
 
 describe("neighbors stand apart in the dark scheme", () => {

@@ -758,6 +758,16 @@ Netslide's ±1 move set already reaches deep enough without it (measured: 108
 walked games, none stranded). `docs/games/hints.md` § "Sliding-permutation
 games" lessons (b) 4 and 5 have the numbers. Consumers: Sixteen, Netslide.
 
+### `piece.ts` — a piece on its cell
+
+`drawPiece` draws what a cell holds as a shape inset on the cell's surface: a
+rounded square or a disc, with `grown` for one being placed or taken away.
+`TWO_SHAPES` gives the two-state pair's shapes in the order of `TWO` and
+`TWO_NAMES` (`colors.ts`), and `expandPair` is what a help page's `{{pair:0}}`
+becomes. A game takes all three by index and names neither a hue nor a shape
+of its own ([`rendering.md`](./rendering.md) § "What a board looks like: pieces
+on a quiet surface"). Consumer: Unruly.
+
 ### `hint-mark.ts` — the ring and the outline
 
 The two board marks a hint draws: a **ring** around the cell the deduction acts

@@ -54,6 +54,10 @@ word.
   `{{choice:<kw>:<index>}}` where it names one
   ([`games/mechanics.md`](./games/mechanics.md) § "Params are declared once,
   on `paramConfig`").
+- **A piece's color is typed nowhere.** A page about pieces of the two-state
+  pair writes `{{pair:0}}` and `{{pair:1}}`, and the build says the palette's
+  word (`TWO_NAMES`). Say the shape too ("a {{pair:0}} square"): a shape is
+  what a player who cannot tell the hues goes by.
 - **The Hints section is checked for presence, not content.** It says what
   the hint's marks mean in that game, which are the player's own notation,
   and the words its sentences use for them

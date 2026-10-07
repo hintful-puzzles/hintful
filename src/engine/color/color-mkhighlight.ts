@@ -129,8 +129,8 @@ export function correctRegionColor(background: Color): Color {
  * from the base.
  *
  * Unlike {@link mkhighlight} (which starts from the frontend background and
- * pre-shifts it away from the extremes), this takes a fixed base — e.g. Unruly's
- * near-white and near-black tiles — and, when that base sits within `K` of white
+ * pre-shifts it away from the extremes), this takes a fixed base — e.g. Slide's
+ * blocks or Crossing's walls — and, when that base sits within `K` of white
  * or black, **extrapolates the base itself** along the line to the extreme so
  * the highlight/lowlight stay in gamut (saturating to pure white/black). The
  * returned `base` is therefore the possibly-shifted color the caller should
@@ -149,8 +149,8 @@ export function mkhighlightSpecific(base: Color): {
   const light = mkhighlightSpecificValue(base);
   const darkBase = darkValue(base);
   if (!darkBase) return light;
-  // A base that authors its dark value (Unruly's near-black and near-white
-  // tiles, which must not invert) hands that decision on to the trio built
+  // A base that authors its dark value (Crossing's wall, built on
+  // `GRID_DARK`) hands that decision on to the trio built
   // from it: each member's dark value is the same derivation applied to the
   // dark base. Without this the trio would be three untagged arrays, adapted
   // by calculation, and the pieces would swap colors in dark mode.

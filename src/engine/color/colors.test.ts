@@ -285,6 +285,17 @@ describe("the named colors", () => {
     expect(darkValue(colors.WHITE)).toEqual([1, 1, 1]);
   });
 
+  it("keeps the two-state pair apart in lightness, in both schemes", () => {
+    // What a color-blind player has when hue fails. The bar is above 0.155,
+    // the gap between two states of a board the owner called too close to
+    // play by (2026-10-04).
+    for (const scheme of [light, dark]) {
+      const [a, b] = colors.TWO.map(scheme);
+      expect(Math.abs(a[0] - b[0])).toBeGreaterThan(0.18);
+    }
+    expect(new Set(colors.TWO_NAMES).size).toBe(colors.TWO.length);
+  });
+
   it("says the ten's names alongside the ten", () => {
     // Flood's hint reads "Fill with orange". The only thing between that and a
     // lie is that the word and the color are handed out together.

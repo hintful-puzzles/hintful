@@ -2,10 +2,10 @@
 
 exports[`unruly: pinned hint positions > says, at each pin 1`] = `
 {
-  "complete": "This row already holds all of its black cells (outlined), so this cell and every other empty one in it must be white.",
-  "groupedPlan": "The outlined cells are already black, so this cell would make three in a row: it must be white.",
-  "nearcomplete": "The last black in this column fits only in an outlined cell without making three whites, so this cell must be white.",
-  "threes": "The outlined cells are already black, so this cell would make three in a row: it must be white.",
-  "unique": "This column's blacks all sit where the outlined column's do, so a black in this cell would copy it: it must be white.",
+  "complete": "This row already holds all its purple cells (outlined), so this cell and every other empty one in it must be yellow.",
+  "groupedPlan": "The outlined cells are already purple, so this cell would make three in a row: it must be yellow.",
+  "nearcomplete": "The last purple in this column fits only in an outlined cell without making three yellows, so this cell must be yellow.",
+  "threes": "The outlined cells are already purple, so this cell would make three in a row: it must be yellow.",
+  "unique": "This column's purples all sit where the outlined column's do, so a purple in this cell would copy it: it must be yellow.",
 }
 `;

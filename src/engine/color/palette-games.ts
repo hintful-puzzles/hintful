@@ -18,12 +18,11 @@
  * Two rules hold here:
  *
  * - **every export is prefixed with its game's id** — `signpostArrowDim`,
- *   `UNRULY_BLACK`. `palette-source.test.ts` derives each game's allowed colors
+ *   `undeadGhost`. `palette-source.test.ts` derives each game's allowed colors
  *   from that prefix, so the prefix is load-bearing, not decoration;
- * - **an absolute value here is an exception and says why.** Unruly's two are
- *   the only ones, and the reason is written where they are declared. A new one
- *   says what it means to the player, and why no meaning and no named color
- *   serves.
+ * - **an absolute value here is an exception and says why.** There is none.
+ *   A new one says what it means to the player, and why no meaning and no
+ *   named color serves.
  */
 
 import type { Color } from "../types.ts";
@@ -351,32 +350,3 @@ export const undeadVampire = (background: Color): Color => [
   background[0] * 0.9,
   background[0] * 0.9,
 ];
-
-// --- unruly -------------------------------------------------------------
-
-/**
- * Unruly's two tile colors — **the one absolute exception in the collection**,
- * and the argument for it.
- *
- * *What they mean to the player:* the two states of a tile, on a board that is
- * half of each. *Why no named color serves:* these are not the colors drawn,
- * they are the **bases a bevel trio is built from** — `mkhighlightSpecific`
- * brightens and darkens them to make each tile look raised, and a base at either
- * extreme has nowhere to go in one of the two directions. {@link BLACK} would
- * give a black tile no highlight and {@link WHITE} a white tile no lowlight, so
- * every tile on the board would read flat on one side. Near-black and near-white
- * are the whole point, and "near" is a headroom, not a shade.
- *
- * The requirement is structural rather than chromatic: it belongs with the
- * bevel, which is [`color-mkhighlight.ts`](./color-mkhighlight.ts)'s business,
- * not with a color anybody names.
- *
- * The black base's dark value is lower than its light one because the dark
- * board is itself near-black: at 0.2 the tile sat 0.03 of lightness off the
- * board and 0.12 off an undecided cell. `mkhighlightSpecific` lifts a base this
- * close to black to the lowest one that still has a lowlight, which is the
- * darkest tile the bevel allows.
- */
-export const UNRULY_BLACK = token([0.2, 0.2, 0.2], [0.1, 0.1, 0.1]);
-/** @see UNRULY_BLACK */
-export const UNRULY_WHITE = token([0.95, 0.95, 0.95], [0.95, 0.95, 0.95]);

@@ -1,8 +1,9 @@
 /**
  * Unruly state, params and desc codec: the state half of `unruly.c`.
  *
- * A cell is `EMPTY`, `ONE` or `ZERO`, and as upstream, **`ONE` renders dark
- * ("black") and `ZERO` renders light ("white")** (see `render.ts`).
+ * A cell is `EMPTY`, `ONE` or `ZERO`. The two filled values are the
+ * collection's two-state pair (`pairIndex`, `constants.ts`); upstream called
+ * `ONE` black and `ZERO` white.
  */
 
 import { assertNever } from "../../engine/assert-never.ts";

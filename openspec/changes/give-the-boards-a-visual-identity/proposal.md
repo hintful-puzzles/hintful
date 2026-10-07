@@ -60,6 +60,12 @@ difference is what a color-blind player is left with when hue alone carries
 state. It is not the equal weight question 1 asks for, and where the two
 conflict the owner's eye decides.
 
+**The owner's answers (2026-10-07): A1, B2 and C4/C5.** Purple and yellow; a
+square and a disc; a given told by a lighter cell under it. Two more asks came
+with them: the pair is to be set up so that a choice of themes is easy to add
+later (not built now), and the same colors and style go across the entire
+catalog straight after Unruly, which is not to be a look of Unruly's own.
+
 ## Questions this change has to answer
 
 1. **Which pair for a two-state game.** The palette ties blue's and orange's
@@ -98,8 +104,21 @@ this change's to fix.
 
 ## What Changes
 
-To be designed in the session that picks this up. Unruly is the first game,
-and whatever it needs from the engine is the first shared rule.
+- **The engine owns the look of a board of pieces.** `colors.ts` holds the
+  two-state pair and its words (`TWO`, `TWO_NAMES`); `palette.ts` the surface
+  roles (`cellSurface`, `surfaceGrid`, `givenSurface`); `engine/piece.ts` the
+  piece painter, the pair's shapes and the help placeholder `{{pair:N}}`.
+- **Unruly is pieces on a quiet surface**: purple squares and yellow discs,
+  inset, a given on a lifted cell, a thin grid. Its bevels and its two gray
+  tile bases are gone, and with them the collection's only absolute color in
+  `palette-games.ts`. The count error's `!` is a badge, since red ink on a
+  purple piece differs in hue alone. The completion flash lifts every cell.
+- **Unruly's words follow the pieces**: hint sentences, the Controls verbs and
+  the hint-marks legend take the pair's names, and the help page names them by
+  placeholder and says the shapes.
+- **The rest of the catalog**, family by family (task 3).
+
+Not changed: the save and game-ID formats, and what any control does.
 
 ## Acceptance
 

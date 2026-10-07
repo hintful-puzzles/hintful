@@ -27,6 +27,7 @@ import {
 } from "./vite-plugins/extra-pages.ts";
 import { withHintMarks } from "./vite-plugins/hint-marks.ts";
 import { withNotApplicable } from "./vite-plugins/not-applicable.ts";
+import { withPair } from "./vite-plugins/pair.ts";
 import { withParameters } from "./vite-plugins/parameters.ts";
 import { precacheCoverage } from "./vite-plugins/precache-coverage.ts";
 
@@ -570,6 +571,7 @@ export default defineConfig(async ({ command, mode }) => {
               withControls,
               withHintMarks,
               withParameters,
+              withPair,
               withNotApplicable,
               renderMarkdown({
                 html: true, // allow HTML tags in markdown

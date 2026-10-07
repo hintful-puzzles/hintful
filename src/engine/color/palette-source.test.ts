@@ -6,7 +6,7 @@
  * requirement in both directions. It cannot see provenance (a game writing a
  * literal that happens to equal a token passes), and once every color is a token
  * it cannot see anything at all, because a derived color has no value to look up
- * — `mkhighlightSpecific(UNRULY_BLACK)` and `soloKiller(bg)` are correct and
+ * — `mkhighlightSpecific(GRID_DARK)` and `soloKiller(bg)` are correct and
  * unmatchable. So the value guard keeps the jobs value is good at (no two shared
  * roles hold one value; every derived role stays visible against both host
  * backgrounds) and this one reads the source.
@@ -26,7 +26,7 @@
  * variables the rules do not name. That is a review matter, and the rules above
  * cover every spelling the collection actually used across 57 games. A game is
  * free to call a **named derivation** from the table (`slantGrid(background)`) or
- * the shared bevel trio (`mkhighlightSpecific(CROSSING_WALL)`) — those are the
+ * the shared bevel trio (`mkhighlightSpecific(GRID_DARK)`) — those are the
  * intended shape, not an exception to it.
  */
 import { describe, expect, it } from "vitest";
@@ -190,10 +190,10 @@ describe("a game contains no color value", () => {
  *
  * A per-game token names the game it belongs to, and that name is only worth
  * anything if it is true. Checking it here rather than by inspecting resolved
- * palettes catches the cases a palette cannot show: `CROSSING_WALL` and Unruly's
- * two tile colors are *inputs to* `mkhighlightSpecific` and their own values
- * never appear in a palette at all, so an identity check over palette entries
- * called all three unused.
+ * palettes catches the case a palette cannot show: a token that is an *input
+ * to* `mkhighlightSpecific` (Slide's block bases) never appears in a palette
+ * with its own value, so an identity check over palette entries calls it
+ * unused.
  */
 describe("a per-game token belongs to the game it names", () => {
   /** The game a token's name claims. `SIGNPOST_REGION_0` → `signpost`;

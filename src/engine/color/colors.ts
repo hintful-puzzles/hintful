@@ -385,6 +385,24 @@ export const EIGHT_FILLS: readonly Color[] = [
 ];
 
 /**
+ * **The two states of a two-state game**, where neither is the important one:
+ * Unruly's two kinds of square. A game takes the pair from here and names no
+ * hue of its own, so a different pair is this line and {@link TWO_NAMES}.
+ *
+ * Purple and yellow because a board of pieces still has marks drawn on it:
+ * red is an error, blue the hint's ring, green the cursor and orange the
+ * hint's outline, and a piece in any of those swallows that mark. Of what is
+ * left, this pair stands furthest apart in lightness, which is what a
+ * color-blind player has when hue fails. The pieces also differ in shape
+ * (`engine/piece.ts`), so the pair is not the only carrier.
+ */
+export const TWO: readonly [Color, Color] = [PURPLE, YELLOW];
+
+/** {@link TWO}, as a player would say them: the words a hint puts in a
+ * sentence, exported beside the colors as {@link TEN_NAMES} is. */
+export const TWO_NAMES: readonly [string, string] = ["purple", "yellow"];
+
+/**
  * **Four fills**, for the one set in the collection whose size is a *theorem* —
  * four colors suffice to color any planar map, which is Map's puzzle.
  *

@@ -1,33 +1,32 @@
 /**
- * Unruly rendering: upstream's `game_redraw` / `unruly_draw_tile`. A per-tile
- * cache keyed on a packed flag word (upstream's `tile` int); error overlays
- * (3-in-a-row bars, count `!`, unique-match bars) recomputed each frame from
- * the validators; a completion flash shifting filled tiles toward
- * highlight/lowlight.
+ * Unruly rendering. A per-tile cache keyed on a packed flag word (upstream's
+ * `tile` int); error overlays (3-in-a-row bars, the count `!`, unique-match
+ * bars) recomputed each frame from the validators; a completion flash that
+ * lifts every cell.
  *
- * The palette mirrors the C color enum index-for-index, so a reader can
- * check it against upstream's slot by slot. The two tile bases author their
- * own dark values and `mkhighlightSpecific` hands those to each bevel trio, so
- * Unruly declares no `paletteScheme`.
+ * The board is pieces on a quiet surface (`engine/piece.ts`): the two states
+ * are the collection's two-state pair, a given sits on a lifted cell, and
+ * every mark drawn at a cell's edge lands beside the piece.
  */
 
-import { mkhighlightSpecific } from "../../engine/color/color-mkhighlight.ts";
-import { ORANGE } from "../../engine/color/colors.ts";
+import { ORANGE, TWO } from "../../engine/color/colors.ts";
 import {
   CURSOR,
+  cellSurface,
   ERROR,
-  GRID_DARK,
+  ERROR_TEXT,
+  givenSurface,
   HINT_ACTION,
-  UNDECIDED,
+  surfaceGrid,
 } from "../../engine/color/palette.ts";
-import { UNRULY_BLACK, UNRULY_WHITE } from "../../engine/color/palette-games.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import { ONE, ZERO } from "./constants.ts";
+import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import {
   FE_COL_MATCH,
@@ -57,45 +56,37 @@ export const PLACE_ANIM_TIME = 0.13;
 // --- palette -------------------------------------------------------------
 export const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
+/** The surface of a cell, which is all an undecided cell is. */
 export const COL_EMPTY = 2;
-export const COL_0 = 3;
-export const COL_0_HIGHLIGHT = 4;
-export const COL_0_LOWLIGHT = 5;
-export const COL_1 = 6;
-export const COL_1_HIGHLIGHT = 7;
-export const COL_1_LOWLIGHT = 8;
-export const COL_CURSOR = 9;
-export const COL_ERROR = 10;
-// Hint colors, appended past upstream's enum. The action cell rings COL_HINT,
-// the line the sentence names is hatched in it, and the cited premise cells
-// ring COL_HINT_REF, distinct from the move.
-export const COL_HINT = 11;
-export const COL_HINT_REF = 12;
+/** The surface under a given, and under every cell while the board flashes. */
+export const COL_GIVEN = 3;
+export const COL_0 = 4;
+export const COL_1 = 5;
+export const COL_CURSOR = 6;
+export const COL_ERROR = 7;
+export const COL_ERROR_TEXT = 8;
+// The action cell rings COL_HINT, the line the sentence names is hatched in
+// it, and the cited premise cells ring COL_HINT_REF, distinct from the move.
+export const COL_HINT = 9;
+export const COL_HINT_REF = 10;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = GRID_DARK;
-  out[COL_EMPTY] = UNDECIDED;
-  // Highlight/lowlight (and a possibly-shifted base) derived from each tile
-  // color exactly as game_mkhighlight_specific does.
-  const one = mkhighlightSpecific(UNRULY_BLACK);
-  out[COL_1] = one.base;
-  out[COL_1_HIGHLIGHT] = one.highlight;
-  out[COL_1_LOWLIGHT] = one.lowlight;
-  const zero = mkhighlightSpecific(UNRULY_WHITE);
-  out[COL_0] = zero.base;
-  out[COL_0_HIGHLIGHT] = zero.highlight;
-  out[COL_0_LOWLIGHT] = zero.lowlight;
+  out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_EMPTY] = cellSurface(defaultBackground);
+  out[COL_GIVEN] = givenSurface(defaultBackground);
+  out[COL_1] = TWO[pairIndex(ONE)];
+  out[COL_0] = TWO[pairIndex(ZERO)];
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
+  out[COL_ERROR_TEXT] = ERROR_TEXT;
   out[COL_HINT] = HINT_ACTION;
   // Cited premise / pivotal cells. A single ring color (not the cross-game
-  // teal/violet black/white-ref pair): Unruly's ring set is mixed — filled
-  // black cells, a balanced reference row holding both colors, and empty
-  // reserved windows — so a state-derived color is ill-defined. Orange keeps
-  // it clear of the blue move and of the teal/violet "decided black/white"
-  // meaning those hues carry in Singles/Range.
+  // black/white-ref pair): Unruly's ring set is mixed — pieces of one kind, a
+  // balanced reference row holding both, and empty reserved windows — so a
+  // state-derived color is ill-defined. Orange keeps it clear of the blue
+  // move and of both pieces.
   out[COL_HINT_REF] = ORANGE;
   return out;
 }
@@ -105,8 +96,7 @@ const FE_COUNT = 0x10;
 const FF_ONE = 0x80;
 const FF_ZERO = 0x100;
 const FF_CURSOR = 0x200;
-const FF_FLASH1 = 0x400;
-const FF_FLASH2 = 0x800;
+const FF_FLASH = 0x400;
 const FF_IMMUTABLE = 0x1000;
 // Our mistake-overlay bit (no upstream analog), folded into the cache key.
 const FF_MISTAKE = 0x2000;
@@ -120,7 +110,8 @@ const FF_HINT_RING = 0x20000; // a cited premise / pivotal cell (COL_HINT_REF ou
  * the painter does — one function, both callers
  * ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
 export const border = (ts: number) => Math.floor(ts / 2);
-const outerEdge = (ts: number) => Math.max(Math.floor(ts / 10), 1);
+/** The frame closes the grid on its top and left and is no heavier than it. */
+const outerEdge = (_ts: number) => 1;
 const coord = (n: number, ts: number) => n * ts + border(ts);
 
 export function computeSize(p: UnrulyParams, ts: number): Size {
@@ -173,46 +164,38 @@ function drawTile(
   py: number,
   ts: number,
   tile: number,
-  // Placement animation: the cell's previous color index, or -1 if not
-  // animating; `animFrac` is the grow progress 0→1.
-  animPrevColor = -1,
+  // Placement animation: the value the cell held before, or null if it is not
+  // animating; `animFrac` is the progress 0→1.
+  animPrev: Cell | null = null,
   animFrac = 1,
 ): void {
   dr.clip({ x: px, y: py, w: ts, h: ts });
 
-  // Grid edge first, so the tile can overwrite it.
+  // Grid edge first, so the cell can overwrite it.
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
 
-  // Tile background: FF_ZERO → COL_0 (white), FF_ONE → COL_1 (black), else
-  // COL_EMPTY. A flash shifts a filled tile toward highlight (+1) / lowlight (+2).
-  let val = tile & FF_ZERO ? COL_0 : tile & FF_ONE ? COL_1 : COL_EMPTY;
-  if (tile & (FF_FLASH1 | FF_FLASH2) && (val === COL_0 || val === COL_1)) {
-    val += tile & FF_FLASH1 ? 1 : 2;
-  }
-
+  // The cell's surface, lifted under a given and on the flash's lit frames.
   const inner = { x: px, y: py, w: ts - 1, h: ts - 1 };
-  if (animPrevColor >= 0 && animFrac < 1) {
-    // Placement grow: the previous color beneath, the new color growing
-    // from the cell center (geometric, no color tween).
-    dr.drawRect(inner, animPrevColor);
-    const sz = Math.max(0, Math.round((ts - 1) * animFrac));
-    if (sz > 0) {
-      const off = Math.floor((ts - 1 - sz) / 2);
-      dr.drawRect({ x: px + off, y: py + off, w: sz, h: sz }, val);
-    }
-  } else {
-    dr.drawRect(inner, val);
-  }
+  const value: Cell = tile & FF_ZERO ? ZERO : tile & FF_ONE ? ONE : EMPTY;
+  const lifted = (value !== EMPTY && tile & FF_IMMUTABLE) || tile & FF_FLASH;
+  dr.drawRect(inner, lifted ? COL_GIVEN : COL_EMPTY);
+  // The hatch goes under the piece: it marks the line, and the piece is what
+  // the line holds.
   if (tile & FF_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
 
-  // Immutable-clue bevel: inset top/left lowlight, bottom/right highlight.
-  if ((val === COL_0 || val === COL_1) && tile & FF_IMMUTABLE) {
-    const o = Math.floor(ts / 6);
-    const span = ts - 2 * o - 2;
-    dr.drawRect({ x: px + o, y: py + o, w: span, h: 1 }, val + 2);
-    dr.drawRect({ x: px + o, y: py + o, w: 1, h: span }, val + 2);
-    dr.drawRect({ x: px + o + 1, y: py + ts - o - 2, w: span, h: 1 }, val + 1);
-    dr.drawRect({ x: px + ts - o - 2, y: py + o + 1, w: 1, h: span }, val + 1);
+  const piece = (v: Cell, grown: number): void => {
+    if (v === EMPTY) return;
+    const i = pairIndex(v);
+    drawPiece(dr, inner, TWO_SHAPES[i], v === ONE ? COL_1 : COL_0, grown);
+  };
+  if (animPrev !== null && animFrac < 1) {
+    // A placed piece grows from the middle of its cell, and one taken away
+    // shrinks into it. One replacing another grows alone: two shapes in one
+    // cell read as neither.
+    if (value === EMPTY) piece(animPrev, 1 - animFrac);
+    else piece(value, animFrac);
+  } else {
+    piece(value, 1);
   }
 
   // 3-in-a-row error bars, extending a half-tile into the run's neighbors
@@ -232,14 +215,12 @@ function drawTile(
     drawErrRectangle(dr, px, top, ts - 1, bottom - top, ts);
   }
 
-  // Count error.
+  // Count error: a badge, because the `!` sits on the piece and red ink on a
+  // purple piece is a difference of hue with none of lightness.
   if (tile & FE_COUNT) {
-    dr.drawText(
-      { x: px + Math.floor(ts / 2), y: py + Math.floor(ts / 2) },
-      glyphFont(Math.floor(ts / 2)),
-      COL_ERROR,
-      "!",
-    );
+    const c = { x: px + Math.floor(ts / 2), y: py + Math.floor(ts / 2) };
+    dr.drawCircle(c, ts / 4, COL_ERROR, COL_ERROR);
+    dr.drawText(c, glyphFont(Math.floor((ts * 2) / 5)), COL_ERROR_TEXT, "!");
   }
 
   // Unique-match bars.
@@ -294,8 +275,8 @@ function drawTile(
 
   // The forced cell is **ringed**, in the same shape and place a cited premise
   // is: the hint marks where to act, it does not place the color the player
-  // must enter themselves. A blue *fill* in a game whose entire move is "make
-  // this cell black or white" reads as a third color already placed. The
+  // must enter themselves. A blue *fill* in a game whose entire move is "put
+  // one of two pieces here" reads as a third piece already placed. The
   // narration says which color; auto-hint applies it for real.
   if (tile & FF_HINT_TARGET) {
     drawMarkSides(
@@ -352,9 +333,6 @@ export function redraw(
   // (animTime > 0) and we have a from-state to grow out of.
   const animating = animTime > 0 && prev != null;
   const animFrac = animTime / PLACE_ANIM_TIME;
-  const colorOf = (v: number): number =>
-    v === ONE ? COL_1 : v === ZERO ? COL_0 : COL_EMPTY;
-
   if (!ds.started) {
     // The outer grid-edge frame.
     const o = outerEdge(ts);
@@ -370,10 +348,9 @@ export function redraw(
     ds.started = true;
   }
 
-  let flash = 0;
-  if (flashTime > 0) {
-    flash = Math.floor(flashTime / FLASH_FRAME) === 1 ? FF_FLASH2 : FF_FLASH1;
-  }
+  // Lit, unlit, lit.
+  const flash =
+    flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) !== 1 ? FF_FLASH : 0;
 
   // Recompute error overlays each frame (live error display, like upstream).
   const gridfs = new Int32Array(s);
@@ -417,7 +394,7 @@ export function redraw(
           coord(y, ts),
           ts,
           tile,
-          colorOf(prev.grid[i]),
+          prev.grid[i] as Cell,
           animFrac,
         );
       } else if (ds.cache[i] !== tile) {

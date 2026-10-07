@@ -1,7 +1,7 @@
 # unruly Specification
 
 ## Purpose
-Unruly (Binairo), the puzzle of coloring every square black or white so that no
+Unruly (Binairo), the puzzle of filling every square with one of two pieces so that no
 three consecutive squares in a line match and each row and column is half of
 each, optionally with no two rows or columns alike. This capability specifies
 its port to the TS engine, with difficulty-gated deductive generation, live

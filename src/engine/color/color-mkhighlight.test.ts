@@ -116,9 +116,9 @@ describe("mkhighlight", () => {
 });
 
 describe("mkhighlightSpecific", () => {
-  // Unruly's two fixed bases: near-white COL_0 (0.95 gray) and dark COL_1
-  // (0.2 gray). The near-white base is the case the existing mkhighlight
-  // helper can't reproduce — it must shift the base itself.
+  // Two fixed bases: a near-white COL_0 (0.95 gray) and a dark COL_1 (0.2
+  // gray). The near-white base is the case the existing mkhighlight helper
+  // can't reproduce — it must shift the base itself.
   const COL_0: Color = [0.95, 0.95, 0.95];
   const COL_1: Color = [0.2, 0.2, 0.2];
 
@@ -132,7 +132,7 @@ describe("mkhighlightSpecific", () => {
   });
 
   it("hands a base's authored dark value on to the trio built from it", () => {
-    // Unruly's tiles must not invert. The base carries that decision as a token
+    // A pinned tile must not invert. The base carries that decision as a token
     // and the trio derived from it must carry it too, or the pieces are three
     // untagged arrays adapted by calculation.
     const pinned = token([0.2, 0.2, 0.2], [0.2, 0.2, 0.2]);

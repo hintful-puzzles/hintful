@@ -18,10 +18,12 @@
 
 import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
+import { TWO_NAMES } from "./engine/color/colors.ts";
 import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
 import { MODIFIERS_PLACEHOLDER, modifiersOf } from "./engine/modifier.ts";
 import { expandChoices, PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
+import { expandPair } from "./engine/piece.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
 import { RULESETS_PLACEHOLDER, rulesetField } from "./engine/ruleset.ts";
 import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
@@ -178,6 +180,24 @@ describe("every game's page has the one skeleton", () => {
     const page = helpPages[`../help/games/${id}.md`] ?? "";
     const bound = getTsGame(id)?.hintMarks !== undefined;
     expect(page.includes(HINT_MARKS_PLACEHOLDER), `help/games/${id}.md`).toBe(bound);
+  });
+
+  // A page about pieces of the two-state pair says their colors with
+  // `{{pair:0}}` and `{{pair:1}}` (`vite-plugins/pair.ts`). One that also types
+  // a name holds a second copy of the palette's word, which a new pair would
+  // leave behind.
+  let pairPages = 0;
+  it.each(puzzleIds)("%s: a page naming the pair types neither name", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    expect(() => expandPair(page), `help/games/${id}.md`).not.toThrow();
+    if (expandPair(page) === page) return;
+    pairPages++;
+    for (const name of TWO_NAMES)
+      expect(page.toLowerCase(), `help/games/${id}.md`).not.toContain(name);
+  });
+
+  itOverWholeSweep("is not vacuous — some page names the pair", () => {
+    expect(pairPages).toBeGreaterThanOrEqual(1);
   });
 
   // A game declaring `targetVerbs` has its Controls paragraph generated
