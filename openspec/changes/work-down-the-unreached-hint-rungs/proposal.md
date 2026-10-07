@@ -1,7 +1,9 @@
 # work-down-the-unreached-hint-rungs
 
-**Status: eight of ten entries settled (2026-10-07); two questions are with
-the owner, and `tasks.md` holds both.** The sorting under "Why" is the reading
+**Status: eight of ten entries settled (2026-10-07), and the owner has answered
+on the other two.** Salad's two are task 2.3, the one task left here. Mines'
+`restart` goes with its board in `undo-a-mines-first-click-to-the-seed`. The
+sorting under "Why" is the reading
 this started from, and most of it was wrong in the same way: five of the
 entries it calls rare or shadowed fire on a board the scan does not visit, and
 one could not fire because of a bug. A follow-up from

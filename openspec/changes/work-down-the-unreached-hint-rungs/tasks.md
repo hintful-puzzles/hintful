@@ -21,8 +21,10 @@
 - [ ] 2.3 Salad `note` and `regionsFull`: the population is taken. Six games
       list `LATIN_RUNGS` (Group, Keen, Mathrax, Salad, Towers, Unequal), and
       Salad alone passes its own `setUp` and so never walks the implicit
-      reading; the other five pin `regionsFull`. Whether the engine should let
-      a game say so is asked of the owner.
+      reading; the other five pin `regionsFull`. The owner's answer
+      (2026-10-07): build it, in a fresh session. Let a game on the populate
+      reading alone say so, so that its list and its step type lose the two
+      ids, and Salad's `unreached` goes. This is the change's last task.
 
 ## 3. Boards nobody built
 
@@ -44,10 +46,9 @@
 
 ## 4. Close
 
-- [ ] 4.1 Mines `restart`: the entry says its kind (a board no pin can hold)
-      and names the test that builds the board. Whether that board should
-      exist is asked of the owner: undoing the first click and opening another
-      square changes the game ID, and 299 of 480 such boards then save to a
-      file that will not restore.
+- [x] 4.1 Mines `restart`: the entry says its kind (a board no pin can hold)
+      and names the test that builds the board. The board itself goes in
+      `undo-a-mines-first-click-to-the-seed`, filed on the owner's answer
+      (2026-10-07), and the rung with it.
 - [x] 4.2 `docs/games/testing.md` § "Pinning a hint's positions" says what was
       learned about which kinds of `unreached` are acceptable to keep.
