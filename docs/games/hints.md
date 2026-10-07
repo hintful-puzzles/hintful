@@ -1074,6 +1074,21 @@ reasons than the one it was handed (Seismic says a one-cell area is a
 singleton whichever single the walk found), it returns that `rung` beside the
 words, so the id and the sentence cannot disagree.
 
+**A plan on the populate reading alone says so, and its list is shorter.** Two
+of the walk's rungs are spoken only of a cell with no notes: `note`, and the
+`regionsFull` single. A plan that gives a `setUp` of its own never walks the
+implicit reading, so it takes the reading as a type argument
+(`runLatinCandidatePlan<…, "populate">`, steps of
+`PlanRung<Reason, "populate">`), its reason union takes
+`SingleReasonUnder<"populate">`, and its list spreads `LATIN_POPULATE_RUNGS`.
+The `setUp` is the declaration: the argument does not compile without one, a
+plan on both readings does not compile with one, and the walk throws before it
+reads a note-less single on a plan that gave one. That last can only happen to
+an own rung that asks for `RungContext.placements()` before the setup is done,
+as Group's does; a game that wants that and its own setup has a list with
+`regionsFull` in it, and the type to widen is `OwnSetUp`. Salad is the one such
+plan.
+
 **A rung's pin can sit under the wrong candidate reading.** `populate` is
 spoken only under the populate reading and `note` only under the implicit one,
 and a pin is loaded under the scan's `ui`. So a candidate game's scan gives
@@ -4757,7 +4772,8 @@ measures the same two numbers before choosing.
 empty" note is a candidate no row or column rules out, so an implicit Salad
 would have to decide when to write it), and the walk refuses the implicit
 reading with a setup of the game's own. Nothing presses for more, so it stays
-populate-only by decision (2026-09-25). Of the note games that plan without the
+populate-only by decision (2026-09-25), and its rung list says so (§ "Name the
+rung a step speaks"). Of the note games that plan without the
 walk, Crossing already writes a square's notes only when a narrowing needs them
 (§ "Place the notes a fixpoint rests on (Crossing)"), with a `pencilAdd` of its
 own that predates the shared one. **Undead

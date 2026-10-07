@@ -611,17 +611,18 @@ by a single cross-game guard, rather than per game by hand.
 
 Non-monotonicity is not theoretical. Boats shipped with a solver that solved
 boards at a *lower* cap which it failed at a higher one — its second-tier
-disjoint-set check can report a contradiction a board does not have — and that
+disjoint-set check reported a contradiction a board did not have — and that
 silently broke Check & Save on Easy boards, because "solvable at Easy" and
 "solvable at Tricky" were both true statements about different code paths and
 nothing compared them.
 
-A game whose solver is genuinely non-monotone SHALL declare itself so in its
-difficulty contract. The guard then asserts the **workaround** that game's spec
-promises — that solving at each tier in turn and taking the first success always
-succeeds — rather than skipping the game. A skipped game is an untested game
-wearing a comment, and the exemption must itself be under test so that fixing the
-underlying defect is visible.
+**A solver found non-monotone SHALL be repaired, and the contract offers no way
+to declare it so.** Every technique is sound and a higher cap only adds some, so
+a board that fails at a higher cap convicts a technique or a check. Boats
+declared itself non-monotone, and solved at each tier in turn, while the cause
+went unlooked for: one read of the disjoint-set root as a boat's first square.
+The declaration kept the game out of the tier-binding guard as well, and hid
+that the same read left a whole technique unable to fire.
 
 The same cross-game guard SHALL also assert that every declared tier either
 generates or is refused with a reason, and that a game's declared tier list
@@ -631,9 +632,9 @@ gains a tier cannot ship a stale declaration.
 The guard SHALL sample **enough boards per tier to catch the defect it names**,
 and that sample size SHALL be established by removing a known exemption and
 confirming the guard fires — not chosen by judgment. The first version of this
-guard sampled one board per tier and did **not** catch Boats with its
-`nonMonotone` declaration removed, because Boats' first seed happens to be
-monotone while 7 of 8 are not. A guard that has never been shown to fail is not
+guard sampled one board per tier and did **not** catch Boats, whose solver was
+then non-monotone on 7 of 8 of its easiest boards, because the first seed
+happened to be one of the eighth. A guard that has never been shown to fail is not
 known to work, and sampling is where a cross-game guard silently becomes
 decorative.
 
@@ -645,14 +646,14 @@ statement about what a difficulty tier *means* that the byte-match never checked
 - **WHEN** a game's solver solves a board with its ladder capped at the easiest
   tier but fails the same board with the ladder uncapped
 - **THEN** the cross-game monotonicity guard fails, naming the game and seed
-- **AND** the solver is fixed, or the non-monotonicity is declared in the game's
-  difficulty contract together with the workaround its consumers must apply
+- **AND** the solver is fixed: no declaration excuses the game from the guard
 
 #### Scenario: A game declares itself non-monotone
 
-- **WHEN** a game's contract declares `nonMonotone`
-- **THEN** the guard asserts that solving at each tier in turn and taking the
-  first success always succeeds
+- **WHEN** a game's solver is found to fail at a higher cap what it solves at a
+  lower one
+- **THEN** its contract has no field to say so, and the guard fails until the
+  cause is found and repaired
 - **AND** the game is never silently skipped
 
 #### Scenario: A solver is converted to the shared deduction runner

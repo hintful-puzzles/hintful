@@ -14,7 +14,11 @@
  * re-derivation, shared so every Latin game tells the truth the same way.
  */
 
-import { type NoteEncoding, nextPlace } from "./candidate-hint.ts";
+import {
+  type CandidateReading,
+  type NoteEncoding,
+  nextPlace,
+} from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { ForcingLink } from "./latin.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
@@ -249,6 +253,13 @@ export type SingleReason =
   | { kind: "regionsFull" }
   | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number };
 
+/** The {@link SingleReason}s a row/column plan walking `Reading` narrates
+ * ({@link SingleWhyUnder}). */
+export type SingleReasonUnder<Reading extends CandidateReading> =
+  "implicit" extends Reading
+    ? SingleReason
+    : Exclude<SingleReason, { kind: "regionsFull" }>;
+
 /** Why a single the plan can see is forced, before a game names it:
  * - `naked`: the cell's own notes are down to one;
  * - `regionsFull`: the cell has no notes, and its regions already hold every
@@ -259,6 +270,16 @@ export type SingleWhy<R> =
   | { kind: "naked" }
   | { kind: "regionsFull" }
   | { kind: "hidden"; region: R };
+
+/** The {@link SingleWhy}s a plan walking `Reading` hands its game. A plan on
+ * the populate reading alone reads every single off notes, so it is never
+ * handed `regionsFull`. */
+export type SingleWhyUnder<
+  R,
+  Reading extends CandidateReading,
+> = "implicit" extends Reading
+  ? SingleWhy<R>
+  : Exclude<SingleWhy<R>, { kind: "regionsFull" }>;
 
 /** Re-derive *why* a generic-`single` placement is forced, from the working board:
  * a naked single (the cell's candidates collapsed to one) or a hidden single (the

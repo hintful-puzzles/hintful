@@ -1,8 +1,9 @@
 # work-down-the-unreached-hint-rungs
 
-**Status: eight of ten entries settled (2026-10-07), and the owner has answered
-on the other two.** Salad's two are task 2.3, the one task left here. Mines'
-`restart` goes with its board in `undo-a-mines-first-click-to-the-seed`. The
+**Status: done (2026-10-07). One entry stands, and it has a change of its
+own.** Salad's two went with task 2.3, when a plan could say which reading it
+walks. Mines' `restart` goes with its board in
+`undo-a-mines-first-click-to-the-seed`. The
 sorting under "Why" is the reading
 this started from, and most of it was wrong in the same way: five of the
 entries it calls rare or shadowed fire on a board the scan does not visit, and
@@ -34,7 +35,8 @@ then excusing the list, not a shortfall of the scan.
   both halves: the plan now teaches the hole-symbol strikes a set or a chain
   makes, and `repeatFull` itself left `SaladReason`, since a line count says
   the same first on every board.
-- Salad `note` and `regionsFull`: Salad sets its notes up itself and always
+- Salad `note` and `regionsFull`: **done**, as task 2.3 says. Salad sets its
+  notes up itself and always
   walks the populate reading, so the implicit reading's two rungs are in its
   list only because `LATIN_RUNGS` holds them and `PlanRung<Reason>` types them
   in. That is a question for the engine: whether a game on the populate

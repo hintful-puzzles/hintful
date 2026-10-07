@@ -18,13 +18,17 @@
 - [x] 2.2 Salad `repeatFull`: decided in `fix-salad-number-ball-hint-throw`.
       The plan teaches the hole-symbol strikes no count says, and the reason
       went.
-- [ ] 2.3 Salad `note` and `regionsFull`: the population is taken. Six games
-      list `LATIN_RUNGS` (Group, Keen, Mathrax, Salad, Towers, Unequal), and
-      Salad alone passes its own `setUp` and so never walks the implicit
-      reading; the other five pin `regionsFull`. The owner's answer
-      (2026-10-07): build it, in a fresh session. Let a game on the populate
-      reading alone say so, so that its list and its step type lose the two
-      ids, and Salad's `unreached` goes. This is the change's last task.
+- [x] 2.3 Salad `note` and `regionsFull`: gone from its list, its step type
+      and its `unreached`. Six games list the Latin family's rungs (Group,
+      Keen, Mathrax, Salad, Towers, Unequal), and Salad alone passes its own
+      `setUp` and so never walks the implicit reading; the other five pin
+      `regionsFull`. The owner's answer (2026-10-07) was to build it. A plan
+      now takes the readings it walks as a type argument, and its `setUp` is
+      what says "populate alone": the argument does not compile without one, a
+      plan on both readings does not compile with one, and the walk throws
+      before it reads a single off a cell with no notes on a plan that gave
+      one. Salad's scan walks its 2,570 positions on 48 boards without meeting
+      that throw.
 
 ## 3. Boards nobody built
 

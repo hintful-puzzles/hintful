@@ -670,7 +670,10 @@ step, and the frontier reads a firing's premise off those steps. The game
 supplies its recording solver, regions, words and strike-split axis — see
 [`hints.md`](./hints.md) § "Candidate-elimination games". Its `reading` is the
 player's: under the implicit one there is no populate, and a firing first
-writes the notes of every note-less cell its premise reads.
+writes the notes of every note-less cell its premise reads. A plan with a
+`setUp` of its own walks the populate reading alone and is typed so
+(`PlanRung<Reason, "populate">`, `LATIN_POPULATE_RUNGS`): see
+[`hints.md`](./hints.md) § "Name the rung a step speaks".
 
 `runLatinCandidatePlan` is the same walk with the plain row/column square's
 answers filled in — its regions, the reason a single narrates as, and a hidden

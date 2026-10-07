@@ -26,7 +26,11 @@ require `n ≥ 1`, `n ≤ w·h − 9`, and `w > 2 && h > 2` for a board about to
 
 The game SHALL provide `solve`, `textFormat` and `statusbarText`. It SHALL implement
 `finishesByDeduction` as its hint's plan, played from the first click, opening every safe
-square; a layout with no square opened SHALL pass.
+square. A board not laid out yet SHALL pass: it will be laid out to finish from
+whichever square is opened first. A layout that names no first square SHALL NOT
+pass: it was made to finish from one square it does not say, and opening any other
+is a guess. That is the description a save keeps beside its public one, which
+names the square, and it SHALL NOT load as a game ID.
 
 #### Scenario: Params round-trip
 
@@ -37,6 +41,13 @@ square; a layout with no square opened SHALL pass.
 
 - **WHEN** `16x16n40aX3Y4` is decoded
 - **THEN** the params are those of `16x16n40X3Y4`
+
+#### Scenario: A layout with no first square is typed as a game ID
+
+- **WHEN** a game ID gives a mine layout and no first square (`9x9n10:m…`)
+- **THEN** it is refused as a board that needs trial and error
+- **AND** a save that carries the same layout as its private description, with
+  the public one beside it, still restores
 
 ### Requirement: The first click is never a mine
 

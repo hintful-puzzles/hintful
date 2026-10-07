@@ -3323,8 +3323,7 @@ way reported ten violations across four games where there were three across one.
 the tier in it.
 
 **Exceptions SHALL be derived from a declaration the game already makes**, never
-from a roster. A contract declaring `nonMonotone` has no well-defined lowest
-cap and is exempt for the same reason it is exempt from the monotonicity sweep. A game that genuinely cannot generate a declared tier at
+from a roster. A game that genuinely cannot generate a declared tier at
 a given size SHALL refuse it from `validateParams` with a reason — the shape
 already required by "either generates every declared tier, or refuses it with a
 reason" — rather than being added to an exemption list.
@@ -8184,6 +8183,18 @@ write its list and no stamp. Where a game's words for a placement narrate
 another of its reasons than the one the walk handed it, the game SHALL say
 which, so that a step's rung and its sentence name the same deduction.
 
+**A game's list SHALL hold only the rungs of the readings its plan walks.** A
+plan that gives a setup of its own walks the populate reading alone, and two of
+the walk's rungs are then ones it cannot speak: the implicit reading's note
+step, and the single read off a cell with no notes. Such a plan's step type
+SHALL lack both, so its game's list lacks them and its tests excuse neither;
+until this a list said more than its game did, and the two were excused in
+Salad's tests as rungs no board reached. The setup is the declaration, since
+the walk already runs it: a plan typed on the populate reading alone SHALL NOT
+compile without one, a plan typed on both SHALL NOT compile with one, and the
+walk SHALL throw rather than read a single off a cell with no notes on a plan
+that gave one.
+
 A rung id is not player-facing: no sentence, help page, save or game ID holds
 one.
 
@@ -8216,6 +8227,14 @@ one.
 - **WHEN** a game's words for a placement are those of a reason other than
   the one the walk found, as a one-cell area's are a singleton's
 - **THEN** the step carries that reason's rung, not the one the walk found
+
+#### Scenario: A plan on the populate reading alone
+
+- **WHEN** a game's plan gives a setup of its own
+- **THEN** its rung list holds neither the note step nor the single of a cell
+  with no notes, and its tests pin a board for every rung left
+- **AND** a single the walk would read off a cell with no notes throws, naming
+  the plan, where it would have been stamped with a rung the list lacks
 
 ### Requirement: A cross-game sweep SHALL deal every choice the Custom dialog offers
 

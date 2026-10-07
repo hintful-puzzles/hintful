@@ -131,9 +131,12 @@ The hint SHALL be derived from the same deduction engine as the solver, replayed
 one firing at a time, and SHALL NOT alter the solver, the generator or the
 description codec.
 
-Because the solver is not monotone in its difficulty cap, the hint SHALL replay
-the deduction at the **lowest** cap at which the board solves, so that a board
-generated at an easy tier is taught the easy technique that suffices.
+The hint SHALL replay the deduction at the **lowest** cap at which the board
+solves, so that a board generated at an easy tier is taught the easy technique
+that suffices.
+
+A hidden border number the deduction recovers is new to every cheaper
+technique, so the hint SHALL ask them again before it tries a harder one.
 
 Every named technique SHALL be narratable — Boats guesses at no tier, so the hint
 SHALL NOT fall back on an unexplained "this is the only possibility" step.
@@ -150,6 +153,14 @@ SHALL NOT fall back on an unexplained "this is the only possibility" step.
 - **WHEN** a hint is requested on a board generated at the easiest difficulty
 - **THEN** a plan is produced, and it is the deduction that difficulty admits
   rather than a harder refutation reaching the same square
+
+#### Scenario: A recovered number feeds a line count
+
+- **WHEN** the only progress on a board with hidden border numbers is that one
+  of them can now be worked out, and with it a line is one boat square short
+  with one square free
+- **THEN** the hint offers that square, and does not report that deduction has
+  run out
 
 #### Scenario: A refutation names the rule the alternative would break
 
@@ -231,18 +242,19 @@ highest tier a board actually requires. The solver SHALL NOT guess or backtrack 
 any tier, so that every generated board is solvable by pure deduction and Boats
 satisfies the guess-free-generation policy at every named difficulty.
 
-Boat connectivity SHALL be computed over the shared disjoint-set structure, whose
-canonical root identity the solver reads (the canonical square of a boat run), so
-the port SHALL NOT substitute a union-find with a different root rule.
+Boat connectivity SHALL be computed over the shared disjoint-set structure. Where
+the solver needs a boat's first square (whether a boat is finished, and which way
+an unfinished one must grow) it SHALL ask for the smallest element of the boat's
+class, and SHALL NOT read the class's root, which union-by-size leaves on a
+boat's second square.
 
-The solver's deductive power is **not monotone in its difficulty cap**: the
-unfinished-boat disjoint-set check, which runs only from the second tier upward,
-can report a contradiction on a board that has none and abandon the solve. It
-never places a wrong square, so every generated board remains correct and
-uniquely solvable, but a board generated at the easiest tier may fail to solve
-under a higher cap. Any consumer that solves a board of unknown difficulty —
-Solve, and the mistake check — SHALL therefore try each difficulty tier and use
-the first that succeeds, rather than solving once at the maximum.
+The solver SHALL be monotone in its difficulty cap, as every capped solver is.
+A consumer that solves a board of unknown difficulty — Solve, and the mistake
+check — solves once at the highest cap.
+
+A boat that has an end cap on one side and an undecided square on the other
+SHALL be grown into that square once every boat of its present length is
+finished, at the second tier.
 
 The generator SHALL use the solver to guarantee a unique solution at exactly the
 requested difficulty: it SHALL place a random fleet, derive the border clues,
@@ -255,6 +267,19 @@ be reproducible.
 - **WHEN** a soluble board is solved
 - **THEN** the returned tier equals the hardest technique tier the deduction
   needed, and the completed grid is the unique solution
+
+#### Scenario: A finished boat is seen as finished
+
+- **WHEN** the largest boats of the fleet are all placed and bounded by water
+- **THEN** the solver does not report a contradiction, and a board that solves
+  at the easiest cap solves at every cap above it
+
+#### Scenario: An unfinished boat that cannot stop grows
+
+- **WHEN** a boat of two squares has water beyond one end and an undecided
+  square beyond the other, and every two-square boat of the fleet is finished
+- **THEN** the solver places a boat segment in the undecided square, and the
+  hint gives that as its reason
 
 #### Scenario: Generation is reproducible from a seed
 

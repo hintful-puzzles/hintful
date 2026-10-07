@@ -92,7 +92,7 @@ already there:
   as it is for `describeLadderCensus`. The scan walks the excused rungs too and
   says when one fires.
 
-**An excused rung is one of four things, and the scan's zero cannot say
+**An excused rung is one of several things, and the scan's zero cannot say
 which.** The scan follows the hint's own play, where the cheapest rung always
 goes first, on boards the generator deals at the sizes it was given. Twelve
 entries stood when these were sorted (2026-10-07), nearly all excused as rare
@@ -115,6 +115,11 @@ entry is written:
   the comment where its reason was (Bricks' `BricksReason`, Tracks'
   `checkLooseSub`). Prove it from the code, then measure it off the hint's
   line, since an argument from reading has been wrong here before.
+- **A rung the game's plan cannot speak is the list's to lose, not the test's
+  to excuse.** Where a shared list or type puts it there, the fix is a layer
+  down: Salad's `note` and `regionsFull` came with the Latin family's rungs,
+  and went when a plan could say which reading it walks
+  ([`hints.md`](./hints.md) § "Name the rung a step speaks").
 - **What may stay** is a rung on a board no pin can hold, saying so and
   naming the test that builds the board (Mines' `restart`).
 

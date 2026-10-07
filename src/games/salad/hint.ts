@@ -48,7 +48,7 @@ import {
 import {
   evidenceOf,
   type Firing,
-  LATIN_RUNGS,
+  LATIN_POPULATE_RUNGS,
   type Leg,
   type PlanRung,
   populateThenClean,
@@ -71,7 +71,7 @@ import type { Narration, Sentence } from "../../engine/hint-words.ts";
 import {
   type ForcingLink,
   hiddenSingleLine,
-  type SingleReason,
+  type SingleReasonUnder,
 } from "../../engine/latin-hint.ts";
 import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
@@ -117,7 +117,7 @@ export type SaladReason =
   /** Tidy-up leg: squares just settled as holding a symbol keep no
    * "might be empty" mark. */
   | { kind: "circleXNote"; count: number }
-  | SingleReason
+  | SingleReasonUnder<"populate">
   | { kind: "dup"; n: number; px: number; py: number }
   | { kind: "set"; cells: readonly Cell[] }
   /** The shared solver's forcing chain, with the chain it followed — the same
@@ -125,10 +125,11 @@ export type SaladReason =
    * narration come for free. */
   | { kind: "forcing"; chain: ForcingLink[]; shares: "row" | "col" };
 
-/** Every rung a Salad step can be: the Latin family's, and the kinds of
+/** Every rung a Salad step can be: the Latin family's on the populate reading,
+ * the only one Salad's plan walks (`buildSteps`'s `setUp`), and the kinds of
  * {@link SaladReason}. */
 export const SALAD_RUNGS = [
-  ...LATIN_RUNGS,
+  ...LATIN_POPULATE_RUNGS,
   "borderNear",
   "borderFar",
   "countHolesDone",
@@ -644,7 +645,7 @@ function buildSteps(
 ): HintStep<SaladMove, SaladHint, SaladRung>[] {
   const o = state.order;
   const nums = state.nums;
-  const steps: HintStep<SaladMove, SaladHint, PlanRung<SaladReason>>[] = [];
+  const steps: HintStep<SaladMove, SaladHint, PlanRung<SaladReason, "populate">>[] = [];
   const w = startWorking(state);
   const enc = saladNotes(nums);
   const text = say(state.mode);
@@ -715,7 +716,7 @@ function buildSteps(
     return true;
   });
 
-  runLatinCandidatePlan<SaladMove, SaladHint, SaladOp, SaladReason>({
+  runLatinCandidatePlan<SaladMove, SaladHint, SaladOp, SaladReason, "populate">({
     w: o,
     steps,
     grid: w.grid,

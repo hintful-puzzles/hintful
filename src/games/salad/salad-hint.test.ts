@@ -96,11 +96,6 @@ const pinned = describeHintPins({
     { ...LETTERS, diff: DIFF_HARD },
     { ...NUMBERS, diff: DIFF_HARD },
   ],
-  unreached: {
-    note: "it is the implicit reading's step, and Salad's plan sets its notes up itself and always walks the populate reading (`buildSteps`'s `setUp`)",
-    regionsFull:
-      "it is how a single reads on a square with no notes; held on 0 of 2570 positions walked on these 48 boards, where every single follows the populate step",
-  },
   kinds: {
     // A marker step previews the entry it asks for, a placement its symbol.
     marker: (step) => isMarker(step),

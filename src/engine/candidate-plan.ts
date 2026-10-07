@@ -31,7 +31,7 @@ import {
   type Mark,
   NOTES_RUNGS,
   type NoteEncoding,
-  type NotesRung,
+  type NotesRungUnder,
   nakedSingles,
   obviousCandidateMarks,
   type Reach,
@@ -56,8 +56,9 @@ import {
   type CellRegion,
   type RowColRegion,
   rowColRegions,
-  type SingleReason,
+  type SingleReasonUnder,
   type SingleWhy,
+  type SingleWhyUnder,
   singleReasonOf,
   type WholeRegion,
 } from "./latin-hint.ts";
@@ -78,10 +79,11 @@ export interface DupReason {
  * cull ({@link DupReason}). */
 export const CANDIDATE_RUNGS = [...NOTES_RUNGS, "dup"] as const;
 
-/** The rungs a plan's steps carry: the walk's own, and the `kind` of each of
- * the game's reasons, which is the rung of the step a reason narrates. */
-export type PlanRung<Reason> =
-  | NotesRung
+/** The rungs a plan's steps carry: the walk's own under the readings the plan
+ * walks, and the `kind` of each of the game's reasons, which is the rung of
+ * the step a reason narrates. */
+export type PlanRung<Reason, Reading extends CandidateReading = CandidateReading> =
+  | NotesRungUnder<Reading>
   | DupReason["kind"]
   | (Reason extends { kind: infer K extends string } ? K : never);
 
@@ -231,11 +233,12 @@ export interface CandidatePlan<
   R extends DeductionRecord,
   Reason,
   Reg extends CellRegion,
+  Reading extends CandidateReading = CandidateReading,
 > {
   /** The board's row stride; its height is read off `grid`. */
   w: number;
   /** The steps the plan pushes to. */
-  steps: HintStep<M, H, PlanRung<Reason>>[];
+  steps: HintStep<M, H, PlanRung<Reason, Reading>>[];
   /** The working board, advanced as the plan is built: 0 = empty. */
   grid: Uint8Array | Int8Array;
   /** The working notes, in `enc`'s encoding. */
@@ -249,7 +252,7 @@ export interface CandidatePlan<
    * `implicit` there is no populate: a firing first writes the notes of every
    * blank, note-less cell it strikes or outlines as evidence, one leg each, and
    * a single needs no notes at all. Default `populate`. */
-  reading?: CandidateReading;
+  reading?: Reading;
   /** Names the plan if its step budget trips. */
   label: string;
   /** Iteration cap, a backstop for a rung that fires without progress. Default
@@ -270,7 +273,7 @@ export interface CandidatePlan<
    * Default: every cell of the placed cell's `regionsOf`. */
   reach?: Reach;
   /** The reason a single the board shows narrates as. */
-  singleReason: (n: number, why: SingleWhy<WholeRegion<Reg>>) => Reason;
+  singleReason: (n: number, why: SingleWhyUnder<WholeRegion<Reg>, Reading>) => Reason;
   /** A placement's words; `continues` is true on a journey's later legs. The
    * step's rung is the reason's kind, unless the words narrate another of the
    * game's reasons than the one handed in, and then they say which: `rung`. */
@@ -304,8 +307,10 @@ export interface CandidatePlan<
     cleanObvious: (marks: readonly Mark[]) => Sentence;
     note: (cell: Point, values: number[], every: boolean) => Sentence;
   };
-  /** A setup of the game's own, replacing the default. */
-  setUp?: PlanSetUp;
+  /** A setup of the game's own, replacing the default. It is a populate the
+   * walk cannot leave out, so it is also how a plan says it walks the populate
+   * reading alone ({@link OwnSetUp}). */
+  setUp?: "implicit" extends Reading ? never : PlanSetUp;
   /** The game's own rungs, tried after the naked singles and before the
    * recorded strikes and placements, in the note-free opening too. */
   rungs?: readonly CandidateRung<M, H, R, Reason>[];
@@ -381,9 +386,22 @@ export function runCandidatePlan<
   R extends DeductionRecord,
   Reason,
   Reg extends CellRegion,
->(plan: CandidatePlan<M, H, R, Reason, Reg>): void {
-  new CandidateWalk(plan).run();
+  Reading extends CandidateReading = CandidateReading,
+>(plan: CandidatePlan<M, H, R, Reason, Reg, Reading> & OwnSetUp<Reading>): void {
+  // The walk is written once, for both readings. What a narrower `Reading`
+  // takes out of the plan's types it refuses to do: `note` is spoken under the
+  // implicit reading, which `reading` cannot then name, and `single` throws
+  // before it reads a single off a cell with no notes.
+  new CandidateWalk(plan as unknown as CandidatePlan<M, H, R, Reason, Reg>).run();
 }
+
+/** What a plan on the populate reading alone must give: the setup of its own
+ * that says so. The walk can see a `setUp` and cannot see a type argument, so
+ * the narrower step type is given only where the walk can hold the plan to it.
+ * `unknown` for a plan on both readings, which takes the default setup. */
+type OwnSetUp<Reading extends CandidateReading> = "implicit" extends Reading
+  ? unknown
+  : { setUp: PlanSetUp };
 
 /** Whether a reason union can hold the {@link SingleReason} the row/column
  * preset synthesizes. `unknown` when it can (and so intersects away), `never`
@@ -391,7 +409,11 @@ export function runCandidatePlan<
  * narrate differently (Solo names a block or a diagonal) is turned back to
  * {@link runCandidatePlan} by the checker rather than by a convention. The
  * tuples stop the union distributing, so `Reason` is tested whole. */
-type NarratesSingles<Reason> = [SingleReason] extends [Reason] ? unknown : never;
+type NarratesSingles<Reason, Reading extends CandidateReading> = [
+  SingleReasonUnder<Reading>,
+] extends [Reason]
+  ? unknown
+  : never;
 
 /** A {@link CandidatePlan} with the row/column family's answers taken out: see
  * {@link runLatinCandidatePlan} for why each one is not a parameter. */
@@ -400,8 +422,9 @@ export type LatinCandidatePlan<
   H extends CandidateHighlights,
   R extends DeductionRecord,
   Reason,
+  Reading extends CandidateReading = CandidateReading,
 > = Omit<
-  CandidatePlan<M, H, R, Reason, RowColRegion>,
+  CandidatePlan<M, H, R, Reason, RowColRegion, Reading>,
   "regionsOf" | "singleReason" | "notes" | "conclude"
 > & {
   /** The words the shared setup sentences and conclusions are built from: the
@@ -430,6 +453,14 @@ export const LATIN_RUNGS = [
   "forcing",
 ] as const;
 
+/** {@link LATIN_RUNGS} for a plan on the populate reading alone
+ * ({@link OwnSetUp}): without the note leg, and without the single read off a
+ * cell that has no notes. */
+export const LATIN_POPULATE_RUNGS = LATIN_RUNGS.filter(
+  (rung): rung is Exclude<(typeof LATIN_RUNGS)[number], "note" | "regionsFull"> =>
+    rung !== "note" && rung !== "regionsFull",
+);
+
 /**
  * The plain row/column Latin square's {@link runCandidatePlan}: a preset over
  * it, not a second entry point, so a game supplies its recording solver, its
@@ -456,7 +487,12 @@ export function runLatinCandidatePlan<
   H extends CandidateHighlights,
   R extends DeductionRecord,
   Reason,
->(plan: LatinCandidatePlan<M, H, R, Reason> & NarratesSingles<Reason>): void {
+  Reading extends CandidateReading = CandidateReading,
+>(
+  plan: LatinCandidatePlan<M, H, R, Reason, Reading> &
+    NarratesSingles<Reason, Reading> &
+    OwnSetUp<Reading>,
+): void {
   const { w, notes, placeWords, ...rest } = plan;
   const value = notes.value ?? String;
   const cell = notes.cell ?? "cell";
@@ -466,7 +502,7 @@ export function runLatinCandidatePlan<
     regions: "row or column",
     cell,
   };
-  const full: CandidatePlan<M, H, R, Reason, RowColRegion> = {
+  const full: CandidatePlan<M, H, R, Reason, RowColRegion, Reading> = {
     ...rest,
     w,
     notes: {
@@ -484,13 +520,14 @@ export function runLatinCandidatePlan<
       H,
       R,
       Reason,
-      RowColRegion
+      RowColRegion,
+      Reading
     >["singleReason"],
     // A hidden single's line ("in this row") is striped by the words that name
     // it (`narrateLatinReason`), so the preset adds nothing to the placement.
     placeWords,
   };
-  runCandidatePlan(full);
+  runCandidatePlan(full as typeof full & OwnSetUp<Reading>);
 }
 
 class CandidateWalk<
@@ -670,6 +707,14 @@ class CandidateWalk<
    * available before it was (`rome-implicit-continuity`).
    */
   private single(m: Mark, why: SingleWhy<WholeRegion<Reg>>): Firing<M, H, Reason> {
+    // A plan with a setup of its own types its steps without this rung
+    // (`OwnSetUp`). Under the populate reading only the opening shows a single
+    // in a cell with no notes, and only to a rung that asks for
+    // `RungContext.placements` there.
+    if (why.kind === "regionsFull" && this.plan.setUp)
+      throw new Error(
+        `${this.plan.label}: a single in a cell with no notes, on a plan that sets its own notes up`,
+      );
     const f = this.placing(m, this.plan.singleReason(m.n, why));
     const { grid, pencil, w } = this.plan;
     const i = m.y * w + m.x;
