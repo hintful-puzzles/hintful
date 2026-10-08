@@ -13,6 +13,7 @@ import {
   CURSOR,
   cellSurface,
   ERROR,
+  GOAL_WASH,
   GRID_DARK,
   givenSurface,
   HINT_ACTION,
@@ -98,7 +99,11 @@ export const COL_GRID = 13;
  * collection's "you are here" wash, which sinks below a plain cell and a
  * lifted one in both schemes. */
 export const COL_HELD = 14;
-export const NCOLORS = 15;
+/** Where the held number leads: the nearest placed number on either side of
+ * it, and the row or column an edge number is dragged along, which ends on
+ * the two arrows it lines up with and wears their color. */
+export const COL_TARGET = 15;
+export const NCOLORS = 16;
 
 /** A cell's part in the displayed hint, one bit per mark: its diff key. */
 const HINT_TARGET = 1;
@@ -326,6 +331,7 @@ export function ascentColors(defaultBackground: Color): Color[] {
   // Not `HELD`: the held cell is a fill under its number, which is the wash.
   ret[COL_HELD] = highlightWash(background);
   ret[COL_ARROW] = YELLOW_WASH;
+  ret[COL_TARGET] = GOAL_WASH;
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
   ret[COL_CELL] = cellSurface(background);
@@ -694,15 +700,15 @@ export function redrawAscent(
         : flash >= sn && flash <= sn + FLASH_SIZE
           ? COL_LOWLIGHT
           : ui.dragColumn === i % w || ui.dragRow === Math.trunc(i / w)
-            ? COL_HIGHLIGHT
+            ? COL_TARGET
             : ui.held === i ||
                 ui.typingCell === i ||
                 (mouseCursor(ui) && ui.cursor.y * w + ui.cursor.x === i)
               ? COL_HELD
               : oldNextTarget >= 0 && positions[oldNextTarget] === i
-                ? COL_HIGHLIGHT
+                ? COL_TARGET
                 : oldPrevTarget >= 0 && positions[oldPrevTarget] === i
-                  ? COL_HIGHLIGHT
+                  ? COL_TARGET
                   : state.immutable[i]
                     ? COL_GIVEN
                     : COL_CELL;
@@ -902,7 +908,11 @@ export function redrawAscent(
         state.immutable[i]
           ? COL_BORDER
           : state.grid[i] === NUMBER_EMPTY && ui.typingCell !== i
-            ? COL_LOWLIGHT
+            ? // A number offered, not placed. On the dragged lane it is where
+              // the drop lands, and the gray sinks into the wash: ink there.
+              color === COL_TARGET
+              ? COL_BORDER
+              : COL_LOWLIGHT
             : sn <= state.last && positions[sn] === -2 && ui.typingCell !== i
               ? COL_ERROR
               : COL_LINE,

@@ -29,7 +29,7 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { newAscentDesc } from "./generator.ts";
 import { ascentGame } from "./index.ts";
-import { COL_HIGHLIGHT, COL_PATH } from "./render.ts";
+import { COL_PATH, COL_TARGET } from "./render.ts";
 import {
   ascentSolve,
   SolverScratch,
@@ -371,7 +371,7 @@ describe("ascent edge-drag guide line", () => {
     ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, 0);
     return rec.ops.filter(
       (o): o is Extract<DrawOp, { op: "rect" }> =>
-        o.op === "rect" && o.color === COL_HIGHLIGHT,
+        o.op === "rect" && o.color === COL_TARGET,
     );
   };
 

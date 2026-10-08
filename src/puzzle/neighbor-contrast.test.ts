@@ -26,8 +26,6 @@ import {
 /** `kind:a:b` to what the pair is, per game. */
 const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   ascent: {
-    "area:2:11":
-      "the square the next number goes in, lit beside the held square it follows from, whose wash clears the floor",
     "mark:13:2":
       "an endpoint disc's ring, which the disc itself carries in the dark scheme",
   },
