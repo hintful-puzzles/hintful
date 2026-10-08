@@ -9,7 +9,7 @@ import { difficultyChoiceItem, withTier } from "./difficulty.ts";
 import type { Game, ParamConfigItem } from "./game.ts";
 import { presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
-import { MENU_SECTION_LINES } from "./preset-grid.ts";
+import { MENU_LINES, MENU_SECTION_LINES } from "./preset-grid.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { rulesetField } from "./ruleset.ts";
 import { leafPresets } from "./testing/presets.ts";
@@ -72,6 +72,23 @@ describe("a section of a menu is short enough to read", () => {
         `${id}: ${lines.length} lines under one heading, from "${lines[0]?.title}"`,
       ).toBeLessThanOrEqual(MENU_SECTION_LINES);
     }
+  });
+});
+
+/**
+ * Games whose whole menu is longer than `MENU_LINES`, with what fills it. They
+ * were over when the cap was set (owner, 2026-10-08) and are the owner's to
+ * trim; the check holds the list exact, so an entry leaves with its lines.
+ */
+const MENUS_OVER: Record<string, string> = {
+  loopy: "its squares at every tier, and a line for each other tiling",
+  unequal: "two rulesets, each a grid of sizes and tiers",
+};
+
+describe("a whole menu is short enough to choose from", () => {
+  it("holds every game to the cap, or names it", () => {
+    const over = ids.filter((id) => leafPresets(game(id)).length > MENU_LINES);
+    expect(over.sort()).toEqual(Object.keys(MENUS_OVER).sort());
   });
 });
 

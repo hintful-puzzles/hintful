@@ -86,7 +86,7 @@ export const puzzleCatalog = {
   },
   ascent: {
     name: "Ascent",
-    aliases: ["Hidato", "Hidoku", "1to25"],
+    aliases: ["Hidato", "Hidoku", "Numbrix", "1to25"],
     description: "Path-finding puzzle",
     objective: "Place each number once to create a path.",
     collection: "unreleased",

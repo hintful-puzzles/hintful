@@ -18,6 +18,9 @@ import type { ParamConfigItem, PresetMenu } from "./game.ts";
 /** The most lines one section of a menu holds. */
 export const MENU_SECTION_LINES = 12;
 
+/** The most lines a whole menu holds, however many sections it has. */
+export const MENU_LINES = 18;
+
 interface PresetGridOptions<P> {
   /**
    * The first and last tier a board is offered at, for a board the game does

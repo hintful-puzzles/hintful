@@ -33,12 +33,17 @@ import {
   type AscentParams,
   MODE_EDGES,
   MODE_HEXAGON,
+  MODE_ORTHOGONAL,
   MODE_RECT,
 } from "./state.ts";
 
 function id(p: AscentParams, seed: string): string {
   return `${ascentGame.encodeParams(p, true)}#${seed}`;
 }
+
+/** The sides of a square where the path may step diagonally: its corners are
+ * cut off. */
+const CUT_SIDES = 8;
 
 const RECT: AscentParams = {
   w: 5,
@@ -82,6 +87,22 @@ describe("ascent render", () => {
     expect(fills(COL_CELL)).toBe(RECT.w * RECT.h - numbers);
     expect(ops.some((o) => o.op === "polygon" && o.outline === COL_GRID)).toBe(true);
     expect(ops).toMatchSnapshot();
+  });
+
+  it("cuts a square's corners only where the path may step diagonally", () => {
+    const sides = (p: AscentParams) => {
+      const { recording } = renderScenario({
+        game: ascentGame,
+        id: id(p, "render-cut"),
+      });
+      const outlines = recording.ops.filter(
+        (o) => o.op === "polygon" && o.outline === COL_GRID,
+      );
+      return new Set(outlines.map((o) => (o.op === "polygon" ? o.points.length : 0)));
+    };
+    expect(sides(RECT)).toEqual(new Set([CUT_SIDES]));
+    expect(sides(EDGES)).toEqual(new Set([CUT_SIDES]));
+    expect(sides({ ...RECT, mode: MODE_ORTHOGONAL })).toEqual(new Set([4]));
   });
 
   it("Hexagon: renders real hexagonal cells (6-vertex outlines)", () => {
@@ -220,9 +241,9 @@ describe("ascent hint frames", () => {
     const { recording, hint, marks } = hintFrame("rectBetween");
     expect(marks.area).toHaveLength(2);
     const ops = recording.ops;
-    // A ring is one stroke per side of the cell, and no fill: four for a square.
-    expect(strokes(ops, COL_HINT)).toHaveLength(4);
-    expect(strokes(ops, COL_HINT_CELL)).toHaveLength(4 * 2);
+    // A ring is one stroke per side of the cell, and no fill.
+    expect(strokes(ops, COL_HINT)).toHaveLength(CUT_SIDES);
+    expect(strokes(ops, COL_HINT_CELL)).toHaveLength(CUT_SIDES * 2);
     // Highlight, never perform: the number the step places is not drawn as a
     // placed number.
     const n = hint.move.kind === "place" ? hint.move.n : -1;
@@ -266,7 +287,9 @@ describe("ascent hint frames", () => {
     expect(marks.hatch).toEqual([]);
     expect(recording.ops.some((o) => o.op === "hatch")).toBe(false);
     expect(marks.area.length).toBeGreaterThan(0);
-    expect(strokes(recording.ops, COL_HINT_CELL)).toHaveLength(4 * marks.area.length);
+    expect(strokes(recording.ops, COL_HINT_CELL)).toHaveLength(
+      CUT_SIDES * marks.area.length,
+    );
     expect(recording.ops).toMatchSnapshot();
   });
 
@@ -275,9 +298,10 @@ describe("ascent hint frames", () => {
     const route = marks.route;
     expect(hint.move.kind).toBe("places");
     expect(route.length).toBeGreaterThan(2);
-    // One half-segment from each end of every link, and a four-sided ring on
-    // every square the step fills.
-    const rings = 4 * (hint.move.kind === "places" ? hint.move.cells.length : 0);
+    // One half-segment from each end of every link, and a ring on every
+    // square the step fills.
+    const rings =
+      CUT_SIDES * (hint.move.kind === "places" ? hint.move.cells.length : 0);
     expect(strokes(recording.ops, COL_HINT)).toHaveLength(
       2 * (route.length - 1) + rings,
     );

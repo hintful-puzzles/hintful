@@ -363,6 +363,43 @@ function squareCorners(x: number, y: number, size: number): Point[] {
   ];
 }
 
+/** How much of each corner a square loses where the path may step diagonally:
+ * the gap the four squares leave round a corner is where such a step crosses,
+ * and it tells the board from one whose path keeps to the sides. */
+function cornerCut(tileSize: number): number {
+  return Math.max(2, Math.round(tileSize * 0.13));
+}
+
+/** The outline of a `size`-square with `cut` off each corner, clockwise: an
+ * octagon, or the square itself at no cut. */
+function cutSquare(x: number, y: number, size: number, cut: number): Point[] {
+  if (cut === 0) return squareCorners(x, y, size);
+  const far = size - cut;
+  return [
+    { x: x + cut, y },
+    { x: x + far, y },
+    { x: x + size, y: y + cut },
+    { x: x + size, y: y + far },
+    { x: x + far, y: y + size },
+    { x: x + cut, y: y + size },
+    { x, y: y + far },
+    { x, y: y + cut },
+  ];
+}
+
+/** The four triangles {@link cutSquare} takes off a square. */
+function cutCorners(x: number, y: number, size: number, cut: number): Point[][] {
+  return squareCorners(x, y, size).map((corner, k) => {
+    const sx = k === 0 || k === 3 ? 1 : -1;
+    const sy = k < 2 ? 1 : -1;
+    return [
+      corner,
+      { x: corner.x + sx * cut, y: corner.y },
+      { x: corner.x, y: corner.y + sy * cut },
+    ];
+  });
+}
+
 const HORIZONTAL_ARROW = [0.45, 0, 0.35, 0.45, -0.45, 0.45, -0.45, -0.45, 0.35, -0.45];
 const DIAGONAL_ARROW = [-0.45, 0.3, -0.45, -0.45, 0.3, -0.45, 0.45, 0.45];
 
@@ -606,6 +643,37 @@ export function redrawAscent(
 
   /* Draw cells (hexagons for the hexagonal modes, squares otherwise). */
   const hex = isHexagonal(state.mode);
+  const diagonal = movement.dirs.some((d) => d.dx !== 0 && d.dy !== 0);
+  const cut = !hex && diagonal ? cornerCut(tileSize) : 0;
+  const dirBit = (dx: number, dy: number): number =>
+    1 << movement.dirs.findIndex((d) => d.dx === dx && d.dy === dy);
+  /** What crosses the corner of cell `i` toward `(sx, sy)`: the hint's route,
+   * the player's line or the board's path, in that order where two diagonals
+   * cross there, and the board where none does. It reads the same from each of
+   * the four cells round the corner. */
+  const cornerInk = (i: number, sx: number, sy: number): number => {
+    const col = i % w;
+    const row = Math.trunc(i / w);
+    if (col + sx < 0 || col + sx >= w || row + sy < 0 || row + sy >= h)
+      return COL_MIDLIGHT;
+    const beside = i + sx;
+    const below = i + sy * w;
+    const across = below + sx;
+    const crossings = [
+      { from: i, to: across, bit: dirBit(sx, sy), back: dirBit(-sx, -sy) },
+      { from: beside, to: below, bit: dirBit(-sx, sy), back: dirBit(sx, -sy) },
+    ];
+    let ink = COL_MIDLIGHT;
+    for (const { from, to, bit, back } of crossings) {
+      if (routeBits[from] & bit) return COL_HINT;
+      if (!(ds.path[from] & bit) && !(ds.path[to] & back)) continue;
+      ink =
+        (ds.path[from] | ds.path[to]) & FLAG_USER || ink === COL_LINE
+          ? COL_LINE
+          : COL_PATH;
+    }
+    return ink;
+  };
   const r = hexR(tileSize);
   for (let i = 0; i < w * h; i++) {
     const { cx, cy } = cellCenter(i, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
@@ -674,6 +742,12 @@ export function redrawAscent(
         ? hexHatchRects(cx, cy, tileSize)
         : [{ x: tx + 1, y: ty + 1, w: tileSize - 1, h: tileSize - 1 }])
         dr.drawHatch(rect, COL_HINT, hatchPeriod(tileSize));
+
+    // The cut corners show the board, over the fill and the hatch and under
+    // the lines that cross them.
+    if (cut > 0 && !isNumberEdge(sn))
+      for (const corner of cutCorners(tx, ty, tileSize, cut))
+        dr.drawPolygon(corner, COL_MIDLIGHT, COL_MIDLIGHT);
 
     if (ui.typingCell !== i) {
       const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_PATH;
@@ -766,9 +840,20 @@ export function redrawAscent(
     if (!isNumberEdge(sn)) {
       const outline = hex
         ? hexVertices(cx, cy, tileSize)
-        : squareCorners(tx, ty, tileSize);
+        : cutSquare(tx, ty, tileSize, cut);
       dr.drawPolygon(outline, -1, COL_GRID);
     }
+
+    // A corner's own pixel is in four tiles' clips, and two diagonal lines may
+    // cross on it, so whichever tile was painted last would decide it. Every
+    // tile leaves it what the board's state says, as a square's outline leaves
+    // it the grid's.
+    if (cut > 0)
+      squareCorners(tx, ty, tileSize).forEach((corner, k) => {
+        const sx = k === 1 || k === 2 ? 1 : -1;
+        const sy = k >= 2 ? 1 : -1;
+        dr.drawRect({ x: corner.x, y: corner.y, w: 1, h: 1 }, cornerInk(i, sx, sy));
+      });
 
     /* Light circle on possible endpoints. */
     if (state.grid[i] === NUMBER_EMPTY && (sn === 0 || sn === state.last)) {
@@ -882,7 +967,9 @@ export function redrawAscent(
       const target = (hintMarks[i] & HINT_TARGET) !== 0;
       strokeScaledPolygon(
         dr,
-        hex ? hexVertices(cx, cy, tileSize) : squareCorners(tx, ty, tileSize),
+        hex
+          ? hexVertices(cx, cy, tileSize)
+          : cutSquare(tx, ty, tileSize, isNumberEdge(sn) ? 0 : cut),
         center,
         HINT_MARK_SCALE,
         target ? COL_HINT : COL_HINT_CELL,

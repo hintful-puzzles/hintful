@@ -55,6 +55,9 @@ import {
   NUMBER_BOUND,
   NUMBER_EMPTY,
   newAscentState,
+  SHAPE_HEXAGON,
+  SHAPE_HONEYCOMB,
+  SHAPE_RECTANGLE,
   stepDistance,
 } from "./state.ts";
 import { keyboardCursor, mouseCursor } from "./ui.ts";
@@ -100,49 +103,81 @@ describe("ascent generation + solving", () => {
   }
 });
 
-describe("ascent's dialog asks for the ruleset and the grid separately", () => {
+describe("ascent's dialog asks for the ruleset and the board's shape separately", () => {
   const field = (kw: string) => {
     const item = ascentGame.paramConfig?.find((i) => i.kw === kw);
     if (item?.type !== "choices") throw new Error(`no choices field ${kw}`);
     return item;
   };
-  /** The dialog's submission: each field set in order on a copy. */
-  const submit = (ruleset: number, grid: number) => {
-    const p = ascentGame.defaultParams();
+  const MODES = [MODE_ORTHOGONAL, MODE_RECT, MODE_HEXAGON, MODE_HONEYCOMB, MODE_EDGES];
+  /** The dialog's submission over a board of mode `from`: each field set in
+   * order on a copy. */
+  const submit = (from: number, ruleset: number, shape: number) => {
+    const p = { ...ascentGame.defaultParams(), mode: from };
     for (const item of ascentGame.paramConfig ?? []) {
       if (item.kw === "ruleset") field("ruleset").set(p, ruleset);
-      else if (item.kw === "grid-type") field("grid-type").set(p, grid);
+      else if (item.kw === "board-shape") field("board-shape").set(p, shape);
     }
     return p;
   };
 
-  it("offers Edges as a ruleset and not as a grid", () => {
-    expect(field("ruleset").choices).toEqual(["Ascent", "Edges"]);
-    expect(field("grid-type").choices).not.toContain("Edges");
+  it("offers the rulesets by how many neighbors a square has, fewest first", () => {
+    expect(field("ruleset").choices).toEqual(["Orthogonal", "Hex", "Classic", "Edges"]);
+    expect(MODES.map((mode) => field("ruleset").get(mk(5, 5, 1, mode)))).toEqual([
+      0, 2, 1, 1, 3,
+    ]);
+    expect(field("board-shape").choices).toEqual(["Rectangle", "Honeycomb", "Hexagon"]);
   });
 
-  it("reads every mode back as the pair that makes it", () => {
-    for (let mode = 0; mode < 5; mode++) {
-      const p = { ...ascentGame.defaultParams(), mode };
-      const again = submit(field("ruleset").get(p), field("grid-type").get(p));
-      expect(again.mode).toBe(mode);
+  it("reads every mode back as the pair that makes it, whatever it is set over", () => {
+    for (const mode of MODES) {
+      const p = mk(5, 5, 1, mode);
+      for (const from of MODES) {
+        const again = submit(
+          from,
+          field("ruleset").get(p),
+          field("board-shape").get(p),
+        );
+        expect(again.mode, `${mode} over ${from}`).toBe(mode);
+      }
     }
   });
 
-  it("makes Edges of the Rectangle, and refuses it on any other grid", () => {
-    const edges = submit(1, MODE_RECT);
-    expect(edges.mode).toBe(MODE_EDGES);
-    expect(describeParams(ascentGame, { ...edges, diff: 1 })).toMatch(/^Edges: /);
-    const onHex = new Midend(ascentGame).encodeCustomParams({
-      ruleset: 1,
-      "grid-type": MODE_HEXAGON,
-      difficulty: 1,
-    });
-    expect(onHex).toEqual({
+  it("names a board by its ruleset, and by its shape where the ruleset has two", () => {
+    const label = (mode: number, w = 6, h = 7) =>
+      describeParams(ascentGame, mk(w, h, 1, mode, mode === MODE_EDGES));
+    expect(label(MODE_ORTHOGONAL)).toBe("Orthogonal: 6x7 Normal");
+    expect(label(MODE_RECT)).toBe("Classic: 6x7 Normal");
+    expect(label(MODE_HONEYCOMB)).toBe("Hex: 6x7 Honeycomb Normal");
+    expect(label(MODE_HEXAGON, 7, 7)).toBe("Hex: Size 7 Hexagon Normal");
+    expect(label(MODE_EDGES)).toBe("Edges: 6x7 Normal");
+  });
+
+  it("refuses a shape the ruleset does not have", () => {
+    const custom = (ruleset: number, shape: number) =>
+      new Midend(ascentGame).encodeCustomParams({
+        ruleset,
+        "board-shape": shape,
+        difficulty: 1,
+      });
+    expect(custom(3, SHAPE_HEXAGON)).toEqual({
       ok: false,
-      error: "Grid type must be Rectangle for Edges.",
+      error: "Board shape must be Rectangle for Edges.",
     });
-    expect(submit(0, MODE_HEXAGON).mode).toBe(MODE_HEXAGON);
+    expect(custom(0, SHAPE_HONEYCOMB)).toEqual({
+      ok: false,
+      error: "Board shape must be Rectangle for Orthogonal.",
+    });
+    expect(custom(1, SHAPE_RECTANGLE)).toEqual({
+      ok: false,
+      error: "Board shape must be Honeycomb or Hexagon for Hex.",
+    });
+    expect(custom(1, SHAPE_HEXAGON).ok).toBe(true);
+  });
+
+  it("decodes a string that names no mode as the board it always was", () => {
+    expect(ascentGame.decodeParams("6x7").mode).toBe(MODE_RECT);
+    expect(ascentGame.defaultParams().mode).toBe(MODE_ORTHOGONAL);
   });
 
   it("refuses a game ID asking Edges for what it does not offer", () => {
@@ -212,8 +247,10 @@ describe("ascent says which grid a missing tier is missing on", () => {
   it("names the size, the grid and the tier", () => {
     const refusal = (id: string): string | null =>
       paramsError(ascentGame, ascentGame.decodeParams(id), true);
-    expect(refusal("3x3mRdn")).toBe("No 3x3 Rectangle puzzle is Normal.");
-    expect(refusal("2x9mRdh")).toBe("No 2x9 Rectangle puzzle is Hard.");
+    expect(refusal("3x3mRdn")).toBe("No 3x3 Classic puzzle is Normal.");
+    expect(refusal("2x9mRdh")).toBe("No 2x9 Classic puzzle is Hard.");
+    expect(refusal("2x4mOdh")).toBe("No 2x4 Orthogonal puzzle is Hard.");
+    expect(refusal("3x3mHdn")).toBe("No 3x3 Hexagon puzzle is Normal.");
     expect(refusal("3x3mOdn")).toBeNull();
   });
 });

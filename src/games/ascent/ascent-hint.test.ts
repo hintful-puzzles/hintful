@@ -82,6 +82,8 @@ const custom = (
 const SHAPES: AscentParams[] = [
   ...leafPresets(ascentGame).map((p) => p.params),
   ...[0, 1, 2, 3].flatMap((d) => [
+    // A board large enough for the long runs the one-run rungs fire on.
+    custom(8, 10, d, MODE_RECT, false),
     custom(6, 6, d, MODE_ORTHOGONAL, false),
     custom(7, 7, d, MODE_RECT, true),
     custom(7, 7, d, MODE_RECT, false, true),
@@ -932,7 +934,10 @@ describe("every technique is reached", () => {
 
 describe("following a step by hand", () => {
   it("completes on its own number in its own square, however it was entered", () => {
-    const { firing } = walk().seen[0];
+    // A step that places one number: a whole run's is kept track of below.
+    const found = walk().seen.find((s) => stepOf(s.firing).move.kind === "place");
+    if (!found) throw new Error("no step of the walk places one number");
+    const { firing } = found;
     const step = stepOf(firing);
     expect(
       ascentKeepTrack({ kind: "place", cell: firing.cell, n: firing.n }, step),

@@ -47,6 +47,8 @@ const PINNED_EVENTS = 20;
  * the seeded run does not, so a pin the run has caught up with is named.
  */
 const PINNED: Readonly<Record<string, readonly string[]>> = {
+  // A striped square: the reach of the one run that can fill it.
+  ascent: ["5x5mRdt:25_1a4b24_2_8_6_22d12a15a17c19a"],
   crossing: [
     // A note ruled out in a square, which the 7x7 deal's plan never needs.
     "11x11:2a6a2a2b1a1a2b3a6a1a3b1a2b1a1a2a1a3b1a1a3a2a5a1b2c1a3b3b1b3b2a4a3a1,19,23,24,31,32,42,46,48,51,53,59,63,65,74,77,83,89,97,126,276,343,361,435,443,498,547,693,794,886,948,4777,5618,6843,8629,9745,37664,47511,944232,2183531",

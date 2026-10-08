@@ -16,24 +16,28 @@ flip:diag  full=5x5n4D"
 `;
 
 exports[`encoded params are byte-stable > ascent 1`] = `
-"default  full=6x7mRde  brief=6x7mR
-preset:Ascent/Ascent/Ascent: 6x7 Normal  full=6x7mRdn  brief=6x7mR
-preset:Ascent/Ascent/Ascent: 6x7 Tricky  full=6x7mRdt  brief=6x7mR
-preset:Ascent/Ascent/Ascent: 6x7 Hard  full=6x7mRdh  brief=6x7mR
-preset:Ascent/Ascent/Ascent: 8x10 Easy  full=8x10mRde  brief=8x10mR
-preset:Ascent/Ascent/Ascent: 8x10 Normal  full=8x10mRdn  brief=8x10mR
-preset:Ascent/Ascent/Ascent: 8x10 Tricky  full=8x10mRdt  brief=8x10mR
-preset:Ascent/Ascent/Ascent: 8x10 Hard  full=8x10mRdh  brief=8x10mR
-preset:Ascent/Ascent/Ascent: 6x8 Honeycomb Normal  full=6x8mCdn  brief=6x8mC
-preset:Ascent/Ascent/Ascent: Size 7 Hexagon Normal  full=7x7mHdn  brief=7x7mH
+"default  full=6x7mOde  brief=6x7mO
+preset:Ascent/Orthogonal/Orthogonal: 6x7 Normal  full=6x7mOdn  brief=6x7mO
+preset:Ascent/Orthogonal/Orthogonal: 6x7 Tricky  full=6x7mOdt  brief=6x7mO
+preset:Ascent/Orthogonal/Orthogonal: 6x7 Hard  full=6x7mOdh  brief=6x7mO
+preset:Ascent/Hex/Hex: 6x8 Honeycomb Easy  full=6x8mCde  brief=6x8mC
+preset:Ascent/Hex/Hex: 6x8 Honeycomb Normal  full=6x8mCdn  brief=6x8mC
+preset:Ascent/Hex/Hex: 6x8 Honeycomb Tricky  full=6x8mCdt  brief=6x8mC
+preset:Ascent/Hex/Hex: 6x8 Honeycomb Hard  full=6x8mCdh  brief=6x8mC
+preset:Ascent/Hex/Hex: Size 7 Hexagon Normal  full=7x7mHdn  brief=7x7mH
+preset:Ascent/Hex/Hex: Size 7 Hexagon Tricky  full=7x7mHdt  brief=7x7mH
+preset:Ascent/Hex/Hex: Size 7 Hexagon Hard  full=7x7mHdh  brief=7x7mH
+preset:Ascent/Classic/Classic: 6x7 Easy  full=6x7mRde  brief=6x7mR
+preset:Ascent/Classic/Classic: 6x7 Normal  full=6x7mRdn  brief=6x7mR
+preset:Ascent/Classic/Classic: 6x7 Tricky  full=6x7mRdt  brief=6x7mR
+preset:Ascent/Classic/Classic: 6x7 Hard  full=6x7mRdh  brief=6x7mR
 preset:Ascent/Edges/Edges: 5x5 Normal  full=5x5mEEdn  brief=5x5mE
 preset:Ascent/Edges/Edges: 5x5 Tricky  full=5x5mEEdt  brief=5x5mE
 preset:Ascent/Edges/Edges: 5x5 Hard  full=5x5mEEdh  brief=5x5mE
-bump:w  full=7x7mRde  brief=7x7mR
-bump:h  full=6x8mRde  brief=6x8mR
-bump:mode  full=6x7mHde  brief=6x7mH
-flip:removeends  full=6x7mREde  brief=6x7mR
-flip:symmetrical  full=6x7mRdeS  brief=6x7mR"
+bump:w  full=7x7mOde  brief=7x7mO
+bump:h  full=6x8mOde  brief=6x8mO
+flip:removeends  full=6x7mOEde  brief=6x7mO
+flip:symmetrical  full=6x7mOdeS  brief=6x7mO"
 `;
 
 exports[`encoded params are byte-stable > blackbox 1`] = `

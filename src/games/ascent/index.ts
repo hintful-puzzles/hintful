@@ -25,6 +25,7 @@ import {
   transposeDimensions,
 } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import type { Point } from "../../engine/types.ts";
@@ -51,8 +52,8 @@ import { ascentSolve, SolverScratch } from "./solver.ts";
 import {
   ASCENT_DIFFCHARS,
   ASCENT_DIFFNAMES,
-  ASCENT_GRID_NAMES,
   ASCENT_MODECHARS,
+  ASCENT_SHAPE_NAMES,
   type AscentMistake,
   type AscentMove,
   type AscentParams,
@@ -79,6 +80,9 @@ import {
   NUMBER_EMPTY,
   NUMBER_WALL,
   newAscentState,
+  SHAPE_HEXAGON,
+  SHAPE_HONEYCOMB,
+  SHAPE_RECTANGLE,
 } from "./state.ts";
 import {
   type AscentUi,
@@ -215,66 +219,85 @@ function mk(
   return { w, h, diff, mode, removeends, symmetrical };
 }
 
-const MAIN_PRESETS: AscentParams[] = [
+// The menu's boards: one of each ruleset, and of each shape of Hex, which is
+// what the menu's length leaves room for. Other sizes are a Custom away. A
+// honeycomb is not the square board transposed, as it cannot be turned on its
+// side: 6x8 is the size nearest upstream's 7x6 that draws taller than wide.
+const BOARDS: AscentParams[] = [
+  mk(6, 7, 0, MODE_ORTHOGONAL, false, false),
+  mk(6, 8, 0, MODE_HONEYCOMB, false, false),
+  mk(7, 7, DIFF_NORMAL, MODE_HEXAGON, false, false),
   mk(6, 7, 0, MODE_RECT, false, false),
-  mk(6, 7, 1, MODE_RECT, false, false),
-  mk(6, 7, 2, MODE_RECT, false, false),
-  mk(6, 7, 3, MODE_RECT, false, false),
-  mk(8, 10, 0, MODE_RECT, false, false),
-  mk(8, 10, 1, MODE_RECT, false, false),
-  mk(8, 10, 2, MODE_RECT, false, false),
-  mk(8, 10, 3, MODE_RECT, false, false),
+  mk(5, 5, DIFF_NORMAL, MODE_EDGES, true, false),
 ];
 
-// One board of each hexagonal shape: other sizes and tiers are a Custom away.
-// The honeycomb is not the square preset transposed, as a honeycomb cannot be
-// turned on its side; 6x8 is the nearest size to upstream's 7x6 that draws
-// taller than wide.
-const HEX_PRESETS: AscentParams[] = [
-  mk(6, 8, 1, MODE_HONEYCOMB, false, false),
-  mk(7, 7, 1, MODE_HEXAGON, false, false),
-];
+const RULESET_ORTHOGONAL = 0;
+const RULESET_HEX = 1;
+const RULESET_CLASSIC = 2;
+const RULESET_EDGES = 3;
+const CLASSIC = "Classic";
+const EDGES = "Edges";
+const SHAPE_KW = "board-shape";
+const ON_THE_RECTANGLE = { [SHAPE_KW]: [SHAPE_RECTANGLE] };
 
-// Edges is 1to25 more than Hidato, so it has a heading of its own.
-const EDGES_PRESETS: AscentParams[] = [
-  mk(5, 5, 1, MODE_EDGES, true, false),
-  mk(5, 5, 2, MODE_EDGES, true, false),
-  mk(5, 5, 3, MODE_EDGES, true, false),
-];
-
-/** The two puzzles: Hidato on any of the four grids, and 1to25 on the
- * Rectangle. */
+/** The four puzzles, told apart by which squares are neighbors, fewest first:
+ * four (Numbrix), six, eight (Hidato), and eight with arrows (1to25). */
 const RULESETS: Ruleset[] = [
   {
-    name: "Ascent",
-    rule: "Several numbers are already inside the grid. It can be played on a rectangular or hexagonal grid, and on a rectangular grid where the path may not move diagonally.",
+    name: "Orthogonal",
+    rule: "Two numbers in sequence must be horizontally or vertically adjacent, and never diagonally.",
+    only: ON_THE_RECTANGLE,
   },
   {
-    name: "Edges",
-    rule: "The grid is surrounded by numbers placed inside arrows. An arrow points to the row, column or diagonal where this number appears in the path.",
+    name: "Hex",
+    rule: `The board is made of hexagons, and two numbers in sequence must be in hexagons that share a side. The board is a ${ASCENT_SHAPE_NAMES[SHAPE_HONEYCOMB]} or a ${ASCENT_SHAPE_NAMES[SHAPE_HEXAGON]}.`,
+    only: { [SHAPE_KW]: [SHAPE_HONEYCOMB, SHAPE_HEXAGON] },
+  },
+  {
+    name: CLASSIC,
+    rule: "Two numbers in sequence must be horizontally, vertically or diagonally adjacent. The squares have their corners cut off, as a reminder that the path may cross them.",
+    only: ON_THE_RECTANGLE,
+  },
+  {
+    name: EDGES,
+    rule: `The neighbors are those of ${CLASSIC}, and the grid is surrounded by numbers placed inside arrows. An arrow points to the row, column or diagonal where this number appears in the path.`,
     only: {
-      "grid-type": [MODE_RECT],
+      ...ON_THE_RECTANGLE,
       "symmetrical-clues": false,
       [DIFFICULTY_KW]: [DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD],
     },
   },
 ];
-const EDGES = RULESETS[1].name;
+
+/** Which of {@link RULESETS} a mode plays. */
+function rulesetOf(mode: number): number {
+  if (mode === MODE_ORTHOGONAL) return RULESET_ORTHOGONAL;
+  if (isHexagonal(mode)) return RULESET_HEX;
+  return mode === MODE_EDGES ? RULESET_EDGES : RULESET_CLASSIC;
+}
 
 function presets(): PresetMenu<AscentParams> {
   return {
     title: "Ascent",
-    submenu: [...MAIN_PRESETS, ...HEX_PRESETS, ...EDGES_PRESETS].map((params) => ({
-      params,
-    })),
+    ...presetGrid(paramConfig, BOARDS, {
+      // Edges has no Easy, and the Honeycomb's is the Hex section's.
+      tiers: (p) =>
+        p.mode === MODE_EDGES || p.mode === MODE_HEXAGON
+          ? [DIFF_NORMAL, DIFF_HARD]
+          : null,
+    }),
   };
 }
 
 // --- params codec --------------------------------------------------
 
 function defaultParams(): AscentParams {
-  return { ...MAIN_PRESETS[0] };
+  return { ...BOARDS[0] };
 }
+
+/** What a params string that names no mode or tier decodes over: upstream's
+ * default, so such a string names the board it always did. */
+const UNSAID = mk(6, 7, DIFF_EASY, MODE_RECT, false, false);
 
 function encodeParams(p: AscentParams, full: boolean): string {
   let out = `${p.w}x${p.h}m${ASCENT_MODECHARS[p.mode]}`;
@@ -287,7 +310,7 @@ function encodeParams(p: AscentParams, full: boolean): string {
 }
 
 function decodeParams(s: string): AscentParams {
-  const p = defaultParams();
+  const p = { ...UNSAID };
   const dims = parseDimensions(s);
   p.w = dims.w;
   p.h = dims.h;
@@ -326,7 +349,7 @@ function decodeParams(s: string): AscentParams {
  * Measured 2026-10-06 over every size of 18 squares or fewer and the boards
  * two wide up to 12 long: none in 40,000 to 800,000 tries a cell, and none in
  * 10,000 at the longest. The tiers are rungs a board needs and not a ladder of
- * size, so a tier is missing under one that is there: a 3x3 Rectangle has
+ * size, so a tier is missing under one that is there: a 3x3 Classic has
  * Tricky and Hard boards and no Normal one. With diagonal moves a board two
  * wide has no Hard at any length counted, which past 12 is 3,500 tries at 16
  * long, 1,900 at 20 and 600 at 30. The honeycomb is not the same grid
@@ -365,7 +388,7 @@ function validateParams(p: AscentParams, full: boolean): string | null {
     return `${EDGES} mode needs a grid bigger than 2x2.`;
   if (full && p.diff > DIFF_EASY && lacksTier(p))
     return noSuchTier(
-      `${w}x${h} ${ASCENT_GRID_NAMES[p.mode]} puzzle`,
+      `${w}x${h} ${boardWords(p.mode)} puzzle`,
       ASCENT_DIFFNAMES[p.diff],
     );
   return null;
@@ -373,24 +396,38 @@ function validateParams(p: AscentParams, full: boolean): string | null {
 
 const transposeSquareGrid = transposeDimensions<AscentParams>();
 
-/** The grid type's words in a label: its own name, except that Rectangle is
- * the plain board and goes unsaid, with or without its diagonals. */
-function modeWords(p: AscentParams): string | null {
-  if (p.mode === MODE_RECT) return null;
-  if (p.mode === MODE_ORTHOGONAL) return "(no diagonals)";
-  return ASCENT_GRID_NAMES[p.mode] ?? null;
+function shapeOf(mode: number): number {
+  if (mode === MODE_HONEYCOMB) return SHAPE_HONEYCOMB;
+  return mode === MODE_HEXAGON ? SHAPE_HEXAGON : SHAPE_RECTANGLE;
 }
 
+/** The shape's words in a label: the Rectangle is its ruleset's only board
+ * and goes unsaid. */
+function shapeWords(p: AscentParams): string | null {
+  return isHexagonal(p.mode) ? ASCENT_SHAPE_NAMES[shapeOf(p.mode)] : null;
+}
+
+/** A mode's board in a refusal: its shape where the ruleset has two, and the
+ * ruleset's own name otherwise. */
+function boardWords(mode: number): string {
+  return isHexagonal(mode)
+    ? ASCENT_SHAPE_NAMES[shapeOf(mode)]
+    : RULESETS[rulesetOf(mode)].name;
+}
+
+// One `mode` holds the ruleset and the shape. The ruleset is set first and
+// picks a mode of its own; the shape then chooses between the two hexagonal
+// modes and is nothing's to set on a Rectangle.
 const paramConfig: ParamConfigItem<AscentParams>[] = [
   rulesetItem<AscentParams>(RULESETS, {
-    get: (p) => (p.mode === MODE_EDGES ? 1 : 0),
+    get: (p) => rulesetOf(p.mode),
     set: (p, v) => {
-      if (v === 1) p.mode = MODE_EDGES;
-      else if (p.mode === MODE_EDGES) p.mode = MODE_RECT;
+      if (v === rulesetOf(p.mode)) return;
+      p.mode = [MODE_ORTHOGONAL, MODE_HONEYCOMB, MODE_RECT, MODE_EDGES][v];
     },
   }),
   ...dimensionParamConfig<AscentParams>({
-    doc: "Size of the grid in squares. The smallest boards lack some difficulties: a 2x2 has only Easy puzzles, a 3x3 Rectangle or Hexagon has none at Normal, and a Rectangle two squares wide has none at Hard.",
+    doc: `Size of the grid in squares. The smallest boards lack some difficulties: a 2x2 has only Easy puzzles, a 3x3 ${CLASSIC} or ${ASCENT_SHAPE_NAMES[SHAPE_HEXAGON]} board has none at Normal, and a ${CLASSIC} board two squares wide has none at Hard.`,
     bounds: { min: 2, max: 50 },
     size: (p) => (p.mode === MODE_HEXAGON ? `Size ${p.w}` : `${p.w}x${p.h}`),
   }),
@@ -427,17 +464,16 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
     },
   },
   {
-    kw: "grid-type",
-    name: "Grid type",
+    kw: SHAPE_KW,
+    name: "Board shape",
     type: "choices",
-    choices: ASCENT_GRID_NAMES,
-    doc: `Choose between ${ASCENT_GRID_NAMES.map((n) => `'${n}'`).join(", ")}.`,
-    label: { slot: "kind", words: modeWords },
-    // One `mode` holds the ruleset and the grid, and Edges is its own value of
-    // it, so there the grid is the Rectangle and is not this field's to set.
-    get: (p) => (p.mode === MODE_EDGES ? MODE_RECT : p.mode),
+    choices: ASCENT_SHAPE_NAMES,
+    doc: `The outline of the board: ${ASCENT_SHAPE_NAMES.map((n) => `'${n}'`).join(", ")}. A ${ASCENT_SHAPE_NAMES[SHAPE_HONEYCOMB]} is a rectangle of hexagons, and a ${ASCENT_SHAPE_NAMES[SHAPE_HEXAGON]} is one large hexagon, whose size is the length of its middle row.`,
+    label: { slot: "kind", words: shapeWords },
+    get: (p) => shapeOf(p.mode),
     set: (p, v) => {
-      if (p.mode !== MODE_EDGES) p.mode = v;
+      if (!isHexagonal(p.mode) || v === SHAPE_RECTANGLE) return;
+      p.mode = v === SHAPE_HEXAGON ? MODE_HEXAGON : MODE_HONEYCOMB;
     },
   },
   difficultyItem(ASCENT_DIFFNAMES, "diff"),

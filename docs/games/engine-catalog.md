@@ -1144,7 +1144,7 @@ grid".
 ### `ruleset.ts` — the puzzles a game plays on one board
 
 `rulesetItem(rulesets, field)` is the `paramConfig` item of a game with more
-than one puzzle (Seismic's Tectonic, Ascent's Edges): each ruleset a `name` and its
+than one puzzle (Seismic's Tectonic, Ascent's Hex): each ruleset a `name` and its
 `rule`. `rulesetField(game)` finds it, for the label, the menu's sections and
 the help; `rulesetsMarkdown` is the list a page's `{{rulesets}}` becomes. A
 ruleset's `only` is what it offers of the other fields (`only.ts`).

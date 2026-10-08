@@ -303,9 +303,14 @@ type header, shown with no heading over it, keeps it: a leaf of
 name anywhere else. A test naming a preset reads the `label`, which is what
 `leafPresets` returns. A field that only changes the
 board's shape or look (Loopy's tilings, Cube's solids) is a `kind`, not a
-ruleset. **A ruleset need not be a params field of its own**: Ascent keeps one
-`mode` in which Edges is a fifth value beside four grids, and its ruleset and
-grid-type items read and write that one value between them.
+ruleset. **A field that changes which squares are neighbors is a ruleset, not
+a kind** (owner, 2026-10-08): Ascent's Orthogonal, Hex and Classic are told
+apart by four, six and eight neighbors, and its Honeycomb and Hexagon are two
+kinds of Hex board. **Rulesets are declared easiest to learn first**, which is
+the order of the menu's sections, and the game's default is the first line.
+**A ruleset need not be a params field of its own**: Ascent keeps one `mode`,
+and its ruleset and board-shape items read and write that one value between
+them.
 
 **A ruleset that does not take every value of another setting says so, with
 `only`**: by the field's `kw`, the choice indices it offers or the one value
@@ -367,6 +372,11 @@ boards, and that is about the puzzle; the shape is not.
 [`preset-menu-shape.test.ts`](../../src/engine/preset-menu-shape.test.ts) reads
 the shape off every game's menu, whether or not the game calls the builder:
 
+- **A whole menu holds at most eighteen lines** (`MENU_LINES`; owner,
+  2026-10-08), however many rulesets share it. Four sections of two boards
+  each read as a wall, so a game with several rulesets offers one board of
+  each and leaves the other sizes to the Custom dialog (Ascent). The games
+  over the cap when it was set are in the test's `MENUS_OVER`.
 - **A section holds at most twelve lines** (`MENU_SECTION_LINES`). A game
   trades sizes against tiers to fit: three sizes at four tiers, or four at
   three. A section with one line for each kind of board (Loopy's tilings,
@@ -381,7 +391,8 @@ the shape off every game's menu, whether or not the game calls the builder:
 - **A rule modifier has exactly one line**, after the grid
   (`opts.variants`), so a player can see that it exists; every other board it
   applies to is reached through the Custom dialog. The same goes for a second
-  kind of board, as Ascent's Honeycomb and Hexagon.
+  kind of board, as Loopy's tilings; Ascent's Hexagon, the second shape of
+  its Hex, has a short run of tiers.
 - **A game with a size offers at least three boards.**
 
 **Measure a deal before offering it.** A preset that takes seconds to deal is
