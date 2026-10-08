@@ -1,0 +1,5 @@
+# No delta: `repo-layout` already requires the CLI "at a stated version", and
+# the check now holds the pin to that.
+schema: spec-driven
+created: 2026-10-08
+skip_specs: true

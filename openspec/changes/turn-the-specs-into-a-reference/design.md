@@ -172,7 +172,14 @@ here.
   on one. Run against this tree on 2026-10-08, 1.14.1 rejects all 80 specs
   over 779 of the 924 requirements; 1.14.0 passes. So the pin cannot move past
   1.14.0 until the rewrite is done, and the pilot's bound for a requirement
-  starts from the tool's 500 and argues for any other figure.
+  starts from the tool's 500 and argues for any other figure. The pin is exact
+  and the version check refuses a range (`move-openspec-to-1-14-0`).
+- **Upstream's own way to shorten a requirement** is a change made for the
+  purpose: keep the `MODIFIED` header and every scenario, cut the description
+  to one behavior, and add each behavior removed as its own `ADDED`
+  requirement (pull request 2020). That splits and does not merge, so it is
+  not Decision 5's route, and the pilot says whether any capability is better
+  served by it.
 - **Rules for the `specs` artifact** in `openspec/config.yaml`, stating
   Decision 1 to whoever writes a delta.
 - **The archive step re-reads the merged requirement.** `docs/work-management.md`
@@ -363,6 +370,8 @@ leaves the exempt list.
   capability.
 - 7.2 `AGENTS.md`'s read-first table and each guide name the capability that
   binds the part of the tree, within the root brief's bound.
-- 7.3 The pinned openspec moves past 1.14.0 (Decision 7).
+- 7.3 The pin moves to openspec 1.14.1 or whatever is latest then, and the
+  gate's `validate --all --strict` passes under it with no requirement
+  reported as too long (`proposal.md` § "Acceptance").
 - 7.4 Run the census again and record before and after here.
 - 7.5 The owner's acceptance (`proposal.md` § "Acceptance").

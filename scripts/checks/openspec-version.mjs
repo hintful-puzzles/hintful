@@ -63,7 +63,16 @@ if (!declared) {
       " installed (openspec/specs/repo-layout, 'The openspec CLI is pinned').",
   );
 }
-const floor = parse(declared.replace(/^[^\d]*/, ""));
+// A range lets `npm update` take a release whose `--strict` validation rejects
+// this tree: 1.14.1 made a requirement over 500 characters fail it, in a patch.
+if (!/^\d+\.\d+\.\d+$/.test(declared)) {
+  fail(
+    `the pin "${declared}" is a range. State one exact version: a newer CLI can` +
+      " tighten 'validate --strict', which the gate runs, so moving to it is a" +
+      " change that first checks the tree passes.",
+  );
+}
+const floor = parse(declared);
 if (!floor) fail(`cannot read a version out of the pin "${declared}"`);
 if (compare(floor, [1, 6, 0]) < 0) {
   fail(

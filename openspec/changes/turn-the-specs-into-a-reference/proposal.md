@@ -110,6 +110,12 @@ None.
 
 ## Acceptance
 
-The owner's, since they asked for it by name: a capability of their choosing,
-read whole, and a session's answer to a question about that part of the tree
-taken from the spec alone.
+Two criteria, the second set by the owner on 2026-10-08:
+
+- The owner's reading, since they asked for the change by name: a capability
+  of their choosing, read whole, and a session's answer to a question about
+  that part of the tree taken from the spec alone.
+- **The repository moves to openspec 1.14.1**, or the latest release at the
+  time. From 1.14.1 `validate --strict` fails on a requirement over 500
+  characters, and 779 of the 924 here are; the pin is held at 1.14.0 until the
+  specs pass (`move-openspec-to-1-14-0`).
