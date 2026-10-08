@@ -76,7 +76,8 @@ const KILLER: SoloParams = {
 };
 
 const EXTRA_CAGE = /^This (row|column|block) must total (\d+);/;
-const LOCKED_PATTERN = /^Their columns fit (\S+) only in the outlined cells/;
+const CONFINED =
+  /^These (\d+) (rows|columns) fit (\S+) only in the outlined cells, leaving their (\d+) (rows|columns) no other /;
 
 const strikes = (step: AnyStep): number =>
   step.move.type === "pencilStrike" ? step.move.marks.length : 0;
@@ -87,6 +88,24 @@ type Cell = { x: number; y: number };
  * row", "this block", "this diagonal". */
 const striped = (step: { highlights?: unknown }): readonly Cell[] =>
   (step.highlights as { hatch?: Cell[] } | undefined)?.hatch ?? [];
+
+/** The whole parallel lines `cells` are, where they are two or more of them:
+ * each line's index along `axis`. */
+function parallelLines(
+  cells: readonly Cell[],
+  axis: "x" | "y",
+  cr: number,
+): number[] | null {
+  const lines = [...new Set(cells.map((c) => c[axis]))];
+  return lines.length > 1 && cells.length === lines.length * cr ? lines : null;
+}
+
+/** Whether `step` is a digit confined across several lines running along
+ * `axis`: columns for "x", rows for "y". */
+const confinedAlong =
+  (axis: "x" | "y") =>
+  (step: { rung?: string; highlights?: unknown }, state: SoloState): boolean =>
+    step.rung === "set" && parallelLines(striped(step), axis, state.cr) !== null;
 
 /** Whether `cells` are one of the board's two long diagonals. */
 const isDiagonal = (cells: readonly Cell[], cr: number): boolean =>
@@ -180,8 +199,10 @@ const pinned = describeHintKindPins({
     // A killer placement from a whole region's total, which stripes the region.
     extraCage: (step, state) =>
       step.rung === "cageSingle" && striped(step).length === state.cr,
-    // A set that sits in no one region, so stripes none: it runs across lines.
-    lockedPattern: (step) => step.rung === "set" && striped(step).length === 0,
+    // One digit confined across several lines, which it stripes: the firing
+    // names whichever of its columns and rows are fewer.
+    confinedColumns: confinedAlong("x"),
+    confinedRows: confinedAlong("y"),
   },
   pins: {
     /** Held on 625 of 5839 positions walked. */
@@ -198,8 +219,14 @@ const pinned = describeHintKindPins({
       moves:
         '[{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":1},{"x":0,"y":0,"n":2},{"x":0,"y":0,"n":3},{"x":0,"y":0,"n":4},{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6},{"x":0,"y":0,"n":7},{"x":0,"y":0,"n":8},{"x":0,"y":0,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":2},{"x":0,"y":1,"n":3},{"x":0,"y":1,"n":4},{"x":0,"y":1,"n":5},{"x":0,"y":1,"n":6},{"x":0,"y":1,"n":7},{"x":0,"y":1,"n":8},{"x":0,"y":1,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":1},{"x":0,"y":2,"n":2},{"x":0,"y":2,"n":3},{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":6},{"x":0,"y":2,"n":7},{"x":0,"y":2,"n":8},{"x":0,"y":2,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2},{"x":0,"y":3,"n":3},{"x":0,"y":3,"n":4},{"x":0,"y":3,"n":5},{"x":0,"y":3,"n":6},{"x":0,"y":3,"n":7},{"x":0,"y":3,"n":8},{"x":0,"y":3,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":4,"n":1},{"x":0,"y":4,"n":2},{"x":0,"y":4,"n":3},{"x":0,"y":4,"n":4},{"x":0,"y":4,"n":5},{"x":0,"y":4,"n":6},{"x":0,"y":4,"n":7},{"x":0,"y":4,"n":8},{"x":0,"y":4,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":5,"n":1},{"x":0,"y":5,"n":2},{"x":0,"y":5,"n":3},{"x":0,"y":5,"n":4},{"x":0,"y":5,"n":5},{"x":0,"y":5,"n":6},{"x":0,"y":5,"n":7},{"x":0,"y":5,"n":8},{"x":0,"y":5,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":6,"n":1},{"x":0,"y":6,"n":2},{"x":0,"y":6,"n":3},{"x":0,"y":6,"n":4},{"x":0,"y":6,"n":5},{"x":0,"y":6,"n":6},{"x":0,"y":6,"n":7},{"x":0,"y":6,"n":8},{"x":0,"y":6,"n":9}]},{"type":"pencilAdd","marks":[{"x":0,"y":7,"n":1},{"x":0,"y":7,"n":2},{"x":0,"y":7,"n":3},{"x":0,"y":7,"n":4},{"x":0,"y":7,"n":5},{"x":0,"y":7,"n":6},{"x":0,"y":7,"n":7},{"x":0,"y":7,"n":8},{"x":0,"y":7,"n":9}]}]',
     },
+    /** Kept by hand: the scan's boards hold no position that names rows. */
+    confinedRows: {
+      id: "3x3de:a9b6_8b5_2a5_7f6b5a7c1c3_4b7g2b8_5c3c4a2b8f5_6a4_9b6_8b1a",
+      moves:
+        '[{"type":"set","x":2,"y":0,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":6,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":3,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":5,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":4,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":5,"n":2,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":3,"y":7,"n":1},{"x":3,"y":7,"n":3},{"x":3,"y":7,"n":9}]},{"type":"pencilAdd","marks":[{"x":4,"y":7,"n":1},{"x":4,"y":7,"n":3},{"x":4,"y":7,"n":7},{"x":4,"y":7,"n":9}]},{"type":"pencilStrike","marks":[{"x":3,"y":7,"n":1},{"x":4,"y":7,"n":1}]},{"type":"set","x":1,"y":1,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":0,"y":2,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":3,"n":2,"pencil":false,"autoElim":false},{"type":"set","x":5,"y":2,"n":2,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":4,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":3,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":1,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":7,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":5,"y":8,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":4,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":4,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":8,"y":5,"n":1},{"x":8,"y":5,"n":6},{"x":8,"y":5,"n":7},{"x":8,"y":5,"n":9}]},{"type":"pencilAdd","marks":[{"x":7,"y":3,"n":6},{"x":7,"y":3,"n":7}]},{"type":"pencilStrike","marks":[{"x":8,"y":5,"n":1},{"x":8,"y":5,"n":9}]},{"type":"pencilAdd","marks":[{"x":6,"y":0,"n":1},{"x":6,"y":0,"n":2},{"x":6,"y":0,"n":3}]},{"type":"pencilStrike","marks":[{"x":6,"y":0,"n":1}]},{"type":"pencilAdd","marks":[{"x":6,"y":6,"n":3},{"x":6,"y":6,"n":5},{"x":6,"y":6,"n":9}]},{"type":"pencilStrike","marks":[{"x":6,"y":6,"n":9}]},{"type":"pencilAdd","marks":[{"x":4,"y":3,"n":7},{"x":4,"y":3,"n":9}]},{"type":"pencilAdd","marks":[{"x":7,"y":7,"n":2},{"x":7,"y":7,"n":7},{"x":7,"y":7,"n":9}]}]',
+    },
     /** Held on 6 of 5839 positions walked. */
-    lockedPattern: {
+    confinedColumns: {
       id: "3x3de:a7a9c4a3a1e8c3b1_7_6e1_4b1a2c7a9b8_4e2_1_9b5c7e2a1a8c9a3a",
       moves:
         '[{"type":"set","x":4,"y":0,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":4,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":3,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":5,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":8,"n":1,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":8,"n":2,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":7,"n":9,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":1,"n":9,"pencil":false,"autoElim":false},{"type":"set","x":4,"y":6,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":3,"y":6,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":6,"n":4,"pencil":false,"autoElim":false},{"type":"set","x":8,"y":8,"n":7,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":8,"n":5,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":0,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":5,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":6,"y":6,"n":8,"pencil":false,"autoElim":false},{"type":"set","x":7,"y":6,"n":6,"pencil":false,"autoElim":false},{"type":"set","x":5,"y":4,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":2,"y":7,"n":3,"pencil":false,"autoElim":false},{"type":"set","x":1,"y":7,"n":5,"pencil":false,"autoElim":false},{"type":"pencilAdd","marks":[{"x":4,"y":2,"n":4},{"x":4,"y":2,"n":5},{"x":4,"y":2,"n":8}]},{"type":"pencilAdd","marks":[{"x":5,"y":2,"n":2},{"x":5,"y":2,"n":4},{"x":5,"y":2,"n":8}]},{"type":"pencilStrike","marks":[{"x":4,"y":2,"n":4},{"x":5,"y":2,"n":4}]},{"type":"pencilAdd","marks":[{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":5},{"x":3,"y":3,"n":6},{"x":3,"y":3,"n":8}]},{"type":"pencilAdd","marks":[{"x":4,"y":3,"n":5},{"x":4,"y":3,"n":6},{"x":4,"y":3,"n":8},{"x":4,"y":3,"n":9}]},{"type":"pencilStrike","marks":[{"x":3,"y":3,"n":6},{"x":4,"y":3,"n":6}]},{"type":"pencilAdd","marks":[{"x":0,"y":0,"n":5},{"x":0,"y":0,"n":6},{"x":0,"y":0,"n":8}]},{"type":"pencilAdd","marks":[{"x":0,"y":2,"n":4},{"x":0,"y":2,"n":5},{"x":0,"y":2,"n":8},{"x":0,"y":2,"n":9}]},{"type":"pencilStrike","marks":[{"x":0,"y":0,"n":5},{"x":0,"y":2,"n":5}]},{"type":"pencilAdd","marks":[{"x":5,"y":1,"n":2},{"x":5,"y":1,"n":4},{"x":5,"y":1,"n":6},{"x":5,"y":1,"n":7}]},{"type":"pencilAdd","marks":[{"x":4,"y":1,"n":4},{"x":4,"y":1,"n":7}]},{"type":"pencilStrike","marks":[{"x":5,"y":1,"n":2},{"x":5,"y":1,"n":6}]},{"type":"pencilAdd","marks":[{"x":3,"y":1,"n":2},{"x":3,"y":1,"n":5},{"x":3,"y":1,"n":6}]},{"type":"pencilAdd","marks":[{"x":7,"y":1,"n":2},{"x":7,"y":1,"n":5}]},{"type":"pencilAdd","marks":[{"x":7,"y":3,"n":2},{"x":7,"y":3,"n":5},{"x":7,"y":3,"n":8}]}]',
@@ -623,26 +650,41 @@ describe("solo hint", () => {
     expect(area.reduce((t, c) => t + sol[c.y * cr + c.x], 0)).toBe((cr * (cr + 1)) / 2);
   });
 
-  it("shows the cells a locked pattern is locked into", () => {
-    const step = pinned("lockedPattern").step as AnyStep;
-    const said = LOCKED_PATTERN.exec(step.explanation);
-    if (said === null) throw new Error("the pin does not say a locked pattern");
-    const area = step.highlights.area as { x: number; y: number }[];
-    const marks = step.highlights.marks as { x: number; y: number; n: number }[];
-    expect(area.length, "'the outlined cells' with nothing outlined").toBeGreaterThan(
-      3,
+  // Both ways round: the firing names the fewer of its columns and its rows.
+  it.each([
+    ["confinedColumns", "columns", "x", "y"],
+    ["confinedRows", "rows", "y", "x"],
+  ] as const)("stripes the lines a digit is confined in: %s", (kind, word, along, across) => {
+    const { step: pinnedStep, state } = pinned(kind);
+    const step = pinnedStep as AnyStep;
+    const said = CONFINED.exec(step.explanation);
+    if (said === null) throw new Error(`the pin says "${step.explanation}"`);
+    const area = step.highlights.area as Cell[];
+    const marks = step.highlights.marks as (Cell & { n: number })[];
+    const lines = parallelLines(striped(step), along, state.cr);
+    if (lines === null) throw new Error("the pin stripes no whole lines");
+    // The words are the marks: which way the lines run, and both counts.
+    expect(said[2]).toBe(word);
+    expect(Number(said[1]), "'these N lines' over another number").toBe(lines.length);
+    const crossing = new Set(area.map((c) => c[across]));
+    expect(Number(said[4]), "the outlined cells' lines the other way").toBe(
+      crossing.size,
     );
-    const rows = new Set(area.map((c) => c.y));
-    const cols = new Set(area.map((c) => c.x));
-    expect(rows.size, "a locked pattern spans as many rows as columns").toBe(cols.size);
+    expect(crossing.size, "as many lines each way").toBe(lines.length);
+    // Never the longer reading of the two.
+    expect(lines.length * 2).toBeLessThanOrEqual(state.cr);
+    // The outlined cells are places in the striped lines. That the lines leave
+    // the digit no other is the premise audit's to hold
+    // (`engine/firing-replay.test.ts`).
+    expect(area.length).toBeGreaterThanOrEqual(2 * lines.length);
+    for (const c of area)
+      expect(lines.includes(c[along]), "outlined outside the stripes").toBe(true);
     for (const m of marks) {
-      // What the sentence claims: the strike is in a pattern row, and it is
-      // outside the columns the pattern uses up.
-      expect(rows.has(m.y), "struck a cell outside the pattern's rows").toBe(true);
-      expect(cols.has(m.x), "struck a cell inside the pattern's own columns").toBe(
-        false,
-      );
-      expect(digitChar(m.n), "struck a digit the sentence does not name").toBe(said[1]);
+      // What the sentence claims: the strike is in a line the outlined cells
+      // use up, and outside the striped lines.
+      expect(crossing.has(m[across]), "struck outside the cells' lines").toBe(true);
+      expect(lines.includes(m[along]), "struck inside a striped line").toBe(false);
+      expect(digitChar(m.n), "struck a digit the sentence does not name").toBe(said[3]);
     }
   });
 

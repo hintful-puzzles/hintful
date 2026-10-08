@@ -2189,6 +2189,13 @@ not on the board. With the line hatched, an outline only ever marks particular
 things, so it joins a square to its **own piece** (a domino's partner) and never
 across two.
 
+**Several lines are hatched only as one counted set.** Solo's single-digit
+pattern says "these 3 columns" and hatches all three, because its claim is about
+every square of each: the player checks the digit is gone from all but the
+outlined ones. The count in the words is what makes the stripes one thing, and
+the lines are parallel and play the same part. That is the whole exception: two
+lines in different parts are still the next paragraph's case.
+
 **A second line is named by where it lies, never as "this".** When a reason
 cites a met line beside the hatched one, the sentence says "the column beside
 it", and its clue takes the evidence color. Two parallel lines both called "a
@@ -4575,6 +4582,16 @@ reading.
   implicit reading writes their notes first). The solver is the one place that
   knows what it read: `latin.ts`'s set reasons, Rome's `reach`, Solo's cage
   reasons. Words that already name the cells need nothing more.
+- **A read the player must check is drawn, not only carried.** `reads` makes
+  the walk sound and shows nothing, so a step that leans on it asks the player
+  to find those cells unaided. Solo's single-digit pattern stripes its lines
+  for that reason (`hint-text.ts`'s `say.confined`).
+- **A fish has two readings; name the smaller.** `k` columns holding a value in
+  only `k` rows is also the other rows holding it in only the other columns,
+  and either alone gives the same strikes. A solver searching one orientation
+  finds a two-row pattern as its many-column complement, so pick by count when
+  recording (`solver.ts`'s `confinedLines`), and pin a board for each way
+  round: a scan of 48 boards met only one of them.
 - **Say what the sentence rests on, not what the solver's state is.** A Killer
   cage the solver has shrunk by filling cells is still the cage the player
   sees, so "the rest of this cage is filled in" rests on those cells.

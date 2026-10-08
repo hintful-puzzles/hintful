@@ -218,10 +218,7 @@ const GATED: Record<string, string> = {
  * and pinned as {@link GATED} is, so the entry fails the day its board stops
  * showing the defect, which is the day to delete it.
  */
-const SHORT: Record<string, string> = {
-  "solo: set @ digit-set":
-    "a set of one digit across rows and columns names only the squares the digit is left with; the other squares of those lines, which the digit was struck from by earlier steps, are read and not named (found 2026-10-08, when the sweep's boards changed)",
-};
+const SHORT: Record<string, string> = {};
 
 /**
  * Firings a game's replay cannot make again from the recorded state, keyed
@@ -256,11 +253,6 @@ const PINNED: { key: string; id: string; board: string }[] = [
     board:
       "8x8dn:ba4a7a1a5a4b1a9bab4ea1b1aa4d11bd6,bRaRaLcLfLRDRaRaRdRXURaURaLUaUaLURULUaXULRfRaLb",
   },
-  {
-    key: "solo: set @ digit-set",
-    id: "solo",
-    board: "3x3de:a7b9a3a8d2a4_5a4a1h9_6e1_3a9a8a2_5e2_9h8a3a5_4a6d8a2a1b4a",
-  },
 ];
 
 /**
@@ -272,6 +264,9 @@ const EXTRA_BOARDS: Record<string, readonly string[]> = {
   // `lineFull` without its line: the presets' boards reach no such placement
   // while a tower of its line is still unplaced.
   towers: ["5dh:///3//2//3////2/////2/5/3/"],
+  // `digit-set` without its lines: one digit confined across three columns,
+  // two of whose other cells an earlier step struck it from.
+  solo: ["3x3de:a7b9a3a8d2a4_5a4a1h9_6e1_3a9a8a2_5e2_9h8a3a5_4a6d8a2a1b4a"],
 };
 
 /** Walk games whose plan records nothing, so nothing is offered by premise. */

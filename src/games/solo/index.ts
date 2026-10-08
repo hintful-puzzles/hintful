@@ -513,7 +513,9 @@ function premise(
       };
     case "set":
       return {
-        premise: say.set(reason.region ?? null, reason.cells, ns, cells),
+        premise: reason.region
+          ? say.set(reason.region, reason.cells, ns, cells)
+          : say.confined(reason.lines, reason.cells, ns, cells),
         named: true,
       };
     case "forcing":
@@ -771,9 +773,9 @@ export const soloGame: Game<
     roles: {
       ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",
       outline:
-        "the cells the reason rests on: a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; or the numbered cells of a chain.",
+        "the cells the reason rests on: a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; the only cells that several rows or columns leave for one number; or the numbered cells of a chain.",
       stripes:
-        'the row, column, block, diagonal or killer cage the sentence names: "in this block", "this killer cage".',
+        'the row, column, block, diagonal or killer cage the sentence names, or the several rows or columns it names together: "in this block", "this killer cage", "these 2 columns".',
     },
   },
   hintKeepTrack,

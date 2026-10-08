@@ -161,22 +161,38 @@ export const say = {
    * one the premise just named last. */
   intersectWhere: "from the rest of it",
 
-  /** The outlined `set` inside `region` accounts for `ns`; with no region, the
-   * set is a locked pattern across several lines.
-   *
-   * The region-less arm speaks of the cells the step outlines, because there is no
-   * region to name and the lines it used to point at were never marked. What it
-   * claims is what the firing checks: in the columns those cells sit in, the
-   * digit fits nowhere else, so each of their rows is spoken for. */
+  /** The outlined `set` inside `region` accounts for `ns`. */
   set: (
-    region: SoloRegion | null,
+    region: SoloRegion,
     set: readonly Point[],
     ns: number[],
     cells: RegionCells,
   ): Narration =>
-    region
-      ? phrase`${mark.as("outline", CELL, set, "Other cells")} in ${thisRegion(region, cells)} already account for ${all(ns)}`
-      : phrase`Their columns fit ${all(ns)} only in ${mark.the("outline", CELL, set, "cell")}, leaving no other ${all(ns)} in their rows`,
+    phrase`${mark.as("outline", CELL, set, "Other cells")} in ${thisRegion(region, cells)} already account for ${all(ns)}`,
+
+  /** The parallel `lines` take `ns` only in the outlined `set`, which lies in
+   * as many lines the other way.
+   *
+   * Every line is striped whole, because the claim is about all of it: the
+   * player checks the digit is gone from each cell that is not outlined. The
+   * two counts are the argument, so both are said. */
+  confined: (
+    lines: readonly SoloRegion[],
+    set: readonly Point[],
+    ns: number[],
+    cells: RegionCells,
+  ): Narration => {
+    const k = lines.length;
+    const [along, across] =
+      lines[0].kind === "row" ? ["rows", "columns"] : ["columns", "rows"];
+    const striped = mark.as(
+      "stripes",
+      CELL,
+      lines.flatMap(cells),
+      `These ${k} ${along}`,
+    );
+    return phrase`${striped} fit ${all(ns)} only in ${mark.the("outline", CELL, set, "cell")}, leaving their ${k} ${across} no other ${all(ns)}`;
+  },
 
   // The shared chain sentence, with Solo's own region vocabulary — its chain
   // hops through blocks and diagonals as well as lines, so both the region that

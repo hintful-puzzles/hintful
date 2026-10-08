@@ -91,11 +91,13 @@ export type SoloReason =
    * `n` must sit in their overlap and is ruled out of the rest of `target`. One
    * of the two is a sub-block, the other a row/column/diagonal. */
   | { kind: "intersect"; n: number; confined: SoloRegion; target: SoloRegion }
-  /** A naked/hidden subset locks a set of digits to a set of cells in a region
-   * (absent for the cross-line single-digit "X-wing" set), whose `cells` the
-   * firing rests on. The region arm shades its region instead; without a region
-   * the cells are the only thing there is to shade. */
-  | { kind: "set"; region?: SoloRegion; cells: Point[] }
+  /** A naked/hidden subset locks a set of digits to the `cells` of `region`. */
+  | { kind: "set"; region: SoloRegion; cells: Point[] }
+  /** One digit confined across several lines: every cell of the parallel
+   * `lines` that can still take it is in `cells`, which lie in as many lines
+   * the other way, so those have no other place for it. The deduction reads
+   * every cell of `lines`, the ones the digit is absent from too. */
+  | { kind: "set"; region?: undefined; lines: SoloRegion[]; cells: Point[] }
   /** A forcing-chain contradiction, with the chain it followed and the region
    * that ties the conclusion back to the chain's origin — the other half of the
    * case split. Solo's chain hops through blocks and diagonals as well as lines,
@@ -534,8 +536,8 @@ class SolverUsage {
   }
 
   /** `solver_set`: a `cr × cr` matrix of cube positions (`indices[i*cr+j]`);
-   *  hidden/naked subset elimination within `region` (none for the cross-line
-   *  single-digit set). +1 / 0 / -1. */
+   *  hidden/naked subset elimination within `region`, or with none over
+   *  {@link digitSets}' matrix of one digit's places. +1 / 0 / -1. */
   private set_(indices: Int32Array, region?: SoloRegion): number {
     const cr = this.cr;
     const grid = this.sGrid;
@@ -587,18 +589,15 @@ class SolverUsage {
         }
         if (rows > n - count) return -1;
         if (rows >= n - count) {
-          // The firing's own cells — every position the chosen columns still
-          // admit. Recorded per firing rather than once for `set_`, because it
-          // is what the region-less arm has instead of a region to shade: with
-          // no region and no cells, "a locked pattern of cells across these
-          // lines" marks nothing at all.
-          const reason: SoloReason | null = this.recorder
-            ? {
-                kind: "set",
-                region,
-                cells: this.setCells(indices, n, rowidx, colidx, set),
-              }
-            : null;
+          const reason: SoloReason | null = !this.recorder
+            ? null
+            : region
+              ? {
+                  kind: "set",
+                  region,
+                  cells: this.setCells(indices, n, rowidx, colidx, set),
+                }
+              : { kind: "set", ...this.confinedLines(n, count, rowidx, colidx, set) };
           let progress = false;
           for (let i = 0; i < n; i++) {
             let ok = true;
@@ -975,13 +974,9 @@ class SolverUsage {
   }
 
   /**
-   * The cells a {@link set_} firing rests on: every position the chosen columns
-   * of the compacted `n × n` matrix still admit, each cell once.
-   *
-   * What a "column" is depends on the caller. Over a region it is a *digit*, so
-   * these are the subset's cells; over the region-less single-digit matrix it is
-   * a board column, so these are the cells the digit is locked into — the ones
-   * the narration points at, and the reason this is recorded at all.
+   * The cells a {@link set_} firing over a region rests on: every position the
+   * chosen columns of the compacted `n × n` matrix still admit, each cell once.
+   * A column there is a *digit*, so these are the subset's cells.
    */
   private setCells(
     indices: Int32Array,
@@ -1002,6 +997,50 @@ class SolverUsage {
         out.push({ x: cell % cr, y: (cell / cr) | 0 });
       }
     return out;
+  }
+
+  /**
+   * What a {@link set_} firing over {@link digitSets}' matrix rests on, whose
+   * rows and columns are the board's: the lines one digit is confined in, and
+   * the cells of them it can still take.
+   *
+   * The firing is two facts at once, and either alone gives its strikes: the
+   * `count` chosen columns hold the digit only in as many rows, and the other
+   * `n - count` rows hold it only in the other columns. The one over fewer
+   * lines is recorded, since that is the smaller pattern to check.
+   */
+  private confinedLines(
+    n: number,
+    count: number,
+    rowidx: Uint8Array,
+    colidx: Uint8Array,
+    set: Uint8Array,
+  ): { lines: SoloRegion[]; cells: Point[] } {
+    const cr = this.cr;
+    const admits = (i: number, chosen: boolean): boolean => {
+      for (let j = 0; j < n; j++)
+        if (!!set[j] === chosen && this.sGrid[i * cr + j]) return true;
+      return false;
+    };
+    const lines: SoloRegion[] = [];
+    const cells: Point[] = [];
+    const byColumn = count <= n - count;
+    if (byColumn) {
+      for (let j = 0; j < n; j++)
+        if (set[j]) lines.push({ kind: "col", index: colidx[j] });
+    } else {
+      for (let i = 0; i < n; i++)
+        if (!admits(i, true)) lines.push({ kind: "row", index: rowidx[i] });
+    }
+    for (let i = 0; i < n; i++) {
+      // The chosen columns' cells are in the rows they reach; the confined
+      // rows are the ones they miss.
+      if (admits(i, true) !== byColumn) continue;
+      for (let j = 0; j < n; j++)
+        if (!!set[j] === byColumn && this.sGrid[i * cr + j])
+          cells.push({ x: colidx[j], y: rowidx[i] });
+    }
+    return { lines, cells };
   }
 
   /** {@link regionCells}' `(i, n)` as the region a sentence can name. */
