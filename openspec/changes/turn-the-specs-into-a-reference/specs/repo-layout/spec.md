@@ -3,14 +3,10 @@
 ### Requirement: A requirement states a rule, and nothing else
 
 A requirement under `openspec/specs/` SHALL state what must hold, in the
-present tense. It MAY give one sentence of reason. It SHALL NOT hold how the
-decision was reached, what the rule replaced, a count or a measured figure, a
-date, or a change id. Those are in the guide for that part of the tree or in
-the archive.
-
-Requirements about one subject SHALL be one requirement. A change that alters
-a subject a capability already covers SHALL modify that requirement and SHALL
-NOT add a second beside it.
+present tense, with at most one sentence of reason. It SHALL NOT hold how the
+decision was reached, what the rule replaced, a measured figure, a date or a
+change id. A change to a subject a capability already covers SHALL modify that
+requirement and SHALL NOT add a second beside it.
 
 #### Scenario: A change adds a rule to a subject the spec covers
 

@@ -19,7 +19,8 @@ decides the form". "What Changes" below describes the reference form.
 
 `openspec/specs/` is written by every change and read by almost none. Measured
 on 2026-10-08 (a parse of every `spec.md` into requirements, bodies and
-scenarios; task 1.1 puts that parse in the tree):
+scenarios; step 1.1 of the design's order of work puts that parse in the
+tree):
 
 | | Capabilities | Lines | Requirements |
 | --- | --- | --- | --- |

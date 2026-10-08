@@ -2,7 +2,8 @@
 
 Written 2026-10-08 from one evening's search and a first look at the tree.
 Everything under "Prior art" is from abstracts, documentation pages and search
-summaries, not from reading the works in full; `tasks.md` § 1 is that reading.
+summaries, not from reading the works in full; step 1 of "The order of work"
+is that reading.
 
 ## Prior art
 
@@ -53,7 +54,7 @@ Written as queries, since the answers move:
   replays each recorded firing and checks that it follows from the premise its
   step names. So a trace exists for a dealt board (which technique fired, on
   what premise, in what order), and a form of experiment C already runs in the
-  gate for one family of games. How far it reaches is task 2.2.
+  gate for one family of games. How far it reaches is step 2.2.
 - **Declared parameters, rulesets and modifiers**, which the engine consumes
   (`envision-the-game-contract`, archived, and the changes it scaffolded).
 - **Games that plan and do not deduce** (Fifteen, Flood, Inertia, Slide,
@@ -67,7 +68,7 @@ technique ladder").
 
 ## What the earlier withdrawals bind
 
-Not yet read for this purpose; task 2.1. Their headlines, from the postmortems'
+Not yet read for this purpose; step 2.1. Their headlines, from the postmortems'
 own summaries:
 
 - **The definition adapter** was withdrawn because no declaration needed to
@@ -129,7 +130,7 @@ shape `docs/doctrine.md` § "One source of truth" warns about.
 ## Decisions
 
 - **No language is designed before the experiments.** Each of the three
-  experiments in `tasks.md` § 3 can come back negative and end the effort
+  experiments in step 3 can come back negative and end the effort
   cheaply, which is how the earlier withdrawals were kept cheap.
 - **Experiment A needs no language.** It reads traces from the engine as it
   is. If the ladders we have say nothing interesting about a game's learning
@@ -159,3 +160,46 @@ shape `docs/doctrine.md` § "One source of truth" warns about.
 
 - Where experiment code that is worth keeping lives in the repository.
 - Which venue a paper would suit. Decided only if the report supports one.
+
+## The order of work
+
+The change has no `tasks.md` while it waits, which is what makes it a draft
+(`docs/work-management.md` § "The backlog is being drained"). The session that
+takes it up writes `tasks.md` from this list.
+
+**1. Read the prior art in full**
+
+- 1.1 Read each work in "Prior art" whole, and find the two named there as
+  not yet found. The table is corrected where the full text differs from the
+  summary it was written from.
+- 1.2 For each language, write one of the sample games in it, or say what
+  stopped it. The report has the description or the obstacle, per pair.
+
+**2. Read our own history and tree**
+
+- 2.1 Read every postmortem under `openspec/postmortems/` and
+  `retire-the-framework-vision`, and say for each whether its finding binds a
+  description language, and which aim. "What the earlier withdrawals bind" is
+  rewritten from the reading.
+- 2.2 Inventory what a game already declares that the engine consumes, by
+  query, and how far the premise audit in `firing-replay.ts` reaches.
+
+**3. Three experiments**
+
+- 3.1 Experiment A, no language: for every game with a technique ladder,
+  trace dealt boards at each tier and record which techniques fire, the size
+  of each premise and the order. A table per game, and a statement of whether
+  the traces separate the tiers and the games.
+- 3.2 Experiment B: state the rules of the six sample games in a first
+  vocabulary, on paper, and list every rule that did not fit.
+- 3.3 Experiment C: state three techniques from three games so that a solver
+  checks each is sound on small boards. The check passes for the three and
+  fails for a deliberately unsound variant of one.
+
+**4. Report**
+
+- 4.1 Answer the seven questions above, each from the steps it rests on, in a
+  report in this directory that says what was not checked.
+- 4.2 The recommendation: build a language or not, what consumes it, what a
+  paper would claim, and the next change if there is one. The owner's decision
+  is recorded in the report.

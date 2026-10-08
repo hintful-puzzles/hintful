@@ -62,14 +62,14 @@ Nothing in the app, the engine or the specs. The change produces, in its own
 directory:
 
 - **A reading of the prior art in full**, each system tried against the same
-  few of our games (`tasks.md` § 1).
+  few of our games.
 - **A reading of our own withdrawals** and of what the tree already declares
-  about a game (§ 2).
-- **Three small experiments**, none of which needs a language to exist first
-  (§ 3): what the technique ladders we have already say about a game's
+  about a game.
+- **Three small experiments**, none of which needs a language to exist first:
+  what the technique ladders we have already say about a game's
   learning curve; how many of our games a first vocabulary can state; and
   whether a technique can be stated so that a solver checks it is sound.
-- **A report for the owner** (§ 4): whether to build a language, what it would
+- **A report for the owner**: whether to build a language, what it would
   describe, what would consume it, what a paper would claim, and the next
   change if there is one.
 

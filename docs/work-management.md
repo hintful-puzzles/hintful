@@ -100,8 +100,11 @@ well-scoped change goes stale when the code moves under it.
 - **Game ports and hints wait.** `add-*-ts-port`, a game's hint and
   `hintless-games-in-reserve` are not part of the drain, and a session picking
   its next change passes over them.
-- **A change the owner filed for later waits for their word to start.** Its
-  status line says so, and a session picking its next change passes over it.
+- **A change filed for later is a draft: it has no `tasks.md`.** The tool
+  reports it apart from the changes in progress (`openspec view`, and
+  `no-tasks` in `openspec list --json`), and a session picking its next change
+  passes over it. Its plan is in its `design.md`, and writing `tasks.md` from
+  that is how a session takes it up, on the owner's word.
 
 Retire this section when the owner says the drain is over.
 

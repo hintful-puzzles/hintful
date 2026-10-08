@@ -1,7 +1,8 @@
 # Design
 
 Written 2026-10-08, before any spec was rewritten. Nothing here has been tried
-yet; the pilot in `tasks.md` § 2 is where it first meets a real capability.
+yet; the pilot in "The order of work", 2, is where it first meets a real
+capability.
 
 ## Context
 
@@ -165,6 +166,13 @@ here.
   requirement's body, a bound on a capability, and no date. The numbers are set
   from the pilot, and a capability not yet rewritten is exempt by a list that
   shrinks to nothing as the stages land.
+- **The tool's own bound is 500 characters, and it is waiting.** From openspec
+  1.14.1 a requirement whose text before its first scenario is over 500
+  characters is a warning, and the gate validates with `--strict`, which fails
+  on one. Run against this tree on 2026-10-08, 1.14.1 rejects all 80 specs
+  over 779 of the 924 requirements; 1.14.0 passes. So the pin cannot move past
+  1.14.0 until the rewrite is done, and the pilot's bound for a requirement
+  starts from the tool's 500 and argues for any other figure.
 - **Rules for the `specs` artifact** in `openspec/config.yaml`, stating
   Decision 1 to whoever writes a delta.
 - **The archive step re-reads the merged requirement.** `docs/work-management.md`
@@ -238,7 +246,7 @@ its help page already say what it does and nothing reads the spec. That is a
 recommendation from the citation counts above and not from watching a session
 work, which the repository cannot show.
 
-The pilot is built to inform the answer: task 1.3 sorts each rule of the two
+The pilot is built to inform the answer: step 1.3 sorts each rule of the two
 pilot capabilities by what already holds it, and Ascent is rewritten in both
 forms.
 
@@ -272,3 +280,89 @@ forms.
 
 - Whether `repo-layout` and `build-pipeline` should divide by subject as
   `ts-engine` did. Decided when their stage is reached.
+
+## The order of work
+
+The change has no `tasks.md` while it waits, which is what makes it a draft
+(`docs/work-management.md` § "The backlog is being drained"). The session that
+takes it up writes `tasks.md` from this list, each step with its check.
+
+**1. Measure, and get the owner's word**
+
+- 1.1 Put the spec census in the tree as a script under `scripts/checks/`:
+  per capability, its lines, requirements, body and scenario lines, and the
+  shapes `proposal.md` § "Why" counts. Check: it reproduces that table, or the
+  table is corrected.
+- 1.2 Put the use measurements beside it: the archive's deltas by verb and
+  month, and the requirements cited by title outside `openspec/`. Check: it
+  reproduces "What the repository shows about use", or that section is
+  corrected.
+- 1.3 Sort every rule of `engine-difficulty` and of Ascent's spec by what
+  already holds it: a type, a guard, a declaration the engine consumes, a
+  guide, or nothing but the spec. The counts say how much the by-product form
+  would cut, and what it would risk.
+- 1.4 The owner's answers to "Decisions the owner is asked to confirm",
+  recorded here, after 2.6. Nothing from 3 onward starts before them.
+
+**2. The pilot**
+
+- 2.1 Write the ledger checker (Decision 6). Check: it fails on a ledger with
+  a row removed and on one naming a requirement that does not exist.
+- 2.2 Rewrite `engine-difficulty` with its ledger. Check: the checker passes,
+  the `SHALL` count is accounted for, and `openspec validate --specs --strict`
+  passes.
+- 2.3 Rewrite Ascent's spec twice, in the two forms, each with a ledger.
+- 2.4 Two fresh-context reviews of each pilot spec (Decision 6), with what
+  each found recorded here.
+- 2.5 Set the bounds for a requirement and a capability from the pilot, and
+  record the measured ratio in place of the estimate.
+- 2.6 Show the owner the pilot: both capabilities before and after, opened in
+  the preview, with the counts from 1.3.
+
+**3. What keeps it**
+
+- 3.1 The size check, in the gate's fast prefix, with the list of capabilities
+  not yet rewritten. Check: a planted over-long requirement and a planted date
+  each fail.
+- 3.2 `rules` for the `specs` artifact in `openspec/config.yaml`. Check:
+  `openspec instructions specs` returns them.
+- 3.3 `change-citations.mjs` resolves a requirement cited by title. Check: a
+  planted citation of a title that does not exist fails.
+- 3.4 `docs/work-management.md` § "Before archiving" says to re-read the
+  merged requirement.
+
+**4. The engine**
+
+- 4.1 `engine-hints` and `engine-candidate-hints`.
+- 4.2 `ts-engine`, with its misfiled requirements moved (Decision 3).
+- 4.3 `engine-input`, `engine-params`, `engine-colors`, `engine-notes`,
+  `engine-drawing`, `engine-helpers`.
+- 4.4 Repoint every citation of a renamed engine requirement. Check: the
+  citation check passes and `git grep` finds no old title.
+
+Each capability has a ledger and the two reviews, is checked as 2.2, and
+leaves the exempt list.
+
+**5. The other capabilities**
+
+- 5.1 `repo-layout` and `build-pipeline`, divided by subject if their rewrite
+  shows they should be.
+- 5.2 `app-shell`, `ts-migration` and the nine small ones.
+
+**6. The games**
+
+- 6.1 The 57 game specs, in batches of about ten, in the form the owner chose
+  for them. Each spec has a ledger and the first review; one spec a batch
+  gets the second.
+- 6.2 The guide for porting a game says what a game's spec holds, and the
+  scaffolding script's spec skeleton matches.
+
+**7. Close**
+
+- 7.1 The exempt list is empty and removed, and the size check reads every
+  capability.
+- 7.2 `AGENTS.md`'s read-first table and each guide name the capability that
+  binds the part of the tree, within the root brief's bound.
+- 7.3 The pinned openspec moves past 1.14.0 (Decision 7).
+- 7.4 Run the census again and record before and after here.
+- 7.5 The owner's acceptance (`proposal.md` § "Acceptance").
