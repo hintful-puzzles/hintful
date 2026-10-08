@@ -100,6 +100,8 @@ well-scoped change goes stale when the code moves under it.
 - **Game ports and hints wait.** `add-*-ts-port`, a game's hint and
   `hintless-games-in-reserve` are not part of the drain, and a session picking
   its next change passes over them.
+- **A change the owner filed for later waits for their word to start.** Its
+  status line says so, and a session picking its next change passes over it.
 
 Retire this section when the owner says the drain is over.
 

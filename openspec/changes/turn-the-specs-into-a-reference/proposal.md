@@ -4,7 +4,8 @@
 same day: the specs have "too many lines, many of which could possibly be
 combined or otherwise integrated, to make it more useful as a resource, rather
 than just being a write-only journal". The owner asked for it to be filed and
-not yet done.
+not yet done: it waits for their word to start, and a session choosing its
+next change passes over it.
 
 **The open question, which decides the form** (owner, 2026-10-08): are the
 specs a resource a session works from, or a by-product of tracking the work?
