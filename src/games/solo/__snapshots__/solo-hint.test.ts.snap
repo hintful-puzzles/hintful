@@ -6765,8 +6765,8 @@ exports[`solo: pinned hint positions > says, at each pin 1`] = `
 
 exports[`solo: pinned hint positions > says, at each pin 2`] = `
 {
-  "confinedColumns": "These 2 columns fit 2 only in the outlined cells, leaving their 2 rows no other 2, so this cell must be 6.",
-  "confinedRows": "These 2 rows fit 7 only in the outlined cells, leaving their 2 columns no other 7, so pencil in only 1 and 9.",
+  "confinedColumns": "These 2 columns fit 2 only in the outlined cells, which take the 2 of 2 rows, so this cell must be 6.",
+  "confinedRows": "These 2 rows fit 7 only in the outlined cells, which take the 7 of 2 columns, so pencil in only 1 and 9.",
   "diagonal": "Every other cell in this diagonal rules out 3, so this cell must be 3.",
   "extraCage": "This column must total 45; the cages and digits inside it account for all but 5, so its one open cell must be 5.",
   "hiddenSingle": "Every other cell in this column rules out 5, so this cell must be 5.",

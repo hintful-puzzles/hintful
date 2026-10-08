@@ -68,6 +68,7 @@ import {
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { Narration, Sentence } from "../../engine/hint-words.ts";
+import type { ConfinedLines } from "../../engine/latin.ts";
 import {
   type ForcingLink,
   hiddenSingleLine,
@@ -119,7 +120,7 @@ export type SaladReason =
   | { kind: "circleXNote"; count: number }
   | SingleReasonUnder<"populate">
   | { kind: "dup"; n: number; px: number; py: number }
-  | { kind: "set"; cells: readonly Cell[] }
+  | { kind: "set"; cells: readonly Cell[]; lines?: ConfinedLines }
   /** The shared solver's forcing chain, with the chain it followed — the same
    * shape `latin.ts` records, so the numbered squares and the case-split
    * narration come for free. */
@@ -247,18 +248,16 @@ export function premise(
   switch (reason.kind) {
     case "set": {
       // A strike is one square's (`strikeAxis`), so the marks are its notes.
-      if (!marks.some((m) => m.n > nums))
+      // One mark confined across several lines is the shared sentence whichever
+      // mark it is: an X fits a line as often as the line has empty squares, and
+      // "no other X" is as true of those.
+      if (reason.lines || !marks.some((m) => m.n > nums))
         return latinPremise(reason, marks, saladVocab(mode, nums));
       const also = marks.filter((m) => m.n <= nums).map((m) => m.n);
-      // A set lies along one line, or (the same symbol confined to as many
-      // rows as columns) spans several, and then the lines whose empty squares
-      // it holds are the ones the struck square shares with it.
       const { cells } = reason;
-      const inCol = cells.every((c) => c.x === cells[0].x);
-      const inRow = cells.every((c) => c.y === cells[0].y);
-      const line = inCol || (!inRow && cells.some((c) => c.x === at.x)) ? "col" : "row";
+      const line = cells.every((c) => c.x === cells[0].x) ? "col" : "row";
       return {
-        premise: text.setHoles(cells, also, line, !inCol && !inRow, o - nums),
+        premise: text.setHoles(cells, also, line, o - nums),
         struck: text.setHolesStruck(also),
       };
     }

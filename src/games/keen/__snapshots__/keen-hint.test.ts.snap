@@ -6107,7 +6107,7 @@ exports[`keen: pinned hint positions > says, at each pin 1`] = `
   "note": "Nothing in this cell's row or column rules out a number yet, so pencil in every one.",
   "populate": "Start by penciling every candidate number into each empty cell, so there is something to cross out.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
-  "set": "The outlined cells already account for 5 between them, so pencil in only 1, 2, 3, 4 and 6.",
+  "set": "These 3 columns fit 5 only in the outlined cells, which take the 5 of 3 rows, so pencil in only 1, 2, 3, 4 and 6.",
   "single": "Every other number has been ruled out in this cell, so it can only be 5.",
 }
 `;

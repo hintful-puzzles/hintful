@@ -33,10 +33,12 @@ import {
   FiringReplay,
   offerReplay,
 } from "../../engine/firing-replay.ts";
-import type {
-  DeductionRecord,
-  DeductionRecorder,
-  ForcingLink,
+import {
+  type ConfinedLines,
+  confinedLines,
+  type DeductionRecord,
+  type DeductionRecorder,
+  type ForcingLink,
 } from "../../engine/latin.ts";
 import type { Point } from "../../engine/types.ts";
 import type { BlockStructure, SoloState } from "./state.ts";
@@ -97,7 +99,7 @@ export type SoloReason =
    * `lines` that can still take it is in `cells`, which lie in as many lines
    * the other way, so those have no other place for it. The deduction reads
    * every cell of `lines`, the ones the digit is absent from too. */
-  | { kind: "set"; region?: undefined; lines: SoloRegion[]; cells: Point[] }
+  | { kind: "set"; region?: undefined; lines: ConfinedLines; cells: Point[] }
   /** A forcing-chain contradiction, with the chain it followed and the region
    * that ties the conclusion back to the chain's origin — the other half of the
    * case split. Solo's chain hops through blocks and diagonals as well as lines,
@@ -1015,23 +1017,22 @@ class SolverUsage {
     rowidx: Uint8Array,
     colidx: Uint8Array,
     set: Uint8Array,
-  ): { lines: SoloRegion[]; cells: Point[] } {
+  ): { lines: ConfinedLines; cells: Point[] } {
     const cr = this.cr;
     const admits = (i: number, chosen: boolean): boolean => {
       for (let j = 0; j < n; j++)
         if (!!set[j] === chosen && this.sGrid[i * cr + j]) return true;
       return false;
     };
-    const lines: SoloRegion[] = [];
+    const indices: number[] = [];
     const cells: Point[] = [];
     const byColumn = count <= n - count;
     if (byColumn) {
-      for (let j = 0; j < n; j++)
-        if (set[j]) lines.push({ kind: "col", index: colidx[j] });
+      for (let j = 0; j < n; j++) if (set[j]) indices.push(colidx[j]);
     } else {
-      for (let i = 0; i < n; i++)
-        if (!admits(i, true)) lines.push({ kind: "row", index: rowidx[i] });
+      for (let i = 0; i < n; i++) if (!admits(i, true)) indices.push(rowidx[i]);
     }
+    const lines = confinedLines(byColumn ? "col" : "row", indices, cr);
     for (let i = 0; i < n; i++) {
       // The chosen columns' cells are in the rows they reach; the confined
       // rows are the ones they miss.

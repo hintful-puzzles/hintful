@@ -17,7 +17,7 @@ exports[`salad: pinned hint positions > says, at each pin 1`] = `
   "previewsCircle": "This column already has both of its empty squares, so this square and the rest of it must hold a number.",
   "previewsCross": "We already know which 3 squares of this row hold its numbers, so this square and the rest of it must be empty.",
   "previewsNumber": "Every other number has been ruled out in this square, so it can only be 3.",
-  "set": "The outlined squares already account for A between them, so we must cross out the A.",
+  "set": "These 2 columns fit A only in the outlined squares, which take the A of 2 rows, so we must cross it out.",
   "single": "Every other number has been ruled out in this square, so it can only be 3.",
   "xNoteGone": "This square's pencil marks have no empty-square mark among them, so it must hold a number.",
 }

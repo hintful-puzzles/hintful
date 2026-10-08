@@ -25,6 +25,7 @@
 import {
   candidateConclusions,
   cleanObviousText,
+  confinedPremise,
   forcingChainPremise,
   joinOr,
   joinWith,
@@ -43,6 +44,7 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
+import type { ConfinedLines } from "../../engine/latin.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import { digitChar } from "./render.ts";
@@ -170,29 +172,10 @@ export const say = {
   ): Narration =>
     phrase`${mark.as("outline", CELL, set, "Other cells")} in ${thisRegion(region, cells)} already account for ${all(ns)}`,
 
-  /** The parallel `lines` take `ns` only in the outlined `set`, which lies in
-   * as many lines the other way.
-   *
-   * Every line is striped whole, because the claim is about all of it: the
-   * player checks the digit is gone from each cell that is not outlined. The
-   * two counts are the argument, so both are said. */
-  confined: (
-    lines: readonly SoloRegion[],
-    set: readonly Point[],
-    ns: number[],
-    cells: RegionCells,
-  ): Narration => {
-    const k = lines.length;
-    const [along, across] =
-      lines[0].kind === "row" ? ["rows", "columns"] : ["columns", "rows"];
-    const striped = mark.as(
-      "stripes",
-      CELL,
-      lines.flatMap(cells),
-      `These ${k} ${along}`,
-    );
-    return phrase`${striped} fit ${all(ns)} only in ${mark.the("outline", CELL, set, "cell")}, leaving their ${k} ${across} no other ${all(ns)}`;
-  },
+  /** One digit `n` confined across the parallel `lines` to the outlined
+   * `set`, in the engine's words for it. */
+  confined: (lines: ConfinedLines, set: readonly Point[], n: number): Narration =>
+    confinedPremise(lines, set, g(n)),
 
   // The shared chain sentence, with Solo's own region vocabulary — its chain
   // hops through blocks and diagonals as well as lines, so both the region that

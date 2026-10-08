@@ -515,7 +515,7 @@ function premise(
       return {
         premise: reason.region
           ? say.set(reason.region, reason.cells, ns, cells)
-          : say.confined(reason.lines, reason.cells, ns, cells),
+          : say.confined(reason.lines, reason.cells, ns[0]),
         named: true,
       };
     case "forcing":

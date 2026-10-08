@@ -181,6 +181,9 @@ describe("towers hint", () => {
         if (!res?.ok) continue;
         for (const step of res.steps as AnyStep[]) {
           if (step.move.type !== "pencilStrike") continue;
+          // A set across lines stripes the lines it confines a height in, and
+          // strikes outside them by design.
+          if (step.rung === "set") continue;
           const area: { x: number; y: number; order?: number }[] =
             step.highlights?.area ?? [];
           const line: { x: number; y: number }[] = step.highlights?.hatch ?? [];

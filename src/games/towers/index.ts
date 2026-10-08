@@ -429,7 +429,9 @@ function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise
         where: say.dupWhere,
       };
     case "set":
-      return { premise: say.set(reason.cells, n) };
+      return reason.lines
+        ? { premise: say.confined(reason.lines, reason.cells, n), named: true }
+        : { premise: say.set(reason.cells, n) };
     case "forcing":
       return { premise: say.forcing(reason, marks[0], reason.shares) };
     default:
@@ -604,7 +606,7 @@ export const towersGame: Game<
       outline:
         "what the step reasons from: the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or the numbered cells of a chain, in the order it runs.",
       stripes:
-        "the line the sentence names: the row or column a clue sees along, through the clue slots at both its ends.",
+        "the line the sentence names: the row or column a clue sees along, through the clue slots at both its ends. Or the several rows or columns it names together, such as “these 2 columns”, where one height fits only the outlined cells.",
     },
   },
   hintKeepTrack: (m, step, state) =>

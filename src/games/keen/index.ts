@@ -466,7 +466,7 @@ export const keenGame: Game<
       outline:
         "what the step reasons from: cells that between them already account for the numbers being crossed out, the number just placed, or a chain of cells with two numbers left each, numbered in the order the sentence reads them.",
       stripes:
-        'the cage, row or column the sentence names: "this cage", "this row" or "this column".',
+        'the cage, row or column the sentence names: "this cage", "this row" or "this column". Or the several rows or columns it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },
   },
   // The shared candidate-elimination keep-track and stale-step check;

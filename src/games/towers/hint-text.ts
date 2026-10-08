@@ -18,6 +18,7 @@
  */
 
 import {
+  confinedPremise,
   forcingChainPremise,
   type LatinVocab,
   placedRulesOut,
@@ -34,6 +35,7 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
+import type { ConfinedLines } from "../../engine/latin.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 
@@ -147,6 +149,12 @@ export const say = {
 
   set: (cells: readonly Point[], n: number): Narration =>
     phrase`${mark.the("outline", CELL, cells, "cell").capitalized()} already account for a fixed set of heights that includes ${n}`,
+
+  /** One height `n` confined across the parallel `lines` to the outlined
+   * `cells`, in the engine's words for it. The height goes bare: it is said
+   * twice, and the qualified sentence runs past the narration limit. */
+  confined: (lines: ConfinedLines, cells: readonly Point[], n: number): Narration =>
+    confinedPremise(lines, cells, String(n)),
 
   // The shared chain sentence, in Towers' own vocabulary: the value needs no
   // qualifying here, because "two heights left" contextualizes the bare

@@ -20,7 +20,7 @@ import {
   nextPlace,
 } from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
-import type { ForcingLink } from "./latin.ts";
+import type { ConfinedLines, ForcingLink } from "./latin.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
 import type { Point } from "./types.ts";
 
@@ -340,7 +340,7 @@ export function hiddenSingleLine(
 export type GenericLatinReason =
   | SingleReason
   | { kind: "dup"; n: number; px: number; py: number }
-  | { kind: "set"; cells: readonly Point[] }
+  | { kind: "set"; cells: readonly Point[]; lines?: ConfinedLines }
   | { kind: "forcing"; chain: readonly ForcingLink[]; shares: "row" | "col" };
 
 /**

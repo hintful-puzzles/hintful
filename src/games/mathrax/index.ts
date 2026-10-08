@@ -611,7 +611,8 @@ export const mathraxGame: Game<
       ring: "the cell the step decides, or whose pencil marks it crosses out. The numbers it strikes are crossed through in their own color.",
       outline:
         "what the step reasons from: the cells a clue constrains (the diagonal pair it sits between, or all four around an E or O), the number just placed, the cells of a set, or the numbered cells of a chain, in the order it runs.",
-      stripes: 'the row or column the sentence names: "in this row".',
+      stripes:
+        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },
   },
   hintKeepTrack,

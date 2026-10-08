@@ -581,7 +581,8 @@ export const unequalGame: Game<
       ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",
       outline:
         'what the step reasons from: the two cells either side of a sign or bar (the ringed one, and "the cell across" it), the cells that already account for the numbers being crossed out, the number just placed, or the numbered cells of a chain.',
-      stripes: 'the row or column the sentence names: "in this row".',
+      stripes:
+        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
     },
   },
   hintKeepTrack,

@@ -10756,7 +10756,7 @@ exports[`towers: pinned hint positions > says, at each pin 1`] = `
   "note": "Nothing in this cell's row or column rules out a height yet, so pencil in every one.",
   "populate": "Start by penciling every candidate height into each empty cell, so there is something to cross out.",
   "regionsFull": "This cell's row and column already hold every other height, so it can only be 5.",
-  "set": "The outlined cells already account for a fixed set of heights that includes 5, so we must cross out the 5.",
+  "set": "These 2 columns fit 5 only in the outlined cells, which take the 5 of 2 rows, so we must cross it out.",
   "single": "Every other height has been ruled out in this cell, so it can only be 4.",
   "tallestNearest": "Clue 1 sees one tower in its line, so the tallest must stand next to it: height 5 can only sit here.",
 }

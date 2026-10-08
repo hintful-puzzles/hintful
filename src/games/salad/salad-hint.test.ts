@@ -14,7 +14,9 @@
  * cannot touch the board the generator sees.
  */
 import { describe, expect, it } from "vitest";
+import { evidenceOf } from "../../engine/candidate-plan.ts";
 import type { HintStep } from "../../engine/game.ts";
+import { confinedLines } from "../../engine/latin.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { narrate, premise, type SaladHint } from "./hint.ts";
@@ -188,7 +190,7 @@ describe("salad hint — the three signature techniques", () => {
     // The standing bar: no "just because" fallback (docs/games/solver-and-generator.md § "Guess-free generation"). Every
     // narration must match one of the arms the game knows how to say.
     const KNOWN =
-      /(sees [A-C1-9] first|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|square in this (?:row|column) rules out|too, for the same (?:row|column)|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
+      /(sees [A-C1-9] first|fit \S+ only in the outlined squares|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|square in this (?:row|column) rules out|too, for the same (?:row|column)|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
     for (const p of [LETTERS, NUMBERS, { ...LETTERS, diff: DIFF_HARD }]) {
       for (const t of walk(p, "bar-1").texts) {
         expect(t, `unnamed technique: ${t}`).toMatch(KNOWN);
@@ -477,7 +479,7 @@ describe("salad hint — a square a set rules out as empty", () => {
     expect(t.struck).toBe("2 and the X here");
   });
 
-  it("names the lines of a set that spans several", () => {
+  it("names and stripes the lines of a set that spans several", () => {
     // The empty squares of rows 0 and 3 lie in columns 1 and 4 alone, so those
     // columns' empty squares are all in the four outlined squares.
     const t = premise(
@@ -489,13 +491,15 @@ describe("salad hint — a square a set rules out as empty", () => {
           { x: 1, y: 3 },
           { x: 4, y: 3 },
         ],
+        lines: confinedLines("row", [0, 3], 5),
       },
       [{ x: 1, y: 2, n: 4 }],
       { mode: GAMEMODE_NUMBERS, order: 5, nums: 3 },
     );
     expect(t.premise.text).toBe(
-      "The outlined squares account for both empty squares of each of their columns",
+      "These 2 rows fit X only in the outlined squares, which take the X of 2 columns",
     );
+    expect(evidenceOf(t.premise).hatch).toHaveLength(10);
   });
 
   it("prints the empty-square mark as the X it is penciled as", () => {

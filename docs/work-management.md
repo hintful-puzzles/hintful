@@ -75,12 +75,20 @@ were being opened as fast as they were closed, about ten a day each way, and a
 well-scoped change goes stale when the code moves under it.
 
 - **A session ends one of two ways.** Its change is archived and it hands an
-  existing change to a fresh session; or it found a new issue, and it asks the
-  owner. It takes as long as the change needs.
-- **A session files no change on its own.** The ask says what the issue is
-  and what it costs a player, and offers three answers with a recommendation:
-  take it on in this session, in a new session (the owner's yes is what files
-  the change), or not at all.
+  existing change to a fresh session; or it found a distinct new issue, and it
+  asks the owner. It takes as long as the change needs.
+- **An issue the change gave you the context for is taken on at once** (owner,
+  2026-10-08): the defect just fixed, found again in another game or in the
+  shared layer. The session that fixed the first holds everything the second
+  needs, and a fresh session would rebuild it. File a change of its own, after
+  the first is archived, and do it without asking.
+- **A session files no other change on its own.** For a distinct issue, the ask
+  says what it is and what it costs a player, and offers three answers with a
+  recommendation: take it on in this session, in a new session (the owner's
+  yes is what files the change), or not at all.
+- **The ask carries what an informed answer needs** (owner, 2026-10-08): the
+  defect seen in the running app, how often it occurs, what the fix would
+  touch. An ask that says what the session did not check is not ready.
 - **Only an issue whose benefit is unambiguously strong is worth the ask**: a
   player hits the defect, or data is at risk. That several games write the
   same thing is not such a benefit while the backlog drains, however true.

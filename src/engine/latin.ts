@@ -94,16 +94,43 @@ export type LatinReason =
   | { kind: "forcing"; chain: ForcingLink[]; shares: "row" | "col" };
 
 /** A set elimination. `cells` are the subset: the cells whose candidates
- * account for the struck values between them. `reads` is the rest of the lines
+ * account for the struck values between them. `reads` is the rest of the line
  * whose candidates the set rests on, present only when there is one: a naked
- * set reads its own cells, but a hidden set or a fish reads where the values
- * are *not*, across every other cell of its lines. The candidate walk treats it
- * as premise (`DeductionRecord`). */
+ * set reads its own cells, but a hidden set ({@link LatinSolver.setGeneral}'s)
+ * reads where the values are *not*, across every other cell of its line. The
+ * candidate walk treats it as premise (`DeductionRecord`). One value confined
+ * across lines has `lines` instead. */
 type LatinSetReason = {
   kind: "set";
   cells: readonly { x: number; y: number }[];
   reads?: readonly { x: number; y: number }[];
+  lines?: ConfinedLines;
 };
+
+/** The parallel lines one value is confined in, where a set is that and not a
+ * set within one line: `count` whole rows or columns, whose `cells` are every
+ * cell of them. The set's own `cells` are the ones of these the value can
+ * still take, and the deduction reads the rest too, where it is absent, so a
+ * hint stripes them all. */
+export interface ConfinedLines {
+  axis: "row" | "col";
+  count: number;
+  cells: readonly { x: number; y: number }[];
+}
+
+/** `indices` of the board's rows or columns, as {@link ConfinedLines}. */
+export function confinedLines(
+  axis: "row" | "col",
+  indices: readonly number[],
+  o: number,
+): ConfinedLines {
+  const cells = indices.flatMap((at) =>
+    Array.from({ length: o }, (_, k) =>
+      axis === "row" ? { x: k, y: at } : { x: at, y: k },
+    ),
+  );
+  return { axis, count: indices.length, cells };
+}
 
 /** Cube positions gathered as the distinct cells they lie in, in the order
  * first met. `stride` is the cube's symbols per cell. */
@@ -429,8 +456,10 @@ export class LatinSolver {
   /** Set elimination over the `o × o` boolean sub-matrix of the cube indexed
    * by `start + i·step1 + j·step2`. Finds a rectangle of zeroes whose width +
    * height equals the live dimension and rules out the implied possibilities.
-   * (Upstream `latin_solver_set`.) */
-  set(start: number, step1: number, step2: number): number {
+   * (Upstream `latin_solver_set`.) `acrossLines` says the matrix is one value's
+   * places, column by row ({@link diffSet}'s), so a firing confines the value
+   * in whole lines and is recorded with them. */
+  set(start: number, step1: number, step2: number, acrossLines = false): number {
     const o = this.o;
     const cube = this.cube;
     const grid = this.sGrid;
@@ -508,19 +537,15 @@ export class LatinSolver {
                 }
               if (ok) inside.push(i);
             }
+            if (acrossLines) return this.confinedSet(n, inside, rowidx, colidx, set);
             const cells = new CellList(o, o);
             for (const i of inside)
               for (let j = 0; j < n; j++)
                 if (!set[j] && grid[i * o + j])
                   cells.add(start + rowidx[i] * step1 + colidx[j] * step2);
-            // A row reads every column, the ones the reduction dropped too: in
-            // the value slice that is the rest of the line, where the value is
-            // known to be absent.
-            const reads = new CellList(o, o, cells);
-            for (const i of inside)
-              for (let j = 0; j < o; j++)
-                reads.add(start + rowidx[i] * step1 + j * step2);
-            return setReason(cells, reads);
+            // Within a line a row is a cell, and these are a naked set: it
+            // reads nothing but its own cells.
+            return { kind: "set", cells: cells.cells };
           };
           for (let i = 0; i < n; i++) {
             let ok = true;
@@ -720,6 +745,48 @@ export class LatinSolver {
     return 0;
   }
 
+  /**
+   * A {@link set} firing over one value's places, whose matrix rows are the
+   * board's columns and whose columns are its rows, as the lines it confines
+   * the value in.
+   *
+   * The firing is two facts at once, and either alone gives its strikes: the
+   * `inside` columns hold the value only in the rows outside `set`, and the
+   * `set` rows hold it only in the other columns. The one over fewer lines is
+   * recorded, since that is the smaller pattern for a player to check.
+   */
+  private confinedSet(
+    n: number,
+    inside: readonly number[],
+    rowidx: Uint8Array,
+    colidx: Uint8Array,
+    set: Uint8Array,
+  ): LatinSetReason {
+    const o = this.o;
+    const chosen: number[] = [];
+    for (let j = 0; j < n; j++) if (set[j]) chosen.push(j);
+    const byColumn = inside.length <= chosen.length;
+    const cells: { x: number; y: number }[] = [];
+    for (let i = 0; i < n; i++) {
+      if (inside.includes(i) !== byColumn) continue;
+      for (let j = 0; j < n; j++)
+        if (!!set[j] !== byColumn && this.sGrid[i * o + j])
+          cells.push({ x: rowidx[i], y: colidx[j] });
+    }
+    const lines = byColumn
+      ? confinedLines(
+          "col",
+          inside.map((i) => rowidx[i]),
+          o,
+        )
+      : confinedLines(
+          "row",
+          chosen.map((j) => colidx[j]),
+          o,
+        );
+    return { kind: "set", cells, lines };
+  }
+
   /** Looped set elimination; `extreme` enables the harder single-number
    * (row-vs-column) variant. With a repeated symbol the multiplicity-aware
    * {@link setGeneral} runs instead of the C's `set`, over the same matrices. */
@@ -738,7 +805,7 @@ export class LatinSolver {
       }
     } else {
       for (let n = 1; n <= s; n++) {
-        const ret = this.set(this.cubepos(0, 0, n), o * s, s);
+        const ret = this.set(this.cubepos(0, 0, n), o * s, s, true);
         if (ret !== 0) return ret;
       }
     }
@@ -770,7 +837,7 @@ export class LatinSolver {
     } else {
       for (let n = 1; n <= s; n++) {
         const m: number[] = new Array(o).fill(this.multiplicity(n));
-        const ret = this.setGeneral(o, o, m, m, (x, y) => this.cubepos(x, y, n));
+        const ret = this.setGeneral(o, o, m, m, (x, y) => this.cubepos(x, y, n), true);
         if (ret !== 0) return ret;
       }
     }
@@ -801,6 +868,7 @@ export class LatinSolver {
     demand: readonly number[],
     supply: readonly number[],
     at: (i: number, j: number) => number,
+    acrossLines = false,
   ): number {
     const cube = this.cube;
     const rec = this.recorder;
@@ -865,7 +933,16 @@ export class LatinSolver {
               if (mask & (1 << a) && live(a, b)) cells.add(pos(a, b));
           for (let a = 0; a < nSub; a++)
             for (let b = 0; b < nOther; b++) if (mask & (1 << a)) reads.add(pos(a, b));
-          premise = setReason(cells, reads);
+          const members: number[] = [];
+          for (let a = 0; a < nSub; a++) if (mask & (1 << a)) members.push(a);
+          // Over one value's places the matrix rows are the board's columns.
+          premise = acrossLines
+            ? {
+                kind: "set",
+                cells: cells.cells,
+                lines: confinedLines(side === "rows" ? "col" : "row", members, this.o),
+              }
+            : setReason(cells, reads);
         }
         let progress = false;
         for (let a = 0; a < nSub; a++) {

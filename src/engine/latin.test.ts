@@ -31,6 +31,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  type DeductionRecord,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,
@@ -171,6 +172,40 @@ describe("latin deductions", () => {
     for (const x of [0, 1, 2]) only(s, x, 0, [1, 2]);
     only(s, 3, 0, [3, 4]);
     expect(s.set(s.cubepos(0, 0, 1), 4 * 4, 1)).toBe(-1);
+  });
+
+  // A value confined across lines is two facts, and the solver's search finds
+  // either through the other; the recorded reason names the fewer lines.
+  it.each([
+    ["col", (a: number, b: number) => ({ x: a, y: b })],
+    ["row", (a: number, b: number) => ({ x: b, y: a })],
+  ] as const)("a value confined across lines is recorded with the fewer lines: %s", (axis, at) => {
+    // 1 fits lines 0 and 1 only where they cross lines 0 and 1 the other way.
+    const s = blank(5);
+    for (const a of [0, 1])
+      for (const b of [2, 3, 4]) {
+        const c = at(a, b);
+        s.cube[s.cubepos(c.x, c.y, 1)] = 0;
+      }
+    const recorded: DeductionRecord[] = [];
+    s.recorder = (r) => recorded.push(r);
+    expect(s.diffSet(true)).toBe(1);
+    const reason = recorded[0].reason as {
+      cells: { x: number; y: number }[];
+      lines: { axis: string; count: number; cells: { x: number; y: number }[] };
+    };
+    expect(reason.lines.axis).toBe(axis);
+    expect(reason.lines.count).toBe(2);
+    expect(reason.lines.cells).toHaveLength(10);
+    const key = (c: { x: number; y: number }) => `${c.x},${c.y}`;
+    expect(reason.cells.map(key).sort()).toEqual(
+      [at(0, 0), at(0, 1), at(1, 0), at(1, 1)].map(key).sort(),
+    );
+    // Struck from the rest of the two lines the cells use up.
+    const struck = recorded.map((r) => key(r as unknown as { x: number; y: number }));
+    expect(struck.sort()).toEqual(
+      [2, 3, 4].flatMap((a) => [key(at(a, 0)), key(at(a, 1))]).sort(),
+    );
   });
 
   it("forcing chains follow two-candidate cells to an elimination", () => {

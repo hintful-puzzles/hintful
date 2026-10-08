@@ -809,7 +809,8 @@ export const groupGame: Game<
       ring: "the cell the step is about: the letter to enter there, or the pencil marks to cross out, which are shown with a line through them.",
       outline:
         "what the step reasons from: the three products an associativity step reads, the product that gives away (or rules out) the identity, a group of cells that between them already account for the letters being crossed out, the letter just placed, or the numbered cells of a chain.",
-      stripes: 'the row or column the sentence names: "in this row".',
+      stripes:
+        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one letter fits only the outlined cells.',
     },
   },
   hintKeepTrack,

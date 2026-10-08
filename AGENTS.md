@@ -53,12 +53,15 @@ incident only what a later session acts on: the rule, and the shape to look for.
   anything they asked for by name, and a compatibility break (asked before).
 - **A decision is persisted by a commit, or it did not happen.** Never cite an
   agent-private note to the owner.
-- **A session ends one of two ways, and files nothing on its own.** Either its
-  change is archived and it hands an existing change to a fresh session, or it
-  asks the owner about a new issue it found: what it is, and whether to take
-  it on in this session, in a new one, or not at all, with a recommendation.
-  It takes as long as its change needs
-  (`docs/work-management.md` § "The backlog is being drained").
+- **An issue your change turned up, and gave you the context for, is yours
+  now.** The same defect in the next game or the shared layer: file its change
+  and do it in this session, unasked. Ask only about a distinct thing: what it
+  is, and whether to take it on here, in a new session, or not at all, with a
+  recommendation. Otherwise the session ends by handing an existing change to
+  a fresh one (`docs/work-management.md` § "The backlog is being drained").
+- **Bring a question with everything you could find out.** Run the app,
+  measure, read the code first. Never report to the owner that you did not
+  look at something you could have.
 - **Update the guide in the change that taught you something**, and the help
   page in the change that alters what it describes. The guides under `docs/`
   are a live wiki. Cite a section by file and heading name; only

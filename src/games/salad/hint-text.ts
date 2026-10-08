@@ -244,14 +244,13 @@ export function say(mode: number) {
       }),
 
     /** A set that rules a square out as empty: the outlined `cells` hold all
-     * `k` empty squares of their `line` (of each of their lines, where they
-     * span `several`), and the symbols `also` struck from the square with the
-     * mark. Kept short: it names a set, a count and two kinds of mark. */
+     * `k` empty squares of their `line`, and the symbols `also` struck from
+     * the square with the mark. Kept short: it names a set, a count and two
+     * kinds of mark. */
     setHoles: (
       cells: Squares,
       also: readonly number[],
       line: Line,
-      several: boolean,
       k: number,
     ): Narration => {
       const symbols = also.length > 0 ? `${joinWith(also.map(sym))} and ` : "";
@@ -261,10 +260,7 @@ export function say(mode: number) {
           : k === 2
             ? "both empty squares"
             : `all ${k} empty squares`;
-      const where = several
-        ? `each of their ${axisName(line)}s`
-        : `their ${axisName(line)}`;
-      return phrase`${mark.the("outline", CELL, cells, "square").capitalized()} account for ${symbols}${holes} of ${where}`;
+      return phrase`${mark.the("outline", CELL, cells, "square").capitalized()} account for ${symbols}${holes} of their ${axisName(line)}`;
     },
 
     /** What a set's strike calls the notes it crosses out of one square when

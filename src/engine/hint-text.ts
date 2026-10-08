@@ -334,6 +334,38 @@ export function narrateLatinReason(
   }
 }
 
+/**
+ * One value confined across several parallel lines: the `lines` take `value`
+ * only in the outlined `set`, which lies in as many lines the other way, so
+ * those have no other place for it. The premise of every game's version of the
+ * step (an X-wing, a swordfish).
+ *
+ * Every line is striped whole, because the claim is about all of it: the
+ * player checks the value is gone from each cell that is not outlined. The two
+ * counts are the argument, so both are said. Kept short: the walk may end it
+ * with every value a cell keeps, and the whole must fit the narration limit.
+ */
+export function confinedPremise(
+  lines: {
+    axis: "row" | "col";
+    count: number;
+    cells: readonly Point[];
+  },
+  set: readonly Point[],
+  value: string,
+  cell = "cell",
+): Narration {
+  const [along, across] =
+    lines.axis === "row" ? ["rows", "columns"] : ["columns", "rows"];
+  const striped = mark.as(
+    "stripes",
+    CELL,
+    lines.cells,
+    `These ${lines.count} ${along}`,
+  );
+  return phrase`${striped} fit ${value} only in ${mark.the("outline", CELL, set, cell)}, which take the ${value} of ${lines.count} ${across}`;
+}
+
 /** The premise of a generic Latin strike (the placement cull, a set, a forcing
  * chain), shared as {@link narrateLatinReason} is. `marks` are the struck
  * notes. */
@@ -351,6 +383,11 @@ export function latinPremise(
         where: `from the other ${cell}s there`,
       };
     case "set":
+      if (reason.lines)
+        return {
+          premise: confinedPremise(reason.lines, reason.cells, v(marks[0].n), cell),
+          named: true,
+        };
       // One strike per cell can repeat a value, and the order is the solver's:
       // name each value once, smallest first.
       return {

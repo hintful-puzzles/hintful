@@ -358,7 +358,7 @@ export const saladGame: Game<
       outline:
         "what the step reasons from: the squares a clue looks across before its letter, the run of squares its letter must lie in, squares that between them already account for the letters being crossed out or for all of a line’s empty squares, the letter just placed, or a chain of squares with two candidates left each, numbered in the order it runs. The clue a sentence names (“this column’s top clue”) is lit in the hint color.",
       stripes:
-        "the row or column the sentence calls “this row” or “this column”, including the line a named clue looks along.",
+        "the row or column the sentence calls “this row” or “this column”, including the line a named clue looks along. Or the several it names together, such as “these 2 columns”, where one mark fits only the outlined squares.",
     },
   },
   hintKeepTrack,
