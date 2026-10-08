@@ -20,5 +20,5 @@
 ## 3. Verify
 
 - [x] 3.1 In the app, both schemes: all eight games with ruled-out cells.
-- [ ] 3.2 The gate.
+- [x] 3.2 The gate.
 - [ ] 3.3 The owner's eye.
