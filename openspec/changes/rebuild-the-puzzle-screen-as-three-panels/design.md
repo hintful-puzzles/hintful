@@ -53,7 +53,9 @@ depends on the game.
 - `Fill marks` moves from the Bar to the Game controls. This reverses the
   owner's own placement of 2026-09-24, on the argument that it keeps the Bar
   identical in every game.
-- Fixed dock positions; no free dragging.
+- Fixed dock positions; no free dragging. The constrained set of settings in
+  "Docking is constrained so that a collision cannot be expressed" was put to
+  the owner in place of a free side per panel, and accepted.
 - "I'd prefer to avoid anything game-specific going into the menu, as people
   wouldn't know to search there": `Reference` sits with the game's controls.
 - The renames `Start over`, `Save as…`, `Open saved…`. `Auto-solve for me` and
