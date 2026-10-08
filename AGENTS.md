@@ -174,6 +174,11 @@ coherent unit of work.
   loads, so give it a known positive first, or take a symbol's population with
   `npm run refs -- <file> <Name>`. An edit's errors arrive seconds later, on a
   later tool result; `npm run agent-diagnostics` checks that they still do.
+- **Show the owner the openspec file you are working from.** Where
+  `HERDR_PANE_ID` is set, and only there: when you start on a change's
+  proposal, design, tasks or spec delta, or move from one to another, open it
+  with the `herdr-open` skill so they can follow along. Once per file, not per
+  edit: each call replaces what they are reading.
 - **When a change is archived, pick the next one yourself and hand it to a
   fresh session; never ask which.** Read the open changes, take one that can
   start without an answer from the owner, commit, push and leave the tree
