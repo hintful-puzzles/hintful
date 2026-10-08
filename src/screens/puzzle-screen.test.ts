@@ -17,6 +17,7 @@
 // call time by every importer however early it loaded, and `restoreAllMocks`
 // hands the real function back to the next file in the worker.
 // `no-module-mocks.test.ts` keeps `vi.mock` out of the suite.
+import { render, type TemplateResult } from "lit";
 import {
   afterEach,
   beforeEach,
@@ -306,6 +307,24 @@ describe("puzzle-screen: Check without saving", () => {
     await host.commandMap["check-only"].call(host);
     expect(check).not.toHaveBeenCalled();
     expect(showToast).not.toHaveBeenCalled();
+  });
+});
+
+describe("puzzle-screen: the game's name opens the quick-switch", () => {
+  it("is a button inside the heading that runs the Menu's Switch puzzle command", () => {
+    const screen = new PuzzleScreen();
+    const open = vi.fn();
+    // Before the template is built: it captures the method by reference.
+    Object.defineProperty(screen, "openPuzzleSwitcher", { value: open });
+    const bar = document.createElement("div");
+    const template = (
+      screen as unknown as { renderTopBar: () => TemplateResult }
+    ).renderTopBar();
+    render(template, bar, { host: screen });
+    const button = bar.querySelector<HTMLButtonElement>("h1.top-name button");
+    expect(button).not.toBeNull();
+    button?.click();
+    expect(open).toHaveBeenCalledTimes(1);
   });
 });
 

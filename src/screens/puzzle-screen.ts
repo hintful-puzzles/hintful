@@ -392,7 +392,18 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           <wa-icon name="back-to-catalog"></wa-icon>
           <span class="top-back-label">All puzzles</span>
         </a>
-        <h1 class="top-name">${this.puzzleData?.name ?? ""}</h1>
+        <h1 class="top-name">
+          <button
+              class="top-name-button"
+              type="button"
+              aria-haspopup="dialog"
+              title="Switch puzzle"
+              @click=${this.openPuzzleSwitcher}
+          >
+            <span class="top-name-text">${this.puzzleData?.name ?? ""}</span>
+            <wa-icon library="system" name="chevron-down" aria-hidden="true"></wa-icon>
+          </button>
+        </h1>
         <puzzle-type-menu
             class="top-chips"
             presentation="chips"
@@ -1437,14 +1448,50 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
        * the row. */
       .top-name {
         flex: 0 0 auto;
+        display: flex;
         margin: 0;
         line-height: inherit;
         max-width: 45%;
+        min-width: 0;
+        font-size: var(--app-font-size-item);
+        font-weight: var(--wa-font-weight-bold);
+      }
+
+      /* The name is the way to another puzzle: it opens the quick-switch, as
+       * the Menu's Switch puzzle row does. A button inside the heading, so the
+       * page keeps its h1. */
+      .top-name-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        min-width: 0;
+        min-height: var(--app-tap-min);
+        padding: 0;
+        border: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+
+        @media (hover: hover) {
+          &:hover {
+            color: var(--app-color-link);
+          }
+        }
+      }
+      :host([shape="short"]) .top-name-button {
+        min-height: 2.25rem;
+      }
+      .top-name-text {
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: var(--app-font-size-item);
-        font-weight: var(--wa-font-weight-bold);
+      }
+      .top-name-button wa-icon {
+        flex: 0 0 auto;
+        font-size: 0.85em;
+        color: var(--app-color-text-quiet);
       }
 
       /* overflow: hidden as well as min-width: 0, because a no-wrap chip in a box
