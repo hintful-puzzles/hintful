@@ -927,10 +927,11 @@ export class LatinSolver {
         let premise: LatinSetReason | null = null;
         if (rec) {
           const cells = new CellList(this.o, s);
-          const reads = new CellList(this.o, s, cells);
           for (let a = 0; a < nSub; a++)
             for (let b = 0; b < nOther; b++)
               if (mask & (1 << a) && live(a, b)) cells.add(pos(a, b));
+          // After `cells` is whole: the list leaves out what it is given then.
+          const reads = new CellList(this.o, s, cells);
           for (let a = 0; a < nSub; a++)
             for (let b = 0; b < nOther; b++) if (mask & (1 << a)) reads.add(pos(a, b));
           const members: number[] = [];
