@@ -7,7 +7,7 @@ You're given a hexagonal grid with numbers in some of its cells. Your objective 
 3. A number indicates the amount of shaded cells around it.
 4. Cells with numbers cannot be shaded.
 
-A shaded cell holds a {{pair:0}} square. A cell you have decided is not shaded is *clear*, and shows a dot. The numbers sit on lighter cells.
+A shaded cell holds a {{pair:0}} square. A cell you have decided is not shaded is *clear*, and shows a cross. The numbers sit on lighter cells.
 
 ## Controls
 
@@ -23,7 +23,7 @@ This genre was invented by [Nikoli](https://www.nikoli.co.jp/) under the name *T
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. Each step decides one cell: either it must be shaded, or it must *stay clear*, which means giving it the dot (right-click, or Space). The hint reasons from the numbers and your own shaded and clear cells, so it carries on from wherever you are.
+**Hint** explains the next step rather than simply making it. Each step decides one cell: either it must be shaded, or it must *stay clear*, which means giving it the cross (right-click, or Space). The hint reasons from the numbers and your own shaded and clear cells, so it carries on from wherever you are.
 
 {{hint-marks}}
 

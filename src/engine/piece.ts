@@ -33,13 +33,27 @@ export const SHADED_NAME: string = TWO_NAMES[0];
 export const UNSHADED_NAME = "clear";
 
 /**
- * The mark for a cell the player has ruled out of being shaded: a small dot
- * in the middle of `cell`, in `color` (the `RULED_OUT` role). Small on
- * purpose, so a board half ruled out is still mostly quiet surface.
+ * The mark for a cell the player has ruled out: a thin cross in the middle of
+ * `cell`, half the cell wide, in `color` (the `RULED_OUT` role). One mark in
+ * every game that has the state, so a cross never has to be learned twice.
  */
-export function drawRuledOutDot(dr: GameDrawing, cell: Rect, color: number): void {
-  const r = Math.max(1.5, cell.w / 11);
-  dr.drawCircle({ x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 }, r, color, color);
+export function drawRuledOutCross(dr: GameDrawing, cell: Rect, color: number): void {
+  const cx = cell.x + Math.floor(cell.w / 2);
+  const cy = cell.y + Math.floor(cell.h / 2);
+  const off = Math.floor(cell.w / 4);
+  const thickness = Math.max(1, Math.floor(cell.w / 16));
+  dr.drawLine(
+    { x: cx - off, y: cy - off },
+    { x: cx + off, y: cy + off },
+    color,
+    thickness,
+  );
+  dr.drawLine(
+    { x: cx - off, y: cy + off },
+    { x: cx + off, y: cy - off },
+    color,
+    thickness,
+  );
 }
 
 /**

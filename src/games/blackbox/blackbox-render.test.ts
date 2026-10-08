@@ -79,7 +79,7 @@ describe("Black Box redraw", () => {
     expect(ops.some((o) => o.op === "rect" && o.color === COL_SETTLED)).toBe(false);
   });
 
-  it("lifts a square marked as known, and dots it only where it has no ball", () => {
+  it("lifts a square marked as known, and crosses it only where it has no ball", () => {
     let s = makeState(5, 5, []);
     s = blackboxGame.executeMove(s, { type: "toggleBall", x: 1, y: 1 });
     s = blackboxGame.executeMove(s, { type: "toggleLock", x: 1, y: 1 });
@@ -88,9 +88,11 @@ describe("Black Box redraw", () => {
     redraw(dr, freshDs(s), null, s, 1, freshUi(s), 0, 0);
     const lifted = ops.filter((o) => o.op === "rect" && o.color === COL_SETTLED);
     expect(lifted.length).toBe(2);
-    // One disc for the ball and one, much smaller, for the dot.
+    // One disc, the ball's, and the two strokes of one cross.
     const discs = ops.filter((o) => o.op === "circle").map((o) => o.fill);
-    expect(discs.sort()).toEqual([COL_KNOWN, COL_BALL].sort());
+    expect(discs).toEqual([COL_BALL]);
+    const strokes = ops.filter((o) => o.op === "line" && o.color === COL_KNOWN);
+    expect(strokes.length).toBe(2);
   });
 
   it("draws a fired laser's number text", () => {

@@ -110,7 +110,7 @@ const setSquare =
 
 type PatternVerb = TargetVerb<PatternState, PatternUi, Point, PatternMove>;
 const shadeVerb: PatternVerb = {
-  does: `turn it ${SHADED_NAME}, then ${UNSHADED_NAME} (a dot), then back to undecided`,
+  does: `turn it ${SHADED_NAME}, then ${UNSHADED_NAME} (a cross), then back to undecided`,
   apply: setSquare(clickBlack),
 };
 const clearVerb: PatternVerb = {

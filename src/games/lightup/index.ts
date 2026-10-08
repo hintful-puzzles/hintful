@@ -113,7 +113,7 @@ function changedState(
   if (gridCorrect(next)) ui.cursor.visible = false;
 }
 
-/** A bulb or a dot on square `{ x, y }`: toggled, except that each refuses a
+/** A bulb or a cross on square `{ x, y }`: toggled, except that each refuses a
  * square holding the other. */
 function toggle(kind: "light" | "impossible") {
   return (state: LightupState, { x, y }: Point): LightupMove | null => {
@@ -134,7 +134,7 @@ const targetVerbs: TargetVerbs<
   geometry: squareGrid({ size: (s) => s, border }),
   primary: { does: "place or remove a light", apply: toggle("light") },
   secondary: {
-    does: "place or remove a dot, marking a square you think holds no light",
+    does: "place or remove a cross, marking a square you think holds no light",
     keys: [letterKey("I")],
     apply: toggle("impossible"),
   },
@@ -539,7 +539,7 @@ export const lightupGame: Game<
   hintRungs: LIGHTUP_RUNGS,
   hintMarks: {
     roles: {
-      ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a dot.',
+      ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a cross.',
       outline:
         "what the step reasons from, told apart by the sentence's nouns and drawn three ways: “the outlined clue” has a ring round its wall; “the outlined dark square”, which still has to be lit, has a pink double ring; and the other squares the reason rests on, such as a clue's bulbs, are shaded when dark and have a green double ring when lit.",
     },

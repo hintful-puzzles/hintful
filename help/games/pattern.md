@@ -8,7 +8,7 @@ A shaded square holds a {{pair:0}} square.
 
 {{controls}}
 
-A square you know is not shaded can be marked clear, with a dot; a
+A square you know is not shaded can be marked clear, with a cross; a
 square with nothing in it is one you have not decided yet.
 
 Drag along a row or column to give every undecided square on it what

@@ -4,7 +4,7 @@
  * the collection's quiet surface. A wall is a solid block (`wallFill`) with its clue
  * (red when provably wrong); an open square is the cell surface, washed yellow
  * when lit; a bulb is a white disc (red when lit by another bulb); the
- * impossible-mark is the ruled-out dot; and the completion flash blinks the
+ * impossible-mark is the ruled-out cross; and the completion flash blinks the
  * lit squares to the lifted surface.
  */
 
@@ -28,7 +28,7 @@ import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.t
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawRuledOutDot } from "../../engine/piece.ts";
+import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { LightupHint, LightupMistake } from "./index.ts";
 import {
@@ -60,7 +60,7 @@ export const COL_HINT = 7; // forced cell(s), blue fill (highlight only)
 export const COL_HINT_CELL = 8; // evidence: the shade on a *dark* square
 export const COL_HINT_LITERF = 9; // cited lit/bulb premise (green ring)
 export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (pink ring)
-/** The player's "no light here" dot. Upstream drew it in the wall's color. */
+/** The player's "no light here" cross. */
 export const COL_RULED_OUT = 11;
 export const COL_CELL = 12; // the surface of an open square no bulb lights
 /** What a lit square blinks to in the completion flash: a lifted surface,
@@ -283,7 +283,7 @@ function tileRedraw(
       dsFlags & DF_IMPOSSIBLE &&
       (!(dsFlags & DF_LIT) || ui.drawBlobsWhenLit)
     ) {
-      drawRuledOutDot(dr, box, COL_RULED_OUT);
+      drawRuledOutCross(dr, box, COL_RULED_OUT);
     }
   }
 

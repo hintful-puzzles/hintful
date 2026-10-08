@@ -2,7 +2,7 @@
  * Range rendering: a per-cell diffed loop over pieces on a quiet surface
  * (`engine/piece.ts`). A cell is a grid-outlined surface, lifted under a clue
  * and, on the lit beats of the completion flash, under every cell; a shaded
- * cell holds the shaded piece, a cell marked clear holds the ruled-out dot,
+ * cell holds the shaded piece, a cell marked clear holds the ruled-out cross,
  * and a clue holds its number. The keyboard cursor is corner brackets, out at
  * the cell's corners. Rule violations are
  * recomputed every frame via `findErrors` and framed in the error color —
@@ -33,7 +33,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawPiece, drawRuledOutDot, SHADED_SHAPE } from "../../engine/piece.ts";
+import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { CLUE } from "./hint-text.ts";
 import type { RangeHint } from "./index.ts";
@@ -60,7 +60,7 @@ export const COL_CELL = 2; // the surface of a cell the puzzle left open
 /** The surface under a clue, and under every cell while the board flashes. */
 export const COL_GIVEN = 3;
 export const COL_SHADED = 4; // the piece in a shaded cell
-export const COL_RULED_OUT = 5; // the dot in a cell marked clear
+export const COL_RULED_OUT = 5; // the cross in a cell marked clear
 export const COL_TEXT = 6; // a clue's number
 export const COL_ERROR = 7;
 export const COL_CURSOR = 8;
@@ -178,7 +178,7 @@ function drawCell(
   if (value === BLACK) {
     drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
   } else if (value === WHITE) {
-    drawRuledOutDot(dr, box, error ? COL_ERROR : COL_RULED_OUT);
+    drawRuledOutCross(dr, box, error ? COL_ERROR : COL_RULED_OUT);
   } else if (value > 0) {
     dr.drawText(
       { x: tx, y: ty },
@@ -196,7 +196,7 @@ function drawCell(
   // The hint marks sit on the cell's own border. A shaded premise gets a
   // doubled inset outline so "this shaded square is the reason" reads distinct
   // from the ring of the forced move. The target is never previewed with its
-  // mark: a placed piece or dot would read as already done, so the narration
+  // mark: a placed piece or cross would read as already done, so the narration
   // says which mark and auto-hint applies it for real.
   const band = { box, outer: 0, inner: thick };
   if (hintKind === "area") drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);

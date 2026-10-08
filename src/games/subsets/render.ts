@@ -4,7 +4,7 @@
  * Each cell is a `CELL_WIDTH × CELL_HEIGHT` block of letter slots on a backing
  * in the grid line's color. A slot is the cell surface, lifted where the
  * puzzle gave the cell's set, and its state is what it holds: a letter marked
- * present (ink for a given, green for a player mark), the ruled-out dot for a
+ * present (ink for a given, green for a player mark), the ruled-out cross for a
  * letter cleared, and nothing while unknown. Horseshoe
  * arrows sit in the gaps between cell blocks (red when their relation is
  * violated), a violated missing-arrow edge shows a red cross, and the band
@@ -47,7 +47,7 @@ import {
   HINT_TARGET,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
-import { drawRuledOutDot } from "../../engine/piece.ts";
+import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
@@ -94,7 +94,7 @@ export const COL_HINT_CELL = 10;
 export const COL_HINT_SPOT = 11;
 // The cell where a clicked, already *placed* set sits.
 export const COL_HINT_PLACED = 12;
-/** The dot in a slot whose letter is cleared. */
+/** The cross in a slot whose letter is cleared. */
 export const COL_RULED_OUT = 13;
 
 /** Sidecar bit: a cell a spotlit set can still be placed in. */
@@ -363,7 +363,7 @@ export function redraw(
           const box = { x: tx, y: ty, w: ts - 1, h: ts - 1 };
 
           // The surface says who decided the cell and never what a slot
-          // holds: a letter, the dot, or nothing yet.
+          // holds: a letter, the cross, or nothing yet.
           dr.drawRect(box, flash || state.immutable[i] & bit ? COL_GIVEN : COL_CELL);
           // The cell the hint's sentence names, under its letters.
           ds.hint.drawHatch(
@@ -382,7 +382,7 @@ export function redraw(
               String.fromCharCode(CODE_A + cn),
             );
           } else if (!unknown) {
-            drawRuledOutDot(dr, box, COL_RULED_OUT);
+            drawRuledOutCross(dr, box, COL_RULED_OUT);
           }
 
           if (slot === cn) {

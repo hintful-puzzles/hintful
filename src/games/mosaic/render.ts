@@ -5,7 +5,7 @@
  * flash inverts marked/blank in its first and last thirds.
  *
  * The board is pieces on a quiet surface (`engine/piece.ts`): a marked cell
- * holds the shaded piece, a blank one the ruled-out dot, and a cell's number
+ * holds the shaded piece, a blank one the ruled-out cross, and a cell's number
  * is drawn over whichever it holds.
  */
 
@@ -32,7 +32,7 @@ import {
   MarkOutlines,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawPiece, drawRuledOutDot, SHADED_SHAPE } from "../../engine/piece.ts";
+import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
@@ -59,7 +59,7 @@ export const COL_CELL = 1;
 export const COL_GRID = 2;
 /** The piece in a marked cell. */
 export const COL_SHADED = 3;
-/** The dot in a blank cell. */
+/** The cross in a blank cell. */
 export const COL_RULED_OUT = 4;
 /** A number on bare surface, and one the board has satisfied. */
 export const COL_TEXT = 5;
@@ -177,9 +177,11 @@ function drawCell(
     if (shaded) {
       drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
     } else if (cell & STATE_BLANK) {
-      // In the corner where the cell has a number, which takes the middle.
-      const off = clueVal >= 0 ? Math.round(box.w * 0.29) : 0;
-      drawRuledOutDot(dr, { ...box, x: box.x + off, y: box.y - off }, COL_RULED_OUT);
+      // Small and in the corner where the cell has a number, which takes the
+      // middle.
+      const side = Math.round(box.w * 0.4);
+      const corner = { x: box.x + box.w - side, y: box.y, w: side, h: side };
+      drawRuledOutCross(dr, clueVal >= 0 ? corner : box, COL_RULED_OUT);
     }
 
     if (cell & DRAWFLAG_MISTAKE) {

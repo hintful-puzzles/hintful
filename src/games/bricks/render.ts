@@ -11,7 +11,7 @@
  *
  * The board is pieces on a quiet surface (`engine/piece.ts`): a shaded brick
  * is the collection's shaded piece inset on its cell, a ruled-out one carries
- * a dot, a clue sits on a lifted cell, and every mark drawn at a cell's edge
+ * a cross, a clue sits on a lifted cell, and every mark drawn at a cell's edge
  * lands beside the piece. A cell is a square whatever the row's offset, so the
  * piece is the square one.
  *
@@ -38,7 +38,7 @@ import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawPiece, drawRuledOutDot, SHADED_SHAPE } from "../../engine/piece.ts";
+import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { BricksHint } from "./index.ts";
 import { bricksValidate } from "./solver.ts";
@@ -82,7 +82,7 @@ export const COL_HINT = 7; // the forced cell — ringed on its own border
 export const COL_HINT_CELL = 8; // the deduction's evidence — a ring inside it
 /** The digit on a clue's lifted cell. */
 export const COL_NUMBER = 9;
-/** The dot in a cell the player has ruled out. */
+/** The cross in a cell the player has ruled out. */
 export const COL_RULED_OUT = 10;
 /** The `!` on a gravity diamond, and the diamond's rim. */
 export const COL_ERROR_TEXT = 11;
@@ -217,7 +217,7 @@ function drawTile(
   const inner = { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 };
   dr.drawRect(inner, color ? COL_EMPTY : COL_GIVEN);
   if (color === F_SHADE) drawPiece(dr, inner, SHADED_SHAPE, COL_SHADE);
-  else if (color === F_UNSHADE) drawRuledOutDot(dr, inner, COL_RULED_OUT);
+  else if (color === F_UNSHADE) drawRuledOutCross(dr, inner, COL_RULED_OUT);
 
   // Square border.
   dr.drawPolygon(

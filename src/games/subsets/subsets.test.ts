@@ -614,13 +614,14 @@ describe("subsets rendering (tier 2.5)", () => {
     expect(givens).toBeGreaterThan(0);
     expect(slots(COL_GIVEN)).toBe(4 * givens);
     expect(slots(COL_CELL)).toBe(4 * (start.immutable.length - givens));
-    // A slot's state is what it holds: a given's absent letter is the dot.
+    // A slot's state is what it holds: a given's absent letter is the cross,
+    // which is two strokes.
     const absent = Array.from(start.immutable, (v, i) =>
       v === 0 ? 0 : [0, 1, 2, 3].filter((b) => !(start.known[i] & (1 << b))).length,
     ).reduce((a, b) => a + b, 0);
     expect(
-      ops.filter((o) => o.op === "circle" && o.fill === COL_RULED_OUT),
-    ).toHaveLength(absent);
+      ops.filter((o) => o.op === "line" && o.color === COL_RULED_OUT),
+    ).toHaveLength(2 * absent);
     // Horseshoe arrows are drawn (circles) and no error color yet.
     expect(ops.some((o) => o.op === "circle")).toBe(true);
     expect(ops.some((o) => "color" in o && o.color === COL_ERROR)).toBe(false);

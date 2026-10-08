@@ -26,8 +26,8 @@
  */
 
 import type { Color } from "../types.ts";
-import { divide, mix, scale, token } from "./color-token.ts";
-import { BLUE_BOLD, EIGHT_FILLS } from "./colors.ts";
+import { darkValue, divide, mix, scale, token } from "./color-token.ts";
+import { BLUE_BOLD, EIGHT_FILLS, PURPLE_WASH } from "./colors.ts";
 import { INK } from "./palette.ts";
 
 // --- signpost ----------------------------------------------------------
@@ -240,6 +240,20 @@ export const soloKiller = (background: Color): Color => [
   0.5 * background[1],
   0.1 * background[2],
 ];
+
+// --- tracks -------------------------------------------------------------
+
+/**
+ * **This square carries track**: the bed under a square's rails, and under a
+ * square known to hold track before it has any. The theme's purple wash at its
+ * dark-scheme value under both schemes: the light wash is paler than the cell
+ * and sits beside a given's lifted surface, where the two read as one.
+ */
+export const TRACKS_BED: Color = (() => {
+  const deep = darkValue(PURPLE_WASH);
+  if (deep === null) throw new Error("PURPLE_WASH has no dark value");
+  return token(mix(PURPLE_WASH, deep, 0.5), deep);
+})();
 
 // --- twiddle ------------------------------------------------------------
 

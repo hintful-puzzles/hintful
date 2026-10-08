@@ -621,7 +621,7 @@ describe("lightup rendering", () => {
   it("the show-lit-blobs preference suppresses blobs on lit squares", () => {
     // Mark (0,0), then light (3,0): the mark's square becomes lit.
     const blobRect = (rec: RecordingDrawing) =>
-      rec.ops.some((o) => o.op === "circle" && o.fill === COL_RULED_OUT);
+      rec.ops.some((o) => o.op === "line" && o.color === COL_RULED_OUT);
     const me = new Midend(lightupGame);
     expect(me.newGameFromId(EASY_ID)).toBeNull();
     me.playMoves([mark(0, 0), light(3, 0)]);

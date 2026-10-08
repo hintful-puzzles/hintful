@@ -6,7 +6,7 @@
  *
  * Left-click / select cycles a non-clue cell empty → black → white →
  * empty; right-click / select2 cycles the other way. White is the
- * player's optional "this is white" dot. Errors (rule violations) are
+ * player's optional "this is white" cross. Errors (rule violations) are
  * highlighted live; Check & Save additionally flags cells that
  * contradict the unique solution.
  */
@@ -117,7 +117,7 @@ const targetVerbs: TargetVerbs<RangeState, RangeUi, RangeDrawState, Point, Range
     geometry: squareGrid({ size: (s) => s, border }),
     primary: { does: `color it ${SHADED_NAME}`, apply: cycleAt(false) },
     secondary: {
-      does: `mark it with a dot, if you know it should not be ${SHADED_NAME}`,
+      does: `mark it with a cross, if you know it should not be ${SHADED_NAME}`,
       apply: cycleAt(true),
     },
   };
@@ -132,7 +132,7 @@ function interpretMove(
   const { w, h, grid } = state;
   const delta = cursorDelta(stripModifiers(rawButton));
   if (delta && rawButton & MOD_SHFT) {
-    // A shifted arrow *dots* the cells it passes, which is too much to do to
+    // A shifted arrow *crosses* the cells it passes, which is too much to do to
     // a player who cannot yet see the cursor — that one still only reveals.
     if (showCursor(ui.cursor)) return UI_UPDATE;
     const dr = delta.dy;

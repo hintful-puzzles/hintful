@@ -9,13 +9,13 @@
  * `OverlaySidecar` so it is part of the diff key (docs/games/rendering.md
  * § "Overlay sidecars").
  *
- * Every square the player works is the quiet cell surface with the thin
- * surface grid, and a square the puzzle laid track in is the lifted surface of
- * a given. What a square holds is a mark: rails, the track block until it has
- * them, or the collection's ruled-out dot.
+ * An undecided square is the quiet cell surface with the thin surface grid, a
+ * square the puzzle laid track in is the lifted surface of a given, and a
+ * square that carries track is the bed, with or without rails yet. A square
+ * marked as holding no track holds the collection's ruled-out cross.
  */
 
-import { BROWN } from "../../engine/color/colors.ts";
+import { ORANGE_BOLD } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -31,13 +31,14 @@ import {
   RULED_OUT,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import { TRACKS_BED } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { drawRuledOutDot } from "../../engine/piece.ts";
+import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { pieceOfOp } from "./hint.ts";
 import { LINE, PIECE, type Piece } from "./hint-text.ts";
@@ -105,10 +106,12 @@ export const COL_HINT = 13;
 /** The hint's evidence color: teal, the collection's, distinct in hue from the
  * action so the words map to the picture. */
 export const COL_HINT_CELL = 14;
-/** The player's no-track marks: the dot in a square, the cross on an edge.
- * Their own slot rather than the rails' `COL_TRACK`, which upstream shared: a
- * rail is the picture and a no-track mark is a note beside it. */
+/** The player's no-track crosses, on squares and edges. Their own slot rather
+ * than the rails' `COL_TRACK`, which upstream shared: a rail is the picture
+ * and a cross is a note beside it. */
 export const COL_NOTRACK = 15;
+/** The bed under a square that carries track, whole piece or not. */
+export const COL_TRACK_BACKGROUND = 16;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -116,6 +119,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = background;
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
+  out[COL_TRACK_BACKGROUND] = TRACKS_BED;
   out[COL_GRID] = surfaceGrid(background);
   // Ink for every rail: track the puzzle laid is told by the surface under
   // it, and the rail itself is the same rail.
@@ -125,7 +129,9 @@ export function colors(defaultBackground: Color): Color[] {
   // White behind a red clue digit, so the red pops; a red wash would sit red
   // under red.
   out[COL_ERROR_BACKGROUND] = PAPER;
-  out[COL_SLEEPER] = BROWN;
+  // Brown wood in the light scheme and pale wood in the dark one: orange's
+  // bold step, where `BROWN` stays dark and sinks into the bed and a given.
+  out[COL_SLEEPER] = ORANGE_BOLD;
   out[COL_ERROR] = ERROR;
   out[COL_DRAGON] = DRAG_ADD;
   out[COL_DRAGOFF] = DRAG_REMOVE;
@@ -472,25 +478,7 @@ function bestBits(
   return { bits: flags & ALLDIR, col };
 }
 
-/**
- * "Track here, which way not known yet": a block of sleeper wood edged in the
- * rail's color, in the middle of the square. Square, two-colored and twice the
- * size of the ruled-out dot, so it is never read as one. In any `color` but the
- * rail's own (a drag, an error, the flash) it is that color throughout.
- */
-function drawTrackBlock(dr: GameDrawing, m: Metrics, c: Point, color: number): void {
-  const edge = Math.max(Math.floor(m.tile / 16), 1);
-  const r = Math.max(edge + 2, Math.round(m.tile / 6));
-  dr.drawRect({ x: c.x - r, y: c.y - r, w: 2 * r, h: 2 * r }, color);
-  if (color === COL_TRACK)
-    dr.drawRect(
-      { x: c.x - r + edge, y: c.y - r + edge, w: 2 * (r - edge), h: 2 * (r - edge) },
-      COL_SLEEPER,
-    );
-}
-
-/** The cross the game draws for "no track across this edge", at an arbitrary
- * center. */
+/** The cross for "no track across this edge", at an arbitrary center. */
 function drawCross(
   dr: GameDrawing,
   cx: number,
@@ -556,7 +544,7 @@ function drawHintMarks(
     const cy = oy + t2 + (d === D ? t2 : d === U ? -t2 : 0);
     drawCross(dr, cx, cy, Math.floor(m.half / 4), lineThick, COL_HINT);
   }
-  if (hint & H_EMPTY) drawRuledOutDot(dr, box, COL_HINT);
+  if (hint & H_EMPTY) drawRuledOutCross(dr, box, COL_HINT);
   if (hint & H_RING)
     drawMarkSides(dr, { box, outer: 0, inner: band }, MARK_ALL, COL_HINT);
 }
@@ -585,7 +573,7 @@ function drawSquare(
   const bg = bestBits(
     flags & DS_TRACK ? 1 : 0,
     flagsDrag & DS_TRACK ? 1 : 0,
-    flags & DS_CLUE ? COL_GIVEN : COL_CELL,
+    flags & DS_CLUE ? COL_GIVEN : flags & DS_TRACK ? COL_TRACK_BACKGROUND : COL_CELL,
   ).col;
   dr.drawRect({ x: ox, y: oy, w: m.tile, h: m.tile }, COL_GRID);
   const inner = {
@@ -630,18 +618,14 @@ function drawSquare(
   const c = flags & DS_ERROR ? COL_ERROR : flags & DS_FLASH ? COL_FLASH : COL_TRACK;
   const track = bestBits(flags, flagsDrag, c);
   drawTracksSpecific(dr, m, x, y, track.bits, track.col, COL_SLEEPER);
-  // A square that carries track and has no whole piece yet: the block, beside
-  // whatever rail ends already reach it.
-  if (flags & DS_TRACK && NBITS[track.bits] < 2)
-    drawTrackBlock(dr, m, { x: cx, y: cy }, track.col);
 
-  // No-track square mark: the collection's ruled-out dot.
+  // No-track square mark: the collection's ruled-out cross.
   const sq = bestBits(
     flags & DS_NOTRACK ? 1 : 0,
     flagsDrag & DS_NOTRACK ? 1 : 0,
     COL_NOTRACK,
   );
-  if (sq.bits) drawRuledOutDot(dr, { x: ox, y: oy, w: m.tile, h: m.tile }, sq.col);
+  if (sq.bits) drawRuledOutCross(dr, { x: ox, y: oy, w: m.tile, h: m.tile }, sq.col);
 
   // No-track edge marks (a cross on the edge midpoint).
   const edge = bestBits(flags >> DS_NSHIFT, flagsDrag >> DS_NSHIFT, COL_NOTRACK);

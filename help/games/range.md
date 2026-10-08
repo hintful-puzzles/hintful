@@ -20,22 +20,22 @@ cannot be changed.
 
 {{controls}}
 
-A dot is your own note that a square is clear. Clicking again moves on
+A cross is your own note that a square is clear. Clicking again moves on
 round the same three states: a left-click turns a {{pair:0}} square into
-a dot and a dot back into an empty square, and a right-click turns a dot
-{{pair:0}} and a {{pair:0}} square empty.
+a cross and a cross back into an empty square, and a right-click turns a
+cross {{pair:0}} and a {{pair:0}} square empty.
 
-Hold Shift while moving the cursor to put a dot in every empty square
+Hold Shift while moving the cursor to put a cross in every empty square
 it passes over.
 
 ## Hints
 
 **Hint** explains the next step rather than simply making it. It reasons
-only from the numbers, your {{pair:0}} squares and your dots, so it
+only from the numbers, your {{pair:0}} squares and your crosses, so it
 carries on from wherever you are, as long as none of those is wrong; if
 one is, it asks you to fix the highlighted mistakes first. Its sentences
 call a square a *cell*, and when one says a cell "must be clear" it
-means you can mark it with a dot.
+means you can mark it with a cross.
 
 {{hint-marks}}
 

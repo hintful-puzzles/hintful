@@ -32,6 +32,7 @@ import {
   COL_HINT,
   COL_HINT_CELL,
   COL_HINT_SPOT,
+  COL_RULED_OUT,
   newDrawState,
 } from "./render.ts";
 import {
@@ -250,7 +251,10 @@ describe("subsets rule-out mistakes", () => {
         undefined,
         findMistakes(board),
       );
-      return rec.ops.filter((o) => o.op === "line").map((o) => o.color);
+      // A line that is not a stroke of a cleared slot's cross is a strike.
+      return rec.ops
+        .filter((o) => o.op === "line" && o.color !== COL_RULED_OUT)
+        .map((o) => ("color" in o ? o.color : -1));
     };
     expect(strikes(cell).sort()).toEqual([COL_GUESS, COL_ERROR].sort());
     // The strikes belong to the cell in focus, and to no other.

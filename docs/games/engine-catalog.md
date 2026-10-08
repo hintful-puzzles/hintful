@@ -769,7 +769,9 @@ rounded square or a disc, with `grown` for one being placed or taken away.
 becomes. A game takes all three by index and names neither a hue nor a shape
 of its own ([`rendering.md`](./rendering.md) § "What a board looks like: pieces
 on a quiet surface"). `SHADED_SHAPE`, `SHADED_NAME`, `UNSHADED_NAME` and
-`drawRuledOutDot` are the same for a game whose cells are shaded or not.
+`drawRuledOutCross` are the same for a game whose cells are shaded or not, and
+the cross is every game's mark for a cell ruled out (Light Up, Subsets, Black
+Box and Tracks take it too).
 Consumers: Unruly, Clusters and Flip (the pair); Pattern, Mosaic, Range,
 Singles and Bricks (shaded or not).
 

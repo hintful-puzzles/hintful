@@ -131,11 +131,13 @@ describe("pieces on a quiet surface", () => {
     expect(pieces.map((o) => o.fill)).toEqual([COL_SHADED]);
   });
 
-  it("draws a cell marked clear as a dot, with no fill of its own", () => {
+  it("draws a cell marked clear as a cross, with no fill of its own", () => {
     const rec = renderState(makeState(3, 1, [WHITE, EMPTY, EMPTY]), noCursor);
     expect(surfaces(rec)).toEqual([COL_CELL, COL_CELL, COL_CELL]);
-    const dots = rec.ops.filter((o) => o.op === "circle");
-    expect(dots.map((o) => o.fill)).toEqual([COL_RULED_OUT]);
+    // The two strokes of one cross.
+    const strokes = rec.ops.filter((o) => o.op === "line" && o.color === COL_RULED_OUT);
+    expect(strokes).toHaveLength(2);
+    expect(rec.ops.some((o) => o.op === "circle")).toBe(false);
   });
 
   it("lifts the surface under a clue and nowhere else", () => {

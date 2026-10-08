@@ -10,11 +10,11 @@ orthogonally adjacent to exactly the given number of lights.
 
 {{controls}}
 
-A square holding a dot takes no light until you remove the dot (right-click it again), and a square holding a light takes no dot.
+A square holding a cross takes no light until you remove the cross (right-click it again), and a square holding a light takes no cross.
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. Each step either puts a bulb in a square or, when a square "can't hold a bulb", marks it with a dot. The hint reasons from the numbers and your own bulbs and dots, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. A *dark* square, in its words, is a blank square no bulb lights yet; a *free* one is a blank square with neither a bulb nor a dot.
+**Hint** explains the next step rather than simply making it. Each step either puts a bulb in a square or, when a square "can't hold a bulb", marks it with a cross. The hint reasons from the numbers and your own bulbs and crosses, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. A *dark* square, in its words, is a blank square no bulb lights yet; a *free* one is a blank square with neither a bulb nor a cross.
 
 {{hint-marks}}
 

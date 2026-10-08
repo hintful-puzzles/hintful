@@ -5,7 +5,7 @@
  *
  * Pieces on a quiet surface (`engine/piece.ts`): a square of the box is the
  * cell surface and a guessed ball is a disc on it. What is settled is lifted:
- * a square marked as known, which holds a dot where it has no ball, a laser
+ * a square marked as known, which holds a cross where it has no ball, a laser
  * square once fired, and the whole box once revealed.
  */
 
@@ -28,7 +28,7 @@ import {
 } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawPiece, drawRuledOutDot, TWO_SHAPES } from "../../engine/piece.ts";
+import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { BUTTON, LASER } from "./hint-text.ts";
 import {
@@ -58,7 +58,7 @@ export const COL_CELL = 2; // the surface of a square of the box
 /** The surface of what is settled: a square marked as known, a fired laser
  * square, and every square of a revealed box. */
 export const COL_SETTLED = 3;
-export const COL_KNOWN = 4; // the dot in a square marked as known that has no ball
+export const COL_KNOWN = 4; // the cross in a square marked as known that has no ball
 const COL_TEXT = 5;
 const COL_FLASHTEXT = 6;
 export const COL_BALL = 7;
@@ -268,7 +268,7 @@ function drawArenaTile(
     if (gsTile & BALL_GUESS) {
       if (!(gs.reveal && isflash))
         drawPiece(dr, face(ds, dx, dy), TWO_SHAPES[PAIR_DISC], COL_BALL);
-    } else if (known && !gs.reveal) drawRuledOutDot(dr, face(ds, dx, dy), COL_KNOWN);
+    } else if (known && !gs.reveal) drawRuledOutCross(dr, face(ds, dx, dy), COL_KNOWN);
 
     if (gsTile & FLAG_CURSOR) drawCursor(dr, ds, dx, dy);
     drawHintMark(dr, ds, dx, dy, gsTile);

@@ -16,10 +16,10 @@ Left- or right-drag between squares to lay a straight line of is-track or
 is-not-track indicators, useful for filling in rows or columns to match the
 clue.
 
-A square you have said holds track shows a small brown block, edged like the
-rails, until its rails are in. A square you have said holds no track shows a
-small dot, the same "ruled out" mark the other puzzles use, and an edge the
-track can't cross shows a small cross.
+A square that holds track is purple, whether or not its rails are in yet, and
+so is a square a rail leads into. A square you have said holds no track shows
+a cross, the same "ruled out" mark the other puzzles use, and an edge the
+track can't cross shows a smaller one.
 
 ## Hints
 

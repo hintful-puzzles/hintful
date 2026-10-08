@@ -5,7 +5,7 @@
  * The whole board lives in one signed `Int8Array` `grid`, as upstream's
  * `puzzle_size *grid`: a positive value is an immutable clue number, and the
  * three non-clue cell states are the sentinels `BLACK = -2`, `WHITE = -1`
- * (the player's "dot" pencil mark), and `EMPTY = 0` (undecided). Clue cells
+ * (the player's "clear" pencil mark), and `EMPTY = 0` (undecided). Clue cells
  * are identified by `grid[i] > 0` and are never written by a move.
  */
 

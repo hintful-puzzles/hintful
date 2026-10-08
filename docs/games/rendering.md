@@ -875,11 +875,15 @@ The owner's decisions (2026-10-07, from the mock-ups in the archived change
   which the marks drawn on a board have spent.
 - **Shaded or not is one color, not two** (owner, 2026-10-07; Pattern, Mosaic,
   Range, Singles, Bricks; in Singles the mark for a cell kept clear is the
-  puzzle's own ring round its number, not the dot). The states are not equals:
+  puzzle's own ring round its number, not the cross). The states are not equals:
   the shaded cells are what the puzzle is about, and "not shaded" is a note. A shaded cell is the
   `SHADED` piece (`SHADED_SHAPE`, `SHADED_NAME`), a cell ruled out is quiet
-  surface with `drawRuledOutDot`, and an undecided one is plain surface, so a
-  finished picture still reads as a picture. The words are `SHADED_NAME` and
+  surface with `drawRuledOutCross`, and an undecided one is plain surface, so a
+  finished picture still reads as a picture. **Ruled out is a cross in every
+  game** (owner, 2026-10-08, replacing the dot of the day before): a cell, a
+  slot or a square the player has said holds nothing takes `drawRuledOutCross`
+  and never a mark of the game's own, so the mark is learned once. A cell
+  that also holds a number passes a corner box (Mosaic). The words are `SHADED_NAME` and
   `UNSHADED_NAME`, never "black" and "white". Flip is not one of these: lit
   and unlit are both states the player makes, and it takes the pair.
 - **The pair's hues are the board's content beyond two states** (owner,

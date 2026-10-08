@@ -2,7 +2,7 @@
  * Pattern rendering, after `game_redraw` / `grid_square` / `draw_numbers` in
  * pattern.c. The board is pieces on a quiet surface (`engine/piece.ts`): a
  * full cell holds the shaded piece, a cell known to be empty holds the
- * ruled-out dot, and an undecided cell is plain surface. A per-cell cache
+ * ruled-out cross, and an undecided cell is plain surface. A per-cell cache
  * keyed on the displayed value (drag- and flash-adjusted) plus overlay bits,
  * and a per-line cache of the clue color, which turns red when a completed
  * line contradicts its clue (`check_errors`).
@@ -26,7 +26,7 @@ import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { drawPiece, drawRuledOutDot, SHADED_SHAPE } from "../../engine/piece.ts";
+import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
 import type { PatternHint } from "./index.ts";
@@ -47,7 +47,7 @@ export const FLASH_TIME = 0.13;
 
 // --- palette -------------------------------------------------------------
 export const COL_BACKGROUND = 0;
-/** The dot in a cell known to be empty. */
+/** The cross in a cell known to be empty. */
 export const COL_RULED_OUT = 1;
 /** The piece in a full cell. */
 export const COL_FULL = 2;
@@ -186,7 +186,7 @@ function gridSquare(
   // line, so the pieces of a picture are all one size.
   const content = { x: dx, y: dy, w: ts - 2, h: ts - 2 };
   if (val === GRID_FULL) drawPiece(dr, content, SHADED_SHAPE, COL_FULL);
-  else if (val === GRID_EMPTY) drawRuledOutDot(dr, content, COL_RULED_OUT);
+  else if (val === GRID_EMPTY) drawRuledOutCross(dr, content, COL_RULED_OUT);
 
   if (hintBits & K_HINT_TARGET) {
     drawMarkSides(

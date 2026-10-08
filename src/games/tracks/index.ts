@@ -211,7 +211,7 @@ const trackVerb: TracksVerb = {
 };
 const noTrackVerb: TracksVerb = {
   does:
-    "mark it as holding no track (a dot in a square, a cross on an edge), " +
+    "mark it as holding no track (a cross in a square or on an edge), " +
     "or take the mark away again",
   apply: flipAt(true),
 };
@@ -444,7 +444,7 @@ export const tracksGame: Game<
   hint: tracksHint,
   hintMarks: {
     roles: {
-      ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a dot in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",
+      ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a cross in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",
       outline:
         "what the step reasons from, in a second color: an outline round the squares it counts, a short bar on a side whose state is part of the argument, and the clue number it counts with, recolored in the margin.",
       stripes:
