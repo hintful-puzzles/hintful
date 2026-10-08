@@ -20,6 +20,7 @@ import {
   HINT_EVIDENCE,
   highlightWash,
   INK,
+  pencilColor,
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -103,7 +104,11 @@ export const COL_HELD = 14;
  * it, and the row or column an edge number is dragged along, which ends on
  * the two arrows it lines up with and wears their color. */
 export const COL_TARGET = 15;
-export const NCOLORS = 16;
+/** A number offered and not placed: what a click here would write. A note in
+ * every other entry game's sense, and legible on a dark cell where the bevel's
+ * gray was not. */
+export const COL_OFFERED = 16;
+export const NCOLORS = 17;
 
 /** A cell's part in the displayed hint, one bit per mark: its diff key. */
 const HINT_TARGET = 1;
@@ -332,6 +337,7 @@ export function ascentColors(defaultBackground: Color): Color[] {
   ret[COL_HELD] = highlightWash(background);
   ret[COL_ARROW] = YELLOW_WASH;
   ret[COL_TARGET] = GOAL_WASH;
+  ret[COL_OFFERED] = pencilColor(background);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
   ret[COL_CELL] = cellSurface(background);
@@ -909,10 +915,10 @@ export function redrawAscent(
           ? COL_BORDER
           : state.grid[i] === NUMBER_EMPTY && ui.typingCell !== i
             ? // A number offered, not placed. On the dragged lane it is where
-              // the drop lands, and the gray sinks into the wash: ink there.
+              // the drop lands, and a note's blue sinks into the wash: ink there.
               color === COL_TARGET
               ? COL_BORDER
-              : COL_LOWLIGHT
+              : COL_OFFERED
             : sn <= state.last && positions[sn] === -2 && ui.typingCell !== i
               ? COL_ERROR
               : COL_LINE,
