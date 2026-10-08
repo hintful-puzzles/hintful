@@ -381,8 +381,10 @@ premise is a pattern of candidate positions across several lines.
 
 - **WHEN** the hint strikes a candidate because a single digit is confined,
   across several lines, to a pattern of cells that uses them up
-- **THEN** the step shades that pattern's cells as evidence
-- **AND** the narration points at those marks rather than at unmarked lines
+- **THEN** the step stripes every cell of the lines that confine the digit
+- **AND** it outlines the cells of those lines the digit can still take
+- **AND** the narration points at both marks, and says how many lines there
+  are each way
 
 ### Requirement: Every killer sum Solo cites is worked out from the board in one step
 
@@ -470,3 +472,34 @@ edge.
 - **WHEN** a board is drawn
 - **THEN** the line between two cells of one block is the surface grid line
 - **AND** the line between two blocks, and the frame, are ink
+
+### Requirement: Solo's single-digit pattern step marks the lines it read
+
+A Solo hint step that strikes a candidate because one digit is confined, across
+several lines, to a pattern of cells SHALL mark every cell the deduction read:
+the cells the digit is left with, and the other cells of the lines that confine
+it. Its narration SHALL point at those marks, and SHALL name the confined lines
+as rows or columns according to the firing. Every such firing can be read two
+ways, as some columns confined to as many rows or as the remaining rows
+confined to the remaining columns; the step SHALL name whichever is fewer
+lines.
+
+#### Scenario: A replay from the marked cells reaches the same strike
+
+- **WHEN** the premise audit replays a single-digit pattern firing from only
+  the cells its step marks
+- **THEN** the firing strikes the same candidates
+- **AND** no ledger entry excuses it
+
+#### Scenario: The player can check the step from the frame
+
+- **WHEN** the hint shows a single-digit pattern step
+- **THEN** each line the sentence speaks of is marked on the board
+- **AND** the cells the digit is left with are told apart from the rest of
+  those lines
+
+#### Scenario: The step names the fewer lines
+
+- **WHEN** a single-digit pattern firing confines more columns than it leaves
+  rows outside the pattern
+- **THEN** the step stripes those rows and names them, not the columns
