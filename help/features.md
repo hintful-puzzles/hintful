@@ -34,8 +34,10 @@ and you are playing by touch, you have four ways to do it:
   second finger and move the first.
 
 * **The ::mouse-left-button|left-click::/::mouse-right-button|right-click::
-  toggle.** A button that decides what a plain tap means. It is hidden by
-  default; turn it on in the
+  toggle.** A button at the end of the bar that decides what a plain tap
+  means: it reads *Left* or *Right*, and pressing it swaps the two. It goes
+  back to *Left* when you leave the puzzle, and a puzzle with nothing on the
+  right button has no toggle. You can hide it in the
   <command-link command="settings:mouse">preferences</command-link>. Set to
   right-click, it also inverts the long press and the two-finger tap to mean
   *left*-click, and it swaps the buttons of a mouse or trackpad the same way.

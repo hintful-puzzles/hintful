@@ -1,8 +1,7 @@
 /**
  * **The Game controls: everything the game in play brings, and nothing else.**
- * In the same order in every game: its keys, then the controls that change
- * what a press means (the note toggle, the button toggle), then its own
- * commands (Fill or Update marks, Reference).
+ * In the same order in every game: its keys, then the note toggle, then its
+ * own commands (Fill or Update marks, Reference).
  *
  * Each is present by what the game is, read off the `Puzzle`, so no game is
  * listed here. A game that brings none of them has no panel: the host carries
@@ -26,11 +25,7 @@ import type { Puzzle } from "../puzzle.ts";
 // Component registration
 import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
-import "@awesome.me/webawesome/dist/components/radio/radio.js";
-import "@awesome.me/webawesome/dist/components/radio-group/radio-group.js";
 import "./keys.ts";
-
-export type SwapButtonsEvent = CustomEvent<{ swap: boolean }>;
 
 /** The key columns a side panel starts from, before its height is measured. */
 function startingColumns(keyCount: number): number {
@@ -46,10 +41,6 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
   /** Beside the board, or under it. */
   @property({ type: String, reflect: true })
   along: "side" | "under" = "under";
-
-  /** Whether a press on the board is being sent as the secondary button. */
-  @property({ type: Boolean, attribute: "swap-buttons" })
-  swapButtons = false;
 
   /** Whether the reference panel is open, so its control can say which way a
    * press will go. */
@@ -110,7 +101,6 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
   private get hasOthers(): boolean {
     return (
       this.noteKey !== null ||
-      this.showsButtonToggle ||
       this.puzzle?.canMarkAll === true ||
       this.puzzle?.hasReference === true
     );
@@ -127,14 +117,6 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
 
   private get noteKey(): KeyLabel | null {
     return this.shownKeys.find((key) => key.button === PENCIL_MODE_BUTTON) ?? null;
-  }
-
-  /** The inherited left-button and right-button toggle, for a player who has
-   * asked for it, in a game that has a secondary action to swap to. */
-  private get showsButtonToggle(): boolean {
-    return (
-      settings.showMouseButtonToggle && this.puzzle?.ignoresSecondaryButton === false
-    );
   }
 
   protected override render() {
@@ -162,7 +144,6 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
                     ? html`<puzzle-keys labeled .keys=${[noteKey]}></puzzle-keys>`
                     : nothing
                 }
-                ${this.showsButtonToggle ? this.renderButtonToggle() : nothing}
                 ${
                   puzzle.canMarkAll
                     ? html`
@@ -199,43 +180,6 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
         }
       </div>
     `;
-  }
-
-  private renderButtonToggle() {
-    return html`
-      <wa-radio-group
-          part="button-toggle"
-          appearance="button"
-          orientation="horizontal"
-          aria-label="A press on the board acts as"
-          .value=${this.swapButtons ? "right" : "left"}
-          @change=${this.handleButtonToggle}
-      >
-        <wa-radio appearance="button" value="left">
-          <span class="stack">
-            <wa-icon name="mouse-left-button"></wa-icon><span>Left</span>
-          </span>
-        </wa-radio>
-        <wa-radio appearance="button" value="right">
-          <span class="stack">
-            <wa-icon name="mouse-right-button"></wa-icon><span>Right</span>
-          </span>
-        </wa-radio>
-      </wa-radio-group>
-    `;
-  }
-
-  private handleButtonToggle(event: Event) {
-    // The radio group's own `change` stops at this shadow root.
-    event.stopPropagation();
-    const swap = (event.target as HTMLInputElement).value === "right";
-    this.dispatchEvent(
-      new CustomEvent("puzzle-swap-buttons", {
-        detail: { swap },
-        bubbles: true,
-        composed: true,
-      }) satisfies SwapButtonsEvent,
-    );
   }
 
   protected override updated() {
@@ -331,14 +275,6 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
         /* Disable double-tap to zoom on a control that may be tapped quickly.
          * (Ineffective in iOS Safari; see preventDoubleTapZoomOnButtons.) */
         touch-action: pinch-zoom;
-      }
-
-      /* The toggle's two halves are as tall as the stacked controls beside
-       * them. */
-      wa-radio {
-        height: auto;
-        min-height: var(--app-row-tool-phone);
-        padding-block: 0.25rem;
       }
     `,
   ];

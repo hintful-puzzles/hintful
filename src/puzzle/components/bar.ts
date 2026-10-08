@@ -12,6 +12,7 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { settings } from "../../store/settings.ts";
 import { cssWATweaks } from "../../utils/css.ts";
 import { windowSize } from "../../utils/window-size.ts";
 import { awaitsFirstBoard } from "../board-commands.ts";
@@ -30,6 +31,7 @@ import { shortcutLabel } from "../shortcuts.ts";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 
 export type PuzzleBarFitEvent = CustomEvent<{ length: number }>;
+export type SwapButtonsEvent = CustomEvent<{ swap: boolean }>;
 
 @customElement("puzzle-bar")
 export class PuzzleBar extends SignalWatcher(LitElement) {
@@ -53,6 +55,10 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
    * Menu opens at that end of the Bar, so the button is beside what it opens. */
   @property({ type: Boolean, attribute: "menu-first" })
   menuFirst = false;
+
+  /** Whether a press on the board is being sent as the secondary button. */
+  @property({ type: Boolean, attribute: "swap-buttons" })
+  swapButtons = false;
 
   /** The Menu is open over the board, as a modal: the `Menu` button under it
    * closes it, and no other slot can be reached until it has. */
@@ -81,6 +87,19 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
     return this.puzzle ? commandList(this.puzzle, "") : [];
   }
 
+  /**
+   * The button toggle: one slot that says which mouse button a press on the
+   * board is sent as, and swaps it. It is how a tap reaches a game's second
+   * action without a long press. Absent in a game that ignores the secondary
+   * button, which has nothing to swap to, and for a player who has turned it
+   * off in Preferences.
+   */
+  private get showsButtonToggle(): boolean {
+    return (
+      settings.showMouseButtonToggle && this.puzzle?.ignoresSecondaryButton === false
+    );
+  }
+
   protected override updated() {
     // The hint's slot is in the measure, so a puzzle arriving can change what
     // fits without the Bar changing size.
@@ -92,8 +111,11 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
     // Not laid out yet: there is nothing to fit against.
     if (extent === 0) return;
     const { rem } = windowSize.get();
-    this.roomy = this.along === "bottom" && extent >= 46 * rem;
-    const length = barLengthThatFits(this.entries, extent, rem, this.along);
+    const toggle = this.showsButtonToggle;
+    // The whole leading run at its roomy width, which the toggle adds a slot
+    // and a rule to.
+    this.roomy = this.along === "bottom" && extent >= (toggle ? 52 : 46) * rem;
+    const length = barLengthThatFits(this.entries, extent, rem, this.along, toggle);
     if (length !== this.length) {
       this.dispatchEvent(
         new CustomEvent("puzzle-bar-fit", {
@@ -118,16 +140,52 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
         <span part="caption">Menu</span>
       </button>
     `;
-    // The `Menu` button opens a panel and the other slots act on the board, so
-    // a rule sets it apart from them.
+    // The `Menu` button opens a panel, the button toggle is a mode, and the
+    // slots between them act on the board, so a rule sets each end apart. The
+    // toggle is at the end away from the Menu button.
     const rule = html`<span part="rule" aria-hidden="true"></span>`;
+    const toggle = this.showsButtonToggle ? this.renderButtonToggle() : nothing;
+    const withRule = (slot: unknown, ruleFirst: boolean) =>
+      slot === nothing ? nothing : ruleFirst ? [rule, slot] : [slot, rule];
+    const first = this.menuFirst ? menuButton : toggle;
+    const last = this.menuFirst ? toggle : menuButton;
     return html`
       <nav part="base" aria-label="Puzzle commands">
-        ${this.menuFirst ? [menuButton, rule] : nothing}
+        ${withRule(first, false)}
         ${bar.map((entry) => this.renderSlot(entry))}
-        ${this.menuFirst ? nothing : [rule, menuButton]}
+        ${withRule(last, true)}
       </nav>
     `;
+  }
+
+  /** The caption is the button a press is sent as now, so the slot reads as
+   * a state and a press on it as the swap. */
+  private renderButtonToggle() {
+    const now = this.swapButtons ? "right" : "left";
+    const next = this.swapButtons ? "left" : "right";
+    return html`
+      <button
+          part="slot swap"
+          type="button"
+          aria-label="A press on the board acts as the ${now} mouse button. Swap to the ${next}."
+          title="A press on the board acts as the ${now} mouse button"
+          ?data-swapped=${this.swapButtons}
+          @click=${this.handleButtonToggle}
+      >
+        <wa-icon name="mouse-${now}-button"></wa-icon>
+        <span part="caption">${this.swapButtons ? "Right" : "Left"}</span>
+      </button>
+    `;
+  }
+
+  private handleButtonToggle() {
+    this.dispatchEvent(
+      new CustomEvent("puzzle-swap-buttons", {
+        detail: { swap: !this.swapButtons },
+        bubbles: true,
+        composed: true,
+      }) satisfies SwapButtonsEvent,
+    );
   }
 
   /**
@@ -229,7 +287,8 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
           outline-offset: var(--wa-focus-ring-offset);
         }
 
-        &[aria-pressed="true"] {
+        &[aria-pressed="true"],
+        &[data-swapped] {
           background-color: var(--app-color-row-rule);
           border-color: var(--app-color-control-border);
         }
@@ -248,6 +307,7 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
       /* Under a modal Menu the other slots read as out of reach, which they
        * are, and the Menu button reads as the way back. */
       :host([menu-over]) [part="slot"],
+      :host([menu-over]) [part~="swap"],
       :host([menu-over]) [part~="hint"] {
         opacity: 0.4;
       }
@@ -298,6 +358,10 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
        * whether to take a hint is the player's choice. */
       :host([along="bottom"]) [part~="hint"] {
         flex: 1 1 0;
+        /* Room for the armed caption on two lines. Without the floor a full
+         * Bar squeezes this slot first, the caption takes three, and the Bar
+         * grows under the player's thumb. Another caption wraps instead. */
+        min-width: 4rem;
         max-width: 8rem;
       }
 

@@ -54,9 +54,9 @@ component's templates, the Playwright checks).
 | `view.ts` | `<puzzle-view>` | displays the puzzle and status bar; provides the on-screen canvas for the drawing API. Handles no input |
 | `view-interactive.ts` | `<puzzle-view-interactive>` | subclass of `<puzzle-view>` adding mouse, touch and keyboard handling |
 | `type-menu.ts` | `<puzzle-type-menu>` | the "Type" menu described in section 2.3 of the puzzles documentation |
-| `bar.ts` | `<puzzle-bar>` | the Bar: the commands every game has, as many of the command list's leading entries as fit, and the `Menu` button |
+| `bar.ts` | `<puzzle-bar>` | the Bar: the commands every game has, as many of the command list's leading entries as fit, the `Menu` button, and the left/right button toggle |
 | `menu.ts` | `<puzzle-menu>` | the Menu: every entry of the command list the Bar does not show. The only panel that scrolls |
-| `game-controls.ts` | `<puzzle-game-controls>` | the Game controls: what the game in play brings (keys, note toggle, button toggle, mark-all, Reference). Absent for a game that brings none |
+| `game-controls.ts` | `<puzzle-game-controls>` | the Game controls: what the game in play brings (keys, note toggle, mark-all, Reference). Absent for a game that brings none |
 | `keys.ts` | `<puzzle-keys>` | the virtual keys it is given, drawn as buttons that send each key's code |
 | `history.ts` | `<puzzle-history>` | the move counter, which opens the timeline and its checkpoints |
 | `timer.ts` | `<puzzle-timer>` | the solve timer, absent while it is off |

@@ -34,10 +34,11 @@ below on sight, from drawn alternatives.
   the window shape, as a board's orientation already does.
 - The window shape, not the width alone, chooses the default layout.
 
-Not in this change, and recorded in `design.md` as what follows it: the tap
-switch that swaps a press's primary and secondary action, named with each
-game's own two actions and on for everyone; and the Aids preferences that let a
-player remove the help they do not use.
+- The left-button and right-button toggle is one slot on the Bar, shown by
+  default, where it was a preference almost no player had found.
+
+Not in this change, and recorded in `design.md` as what follows it: the Aids
+preferences that let a player remove the help they do not use.
 
 ## Capabilities
 

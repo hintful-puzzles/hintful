@@ -84,17 +84,24 @@ Menu is in view under the pointer, and a press there closes it.
 ### Requirement: The Bar is the same in every game, and a game's own controls are together
 
 The Bar SHALL hold only commands every game has, so that a command keeps its
-slot from one game to the next. A game with no hint has no Hint slot; no other
-slot depends on the game.
+slot from one game to the next. A game with no hint has no Hint slot; no
+command's slot otherwise depends on the game.
+
+The Bar SHALL carry the button toggle: one slot, at the end away from the Menu
+button and set apart by a rule, whose caption says which mouse button a press
+on the board is sent as, and which swaps the two when pressed. It is a
+function every game shares, and so it is on the Bar and not in the Game
+controls. It SHALL be shown by default, and a player can turn it off in
+Preferences. It SHALL be absent in a game that ignores the secondary button,
+which has nothing to swap to. A swap SHALL NOT outlast the puzzle it was made
+in.
 
 Everything that depends on the game in play SHALL be in the Game controls
-panel and nowhere else, in this order in every game: its keys, the controls
-that change what a press means (the note toggle, the button toggle), and its
-own commands (Fill or Update marks, Reference). Each SHALL be present by what
+panel and nowhere else, in this order in every game: its keys, the note
+toggle, and its own commands (Fill or Update marks, Reference). Each SHALL be present by what
 the game is, so that no game is listed: the keys and the note toggle by the
 keys the game asks for, mark-all by `canMarkAll`, Reference by a `reference`
-hook. The button toggle SHALL be shown to a player who has asked for it in
-Preferences, in a game that has a secondary action to swap to. The Menu SHALL
+hook. The Menu SHALL
 hold nothing that depends on the game, apart from the game's name in the help
 row and the commands a game cannot run at all, which are absent. A game that
 brings none of these SHALL have no Game controls panel, and the board takes
@@ -121,9 +128,18 @@ A player does not know to look in a menu for something only one game has.
 
 #### Scenario: A game with nothing of its own
 
-- **WHEN** the screen renders for a game with no keys, no secondary action
-  shown as a toggle, no mark-all and no reference
+- **WHEN** the screen renders for a game with no keys, no mark-all and no
+  reference
 - **THEN** no Game controls panel is drawn
+
+#### Scenario: A run of second actions by tapping
+
+- **WHEN** a player in Tracks presses the Bar's button toggle, whose caption
+  is `Left`
+- **THEN** its caption is `Right`, no other slot of the Bar has moved, and a
+  tap on the board does what a right click does
+- **AND** in a game that ignores the secondary button the Bar has no such
+  slot
 
 ### Requirement: Only the Menu scrolls
 

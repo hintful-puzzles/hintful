@@ -275,7 +275,7 @@ class Settings {
   // — the filter, the badge and the warning dialog with it. Rows already stored
   // under these keys are harmless: nothing reads them.
 
-  @commonSetting({ default: false })
+  @commonSetting({ default: true })
   declare showMouseButtonToggle: boolean;
 
   @commonSetting({ default: true })

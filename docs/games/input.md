@@ -379,11 +379,15 @@ in the right one.
 - **Game controls**: what the game in play brings, in
   [`components/game-controls.ts`](../../src/puzzle/components/game-controls.ts).
   Its keys come from `requestKeys`, its note toggle from the key whose code is
-  `PENCIL_MODE_BUTTON`, mark-all from `canMarkAll`, Reference from a
-  `reference` hook, and the button toggle from the absence of
-  `ignoresSecondaryButton`. A game that brings none of them has no panel.
+  `PENCIL_MODE_BUTTON`, mark-all from `canMarkAll`, and Reference from a
+  `reference` hook. A game that brings none of them has no panel.
   Nothing a single game has belongs in the Menu: a player does not know to
   look there for it.
+- **A function every game shares is on the Bar, even where it is not a
+  command.** The left/right button toggle is one: a slot of the Bar's own, at
+  the end away from the `Menu` button, absent only in a game with
+  `ignoresSecondaryButton`. The Game controls are for what differs from game
+  to game.
 - **The status line and the hint's words are in no panel.** They sit under the
   board, so showing a hint moves no control.
 - **Only the Menu scrolls.** The Bar sheds trailing entries to the head of the

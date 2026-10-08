@@ -179,7 +179,7 @@ export function cutCommandList(
 
 /**
  * How many leading entries a Bar of `extent` shows: as many as fit beside the
- * `Menu` button, by the slot sizes its stylesheet lays out (`components/bar.ts`).
+ * `Menu` button and the button toggle, by the slot sizes its stylesheet lays out (`components/bar.ts`).
  * Along the bottom `extent` is its width and the hint's slot is double; down a
  * side it is its height and every slot is one tile.
  */
@@ -188,15 +188,20 @@ export function barLengthThatFits(
   extent: number,
   rem: number,
   along: "bottom" | "side",
+  buttonToggle: boolean,
 ): number {
   const capacity = barCapacity(list);
+  // The slots that are not entries: the `Menu` button, and the button toggle
+  // where the Bar shows one. Each has a rule beside it.
+  const fixed = buttonToggle ? 2 : 1;
   const needs = (length: number): number => {
-    // The last term of each is the Bar's padding and the rule beside the
-    // `Menu` button.
-    if (along === "side") return (length + 1) * 3.375 * rem + 0.625 * rem;
+    // The last term of each is the Bar's padding and the rules.
+    if (along === "side") {
+      return (length + fixed) * 3.375 * rem + (0.5 + fixed * 0.125) * rem;
+    }
     const hint = list.slice(0, length).some((entry) => entry.id === "hint") ? 1 : 0;
-    const slots = length + 1 + hint;
-    return slots * 4.25 * rem + length * 0.25 * rem + 1.25 * rem;
+    const slots = length + fixed + hint;
+    return slots * 4.25 * rem + length * 0.25 * rem + (0.5 + fixed * 0.75) * rem;
   };
   let length = Math.min(MIN_BAR_LENGTH, capacity);
   while (length < capacity && needs(length + 1) <= extent) length++;

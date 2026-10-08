@@ -9,9 +9,8 @@ import { assertNever } from "../engine/assert-never.ts";
 import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import { MIN_BAR_LENGTH } from "../puzzle/command-list.ts";
-import type { PuzzleBarFitEvent } from "../puzzle/components/bar.ts";
+import type { PuzzleBarFitEvent, SwapButtonsEvent } from "../puzzle/components/bar.ts";
 import type { PuzzleEvent } from "../puzzle/components/context.ts";
-import type { SwapButtonsEvent } from "../puzzle/components/game-controls.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
 import { dealNewGame } from "../puzzle/deal-actions.ts";
 import {
@@ -165,6 +164,9 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       this.autoSaveFilename = null;
       this.puzzleLoaded = false;
       this.referenceOpen = false; // a new puzzle type may have no reference
+      // A swap is for the game it was made in: a tap must not open the next
+      // one doing its second action.
+      this.swapMouseButtons = false;
       this.defaultHelpLabel = `${this.puzzleData.name} Help`;
     }
     // Crossing into another window shape, or losing the room to dock, switches
@@ -310,9 +312,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
 
         <puzzle-game-controls
             along=${choice.controls}
-            ?swap-buttons=${this.swapMouseButtons}
             ?reference-open=${this.referenceOpen}
-            @puzzle-swap-buttons=${this.handleSwapButtons}
             @click=${this.handleChromeClick}
         ></puzzle-game-controls>
 
@@ -322,6 +322,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
             ?menu-first=${choice.bar === "bottom" && controlsSide === "right"}
             ?menu-open=${menuOpen}
             ?menu-over=${menuOpen && !menuDocks}
+            ?swap-buttons=${this.swapMouseButtons}
+            @puzzle-swap-buttons=${this.handleSwapButtons}
             @puzzle-bar-fit=${this.handleBarFit}
             @puzzle-menu-toggle=${this.toggleMenu}
             @click=${this.handleChromeClick}

@@ -120,7 +120,7 @@ favor of the phone's shape at every size.
 - **Bar**: the same in every game. A game with no hint is the one exception,
   and it is a draft (`docs/doctrine.md`).
 - **Game controls**: everything the game in play brings. In this order in every
-  game: the keys, then the modes (the tap switch, Note), then the game's own
+  game: the keys, then the Note mode, then the game's own
   commands (Fill or Update marks, Reference). A game that brings none of them
   has no panel, and the board takes the room.
 - **Menu**: the same in every game.
@@ -181,19 +181,14 @@ played".
 
 ## What follows this change
 
-Each is a change of its own, on the owner's word. The tap switch is filed as
-`add-the-tap-switch` (the owner asked after it on the deployment, 2026-10-08);
-the Aids preferences are not filed.
+A change of its own, on the owner's word, and not filed.
 
-- **The tap switch.** A two-part switch in the Game controls naming the game's
-  own two actions (`Track | No track`, `Digit | Note`), on for everyone, kept
-  for the session and reset on leaving the puzzle. The games that use
-  `targetVerbs` already declare `primary` and `secondary` with a sentence each;
-  a short name beside the sentence is the same kind of declaration. The other
-  games need the two names declared as well. Until then the inherited
-  left-button and right-button toggle keeps its preference and moves into the
-  Game controls panel. `Game.ignoresSecondaryButton` already says which games
-  have no secondary action.
+The tap switch was the other thing listed here: a two-part switch naming each
+game's own two actions. The owner withdrew it on the deployment (2026-10-08):
+"no need to use words, here, I'm very happy with a shared toggle". What was
+built in its place is under "Decided while building", "The button toggle is
+one slot on the Bar".
+
 - **Aids preferences.** Four independent switches (Hints, Checking, Pencil-mark
   filling, Move timeline), where off means absent everywhere. Not modes, and
   not presets.
@@ -275,10 +270,21 @@ questions are first.
 - **The note toggle is the keypad's `Marks` key, drawn after the keys with its
   label.** It is a mode and not a character, so it is held to "every control
   carries a label". It has no pressed state, because the app is not told the
-  game's pencil mode; the tap switch that follows this change is where that
-  belongs.
-- **The button toggle carries the words `Left` and `Right`**, and is not shown
-  in a game with `ignoresSecondaryButton`, which has nothing to swap to.
+  game's pencil mode.
+- **The button toggle is one slot on the Bar, shown by default** (the owner,
+  on the deployment, 2026-10-08: "just one toggle button on the bottom bar,
+  always visible by default. In general, as I see it, only game-specific
+  inputs should be on the panel, whereas all common functions like this should
+  be on the bottom bar"). It was first built as a two-part `Left | Right`
+  control in the Game controls, behind the inherited preference, which was off.
+  The preference stays and its default is now on. The caption is the button a
+  press is sent as now, `Left` or `Right`. The slot is at the end of the Bar
+  away from the Menu button, with a rule of its own, and is not in the command
+  list: it is a mode, and the Menu has no row for it. It is absent in a game
+  with `ignoresSecondaryButton`, which has nothing to swap to, and a swap is
+  dropped on leaving the puzzle. It costs the Bar a slot: at 320px `Check &
+  save` wraps to two lines to keep the armed hint's caption on two, and a side
+  Bar in a 390px-high window sheds `New game` to the Menu.
 - **The reference panel is a region of the grid**: beside the board, beyond
   the Game controls, in a landscape window, and under the board in a tall one.
   A short landscape window now gets it beside the board, where it took 45% of

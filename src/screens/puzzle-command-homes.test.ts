@@ -397,8 +397,8 @@ describe("every puzzle command is in exactly one of the three panels", () => {
       ...(menu.shadowRoot?.querySelectorAll("[part=row]") ?? []),
       ...(controls.shadowRoot?.querySelectorAll("wa-button") ?? []),
     ].filter((el) => (el.textContent ?? "").trim() === "");
-    // Vacuity floor: seven Bar slots at the least.
-    expect(bar.shadowRoot?.querySelectorAll("button").length).toBe(7);
+    // Vacuity floor: six commands, the Menu button and the button toggle.
+    expect(bar.shadowRoot?.querySelectorAll("button").length).toBe(8);
     expect(unlabeled.map((el) => el.outerHTML)).toEqual([]);
   });
 });
@@ -478,30 +478,45 @@ describe("what a game brings is in the Game controls, and only there", () => {
   });
 
   it("draws no panel for a game that brings nothing", async () => {
-    // Cube has no keys, no mark-all and no reference; the button toggle is a
-    // preference, off unless a player asks for it.
+    // Cube has no keys, no mark-all and no reference. Tracks has a second
+    // action, and the toggle that reaches it is the Bar's.
     expect(await controlsOf("cube")).toEqual({ empty: true, keys: [], commands: [] });
     expect((await controlsOf("tracks")).empty).toBe(true);
   });
 
-  it("offers the button toggle only to a game with a secondary action", async () => {
-    settings.showMouseButtonToggle = true;
+  it("puts the button toggle on the Bar, only in a game with a secondary action", async () => {
+    const toggle = async (puzzle: FakePuzzle) =>
+      (await mountBar(puzzle, MIN_BAR_LENGTH)).shadowRoot?.querySelector(
+        '[part~="swap"]',
+      ) ?? null;
+    expect(puzzleFor("tracks")["ignoresSecondaryButton"]).toBe(false);
+    expect(settings.showMouseButtonToggle).toBe(true);
+    const shown = await toggle(puzzleFor("tracks"));
+    expect(shown?.textContent?.trim()).toBe("Left");
+
+    // A press asks the screen for the swap, and the caption follows the
+    // answer.
+    const bar = shown?.getRootNode() as ShadowRoot;
+    const asked: boolean[] = [];
+    bar.host.addEventListener("puzzle-swap-buttons", (event) =>
+      asked.push((event as CustomEvent<{ swap: boolean }>).detail.swap),
+    );
+    (shown as HTMLElement).click();
+    expect(asked).toEqual([true]);
+    (bar.host as PuzzleBar).swapButtons = true;
+    await (bar.host as PuzzleBar).updateComplete;
+    expect(bar.querySelector('[part~="swap"]')?.textContent?.trim()).toBe("Right");
+
+    // A game that ignores the secondary button has nothing to swap to.
+    expect(
+      await toggle(fullyCapablePuzzle({ ignoresSecondaryButton: true })),
+    ).toBeNull();
+    // And a player can turn it off.
+    settings.showMouseButtonToggle = false;
     try {
-      const toggle = async (puzzleId: string) =>
-        (await mountControls(puzzleFor(puzzleId))).shadowRoot?.querySelector(
-          "wa-radio-group",
-        ) !== null;
-      expect(puzzleFor("tracks")["ignoresSecondaryButton"]).toBe(false);
-      expect(await toggle("tracks")).toBe(true);
-      // A game that ignores the secondary button has nothing to swap to.
-      const ignoring = fullyCapablePuzzle({
-        ignoresSecondaryButton: true,
-        canMarkAll: false,
-        hasReference: false,
-      });
-      expect((await mountControls(ignoring)).empty).toBe(true);
+      expect(await toggle(puzzleFor("tracks"))).toBeNull();
     } finally {
-      settings.showMouseButtonToggle = false;
+      settings.showMouseButtonToggle = true;
     }
   });
 });
