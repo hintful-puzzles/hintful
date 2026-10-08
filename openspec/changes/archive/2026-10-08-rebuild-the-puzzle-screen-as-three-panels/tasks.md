@@ -36,4 +36,4 @@
 - [x] 7.1 Update `help/features.md` and every help page that names the rail, `More…` or a renamed command; `npm run gate` passes
 - [x] 7.2 Update `docs/games/input.md` and the README of `src/puzzle/` where they describe the chrome
 - [x] 7.3 Re-read every `app-shell` requirement that names the rail's "Your position" group or the More sheet against the code, and amend the delta
-- [ ] 7.4 Run the app at desktop, tablet, phone and landscape-phone sizes, by mouse, keyboard and touch, in both color schemes; ask the owner to accept on the deployment
+- [x] 7.4 Run the app at desktop, tablet, phone and landscape-phone sizes, by mouse, keyboard and touch, in both color schemes; ask the owner to accept on the deployment

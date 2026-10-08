@@ -27,8 +27,8 @@ controls ("The on-screen key panel never takes keyboard focus"): the character
 is what they carry.
 
 A control in the Bar or the Game controls SHALL draw its icon above its
-caption, the same shape for every one of them, Hint included. A caption SHALL
-name an action.
+caption, the same shape for every one of them, Hint included. A command's
+caption SHALL name an action, and a mode's caption SHALL name the mode.
 
 The Bar SHALL NOT draw the key that runs a command: a slot's tooltip carries
 it, with the command's full name. A Menu row SHALL write the key beside the
