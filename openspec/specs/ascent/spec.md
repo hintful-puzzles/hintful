@@ -477,37 +477,6 @@ A tap otherwise places only the number before or after a highlighted one, beside
 - **WHEN** the player taps an empty square, presses the keypad digits of a number missing from the board, presses a wrong digit and Clear, and taps another square
 - **THEN** the square holds that number
 
-### Requirement: Ascent's rulesets are Ascent and Edges
-
-Ascent SHALL declare two rulesets: Ascent, played on any of its four grids, and Edges, played on the Rectangle. The Custom dialog SHALL ask for the ruleset and the grid type as separate fields, the grid type offering the four grids and not Edges. The params encoding SHALL be unchanged: one mode letter, `E` for Edges.
-
-Edges SHALL declare what it offers (`Ruleset.only`): the Rectangle alone of the grid types, symmetrical clues off, and the tiers from Normal up. Ascent's params SHALL hold no value for Edges on another grid, and `validateParams` SHALL write no refusal for any of the three.
-
-The Type menu SHALL hold a section for each ruleset. It SHALL offer one size of each hexagonal shape, Normal to Hard, in the Ascent section; other sizes are Custom's.
-
-#### Scenario: Edges has its own section
-
-- **WHEN** the player opens Ascent's Type menu
-- **THEN** the Edges presets are in an "Edges" section of their own, and every
-  other preset is in the "Ascent" section
-
-#### Scenario: Edges is chosen with the Hexagon selected
-
-- **WHEN** the player selects the grid type Hexagon and then the game mode Edges
-- **THEN** the grid type is shown disabled at Rectangle, and OK deals an Edges
-  board
-
-#### Scenario: Edges is asked for on the Hexagon
-
-- **WHEN** the dialog's values are submitted, by something other than its form, with the game mode Edges and the
-  grid type Hexagon
-- **THEN** it is refused: "Grid type must be Rectangle for Edges."
-
-#### Scenario: A game ID from before the split
-
-- **WHEN** a params string with the mode letter `E`, `H` or any other is decoded
-- **THEN** it names the board it always did
-
 ### Requirement: Ascent draws its cells on a quiet surface and lifts a given
 
 `redraw` SHALL draw every cell the player fills on the collection's cell
@@ -548,3 +517,40 @@ target SHALL each replace the cell's surface as before.
 - **WHEN** a number is typed next to its neighbor in the sequence
 - **THEN** the preview of the line joining them is drawn in the color of the
   board's own path, which is neither surface's
+
+### Requirement: Ascent's rulesets are told apart by a square's neighbors
+
+Ascent SHALL declare four rulesets, in this order: Orthogonal (four neighbors, mode letter `O`), Hex (six, `H` and `C`), Classic (eight, `R`) and Edges (eight, with arrows round the grid, `E`). The Custom dialog SHALL ask for the ruleset and the board's shape as separate fields, the shape offering Rectangle, Honeycomb and Hexagon. The params encoding SHALL be unchanged: one mode letter, and a string that names no mode SHALL decode as Classic.
+
+Each ruleset SHALL declare what it offers (`Ruleset.only`): Hex the Honeycomb and the Hexagon, and every other ruleset the Rectangle alone; Edges also symmetrical clues off and the tiers from Normal up. `validateParams` SHALL write no refusal for any of these.
+
+The Type menu SHALL hold a section for each ruleset, each offering one board: Orthogonal, Hex's Honeycomb and Classic at every tier, Edges from Normal up, and Hex's Hexagon from Normal up beside the Honeycomb. Other sizes are Custom's. The game's default SHALL be the menu's first line.
+
+#### Scenario: The menu's sections
+
+- **WHEN** the player opens Ascent's Type menu
+- **THEN** its sections are Orthogonal, Hex, Classic and Edges, in that order, and the Hex section holds a Honeycomb board at every tier and a Hexagon board from Normal to Hard
+
+#### Scenario: Hex is chosen in the dialog
+
+- **WHEN** the player selects the game mode Hex on a Rectangle board
+- **THEN** the board shape offers Honeycomb and Hexagon with Honeycomb chosen, and OK deals a Hex board
+
+#### Scenario: A ruleset is asked for on a shape it does not have
+
+- **WHEN** the dialog's values are submitted, by something other than its form, with the game mode Edges and the board shape Hexagon
+- **THEN** it is refused: "Board shape must be Rectangle for Edges."
+
+#### Scenario: A game ID from before the rulesets were split
+
+- **WHEN** a params string with any mode letter, or with none, is decoded
+- **THEN** it names the board it always did
+
+### Requirement: A square's corners are cut where the path may step diagonally
+
+On a Rectangle board whose ruleset lets the path step diagonally (Classic and Edges), `redraw` SHALL draw each square of the grid with its corners cut off, the board showing in the gap, and a hint's ring or outline round such a square SHALL follow the cut. On an Orthogonal board a square SHALL be drawn whole. An edge number's arrow is not a square of the grid and SHALL be drawn as before.
+
+#### Scenario: The two square boards are told apart
+
+- **WHEN** a Classic board and an Orthogonal board of one size are drawn
+- **THEN** every cell outline of the Classic board has eight sides and every one of the Orthogonal board four
