@@ -103,12 +103,16 @@ into shorter ones. That is the smaller change first proposed. It makes a
 
 | What leaves a requirement | Where it goes |
 | --- | --- |
+| A reason that can be checked | A guard, or a declaration the engine consumes, in place of the prose |
 | A reason, a trap or a worked case a session needs | The guide for that part of the tree, if it is not already there |
 | How the decision was reached, and what was tried | Nowhere: the archive already has it |
 | A count or a measured figure | Deleted. The query, if one exists, is in the guide |
 | The case against a refused alternative | `docs/doctrine.md` or the guide, in a sentence |
 
 ### Decision 3: requirements are merged by subject
+
+This and Decision 4 describe the reference form. Where the owner's answer
+gives a group the other form, the table in "The two forms" replaces them.
 
 - **A game's spec follows one skeleton**, the sections of the `Game` contract
   the game implements: its rules and description format, input, generation and
@@ -174,21 +178,79 @@ Ascent's spec. It yields the bounds, a measured ratio, and a before and after
 the owner can read. Then the engine, the other capabilities, and the games in
 batches. Each stage is a commit and leaves the tree valid.
 
+## The question that decides the form: what are the specs used for
+
+The owner's question (2026-10-08): are the specs a resource a session works
+from, or a by-product of tracking the work? The cleanup helps either way, and
+what is left in a spec differs by the answer. It is not answered yet.
+
+**Settled in either case** (owner, 2026-10-08): the main reasoning moves out
+of the specs into the guides, and where it can, into a form a machine checks.
+Decisions 1 and 2 stand on that. What it adds to them: before a reason is
+moved as prose, ask whether it can be a check, or a declaration the engine
+consumes, and a requirement that a guard holds names the guard by a reference
+the gate resolves.
+
+### What the repository shows about use
+
+Measured 2026-10-08, by a parse of every delta in the archive and a search of
+`src/`, `docs/` and `scripts/` for the first 40 characters of each
+requirement's title. The search misses a citation that paraphrases its title.
+
+| | Requirements | Cited by title outside `openspec/` |
+| --- | --- | --- |
+| The engine | 222 | 25 |
+| The games | 548 | 3 |
+| The rest | 154 | 27 |
+
+- **Nothing consumes a spec.** No test and no build step reads a requirement's
+  text. Three checks read the directory, for a capability's name and for
+  spelling.
+- **A session does read a requirement in order to change it.** Of the
+  requirements the archive's deltas carry, 1,075 were `ADDED`, 653 `MODIFIED`
+  and 147 `REMOVED`. Until August nearly all were additions; in September and
+  October modifications and additions run about level.
+- **The guides lean on the engine's and the repository's specs** and almost
+  never on a game's: `openspec/specs/` is named 44 times in `docs/` and once in
+  `src/`.
+
+Read together: the engine's and the repository's specs are used a little as a
+reference and are written as one; a game's spec is used by nothing but the
+next change to that game.
+
+### The two forms
+
+| | A reference | A by-product of the work |
+| --- | --- | --- |
+| What a spec is for | Read whole before touching that part of the tree | The delta says what a change set out to make true; the main spec is what is left when the changes are added up |
+| What stays | Every rule, stated once, merged by subject | Only a rule nothing else holds: no type, no guard, no declaration and no guide states it |
+| What goes | Reasons, history, figures | Those, and every rule a guard or a type already enforces, with the ledger naming which |
+| Scenarios | Kept where they add a case | Kept only where no test is the case |
+| How it is kept | A size bound, and the guides point to it | A size bound, and a change with no rule of that kind sets `skip_specs` |
+| The work | A rewrite of 924 requirements | Mostly deletion against a ledger, and a far smaller result |
+| What it risks | A second copy of what the guards say, which must be kept true by hand | A decision that lived only in a spec is cut as "held elsewhere" when it was not |
+
+**Recommended: the answer differs by group.** The engine's and the
+repository's specs become a reference, since a porter and a session changing
+the shared layer have rules to learn that are spread over many guards. A
+game's spec becomes the by-product form, since the game's code, its tests and
+its help page already say what it does and nothing reads the spec. That is a
+recommendation from the citation counts above and not from watching a session
+work, which the repository cannot show.
+
+The pilot is built to inform the answer: task 1.3 sorts each rule of the two
+pilot capabilities by what already holds it, and Ascent is rewritten in both
+forms.
+
 ## Decisions the owner is asked to confirm
 
-Each has a recommendation. None blocks the pilot's first task, the census.
-
-1. **Reasons move out of the specs** (Decision 1 and 2). A requirement stops
-   explaining itself at length; the guide does. Recommended. The cost is that a
-   spec alone no longer argues for its rules.
-2. **How far a game's spec is cut** (Decision 3). Recommended: the skeleton,
-   keeping every rule. The further option is to keep only what a game decides
-   differently from the collection's conventions and from upstream, on the
-   ground that the rest is read from the game's code and help page. The pilot
-   shows both for Ascent.
-3. **The target.** From one sample, the first requirement of
-   `engine-difficulty`, the rules are about a third of the lines. That is an
-   estimate from a single requirement and the pilot replaces it.
+1. **What the specs are for**, by group (the section above). It decides
+   Decision 3 and 4 and the size of the work, so nothing past the pilot starts
+   without it.
+2. **The target.** From one sample, the first requirement of
+   `engine-difficulty`, the rules are about a third of the lines in the
+   reference form. That is an estimate from a single requirement and the pilot
+   replaces it, for both forms.
 
 ## Risks / Trade-offs
 

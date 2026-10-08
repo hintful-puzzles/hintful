@@ -4,8 +4,15 @@
 same day: the specs have "too many lines, many of which could possibly be
 combined or otherwise integrated, to make it more useful as a resource, rather
 than just being a write-only journal". The owner asked for it to be filed and
-not yet done. Three decisions in `design.md` § "Decisions the owner is asked to
-confirm" wait for their word before any spec is rewritten.
+not yet done.
+
+**The open question, which decides the form** (owner, 2026-10-08): are the
+specs a resource a session works from, or a by-product of tracking the work?
+Reasons leave the specs for the guides in either case, into a checkable form
+where they can. What stays in a spec depends on the answer: every rule, stated
+once, or only a rule nothing else holds. The evidence, the two forms and a
+recommendation that differs by group are in `design.md` § "The question that
+decides the form". "What Changes" below describes the reference form.
 
 ## Why
 

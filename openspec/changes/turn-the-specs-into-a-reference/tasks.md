@@ -4,9 +4,17 @@
       per capability, its lines, requirements, body and scenario lines, and the
       shapes `proposal.md` § "Why" counts. Verify it reproduces that table, or
       correct the table.
-- [ ] 1.2 The owner's answers to `design.md` § "Decisions the owner is asked to
-      confirm", recorded in `design.md`. Nothing in § 3 onward starts before
-      them.
+- [ ] 1.2 Put the use measurements beside it: the archive's deltas by verb and
+      month, and the requirements cited by title outside `openspec/`. Verify
+      it reproduces `design.md` § "What the repository shows about use", or
+      correct that section.
+- [ ] 1.3 Sort every rule of `engine-difficulty` and of Ascent's spec by what
+      already holds it: a type, a guard, a declaration the engine consumes, a
+      guide, or nothing but the spec. Record the counts in `design.md`; they
+      say how much the by-product form would cut, and what it would risk.
+- [ ] 1.4 The owner's answers to `design.md` § "Decisions the owner is asked to
+      confirm", recorded in `design.md`, after 2.6. Nothing in § 3 onward
+      starts before them.
 
 ## 2. The pilot
 
@@ -17,15 +25,16 @@
 - [ ] 2.2 Rewrite `engine-difficulty` with its ledger. Verify: the checker
       passes, the `SHALL` count is accounted for, and `openspec validate
       --specs --strict` passes.
-- [ ] 2.3 Rewrite Ascent's spec twice, in the two forms of the owner's second
-      decision, each with a ledger. Verify as 2.2.
+- [ ] 2.3 Rewrite Ascent's spec twice, in the two forms of `design.md` § "The
+      two forms", each with a ledger. Verify as 2.2.
 - [ ] 2.4 Two fresh-context reviews of each pilot spec: one with old, new and
       ledger, hunting a lost rule; one with the new spec alone, answering
       questions drawn from the old. Record what each found in `design.md`.
 - [ ] 2.5 Set the bounds for a requirement and a capability from the pilot, and
       record the measured ratio in `design.md` in place of the estimate.
 - [ ] 2.6 Show the owner the pilot: both capabilities before and after, opened
-      in the preview. Their word on the form settles the game specs' shape.
+      in the preview, with the counts from 1.3. Their word on what the specs
+      are for, by group, settles the form of everything after.
 
 ## 3. What keeps it
 
@@ -59,7 +68,7 @@
 ## 6. The games
 
 - [ ] 6.1 The 57 game specs, in batches of about ten, in the form the owner
-      chose. Each spec has a ledger and the first review; one spec a batch
+      chose for them. Each spec has a ledger and the first review; one spec a batch
       gets the second. Verify as 2.2 per batch.
 - [ ] 6.2 The guide for porting a game says what a game's spec holds. Verify
       the section exists and the scaffolding script's spec skeleton matches.
