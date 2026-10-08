@@ -51,6 +51,8 @@ import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label
 import { paramsError } from "./params.ts";
 import {
   cancelDrags,
+  isMouseDown,
+  isMouseDrag,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
@@ -58,9 +60,11 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
+  stripModifiers,
 } from "./pointer.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
+import { endSweep, sweepContinues, sweepPending } from "./target-verb.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -293,6 +297,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** Parallel to `history`: `moveLog[i]` turns `history[i]` into
    * `history[i+1]`, so `moveLog.length === history.length - 1`. */
   private moveLog: (Move | Restart)[] = [];
+  /** Parallel to `moveLog`: whether the entry carries on a drag the entry
+   * before it began (`target-verb.ts`, the sweep), so Undo and Redo cross the
+   * two together. Not saved: a reloaded game undoes such a drag a mark at a
+   * time. */
+  private joined: boolean[] = [];
   private pos = 0;
   /** The board this one replaced, which Undo at this board's first position
    * brings back. One deep, never serialized, and dropped at the first move
@@ -649,6 +658,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.aux = aux;
     this.history = [initial];
     this.moveLog = [];
+    this.joined = [];
     this.pos = 0;
     this.replaced = this.keep(left);
     this.undone = null;
@@ -707,11 +717,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** Make `next` the step after the cursor, reached by `entry`. A step made
    * after an undo drops what was ahead of it, and any step made on this board
    * drops the board kept from before it and the one kept from after. */
-  private record(next: State, entry: Move | Restart): void {
+  private record(next: State, entry: Move | Restart, joins = false): void {
     this.history = this.history.slice(0, this.pos + 1);
     this.moveLog = this.moveLog.slice(0, this.pos);
+    this.joined = this.joined.slice(0, this.pos);
     this.history.push(next);
     this.moveLog.push(entry);
+    this.joined.push(joins);
     this.pos = this.history.length - 1;
     this.replaced = null;
     this.undone = null;
@@ -784,6 +796,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // non-null `ds` true rather than merely usually-true.
     if (this.drawState === null) return false;
 
+    // A press opens its own drag or none: one left open by a release the
+    // game never saw (the pointer left the canvas) ends here.
+    const pointer = stripModifiers(button);
+    if (isMouseDown(pointer)) endSweep(this.ui);
+
     const move = this.game.interpretMove(
       this.state,
       this.ui,
@@ -791,6 +808,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       { x, y },
       button,
     );
+    // Only a drag event carries a drag on; anything else but its press ends it.
+    const dragging = isMouseDrag(pointer);
+    const joins = dragging && sweepContinues(this.ui);
+    if (!dragging && !isMouseDown(pointer)) endSweep(this.ui);
     if (move === null) return false;
     if (move === UI_UPDATE) {
       // UI/cursor changed in place: redraw + notify, no history entry,
@@ -844,7 +865,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
             : this.currentHintStep?.continuesPrevious === true;
       }
     }
-    return this.commitMove(next, move);
+    // A drag's later marks join its first in the history, and one pointer
+    // event can pass over several targets: ask again until it has no more.
+    this.commitMove(next, move, joins);
+    if (dragging && sweepPending(this.ui)) this.processInput(x, y, button);
+    return true;
   }
 
   private applyMove(move: Move): boolean {
@@ -856,7 +881,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * classify/re-validate the hint plan against `next` *before* the
    * commit's redraw paints, keeping the displayed step in sync with the
    * frame. */
-  private commitMove(next: State, move: Move): boolean {
+  private commitMove(next: State, move: Move, joins = false): boolean {
     // Check BEFORE touching history. A game whose `switch` is exhaustive over
     // its move union has no `default` arm, so a move *typed* right and *valued*
     // wrong (an unknown `type` replayed from another build's save, cast rather
@@ -871,7 +896,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       );
     }
     const prev = this.state;
-    this.record(next, move);
+    this.record(next, move, joins);
     this.stateReplaced(prev, next);
     this.setupAnimation(prev, next, 1);
     this.afterTransition();
@@ -888,15 +913,22 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   undo(): void {
-    if (this.pos > 0) this.step(-1);
+    if (this.pos > 0) {
+      // A drag's marks come off together: on past each entry that joined
+      // the one before it.
+      do this.step(-1);
+      while (this.pos > 0 && this.joined[this.pos]);
+    }
     // The board undone from is one Redo away, at the position it was left in.
     else if (this.replaced !== null)
       this.returnTo(this.replaced, null, this.boardLeft());
   }
 
   redo(): void {
-    if (this.pos < this.history.length - 1) this.step(1);
-    else if (this.undone !== null) this.returnTo(this.undone, this.boardLeft(), null);
+    if (this.pos < this.history.length - 1) {
+      do this.step(1);
+      while (this.pos < this.history.length - 1 && this.joined[this.pos]);
+    } else if (this.undone !== null) this.returnTo(this.undone, this.boardLeft(), null);
   }
 
   /** Move the cursor one step along the history. */

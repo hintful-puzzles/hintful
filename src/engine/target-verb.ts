@@ -40,6 +40,8 @@ import {
   type GridCursor,
   isCursorMove,
   isMouseDown,
+  isMouseDrag,
+  isMouseRelease,
   LEFT_BUTTON,
   LEFT_RELEASE,
   moveCursor,
@@ -119,9 +121,40 @@ export interface TargetGeometry<State, Ui, DrawState, Target> {
   moveCursor(state: State, ui: Ui, button: number): boolean;
 }
 
+/**
+ * **A drag repeats the press.** The press does what a click does; each further
+ * target the pointer passes over that holds what the pressed one held gets the
+ * same verb, so a drag paints one result and never toggles its way along a
+ * row. A game declares it by saying what a target holds; the model owns the
+ * rest, and the midend makes the whole drag one step of Undo.
+ *
+ * Not for a verb that is a move and not a mark (a rotation, a slide), which
+ * leaves `buttons` without that button, or declares no sweep at all.
+ */
+export interface Sweep<State, DrawState, Target> {
+  /** What `target` holds, as a value `===` compares: the drag carries on to
+   * the targets whose value is the pressed one's before its press. */
+  holds(state: State, target: Target): string | number;
+  /** The buttons whose verb a drag repeats; both, where absent. */
+  readonly buttons?: readonly VerbButton[];
+  /** Whether a drag begun on `first` carries on to `next`; to any target,
+   * where absent. Tracks' drag from an edge takes edges and no square. */
+  reaches?(state: State, first: Target, next: Target): boolean;
+  /** How near `geometry.pointAt(target)` the pointer has to pass, in pixels,
+   * for the drag to take `target`; anywhere in its catchment, where absent.
+   * An edge's catchment meets its neighbors' at every corner, so a drag
+   * along a line of edges takes each one near its middle only. */
+  within?(ds: DrawState): number;
+  /** The Controls paragraph's sentence about the drag, where the default
+   * ("Keep the button down and drag …") would not describe it. */
+  readonly says?: string;
+}
+
 /** A game's whole target-verb input: its geometry and the verbs by button. */
 export interface TargetVerbs<State, Ui, DrawState, Target, Move> {
   readonly geometry: TargetGeometry<State, Ui, DrawState, Target>;
+  /** What a drag on from a press repeats; nothing, where absent. */
+  readonly sweep?: Sweep<State, DrawState, Target>;
   /** The left button, and Enter at the cursor. */
   readonly primary: TargetVerb<State, Ui, Target, Move>;
   /** The right button, and Space at the cursor. A game without one takes
@@ -245,6 +278,191 @@ export function pressTarget<S, U extends TargetVerbUi, D, T, M>(
   ui.cursor.visible = false;
 }
 
+// --- the sweep ----------------------------------------------------------
+
+/** A drag in progress. Kept beside the `Ui` and not in it: it is the model's,
+ * it lives from a press to its release, and a game's `Ui` is where the player
+ * is and nothing else. */
+interface SweepInProgress {
+  readonly button: VerbButton;
+  readonly first: unknown;
+  readonly held: string | number;
+  /** Whether the pressed target's own verb has been applied: at once for a
+   * game that acts on the press, and when the drag reaches a second target
+   * for one whose click acts on the release. */
+  applied: boolean;
+  /** The moves this drag has made. */
+  made: number;
+  /** Where the pointer last was, so a fast drag takes what it passed over. */
+  last: Point;
+  /** Targets passed over and not yet tried, oldest first. */
+  queue: unknown[];
+}
+
+const sweeps = new WeakMap<object, SweepInProgress>();
+
+/** How far apart, in pixels, the points a drag is sampled at between two
+ * pointer events. Smaller than any catchment a drag could step over. */
+const SWEEP_SAMPLE_PX = 3;
+
+const sameTarget = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+const slotOf = (button: number): VerbButton | null =>
+  button === LEFT_BUTTON || button === LEFT_RELEASE
+    ? "primary"
+    : button === RIGHT_BUTTON || button === RIGHT_RELEASE
+      ? "secondary"
+      : null;
+
+/**
+ * Open a drag on `target`, pressed with `button` at `at`: for a game whose own
+ * arm takes the press. `applied` says whether the press has already made the
+ * verb's move there; where it has not (the click acts on the release), the
+ * drag makes it when it reaches a second target. Ends any drag still open,
+ * and opens none where the game declares no sweep for the button.
+ */
+export function beginSweep<S, U extends object, D, T, M>(
+  verbs: Verbs<S, U, D, T, M>,
+  state: S,
+  ui: U,
+  target: T,
+  button: number,
+  at: Point,
+  applied: boolean,
+): void {
+  sweeps.delete(ui);
+  const slot = slotOf(button);
+  const sweep = verbs.sweep;
+  if (!sweep || slot === null || !verbs[slot]) return;
+  if (sweep.buttons && !sweep.buttons.includes(slot)) return;
+  sweeps.set(ui, {
+    button: slot,
+    first: target,
+    held: sweep.holds(state, target),
+    applied,
+    made: applied ? 1 : 0,
+    last: at,
+    queue: [],
+  });
+}
+
+/** End the drag, if one is open: `true` when it made a move, so a game whose
+ * click acts on the release knows the release is not a click. */
+export function endSweep(ui: unknown): boolean {
+  const made = (sweepOf(ui)?.made ?? 0) > 0;
+  if (typeof ui === "object" && ui !== null) sweeps.delete(ui);
+  return made;
+}
+
+/** The drag open on `ui`, which the midend holds as a value of any type. */
+const sweepOf = (ui: unknown): SweepInProgress | null =>
+  typeof ui === "object" && ui !== null ? (sweeps.get(ui) ?? null) : null;
+
+/** Whether a drag is open on `ui`. */
+export function sweepOpen(ui: unknown): boolean {
+  return sweepOf(ui) !== null;
+}
+
+/** Whether the drag has passed over targets it has not tried yet: the midend
+ * asks again with the same event until it has not. */
+export function sweepPending(ui: unknown): boolean {
+  return (sweepOf(ui)?.queue.length ?? 0) > 0;
+}
+
+/** Whether the move the drag just made carries on from an earlier one of the
+ * same drag, which the midend undoes with it. */
+export function sweepContinues(ui: unknown): boolean {
+  return (sweepOf(ui)?.made ?? 0) > 1;
+}
+
+/**
+ * The drag's next move as the pointer reaches `p`, or `null` when it passed
+ * over nothing the drag takes. One move a call: what else it passed over
+ * waits in the queue ({@link sweepPending}).
+ */
+export function sweepTo<S, U extends object, D, T, M>(
+  verbs: Verbs<S, U, D, T, M>,
+  state: S,
+  ui: U,
+  ds: D,
+  p: Point,
+): M | null {
+  const sw = sweeps.get(ui);
+  const sweep = verbs.sweep;
+  if (!sw || !sweep) return null;
+  const verb = verbs[sw.button];
+  if (!verb) return null;
+  const { geometry } = verbs;
+  const first = sw.first as T;
+
+  // A pointer that leaves the canvas is reported as a drag far off its top
+  // left corner. That is no place the player dragged to, and the line there
+  // from the last position would cross the board marking as it went.
+  if (p.x < 0 || p.y < 0) return null;
+
+  // Every target between the last pointer position and this one.
+  const reach = sweep.within?.(ds);
+  const dx = p.x - sw.last.x;
+  const dy = p.y - sw.last.y;
+  const steps = Math.max(1, Math.ceil(Math.hypot(dx, dy) / SWEEP_SAMPLE_PX));
+  for (let i = 1; i <= steps; i++) {
+    const q = { x: sw.last.x + (dx * i) / steps, y: sw.last.y + (dy * i) / steps };
+    const t = geometry.pointerTarget(state, ds, q, ui);
+    if (t === null) continue;
+    if (reach !== undefined) {
+      const mid = geometry.pointAt(state, ds, t, ui);
+      if (Math.hypot(q.x - mid.x, q.y - mid.y) > reach) continue;
+    }
+    if (!sameTarget(t, sw.queue.at(-1))) sw.queue.push(t);
+  }
+  sw.last = p;
+
+  while (sw.queue.length > 0) {
+    const t = sw.queue[0] as T;
+    const takes =
+      !sameTarget(t, first) &&
+      (sweep.reaches?.(state, first, t) ?? true) &&
+      sweep.holds(state, t) === sw.held;
+    if (!takes) {
+      sw.queue.shift();
+      continue;
+    }
+    // The pressed target first, where its press did not act: `t` stays
+    // queued behind it.
+    const at = sw.applied ? t : first;
+    if (sw.applied) sw.queue.shift();
+    else sw.applied = true;
+    const move = verb.apply(state, at, ui);
+    if (move === null || move === UI_UPDATE) {
+      if (at !== first) continue;
+      // Nothing to repeat where the pressed target itself takes nothing.
+      sweeps.delete(ui);
+      return null;
+    }
+    geometry.parkCursor(ui, at);
+    sw.made++;
+    return move;
+  }
+  return null;
+}
+
+/** The Controls paragraph's sentence about the drag. */
+function sweepWords<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): string {
+  const sweep = verbs.sweep;
+  if (!sweep) return "";
+  if (sweep.says !== undefined) return ` ${sweep.says}`;
+  const both = !sweep.buttons || (sweep.buttons.length === 2 && verbs.secondary);
+  const which = both
+    ? "Keep the button down"
+    : sweep.buttons?.[0] === "primary"
+      ? "Keep the left button down"
+      : "Keep the right button down";
+  return (
+    ` ${which} and drag to do the same to every ${verbs.geometry.noun} ` +
+    `you pass over that looked the same as the first.`
+  );
+}
+
 /** The verb a key applies at the cursor. */
 function keyVerb<S, U, D, T, M>(v: Verbs<S, U, D, T, M>, button: number) {
   if (button === CURSOR_SELECT) return v.primary;
@@ -278,7 +496,18 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
     // shown one makes a press that applies nothing worth a repaint.
     const wasShown = ui.cursor.visible;
     pressTarget(verbs, ui, target);
-    return pressed.apply(state, target, ui) ?? (wasShown ? UI_UPDATE : null);
+    const made = pressed.apply(state, target, ui);
+    // A drag carries on from a press that marked something.
+    if (made !== null && made !== UI_UPDATE)
+      beginSweep(verbs, state, ui, target, button, p, true);
+    else sweeps.delete(ui);
+    return made ?? (wasShown ? UI_UPDATE : null);
+  }
+
+  if (isMouseDrag(button)) return sweepTo(verbs, state, ui, ds, p);
+  if (isMouseRelease(button)) {
+    sweeps.delete(ui);
+    return null;
   }
 
   if (isCursorMove(button))
@@ -464,7 +693,7 @@ export function controlsMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): st
     )
     .join("");
   return (
-    `${pointer.join(" ")}\n\n` +
+    `${pointer.join(" ")}${sweepWords(verbs)}\n\n` +
     `With the keyboard, the arrow keys move a cursor around the grid. ` +
     `${keyboard}${keyOnly}`
   );

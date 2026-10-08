@@ -4,7 +4,12 @@ import { token } from "./color/color-token.ts";
 import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
 import { DESC_MALFORMED } from "./desc-error.ts";
 import { dealGaveUp, difficultyItem } from "./difficulty.ts";
-import { type FakeDrawState, fakeGame } from "./fake-game.ts";
+import {
+  type FakeDrawState,
+  type FakeMove,
+  type FakeState,
+  fakeGame,
+} from "./fake-game.ts";
 import type { Game } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
 import { click, drag, key } from "./hint-gesture.ts";
@@ -16,13 +21,20 @@ import {
   NO_MOVE_WORTH_MAKING,
 } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
-import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON } from "./pointer.ts";
+import {
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  newCursor,
+  RIGHT_BUTTON,
+} from "./pointer.ts";
 import { RetryLimitExceeded } from "./retry-limit.ts";
 import { decodeSave, encodeSave } from "./save.ts";
+import { interpretTargetVerbs, squareGrid, type TargetVerbs } from "./target-verb.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
-import type { ChangeNotification, Color } from "./types.ts";
+import type { ChangeNotification, Color, Point } from "./types.ts";
 
 function recordingDrawing() {
   const dr = new RecordingDrawing(fakeGame.colors(DEFAULT_BACKGROUND));
@@ -322,6 +334,52 @@ describe("Midend moves / undo / redo", () => {
     h.m.processInput(0, 0, LEFT_BUTTON);
     h.m.redo();
     expect(h.state()).toMatchObject({ currentMove: 1, totalMoves: 1 });
+  });
+
+  it("a drag's moves are one step of Undo and of Redo, and a click beside it its own", () => {
+    // The fake counts presses; here each square of a row is a target whose
+    // verb counts one, and every square holds the same thing, so a drag
+    // across squares counts one a square.
+    const verbs: TargetVerbs<FakeState, SweepUi, FakeDrawState, Point, FakeMove> = {
+      geometry: squareGrid({ size: () => ({ w: 20, h: 1 }), border: () => 0 }),
+      primary: { does: "count it", apply: () => "inc" },
+      sweep: { holds: () => 0 },
+    };
+    type SweepUi = { cursor: ReturnType<typeof newCursor> };
+    const game = {
+      ...fakeGame,
+      newUi: (): SweepUi => ({ cursor: newCursor() }),
+      interpretMove: (
+        s: FakeState,
+        ui: SweepUi,
+        ds: FakeDrawState,
+        p: Point,
+        button: number,
+      ) => interpretTargetVerbs(verbs, s, ui, ds, p, button),
+    } as unknown as typeof fakeGame;
+    h = harness(game);
+    h.m.newGame();
+    const tile = fakeGame.preferredTileSize ?? 32;
+    const at = (square: number) => square * tile + tile / 2;
+
+    h.m.processInput(at(0), 5, LEFT_BUTTON);
+    h.m.processInput(at(0), 5, LEFT_RELEASE);
+    h.m.processInput(at(2), 5, LEFT_BUTTON);
+    h.m.processInput(at(3), 5, LEFT_DRAG);
+    // One event that passed over squares 3, 4 and 5 makes a move for each:
+    // a square here never stops holding what the pressed one held, so 3
+    // counts again.
+    h.m.processInput(at(5), 5, LEFT_DRAG);
+    h.m.processInput(at(5), 5, LEFT_RELEASE);
+    expect(h.m.formatAsText()).toBe("count=6");
+
+    h.m.undo();
+    expect(h.m.formatAsText()).toBe("count=1");
+    h.m.redo();
+    expect(h.m.formatAsText()).toBe("count=6");
+    h.m.undo();
+    h.m.undo();
+    expect(h.m.formatAsText()).toBe("count=0");
   });
 
   // Restart as a step of the history is `restart-step.test.ts`.

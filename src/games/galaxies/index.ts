@@ -50,15 +50,21 @@ import {
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
+  LEFT_DRAG,
   LEFT_RELEASE,
   newCursor,
   RIGHT_BUTTON,
+  stripModifiers,
 } from "../../engine/pointer.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import {
+  beginSweep,
   buttonVerb,
+  endSweep,
   interpretTargetVerbs,
   pressTarget,
+  sweepOpen,
+  sweepTo,
   type TargetGeometry,
   type TargetVerbs,
   verbClicks,
@@ -332,7 +338,48 @@ const targetVerbs: TargetVerbs<
         ? { ops: [{ kind: "edge", x: e.x, y: e.y }], solving: false }
         : null,
   },
+  sweep: {
+    holds: (s, e) => (s.flags[idx(s, e.x, e.y)] & F_EDGE_SET ? 1 : 0),
+    buttons: ["primary"],
+    // Lines turn corners, so a drag takes an edge of either direction, but
+    // only near its middle: four edges meet at every corner it passes.
+    within: (ds) => ds.tileSize * WALL_DRAG_REACH,
+    says:
+      "Press on a grid edge and drag along the grid to do the same to every " +
+      "edge you pass over that looked the same as the first.",
+  },
 };
+
+/** How near an edge's middle a wall drag passes to take it, in tiles. */
+const WALL_DRAG_REACH = 0.3;
+/** How near an edge's line a press lands to drag walls and not an arrow, in
+ * tiles: the strip a player aims at to mean "this line", leaving the body of
+ * each tile to the association drag. */
+const WALL_PRESS_REACH = 0.2;
+
+/** The edge a press at `(x, y)` would drag walls from: one whose line the
+ * press is on, that can take a line, with no dot under the press (a dot on an
+ * edge is the association's to pick up). */
+function wallPressed(
+  s: GalaxiesState,
+  ds: GalaxiesDrawState,
+  ui: GalaxiesUi,
+  x: number,
+  y: number,
+): Point | null {
+  const tile = ds.tileSize;
+  const border = borderFor(tile);
+  const e = edgeGeometry.pointerTarget(s, ds, { x, y }, ui);
+  if (e === null || !edgePlacementLegal(s, e.x, e.y)) return null;
+  if (dotUnder(s, x, y, tile, border) !== null) return null;
+  // An edge between two tiles side by side has an even x and is a vertical
+  // line; one between two stacked tiles is horizontal.
+  const off =
+    e.x % 2 === 0
+      ? Math.abs(x - scoord(e.x, tile, border))
+      : Math.abs(y - scoord(e.y, tile, border));
+  return off <= tile * WALL_PRESS_REACH ? e : null;
+}
 
 // --- move logic -----------------------------------------------------
 
@@ -629,6 +676,17 @@ function interpretMove(
   if (isMouseDrag(button)) {
     if (ui.pressPending && traveled(ui, x, y)) {
       ui.pressPending = false;
+      // A left press on a line drags walls: the click's own verb, on every
+      // edge the drag passes. Anywhere else it is the association.
+      const wall =
+        stripModifiers(button) === LEFT_DRAG
+          ? wallPressed(s, ds, ui, ui.pressX, ui.pressY)
+          : null;
+      if (wall !== null) {
+        const from = { x: ui.pressX, y: ui.pressY };
+        beginSweep(targetVerbs, s, ui, wall, LEFT_BUTTON, from, false);
+        return sweepTo(targetVerbs, s, ui, ds, p) ?? UI_UPDATE;
+      }
       // Start from where the press landed, not from here: the source is
       // whatever the player put their pointer on, and by now it has moved
       // off it. Reverse drags are allowed from here on — the travel is what
@@ -637,6 +695,7 @@ function interpretMove(
       aimDrag(s, ui, x, y, tile, border);
       return UI_UPDATE;
     }
+    if (sweepOpen(ui)) return sweepTo(targetVerbs, s, ui, ds, p);
     if (!ui.dragging) return null;
     return aimDrag(s, ui, x, y, tile, border) ? UI_UPDATE : null;
   }
@@ -644,6 +703,11 @@ function interpretMove(
   if (isMouseRelease(button)) {
     const pending = ui.pressPending;
     ui.pressPending = false;
+    // A wall drag made its moves as it went; its release is not a click.
+    if (sweepOpen(ui)) {
+      endSweep(ui);
+      return null;
+    }
     if (ui.dragging) {
       // Commit the pair the preview showed, not the raw release pixel: the
       // two differ only when the pointer jumps between the last drag event

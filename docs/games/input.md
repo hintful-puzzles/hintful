@@ -517,6 +517,36 @@ will do, the preview and the verb read one function (Tents' `clickTent` and
 the drag has no button for — Tents' T, N and B — are `keyOnly` verbs on a
 `cycle` route. Exemplar: Tents.
 
+**A mark can be dragged: declare `sweep`, do not write a drag.** Where a
+button's verb is a mark (shade, cross, wall, flag) the player wants on several
+targets, the declaration says what a target holds (`sweep.holds`, a value
+`===` compares), and the model makes a drag on from a press repeat the press
+on every further target that held what the pressed one held. It paints and
+never toggles: the test is the value the first target had *before* its press.
+The midend undoes the whole drag in one step (`joined`, in memory only), and
+the Controls paragraph says the drag. Four knobs, each a fact about the
+puzzle:
+
+- `buttons`, where one button's verb is a move or a thing never wanted in a
+  row (Light Up's bulb);
+- `reaches(first, next)`, where a drag from one kind of target must not take
+  another (Tracks: from an edge, edges only);
+- `within(ds)`, **which every edge geometry needs**: an edge's catchment
+  meets its neighbors' at each corner, so a drag along a wall would clip the
+  edges crossing it. With a reach, an edge is taken only where the pointer
+  passes near `pointAt` of it, its middle;
+- `says`, where the default sentence would not describe the gesture.
+
+A game whose own arm takes the press (a click that acts on the release, or a
+drag of its own beside this one) opens the same drag with `beginSweep`,
+continues it with `sweepTo` and asks `endSweep` on the release whether the
+drag made a move, in which case the release is not a click. **Split two drags
+by where the press lands**, as Tracks does (a square's middle drags squares,
+an edge drags edges) and Galaxies (a press on a line drags lines, anywhere
+else is the association).
+`target-verb-sweep.test.ts` plays every declaring game: a drag between two
+like targets marks both, and one Undo takes it back.
+
 **What the model is not for.** A drag game's drag is an arm of its own, and its
 keyboard form of a drag (Tents' Shift-arrows, its `L`) is a design (below). A
 game whose keyboard walks something other than the targets is not expressible —

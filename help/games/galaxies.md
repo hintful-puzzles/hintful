@@ -19,8 +19,8 @@ matching arrow at the same time, because a region is symmetric about
 its dot. Drag an existing arrow to move it, or drop it off the edge
 of the grid to remove it.
 
-You can also drag the other way round: start on an empty square and
-drag towards a dot, and the arrow is placed when you let go. While
+You can also drag the other way round: start inside an empty square,
+away from its edges, and drag towards a dot, and the arrow is placed when you let go. While
 you do, every dot that square could legally belong to is ringed, and
 the one you are aiming at is ringed more heavily. If you would rather
 work that out for yourself, turn off **While dragging from a cell,

@@ -12,9 +12,10 @@ near one of its sides addresses the edge there.
 
 {{controls}}
 
-Left- or right-drag between squares to lay a straight line of is-track or
+A drag that starts in the middle of a square marks squares instead: left- or
+right-drag along a row or column to lay a straight line of is-track or
 is-not-track indicators, useful for filling in rows or columns to match the
-clue.
+clue. Either kind of drag is one step of Undo.
 
 A square that holds track is purple, whether or not its rails are in yet, and
 so is a square a rail leads into. A square you have said holds no track shows

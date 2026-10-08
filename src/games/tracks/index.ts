@@ -34,9 +34,13 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  beginSweep,
   buttonVerb,
+  endSweep,
   interpretTargetVerbs,
   pressTarget,
+  sweepOpen,
+  sweepTo,
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
@@ -204,7 +208,7 @@ type TracksVerb = TargetVerb<TracksState, TracksUi, Point, TracksMove>;
 const trackVerb: TracksVerb = {
   does:
     "lay track there: on an edge, a segment joining the two squares; in a square, " +
-    "a block of sleeper wood that says it holds track, even before you know " +
+    "the purple bed that says it holds track, even before you know " +
     "which edges it crosses. " +
     "Click it again to take the track away",
   apply: flipAt(false),
@@ -278,7 +282,34 @@ const targetVerbs: TargetVerbs<
   TracksDrawState,
   Point,
   TracksMove
-> = { geometry, primary: trackVerb, secondary: noTrackVerb };
+> = {
+  geometry,
+  primary: trackVerb,
+  secondary: noTrackVerb,
+  // A drag that starts on an edge lays segments (or crosses) on the edges it
+  // crosses. One that starts in a square's middle is the square drag,
+  // `interpretMove`'s own.
+  sweep: {
+    holds(state, t) {
+      const spot = spotAt(state, t);
+      if (!spot) return "none";
+      if (spot.kind === "square")
+        return `s${state.sflags[spot.y * state.w + spot.x] & (S_TRACK | S_NOTRACK)}`;
+      const flags = sEFlags(stateToBoard(state), spot.x, spot.y, spot.dir);
+      return `e${flags & (E_TRACK | E_NOTRACK)}`;
+    },
+    reaches: (state, first, next) =>
+      spotAt(state, first)?.kind === "edge" && spotAt(state, next)?.kind === "edge",
+    within: (ds) => metrics(ds.tileSize).tile * RAIL_DRAG_REACH,
+    says:
+      "Press on an edge and drag from square to square to do the same to " +
+      "every edge you cross that looked the same as the first.",
+  },
+};
+
+/** How near an edge's middle a drag passes to take it, in tiles. A drag
+ * through the middles of two squares crosses the edge between them there. */
+const RAIL_DRAG_REACH = 0.3;
 
 /** The square a pixel falls in along one axis, `-1` in the top/left border
  * (the clues sit a whole tile in, hence the `- 1`). */
@@ -316,20 +347,39 @@ function interpretMove(
     }
     ui.clickx = p.x;
     ui.clicky = p.y;
-    startDrag(ui.drag, gx, gy);
     const aimed = geometry.pointerTarget(state, ds, p, ui);
     if (aimed) pressTarget(targetVerbs, ui, aimed);
+    // A press on an edge drags along edges; one in a square's middle drags
+    // the square marks down its row or column.
+    if (aimed && spotAt(state, aimed)?.kind === "edge") {
+      endDrag(ui.drag);
+      beginSweep(targetVerbs, state, ui, aimed, button, p, false);
+      return UI_UPDATE;
+    }
+    startDrag(ui.drag, gx, gy);
     return UI_UPDATE;
   }
 
   if (isMouseDrag(button)) {
     ui.cursor.visible = false;
+    if (sweepOpen(ui)) return sweepTo(targetVerbs, state, ui, ds, p) ?? UI_UPDATE;
     updateUiDrag(state, ui, gx, gy);
     return UI_UPDATE;
   }
 
   if (isMouseRelease(button)) {
     ui.cursor.visible = false;
+    if (sweepOpen(ui)) {
+      // An edge drag made its moves as it went. One that reached no second
+      // edge is a click on the edge it pressed, if it ends in that square.
+      if (endSweep(ui)) return UI_UPDATE;
+      const pressed = { x: ui.clickx, y: ui.clicky };
+      if (gridCoord(pressed.x, m) !== gx || gridCoord(pressed.y, m) !== gy)
+        return UI_UPDATE;
+      const target = geometry.pointerTarget(state, ds, pressed, ui);
+      if (!target) return UI_UPDATE;
+      return buttonVerb(targetVerbs, button)?.apply(state, target, ui) ?? UI_UPDATE;
+    }
     const { sx, sy, ex, ey } = ui.drag;
     // The whole release is gated on `drag.live`: the engine ends a live drag
     // when the board changes under it, and the click path below — which flips a

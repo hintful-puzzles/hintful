@@ -287,14 +287,26 @@ export const MODULES = [
       {
         within: "Midend.undo",
         why: "undo walks off the start of history instead of stopping at state 0",
-        find: "    if (this.pos > 0) this.step(-1);",
-        replace: "    if (this.pos >= 0) this.step(-1);",
+        find: "    if (this.pos > 0) {",
+        replace: "    if (this.pos >= 0) {",
+      },
+      {
+        within: "Midend.undo",
+        why: "undo takes back one mark of a drag and leaves the rest",
+        find: "      while (this.pos > 0 && this.joined[this.pos]);",
+        replace: "      while (false);",
       },
       {
         within: "Midend.redo",
         why: "redo runs past the end of history",
-        find: "    if (this.pos < this.history.length - 1) this.step(1);",
-        replace: "    if (this.pos <= this.history.length - 1) this.step(1);",
+        find: "    if (this.pos < this.history.length - 1) {",
+        replace: "    if (this.pos <= this.history.length - 1) {",
+      },
+      {
+        within: "Midend.redo",
+        why: "redo replays one mark of a drag and leaves the rest",
+        find: "      while (this.pos < this.history.length - 1 && this.joined[this.pos]);",
+        replace: "      while (false);",
       },
       {
         within: "Midend.afterTransition",
