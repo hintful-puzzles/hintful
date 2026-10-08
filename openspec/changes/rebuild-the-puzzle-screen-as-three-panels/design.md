@@ -145,7 +145,8 @@ showing, most felt in a wide, short window.
 | Keep the Menu open when there is room | on · off | per window shape |
 
 The Menu takes the side opposite the Game controls. A side Bar takes that side
-too, between the Menu and the board. Nothing docks to the top, where the
+too, at the window's edge, with the Menu between it and the board (first built
+the other way round; see "Decided while building"). Nothing docks to the top, where the
 readout row is. "Game controls on the Left" is the left-handed switch.
 
 *Alternative considered:* a free side for each of the three panels, which is
@@ -180,7 +181,9 @@ played".
 
 ## What follows this change
 
-Each is a change of its own, on the owner's word, and neither is filed.
+Each is a change of its own, on the owner's word. The tap switch is filed as
+`add-the-tap-switch` (the owner asked after it on the deployment, 2026-10-08);
+the Aids preferences are not filed.
 
 - **The tap switch.** A two-part switch in the Game controls naming the game's
   own two actions (`Track | No track`, `Digit | Note`), on for everyone, kept
@@ -255,8 +258,20 @@ questions are first.
   opens it over the board: a sheet when tall, a drawer on the Menu's side when
   wide.
 - **The Menu docks when what is left is at least 0.9 of the board area's
-  height in width** (`menuFits`). At 1280x720 it docks; at 1024x768 and
-  800x720 it does not.
+  height in width** (`menuFits`). At 1280x720 and 1024x768 it docks; at
+  800x720 it does not (measured in Chrome, 2026-10-08).
+- **The Bar holds still when the Menu opens** (the owner, on the deployment,
+  2026-10-08: "a click on the same position would open and close the menu").
+  A bottom Bar runs under a docked Menu, and a side Bar is at the window's
+  edge with the Menu inside it, so the Menu's column never pushes the Bar.
+  The cost is the Bar's height off a docked Menu, which scrolls a little
+  sooner. A Menu over the board stops at the Bar, and its backdrop is clear
+  over the Bar but still covers it: a press on an uncovered, inert Bar was
+  delivered to the document's root in Chrome, not to the dialog, so a
+  backdrop that stopped short would not have closed anything. The Bar's other
+  slots are dimmed while the Menu is over the board, because a modal Menu
+  takes the first press to close.
+- **A rule sets the Menu button apart** from the Bar's commands.
 - **The note toggle is the keypad's `Marks` key, drawn after the keys with its
   label.** It is a mode and not a character, so it is held to "every control
   carries a label". It has no pressed state, because the app is not told the

@@ -54,6 +54,11 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
   @property({ type: Boolean, attribute: "menu-first" })
   menuFirst = false;
 
+  /** The Menu is open over the board, as a modal: the `Menu` button under it
+   * closes it, and no other slot can be reached until it has. */
+  @property({ type: Boolean, attribute: "menu-over", reflect: true })
+  menuOver = false;
+
   /** Wide enough to give every slot room around its caption. */
   @property({ type: Boolean, reflect: true })
   roomy = false;
@@ -113,11 +118,14 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
         <span part="caption">Menu</span>
       </button>
     `;
+    // The `Menu` button opens a panel and the other slots act on the board, so
+    // a rule sets it apart from them.
+    const rule = html`<span part="rule" aria-hidden="true"></span>`;
     return html`
       <nav part="base" aria-label="Puzzle commands">
-        ${this.menuFirst ? menuButton : nothing}
+        ${this.menuFirst ? [menuButton, rule] : nothing}
         ${bar.map((entry) => this.renderSlot(entry))}
-        ${this.menuFirst ? nothing : menuButton}
+        ${this.menuFirst ? nothing : [rule, menuButton]}
       </nav>
     `;
   }
@@ -235,6 +243,30 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
         wa-icon {
           font-size: 1.125rem;
         }
+      }
+
+      /* Under a modal Menu the other slots read as out of reach, which they
+       * are, and the Menu button reads as the way back. */
+      :host([menu-over]) [part="slot"],
+      :host([menu-over]) [part~="hint"] {
+        opacity: 0.4;
+      }
+
+      [part="rule"] {
+        flex: 0 0 1px;
+        align-self: stretch;
+        margin: 0.375rem 0.125rem;
+        background-color: var(--app-color-hairline);
+      }
+
+      :host([roomy]) [part="rule"] {
+        margin-inline: 0.75rem;
+      }
+
+      /* Down a side the Bar's height is what runs out, so the rule takes a
+       * pixel of it and no margin. */
+      :host([along="side"]) [part="rule"] {
+        margin: 0 0.375rem;
       }
 
       [part="caption"] {

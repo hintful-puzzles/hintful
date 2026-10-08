@@ -183,9 +183,32 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     super.updated(changedProperties);
     // A modal dialog is opened by a call, not by an attribute.
     const over = this.menuOver;
+    if (over && this.menuOpen) this.keepClearOfBar(over);
     if (over && this.menuOpen !== over.open) {
       if (this.menuOpen) over.showModal();
       else over.close();
+    }
+  }
+
+  /**
+   * The Menu over the board stops at the Bar, and its backdrop is clear over
+   * it: the `Menu` button that opened it stays in view where it was, and a tap
+   * there closes it, as a tap anywhere outside the Menu does.
+   */
+  private keepClearOfBar(over: HTMLDialogElement) {
+    const bar = this.shadowRoot?.querySelector("puzzle-bar");
+    if (!bar) return;
+    const screen = this.getBoundingClientRect();
+    const rect = bar.getBoundingClientRect();
+    const beside = bar.along === "side";
+    const atLeft = rect.left - screen.left < screen.right - rect.right;
+    const clear = {
+      bottom: beside ? 0 : screen.bottom - rect.top,
+      left: beside && atLeft ? rect.right - screen.left : 0,
+      right: beside && !atLeft ? screen.right - rect.left : 0,
+    };
+    for (const [edge, px] of Object.entries(clear)) {
+      over.style.setProperty(`--bar-clear-${edge}`, `${px}px`);
     }
   }
 
@@ -298,6 +321,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
             length=${this.barLength}
             ?menu-first=${choice.bar === "bottom" && controlsSide === "right"}
             ?menu-open=${menuOpen}
+            ?menu-over=${menuOpen && !menuDocks}
             @puzzle-bar-fit=${this.handleBarFit}
             @puzzle-menu-toggle=${this.toggleMenu}
             @click=${this.handleChromeClick}
@@ -1522,6 +1546,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
        * to its content, so a click on its backdrop is a click outside the
        * Menu (utils/dialog.ts). */
       .menu-over {
+        /* The room the Bar takes at its edge of the window, which
+         * keepClearOfBar measures. The Menu stops there. */
+        inset: 0 var(--bar-clear-right, 0px) var(--bar-clear-bottom, 0px)
+          var(--bar-clear-left, 0px);
         max-width: none;
         max-height: none;
         margin: 0;
@@ -1531,26 +1559,35 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         color: var(--app-color-text);
         overflow-y: auto;
 
+        /* The backdrop covers the Bar and is clear over it: a tap on the Bar
+         * must land on the backdrop to count as a tap outside the Menu, and a
+         * backdrop that stopped short would let it through to an inert page. */
         &::backdrop {
-          background-color: var(--wa-color-overlay-modal);
+          background: linear-gradient(
+              var(--wa-color-overlay-modal),
+              var(--wa-color-overlay-modal)
+            )
+            var(--bar-clear-left, 0px) 0 / calc(
+                100% - var(--bar-clear-left, 0px) - var(--bar-clear-right, 0px)
+              )
+              calc(100% - var(--bar-clear-bottom, 0px)) no-repeat;
         }
       }
 
       /* A sheet from the bottom in a tall window. */
       .menu-over.sheet {
-        width: 100%;
+        width: auto;
         max-height: 80dvh;
         margin-block-start: auto;
         border-start-start-radius: var(--app-radius-container);
         border-start-end-radius: var(--app-radius-container);
-        padding-block-end: env(safe-area-inset-bottom);
       }
 
       /* A drawer on the Menu's side in a landscape one. */
       .menu-over.drawer-left,
       .menu-over.drawer-right {
         width: min(18rem, 85vw);
-        height: 100%;
+        height: auto;
       }
       .menu-over.drawer-left {
         margin-inline-end: auto;

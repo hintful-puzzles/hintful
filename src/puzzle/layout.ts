@@ -5,9 +5,13 @@
  * query of its own.
  *
  * The choices are constrained so that a collision cannot be expressed: the
- * Game controls have a side, the Menu takes the other one, and a side Bar sits
- * between the Menu and the board. Nothing docks to the top, where the readout
- * row is.
+ * Game controls have a side, the Menu takes the other one, and a side Bar is
+ * at that window edge with the Menu between it and the board. Nothing docks to
+ * the top, where the readout row is.
+ *
+ * **Opening the Menu moves no part of the Bar.** A side Bar is outside the
+ * Menu's column, and a bottom Bar runs under it, so the `Menu` button that
+ * opened the Menu is under the pointer to close it.
  */
 
 /** Tall is portrait. A landscape window is `wide`, or `short` below
@@ -110,9 +114,8 @@ const REFERENCE_ROW = "fit-content(min(45vh, 22rem))";
  * The grid for `state`, written for Game controls on the right and mirrored
  * for the left.
  *
- * The Bar is the board column's width when it is along the bottom, so its
- * commands sit under the board and a side column of Game controls runs the
- * full height beside both.
+ * A Bar along the bottom runs under the board and under a docked Menu, and a
+ * side column of Game controls runs the full height beside them.
  */
 export function gridLayout(state: LayoutState): GridLayout {
   const controlsBeside = state.controls === "side";
@@ -123,8 +126,13 @@ export function gridLayout(state: LayoutState): GridLayout {
   const referenceUnder = state.reference && state.shape === "tall";
 
   const columns: { size: string; cell: (row: Region) => Region }[] = [];
-  if (state.menuDocked) columns.push({ size: `${MENU_REM}rem`, cell: () => "menu" });
   if (barBeside) columns.push({ size: "auto", cell: () => "bar" });
+  if (state.menuDocked) {
+    columns.push({
+      size: `${MENU_REM}rem`,
+      cell: (row) => (row === "bar" ? "bar" : "menu"),
+    });
+  }
   columns.push({ size: "minmax(0, 1fr)", cell: (row) => row });
   if (controlsBeside) {
     columns.push({ size: "auto", cell: (row) => (row === "top" ? "top" : "controls") });

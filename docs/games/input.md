@@ -399,7 +399,15 @@ a new one must not start.
 directions, and `layout.test.ts` enumerates every layout. Neither can see
 pixels. **A change to a panel is checked in Chrome** at desktop, tablet, phone
 and landscape-phone sizes: that the Bar and the Game controls report no
-scroll, and that pressing Hint leaves every control's rectangle where it was.
+scroll, that pressing Hint leaves every control's rectangle where it was, and
+that two presses on one point of the Menu button open and close the Menu with
+the Bar's slots unmoved, docked and over the board.
+
+A panel that opens over the board is a modal `<dialog>`, and what is outside
+it is inert. Leave part of the screen in view under it by making the backdrop
+clear there, never by shrinking the backdrop: a press on inert content the
+backdrop does not cover reaches the document's root and not the dialog, so
+"tap outside to close" (`utils/dialog.ts`) does not see it.
 
 ## Targets and verbs
 

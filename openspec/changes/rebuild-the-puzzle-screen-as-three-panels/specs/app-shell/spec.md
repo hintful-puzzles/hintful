@@ -35,7 +35,21 @@ it, with the command's full name. A Menu row SHALL write the key beside the
 command only where a keyboard is likely: a pointer that is fine and can hover.
 
 A bottom Bar's Menu button SHALL be at the end of the Bar nearest the side the
-Menu opens on, so that the button is beside what it opens.
+Menu opens on, so that the button is beside what it opens. A rule SHALL set
+the Menu button apart from the Bar's commands: it opens a panel, and they act
+on the board.
+
+Opening or closing the Menu SHALL move no slot of the Bar, in any layout, and
+the Menu SHALL NOT cover the Bar, so that the Menu button which opened the
+Menu is in view under the pointer, and a press there closes it.
+
+#### Scenario: The same press opens and closes the Menu
+
+- **WHEN** a player presses the Bar's Menu button, and presses the same point
+  again without moving
+- **THEN** the Menu opens and then closes, whether it docks beside the board,
+  opens as a sheet or opens as a drawer
+- **AND** every slot of the Bar is where it was throughout
 
 #### Scenario: The Menu button, by handedness
 
@@ -167,7 +181,8 @@ window shape.
 A choice that cannot be honored in the current window SHALL fall back without
 being overwritten: a Menu that cannot dock without squeezing the board is
 closed, and the Bar's Menu button opens it over the board, as a sheet in a tall
-window and a drawer on the Menu's side in a wide one. A command chosen from a
+window and a drawer on the Menu's side in a wide one, in either case clear of
+the Bar. A command chosen from a
 Menu that is over the board SHALL close it; a docked Menu stays.
 
 Closing or opening the Menu from the Bar is for the visit and SHALL NOT change

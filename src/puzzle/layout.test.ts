@@ -135,13 +135,16 @@ describe("the puzzle screen's grid", () => {
     expect(docked).toHaveLength(48);
     for (const state of docked) {
       const { areas } = gridLayout(state);
-      const last = areas[0].length - 1;
       const menu = rectangleOf(areas, "menu");
-      // The Menu is a whole edge column, top to bottom.
-      expect(menu?.rows).toEqual([0, areas.length - 1]);
-      expect(menu?.columns).toEqual(
-        state.controlsSide === "right" ? [0, 0] : [last, last],
-      );
+      const board = rectangleOf(areas, "board");
+      if (!menu || !board) throw new Error("unplaced");
+      // One column against the board, from the top down to a bottom Bar.
+      const step = state.controlsSide === "right" ? -1 : 1;
+      expect(menu.columns).toEqual([board.columns[0] + step, board.columns[0] + step]);
+      expect(menu.rows).toEqual([
+        0,
+        state.bar === "side" ? areas.length - 1 : areas.length - 2,
+      ]);
     }
 
     // Where the Game controls are beside the board, the board lies between
@@ -159,17 +162,41 @@ describe("the puzzle screen's grid", () => {
     }
   });
 
-  it("keeps a side Bar between the Menu and the board", () => {
+  it("keeps a side Bar at the window's edge, the whole height", () => {
     const sideBars = everyState().filter((state) => state.bar === "side");
     expect(sideBars).toHaveLength(48);
     for (const state of sideBars) {
       const { areas } = gridLayout(state);
+      const last = areas[0].length - 1;
       const bar = rectangleOf(areas, "bar");
-      const board = rectangleOf(areas, "board");
-      if (!bar || !board) throw new Error("unplaced");
-      expect(bar.rows).toEqual([0, areas.length - 1]);
-      const step = state.controlsSide === "right" ? -1 : 1;
-      expect(bar.columns[0]).toBe(board.columns[0] + step);
+      expect(bar?.rows).toEqual([0, areas.length - 1]);
+      expect(bar?.columns).toEqual(
+        state.controlsSide === "right" ? [0, 0] : [last, last],
+      );
+    }
+  });
+
+  /**
+   * The `Menu` button must be under the pointer that opened the Menu. The Bar
+   * holds still when the Menu's column is inside the Bar's span, or is on the
+   * same side of the Bar as the board's column, which is the one that flexes
+   * and gives the Menu its width.
+   */
+  it("leaves the Bar where it was when the Menu docks", () => {
+    const docked = everyState().filter((state) => state.menuDocked);
+    expect(docked).toHaveLength(48);
+    for (const state of docked) {
+      const grid = gridLayout(state);
+      const bar = rectangleOf(grid.areas, "bar");
+      const board = rectangleOf(grid.areas, "board");
+      const menu = grid.areas[0].indexOf("menu");
+      if (!bar || !board || menu < 0) throw new Error("unplaced");
+      const side = (column: number) =>
+        column < bar.columns[0] ? "before" : column > bar.columns[1] ? "after" : "in";
+      const held = side(menu) === "in" || side(menu) === side(board.columns[0]);
+      expect(held, JSON.stringify(state)).toBe(true);
+      // And no row comes or goes with the Menu.
+      expect(grid.rows).toEqual(gridLayout({ ...state, menuDocked: false }).rows);
     }
   });
 
@@ -195,7 +222,7 @@ describe("the puzzle screen's grid", () => {
         }).areas,
       ),
     ).toBe(
-      '"menu top top" "menu board controls" "menu words controls" "menu bar controls"',
+      '"menu top top" "menu board controls" "menu words controls" "bar bar controls"',
     );
     expect(
       gridTemplateAreas(
