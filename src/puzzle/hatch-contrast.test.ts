@@ -11,6 +11,7 @@ import { HATCH_OPACITY } from "../engine/hatch.ts";
 import type { Narration } from "../engine/hint-words.ts";
 import { Midend } from "../engine/index.ts";
 import { registeredGameIds } from "../engine/registry.ts";
+import { beginDealt } from "../engine/testing/dealt.ts";
 import { codeLinesMatching } from "../engine/testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { opsOfKind, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
@@ -40,29 +41,41 @@ const over = (under: Color, color: Color): Color =>
  * every few pixels, and Magnets' board measured 1.40 light, 1.36 dark at 0.3. */
 const VISIBLE = 1.25;
 
+/**
+ * A board whose hints hatch, for a game whose dealt boards cannot be relied on
+ * to: Rect stripes on few positions (`rect-hint.test.ts` holds this board to
+ * its `overlap` rung, and counted how few). A board is the input, where more
+ * seeds would be a bigger sample of the same kind.
+ */
+const HATCHES_ON: Record<string, string> = {
+  rect: "10x10e0.5:h6b12e3f6f18h8m18b15za7h7e",
+};
+
 /** The first palette index a game hatches with, from its own hint frames. */
 function hatchColor(id: string): number | null {
   const game = HINT_GAMES.find(([g]) => g === id)?.[1];
   if (!game) return null;
   const palette = game.colors(DEFAULT_BACKGROUND);
-  for (const { title, params } of gatePresets(id, game)) {
-    for (let s = 0; s < 4; s++) {
-      const midend = new Midend(game);
-      if (
-        midend.newGameFromId(`${game.encodeParams(params, true)}#hatch-${title}-${s}`)
-      )
-        continue;
-      midend.size({ w: 700, h: 700 });
-      // Asked again when a plan runs out: Guess's first plan is one opening
-      // guess, and only the next reads a scored row.
-      for (let ask = 0; ask < 6 && !midend.hint(); ask++) {
-        for (let step = 0; step < 24 && midend.activeHintStep(); step++) {
-          const frame = new RecordingDrawing(palette);
-          midend.redraw(frame);
-          const [hatch] = opsOfKind(frame.ops, "hatch");
-          if (hatch) return hatch.color;
-          midend.executeHint();
-        }
+  const begins: ((
+    midend: Midend<unknown, unknown, unknown, unknown, unknown>,
+  ) => string | null)[] = [];
+  const pinned = HATCHES_ON[id];
+  if (pinned !== undefined) begins.push((m) => m.newGameFromId(pinned));
+  for (const { params } of gatePresets(id, game))
+    for (let s = 0; s < 4; s++) begins.push((m) => beginDealt(m, game, params, s));
+  for (const begin of begins) {
+    const midend = new Midend(game);
+    if (begin(midend)) continue;
+    midend.size({ w: 700, h: 700 });
+    // Asked again when a plan runs out: Guess's first plan is one opening
+    // guess, and only the next reads a scored row.
+    for (let ask = 0; ask < 6 && !midend.hint(); ask++) {
+      for (let step = 0; step < 24 && midend.activeHintStep(); step++) {
+        const frame = new RecordingDrawing(palette);
+        midend.redraw(frame);
+        const [hatch] = opsOfKind(frame.ops, "hatch");
+        if (hatch) return hatch.color;
+        midend.executeHint();
       }
     }
   }
@@ -118,8 +131,7 @@ describe("a step that names a line or region draws it, and only then", () => {
       const [first] = gatePresets(id, game);
       if (!first) continue;
       const midend = new Midend(game);
-      if (midend.newGameFromId(`${game.encodeParams(first.params, true)}#names-a-line`))
-        continue;
+      if (beginDealt(midend, game, first.params)) continue;
       midend.size({ w: 700, h: 700 });
       for (let ask = 0; ask < 6 && !midend.hint(); ask++) {
         for (let n = 0; n < 12 && midend.activeHintStep(); n++) {

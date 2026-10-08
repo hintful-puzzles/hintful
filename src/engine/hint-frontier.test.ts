@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "./candidate-hint.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
-import { randomNew } from "./random/index.ts";
+import { dealt } from "./testing/dealt.ts";
 import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
 import { planContinuity } from "./testing/plan-continuity.ts";
@@ -293,10 +293,7 @@ describe("hint plans continue from their previous step where they can", () => {
         let avoidable = 0;
         for (const p of leafPresets(game)) {
           for (let s = 0; s < 2; s++) {
-            const { desc } = game.newDesc(
-              p.params,
-              randomNew(`continuity-${p.title}-${s}`),
-            );
+            const { desc } = dealt(game, p.params, s);
             const state = game.newState(p.params, desc);
             const ui = reading
               ? { ...(game.newUi(state) as object), candidateReading: reading }

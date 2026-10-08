@@ -17,7 +17,7 @@ import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "./candidate-hint.ts";
 import { permitsSearch } from "./difficulty.ts";
 import type { Narration } from "./hint-words.ts";
-import { randomNew } from "./random/index.ts";
+import { dealt } from "./testing/dealt.ts";
 import { enrolledIn } from "./testing/enrollment.ts";
 import { type AnyGame, HINT_GAMES } from "./testing/hint-games.ts";
 import { dealtBoards } from "./testing/presets.ts";
@@ -185,7 +185,7 @@ describe("the hint-notes preference", () => {
       for (const { title, params } of presetsOf(game)) {
         for (const reading of READINGS) {
           it(`${title}, ${reading}: every step is live and its premise noted when shown, and the plan finishes`, () => {
-            const { desc, aux } = game.newDesc(params, randomNew(`reading-${title}`));
+            const { desc, aux } = dealt(game, params);
             let state = game.newState(params, desc);
             const res = game.hint?.(state, aux, uiFor(game, state, reading));
             if (!res?.ok) {
@@ -228,7 +228,7 @@ describe("the hint-notes preference", () => {
         it(`${title}: resumes from every position under the other reading`, () => {
           // The default reading is `hint-resume.test.ts`'s walk; this is its
           // twin for the reading the player may switch to.
-          const { desc, aux } = game.newDesc(params, randomNew(`resume-${title}`));
+          const { desc, aux } = dealt(game, params);
           let state = game.newState(params, desc);
           const other = READINGS.find((r) => r !== game.newUi(state).candidateReading);
           if (!other) throw new Error("two readings");

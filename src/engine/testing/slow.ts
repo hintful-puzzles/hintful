@@ -86,6 +86,26 @@ export const SLOW_TESTS_ENABLED = Boolean(env?.["PUZZLES_SLOW_TESTS"]);
  */
 export const PRECOMMIT_HOOK_RUN = env?.["GATE_PRECOMMIT"] === "1";
 
+/**
+ * An amount of work by role: `hook` in the automatic per-commit hook, `wide`
+ * everywhere else (CI on every push, `npm run gate`, a bare `vitest`).
+ *
+ * **For more of the same, never for the only board of a kind.** The hook keeps
+ * one board of every params set a sweep walks and every value of every mode;
+ * what this takes off it is the second and later boards of one params set, and
+ * a game's largest board where a smaller one of the same modes is walked. A
+ * defect that shows on every board of a kind still fails the commit, and one
+ * that needs the fourth board or the 50x50 fails the push. Say at the call
+ * site what the hook's amount still walks.
+ *
+ * A session that changed the code a sweep guards runs it wide before
+ * committing: `npx vitest run <file>`, which is the wide run because nothing
+ * but the hook sets the toggle.
+ */
+export function perCommit<T>(hook: T, wide: T): T {
+  return PRECOMMIT_HOOK_RUN ? hook : wide;
+}
+
 /** The games this run's cross-game sweeps are narrowed to, or `null` when every
  * sweep is whole. Only the per-commit hook narrows, and only to the games whose
  * code reaches what the commit staged; `game-scope.ts` states when that is

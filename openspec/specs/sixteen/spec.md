@@ -41,7 +41,7 @@ out of place — and Sixteen's 5×5 hint cycled with period 4 as a result, reach
 four tiles from finished and walking away again for ever. A shortest plan climbs
 on the way home (the measured plan peaks at 17 tiles out of place, and at a total
 travel of 30, from 9 and 9), so any such gate switches off partway down its own
-descent and hands the board back to the heuristic. See the `ts-engine` planner
+descent and hands the board back to the heuristic. See the `engine-hints` planner
 requirement for the general rule.
 
 The planner SHALL return the whole path as a plan

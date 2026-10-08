@@ -581,9 +581,9 @@ excuse:
 - **Say what still covers the configuration**, at the site, when you defer or
   delete the only case covering a mode, grid type or difficulty.
 - **A guard that catches what the author just wrote stays on the per-commit
-  path whatever it costs.** The answer to its cost is a cheaper walk, never a
-  later one. Only a check on *decay* may defer to push; the conditions are in
-  the `build-pipeline` spec.
+  path, on one board of every kind it walks.** More boards of the same kind,
+  and a check on *decay*, go to push (§ "One board of each kind per commit");
+  the conditions are in the `build-pipeline` spec.
 
 **The gate is paid on every commit; keep each test's cost proportional to what
 it catches.** Three treatments, in order of how little they lose:
@@ -603,6 +603,62 @@ it catches.** Three treatments, in order of how little they lose:
    configuration**, and state what still covers it. The slow tier runs once per
    refactoring round; a tier nobody runs is worse than a deleted test, because
    the file still reads as coverage.
+
+### Deal through `dealt`
+
+**A cross-game sweep takes its boards from `dealt(game, params, n)`**
+([`testing/dealt.ts`](../../src/engine/testing/dealt.ts)), and a sweep that
+drives a midend begins it with `beginDealt`. Dealing is where a sweep's time
+goes: following a hint plan to the end of a board measured under 0.1 s on all
+but three of the boards of the six dearest games, and dealing one took up to
+19.5 s (Group's 8x8 at Hard, 2026-10-08). Each sweep used to seed its own deal
+from its own name, so a dozen guards each dealt that board afresh. The suite
+runs with `isolate: false`, so the dealer's cache is one per worker, and that
+alone took the suite from 1,475 s of test time to 1,195 s.
+
+- Take a second board of the same params with `n`, only where the property
+  needs one. Never seed a deal from the guard's own name.
+- A sweep's boards changed when it moved to the dealer, and four tests went red
+  on what the new boards showed, three of them true: a Singles sentence over
+  the length limit on a 12x12, a second its ledger had never heard, and a Solo
+  rung whose premise is short. A sweep reports on the boards it walked; a
+  sentence or a rung that matters is pinned to a board (§ "Pinning a hint's
+  positions").
+- A game's own test deals as it likes. The dealer is for the sweeps that walk
+  every game.
+
+### One board of each kind per commit
+
+**The per-commit hook walks one board of each kind, and the push walks the
+rest.** `perCommit(hook, wide)` ([`slow.ts`](../../src/engine/testing/slow.ts))
+is the lever, and `gatePresets` uses it, so a sweep that takes its boards
+there has it already. In the hook:
+
+- a sweep walks one board of each params set where the push walks several;
+- `gatePresets` leaves out a game's largest board, and keeps one board for
+  every value of every mode, tier and choice;
+- the bound-hint walk in `hint-quality.test.ts` checks the first 400 steps of
+  a board.
+
+CI runs everything on every push, and so does a bare `vitest`: nothing but
+the hook sets the toggle. **After changing the code a sweep guards, run that
+sweep wide before committing**: `npx vitest run src/engine/hint-resume.test.ts`
+for a hint planner, the file named for the mechanic otherwise. The hook is not
+that run.
+
+Use it only for more of the same. The only board of a mode, a tier or a rule
+stays in the hook, and so does anything a single board shows. Say at the call
+site what the hook's amount still walks.
+
+Measured 2026-10-08 on this machine at load 4 to 5, the whole suite as the
+hook runs it when a commit selects every test, one run each back to back:
+1,643 s of CPU and 763 s of wall before, 865 s and 387 s after the dealer and
+this together. A commit that touches one game selects far less.
+
+**The hook and the push can walk different boards of one game.** The slice
+takes the smallest preset that supplies each value still wanted, so leaving out
+the largest board can change which preset a mode is walked on. A ledger a walk
+is held against has to be true of both.
 
 **A guard that only reads source runs first, if you let it.** The gate runs
 the *source scans* as a pass ahead of the rest of the suite, so their failures
@@ -979,10 +1035,11 @@ time, because every wrong answer looks like coverage.
 **Never invent a key, and do not build a population at all. Call
 `gatePresets(id, game)`**
 ([`testing/hint-games.ts`](../../src/engine/testing/hint-games.ts)): it hands
-back every preset in the slow tier and the per-commit slice otherwise — one
+back every preset in the slow tier and the slice otherwise — one
 preset per *value* of every axis the game varies, derived from the game's own
 `paramConfig` — and it decides the search-planning games' cost discipline for
-you. Difficulty is not special there; it is a `"choices"` item like any other,
+you. In the per-commit hook the slice leaves out each game's largest board
+(§ "One board of each kind per commit"). Difficulty is not special there; it is a `"choices"` item like any other,
 so the slice **replaces** a `tiers.map(withTier(base))` loop rather than
 multiplying with it, and the board it walks a tier on is one the player can pick
 from the menu.

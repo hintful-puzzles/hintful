@@ -1,6 +1,6 @@
 /**
  * **One keyboard cursor, spelled one way, across the whole collection** —
- * the guard behind the `ts-engine` requirement "One keyboard-cursor vocabulary
+ * the guard behind the `engine-input` requirement "One keyboard-cursor vocabulary
  * across games".
  *
  * Before `unify-cross-game-vocabulary` the same three values went by ten

@@ -77,7 +77,7 @@ completion implies uniqueness, so no separate uniqueness pass is required, and
 the highest **tier** reached is the difficulty grade, never a technique's
 position in the ladder), and the hint runs the same techniques with the
 recorder on. A hint SHALL NOT fall back to a generic, unexplained step for a
-deduction its techniques do not cover (the `ts-engine` Hint-System companion
+deduction its techniques do not cover (the `engine-hints` companion
 rule).
 
 A game SHALL meet this by either **narrating every deduction it accepts**

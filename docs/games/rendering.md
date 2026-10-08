@@ -8,7 +8,7 @@ palette. This is one file of the [`docs/games/`](./README.md) set; input
 [`testing.md`](./testing.md).
 
 Authoritative specs:
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md) (the `GameDrawing`
+[`engine-drawing`](../../openspec/specs/engine-drawing/spec.md) (the `GameDrawing`
 contract; the repaint/animation requirement, which also owns the
 ground/`canvasCleared` doctrine) ·
 [`repo-layout`](../../openspec/specs/repo-layout/spec.md) (in-process render
@@ -42,7 +42,7 @@ or a new tile size, each of which repaints everything anyway; four games had
 meanwhile shipped a first frame with bare black pixels, which is what a fill
 every game must remember to write gets you. `first-frame-coverage.test.ts`
 rasterizes every game's first frame and holds it to full coverage. The owning
-requirement is `ts-engine` § "The midend repaints on every transition, rebuilds
+requirement is `engine-drawing` § "The midend repaints on every transition, rebuilds
 the draw state for a new tile size, and lays the ground under a fresh one" —
 link it, don't restate it.
 
@@ -698,7 +698,7 @@ input is reachable in play. Exemplar:
 durations; the midend runs the timer and calls `redraw` with
 `animTime`/`flashTime`; the game interpolates. A non-animated transition
 paints once; animation frames — including the first — are driven by the
-timer (`ts-engine` § "The midend repaints on every transition, rebuilds the
+timer (`engine-drawing` § "The midend repaints on every transition, rebuilds the
 draw state for a new tile size, and lays the ground under a fresh one").
 
 **When the win flash plays is the engine's; how long is the game's.** The

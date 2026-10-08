@@ -11,7 +11,7 @@ import {
   FiringReplay,
   type PremiseAudit,
 } from "./firing-replay.ts";
-import { randomNew } from "./random/index.ts";
+import { dealt } from "./testing/dealt.ts";
 import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
 import { type AnyGame, HINT_GAMES } from "./testing/hint-games.ts";
 import { dealtBoards } from "./testing/presets.ts";
@@ -213,6 +213,17 @@ const GATED: Record<string, string> = {
 };
 
 /**
+ * Firings whose premise really is short: a defect in the game's hint, held
+ * here so the sweep stays a guard for every other firing while it stands. Keyed
+ * and pinned as {@link GATED} is, so the entry fails the day its board stops
+ * showing the defect, which is the day to delete it.
+ */
+const SHORT: Record<string, string> = {
+  "solo: set @ digit-set":
+    "a set of one digit across rows and columns names only the squares the digit is left with; the other squares of those lines, which the digit was struck from by earlier steps, are read and not named (found 2026-10-08, when the sweep's boards changed)",
+};
+
+/**
  * Firings a game's replay cannot make again from the recorded state, keyed
  * `<id>: <technique>`, and why: a fault of the instrument, so nothing it then
  * says is about the premise. Empty, and still asserting that every replay
@@ -226,7 +237,8 @@ const UNREPRODUCED: Record<string, string> = {};
  */
 const UNREPLAYED: Record<string, string> = {};
 
-/** The boards that show each ledger entry, as the input its technique reads. */
+/** The boards that show each entry of the two ledgers, as the input its
+ * technique reads. */
 const PINNED: { key: string; id: string; board: string }[] = [
   {
     key: "mathrax: clue @ latin-level-0",
@@ -243,6 +255,11 @@ const PINNED: { key: string; id: string; board: string }[] = [
     id: "rome",
     board:
       "8x8dn:ba4a7a1a5a4b1a9bab4ea1b1aa4d11bd6,bRaRaLcLfLRDRaRaRdRXURaURaLUaUaLURULUaXULRfRaLb",
+  },
+  {
+    key: "solo: set @ digit-set",
+    id: "solo",
+    board: "3x3de:a7b9a3a8d2a4_5a4a1h9_6e1_3a9a8a2_5e2_9h8a3a5_4a6d8a2a1b4a",
   },
 ];
 
@@ -281,7 +298,7 @@ function descOf(
   const key = `${id}|${p.title}`;
   let desc = descs.get(key);
   if (desc === undefined) {
-    desc = game.newDesc(p.params, randomNew(`premise-${p.title}`)).desc;
+    desc = dealt(game, p.params).desc;
     descs.set(key, desc);
   }
   return desc;
@@ -318,8 +335,10 @@ describe("a recorded firing follows from the premise its steps name", () => {
       expect(WALK_GAMES).toContain(id);
   });
 
-  it("pins every gate to a board", () => {
-    expect(PINNED.map((p) => p.key).sort()).toEqual(Object.keys(GATED).sort());
+  it("pins every gate and every short premise to a board", () => {
+    expect(PINNED.map((p) => p.key).sort()).toEqual(
+      [...Object.keys(GATED), ...Object.keys(SHORT)].sort(),
+    );
   });
 
   for (const { key, id, board } of PINNED) {
@@ -373,7 +392,9 @@ describe("a recorded firing follows from the premise its steps name", () => {
         ).toBe(id in UNREPLAYED);
         for (const f of audits.flatMap((a) => a.findings)) {
           const key = `${id}: ${keyOf(f)}`;
-          expect(GATED, `${key}: ${JSON.stringify(f)}`).toHaveProperty([key]);
+          expect({ ...GATED, ...SHORT }, `${key}: ${JSON.stringify(f)}`).toHaveProperty(
+            [key],
+          );
         }
         for (const u of audits.flatMap((a) => a.unreproduced))
           expect(UNREPRODUCED, `${id}: ${u.technique}`).toHaveProperty([

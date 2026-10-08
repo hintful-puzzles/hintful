@@ -16,7 +16,7 @@
  */
 import { type AnyGame, membersNotMentioning, REGISTERED_GAMES } from "./enrollment.ts";
 import { dealtBoards } from "./presets.ts";
-import { SLOW_TESTS_ENABLED } from "./slow.ts";
+import { perCommit, SLOW_TESTS_ENABLED } from "./slow.ts";
 
 export type { AnyGame };
 
@@ -145,7 +145,13 @@ export function markRoles(highlights: unknown): number {
  * reaches the modes, and it is a board the player can actually pick rather than
  * a tier label written onto the smallest grid in the menu.
  *
- * **A searching hint takes its modes and not its sizes.** Its cost is
+ * **The per-commit hook takes its modes and not its sizes, for every game.**
+ * `perCommit` leaves the largest board to the push, where the whole slice is
+ * walked on every commit to `main` (`docs/games/testing.md` § "One board of
+ * each kind per commit"). Every value of every mode, tier and choice keeps a
+ * board in the hook, on the smallest preset offering it.
+ *
+ * **A searching hint takes its modes and not its sizes everywhere.** Its cost is
  * superlinear in board size — one full search per move, and more moves to make
  * — and `retire-tests-that-do-not-earn-their-runtime` measured the two members
  * of {@link SEARCH_PLANNING_GAMES} at 43% of all test time. So they get
@@ -166,6 +172,6 @@ export function gatePresets(
 ): { title: string; params: unknown }[] {
   return dealtBoards(game, {
     every: SLOW_TESTS_ENABLED,
-    scalarEnds: !SEARCH_PLANNING_GAMES.includes(id),
+    scalarEnds: perCommit(false, !SEARCH_PLANNING_GAMES.includes(id)),
   });
 }

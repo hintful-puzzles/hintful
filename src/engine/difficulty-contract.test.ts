@@ -34,10 +34,15 @@ import {
 import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
 import { paramsError } from "./params.ts";
-import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { dealt } from "./testing/dealt.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
-import { itOverWholeSweep, SLOW_TESTS_ENABLED, seedBudget } from "./testing/slow.ts";
+import {
+  itOverWholeSweep,
+  perCommit,
+  SLOW_TESTS_ENABLED,
+  seedBudget,
+} from "./testing/slow.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 type AnyGame = Game<any, any, any, any, any, any>;
@@ -270,7 +275,7 @@ for (const { id, game, contract, tiers } of tiered) {
       // The general lesson: *a guard that has never been shown to fail is not
       // known to work*, and sampling is where a cross-game guard silently
       // becomes decorative.
-      const boards = seedBudget(4, 12);
+      const boards = seedBudget(perCommit(1, 4), 12);
       let checked = 0;
 
       for (let tier = 0; tier < tiers.length; tier++) {
@@ -278,10 +283,7 @@ for (const { id, game, contract, tiers } of tiered) {
         if (p === null) continue; // an ungenerable tier; covered by the test above
 
         for (let seed = 0; seed < boards; seed++) {
-          const { desc } = game.newDesc(
-            p,
-            randomNew(`difficulty-${id}-${tier}-${seed}`),
-          );
+          const { desc } = dealt(game, p, seed);
           const solve = cappedSolveFor(contract, p, desc);
           const lowest = lowestSolvingCap(solve, tiers.length);
           checked++;
@@ -357,10 +359,7 @@ for (const { id, game, contract, tiers } of tiered) {
         const tier = tierOf(game, params);
 
         for (let seed = 0; seed < seeds; seed++) {
-          const { desc } = game.newDesc(
-            params,
-            randomNew(`binds-${id}-${title}-${seed}`),
-          );
+          const { desc } = dealt(game, params, seed);
           const lowest = lowestSolvingCap(
             cappedSolveFor(contract, params, desc),
             tiers.length,

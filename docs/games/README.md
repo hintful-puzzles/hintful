@@ -31,7 +31,8 @@ Authoritative specs:
 [`ts-migration`](../../openspec/specs/ts-migration/spec.md) (strategy,
 acceptance gate, test discipline) ·
 [`ts-engine`](../../openspec/specs/ts-engine/spec.md) (the `Game` interface,
-the `Midend`, the hint system) ·
+the `Midend`) and the `engine-*` specs beside it, one per subject (hints,
+input, params, difficulty, notes, colors, drawing, helpers) ·
 [`repo-layout`](../../openspec/specs/repo-layout/spec.md) (where things live,
 the in-process test tiers) · per-game specs under `openspec/specs/<game>/`.
 Doctrine: [`doctrine.md`](../doctrine.md). **Exemplar to read

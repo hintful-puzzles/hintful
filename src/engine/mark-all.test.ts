@@ -24,6 +24,7 @@ import { registerAllGames } from "../games/index.ts";
 import { UI_UPDATE } from "./game.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { dealt } from "./testing/dealt.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
@@ -72,10 +73,7 @@ it("drew a populated roster, and every member keeps its notes in `pencil`", () =
   // every board the gate slice offers.
   for (const row of MARK_ALL_GAMES) {
     for (const { title, params } of gatePresets(row.name, row.game)) {
-      const { desc } = row.game.newDesc(
-        params,
-        randomNew(`slots-${row.name}-${title}`),
-      );
+      const { desc } = dealt(row.game, params);
       const notes = notesOf(row.game.newState(params, desc));
       expect(
         ArrayBuffer.isView(notes),
@@ -141,7 +139,7 @@ describe("every game declaring the press answers it, and no other game does", ()
       const answeredOn: string[] = [];
       const presets = gatePresets(id, game);
       for (const { title, params } of presets) {
-        const { desc } = game.newDesc(params, randomNew(`mark-all-${id}-${title}`));
+        const { desc } = dealt(game, params);
         const state = game.newState(params, desc);
         boards++;
         const move = game.interpretMove(

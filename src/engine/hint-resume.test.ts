@@ -23,7 +23,7 @@
 import { describe, expect, it } from "vitest";
 import { permitsSearch } from "./difficulty.ts";
 import { DEDUCTION_EXHAUSTED, SEARCH_OUT_OF_REACH } from "./hint-refusal.ts";
-import { randomNew } from "./random/index.ts";
+import { dealt } from "./testing/dealt.ts";
 import {
   type AnyGame,
   gatePresets,
@@ -50,7 +50,7 @@ function solveByHints(
   permitsSearch: boolean,
   boundedSearch: boolean,
 ): number {
-  const { desc, aux } = game.newDesc(params, randomNew(seed));
+  const { desc, aux } = dealt(game, params);
   let state = game.newState(params, desc);
   // Generous cap, so only a genuine loop or non-convergence trips it: twice
   // the length the game's own first plan claims, and never below 800 for a
@@ -313,7 +313,7 @@ describe("a kept hint plan never contains a step that does nothing", () => {
       for (const { title, params } of gatePresets(name, game)) {
         for (const seed of BREADTH_SEEDS) {
           const at = `${name}/${title}/${seed}`;
-          const { desc, aux } = game.newDesc(params, randomNew(`noop-${at}`));
+          const { desc, aux } = dealt(game, params);
           let state = game.newState(params, desc);
           const res = game.hint?.(state, aux);
           if (!res?.ok) continue; // a refusal has no steps to check
@@ -342,7 +342,7 @@ describe("requesting a hint never mutates the board", () => {
       for (const { title, params } of gatePresets(name, game)) {
         for (const seed of BREADTH_SEEDS) {
           const at = `${name}/${title}/${seed}`;
-          const { desc, aux } = game.newDesc(params, randomNew(`pure-${at}`));
+          const { desc, aux } = dealt(game, params);
           const state = game.newState(params, desc);
           const before = stateKey(state);
           game.hint?.(state, aux);
@@ -373,7 +373,7 @@ describe("a Latin-family placement never falsely claims a naked single", () => {
     it(`${name}: "ruled out in this cell" only on a genuine naked single`, () => {
       for (const { title, params } of gatePresets(name, game)) {
         const at = `${name}/${title}`;
-        const { desc, aux } = game.newDesc(params, randomNew(`naked-${at}`));
+        const { desc, aux } = dealt(game, params);
         let state = game.newState(params, desc);
         // biome-ignore lint/suspicious/noExplicitAny: structural state access.
         const w = (params as any).w ?? (params as any).order;

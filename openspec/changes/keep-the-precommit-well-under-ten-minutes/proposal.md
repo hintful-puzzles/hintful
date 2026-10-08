@@ -1,8 +1,9 @@
 # keep-the-precommit-well-under-ten-minutes
 
-**Status: scaffolded, not started (2026-10-07).** Filed on the owner's word,
-the same day: the per-commit gate "used to be ~10 a few days ago", and it is
-to be brought back "well under 10 mins if we can".
+**Status: implemented 2026-10-08.** Filed on the owner's word on 2026-10-07:
+the per-commit gate "used to be ~10 a few days ago", and it is to be brought
+back "well under 10 mins if we can". The sections down to "The second half"
+are the scaffold as filed; what was found and decided is in `design.md`.
 
 ## Why
 
@@ -70,9 +71,29 @@ Whether the two halves are one change or two is the picking-up session's call
 once it has the ranking: they share a session on the owner's suggestion, and a
 change is one coherent unit of work.
 
+The two halves stayed one change. The spec split is a move that touches no
+requirement, and the midend question was answered by the same ranking.
+
 ## What Changes
 
-To be designed from the per-file ranking.
+- **The cross-game sweeps deal each board once** (`testing/dealt.ts`). The
+  ranking's finding was that the sweeps' time is dealing, not checking, and
+  that each sweep dealt its own copy of every board.
+- **The per-commit hook walks one board of each kind and the push walks the
+  rest** (`perCommit` in `testing/slow.ts`): one board of a params set, no
+  largest board, the first 400 steps of the bound-hint walk. CI and a bare
+  `vitest` do everything.
+- **The hook says when the last finished CI run on `main` failed.** A notice,
+  never a failure.
+- **`ts-engine`'s specification is ten capabilities by subject.** A move, line
+  for line.
+- **`midend.ts` is not split.** Its tests cost under a second, so no test would
+  get cheaper.
+- Nothing a player sees changes.
+
+One defect was found and is not fixed here: a Solo hint rung whose premise
+leaves out squares it reads (`design.md` § "Decision 1"). It is held in the
+sweep that found it and raised with the owner.
 
 ## Acceptance
 

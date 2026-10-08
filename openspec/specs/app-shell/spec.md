@@ -118,7 +118,7 @@ they have merely opened.
 The recorded game ID SHALL be the board's one game ID, which carries the full
 params encoding, difficulty included. Re-dealing a remembered board therefore
 restores the tier the player chose; the midend only checks that the board solves
-there, and raises a tier a mislabeling build recorded too low (ts-engine,
+there, and raises a tier a mislabeling build recorded too low (engine-difficulty,
 Requirement: A loaded board carries the tier it needs).
 
 A recorded game ID that this build can no longer deal SHALL be discarded and

@@ -4,8 +4,9 @@ How a game receives input in this frontend, and the traps this frontend has
 that upstream never had. Every trap below has already cost this project a
 shipped bug — read them before writing a game's input, not after.
 
-Authoritative specs: [`ts-engine`](../../openspec/specs/ts-engine/spec.md) (the
-`Game` interface, touch equivalence, on-screen keys) ·
+Authoritative specs: [`engine-input`](../../openspec/specs/engine-input/spec.md) (touch
+equivalence, on-screen keys, the keyboard cursor) · [`ts-engine`](../../openspec/specs/ts-engine/spec.md) (the
+`Game` interface) ·
 [`app-shell`](../../openspec/specs/app-shell/spec.md) (focus handling).
 Related guides: [`mechanics.md`](./mechanics.md) (the `interpretMove` /
 `executeMove` contract and `UI_UPDATE`) · [`rendering.md`](./rendering.md)
@@ -992,7 +993,7 @@ Two things to get right, learned from `add-loopy-auto-rule-out`:
 (correct for games upstream gave none, like Flip). On touch this panel is the
 *primary* digit-entry affordance, so it is not optional for a keypad game.
 Normative: the on-screen-keys requirement in
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md).
+[`engine-input`](../../openspec/specs/engine-input/spec.md).
 
 - **Digit games use the shared helper.** `digitKeys(n)` in
   [`engine/key-labels.ts`](../../src/engine/key-labels.ts) builds `'1'..'9'`

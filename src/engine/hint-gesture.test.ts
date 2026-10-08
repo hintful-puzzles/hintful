@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "./midend.ts";
+import { beginDealt } from "./testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 
 /** Far above any plan a gate preset's board needs, so only a loop trips it. */
@@ -28,8 +29,7 @@ describe("every hint step is one the pointer makes", () => {
       let played = 0;
       for (const { title, params } of presets) {
         const midend = new Midend(game);
-        const id = `${game.encodeParams(params, true)}#gesture-${title}`;
-        expect(midend.newGameFromId(id), id).toBeNull();
+        expect(beginDealt(midend, game, params), title).toBeNull();
         for (let steps = 0; steps < MAX_STEPS; steps++) {
           if (midend.executeHint() !== null) break;
           played++;

@@ -6,7 +6,8 @@ upstream's model. The authoritative contract is
 [`src/engine/game.ts`](../../src/engine/game.ts) — its doc comments are
 normative-adjacent and kept current; this guide is the tour with the traps
 marked. Normative requirements live in the
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md) spec.
+[`ts-engine`](../../openspec/specs/ts-engine/spec.md) spec and the `engine-*` specs beside
+it, one per subject.
 
 Sibling guides: [input](./input.md) · [rendering](./rendering.md) ·
 [solver & generator](./solver-and-generator.md) · [hints](./hints.md) ·
@@ -912,8 +913,8 @@ exercises.
 from the state, so `executeMove` stays pure and no game holds a midend
 back-reference. Mines lays out its mines on the first click (which is
 therefore never a mine). The engine guarantees, so don't re-derive them
-(normative: [`ts-engine`](../../openspec/specs/ts-engine/spec.md), "A game can
-supersede its game description mid-play"):
+(normative: [`engine-params`](../../openspec/specs/engine-params/spec.md), "A game
+can supersede its game description mid-play"):
 
 - The answer is a function of the state, and `null` means the desc the board
   started from. The game ID **follows the position**: undoing past the move
@@ -1000,7 +1001,7 @@ keep their own words — a field that is not a candidate set (Pearl's `marks` ar
 no-line marks on a cell's four edges), and a **solver's** own working candidate
 scratch, which is a different object with a different lifetime. Guarded by
 [`note-vocabulary.test.ts`](../../src/engine/note-vocabulary.test.ts); the
-normative rule is the `ts-engine` spec, "One note-taking vocabulary across
+normative rule is the `engine-notes` spec, "One note-taking vocabulary across
 games". *What the disagreement cost while it lasted*: `mark-all.test.ts` carried
 a hand-written row per game whose whole job was to say where that game's notes
 were — the last per-game roster in the cross-game guards.

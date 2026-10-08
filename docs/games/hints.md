@@ -11,8 +11,8 @@ comes next" says how the order is chosen. Upstream's `'h'` returns one next move
 no explanation; that is below the bar. Adding a hint to a game is its **own
 openspec change** (`add-<game>-hint`), acceptance-gated like a port.
 
-Authoritative spec: the Hint System requirements in
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md). Quality bar:
+Authoritative specs: [`engine-hints`](../../openspec/specs/engine-hints/spec.md), and
+[`engine-candidate-hints`](../../openspec/specs/engine-candidate-hints/spec.md) for the candidate walk. Quality bar:
 [`palisade`](../../openspec/specs/palisade/spec.md) + § "The quality bar" below. **Exemplars to
 read:** Palisade (grouped multi-leg deductions),
 [`src/games/range/`](../../src/games/range/) (`solver.ts` recording →
@@ -997,7 +997,7 @@ firing must still move the board.
 ## Engine mechanics
 
 The `Game` hooks and the `Midend` lifecycle are in
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md); the implementation is
+[`engine-hints`](../../openspec/specs/engine-hints/spec.md); the implementation is
 [`src/engine/midend.ts`](../../src/engine/midend.ts). A game implements:
 
 - **`hint(state, aux?, ui?): HintResult`** — return `{ ok: false, error }` to
@@ -1566,8 +1566,7 @@ manual Hint and Auto-Hint route the returned string into the transient banner
 ([`src/puzzle/puzzle.ts`](../../src/puzzle/puzzle.ts) `hint()` →
 `setHelpMessage`). A hint-carrying game with no `statusbarText`
 (e.g. Range) still shows and clears the banner. (Both behaviors are
-requirements in the [`ts-engine`](../../openspec/specs/ts-engine/spec.md)
-Hint System.) A refused **Solve** uses the same banner, so a game's `solve`
+requirements in [`engine-hints`](../../openspec/specs/engine-hints/spec.md).) A refused **Solve** uses the same banner, so a game's `solve`
 refusal is player-facing text too — word it as one.
 
 ## Rendering the hint
@@ -1838,7 +1837,7 @@ narration names more than one distinct *kind* of board element, give each
 *type* its own highlight color so the words map to the picture — and keep it
 stable (a "shaded square" is the *same* color in every hint that cites one),
 so the player learns it. Normative rule + scenarios:
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md) Hint System
+[`engine-hints`](../../openspec/specs/engine-hints/spec.md)
 ("element-type color legend"). Three non-negotiables:
 
 - **Color is never the sole carrier** (colorblind users). Every legend
@@ -4396,7 +4395,7 @@ list; forcing either onto the shared narrator would mean per-game overrides
 for half its arms, which reads worse than the duplication. The rule that
 held: extract the entry/arms that are *verbatim* across ≥2 games, leave the
 ones that diverge local. (Normative:
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md) "A shared narrator for
+[`engine-candidate-hints`](../../openspec/specs/engine-candidate-hints/spec.md) "A shared narrator for
 generic Latin deduction reasons" — a recorded local-narrate decision is a
 conforming outcome.)
 

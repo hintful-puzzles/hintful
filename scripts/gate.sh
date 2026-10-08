@@ -220,12 +220,24 @@ fi
 # --- 1c-ii. A note on what else GATE_PRECOMMIT reaches. ---
 #
 # The toggle is set once, by `.husky/pre-commit`, and vitest inherits it — so a
-# test can read it (`PRECOMMIT_HOOK_RUN` in src/engine/testing/slow.ts) and
-# defer an expensive *decay* check to push, while the half of the same guard
-# that catches what the commit just wrote keeps running here. The conditions
-# are in the build-pipeline spec, and they are narrow; `hint-quality.test.ts`
-# is the one caller and states its own reasoning. The backstop is asserted by
-# `src/gate-scope.test.ts`, which fails if CI ever sets this or the hook stops.
+# test can read it (`src/engine/testing/slow.ts`), two ways. `PRECOMMIT_HOOK_RUN`
+# defers an expensive *decay* check to push, while the half of the same guard
+# that catches what the commit just wrote keeps running here. `perCommit` has a
+# cross-game sweep walk one board of each kind here and the rest on push. The
+# conditions for both are in the build-pipeline spec. The backstop is asserted
+# by `src/gate-scope.test.ts`, which fails if CI ever sets this or the hook
+# stops.
+#
+# What the push runs and this does not shows first as a red CI run, and nobody
+# watches one, so the hook ends by saying so when the last finished run on
+# `main` failed (`scripts/checks/ci-status.mjs`). It is a notice and cannot fail
+# the commit, which is usually the fix; it is silent when it cannot reach
+# GitHub.
+ci_notice() {
+  if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
+    node scripts/checks/ci-status.mjs || true
+  fi
+}
 #
 # `nice` (weak on macOS but free insurance) is applied to BOTH heavy branches,
 # so the gate yields to whatever else the developer is running rather than
@@ -269,6 +281,7 @@ if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
     grep -qvE '^(docs/|openspec/|AGENTS\.md$|CLAUDE\.md$|CREDITS\.md$|README\.md$|LICENSE\.md$)'; then
     echo "✓ documentation-only commit — skipping vitest and vite build."
     echo "  (CI runs the full gate on push; \`npm run gate\` runs it here.)"
+    ci_notice
     exit 0
   fi
 fi
@@ -319,6 +332,10 @@ if [ "$plan" != "ALL" ]; then
     echo "✓ $(count "$narrow") of them run only the cross-game cases of: $scope."
   fi
   echo "  (CI runs everything on push; \`npm run gate\` runs everything here.)"
+fi
+if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
+  echo "  The cross-game sweeps walk one board of each kind here and the rest on push."
+  echo "  After changing code a sweep guards, run it wide: npx vitest run <its file>."
 fi
 
 # --- 1f. The source scans, ahead of everything that builds a board. ~6s. ---
@@ -392,3 +409,4 @@ if [ "$vitest_rc" -ne 0 ] || [ "$build_rc" -ne 0 ]; then
   echo "pre-commit gate failed (vitest=$vitest_rc build=$build_rc)"
   exit 1
 fi
+ci_notice

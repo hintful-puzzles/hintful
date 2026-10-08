@@ -3,7 +3,8 @@
  * that orchestrates it, the game registry, the save codec, and a few shared
  * helpers.
  *
- * See `openspec/specs/ts-engine/spec.md` for the capability contract.
+ * See `openspec/specs/ts-engine/spec.md` for the capability contract, and the
+ * `engine-*` specs beside it for each subject.
  */
 
 export { mkhighlight, mkhighlightBackground } from "./color/color-mkhighlight.ts";

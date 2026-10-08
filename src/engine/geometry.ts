@@ -2,7 +2,7 @@
  * Shared grid-coordinate helpers — the upstream `COORD` / `FROMCOORD`
  * mapping between cell indices and pixels, with the per-game border
  * supplied by the caller (most games use `Math.floor(tileSize / 2)`;
- * Sixteen uses a full tile). See the `ts-engine` spec, "shared
+ * Sixteen uses a full tile). See the `engine-helpers` spec, "shared
  * grid-coordinate helpers".
  */
 

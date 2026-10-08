@@ -2171,7 +2171,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * Where the displayed step sits in its journey, and how long the journey is;
    * `undefined` when no hint is displayed.
    *
-   * A journey is one deduction firing (`ts-engine`, "One deduction firing is
+   * A journey is one deduction firing (`engine-hints`, "One deduction firing is
    * one journey"): a first step plus every following step flagged
    * `continuesPrevious`. It is **derived from a flag the game already sets for
    * its own reasons**, so a game that never groups its steps reports length 1.

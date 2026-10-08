@@ -44,7 +44,7 @@ import { describe, expect, it } from "vitest";
 import { difficultyTiers, withTier } from "./difficulty.ts";
 import type { HintStep } from "./game.ts";
 import { paramsError } from "./params.ts";
-import { randomNew } from "./random/index.ts";
+import { dealt } from "./testing/dealt.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
 import { CHAIN_PINS, declaredOrder } from "./testing/hint-chain-pins.ts";
 import {
@@ -59,10 +59,12 @@ import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import {
   itOverWholeSweep,
   PRECOMMIT_HOOK_RUN,
+  perCommit,
   SLOW_TESTS_ENABLED,
 } from "./testing/slow.ts";
 
-const SEEDS = ["hq-a", "hq-b", "hq-c"];
+/** Which of a params set's shared boards (`dealt`) a walk over several takes. */
+const SEEDS = perCommit([0], [0, 1, 2]);
 
 /**
  * How long a step may be — short enough to read at a glance (owner,
@@ -130,6 +132,18 @@ const BOATS_RINGS_THE_WATER =
  * would be a bigger sample of the same kind, and it is checked on every commit
  * rather than at push: "every pinned board still speaks its sentence".
  */
+/** Why Pearl's steps run long; two ledger entries share it. */
+const PEARL_CARRIES_ON =
+  "The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also " +
+  "draws the line on through a white pearl it runs into, and says so in a " +
+  "second sentence after its own deduction, whichever deduction that is.";
+
+/** Why Signpost's link steps run long; two ledger entries share it. */
+const SIGNPOST_NAMES_EACH_REASON =
+  "A link's rivals ruled out for all three of Signpost's reasons at once: the " +
+  "sentence names each reason some rival has, and a reason left out would " +
+  "leave a square on the board the player cannot account for.";
+
 const LONG_NARRATIONS: {
   games: string[];
   rungs: string[];
@@ -159,7 +173,7 @@ const LONG_NARRATIONS: {
         "12dx:1_2_3_4_5_6_7_8_9_10_11_12_2k3a7g9a4f9a3b5k6b2c1c9_7k8h6b9k10_5b9g11k12f5d",
     },
     why:
-      "The Latin chain Tactic (`latin-hint.ts`). ts-engine requires a narrated " +
+      "The Latin chain Tactic (`latin-hint.ts`). engine-hints requires a narrated " +
       "chain to name both ends, cite its links by position and say when the " +
       "conclusion rests on a case split, and that is three clauses.",
   },
@@ -244,11 +258,17 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["pearl"],
-    rungs: ["square", "whiteCannotTurn"],
-    why:
-      "The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also " +
-      "draws the line on through a white pearl it runs into, and says so in a " +
-      "second sentence after its own deduction, whichever deduction that is.",
+    rungs: ["closesEarlyThrough", "square"],
+    why: PEARL_CARRIES_ON,
+  },
+  {
+    // An entry of its own, as Boats' pinned rung is: over the limit only with
+    // the second sentence, on 2 of the first 5 deals at 10x10 Normal
+    // (2026-10-08) and on no board the walk takes.
+    games: ["pearl"],
+    rungs: ["whiteCannotTurn"],
+    spokenOn: { pearl: "10x10dt:BaBbBBkWcBfBcBaBWeWfBWWaBdWcBcWdWdWWcWWbWWkWa" },
+    why: PEARL_CARRIES_ON,
   },
   {
     games: ["subsets"],
@@ -280,7 +300,7 @@ const LONG_NARRATIONS: {
     games: ["clusters"],
     rungs: ["chain"],
     why:
-      "A Tactic chain. ts-engine requires the narration to name both ends and " +
+      "A Tactic chain. engine-hints requires the narration to name both ends and " +
       'cite the links by their numbers on the board, and "from it" is the ' +
       "deixis tie clusters-hint.test.ts checks.",
   },
@@ -307,14 +327,14 @@ const LONG_NARRATIONS: {
     games: ["map"],
     rungs: ["forcingChain"],
     why:
-      "Map's chain Tactic, held to what ts-engine asks of every narrated chain: " +
+      "Map's chain Tactic, held to what engine-hints asks of every narrated chain: " +
       "name both ends, cite the links by their numbers on the board, and state " +
       "the case split. The walk names each link's color, which is what made it " +
       "readable at a glance (owner playtest, 2026-09-25), and costs a clause per link.",
   },
   {
     games: ["singles"],
-    rungs: ["corner2", "corner3"],
+    rungs: ["corner2", "corner3", "corner4"],
     why:
       'The owner-directed corner family (hints.md § "Name a square by its ' +
       'value": concrete values read far clearer): each arm is a proof by ' +
@@ -322,12 +342,35 @@ const LONG_NARRATIONS: {
       "box-in step is the one a shorter sentence would drop.",
   },
   {
-    games: ["signpost"],
-    rungs: ["onlyBefore", "onlyNext"],
+    // Over by one character, and only where four squares are listed and three
+    // of their numbers have two digits, which needs a board wider than nine.
+    games: ["singles"],
+    rungs: ["adjBlack"],
+    spokenOn: {
+      singles:
+        "12x12dk:b2124355c74756c52b1ac39725a5a63313c6a452b7c331a281372a46842b746a49b2a1178526443c6883c3ba519162b8b287154b7733a54b3b2a5c214cb66257895abb44a161b7b5",
+    },
     why:
-      "A link's rivals ruled out for all three of Signpost's reasons at once: the " +
-      "sentence names each reason some rival has, and a reason left out would " +
-      "leave a square on the board the player cannot account for.",
+      "The squares a purple square forces clear are listed by their numbers so " +
+      "the player need not hunt the rings, and the rule that forces them is the " +
+      "whole of the reason: neither half can go, and the list is as long as the " +
+      "square has open neighbors.",
+  },
+  {
+    games: ["signpost"],
+    rungs: ["onlyNext"],
+    why: SIGNPOST_NAMES_EACH_REASON,
+  },
+  {
+    // An entry of its own for the same reason: all three reasons meet on few
+    // boards, 2 of the first 10 deals at 7x7 (2026-10-08).
+    games: ["signpost"],
+    rungs: ["onlyBefore"],
+    spokenOn: {
+      signpost:
+        "7x7c:1dcee18gdfc38cdeeeedecdg28a13fbadae7g31h22ahhba35ggbb11acg5aacbh33aag49a",
+    },
+    why: SIGNPOST_NAMES_EACH_REASON,
   },
   {
     games: ["net"],
@@ -605,10 +648,7 @@ describe("hint narration form, cross-game", () => {
     it(`${name}: every step is visible, terse${DEDUCTIVE.has(name) ? ", and necessity-voiced" : ""}`, () => {
       for (const { title, params } of gatePresets(name, game))
         for (const seed of FORM_SEEDS) {
-          const { desc, aux } = game.newDesc(
-            params,
-            randomNew(`${name}-${title}-${seed}`),
-          );
+          const { desc, aux } = dealt(game, params, seed);
           const state = game.newState(params, desc);
           const res = game.hint?.(state, aux);
           if (!res?.ok) continue;
@@ -701,6 +741,14 @@ function formDefects(step: HintStep<unknown>, searching: boolean): string[] {
   return [];
 }
 
+/**
+ * How many steps of one board the walk below checks. The per-commit hook stops
+ * at 400: a board's later steps are spoken by the rungs its earlier ones were,
+ * and one board, Mosaic's 50x50 with its 1,355 steps, was 52 s of the walk's
+ * 110 s (2026-10-08). Every step of every board is checked on push.
+ */
+const BOUND_STEPS = perCommit(400, Number.POSITIVE_INFINITY);
+
 /** Forms seen across the walk, so the close-out can tell that every kind of
  * exception and the searching check met real steps. */
 const formsSeen = new Map<string, number>();
@@ -711,7 +759,7 @@ const formsSeen = new Map<string, number>();
  * folds strikes into placements; otherwise the game's own, `null`.
  */
 function readingsOf(game: AnyGame, params: unknown): readonly (string | null)[] {
-  const { desc } = game.newDesc(params, randomNew("reading-probe"));
+  const { desc } = dealt(game, params);
   const ui = game.newUi(game.newState(params, desc)) as Record<string, unknown>;
   return typeof ui["candidateReading"] === "string" ? ["implicit", "populate"] : [null];
 }
@@ -765,18 +813,16 @@ describe("a bound hint's words name exactly the marks it draws", () => {
       for (const { title, params } of gatePresets(name, game))
         for (const seed of FORM_SEEDS)
           for (const reading of readingsOf(game, params)) {
-            const { desc, aux } = game.newDesc(
-              params,
-              randomNew(`${name}-${title}-${seed}`),
-            );
+            const { desc, aux } = dealt(game, params, seed);
             let state = game.newState(params, desc);
             const ui = game.newUi(state);
             if (reading)
               (ui as { candidateReading: string }).candidateReading = reading;
             const at = `${title}/${seed}${reading ? `/${reading}` : ""}`;
+            let walked = 0;
             for (
               let round = 0;
-              round < 60 && game.status(state) === "ongoing";
+              round < 60 && walked < BOUND_STEPS && game.status(state) === "ongoing";
               round++
             ) {
               const res = game.hint?.(state, aux, ui);
@@ -784,6 +830,7 @@ describe("a bound hint's words name exactly the marks it draws", () => {
               // Each step over the board it is narrated for: the state after
               // the steps before it.
               for (const [i, step] of res.steps.entries()) {
+                if (walked++ >= BOUND_STEPS) break;
                 check(state, ui, step, `${at} round ${round} step ${i}`);
                 // `null` is a step already resolved: the midend skips it.
                 const live = game.refreshHintStep
@@ -890,7 +937,7 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
         for (const seed of SEEDS) {
           let board: { desc: string; aux?: string };
           try {
-            board = game.newDesc(params, randomNew(`${name}-${label}-${seed}`));
+            board = dealt(game, params, seed);
           } catch {
             continue; // ungenerable at this size; difficulty-contract.test.ts owns that
           }
@@ -1033,10 +1080,10 @@ const CORNER_WALKED = !PRECOMMIT_HOOK_RUN;
 function lintCases(
   id: string,
   game: AnyGame,
-): { label: string; params: unknown; seeds: readonly string[] }[] {
-  const out: { label: string; params: unknown; seeds: readonly string[] }[] = [];
+): { label: string; params: unknown; seeds: readonly number[] }[] {
+  const out: { label: string; params: unknown; seeds: readonly number[] }[] = [];
   const seen = new Set<string>();
-  const add = (label: string, params: unknown, seeds: readonly string[]): void => {
+  const add = (label: string, params: unknown, seeds: readonly number[]): void => {
     const key = JSON.stringify(params);
     if (seen.has(key)) return;
     seen.add(key);
@@ -1113,7 +1160,7 @@ describe("hint narration stays readable at a glance", () => {
         for (const seed of seeds) {
           let board: { desc: string; aux?: string };
           try {
-            board = game.newDesc(params, randomNew(`${name}-${label}-${seed}`));
+            board = dealt(game, params, seed);
           } catch {
             continue;
           }

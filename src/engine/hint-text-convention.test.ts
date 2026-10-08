@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { randomNew } from "./random/index.ts";
+import { dealt } from "./testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 
 /** Game ids with a text module, read off the paths alone (nothing is loaded). */
@@ -19,7 +19,7 @@ const WITH_TEXT = new Set(
   Object.keys(import.meta.glob("../games/*/hint-text.ts")).map((p) => p.split("/")[2]),
 );
 
-const SEEDS = ["ht-a", "ht-b", "ht-c"];
+const SEEDS = [0, 1, 2];
 
 /**
  * Does this game's hint put words on screen? One speaking step on any board of
@@ -36,11 +36,11 @@ const SEEDS = ["ht-a", "ht-b", "ht-c"];
 function speaks(id: string): boolean {
   const game = HINT_GAMES.find(([g]) => g === id)?.[1];
   if (!game) return false;
-  for (const { title, params } of gatePresets(id, game)) {
+  for (const { params } of gatePresets(id, game)) {
     for (const seed of SEEDS) {
       let board: { desc: string; aux?: string };
       try {
-        board = game.newDesc(params, randomNew(`${id}-${title}-${seed}`));
+        board = dealt(game, params, seed);
       } catch {
         continue;
       }

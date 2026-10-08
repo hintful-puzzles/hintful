@@ -138,7 +138,7 @@ type VerbButton = "primary" | "secondary";
 
 /**
  * How a pointer reaches what a key-only verb does, since every action is
- * reachable by the pointer alone as well as the keyboard (`ts-engine`, "A game
+ * reachable by the pointer alone as well as the keyboard (`engine-input`, "A game
  * reads one pointer with two buttons"). A verb without one does not typecheck.
  *
  * - `repeat`: the button pressed on the target `times` times (a half turn is

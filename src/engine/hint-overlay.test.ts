@@ -20,12 +20,13 @@
 import { describe, expect, it } from "vitest";
 import { permitsSearch } from "./difficulty.ts";
 import { Midend } from "./midend.ts";
+import { beginDealt } from "./testing/dealt.ts";
 import { declaresNoMarks, gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 
-/**
- * Seeds per board — one, because the boards are now the gate slice rather than
+/*
+ * One board of each params set, because the boards are now the gate slice rather than
  * three of each game's easiest preset
  * (`slice-the-first-leaf-hint-guards-by-axis`).
  *
@@ -36,7 +37,6 @@ import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
  * cages, Seismic's Tectonic regions and twenty of Loopy's twenty-one tilings
  * are each a branch this walked no board of.
  */
-const SEED = "ov-a";
 
 /** How many opening steps we will play through looking for one that carries
  * board marks (a candidate game's populate/cleanup opener may precede the
@@ -50,9 +50,7 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
       for (const { title, params } of gatePresets(name, game)) {
         const seed = `${name}/${title}`;
         const midend = new Midend(game);
-        const id = `${game.encodeParams(params, true)}#${SEED}-${seed}`;
-        const err = midend.newGameFromId(id);
-        expect(err, `${seed}: bad id ${id}`).toBeNull();
+        expect(beginDealt(midend, game, params), `${seed}: no board`).toBeNull();
 
         const palette = game.colors(DEFAULT_BACKGROUND);
 

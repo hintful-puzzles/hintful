@@ -180,7 +180,7 @@ describe("the conventional tier names", () => {
 
   it("never hands out Unreasonable by position", () => {
     // The word is a promise `features.md` makes to players, reserved by the
-    // `ts-engine` spec for a tier whose boards can require Search. A game that
+    // `engine-difficulty` spec for a tier whose boards can require Search. A game that
     // does not declare one must not be able to acquire the name by growing.
     for (let count = 2; count <= 5; count++) {
       expect(tierNames(count)).not.toContain("Unreasonable");

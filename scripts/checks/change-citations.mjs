@@ -41,6 +41,10 @@
  *    still something a reader can go and find, which is the property this guard
  *    is actually about.
  *
+ *    A spec capability's name resolves as well (`engine-candidate-hints`): a
+ *    directory under `openspec/specs/` is a thing a reader can go and find,
+ *    and it is cited the way a change is.
+ *
  * 3. **The unresolved tokens are a ledger asserted EXACTLY equal to the
  *    unresolved set, with a reason per entry** — the `NO_KEYBOARD` shape
  *    (`docs/games/testing.md` § "How a cross-game guard finds its population").
@@ -169,8 +173,13 @@ for (const f of postmortemFiles) {
   for (const [, id] of text.matchAll(CITATION)) postmortemIds.add(id);
 }
 
+const specNames = readdirSync("openspec/specs", { withFileTypes: true })
+  .filter((e) => e.isDirectory())
+  .map((e) => e.name);
+
 const resolvable = new Set([
   ...openIds,
+  ...specNames,
   ...archiveDirs, // cited with its date prefix
   ...archiveDirs.map((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, "")), // and without
   ...postmortemIds,

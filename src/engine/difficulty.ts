@@ -244,7 +244,7 @@ export function difficultyChoiceItem<Params>(game: {
  * are named from unless it declares an override.
  *
  * `Unreasonable` is deliberately **not** in it: it is not a rung of this scale
- * but a promise about one, reserved by the `ts-engine` spec for a tier whose
+ * but a promise about one, reserved by the `engine-difficulty` spec for a tier whose
  * boards can require Search and forbidden elsewhere. {@link tierNames} appends
  * it on request, which is why that request is a declared fact about the top
  * rung rather than a position.

@@ -14,7 +14,7 @@
  * The shape is Loopy's own rather than `GridCursor` because the position is a
  * dot index, not an `(x, y)`, and an arrow press does not *move* it — it picks
  * an edge. It still sits under `ui.cursor`, the collection's one name for the
- * thing (`ts-engine`, "One keyboard-cursor vocabulary across games").
+ * thing (`engine-input`, "One keyboard-cursor vocabulary across games").
  *
  * ## Walking, and aiming
  *

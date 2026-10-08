@@ -8,7 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { loadVerdict, validateDesc } from "./desc-error.ts";
 import { Midend } from "./midend.ts";
-import { randomNew } from "./random/index.ts";
+import { dealt } from "./testing/dealt.ts";
 import { descAlphabet, descMutants } from "./testing/desc-mutants.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { dealtBoards } from "./testing/presets.ts";
@@ -89,7 +89,7 @@ describe("a near-miss game ID", () => {
       const boards = presets.map(({ title, params }) => ({
         title,
         params: game.encodeParams(params, true),
-        desc: game.newDesc(params, randomNew(`near-miss-${id}-${title}`)).desc,
+        desc: dealt(game, params).desc,
       }));
       const alphabet = descAlphabet(boards.map((b) => b.desc));
 

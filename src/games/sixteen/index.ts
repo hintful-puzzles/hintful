@@ -129,7 +129,7 @@ function interpretMove(
       // reveals: a first press must not move the board out from under a player
       // who cannot yet see where it would act. The unlocked mode below is the
       // plain cursor walk, and reveals and moves in one press like every other
-      // game's (`ts-engine`, "One keyboard-cursor vocabulary across games").
+      // game's (`engine-input`, "One keyboard-cursor vocabulary across games").
       if (showCursor(ui.cursor)) return UI_UPDATE;
       if (
         ui.cursor.x < 0 ||

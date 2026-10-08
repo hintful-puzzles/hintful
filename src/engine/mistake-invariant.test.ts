@@ -63,6 +63,7 @@ import { registerAllGames } from "../games/index.ts";
 import { Midend } from "./midend.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { NOT_STARTED } from "./solve-failure.ts";
+import { beginDealt } from "./testing/dealt.ts";
 import { capabilitySets } from "./testing/enrollment.ts";
 import { dealtBoards } from "./testing/presets.ts";
 import { SLOW_TESTS_ENABLED } from "./testing/slow.ts";
@@ -129,10 +130,9 @@ describe("a board with nothing wrong on it reports no mistakes", () => {
 
       for (const { title, params } of presets) {
         const midend = new Midend(game);
-        const id = `${game.encodeParams(params, true)}#mi-${name}`;
         expect(
-          midend.newGameFromId(id),
-          `${name}/${title}: could not deal ${id}`,
+          beginDealt(midend, game, params),
+          `${name}/${title}: could not deal`,
         ).toBeNull();
 
         expect(

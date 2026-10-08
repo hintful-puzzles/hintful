@@ -11,8 +11,9 @@
  * production build.** If that stops being true, a commit touching those paths
  * would skip `vitest run` and `vite build` while genuinely affecting them.
  *
- * **A deferred assertion** (`PRECOMMIT_HOOK_RUN`, `engine/testing/slow.ts`)
- * rests on a different one: **CI is the backstop.** The hook sets
+ * **A deferred assertion and a sweep's smaller per-commit amount**
+ * (`PRECOMMIT_HOOK_RUN` and `perCommit`, `engine/testing/slow.ts`)
+ * rest on a different one: **CI is the backstop.** The hook sets
  * `GATE_PRECOMMIT` and CI does not, so work skipped for a commit still runs on
  * every push. Set it in both and the deferred assertions run *nowhere* while
  * both runs report green, which is why the last test below reads the two files

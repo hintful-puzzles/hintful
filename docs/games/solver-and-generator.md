@@ -7,7 +7,7 @@ How a game's deduction engine, difficulty tiers, generator, `solve()` and
 **"Narratable-deduction generation policy"**, **"A difficulty-capped solver is
 monotone in its cap"**, **"A difficulty tier binds the board it generates"**
 and **"An unbindable tier is refused, not silently downgraded"**, and the
-[`ts-engine`](../../openspec/specs/ts-engine/spec.md) requirement **"A hint
+[`engine-hints`](../../openspec/specs/engine-hints/spec.md) requirement **"A hint
 step always names a technique, with no un-narrated fallback"**.
 
 Related guides: [hints.md](./hints.md) (narration and plan mechanics),
@@ -325,7 +325,7 @@ decides the walk, check whether anything can reach it.
 #### What a bespoke loop still owes
 
 A bespoke loop is part of the design, not a failure of it. Three obligations,
-stated per game rather than assumed, and normative here — the `ts-engine`
+stated per game rather than assumed, and normative here — the `engine-helpers`
 "shared deduction-fixpoint scaffold" requirement carries them.
 
 | Obligation | Loopy | Lightup |
@@ -612,7 +612,7 @@ hold a tier (`tierOf`/`withTier`), come from the game's difficulty item
 
 **Don't try to derive them from the technique ladder.** The framework fiction
 proposed it and `declare-deduction-techniques` looks like the lever, but three
-things independently defeat it, and the `ts-engine` spec records them so the
+things independently defeat it, and the `engine-difficulty` spec records them so the
 survey is not repeated: `DeductionTechnique.tier` is a *number* while a tier list
 is *names*; `runDeductionFixpoint` **receives** `maxTier`, and every ladder in
 the collection is an array literal built inside a solve from board state, so
@@ -634,7 +634,7 @@ for the next caller. A tier probe runs on state uncontaminated by earlier
 candidates (the `ts-migration` requirement of that name).
 
 **`solveAtCap` also runs whenever a board is loaded, not only while one is
-dealt.** The midend checks a loaded board's tier against it (`ts-engine` §
+dealt.** The midend checks a loaded board's tier against it (`engine-difficulty` §
 "A loaded board carries the tier it needs"): an id without a tier (upstream's
 game IDs omit it) is graded outright, and a tier pinned by an id or a save is
 kept only if the board solves there,

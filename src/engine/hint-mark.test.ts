@@ -18,9 +18,11 @@
 import { describe, expect, it } from "vitest";
 import { HintMarks, type MarkCell } from "./hint-mark.ts";
 import { Midend } from "./index.ts";
+import { beginDealt } from "./testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import { perCommit } from "./testing/slow.ts";
 import type { Color, Rect } from "./types.ts";
 
 const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.ts", {
@@ -99,11 +101,10 @@ function hintFrames(
 ): { ops: Op[]; cell: number }[] {
   const palette = game.colors(DEFAULT_BACKGROUND);
   const frames: { ops: Op[]; cell: number }[] = [];
-  for (const { title, params } of gatePresets(id, game)) {
-    for (let s = 0; s < 2; s++) {
+  for (const { params } of gatePresets(id, game)) {
+    for (let s = 0; s < perCommit(1, 2); s++) {
       const midend = new Midend(game);
-      const seed = `mark-${title}-${s}`;
-      if (midend.newGameFromId(`${game.encodeParams(params, true)}#${seed}`)) continue;
+      if (beginDealt(midend, game, params, s)) continue;
       const size = midend.size({ w: 700, h: 700 });
       const cell = Math.min(size.w, size.h) / 20;
       if (midend.hint()) continue;

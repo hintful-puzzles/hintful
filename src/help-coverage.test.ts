@@ -640,7 +640,7 @@ describe("the populations the help asserts are derived, not trusted", () => {
 
   /*
    * `Unreasonable` is a promise, not a boast: it is the one tier name allowed to
-   * mean "deduction may not finish this board" (`ts-engine`). Thirteen games
+   * mean "deduction may not finish this board" (`engine-difficulty`). Thirteen games
    * ship one and, until this change, nothing player-facing said so — which made
    * a hint that had honestly run out indistinguishable from a broken one.
    */

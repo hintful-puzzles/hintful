@@ -734,7 +734,7 @@ hint-quality walk; `legendMarkdown` is the help's generated list of marks. See
 The engine's half of the hint-text convention (a game's own sentences are its
 `hint-text.ts`): `narrateLatinReason` and `latinPremise` for the row/column
 games whose generic-arm wording is verbatim-identical (normative rule: the
-`ts-engine` "shared narrator" requirement), `forcingChainPremise`, the
+`engine-candidate-hints` "shared narrator" requirement), `forcingChainPremise`, the
 candidate games' `populateText`/`cleanObviousText`, the `Premise` a strike's
 words are and the `Conclusions` the walk ends it with (`candidateConclusions`
 for a game whose values print one way), the `LatinVocab` a value is spoken in, the
@@ -1099,7 +1099,7 @@ junk appended and with every legacy form the old decoder handles, since a
 hand-written decoder accepts strings no encoder writes. Five grammars
 genuinely escape it (a float param, a leading letter before the dimensions, a
 `switch` over multi-character strings, a `while` loop over the tail, a boolean
-encoded as an integer) — those are named in the `ts-engine` spec, and a game
+encoded as an integer) — those are named in the `engine-params` spec, and a game
 taking one still owes the inverse property, which
 `params-stability.test.ts` asserts over a registry-derived corpus.
 
@@ -1421,6 +1421,10 @@ board of that size needs the tier: refused when dealing, accepted with a desc,
 and in the slow tier the generator run out at each; and `describeDealtTiers`,
 the cells that deal boards whose lowest solving cap is the tier asked for,
 with `seldom` for a cell that takes seconds a board, dealt in the slow tier),
+`dealt.ts` (`dealt` and `beginDealt`: a board of given params, dealt once per
+worker and shared by every cross-game sweep, because dealing and not checking
+is where a sweep's time goes; see [`testing.md`](./testing.md) § "Deal through
+`dealt`"),
 `differential.ts` (`describeDescDifferential`, the byte-for-byte desc shape +
 the one statement that fixtures are frozen and unregenerable),
 `enrollment.ts` + `hint-games.ts` (**how a cross-game guard finds its
