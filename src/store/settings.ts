@@ -3,6 +3,12 @@ import { SignalMap } from "signal-utils/map";
 import { effect } from "signal-utils/subtle/microtask-effect";
 import type { ConfigValues, PuzzleId } from "../engine/types.ts";
 import {
+  type ControlsSide,
+  DEFAULT_SHAPE_LAYOUT,
+  type ShapeLayout,
+  type WindowShape,
+} from "../puzzle/layout.ts";
+import {
   type CommonSettings,
   db,
   type PuzzleSettings,
@@ -24,6 +30,12 @@ const isSerializedSettings = (obj: unknown): obj is SerializedSettings =>
   Array.isArray(obj.data);
 
 const COMMON_SETTINGS_ID = "puzzle-common";
+
+const SHAPE_LAYOUT_KEY = {
+  tall: "layoutTall",
+  wide: "layoutWide",
+  short: "layoutShort",
+} as const satisfies Record<WindowShape, keyof CommonSettings>;
 
 //
 // @commonSetting decorator
@@ -296,7 +308,7 @@ class Settings {
    * (`src/puzzle/shortcuts.ts`). The preference is for a player who would
    * rather no bare letter ever meant anything at the app level.
    *
-   * (No `statusbarPlacement`: the rail gives the status line one home, so
+   * (No `statusbarPlacement`: the status line has one home, under the board, so
    * `start` / `end` denote nothing. `CommonSettings` does not declare the
    * field, so a stored value comes back from `getCommonSettings` and nothing
    * asks for it.)
@@ -311,6 +323,31 @@ class Settings {
     toDB: (value) => (value === Number.POSITIVE_INFINITY ? null : value),
   })
   declare maxScale: number;
+
+  /** Which side the Game controls dock on. The Menu takes the other. */
+  @commonSetting({ default: "right" })
+  declare layoutControlsSide: ControlsSide;
+
+  /**
+   * The layout in force for `shape`: what the player chose there, over that
+   * shape's default. Each shape keeps its own choices, so a layout chosen on a
+   * wide screen does not follow a player to a tall one.
+   */
+  layoutFor(shape: WindowShape): ShapeLayout {
+    const stored = this[getCommonSetting](SHAPE_LAYOUT_KEY[shape]);
+    return { ...DEFAULT_SHAPE_LAYOUT[shape], ...(stored === UNSET ? {} : stored) };
+  }
+
+  setLayoutFor(shape: WindowShape, choice: Partial<ShapeLayout>) {
+    const key = SHAPE_LAYOUT_KEY[shape];
+    const stored = this[getCommonSetting](key);
+    this[setCommonSetting](key, { ...(stored === UNSET ? {} : stored), ...choice });
+  }
+
+  /** Forget every choice made for `shape`, so its default is in force. */
+  resetLayoutFor(shape: WindowShape) {
+    this[setCommonSetting](SHAPE_LAYOUT_KEY[shape], {});
+  }
 
   //
   // Settings DB access

@@ -52,7 +52,9 @@ function swatchProperties(fill: string): string {
 }
 
 /**
- * A virtual keyboard for the puzzle
+ * A virtual keyboard for the puzzle: the keys it is given, drawn as buttons
+ * that send each key's code to the game. Which keys a game has, and when they
+ * change, is `game-controls.ts`'s to know.
  */
 @customElement("puzzle-keys")
 export class PuzzleKeys extends SignalWatcher(LitElement) {
@@ -70,47 +72,48 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
   @property({ type: Object })
   labelIcons: LabelIcons = PuzzleKeys.defaultLabelIcons;
 
-  @state()
-  private keyLabels?: KeyLabel[];
+  @property({ attribute: false })
+  keys: readonly KeyLabel[] = [];
 
-  private renderedParams: string | null = null;
+  /**
+   * Lay the keys out as a grid of this many columns. `null` leaves them in
+   * rows that wrap to the width they are given.
+   */
+  @property({ type: Number })
+  columns: number | null = null;
 
-  protected override async willUpdate() {
-    // The available keys can vary with changes to puzzle params.
-    // (This should really be an effect on this.puzzle?.currentParams,
-    // but @lit-labs/signals doesn't have effects yet.)
-    const currentParams = this.puzzle?.currentParams ?? null;
-    if (currentParams !== this.renderedParams) {
-      this.renderedParams = currentParams;
-      await this.loadKeyLabels();
-    }
-  }
-
-  private async loadKeyLabels() {
-    this.keyLabels = (await this.puzzle?.requestKeys()) ?? [];
-  }
+  /** Write each key's label beside its icon: for a key that is a mode and not
+   * a character, which a player has to be able to read. */
+  @property({ type: Boolean, reflect: true })
+  labeled = false;
 
   protected override render() {
-    if (!this.keyLabels || this.keyLabels.length === 0) {
+    if (this.keys.length === 0) {
       return nothing;
     }
 
     // If >5 keys, divide into two equal groups for better wrapping
     const split =
-      this.keyLabels.length > 5
-        ? Math.floor(this.keyLabels.length / 2)
-        : this.keyLabels.length;
-    const keyGroups = [this.keyLabels.slice(0, split), this.keyLabels.slice(split)];
-    const groups = keyGroups.map(
-      (keys) => html`
-          <div part="group">${keys.map(this.renderVirtualKey)}</div>`,
-    );
+      this.columns === null && this.keys.length > 5
+        ? Math.floor(this.keys.length / 2)
+        : this.keys.length;
+    const keyGroups = [this.keys.slice(0, split), this.keys.slice(split)];
+    const groups = keyGroups
+      .filter((keys) => keys.length > 0)
+      .map(
+        (keys) => html`
+          <div
+              part="group"
+              style=${this.columns === null ? nothing : `--columns: ${this.columns}`}
+            >${keys.map(this.renderVirtualKey)}</div>`,
+      );
 
     // Activate virtual keys on touchstart for better responsiveness in rapid "typing".
     // But also handle click for keyboard activation (if a virtual key somehow gets focus).
     return html`
       <div
           part="base"
+          class=${this.columns === null ? "rows" : "grid"}
           @click=${this.handleButtonPress}
           @mousedown=${keepFocusOnTheBoard}
           @touchstart=${this.handleButtonPress}
@@ -123,12 +126,14 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
     const icon = this.labelIcons[label];
     const fill = this.swatchFill(key);
     const classes = classMap({
-      single: icon || label.length === 1,
+      single: !this.labeled && (icon || label.length === 1),
       swatch: fill !== null,
     });
-    const content = icon
-      ? html`<wa-icon name=${icon} label=${label}></wa-icon>`
-      : label;
+    const content = !icon
+      ? label
+      : this.labeled
+        ? html`<wa-icon slot="start" name=${icon}></wa-icon>${label}`
+        : html`<wa-icon name=${icon} label=${label}></wa-icon>`;
     // Exclude virtual keys from keyboard navigation
     // (they're not helpful for a keyboard user).
     return html`
@@ -188,12 +193,30 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
 
         display: flex;
         flex-wrap: wrap;
+        justify-content: center;
         gap: var(--gap);
       }
   
       [part~="group"] {
         display: flex;
         gap: var(--gap);
+      }
+
+      /* A labeled key fills the width it is given, as a button beside it
+       * does. */
+      :host([labeled]) [part~="base"],
+      :host([labeled]) [part~="group"] {
+        display: grid;
+        justify-content: stretch;
+      }
+      :host([labeled]) wa-button {
+        width: 100%;
+      }
+
+      .grid [part~="group"] {
+        display: grid;
+        grid-template-columns: repeat(var(--columns), auto);
+        justify-content: center;
       }
   
       .single {

@@ -6,6 +6,7 @@ import type {
   GameStatus,
   PuzzleId,
 } from "../engine/types.ts";
+import type { ControlsSide, ShapeLayout } from "../puzzle/layout.ts";
 
 // Settings shared by all puzzles
 export interface CommonSettings {
@@ -33,6 +34,15 @@ export interface CommonSettings {
   showPuzzleKeyboard?: boolean;
   oneKeyShortcuts?: boolean;
   maxScale?: number | null; // null in DB/json === Infinity in exposed value
+
+  // Where the puzzle screen's panels dock (`src/puzzle/layout.ts`). The side
+  // is kept once for the device; the rest once per window shape, holding only
+  // what the player chose, so a default can change under a player who never
+  // chose.
+  layoutControlsSide?: ControlsSide;
+  layoutTall?: Partial<ShapeLayout>;
+  layoutWide?: Partial<ShapeLayout>;
+  layoutShort?: Partial<ShapeLayout>;
 }
 
 // PuzzleId-specific settings

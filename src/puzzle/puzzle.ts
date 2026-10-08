@@ -332,8 +332,7 @@ export class Puzzle {
   private _activeHintExplanation = signal<string>("");
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
-   * in the chrome so the two surfaces that show it (the rail and the phone's
-   * hint strip) cannot word it differently. */
+   * in the chrome, so that whatever shows it cannot word it differently. */
   private _hintJourney = signal<string>("");
   private _helpMessageTimeoutId?: ReturnType<typeof setTimeout>;
   /** A `processHover` round trip is outstanding. */

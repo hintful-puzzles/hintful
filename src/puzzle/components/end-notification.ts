@@ -142,7 +142,7 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
       html`
         <wa-button @click=${this.restartGame}>
           <wa-icon slot="start" name="restart-game"></wa-icon>
-          Restart
+          Start over
         </wa-button>
       `,
     ];

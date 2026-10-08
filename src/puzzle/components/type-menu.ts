@@ -54,7 +54,7 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
    * `button` is the Web Awesome button with a caret, used where this menu is
    * one control among several. `chips` splits the current parameter
    * description into its own small monospaced chips — `7×7`, `Easy` — which is
-   * what the rail and the phone's top bar want: the type is a *fact about the
+   * what the puzzle screen's readout row wants: the type is a *fact about the
    * board in front of you*, and hiding it behind a caret while the board is
    * governed by it is the wrong way round.
    *

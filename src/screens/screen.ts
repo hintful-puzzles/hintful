@@ -13,49 +13,28 @@ export class Screen extends LitElement {
   }
 
   //
-  // Layout and sizing
+  // Sizing
   //
 
   @property({ type: String, reflect: true })
   size: "large" | "medium" | "small" = "large";
 
-  @property({ type: String, reflect: true })
-  orientation: "horizontal" | "vertical" = "vertical";
-
-  /** Which command surface the puzzle screen wears — see `--app-chrome` in
-   * `common.css`. Read here because this is where the layout tokens are read;
-   * only `PuzzleScreen` acts on it. */
-  @property({ type: String, reflect: true })
-  chrome: "rail" | "bar" = "rail";
-
   @state()
   protected themeColor?: string;
 
-  protected get compactButtons(): boolean {
-    return this.size !== "large";
-  }
-
   protected handleResize = () => {
     if (this.isConnected) {
-      // Update layout attrs from token calculations in common.css
-      const styles = window.getComputedStyle(this);
-      const orientation = styles.getPropertyValue("--app-orientation");
-      const size = styles.getPropertyValue("--app-size");
-      const chrome = styles.getPropertyValue("--app-chrome");
-      if (!import.meta.env.PROD) {
-        if (orientation !== "horizontal" && orientation !== "vertical") {
-          throw new Error(`Unknown --app-orientation='${orientation}'`);
-        }
-        if (size !== "large" && size !== "medium" && size !== "small") {
-          throw new Error(`Unknown --app-size='${size}'`);
-        }
-        if (chrome !== "rail" && chrome !== "bar") {
-          throw new Error(`Unknown --app-chrome='${chrome}'`);
-        }
+      // Update the size attr from the token calculation in common.css
+      const size = window.getComputedStyle(this).getPropertyValue("--app-size");
+      if (
+        !import.meta.env.PROD &&
+        size !== "large" &&
+        size !== "medium" &&
+        size !== "small"
+      ) {
+        throw new Error(`Unknown --app-size='${size}'`);
       }
-      this.orientation = orientation as Screen["orientation"];
       this.size = size as Screen["size"];
-      this.chrome = chrome as Screen["chrome"];
     }
   };
 
@@ -251,8 +230,6 @@ export class Screen extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    // TODO: needs to be a resize observer on `this` to catch dvh/dvw changes
-    //   (for puzzle-screen, but not for home-screen)
     window.addEventListener("resize", this.handleResize);
     this.addEventListener("click", this.interceptCommandAndHrefClicks);
     this.addEventListener("wa-select", this.handleDropdownSelect);

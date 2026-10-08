@@ -1770,7 +1770,7 @@ uses for something else (Subsets' reference aid; Crossing's selected-run wash,
 suppressed so blue and green can't both mean "washed square"), the suppression
 is invisible until the player touches that surface — and then **nothing
 happens at all**: no wash, no aid, no change, and no way out of hint mode
-short of finding the right control in the rail.
+short of finding the right control in the chrome.
 
 The gap in the plumbing: `hintKeepTrack` is only consulted for **moves**. In a
 game whose board clicks *are* moves, going your own way returns `"off"` and

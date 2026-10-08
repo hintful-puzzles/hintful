@@ -127,7 +127,7 @@ export class PuzzleHistory extends SignalWatcher(LitElement) {
     named.set(0, { label: "Start", move: 0 });
     for (const move of restarts) {
       named.set(move, {
-        label: html`Restart <small>(${move + 1})</small>`,
+        label: html`Started over <small>(${move + 1})</small>`,
         move,
         icon: "restart-game",
       });

@@ -59,17 +59,14 @@ afterEach(() => {
 async function mountKeys(keys: KeyLabel[]): Promise<PuzzleKeys> {
   const context = new PuzzleContext();
   (context as unknown as { _puzzle: unknown })._puzzle = {
-    currentParams: "4x4",
-    requestKeys: async () => keys,
     palette: PALETTE,
     delete: async () => {},
   };
   const panel = document.createElement("puzzle-keys");
+  panel.keys = keys;
   context.append(panel);
   document.body.append(context);
   mounted.push(context);
-  await panel.updateComplete;
-  // The labels are fetched in `willUpdate`, so the first paint has none.
   await panel.updateComplete;
   return panel;
 }
@@ -113,16 +110,14 @@ describe("a key that names a color", () => {
     // The panel can be asked for keys before the board has been painted once.
     const context = new PuzzleContext();
     (context as unknown as { _puzzle: unknown })._puzzle = {
-      currentParams: "4x4",
-      requestKeys: async () => [{ button: 0x31, label: "1", swatch: 2 }],
       palette: [],
       delete: async () => {},
     };
     const panel = document.createElement("puzzle-keys");
+    panel.keys = [{ button: 0x31, label: "1", swatch: 2 }];
     context.append(panel);
     document.body.append(context);
     mounted.push(context);
-    await panel.updateComplete;
     await panel.updateComplete;
 
     expect(buttons(panel)[0].style.getPropertyValue("--wa-color-fill-loud")).toBe("");

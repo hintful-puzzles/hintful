@@ -1132,8 +1132,8 @@ The explained pencil-notes hint these games want is its own change — see
 **A game whose core bookkeeping is "which pieces have I used?" can offer a
 reference aid** — a non-blocking checklist panel of the fixed piece inventory
 with found status, where clicking a piece spotlights its candidate placements.
-A deliberate learning-aid divergence, gated behind a rail row like
-*Show solution…*. The seam is generic (Dominosa implements it today):
+A deliberate learning-aid divergence, opened from the Game controls panel. The
+seam is generic (Dominosa implements it today):
 
 - **Two optional hooks.** `reference(state, ui): ReferenceModel` returns the
   checklist, derived **purely from the player's own placements**, never the
@@ -1142,11 +1142,12 @@ A deliberate learning-aid divergence, gated behind a rail row like
   skips the repaint). It is the first clean app→`Ui` push channel — shaped
   like a `UI_UPDATE`, no move, no history, not serialized.
 - **Presence flows the `canMarkAll` chain** (`hasReference` →
-  `PuzzleStaticAttributes` → a *Reference* row in the rail). The panel is the generic
-  [`components/reference-panel.ts`](../../src/components/reference-panel.ts):
-  side-docked with room, a bottom sheet on narrow viewports *and* in the
-  short-landscape orientation (a side dock there shoves the board off-center —
-  the panel and the padding rule share the orientation media condition).
+  `PuzzleStaticAttributes` → a *Reference* control in the Game controls
+  panel). The panel is the generic
+  [`components/reference-panel.ts`](../../src/components/reference-panel.ts),
+  a region of the puzzle screen's grid: beside the board in a landscape
+  window and under it in a tall one (`gridLayout` in
+  [`puzzle/layout.ts`](../../src/puzzle/layout.ts)).
 - **The board highlight is a per-game `Ui` field + render bit** (Dominosa's
   `highlightPair` drives `COL_REFERENCE` boxes; the bit folds into the packed
   cache key — [rendering](./rendering.md) § "The tile cache and the diff key"). Drive the frame

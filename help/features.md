@@ -177,8 +177,8 @@ button to press.
 Where a puzzle has a single provable answer, this app can tell you whether what
 you've entered so far contradicts it.
 
-::check-and-save:: **Check & save** — beside the board, in the bottom bar on a
-phone, and on <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>S</kbd> — checks the board and
+::check-and-save:: **Check & save** — on the bar of commands by the board, and
+on <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>S</kbd> — checks the board and
 then saves your position if it's sound. If it isn't, it tells you how many squares are
 wrong, highlights them, and **doesn't save**; the position you saved earlier is
 left exactly as it was, so a check you fail can never cost you the one you
@@ -292,9 +292,9 @@ And pressing it a second time doesn't start over: in most of these puzzles it
 crosses out the candidates that the board has since ruled out, so repeated
 presses narrow rather than reset.
 
-On a keyboard this is also the <kbd>M</kbd> key. On a phone it has a place of
-its own in the bottom bar, as ::mark-all:: **Fill marks** (or **Update marks**
-once there are some to narrow).
+It is ::mark-all:: **Fill marks** (or **Update marks** once there are some to
+narrow), with the puzzle's own controls beside its number keys. On a keyboard
+it is also the <kbd>M</kbd> key.
 
 It's a move like any other, so ::undo:: undoes it.
 
@@ -350,15 +350,15 @@ than tracing. It is a mouse feature, since a touch screen has no notion of
 hovering — a finger is either pressing or absent — so on a phone or tablet you
 will not see it.
 
-## Taking back a Restart or a New game {#undo-reach}
+## Taking back Start over or a New game {#undo-reach}
 
 ::undo:: Undo reaches past the two commands that put your work away.
 
-**Restart is a move like any other.** It steps to the board as it started and
+**Start over is a move like any other.** It steps to the board as it started and
 keeps everything you played behind that step. Undo straight afterwards and your
-moves are back; ::redo:: redo restarts again. Undo further and you walk back
-through the moves themselves. The ::history:: history panel shows where each
-restart was. Restarting a board you have played nothing on does nothing. (In
+moves are back; ::redo:: redo starts over again. Undo further and you walk back
+through the moves themselves. The ::history:: history panel shows where you
+started over. Starting over on a board you have played nothing on does nothing. (In
 Mines the board "as it started" is the one just after your first square
 opened, so you needn't remember where you began.)
 
@@ -409,7 +409,7 @@ The clock starts with your first move, not when the board is dealt, and it
 stops while the app is out of sight. Once you have solved the board, the time
 is final: undoing afterwards will not restart it. If you lose (in Mines, say),
 the clock waits while the board stays lost and carries on if you undo.
-Restarting the board does not reset the clock or stop it: the time is how long
+Starting over does not reset the clock or stop it: the time is how long
 you have spent on that board.
 
 When you solve the board, the time appears in the message that congratulates
@@ -436,7 +436,7 @@ To discard every game in progress, open the
 
 ## Sharing a game {#sharing}
 
-*::share:: Share* in *More…* (or
+*::share:: Share* in the *Menu* (or
 <command-link command="share:link">here</command-link>) offers:
 
 * **This specific game**: a link to the game you are playing, as it was dealt.
@@ -462,7 +462,7 @@ To discard every game in progress, open the
 
 To open a game someone sent you, open its link, or paste the link into
 <command-link command="enter-gameid">*Open a shared game*</command-link> in
-*More…*, which is the way in from the installed app. Any puzzle’s link works
+the *Menu*, which is the way in from the installed app. Any puzzle’s link works
 from any puzzle, and so does a link to a game on Simon Tatham’s website,
 though a link there by random seed may deal a different board here; a bare
 game ID opens a game of the puzzle you are on.
@@ -473,8 +473,8 @@ when something looks wrong.
 
 ## Saving, loading, exporting and importing {#saved-games}
 
-*::save-game:: Save game* in *More…* keeps the whole game, undo history and
-[checkpoints](#checkpoints) included, and *::load-game:: Load game* brings it
+*::save-game:: Save as…* in the *Menu* keeps the whole game, undo history and
+[checkpoints](#checkpoints) included, and *::load-game:: Open saved…* brings it
 back.
 Saved games stay on your device, in your browser’s storage.
 

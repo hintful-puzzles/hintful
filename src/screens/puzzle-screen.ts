@@ -1,21 +1,30 @@
 import { SignalWatcher } from "@lit-labs/signals";
-import { css, html, nothing, type TemplateResult } from "lit";
+import { css, html, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { query } from "lit/decorators/query.js";
 import { customElement, property, state } from "lit/decorators.js";
+import { styleMap } from "lit/directives/style-map.js";
 import { showAlert } from "../dialogs/alert-dialog.ts";
 import { showToast } from "../dialogs/toast.ts";
 import { assertNever } from "../engine/assert-never.ts";
 import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
-import { awaitsFirstBoard } from "../puzzle/board-commands.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
+import { MIN_BAR_LENGTH } from "../puzzle/command-list.ts";
+import type { PuzzleBarFitEvent } from "../puzzle/components/bar.ts";
 import type { PuzzleEvent } from "../puzzle/components/context.ts";
+import type { SwapButtonsEvent } from "../puzzle/components/game-controls.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
 import { dealNewGame } from "../puzzle/deal-actions.ts";
+import {
+  gridLayout,
+  gridTemplateAreas,
+  menuFits,
+  type WindowShape,
+  windowShape,
+} from "../puzzle/layout.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 import {
   CHECK_OUT_OF_REACH,
   checkAndSave,
-  justSaved,
   mistakesFound,
   quickLoadPuzzle,
 } from "../puzzle/quick-save-actions.ts";
@@ -27,6 +36,7 @@ import { cssWATweaks } from "../utils/css.ts";
 import { closeOnBackdropClick } from "../utils/dialog.ts";
 import { preventDoubleTapZoomOnButtons } from "../utils/events.ts";
 import { debounced, sleep } from "../utils/timing.ts";
+import { windowSize } from "../utils/window-size.ts";
 import { Screen } from "./screen.ts";
 
 // Register components
@@ -35,16 +45,14 @@ import "@awesome.me/webawesome/dist/components/divider/divider.js";
 import "@awesome.me/webawesome/dist/components/dropdown/dropdown.js";
 import "@awesome.me/webawesome/dist/components/dropdown-item/dropdown-item.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
-import "@awesome.me/webawesome/dist/components/radio/radio.js";
-import "@awesome.me/webawesome/dist/components/radio-group/radio-group.js";
 import "@awesome.me/webawesome/dist/components/skeleton/skeleton.js";
 import "../components/dynamic-content.ts";
 import "../components/reference-panel.ts";
+import "../puzzle/components/bar.ts";
 import "../puzzle/components/context.ts";
-import "../puzzle/components/history.ts";
-import "../puzzle/components/keys.ts";
+import "../puzzle/components/game-controls.ts";
+import "../puzzle/components/menu.ts";
 import "../puzzle/components/type-menu.ts";
-import "../puzzle/components/rail.ts";
 import "../puzzle/components/timer.ts";
 import "../components/puzzle-switcher.ts";
 import "../puzzle/components/view-interactive.ts";
@@ -82,6 +90,24 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    * for a game whose `hasReference` is true (the toggle button only shows then). */
   @state()
   private referenceOpen = false;
+
+  /** How many of the command list's leading entries the Bar has room for. The
+   * Bar measures it and the Menu starts where it stops, so the two are given
+   * the same number in the same render. */
+  @state()
+  private barLength = MIN_BAR_LENGTH;
+
+  /** What the player last did with the Menu in this layout: opened it, closed
+   * it, or nothing yet (`null`), which leaves it open exactly when it docks. */
+  @state()
+  private menuChoice: boolean | null = null;
+
+  /** The window's shape, for the styles that follow it. */
+  @property({ type: String, reflect: true })
+  shape: WindowShape = "wide";
+
+  /** The shape and docking the Menu's state was last chosen in. */
+  private menuChoiceFor = "";
 
   @query("puzzle-context")
   private puzzleContext?: HTMLElementTagNameMap["puzzle-context"];
@@ -141,6 +167,26 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       this.referenceOpen = false; // a new puzzle type may have no reference
       this.defaultHelpLabel = `${this.puzzleData.name} Help`;
     }
+    // Crossing into another window shape, or losing the room to dock, switches
+    // at once to that layout's own Menu state. What was chosen is in the
+    // settings and stays there.
+    const { shape, menuDocks } = this.layout;
+    this.shape = shape;
+    const menuChoiceFor = `${shape} ${menuDocks ? "docked" : "over"}`;
+    if (menuChoiceFor !== this.menuChoiceFor) {
+      this.menuChoiceFor = menuChoiceFor;
+      this.menuChoice = null;
+    }
+  }
+
+  protected override updated(changedProperties: PropertyValues) {
+    super.updated(changedProperties);
+    // A modal dialog is opened by a call, not by an attribute.
+    const over = this.menuOver;
+    if (over && this.menuOpen !== over.open) {
+      if (this.menuOpen) over.showModal();
+      else over.close();
+    }
   }
 
   override render() {
@@ -159,44 +205,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           @puzzle-params-change=${this.handlePuzzleParamsChange}
           @puzzle-game-state-change=${this.handlePuzzleGameStateChange}
       >
-        <main class=${this.referenceOpen ? "reference-open" : nothing}>
-          ${this.chrome === "rail" ? this.renderRail() : this.renderTopBar()}
-
-          <div class="board-area">
-            <puzzle-view-interactive
-                role="figure"
-                aria-label="interactive puzzle displayed as an image"
-                ?longPress=${settings.rightButtonLongPress}
-                ?swapMouseButtons=${this.swapMouseButtons}
-                ?twoFingerTap=${settings.rightButtonTwoFingerTap}
-                secondaryButtonAudioVolume=${settings.rightButtonAudioVolume}
-                secondaryButtonHoldTime=${settings.rightButtonHoldTime}
-                secondaryButtonDragThreshold=${settings.rightButtonDragThreshold}
-                max-scale=${settings.maxScale}
-                @puzzle-key-unhandled=${this.handleUnhandledPuzzleKey}
-            >
-              <wa-skeleton slot="loading" effect="sheen"></wa-skeleton>
-            </puzzle-view-interactive>
-
-            <div class="board-controls">
-              ${
-                settings.showPuzzleKeyboard
-                  ? html`<puzzle-keys></puzzle-keys>`
-                  : nothing
-              }
-              ${this.renderMouseButtonToggle()}
-            </div>
-          </div>
-
-          ${this.chrome === "bar" ? this.renderPhoneChrome() : nothing}
-          ${
-            this.referenceOpen
-              ? html`<reference-panel
-                  @reference-close=${this.handleReferenceClose}
-                ></reference-panel>`
-              : nothing
-          }
-        </main>
+        ${this.renderPanels()}
 
         <puzzle-switcher current=${this.puzzleId}></puzzle-switcher>
         ${settings.showEndNotification ? this.renderEndNotification() : nothing}
@@ -205,37 +214,158 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     `;
   }
 
-  /** The desktop command surface. One `puzzle-rail`, drawn as a column. */
-  private renderRail(): TemplateResult {
+  /**
+   * The layout in force: the window's shape, the player's choices for that
+   * shape over its default, and whether the Menu can dock.
+   *
+   * A Menu that cannot dock without squeezing the board opens over it instead.
+   * The stored choice is read here and never written, so it is in force again
+   * when the window has the room.
+   */
+  private get layout() {
+    const { width, height, rem } = windowSize.get();
+    const shape = windowShape(width, height, rem);
+    const choice = settings.layoutFor(shape);
+    return {
+      shape,
+      choice,
+      controlsSide: settings.layoutControlsSide,
+      menuDocks: choice.keepMenuOpen && menuFits(width, height, rem, choice),
+    };
+  }
+
+  /** Whether the Menu is showing: what the player last did with it in this
+   * layout, or open exactly when it docks. */
+  private get menuOpen(): boolean {
+    return this.menuChoice ?? this.layout.menuDocks;
+  }
+
+  /**
+   * The three panels and the board, as one grid whose areas the layout
+   * chooses (`puzzle/layout.ts`). Each panel names its area and nothing else,
+   * so where a panel docks is a property of the template and never of the
+   * panel.
+   */
+  private renderPanels(): TemplateResult {
+    const { shape, choice, controlsSide, menuDocks } = this.layout;
+    const menuOpen = this.menuOpen;
+    const grid = gridLayout({
+      shape,
+      controlsSide,
+      bar: choice.bar,
+      controls: choice.controls,
+      menuDocked: menuDocks && menuOpen,
+      reference: this.referenceOpen,
+    });
+    const gridStyle = styleMap({
+      gridTemplateAreas: gridTemplateAreas(grid.areas),
+      gridTemplateColumns: grid.columns.join(" "),
+      gridTemplateRows: grid.rows.join(" "),
+    });
     return html`
-      <puzzle-rail
-          variant="rail"
+      <main class="controls-${controlsSide}" style=${gridStyle}>
+        ${this.renderTopBar()}
+
+        <div class="board-area">
+          <puzzle-view-interactive
+              role="figure"
+              aria-label="interactive puzzle displayed as an image"
+              ?longPress=${settings.rightButtonLongPress}
+              ?swapMouseButtons=${this.swapMouseButtons}
+              ?twoFingerTap=${settings.rightButtonTwoFingerTap}
+              secondaryButtonAudioVolume=${settings.rightButtonAudioVolume}
+              secondaryButtonHoldTime=${settings.rightButtonHoldTime}
+              secondaryButtonDragThreshold=${settings.rightButtonDragThreshold}
+              max-scale=${settings.maxScale}
+              @puzzle-key-unhandled=${this.handleUnhandledPuzzleKey}
+          >
+            <wa-skeleton slot="loading" effect="sheen"></wa-skeleton>
+          </puzzle-view-interactive>
+        </div>
+
+        ${this.renderWords()}
+
+        <puzzle-game-controls
+            along=${choice.controls}
+            ?swap-buttons=${this.swapMouseButtons}
+            ?reference-open=${this.referenceOpen}
+            @puzzle-swap-buttons=${this.handleSwapButtons}
+            @click=${this.handleChromeClick}
+        ></puzzle-game-controls>
+
+        <puzzle-bar
+            along=${choice.bar}
+            length=${this.barLength}
+            ?menu-open=${menuOpen}
+            @puzzle-bar-fit=${this.handleBarFit}
+            @puzzle-menu-toggle=${this.toggleMenu}
+            @click=${this.handleChromeClick}
+        ></puzzle-bar>
+
+        ${
+          menuDocks && menuOpen
+            ? html`<aside
+                  class="menu-dock"
+                  aria-label="Menu"
+                  @click=${this.handleChromeClick}
+                  @puzzle-menu-close=${this.toggleMenu}
+              >${this.renderMenu()}</aside>`
+            : nothing
+        }
+        ${
+          this.referenceOpen
+            ? html`<reference-panel
+                @reference-close=${this.handleReferenceClose}
+              ></reference-panel>`
+            : nothing
+        }
+      </main>
+
+      ${
+        menuDocks
+          ? nothing
+          : html`<dialog
+                class="menu-over ${shape === "tall" ? "sheet" : `drawer-${controlsSide === "right" ? "left" : "right"}`}"
+                aria-label="Menu"
+                @click=${this.handleMenuOverClick}
+                @close=${this.handleMenuOverClosed}
+                @keydown=${this.handleMenuOverKeyDown}
+                @wa-select=${this.handleMenuOverSelect}
+                @puzzle-menu-close=${this.toggleMenu}
+            >${this.renderMenu()}</dialog>`
+      }
+    `;
+  }
+
+  /** The Menu's content, the same whether it is docked or over the board. */
+  private renderMenu(): TemplateResult {
+    return html`
+      <puzzle-menu
+          bar-length=${this.barLength}
           gameName=${this.puzzleData?.name ?? ""}
           helpHref=${helpUrl(this.puzzleId).href}
-          ?reference-open=${this.referenceOpen}
-          @click=${this.handleChromeClick}
-      ></puzzle-rail>
+      ></puzzle-menu>
     `;
   }
 
   /**
-   * The phone's top bar: back, the game's name, its parameter chips, then the
+   * The readout row: back, the game's name, its parameter chips, then the
    * solve timer when the player has it on. **Readouts, not commands**, in one
-   * row at 320px: the commands live in the bottom bar and behind it instead, so
-   * nothing here competes for the width.
+   * row at 320px: the commands are in the three panels, so nothing here
+   * competes for the width.
    *
-   * **The move counter is not here.** It is the timeline control, and the More
-   * sheet's "Your position" group carries it; beside Undo and Redo its number
-   * told a phone player little. It was the widest item in the row, and with the
-   * timer on it squeezed the game's name to two letters.
+   * **The move counter is not here.** It is the timeline control, and the
+   * Menu's Board group carries it. It was the widest item in the row, and with
+   * the timer on it squeezed the game's name to two letters.
    */
   private renderTopBar(): TemplateResult {
     return html`
       <header class="top-bar">
-        <a class="top-back" href="/" data-command="home" aria-label="All puzzles">
+        <a class="top-back" href=${homePageUrl().href} aria-label="All puzzles">
           <wa-icon name="back-to-catalog"></wa-icon>
+          <span class="top-back-label">All puzzles</span>
         </a>
-        <span class="top-name">${this.puzzleData?.name ?? ""}</span>
+        <h1 class="top-name">${this.puzzleData?.name ?? ""}</h1>
         <puzzle-type-menu
             class="top-chips"
             presentation="chips"
@@ -247,139 +377,54 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   }
 
   /**
-   * The phone's own chrome: the hint's words above the bar, then a persistent
-   * bar of five, or six in a game with `canMarkAll`.
+   * What the app has to say about the board, under it at every size: the
+   * game's status line, the hint's explanation, and a deal still being looked
+   * for.
    *
-   * **The explanation sits above the bar** so a thumb resting on the controls
-   * cannot cover the sentence that explains the move — the whole point of an
-   * explained hint. **`Check & save` holds a permanent slot** by owner request
-   * (2026-09-07: *"I am very interested in it being in a highly accessible
-   * quick-access position"*), drawn like its neighbors: it is a plain command
-   * that happens to be used often, not a special one (owner, 2026-09-25).
+   * **None of it is in a panel**, so showing or clearing a hint moves no
+   * control: the board gives up the height. It sits above a bottom Bar, where
+   * a thumb resting on the controls cannot cover the sentence that explains
+   * the move.
    */
-  private renderPhoneChrome(): TemplateResult {
+  private renderWords(): TemplateResult {
     const puzzle = this.puzzle;
     const explanation = puzzle?.activeHintExplanation || puzzle?.helpMessage;
     const status = puzzle?.wantsStatusbar ? puzzle.statusbarText : null;
     return html`
-      ${
-        // A status line is part of the board, not a command — Flood's move
-        // limit, Mines' remaining count — so it must be readable while playing
-        // rather than behind the More sheet. On a phone it rides above the bar
-        // with the hint; on a desktop it is in the rail.
-        status ? html`<div class="phone-status" role="status">${status}</div>` : nothing
-      }
-      ${
-        explanation
-          ? html`<div class="phone-hint" role="status">
-              ${
-                puzzle?.hintJourney
-                  ? html`<span class="phone-hint-journey">${puzzle.hintJourney}</span>`
-                  : nothing
-              }
-              ${explanation}
-            </div>`
-          : nothing
-      }
-      ${
-        // Above the bar with the hint, and apart from it: the board in play
-        // takes moves and hints while a deal is looked for, and the way out
-        // stays in reach through them.
-        puzzle?.dealMessage
-          ? html`<div class="phone-deal" @click=${this.handleChromeClick}>
-              <span role="status">${puzzle.dealMessage}</span>
-              ${
-                puzzle.canStopDeal
-                  ? html`<button type="button" data-command="stop-deal">Stop</button>`
-                  : nothing
-              }
-            </div>`
-          : nothing
-      }
-      <nav class="phone-bar" aria-label="Puzzle commands" @click=${this.handleChromeClick}>
-        ${this.renderPhoneAction("undo", "undo", "Undo", !puzzle?.canUndo)}
-        ${this.renderPhoneAction("redo", "redo", "Redo", !puzzle?.canRedo)}
+      <div class="words">
         ${
-          puzzle?.canHint
-            ? html`
-              <button
-                  class="phone-action hint"
-                  type="button"
-                  data-command="hint"
-                  ?disabled=${puzzle.isSolved || awaitsFirstBoard("hint", puzzle)}
-              >
-                <wa-icon name="hint"></wa-icon>
-                <span>${
-                  puzzle.hintPending
-                    ? "Thinking…"
-                    : puzzle.hintArmedToApply
-                      ? "Apply the hint"
-                      : "Hint"
-                }</span>
-              </button>`
+          // A status line is part of the board, not a command: Flood's move
+          // limit, Mines' remaining count. Absent, not blank, for a game with
+          // nothing to say.
+          status ? html`<div class="status" role="status">${status}</div>` : nothing
+        }
+        ${
+          explanation
+            ? html`<div class="hint" role="status">
+                ${
+                  puzzle?.hintJourney
+                    ? html`<span class="hint-journey">${puzzle.hintJourney}</span>`
+                    : nothing
+                }
+                ${explanation}
+              </div>`
             : nothing
         }
         ${
-          // A sixth slot, by owner request (2026-09-24): in a game that has it,
-          // this is the command that turns placed digits into candidates to
-          // reason from. The caption is the rail row's wording cut to fit six.
-          puzzle?.canMarkAll
-            ? this.renderPhoneAction(
-                "mark-all",
-                "mark-all",
-                puzzle.hasPencilMarks ? "Update marks" : "Fill marks",
-                puzzle.isSolved,
-              )
+          // Apart from the hint: the board in play takes moves and hints while
+          // a deal is looked for, and the way out stays in reach through them.
+          puzzle?.dealMessage
+            ? html`<div class="deal" @click=${this.handleChromeClick}>
+                <span role="status">${puzzle.dealMessage}</span>
+                ${
+                  puzzle.canStopDeal
+                    ? html`<button type="button" data-command="stop-deal">Stop</button>`
+                    : nothing
+                }
+              </div>`
             : nothing
         }
-        ${
-          justSaved(this.puzzleId)
-            ? this.renderPhoneAction("check-and-save", "success", "Saved", false)
-            : this.renderPhoneAction(
-                "check-and-save",
-                "check-and-save",
-                "Check & save",
-                false,
-              )
-        }
-        <button class="phone-action" type="button" @click=${this.openMoreSheet}>
-          <wa-icon name="more"></wa-icon>
-          <span>More</span>
-        </button>
-      </nav>
-
-      <dialog
-          class="more-sheet"
-          @click=${this.handleSheetClick}
-          @keydown=${this.handleSheetKeyDown}
-          @wa-select=${this.handleSheetSelect}
-      >
-        <puzzle-rail
-            variant="sheet"
-            gameName=${this.puzzleData?.name ?? ""}
-            helpHref=${helpUrl(this.puzzleId).href}
-            ?reference-open=${this.referenceOpen}
-        ></puzzle-rail>
-      </dialog>
-    `;
-  }
-
-  private renderPhoneAction(
-    command: string,
-    icon: string,
-    label: string,
-    disabled: boolean,
-  ): TemplateResult {
-    return html`
-      <button
-          class="phone-action"
-          type="button"
-          data-command=${command}
-          ?disabled=${disabled || awaitsFirstBoard(command, this.puzzle)}
-      >
-        <wa-icon name=${icon}></wa-icon>
-        <span>${label}</span>
-      </button>
+      </div>
     `;
   }
 
@@ -462,26 +507,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     `;
   }
 
-  private renderMouseButtonToggle() {
-    if (!settings.showMouseButtonToggle) {
-      return nothing;
-    }
-    return html`
-      <wa-radio-group
-          id="mouse-button-toggle"
-          appearance="button" 
-          orientation="horizontal" 
-          aria-label="Tap on puzzle means"
-          .value=${this.swapMouseButtons ? "right" : "left"}
-          @change=${() => {
-            this.swapMouseButtons = !this.swapMouseButtons;
-          }}
-      >
-        <wa-radio appearance="button" value="left"><wa-icon name="mouse-left-button" label="left click"></wa-radio>
-        <wa-radio appearance="button" value="right"><wa-icon name="mouse-right-button" label="right click"></wa-radio>
-      </wa-radio-group>
-    `;
-  }
+  private handleSwapButtons = (event: SwapButtonsEvent) => {
+    this.swapMouseButtons = event.detail.swap;
+  };
+
+  private handleBarFit = (event: PuzzleBarFitEvent) => {
+    this.barLength = event.detail.length;
+  };
 
   //
   // Commands
@@ -547,10 +579,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   protected override handleCommand(command: string): boolean {
     const handled = super.handleCommand(command);
     if (handled) {
-      // A command chosen from the phone sheet has been chosen: the sheet is a
-      // menu, and a menu that stays open over the result of its own command is
-      // covering the thing the player asked to see.
-      this.closeMoreSheet();
+      // A command chosen from a Menu that is over the board has been chosen:
+      // a menu that stays open over the result of its own command is covering
+      // the thing the player asked to see. A docked Menu covers nothing.
+      this.closeMenuOver();
       this.focusBoard();
     }
     return handled;
@@ -861,7 +893,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     await this.puzzle?.processKey(PENCIL_MODE_BUTTON);
   }
 
-  /** `Play hints for me` — a mode, so the rail draws it as a switch. */
+  /** `Auto-solve for me`, and `Stop auto-solving` while it runs. */
   private handleAutoHintToggle() {
     const puzzle = this.puzzle;
     if (!puzzle) return;
@@ -873,41 +905,57 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   }
 
   /** The quick-switch, shared with the home screen: `Ctrl/Cmd+K`, and the
-   * `Switch puzzle…` row in `More…` so touch keeps the capability the
+   * `Switch puzzle…` row in the Menu so touch keeps the capability the
    * `Other puzzles` menu used to provide. */
   private openPuzzleSwitcher() {
     this.shadowRoot?.querySelector("puzzle-switcher")?.open();
   }
 
-  /** The phone's `More…`: the rail, as a sheet, in the same order. */
-  private openMoreSheet = () => {
-    this.shadowRoot?.querySelector<HTMLDialogElement>(".more-sheet")?.showModal();
-  };
-
-  private closeMoreSheet() {
-    this.shadowRoot?.querySelector<HTMLDialogElement>(".more-sheet")?.close();
+  /** The Menu over the board, where it does not dock: a sheet in a tall
+   * window, a drawer on the Menu's side in a wide one. */
+  private get menuOver(): HTMLDialogElement | null {
+    return this.shadowRoot?.querySelector<HTMLDialogElement>(".menu-over") ?? null;
   }
 
-  /** Escape closes the sheet and goes no further — the board must not also see
+  /**
+   * The Bar's `Menu` button, and the Menu's own close button. The choice is
+   * for this layout and this visit: it is dropped when the layout changes, and
+   * `Keep the Menu open` in Preferences is what says how it starts.
+   */
+  private toggleMenu = () => {
+    this.menuChoice = !this.menuOpen;
+  };
+
+  private closeMenuOver() {
+    if (!this.layout.menuDocks) this.menuChoice = false;
+  }
+
+  /** The dialog closed itself (Escape): keep the state in step with it. */
+  private handleMenuOverClosed = () => {
+    this.menuChoice = false;
+  };
+
+  /** Escape closes the Menu and goes no further: the board must not also see
    * it and drop a reference spotlight the player never asked to lose. */
-  private handleSheetKeyDown = (event: KeyboardEvent) => {
+  private handleMenuOverKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape") event.stopPropagation();
   };
 
   /**
-   * A choice made in a menu inside the sheet — a checkpoint picked from the
-   * timeline — closes the sheet, as a command chosen from it does. The trigger
-   * that opened that menu must *not* close it, which is why the timeline is a
-   * menu here and not a command: closing the sheet takes the menu with it.
+   * A choice made in a menu inside the Menu, a checkpoint picked from the
+   * timeline, closes a Menu that is over the board, as a command chosen from
+   * it does. The trigger that opened that menu must *not* close it, which is
+   * why the timeline is a menu here and not a command: closing the Menu takes
+   * the timeline with it.
    */
-  private handleSheetSelect = () => {
-    this.closeMoreSheet();
+  private handleMenuOverSelect = () => {
+    this.closeMenuOver();
     this.focusBoard();
   };
 
-  /** A tap in the sheet does both jobs: outside the panel it dismisses, inside
-   * it hands the keyboard back like any other chrome click. */
-  private handleSheetClick = (event: MouseEvent) => {
+  /** A tap does both jobs: outside the Menu it dismisses, inside it hands the
+   * keyboard back like any other chrome click. */
+  private handleMenuOverClick = (event: MouseEvent) => {
     closeOnBackdropClick(event);
     this.handleChromeClick(event);
   };
@@ -923,10 +971,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     event.preventDefault(); // We'll set up our own new game (or restore one from autoSave)
 
     // `this.puzzle` reads through a `@query`, which is not reactive, and the
-    // first render ran before the puzzle existed. Without this the phone bar
-    // keeps that puzzle-less render — no Hint, no Fill marks — until
-    // `puzzleLoaded` is set, which waits for the first board to be dealt: on a
-    // slow phone, seconds with Hint missing from the bar but present in More.
+    // first render ran before the puzzle existed. Without this, what the
+    // screen draws from it (the status line, the hint's words) keeps that
+    // puzzle-less render until `puzzleLoaded` is set, which waits for the
+    // first board to be dealt: seconds, on a slow phone.
     this.requestUpdate();
 
     await settings.loaded;
@@ -1114,8 +1162,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   }
 
   /**
-   * The always-on chords, from `shortcuts.ts` — the same table the rail reads
-   * to label each row, so a shown key is a bound key by construction.
+   * The always-on chords, from `shortcuts.ts` — the same table the Bar and the
+   * Menu read to label a control, so a shown key is a bound key by construction.
    *
    * `preventDefault` on a match, which is what suppresses the browser's own
    * `Ctrl/Cmd+S` save dialog; the modifier means these can never collide with a
@@ -1195,42 +1243,78 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         height: var(--app-height, 100dvh);
       }
       
+      /*
+       * One grid, whose template the layout settings choose and renderPanels
+       * writes on the element. Each region below names its area and nothing
+       * else: where a panel docks is never decided here.
+       *
+       * The board's row and column are the ones that flex, so the canvas fills
+       * what the panels leave. No region but the Menu scrolls.
+       */
       main {
         height: 100%;
         box-sizing: border-box;
-        position: relative;
-  
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-  
+        display: grid;
+        overflow: hidden;
         background-color: var(--wa-color-brand-fill-quiet);
         color: var(--wa-color-text-normal);
       }
 
-      /* When the non-blocking reference panel is docked, reserve space for it so
-       * the ResizeController-driven canvas reflows smaller and stays fully
-       * visible/interactive beside (wide) or above (narrow) the panel. The
-       * conditions mirror reference-panel.ts's :host media query: a side dock by
-       * default, a bottom sheet on a narrow viewport OR in "horizontal"
-       * orientation (short landscape, where a side dock would shove the board
-       * off-center against the toolbar column). */
-      main.reference-open {
-        padding-inline-end: min(340px, 42vw);
+      .top-bar {
+        grid-area: top;
       }
-      @media (max-width: 640px) {
-        main.reference-open {
-          padding-inline-end: 0;
-          padding-block-end: min(45vh, 22rem);
+      .board-area {
+        grid-area: board;
+      }
+      .words {
+        grid-area: words;
+      }
+      puzzle-game-controls {
+        grid-area: controls;
+      }
+      puzzle-bar {
+        grid-area: bar;
+      }
+      .menu-dock {
+        grid-area: menu;
+      }
+      reference-panel {
+        grid-area: reference;
+      }
+
+      /* A panel beside the board is ruled off on the edge that faces it. */
+      main.controls-right {
+        .menu-dock,
+        puzzle-bar[along="side"] {
+          border-inline-end: 1px solid var(--app-color-hairline);
+        }
+        puzzle-game-controls[along="side"],
+        reference-panel {
+          border-inline-start: 1px solid var(--app-color-hairline);
         }
       }
-      :host([orientation="horizontal"]) main.reference-open {
-        padding-inline-end: 0;
-        padding-block-end: min(45vh, 22rem);
+      main.controls-left {
+        .menu-dock,
+        puzzle-bar[along="side"] {
+          border-inline-start: 1px solid var(--app-color-hairline);
+        }
+        puzzle-game-controls[along="side"],
+        reference-panel {
+          border-inline-end: 1px solid var(--app-color-hairline);
+        }
+      }
+      :host([shape="tall"]) reference-panel {
+        border-inline: none;
+        border-block-start: 1px solid var(--app-color-hairline);
       }
 
       /* Dev-only icon-capture mode (?screenshot). */
+      main.capture-mode {
+        display: flex;
+        flex-direction: column;
+      }
       .capture-bar {
+        display: flex;
         align-items: center;
         gap: var(--wa-space-s);
         padding: var(--wa-space-xs) var(--wa-space-s);
@@ -1242,56 +1326,19 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         }
       }
 
-      /*
-       * Two layouts, chosen by --app-chrome (common.css).
-       *
-       * rail: a 284px command column beside the board.
-       * bar:  a top bar of readouts, the board, and a five- or six-slot bottom bar.
-       *
-       * The board area is the flex child that grows in both, so the canvas
-       * fills what the chrome leaves rather than sitting small inside a panel
-       * of dead surface.
-       */
-
-      :host([chrome="rail"]) main {
-        flex-direction: row;
-      }
-
-      /* The 284px column, and only there: the same component is the phone's
-       * More sheet, which wants the whole width. Scoped by the layout
-       * attribute rather than by the component, so one selector cannot make the
-       * sheet a narrow strip in the middle of a phone. */
-      :host([chrome="rail"]) puzzle-rail {
-        flex: 0 0 284px;
-        max-width: 284px;
-        overflow-y: auto;
-        background-color: var(--app-color-rail);
-        border-inline-end: 1px solid var(--app-color-hairline);
-      }
-
       .board-area {
-        flex: 1 1 auto;
         min-width: 0;
         min-height: 0;
         display: flex;
         flex-direction: column;
         align-items: stretch;
         padding: var(--app-spacing);
-        gap: var(--app-spacing);
       }
 
-      .board-controls {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: end;
-        justify-content: center;
-        gap: var(--app-spacing);
-
-        /* Empty for most games (no keypad, no button toggle): collapse rather
-         * than leaving a gap under the board. */
-        &:empty {
-          display: none;
-        }
+      .menu-dock {
+        min-height: 0;
+        overflow-y: auto;
+        background-color: var(--app-color-rail);
       }
 
       puzzle-view-interactive {
@@ -1304,21 +1351,21 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         --border-radius: var(--app-radius-container);
       }
 
-      /* On a phone, width is what sizes most boards, and the board's own border
-       * already holds its clues and labels: a margin outside the card plus
-       * padding inside it spent 48px of a 412px screen on nothing. The card
-       * keeps a thin edge so its rounded corners still read. */
-      :host([chrome="bar"]) .board-area {
-        padding-inline: var(--wa-space-xs);
+      /* In a tall window, width is what sizes most boards, and the board's own
+       * border already holds its clues and labels: a margin outside the card
+       * plus padding inside it spent 48px of a 412px screen on nothing. The
+       * card keeps a thin edge so its rounded corners still read. A short
+       * window is as tight the other way. */
+      :host(:not([shape="wide"])) .board-area {
+        padding: var(--wa-space-xs);
       }
-      :host([chrome="bar"]) puzzle-view-interactive {
+      :host(:not([shape="wide"])) puzzle-view-interactive {
         --spacing: var(--wa-space-xs);
       }
 
       .top-bar {
-        flex: 0 0 auto;
         box-sizing: border-box;
-        width: 100%;
+        min-width: 0;
         display: flex;
         align-items: center;
         gap: var(--wa-space-s);
@@ -1333,10 +1380,27 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 0.375rem;
         min-width: var(--app-tap-min);
         min-height: var(--app-tap-min);
+        font-size: var(--app-font-size-support);
         color: var(--app-color-text-quiet);
         text-decoration: none;
+
+        @media (hover: hover) {
+          &:hover {
+            color: var(--app-color-link);
+          }
+        }
+      }
+
+      /* The link's words where the row has the width for them; its aria-label
+       * says them everywhere. */
+      :host(:not([shape="wide"])) .top-back-label {
+        display: none;
+      }
+      :host([shape="short"]) .top-back {
+        min-height: 2.25rem;
       }
 
       /* **The chips give way, not the name.** A clipped chip still opens the
@@ -1346,6 +1410,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
        * the row. */
       .top-name {
         flex: 0 0 auto;
+        margin: 0;
+        line-height: inherit;
         max-width: 45%;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1380,25 +1446,36 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         display: none;
       }
 
-      /* The status line and the hint sit ABOVE the bar, where a thumb resting
-       * on the controls cannot cover them — the whole point of an explained
-       * hint is that it can be read. */
-      .phone-status,
-      .phone-hint {
-        flex: 0 0 auto;
-        margin-inline: var(--app-spacing);
-        margin-block-end: var(--wa-space-2xs);
+      /* The status line and the hint sit under the board and above a bottom
+       * Bar, where a thumb resting on the controls cannot cover them: the
+       * whole point of an explained hint is that it can be read. A column no
+       * wider than a line of prose reads well at, centered under the board. */
+      .words {
+        box-sizing: border-box;
+        min-width: 0;
+        width: 100%;
+        max-width: 44rem;
+        justify-self: center;
+        padding-inline: var(--app-spacing);
+      }
+      :host(:not([shape="wide"])) .words {
+        padding-inline: var(--wa-space-xs);
+      }
+
+      .status,
+      .hint {
+        margin-block-end: var(--wa-space-xs);
         font-size: var(--app-font-size-support);
         line-height: var(--wa-line-height-normal);
       }
 
-      .phone-status {
+      .status {
         text-align: center;
         color: var(--app-color-text-secondary);
         font-variant-numeric: tabular-nums;
       }
 
-      .phone-hint {
+      .hint {
         padding: 0.5rem 0.625rem;
         border: 1px solid var(--app-color-hint-border);
         border-radius: var(--app-radius-hint);
@@ -1406,14 +1483,12 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         color: var(--app-color-hint-ink);
       }
 
-      .phone-deal {
-        flex: 0 0 auto;
+      .deal {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 0.5rem;
-        margin-inline: var(--app-spacing);
-        margin-block-end: var(--wa-space-2xs);
+        margin-block-end: var(--wa-space-xs);
         padding-inline-start: 0.625rem;
         border: 1px solid var(--app-color-hairline);
         border-radius: var(--app-radius-hint);
@@ -1433,7 +1508,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         }
       }
 
-      .phone-hint-journey {
+      .hint-journey {
         display: block;
         font-family: var(--app-font-mono);
         font-size: var(--app-font-size-micro);
@@ -1442,92 +1517,15 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         opacity: 0.75;
       }
 
-      .phone-bar {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: stretch;
-        gap: var(--wa-space-2xs);
-        padding: var(--wa-space-2xs);
-        /* Below the home indicator on a phone with one. */
-        padding-block-end: max(var(--wa-space-2xs), env(safe-area-inset-bottom));
-        background-color: var(--app-color-rail);
-        border-block-start: 1px solid var(--app-color-hairline);
-      }
-
-      /* A caption wraps only when the bar is squeezed: six slots, a narrow
-       * phone and the armed hint's longer label together overran 360px when
-       * every caption held one line. The 54px row holds an icon over two.
-       *
-       * The tap-target floor sits on the caption, not the button, so the
-       * button keeps flexbox's own floor of its longest word: a min-width on
-       * the button replaced that floor, and the hint's label overflowed onto
-       * its neighbors. */
-      .phone-action {
-        flex: 0 4 auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        min-height: var(--app-row-tool-phone);
-        padding-inline: 0.25rem;
-        border: 1px solid transparent;
-        border-radius: var(--app-radius-control);
-        background: none;
-        color: var(--app-color-text);
-        font: inherit;
-        font-size: var(--app-font-size-micro);
-        cursor: pointer;
-        touch-action: pinch-zoom;
-
-        &:disabled {
-          color: var(--app-color-text-faintest);
-        }
-
-        wa-icon {
-          font-size: 1.125rem;
-        }
-
-        span {
-          /* The 44px target, less the button's padding and border. */
-          min-width: calc(var(--app-tap-min) - 0.5rem - 2px);
-          line-height: 1.15;
-          text-align: center;
-          text-wrap: balance;
-        }
-      }
-
-      /* The hint takes the free space, because its label grows when the hint is
-       * armed and the bar reads better with it wide either way. It yields width
-       * at a quarter of its neighbors' rate, so the small captions go to two
-       * lines before the hint does. The ratio is carried by the others' 4 rather
-       * than a hint factor below 1: a lone item whose factor is under 1 absorbs
-       * only that fraction of the overflow, and the bar overran 320px.
-       *
-       * It is NOT filled, deliberately: an accent control reads as advice, and
-       * whether to take a hint is the player's choice. The hint is offered
-       * plainly, and nothing about the chrome urges it. */
-      .phone-action.hint {
-        flex: 1 1 auto;
-        flex-direction: row;
-        gap: 0.375rem;
-        font-size: var(--app-font-size-body);
-
-        &:disabled {
-          color: var(--app-color-text-faintest);
-        }
-      }
-
-      .more-sheet {
-        width: 100%;
+      /* The Menu over the board, where it does not dock. The dialog is sized
+       * to its content, so a click on its backdrop is a click outside the
+       * Menu (utils/dialog.ts). */
+      .menu-over {
         max-width: none;
-        max-height: 80dvh;
+        max-height: none;
         margin: 0;
-        margin-block-start: auto;
         padding: 0;
         border: none;
-        border-start-start-radius: var(--app-radius-container);
-        border-start-end-radius: var(--app-radius-container);
         background-color: var(--app-color-rail);
         color: var(--app-color-text);
         overflow-y: auto;
@@ -1535,6 +1533,29 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         &::backdrop {
           background-color: var(--wa-color-overlay-modal);
         }
+      }
+
+      /* A sheet from the bottom in a tall window. */
+      .menu-over.sheet {
+        width: 100%;
+        max-height: 80dvh;
+        margin-block-start: auto;
+        border-start-start-radius: var(--app-radius-container);
+        border-start-end-radius: var(--app-radius-container);
+        padding-block-end: env(safe-area-inset-bottom);
+      }
+
+      /* A drawer on the Menu's side in a landscape one. */
+      .menu-over.drawer-left,
+      .menu-over.drawer-right {
+        width: min(18rem, 85vw);
+        height: 100%;
+      }
+      .menu-over.drawer-left {
+        margin-inline-end: auto;
+      }
+      .menu-over.drawer-right {
+        margin-inline-start: auto;
       }
 
       puzzle-end-notification {
@@ -1556,18 +1577,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         }
       }
 
-      /* Short landscape: the keypad reads better as a column beside the board
-       * than as a row under it. The rail is already a column, so nothing else
-       * needs to change here — which is the point of deciding the chrome on
-       * width alone rather than on orientation. */
-      :host([orientation="horizontal"]) {
-        .board-area {
-          flex-direction: row;
-        }
-        puzzle-keys::part(group) {
-          flex-direction: column;
-        }
-      }
       wa-skeleton {
         --color: var(--wa-color-brand-fill-quiet);
         --sheen-color: var(--wa-color-brand-fill-normal);
@@ -1576,21 +1585,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         }
       }
   
-      @media (prefers-reduced-motion: no-preference) {
-        .game-menu-trigger {
-          transition: font-size var(--wa-transition-fast) var(--wa-transition-easing);
-        }
-      }
-      
-      #mouse-button-toggle {
-        flex: 0 0 auto;
-        wa-radio {
-          /* Make it square with icon-only label (1em wide) */
-          padding-inline: calc(
-              (var(--wa-form-control-height) - 1em) / 2 
-              - var(--wa-form-control-border-width));
-        }
-      }
     `,
   ];
 }

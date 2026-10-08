@@ -7,7 +7,7 @@
  * serves an experienced player better than a dropdown can and works from the
  * home screen too.
  *
- * **And a `Switch puzzle…` row in `More…` opens the same thing**, so a touch
+ * **And a `Switch puzzle…` row in the Menu opens the same thing**, so a touch
  * player keeps the capability the menu provided. A keyboard-only affordance
  * would have quietly taken it away, which is not what "replace" was asked to
  * mean.

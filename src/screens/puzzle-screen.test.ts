@@ -299,7 +299,7 @@ describe("puzzle-screen: Check without saving", () => {
   });
 
   it("does nothing on a game that cannot check", async () => {
-    // The command is gated on `canCheck` in the rail, so this arm is only ever
+    // The command is gated on `canCheck` in the Menu, so this arm is only ever
     // reached by a shortcut or a stale surface — and it must not report a
     // clean board it never examined.
     const { host, check } = makeScreen({ canCheck: false });
@@ -367,7 +367,7 @@ describe("puzzle-screen: focus returns to the board after a command", () => {
   });
 
   it("hands focus to the board after a chrome control is clicked", async () => {
-    // A pointer click anywhere in the rail or the phone bar hands the keyboard
+    // A pointer click anywhere in the three panels hands the keyboard
     // back, whether or not the control also went through the command bus — a
     // control may be both a `data-command` and a menu trigger, and only a real
     // event's composed path tells those apart.
@@ -617,9 +617,9 @@ describe("which board a puzzle page opens with", () => {
   });
 
   it("redraws its chrome once the puzzle exists, without waiting for the deal", async () => {
-    // The phone bar reads the puzzle through a non-reactive `@query`, so a
-    // render requested only by `puzzleLoaded` left Hint off the bar for as long
-    // as the first board took to deal.
+    // The screen reads the puzzle through a non-reactive `@query`, so a render
+    // requested only by `puzzleLoaded` left the hint's words off the screen
+    // for as long as the first board took to deal.
     const puzzle = makeLoadPuzzle();
     const screen = new PuzzleScreen();
     const requestUpdate = vi.spyOn(screen, "requestUpdate");

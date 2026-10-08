@@ -36,9 +36,9 @@
 
   /** The page. */
   --app-color-ground: #ffffff;
-  /** The rail, and any raised surface: panels, dialogs, sheets. */
+  /** The puzzle screen's panels, and any raised surface: dialogs, sheets. */
   --app-color-rail: #fafafa;
-  /** Structure: the line that separates the rail from the board. */
+  /** Structure: the line that separates a panel from the board. */
   --app-color-hairline: #e3e4e7;
   /** The lighter rule between rows of a list. */
   --app-color-row-rule: #eef0f2;
@@ -57,12 +57,8 @@
 
   /** The hint's amber, and it is the hint's alone.
    *
-   * There was a fourth token here, `--app-color-accent: #ffc83d`, a saturated
-   * fill for the one control the chrome wanted to shout. Its only two consumers
-   * were the rail's hint row and the phone bar's hint button, and both were
-   * retired: a filled hint button reads as advice, and whether to take a hint is
-   * the player's call. Removed rather than left declared, because a palette
-   * token nothing consumes is a color the next reader will assume is in use.
+   * There is no saturated accent fill for the Hint control: a filled hint
+   * button reads as advice, and whether to take a hint is the player's call.
    *
    * These three stay, and they are where the amber lives now — the hint
    * explanation panel, which is the hint speaking rather than the chrome
@@ -106,7 +102,7 @@
   --app-row-rail: 2.0625rem; /* 33 — a rail control */
   --app-row-list: 3.25rem; /* 52 — a desktop catalog row */
   --app-row-list-phone: 4rem; /* 64 */
-  --app-row-tool-phone: 3.375rem; /* 54 — the phone bar */
+  --app-row-tool-phone: 3.375rem; /* 54 — a slot of the puzzle screen's Bar */
   /** No tap target on a phone goes below this. */
   --app-tap-min: 2.75rem; /* 44 */
 

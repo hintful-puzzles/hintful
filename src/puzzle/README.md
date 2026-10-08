@@ -34,6 +34,11 @@ called `puzzle`.
 - **`contexts.ts`** — the `@lit/context` token for the `Puzzle` object. It lives
   at the root rather than under `components/` because dialogs and panels outside
   this directory consume it too.
+- **`command-list.ts`** — every command the Bar and the Menu offer, as one
+  ordered list that is cut once: the Bar shows its leading entries and the Menu
+  the rest. Add a command here, never to a panel.
+- **`layout.ts`** — where the puzzle screen's panels dock: the window shapes,
+  each shape's default, and the grid a set of choices produces.
 - **`canvas-sizing.ts`, `icon-capture.ts`, `quick-save-actions.ts`,
   `engine-surface.ts`** — supporting runtime pieces.
 
@@ -49,11 +54,14 @@ component's templates, the Playwright checks).
 | `view.ts` | `<puzzle-view>` | displays the puzzle and status bar; provides the on-screen canvas for the drawing API. Handles no input |
 | `view-interactive.ts` | `<puzzle-view-interactive>` | subclass of `<puzzle-view>` adding mouse, touch and keyboard handling |
 | `type-menu.ts` | `<puzzle-type-menu>` | the "Type" menu described in section 2.3 of the puzzles documentation |
-| `keys.ts` | `<puzzle-keys>` | virtual keyboard, undo/redo buttons and other controls |
-| `history.ts` | `<puzzle-history>` | the history/timeline bar, including Check &amp; Save |
+| `bar.ts` | `<puzzle-bar>` | the Bar: the commands every game has, as many of the command list's leading entries as fit, and the `Menu` button |
+| `menu.ts` | `<puzzle-menu>` | the Menu: every entry of the command list the Bar does not show. The only panel that scrolls |
+| `game-controls.ts` | `<puzzle-game-controls>` | the Game controls: what the game in play brings (keys, note toggle, button toggle, mark-all, Reference). Absent for a game that brings none |
+| `keys.ts` | `<puzzle-keys>` | the virtual keys it is given, drawn as buttons that send each key's code |
+| `history.ts` | `<puzzle-history>` | the move counter, which opens the timeline and its checkpoints |
+| `timer.ts` | `<puzzle-timer>` | the solve timer, absent while it is off |
 | `config.ts` | `<puzzle-custom-params-*>`, `<puzzle-preferences-*>` | extensible dialogs for custom game types and preferences |
 | `end-notification.ts` | `<puzzle-end-notification>` | the completion notification |
-| `other-puzzles-menu.ts` | `<other-puzzles-menu>` | the cross-puzzle navigation menu |
 
 Historical note: until `retire-c-engine` this layer had two implementations
 behind `PuzzleEngineSurface` — the TypeScript one above, and a `WorkerPuzzle`

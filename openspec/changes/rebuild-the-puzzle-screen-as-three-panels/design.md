@@ -163,19 +163,20 @@ controls on the right. Tall, the Menu a sheet, the Bar at the bottom, the Game
 controls under the board. Wide and short, the Bar on the side and the Game
 controls opposite.
 
-**Fit**: a Menu that cannot dock without squeezing the board opens over it (a
-sheet when tall). The stored choice is kept, not overwritten.
+**Fit**: a Menu that cannot dock without squeezing the board is opened over it
+by the Menu button (a sheet when tall). The stored choice is kept, not
+overwritten.
 
 The layout is one grid on the puzzle screen's `main`, whose areas the settings
-choose. It replaces `chrome="rail" | "bar"`, the keypad's `orientation` switch
-and the reference panel's own media query with one mechanism.
+choose (`src/puzzle/layout.ts`). It replaces `chrome="rail" | "bar"`, the
+keypad's `orientation` switch and the reference panel's own media query with
+one mechanism.
 
 ### Undo across a Load
 
 `Midend.loadGame` already keeps the board it replaces, through the same
-`keep()` that New game uses. Whether `Back to last save` and `Open saved…`
-reach Undo in the running app has been read in the code and not played. It is
-a task of this change to play it, and to make it true if it is not.
+`keep()` that New game uses. It was played: see "Undo across a Load, as
+played".
 
 ## What follows this change
 
@@ -212,9 +213,89 @@ Each is a change of its own, on the owner's word, and neither is filed.
 - [`Fill marks` moves about 50px up on a phone, away from where a player's
   thumb has learned it] → accepted by the owner.
 
-## Open Questions
+## Decided while building (2026-10-08)
 
-- Whether Preferences › Layout shows only the current window shape's settings
-  (as drawn) or all three.
-- Whether the Bar on a wide window shows key hints as a second line under each
-  caption (as drawn) or leaves them to the Menu and the help.
+Each is an implementation decision, with its reason. The two that were open
+questions are first.
+
+- **Preferences › Layout shows the current window shape's settings only**, as
+  drawn. A choice is judged by watching the board rearrange behind the dialog,
+  and only the current shape can show that.
+- **A key is written beside a command where a keyboard is likely**: a pointer
+  that is fine and can hover. On the Bar, also only while it has room (as
+  drawn, a line under the caption). This removes the shortcut labels a phone
+  showed, which "What is wrong today" lists.
+- **A bottom Bar is the board column's width, and a side column of Game
+  controls runs the full height beside it.** The drawings show the Bar passing
+  under the Game controls; "Risks" below says the Bar is the board column's
+  width, and that is what was built, because it centers Hint under the board
+  and gives the keys the height at 1280x600.
+- **The Bar's length is computed from its own size**, by the slot sizes its
+  stylesheet uses, and the screen hands the one number to the Bar and the Menu.
+  It is 4 on a phone, 5 at a height of 373px with the Bar on the side, and 6
+  elsewhere measured. Opening the reference panel on a 1280px window takes it
+  to 4, which is the mechanism working.
+- **`Back to last save` is captioned `Last save` on the Bar**, as the landscape
+  drawing has it, and keeps its full name in the Menu. It is the one caption
+  that differs, declared beside the label on the same entry.
+- **The Menu button and the Menu's close button are for the visit.** They do
+  not write `Keep the Menu open`. Crossing into another window shape, or
+  losing the room to dock, drops the visit's choice.
+- **A Menu that cannot dock is closed, not opened over the board.** Narrowing a
+  window must not put a modal sheet over a game in play. The Menu button then
+  opens it over the board: a sheet when tall, a drawer on the Menu's side when
+  wide.
+- **The Menu docks when what is left is at least 0.9 of the board area's
+  height in width** (`menuFits`). At 1280x720 it docks; at 1024x768 and
+  800x720 it does not.
+- **The note toggle is the keypad's `Marks` key, drawn after the keys with its
+  label.** It is a mode and not a character, so it is held to "every control
+  carries a label". It has no pressed state, because the app is not told the
+  game's pencil mode; the tap switch that follows this change is where that
+  belongs.
+- **The button toggle carries the words `Left` and `Right`**, and is not shown
+  in a game with `ignoresSecondaryButton`, which has nothing to swap to.
+- **The reference panel is a region of the grid**: beside the board, beyond
+  the Game controls, in a landscape window, and under the board in a tall one.
+  A short landscape window now gets it beside the board, where it took 45% of
+  the height before.
+- **The timeline names a restart `Started over`**, and the solved-or-lost
+  popup's button and the help say `Start over`, with the row.
+- **`--app-chrome`, `--app-orientation` and the `chrome` and `orientation`
+  attributes are retired.** `--app-size` stays: the home screen reads it.
+
+### Measured after (Chrome, Solo 2x3, 2026-10-08)
+
+| Viewport | Shape | Bar length | Board edge, before → after |
+| --- | --- | --- | --- |
+| 1440x900 | wide | 6 | 736 → 686 |
+| 1280x720 | wide | 6 | 554 → 504 |
+| 1280x600 | wide | 6 | 546 → 442 |
+| 1000x373 | short | 5 | 322 → 304 |
+| 844x390 | short | 6 | 340 → 322 |
+| 800x1000 | tall | 6 | 420 → 764 |
+| 768x1024 | tall | 6 | 736 → 736 |
+| 390x844 | tall | 4 | 372 → 372 |
+
+At every size, and at 360x740 and 320x568, the Bar and the Game controls
+report no scroll in either direction. Pressing Hint left the rectangle of
+every control where it was at 1280x720, 390x844, 844x390, 360x740 and 320x568
+(33, 16, 18, 16 and 16 controls compared).
+
+The board loses 50px at 1280x720 and 104px at 1280x600, as "Risks" expected.
+`Bar: Side` gives back the Bar's 64px.
+
+### Undo across a Load, as played
+
+`Back to last save` and `Open saved…` were each played in Chrome with Undo
+after. The board left is kept and does come back, by the engine's rule
+(`ts-engine`, "The board a new one replaces is kept, one deep"): it lies
+beyond the loaded save's **first** position. A save loaded at move 2 takes
+three presses of Undo to return the board left; the timeline offers it in one,
+as *Previous board*. `replaced-board.test.ts` already pins a save beside a deal
+and an id, and `help/features.md` already says "a loaded one".
+
+Whether one press of Undo straight after a Load should return the board left
+is the owner's to say. It would give Undo two meanings at one position, which
+the engine's rule exists to prevent, and it is put to the owner with this
+change.

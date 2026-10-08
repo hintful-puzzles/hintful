@@ -1,49 +1,56 @@
 // @vitest-environment happy-dom
 //
 /**
- * **Every command has a home, and the chrome and the command bus agree about
- * which.**
+ * **Every command is in exactly one of the three panels, and the panels and
+ * the command bus agree about which.**
  *
- * The defect this guards against shipped for the life of the app: `hint`,
- * `toggle-reference` and `check-and-save` were offered from *both* a fourteen-
- * item game menu and an eight-button toolbar, with eleven further commands split
- * between the two under no rule. A player had to learn both surfaces and could
- * still miss a command that lived only in the other. Nothing could see it,
- * because each surface was correct on its own.
+ * The defect this guards against shipped twice. First `hint`,
+ * `toggle-reference` and `check-and-save` were offered from *both* a game menu
+ * and a toolbar, with eleven further commands split between the two under no
+ * rule. Then a desktop rail and a phone bar were one list drawn as two shapes,
+ * and the phone's sheet opened on nine rows its bar already showed. Each
+ * surface was correct on its own, so nothing could see either.
  *
- * So the check is a **render**, not a source scan: it mounts the real
- * `puzzle-rail` against a fake puzzle, walks every shadow root under it, and
- * compares the `data-command` values it finds with `PuzzleScreen`'s own
- * `commandMap`. Both directions fail — a command offered twice, and a command
- * offered nowhere.
+ * So the check is a **render**, not a source scan: it mounts the real Bar,
+ * Menu and Game controls against a fake puzzle, walks every shadow root under
+ * them, and compares the `data-command` values it finds with `PuzzleScreen`'s
+ * own `commandMap`. Both directions fail: a command offered twice, and a
+ * command offered nowhere.
  *
- * ON THE PHONE BAR, and why "exactly one home" is not the right rule there.
- * The rule exists to stop *two surfaces a player must learn*. The phone's
- * bottom bar is not a second surface: it is a few rows promoted out of the sheet
- * that `More…` opens, which is the quick-access position the owner asked for
- * Check & save to hold (2026-09-07). What must be true is that the promotion is
- * only ever a promotion — so this asserts the bar's commands are a **subset** of
- * the sheet's, which is the property that would actually break if somebody put
- * a command in the bar and nowhere else. The desktop rail, where there is no
- * bar, is held to the strict rule.
+ * The Bar and the Menu are held to more than not overlapping. They **partition
+ * one ordered list**: at every Bar length the Menu is exactly the entries the
+ * Bar does not show, in the list's order, which is what makes the Menu's
+ * contents predictable from where the Bar stops.
  */
 import "../test-setup/element-internals.ts";
+import "../test-setup/resize-and-animations.ts";
 import { render, type TemplateResult } from "lit";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The real `saved-games` store, against `fake-indexeddb`. Nothing here needs a
 // saved game: `Back to last save` renders either way, disabled when there is
-// none, and a disabled row still has the `data-command` this file reads.
+// none, and a disabled control still has the `data-command` this file reads.
 
+import { createTsEngine } from "../engine/registry.ts";
 import { NOT_STARTED } from "../engine/solve-failure.ts";
-import { PuzzleRail } from "../puzzle/components/rail.ts";
+import { registerAllGames } from "../games/index.ts";
+import {
+  barCapacity,
+  commandList,
+  cutCommandList,
+  MIN_BAR_LENGTH,
+} from "../puzzle/command-list.ts";
+import { PuzzleBar } from "../puzzle/components/bar.ts";
+import { PuzzleGameControls } from "../puzzle/components/game-controls.ts";
+import { PuzzleMenu } from "../puzzle/components/menu.ts";
+import { settings } from "../store/settings.ts";
 import { PuzzleScreen } from "./puzzle-screen.ts";
 
 // Every `wa-icon` fetches its SVG from Web Awesome's default icon library, and
-// happy-dom aborts those requests at teardown — twenty stack traces per run, in
+// happy-dom aborts those requests at teardown: twenty stack traces per run, in
 // a suite where nobody is looking at an icon. Serve an empty SVG instead. (The
 // app's own resolver in `src/icons.ts` never runs here: only `main.ts` installs
-// it, and this test mounts one component.)
+// it, and this test mounts components on their own.)
 vi.stubGlobal(
   "fetch",
   vi.fn(
@@ -54,18 +61,24 @@ vi.stubGlobal(
   ),
 );
 
+type FakePuzzle = Record<string, unknown>;
+
 /**
- * A puzzle that can do **everything**, so the rail renders every row it has.
+ * A puzzle that can do **everything**, so every panel renders every control it
+ * has.
  *
- * Deliberately maximal: a capability-gated row that is absent would otherwise
- * read as "this command has no home", and the failure would name the wrong
- * problem. The `renders nothing a game cannot do` case below covers the other
- * end.
+ * Deliberately maximal: a capability-gated control that is absent would
+ * otherwise read as "this command has no home", and the failure would name the
+ * wrong problem. The `renders no command a game cannot run` case below covers
+ * the other end.
  */
-function fullyCapablePuzzle(overrides: Record<string, unknown> = {}) {
+function fullyCapablePuzzle(overrides: FakePuzzle = {}): FakePuzzle {
   return {
     puzzleId: "lightup",
+    displayName: "Light Up",
     status: "ongoing",
+    hasBoard: true,
+    isSolved: false,
     canUndo: true,
     canRedo: true,
     canHint: true,
@@ -73,10 +86,14 @@ function fullyCapablePuzzle(overrides: Record<string, unknown> = {}) {
     canMarkAll: true,
     canCheck: true,
     hasReference: true,
+    hasPencilMarks: false,
+    ignoresSecondaryButton: false,
     wantsStatusbar: true,
     statusbarText: "3 lights placed",
+    hintPending: false,
+    hintArmedToApply: false,
     autoHintActive: false,
-    // A deal is being looked for, which is when its way out has a row.
+    // A deal is being looked for, which is when its way out has a control.
     dealMessage: "Looking for a board…",
     canStopDeal: true,
     helpMessage: "",
@@ -84,51 +101,65 @@ function fullyCapablePuzzle(overrides: Record<string, unknown> = {}) {
     currentMove: 3,
     totalMoves: 7,
     checkpoints: new Set<number>(),
+    restarts: [],
+    currentParams: "7x7",
+    requestKeys: async () => [],
+    palette: [],
     ...overrides,
   };
 }
 
-/** Mount a rail with `puzzle` injected, rendered for real. */
-async function mountRail(
-  variant: "rail" | "sheet",
-  puzzle: Record<string, unknown>,
-): Promise<PuzzleRail> {
-  const rail = new PuzzleRail();
-  rail.variant = variant;
-  rail.gameName = "Light Up";
-  rail.helpHref = "/help/lightup.html";
+/** Mount `element` with `puzzle` injected, rendered for real. */
+async function mount<T extends HTMLElement & { updateComplete: Promise<boolean> }>(
+  element: T,
+  puzzle: FakePuzzle,
+): Promise<T> {
   // `@consume` assigns this field from the context; with no provider in this
   // detached tree, assigning it directly is the same write by a shorter route.
-  (rail as unknown as { puzzle: unknown }).puzzle = puzzle;
-  document.body.append(rail);
-  await rail.updateComplete;
-  return rail;
+  (element as unknown as { puzzle: unknown }).puzzle = puzzle;
+  document.body.append(element);
+  await element.updateComplete;
+  return element;
 }
 
-/**
- * The commands in the phone's bottom bar for `puzzle`, read from the real
- * `renderPhoneChrome` template. Only the `<nav>` is read: the sheet beside it
- * is a `puzzle-rail` with no puzzle in its context here, and `mountRail`
- * already renders that properly.
- */
-async function phoneBarCommands(puzzle: Record<string, unknown>): Promise<string[]> {
+async function mountBar(puzzle: FakePuzzle, length: number): Promise<PuzzleBar> {
+  const bar = new PuzzleBar();
+  bar.length = length;
+  return mount(bar, puzzle);
+}
+
+async function mountMenu(puzzle: FakePuzzle, barLength: number): Promise<PuzzleMenu> {
+  const menu = new PuzzleMenu();
+  menu.barLength = barLength;
+  menu.gameName = "Light Up";
+  menu.helpHref = "/help/lightup.html";
+  return mount(menu, puzzle);
+}
+
+async function mountControls(puzzle: FakePuzzle): Promise<PuzzleGameControls> {
+  const controls = await mount(new PuzzleGameControls(), puzzle);
+  // The keys are asked for in the first update and arrive in a later one.
+  await Promise.resolve();
+  await controls.updateComplete;
+  return controls;
+}
+
+/** What the screen says under the board, from the real `renderWords`. It is
+ * no panel, and one command lives there: the way out of a deal. */
+function mountWords(puzzle: FakePuzzle): HTMLElement {
   const screen = new PuzzleScreen();
   Object.defineProperty(screen, "puzzle", { get: () => puzzle });
-  Object.defineProperty(screen, "puzzleId", { value: puzzle["puzzleId"] });
   const template = (
-    screen as unknown as { renderPhoneChrome(): TemplateResult }
-  ).renderPhoneChrome();
+    screen as unknown as { renderWords(): TemplateResult }
+  ).renderWords();
   const host = document.createElement("div");
   document.body.append(host);
   render(template, host);
-  const bar = host.querySelector("nav.phone-bar");
-  if (!bar) throw new Error("renderPhoneChrome drew no phone bar");
-  return commandsIn(bar);
+  return host;
 }
 
-/** Every `data-command` under `root`, descending through shadow roots — the
- * rail nests `puzzle-history` and `puzzle-type-menu`, each with commands of its
- * own, and a flat query would miss them and report them as homeless. */
+/** Every `data-command` under `root`, descending through shadow roots, so a
+ * command inside a nested component is not missed and reported as homeless. */
 function commandsIn(root: ParentNode): string[] {
   const out: string[] = [];
   for (const el of root.querySelectorAll("[data-command]")) {
@@ -143,32 +174,45 @@ function commandsIn(root: ParentNode): string[] {
   return out;
 }
 
+/** The commands each place offers for `puzzle`, at one Bar length. */
+async function homes(puzzle: FakePuzzle, barLength: number) {
+  document.body.replaceChildren();
+  return {
+    Bar: commandsIn((await mountBar(puzzle, barLength)).shadowRoot as ParentNode),
+    Menu: commandsIn((await mountMenu(puzzle, barLength)).shadowRoot as ParentNode),
+    "Game controls": commandsIn((await mountControls(puzzle)).shadowRoot as ParentNode),
+    "under the board": commandsIn(mountWords(puzzle)),
+  };
+}
+
+/** The Bar lengths a window can produce for a game with a hint: the floor,
+ * the whole leading run, and one between. */
+const BAR_LENGTHS = [4, 5, 6];
+
 /**
- * Commands that are deliberately not rail rows, one entry per command with the
+ * Commands that are deliberately in no panel, one entry per command with the
  * reason it is excused.
  *
  * A **ledger against the derived set**, not a filter applied before deriving:
  * the assertion below requires it to be exactly right, so an entry that stops
- * being true fails just as loudly as a missing home. (`docs/games/testing.md`: where intent
- * cannot be observed, attach it to the derived member.)
+ * being true fails just as loudly as a missing home. (`docs/games/testing.md`:
+ * where intent cannot be observed, attach it to the derived member.)
  */
-const NOT_A_RAIL_ROW: Record<string, string> = {
+const IN_NO_PANEL: Record<string, string> = {
   "capture-icons": "dev-only, from the ?screenshot icon-capture bar",
   redraw: "dev-only debugging; no player-facing control",
   "change-type": "the parameter chips are a puzzle-type-menu, not a data-command",
   "toggle-pencil-mode":
-    "the bare P shortcut's command; the control is the keypad's Marks key, which " +
-    "sends the same code straight to the game",
+    "the bare P shortcut's command; the control is the Game controls' Marks key, " +
+    "which sends the same code straight to the game",
   // `All puzzles` and `How to play …` are real links, carrying an `href` and
   // nothing else. `Screen.interceptCommandAndHrefClicks` routes the home URL to
   // `navigateToHomePage` and a help URL to the help drawer, and it *throws* in
-  // dev on an element with both an href and a data-command — which is exactly
-  // what these two rows had at first, so the anchor won and "How to play"
-  // navigated to the raw help page instead of opening the drawer.
-  home: "the `All puzzles` row is an <a href>, routed by the href interceptor",
+  // dev on an element with both an href and a data-command.
+  home: "the `All puzzles` link is an <a href>, routed by the href interceptor",
 };
 
-describe("every puzzle command has exactly one home in the rail", () => {
+describe("every puzzle command is in exactly one of the three panels", () => {
   let commandKeys: string[];
 
   beforeEach(() => {
@@ -179,90 +223,131 @@ describe("every puzzle command has exactly one home in the rail", () => {
     );
   });
 
-  it("finds a command map and a rendered rail at all", async () => {
-    // Both floors are vacuity guards: an empty map or a rail that failed to
-    // render would make every assertion below pass over nothing.
+  it("finds a command map and rendered panels at all", async () => {
+    // Vacuity guards: an empty map, or a panel that failed to render, would
+    // make every assertion below pass over nothing.
     expect(commandKeys.length).toBeGreaterThan(15);
-    const rail = await mountRail("rail", fullyCapablePuzzle());
-    expect(commandsIn(rail.shadowRoot as ParentNode).length).toBeGreaterThan(10);
+    const found = await homes(fullyCapablePuzzle(), MIN_BAR_LENGTH);
+    expect(found.Bar.length).toBe(MIN_BAR_LENGTH);
+    expect(found.Menu.length).toBeGreaterThan(10);
+    expect(found["Game controls"]).toEqual(["mark-all", "toggle-reference"]);
+    expect(found["under the board"]).toEqual(["stop-deal"]);
   });
 
   it("gives no control both an href and a data-command", async () => {
     // `Screen.interceptCommandAndHrefClicks` throws on such an element, but
-    // only in dev and only when somebody clicks it — so the `How to play …` row
-    // shipped with both, the anchor's navigation won the race, and the help
-    // drawer became a full-page load. Asserting it at render is what turns a
-    // click-time throw into a build-time failure.
-    for (const variant of ["rail", "sheet"] as const) {
-      document.body.replaceChildren();
-      const rail = await mountRail(variant, fullyCapablePuzzle());
+    // only in dev and only when somebody clicks it, so the `How to play …` row
+    // once shipped with both, the anchor's navigation won the race, and the
+    // help drawer became a full-page load. Asserting it at render is what
+    // turns a click-time throw into a build-time failure.
+    const puzzle = fullyCapablePuzzle();
+    for (const panel of [
+      await mountBar(puzzle, MIN_BAR_LENGTH),
+      await mountMenu(puzzle, MIN_BAR_LENGTH),
+      await mountControls(puzzle),
+    ]) {
       const both = [
-        ...(rail.shadowRoot?.querySelectorAll("[data-command][href]") ?? []),
+        ...(panel.shadowRoot?.querySelectorAll("[data-command][href]") ?? []),
       ].map((el) => `${el.tagName.toLowerCase()}[${el.getAttribute("data-command")}]`);
       expect(
         both,
-        `${variant}: a control is either a link or a command, never both`,
+        `${panel.localName}: a control is either a link or a command, never both`,
       ).toEqual([]);
     }
   });
 
-  it("offers no command twice", async () => {
-    const rail = await mountRail("rail", fullyCapablePuzzle());
-    const found = commandsIn(rail.shadowRoot as ParentNode);
-    const twice = found.filter((c, i) => found.indexOf(c) !== i);
+  it.each(
+    BAR_LENGTHS,
+  )("cuts one list between the Bar and the Menu, at a Bar of %i", async (barLength) => {
+    const puzzle = fullyCapablePuzzle();
+    const list = commandList(puzzle as never, "Light Up");
+    // The help link and the timeline hold a place in the order and are not
+    // commands.
+    const commands = list.flatMap((entry) =>
+      entry.kind === "command" ? [entry.id] : [],
+    );
+    expect(barCapacity(list)).toBe(6);
+
+    const found = await homes(puzzle, barLength);
+    expect(found.Bar, "the Bar is the list's leading entries").toEqual(
+      commands.slice(0, barLength),
+    );
     expect(
-      [...new Set(twice)],
-      "a command reachable from two places in one surface is the defect this " +
-        "chrome was rebuilt to remove; give it one home",
+      found.Menu,
+      "the Menu is every entry the Bar does not show, in the list's order",
+    ).toEqual(commands.slice(barLength));
+    // The first four are on the Bar at every size.
+    expect(found.Bar.slice(0, 4)).toEqual(["undo", "redo", "hint", "check-and-save"]);
+  });
+
+  it.each(BAR_LENGTHS)("offers no command twice, at a Bar of %i", async (barLength) => {
+    const found = await homes(fullyCapablePuzzle(), barLength);
+    const places = new Map<string, string[]>();
+    for (const [place, commands] of Object.entries(found)) {
+      for (const command of commands) {
+        places.set(command, [...(places.get(command) ?? []), place]);
+      }
+    }
+    expect(
+      [...places]
+        .filter(([, where]) => where.length > 1)
+        .map(([command, where]) => `${command}: ${where.join(" and ")}`),
+      "a command reachable from two places is the defect the panels were " +
+        "built to remove; give it one home",
     ).toEqual([]);
   });
 
-  it("gives every command in the map a home, or a reason", async () => {
-    const rail = await mountRail("rail", fullyCapablePuzzle());
-    const found = new Set(commandsIn(rail.shadowRoot as ParentNode));
+  it.each(
+    BAR_LENGTHS,
+  )("gives every command in the map a home, or a reason, at a Bar of %i", async (barLength) => {
+    const found = new Set(
+      Object.values(await homes(fullyCapablePuzzle(), barLength)).flat(),
+    );
 
     const homeless = commandKeys.filter(
-      (c) => !found.has(c) && !Object.hasOwn(NOT_A_RAIL_ROW, c),
+      (c) => !found.has(c) && !Object.hasOwn(IN_NO_PANEL, c),
     );
     expect(
       homeless,
-      "these commands are registered but reachable from nowhere in the rail — " +
-        "add a row, or add an entry to NOT_A_RAIL_ROW saying why not",
+      "these commands are registered but reachable from no panel: give each a " +
+        "control, or an entry in IN_NO_PANEL saying why not",
     ).toEqual([]);
 
-    // The ledger is held to being exactly right in the other direction too: an
-    // excuse for a command that now *has* a row is a stale note that would
-    // quietly permit a duplicate later.
-    const staleExcuses = Object.keys(NOT_A_RAIL_ROW).filter((c) => found.has(c));
+    // The ledger is held to being exactly right in the other direction too:
+    // an excuse for a command that now *has* a control is a stale note that
+    // would quietly permit a duplicate later.
+    const staleExcuses = Object.keys(IN_NO_PANEL).filter((c) => found.has(c));
     expect(
       staleExcuses,
-      "NOT_A_RAIL_ROW excuses a command that now has a rail row; remove the entry",
+      "IN_NO_PANEL excuses a command that now has a control; remove the entry",
     ).toEqual([]);
-    const excusesForNothing = Object.keys(NOT_A_RAIL_ROW).filter(
+    const excusesForNothing = Object.keys(IN_NO_PANEL).filter(
       (c) => !commandKeys.includes(c),
     );
     expect(
       excusesForNothing,
-      "NOT_A_RAIL_ROW names a command that is not in the command map at all",
+      "IN_NO_PANEL names a command that is not in the command map at all",
     ).toEqual([]);
   });
 
   it("renders no command a game cannot run", async () => {
-    const rail = await mountRail(
-      "rail",
-      fullyCapablePuzzle({
-        canHint: false,
-        canSolve: false,
-        canMarkAll: false,
-        canCheck: false,
-        hasReference: false,
-        wantsStatusbar: false,
-      }),
+    const found = new Set(
+      Object.values(
+        await homes(
+          fullyCapablePuzzle({
+            canHint: false,
+            canSolve: false,
+            canMarkAll: false,
+            canCheck: false,
+            hasReference: false,
+            wantsStatusbar: false,
+          }),
+          MIN_BAR_LENGTH,
+        ),
+      ).flat(),
     );
-    const found = new Set(commandsIn(rail.shadowRoot as ParentNode));
     // Absent, not present-and-disabled: "grayed out for this puzzle" teaches a
-    // player that the app is broken here rather than that the game has no such
-    // idea.
+    // player that the app is broken here, not that the game has no such idea.
     for (const command of [
       "hint",
       "toggle-auto-hint",
@@ -283,65 +368,141 @@ describe("every puzzle command has exactly one home in the rail", () => {
     }
   });
 
-  it("shows the help banner exactly once, whether or not the game can hint", async () => {
+  it("shows the help banner exactly once, whether or not the game can hint", () => {
     // Solve refuses in the banner, and a game can offer Solve with no hint
-    // (Mines): its banner was once rendered only under the hint row, so a
-    // refused Solve there showed nothing at all.
+    // (Mines): its banner was once rendered only under the hint's control, so
+    // a refused Solve there showed nothing at all.
     for (const canHint of [true, false]) {
       document.body.replaceChildren();
-      const rail = await mountRail(
-        "rail",
+      const words = mountWords(
         fullyCapablePuzzle({ canHint, helpMessage: NOT_STARTED }),
       );
-      const banners = [
-        ...(rail.shadowRoot?.querySelectorAll('[part="hint-explanation"]') ?? []),
-      ].map((el) => el.textContent?.trim());
+      const banners = [...words.querySelectorAll(".hint")].map((el) =>
+        el.textContent?.trim(),
+      );
       expect(banners, `canHint: ${canHint}`).toEqual([NOT_STARTED]);
     }
   });
 
-  it("draws the sheet from the same rows as the rail", async () => {
-    // The phone's `More…` sheet is the rail, so "the same order and the same
-    // wording" is structural rather than maintained. This is what would fail if
-    // somebody gave the sheet its own list.
-    const rail = await mountRail("rail", fullyCapablePuzzle());
-    const railCommands = commandsIn(rail.shadowRoot as ParentNode);
-    document.body.replaceChildren();
-    const sheet = await mountRail("sheet", fullyCapablePuzzle());
-    const sheetCommands = commandsIn(sheet.shadowRoot as ParentNode);
+  it("writes a label on every control", async () => {
+    // An icon alone is how eight controls once shipped wordless. The keys that
+    // type a character are not held to it: the on-screen key panel is an input
+    // surface, where the character is the label.
+    const puzzle = fullyCapablePuzzle();
+    const bar = await mountBar(puzzle, 6);
+    const menu = await mountMenu(puzzle, MIN_BAR_LENGTH);
+    const controls = await mountControls(puzzle);
+    const unlabeled = [
+      ...(bar.shadowRoot?.querySelectorAll("button") ?? []),
+      ...(menu.shadowRoot?.querySelectorAll("[part=row]") ?? []),
+      ...(controls.shadowRoot?.querySelectorAll("wa-button") ?? []),
+    ].filter((el) => (el.textContent ?? "").trim() === "");
+    // Vacuity floor: seven Bar slots at the least.
+    expect(bar.shadowRoot?.querySelectorAll("button").length).toBe(7);
+    expect(unlabeled.map((el) => el.outerHTML)).toEqual([]);
+  });
+});
 
-    // The sheet omits the heading block (the back link and the game's name live
-    // in the phone's top bar instead), so it is the rail minus exactly that.
-    expect(sheetCommands).toEqual(railCommands.filter((c) => c !== "home"));
+/**
+ * The panels against real games, by what each game is: its static attributes
+ * and its keys come from the engine, so no capability is typed in here.
+ */
+describe("what a game brings is in the Game controls, and only there", () => {
+  beforeAll(registerAllGames);
+
+  beforeEach(() => {
+    document.body.replaceChildren();
   });
 
-  it("promotes into the phone bar only commands the sheet also offers", async () => {
-    for (const canMarkAll of [true, false]) {
-      document.body.replaceChildren();
-      const puzzle = fullyCapablePuzzle({ canMarkAll });
-      const bar = await phoneBarCommands(puzzle);
-      const sheet = new Set(
-        commandsIn((await mountRail("sheet", puzzle)).shadowRoot as ParentNode),
-      );
-      // Vacuity floor: Undo, Redo, Hint and Check & save at least.
-      expect(bar.length, `canMarkAll: ${canMarkAll}`).toBeGreaterThanOrEqual(4);
-      expect(
-        bar.filter((c) => !sheet.has(c)),
-        "a command in the phone bar must also be behind More…, or the sheet " +
-          "no longer reaches everything",
-      ).toEqual([]);
+  function puzzleFor(puzzleId: string): FakePuzzle {
+    const engine = createTsEngine(puzzleId);
+    if (!engine) throw new Error(`no engine for ${puzzleId}`);
+    expect(engine.newGame()).toBeNull();
+    return fullyCapablePuzzle({
+      ...engine.getStaticProperties(),
+      puzzleId,
+      displayName: puzzleId,
+      dealMessage: "",
+      currentParams: engine.getParams(),
+      requestKeys: async () => engine.requestKeys(),
+    });
+  }
+
+  /** What the Game controls panel shows, in order. */
+  async function controlsOf(puzzleId: string) {
+    const panel = await mountControls(puzzleFor(puzzleId));
+    const root = panel.shadowRoot as ShadowRoot;
+    return {
+      empty: panel.empty,
+      keys: [...root.querySelectorAll("puzzle-keys")].map(
+        (keys) => `${keys.labeled ? "labeled" : "keys"}:${keys.keys.length}`,
+      ),
+      commands: commandsIn(root),
+    };
+  }
+
+  it("draws the same Bar for Solo and for Tracks", async () => {
+    const solo = commandsIn(
+      (await mountBar(puzzleFor("solo"), 6)).shadowRoot as ParentNode,
+    );
+    document.body.replaceChildren();
+    const tracks = commandsIn(
+      (await mountBar(puzzleFor("tracks"), 6)).shadowRoot as ParentNode,
+    );
+    expect(solo).toHaveLength(6);
+    expect(tracks).toEqual(solo);
+  });
+
+  it("gives Solo its keys, its note toggle and mark-all, in that order", async () => {
+    const solo = await controlsOf("solo");
+    expect(solo.empty).toBe(false);
+    // The keys that type, then the one that is a mode.
+    expect(solo.keys).toHaveLength(2);
+    expect(solo.keys[0]).toMatch(/^keys:\d+$/);
+    expect(solo.keys[1]).toBe("labeled:1");
+    expect(solo.commands).toEqual(["mark-all"]);
+
+    // …and neither the Bar nor the Menu has mark-all.
+    for (const barLength of BAR_LENGTHS) {
+      const found = await homes(puzzleFor("solo"), barLength);
+      expect(found.Bar).not.toContain("mark-all");
+      expect(found.Menu).not.toContain("mark-all");
     }
   });
 
-  it("pins mark-all to the phone bar exactly when the game has it", async () => {
-    // Owner request (2026-09-24): in a game with mark-all it is used often
-    // enough to earn a bar slot rather than a trip through More….
-    expect(await phoneBarCommands(fullyCapablePuzzle({ canMarkAll: true }))).toContain(
-      "mark-all",
-    );
-    expect(
-      await phoneBarCommands(fullyCapablePuzzle({ canMarkAll: false })),
-    ).not.toContain("mark-all");
+  it("gives Dominosa its Reference, and the Menu none", async () => {
+    expect((await controlsOf("dominosa")).commands).toEqual(["toggle-reference"]);
+    const found = await homes(puzzleFor("dominosa"), MIN_BAR_LENGTH);
+    expect(found.Menu).not.toContain("toggle-reference");
+    expect(found.Bar).not.toContain("toggle-reference");
+  });
+
+  it("draws no panel for a game that brings nothing", async () => {
+    // Cube has no keys, no mark-all and no reference; the button toggle is a
+    // preference, off unless a player asks for it.
+    expect(await controlsOf("cube")).toEqual({ empty: true, keys: [], commands: [] });
+    expect((await controlsOf("tracks")).empty).toBe(true);
+  });
+
+  it("offers the button toggle only to a game with a secondary action", async () => {
+    settings.showMouseButtonToggle = true;
+    try {
+      const toggle = async (puzzleId: string) =>
+        (await mountControls(puzzleFor(puzzleId))).shadowRoot?.querySelector(
+          "wa-radio-group",
+        ) !== null;
+      expect(puzzleFor("tracks")["ignoresSecondaryButton"]).toBe(false);
+      expect(await toggle("tracks")).toBe(true);
+      // A game that ignores the secondary button has nothing to swap to.
+      const ignoring = fullyCapablePuzzle({
+        ignoresSecondaryButton: true,
+        canMarkAll: false,
+        hasReference: false,
+      });
+      expect((await mountControls(ignoring)).empty).toBe(true);
+    } finally {
+      settings.showMouseButtonToggle = false;
+    }
   });
 });
 
@@ -354,22 +515,19 @@ function triggersIn(root: ParentNode): Element[] {
   return out;
 }
 
-describe("a menu inside the phone's More sheet", () => {
+describe("a menu inside the Menu", () => {
   beforeEach(() => {
     document.body.replaceChildren();
   });
 
   it("is opened by a trigger that is not also a command", async () => {
-    // A command chosen from the sheet closes it, and closing the sheet takes
-    // any menu inside it along. The timeline's counter carried
-    // `show-timeline`, and tapping it in the sheet only appeared to work
-    // because that command then opened a second copy in the top bar; once the
-    // top bar stopped carrying one, the tap closed the sheet and showed
+    // A command chosen from a Menu that is over the board closes it, and
+    // closing it takes any menu inside it along. The timeline's counter once
+    // carried `show-timeline`, and tapping it closed the sheet and showed
     // nothing.
-    const sheet = await mountRail("sheet", fullyCapablePuzzle());
-    const triggers = triggersIn(sheet.shadowRoot as ParentNode);
-    // Vacuity floor: the timeline's counter. (The sheet lays the rail's
-    // overflow entries out as rows, so that menu has no trigger here.)
+    const menu = await mountMenu(fullyCapablePuzzle(), MIN_BAR_LENGTH);
+    const triggers = triggersIn(menu.shadowRoot as ParentNode);
+    // Vacuity floor: the timeline's counter.
     expect(triggers.length).toBeGreaterThanOrEqual(1);
     expect(
       triggers
@@ -378,26 +536,23 @@ describe("a menu inside the phone's More sheet", () => {
     ).toEqual([]);
   });
 
-  it("closes the sheet when a choice is made in it", () => {
-    const screen = new PuzzleScreen();
-    const puzzle = fullyCapablePuzzle();
-    Object.defineProperty(screen, "puzzle", { get: () => puzzle });
-    Object.defineProperty(screen, "puzzleId", { value: puzzle.puzzleId });
-    const host = screen as unknown as {
-      renderPhoneChrome(): TemplateResult;
-      closeMoreSheet(): void;
-      focusBoard(): void;
-    };
-    const close = vi.spyOn(host, "closeMoreSheet").mockImplementation(() => {});
-    vi.spyOn(host, "focusBoard").mockImplementation(() => {});
-    const root = document.createElement("div");
-    document.body.append(root);
-    render(host.renderPhoneChrome(), root);
-    const rail = root.querySelector("dialog.more-sheet puzzle-rail");
-    if (!rail) throw new Error("renderPhoneChrome drew no sheet");
-    // What `wa-dropdown` fires on a choice: bubbling and composed, so it
-    // leaves the shadow roots of the history and the rail.
-    rail.dispatchEvent(new Event("wa-select", { bubbles: true, composed: true }));
-    expect(close).toHaveBeenCalledOnce();
+  it("is the Menu's only one", async () => {
+    // The Menu is the screen's one overflow: no second menu of commands
+    // inside it.
+    const menu = await mountMenu(fullyCapablePuzzle(), MIN_BAR_LENGTH);
+    const owners = triggersIn(menu.shadowRoot as ParentNode).map((el) => {
+      const root = el.getRootNode();
+      return root instanceof ShadowRoot ? root.host.localName : "document";
+    });
+    expect(owners).toEqual(["puzzle-history"]);
+  });
+
+  it("starts where the Bar stops", () => {
+    const list = commandList(fullyCapablePuzzle() as never, "Light Up");
+    for (const barLength of [0, 3, 4, 5, 6, 9]) {
+      const { bar, menu } = cutCommandList(list, barLength);
+      expect([...bar, ...menu]).toEqual(list);
+      expect(bar.length).toBe(Math.min(6, Math.max(MIN_BAR_LENGTH, barLength)));
+    }
   });
 });

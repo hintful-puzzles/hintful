@@ -3,9 +3,10 @@
  * **"Custom type…" opens its dialog wherever the Type menu is drawn.**
  *
  * The menu appends the dialog inside the nearest `<puzzle-context>`, so the
- * dialog and its form are provided the same puzzle as the menu. The rail draws
- * its menu inside its own shadow root, which `Element.closest` does not leave,
- * and while the lookup used it the rail's Custom type… threw instead of opening.
+ * dialog and its form are provided the same puzzle as the menu. A component
+ * may draw the menu inside its own shadow root, which `Element.closest` does
+ * not leave, and while the lookup used it Custom type… threw there instead of
+ * opening.
  * So the menu is mounted both ways, under a real `<puzzle-context>` provider,
  * and the real dialog is opened from each.
  */
@@ -59,7 +60,7 @@ afterEach(() => {
 });
 
 /** A `<puzzle-context>` providing the fake puzzle, with a Type menu in it —
- * directly, or behind a shadow root the way the rail draws one. */
+ * directly, or behind a shadow root. */
 async function mountMenu(placement: "light DOM" | "shadow root") {
   const context = new PuzzleContext();
   // Assigned before connecting, so `connectedCallback` finds a puzzle and does

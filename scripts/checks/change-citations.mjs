@@ -130,7 +130,6 @@ const NOT_A_LIVE_CHANGE = {
   "check-and-save": "a UI command id, one of the app's `data-command` values",
   "check-bridge-parity": "a Tracks solver rung",
   "find-4-position": "a Rome solver rung",
-  "puzzle-type-menu": "a custom element the puzzle rail nests",
   "single-number-simple": "an Ascent ladder rung",
 };
 

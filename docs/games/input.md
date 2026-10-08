@@ -340,8 +340,8 @@ than the detection round trip from losing its release.
 ## The board keeps the keyboard after a control
 
 **You can rely on this now, but know what it is doing for you.** Pressing a
-control — any `data-command` row in the rail, the phone bar or the More
-sheet — hands keyboard focus back to the interactive board view. Before
+control — any `data-command` control in the Bar, the Menu or the Game
+controls — hands keyboard focus back to the interactive board view. Before
 `fix-board-focus-after-command`, focus stayed on the trigger, so one click
 made the board deaf to the keyboard until it was clicked again (Enter reopened
 the menu; cursor keys went nowhere).
@@ -354,8 +354,8 @@ behind the `oneKeyShortcuts` preference. **A bare letter is offered to the
 game first and only becomes an app command if the game declines it** —
 `Midend.processInput` returns false exactly when `interpretMove` returned
 null, so a game that takes `n` simply keeps it and has to declare nothing.
-The same table supplies the key drawn on each rail row, so a label cannot
-come adrift from its binding (`src/puzzle/shortcuts.test.ts`).
+The same table supplies the key drawn on a Bar slot and a Menu row, so a label
+cannot come adrift from its binding (`src/puzzle/shortcuts.test.ts`).
 
 It matters most to a keyboard player who alternates a *menu* command with play
 — asking for a hint, then making its move — which is unusable without it. The normative rule is the
@@ -363,6 +363,43 @@ It matters most to a keyboard player who alternates a *menu* command with play
 control gives the keyboard back to the board"; its two carve-outs are a click
 that opens a menu (the menu needs the focus) and a keyboard activation of a
 button (that player is in the tab order deliberately).
+
+## The puzzle screen's three panels
+
+The screen has three panels at every window size, each with one rule
+(`app-shell`, "The puzzle screen is three panels, and every command is in
+exactly one"). A porter decides nothing here: what a game is puts its controls
+in the right one.
+
+- **Bar**: the commands every game has. **Menu**: the rest. They are one
+  ordered list, [`command-list.ts`](../../src/puzzle/command-list.ts), cut
+  once: the Bar shows its leading entries and the Menu every entry after. A
+  new command is a new entry in that list, placed by how often it is used, and
+  never a control added to a panel.
+- **Game controls**: what the game in play brings, in
+  [`components/game-controls.ts`](../../src/puzzle/components/game-controls.ts).
+  Its keys come from `requestKeys`, its note toggle from the key whose code is
+  `PENCIL_MODE_BUTTON`, mark-all from `canMarkAll`, Reference from a
+  `reference` hook, and the button toggle from the absence of
+  `ignoresSecondaryButton`. A game that brings none of them has no panel.
+  Nothing a single game has belongs in the Menu: a player does not know to
+  look there for it.
+- **The status line and the hint's words are in no panel.** They sit under the
+  board, so showing a hint moves no control.
+- **Only the Menu scrolls.** The Bar sheds trailing entries to the head of the
+  Menu when it runs short, and the Game controls lay the keys out in more
+  columns.
+
+Where a panel docks is the player's layout, kept for each window shape
+([`layout.ts`](../../src/puzzle/layout.ts)): the grid's template is computed
+from it, and a panel only names its area. No panel carries a media query, and
+a new one must not start.
+
+`puzzle-command-homes.test.ts` holds the panels to the command map in both
+directions, and `layout.test.ts` enumerates every layout. Neither can see
+pixels. **A change to a panel is checked in Chrome** at desktop, tablet, phone
+and landscape-phone sizes: that the Bar and the Game controls report no
+scroll, and that pressing Hint leaves every control's rectangle where it was.
 
 ## Targets and verbs
 
@@ -1184,8 +1221,8 @@ Normative: the on-screen-keys requirement in
   landing on a key focused that button and left the **physical keyboard dead in
   every keypad game** until the player clicked the board again. The panel
   prevents the `mousedown` default (`keepFocusOnTheBoard` in
-  [`components/keys.ts`](../../src/puzzle/components/keys.ts)); the rail already
-  had its own answer to the same hole, `puzzle-screen.ts`'s `focusBoard`. **No
+  [`components/keys.ts`](../../src/puzzle/components/keys.ts)); a command
+  control has its own answer to the same hole, `puzzle-screen.ts`'s `focusBoard`. **No
   behavioral tier can see this**: every one of them calls `processInput`
   directly, so the panel and the keyboard both "work" in a suite that is green
   over a game nobody can type into. It was found by driving the real app.

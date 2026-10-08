@@ -7,7 +7,7 @@
  * from it rather than restating either. The assertions synthesize the event
  * from an entry's own chord and check that the matcher returns that entry's
  * command; the label test renders through `shortcutLabel`, the function the
- * rail row calls. Neither spells a key out a third time.
+ * Bar and the Menu call. Neither spells a key out a third time.
  *
  * Two properties this also nails down, both of which are the sort of thing a
  * later edit breaks silently:

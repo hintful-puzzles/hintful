@@ -8,10 +8,9 @@
  * Dominosa is the first (and currently only) game that exposes a reference; the
  * panel is only ever mounted when `puzzle.hasReference` is true.
  *
- * Presentation is deliberately NOT a modal: it docks beside the board on wide
- * viewports and becomes a bottom sheet on narrow ones (see the `:host` media
- * query, whose breakpoint the puzzle-screen reserved-padding rule mirrors), so
- * the board stays visible and interactive while the panel is open.
+ * Presentation is deliberately NOT a modal: it is a region of the puzzle
+ * screen's grid (`puzzle/layout.ts`), so the board stays visible and
+ * interactive while the panel is open.
  */
 
 import { consume } from "@lit/context";
@@ -137,38 +136,13 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
 
   static override styles = css`
     :host {
-      /* Docked beside the board (wide) — a bottom sheet (narrow). Absolute
-       * within the puzzle-screen <main> (position: relative), whose matching
-       * reserved padding keeps the board fully visible beside/above it. */
-      position: absolute;
-      z-index: 10;
-      inset-block: 0;
-      inset-inline-end: 0;
-      width: min(340px, 42vw);
+      /* Fills the area the puzzle screen's grid gives it: beside the board in
+       * a landscape window, under it in a tall one. */
       box-sizing: border-box;
       display: block;
+      min-width: 0;
+      min-height: 0;
       background-color: var(--wa-color-surface-raised);
-      border-inline-start: var(--wa-border-width-s) solid
-        var(--wa-color-neutral-border-normal);
-      box-shadow: var(--wa-shadow-l);
-    }
-
-    /* Bottom sheet when there isn't room to dock beside the board: a narrow
-     * viewport, OR the app's "horizontal" orientation (short landscape, where a
-     * side dock would squeeze the board off-center against the toolbar column).
-     * The landscape-short half mirrors the --app-orientation:horizontal query in
-     * common.css, and the puzzle-screen reserved-padding rule matches it. */
-    @media (max-width: 640px), (orientation: landscape) and (max-height: 40rem) {
-      :host {
-        inset-block-start: auto;
-        inset-inline: 0;
-        inset-block-end: 0;
-        width: auto;
-        height: min(45vh, 22rem);
-        border-inline-start: none;
-        border-block-start: var(--wa-border-width-s) solid
-          var(--wa-color-neutral-border-normal);
-      }
     }
 
     .panel {

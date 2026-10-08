@@ -6,6 +6,7 @@ import { css, html, LitElement, nothing } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
 import type { PuzzleConfigChangeEvent } from "../puzzle/components/config.ts";
 import { puzzleContext } from "../puzzle/contexts.ts";
+import { type ShapeLayout, type WindowShape, windowShape } from "../puzzle/layout.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 import { savedGames } from "../store/saved-games.ts";
 import { settings } from "../store/settings.ts";
@@ -15,6 +16,7 @@ import { cssNative, cssWATweaks } from "../utils/css.ts";
 import { clamp } from "../utils/math.ts";
 import { isRunningAsApp, pwaManager } from "../utils/pwa.ts";
 import { sleep } from "../utils/timing.ts";
+import { windowSize } from "../utils/window-size.ts";
 import { showAlert } from "./alert-dialog.ts";
 
 // Register components
@@ -31,6 +33,18 @@ import "@awesome.me/webawesome/dist/components/radio/radio.js";
 import "@awesome.me/webawesome/dist/components/radio-group/radio-group.js";
 import "@awesome.me/webawesome/dist/components/slider/slider.js";
 import "@awesome.me/webawesome/dist/components/spinner/spinner.js";
+
+const SHAPE_HEADING: Readonly<Record<WindowShape, string>> = {
+  tall: "For a tall window, like this one",
+  wide: "For a wide window, like this one",
+  short: "For a wide, short window, like this one",
+};
+
+const OTHER_SHAPES: Readonly<Record<WindowShape, string>> = {
+  tall: "Wide windows and wide, short windows",
+  wide: "Tall windows and wide, short windows",
+  short: "Tall windows and wide windows",
+};
 
 const MAX_SCALE_MIN = 0.25;
 const MAX_SCALE_MAX = 2.75; // stand-in for "infinity" in maxScale slider
@@ -50,6 +64,7 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
       <wa-dialog label="Preferences" light-dismiss>
         ${this.renderPuzzleSection()}
         ${this.renderAppearanceSection()}
+        ${this.renderLayoutSection()}
         ${this.renderMouseButtonsSection()}
         ${this.renderDataSection()}
         ${this.renderAdvancedSection()}
@@ -124,6 +139,70 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
           <span slot="reference" class="scale-2x">200%</span>
           <span slot="reference">Max</span>
         </wa-slider>
+      </wa-details>
+    `;
+  }
+
+  /**
+   * Where the puzzle screen's panels dock. The per-shape choices shown are the
+   * ones for the window as it is now: a choice is judged by watching the board
+   * rearrange behind this dialog, and only the current shape can show that.
+   */
+  private renderLayoutSection() {
+    const { width, height, rem } = windowSize.get();
+    const shape = windowShape(width, height, rem);
+    const layout = settings.layoutFor(shape);
+    const choose = (key: keyof ShapeLayout) => (event: Event) => {
+      const { value } = event.target as HTMLInputElement;
+      settings.setLayoutFor(shape, { [key]: value });
+    };
+    return html`
+      <wa-details id="layout" name="panel" summary="Layout">
+        <wa-radio-group
+            orientation="horizontal"
+            label="Game controls on the"
+            hint="On every screen. The Menu opens on the other side."
+            .value=${autoBind(settings, "layoutControlsSide")}
+        >
+          <wa-radio value="left" appearance="button">Left</wa-radio>
+          <wa-radio value="right" appearance="button">Right</wa-radio>
+        </wa-radio-group>
+        <wa-divider></wa-divider>
+        <div class="hint">${SHAPE_HEADING[shape]}</div>
+        <wa-radio-group
+            orientation="horizontal"
+            label="Bar"
+            .value=${layout.bar}
+            @change=${choose("bar")}
+        >
+          <wa-radio value="bottom" appearance="button">Bottom</wa-radio>
+          <wa-radio value="side" appearance="button">Side</wa-radio>
+        </wa-radio-group>
+        <wa-radio-group
+            orientation="horizontal"
+            label="Game controls"
+            .value=${layout.controls}
+            @change=${choose("controls")}
+        >
+          <wa-radio value="under" appearance="button">Under the board</wa-radio>
+          <wa-radio value="side" appearance="button">Side</wa-radio>
+        </wa-radio-group>
+        <wa-checkbox
+            ?checked=${layout.keepMenuOpen}
+            hint="Where there is not, the Menu button opens it over the board"
+            @change=${(event: Event) => {
+              const { checked } = event.target as HTMLInputElement;
+              settings.setLayoutFor(shape, { keepMenuOpen: checked });
+            }}
+          >Keep the Menu open when there is room</wa-checkbox>
+        <div>
+          <wa-button @click=${() => settings.resetLayoutFor(shape)}>
+            Reset this shape to its default
+          </wa-button>
+          <div class="hint">
+            ${OTHER_SHAPES[shape]} each keep their own choices.
+          </div>
+        </div>
       </wa-details>
     `;
   }

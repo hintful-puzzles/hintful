@@ -25,7 +25,7 @@
  * **`Ctrl/Cmd+S` is bound** to Check & save, with a `preventDefault()` that
  * suppresses the browser's save dialog. Deliberately, though the design left
  * that chord to the browser: it is a working, player-visible shortcut, and
- * listing it here is what puts it on the rail's Check & save row.
+ * listing it here is what puts it on the Bar's Check & save slot.
  *
  * Nothing here decides *what* a command does; `puzzle-screen.ts`'s `commandMap`
  * does, and every `command` below is one of its keys (asserted by
@@ -107,7 +107,7 @@ type ModifierEvent = Pick<
  * The command an always-on chord in `event` runs, or `null`.
  *
  * Alt/Option disqualifies a match: `⌥⌘Z` is somebody's window-manager binding,
- * not ours, and claiming a superset of what is drawn on the rail is how a
+ * not ours, and claiming a superset of what is drawn on a control is how a
  * shortcut label stops being true.
  */
 export function chordCommand(event: ModifierEvent): string | null {

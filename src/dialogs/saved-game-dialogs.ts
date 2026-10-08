@@ -105,7 +105,7 @@ export class LoadGameDialog extends GameFileDialog {
   protected override render() {
     return html`
       <wa-dialog>
-        <div slot="label">Load game</div>
+        <div slot="label">Open saved game</div>
         <wa-button
             slot="header-actions"
             appearance="plain"
@@ -151,7 +151,7 @@ export class LoadGameDialog extends GameFileDialog {
             variant="brand"
             ?disabled=${!this.filename}
             @click=${this.handleLoadClick}
-        >Load</wa-button>
+        >Open</wa-button>
       </wa-dialog>
     `;
   }
@@ -180,7 +180,7 @@ export class SaveGameDialog extends GameFileDialog {
   protected override render() {
     return html`
       <wa-dialog>
-        <div slot="label">Save game</div>
+        <div slot="label">Save as</div>
         <wa-button
             slot="header-actions"
             appearance="plain"

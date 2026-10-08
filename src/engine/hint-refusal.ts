@@ -124,7 +124,7 @@ export const NO_MOVE_WORTH_MAKING = "No move here would get you closer.";
  * **So it says what to do instead, in the two ways that work.** Playing on
  * changes the board, and a board the search could not reach is often one move
  * from one it can; revealing the answer ends the game but is honest about doing
- * so. The control it names is the rail's `Show solution…` — deliberately not
+ * so. The control it names is the Menu's `Show solution…` — deliberately not
  * `Auto-solve for me`, which is *continuous hinting* and would refuse for the
  * same reason the hint just did. Naming it would have been advice that cannot
  * work, on the one screen a player has just been let down on.
