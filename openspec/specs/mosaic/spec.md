@@ -145,16 +145,16 @@ no mistakes when deduction stalls or the marks are consistent.
 - **THEN** `findMistakes` returns that cell
 - **AND** a correctly-marked board returns no mistakes
 
-### Requirement: Mosaic draws its marks as a piece and a dot on a quiet surface
+### Requirement: Mosaic draws its marks as a piece and a cross on a quiet surface
 
 `redraw` SHALL draw the board as pieces on a quiet surface. Every cell SHALL
 have the same surface whatever its mark, and the line between cells SHALL be
 the collection's thin surface grid. A marked cell (the one the other
 requirements call black, after upstream) SHALL hold the collection's shaded
 piece, inset on its cell. A blank cell (the one they call white) SHALL hold no
-piece and no fill of its own: it SHALL carry the collection's ruled-out dot,
-in the middle of the cell, or in a corner of it where the cell has a number,
-so that the number keeps the middle. An unmarked cell SHALL be plain surface.
+piece and no fill of its own: it SHALL carry the collection's ruled-out cross,
+in the middle of the cell, or small in a corner of it where the cell has a
+number, so that the number keeps the middle. An unmarked cell SHALL be plain surface.
 
 A cell's number SHALL be drawn over whatever the cell holds and SHALL read
 against it in both color schemes: on the shaded piece it is drawn in a color
@@ -173,14 +173,14 @@ the shaded color by placeholder.
 - **WHEN** a board holding a marked cell, a blank cell and an unmarked cell is
   drawn
 - **THEN** all three cells are filled with the same surface color
-- **AND** the marked cell holds the shaded piece, the blank cell holds a dot
+- **AND** the marked cell holds the shaded piece, the blank cell holds a cross
   and the unmarked cell holds neither
 
-#### Scenario: A blank cell's dot and its number both read
+#### Scenario: A blank cell's cross and its number both read
 
 - **WHEN** a blank cell that has a number is drawn
-- **THEN** the dot's center is further from the number's center than the dot
-  is wide, on both axes
+- **THEN** the cross is small and lies wholly to the right of the number's
+  center and wholly above it
 
 #### Scenario: A satisfied number grays on the piece and off it
 

@@ -197,7 +197,7 @@ never include the target cell itself.
 Independently of hints, `redraw` SHALL render a **known-white cell so that it
 is told from an undecided one without a fill of its own**: a clue by the
 lifted surface under it (clues are implicitly white), and a player white mark
-by its dot, leaving an undecided cell the plain cell surface, so a beginner
+by its cross, leaving an undecided cell the plain cell surface, so a beginner
 reads determined state at a glance.
 
 #### Scenario: Hint explains the next forced move
@@ -272,14 +272,14 @@ same cells.
 has shaded (the state the other requirements call black, after upstream) SHALL
 hold the collection's shaded piece, in its color and shape, inset on its cell.
 A cell the player has marked as not shaded (the state they call white) SHALL
-hold the collection's ruled-out dot and take no fill of its own, and an
+hold the collection's ruled-out cross and take no fill of its own, and an
 undecided cell SHALL be the plain cell surface, so no state is told by a step
 of gray. A clue cell SHALL sit on the lifted surface of a given, with its
 number in ink. The line between cells and the frame round the grid SHALL be
 the surface's grid line.
 
 A cell in error SHALL keep its content and take a frame in the error color at
-its edge, with a clue's number or a dot drawn in the error color; a shaded
+its edge, with a clue's number or a cross drawn in the error color; a shaded
 piece keeps its own color. The completion flash SHALL lift every cell to the
 given's surface on its lit beats, a step that reads in both schemes, and leave
 the pieces standing. The keyboard cursor and every
@@ -295,7 +295,7 @@ shaded color by placeholder.
 - **WHEN** a board holds a shaded cell, a cell marked not shaded and an
   undecided cell
 - **THEN** all three are drawn on the same cell surface
-- **AND** the first holds the shaded piece, the second the ruled-out dot and
+- **AND** the first holds the shaded piece, the second the ruled-out cross and
   the third nothing
 
 #### Scenario: A clue is told by the cell under it

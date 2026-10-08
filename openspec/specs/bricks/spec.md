@@ -308,7 +308,7 @@ does not.
 hold the collection's shaded piece, in its color and shape, inset on its cell;
 a cell is a square whatever its row's offset, so the piece is the square one. A
 cell the player has ruled out SHALL be the same surface as an undecided cell
-with the collection's ruled-out dot on it, and an undecided cell SHALL be the
+with the collection's ruled-out cross on it, and an undecided cell SHALL be the
 plain surface: no state SHALL be a fill of the whole cell or a step of gray. A
 clue SHALL sit on the lifted surface of a given. The line between cells SHALL
 be the surface's grid line, and no cell SHALL carry a bevel.
@@ -328,7 +328,7 @@ help page SHALL name the piece's color by placeholder and say its shape.
   cell is drawn
 - **THEN** all three cells have the same surface color
 - **AND** the shaded one holds a piece in the shaded color, the ruled-out one a
-  dot, and the undecided one nothing
+  cross, and the undecided one nothing
 
 #### Scenario: A clue is told from a cell the player decides
 

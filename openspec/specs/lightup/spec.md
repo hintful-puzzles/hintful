@@ -187,7 +187,7 @@ leaving the reader to supply it.
 
 The displayed hint SHALL highlight, not perform: each target square SHALL be
 ringed `COL_HINT` at its edge with no bulb/mark preview (bulb targets and mark
-targets look identical; the narration says which action), so a bulb or dot
+targets look identical; the narration says which action), so a bulb or cross
 already on it stays visible. The deduction's evidence SHALL be drawn by what
 it is: an evidence square no bulb lights SHALL be shaded `COL_HINT_CELL`; a
 lit one SHALL keep its lit fill and take a doubled ring in `COL_HINT_LITERF`;
@@ -282,7 +282,7 @@ failed grids. Generation from a given seed SHALL be reproducible.
 on a disc in the error color when the clue is provably wrong — too many adjacent
 bulbs, or too few even if all plausible neighbors were filled); open squares
 with lit squares filled yellow; bulbs as circles (error-colored when lit by
-another bulb); impossible-marks as the collection's ruled-out dot — suppressed
+another bulb); impossible-marks as the collection's ruled-out cross — suppressed
 on lit squares when the `show-lit-blobs` preference (default on, via the
 `Game.prefs` hook) is off; the keyboard cursor; and the 3-phase completion
 flash. The per-tile packed flags SHALL be the render cache key (`Int32Array`),
@@ -315,7 +315,7 @@ whole tile, so that adjacent walls read as one block, with its clue in a white
 that is the same in both schemes. A bulb SHALL be a disc in that same white,
 outlined in a black that is the same in both schemes, so it reads on a lit and
 an unlit square alike. The mark for a square that cannot hold a bulb SHALL be
-the collection's ruled-out dot. The clue a hint reasons from SHALL keep its
+the collection's ruled-out cross. The clue a hint reasons from SHALL keep its
 white digit and be ringed at its wall's edge in the collection's evidence
 color, with a line in the digit's white inside the ring. The game's words (its
 help page and its Custom dialog) SHALL call the square a wall, never a black

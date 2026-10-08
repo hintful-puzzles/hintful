@@ -21,4 +21,5 @@
 
 - [x] 3.1 In the app, both schemes: all eight games with ruled-out cells.
 - [x] 3.2 The gate.
-- [ ] 3.3 The owner's eye.
+- [x] 3.3 The owner's eye. Owner, 2026-10-08, after checking several of the
+      games: accepted.

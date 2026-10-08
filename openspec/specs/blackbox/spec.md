@@ -256,7 +256,7 @@ marks drawn on the board uses.
 What is settled SHALL sit on the lifted surface: a square marked as known, a
 laser square once it has been fired, and every square of the box after a
 reveal. A square marked as known that holds no ball SHALL also hold the
-collection's ruled-out dot, so that being marked is never told by a step of
+collection's ruled-out cross, so that being marked is never told by a step of
 gray alone. A laser square not yet fired SHALL be the board's own color inside
 its grid line.
 
@@ -280,9 +280,9 @@ name no hue for a ball.
 #### Scenario: A known square is lifted and marked
 
 - **WHEN** the player marks an empty square as known
-- **THEN** the square is the lifted surface and holds the ruled-out dot
+- **THEN** the square is the lifted surface and holds the ruled-out cross
 - **AND** a ball on a square marked as known sits on the lifted surface with
-  no dot
+  no cross
 
 #### Scenario: A fired laser square is lifted
 
