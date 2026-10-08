@@ -16,7 +16,6 @@ import { UI_UPDATE } from "./game.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
-  LEFT_RELEASE,
   newCursor,
   RIGHT_BUTTON,
   RIGHT_DRAG,
@@ -33,7 +32,8 @@ import {
   type TargetVerbs,
   type TargetVerbUi,
 } from "./target-verb.ts";
-import { type AnyGame, probeBoard } from "./testing/input-probe.ts";
+import type { AnyGame } from "./testing/input-probe.ts";
+import { expectDragRepeatsThePress } from "./testing/sweep-probe.ts";
 import type { Point } from "./types.ts";
 
 beforeAll(registerAllGames);
@@ -172,98 +172,9 @@ describe("a game's declared sweep is what a drag does", () => {
     expect(sweeping().length).toBeGreaterThanOrEqual(2);
   });
 
-  /** How many pairs of targets a button is tried on before the guard says no
-   * drag works. A pair can fail for the puzzle's own reasons (Tracks refuses a
-   * third rail into a square), so the claim is that the nearest pairs include
-   * one that works, which a game that drops its drags never meets. */
-  const PAIRS_TRIED = 40;
-
   it.each(sweeping())("%s", (id) => {
     const game = getTsGame(id) as unknown as AnyGame;
-    const verbs = game.targetVerbs;
-    const sweep = verbs?.sweep;
-    if (!verbs || !sweep) throw new Error(`${id} declares no sweep`);
-    const { geometry } = verbs;
-    const b = probeBoard(game, id);
-    const opening = b.live();
-    const ds = game.newDrawState(opening.state, b.tileSize);
-
-    // Every target a press reaches, with the point a press addresses it from.
-    const targets = new Map<string, { t: unknown; at: Point }>();
-    const step = Math.max(1, Math.floor(b.tileSize / 8));
-    for (let x = 0; x < b.size.w; x += step)
-      for (let y = 0; y < b.size.h; y += step) {
-        const t = geometry.pointerTarget(opening.state, ds, { x, y }, opening.ui);
-        if (t === null) continue;
-        const k = JSON.stringify(t);
-        if (!targets.has(k))
-          targets.set(k, { t, at: geometry.pointAt(opening.state, ds, t, opening.ui) });
-      }
-
-    const slots = (sweep.buttons ?? ["primary", "secondary"]).filter((s) => verbs[s]);
-    expect(slots.length, "the sweep names no button with a verb").toBeGreaterThan(0);
-    for (const slot of slots) {
-      const [down, drag, up] =
-        slot === "primary"
-          ? [LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE]
-          : [RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE];
-      const verb = verbs[slot];
-      if (!verb) continue;
-      const marks = (t: unknown) => {
-        const made = verb.apply(opening.state, t, structuredClone(opening.ui));
-        return made !== null && made !== UI_UPDATE;
-      };
-      // Pairs the drag should take, nearest first.
-      const all = [...targets.values()].filter(({ t }) => marks(t));
-      const pairs: { a: (typeof all)[number]; b: (typeof all)[number]; d: number }[] =
-        [];
-      for (const a of all)
-        for (const c of all) {
-          if (a === c) continue;
-          if (sweep.holds(opening.state, a.t) !== sweep.holds(opening.state, c.t))
-            continue;
-          if (!(sweep.reaches?.(opening.state, a.t, c.t) ?? true)) continue;
-          pairs.push({ a, b: c, d: Math.hypot(a.at.x - c.at.x, a.at.y - c.at.y) });
-        }
-      pairs.sort((p, q) => p.d - q.d);
-      expect(pairs.length, `${slot}: no two targets a drag could join`).toBeGreaterThan(
-        0,
-      );
-
-      let worked = false;
-      for (const { a, b: c } of pairs.slice(0, PAIRS_TRIED)) {
-        b.reset();
-        const before = sweep.holds(b.live().state, a.t);
-        b.m.processInput(a.at.x, a.at.y, down);
-        const n = Math.max(
-          1,
-          Math.ceil(Math.hypot(c.at.x - a.at.x, c.at.y - a.at.y) / 4),
-        );
-        for (let i = 1; i <= n; i++)
-          b.m.processInput(
-            a.at.x + ((c.at.x - a.at.x) * i) / n,
-            a.at.y + ((c.at.y - a.at.y) * i) / n,
-            drag,
-          );
-        b.m.processInput(c.at.x, c.at.y, up);
-        const after = b.live().state;
-        const painted =
-          sweep.holds(after, a.t) !== before &&
-          sweep.holds(after, a.t) === sweep.holds(after, c.t);
-        if (!painted || b.moves() < 2) continue;
-        // The whole drag is one step of Undo, and one of Redo.
-        const made = b.moves();
-        b.m.undo();
-        expect(b.moves(), `${slot}: one Undo left part of the drag`).toBe(0);
-        b.m.redo();
-        expect(b.moves(), `${slot}: one Redo replayed part of the drag`).toBe(made);
-        worked = true;
-        break;
-      }
-      expect(worked, `${slot}: no drag between two like targets marked both`).toBe(
-        true,
-      );
-    }
-    b.reset();
+    if (!game.targetVerbs) throw new Error(`${id} declares no verbs`);
+    expectDragRepeatsThePress(game, id, game.targetVerbs);
   });
 });

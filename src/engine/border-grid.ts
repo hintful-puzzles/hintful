@@ -249,6 +249,21 @@ export function borderGridVerbs<
         "it to undecided",
       apply: (s, e) => toMove(edgeEdits(s, e, false)),
     },
+    // Along a line of edges or round a corner, each taken near its middle:
+    // every corner the drag passes is where four edges' catchments meet.
+    sweep: {
+      holds: (s, { x, y, dir }) => {
+        const b = s.borders[y * s.w + x];
+        return b & BORDER(dir) ? YES : b & DISABLED(BORDER(dir)) ? NO : MAYBE;
+      },
+      within: (ds) => ds.tileSize * 0.3,
+      middle(ds, _s, { x, y, dir }) {
+        const ts = ds.tileSize;
+        const toward = (v: number, d: number) =>
+          margin(ts) + v * ts + ((1 + d) * ts) / 2;
+        return { x: toward(x, DX[dir]), y: toward(y, DY[dir]) };
+      },
+    },
   };
 }
 

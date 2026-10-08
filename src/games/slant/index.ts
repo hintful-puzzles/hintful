@@ -26,6 +26,7 @@ import {
   hideCursor,
   isCancelKey,
   isEraseKey,
+  isMouseDrag,
   LEFT_BUTTON,
   newCursor,
   PENCIL_MODE_BUTTON,
@@ -36,9 +37,12 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
+  beginSweep,
+  dragMarkVerbs,
   ERASE_KEYS,
   interpretTargetVerbs,
   squareGrid,
+  sweepTo,
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
@@ -162,6 +166,7 @@ const targetVerbs: TargetVerbs<SlantState, SlantUi, SlantDrawState, Point, Slant
         pointer: { kind: "cycle", button: "primary" },
       },
     ],
+    sweep: { holds: (s, { x, y }) => s.soln[y * s.w + x] },
   };
 
 function interpretMove(
@@ -189,19 +194,13 @@ function interpretMove(
     const y = fromCoord(p.y, ts, border(ts));
     if (x < 0 || y < 0 || x >= w || y >= h) return null;
     hideCursor(ui.cursor);
-    // The diagonals cut the square into four triangles, one per side.
-    const fx = (p.x - border(ts)) / ts - x;
-    const fy = (p.y - border(ts)) / ts - y;
-    const side = [fx, 1 - fx, fy, 1 - fy];
-    const near = side.indexOf(Math.min(...side));
-    const [nx, ny] = [
-      [x - 1, y],
-      [x + 1, y],
-      [x, y - 1],
-      [x, y + 1],
-    ][near];
-    return toggleMark(state, { x, y }, { x: nx, y: ny });
+    const side = sideMarkAt(state, ds, p);
+    if (side === null) return null;
+    // Either button marks, so the drag is opened as the one it declares.
+    beginSweep(markDrag, state, ui, side, LEFT_BUTTON, p, true);
+    return markDrag.primary.apply(state, side, ui);
   }
+  if (ui.pencilMode && isMouseDrag(button)) return sweepTo(markDrag, state, ui, ds, p);
   if (ui.pencilMode && (button === CURSOR_SELECT || button === CURSOR_SELECT2)) {
     if (showCursor(ui.cursor)) return UI_UPDATE;
     const { x, y } = ui.cursor;
@@ -228,6 +227,61 @@ function markBetween(a: Point, b: Point): { x: number; y: number; dir: AlikeDir 
   const lo = a.y < b.y || (a.y === b.y && a.x < b.x) ? a : b;
   return { x: lo.x, y: lo.y, dir: a.y === b.y ? "right" : "down" };
 }
+
+type SideMark = ReturnType<typeof markBetween>;
+
+/** The mark on the side of its square a notes-mode press at `p` is nearest,
+ * or `null` off the board or on the board's rim. The diagonals cut a square
+ * into four triangles, one per side. */
+function sideMarkAt(state: SlantState, ds: SlantDrawState, p: Point): SideMark | null {
+  const { w, h } = state;
+  const ts = ds.tileSize;
+  const x = fromCoord(p.x, ts, border(ts));
+  const y = fromCoord(p.y, ts, border(ts));
+  if (x < 0 || y < 0 || x >= w || y >= h) return null;
+  const fx = (p.x - border(ts)) / ts - x;
+  const fy = (p.y - border(ts)) / ts - y;
+  const side = [fx, 1 - fx, fy, 1 - fy];
+  const [nx, ny] = [
+    [x - 1, y],
+    [x + 1, y],
+    [x, y - 1],
+    [x, y + 1],
+  ][side.indexOf(Math.min(...side))];
+  if (nx < 0 || ny < 0 || nx >= w || ny >= h) return null;
+  return markBetween({ x, y }, { x: nx, y: ny });
+}
+
+/** Notes mode's mark between two squares, which a drag across more sides
+ * repeats, each taken near its middle. */
+export const markDrag = dragMarkVerbs<
+  SlantState,
+  SlantUi,
+  SlantDrawState,
+  SideMark,
+  SlantMove
+>({
+  noun: "side",
+  target: sideMarkAt,
+  apply: (state, mark) => ({
+    type: "alike",
+    ...mark,
+    on: (state.alike[mark.y * state.w + mark.x] & alikeBit(mark.dir)) === 0,
+  }),
+  pointAt(_state, ds, { x, y, dir }) {
+    // The middle of the side: the right or the bottom of square (x, y).
+    const ts = ds.tileSize;
+    const b = border(ts);
+    return dir === "right"
+      ? { x: b + (x + 1) * ts, y: b + y * ts + ts / 2 }
+      : { x: b + x * ts + ts / 2, y: b + (y + 1) * ts };
+  },
+  sweep: {
+    holds: (state, { x, y, dir }) =>
+      state.alike[y * state.w + x] & alikeBit(dir) ? 1 : 0,
+    within: (ds) => ds.tileSize * 0.3,
+  },
+});
 
 /** Toggle the mark between `a` and its neighbor `b`, or nothing when `b` is
  * off the board. */

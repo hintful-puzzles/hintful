@@ -36,7 +36,8 @@ crosses it** (a short pencil stub across the side), or right-click (on a
 touch screen, a long press) to note that **no wire does** (a pencil ×).
 Doing the same again takes the note off. Click the middle of a square
 instead to **lock** it, or to unlock it again; outside notes mode, S does
-the same at the cursor. From the keyboard, press **Enter**
+the same at the cursor. Either can be dragged: keep the button down and
+the sides, or the middles, you pass over get the same. From the keyboard, press **Enter**
 or **Space** on one square, move to the square beside it, and press
 **Enter** to note a wire between them or **Space** to note none; **Escape**
 lets go of the first square. A side with a wall on it needs no note.

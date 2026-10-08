@@ -26,7 +26,8 @@ the monsters it can still hold, so **Check & save** flags a set of marks
 that leaves out the square's real monster.
 
 Left-click on a clue to mark it as done (gray it out). To unmark a
-clue as done, left-click on it again.
+clue as done, left-click on it again. Drag along the clues to do the
+same to each one you pass over.
 
 With the keyboard, the arrow keys move the selection around the grid.
 The keys 1, 2 and 3 work like G, V and Z, and E, 0, Space, Backspace and

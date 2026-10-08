@@ -68,6 +68,7 @@ import {
   CURSOR_RIGHT,
   CURSOR_UP,
   isCursorMove,
+  isMouseDrag,
   LEFT_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
@@ -79,6 +80,7 @@ import { registerGame } from "../../engine/registry.ts";
 import { rulesetItem } from "../../engine/ruleset.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { say, unequalVocab } from "./hint-text.ts";
@@ -153,6 +155,54 @@ function presets(): PresetMenu<UnequalParams> {
   };
 }
 
+type SpentMove = Extract<UnequalMove, { type: "spent" }>;
+
+/** The move that flips the clue in the gap a press at `p` lands in, below or
+ * to the right of its cell, or `null` where that gap holds no clue. */
+function clueInGap(
+  state: UnequalState,
+  ds: UnequalDrawState,
+  p: Point,
+): SpentMove | null {
+  const o = state.order;
+  const ts = ds.tileSize;
+  const tx = fromCoord(p.x, ts);
+  const ty = fromCoord(p.y, ts);
+  if (tx < 0 || tx >= o || ty < 0 || ty >= o) return null;
+  const gapBelow = p.y - coord(ty, ts) > ts;
+  const gapRight = p.x - coord(tx, ts) > ts;
+  if (gapBelow === gapRight) return null;
+  if (gapBelow) {
+    if (state.clueFlags[ty * o + tx] & F_ADJ_DOWN)
+      return { type: "spent", x: tx, y: ty, flag: F_SPENT_DOWN };
+    if (ty + 1 < o && state.clueFlags[(ty + 1) * o + tx] & F_ADJ_UP)
+      return { type: "spent", x: tx, y: ty + 1, flag: F_SPENT_UP };
+    return null;
+  }
+  if (state.clueFlags[ty * o + tx] & F_ADJ_RIGHT)
+    return { type: "spent", x: tx, y: ty, flag: F_SPENT_RIGHT };
+  if (tx + 1 < o && state.clueFlags[ty * o + tx + 1] & F_ADJ_LEFT)
+    return { type: "spent", x: tx + 1, y: ty, flag: F_SPENT_LEFT };
+  return null;
+}
+
+/** The "this clue is spent" mark, which a drag through the gaps repeats. The
+ * target is the move itself: it names its clue. */
+export const spentDrag = dragMarkVerbs<
+  UnequalState,
+  UnequalUi,
+  UnequalDrawState,
+  SpentMove,
+  UnequalMove
+>({
+  noun: "clue",
+  target: clueInGap,
+  apply: (_state, clue) => clue,
+  sweep: {
+    holds: (state, { x, y, flag }) => (state.spent[y * state.order + x] & flag ? 1 : 0),
+  },
+});
+
 function interpretMove(
   state: UnequalState,
   ui: UnequalUi,
@@ -169,24 +219,20 @@ function interpretMove(
   const ty = fromCoord(p.y, ts);
   const inGrid = tx >= 0 && tx < o && ty >= 0 && ty < o;
 
+  if (isMouseDrag(button)) return sweepTo(spentDrag, state, ui, ds, p);
+
   if (inGrid && (button === LEFT_BUTTON || button === RIGHT_BUTTON)) {
-    // A click in the gap below/right of a cell toggles that clue's spent flag.
+    // A click in the gap below/right of a cell toggles that clue's spent flag,
+    // and a drag on through the gaps marks the clues that looked the same.
     const gapBelow = p.y - coord(ty, ts) > ts;
     const gapRight = p.x - coord(tx, ts) > ts;
     if (gapBelow && gapRight) return null;
-    if (gapBelow) {
-      if (state.clueFlags[ty * o + tx] & F_ADJ_DOWN)
-        return { type: "spent", x: tx, y: ty, flag: F_SPENT_DOWN };
-      if (ty + 1 < o && state.clueFlags[(ty + 1) * o + tx] & F_ADJ_UP)
-        return { type: "spent", x: tx, y: ty + 1, flag: F_SPENT_UP };
-      return null;
-    }
-    if (gapRight) {
-      if (state.clueFlags[ty * o + tx] & F_ADJ_RIGHT)
-        return { type: "spent", x: tx, y: ty, flag: F_SPENT_RIGHT };
-      if (tx + 1 < o && state.clueFlags[ty * o + tx + 1] & F_ADJ_LEFT)
-        return { type: "spent", x: tx + 1, y: ty, flag: F_SPENT_LEFT };
-      return null;
+    if (gapBelow || gapRight) {
+      const clue = clueInGap(state, ds, p);
+      if (clue === null) return null;
+      // Either button marks, so the drag is opened as the one it declares.
+      beginSweep(spentDrag, state, ui, clue, LEFT_BUTTON, p, true);
+      return clue;
     }
 
     pressNoteTakingCell(ui, button, tx, ty, {

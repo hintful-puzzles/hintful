@@ -547,6 +547,26 @@ else is the association).
 `target-verb-sweep.test.ts` plays every declaring game: a drag between two
 like targets marks both, and one Undo takes it back.
 
+**A mark outside the verbs is `dragMarkVerbs`.** A clue marked done beside
+cells that take a keypad (Towers, Undead, Unequal), a mark of notes mode
+(Slant; Net's is a pair of verbs written out, since its two buttons differ),
+or the one button a drag game's own drag does not use (Pearl's right-button
+cross): the game declares the one mark, where a press lands on it and what it
+holds, exports the declaration, and opens and continues the drag with the same
+three helpers. Such a declaration is no `Game` member, so no guard finds it by
+itself: **add it to `drag-marks.test.ts`**, which runs the same check
+(`testing/sweep-probe.ts`). That check has caught a `holds` reading the wrong
+array, which typechecks and silently drags nothing.
+
+**Which marks drag, and which do not.** A verb that is a move (rotate, slide,
+fire, open) does not, and neither does a mark never wanted in a row (Light
+Up's bulb): leave its button out of `buttons`. Where the drag is the game's
+own gesture on that target (Rect, Bridges, Spokes, Map, Rome, Tents' left
+button, Loopy's notes mode), the click stays one mark a press. **Do not write
+a second paint drag beside the model's**: Mosaic had one that painted along a
+row or column, could not clear, and made a move an event, so Undo took it back
+a square at a time; it is the model's drag now.
+
 **What the model is not for.** A drag game's drag is an arm of its own, and its
 keyboard form of a drag (Tents' Shift-arrows, its `L`) is a design (below). A
 game whose keyboard walks something other than the targets is not expressible —

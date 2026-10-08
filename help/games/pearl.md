@@ -12,7 +12,8 @@ must be a straight which is connected to *at least one* corner.
 Drag between squares to draw or undraw pieces of the loop.
 Alternatively, left-click the edge between two squares to turn it on
 or off. Right-click an edge to mark it with a cross indicating that
-you are sure the loop does not go through it.
+you are sure the loop does not go through it, and keep the button down
+and drag to cross every unmarked edge you pass over.
 
 The keyboard can also be used. The arrow keys move a cursor. Press
 Enter to start drawing, move the cursor along the path you want, and

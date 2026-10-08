@@ -138,6 +138,11 @@ const targetVerbs: TargetVerbs<
     keys: [letterKey("I")],
     apply: toggle("impossible"),
   },
+  // The cross only: a row of bulbs light each other, so it is never wanted.
+  sweep: {
+    holds: (s, { x, y }) => s.flags[idx(x, y, s.w)] & (F_LIGHT | F_IMPOSSIBLE),
+    buttons: ["secondary"],
+  },
 };
 
 function interpretMove(

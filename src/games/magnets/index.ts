@@ -171,6 +171,18 @@ const targetVerbs: TargetVerbs<
       return { type: "flag", idx, mode: "neutral" };
     },
   },
+  // Tiles to tiles, and clues marked done to clues.
+  sweep: {
+    holds(s, t) {
+      if (isClue(s.w, s.h, t.x, t.y))
+        return `clue ${s.countsDone[clueIndex(s.w, s.h, t.x, t.y)]}`;
+      const idx = tileAt(s, t);
+      if (idx === null) return "none";
+      return `${s.grid[idx]} ${s.flags[idx] & (GS_SET | GS_NOTNEUTRAL)}`;
+    },
+    reaches: (s, first, next) =>
+      isClue(s.w, s.h, first.x, first.y) === isClue(s.w, s.h, next.x, next.y),
+  },
 };
 
 function interpretMove(

@@ -31,11 +31,19 @@ import {
   moveCursor,
   newCursor,
   RIGHT_BUTTON,
+  RIGHT_DRAG,
   RIGHT_RELEASE,
   showCursor,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  beginSweep,
+  dragMarkVerbs,
+  endSweep,
+  sweepOpen,
+  sweepTo,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
@@ -138,6 +146,68 @@ function markInDirection(
   };
 }
 
+/** One side of a square: the edge a press off the square's middle addresses. */
+interface Side {
+  readonly x: number;
+  readonly y: number;
+  readonly dir: number;
+}
+
+/** The side of its square a press at `p` is nearest, or `null` near the
+ * square's middle, off the grid, or on the grid's rim. */
+function sideAt(state: PearlState, ds: PearlDrawState, p: Point): Side | null {
+  const m = metrics(ds.tileSize);
+  const x = fromCoord(p.x, m);
+  const y = fromCoord(p.y, m);
+  if (!inGrid(state, x, y)) return null;
+  const cx = centeredCoord(x, m);
+  const cy = centeredCoord(y, m);
+  if (Math.max(Math.abs(p.x - cx), Math.abs(p.y - cy)) < m.tile / 4) return null;
+  const dir =
+    Math.abs(p.x - cx) < Math.abs(p.y - cy) ? (p.y < cy ? U : D) : p.x < cx ? L : R;
+  return inGrid(state, x + DX(dir), y + DY(dir)) ? { x, y, dir } : null;
+}
+
+/**
+ * The right button's drag: the cross on every edge the pointer passes, through
+ * the engine's sweep, so the drag is one step of Undo. The left button's drag
+ * is the line path, `interpretMove`'s own.
+ */
+export const crossDrag = dragMarkVerbs<
+  PearlState,
+  PearlUi,
+  PearlDrawState,
+  Side,
+  PearlMove
+>({
+  noun: "edge",
+  button: "secondary",
+  target: sideAt,
+  apply(state, { x, y, dir }) {
+    const made = markInDirection(state, x, y, dir, false);
+    return made === UI_UPDATE ? null : made;
+  },
+  pointAt(_s, ds, { x, y, dir }) {
+    const m = metrics(ds.tileSize);
+    const reach = Math.floor((3 * m.tile) / 8);
+    return {
+      x: centeredCoord(x, m) + reach * DX(dir),
+      y: centeredCoord(y, m) + reach * DY(dir),
+    };
+  },
+  sweep: {
+    holds: (s, { x, y, dir }) => (s.marks[y * s.w + x] & dir ? 1 : 0),
+    within: (ds) => metrics(ds.tileSize).tile * 0.3,
+    middle(ds, _s, { x, y, dir }) {
+      const m = metrics(ds.tileSize);
+      return {
+        x: centeredCoord(x, m) + (m.tile / 2) * DX(dir),
+        y: centeredCoord(y, m) + (m.tile / 2) * DY(dir),
+      };
+    },
+  },
+});
+
 function interpretMove(
   state: PearlState,
   ui: PearlUi,
@@ -170,6 +240,9 @@ function interpretMove(
     ui.clicky = y;
     ui.dragcoords[0] = gy * w + gx;
     ui.ndragcoords = 0; // will be 1 once the drag is confirmed
+    // A right press on an edge can be dragged along more edges.
+    const side = button === RIGHT_BUTTON ? sideAt(state, ds, p) : null;
+    if (side !== null) beginSweep(crossDrag, state, ui, side, button, p, false);
     return UI_UPDATE;
   }
 
@@ -177,9 +250,18 @@ function interpretMove(
     updateUiDrag(state, ui, gx, gy);
     return UI_UPDATE;
   }
+  if (button === RIGHT_DRAG && sweepOpen(ui))
+    return sweepTo(crossDrag, state, ui, ds, p);
 
   let release = false;
-  if (isMouseRelease) release = true;
+  if (isMouseRelease) {
+    // A cross drag made its moves as it went; its release is not a click.
+    if (endSweep(ui)) {
+      ui.ndragcoords = -1;
+      return UI_UPDATE;
+    }
+    release = true;
+  }
 
   if (isCursorMove(button)) {
     // A *modified* arrow marks a line, which is too much to do to a player who

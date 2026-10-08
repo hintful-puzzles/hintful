@@ -24,7 +24,8 @@ way as in every other puzzle that takes notes; a small pencil shows at the top
 right of the board while it is on, and pressing it again turns it off.
 
 In notes mode, tap near the side two squares share to put a **same-slant mark**
-(**=**) across it, and tap there again to take it off. From the keyboard, press
+(**=**) across it, and tap there again to take it off; drag on across more sides
+to do the same to each. From the keyboard, press
 **Enter** on one square, move to the square beside it and press **Enter** again;
 **Escape** lets go of the first square.
 

@@ -42,9 +42,11 @@ import { type RandomState, randomNew, randomUpto } from "../../engine/random/ind
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
+  beginSweep,
   interpretTargetVerbs,
   letterKey,
   routeGesture,
+  sweepTo,
   type TargetGeometry,
   type TargetVerbs,
   verbGesture,
@@ -343,6 +345,70 @@ function directionTo(s: NetState, a: Point, b: Point): number | null {
   return null;
 }
 
+/** What a notes-mode press addresses: side `dir` of a tile, or with `dir` 0
+ * the tile's middle, which is its lock. */
+interface NoteSpot {
+  readonly x: number;
+  readonly y: number;
+  readonly dir: number;
+}
+
+function noteSpotAt(
+  s: NetState,
+  ds: NetDrawState,
+  p: Point,
+  ui: NetUi,
+): NoteSpot | null {
+  const t = pressedTile(s, ds, p, ui);
+  if (t === null) return null;
+  const nearest = [t.fx, 1 - t.fx, t.fy, 1 - t.fy];
+  const least = Math.min(...nearest);
+  if (!t.onGutter && least >= LOCK_ZONE) return { x: t.x, y: t.y, dir: 0 };
+  return { x: t.x, y: t.y, dir: [L, R, U, D][nearest.indexOf(least)] };
+}
+
+/** Notes mode's marks as the engine's drag reads them: the left button notes
+ * a wire across a side and the right button none, and either locks a middle.
+ * A drag from a side takes sides, near their middles, and one from a middle
+ * takes middles. Not the game's `targetVerbs`, which are the rotations. */
+export const noteVerbs: TargetVerbs<NetState, NetUi, NetDrawState, NoteSpot, NetMove> =
+  {
+    geometry: {
+      noun: "side",
+      pointerTarget: noteSpotAt,
+      pointAt(s, ds, { x, y, dir }, ui) {
+        const mid = geometry.pointAt(s, ds, { x, y }, ui);
+        const reach = Math.floor(ds.tileSize * 0.4);
+        const dx = dir === L ? -1 : dir === R ? 1 : 0;
+        const dy = dir === U ? -1 : dir === D ? 1 : 0;
+        return { x: mid.x + reach * dx, y: mid.y + reach * dy };
+      },
+      cursorTarget: () => null,
+      parkCursor() {},
+      moveCursor: () => false,
+    },
+    primary: {
+      does: "note a wire across it",
+      apply: (s, t) =>
+        t.dir === 0 ? lockMove(s, t) : toggleNote(s, t.x, t.y, t.dir, NOTE_WIRE),
+    },
+    secondary: {
+      does: "note that no wire crosses it",
+      apply: (s, t) =>
+        t.dir === 0 ? lockMove(s, t) : toggleNote(s, t.x, t.y, t.dir, NOTE_NONE),
+    },
+    sweep: {
+      holds: (s, t) =>
+        t.dir === 0
+          ? `lock ${s.tiles[t.y * s.w + t.x] & LOCKED}`
+          : `side ${s.sides[sideIndex(s, t.x, t.y, t.dir)]}`,
+      reaches: (_s, first, next) => (first.dir === 0) === (next.dir === 0),
+      // A side's point is 0.4 of a tile from its tile's middle, so this reach
+      // stops well short of it: a drag through the middles takes no side.
+      within: (ds, _s, t) => (t.dir === 0 ? ds.tileSize : ds.tileSize * 0.25),
+    },
+  };
+
 /**
  * Notes mode's presses and selects, as Slant's: a tap notes the side of the
  * tile it lands nearest (the left button a wire across it, the right button
@@ -361,16 +427,17 @@ function noteInput(
   button: number,
 ): NetMove | null | UiUpdate {
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-    const t = pressedTile(s, ds, p, ui);
-    if (t === null) return null;
+    const spot = noteSpotAt(s, ds, p, ui);
+    if (spot === null) return null;
     const hid = ui.cursor.visible;
     ui.cursor.visible = false;
     ui.pin = null;
-    const nearest = [t.fx, 1 - t.fx, t.fy, 1 - t.fy];
-    if (!t.onGutter && Math.min(...nearest) >= LOCK_ZONE) return lockMove(s, t);
-    const dir = [L, R, U, D][nearest.indexOf(Math.min(...nearest))];
-    const note = button === LEFT_BUTTON ? NOTE_WIRE : NOTE_NONE;
-    return toggleNote(s, t.x, t.y, dir, note) ?? (hid ? UI_UPDATE : null);
+    const verb = button === LEFT_BUTTON ? noteVerbs.primary : noteVerbs.secondary;
+    const made = verb?.apply(s, spot, ui) ?? null;
+    // A drag on over more sides, or more middles, repeats the press.
+    if (made !== null && made !== UI_UPDATE)
+      beginSweep(noteVerbs, s, ui, spot, button, p, true);
+    return made ?? (hid ? UI_UPDATE : null);
   }
   // A select: the first on a hidden cursor only shows it.
   if (!ui.cursor.visible) {
@@ -537,6 +604,7 @@ function interpretMove(
       button === CURSOR_SELECT2)
   )
     return noteInput(s, ui, ds, p, button);
+  if (ui.pencilMode && isMouseDrag(button)) return sweepTo(noteVerbs, s, ui, ds, p);
   // Escape lets go of a picked tile; the erase keys are not a cancel here.
   if (isCancelKey(button) && !isEraseKey(button) && ui.pin !== null) {
     ui.pin = null;

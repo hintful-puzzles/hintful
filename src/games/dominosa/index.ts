@@ -252,6 +252,15 @@ const targetVerbs: TargetVerbs<
     apply: (s, { d1, d2 }) =>
       s.grid[d1] !== d1 || s.grid[d2] !== d2 ? null : { type: "edge", d1, d2 },
   },
+  // A pair is taken near the middle of the edge its two squares share.
+  sweep: {
+    holds(s, { d1, d2 }) {
+      const line = s.edges[d1] & (d2 - d1 === 1 ? EDGE_R : EDGE_B) ? " line" : "";
+      if (s.grid[d1] === d2) return "domino";
+      return (s.grid[d1] !== d1 || s.grid[d2] !== d2 ? "taken" : "free") + line;
+    },
+    within: (ds) => ds.tileSize * 0.3,
+  },
 };
 
 /** Erase every barrier edge lurking around a square that has just become part

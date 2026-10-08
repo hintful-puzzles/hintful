@@ -15,8 +15,9 @@ decided and agrees with it.
 
 {{controls}}
 
-Drag along a row or column to give every empty square you pass over
-the state the first square took.
+The drag works for clearing too: start on a shaded square and the
+shaded squares you pass over are cleared with it. A whole drag is one
+step of Undo.
 
 ## Hints
 

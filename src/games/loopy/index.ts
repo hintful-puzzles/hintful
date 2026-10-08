@@ -465,12 +465,13 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (isMouseDrag(button) || isMouseRelease(button)) {
+  // A notes drag. Outside notes mode a drag is the model's, which repeats the
+  // press along the edges it passes.
+  if ((isMouseDrag(button) || isMouseRelease(button)) && ui.noteDrag !== null) {
     // Whatever button class the drag and release arrive as: a finger held still
     // before dragging arrives as the right button (docs/games/input.md § "A touch
     // hold arrives as the right button"), and the press already said which way.
     const drag = ui.noteDrag;
-    if (drag === null) return null;
     drag.at = p;
     if (Math.hypot(p.x - drag.start.x, p.y - drag.start.y) > ds.tileSize / 2)
       drag.dragged = true;
@@ -583,6 +584,16 @@ const targetVerbs: TargetVerbs<
       pointer: { kind: "cycle", button: "primary" },
     },
   ],
+  // The loop is drawn by dragging along it. An edge is taken near its middle,
+  // by its own length, since a tiling's edges are not one size.
+  sweep: {
+    holds: (s, e) => s.lines[e.index],
+    within(ds, s, e) {
+      const [x1, y1] = toScreen(s.grid, ds.tileSize, e.dot1.x, e.dot1.y);
+      const [x2, y2] = toScreen(s.grid, ds.tileSize, e.dot2.x, e.dot2.y);
+      return Math.hypot(x2 - x1, y2 - y1) * 0.3;
+    },
+  },
 };
 
 /** Carry the cursor over `e` to its far dot, keeping `e` chosen (it is incident

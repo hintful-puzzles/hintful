@@ -28,6 +28,7 @@ import {
   newCursor,
   newDrag,
   RIGHT_BUTTON,
+  RIGHT_RELEASE,
   showCursor,
   startDrag,
   stripModifiers,
@@ -244,7 +245,9 @@ const geometry: TargetGeometry<TracksState, TracksUi, TracksDrawState, Point> = 
     const m = metrics(ds.tileSize);
     const spot = spotAt(state, t);
     const dir = spot?.kind === "edge" ? spot.dir : 0;
-    const reach = Math.floor((3 * m.tile) / 8);
+    // Close to the edge's line, inside the strip a right-click needs to cross
+    // the edge and not the square.
+    const reach = Math.floor((7 * m.tile) / 16);
     const x = spot ? spot.x : 0;
     const y = spot ? spot.y : 0;
     return {
@@ -286,10 +289,12 @@ const targetVerbs: TargetVerbs<
   geometry,
   primary: trackVerb,
   secondary: noTrackVerb,
-  // A drag that starts on an edge lays segments (or crosses) on the edges it
-  // crosses. One that starts in a square's middle is the square drag,
-  // `interpretMove`'s own.
+  // A left drag that starts on an edge lays segments on the edges it crosses.
+  // One that starts in a square's middle, and every right drag, is the square
+  // drag, `interpretMove`'s own: a run of crosses on edges is no use to a
+  // player, and a run of them on squares is.
   sweep: {
+    buttons: ["primary"],
     holds(state, t) {
       const spot = spotAt(state, t);
       if (!spot) return "none";
@@ -301,11 +306,55 @@ const targetVerbs: TargetVerbs<
     reaches: (state, first, next) =>
       spotAt(state, first)?.kind === "edge" && spotAt(state, next)?.kind === "edge",
     within: (ds) => metrics(ds.tileSize).tile * RAIL_DRAG_REACH,
+    middle(ds, state, t) {
+      // An edge is the left or the top side of its spot's square.
+      const m = metrics(ds.tileSize);
+      const spot = spotAt(state, t);
+      const dir = spot?.kind === "edge" ? spot.dir : 0;
+      return {
+        x: centeredCoord(spot?.x ?? 0, m) + (m.tile / 2) * DX(dir),
+        y: centeredCoord(spot?.y ?? 0, m) + (m.tile / 2) * DY(dir),
+      };
+    },
     says:
-      "Press on an edge and drag from square to square to do the same to " +
-      "every edge you cross that looked the same as the first.",
+      "Press on an edge and drag from square to square to lay track across " +
+      "every edge you cross, or, starting on a segment, to take them away.",
   },
 };
+
+/** How near an edge's line a right-click lands to cross the edge and not the
+ * square, in pixels: an eighth of a tile either side, and never under four.
+ * A cross on an edge is the rarer mark by far, so it takes a deliberate aim;
+ * a cross anywhere else in the square is the square's. */
+const edgeCrossStrip = (tile: number): number => Math.max(4, Math.floor(tile / 8));
+
+/**
+ * What a press at `p` with `button` addresses. The left button's is the
+ * geometry's: a square near its middle, an edge elsewhere. The right button's
+ * edge is only the strip along it ({@link edgeCrossStrip}), and the rest of the
+ * square is the square.
+ */
+function aimedAt(
+  state: TracksState,
+  ds: TracksDrawState,
+  ui: TracksUi,
+  p: Point,
+  button: number,
+): Point | null {
+  const t = geometry.pointerTarget(state, ds, p, ui);
+  if (t === null || (button !== RIGHT_BUTTON && button !== RIGHT_RELEASE)) return t;
+  if (spotAt(state, t)?.kind !== "edge") return t;
+  const m = metrics(ds.tileSize);
+  const gx = gridCoord(p.x, m);
+  const gy = gridCoord(p.y, m);
+  const off = Math.max(
+    Math.abs(p.x - centeredCoord(gx, m)),
+    Math.abs(p.y - centeredCoord(gy, m)),
+  );
+  return m.tile / 2 - off <= edgeCrossStrip(m.tile)
+    ? t
+    : { x: 2 * gx + 1, y: 2 * gy + 1 };
+}
 
 /** How near an edge's middle a drag passes to take it, in tiles. A drag
  * through the middles of two squares crosses the edge between them there. */
@@ -347,11 +396,11 @@ function interpretMove(
     }
     ui.clickx = p.x;
     ui.clicky = p.y;
-    const aimed = geometry.pointerTarget(state, ds, p, ui);
+    const aimed = aimedAt(state, ds, ui, p, button);
     if (aimed) pressTarget(targetVerbs, ui, aimed);
-    // A press on an edge drags along edges; one in a square's middle drags
-    // the square marks down its row or column.
-    if (aimed && spotAt(state, aimed)?.kind === "edge") {
+    // A left press on an edge drags along edges. One in a square's middle,
+    // and any right press, drags the square marks down its row or column.
+    if (button !== RIGHT_BUTTON && aimed && spotAt(state, aimed)?.kind === "edge") {
       endDrag(ui.drag);
       beginSweep(targetVerbs, state, ui, aimed, button, p, false);
       return UI_UPDATE;
@@ -376,7 +425,7 @@ function interpretMove(
       const pressed = { x: ui.clickx, y: ui.clicky };
       if (gridCoord(pressed.x, m) !== gx || gridCoord(pressed.y, m) !== gy)
         return UI_UPDATE;
-      const target = geometry.pointerTarget(state, ds, pressed, ui);
+      const target = aimedAt(state, ds, ui, pressed, button);
       if (!target) return UI_UPDATE;
       return buttonVerb(targetVerbs, button)?.apply(state, target, ui) ?? UI_UPDATE;
     }
@@ -403,7 +452,7 @@ function interpretMove(
     const pressed = { x: ui.clickx, y: ui.clicky };
     if (gridCoord(pressed.x, m) !== gx || gridCoord(pressed.y, m) !== gy)
       return UI_UPDATE;
-    const target = geometry.pointerTarget(state, ds, pressed, ui);
+    const target = aimedAt(state, ds, ui, pressed, button);
     if (!target) return UI_UPDATE;
     return buttonVerb(targetVerbs, button)?.apply(state, target, ui) ?? UI_UPDATE;
   }

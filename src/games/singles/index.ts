@@ -139,6 +139,7 @@ const targetVerbs: TargetVerbs<
     does: `circle it, marking a square you are sure should stay ${UNSHADED_NAME}`,
     apply: mark("circle"),
   },
+  sweep: { holds: (s, { x, y }) => s.flags[y * s.w + x] & (F_BLACK | F_CIRCLE) },
 };
 
 function interpretMove(

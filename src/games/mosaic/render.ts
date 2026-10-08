@@ -168,6 +168,10 @@ function drawCell(
   }
   if (cell & DRAWFLAG_CURSOR_UL) {
     dr.drawRect({ x: startX - 1, y: startY - 1, w: 1, h: 1 }, COL_CURSOR);
+  } else if (cell & DRAWFLAG_MARGIN_R && cell & DRAWFLAG_MARGIN_D) {
+    // The grid's bottom right corner draws no line of its own, so nothing
+    // else takes the cursor's corner pixel off again.
+    dr.drawRect({ x: startX - 1, y: startY - 1, w: 1, h: 1 }, COL_BACKGROUND);
   }
 
   if (!(cell & (DRAWFLAG_MARGIN_R | DRAWFLAG_MARGIN_D))) {

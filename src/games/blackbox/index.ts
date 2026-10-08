@@ -230,6 +230,13 @@ const targetVerbs: TargetVerbs<
         : played(s, ui, { type: "toggleRowLock", y: t.y });
     },
   },
+  // Balls and locks inside the box. A beam is a move and not a mark, so a
+  // drag from the edge, or out to it, repeats nothing.
+  sweep: {
+    holds: (s, t) =>
+      interior(s, t) ? gridGet(s, t.x, t.y) & (BALL_GUESS | BALL_LOCK) : -1,
+    reaches: (s, first, next) => interior(s, first) && interior(s, next),
+  },
 };
 
 // --- moves ------------------------------------------------------------

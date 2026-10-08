@@ -41,7 +41,7 @@ const P3 = { width: 3, height: 3, aggressive: true };
 const ALL_BLACK_DESC = "464696464";
 
 function freshUi(): MosaicUi {
-  return { lastX: -1, lastY: -1, lastState: 0, cursor: newCursor() };
+  return { cursor: newCursor() };
 }
 
 function freshDs(state: MosaicState): MosaicDrawState {

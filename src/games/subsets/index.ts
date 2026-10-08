@@ -381,6 +381,14 @@ const targetVerbs: TargetVerbs<
       t === "unknown" ? "known" : t === "known" ? "cleared" : "unknown",
     ),
   },
+  sweep: {
+    holds: (s, { pos, num }) =>
+      s.known[pos] & (1 << num)
+        ? "known"
+        : s.mask[pos] & (1 << num)
+          ? "unknown"
+          : "cleared",
+  },
   secondary: {
     does: "rule it out of that cell's set, going round the other way",
     apply: setSlot((t) =>

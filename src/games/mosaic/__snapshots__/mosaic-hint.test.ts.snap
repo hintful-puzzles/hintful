@@ -4807,6 +4807,15 @@ exports[`Mosaic's hint > a step that makes squares clear is drawn and said 1`] =
     "y": 335,
   },
   {
+    "color": 0,
+    "h": 1,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 1,
+    "x": 335,
+    "y": 335,
+  },
+  {
     "op": "unclip",
   },
 ]
@@ -9627,6 +9636,15 @@ exports[`Mosaic's hint > a step that makes squares shaded is drawn and said 1`] 
     "h": 32,
     "op": "clip",
     "w": 32,
+    "x": 335,
+    "y": 335,
+  },
+  {
+    "color": 0,
+    "h": 1,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 1,
     "x": 335,
     "y": 335,
   },

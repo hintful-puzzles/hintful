@@ -21,7 +21,8 @@ number as a pencil mark, indicating numbers that you think
 *might* go in that square.
 
 Left-click on a clue to mark it as done (gray it out). To unmark a
-clue as done, left-click on it again.
+clue as done, left-click on it again. Drag on through other clues to do
+the same to each one you pass over.
 
 A preference makes right-click switch on a *sticky* pencil mode
 instead, which stays on until you right-click again.

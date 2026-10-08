@@ -114,6 +114,7 @@ const targetVerbs: TargetVerbs<
       pointer: { kind: "cycle", button: "primary" },
     },
   ],
+  sweep: { holds: (s, { x, y }) => s.grid[y * s.w2 + x] },
 };
 
 function interpretMove(

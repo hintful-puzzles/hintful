@@ -37,9 +37,15 @@ The owner's answers, 2026-10-08, to the design put to them:
   its first. The join is kept in memory and not in a save, so the save format
   does not change, and a reloaded game undoes such a drag a move at a time.
 - **Tracks: where the press lands decides.** A press in the middle of a square
-  drags the square marks along its row or column, as before. A press on an
-  edge drags segments (or crosses) over every edge the pointer crosses.
-  A drag that starts on an edge no longer lays square marks.
+  drags the square marks along its row or column, as before. A left press on
+  an edge drags segments over every edge the pointer crosses, and a left drag
+  that starts on an edge no longer lays square marks.
+- **Tracks' right button is the square's** (owner, 2026-10-09, playing the
+  first part: a run of crosses on edges "actually isn't useful at all", and a
+  cross on an edge is "significantly less useful" than one on a square). A
+  right-drag crosses squares wherever it starts. A right-click crosses an
+  edge only on the strip along it, an eighth of a tile either side and never
+  under four pixels; anywhere else in the square it crosses the square.
 - **Galaxies: the same split.** A left press on an edge's line drags lines; a
   press on a dot, an arrow or the inside of a tile is the association drag.
   An association drag started within a fifth of a tile of a line is now a

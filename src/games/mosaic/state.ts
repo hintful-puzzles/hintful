@@ -83,11 +83,6 @@ export type MosaicMove =
   | { type: "fill"; cells: number[]; mark: number };
 
 export interface MosaicUi {
-  /** Drag anchor + the mark a click decided to paint (upstream
-   * `last_x`/`last_y`/`last_state`). `-1` anchor = none. */
-  lastX: number;
-  lastY: number;
-  lastState: number;
   cursor: GridCursor;
 }
 
@@ -265,7 +260,7 @@ export function cluesLeft(state: MosaicState): number {
 /** The straight run of cells from (x,y) toward the anchor (srcX,srcY),
  * anchor excluded: the click that set the anchor already painted it. A
  * pair that is not vertically aligned walks the row. */
-export function paintRun(x: number, y: number, srcX: number, srcY: number): Point[] {
+function paintRun(x: number, y: number, srcX: number, srcY: number): Point[] {
   const vertical = srcX === x && srcY !== y;
   const dx = vertical ? 0 : Math.sign(srcX - x);
   const dy = vertical ? Math.sign(srcY - y) : 0;

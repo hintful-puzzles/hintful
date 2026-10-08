@@ -51,12 +51,14 @@ import {
   digitOf,
   isCursorMove,
   isEraseKey,
+  isMouseDrag,
   LEFT_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type { Color, GameStatus, KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
@@ -278,10 +280,40 @@ function interpretMove(
   }
 
   const clue = grid2range(gx, gy, w, h);
-  if (button === LEFT_BUTTON && clue !== -1) return { type: "hintDone", clue };
+  if (button === LEFT_BUTTON && clue !== -1) {
+    // A drag on along the clues marks the ones that looked the same.
+    beginSweep(clueDrag, state, ui, clue, button, point, true);
+    return clueDrag.primary.apply(state, clue, ui);
+  }
+  if (isMouseDrag(button)) return sweepTo(clueDrag, state, ui, ds, point);
 
   return null;
 }
+
+/** The "this clue is done" mark, which a drag along the clues repeats. */
+export const clueDrag = dragMarkVerbs<
+  UndeadState,
+  UndeadUi,
+  UndeadDrawState,
+  number,
+  UndeadMove
+>({
+  noun: "clue",
+  target(state, ds, p) {
+    const { w, h } = state.common;
+    const ts = ds.tileSize;
+    const b = border(ts);
+    const clue = grid2range(
+      Math.trunc((p.x - b - 1) / ts),
+      Math.trunc((p.y - b - 2) / ts) - 1,
+      w,
+      h,
+    );
+    return clue === -1 ? null : clue;
+  },
+  apply: (_state, clue) => ({ type: "hintDone", clue }),
+  sweep: { holds: (state, clue) => state.hintsDone[clue] },
+});
 
 function executeMove(state: UndeadState, move: UndeadMove): UndeadState {
   const next = cloneState(state);

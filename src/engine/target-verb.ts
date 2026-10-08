@@ -144,7 +144,13 @@ export interface Sweep<State, DrawState, Target> {
    * for the drag to take `target`; anywhere in its catchment, where absent.
    * An edge's catchment meets its neighbors' at every corner, so a drag
    * along a line of edges takes each one near its middle only. */
-  within?(ds: DrawState): number;
+  within?(ds: DrawState, state: State, target: Target): number;
+  /** The point `within` measures from, where it is not `pointAt`: an edge's
+   * true middle. `pointAt` of an edge is often a point inside one of its
+   * squares, where a press is unambiguous, and a reach measured from there
+   * comes close enough to the square's middle that a drag through the middles
+   * of a row would take the edges beside it. */
+  middle?(ds: DrawState, state: State, target: Target): Point;
   /** The Controls paragraph's sentence about the drag, where the default
    * ("Keep the button down and drag …") would not describe it. */
   readonly says?: string;
@@ -284,6 +290,10 @@ export function pressTarget<S, U extends TargetVerbUi, D, T, M>(
  * it lives from a press to its release, and a game's `Ui` is where the player
  * is and nothing else. */
 interface SweepInProgress {
+  /** The declaration the drag was opened on. A game may hold several (its
+   * verbs, and a mark of notes mode), and a drag opened on one is never
+   * carried on with another. */
+  readonly verbs: unknown;
   readonly button: VerbButton;
   readonly first: unknown;
   readonly held: string | number;
@@ -305,7 +315,17 @@ const sweeps = new WeakMap<object, SweepInProgress>();
  * pointer events. Smaller than any catchment a drag could step over. */
 const SWEEP_SAMPLE_PX = 3;
 
-const sameTarget = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** One target and not two: a plain record by its fields, and an object of the
+ * game's own that the geometry hands out (Loopy's edges, which hold their
+ * whole cyclic grid) by identity. */
+function sameTarget(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
 
 const slotOf = (button: number): VerbButton | null =>
   button === LEFT_BUTTON || button === LEFT_RELEASE
@@ -336,6 +356,7 @@ export function beginSweep<S, U extends object, D, T, M>(
   if (!sweep || slot === null || !verbs[slot]) return;
   if (sweep.buttons && !sweep.buttons.includes(slot)) return;
   sweeps.set(ui, {
+    verbs,
     button: slot,
     first: target,
     held: sweep.holds(state, target),
@@ -389,7 +410,7 @@ export function sweepTo<S, U extends object, D, T, M>(
 ): M | null {
   const sw = sweeps.get(ui);
   const sweep = verbs.sweep;
-  if (!sw || !sweep) return null;
+  if (!sw || !sweep || sw.verbs !== verbs) return null;
   const verb = verbs[sw.button];
   if (!verb) return null;
   const { geometry } = verbs;
@@ -401,7 +422,6 @@ export function sweepTo<S, U extends object, D, T, M>(
   if (p.x < 0 || p.y < 0) return null;
 
   // Every target between the last pointer position and this one.
-  const reach = sweep.within?.(ds);
   const dx = p.x - sw.last.x;
   const dy = p.y - sw.last.y;
   const steps = Math.max(1, Math.ceil(Math.hypot(dx, dy) / SWEEP_SAMPLE_PX));
@@ -409,8 +429,9 @@ export function sweepTo<S, U extends object, D, T, M>(
     const q = { x: sw.last.x + (dx * i) / steps, y: sw.last.y + (dy * i) / steps };
     const t = geometry.pointerTarget(state, ds, q, ui);
     if (t === null) continue;
+    const reach = sweep.within?.(ds, state, t);
     if (reach !== undefined) {
-      const mid = geometry.pointAt(state, ds, t, ui);
+      const mid = sweep.middle?.(ds, state, t) ?? geometry.pointAt(state, ds, t, ui);
       if (Math.hypot(q.x - mid.x, q.y - mid.y) > reach) continue;
     }
     if (!sameTarget(t, sw.queue.at(-1))) sw.queue.push(t);
@@ -444,6 +465,53 @@ export function sweepTo<S, U extends object, D, T, M>(
     return move;
   }
   return null;
+}
+
+/**
+ * The verbs of one mark that can be dragged, for a game whose input is not
+ * target-verb: the "clue done" mark beside a grid whose cells take a keypad,
+ * or the one button of a drag game the game's own drag does not use. The game
+ * presses, drags and releases through {@link beginSweep}, {@link sweepTo} and
+ * {@link endSweep}; this is the declaration they read.
+ *
+ * Not a `Game.targetVerbs`: no cursor rests on these targets and no Controls
+ * paragraph is generated from them, since the keyboard reaches the mark by a
+ * key of the game's own.
+ */
+export function dragMarkVerbs<S, U, D, T, M>(mark: {
+  /** What the targets are called. */
+  noun: string;
+  /** The target a press at `p` addresses, or `null` for none. */
+  target(state: S, ds: D, p: Point, ui: U): T | null;
+  /** The move that marks `target`, or `null` where it takes none. */
+  apply(state: S, target: T, ui: U): M | null;
+  /** The button that marks; the left one, where absent. */
+  button?: VerbButton;
+  /** A point a press addresses `target` from, which `sweep.within` measures
+   * from; needed only with a reach. */
+  pointAt?(state: S, ds: D, target: T, ui: U): Point;
+  sweep: Sweep<S, D, T>;
+}): Verbs<S, U, D, T, M> {
+  const slot = mark.button ?? "primary";
+  const verb = { does: `mark the ${mark.noun}`, apply: mark.apply };
+  const none = { does: "", apply: () => null };
+  return {
+    geometry: {
+      noun: mark.noun,
+      pointerTarget: mark.target,
+      pointAt:
+        mark.pointAt ??
+        (() => {
+          throw new Error(`a drag over ${mark.noun}s with a reach needs pointAt`);
+        }),
+      cursorTarget: () => null,
+      parkCursor() {},
+      moveCursor: () => false,
+    },
+    primary: slot === "primary" ? verb : none,
+    secondary: slot === "secondary" ? verb : undefined,
+    sweep: { ...mark.sweep, buttons: [slot] },
+  };
 }
 
 /** The Controls paragraph's sentence about the drag. */

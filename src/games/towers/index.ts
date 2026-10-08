@@ -62,6 +62,7 @@ import {
   digitOf,
   isCursorMove,
   isEraseKey,
+  isMouseDrag,
   LEFT_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
@@ -72,6 +73,7 @@ import { presetGrid } from "../../engine/preset-grid.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTowersDesc } from "./generator.ts";
 import { type ClueSight, say } from "./hint-text.ts";
@@ -143,6 +145,24 @@ function inGrid(w: number, x: number, y: number): boolean {
   return x >= 0 && x < w && y >= 0 && y < w;
 }
 
+/** The "this clue is done" mark, which a drag along the clues repeats. */
+export const clueDrag = dragMarkVerbs<
+  TowersState,
+  TowersUi,
+  TowersDrawState,
+  number,
+  TowersMove
+>({
+  noun: "clue",
+  target(state, ds, p) {
+    const x = fromCoord(p.x, ds.tileSize);
+    const y = fromCoord(p.y, ds.tileSize);
+    return isClue(state, x, y) ? clueIndex(x, y, state.w) : null;
+  },
+  apply: (_state, index) => ({ type: "clueDone", index }),
+  sweep: { holds: (state, index) => state.cluesDone[index] },
+});
+
 function interpretMove(
   state: TowersState,
   ui: TowersUi,
@@ -205,9 +225,13 @@ function interpretMove(
     }
   } else if (button === LEFT_BUTTON) {
     if (isClue(state, tx, ty)) {
-      return { type: "clueDone", index: clueIndex(tx, ty, w) };
+      const index = clueIndex(tx, ty, w);
+      // A drag on along the clues marks the ones that looked the same.
+      beginSweep(clueDrag, state, ui, index, button, p, true);
+      return clueDrag.primary.apply(state, index, ui);
     }
   }
+  if (isMouseDrag(button)) return sweepTo(clueDrag, state, ui, ds, p);
 
   if (isCursorMove(button)) {
     if (shiftOrCtrl) {

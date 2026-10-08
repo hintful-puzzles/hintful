@@ -10,17 +10,7 @@ import type { Game, UiUpdate } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
-import {
-  cursorDelta,
-  LEFT_BUTTON,
-  LEFT_DRAG,
-  LEFT_RELEASE,
-  newCursor,
-  RIGHT_BUTTON,
-  RIGHT_DRAG,
-  RIGHT_RELEASE,
-  stripModifiers,
-} from "../../engine/pointer.ts";
+import { cursorDelta, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   interpretTargetVerbs,
@@ -58,29 +48,18 @@ import {
   type MosaicState,
   type MosaicUi,
   newState,
-  paintRun,
   presets,
   STATE_MARK_MASK,
-  STATE_UNMARKED,
   status,
   statusbarText,
   textFormat,
   validateParams,
 } from "./state.ts";
 
-function isMouseEvent(button: number): boolean {
-  return button >= LEFT_BUTTON && button <= RIGHT_RELEASE;
-}
-
 // --- input -------------------------------------------------------------
 
 function newUi(_state: MosaicState): MosaicUi {
-  return {
-    lastX: -1,
-    lastY: -1,
-    lastState: 0,
-    cursor: newCursor(),
-  };
+  return { cursor: newCursor() };
 }
 
 /** A verb that cycles the square one way: `double` is the right button's
@@ -108,6 +87,9 @@ const targetVerbs: TargetVerbs<
     does: `turn it ${UNSHADED_NAME}, then ${SHADED_NAME}, then empty again`,
     apply: toggle(true),
   },
+  sweep: {
+    holds: (s, { x, y }) => s.cells[y * s.width + x] & STATE_MARK_MASK,
+  },
 };
 
 function interpretMove(
@@ -118,75 +100,13 @@ function interpretMove(
   button: number,
 ): MosaicMove | null | UiUpdate {
   const raw = stripModifiers(button);
-  const { width, height } = state;
 
   // After completion, only cursor browsing is accepted (upstream freeze).
   if (status(state) === "solved" && !cursorDelta(raw)) return null;
 
-  const ts = ds.tileSize;
-  const m = Math.floor(ts / 2);
-  const offsetX = p.x - m;
-  const offsetY = p.y - m;
-  const gameX = Math.floor(offsetX / ts);
-  const gameY = Math.floor(offsetY / ts);
-  const inBounds = gameX >= 0 && gameY >= 0 && gameX < width && gameY < height;
-
-  if (isMouseEvent(raw) && (offsetX < 0 || offsetY < 0)) return null;
-
-  if (raw === LEFT_BUTTON || raw === RIGHT_BUTTON) {
-    if (!inBounds) {
-      ui.lastX = -1;
-      ui.lastY = -1;
-      return null;
-    }
-    // Capture the mark this cell is about to become; aligned drags and
-    // the release paint it onto still-unmarked cells.
-    const cur = state.cells[gameY * width + gameX] & STATE_MARK_MASK;
-    ui.lastState = (cur + (raw === RIGHT_BUTTON ? 2 : 1)) % STATE_MARK_MASK;
-    ui.lastX = gameX;
-    ui.lastY = gameY;
-    return interpretTargetVerbs(targetVerbs, state, ui, ds, p, raw);
-  }
-
-  const isDrag = raw === LEFT_DRAG || raw === RIGHT_DRAG;
-  if (isDrag || raw === LEFT_RELEASE || raw === RIGHT_RELEASE) {
-    ui.cursor.visible = false;
-    const aligned =
-      inBounds &&
-      ui.lastX >= 0 &&
-      ui.lastY >= 0 &&
-      (gameY === ui.lastY || gameX === ui.lastX);
-    if (!aligned) {
-      ui.lastX = -1;
-      ui.lastY = -1;
-      return null;
-    }
-    const move: MosaicMove = {
-      type: "paint",
-      x: gameX,
-      y: gameY,
-      srcX: ui.lastX,
-      srcY: ui.lastY,
-      paintState: ui.lastState,
-    };
-    // Upstream's `changed` check: a paint that would change no cell emits
-    // no move, so it leaves no no-op entry in the history.
-    const changed =
-      ui.lastState !== STATE_UNMARKED &&
-      paintRun(gameX, gameY, ui.lastX, ui.lastY).some(
-        (c) =>
-          c.x < width &&
-          c.y < height &&
-          (state.cells[c.y * width + c.x] & STATE_MARK_MASK) === 0,
-      );
-    if (isDrag) {
-      // The drag anchor advances; the release keeps it.
-      ui.lastX = gameX;
-      ui.lastY = gameY;
-    }
-    return changed ? move : null;
-  }
-
+  // A press, a drag and a release are all the model's: a drag gives the
+  // press's result to every square it passes that held what the pressed one
+  // held, so it lays a mark or clears one.
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, raw);
 }
 

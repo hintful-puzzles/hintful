@@ -20,6 +20,7 @@ import {
   LEFT_RELEASE,
   newCursor,
   RIGHT_BUTTON,
+  RIGHT_DRAG,
 } from "../../engine/pointer.ts";
 import { mosaicGame } from "./index.ts";
 import {
@@ -35,6 +36,7 @@ import {
   STATE_ERROR,
   STATE_MARKED,
   STATE_SOLVED,
+  STATE_UNMARKED,
   status,
   statusbarText,
   textFormat,
@@ -46,7 +48,7 @@ const ALL_BLACK_DESC = "464696464";
 const P3 = { width: 3, height: 3, aggressive: true };
 
 function freshUi(): MosaicUi {
-  return { lastX: -1, lastY: -1, lastState: 0, cursor: newCursor() };
+  return { cursor: newCursor() };
 }
 
 describe("Mosaic params", () => {
@@ -284,19 +286,16 @@ describe("Mosaic input mapping", () => {
     return { s: newState(P3, ALL_BLACK_DESC), ui: freshUi() };
   }
 
-  it("maps a left click to a single toggle and captures the paint state", () => {
+  it("maps a left click to a single toggle", () => {
     const { s, ui } = fresh();
     const move = mosaicGame.interpretMove(s, ui, ds, at(1, 1), LEFT_BUTTON);
     expect(move).toEqual({ type: "toggle", x: 1, y: 1, double: false });
-    expect(ui.lastState).toBe(STATE_MARKED); // unmarked cell will become black
-    expect(ui.lastX).toBe(1);
   });
 
-  it("maps a right click to a double toggle painting blank", () => {
+  it("maps a right click to a double toggle", () => {
     const { s, ui } = fresh();
     const move = mosaicGame.interpretMove(s, ui, ds, at(0, 0), RIGHT_BUTTON);
     expect(move).toEqual({ type: "toggle", x: 0, y: 0, double: true });
-    expect(ui.lastState).toBe(STATE_BLANK);
   });
 
   it("ignores clicks in the margin", () => {
@@ -306,48 +305,61 @@ describe("Mosaic input mapping", () => {
     ).toBeNull();
   });
 
-  it("emits an aligned drag paint and advances the anchor", () => {
-    const { s, ui } = fresh();
-    mosaicGame.interpretMove(s, ui, ds, at(0, 0), LEFT_BUTTON);
-    const move = mosaicGame.interpretMove(s, ui, ds, at(2, 0), LEFT_DRAG);
-    expect(move).toEqual({
-      type: "paint",
-      x: 2,
-      y: 0,
-      srcX: 0,
-      srcY: 0,
-      paintState: STATE_MARKED,
-    });
-    expect(ui.lastX).toBe(2);
-  });
-
-  it("suppresses a drag that would change nothing", () => {
+  /** A board played through `interpretMove`, as a drag is: each move it
+   * makes changes what the next event finds. */
+  function played() {
     let { s } = fresh();
     const ui = freshUi();
-    // Mark the whole top row first.
-    for (let x = 0; x < 3; x++) {
-      s = executeMove(s, { type: "toggle", x, y: 0, double: false });
+    const send = (cx: number, cy: number, button: number) => {
+      const move = mosaicGame.interpretMove(s, ui, ds, at(cx, cy), button);
+      if (move !== null && move !== UI_UPDATE) s = executeMove(s, move);
+      return move;
+    };
+    return { send, mark: (cx: number, cy: number) => s.cells[cy * 3 + cx] & 3 };
+  }
+
+  it("a drag gives the press's mark to each empty square it passes", () => {
+    const b = played();
+    b.send(1, 1, LEFT_BUTTON);
+    b.send(1, 1, LEFT_RELEASE);
+    b.send(0, 0, LEFT_BUTTON);
+    // Down the first column, then along the bottom row: no need to stay in
+    // one line.
+    b.send(0, 1, LEFT_DRAG);
+    b.send(0, 2, LEFT_DRAG);
+    b.send(1, 2, LEFT_DRAG);
+    b.send(1, 2, LEFT_RELEASE);
+    for (const [x, y] of [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [1, 2],
+    ])
+      expect(b.mark(x, y)).toBe(STATE_MARKED);
+    // Back over the square marked before the drag: it is left as it was.
+    b.send(2, 1, RIGHT_BUTTON);
+    b.send(1, 1, RIGHT_DRAG);
+    expect(b.mark(2, 1)).toBe(STATE_BLANK);
+    expect(b.mark(1, 1)).toBe(STATE_MARKED);
+  });
+
+  it("a drag from a marked square clears the marked squares it passes", () => {
+    const b = played();
+    for (const x of [0, 1, 2]) {
+      b.send(x, 0, LEFT_BUTTON);
+      b.send(x, 0, LEFT_RELEASE);
     }
-    mosaicGame.interpretMove(s, ui, ds, at(0, 0), LEFT_BUTTON);
-    // (toggle not applied to s — but the drag's change-check reads s,
-    // where every top-row cell is already marked.)
-    expect(mosaicGame.interpretMove(s, ui, ds, at(2, 0), LEFT_DRAG)).toBeNull();
-  });
-
-  it("resets the anchor on a non-aligned drag", () => {
-    const { s, ui } = fresh();
-    mosaicGame.interpretMove(s, ui, ds, at(0, 0), LEFT_BUTTON);
-    expect(mosaicGame.interpretMove(s, ui, ds, at(2, 2), LEFT_DRAG)).toBeNull();
-    expect(ui.lastX).toBe(-1);
-  });
-
-  it("a release paints without advancing the anchor", () => {
-    const { s, ui } = fresh();
-    mosaicGame.interpretMove(s, ui, ds, at(0, 0), LEFT_BUTTON);
-    const move = mosaicGame.interpretMove(s, ui, ds, at(0, 2), LEFT_RELEASE);
-    expect(move).toMatchObject({ type: "paint", x: 0, y: 2 });
-    expect(ui.lastX).toBe(0);
-    expect(ui.lastY).toBe(0);
+    // A second left click makes the middle one blank.
+    b.send(1, 0, LEFT_BUTTON);
+    b.send(1, 0, LEFT_RELEASE);
+    // The right button takes a marked square straight to empty, and the drag
+    // takes the next marked one with it, passing over the blank between.
+    b.send(0, 0, RIGHT_BUTTON);
+    expect(b.mark(0, 0)).toBe(STATE_UNMARKED);
+    b.send(1, 0, RIGHT_DRAG);
+    b.send(2, 0, RIGHT_DRAG);
+    expect(b.mark(1, 0)).toBe(STATE_BLANK);
+    expect(b.mark(2, 0)).toBe(STATE_UNMARKED);
   });
 
   it("moves the cursor with clamping and toggles via select", () => {

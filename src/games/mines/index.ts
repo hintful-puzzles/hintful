@@ -249,6 +249,8 @@ const targetVerbs: TargetVerbs<MinesState, MinesUi, MinesDrawState, Point, Mines
           : { type: "ops", ops: [{ op: "F", x, y }] };
       },
     },
+    // Flags only: opening a square is a move, and it acts on the release.
+    sweep: { holds: (s, { x, y }) => s.grid[y * s.w + x], buttons: ["secondary"] },
   };
 
 // --- hint ----------------------------------------------------------------
