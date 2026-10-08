@@ -18,7 +18,7 @@ import { customElement, property, query, state } from "lit/decorators.js";
 import { PENCIL_MODE_BUTTON } from "../../engine/pointer.ts";
 import type { KeyLabel } from "../../engine/types.ts";
 import { settings } from "../../store/settings.ts";
-import { cssWATweaks } from "../../utils/css.ts";
+import { cssStackedButton, cssWATweaks } from "../../utils/css.ts";
 import { awaitsFirstBoard } from "../board-commands.ts";
 import { puzzleContext } from "../contexts.ts";
 import type { Puzzle } from "../puzzle.ts";
@@ -167,24 +167,30 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
                   puzzle.canMarkAll
                     ? html`
                       <wa-button
+                          class="stacked"
                           data-command="mark-all"
                           ?disabled=${puzzle.isSolved || awaitsFirstBoard("mark-all", puzzle)}
                       >
-                        <wa-icon slot="start" name="mark-all"></wa-icon>
-                        ${
-                          // The press does double duty on purpose: fill the bare
-                          // cells, or narrow what a placed value has ruled out.
-                          puzzle.hasPencilMarks ? "Update marks" : "Fill marks"
-                        }
+                        <span class="stack">
+                          <wa-icon name="mark-all"></wa-icon>
+                          <span>${
+                            // The press does double duty on purpose: fill the
+                            // bare cells, or narrow what a placed value has
+                            // ruled out.
+                            puzzle.hasPencilMarks ? "Update marks" : "Fill marks"
+                          }</span>
+                        </span>
                       </wa-button>`
                     : nothing
                 }
                 ${
                   puzzle.hasReference
                     ? html`
-                      <wa-button data-command="toggle-reference">
-                        <wa-icon slot="start" name="reference"></wa-icon>
-                        ${this.referenceOpen ? "Hide reference" : "Reference"}
+                      <wa-button class="stacked" data-command="toggle-reference">
+                        <span class="stack">
+                          <wa-icon name="reference"></wa-icon>
+                          <span>${this.referenceOpen ? "Hide reference" : "Reference"}</span>
+                        </span>
                       </wa-button>`
                     : nothing
                 }
@@ -206,10 +212,14 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
           @change=${this.handleButtonToggle}
       >
         <wa-radio appearance="button" value="left">
-          <wa-icon name="mouse-left-button"></wa-icon> Left
+          <span class="stack">
+            <wa-icon name="mouse-left-button"></wa-icon><span>Left</span>
+          </span>
         </wa-radio>
         <wa-radio appearance="button" value="right">
-          <wa-icon name="mouse-right-button"></wa-icon> Right
+          <span class="stack">
+            <wa-icon name="mouse-right-button"></wa-icon><span>Right</span>
+          </span>
         </wa-radio>
       </wa-radio-group>
     `;
@@ -263,6 +273,7 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
 
   static override styles = [
     cssWATweaks,
+    cssStackedButton,
     css`
       :host {
         display: block;
@@ -322,8 +333,12 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
         touch-action: pinch-zoom;
       }
 
-      wa-radio wa-icon {
-        vertical-align: -0.125em;
+      /* The toggle's two halves are as tall as the stacked controls beside
+       * them. */
+      wa-radio {
+        height: auto;
+        min-height: var(--app-row-tool-phone);
+        padding-block: 0.25rem;
       }
     `,
   ];

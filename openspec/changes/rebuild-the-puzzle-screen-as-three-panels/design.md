@@ -221,10 +221,17 @@ questions are first.
 - **Preferences › Layout shows the current window shape's settings only**, as
   drawn. A choice is judged by watching the board rearrange behind the dialog,
   and only the current shape can show that.
-- **A key is written beside a command where a keyboard is likely**: a pointer
-  that is fine and can hover. On the Bar, also only while it has room (as
-  drawn, a line under the caption). This removes the shortcut labels a phone
-  showed, which "What is wrong today" lists.
+- **The Bar draws no key; a Menu row writes one where a keyboard is likely**
+  (a pointer that is fine and can hover). The owner, on the deployment
+  (2026-10-08): the keys sat under the caption in every slot but Hint's, and
+  are better hidden "except maybe when the user hovers". A slot's tooltip
+  carries the key and the command's full name.
+- **The icon is above the caption in every Bar slot and every Game control**
+  (owner, on the deployment). Hint is drawn as its neighbors are, a little
+  wider so the armed caption holds one line.
+- **A bottom Bar's Menu button is at the end nearest the Menu** (owner, on the
+  deployment: it was on the right and opened a Menu on the left). It is first
+  with the Game controls on the right, and last for a left-handed layout.
 - **A bottom Bar is the board column's width, and a side column of Game
   controls runs the full height beside it.** The drawings show the Bar passing
   under the Game controls; "Risks" below says the Bar is the board column's
@@ -235,9 +242,11 @@ questions are first.
   It is 4 on a phone, 5 at a height of 373px with the Bar on the side, and 6
   elsewhere measured. Opening the reference panel on a 1280px window takes it
   to 4, which is the mechanism working.
-- **`Back to last save` is captioned `Last save` on the Bar**, as the landscape
-  drawing has it, and keeps its full name in the Menu. It is the one caption
-  that differs, declared beside the label on the same entry.
+- **`Back to last save` is captioned `Load` on the Bar**, and keeps its full
+  name in the Menu and in the slot's tooltip. It was `Last save`, as the
+  landscape drawing has it; the owner, on the deployment: a caption "has to be
+  the name of an action". It is the one caption that differs, declared beside
+  the label on the same entry.
 - **The Menu button and the Menu's close button are for the visit.** They do
   not write `Keep the Menu open`. Crossing into another window shape, or
   losing the room to dock, drops the visit's choice.

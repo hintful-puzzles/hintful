@@ -5,7 +5,7 @@ import { customElement, eventOptions, property, state } from "lit/decorators.js"
 import { classMap } from "lit/directives/class-map.js";
 import type { KeyLabel } from "../../engine/types.ts";
 import { cssColorToOKLCH } from "../../utils/color.ts";
-import { cssWATweaks } from "../../utils/css.ts";
+import { cssStackedButton, cssWATweaks } from "../../utils/css.ts";
 import { puzzleContext } from "../contexts.ts";
 import type { Puzzle } from "../puzzle.ts";
 
@@ -127,12 +127,15 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
     const fill = this.swatchFill(key);
     const classes = classMap({
       single: !this.labeled && (icon || label.length === 1),
+      stacked: this.labeled && Boolean(icon),
       swatch: fill !== null,
     });
     const content = !icon
       ? label
       : this.labeled
-        ? html`<wa-icon slot="start" name=${icon}></wa-icon>${label}`
+        ? html`<span class="stack">
+            <wa-icon name=${icon}></wa-icon><span>${label}</span>
+          </span>`
         : html`<wa-icon name=${icon} label=${label}></wa-icon>`;
     // Exclude virtual keys from keyboard navigation
     // (they're not helpful for a keyboard user).
@@ -183,6 +186,7 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
 
   static override styles = [
     cssWATweaks,
+    cssStackedButton,
     css`
       :host {
         display: contents;

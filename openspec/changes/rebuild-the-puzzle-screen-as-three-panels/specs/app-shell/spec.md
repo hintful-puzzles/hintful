@@ -26,8 +26,22 @@ The on-screen keys that type a character are an input surface and not
 controls ("The on-screen key panel never takes keyboard focus"): the character
 is what they carry.
 
-A key SHALL be written beside a command only where a keyboard is likely: a
-pointer that is fine and can hover.
+A control in the Bar or the Game controls SHALL draw its icon above its
+caption, the same shape for every one of them, Hint included. A caption SHALL
+name an action.
+
+The Bar SHALL NOT draw the key that runs a command: a slot's tooltip carries
+it, with the command's full name. A Menu row SHALL write the key beside the
+command only where a keyboard is likely: a pointer that is fine and can hover.
+
+A bottom Bar's Menu button SHALL be at the end of the Bar nearest the side the
+Menu opens on, so that the button is beside what it opens.
+
+#### Scenario: The Menu button, by handedness
+
+- **WHEN** the Bar is along the bottom and the Game controls are on the right
+- **THEN** the Menu button is the Bar's first slot, on the left
+- **AND** with the Game controls on the left, it is the last, on the right
 
 #### Scenario: A command is offered twice
 

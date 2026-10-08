@@ -49,6 +49,11 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
   @property({ type: Boolean, attribute: "menu-open" })
   menuOpen = false;
 
+  /** Draw the `Menu` button before the commands: the screen sets it where the
+   * Menu opens at that end of the Bar, so the button is beside what it opens. */
+  @property({ type: Boolean, attribute: "menu-first" })
+  menuFirst = false;
+
   /** Wide enough to give every slot room around its caption. */
   @property({ type: Boolean, reflect: true })
   roomy = false;
@@ -97,22 +102,31 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
 
   protected override render() {
     const { bar } = cutCommandList(this.entries, this.length);
+    const menuButton = html`
+      <button
+          part="slot menu-button"
+          type="button"
+          aria-pressed=${this.menuOpen ? "true" : "false"}
+          @click=${this.handleMenuButton}
+      >
+        <wa-icon name="more"></wa-icon>
+        <span part="caption">Menu</span>
+      </button>
+    `;
     return html`
       <nav part="base" aria-label="Puzzle commands">
+        ${this.menuFirst ? menuButton : nothing}
         ${bar.map((entry) => this.renderSlot(entry))}
-        <button
-            part="slot menu-button"
-            type="button"
-            aria-pressed=${this.menuOpen ? "true" : "false"}
-            @click=${this.handleMenuButton}
-        >
-          <wa-icon name="more"></wa-icon>
-          <span part="caption">Menu</span>
-        </button>
+        ${this.menuFirst ? nothing : menuButton}
       </nav>
     `;
   }
 
+  /**
+   * One slot: an icon over its caption, the same shape for every command. The
+   * key that runs it is not drawn. It is in the tooltip, with the command's
+   * full name where the caption is a shorter one.
+   */
   private renderSlot(entry: CommandEntry) {
     const key = shortcutLabel(entry.id);
     return html`
@@ -120,11 +134,11 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
           part=${entry.id === "hint" ? "slot hint" : "slot"}
           type="button"
           data-command=${entry.id}
+          title=${key ? `${entry.label} (${key})` : entry.label}
           ?disabled=${entry.disabled === true || awaitsFirstBoard(entry.id, this.puzzle ?? null)}
       >
         <wa-icon name=${entry.icon}></wa-icon>
         <span part="caption">${entry.barLabel ?? entry.label}</span>
-        ${key ? html`<kbd part="key">${key}</kbd>` : nothing}
       </button>
     `;
   }
@@ -242,36 +256,21 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
         padding: 2px;
       }
 
-      /* The hint takes the free space along the bottom, from a basis of zero:
-       * its width is then what its neighbors leave and not what its label
-       * needs, so arming the hint lengthens the label and moves no slot.
+      /* The hint is drawn as its neighbors are, and takes the free space along
+       * the bottom from a basis of zero: its width is then what its neighbors
+       * leave and not what its caption needs, so arming the hint lengthens the
+       * caption and moves no slot. With room it is a fixed width, wide enough
+       * for the armed caption on one line.
        *
        * It is NOT filled, deliberately: an accent control reads as advice, and
        * whether to take a hint is the player's choice. */
       :host([along="bottom"]) [part~="hint"] {
         flex: 1 1 0;
-        flex-direction: row;
-        gap: 0.375rem;
-        max-width: 12rem;
-        font-size: var(--app-font-size-body);
+        max-width: 8rem;
       }
 
       :host([roomy]) [part~="hint"] {
-        min-width: 9.5rem;
-      }
-
-      /* A key is shown where there is likely a keyboard to press it on. */
-      [part="key"] {
-        display: none;
-        font-family: var(--app-font-mono);
-        font-size: 0.625rem;
-        color: var(--app-color-text-faint);
-      }
-
-      @media (hover: hover) and (pointer: fine) {
-        :host([roomy]) [part="key"] {
-          display: inline;
-        }
+        flex: 0 0 6.5rem;
       }
     `,
   ];

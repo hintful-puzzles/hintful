@@ -101,7 +101,7 @@ export function commandList(puzzle: CommandPuzzle, gameName: string): CommandEnt
       ? command("bar", "check-and-save", "success", "Saved")
       : command("bar", "check-and-save", "check-and-save", "Check & save"),
     command("bar", "quick-load", "back-to-last-save", "Back to last save", {
-      barLabel: "Last save",
+      barLabel: "Load",
       disabled: !savedGames.hasQuickSave(puzzle.puzzleId),
     }),
     command("bar", "new-game", "new-game", "New game"),

@@ -17,6 +17,33 @@ export const cssNative = css`${unsafeCSS(cssNativeRaw)}`;
 export const cssWATweaks = css`${unsafeCSS(cssWATweaksRaw)}`;
 
 /**
+ * A `wa-button.stacked` whose content is `<span class="stack">` holding an icon
+ * and then its caption: the icon above the caption, as a slot of the puzzle
+ * screen's Bar draws them, so a control beside the board reads as one there
+ * does.
+ */
+export const cssStackedButton = css`
+  wa-button.stacked::part(base) {
+    height: auto;
+    min-height: var(--app-row-tool-phone);
+    padding-block: 0.25rem;
+  }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: var(--app-font-size-micro);
+    line-height: 1.15;
+
+    wa-icon {
+      font-size: 1.125rem;
+    }
+  }
+`;
+
+/**
  * Return the numeric value of a CSS custom property on element.
  * If defaultValue is not provided, throws an error if missing or invalid.
  * Property must be defined in CSS using a numeric @property `syntax` type

@@ -296,6 +296,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         <puzzle-bar
             along=${choice.bar}
             length=${this.barLength}
+            ?menu-first=${choice.bar === "bottom" && controlsSide === "right"}
             ?menu-open=${menuOpen}
             @puzzle-bar-fit=${this.handleBarFit}
             @puzzle-menu-toggle=${this.toggleMenu}

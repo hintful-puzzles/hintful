@@ -183,7 +183,8 @@ then saves your position if it's sound. If it isn't, it tells you how many squar
 wrong, highlights them, and **doesn't save**; the position you saved earlier is
 left exactly as it was, so a check you fail can never cost you the one you
 passed. Return to that saved position at any time with
-::back-to-last-save:: **Back to last save**, directly beneath it.
+::back-to-last-save:: **Back to last save**: it is **Load**, beside Check & save,
+where the bar has the room for it, and in the *Menu* where it has not.
 
 The check also asks the puzzle's [hint](#hints) whether there is any way on from
 here. A position can be past saving without a single square being wrong: a peg
