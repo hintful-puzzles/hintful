@@ -88,8 +88,11 @@ slot from one game to the next. A game with no hint has no Hint slot; no
 command's slot otherwise depends on the game.
 
 The Bar SHALL carry the button toggle: one slot, at the end away from the Menu
-button and set apart by a rule, whose caption says which mouse button a press
-on the board is sent as, and which swaps the two when pressed. It is a
+button and set apart by a rule, which while it is on sends a press on the
+board as the right mouse button and a long press as the left. It SHALL be a
+mode that is on or off: its caption and icon name the mode and SHALL NOT
+change with its state, and being on SHALL be shown by the slot being filled
+and reported as a pressed button. It is a
 function every game shares, and so it is on the Bar and not in the Game
 controls. It SHALL be shown by default, and a player can turn it off in
 Preferences. It SHALL be absent in a game that ignores the secondary button,
@@ -134,10 +137,9 @@ A player does not know to look in a menu for something only one game has.
 
 #### Scenario: A run of second actions by tapping
 
-- **WHEN** a player in Tracks presses the Bar's button toggle, whose caption
-  is `Left`
-- **THEN** its caption is `Right`, no other slot of the Bar has moved, and a
-  tap on the board does what a right click does
+- **WHEN** a player in Tracks presses the Bar's `Right click` slot
+- **THEN** the slot is filled and its caption is unchanged, no slot of the Bar
+  has moved, and a tap on the board does what a right click does
 - **AND** in a game that ignores the secondary button the Bar has no such
   slot
 

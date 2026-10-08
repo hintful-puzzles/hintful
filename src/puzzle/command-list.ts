@@ -104,7 +104,6 @@ export function commandList(puzzle: CommandPuzzle, gameName: string): CommandEnt
       barLabel: "Load",
       disabled: !savedGames.hasQuickSave(puzzle.puzzleId),
     }),
-    command("bar", "new-game", "new-game", "New game"),
 
     {
       kind: "help-link",
@@ -134,6 +133,10 @@ export function commandList(puzzle: CommandPuzzle, gameName: string): CommandEnt
 
     { kind: "timeline", id: "timeline", group: "board", icon: "history", label: "" },
     command("board", "restart-game", "restart-game", "Start over"),
+    // Beside Start over and not on the Bar: the two commands that put a
+    // board away are together, and neither is pressed often enough to hold a
+    // slot a thumb passes over.
+    command("board", "new-game", "new-game", "New game"),
     ...when(
       puzzle.canCheck,
       command("board", "check-only", "check-only", "Check without saving", {

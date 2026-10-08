@@ -186,8 +186,8 @@ async function homes(puzzle: FakePuzzle, barLength: number) {
 }
 
 /** The Bar lengths a window can produce for a game with a hint: the floor,
- * the whole leading run, and one between. */
-const BAR_LENGTHS = [4, 5, 6];
+ * and the whole leading run. */
+const BAR_LENGTHS = [4, 5];
 
 /**
  * Commands that are deliberately in no panel, one entry per command with the
@@ -266,7 +266,7 @@ describe("every puzzle command is in exactly one of the three panels", () => {
     const commands = list.flatMap((entry) =>
       entry.kind === "command" ? [entry.id] : [],
     );
-    expect(barCapacity(list)).toBe(6);
+    expect(barCapacity(list)).toBe(5);
 
     const found = await homes(puzzle, barLength);
     expect(found.Bar, "the Bar is the list's leading entries").toEqual(
@@ -389,7 +389,7 @@ describe("every puzzle command is in exactly one of the three panels", () => {
     // type a character are not held to it: the on-screen key panel is an input
     // surface, where the character is the label.
     const puzzle = fullyCapablePuzzle();
-    const bar = await mountBar(puzzle, 6);
+    const bar = await mountBar(puzzle, 5);
     const menu = await mountMenu(puzzle, MIN_BAR_LENGTH);
     const controls = await mountControls(puzzle);
     const unlabeled = [
@@ -397,8 +397,8 @@ describe("every puzzle command is in exactly one of the three panels", () => {
       ...(menu.shadowRoot?.querySelectorAll("[part=row]") ?? []),
       ...(controls.shadowRoot?.querySelectorAll("wa-button") ?? []),
     ].filter((el) => (el.textContent ?? "").trim() === "");
-    // Vacuity floor: six commands, the Menu button and the button toggle.
-    expect(bar.shadowRoot?.querySelectorAll("button").length).toBe(8);
+    // Vacuity floor: five commands, the Menu button and the button toggle.
+    expect(bar.shadowRoot?.querySelectorAll("button").length).toBe(7);
     expect(unlabeled.map((el) => el.outerHTML)).toEqual([]);
   });
 });
@@ -443,13 +443,13 @@ describe("what a game brings is in the Game controls, and only there", () => {
 
   it("draws the same Bar for Solo and for Tracks", async () => {
     const solo = commandsIn(
-      (await mountBar(puzzleFor("solo"), 6)).shadowRoot as ParentNode,
+      (await mountBar(puzzleFor("solo"), 5)).shadowRoot as ParentNode,
     );
     document.body.replaceChildren();
     const tracks = commandsIn(
-      (await mountBar(puzzleFor("tracks"), 6)).shadowRoot as ParentNode,
+      (await mountBar(puzzleFor("tracks"), 5)).shadowRoot as ParentNode,
     );
-    expect(solo).toHaveLength(6);
+    expect(solo).toHaveLength(5);
     expect(tracks).toEqual(solo);
   });
 
@@ -492,10 +492,12 @@ describe("what a game brings is in the Game controls, and only there", () => {
     expect(puzzleFor("tracks")["ignoresSecondaryButton"]).toBe(false);
     expect(settings.showMouseButtonToggle).toBe(true);
     const shown = await toggle(puzzleFor("tracks"));
-    expect(shown?.textContent?.trim()).toBe("Left");
+    expect(shown?.textContent?.trim()).toBe("Right click");
+    expect(shown?.getAttribute("aria-pressed")).toBe("false");
 
-    // A press asks the screen for the swap, and the caption follows the
-    // answer.
+    // A press asks the screen for the swap. The answer lights the slot and
+    // changes no word on it: a caption that named the state in force read as
+    // the opposite of what a press did.
     const bar = shown?.getRootNode() as ShadowRoot;
     const asked: boolean[] = [];
     bar.host.addEventListener("puzzle-swap-buttons", (event) =>
@@ -505,7 +507,9 @@ describe("what a game brings is in the Game controls, and only there", () => {
     expect(asked).toEqual([true]);
     (bar.host as PuzzleBar).swapButtons = true;
     await (bar.host as PuzzleBar).updateComplete;
-    expect(bar.querySelector('[part~="swap"]')?.textContent?.trim()).toBe("Right");
+    const lit = bar.querySelector('[part~="swap"]');
+    expect(lit?.getAttribute("aria-pressed")).toBe("true");
+    expect(lit?.textContent?.trim()).toBe("Right click");
 
     // A game that ignores the secondary button has nothing to swap to.
     expect(
@@ -567,7 +571,7 @@ describe("a menu inside the Menu", () => {
     for (const barLength of [0, 3, 4, 5, 6, 9]) {
       const { bar, menu } = cutCommandList(list, barLength);
       expect([...bar, ...menu]).toEqual(list);
-      expect(bar.length).toBe(Math.min(6, Math.max(MIN_BAR_LENGTH, barLength)));
+      expect(bar.length).toBe(Math.min(5, Math.max(MIN_BAR_LENGTH, barLength)));
     }
   });
 });

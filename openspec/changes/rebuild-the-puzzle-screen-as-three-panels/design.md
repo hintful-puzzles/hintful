@@ -97,9 +97,9 @@ Every command is one entry in one ordered list:
 
 | # | Group | Rows |
 | --- | --- | --- |
-| 0 | Bar (no label) | Undo · Redo · Hint · Check & save · Back to last save · New game |
+| 0 | Bar (no label) | Undo · Redo · Hint · Check & save · Back to last save |
 | 1 | Help | How to play *game* · Auto-solve for me · Show solution… |
-| 2 | Board | Move *n* of *m* (the timeline, holding Save checkpoint) · Start over · Check without saving |
+| 2 | Board | Move *n* of *m* (the timeline, holding Save checkpoint) · Start over · New game · Check without saving |
 | 3 | Share & files | Share · Open a shared game · Copy image · Save as… · Open saved… |
 | 4 | App | Switch puzzle… · Preferences · About |
 
@@ -277,14 +277,26 @@ questions are first.
   inputs should be on the panel, whereas all common functions like this should
   be on the bottom bar"). It was first built as a two-part `Left | Right`
   control in the Game controls, behind the inherited preference, which was off.
-  The preference stays and its default is now on. The caption is the button a
-  press is sent as now, `Left` or `Right`. The slot is at the end of the Bar
+  The preference stays and its default is now on. **Its caption is `Right
+  click` in both states, and on is a filled slot with `aria-pressed`.** It
+  first read `Left` or `Right` for the state in force, and the owner found
+  that "it says the opposite of what it does": every other caption on the Bar
+  names what a press does, so `Left` read as "press to go left". A UX review
+  the owner asked for gave the cause and the fix: a sticky modifier is a lit
+  key, never a relabeled one, as a Minesweeper flag button or a Sudoku notes
+  button is; and it resets on leaving the puzzle, so it is a modifier over a
+  default and not two peer modes. Passed over: `Swap` (swap what?), a `Tap:
+  Left` readout (still a word that changes, and wrong for a mouse), and a
+  two-part `Left | Right` control (a slot the 320px Bar does not have). The
+  slot is at the end of the Bar
   away from the Menu button, with a rule of its own, and is not in the command
   list: it is a mode, and the Menu has no row for it. It is absent in a game
   with `ignoresSecondaryButton`, which has nothing to swap to, and a swap is
   dropped on leaving the puzzle. It costs the Bar a slot: at 320px `Check &
-  save` wraps to two lines to keep the armed hint's caption on two, and a side
-  Bar in a 390px-high window sheds `New game` to the Menu.
+  save` wraps to two lines to keep the armed hint's caption on two.
+- **`New game` is in the Menu's Board group, after `Start over`** (the owner,
+  on the deployment, 2026-10-08: "It's just not that commonly used button in
+  my experience"). It was the Bar's sixth entry. Its `N` key is unchanged.
 - **The reference panel is a region of the grid**: beside the board, beyond
   the Game controls, in a landscape window, and under the board in a tall one.
   A short landscape window now gets it beside the board, where it took 45% of
@@ -326,6 +338,6 @@ as *Previous board*. `replaced-board.test.ts` already pins a save beside a deal
 and an id, and `help/features.md` already says "a loaded one".
 
 Whether one press of Undo straight after a Load should return the board left
-is the owner's to say. It would give Undo two meanings at one position, which
-the engine's rule exists to prevent, and it is put to the owner with this
-change.
+was the owner's to say. It would give Undo two meanings at one position, which
+the engine's rule exists to prevent. Put to the owner with the recommendation
+to leave it, they agreed (2026-10-08): it stays as played.

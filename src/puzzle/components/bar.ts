@@ -88,8 +88,8 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
   }
 
   /**
-   * The button toggle: one slot that says which mouse button a press on the
-   * board is sent as, and swaps it. It is how a tap reaches a game's second
+   * The button toggle: one slot that, while it is on, sends a press on the
+   * board as the right mouse button and a long press as the left. It is how a tap reaches a game's second
    * action without a long press. Absent in a game that ignores the secondary
    * button, which has nothing to swap to, and for a player who has turned it
    * off in Preferences.
@@ -114,7 +114,7 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
     const toggle = this.showsButtonToggle;
     // The whole leading run at its roomy width, which the toggle adds a slot
     // and a rule to.
-    this.roomy = this.along === "bottom" && extent >= (toggle ? 52 : 46) * rem;
+    this.roomy = this.along === "bottom" && extent >= (toggle ? 46 : 40) * rem;
     const length = barLengthThatFits(this.entries, extent, rem, this.along, toggle);
     if (length !== this.length) {
       this.dispatchEvent(
@@ -158,22 +158,29 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
     `;
   }
 
-  /** The caption is the button a press is sent as now, so the slot reads as
-   * a state and a press on it as the swap. */
+  /**
+   * A mode that is on or off, as a lit key: the caption and the icon name the
+   * mode and never change, and only the pressed state does. A caption that
+   * read `Left` or `Right` for the state in force sat among captions that
+   * each name what a press does, and read as the opposite of what it did.
+   */
   private renderButtonToggle() {
-    const now = this.swapButtons ? "right" : "left";
-    const next = this.swapButtons ? "left" : "right";
+    const on = this.swapButtons;
     return html`
       <button
           part="slot swap"
           type="button"
-          aria-label="A press on the board acts as the ${now} mouse button. Swap to the ${next}."
-          title="A press on the board acts as the ${now} mouse button"
-          ?data-swapped=${this.swapButtons}
+          aria-label="Right-click mode"
+          aria-pressed=${on ? "true" : "false"}
+          title=${
+            on
+              ? "Right-click mode is on: a tap or click is a right-click, and a long press is a left-click"
+              : "Right-click mode is off: a tap or click is a left-click"
+          }
           @click=${this.handleButtonToggle}
       >
-        <wa-icon name="mouse-${now}-button"></wa-icon>
-        <span part="caption">${this.swapButtons ? "Right" : "Left"}</span>
+        <wa-icon name="mouse-right-button"></wa-icon>
+        <span part="caption">Right click</span>
       </button>
     `;
   }
@@ -287,10 +294,18 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
           outline-offset: var(--wa-focus-ring-offset);
         }
 
-        &[aria-pressed="true"],
-        &[data-swapped] {
+        &[aria-pressed="true"] {
           background-color: var(--app-color-row-rule);
           border-color: var(--app-color-control-border);
+        }
+
+        /* A mode in force changes what every tap on the board does, so it is
+         * filled where an open Menu is only outlined: a player must not have
+         * to look twice to know which a tap will be. */
+        &[part~="swap"][aria-pressed="true"] {
+          background-color: var(--wa-color-brand-fill-loud);
+          border-color: var(--wa-color-brand-fill-loud);
+          color: var(--wa-color-brand-on-loud);
         }
 
         @media (hover: hover) {
