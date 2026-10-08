@@ -503,7 +503,9 @@ The squares the held number leads to, which are the nearest placed number on
 either side of it, and the row or column an edge number is dragged along SHALL
 take the collection's goal wash, in a palette slot of their own: it is told
 from a plain cell, a lifted one and the held cell in both schemes. A number
-offered on the dragged row or column and not yet placed SHALL be drawn in ink.
+offered and not yet placed, which is what a click on its square would write,
+SHALL be drawn in the collection's pencil-mark color, and in ink on the
+dragged row or column.
 
 #### Scenario: A target is told from the cells round it in the dark scheme
 
@@ -511,6 +513,12 @@ offered on the dragged row or column and not yet placed SHALL be drawn in ink.
 - **THEN** the squares it leads to are no closer in color to a plain cell, a
   lifted cell or the held cell than the collection's least distance between
   neighbors
+
+#### Scenario: An offered number is read on a dark cell
+
+- **WHEN** a number is held on a board in the dark scheme
+- **THEN** the numbers offered round it are drawn in the color a pencil mark
+  has in every other entry game, and not in the bevel's gray
 
 #### Scenario: A given is told by the cell under it
 
@@ -521,8 +529,8 @@ offered on the dragged row or column and not yet placed SHALL be drawn in ink.
 #### Scenario: The grid is quiet in every mode
 
 - **WHEN** a rectangular board and a hexagonal board are drawn
-- **THEN** each cell's outline, four-sided or six-sided, is the surface's grid
-  line
+- **THEN** each cell's outline, four-sided, eight-sided or six-sided, is the
+  surface's grid line
 
 #### Scenario: The board's own path reads on both surfaces
 
