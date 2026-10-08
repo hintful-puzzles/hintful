@@ -497,8 +497,20 @@ on a disc of its cell's surface, and an end's disc over the line into it, so no
 line runs under a digit. The path the player draws SHALL keep the
 entry color. The cell the player holds, types into or has selected SHALL take
 the collection's selection wash, which is told from a plain cell and a lifted
-one in both schemes. The washes that mark a dragged row or column and the next
-target SHALL each replace the cell's surface as before.
+one in both schemes.
+
+The squares the held number leads to, which are the nearest placed number on
+either side of it, and the row or column an edge number is dragged along SHALL
+take the collection's goal wash, in a palette slot of their own: it is told
+from a plain cell, a lifted one and the held cell in both schemes. A number
+offered on the dragged row or column and not yet placed SHALL be drawn in ink.
+
+#### Scenario: A target is told from the cells round it in the dark scheme
+
+- **WHEN** a number is held on a board in the dark scheme
+- **THEN** the squares it leads to are no closer in color to a plain cell, a
+  lifted cell or the held cell than the collection's least distance between
+  neighbors
 
 #### Scenario: A given is told by the cell under it
 
