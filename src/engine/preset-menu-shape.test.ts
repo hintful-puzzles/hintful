@@ -75,20 +75,9 @@ describe("a section of a menu is short enough to read", () => {
   });
 });
 
-/**
- * Games whose whole menu is longer than `MENU_LINES`, with what fills it. They
- * were over when the cap was set (owner, 2026-10-08) and are the owner's to
- * trim; the check holds the list exact, so an entry leaves with its lines.
- */
-const MENUS_OVER: Record<string, string> = {
-  loopy: "its squares at every tier, and a line for each other tiling",
-  unequal: "two rulesets, each a grid of sizes and tiers",
-};
-
 describe("a whole menu is short enough to choose from", () => {
-  it("holds every game to the cap, or names it", () => {
-    const over = ids.filter((id) => leafPresets(game(id)).length > MENU_LINES);
-    expect(over.sort()).toEqual(Object.keys(MENUS_OVER).sort());
+  it.each(ids)("%s", (id) => {
+    expect(leafPresets(game(id)).length).toBeLessThanOrEqual(MENU_LINES);
   });
 });
 

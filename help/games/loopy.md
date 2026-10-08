@@ -13,7 +13,7 @@ line"*, meaning the loop has no choice but to run along it, or *"this edge can't
 be a line"*, meaning it must run somewhere else.
 
 When you have mastered the square grid, look in the Type menu for
-many other types of tiling!
+many other types of tiling, and in its Custom type for more still!
 
 ## Controls
 

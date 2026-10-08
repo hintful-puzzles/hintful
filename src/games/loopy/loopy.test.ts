@@ -712,13 +712,13 @@ describe("presets", () => {
       for (const c of m.submenu ?? []) walk(c);
     };
     walk(presetMenu(loopyGame));
-    expect(leaves.length).toBeGreaterThanOrEqual(20);
+    expect(leaves.length).toBeGreaterThanOrEqual(15);
     const nonSquare = leaves.filter(({ params: p }) => p.w !== p.h);
     expect(nonSquare.length).toBeGreaterThan(0);
     for (const { title, params: p } of leaves)
       expect(title.startsWith(`${p.w}x${p.h} `)).toBe(true);
     expect(leaves[0]?.title).toBe("7x7 Squares Easy");
-    expect(leaves.map((l) => l.title)).toContain("10x10 Penrose (rhombs) Hard");
+    expect(leaves.map((l) => l.title)).toContain("10x10 Penrose (kite/dart) Hard");
   });
 });
 

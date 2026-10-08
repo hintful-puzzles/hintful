@@ -307,7 +307,7 @@ ruleset. **A field that changes which squares are neighbors is a ruleset, not
 a kind** (owner, 2026-10-08): Ascent's Orthogonal, Hex and Classic are told
 apart by four, six and eight neighbors, and its Honeycomb and Hexagon are two
 kinds of Hex board. **Rulesets are declared easiest to learn first**, which is
-the order of the menu's sections, and the game's default is the first line.
+the order of the menu's sections.
 **A ruleset need not be a params field of its own**: Ascent keeps one `mode`,
 and its ruleset and board-shape items read and write that one value between
 them.
@@ -375,8 +375,8 @@ the shape off every game's menu, whether or not the game calls the builder:
 - **A whole menu holds at most eighteen lines** (`MENU_LINES`; owner,
   2026-10-08), however many rulesets share it. Four sections of two boards
   each read as a wall, so a game with several rulesets offers one board of
-  each and leaves the other sizes to the Custom dialog (Ascent). The games
-  over the cap when it was set are in the test's `MENUS_OVER`.
+  each and leaves the other sizes to the Custom dialog (Ascent), and a game
+  with many kinds of board offers one of each family (Loopy's tilings).
 - **A section holds at most twelve lines** (`MENU_SECTION_LINES`). A game
   trades sizes against tiers to fit: three sizes at four tiers, or four at
   three. A section with one line for each kind of board (Loopy's tilings,

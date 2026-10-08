@@ -220,21 +220,17 @@ const PRESETS_TOP: LoopyParams[] = [
 ];
 
 // A tiling that cannot turn has sizes of its own that draw taller than wide,
-// chosen to keep the drawn area of upstream's landscape preset.
+// chosen to keep the drawn area of upstream's landscape preset. The whole
+// menu's length leaves room for six: one of each family, so Penrose (rhombs),
+// Spectres, Great-Hexagonal, Kagome and the three larger dodecagonal tilings
+// are the Custom dialog's.
 const PRESETS_MORE: LoopyParams[] = [
   preset(10, 10, DIFF_HARD, 11), // Penrose (kite/dart)
-  preset(10, 10, DIFF_HARD, 12), // Penrose (rhombs)
   preset(10, 10, DIFF_HARD, 2), // Honeycomb
-  preset(4, 5, DIFF_HARD, 5), // Great-Hexagonal
-  preset(3, 6, DIFF_HARD, 14), // Kagome
   preset(7, 7, DIFF_HARD, 6), // Octagonal
   preset(5, 5, DIFF_HARD, 8), // Floret
   preset(3, 6, DIFF_HARD, 9), // Dodecagonal
-  preset(3, 6, DIFF_HARD, 10), // Great-Dodecagonal
-  preset(3, 5, DIFF_HARD, 13), // Great-Great-Dodecagonal
-  preset(4, 5, DIFF_HARD, 15), // Compass-Dodecagonal
   preset(9, 11, DIFF_HARD, 16), // Hats
-  preset(10, 10, DIFF_HARD, 17), // Spectres
 ];
 
 /** `Game.transposeParams`: a tiling that turns (`LOOPY_GRIDS`' `turns`) is dealt

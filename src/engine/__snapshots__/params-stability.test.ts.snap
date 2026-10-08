@@ -279,18 +279,11 @@ preset:Loopy/7x7 Snub-Square Hard  full=7x7t3dh  brief=7x7t3
 preset:Loopy/9x9 Cairo Hard  full=9x9t4dh  brief=9x9t4
 preset:Loopy/4x6 Kites Hard  full=4x6t7dh  brief=4x6t7
 preset:Loopy/More.../10x10 Penrose (kite/dart) Hard  full=10x10t11dh  brief=10x10t11
-preset:Loopy/More.../10x10 Penrose (rhombs) Hard  full=10x10t12dh  brief=10x10t12
 preset:Loopy/More.../10x10 Honeycomb Hard  full=10x10t2dh  brief=10x10t2
-preset:Loopy/More.../4x5 Great-Hexagonal Hard  full=4x5t5dh  brief=4x5t5
-preset:Loopy/More.../3x6 Kagome Hard  full=3x6t14dh  brief=3x6t14
 preset:Loopy/More.../7x7 Octagonal Hard  full=7x7t6dh  brief=7x7t6
 preset:Loopy/More.../5x5 Floret Hard  full=5x5t8dh  brief=5x5t8
 preset:Loopy/More.../3x6 Dodecagonal Hard  full=3x6t9dh  brief=3x6t9
-preset:Loopy/More.../3x6 Great-Dodecagonal Hard  full=3x6t10dh  brief=3x6t10
-preset:Loopy/More.../3x5 Great-Great-Dodecagonal Hard  full=3x5t13dh  brief=3x5t13
-preset:Loopy/More.../4x5 Compass-Dodecagonal Hard  full=4x5t15dh  brief=4x5t15
 preset:Loopy/More.../9x11 Hats Hard  full=9x11t16dh  brief=9x11t16
-preset:Loopy/More.../10x10 Spectres Hard  full=10x10t17dh  brief=10x10t17
 bump:w  full=11x10t0de  brief=11x10t0
 bump:h  full=10x11t0de  brief=10x11t0
 bump:type  full=10x10t1de  brief=10x10t1"
@@ -747,10 +740,6 @@ preset:Unequal/Unequal/Unequal: 5x5 Easy  full=5dt  brief=5
 preset:Unequal/Unequal/Unequal: 5x5 Normal  full=5de  brief=5
 preset:Unequal/Unequal/Unequal: 5x5 Tricky  full=5dk  brief=5
 preset:Unequal/Unequal/Unequal: 5x5 Hard  full=5dx  brief=5
-preset:Unequal/Unequal/Unequal: 6x6 Easy  full=6dt  brief=6
-preset:Unequal/Unequal/Unequal: 6x6 Normal  full=6de  brief=6
-preset:Unequal/Unequal/Unequal: 6x6 Tricky  full=6dk  brief=6
-preset:Unequal/Unequal/Unequal: 6x6 Hard  full=6dx  brief=6
 preset:Unequal/Unequal/Unequal: 7x7 Tricky  full=7dk  brief=7
 preset:Unequal/Unequal/Unequal: 7x7 Hard  full=7dx  brief=7
 preset:Unequal/Unequal/Unequal: 7x7 Unreasonable  full=7dr  brief=7
@@ -758,10 +747,6 @@ preset:Unequal/Adjacent/Adjacent: 5x5 Easy  full=5adt  brief=5a
 preset:Unequal/Adjacent/Adjacent: 5x5 Normal  full=5ade  brief=5a
 preset:Unequal/Adjacent/Adjacent: 5x5 Tricky  full=5adk  brief=5a
 preset:Unequal/Adjacent/Adjacent: 5x5 Hard  full=5adx  brief=5a
-preset:Unequal/Adjacent/Adjacent: 6x6 Easy  full=6adt  brief=6a
-preset:Unequal/Adjacent/Adjacent: 6x6 Normal  full=6ade  brief=6a
-preset:Unequal/Adjacent/Adjacent: 6x6 Tricky  full=6adk  brief=6a
-preset:Unequal/Adjacent/Adjacent: 6x6 Hard  full=6adx  brief=6a
 preset:Unequal/Adjacent/Adjacent: 7x7 Tricky  full=7adk  brief=7a
 preset:Unequal/Adjacent/Adjacent: 7x7 Hard  full=7adx  brief=7a
 preset:Unequal/Adjacent/Adjacent: 7x7 Unreasonable  full=7adr  brief=7a

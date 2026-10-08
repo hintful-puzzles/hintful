@@ -61,6 +61,7 @@ import {
   DIFF_MAX,
   encodeParams,
   gridTypeOf,
+  LOOPY_GRIDS,
   type LoopyParams,
   presets,
 } from "./params.ts";
@@ -144,11 +145,24 @@ function walkCoverage(grid: Grid): { edges: Set<number>; dots: Set<number> } {
 }
 
 describe("walking covers every edge, and aiming covers the rest (design D5)", () => {
-  const presetList = allPresets();
+  // The menu's boards, and a board of each tiling the menu leaves to the
+  // Custom dialog, at the size upstream offered it.
+  const offMenu: LoopyParams[] = [
+    { w: 10, h: 10, diff: 3, type: 12 }, // Penrose (rhombs)
+    { w: 4, h: 5, diff: 3, type: 5 }, // Great-Hexagonal
+    { w: 3, h: 6, diff: 3, type: 14 }, // Kagome
+    { w: 3, h: 6, diff: 3, type: 10 }, // Great-Dodecagonal
+    { w: 3, h: 5, diff: 3, type: 13 }, // Great-Great-Dodecagonal
+    { w: 4, h: 5, diff: 3, type: 15 }, // Compass-Dodecagonal
+    { w: 10, h: 10, diff: 3, type: 17 }, // Spectres
+  ];
+  const presetList = [...allPresets(), ...offMenu];
 
-  it("sees every preset", () => {
-    expect(presetList).toHaveLength(leafPresets(loopyGame).length);
-    expect(presetList.length).toBeGreaterThan(20);
+  it("sees every preset, and every tiling", () => {
+    expect(allPresets()).toHaveLength(leafPresets(loopyGame).length);
+    expect(new Set(presetList.map((p) => p.type)).size).toBe(LOOPY_GRIDS.length);
+    for (const p of offMenu)
+      expect(allPresets().some((q) => q.type === p.type)).toBe(false);
   });
 
   for (const [i, p] of presetList.entries()) {

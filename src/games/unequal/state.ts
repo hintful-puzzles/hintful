@@ -130,16 +130,15 @@ const row = (order: number, mode: Mode, first: Difficulty, last: Difficulty) =>
   );
 
 /**
- * Each mode as a grid of sizes by tiers. Every cell deals in a fraction of a
- * second, so the corners are cut only to keep a section to twelve lines.
+ * Each mode as a small board at the lower tiers and a large one at the upper.
+ * Every cell deals in a fraction of a second: 6x6 is left to the Custom
+ * dialog only to keep the two modes' menu short.
  */
 export const PRESETS: UnequalParams[] = [
   ...row(4, "unequal", "trivial", "trivial"),
   ...row(5, "unequal", "trivial", "extreme"),
-  ...row(6, "unequal", "trivial", "extreme"),
   ...row(7, "unequal", "tricky", "recursive"),
   ...row(5, "adjacent", "trivial", "extreme"),
-  ...row(6, "adjacent", "trivial", "extreme"),
   ...row(7, "adjacent", "tricky", "recursive"),
 ];
 
