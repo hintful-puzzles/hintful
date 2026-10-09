@@ -603,9 +603,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     let floor = 0;
     if (ambiguous.length < 2) {
       const stated = tierOf(this.game, params);
-      if (permitsSearch(this.game, params)) return params;
-      if (solve(stated) === "solved") return params;
-      floor = stated + 1;
+      // A retired choice pins nothing: it is no tier a board can be at, and
+      // has no name for the hint to read, so the board is graded outright.
+      if (stated < tiers) {
+        if (permitsSearch(this.game, params)) return params;
+        if (solve(stated) === "solved") return params;
+        floor = stated + 1;
+      }
     }
     const tier = lowestSolvingCap(
       (cap) => (cap < floor ? "unsolved" : solve(cap)),

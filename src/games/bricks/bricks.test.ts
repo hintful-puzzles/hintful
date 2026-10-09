@@ -419,6 +419,25 @@ describe("bricks generator", () => {
   });
 });
 
+// A game ID or a save written while upstream's Tricky was a tier carries `dt`.
+// The tier is retired and has no name, so a board left at it is one the midend
+// takes to permit no search, and its hint throws where it should say that
+// deduction has run out.
+describe("a bricks board loaded under the retired tier letter", () => {
+  it.each([
+    "6x7de",
+    "6x7dn",
+  ])("takes the tier it needs, as a %s board does", (dealt) => {
+    const { desc } = newBricksDesc(
+      decodeParams(dealt),
+      randomNew(`bricks-retired-${dealt}`),
+    );
+    const m = new Midend(bricksGame);
+    expect(m.newGameFromId(`6x7dt:${desc}`)).toBeNull();
+    expect(m.getParams()).toBe(dealt);
+  });
+});
+
 describe("bricks rendering (tier 2.5)", () => {
   it("draws the opening frame with clue numbers", () => {
     const result = renderScenario({ game: bricksGame, id: FIX_ID });
