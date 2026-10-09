@@ -11,22 +11,11 @@ a symbol, such as an empty square, that may repeat in a line.
 ### Requirement: Shared generic Latin-square solver
 
 The engine SHALL provide a generic Latin-square solver in
-`src/engine/latin.ts`, the idiomatic-TS port of upstream `latin.c`'s
-solver framework, for reuse by every Latin-square game (Towers first; Solo,
-Unequal, Keen, Group later). It SHALL expose a `latinSolver(grid, o, maxdiff,
-diffSimple, diffSet0, diffSet1, diffForcing, diffRecursive, usersolvers, valid,
-ctx)` entry point that, given an `o × o` grid (0 = blank) seeded with a game's
-fixed cells, applies — up to `maxdiff` — positional and numeric elimination,
-row/column set elimination, single-number set elimination, forcing chains, and
-guess-and-verify recursion, interleaved with the game's own `usersolvers` at
-their declared difficulty levels and validated by the game's `valid` callback.
-It SHALL write the solved grid back in place and return the difficulty level at
-which it solved, or the numeric sentinels `DIFF_IMPOSSIBLE` (10),
-`DIFF_AMBIGUOUS` (11), or `DIFF_UNFINISHED` (12). The candidate cube SHALL be
-indexed `(x·o + y)·symbols + (n−1)`, where `symbols` is the number of distinct
-values — `o` for a Latin square, which is upstream's `cubepos` exactly, and
-`o − times + 1` when a symbol is declared to repeat `times` per line (see "The
-Latin cube supports a symbol that may repeat in a line").
+`src/engine/latin.ts`, for reuse by every Latin-square game. It SHALL expose a
+`latinSolver(grid, o, cfg)` entry point that takes an `o × o` grid (0 = blank)
+seeded with a game's fixed cells, and a configuration carrying `maxdiff`,
+`diffSimple`, `diffSet0`, `diffSet1`, `diffForcing`, `diffRecursive`,
+`usersolvers`, `valid` and `ctx`.
 
 #### Scenario: Solves a uniquely-determined board
 
@@ -35,11 +24,13 @@ Latin cube supports a symbol that may repeat in a line").
 - **THEN** it returns a non-sentinel difficulty
 - **AND** the grid is written back as a valid Latin square
 
-#### Scenario: Reports ambiguity
+### Requirement: The solver applies the generic deductions up to the difficulty ceiling
 
-- **WHEN** `latinSolver` runs with recursion on a board with more than one
-  completion
-- **THEN** it returns `DIFF_AMBIGUOUS`
+`latinSolver` SHALL apply, up to `maxdiff`, positional and numeric elimination,
+row and column set elimination, single-number set elimination, forcing chains,
+and guess-and-verify recursion. These SHALL be interleaved with the game's own
+`usersolvers` at their declared difficulty levels and validated by the game's
+`valid` callback.
 
 #### Scenario: Respects the difficulty ceiling
 
@@ -47,17 +38,39 @@ Latin cube supports a symbol that may repeat in a line").
   permitted
 - **THEN** `latinSolver` returns `DIFF_UNFINISHED` rather than guessing
 
+### Requirement: The solver writes the grid back and returns a difficulty or a sentinel
+
+`latinSolver` SHALL write the solved grid back in place and return the
+difficulty level at which it solved, or one of the numeric sentinels
+`DIFF_IMPOSSIBLE` (10), `DIFF_AMBIGUOUS` (11) and `DIFF_UNFINISHED` (12).
+
+#### Scenario: Reports ambiguity
+
+- **WHEN** `latinSolver` runs with recursion on a board with more than one
+  completion
+- **THEN** it returns `DIFF_AMBIGUOUS`
+
+### Requirement: The candidate cube is indexed by cell and then by symbol
+
+The candidate cube SHALL be indexed `(x·o + y)·symbols + (n−1)`, where
+`symbols` is the number of distinct values: `o` for a Latin square, and
+`o − times + 1` when a symbol is declared to repeat `times` per line (see "The
+Latin cube supports a symbol that may repeat in a line").
+
+#### Scenario: A repeated symbol narrows the cube
+
+- **WHEN** a solver of order `o` is built with a symbol declared to repeat
+  `times` per line
+- **THEN** each cell has `o − times + 1` candidates in the cube, and the
+  candidates of one cell are adjacent in it
+
 ### Requirement: The Latin cube supports a symbol that may repeat in a line
 
-The shared Latin-square solver SHALL support puzzles in which one declared symbol
-may appear a stated number of times in each row and column, rather than exactly
-once. This is what a *pseudo*-Latin puzzle needs — Salad's empty square is such a
-symbol — and expressing it in the cube is what allows deduction techniques to be
-written about it.
-
-The support SHALL be opt-in, and SHALL be inert when not requested: a puzzle that
-declares no repeatable symbol SHALL produce exactly the deductions, in exactly the
-order, that it produces without the support.
+The shared Latin-square solver SHALL support puzzles in which one declared
+symbol may appear a stated number of times in each row and column, rather than
+exactly once, and SHALL express it in the cube, so that deduction techniques can be written about it. The support SHALL be opt-in, and SHALL be inert when
+not requested: a puzzle that declares no repeatable symbol SHALL produce exactly
+the deductions, in exactly the order, that it produces without the support.
 
 #### Scenario: A pseudo-Latin puzzle is expressed directly
 
@@ -74,10 +87,10 @@ order, that it produces without the support.
 ### Requirement: The engine provides a shared, seeded Latin-square generator
 
 The engine SHALL provide, in `src/engine/latin.ts`, the Latin-square
-generator promoted from the Singles port: `matching` (randomized
-bipartite matching), `latinGenerate(o, rng)`, and `latinGenerateRect(w, h, rng)`.
-Given the same random state they SHALL produce the same square, so a seeded game
-ID keeps its board. Singles SHALL consume the shared implementation.
+generator: `matching` (randomized bipartite matching), `latinGenerate(o, rng)`,
+and `latinGenerateRect(w, h, rng)`. Given the same random state they SHALL
+produce the same square, so a seeded game ID keeps its board. Singles SHALL
+consume the shared implementation.
 
 #### Scenario: Generated square is Latin and deterministic per seed
 

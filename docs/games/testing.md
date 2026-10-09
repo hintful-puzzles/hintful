@@ -561,7 +561,7 @@ violating them:
   process on the same seeds. Re-measure outside the runner before designing a
   fix for a "slow" generator.
 
-Normative: the `repo-layout` "deterministic under parallel load" requirement.
+Normative: `repo-layout`, "The test suite is deterministic under parallel load".
 "Contention on work that terminates" is a complete diagnosis and its fix is
 removing the clock gate — reach for the other causes (shared state, order
 dependence, non-termination) only when evidence points there; re-run the file

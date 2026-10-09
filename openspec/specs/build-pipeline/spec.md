@@ -2,60 +2,40 @@
 
 ## Purpose
 
-**How this repository decides that a tree is fit to commit, publish and run —
-and what that decision is allowed to cost.**
-
-It governs the gate — defined by `scripts/gate.sh`, which gives the reason
-for each step in a comment — which runs identically in the
-pre-commit hook and in CI; the rule that no correctness check may be dropped or
-weakened to buy speed, and the narrow scopings that are permitted instead; how a
-test earns its place on the per-commit path, and how one is retired or deferred
-by measurement rather than by category; the on-demand instruments that are
-deliberately *not* gates (`npm run metrics`, `npm run probe`, `npm run diff`) and
-must never be ratcheted; the build's independence from any native toolchain; and
-the deploy, which publishes the gate's own artifact and is verified against the
-deployed origin rather than against `dist/`.
-
-Two things it deliberately does not govern: which *individual* tests a commit
-runs (see the gate requirement — graph-based selection is unproven against this
-repo's glob-based cross-game guards and is not authorized), and what any single
-test asserts, which belongs to the capability spec that test serves.
+How this repository decides that a tree is fit to commit, publish and run, and
+what that decision is allowed to cost: the gate that `scripts/gate.sh` defines
+and that the pre-commit hook and CI both run; the rule that no correctness
+check is dropped or weakened to buy speed, and the scopings by role permitted
+instead; how a test earns its place on the per-commit path, and how one is
+retired or deferred by measurement and not by category; the on-demand
+instruments that are not gates and are never ratcheted (`npm run metrics`,
+`npm run probe`, `npm run diff`); the build's
+independence from any native toolchain; and the deploy, which publishes the
+gate's own artifact and is verified against the deployed origin. What any
+single test asserts belongs to the capability that test serves.
 
 ## Requirements
 
 ### Requirement: Continuous integration runs the full gate on push to main
 
 The repository SHALL provide a GitHub Actions workflow that, on every push to
-`main`, runs the same gate as the husky pre-commit hook — `npm run gate`, whose
-steps are defined by `scripts/gate.sh` and are not restated here (see the
-gate requirement below for why).
-
-The gate SHALL require **no generated assets**. This reverses the original
-requirement, which stated there was "no valid asset-free CI tier (a no-asset job
-fails at `tsc -b`)" — true only while `src/puzzle/{catalog,types,worker}.ts`
-imported artifacts produced by the Emscripten build. Since `retire-c-engine` the
-catalog is committed source and the types are hand-authored, so a clean checkout
-type-checks, tests and builds with nothing generated. The workflow SHALL NOT
-provision a wasm toolchain, and SHALL NOT cache generated assets to make the
-gate viable.
-
-**The workflow SHALL provision no native tool at all.** It previously carried an
-apt install of halibut and a `npm run build:assets` step, on the reasoning that
-the manual was the only generated asset left and building it was the only thing
-exercising `scripts/build-manual.sh` and vite's manual-page rendering path. Both
-the script and that rendering path are deleted with the manual, so the coverage
-argument has no subject: the job is `npm ci` and the gate.
-
-The project is trunk-based (no pull-request flow), so the gate runs post-push on
-`main` rather than pre-merge; a `pull_request` trigger MAY be added later if a
-contributor PR flow is adopted. This closes the single-point-of-failure gap where
-the pre-commit hook was the only gate (a `--no-verify` commit or a clone whose
-hooks never installed could land breakage on `main` undetected).
+`main`, runs the same gate as the husky pre-commit hook: `npm run gate`, whose
+steps `scripts/gate.sh` defines. The project is trunk-based, with no
+pull-request flow, so the gate runs after the push and not before a merge, and
+it is what catches a `--no-verify` commit or a clone whose hooks never
+installed.
 
 #### Scenario: A push to main is gated
 
 - **WHEN** a commit is pushed to `main` (including one made with `--no-verify`)
 - **THEN** the workflow runs `npm run gate` and fails the run on any gate failure
+
+### Requirement: The gate needs no generated asset, and CI provisions no native tool
+
+The gate SHALL require no generated assets: a clean checkout type-checks, tests
+and builds with nothing generated. The workflow SHALL NOT provision a wasm
+toolchain or any other native tool, and SHALL NOT cache generated assets to
+make the gate viable. The job is `npm ci` and the gate.
 
 #### Scenario: The gate runs without generated assets
 
@@ -71,157 +51,24 @@ hooks never installed could land breakage on `main` undetected).
 
 ### Requirement: The pre-commit gate minimizes wall-clock without dropping checks
 
-The pre-commit gate SHALL run **every check `scripts/gate.sh` defines** and block
-a commit on any failure — with the single documentation-only exception scoped
-below — while being orchestrated to reduce wall-clock: the cheap checks run first
-as a fail-fast prefix, cheapest first, so a type, lint, formatting or guard
-failure costs seconds rather than the whole gate; and the two heavy,
-mutually-independent checks (`vitest run` and `vite build`, which share no inputs
-or outputs) SHALL run **concurrently**, making the gate's wall-clock
-~max(vitest, build) rather than their sum.
+The pre-commit gate SHALL run every check `scripts/gate.sh` defines and SHALL
+block a commit on any failure, except as the scopings by role in this spec
+permit. The cheap checks SHALL run first as a fail-fast prefix, cheapest first,
+so that a type, lint, formatting or guard failure costs seconds and not the
+whole gate.
 
-**This requirement deliberately does not list the checks, and the reason is that
-it used to.** It read "SHALL run all six checks (`tsc -b --noEmit`, biome,
-`npm run probe -- --verify`, the spelling guard, `vitest run`, `vite build`)" —
-a bare count in the present tense, which `docs/method.md` calls a census
-nobody re-runs. By 2026-09-09 the gate ran eleven, the named compiler had been
-replaced by `tsgo` thirty-five days earlier, and four more prose copies of the
-same list elsewhere in the tree had each rotted differently. **The list has one
-definition (`scripts/gate.sh`, which carries the per-step rationale in its
-comments); a spec states the gate's
-properties instead.**
+#### Scenario: A cheap check fails
 
-Membership is therefore normative *per check*: a guard belongs in the gate
-because its own capability requirement says so, and this requirement says only
-that the gate runs all of them, fails closed, and is ordered fast-first. That is
-also what stops a check being quietly dropped — deleting one now contradicts the
-requirement that introduced it, rather than a count in a neighbor's prose.
+- **WHEN** a commit stages a type error
+- **THEN** the gate fails in its prefix, before `vitest run` or `vite build`
+  start, and the commit is blocked
 
-The probe-anchor check (`scripts/feedback-probe.mjs --verify`, **0.02–0.03 s**
-user CPU measured over three runs — `npm run probe -- --verify` is ~0.2 s, which
-is npm's own overhead, so the gate invokes node directly) verifies
-that every case in the local-feedback corpus still **applies** — its anchor is
-present and unique in the module it names. It runs no tests and asserts nothing
-about the corpus's *result*.
+### Requirement: The two heavy checks run concurrently, whatever the machine load
 
-That distinction is the whole of it, and it is load-bearing in both directions:
-
-- The corpus is built from verbatim excerpts of engine source, so a refactor of
-  a probed line silently stops the case matching. The harness then measures a
-  smaller corpus and **reports success**, which reads exactly like health. The
-  full run is ~20 minutes and deliberately outside the gate, so nothing else
-  would notice.
-- The probe's **rate** SHALL NOT be gated or ratcheted. A gated feedback number
-  invites tests written against the number rather than against behavior, which
-  the `repo-layout` requirement it serves explicitly forbids. A survivor is a
-  finding to read; only a case that no longer applies is a failure.
-
-The spelling guard (`scripts/checks/spelling.mjs`, ~1 s) scans every tracked
-file outside the record and other people's words for a British stem, per the
-`repo-layout` spelling requirement. It SHALL run in the fast prefix, ahead of
-the documentation-only shortcut, because the shortcut skips `vitest run` and a
-test may not read `docs/` or `openspec/` at all — so a vitest guard would be
-blind to exactly the commits most likely to reintroduce a British spelling.
-
-The gate's biome step SHALL check formatting and import order as well as lint
-rules (the read-only form of `biome check`), so a file that is lint-clean but
-unformatted cannot be committed. Gating only `biome lint` left the tree
-lint-clean but never format-clean, so the first `biome check --write` run
-reformatted ~150 unrelated files and buried the real diff; the fixer command
-(`npm run check`) is not a substitute, because nothing requires it to be run.
-
-The biome step SHALL be scoped by role, since a commit can only make a file
-unformatted by touching it:
-
-- The **automatic per-commit hook** SHALL check only the staged files
-  (`biome check --staged`), so it inspects exactly the files the commit
-  introduces and does no redundant work on an already-clean tree.
-- **CI and the manual `npm run gate`** SHALL check the whole tree (`biome ci`)
-  as the backstop. This is deliberate and SHALL NOT be scoped down: CI is the
-  only gate a `--no-verify` commit passes through, and the whole-tree pass is
-  also what forces a tree-wide reformat when biome itself is upgraded and
-  restyles files no single commit touched.
-
-**The heavy checks SHALL likewise be scoped by role, and only for a commit that
-cannot affect them.** The automatic per-commit hook MAY skip `vitest run` and
-`vite build` when **every** staged path is documentation that is neither a test
-input nor a build input; one staged path outside that set SHALL run the whole
-gate. CI and a manual `npm run gate` SHALL run everything, so the branch's
-guarantee is unchanged — the same backstop argument as the biome scope, and
-permitted for the same reason.
-
-The set of skippable paths SHALL be asserted rather than assumed: a test SHALL
-fail if any test, source or build-side module acquires a **read** of a path in
-that set, so the exception stops being safe *and says so* rather than silently
-skipping a check that has become real. That assertion SHALL key on the shape of
-a read and not on the paths' names, since this repo's documentation is cited in
-prose throughout its sources. `help/` SHALL NOT be skippable: it is a
-`vite build` input and `help-coverage.test.ts`'s subject.
-
-Selecting *individual tests* by what a commit changed is a different question
-and is NOT authorized by this requirement. The cross-game guards here reach
-their subjects through `import.meta.glob(..., "?raw")` rather than through
-imports, so a graph-based selection may omit exactly the guards that exist to
-catch a change to one game. Such a scheme SHALL first demonstrate that its
-selection reaches those guards.
-
-**An individual assertion MAY defer to the push-time backstop, under all four
-of the conditions below.** This is the third scoping by role and the narrowest;
-it exists because a guard's cost can land on every commit while its subject is
-*decay* rather than the code being committed. All four SHALL hold:
-
-1. **It checks decay, not the commit's own code.** The half of a guard that
-   catches what the author just wrote SHALL stay on the per-commit path. Only a
-   check of whether something has *stopped* being true may defer.
-2. **A push-time backstop actually runs it.** CI SHALL run it on every push to
-   `main`, which means it is selected by the role toggle the hook sets and by
-   nothing else. Deferring into a tier that runs only on request is the slow
-   tier's business and is governed by its own requirement.
-3. **It is reported as skipped, never silently passed.** A deferred assertion
-   SHALL be skipped at the runner level, so a run that did not check it says so.
-   An assertion left to pass over a sample it could not take is the failure this
-   repository punishes hardest.
-4. **The backstop is asserted by a test.** A test SHALL fail if the role toggle
-   is ever set in CI, or if the hook stops setting it — because the failure
-   otherwise is silent in the worst direction: set it in both places and the
-   deferred assertions run **nowhere**, while both runs report green.
-
-Where an assertion's verdict depends on expensive work elsewhere in its file,
-that work and the assertion SHALL defer **together**: running the assertion
-against a walk narrowed beneath it makes it report a finding it has not
-measured.
-
-No correctness check may be removed or weakened to buy speed, and none may be
-moved off the per-commit path except by a scoping-by-role that keeps the
-push-time backstop intact — scoping the hook to staged files is not a
-weakening, because the whole-tree backstop in CI and `npm run gate` still
-guarantees nothing unformatted survives on `main`, and the same argument, under
-the four conditions above, is what permits an individual assertion to defer.
-`vite build` SHALL remain in the gate (it is the only
-step that exercises the production build, where two prod-only regressions have
-shipped undetected). Any vitest pool/isolation tuning adopted to reduce per-file
-module-load overhead SHALL preserve the `repo-layout` requirement that "the test
-suite is deterministic under parallel load" — verified by a green full run
-repeated under the new configuration (including under file-order shuffle, which
-stresses the shared-module-state that non-isolated pools expose) — or be
-reverted.
-
-The gate SHALL NOT make its concurrency conditional on machine load. It once
-probed the 1-minute load average and serialized on a busy box, because
-oversubscription starved timeout-bound tests past their per-test deadlines. That
-rationale was retired with the per-test timeouts themselves (one 600s ceiling in
-`vitest.config.ts`, no per-test timeouts), so contention now makes a test
-*slower*, never *failed* — and the probe only cost time, reading "busy" on a
-deliberately-loaded box and putting the build on the critical path against a
-danger that no longer exists. Reliability remains the gate's first duty; it is
-bought by not gating tests on the clock rather than by hoarding cores.
-
-The gate's orchestration SHALL live in a single script (`scripts/gate.sh`)
-invoked by both `.husky/pre-commit` and `npm run gate`, so the hook and the
-manual command cannot drift; the per-commit-vs-backstop biome scope is selected
-by an environment toggle the hook sets, not by a second copy of the gate. That
-same toggle SHALL be the only signal an individual deferred assertion reads, so
-there is one name for one idea rather than a second switch to keep in step.
+`vitest run` and `vite build` share no inputs or outputs and SHALL run
+concurrently, so the gate's wall-clock is the longer of the two and not their
+sum. The gate SHALL fail if either fails. The gate SHALL NOT make that
+concurrency conditional on machine load.
 
 #### Scenario: The independent heavy steps run concurrently
 
@@ -231,14 +78,97 @@ there is one name for one idea rather than a second switch to keep in step.
 - **AND** the commit is rejected if either the tests or the production build
   fails
 
+### Requirement: The gate's checks are listed in one place
+
+The list of the gate's checks SHALL have one definition, `scripts/gate.sh`,
+which carries the reason for each step in a comment. A spec SHALL state the
+gate's properties and SHALL NOT restate the list. Membership is normative per
+check: a guard belongs in the gate because its own capability requirement says
+so, and this capability says only that the gate runs all of them, fails closed
+and is ordered fast-first. Deleting a check therefore contradicts the
+requirement that introduced it.
+
+#### Scenario: A reader asks which checks the gate runs
+
+- **WHEN** a session needs the gate's steps or the reason for one
+- **THEN** `scripts/gate.sh` answers, and no spec or guide carries a second
+  list to disagree with it
+
+### Requirement: The gate verifies that every probe case still applies
+
+The gate SHALL verify that every case in the local-feedback corpus still
+applies: its anchor is present and unique in the module it names. The check
+SHALL run no tests and SHALL assert nothing about the corpus's result. The
+gate SHALL invoke `scripts/feedback-probe.mjs --verify` with node directly and
+not through npm. The corpus is verbatim excerpts of engine source, so a
+refactor of a probed line otherwise leaves the harness measuring a smaller
+corpus and reporting success.
+
+#### Scenario: A refactor moves a line the probe corpus anchors on
+
+- **WHEN** a commit changes an engine line that a probe case quotes as its anchor
+- **THEN** the gate fails naming the case, and the case is re-anchored (or
+  retired) as part of that commit
+- **AND** re-anchoring is the moment a person decides whether the case still
+  states the defect it claims to
+
+### Requirement: The probe's rate is never gated
+
+The probe's rate SHALL NOT be gated or ratcheted. A survivor is a finding to
+read, and only a case that no longer applies is a failure. A gated feedback
+number invites tests written against the number and not against behavior,
+which the `repo-layout` requirement the probe serves forbids.
+
+#### Scenario: A probe run reports a survivor
+
+- **WHEN** a run of `npm run probe` reports a case that no test caught
+- **THEN** no gate fails on it, and the survivor is read as a finding
+
+### Requirement: The spelling guard runs ahead of the documentation-only shortcut
+
+The spelling guard (`scripts/checks/spelling.mjs`), which scans every tracked
+file outside the record and other people's words for a British stem, as the
+`repo-layout` spelling requirement asks, SHALL run in the fast prefix, ahead of
+the documentation-only shortcut. The shortcut skips `vitest run`, and a test
+may not read `docs/` or `openspec/` at all, so a vitest guard would be blind to
+the commits most likely to bring a British spelling back.
+
+#### Scenario: A documentation-only commit is still spell-checked
+
+- **WHEN** a commit stages only `docs/`, `openspec/` or the root agent files,
+  and one of them carries a British spelling outside an allowance
+- **THEN** the spelling guard fails in the fast prefix and blocks the commit,
+  before the documentation-only shortcut is reached
+
+### Requirement: The gate's biome step checks formatting and import order
+
+The gate's biome step SHALL check formatting and import order as well as lint
+rules, in the read-only form of `biome check`, so a file that is lint-clean but
+unformatted cannot be committed. The fixer command `npm run check` SHALL NOT
+stand in for it, because nothing requires the fixer to be run.
+
 #### Scenario: A staged unformatted file is rejected by the hook
 
 - **WHEN** a commit stages a file that satisfies every lint rule but is not
   formatted (or has unsorted imports) to the repository's biome configuration
 - **THEN** the per-commit hook's staged biome check fails in the fail-fast
   prefix and the commit is blocked, before the heavy checks are spent
-- **AND** an unformatted file that is NOT staged does not block the commit
-  (it is outside the commit's blast radius)
+
+### Requirement: The biome step is scoped by role
+
+The automatic per-commit hook SHALL check only the staged files
+(`biome check --staged`), since a commit can make a file unformatted only by
+touching it. CI and a manual `npm run gate` SHALL check the whole tree
+(`biome ci`), and that SHALL NOT be scoped down: CI is the only gate a
+`--no-verify` commit passes through, and the whole-tree pass is what forces a
+tree-wide reformat when a biome upgrade restyles files no single commit
+touched.
+
+#### Scenario: An unformatted file that is not staged
+
+- **WHEN** the tree holds an unformatted file that the commit does not stage
+- **THEN** the hook does not block the commit on it, since it is outside what
+  the commit introduces
 
 #### Scenario: The whole-tree backstop still catches a bypass
 
@@ -248,22 +178,14 @@ there is one name for one idea rather than a second switch to keep in step.
 - **BECAUSE** the per-commit scope is a per-commit optimization, not a relaxation
   of the guarantee that `main` stays formatted
 
-#### Scenario: A speed change never weakens the gate
+### Requirement: A documentation-only commit skips the heavy checks in the hook
 
-- **WHEN** a pool/isolation setting is changed to speed up `vitest run`
-- **THEN** the full suite is shown to remain green and deterministic under the
-  new setting (repeated runs, including under file-order shuffle)
-- **AND** if it does not, the setting is reverted rather than shipped
-
-#### Scenario: A refactor moves a line the probe corpus anchors on
-
-- **WHEN** a commit changes an engine line that a probe case quotes as its anchor
-- **THEN** the gate fails in ~0.2 s naming the case, and the case is re-anchored
-  (or retired) as part of that commit
-- **BECAUSE** an anchor that no longer applies makes the harness measure a
-  smaller corpus and report success — the failure mode this project keeps
-  naming, where a silent cap reads as health. Re-anchoring is also the moment a
-  human decides whether the case still states the defect it claims to.
+The automatic per-commit hook skips `vitest run` and `vite build` only when
+every staged path is documentation that is neither a test input nor a build
+input; one staged path outside that set SHALL run the whole gate. CI and a
+manual `npm run gate` SHALL run everything. `help/` SHALL NOT be skippable: it is a `vite build` input and the
+subject of the help-coverage guard. A run that takes the shortcut SHALL say
+what it skipped and where the full gate still runs.
 
 #### Scenario: A documentation-only commit skips the heavy checks
 
@@ -277,7 +199,16 @@ there is one name for one idea rather than a second switch to keep in step.
 
 - **WHEN** a commit stages documentation together with any other path
 - **THEN** the whole gate runs, because the exception is an all-or-nothing test
-  on the staged set rather than a per-file filter
+  on the staged set and not a per-file filter
+
+### Requirement: The skippable paths are asserted to have no reader
+
+The set of paths the documentation-only shortcut skips SHALL be asserted and
+not assumed: a test SHALL fail if any test, source or build-side module
+acquires a read of a path in that set, so the exception stops being safe and
+says so, where it would otherwise skip a check that has become real. The
+assertion SHALL key on the shape of a read and not on the paths' names, since
+this repository's documentation is cited in prose throughout its sources.
 
 #### Scenario: A skippable path acquires a reader
 
@@ -288,12 +219,14 @@ there is one name for one idea rather than a second switch to keep in step.
   a check skipped for a path that has become real is a dropped check reporting
   success
 
-#### Scenario: A documentation-only commit is still spell-checked
+### Requirement: An assertion defers to push only when it checks decay
 
-- **WHEN** a commit stages only `docs/`, `openspec/` or the root agent files,
-  and one of them carries a British spelling outside an allowance
-- **THEN** the spelling guard fails in the fast prefix and blocks the commit,
-  before the documentation-only shortcut is reached
+An individual assertion SHALL defer from the per-commit hook to the push only
+when it checks decay: whether something has stopped being true. The half of a
+guard that catches what the author just wrote SHALL stay on the per-commit
+path. Where an assertion's verdict depends on expensive work elsewhere in its
+file, that work and the assertion SHALL defer together: an assertion run
+against a walk narrowed beneath it reports a finding it has not measured.
 
 #### Scenario: A decay check defers to push while its partner stays per-commit
 
@@ -301,16 +234,36 @@ there is one name for one idea rather than a second switch to keep in step.
   and another whose verdict needs expensive work and reports decay
 - **THEN** the per-commit hook runs the first half and skips the second, and the
   second runs in CI on every push and in a manual `npm run gate`
-- **AND** the skipped half is reported as skipped by the test runner
 
 #### Scenario: A deferred assertion and the work it reads defer together
 
 - **WHEN** an assertion's verdict is decided against a walk that the per-commit
   hook narrows
-- **THEN** the assertion is skipped on that run rather than evaluated against
-  the narrowed walk
+- **THEN** the assertion is skipped on that run and not evaluated against the
+  narrowed walk
 - **BECAUSE** an assertion run against a sample that cannot contain its subject
   reports a finding it never measured
+
+### Requirement: A deferred assertion runs on every push and is reported as skipped
+
+A deferred assertion SHALL run in CI on every push to `main`: it SHALL be
+selected by the role toggle the hook sets and by nothing else. Deferring into a
+tier that runs only on request is the slow tier's business, under its own
+requirements. In the hook the assertion SHALL be skipped at the runner level,
+so a run that did not check it says so; it SHALL NOT be left to pass over a
+sample it could not take.
+
+#### Scenario: The hook skips a deferred assertion
+
+- **WHEN** the per-commit hook runs a test file that holds a deferred assertion
+- **THEN** the test runner reports that assertion as skipped, and CI runs it on
+  the push
+
+### Requirement: The role toggle is the hook's alone, and a test holds it there
+
+The push-time backstop SHALL be asserted by a test: a test SHALL fail if the
+role toggle is ever set in CI, or if the hook stops setting it. Set in both
+places, the deferred assertions run nowhere while both runs report green.
 
 #### Scenario: The role toggle leaks into CI
 
@@ -321,58 +274,79 @@ there is one name for one idea rather than a second switch to keep in step.
   both places means the deferred assertions run nowhere while both runs report
   green
 
-### Requirement: Refactoring metrics are measured on demand and ratcheted in the gate
+### Requirement: No correctness check is removed or weakened to buy speed
 
-The repository SHALL provide an on-demand metrics harness (`npm run metrics`,
-orchestrated by `scripts/metrics.sh`) that records code-health measurements —
-duplication, import cycles, dead code, and cognitive complexity — as raw tool
-output, committed to the repository.
+No correctness check SHALL be removed or weakened to buy speed, and none SHALL
+be moved off the per-commit path except by a scoping by role that keeps the
+push-time backstop intact. Such a scoping is not a weakening, because the
+whole-tree, whole-suite run in CI and in `npm run gate` still holds `main` to
+the guarantee. `vite build` SHALL remain in the gate: it is the only step that
+exercises the production build.
 
-A **round's** dated snapshot SHALL be committed under the openspec change that
-produced it, and SHALL travel into the archive with that change. A snapshot is
-evidence for a piece of work, not a standing repository artifact: its value is
-the diff between rounds, that diff is read once by the change that ordered the
-measurement, and it cannot be regenerated afterwards because it measures a tree
-that no longer exists. The same reasoning files an audit's findings under its
-change, and filed `retire-c-engine`'s unbuildable C reference sources under the
-changes that read them.
+#### Scenario: A step is proposed for removal to save time
 
-This does **not** conflict with `repo-layout`'s rule that a *tool* SHALL NOT
-write its output into an `openspec/changes/<id>/` directory. The harness writes
-to the stable path `metrics/<date>/`; the change's author then commits the
-finished snapshot under the change. The distinction is what each rule is
-protecting: a tool's output path must not expire when `openspec archive` renames
-a directory, and a one-off measurement must not be left standing at the root
-where it reads as current. A snapshot is only filed under a change once it is
-final.
+- **WHEN** a change proposes dropping `vite build` from the gate because it is
+  slow
+- **THEN** it is refused, because nothing else in the gate exercises the
+  production build
 
-A top-level `metrics/` directory SHALL hold only **live instruments** — output
-that something still reads. Currently that is `metrics/mutation/report.json`,
-read by `docs/test-strength.md`, and `metrics/color-inventory.md`, regenerated
-by `npm run diff`. A finished round's output left at the root reads as current
-measurement of the current tree, which is precisely what it is not.
+### Requirement: Pool tuning keeps the suite deterministic, or is reverted
 
-A snapshot SHALL be accompanied by a note recording that it cannot be
-regenerated, and that note SHALL point at something checkable in the files
-rather than merely assert it. The 2026-08-01 round's three READMEs cite that
-every path inside their own `summary.md` reads `src/native/…`, a tree deleted
-the following day — a reader can confirm the claim without trusting it.
+Any vitest pool or isolation tuning adopted to reduce per-file module-load
+overhead SHALL preserve the `repo-layout` requirement "The test suite is
+deterministic under parallel load", verified by a green full run repeated
+under the new configuration, including under file-order shuffle, which
+stresses the shared module state a non-isolated pool exposes. Otherwise it
+SHALL be reverted.
 
-The harness SHALL NOT be part of the pre-commit gate or of CI's blocking checks.
-Its value is the **diff between rounds**, not per-commit freshness, and adding a
-slow whole-tree scan to a gate that is explicitly optimized for wall-clock would
-buy nothing.
+#### Scenario: A speed change never weakens the gate
 
-Cognitive complexity SHALL be obtained from Biome's
-`complexity/noExcessiveCognitiveComplexity`, which implements the published
-Sonar algorithm already available in the installed linter. A second lint
-toolchain SHALL NOT be added to compute it.
+- **WHEN** a pool/isolation setting is changed to speed up `vitest run`
+- **THEN** the full suite is shown to remain green and deterministic under the
+  new setting (repeated runs, including under file-order shuffle)
+- **AND** if it does not, the setting is reverted and not shipped
 
-Where a metric is enforced rather than merely recorded, its threshold SHALL be a
-**ratchet** — set to the value the tree currently achieves, and lowered only by a
-change that does the work to earn the lower value. A threshold SHALL NOT be set
-to an aspiration, because a gate that fails on work in progress is a gate that
-gets disabled.
+### Requirement: The gate is one script, and the hook selects its role by environment
+
+The gate's orchestration SHALL live in a single script, `scripts/gate.sh`,
+invoked by both `.husky/pre-commit` and `npm run gate`, so the hook and the
+manual command cannot drift. The hook's narrower role SHALL be selected by
+environment toggles the hook sets and not by a second copy of the gate:
+`GATE_BIOME_STAGED` for the biome scope, and `GATE_PRECOMMIT` for everything
+else the hook does less of. `GATE_PRECOMMIT` SHALL be the only signal an
+individual deferred assertion reads.
+
+#### Scenario: The gate is run by hand
+
+- **WHEN** `npm run gate` is run with neither toggle set
+- **THEN** the same script runs as in the hook, with biome over the whole tree
+  and the whole suite
+
+### Requirement: Refactoring metrics are measured on demand
+
+The repository SHALL provide an on-demand metrics harness, `npm run metrics`,
+orchestrated by `scripts/metrics.sh`, that records code-health measurements
+(duplication, import cycles, dead code and cognitive complexity) as raw tool
+output, committed to the repository. The harness SHALL NOT be part of the
+pre-commit gate or of CI's blocking checks: its value is the diff between
+rounds, not per-commit freshness, and a slow whole-tree scan buys a gate
+nothing.
+
+#### Scenario: The metrics harness is not in the gate
+
+- **WHEN** a commit is made
+- **THEN** the pre-commit gate does not run the metrics harness
+- **AND** the round-over-round diff remains the harness's purpose
+
+### Requirement: A round's metrics snapshot is filed under the change that ordered it
+
+A round's dated snapshot SHALL be committed under the openspec change that
+produced it, once it is final, and SHALL travel into the archive with that
+change: it is evidence for one piece of work, and it measures a tree that no
+longer exists. The harness itself SHALL write to the stable path
+`metrics/<date>/`, and the change's author files the finished snapshot, which
+keeps `repo-layout`'s rule that a tool SHALL NOT write its output into an
+`openspec/changes/<id>/` directory.
 
 #### Scenario: A refactoring round records its baseline
 
@@ -381,6 +355,12 @@ gets disabled.
 - **AND** the snapshot is committed under that change's directory, not at the
   repository root
 
+### Requirement: The top-level metrics directory holds only live instruments
+
+A top-level `metrics/` directory SHALL hold only live instruments: output that
+something still reads. A finished round's output left at the
+root reads as a current measurement of the current tree, which it is not.
+
 #### Scenario: A finished round's snapshot is not left at the root
 
 - **WHEN** a round's work is archived
@@ -388,44 +368,72 @@ gets disabled.
 - **AND** the top-level `metrics/` directory contains only output that something
   still reads
 
-#### Scenario: The metrics harness is not in the gate
+### Requirement: A snapshot's note points at something checkable
 
-- **WHEN** a commit is made
-- **THEN** the pre-commit gate does not run the metrics harness
-- **AND** the round-over-round diff remains the harness's purpose
+A snapshot SHALL be accompanied by a note recording that it cannot be
+regenerated, and that note SHALL point at something checkable in the files and
+not merely assert it.
+
+#### Scenario: A reader doubts that a snapshot is stale
+
+- **WHEN** a reader opens an archived snapshot's note
+- **THEN** it names something in the snapshot's own files that shows the tree it
+  measured is gone, such as every path in its summary lying under a directory
+  since deleted
+
+### Requirement: Cognitive complexity comes from Biome
+
+Cognitive complexity SHALL be obtained from Biome's
+`complexity/noExcessiveCognitiveComplexity`, which implements the published
+Sonar algorithm in the linter already installed. A second lint toolchain SHALL
+NOT be added to compute it.
+
+#### Scenario: A round measures cognitive complexity
+
+- **WHEN** the metrics harness measures cognitive complexity
+- **THEN** it runs Biome with that rule, and no other linter is installed for it
+
+### Requirement: An enforced metric's threshold is a ratchet
+
+Where a metric is enforced and not merely recorded, its threshold SHALL be a
+ratchet: set to the value the tree currently achieves, and lowered only by a
+change that does the work to earn the lower value. A threshold SHALL NOT be set
+to an aspiration, because a gate that fails on work in progress is a gate that
+gets disabled.
+
+#### Scenario: A lower threshold is wanted
+
+- **WHEN** a change wants an enforced metric's threshold lower than the tree
+  achieves
+- **THEN** it first brings the tree to that value, and lowers the threshold with
+  that work
 
 ### Requirement: A static-analysis finding is triaged against the type information behind it
 
 Type-aware analysis that reports a condition as impossible SHALL have each such
-finding triaged before any code is removed. A reported condition is exactly one
-of three things, and **the third is the common case in this repository**:
+finding triaged before any code is removed, as exactly one of three things: a
+guard made redundant by a type tightened after it was written, which is
+deleted; a check that was intended to fire and cannot, which is a defect, fixed
+with the behavior change reported; or a correct runtime guard that the type
+system misrepresents, which is kept, with the reason recorded so the next
+audit does not raise it again.
 
-1. a guard rendered redundant by a type that was tightened after it was written
-   — delete it;
-2. **a check that was intended to fire and cannot** — a defect; fix it and report
-   the behavior change; or
-3. **a correct runtime guard that the type system misrepresents** — keep it, and
-   record why so the next audit does not re-raise it.
+#### Scenario: A never-firing check turns out to be load-bearing
 
-The third category is not an edge case here. All 53 findings measured on
-2026-08-01 were in it, by two structural mechanisms that will not go away:
+- **WHEN** triage finds a reported condition was genuinely written to reject an
+  invalid state and cannot do so
+- **THEN** the condition is corrected so that it fires as intended, with a test
+- **AND** any resulting change in generated boards is reported, not absorbed
 
-- **Narrowing is not invalidated by a mutating call.** A solver that checks
-  `state.impossible`, calls a technique that sets it, and checks again is
-  reported as having a dead second check. Deleting it stops the solver detecting
-  contradictions, and generation is gated on that verdict. This follows from the
-  deliberate house style of a mutable solver state.
-- **Index access is typed as total when `noUncheckedIndexedAccess` is off.**
-  `const c = desc[pos]; if (c === undefined) …` is reported as having no
-  overlap, while at runtime the read genuinely can be `undefined`. These sites
-  are overwhelmingly **description parsers**, i.e. the code validating a game ID
-  a player pasted from an untrusted source.
+### Requirement: A guard the type system misrepresents is kept
 
-Consequently, an analysis whose soundness depends on a compiler flag the project
-has declined SHALL NOT be adopted as a blocking gate. Declining to tighten types
-does not merely weaken such an analysis — it makes it wrong in a specific and
-confident direction, and a mechanical fix pass would delete exactly the
-validation the declined flag existed to enforce.
+A correct runtime guard that analysis reports as dead SHALL be kept. It is the
+common case in this repository, by two mechanisms. Narrowing is not
+invalidated by a mutating call, so a solver's second check of a mutable flag,
+after a technique that can set it, reads as dead. Index access is typed as
+total while `noUncheckedIndexedAccess` is off, so a comparison of an indexed
+read against `undefined` reads as having no overlap; these are mostly
+description parsers validating a pasted game ID.
 
 #### Scenario: A bounds check in a description parser is reported as dead
 
@@ -433,8 +441,8 @@ validation the declined flag existed to enforce.
   read as having no overlap
 - **THEN** the guard is kept, because the read can return `undefined` at runtime
   regardless of its declared type
-- **AND** the finding is recorded as an analysis artifact rather than re-triaged
-  on every subsequent audit
+- **AND** the finding is recorded as an analysis artifact and not triaged again
+  on every later audit
 
 #### Scenario: A solver's second contradiction check is reported as always falsy
 
@@ -444,40 +452,33 @@ validation the declined flag existed to enforce.
 - **BECAUSE** the narrowing that makes it look dead does not survive the call at
   runtime, and removing it would let an impossible board be reported as solved
 
-#### Scenario: A never-firing check turns out to be load-bearing
+### Requirement: An analysis that depends on a declined compiler flag is not a gate
 
-- **WHEN** triage finds a reported condition was genuinely written to reject an
-  invalid state and cannot do so
-- **THEN** the condition is corrected so that it fires as intended, with a test
-- **AND** any resulting change in generated boards is reported, not absorbed
+An analysis whose soundness depends on a compiler flag the project has declined
+SHALL NOT be adopted as a blocking gate. Without the flag it is wrong in a
+specific and confident direction, and a mechanical fix pass would delete
+exactly the validation the declined flag existed to enforce.
+
+#### Scenario: A type-aware rule is proposed for the gate
+
+- **WHEN** a rule that reports impossible conditions, and is sound only under
+  `noUncheckedIndexedAccess`, is proposed as a blocking check
+- **THEN** it is not adopted as one, and what it reports is triaged finding by
+  finding
 
 ### Requirement: Compiler strictness is adopted on measured evidence, not from a checklist
 
 Additional TypeScript strictness flags SHALL be adopted on the evidence of what
-they cost and what they buy **measured against this tree**, and the reasoning for
-a declined flag SHALL be recorded in `tsconfig.json` beside the ones that are on,
-so the next reader gets the number rather than re-deriving it.
-
-`noUncheckedIndexedAccess` SHALL NOT be enabled tree-wide. It applies to typed
-arrays as well as plain arrays and records, and this codebase uses typed arrays
-as its deliberate house pattern for game state and render cache keys. In a solver
-whose indices come from the loop bounds immediately above them, the flag reports
-an impossibility whose only available fix is a non-null assertion at every
-access — no runtime safety, and arithmetic that is harder to read. Measured cost:
-9,028 errors, concentrated in solver code.
-
-Where the guarantee is genuinely earned — decoding a save, parsing a game ID or a
-user-supplied description — it SHALL be obtained with an explicit check at that
-boundary. Such checks already exist throughout the description parsers and SHALL
-NOT be removed on the strength of an analysis that cannot see them (see the
-requirement above).
+they cost and what they buy, measured against this tree, and the reasoning for
+a declined flag SHALL be recorded in `tsconfig.json` beside the ones that are
+on, so the next reader gets the measurement and does not derive it again.
 
 #### Scenario: A strictness flag is proposed from a checklist
 
 - **WHEN** a change proposes enabling a compiler strictness flag
 - **THEN** its error count against the current tree is measured first
 - **AND** the flag is adopted only if the errors represent distinctions the code
-  genuinely blurs, rather than assertions restating what the surrounding control
+  genuinely blurs, and not assertions restating what the surrounding control
   flow already guarantees, or widenings that restore the semantics already in
   force
 
@@ -488,66 +489,76 @@ requirement above).
 - **AND** the decision is revisited only on new evidence, such as a format that
   begins to distinguish a missing key from an explicit null
 
+### Requirement: noUncheckedIndexedAccess stays off, and a boundary checks explicitly
+
+`noUncheckedIndexedAccess` SHALL NOT be enabled tree-wide. It applies to typed
+arrays, the house pattern for game state and render cache keys, and where an
+index comes from the loop bounds above it the only fix is a non-null assertion
+at every access. Where the guarantee is earned (decoding a save,
+parsing a game ID or a user-supplied description) it SHALL be obtained with an
+explicit check at that boundary, and such checks SHALL NOT be removed on the
+word of an analysis that cannot see them.
+
+#### Scenario: A description parser reads past its input
+
+- **WHEN** a description parser reads a character by index
+- **THEN** it tests the read explicitly before using it, and that test stays
+  whatever a type-aware analysis says of it
+
 ### Requirement: The commit gate's cost is proportional to what it protects
 
-The pre-commit gate SHALL be kept affordable per commit, and a test that costs a
-large share of it SHALL justify that share by what it would catch. A test whose
-cost is dominated by *more of the same* — a larger board, additional seeds beyond
-the point of detection — SHALL be reduced or moved to the opt-in tier, not left
-to be paid on every commit.
-
-The measurement that motivates this: five files were **66% of all test time**, and
-about ten individual tests were **54%** — one property test alone was 20% of the
-whole suite.
-
-Three treatments are permitted, in order of preference, because they lose
-different amounts:
-
-1. **Short-circuit a deterministic search.** Where a test scans generated boards
-   to find one exhibiting a case, the pair it finds is deterministic and MAY be
-   recorded so the scan starts there. This loses **nothing** — the same board is
-   returned — and correctness MUST NOT depend on the recorded value being current:
-   a stale pin falls back to the full scan.
-2. **Reduce a confidence dial.** Where a seed count expresses "how many boards do
-   we scan", it MAY be reduced for the gate provided the property is one a
-   violation of which would be *systematic* rather than rare, and provided the
-   remaining scan still exercises the assertion many times. The change SHALL
-   state that count.
-3. **Defer to the opt-in tier** (`npm run test:slow`). Reserved for cases where
-   the cost is board *size* rather than configuration.
-
-A test SHALL NOT be deferred when it is the only one covering some configuration.
-Deferring the largest board of a family whose every mode, difficulty and grid type
-is checked by smaller fixtures costs the gate nothing it relied on; deferring the
-only fixture for a grid type silently removes that grid type from every commit.
-The remaining coverage SHALL be stated where the deferral is made.
-
-The opt-in tier SHALL be run as part of a refactoring round, alongside
-`npm run metrics`. A tier nobody ever runs is worse than a deleted test, because
-the file still reads as coverage.
-
-A saving claimed for the gate SHALL be quoted in **CPU time** (`user + sys` over
-the whole run), not in wall clock and not in summed per-test durations. This box
-runs other work in parallel, and summed per-test duration is wall clock per test
-— so it inflates exactly the heavy tests a right-sizing pass removes, and
-flatters the result. Measured here: the duration sums reported a 68–70% saving
-where the CPU measurement showed **53%**. Per-test durations remain the right
-tool for *locating* cost, because a relative measure is all that needs to be.
-
-#### Scenario: A gate saving is reported
-
-- **WHEN** a change claims to have reduced the gate's cost
-- **THEN** the figure quoted is CPU time before and after
-- **BECAUSE** a wall-clock or summed-duration figure measures how long the tests
-  appeared to take under whatever else the box was doing, not what they cost
+The pre-commit gate SHALL be kept affordable per commit, and a test that costs
+a large share of it SHALL justify that share by what it would catch. A test
+whose cost is dominated by more of the same (a larger board, additional seeds
+beyond the point of detection) SHALL be reduced or moved to the opt-in tier,
+not left to be paid on every commit.
 
 #### Scenario: A test is made cheaper
 
 - **WHEN** a test's cost is reduced by any of the three treatments
-- **THEN** it is verified to still discriminate — by breaking the code it covers
+- **THEN** it is verified to still discriminate, by breaking the code it covers
   and confirming it fails
 - **BECAUSE** the failure this optimization most easily causes is a test that
   still passes, still reads as coverage, and no longer catches anything
+
+### Requirement: A test is made cheaper by one of three treatments, in order of preference
+
+A test's cost SHALL be reduced by one of three treatments, preferred in this
+order because they lose different amounts: short-circuit a deterministic
+search, by recording the pair a scan of generated boards finds so the scan
+starts there; reduce a confidence dial; defer to the opt-in tier,
+`npm run test:slow`. The first loses nothing, since the same board is
+returned, and correctness SHALL NOT depend on the recorded value being
+current: a stale pin falls back to the full scan.
+
+#### Scenario: A recorded pin goes stale
+
+- **WHEN** a generator change means the recorded pair no longer exhibits the
+  case
+- **THEN** the test falls back to the full scan and still finds a board that
+  does
+
+### Requirement: A seed count is reduced only for a systematic property
+
+A seed count that expresses how many boards a test scans SHALL be reduced for
+the gate only where a violation of the property would be systematic and not
+rare, and where the remaining scan still exercises the assertion many times.
+The change SHALL state that count.
+
+#### Scenario: A property test's seed count is lowered
+
+- **WHEN** a change lowers the number of boards a property test scans in the
+  gate
+- **THEN** the property is one whose violation would show on most boards, and
+  the change states how many times the assertion still runs
+
+### Requirement: A test is not deferred when it is the only cover of a configuration
+
+Deferral to the opt-in tier SHALL be reserved for cases where the cost is board
+size and not configuration. A test SHALL NOT be deferred when it is the only
+one covering some configuration: deferring the only fixture for a grid type
+silently removes that grid type from every commit. The remaining coverage
+SHALL be stated where the deferral is made.
 
 #### Scenario: A differential fixture is deferred
 
@@ -558,39 +569,55 @@ tool for *locating* cost, because a relative measure is all that needs to be.
 - **BECAUSE** the differentials are the refactoring net: a refactor that changes a
   solver's verdict must still change a desc the gate checks
 
+### Requirement: The opt-in tier is run in every refactoring round
+
+The opt-in tier SHALL be run as part of a refactoring round, alongside
+`npm run metrics`. A tier nobody ever runs is worse than a deleted test,
+because the file still reads as coverage.
+
+#### Scenario: A refactoring round is run
+
+- **WHEN** a change orders a refactoring round
+- **THEN** it runs the opt-in tier as well as the metrics harness
+
+### Requirement: A gate saving is quoted in CPU time
+
+A saving claimed for the gate SHALL be quoted in CPU time (`user + sys` over
+the whole run), not in wall clock and not in summed per-test durations. Summed
+per-test duration is wall clock per test, so on a box running other work it
+inflates exactly the heavy tests a right-sizing pass removes, and flatters the
+result.
+
+#### Scenario: A gate saving is reported
+
+- **WHEN** a change claims to have reduced the gate's cost
+- **THEN** the figure quoted is CPU time before and after
+- **BECAUSE** a wall-clock or summed-duration figure measures how long the tests
+  appeared to take under whatever else the box was doing, not what they cost
+
 ### Requirement: The app builds from a clean checkout with no toolchain but Node
 
-A clean checkout SHALL build the complete app — every game, every help page, the
-service worker and the PWA assets — with **`npm install` as the entire setup**.
-No native toolchain, no system package, and no generated artifact SHALL be
-required, at config-load time or at build time.
-
-Nothing is generated any more. The game catalog is committed TypeScript source
-(`src/puzzle/catalog-data.ts`), the per-puzzle icons are a committed snapshot,
-and the help pages are committed markdown. With the halibut manual deleted there
-is no asset build at all: `npm run build:assets`, `scripts/build-manual.sh` and
-`Brewfile` are removed, halibut having been the Brewfile's only remaining entry
-and the manual its only consumer.
-
-This is the end of a sequence worth recording, because each step looked like a
-small cleanup and the property only arrived when the last one landed: the
-Emscripten toolchain went with `retire-c-engine`, the CMake tree and the icon
-pipeline before it, the generated `catalog.json` became committed source, and the
-manual was the last generated artifact standing. A build that needs a system
-package is a build that fails differently on every contributor's machine, and
-until now this repository needed one to be complete.
-
-The build configuration SHALL NOT depend on any generated, gitignored artifact at
-config-load time.
+A clean checkout SHALL build the complete app (every game, every help page, the
+service worker and the PWA assets) with `npm install` as the entire setup. No
+native toolchain, no system package and no generated artifact SHALL be
+required, at config-load time or at build time. The build configuration SHALL
+NOT depend on any generated, gitignored artifact at config-load time.
 
 #### Scenario: A clean checkout builds with nothing installed but Node
 
-- **WHEN** the app is built from a fresh clone on a machine with no `brew bundle
-  install`, no Emscripten, and no halibut
+- **WHEN** the app is built from a fresh clone on a machine with no native
+  toolchain and no system package beyond Node
 - **THEN** `npm install && npm run build` produces the complete app
 - **AND** every game and every help page is present in `dist/`
-- **AND** nothing is missing or degraded relative to a machine that has those
+- **AND** nothing is missing or degraded relative to a machine that has such
   tools
+
+### Requirement: Nothing is generated into the source tree
+
+Nothing the build reads SHALL be generated: the game catalog is committed
+TypeScript source (`src/puzzle/catalog-data.ts`), the per-puzzle icons are a
+committed snapshot, and the help pages are committed markdown. There SHALL be
+no asset build step.
 
 #### Scenario: No artifact is generated into the source tree
 
@@ -600,35 +627,11 @@ config-load time.
 
 ### Requirement: The typechecker sees every TypeScript file in the repository
 
-Every `.ts` / `.mts` file in the repository SHALL belong to a TypeScript project
-the gate checks. A file outside every project's `include` is checked by nothing —
-not the gate, not CI, not `npm run typecheck` — and the only thing that notices
-is an editor applying its own fallback options, whose diagnostics then disagree
-with the build in both directions.
-
-The build-side files — the vite and vitest configs, the vite plugins, and the
-advisory checks that run outside the gate — SHALL be a **separate project** from
-the app rather than folded into it, because the app's project is deliberately
-browser-shaped (`"types": []`, a DOM lib) and that posture is relied upon: tests
-here read source through `import.meta.glob` rather than `node:fs` specifically to
-stay inside it. The separation SHALL be by runtime only; every strictness flag
-SHALL be identical, so a file does not become more permissive by being a build
-file.
-
-This is required because the gap hid live defects rather than merely risking
-them. When the build-side files were first checked, the config that renders every
-help page and static entry carried a `build.rollupOptions.output.validate`
-setting that had had no effect since the bundler changed under it — a rollup
-option this project's rolldown-based Vite neither declares nor reads.
-
-Where a build tool's published type is **narrower than its implementation**, the
-option SHALL be kept and its type widened at the one property, with the evidence
-that the option is live recorded beside it. It SHALL NOT be deleted on the
-strength of the type alone, and it SHALL NOT be preserved by asserting the type
-of its whole containing object, which stops checking every sibling key. The
-distinction is not academic: of the two unknown properties this requirement's
-change found, one was genuinely dead and one was a live browser-bug workaround,
-and the type said the same thing about both.
+Every `.ts` / `.mts` file in the repository SHALL belong to a TypeScript
+project the gate checks. A file outside every project's `include` is checked by
+nothing (not the gate, not CI, not `npm run typecheck`), and the only thing
+that notices is an editor applying its own fallback options, whose diagnostics
+then disagree with the build in both directions.
 
 #### Scenario: A build-side file gains a type error
 
@@ -636,11 +639,30 @@ and the type said the same thing about both.
   a check under `scripts/checks/`
 - **THEN** the gate's typecheck fails
 
+### Requirement: The build-side files are a separate project, as strict as the app's
+
+The build-side files (the vite and vitest configs, the vite plugins, and the
+advisory checks that run outside the gate) SHALL be a separate project from
+the app and not folded into it, because the app's project is deliberately
+browser-shaped (`"types": []`, a DOM lib) and tests read source through
+`import.meta.glob` to stay inside it. The separation SHALL be by runtime only:
+every strictness flag SHALL be identical, so a file does not become more
+permissive by being a build file.
+
 #### Scenario: The app's type world stays browser-shaped
 
 - **WHEN** the build-side project is configured
 - **THEN** it is a separate project with a Node runtime
 - **AND** the app's project still declares no ambient Node types
+
+### Requirement: A live build option the tool's type does not declare is kept
+
+Where a build tool's published type is narrower than its implementation, the
+option SHALL be kept and its type widened at the one property, with the
+evidence that the option is live recorded beside it. It SHALL NOT be deleted on
+the strength of the type alone, and it SHALL NOT be preserved by asserting the
+type of its whole containing object, which stops checking every sibling key.
+The type says the same thing about a dead option and a live one.
 
 #### Scenario: An option the bundler's type does not declare
 
@@ -654,31 +676,10 @@ and the type said the same thing about both.
 
 The production build SHALL verify that every file it writes to the output
 directory appears in the service worker's precache manifest, and SHALL fail
-otherwise. Files a page genuinely never loads MAY be excluded, and the
-exclusions SHALL be shared with Workbox's own `globIgnores` rather than restated
-beside them.
-
-Offline is one of this app's two reasons for existing, and it rests on a single
-extension allowlist. **An asset whose extension is missing from that list still
-builds and still ships**; it is only absent from the manifest, so it loads
-perfectly online and is silently missing offline. Nothing in the type checker,
-the linter or the test suite can see it, because nothing is wrong with the file.
-
-This is not hypothetical. `implement-front-page-and-chrome` self-hosted three
-IBM Plex `woff2` faces *specifically* so that offline would match online, and
-the allowlist had no `woff2` in it; the first run of this check also found that
-`favicon.ico` had never been precached either. Two gaps, one of them years old,
-neither visible from anywhere else.
-
-The check SHALL run against the **built output** and the **generated service
-worker**, not against the configuration, because the configuration is the thing
-being checked. It SHALL report the offending file *extensions* rather than the
-files, since the fix is always to the allowlist and a list of hashed filenames
-buries it. It SHALL fail on its own input count, so a listing that matches
-nothing cannot report health. Its exclusion ledger SHALL be held to being
-exactly right — an unconditional entry matching no file fails — with entries
-that are only emitted under some configurations marked as such, so the check
-does not have to be weakened to survive an ordinary local build.
+otherwise. The check SHALL run against the built output and the generated
+service worker, not against the configuration, which is the thing being
+checked. An asset whose extension is missing from the precache allowlist still
+builds and ships, and is only missing offline, where nothing else can see it.
 
 #### Scenario: A new asset type ships outside the offline cache
 
@@ -686,33 +687,49 @@ does not have to be weakened to survive an ordinary local build.
   allowlist and is not deliberately excluded
 - **THEN** the build fails, naming the extension and an example file
 
-#### Scenario: The exclusions are one list
+### Requirement: The precache check's exclusions are shared and held exactly
 
-- **WHEN** a file is deliberately kept out of the precache
+A file deliberately kept out of the precache SHALL be excluded through the
+same declaration Workbox's own `globIgnores` reads, and not by a second copy
+beside it. The check's own ledger of build machinery, which is never
+precached, SHALL be held to being exactly right: an unconditional entry
+matching no file fails the build, and an entry emitted only under some
+configurations SHALL be marked as such, so the check does not have to be
+weakened to survive an ordinary local build.
+
+#### Scenario: A file is deliberately kept out of the precache
+
+- **WHEN** a file the build emits, such as the 404 page, is deliberately kept
+  out of the precache
 - **THEN** the same declaration is what Workbox skips and what the check skips
+
+#### Scenario: An excuse outlives its file
+
+- **WHEN** an unconditional entry of the check's ledger matches no file the
+  build emits
+- **THEN** the build fails, naming the entry
+
+### Requirement: The precache check reports extensions and cannot pass over nothing
+
+The check SHALL report the offending file extensions and not the files, since
+the fix is always to the allowlist and a list of hashed filenames buries it. It
+SHALL fail on its own input count, so a listing that matches nothing cannot
+report health.
 
 #### Scenario: The check cannot pass over nothing
 
 - **WHEN** the output listing finds implausibly few files
-- **THEN** the build fails on the count rather than reporting coverage
+- **THEN** the build fails on the count and does not report coverage
 
 ### Requirement: A host that cannot deliver the security headers is a recorded decision
 
-The build emits `dist/_headers` — the Content-Security-Policy, the
-cache-control policy for immutable asset paths, and the rest of the security
-headers — in the format one specific host reads. A host that cannot set response
-headers, or that reads a different format, SHALL NOT be adopted silently: either
-the rules are translated into that host's own configuration, or the loss is
-stated as a decision with its cost.
-
-The failure this prevents is specific: `_headers` remains present in the build
-output whatever host is chosen, so an inert copy of it looks exactly like a
-working one. Nothing a visitor can see changes when the CSP stops being
-delivered.
-
-The cache-control rules SHALL be translated alongside the CSP when a translation
-is needed. Hashed asset paths are `immutable` for a year and the HTML entry
-points are not; inverting that ships an app that cannot update itself.
+The build emits `dist/_headers` (the Content-Security-Policy, the cache-control
+policy for immutable asset paths, and the rest of the security headers) in the
+format one specific host reads. A host that cannot set response headers, or
+that reads a different format, SHALL NOT be adopted silently: either the rules
+are translated into that host's own configuration, or the loss is stated as a
+decision with its cost. An inert `_headers` in the build output looks exactly
+like a working one.
 
 #### Scenario: Adopting a host without header support
 
@@ -720,19 +737,26 @@ points are not; inverting that ships an app that cannot update itself.
 - **THEN** the loss is recorded in the change's design with what it costs, and
   the headers are not left looking as though they apply
 
+### Requirement: The cache-control rules are translated with the CSP
+
+The cache-control rules SHALL be translated alongside the CSP when a
+translation is needed. Hashed asset paths are `immutable` for a year and the
+HTML entry points are not; inverting that ships an app that cannot update
+itself.
+
+#### Scenario: The header rules are translated for another host
+
+- **WHEN** the emitted rules are rewritten in another host's configuration
+- **THEN** the hashed asset paths are still served `immutable` and the HTML
+  entry points are still not
+
 ### Requirement: The content security policy grants only origins the app loads
 
 Every origin named in the CSP SHALL correspond to something the app actually
 loads, and an origin that is conditional on configuration SHALL be added
-conditionally — as the Sentry origin is added only when `VITE_SENTRY_DSN` is
-set.
-
-This is not hypothetical tidiness. The policy inherited from the upstream fork
-grants `https://static.cloudflareinsights.com` a `script-src` and
-`https://cloudflareinsights.com` a `connect-src` unconditionally, for an
-analytics vendor this fork has not chosen and does not load. A policy that
-whitelists an unused third-party script origin is strictly weaker than one that
-does not, for no benefit.
+conditionally, as the Sentry origin is added only when `VITE_SENTRY_DSN` is
+set. A policy that whitelists an unused third-party script origin is strictly
+weaker than one that does not, for no benefit.
 
 #### Scenario: An unused vendor origin is not whitelisted
 
@@ -743,24 +767,35 @@ does not, for no benefit.
 
 The `_headers` file the build emits SHALL contain a number of rules that does
 not depend on how many puzzles the catalog holds, and the build SHALL fail if
-the rendered file exceeds the host's rule limit.
+the rendered file exceeds the host's rule limit. That limit is a parser limit
+and not a quota: it cannot be raised by migrating or by paying, and rules past
+it are dropped with no error and no visible change, so one rule per puzzle
+page would turn it into a limit on the number of games.
 
-The limit is a parser limit rather than a quota — Cloudflare reads at most 100
-rules, identically on Pages and on Workers static assets and identically on
-every plan — so it cannot be raised by migrating or by paying, and rules past it
-are dropped with no error and no visible change. A file carrying one rule per
-puzzle entry page therefore converts that parser limit into a limit on the
-number of **games**, which is a constraint the collection must never acquire by
-accident.
+#### Scenario: Adding a puzzle does not add a header rule
 
-Nothing about a cache policy depends on the size of the catalog. Where a broad
-rule and a narrow rule would otherwise merge, the broad rule SHALL carry the
-value the many paths want and the few exceptions SHALL detach and replace it,
-rather than the reverse — which is what makes the per-page rule unnecessary.
+- **WHEN** a puzzle is added to the catalog
+- **THEN** the number of rules in the emitted `_headers` file is unchanged
 
-The rule count SHALL be asserted by the build rather than recorded in a comment,
-and the assertion SHALL carry a vacuity guard, since a render producing no rules
-would otherwise satisfy a limit check while measuring nothing.
+### Requirement: A broad header rule carries the common value, and the exceptions detach
+
+Where a broad rule and a narrow rule would otherwise merge, the broad rule
+SHALL carry the value the many paths want and the few exceptions SHALL detach
+and replace it, and not the reverse. Nothing about a cache policy depends on
+the size of the catalog, and this is what makes a per-page rule unnecessary.
+
+#### Scenario: The entry pages share one cache rule
+
+- **WHEN** the HTML entry points want a short cache and the hashed assets a long
+  one
+- **THEN** one broad rule carries the short cache for every page, and the rules
+  for the hashed asset paths detach it and set their own
+
+### Requirement: The header rule count is asserted by the build
+
+The rule count SHALL be asserted by the build and not recorded in a comment,
+and the assertion SHALL carry a vacuity guard, since a render producing no
+rules would otherwise satisfy a limit check while measuring nothing.
 
 #### Scenario: A build whose header rules would be silently truncated
 
@@ -768,36 +803,18 @@ would otherwise satisfy a limit check while measuring nothing.
   parse
 - **THEN** the build fails, naming the count and the limit
 
-#### Scenario: Adding a puzzle does not add a header rule
+#### Scenario: The header template renders no rules
 
-- **WHEN** a puzzle is added to the catalog
-- **THEN** the number of rules in the emitted `_headers` file is unchanged
+- **WHEN** the rendered `_headers` file holds no rule at all
+- **THEN** the build fails, and the limit check does not pass over nothing
 
 ### Requirement: A test is retired or deferred by measurement, never by category
 
-A test SHALL be judged by what it would catch in a refactor that **no cheaper
-test would**, and never by the era or the category it belongs to. "It was
-written for the port" is not by itself a reason: the frozen `c-reference`
-differentials are porting artifacts *and* the strongest net under solver
-refactoring, because a change to a solver's verdict changes which boards exist.
-
-Before anything is retired or deferred, the population SHALL be **ranked and
-counted** — how many test files were examined, and how many classified — so an
-audit cannot quietly look at the dozen files somebody remembered.
-
-Measured 2026-09-09 over all 301 test files, and recorded here because it is the
-result a later session would otherwise re-derive: the differentials are **10.1%**
-of suite time across 50 files, with the heaviest single one at 11.5 s CPU. The
-category most obviously "porting-era" was therefore the cheap half, and retiring
-by category would have cut it while leaving the expense untouched.
-
-#### Scenario: A retirement is proposed for a category of tests
-
-- **WHEN** a change proposes to retire tests because of what they were written for
-- **THEN** it ranks the population by measured cost first, and answers per file
-  what that file uniquely protects
-- **BECAUSE** the era a test was written in does not predict what it catches, and
-  here the two were anti-correlated
+A test SHALL be judged by what it would catch in a refactor that no cheaper
+test would, and never by the era or the category it belongs to. "It was written
+for the port" is not by itself a reason: the frozen `c-reference` differentials
+are porting artifacts and also the strongest net under solver refactoring,
+because a change to a solver's verdict changes which boards exist.
 
 #### Scenario: A configuration would lose its last cover
 
@@ -808,71 +825,69 @@ by category would have cut it while leaving the expense untouched.
 - **BECAUSE** a silently removed configuration reads identically to one that was
   never covered
 
+### Requirement: A retirement audit ranks and counts its population
+
+Before anything is retired or deferred, the population SHALL be ranked and
+counted (how many test files were examined, and how many classified), so an
+audit cannot quietly look at the dozen files somebody remembered.
+
+#### Scenario: A retirement is proposed for a category of tests
+
+- **WHEN** a change proposes to retire tests because of what they were written for
+- **THEN** it ranks the population by measured cost first, and answers per file
+  what that file uniquely protects
+- **BECAUSE** the era a test was written in does not predict what it catches
+
 ### Requirement: Suite cost is attributed per game, and quoted in CPU
 
 A measurement of what the test suite costs SHALL attribute each cross-game
-guard's per-game case to **the game it names**, not to the file or directory the
+guard's per-game case to the game it names, not to the file or directory the
 guard lives in. The guards title their cases `"<gameId>: …"`, which is the join
-key.
+key. Attribution by directory reports the cross-game guards as undifferentiated
+engine cost and hides which game makes them expensive.
 
-Attribution by directory reports the cross-game guards as undifferentiated
-engine cost and hides which game makes them expensive: measured 2026-09-09,
-Sixteen is 17% of suite time by directory and **30%** once its cases inside
-`hint-resume.test.ts` and `hint-quality.test.ts` are counted, and three games
-account for 52% of all test time.
+#### Scenario: A cross-game guard's case is costed
 
-Every cost figure SHALL be **CPU (`user + sys`)** from `/usr/bin/time` on a
-single-file run, **measured on a quiet box, with the load average stated**.
-Wall clock on a shared box measures the contention, and it does so *unevenly* —
-in the same run one file inflated 5.2× and another 1.6× — so a contended wall
-figure distorts the ranking, not merely the total. Summed per-test duration
-remains permissible for **locating** cost, and for nothing else.
+- **WHEN** a cost measurement meets a case titled for one game inside a guard
+  that lives under the engine
+- **THEN** the case's time is counted against that game
 
-**CPU is the better instrument, not an immune one, and the reason names the
-resource that actually matters.** Corrected 2026-09-09 by re-measuring two files
-that no change had touched: `input-parity.test.ts` read 40.5 s under pressure
-and **22.4 s** without, `hint-ordinal.test.ts` 25.2 s and **14.8 s** — an
-inflation of **1.7–1.8×**, against wall clock's 5×.
+### Requirement: A cost figure is CPU from a single-file run, with the machine's conditions recorded
 
-The cause is **memory, not cores**. The box has 16 GB of RAM and was 23.9 GB
-into swap with ~65 MB free; under paging, `sys` time *is* page-fault time, so
-`user + sys` re-imports the contention that switching away from wall clock was
-meant to remove. Load average is a proxy for the wrong variable.
-
-A cost measurement SHALL therefore record **free memory and swap in use**
-alongside the load average, and SHALL treat a figure taken under paging as an
-upper bound rather than a measurement. Three consequences, all learned by
-getting this wrong:
-
-- **A ratio between two figures taken under comparable conditions survives; an
-  absolute second does not.** The change that wrote this requirement had sound
-  per-file percentages and absolute totals ~1.7× high.
-- **Recording the conditions is what makes an error recoverable** rather than
-  merely suspected, which is why it is a SHALL and not advice.
-- **Ask which resource is scarce before choosing the instrument.** The unit was
-  correct at every step here (seconds of CPU); what went unexamined was whether
-  cores or memory were the constraint, and that is what made three successive
-  instruments wrong.
+Every cost figure SHALL be CPU (`user + sys`) from `/usr/bin/time` on a
+single-file run, measured on a quiet box. The measurement SHALL record the
+load average, free memory and swap in use. Wall clock on a shared box measures
+the contention, and unevenly, so it distorts the ranking and not merely the
+total. Summed per-test duration SHALL be used only for locating cost.
 
 #### Scenario: A suite-cost finding is reported
 
 - **WHEN** a change reports what a test file or a game costs the suite
 - **THEN** the figure is CPU time, and the machine's load at the time is stated
-- **BECAUSE** the first figure ever recorded for this question was taken at load
-  533 and measured the contention
+- **BECAUSE** a figure taken on a loaded box measures the contention
+
+### Requirement: A figure taken under paging is an upper bound
+
+A cost figure taken under paging SHALL be treated as an upper bound and not as
+a measurement. Under paging `sys` time is page-fault time, so `user + sys`
+carries the contention that moving off wall clock was meant to remove, and the
+load average is a proxy for the wrong variable. A ratio between two figures
+taken under comparable conditions survives; an absolute second does not.
+
+#### Scenario: Two files are costed while the box is paging
+
+- **WHEN** a measurement is taken with swap in use and little memory free
+- **THEN** its seconds are reported as upper bounds, and only the ratio between
+  figures taken under the same conditions is relied on
 
 ### Requirement: The opt-in slow tier is invokable for one area at a time
 
 `npm run test:slow` SHALL forward its arguments to the test runner, and the
 targeted form SHALL be documented where the tier is defined, because the bare
-command re-runs the **entire** gate suite as well as the deferred cases and the
-widened seed budgets.
-
-Measured 2026-09-09: the deferred tier is **six tests in three files**, while the
-command that runs it also runs 8,504 gate tests with the heaviest files
-multiplied 3–7.5×. A change that defers work into the tier SHALL therefore say
-which targeted invocation exercises it — `npm run test:slow -- <path>` — rather
-than relying on a whole-tier run that a person will decline to wait for.
+command runs the entire gate suite as well as the deferred cases and the
+widened seed budgets. A change that defers work into the tier SHALL say which
+targeted invocation exercises it, `npm run test:slow -- <path>`, and SHALL NOT
+rely on a whole-tier run that a person will decline to wait for.
 
 #### Scenario: Work is deferred into the slow tier
 
@@ -884,35 +899,40 @@ than relying on a whole-tier run that a person will decline to wait for.
 
 ### Requirement: A cross-game guard bounds its cost on the axis the game varies
 
-Where a cross-game guard walks a game's presets, it SHALL slice them on the axis
-that game actually varies, and it SHALL derive any cost exemption from a
-property the game already has rather than from a list of game ids.
+Where a cross-game guard walks a game's presets, it SHALL slice them on the
+axis that game actually varies, and it SHALL derive any cost exemption from a
+property the game already has and not from a list of game ids.
 
-A hint that plans by **searching** pays for board size twice over — one full
-search per move, and more moves to make on a bigger board — while a guard that
-recomputes a hint after every move multiplies exactly that. Such games SHALL be
-sliced by board size in the gate and walked in full in the slow tier, with the
-population derived from the game's own source (`SEARCH_PLANNING_GAMES` reads
-each game for a call to the shared slide planner) rather than declared.
+#### Scenario: A guard excuses some games a cost
 
-Which games the hint-resume walk excuses its completion promise is a separate
-population, `SEARCH_REACH_GAMES`: the games whose own code names
-`SEARCH_OUT_OF_REACH`, the refusal that admits a search ran out. A game may
-search without the slide planner, and keying the excuse on the planner left
-such games unexcused.
+- **WHEN** a cross-game guard needs to walk some games less than the rest
+- **THEN** the games are found from a property each already has, read from the
+  game, and the guard carries no list of ids
 
-The reason a member is excused, and the test that still covers its largest
-board on every commit, SHALL be recorded **per member**, with the derivation
-asserted to be exactly the ledger — so a game that later joins the mechanic
-fails the guard until someone writes that sentence.
+### Requirement: A game whose hint searches is sliced by board size in the gate
+
+A game whose hint plans by searching SHALL be sliced by board size in the gate
+and walked in full in the slow tier: a search pays for board size once per move
+and again in the number of moves, and a guard that recomputes a hint after
+every move multiplies that. The population SHALL be derived from the game's
+own source and not declared: `SEARCH_PLANNING_GAMES` reads each game for a call
+to the shared slide planner.
 
 #### Scenario: A game joins the searching-hint population
 
 - **WHEN** a new game's hint calls the shared slide planner
-- **THEN** it is enrolled by the derivation automatically, and the ledger's
-  equality assertion fails until its entry names what covers its largest board
+- **THEN** it is enrolled by the derivation automatically
 - **BECAUSE** an exemption roster rots exactly as quietly as the membership
   roster it replaced
+
+### Requirement: The hint-resume walk excuses the games that can say a search ran out
+
+Which games the hint-resume walk excuses its completion promise SHALL be a
+separate population, `SEARCH_REACH_GAMES`: the games whose own code names
+`SEARCH_OUT_OF_REACH`, the refusal that admits a search ran out, or hands a
+search's outcome to `searchRefusal`, which names it for them. A game can
+search without the slide planner, so the excuse SHALL NOT be keyed on the
+planner.
 
 #### Scenario: A game that searches without the slide planner may refuse past its reach
 
@@ -920,51 +940,43 @@ fails the guard until someone writes that sentence.
 - **THEN** the hint-resume walk excuses it by the same derivation, and its ledger
   entry is required before the guard passes
 
+### Requirement: An excused game's reason and remaining cover are recorded per member
+
+The reason a member is excused, and the test that still covers its largest
+board on every commit, SHALL be recorded per member, with the derivation
+asserted to be exactly the ledger, so a game that later joins the mechanic
+fails the guard until someone writes that sentence.
+
+#### Scenario: A newly enrolled game has no ledger entry
+
+- **WHEN** the derivation enrolls a game the ledger does not name
+- **THEN** the ledger's equality assertion fails until its entry names what
+  covers its largest board
+
 ### Requirement: Import-graph selection alone is unsound here, and is used only in a union
 
-Selecting which tests a commit runs by walking the **static import graph**
-alone (`vitest related`, `vitest --changed`, or any equivalent) SHALL NOT be
-adopted. The demonstration the gate requirement asks for has been run and it
-fails.
+Selecting which tests a commit runs by walking the static import graph alone
+(`vitest related`, `vitest --changed`, or any equivalent) SHALL NOT be adopted.
+A cross-game guard reads what a game is, its source text included, through
+`import.meta.glob(..., "?raw")`, and a file read as text forms no import edge.
+The graph SHALL be used only as one term of a union with a glob-reach channel,
+which "The pre-commit hook may run a selected subset of the suite" specifies.
 
-Measured 2026-09-09 with the installed `vitest related`:
+#### Scenario: A commit touches only help pages
 
-- **A game source change** (`src/games/sixteen/index.ts`) selects 33 of 301 test
-  files, and omits every cross-game guard that reads game source as *text*
-  through `import.meta.glob` while importing nothing from `games/` — among them
-  the two palette guards, `palette-override-claims`, `hint-refusal` and
-  `note-vocabulary`.
-- **A help page change** (`help/games/sixteen.md`) selects **nothing at all**,
-  while three guards exist to check those files — including
-  `help-coverage.test.ts`, which holds the help directory and the catalog to
-  each other in both directions.
+- **WHEN** a selector reports no tests for a change under `help/`
+- **THEN** the selector is rejected, and the guards are not skipped
+- **BECAUSE** `help/` is a build input and the subject of the help-coverage
+  guard, which is why it is already excluded from the documentation-only
+  shortcut
 
-The cause is structural rather than incidental, and it follows from a rule this
-project holds deliberately: a cross-game guard finds its population by reading
-**what a game is**, including its own source text, never a roster kept in a
-test file. A declaration on the game that a mechanism consumes — a contract
-section's `notApplicable` reason, which the help page shows — is part of what
-the game is; a list that only a check reads is not. 26 test files therefore
-reach their subjects through `import.meta.glob(..., "?raw")`, and a file read
-as text forms no import edge. The design that makes these guards impossible to
-forget is the same design that makes them invisible to import-graph selection.
+### Requirement: A test selector is accepted only against two experiments
 
-**What has changed is that the missing channel turned out to be derivable.**
-Every `import.meta.glob` call in the tree takes a literal pattern — a string, or
-an array of strings — so the couplings the graph cannot see can be enumerated
-statically. The graph is therefore permitted **as one term of a union** with a
-glob-reach channel, never on its own; the union is specified in "The pre-commit
-hook may run a selected subset of the suite".
-
-A scheme that selects on what a test **actually read at runtime** remains
-acceptable too. Any such scheme SHALL be accepted only against the two
-experiments above, and SHALL treat an unclassifiable change as "run everything"
-rather than "run nothing".
-
-This requirement bounds *test selection* only. It does not restrict the gate's
-existing role-scoping — biome staged-versus-whole-tree, and the
-documentation-only shortcut — which are permitted because their safety is
-asserted rather than assumed.
+A scheme that selects on what a test actually read at runtime is acceptable
+too. Any selection scheme SHALL be accepted only against two experiments, a
+change to one game's source and a change to a `help/` page, and only if it
+selects the glob-based guards for both. It SHALL treat an unclassifiable
+change as "run everything" and never as "run nothing".
 
 #### Scenario: A test-impact selector is proposed
 
@@ -974,70 +986,26 @@ asserted rather than assumed.
 - **BECAUSE** the guards this project most relies on are exactly the ones a
   static graph cannot see, and switching them off is silent
 
-#### Scenario: A commit touches only help pages
-
-- **WHEN** a selector reports no tests for a change under `help/`
-- **THEN** the selector is rejected rather than the guards skipped
-- **BECAUSE** `help/` is a build input and `help-coverage.test.ts`'s subject,
-  which is why it is already excluded from the documentation-only shortcut
-
 ### Requirement: The pre-commit hook may run a selected subset of the suite
 
-The **automatic per-commit hook** MAY run only the test files a commit can have
-broken. CI and a manual `npm run gate` SHALL continue to run the whole suite, so
-the guarantee on `main` is unchanged — the same backstop argument that already
-scopes biome to staged files in the hook and to the whole tree in CI.
-
-The selection SHALL be the **union of two channels**, because neither is
-sufficient alone:
-
-1. the static import graph, via `vitest list --changed`;
-2. every test whose walk reaches a staged path, where the walk follows imports
-   and reads the `import.meta.glob` calls of **every module it visits**, not
-   only of the test file. A guard that reads source through a helper reads what
-   the helper's glob matches, and a scan of the test file alone cannot see it.
-
-The glob channel SHALL match by the pattern's **literal base directory** — the
-prefix before its first wildcard — rather than by evaluating the pattern. A
-matcher for Vite's glob syntax is a component that can be subtly wrong, and
-being subtly wrong here means silently not running a guard; matching by base
-directory can only ever select *more* tests. It MAY also require a match to end
-in the pattern's literal last segment, or in the literal after a last segment of
-the form `*<literal>`, since every file the pattern matches does.
-
-The selector SHALL **fail closed**, resolving to the whole suite whenever: a
-staged path lies outside the directories it models, the union is empty, or
-anything at all goes wrong.
-
-A test SHALL NOT reach its subject through a channel the selector cannot model.
-A guard SHALL assert this by reading the tree — failing on a computed
-`import.meta.glob` pattern, or on a direct filesystem read from a test inside the
-gate's `include` — and SHALL be shown to fail before it is trusted. The gate
-SHALL also hold the walk to known couplings on the real tree, among them a glob
-reached only through a helper, so that a walk gone blind fails rather than
-reporting a small selection.
+The automatic per-commit hook runs only the test files a commit can have
+broken. CI and a manual `npm run gate` SHALL continue to run the whole suite,
+so the guarantee on `main` is unchanged. The selection SHALL be the union of
+two channels, because neither is sufficient alone: the static import graph,
+via `vitest list --changed`; and every test whose walk reaches a staged path.
 
 #### Scenario: A commit changes a help page
 
 - **WHEN** only files under `help/` are staged
 - **THEN** the guards that glob `help/` are selected and run
-- **BECAUSE** the import graph alone selects nothing for such a change, which is
-  the defect that made graph-only selection unusable
+- **BECAUSE** the import graph alone selects nothing for such a change
 
-#### Scenario: A commit touches a file the selector does not model
+### Requirement: The selector's walk reads the globs of every module it visits
 
-- **WHEN** a staged path lies outside the modeled directories — a config file, a
-  template, a script
-- **THEN** the whole suite runs
-- **BECAUSE** a wrong "everything" costs minutes and a wrong subset costs a guard
-
-#### Scenario: A test acquires an unmodeled read channel
-
-- **WHEN** a test is written with a computed glob pattern, or reads the
-  filesystem directly
-- **THEN** the guard fails the build and names the file
-- **BECAUSE** the coupling would otherwise be invisible to the selector, and the
-  commit that broke it would pass without ever running it
+The walk SHALL follow imports and SHALL read the `import.meta.glob` calls of
+every module it visits, not only of the test file. A guard that reads source
+through a helper reads what the helper's glob matches, and a scan of the test
+file alone cannot see it.
 
 #### Scenario: A guard reads source through a helper
 
@@ -1047,37 +1015,78 @@ reporting a small selection.
 - **BECAUSE** the helper's glob is read by every file that imports the helper,
   and a selector that read only the test file's own globs would skip it
 
+### Requirement: A glob is matched by its literal base directory
+
+The glob channel SHALL match by the pattern's literal base directory, the
+prefix before its first wildcard, and SHALL NOT evaluate the pattern. A matcher
+for Vite's glob syntax that is subtly wrong silently skips a guard, while
+matching by base directory can only select more tests.
+The one narrowing it takes is to require a match to end in the pattern's
+literal last segment, or in the literal after a last segment of the form
+`*<literal>`, since every file the pattern matches does.
+
+#### Scenario: A staged file lies under a glob's base directory
+
+- **WHEN** a test globs a directory with wildcards in the middle of its pattern,
+  and a staged path lies under the literal prefix and ends as the pattern ends
+- **THEN** the test is selected, whether or not the full pattern would match
+  the path
+
+### Requirement: The selector fails closed
+
+The selector SHALL fail closed, resolving to the whole suite whenever a staged
+path lies outside the directories it models, the union is empty, or anything
+at all goes wrong.
+
+#### Scenario: A commit touches a file the selector does not model
+
+- **WHEN** a staged path lies outside the modeled directories: a config file, a
+  template, a script
+- **THEN** the whole suite runs
+- **BECAUSE** a wrong "everything" costs minutes and a wrong subset costs a guard
+
+### Requirement: No test reaches its subject through a channel the selector cannot model
+
+A test SHALL NOT reach its subject through a channel the selector cannot
+model. A guard SHALL assert this by reading the tree, failing on a computed
+`import.meta.glob` pattern or on a direct filesystem read from a test inside
+the gate's `include`, and SHALL be shown to fail before it is trusted.
+
+#### Scenario: A test acquires an unmodeled read channel
+
+- **WHEN** a test is written with a computed glob pattern, or reads the
+  filesystem directly
+- **THEN** the guard fails the build and names the file
+- **BECAUSE** the coupling would otherwise be invisible to the selector, and the
+  commit that broke it would pass without ever running it
+
+### Requirement: The gate holds the selector's walk to known couplings
+
+The gate SHALL hold the walk to known couplings on the real tree, among them a
+glob reached only through a helper, so that a walk gone blind fails and does
+not report a small selection.
+
+#### Scenario: The walk stops seeing a helper's glob
+
+- **WHEN** a change to the walk makes it miss a glob that a test reaches only
+  through a helper
+- **THEN** the gate fails on the known coupling
+
 ### Requirement: The gate rejects a test whose every assertion is conditional
+
 The gate SHALL fail on a test whose every assertion sits behind a condition
 without the test also asserting how many cases it examined, and the check SHALL
-carry a floor on the test files and the tests it scanned.
-
-A test that cannot fail passes forever while asserting nothing, and nothing in
-the suite notices, because a green test and a vacuous one are the same
-observation. Measured during `tidy-the-code-after-the-port`: thirteen games
-carried one, found only because an agent planted a defect in each game and
-watched for red.
-
-**Which shapes are guarded SHALL be decided by measuring against that corpus, not
-by how confident a shape looks.** Measured 2026-09-12 by running each candidate
-over every one of those games' test files as they stood at the tidy commit's
-parent and again at the commit: "both sides of an assertion are one expression"
-caught **0 of 13** and reported five sites, all of them sound determinism checks;
-"a bound the type guarantees" caught **0 of 13** and reported eleven, all already
-reviewed by an earlier change; "every assertion conditional" caught **5 of 13**.
-Only the third is built.
-
-A condition means an `if`, and equally `if (…) continue;` or `if (…) return;` —
-the same guard written the other way round. Reading only the first spelling is
-the wrong-key failure `docs/method.md` § "A scan that keys on a name" describes; it
-sees four of one game's five reason scans and misses the fifth.
+carry a floor on the test files and the tests it scanned. A condition means an
+`if`, and equally `if (…) continue;` or `if (…) return;`, the same guard
+written the other way round. A test that cannot fail passes forever, and a
+green test and a vacuous one are the same observation.
 
 #### Scenario: a test scans for a case and finds none
 
 - **WHEN** a test's assertions run only inside a conditional
 - **THEN** the gate fails unless the test also asserts the number of cases it
   examined, outside that conditional
-- **AND** a fixture that stops producing the case then fails rather than passing
+- **AND** a fixture that stops producing the case then fails and does not pass
   silently
 
 #### Scenario: a test has already written its own vacuity guard
@@ -1085,13 +1094,13 @@ sees four of one game's five reason scans and misses the fifth.
 - **WHEN** a scan returns on finding its case and ends in an unconditional
   `throw`, or an `if`/`else` asserts on both branches
 - **THEN** the guard is silent, because one of those paths always runs
-- **AND** the exemption is derived from the syntax rather than held in a roster
+- **AND** the exemption is derived from the syntax and not held in a roster
 
 #### Scenario: a test genuinely cannot count what it examined
 
 - **WHEN** the healthy state of the system is that the condition never fires
 - **THEN** the test is carried in the guard's ledger with the reason, keyed on
-  its title rather than its line, so the entry survives edits above it
+  its title and not its line, so the entry survives edits above it
 - **AND** the ledger is asserted exactly equal to the guard's findings, so an
   entry that stops being needed fails as loudly as a new offender
 
@@ -1102,26 +1111,29 @@ sees four of one game's five reason scans and misses the fifth.
   catch and every exemption it claims to make, and fails if any behaves wrongly
 - **AND** a guard about tests that cannot fail is therefore never one itself
 
+### Requirement: Which test shapes the gate guards is decided by measurement
+
+Which shapes are guarded SHALL be decided by measuring each candidate against a
+corpus of tests known to be vacuous, not by how confident a shape looks. Of the
+candidates measured, only "every assertion conditional" is built. "Both sides
+of an assertion are one expression" and "a bound the type guarantees" caught
+none of the corpus, and reported only sound or already-reviewed sites.
+
+#### Scenario: A new shape is proposed for the check
+
+- **WHEN** a change proposes that the check also reject another shape of test
+- **THEN** the candidate is run over tests known to be vacuous, and what it
+  catches there and what else it reports decide whether it is built
+
 ### Requirement: A complexity ceiling is set from the tree's own distribution
+
 The cognitive-complexity ceiling SHALL be a number taken from the measured
-distribution of this repository, recorded with that measurement, and SHALL NOT be
-left at a value no function in the tree can reach.
-
-A rule configured never to fire is indistinguishable from a rule that is off,
-except that it reads as enforced. The ceiling in force before this change was
-150, and no function reached it.
-
-**Measured 2026-09-12, with biome's diagnostic cap lifted**: 876 diagnostics at
-15, 477 at 25, 154 at 50, 71 at 75, 26 at 100, 12 at 120, 6 at 130, 2 at 140, 0
-at 150. There is no knee — the tree has a long tail — so the ceiling is chosen
-for the size of the exception list it produces, and it is **130**, with six
-sites accepted at their sites.
-
-**Why not lower, which is the part worth knowing.** The 26 sites at 100 are not
-a scattered tail: every one is an `interpretMove`, a `redraw`, or a solver's
-deduction loop — the three functions a game port inherently carries, branchy
-because the puzzle is. A ceiling that names 26 instances of a known, inherent
-shape is a ceiling that gets suppressed 26 times and then ignored.
+distribution of this repository, recorded with that measurement, and SHALL NOT
+be left at a value no function in the tree can reach: a rule that never fires
+reads as enforced and is off. The distribution has a long tail, so the ceiling
+is chosen for the size of the exception list it produces: one whose list is
+the `interpretMove`, `redraw` and deduction-loop shapes a port inherently has
+is suppressed at each and ignored.
 
 #### Scenario: a new function exceeds the ceiling
 
@@ -1133,45 +1145,18 @@ shape is a ceiling that gets suppressed 26 times and then ignored.
 
 - **WHEN** a site named by the rule is an input arbitrator, a redraw diff or a
   deduction loop whose branching is inherent
-- **THEN** it may stay, with a comment at the site stating the reason it is that
+- **THEN** it stays, with a comment at the site stating the reason it is that
   shape
 - **AND** the comment states the constraint, not the history of the decision
 
 ### Requirement: Nothing exports a symbol no other file imports
+
 The repository SHALL carry a check reporting every export under `src/`,
-`vite-plugins/` and `scripts/` that no other file imports, and the check SHALL
-carry vacuity floors on the files it parsed, the exports it found and the
-fraction of internal import specifiers it resolved. **It SHALL run in the gate's
-fast prefix**, with a ledger naming every export that is kept despite having no
-importer, and the ledger SHALL be asserted exactly equal to the check's
-findings — so an entry that stops earning its place fails as loudly as a new
-dead export, and an empty ledger is itself a claim.
-
-An unused export is invisible to the typechecker, to biome and to every test,
-because nothing that runs reads it. A tidy pass found dead accessors, dead
-re-exports and dead constants across the games entirely by hand.
-
-**What counts as a use is a rule each time, never a list.** A named or namespace
-import, a re-export, an entry file, a glob whose modules are really imported —
-and **a name mentioned in the signature of another export that is itself
-reached**, because a caller writing the object literal an exported function
-takes is reaching that type whether or not it imports the name. That last one is
-163 of the 376 findings the backlog held, all of them types; without it the only
-options are to un-export a type an exported signature names, which makes it
-unnameable by the caller who has to satisfy it, or to write a 163-entry ledger,
-which is the skip list this check exists not to be. It is resolved to a fixpoint
-*after* the dead set is known and only from an owner something reaches, so a
-dead exported function cannot keep its own options type alive.
-
-**The check is written here rather than installed, on a measurement.** `knip` was
-a devDependency for exactly this job, wired to no script. Measured 2026-09-12 at
-the pinned 6.31.0, with a config naming this repository's real entry points, it
-reports zero unused exports — and asked to trace a symbol imported on the first
-line of `src/main.ts`, it answers that no such export exists. The cause is
-structural: this repository writes every import with a `.ts` specifier, and
-knip's resolver does not follow those, so its module graph stops at each entry
-file. Its zero was a scan of nothing. The dependency is removed rather than
-worked around, so the next reader does not repeat the investigation.
+`vite-plugins/` and `scripts/` that no other file imports. It SHALL run in the
+gate's fast prefix, with a ledger naming every export that is kept despite
+having no importer, and the ledger SHALL be asserted exactly equal to the
+check's findings, so an entry that stops earning its place fails as loudly as
+a new dead export, and an empty ledger is itself a claim.
 
 #### Scenario: an export loses its last importer
 
@@ -1179,22 +1164,46 @@ worked around, so the next reader does not repeat the investigation.
 - **THEN** the gate fails, naming the symbol and its file
 - **AND** deleting the export, or importing it again, makes the gate pass
 
+### Requirement: The unused-export check floors what it read
+
+The check SHALL carry vacuity floors on the files it parsed, the exports it
+found and the fraction of internal import specifiers it resolved. The floor on
+the resolved fraction SHALL count only specifiers the check was asked to
+resolve, since counting package imports as unresolved makes the floor read a
+failure that is not one.
+
+#### Scenario: the resolver stops following this tree's imports
+
+- **WHEN** a change makes internal `.ts` specifiers stop resolving
+- **THEN** the floor on the resolved fraction fails, and the check does not
+  report a clean tree
+
+### Requirement: What counts as a use of an export is a rule, never a list
+
+A use SHALL be defined by rule each time and never by a list: a named or
+namespace import, a re-export, an entry file, a glob whose modules are really
+imported, and a name mentioned in the signature of another export that is
+itself reached, because a caller writing the object literal an exported
+function takes reaches that type whether or not it imports the name. Being
+reached only through `export * from` a barrel, or through a `?raw` glob that
+reads the module as text, SHALL NOT count as a use.
+
 #### Scenario: a relay is counted as a consumer
 
 - **WHEN** a module is reached only through `export * from` a barrel, or through
   an `import.meta.glob` that reads it as text with `?raw`
 - **THEN** its exports are NOT thereby counted as used, because neither is a use
 - **AND** the check's report is verified against a deliberately planted dead
-  export, since both of those blind spots are silent rather than wrong
+  export, since both of those blind spots are silent and not wrong
 
-#### Scenario: the resolver stops following this tree's imports
+### Requirement: A type named by a reached signature is used, and only then
 
-- **WHEN** a change makes internal `.ts` specifiers stop resolving
-- **THEN** the floor on the resolved fraction fails, rather than the check
-  reporting a clean tree
-- **AND** the floor counts only specifiers the check was asked to resolve, since
-  counting package imports as unresolved makes the floor read a failure that is
-  not one
+A name used only in another export's signature SHALL be resolved to a fixpoint
+after the dead set is known, and only from an owner something reaches, so a
+dead exported function cannot keep its own options type alive. Without the
+rule a type an exported signature names would have to be un-exported, which
+makes it unnameable by the caller who has to satisfy it, or carried in the
+ledger.
 
 #### Scenario: a type is named only by the signature that takes it
 
@@ -1202,19 +1211,45 @@ worked around, so the next reader does not repeat the investigation.
   nothing imports the type
 - **THEN** it is NOT reported, because the caller reaches it through the
   function
-- **AND** a type no reached export names IS reported, which is what the planted
+- **AND** a type no reached export names IS reported, which is what a planted
   dead `interface` proves
+
+### Requirement: The unused-export check is the repository's own, not knip
+
+The check SHALL be the repository's own script and SHALL NOT be `knip`. This
+repository writes every import with a `.ts` specifier, which knip's resolver
+does not follow, so its module graph stops at each entry file and its clean
+report is a scan of nothing.
+
+#### Scenario: knip is proposed for dead exports again
+
+- **WHEN** a change proposes installing knip to find unused exports
+- **THEN** it is declined, because on this tree knip follows no import past an
+  entry file and so reports no unused export at all
 
 ### Requirement: The gate holds absence to one spelling
 
-The repository SHALL carry `scripts/checks/absence-spelling.mjs`, run in the gate's fast prefix, and it SHALL fail on two shapes across every tracked TypeScript file. The first is `undefined` written as a member of a union type anywhere but inside a cast, which is the `ts-engine` rule "Absence has one spelling" held by syntax. The second is a strict comparison against `null` or `undefined` whose other operand's type holds the other word and not this one. That comparison is always false, the typechecker accepts it, and it is exactly what a respelling leaves behind.
-
-Its exceptions SHALL be derived from syntax and never listed: a cast describes a value the language produced, a comparison against an index read is a bounds check while `noUncheckedIndexedAccess` is off, and an operand whose type is generic, `any` or `unknown` has no absent word the checker can know. It SHALL prove both halves on every run against fixtures parsed in memory, and SHALL floor the files, unions and comparisons it examined, so a scan that stops matching fails instead of reporting a clean tree.
+The repository SHALL carry `scripts/checks/absence-spelling.mjs`, run in the
+gate's fast prefix, and it SHALL fail on two shapes across every tracked
+TypeScript file. First, `undefined` written as a member of a union type
+anywhere but inside a cast, which is the `ts-engine` rule "Absence has one
+spelling" held by syntax. Second, a strict comparison against `null` or
+`undefined` whose other operand's type holds the other word and not this one:
+always false, and what a respelling leaves behind.
 
 #### Scenario: a respelled helper leaves a dead comparison
 
 - **WHEN** a function's declared return moves from `T | undefined` to `T | null` and a caller still tests `=== undefined`
 - **THEN** the gate fails naming the comparison and the operand's type, although the typechecker passes
+
+### Requirement: The absence guard derives its exceptions and proves itself
+
+The guard's exceptions SHALL be derived from syntax and never listed: a cast
+describes a value the language produced, a comparison against an index read is
+a bounds check while `noUncheckedIndexedAccess` is off, and an operand whose
+type is generic, `any` or `unknown` has no absent word the checker can know.
+The guard SHALL prove both halves on every run against fixtures parsed in
+memory, and SHALL floor the files, unions and comparisons it examined.
 
 #### Scenario: a cast is not a declaration
 
@@ -1224,7 +1259,7 @@ Its exceptions SHALL be derived from syntax and never listed: a cast describes a
 #### Scenario: the guard stops seeing the tree
 
 - **WHEN** the file listing, the parse or the program load examines fewer files, unions or comparisons than its floor
-- **THEN** the guard fails and says which floor, rather than passing
+- **THEN** the guard fails and says which floor, and does not pass
 
 ### Requirement: A stated reporting rule matches what the build does
 
@@ -1234,11 +1269,6 @@ amended to say that it does not. A rule enforced against nothing is worse than
 no rule: it reads as a guarantee, code is written to satisfy it, and nobody
 discovers it is inert until the failure it exists for is the one nobody heard
 about.
-
-`AGENTS.md` carried "let them propagate so Sentry records them" from before
-there was anywhere to deploy, while `VITE_SENTRY_DSN` was never set. The first
-outside failure — a stale chunk on the About dialog — reached the developer only
-because a player read the error off their own screen and retyped it.
 
 #### Scenario: A reporting rule is stated but no build implements it
 
@@ -1256,23 +1286,35 @@ by itself: the build requests no high-entropy client hints (`Accept-CH`), the
 SDK tracks no sessions and sends no client reports, and nothing is sent while
 nothing has gone wrong.
 
-A client-side DSN is public by construction: it is compiled into the shipped
-bundle and readable from the deployed assets. Whatever it is stored in, the
-controls that restrict use are the reporting service's own allowed-domains list
-and rate limits, and both SHALL be configured — an unrestricted public DSN
-accepts traffic from anywhere.
-
-Reporting SHALL be verified on the deployed origin by observing a deliberately
-triggered and consented report arrive, since a DSN that is set but wrong is
-indistinguishable from an app that never crashes.
-
 #### Scenario: Error reporting is switched on for a deployment
 
 - **WHEN** a deployment sets `VITE_SENTRY_DSN`
 - **THEN** the CSP's `connect-src` names the reporting origin
 - **AND** no `Accept-CH` header is emitted
-- **AND** the service's allowed domains and rate limits are configured
-- **AND** a deliberately triggered report the player agreed to is observed
+
+### Requirement: A public DSN is restricted at the reporting service
+
+A client-side DSN is public by construction: it is compiled into the shipped
+bundle and readable from the deployed assets, whatever it is stored in. The
+reporting service's own allowed-domains list and rate limits are the controls
+that restrict its use, and both SHALL be configured, since an unrestricted
+public DSN accepts traffic from anywhere.
+
+#### Scenario: A DSN is set for a deployment
+
+- **WHEN** a deployment sets `VITE_SENTRY_DSN`
+- **THEN** the service's allowed domains and rate limits are configured
+
+### Requirement: Error reporting is verified on the deployed origin
+
+Reporting SHALL be verified on the deployed origin by observing a deliberately
+triggered and consented report arrive, since a DSN that is set but wrong is
+indistinguishable from an app that never crashes.
+
+#### Scenario: Reporting has just been switched on
+
+- **WHEN** a deployment sets `VITE_SENTRY_DSN`
+- **THEN** a deliberately triggered report the player agreed to is observed
   arriving
 
 ### Requirement: What a crash report carries matches what the privacy notes promise
@@ -1290,27 +1332,11 @@ change.
 
 ### Requirement: The gate runs the source-scan tests as a pass ahead of the rest of the suite
 
-The gate SHALL run the **source-scan test files** as a vitest pass of their own,
+The gate SHALL run the source-scan test files as a vitest pass of their own,
 after the node guards of the fail-fast prefix and before the rest of the suite
-and `vite build` start, and SHALL fail without starting either when a scan fails.
-A source scan costs milliseconds, and as an ordinary vitest file it was reported
-only after the whole run: on 2026-09-22 one commit failed twice that way, each
-time about eight minutes in.
-
-Membership SHALL be **derived from what the file is**, never listed: a test file
-is a source scan when it reads source through an `import.meta.glob` with a `?raw`
-query, no glob it calls imports code, and its import closure reaches no module
-under `src/games/`. That last condition is structural rather than a timing, since
-a file that cannot reach a `Game` cannot build a board. Anything the derivation
-cannot resolve SHALL count against membership, which only moves a file into the
-main pass.
-
-The two passes SHALL **partition** the suite: one list is the scan pass's
-`include` and the main pass's `exclude`, and the gate SHALL ask vitest before the
-scan pass to confirm that every test file an unsplit run would run lands in
-exactly one pass and that the scan pass is not empty. The split changes only when
-a failure is reported, never what runs. Outside the gate the suite is one run of
-everything, and the hook's test selection applies to both passes unchanged.
+and `vite build` start, and SHALL fail without starting either when a scan
+fails. A source scan costs milliseconds, and as an ordinary vitest file it is
+reported only after the whole run.
 
 #### Scenario: A commit breaks a source scan
 
@@ -1318,16 +1344,16 @@ everything, and the hook's test selection applies to both passes unchanged.
   departs from its shared role without a reason
 - **THEN** the gate fails in the scan pass, before the main vitest pass or `vite
   build` start
-- **BECAUSE** measured with such a plant on 2026-09-25, the gate reported it
-  twenty seconds after starting, where the same class of failure had cost about
-  eight minutes on 2026-09-22
 
-#### Scenario: A test file falls out of both passes
+### Requirement: Source-scan membership is derived from what the file is
 
-- **WHEN** a configuration change leaves a test file in neither pass, or in both
-- **THEN** the partition check fails and names the file, before any test runs
-- **BECAUSE** a file in neither pass would pass by never running; both plants
-  were shown to fail on 2026-09-25
+Membership SHALL be derived from what the file is, never listed: a test file is
+a source scan when it reads source through an `import.meta.glob` with a `?raw`
+query, no glob it calls imports code, and its import closure reaches no module
+under `src/games/`. That last condition is structural and not a timing, since a
+file that cannot reach a `Game` cannot build a board. Anything the derivation
+cannot resolve SHALL count against membership, which only moves a file into
+the main pass.
 
 #### Scenario: A source scan starts importing a game
 
@@ -1336,30 +1362,29 @@ everything, and the hook's test selection applies to both passes unchanged.
 - **BECAUSE** membership is read from the file's imports, and the partition holds
   whatever the derivation answers
 
-### Requirement: The app is published once the fast checks and the build pass, and the publish is verified on the deployed origin
+### Requirement: The scan pass and the main pass partition the suite
 
-The app SHALL be deployed to a public HTTPS origin, and the deploy SHALL wait on
-the gate's checks up to and including the production build: the typecheck, the
-lint, the source checks and openspec validation, run by `scripts/gate.sh` itself
-with `GATE_BUILD_ONLY=1`, so the deploy and the gate cannot disagree about what
-those checks are. The build that runs there SHALL be the artifact published. The
-test suite SHALL run in CI beside the deploy, as the full `npm run gate`, and a
-failure there SHALL fail the run without holding back the deploy.
+The two passes SHALL partition the suite: one list is the scan pass's `include`
+and the main pass's `exclude`, and the gate SHALL ask vitest before the scan
+pass to confirm that every test file an unsplit run would run lands in exactly
+one pass and that the scan pass is not empty. The split changes only when a
+failure is reported, never what runs. Outside the gate the suite is one run of
+everything, and the hook's test selection applies to both passes unchanged.
 
-Verification SHALL be performed **against the deployed origin**, not against a
-local build, for the four things that fail silently there:
+#### Scenario: A test file falls out of both passes
 
-- a route loads by its **clean URL** (`/pegs` served from `pegs.html`) —
-  extensionless resolution is host behavior and is a configuration switch on
-  some hosts, so it is checked, never assumed;
-- the **security headers arrive** as headers, confirmed by inspecting the
-  response, not inferred from `dist/_headers` existing in the output;
-- the **service worker registers on that origin** and the app opens with the
-  network off — registration is scope- and `base`-sensitive, and a local preview
-  does not exercise either;
-- the **canonical-URL-gated artifacts** (`sitemap.xml`, `robots.txt`) are
-  present, since they are emitted only when `VITE_CANONICAL_BASE_URL` is set and
-  their absence is invisible.
+- **WHEN** a configuration change leaves a test file in neither pass, or in both
+- **THEN** the partition check fails and names the file, before any test runs
+- **BECAUSE** a file in neither pass would pass by never running
+
+### Requirement: The app is published once the fast checks and the build pass
+
+The app SHALL be deployed to a public HTTPS origin, and the deploy SHALL wait
+on the gate's checks up to and including the production build: the typecheck,
+the lint, the source checks and openspec validation, run by `scripts/gate.sh`
+itself with `GATE_BUILD_ONLY=1`, so the deploy and the gate cannot disagree
+about what those checks are. The build that runs there SHALL be the artifact
+published.
 
 #### Scenario: A commit that fails the fast checks does not reach the public URL
 
@@ -1367,11 +1392,25 @@ local build, for the four things that fail silently there:
   fail
 - **THEN** no deploy is published for that commit
 
+### Requirement: The test suite runs beside the deploy and does not hold it back
+
+The test suite SHALL run in CI beside the deploy, as the full `npm run gate`,
+and a failure there SHALL fail the run without holding back the deploy.
+
 #### Scenario: The suite does not hold back the deploy
 
 - **WHEN** a commit lands on `main`
 - **THEN** it is published once the fast checks and the build pass, and the
   suite's result arrives on the same run afterwards
+
+### Requirement: The publish is verified on the deployed origin
+
+Verification SHALL be performed against the deployed origin, not against a
+local build, for what fails silently there. A route SHALL load by its clean URL
+(`/pegs` served from `pegs.html`): extensionless resolution is host behavior,
+so it is checked and never assumed. The security headers SHALL be seen to
+arrive, by inspecting the response and not inferred from `dist/_headers`
+existing in the output.
 
 #### Scenario: A puzzle route is reachable by its clean URL
 
@@ -1379,51 +1418,29 @@ local build, for the four things that fail silently there:
   extension
 - **THEN** the corresponding page is served
 
+### Requirement: The service worker and the crawler files are verified on the deployed origin
+
+On the deployed origin the service worker SHALL be seen to register and the app
+to open with the network off, since registration is scope- and
+`base`-sensitive and a local preview exercises neither. `sitemap.xml` SHALL be
+seen to be present, with the `robots.txt` written beside it: the sitemap
+plugin runs only when `VITE_CANONICAL_BASE_URL` is set, and without it the
+build ships no sitemap and the committed default `robots.txt`, which nothing
+visible reports.
+
+#### Scenario: A deploy is built without the canonical URL
+
+- **WHEN** the published build was made with `VITE_CANONICAL_BASE_URL` unset
+- **THEN** the check of the deployed origin finds no `sitemap.xml`, which the
+  build itself did not report
+
 ### Requirement: The pre-commit hook narrows the cross-game sweeps to the games a commit can reach
 
-The **automatic per-commit hook** SHALL skip the cross-game cases of every game
+The automatic per-commit hook SHALL skip the cross-game cases of every game
 whose code cannot reach a staged path, and SHALL NOT skip anything else on that
 basis. CI and a manual `npm run gate` SHALL never narrow, so the guarantee on
-`main` is unchanged. A cross-game guard runs one case per game, and on a
-Pearl-only commit, measured 2026-09-27, 518 s of 593 s of test time was such
-cases and 413 s of it was other games' cases.
-
-The **scope** SHALL be the games that reach a staged path: a game whose
-directory holds it, and a game whose own files' walk reaches it through imports,
-globs or text imports. A test file outside the game directories whose walk
-reaches a staged path **without passing through a game directory** SHALL run
-with every game's cases, in a test run of its own, because the name filter is
-one per run.
-
-A skipped case SHALL be one the commit could not have turned red, which requires
-both halves of a soundness condition: **the case's file reaches no staged path
-except through a game, and every such game is in scope**; and **a case titled
-`<id>: …` depends on no game but `<id>`**, which holds because a game cannot
-import another game and no case reads a second one on purpose. A case is
-recognized by that title and by nothing else, so a guard that titles its cases
-otherwise is not narrowed, which only costs time. When no game reaches a staged
-path the hook SHALL NOT narrow at all.
-
-The scope SHALL travel as a single value, `GATE_GAME_SCOPE`, honored only beside
-`GATE_PRECOMMIT=1`, so it inherits that toggle's backstop. The name filter that
-skips the cases and the helpers that narrow the assertions spanning a sweep SHALL
-both be derived from it, so they cannot disagree about which games ran. Skipped
-cases SHALL be reported as skipped at the runner level.
-
-An assertion that reads across a sweep SHALL be narrowed **with** the sweep, as
-"The pre-commit gate minimizes wall-clock without dropping checks" already
-requires of an assertion whose verdict depends on narrowed work.
-A ledger compared against what the cases found SHALL be filtered to the games
-that ran, so the touched game's entry is still held to its case. A floor over the
-whole population that no subset can be expected to meet SHALL be skipped on a
-narrowed run, unless a touched game could move it on its own; such a floor SHALL
-be computed over the whole population without the narrowed work, so that it
-still runs.
-
-A helper module that reads a broad tree through a glob SHALL be kept apart from
-helpers that do not, so that importing one does not make a guard read the whole
-tree. The narrowing works at the grain of a module, and a glob reached through
-a shared helper makes every importer of that helper run whole.
+`main` is unchanged. When no game reaches a staged path the hook SHALL NOT
+narrow at all. Skipped cases SHALL be reported as skipped at the runner level.
 
 #### Scenario: A commit touches only one game
 
@@ -1432,6 +1449,15 @@ a shared helper makes every importer of that helper run whole.
   Pearl, and runs Pearl's
 - **AND** reports the skipped cases as skipped
 - **BECAUSE** no other game's verdict can have changed, and CI runs them all
+
+### Requirement: The scope is the games that reach a staged path
+
+The scope SHALL be the games that reach a staged path: a game whose directory
+holds it, and a game whose own files' walk reaches it through imports, globs or
+text imports. A test file outside the game directories whose walk reaches a
+staged path without passing through a game directory SHALL run with every
+game's cases, in a test run of its own, because the name filter is one per
+run.
 
 #### Scenario: A commit touches an engine module some games use
 
@@ -1451,6 +1477,44 @@ a shared helper makes every importer of that helper run whole.
 - **THEN** those guards run with every game's cases
 - **BECAUSE** a module a guard reads itself can change every case in it
 
+### Requirement: A skipped case is one the commit could not have turned red
+
+A skipped case SHALL be one the commit could not have turned red, which needs
+both: the case's file reaches no staged path
+except through a game, and every such game is in scope; and a case titled
+`<id>: …` depends on no game but `<id>`, which holds because a game cannot
+import another game and no case reads a second one on purpose. A case SHALL be
+recognized by that title and by nothing else, so a guard that titles its cases
+otherwise is not narrowed, which only costs time.
+
+#### Scenario: A guard titles its cases another way
+
+- **WHEN** a cross-game guard's per-game cases do not begin `<id>: `
+- **THEN** none of them is skipped on a narrowed run
+
+### Requirement: The game scope travels as one value beside the role toggle
+
+The scope SHALL travel as a single value, `GATE_GAME_SCOPE`, honored only
+beside `GATE_PRECOMMIT=1`, so it inherits that toggle's backstop. The name
+filter that skips the cases and the helpers that narrow the assertions spanning
+a sweep SHALL both be derived from it, so they cannot disagree about which
+games ran.
+
+#### Scenario: The scope is set without the role toggle
+
+- **WHEN** a run has `GATE_GAME_SCOPE` set and `GATE_PRECOMMIT` unset
+- **THEN** no case is skipped and no assertion is narrowed
+
+### Requirement: An assertion that reads across a sweep is narrowed with the sweep
+
+An assertion that reads across a sweep SHALL be narrowed with the sweep. A
+ledger compared against what the cases found SHALL be filtered to the games
+that ran, so the touched game's entry is still held to its case. A floor over
+the whole population that no subset can be expected to meet SHALL be skipped
+on a narrowed run, unless a touched game could move it on its own; such a floor
+SHALL be computed over the whole population without the narrowed work, so that
+it still runs.
+
 #### Scenario: A ledger is compared on a narrowed run
 
 - **WHEN** the hook narrowed the run to one game, and a guard compares an
@@ -1469,50 +1533,27 @@ a shared helper makes every importer of that helper run whole.
 - **BECAUSE** that floor is read from the games without building a board, so
   narrowing the cases does not narrow it
 
+### Requirement: A helper that globs a broad tree is kept apart
+
+A helper module that reads a broad tree through a glob SHALL be kept apart from
+helpers that do not, so that importing one does not make a guard read the whole
+tree. The narrowing works at the grain of a module, and a glob reached through
+a shared helper makes every importer of that helper run whole.
+
+#### Scenario: A guard needs a helper that reads no source
+
+- **WHEN** a helper that reads no source shares a module with one that globs
+  the whole engine tree
+- **THEN** every guard importing either runs whole on an engine commit, which is
+  why the two are kept in separate modules
+
 ### Requirement: The per-commit hook walks one board of each kind, and the push walks the rest
 
-A cross-game sweep MAY do less work in the automatic per-commit hook than
-everywhere else, where the work it leaves out is **more of the same**: a second
-or later board of one params set, a game's largest board where a smaller board
-of every mode, tier and choice is still walked, or the later steps of one
-board's plan. The amount SHALL be chosen through `perCommit(hook, wide)` in
-`src/engine/testing/slow.ts`, which reads the role toggle the hook sets and
-nothing else, so CI, a manual `npm run gate` and a bare `vitest` all do the wide
-amount.
-
-This is a fourth scoping by role, beside the staged biome check, the
-documentation-only shortcut and the deferred decay assertion, and it rests on
-the same backstop: CI runs the whole suite wide on every push to `main`, and
-`src/gate-scope.test.ts` fails if the toggle is ever set there. It differs from
-a deferred assertion in that every assertion still runs in the hook, over fewer
-boards.
-
-The hook SHALL keep, for every sweep:
-
-- at least one board of every params set the sweep walks;
-- a board for every value of every mode, tier and choice a game's presets or its
-  Custom dialog offer, which is what `gatePresets` returns with the largest
-  board left out;
-- every check a single board can fail.
-
-A sweep SHALL NOT use the lever to leave out the only board of a kind, and the
-call site SHALL say what the hook's amount still walks.
-
-An assertion held against what a sweep found (a ledger of sentences heard, a
-floor on boards walked) SHALL be true of the hook's boards and of the push's.
-The two can differ by more than size: the slice takes the smallest preset
-supplying each value still wanted, so leaving out the largest board can change
-which preset a mode is walked on.
-
-A session that changes the code a sweep guards SHALL run that sweep wide before
-committing (`npx vitest run <the sweep's file>`), because the hook no longer
-does. The guide for writing tests names the sweeps.
-
-Measured 2026-10-08 on the owner's machine at load 4 to 5, with every test
-selected and the hook's toggle set, one run each back to back: 1,643 s of CPU
-(`user + sys`) and 763 s of wall before this requirement and the shared dealer
-(`ts-engine`, "A cross-game sweep deals each board once"), 865 s and 387 s
-after.
+A cross-game sweep SHALL do less work in the automatic per-commit hook than
+everywhere else only where what it leaves out is more of the same: a second or
+later board of one params set, a game's largest board where a
+smaller board of every mode, tier and choice is still walked, or the later
+steps of one board's plan.
 
 #### Scenario: A sweep walks several boards of one params set
 
@@ -1521,6 +1562,28 @@ after.
 - **BECAUSE** the first board catches a defect that shows on every board of the
   tier, and the others catch what a push can catch in time
 
+### Requirement: A sweep's per-commit amount is chosen through perCommit
+
+The amount a sweep does in the hook SHALL be chosen through
+`perCommit(hook, wide)` in `src/engine/testing/slow.ts`, which reads the role
+toggle the hook sets and nothing else, so CI, a manual `npm run gate` and a
+bare `vitest` all do the wide amount.
+
+#### Scenario: A sweep is run outside the hook
+
+- **WHEN** a sweep's file is run by a bare `vitest`, with no toggle set
+- **THEN** it walks the wide amount
+
+### Requirement: The hook keeps a board of every kind and every check one board can fail
+
+For every sweep the hook SHALL keep: at least one board of every params set the
+sweep walks; a board for every value of every mode, tier and choice a game's
+presets or its Custom dialog offer, which is what `gatePresets` returns with
+the largest board left out; and every check a single board can fail, so every
+assertion still runs in the hook, over fewer boards. A sweep SHALL NOT use the
+lever to leave out the only board of a kind, and the call site SHALL say what
+the hook's amount still walks.
+
 #### Scenario: A mode is offered only on a game's largest preset
 
 - **WHEN** a value of a boolean or choice setting appears on no preset but the
@@ -1528,14 +1591,28 @@ after.
 - **THEN** the hook still walks a board with that value
 - **BECAUSE** the lever takes off size, never a mode
 
-#### Scenario: A hint planner is changed
+### Requirement: A sweep's ledger is true of the hook's boards and of the push's
 
-- **WHEN** a session edits a hint planner and commits
-- **THEN** it has run the hint sweeps wide for that planner's games first, and
-  the hook's narrower run is not what it relied on
+An assertion held against what a sweep found (a ledger of sentences heard, a
+floor on boards walked) SHALL be true of the hook's boards and of the push's.
+The two can differ by more than size: the slice takes the smallest preset
+supplying each value still wanted, so leaving out the largest board can change
+which preset a mode is walked on.
 
 #### Scenario: A ledger is held against the hook's walk and the push's
 
 - **WHEN** a sentence over the length limit is spoken only on a board the hook
   walks and the push does not, or the reverse
 - **THEN** the ledger lists it with a board that speaks it, and both runs pass
+
+### Requirement: A session runs a sweep wide before committing a change to what it guards
+
+A session that changes the code a sweep guards SHALL run that sweep wide before
+committing (`npx vitest run <the sweep's file>`), because the hook no longer
+does. The guide for writing tests names the sweeps.
+
+#### Scenario: A hint planner is changed
+
+- **WHEN** a session edits a hint planner and commits
+- **THEN** it has run the hint sweeps wide for that planner's games first, and
+  the hook's narrower run is not what it relied on

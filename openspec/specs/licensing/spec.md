@@ -11,32 +11,11 @@ and names every bundled third-party package with its license.
 ### Requirement: Layered top-level LICENSE.md
 
 The top-level `LICENSE.md` file SHALL credit, in chronological order, the layers
-of contribution to this codebase under a single MIT license body:
-
-1. Simon Tatham and upstream Portable Puzzle Collection contributors (deferring
-   to `licenses/sgt-puzzles-LICENSE` for the full contributor list).
-2. Lennard Sprong (x-sheep), for the `puzzles-unreleased` puzzles that thirteen
-   of the games here are ported from (deferring to
-   `licenses/puzzles-unreleased-LICENSE`).
-3. Mike Edmunds, for the puzzles-web PWA shell this project forks from.
-4. Yoni Lavi, for the TypeScript port work in this project (year range `2025-`,
-   open-ended).
-
-The MIT permission grant, conditions, and warranty disclaimer SHALL appear once
-below the layered copyright lines and apply to every layer.
-
-Upstream notices SHALL live in `licenses/`, one file per upstream project, each
-byte-identical to what that project ships, with a README recording what each one
-covers. The directory and file names are this project's and follow its spelling
-convention; the contents are the upstream projects' words and SHALL NOT be
-edited, which a rename does not do. They SHALL NOT live inside a subdirectory of
-the source tree they once accompanied: after the migration what they cover is
-the whole of `src/engine/` and `src/games/` and the served help sources, and
-`puzzles/` — the tree that held them — no longer exists.
-
-The notices SHALL remain reachable from the app: the About dialog `?raw`-imports
-each one and shows it to players, so they are live build inputs and moving one
-without repointing that import breaks the production build.
+of contribution to this codebase: Simon Tatham and the upstream Portable Puzzle
+Collection contributors; Lennard Sprong (x-sheep), for the `puzzles-unreleased`
+puzzles that games here are ported from; Mike Edmunds, for the puzzles-web PWA
+shell this project forks from; and Yoni Lavi, for the TypeScript port work in
+this project, with the open-ended year range `2025-`.
 
 #### Scenario: Every lineage layer credited
 
@@ -47,7 +26,13 @@ without repointing that import breaks the production build.
   games
 - **AND** a copyright line for Mike Edmunds
 - **AND** a copyright line for Yoni Lavi
-- **AND** a single MIT permission/conditions/warranty body that covers them all
+
+### Requirement: LICENSE.md defers to the upstream notices
+
+The Simon Tatham layer of `LICENSE.md` SHALL defer to
+`licenses/sgt-puzzles-LICENSE` for the full list of upstream contributors and
+SHALL NOT enumerate them inline. The Lennard Sprong layer SHALL defer to
+`licenses/puzzles-unreleased-LICENSE`.
 
 #### Scenario: Upstream contributor list not duplicated
 
@@ -56,16 +41,59 @@ without repointing that import breaks the production build.
   enumerating contributors inline
 - **AND** that file is left byte-identical to upstream
 
-#### Scenario: The notices are shown in the app
+### Requirement: One MIT body covers every layer
 
-- **WHEN** a player opens the About dialog
-- **THEN** the upstream notices are rendered from the files in `licenses/`
+The MIT permission grant, conditions, and warranty disclaimer SHALL appear once
+in `LICENSE.md`, below the layered copyright lines, and SHALL apply to every
+layer.
+
+#### Scenario: A single license body
+
+- **WHEN** a reader opens the top-level `LICENSE.md`
+- **THEN** below the layered copyright lines there is a single MIT
+  permission/conditions/warranty body that covers them all
+
+### Requirement: Upstream notices are kept byte-identical in licenses/
+
+Upstream notices SHALL live in `licenses/`, one file per upstream project, each
+byte-identical to what that project ships, with a README recording what each one
+covers. The directory and file names are this project's and follow its spelling
+convention; the contents are the upstream projects' words and SHALL NOT be
+edited, which a rename does not do.
 
 #### Scenario: Renaming a notice file leaves its bytes alone
 
 - **WHEN** a notice file or the directory holding it is renamed
 - **THEN** the file's content hash before and after the rename is identical
-- **AND** the About dialog's `?raw` imports are repointed in the same commit
+
+### Requirement: The upstream notices sit outside the source they cover
+
+The upstream notices SHALL NOT live inside a subdirectory of the source tree,
+because what they cover is the whole of `src/engine/` and `src/games/` and the
+served help sources, and not one directory of them.
+
+#### Scenario: A notice beside the code it covers
+
+- **WHEN** an upstream notice is placed under `src/games/`
+- **THEN** it is in the wrong home, and belongs in the top-level `licenses/`
+
+### Requirement: The upstream notices are reachable from the app
+
+The upstream notices SHALL remain reachable from the app: the About dialog
+`?raw`-imports each one and shows it to players. They are
+therefore live build inputs, and a change that moves or renames one SHALL
+repoint that import in the same commit, since the production build breaks
+without it.
+
+#### Scenario: The notices are shown in the app
+
+- **WHEN** a player opens the About dialog
+- **THEN** the upstream notices are rendered from the files in `licenses/`
+
+#### Scenario: A rename repoints the imports
+
+- **WHEN** a notice file or the directory holding it is renamed
+- **THEN** the About dialog's `?raw` imports are repointed in the same commit
 
 ### Requirement: CREDITS.md file thanking lineage
 
@@ -81,28 +109,36 @@ The repository SHALL contain a top-level `CREDITS.md` file that thanks upstream 
 
 The third-party section of the About dialog SHALL name, for each package the
 app bundles, who publishes it and under what license, and SHALL reproduce that
-package's own notice. **No entry may contain an unfilled license template.**
+package's own notice. No entry SHALL contain an unfilled license template, such
+as the line `Copyright [yyyy] [name of copyright owner]`: it names nobody, and
+reads as this project's own unfinished work.
+
+#### Scenario: A bundled package's entry
+
+- **WHEN** a player expands a bundled package whose metadata names an author
+- **THEN** the entry shows the package's name, that author as who publishes
+  it, and the package's own notice or license text
+- **AND** no line of it is a license template left blank
+
+### Requirement: A filled-in Apache appendix is the package's notice
 
 Apache-2.0's text ends with an appendix headed "How to apply the Apache License
-to your work" — a template *for authors*, containing the line
-`Copyright [yyyy] [name of copyright owner]`. Where a package fills it in it is
-the closest thing that package has to a NOTICE and SHALL be used as one. Where a
-package ships it **unfilled**, it names nobody, and the appendix SHALL be
-removed rather than reproduced: it is not part of the license grant, and the
-alternative is telling players `Copyright [yyyy] [name of copyright owner]`,
-which reads as this project's own unfinished work.
+to your work", a template for authors. Where a bundled package fills its
+copyright line in, the filled-in appendix is the closest thing that package has
+to a NOTICE and SHALL be used as one.
 
-Attribution SHALL be **derived from each package's own metadata** — its `author`,
-else its `contributors`, else the repository it is published from — and SHALL
-NOT be written down in this repository, which would be a list to maintain per
-dependency and a claim about someone else's code.
+#### Scenario: A package fills the appendix in
 
-It SHALL be presented as *who publishes the package*, never as a copyright
-notice this project asserts on their behalf. Where a package states a copyright
-holder, that statement is in the notice text below it and speaks for itself.
+- **WHEN** a bundled package's appendix names a real copyright holder
+- **THEN** that line is used as the package's notice
 
-A package's own `NOTICE` file SHALL take precedence over everything else, which
-Apache-2.0 §4(d) requires.
+### Requirement: An unfilled Apache appendix is removed
+
+Where a bundled package ships the Apache-2.0 appendix with its copyright line
+left as the template, the appendix SHALL be removed and SHALL NOT be reproduced,
+in the extracted form or within the license text the entry falls back to. The
+entry SHALL still reproduce the license grant: the appendix is addressed to
+authors and is not part of the grant.
 
 #### Scenario: A package ships the Apache appendix unfilled
 
@@ -112,16 +148,62 @@ Apache-2.0 §4(d) requires.
   license text it would otherwise fall back to
 - **AND** the entry still reproduces the license grant itself
 
-#### Scenario: A package fills the appendix in
+### Requirement: Attribution is derived from each package's own metadata
 
-- **WHEN** a bundled package's appendix names a real copyright holder
-- **THEN** that line is used as the package's notice
+A bundled package's attribution SHALL be derived from that package's own
+metadata: its `author`, else its `contributors`, else the repository it is
+published from. It SHALL NOT be written down in this repository, which would be
+a list to maintain per dependency and a claim about someone else's code.
+
+#### Scenario: A package with contributors and no author
+
+- **WHEN** a bundled package declares no `author` and declares `contributors`
+- **THEN** its attribution is the contributors' names
+- **AND** the repository it is published from is not consulted
+
+### Requirement: Attribution says who publishes a package, never who holds its copyright
+
+A bundled package's attribution SHALL be presented as who publishes the
+package, and SHALL NOT be presented as a copyright notice this project asserts
+on the publisher's behalf. Where a package states a copyright holder, that
+statement is in the notice text below the attribution and speaks for itself.
+
+#### Scenario: A package whose author differs from its copyright holder
+
+- **WHEN** a bundled package's metadata names an author and its license text
+  carries a copyright line naming someone else
+- **THEN** the About dialog shows the author beside the package's name, with no
+  "Copyright" wording added
+- **AND** the copyright line appears only in the notice text beneath
+
+### Requirement: A package's own NOTICE file takes precedence
+
+A bundled package's own `NOTICE` file SHALL take precedence over everything
+else as the notice reproduced for it, which Apache-2.0 §4(d) requires.
+
+#### Scenario: A NOTICE file beside a filled-in appendix
+
+- **WHEN** a bundled Apache-2.0 package ships a `NOTICE` file and also fills in
+  its appendix
+- **THEN** the `NOTICE` file is what the entry reproduces
+
+### Requirement: A package that credits nobody fails the build
+
+The build SHALL fail, and SHALL NOT ship the package uncredited, where a
+bundled package declares no author, no contributors and no repository and its
+notice contains no copyright line.
 
 #### Scenario: A package names nobody
 
 - **WHEN** a package declares no author, no contributors and no repository
 - **AND** its notice contains no copyright line
 - **THEN** the build fails, rather than shipping an uncredited package
+
+### Requirement: The notice check refuses an implausibly short listing
+
+The build SHALL fail on the count where the bundled-package listing is
+implausibly short, so the checks on the entries cannot pass over an empty or
+nearly empty list.
 
 #### Scenario: The check cannot pass over an empty list
 

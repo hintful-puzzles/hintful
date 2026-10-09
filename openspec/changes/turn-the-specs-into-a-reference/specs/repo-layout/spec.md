@@ -11,7 +11,7 @@ requirement and SHALL NOT add a second beside it.
 #### Scenario: A change adds a rule to a subject the spec covers
 
 - **WHEN** a change alters how a game's hint behaves, and the game's spec has a
-  requirement for its hint
+  requirement for that part of its hint
 - **THEN** the change's delta modifies that requirement
 - **AND** the merged requirement reads as the rule that now holds, with no
   mention of the change
@@ -21,21 +21,30 @@ requirement and SHALL NOT add a second beside it.
 - **WHEN** a rule cannot be justified in one sentence
 - **THEN** the requirement states the rule and the guide carries the argument
 
-### Requirement: A spec is bounded, and the gate holds the bound
+### Requirement: The gate holds a spec to its form
 
-The gate SHALL fail when a requirement's body or a capability's `spec.md`
-exceeds its stated bound, or when a `spec.md` contains a date. The check SHALL
-read every `spec.md` under `openspec/specs/`, and SHALL say in its failure what
-a requirement may hold.
+The gate SHALL fail when a requirement's text before its first scenario is
+longer than the validator allows, and when a `spec.md` contains a date or the
+id of a change. The check SHALL read every `spec.md` under `openspec/specs/`,
+and SHALL say in its failure what a requirement holds.
 
 #### Scenario: A delta is archived into an over-long requirement
 
-- **WHEN** archiving a change leaves a requirement over the bound
+- **WHEN** archiving a change leaves a requirement over the validator's bound
 - **THEN** the commit that archives it fails the gate
-- **AND** the message names the requirement and its length
 
-#### Scenario: A capability outgrows its bound
+#### Scenario: A delta's words name its change
 
-- **WHEN** a capability's `spec.md` exceeds the bound for a capability
-- **THEN** the gate fails until requirements are merged or the capability is
-  divided by subject
+- **WHEN** archiving a change leaves its id or a date in a `spec.md`
+- **THEN** the commit fails the gate, naming the file and the line
+
+### Requirement: A requirement cited by its title resolves
+
+A requirement cited by its capability and its title, in `src/`, `docs/`,
+`scripts/` or `AGENTS.md`, SHALL resolve to a requirement of that capability,
+and the gate SHALL fail on one that does not.
+
+#### Scenario: A requirement is renamed
+
+- **WHEN** a change renames a requirement that a source comment cites by title
+- **THEN** the gate fails until the comment cites the new title

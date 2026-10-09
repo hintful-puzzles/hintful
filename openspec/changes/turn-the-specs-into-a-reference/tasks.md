@@ -68,41 +68,75 @@ the owner's word (2026-10-09). Each step's check is beside it.
 
 ## 3. What keeps it
 
-- [ ] 3.1 The size check, in the gate's fast prefix, with the list of
+- [x] 3.1 The size check, in the gate's fast prefix, with the list of
       capabilities not yet rewritten. Check: a planted over-long requirement
       and a planted date each fail.
-- [ ] 3.2 `rules` for the `specs` artifact in `openspec/config.yaml`. Check:
+      - It became two things, with no list of exemptions since it landed with
+        the rewrite. The length is the validator's own bound, which the gate's
+        `validate --all --strict` holds from 1.14.1 (7.3), so no second copy
+        of it is written. `scripts/checks/spec-form.mjs` refuses a date and
+        the id of a change; it was seen to fail on 43 dates and 34 change ids
+        while the rewrite was in flight.
+- [x] 3.2 `rules` for the `specs` artifact in `openspec/config.yaml`. Check:
       `openspec instructions specs` returns them.
-- [ ] 3.3 `change-citations.mjs` resolves a requirement cited by title. Check:
+- [x] 3.3 `change-citations.mjs` resolves a requirement cited by title. Check:
       a planted citation of a title that does not exist fails.
-- [ ] 3.4 `docs/work-management.md` § "Before archiving" says to re-read the
+      - A script of its own, `scripts/checks/spec-citations.mjs`, since its
+        key and its resolver share nothing with a change id's. Seen to fail
+        on the five citations the rewrite left behind.
+- [x] 3.4 `docs/work-management.md` § "Before archiving" says to re-read the
       merged requirement.
 
 ## 4. The engine
 
-Each capability has a ledger and the two reviews, is checked as 2.2, and leaves
-the exempt list.
+Stages 4 to 6 ran as one parallel pass on 2026-10-09: one agent rewrote each
+of the 78 remaining capabilities by `rewrite-brief.md` and a second reviewed
+and corrected it. Every ledger passes `spec-ledger.mjs`, every spec validates
+under 1.14.1, and `rewrite-report.md` has what the agents reported.
 
-- [ ] 4.1 `engine-hints` and `engine-candidate-hints`.
+- [x] 4.1 `engine-hints` and `engine-candidate-hints`.
 - [ ] 4.2 `ts-engine`, with its misfiled requirements moved (Decision 3).
-- [ ] 4.3 `engine-input`, `engine-params`, `engine-colors`, `engine-notes`,
+      - Rewritten. Nothing has moved between capabilities:
+        `rewrite-report.md` § "Requirements that look misfiled" lists what
+        the agents would move, and 6a decides it with the cuts.
+- [x] 4.3 `engine-input`, `engine-params`, `engine-colors`, `engine-notes`,
       `engine-drawing`, `engine-helpers`.
-- [ ] 4.4 Every citation of a renamed engine requirement is repointed. Check:
+- [x] 4.4 Every citation of a renamed engine requirement is repointed. Check:
       the citation check passes and `git grep` finds no old title.
+      - Five citations, in three guides, one script and one source comment.
 
 ## 5. The other capabilities
 
-- [ ] 5.1 `repo-layout` and `build-pipeline`, divided by subject if their
+- [x] 5.1 `repo-layout` and `build-pipeline`, divided by subject if their
       rewrite shows they should be.
-- [ ] 5.2 `app-shell`, `ts-migration` and the nine small ones.
+      - Rewritten and not divided; 6a decides that too, once they are cut.
+- [x] 5.2 `app-shell`, `ts-migration` and the nine small ones.
 
 ## 6. The games
 
-- [ ] 6.1 The 57 game specs, in batches of about ten, in the form the owner
+- [x] 6.1 The 57 game specs, in batches of about ten, in the form the owner
       chose for them. Each spec has a ledger and the first review; one spec a
       batch gets the second.
+      - In the reference form, all at once, each with the first review
+        (`design.md` § "What was decided").
 - [ ] 6.2 The guide for porting a game says what a game's spec holds, and the
       scaffolding script's spec skeleton matches.
+
+## 6a. Keep only what is worth reading
+
+The owner's word (2026-10-09): keeping every rule is the invariant of the
+rewrite and not the aim. What stays in a spec is a rule a session would read
+before working on that part, or would check a change against.
+
+- [ ] 6a.1 The rewrite of stages 4 to 6 is committed whole first, so the
+      version that kept every rule is in git before anything is cut.
+- [ ] 6a.2 The criteria for what goes are written in `design.md`, from reading
+      what the rewrite left: what a type or the `Game` contract already says
+      of every game, how a thing is built where only what it does matters, a
+      rule so particular that only its own test would ever consult it.
+- [ ] 6a.3 Each capability is pruned by those criteria, with what was cut and
+      why recorded beside its ledger, and a fresh reviewer reads the cuts for
+      a decision the owner made or a rule a player would notice broken.
 
 ## 7. Close
 
@@ -110,9 +144,12 @@ the exempt list.
       capability.
 - [ ] 7.2 `AGENTS.md`'s read-first table and each guide name the capability
       that binds the part of the tree, within the root brief's bound.
-- [ ] 7.3 The pin moves to openspec 1.14.1 or whatever is latest then, and the
+- [x] 7.3 The pin moves to openspec 1.14.1 or whatever is latest then, and the
       gate's `validate --all --strict` passes under it with no requirement
       reported as too long.
+      - 1.14.1, the latest on 2026-10-09. The deltas of `add-numgame-ts-port`
+        and `add-path-ts-port` had three requirements over the bound and are
+        split to pass it.
 - [ ] 7.4 The census is run again and before and after are recorded in
       `design.md`.
 - [ ] 7.5 The owner's acceptance (`proposal.md` § "Acceptance").

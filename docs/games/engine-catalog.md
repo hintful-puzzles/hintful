@@ -733,7 +733,8 @@ hint-quality walk; `legendMarkdown` is the help's generated list of marks. See
 The engine's half of the hint-text convention (a game's own sentences are its
 `hint-text.ts`): `narrateLatinReason` and `latinPremise` for the row/column
 games whose generic-arm wording is verbatim-identical (normative rule: the
-`engine-candidate-hints` "shared narrator" requirement), `forcingChainPremise`, `confinedPremise` (one
+`engine-candidate-hints`, "A shared narrator for generic Latin placements and
+strike premises"), `forcingChainPremise`, `confinedPremise` (one
 value confined across several lines, which it stripes: every game's words for
 an X-wing), the
 candidate games' `populateText`/`cleanObviousText`, the `Premise` a strike's

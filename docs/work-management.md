@@ -113,6 +113,10 @@ Retire this section when the owner says the drain is over.
 - Re-read every spec delta against the code. A delta written mid-change
   states what the code was that morning, and the validator checks a delta's
   shape, never its truth.
+- Re-read each merged requirement after archiving. Archive copies the delta's
+  words into the main spec, so the requirement has to read as the rule that
+  holds, with no mention of the change that made it
+  (`openspec/config.yaml`, the rules for `specs`).
 - No script of ours writes into a change directory. Archiving renames it.
 
 ## Which hintless game comes next

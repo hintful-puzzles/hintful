@@ -205,6 +205,24 @@ node scripts/checks/absence-spelling.mjs
 node scripts/checks/openspec-version.mjs
 npx --no-install openspec validate --all --strict
 
+# --- 1c-0. A spec holds rules, not the story of a change. ~0s. ---
+#
+# Archiving merges a delta's words into the main spec as written, so a delta
+# that says when a rule was decided and by which change leaves that in the
+# spec for good. The validator above bounds a requirement's length; this
+# refuses a date and a change id, the two marks of a history that can be
+# resolved rather than guessed at. Here because archiving is a
+# documentation-only commit.
+node scripts/checks/spec-form.mjs
+
+# --- 1c-00. A requirement cited by its title is still there. ~0s. ---
+#
+# A comment or a guide that sends a reader to a requirement names it by its
+# title, and a title changes whenever a change restates the requirement. Here
+# for the reason the change-citation guard is: it reads `docs/`, and a rename
+# is a documentation-only commit.
+node scripts/checks/spec-citations.mjs
+
 # --- 1c-i. The deploy's build-only run. ---
 #
 # CI's deploy job runs the checks above and the production build, and nothing

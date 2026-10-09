@@ -9,7 +9,12 @@ rules that keep a game's palette declared, small and true to its names.
 
 ### Requirement: The engine provides a shared color-mkhighlight helper
 
-The engine SHALL provide `mkhighlightBackground(bg: Color): Color` in `src/engine/color/color-mkhighlight.ts`, implementing the `misc.c` `game_mkhighlight_specific` background-adjustment logic with the near-white epsilon fix. Every white/black-tile game SHALL be able to import and use this instead of re-deriving it locally.
+The engine SHALL provide `mkhighlightBackground(bg: Color): Color` in
+`src/engine/color/color-mkhighlight.ts`. It SHALL shift a background that lies
+too near pure white or pure black away from that extreme, and SHALL treat a
+background within rounding drift of an extreme as lying on it. A game with
+white or black tiles SHALL be able to import it and SHALL NOT re-derive the
+shift locally.
 
 #### Scenario: A game imports the shared mkhighlightBackground
 
@@ -19,30 +24,40 @@ The engine SHALL provide `mkhighlightBackground(bg: Color): Color` in `src/engin
 
 ### Requirement: The engine provides a full mkhighlight palette helper
 
-The engine SHALL provide `mkhighlight(bg: Color): { background: Color; highlight: Color; lowlight: Color }` in `src/engine/color/color-mkhighlight.ts`, implementing the full `misc.c` `game_mkhighlight` derivation: the background is adjusted via `mkhighlightBackground`, then the highlight is shifted from the adjusted background toward white by K = sqrt(3)/6 and the lowlight toward black by K. Per upstream, when the background is within K of white the highlight SHALL saturate to pure white, and when within K of black the lowlight SHALL saturate to pure black. Games needing the standard bg/highlight/lowlight trio SHALL destructure this helper instead of re-deriving the colors locally.
+The engine SHALL provide
+`mkhighlight(bg: Color): { background: Color; highlight: Color; lowlight: Color }`
+in `src/engine/color/color-mkhighlight.ts`. The background SHALL be
+`mkhighlightBackground(bg)`, the highlight that background shifted toward
+white by K = sqrt(3)/6, and the lowlight that background shifted toward black
+by K. A game needing the standard background, highlight and lowlight trio
+SHALL destructure this helper and SHALL NOT re-derive the colors locally.
 
 #### Scenario: A game derives its palette from the shared helper
 
 - **WHEN** a game's `colors()` method calls `mkhighlight(defaultBackground)`
-- **THEN** it receives background, highlight, and lowlight colors matching upstream `game_mkhighlight`, with the highlight strictly brighter and the lowlight strictly darker than the background
-- **AND** the game contains no local copy of the highlight/lowlight math
+- **THEN** it receives a background, a highlight strictly brighter than it and a lowlight strictly darker than it
+- **AND** the game contains no local copy of the highlight and lowlight math
+
+### Requirement: A mkhighlight shade saturates at the extreme
+
+When the adjusted background `mkhighlight` derives from is within K of white,
+the highlight SHALL saturate to pure white, and when it is within K of black,
+the lowlight SHALL saturate to pure black.
 
 #### Scenario: Light host backgrounds get a pure-white highlight
 
 - **WHEN** the host background is white or near-white
-- **THEN** the highlight saturates to pure white instead of collapsing into the adjusted background (the defect the previous per-game inline copies had)
+- **THEN** the highlight saturates to pure white and does not collapse into the adjusted background
 
 ### Requirement: Adapting a color to another scheme preserves its relation to the board
 
-A calculated per-scheme value SHALL preserve the color's relationship to its own
-background: a color close in lightness to the background in one scheme SHALL be close
-to the background in the other, and a color far from it SHALL stay far from it. The
-failure this forbids is a subtle tint of the board becoming a prominent area of color
-purely because the scheme changed.
-
-This SHALL hold regardless of how colorful the color is. A rule that treats grays and
-chromatic colors by different principles will make a game's near-background tints
-behave unlike its near-background grays, which is that failure.
+A calculated per-scheme value SHALL preserve the color's relationship to its
+own background: a color close in lightness to the background in one scheme
+SHALL be close to the background in the other, and a color far from it SHALL
+stay far from it, so that a subtle tint of the board never becomes a prominent
+area of color purely because the scheme changed. This SHALL hold regardless of
+how colorful the color is: grays and chromatic colors SHALL NOT be adapted by
+different principles.
 
 #### Scenario: A near-background tint stays near the background
 
@@ -56,40 +71,50 @@ behave unlike its near-background grays, which is that failure.
   are both adapted to a dark scheme
 - **THEN** the text color is lighter than the fill color it may be drawn over
 
+#### Scenario: A tint behaves as a gray of its lightness does
+
+- **WHEN** a gray and a chromatic color of one lightness are adapted to the dark
+  scheme by calculation
+- **THEN** the two land at one lightness
+
 ### Requirement: A palette may carry its own per-scheme decisions
 
-The engine SHALL report to the frontend, **per palette index**, any decision a palette
-entry makes about its own behavior when the color scheme changes — a decision an
-entry may carry where that behavior is a property of the color's meaning rather than
-of the game showing it. Reporting per index is required because the association between
-a color and its meaning cannot be assumed to survive transfer to the frontend.
-
-A per-puzzle adjustment SHALL take precedence over a decision carried by the palette,
-so that a game whose board needs different treatment can still state it.
+The engine SHALL report to the frontend, per palette index, any decision a
+palette entry makes about its own behavior when the color scheme changes. An
+entry carries one where that behavior is a property of the color's meaning and
+not of the game showing it. Reporting per index is required because the
+association between a color and its meaning cannot be assumed to survive
+transfer to the frontend. An index that reports none SHALL be adapted by calculation.
 
 #### Scenario: A color's own decision is applied
 
-- **WHEN** a palette entry states that it must not be adapted, and the puzzle declares
-  no adjustment for that index
-- **THEN** the frontend leaves that color unchanged
+- **WHEN** a palette entry states that it must not be adapted, and the game
+  declares no exchange for that index
+- **THEN** the frontend paints the value the entry stated and does not adapt it
+  by calculation
 
-#### Scenario: A per-puzzle adjustment wins
+### Requirement: A game's declared exchange holds over an entry's own decision
 
-- **WHEN** a palette entry states that it must not be adapted, and the puzzle also
-  declares an adjustment for that index
-- **THEN** the puzzle's adjustment is applied instead
+The exchange a game declares for its palette (`darkSwaps`) SHALL be applied
+after every index has its dark value, whether the entry stated that value or
+it was calculated, so that a game whose board needs different treatment can
+still state it.
+
+#### Scenario: A declared exchange wins
+
+- **WHEN** a palette entry states its own dark value, and the game also declares
+  an exchange for that index
+- **THEN** the index is painted in its partner's dark value
 
 ### Requirement: A color that means "this piece is black or white" is distinct from ink and paper
 
-The engine SHALL distinguish a color used as **maximum-contrast foreground or surface**
-(grid lines, glyphs, text, a white cell background) from a color used to say **a game
-object is black or white** (a black peg, a black mine, the filled squares of a
-two-color game).
-
-The two SHALL NOT share a role, because they require opposite treatment when the scheme
-changes: foreground and surface colors invert, so that text stays readable against the
-surface it is drawn on, while a piece's black or white is the game's own meaning and
-SHALL be preserved — inverting it would tell the player the piece is the other color.
+The engine SHALL distinguish a color used as maximum-contrast foreground or
+surface (grid lines, glyphs, text, a white cell background) from a color used
+to say a game object is black or white (a black peg, a black mine, the filled
+squares of a two-color game). The two SHALL NOT share a role: foreground and
+surface colors SHALL invert with the scheme, so that text stays readable
+against the surface it is drawn on, while a piece's black or white is the
+game's own meaning and SHALL be preserved.
 
 #### Scenario: Ink inverts so text stays readable
 
@@ -100,36 +125,18 @@ SHALL be preserved — inverting it would tell the player the piece is the other
 
 - **WHEN** a color whose meaning is that a game object is black is resolved for a dark
   scheme
-- **THEN** it remains black
-- **AND** the game requires no per-puzzle adjustment to keep it black
+- **THEN** it remains black, since inverting it would tell the player the piece is
+  the other color
+- **AND** the game requires no declaration of its own to keep it black
 
 ### Requirement: The engine provides a shared semantic color palette
 
-The engine SHALL provide a shared module of **semantic color roles** — the colors
-that mean something to the *player* — alongside the existing structural
-`color-mkhighlight` helpers. A role SHALL be defined in exactly one place, and every
-game SHALL obtain its player-facing colors from there rather than writing an RGB
-triple.
-
-A role SHALL be declared in one of two forms, chosen by whether it must survive the
-app's dark-mode adaptation:
-
-- an **absolute** color, for a role whose purpose is to be unmistakable regardless of
-  the board (the error/mistake color);
-- a **function of the frontend background**, for any role that must stay legible
-  *against the board*. This is required, not stylistic: the app passes a game **pure
-  white** as its default background in dark mode, so a fixed pale color that reads
-  correctly in light mode can otherwise land on the background in dark mode.
-
-A color SHALL be a shared role only where **two or more games use it to mean the same
-thing to the player**. A color that belongs to one game's visual identity, or that is
-a member of that game's own enumerated set whose job is to be distinguishable from the
-set's other members (peg colors, region colors, tile color sets, per-number digit
-colors), SHALL remain game-local — but SHALL be **declared** as such rather than left
-undeclared.
-
-The engine SHALL NOT duplicate the structural background/highlight/lowlight
-derivation, which the `mkhighlight` helpers continue to own.
+The engine SHALL provide a shared module of semantic color roles, the colors
+that mean something to the player, alongside the structural `mkhighlight`
+helpers. A role SHALL be defined in exactly one place, and every game SHALL
+obtain its player-facing colors from there and SHALL NOT write an RGB triple.
+The engine SHALL NOT duplicate the structural background, highlight and
+lowlight derivation, which the `mkhighlight` helpers own.
 
 #### Scenario: Two games needing the same cue get the same color
 
@@ -138,54 +145,63 @@ derivation, which the `mkhighlight` helpers continue to own.
 - **THEN** both obtain that color from the same role
 - **AND** neither contains a literal color value for it
 
+### Requirement: A shared role is an absolute color or a function of the background
+
+A role SHALL be declared in one of two forms, chosen by whether it must
+survive the app's dark-mode adaptation: an absolute color, for a role whose
+purpose is to be unmistakable regardless of the board (the error color); or a
+function of the frontend background, for any role that must stay legible
+against the board. The second is required, not stylistic: the app
+supplies pure white as the host background in dark mode, so a fixed pale
+color that reads in light mode can land on the board there.
+
 #### Scenario: A role that must stay legible is derived from the background
 
 - **WHEN** a background-derived role is resolved against a light host background and
   against the pure white the app supplies in dark mode
-- **THEN** the resulting color is visibly distinct from that background in both cases
+- **THEN** the resulting color is visibly distinct from the board in both cases
 
-#### Scenario: A game-specific color set stays game-specific
+### Requirement: A color is a shared role only where two games mean the same by it
 
-- **WHEN** a game's colors form its own enumerated set whose members must be
-  distinguishable from each other rather than carrying a meaning that recurs elsewhere
-- **THEN** those colors remain defined by that game
-- **AND** they are declared as game-local, so the declaration is a recorded decision
-  rather than an omission
+A color SHALL be a shared role only where two or more games use it to mean the
+same thing to the player. A color that belongs to one game's visual identity
+SHALL remain that game's, and SHALL be declared as game-local, never left
+undeclared: in the engine's table of game-local colors, under a name that
+begins with the game's id. A member of a set whose job is to be told from the
+set's other members (peg colors, region colors, tile colors, per-number digit
+colors) SHALL NOT be a shared role.
+
+#### Scenario: A game-specific color stays game-specific
+
+- **WHEN** a color means something on one game's board only
+- **THEN** it is declared game-local under that game's id, so the declaration is a
+  recorded decision and not an omission
+- **AND** the suite fails when another game imports it
 
 ### Requirement: A game's palette contains no undeclared color
 
-The suite SHALL fail when any registered game's palette contains a color that is
-neither traceable to a shared role or the `mkhighlight` trio, nor listed as a declared
-game-local color for that game.
-
-The failure mode this guards is **silent divergence**: a hand-written color is
-invisible to a render snapshot (which records whatever the game emits) and to a
-targeted op assertion (which names the game's own constant), so without this guard a
-new color, or a second spelling of an existing role, can enter the collection with
-nothing objecting.
+The suite SHALL fail when a game's source writes a color literal, reads a
+channel of the background, or imports the functions that combine colors. A
+literal of three numbers that is not a color SHALL be recorded with what it
+is. The guard reads the source because a hand-written color is invisible to a
+render snapshot, which records whatever the game emits, and to an assertion
+that names the game's own constant.
 
 #### Scenario: An undeclared color fails the suite
 
-- **WHEN** a game's palette gains a color that is neither a shared role nor declared
-  game-local
-- **THEN** the suite fails, naming the game and the color
-- **AND** it passes once the color is either mapped to a role or declared game-local
+- **WHEN** a game's source gains a color written as a value
+- **THEN** the suite fails, naming the file and the line
+- **AND** it passes once the color is a reference to a role, a named color or a
+  declared game-local color
 
 ### Requirement: A game contains no color value
 
-A game SHALL NOT contain a color value. Every color a game shows SHALL be a named
-reference to a shared color token, or the result of a shared function whose inputs are
-such tokens.
-
-The second form exists because some colors are genuinely *relative* to another color —
-a bevel highlight is a function of the surface it sits on, a pencil mark is a function
-of the board it is written on, and an interpolated ramp is a function of its endpoints.
-Requiring literal values for these would replace one correct line of arithmetic with
-many authored values that must then be kept consistent by hand.
-
-A game's palette SHALL depend on nothing but the frontend background: no game requires
-a color computed from its parameters or its state. A game MAY choose **which** token to
-draw with based on its state; that is selection, not computation.
+A game SHALL NOT contain a color value. Every color a game shows SHALL be a
+named reference to a shared color token, or the result of a shared function
+whose inputs are such tokens or the background the game was handed. The second
+form is for a color that is relative to another: a bevel highlight to the
+surface it sits on, a pencil mark to the board it is written on, an
+interpolated ramp to its endpoints.
 
 #### Scenario: A color is referenced, never written
 
@@ -197,22 +213,41 @@ draw with based on its state; that is selection, not computation.
 
 - **WHEN** a color's meaning is defined relative to another color, such as a bevel
   against its surface
-- **THEN** it is produced by a shared function whose inputs are tokens
+- **THEN** it is produced by a shared function
 - **AND** it is not authored as an independent value per game
+
+### Requirement: A game's palette depends on nothing but the frontend background
+
+A game's palette SHALL depend on nothing but the frontend background: no game
+computes a color from its parameters or its state. A game that picks which
+token to draw with by its state is selecting, not computing, and this
+requirement does not forbid it.
+
+#### Scenario: A state picks between two tokens
+
+- **WHEN** a game draws a cell in one color or another according to its state
+- **THEN** both colors are entries of the one palette built from the background
+- **AND** the palette is the same for every parameter set and every position
 
 ### Requirement: A color token defines a value per color scheme
 
-A color token SHALL define its value for **each color scheme the app offers**, chosen
-for what the token means to the player under that scheme rather than converted from
-another scheme's value by a general formula.
+A color token SHALL state its value for each color scheme the app offers,
+chosen for what the token means to the player under that scheme and not
+converted from another scheme's value by a general formula. A token that
+leaves a scheme's value unstated SHALL be adapted by calculation, so that
+schemes can be authored incrementally. A token's name SHALL describe its
+meaning, not its appearance, since its appearance differs between schemes.
 
-A token MAY leave a scheme's value unstated, in which case it SHALL be adapted by
-calculation, so that schemes can be authored incrementally. A token's name SHALL
-describe its **meaning**, not its appearance, since its appearance differs between
-schemes.
+#### Scenario: An unstated scheme value falls back
 
-Changing a scheme's appearance SHALL be possible by editing the token table alone, and
-adding a color scheme SHALL require no change to any game.
+- **WHEN** a token does not state a value for the active scheme
+- **THEN** its value is calculated from a scheme it does state
+- **AND** the game renders correctly
+
+### Requirement: A scheme is restyled or added in the token table alone
+
+Changing a scheme's appearance SHALL be possible by editing the token table
+alone, and adding a color scheme SHALL require no change to any game.
 
 #### Scenario: A scheme is restyled without touching a game
 
@@ -226,34 +261,13 @@ adding a color scheme SHALL require no change to any game.
 - **THEN** it is defined by giving tokens their values for that scheme
 - **AND** no game source is modified
 
-#### Scenario: An unstated scheme value falls back
-
-- **WHEN** a token does not state a value for the active scheme
-- **THEN** its value is calculated from a scheme it does state
-- **AND** the game renders correctly
-
 ### Requirement: The collection's colors are a small named set
 
-The colors the collection uses SHALL be a **small named set**, sized by what the
-games demonstrably need to distinguish rather than by how many colors happen to
+The colors the collection uses SHALL be a small named set, sized by what the
+games demonstrably need to distinguish and not by how many colors happen to
 have been written. A color SHALL NOT be added to it because one game wants a
-shade; a game that needs a color the set does not have SHALL record what it means
-to the player and why no existing color serves.
-
-Every color a game shows SHALL be a reference to a **meaning** — an error, a
-hint, a completed clue — except where the color itself is the meaning: a member
-of a set whose job is to be told apart from the other members, or a color the
-game names to the player.
-
-A meaning SHALL be defined in terms of a color from the set rather than holding a
-value of its own, so that changing a color changes every meaning built on it.
-
-#### Scenario: A game asks for a meaning
-
-- **WHEN** a game needs the color for something being wrong, or for the move a
-  hint is proposing
-- **THEN** it references that meaning
-- **AND** the meaning resolves to a color from the named set
+shade; a game that needs a color the set does not have SHALL record what it
+means to the player and why no existing color serves.
 
 #### Scenario: A color the set does not have
 
@@ -261,21 +275,51 @@ value of its own, so that changing a color changes every meaning built on it.
 - **THEN** the reason is recorded with the color: what it means to the player, and
   why nothing in the set serves
 
+### Requirement: A game references a meaning, or a named color that is the meaning
+
+Every color a game shows SHALL be a reference to a meaning (an error, a hint,
+a completed clue), except where the color itself is the meaning: a member of a
+set whose job is to be told apart from the other members, or a color the game
+names to the player.
+
+#### Scenario: A game asks for a meaning
+
+- **WHEN** a game needs the color for something being wrong, or for the move a
+  hint is proposing
+- **THEN** it references that meaning
+
+#### Scenario: A set member is taken by name
+
+- **WHEN** a game colors the members of a set the player tells apart
+- **THEN** it references the set's named colors, and no meaning
+
+### Requirement: A meaning holds no value of its own
+
+A meaning SHALL be defined in terms of a color from the named set and SHALL
+hold no value of its own, so that changing a color changes every meaning built
+on it. Two kinds of meaning are outside this: ink and paper, which are adapted
+by the scheme and so cannot be named colors, and a meaning that is a function
+of the background.
+
+#### Scenario: A meaning resolves to a named color
+
+- **WHEN** the meaning for something being wrong is resolved
+- **THEN** it is a color from the named set, by reference
+- **AND** restyling that color restyles the meaning
+
 ### Requirement: A named color's name is true
 
-Where a color is referenced **by name** rather than by meaning, the name SHALL
-describe the color as a player would, under **every** color scheme. A scheme MAY
-change such a color's shade; it SHALL NOT change it into a color a player would
-give another name.
-
-This exists because a name reaches the player. A hint that says "fill with yellow"
-is making a claim about the board, and a scheme that renders that color as
-something else makes the game lie to the player.
+Where a color is referenced by name and not by meaning, the name SHALL
+describe the color as a player would, under every color scheme. A scheme that
+gives such a color another value SHALL give it another shade of the same
+color; it SHALL NOT change it into a color a player would give another name. A
+name reaches the player: a hint that says "fill with yellow" is making a claim
+about the board.
 
 #### Scenario: A hint names a color
 
 - **WHEN** a hint's explanation refers to a color by name
-- **THEN** the color that name resolves to is recognisably that color in the
+- **THEN** the color that name resolves to is recognizably that color in the
   active scheme
 
 #### Scenario: A scheme restyles a named color
@@ -286,65 +330,82 @@ something else makes the game lie to the player.
 
 ### Requirement: A set of colors meant to be told apart is designed as a set
 
-Colors a game relies on to distinguish items SHALL be mutually distinguishable in
-every scheme, and that SHALL be a property of the named set rather than of any one
-game that draws from it.
-
-Mutual distinguishability cannot be established one color at a time: it is a
-relation between members, so no rule applied to a single color — including
-adapting it to a scheme — can establish or preserve it.
+Colors a game relies on to distinguish items SHALL be mutually distinguishable
+in every scheme, and that SHALL be a property of the named set and not of any
+one game that draws from it. It is a relation between members, so no rule
+applied to a single color, adapting it to a scheme included, establishes or
+preserves it.
 
 #### Scenario: A scheme is added or changed
 
 - **WHEN** a color scheme is introduced or restyled
 - **THEN** the members of the named set remain distinguishable from one another
-- **AND** this is verified by measurement rather than by inspection
+- **AND** this is verified by measurement, not by inspection
 
 ### Requirement: The hint emphases stay distinguishable in both schemes
 
-Hint-role colors SHALL stay distinguishable in **each** scheme, not only in
-light. Every pair among the acted-on color, the fill behind text it is about,
-the evidence, and the two premise references SHALL stay more than 0.12 apart in
-OKLCH in each scheme, and the acted-on color SHALL carry more than twice the
-chroma of either wash in each scheme.
-
-This is what the narration rule above rests on. A narration may tie two marks
-together in words only where the marks are themselves distinguishable by
-something other than hue; a solid acted-on color against a wash qualifies
-because it differs in **weight**, which is the cue left to a reader who cannot
-compare hues. An exemption resting on a number is worth exactly as much as the
-assertion that keeps the number true.
-
-Measuring the light column alone does NOT state this requirement. The two
-schemes are authored separately by construction, so their separations differ:
-the closest pair of the six is the fill-versus-evidence pair in **dark**, at
-0.124, against 0.147 for the same pair in light. A guard that reads only the
-light value stays green through a dark-scheme collapse.
+Hint-role colors SHALL stay distinguishable in each scheme, not only in light.
+Every pair among the acted-on color (`HINT_ACTION`), the evidence
+(`HINT_EVIDENCE`), the evidence drawn as a fill (`HINT_EVIDENCE_WASH`) and the
+two premise references (`HINT_BLACKREF`, `HINT_WHITEREF`) SHALL stay more than
+0.12 apart in OKLCH in each scheme.
 
 #### Scenario: A scheme's hint colors converge
 
 - **WHEN** a color edit brings two hint roles within 0.12 in either scheme
 - **THEN** the palette guard fails, naming the pair and the scheme
 
+### Requirement: The acted-on hint color outweighs the evidence fill
+
+The acted-on hint color SHALL carry more than twice the chroma of the evidence
+fill in each scheme. A narration ties two marks together in words only where
+the marks differ by something other than hue, and a solid acted-on color
+against a wash qualifies because it differs in weight, the cue left to a
+reader who cannot compare hues.
+
 #### Scenario: The acted-on color loses its weight
 
-- **WHEN** the acted-on hint color's chroma falls to twice a wash's or below,
+- **WHEN** the acted-on hint color's chroma falls to twice the wash's or below,
   in either scheme
-- **THEN** the palette guard fails, because the narration rule's exemption for
+- **THEN** the palette guard fails, because the narration's exemption for
   solid-against-wash marks no longer holds
+
+### Requirement: The hint colors are measured in each scheme
+
+A guard on the hint-role colors SHALL measure each scheme's own values. A
+measurement of the light values alone SHALL NOT be taken to state the two
+requirements above: the two schemes are authored separately, so their
+separations differ, and a guard that reads only the light value stays green
+through a dark-scheme collapse.
+
+#### Scenario: Two hint roles converge in the dark scheme only
+
+- **WHEN** a color edit brings two hint roles within 0.12 in the dark scheme and
+  leaves their light values apart
+- **THEN** the palette guard fails, naming the pair and the dark scheme
 
 ### Requirement: A dark-scheme palette swap keeps its bevel lit from one side
 
-For every bevel trio a game exchanges via `darkSwaps`, the highlight SHALL be lighter than the surface it sits on and the lowlight darker, **in both schemes**.
-
-A swap exists because inverting every color's lightness turns an emboss into an inset. For every declared pair, whatever its two colors are, the lighter of the two in the light scheme SHALL be the lighter of the two in the dark scheme.
-
-The requirement above is a relationship to that *surface* and not to the board, so a measurement of a swapped index against the background does not state it and MUST NOT be read as though it did: the two indices of a pair denote different roles in the two schemes, so such a measurement compares a highlight with a lowlight.
+For every bevel trio a game exchanges via `darkSwaps`, the highlight SHALL be
+lighter than the surface it sits on and the lowlight darker, in both schemes.
+This is a relationship to that surface and not to the board: a measurement of
+a swapped index against the background SHALL NOT be read as stating it, since
+the two indices of a pair denote different roles in the two schemes and such a
+measurement compares a highlight with a lowlight.
 
 #### Scenario: A bevel survives the scheme flip
 
 - **WHEN** a game's bevel trio is resolved for the light scheme and for the dark scheme
 - **THEN** in each scheme its highlight is lighter than its base and its lowlight is darker
+
+### Requirement: A declared swap keeps its pair in one order across the schemes
+
+For every pair a game declares in `darkSwaps`, whatever its two colors are,
+the lighter of the two in the light scheme SHALL be the lighter of the two in
+the dark scheme. A swap exists because inverting every color's lightness turns
+an emboss into an inset. Both indices of a pair SHALL exist in the game's
+palette and differ in lightness, and no index SHALL be named by more than one
+pair.
 
 #### Scenario: A swap names two distinct colors
 
@@ -355,20 +416,17 @@ The requirement above is a relationship to that *surface* and not to the board, 
 
 - **WHEN** a declared pair is resolved for the light scheme and for the dark scheme
 - **THEN** the color that is lighter in one is lighter in the other
-- **AND** the check fails for every declared pair when the exchange is not applied
+- **AND** this fails for every declared pair when the exchange is not applied
 
 ### Requirement: Every game's board sits at one tone
 
-The engine SHALL hand a game's `colors()` a background already shifted off pure
-white and pure black by `mkhighlightBackground`, from a single resolution point
-(`resolvePalette`) that every consumer of a game's palette — the midend's palette
-and dark-value reporting and the render-scenario harness — goes through. The
-color a game paints its board with SHALL therefore resolve to the same value
-across the collection for a given host background, whether or not the game's own
-`colors()` calls `mkhighlight`.
-
-A game MAY call `mkhighlight` on the background it receives to obtain the bevel
-trio; the background it gets back SHALL be identical to the one it was handed.
+The engine SHALL hand a game's `colors()` a background already shifted off
+pure white and pure black by `mkhighlightBackground`, from a single resolution
+point (`resolvePalette`) that every consumer of a game's palette goes through:
+the midend's palette and dark-value reporting, and the render-scenario
+harness. The color a game paints its board with SHALL resolve to the same
+value across the collection for a given host background, whether or not the
+game's own `colors()` calls `mkhighlight`.
 
 #### Scenario: A raw-background game and a mkhighlight game paint one board
 
@@ -386,6 +444,11 @@ trio; the background it gets back SHALL be identical to the one it was handed.
 - **AND** the check counts the games it looked at and fails if the shift did not
   fire
 
+### Requirement: A game that calls mkhighlight gets back the background it was handed
+
+A game that calls `mkhighlight` on the background it receives, to obtain the
+bevel trio, SHALL get back a background identical to the one it was handed.
+
 #### Scenario: A game calling mkhighlight is unaffected
 
 - **WHEN** a game's `colors()` calls `mkhighlight` on the background it receives
@@ -395,19 +458,18 @@ trio; the background it gets back SHALL be identical to the one it was handed.
 ### Requirement: A ruled-out edge is discernible in both schemes
 
 The shared "ruled out" role (`lineNoColor`) SHALL resolve to a color a clear
-step off the board in both schemes — a mid gray — and SHALL remain visibly
+step off the board in both schemes, a mid gray, and SHALL remain visibly
 distinct from the completed-region fill (`REGION_DONE`) it may be drawn
-across, so that a player, and in particular a keyboard player whose cursor walks
-the edges, can see where a ruled-out edge lies while still reading it as
-disabled rather than drawn.
+across, so that a player, and in particular a keyboard player whose cursor
+walks the edges, can see where a ruled-out edge lies while still reading it as
+disabled and not drawn.
 
 #### Scenario: A ruled-out edge stands off a dark board
 
 - **WHEN** the role is resolved for the dark scheme against the collection's
   board
-- **THEN** its lightness differs from the board's by more than the undecided
-  edge's did before this change (the value the owner's playtest found nearly
-  invisible)
+- **THEN** its lightness stands off the board's by more than a step that reads
+  as board
 - **AND** it remains darker than ink
 
 #### Scenario: A ruled-out edge across a completed region still shows
@@ -420,8 +482,8 @@ disabled rather than drawn.
 
 A game whose completion flash is drawn as a fill or line color SHALL take that
 color from the shared `FLASH` role, which is maximum contrast against the
-surface and inverts with the scheme. A game whose flash is an animation rather
-than a color — a bevel wave, a state swap, a color cycle, a wash under text —
+surface and inverts with the scheme. A game whose flash is an animation and
+not a color (a bevel wave, a state swap, a color cycle, a wash under text)
 keeps its own mechanism and is not covered by this requirement.
 
 #### Scenario: Two white-flashing games flash the same color
@@ -434,16 +496,11 @@ keeps its own mechanism and is not covered by this requirement.
 ### Requirement: A departure from a shared role is stated at the assignment
 
 Where the shared palette defines a role for a meaning a game's color carries
-(the keyboard cursor, a held or dragged item, a flagged mistake, a hint's action
-or evidence, a black or white piece, a retired clue, a correctly completed
-region), the game SHALL assign that role. A game that assigns a different color
-for that meaning SHALL state, on or immediately above the assignment, why its
-board has spent the role's color — so that the departure is a recorded decision
-and not an unexamined inheritance.
-
-A cross-game check SHALL find every such departure by the shape of the
-assignment rather than by the slot's name, and SHALL fail on one that carries no
-reason.
+(the keyboard cursor, a held or dragged item, a flagged mistake, a hint's
+action or evidence, a black or white piece, a retired clue, a correctly
+completed region), the game SHALL assign that role. A game that assigns a
+different color for that meaning SHALL state, on or immediately above the
+assignment, why its board has spent the role's color.
 
 #### Scenario: A game whose board has spent the cursor's green says so
 
@@ -452,30 +509,44 @@ reason.
 - **THEN** the assignment carries a one-line reason naming what the role's color
   is already used for on that board
 
+### Requirement: A cross-game check finds an unexplained departure
+
+A cross-game check SHALL find every palette assignment in the games' source
+by the shape of the assignment, and SHALL fail on one to a cursor, held, drag
+or hint slot that assigns a color other than a shared role for that meaning
+and carries no reason. It SHALL fail when it reads fewer games than the
+collection has, or fewer slots of a kind than a stated floor.
+
 #### Scenario: An unexplained departure fails the check
 
-- **WHEN** a game assigns a slot whose meaning a shared role covers to a color
-  other than that role, with no reason at the assignment
+- **WHEN** a game assigns a cursor, held, drag or hint slot a color other than a
+  shared role for that meaning, with no reason at the assignment
 - **THEN** the cross-game check names the game and the slot
 
 #### Scenario: The check counts what it looked at
 
-- **WHEN** the cross-game check runs
-- **THEN** it reports the number of games and slots it examined and fails if that
-  number is not the collection's
+- **WHEN** the cross-game check reads no assignment from one of the collection's
+  games
+- **THEN** it fails
 
 ### Requirement: Colors a game paints side by side stand apart in the dark scheme
 
-Two palette colors that a game's frames paint next to each other SHALL stand at
-least a stated distance apart in the dark scheme as the app paints it, measured
-between the two colors within that scheme. The pairs SHALL be read off the
-game's own draw record, so that a game is covered by being registered.
+Two palette colors that a game's frames paint next to each other SHALL stand
+at least a stated distance apart in the dark scheme as the app paints it,
+measured between the two colors within that scheme. The pairs SHALL be read
+off the game's own draw record, so that a game is covered by being registered.
 
-Two filled areas owe the distance outright. A thin mark or a glyph owes it only
-where the light scheme gives the same pair at least twice the distance, since a
-quiet grid line is quiet in both schemes on purpose. A pair that is closer on
-purpose SHALL be recorded with what it is, one entry per pair, and an entry
-whose pair is no longer close SHALL fail.
+#### Scenario: A new game is covered without being listed
+
+- **WHEN** a game is added to the catalog
+- **THEN** its frames are measured by the same guard with no edit to the guard
+
+### Requirement: Two filled areas owe the dark distance outright, a thin mark conditionally
+
+Of two colors a game's frames paint next to each other, two filled areas SHALL
+owe the stated dark-scheme distance outright. A thin mark or a glyph SHALL owe
+it only where the light scheme gives the same pair more than twice its dark
+distance, since a quiet grid line is quiet in both schemes on purpose.
 
 #### Scenario: A wall that sinks into the floor fails
 
@@ -484,10 +555,18 @@ whose pair is no longer close SHALL fail.
   distance
 - **THEN** the cross-game guard fails and names the game and the pair
 
-#### Scenario: A new game is covered without being listed
+#### Scenario: A quiet grid line passes
 
-- **WHEN** a game is added to the catalog
-- **THEN** its frames are measured by the same guard with no edit to the guard
+- **WHEN** a grid line stands closer to its cell than the stated distance in the
+  dark scheme, and the light scheme gives the pair no more than twice its dark
+  distance
+- **THEN** the guard does not fail on the pair
+
+### Requirement: A pair that is close on purpose is recorded
+
+A pair of side-by-side colors that is closer in the dark scheme than the
+stated distance on purpose SHALL be recorded with what it is, one entry per
+pair, and an entry whose pair is no longer close SHALL fail.
 
 #### Scenario: An excused pair that stops being close fails
 
@@ -497,11 +576,12 @@ whose pair is no longer close SHALL fail.
 
 ### Requirement: A lightness a help page names is pinned in the game's palette
 
-A game whose help page calls something black, shaded, white or lit SHALL hold in
-its palette a color that is dark, or light, in both schemes by its own authored
-values, so that the word stays true when the scheme changes. A page whose word
-is not about a piece's color SHALL be recorded with what the word is about, and
-a record for a page that no longer uses the word SHALL fail.
+A game whose help page calls something black, shaded, white or lit SHALL hold
+in its palette a color that is dark, or light, in both schemes by its own
+authored values, so that the word stays true when the scheme changes. A
+palette that holds the `SHADED` role answers a page that says shaded. A page
+whose word is not about a piece's color SHALL be recorded with what the word
+is about, and a record for a page that no longer uses the word SHALL fail.
 
 #### Scenario: A lit square drawn in paper fails
 
@@ -519,16 +599,24 @@ a record for a page that no longer uses the word SHALL fail.
 
 ### Requirement: A game declares its palette's scheme handling with its own color constants
 
-What a game's palette needs from the color schemes beyond its tokens SHALL be declared on the game, as `Game.paletteScheme`, in terms of the game's own color constants: the color the board is painted in when it is not color 0, and the pairs whose dark values are exchanged.
-
-The declaration SHALL name palette slots only. It SHALL NOT hold a color value or a number that adjusts one: a color that is wrong in one scheme is corrected on its token, in the engine.
-
-The app SHALL read that declaration from the game, through the static attributes the midend reports, and SHALL hold no table of its own that addresses a game's palette by index. A game that declares nothing SHALL get color 0 as its board and no exchanged pairs.
+What a game's palette needs from the color schemes beyond its tokens SHALL be
+declared on the game, as `Game.paletteScheme`, in terms of the game's own
+color constants: the color the board is painted in when it is not color 0, and
+the pairs whose dark values are exchanged. The declaration SHALL name palette
+slots only. It SHALL NOT hold a color value or a number that adjusts one: a
+color that is wrong in one scheme is corrected on its token, in the engine.
 
 #### Scenario: A moved color takes its swap with it
 
 - **WHEN** a color is added or dropped above a game's bevel so that the bevel's indices move
 - **THEN** the dark scheme still exchanges the bevel's highlight and lowlight, with no edit outside the game's palette
+
+### Requirement: The app reads a game's scheme handling from the game
+
+The app SHALL read a game's `paletteScheme` from the game, through the static
+attributes the midend reports, and SHALL hold no table of its own that
+addresses a game's palette by index. A game that declares nothing SHALL get
+color 0 as its board and no exchanged pairs.
 
 #### Scenario: A game that declares nothing
 
@@ -542,17 +630,23 @@ The app SHALL read that declaration from the game, through the static attributes
 
 ### Requirement: A bevel a game draws is lit from one side in both schemes
 
-For every bevel on a game's frames, the lighter of its two colors in the light scheme SHALL be the lighter of the two in the dark scheme, as the app paints them.
-
-The bevels SHALL be read off the game's own draw record by shape, two polygons drawn one after the other that split one box along its diagonal, so that a game is covered by drawing a bevel and not by declaring one. Two shapes drawn one over the other SHALL NOT be read as a bevel.
-
-A bevel whose two colors are also used as tints SHALL take palette slots of its own, since exchanging a slot's dark value changes every use of it.
+For every bevel on a game's frames, the lighter of its two colors in the light
+scheme SHALL be the lighter of the two in the dark scheme, as the app paints
+them. A bevel whose two colors are also used as tints SHALL take palette slots
+of its own, since exchanging a slot's dark value changes every use of it.
 
 #### Scenario: A bevel with no declared swap fails
 
 - **WHEN** a game draws a raised bevel in two colors derived from the board
 - **AND** it declares no exchange for them
 - **THEN** the cross-game guard fails and names the game and the pair
+
+### Requirement: A bevel is read off the draw record by its shape
+
+The bevels a game draws SHALL be read off the game's own draw record by shape,
+two polygons drawn one after the other that split one box along its diagonal,
+so that a game is covered by drawing a bevel and not by declaring one. Two
+shapes drawn one over the other SHALL NOT be read as a bevel.
 
 #### Scenario: A new game is covered without being listed
 
@@ -562,35 +656,68 @@ A bevel whose two colors are also used as tints SHALL take palette slots of its 
 #### Scenario: The guard reads something
 
 - **WHEN** the guard runs
-- **THEN** it finds a bevel in a game that draws through each shared helper and in a game that draws its own, and fails if it finds none
+- **THEN** it sees a shared helper for each shape of bevel called while some
+  game's frames are drawn, and fails if it finds no game that draws a bevel
 
 ### Requirement: The engine owns what a board of pieces looks like
 
 The engine SHALL provide, once for the collection, the look of a board whose
-content is pieces, and a game SHALL take it by reference:
+content is pieces, and a game SHALL take it by reference: the surface, the
+piece and the two-state pair. The surface SHALL be the color of a cell that
+holds a piece or will, the color of the line between two cells, and the lifted
+color of the cell under a piece the puzzle gave, each a shared role that
+authors both schemes. The line SHALL stand off both cell colors in both
+schemes.
 
-- the **surface**: the color of a cell that holds a piece or will, the color of
-  the line between two cells, and the lifted color of the cell under a piece
-  the puzzle gave, each a shared role that authors both schemes. The line
-  SHALL stand off both cell colors in both schemes;
-- the **piece**: a drawing helper that paints a piece as a shape inset on its
-  cell, so that the grid shows between neighboring pieces and a mark drawn at
-  the cell's edge lands beside the piece;
-- the **two-state pair**: two colors, the two words a player would call them,
-  and two shapes, each indexed alike, for a game with two states of which
-  neither is the important one.
+#### Scenario: The line shows beside a plain cell and a lifted one
 
-The pair's colors SHALL be none of the hues the shared roles spend on marks
-drawn over a board (the error, the hint's action, the cursor, and the orange a
-hint outlines premises in), and SHALL stand apart in lightness in both schemes,
-so that a player who cannot tell the hues still has the lightness and the
-shape.
+- **WHEN** the three surface roles are resolved in either scheme
+- **THEN** the line's color differs from the plain cell's and from the lifted
+  cell's
 
-A game that uses the pair SHALL name no hue or shape of its own for a state:
-its palette, its hint sentences and its control words take the pair's members
-by index, and its help page names a member's color by a placeholder the help
-build fills from the same words. Replacing the pair SHALL therefore be a change
-to the engine's declaration alone.
+### Requirement: A piece is drawn inset on its cell
+
+The engine SHALL provide a drawing helper that paints a piece as a shape inset
+on its cell, so that the grid shows between neighboring pieces and a mark
+drawn at the cell's edge lands beside the piece.
+
+#### Scenario: Two neighboring pieces of one kind
+
+- **WHEN** two adjacent cells hold pieces of one color
+- **THEN** the grid shows between the two pieces
+
+### Requirement: The two-state pair is two colors, two words and two shapes
+
+The engine SHALL provide the two-state pair, for a game with two states of
+which neither is the important one: two colors, the two words a player would
+call them, and two shapes, each indexed alike.
+
+#### Scenario: A member is one index in all three
+
+- **WHEN** a game takes the pair's first member
+- **THEN** its color, its word and its shape are each the first of their list
+
+### Requirement: The pair's colors keep off the marks' hues and stand apart in lightness
+
+The two-state pair's colors SHALL be none of the hues the shared roles spend
+on marks drawn over a board (the error, the hint's action, the cursor, and the
+orange a hint outlines premises in), and SHALL stand apart in lightness in
+both schemes, so that a player who cannot tell the hues still has the
+lightness and the shape.
+
+#### Scenario: The pair survives a loss of hue
+
+- **WHEN** the pair's two colors are measured in either scheme
+- **THEN** their lightnesses stand apart by more than a stated gap
+- **AND** their shapes differ
+
+### Requirement: A game that uses the pair names no hue or shape of its own
+
+A game that uses the two-state pair SHALL name no hue or shape of its own for
+a state: its palette, its hint sentences and its control words take the pair's
+members by index, and its help page names a member's color by a placeholder
+the help build fills from the same words. Replacing the pair SHALL therefore
+be a change to the engine's declaration alone.
 
 #### Scenario: A different pair changes no game
 
@@ -605,25 +732,15 @@ to the engine's declaration alone.
 - **AND** also types one of the pair's color words
 - **THEN** the cross-game help guard fails and names the page
 
-#### Scenario: The pair survives a loss of hue
-
-- **WHEN** the pair's two colors are measured in either scheme
-- **THEN** their lightnesses stand apart by more than the gap that was too
-  close to play by
-- **AND** their shapes differ
-
 ### Requirement: The pair's hues carry what a player moves, seeks and finishes
 
 The engine SHALL provide shared roles, each a reference to a member of the
-two-state pair or to its wash, for the things that are a board's content
-without being one of two states: a thing the player pushes or carries
-(`MOVED`), where the player is going or what they are after (`GOAL`, and
-`GOAL_WASH` for the cell it is in), and the surface of a region the player has
-finished correctly (`REGION_DONE`). A game SHALL take these by reference and
-name no hue for them, so that replacing the pair recolors them too.
-
-The figure the player steers SHALL NOT take a pair hue: it is the cursor's
-color, which says where the player is.
+two-state pair or to its wash, for what is a board's content without being one
+of two states: a thing the player pushes or carries (`MOVED`), where the
+player is going or what they are after (`GOAL`, and `GOAL_WASH` for the cell
+it is in), and the surface of a region the player has finished correctly
+(`REGION_DONE`). A game SHALL take these by reference and name no hue for
+them, so replacing the pair recolors them too.
 
 #### Scenario: A finished region is colored, not a step of gray
 
@@ -636,3 +753,13 @@ color, which says where the player is.
 
 - **WHEN** a game draws a thing the player pushes and the place it belongs
 - **THEN** the first is `MOVED` and the second is `GOAL`
+
+### Requirement: The figure the player steers takes the cursor's color
+
+The figure the player steers SHALL NOT take a hue of the two-state pair: it is
+the cursor's color, which says where the player is.
+
+#### Scenario: A figure beside the thing it pushes
+
+- **WHEN** a game draws the figure the player steers beside a thing it pushes
+- **THEN** the figure is the cursor role's color and the pushed thing is `MOVED`

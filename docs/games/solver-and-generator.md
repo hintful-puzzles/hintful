@@ -325,8 +325,8 @@ decides the walk, check whether anything can reach it.
 #### What a bespoke loop still owes
 
 A bespoke loop is part of the design, not a failure of it. Three obligations,
-stated per game rather than assumed, and normative here — the `engine-helpers`
-"shared deduction-fixpoint scaffold" requirement carries them.
+stated per game rather than assumed, and normative here — `engine-helpers`,
+"A bespoke loop carries three obligations".
 
 | Obligation | Loopy | Lightup |
 | --- | --- | --- |

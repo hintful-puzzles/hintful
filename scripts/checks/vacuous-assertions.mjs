@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * The vacuity guard: a test whose every assertion sits under an `if` must also
- * say how many cases it examined (`build-pipeline`, "The gate rejects an
- * assertion that cannot fail").
+ * say how many cases it examined (`build-pipeline`, "The gate rejects a
+ * test whose every assertion is conditional").
  *
  * **Why this exists.** `tidy-the-code-after-the-port` gave every agent one
  * instruction that mattered more than the tidying — plant a defect and check a

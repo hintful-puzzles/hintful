@@ -8,86 +8,92 @@ the mathematics rather than as a replayed recording.
 ## Requirements
 ### Requirement: Upstream combi-test.c is ported to Vitest
 
-The repository SHALL contain a TypeScript translation of `puzzles/auxiliary/combi-test.c` that drives the TS impl over a handful of `(r, n)` cases and asserts the iteration matches an expected hand-spelled output. The C test's output format (`"combi R of N, T elements."` followed by one space-separated line per tuple) SHALL be reproduced so the test reads as a direct translation.
-
-This is the layer that keeps a *reader-checkable* enumeration in the file. The closed-form properties say the count and the ordering are right for every `(r, n)`; a hand-spelled `(3, 5)` says what the answer actually looks like, which is what a first-time reader needs.
+The repository SHALL contain a TypeScript translation of upstream's
+`auxiliary/combi-test.c` that drives the implementation over a handful of
+`(r, n)` cases and asserts that the iteration matches an expected output spelled
+out by hand. The C test's output format, `"combi R of N, T elements."` followed
+by one space-separated line per tuple, SHALL be reproduced, so the test reads as
+a direct translation and keeps in the file an enumeration a reader can check by
+eye.
 
 #### Scenario: Ported test covers a hand-spelled (3, 5) case
 
 - **WHEN** the ported test runs `(r, n) = (3, 5)`
-- **THEN** the produced output matches the hand-spelled expected output for that case
+- **THEN** the produced output matches the hand-spelled expected output for that
+  case
 - **AND** Vitest reports the test passing under `npm run test:run`
 
 ### Requirement: TypeScript combi module enumerates subsets in lexicographic order
 
-The implementation in `src/engine/combi/index.ts` SHALL enumerate, for a given `(r, n)`, every `r`-element subset of `{0, 1, …, n-1}` exactly once, in lexicographic order.
-
-The implementation SHALL expose, at minimum, the public surface used by the sole consumer (Light Up's solver): construction from `(r, n)`, advance-to-next, and read access to the current `r`-tuple. The C surface (`new_combi`, `reset_combi`, `next_combi`, `free_combi`) MAY be exposed under idiomatic TS names.
-
-The TS implementation SHALL preserve the C contract that advancing past exhaustion returns the falsy sentinel (NULL in C; `null` or `false` in TS, whichever the API documents) and SHALL NOT throw.
-
-The TS implementation SHALL enforce the C preconditions `r <= n` and `n >= 1` by throwing on construction.
-
-The requirement is stated as the mathematics rather than as agreement with a recording — it was "reproduces C output byte-for-byte", asserted by replaying a frozen corpus. See the removal below.
-
-The module lives under `src/engine/` because it is an engine library. It was a top-level `src/native/combi/` only because the retired bottom-up migration gave every ported seam its own folder next to the engine — a whole top-level directory, with its own openspec capability, for an 81-line class with one call site.
+The implementation in `src/engine/combi/index.ts` SHALL enumerate, for a given
+`(r, n)`, every `r`-element subset of `{0, 1, …, n-1}` exactly once, in
+lexicographic order. The module SHALL live under `src/engine/`, because it is an
+engine library.
 
 #### Scenario: A hand-spelled enumeration matches
 
-- **WHEN** the iterator is walked for a small case a reader can check by eye (`(3, 5)`, `(2, 5)`)
-- **THEN** the sequence of `r`-tuples equals the enumeration spelled out in the test
-- **AND** the call that follows the final tuple returns the documented falsy sentinel
-
-#### Scenario: reset rewinds the iterator
-
-- **WHEN** a `Combi(r, n)` is enumerated to exhaustion, then reset, then enumerated again
-- **THEN** the second enumeration produces the same sequence of `r`-tuples as the first
-- **AND** this is asserted by a test driving `reset()` directly, not as a side effect of replaying a recording
+- **WHEN** the iterator is walked for a small case a reader can check by eye
+  (`(3, 5)`, `(2, 5)`)
+- **THEN** the sequence of `r`-tuples equals the enumeration spelled out in the
+  test
 
 #### Scenario: degenerate r == 0 yields a single empty tuple
 
-- **WHEN** the TS impl is constructed with `r = 0` and any `n >= 1`
-- **THEN** the iterator produces exactly one `r`-tuple of length zero, then exhausts
+- **WHEN** the implementation is constructed with `r = 0` and any `n >= 1`
+- **THEN** the iterator produces exactly one `r`-tuple of length zero, then
+  exhausts
 
 #### Scenario: degenerate r == n yields a single full tuple
 
-- **WHEN** the TS impl is constructed with `r == n`
-- **THEN** the iterator produces exactly one `r`-tuple equal to `[0, 1, …, n-1]`, then exhausts
+- **WHEN** the implementation is constructed with `r == n`
+- **THEN** the iterator produces exactly one `r`-tuple equal to
+  `[0, 1, …, n-1]`, then exhausts
+
+### Requirement: Combi exposes construction, advance, read and reset
+
+The module SHALL expose, at minimum, the public surface its sole consumer, Light
+Up's solver, uses: construction from `(r, n)`, advance to the next tuple, and
+read access to the current `r`-tuple. It SHALL also expose `reset()`, which
+rewinds the iterator to the start of the enumeration.
+
+#### Scenario: reset rewinds the iterator
+
+- **WHEN** a `Combi(r, n)` is enumerated to exhaustion, then reset, then
+  enumerated again
+- **THEN** the second enumeration produces the same sequence of `r`-tuples as
+  the first
+- **AND** this is asserted by a test driving `reset()` directly, not as a side
+  effect of replaying a recording
+
+### Requirement: Advancing past exhaustion returns false and does not throw
+
+Advancing past exhaustion SHALL return the falsy sentinel the API documents,
+which is `false`, and SHALL NOT throw.
+
+#### Scenario: The call after the final tuple
+
+- **WHEN** an enumeration has produced its final tuple and is advanced again
+- **THEN** the call returns the documented falsy sentinel, `false`
+- **AND** a further advance returns it as well
+
+### Requirement: Combi refuses an invalid (r, n) at construction
+
+The implementation SHALL enforce the preconditions `r <= n` and `n >= 1` by
+throwing on construction.
 
 #### Scenario: precondition violations throw
 
-- **WHEN** the TS impl is constructed with `r > n` or `n < 1`
+- **WHEN** the implementation is constructed with `r > n` or `n < 1`
 - **THEN** construction throws
 
 ### Requirement: Enumeration correctness is asserted in closed form, not by replay
 
 `Combi`'s guarantee SHALL be asserted by properties that state the mathematics
 directly: that it emits exactly `C(n, r)` tuples, in lexicographic order, each a
-distinct `r`-element subset of `{0, …, n-1}`, plus the hand-spelled enumerations
-and degenerate cases its test file already carries. The properties SHALL be
-exhaustive over a small grid of `(r, n)` rather than sampled, since that grid is
-tiny and enumerating it is free.
-
-**This is the one frozen C corpus a closed-form property states better**, and the
-distinction matters because it does not generalize. A per-game differential and
-`random`'s corpus assert facts that *cannot* be derived — which boards a
-solver-gated generator produces, what bit sequence a seed yields — so the
-recorded fixture is the only statement of them, and they are kept. `combi`
-enumerates the subsets of a set. There is no upstream quirk in it: the recorded
-enumeration is what the definition requires, so replaying it demonstrated only
-that C and TypeScript both implement combinations. `AGENTS.md` used this exact
-function as its example of a property test worth having — *"combi emits exactly
-C(n,r) lex-ordered tuples"* — and the corpus is what stood in for it.
-
-The replaced ceremony is not the 4 KB of JSON: it is a `__fixtures__` directory,
-a capability in the spec index, and a "frozen oracle, never re-baseline" rule
-attached to a fact that a first-year combinatorics identity settles.
-
-Retiring a fixture SHALL be scoped by the question *"is **every** fact this
-fixture asserted derivable?"*, not *"is the fixture's subject derivable?"*. Here
-the properties dominated the recorded enumerations — but the corpus block was
-also the only place `reset()` was ever driven, an assurance that would otherwise
-have been lost in silence, on a scenario this same capability requires.
+distinct `r`-element subset of `{0, …, n-1}`. The hand-spelled enumerations and
+the degenerate cases SHALL be asserted beside them. The properties SHALL be
+exhaustive over a small grid of `(r, n)` and not sampled, since enumerating that
+grid costs nothing.
 
 #### Scenario: The count and the order are asserted directly
 
@@ -97,19 +103,34 @@ have been lost in silence, on a scenario this same capability requires.
   its predecessor
 - **AND** no two tuples are equal
 
+### Requirement: A frozen fixture is retired only where every fact it asserts is derivable
+
+Retiring a frozen fixture SHALL be scoped by the question "is every fact this
+fixture asserted derivable?", not "is the fixture's subject derivable?". A
+fixture SHALL be retired only where what it records follows from a definition
+the test can state directly. A fixture recording a fact that cannot be derived,
+such as the boards a solver-gated generator produces or the bit sequence a seed
+yields, SHALL be kept, whatever the state of upstream compatibility.
+
 #### Scenario: A derived fact is not preserved by replay
 
 - **WHEN** deciding whether a frozen C fixture may be retired
 - **THEN** it is retired only where the property it records follows from a
   definition the test can state directly
-- **AND** fixtures recording facts that cannot be derived — a generator's boards,
-  an RNG's bit sequence — are kept, whatever the state of upstream compatibility
+- **AND** fixtures recording facts that cannot be derived, a generator's boards
+  or an RNG's bit sequence, as a per-game differential and `random`'s corpus
+  do, are kept, whatever the state of upstream compatibility
 
-#### Scenario: Retiring a fixture accounts for everything it covered
+### Requirement: Retiring a fixture accounts for everything it covered
 
-- **WHEN** a frozen fixture is retired in favor of properties
-- **THEN** every behavior that only the fixture's replay exercised is given a
-  direct test in the same change
-- **AND** the replacement is named in the change, so the assurance is not dropped
-  silently
+When a frozen fixture is retired in favor of properties, every behavior that
+only the fixture's replay exercised SHALL be given a direct test in the same
+change, and the change SHALL name the replacement, so that no assurance is
+dropped silently.
 
+#### Scenario: The replay was the only caller of reset
+
+- **WHEN** a recorded enumeration is retired whose replay was the only place
+  `reset()` was driven
+- **THEN** the same change adds a test that drives `reset()` directly
+- **AND** the change names that test as the replacement

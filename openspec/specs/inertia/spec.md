@@ -3,9 +3,9 @@
 ## Purpose
 Inertia, the puzzle of steering a ball that slides until a wall or stop halts
 it, collecting every gem without running onto a mine. This capability specifies
-its port to the TS engine, with eight-direction keyboard and swipe control, gems
-placed only where the ball can go and come back from, and a hint that heads for
-the nearest gem it can safely take and explains each move by it.
+the game: eight-direction keyboard and swipe control, gems placed only where
+the ball can go and come back from, and a hint that heads for the nearest gem
+it can safely take and explains each move by it.
 
 ## Requirements
 
@@ -13,20 +13,22 @@ the nearest gem it can safely take and explains each move by it.
 
 The engine SHALL provide a registered `inertia` game implementing
 `Game<InertiaParams, InertiaState, InertiaMove, InertiaUi, InertiaDrawState>`: a
-`w × h` grid whose cells are blank, a gem, a mine, a stop-square or a wall, with a
-single ball starting on a stop-square. A move slides the ball in one of eight
-directions until it lands on a stop-square or the next square in its path is a
-wall; it collects every gem it passes over and dies on any mine it touches. The
-game is won when every gem has been collected. Params SHALL be `w` and `h`, and
-three presets (8×10, 12×15, 16×20), upstream's sizes turned to draw taller
-than wide, SHALL be offered. The game SHALL provide `solve`, `textFormat` and `statusbarText`.
+`w × h` grid whose cells are blank, a gem, a mine, a stop-square or a wall, with
+a single ball starting on a stop-square. The game is won when every gem has been
+collected. The game SHALL provide `solve`, `textFormat`, `statusbarText` and
+`hint`.
 
-The game SHALL NOT implement `findMistakes`: every reachable position is legal — a
-death is undone, not corrected — so there is no wrong-but-legal state to flag, and
-Check-&-Save correctly degrades to a plain quick-save.
+#### Scenario: Collecting the last gem wins
 
-The game SHALL implement `hint` (see "The hint explains each move by the gem it is
-going for").
+- **WHEN** a slide collects the last gem on the board
+- **THEN** the game's status is solved
+
+### Requirement: Inertia's parameters and presets
+
+Params SHALL be `w` and `h`, and three presets (8×10, 12×15, 16×20) SHALL be
+offered. The dimensions' declared bounds SHALL put each at 2 or more, which the
+engine refuses below, and `validateParams` SHALL refuse a grid whose area is
+below 6 squares.
 
 #### Scenario: Params round-trip
 
@@ -35,18 +37,28 @@ going for").
 
 #### Scenario: Degenerate params are rejected
 
-- **WHEN** `validateParams` is given a grid with a dimension below 2, or an area
-  below 6 squares
-- **THEN** it returns a non-null error string
+- **WHEN** params have a dimension below 2, or an area below 6 squares
+- **THEN** they are refused with a non-null error string: the dimension by the
+  engine's bounds check, the area by `validateParams`
+
+### Requirement: Inertia has no mistake check
+
+The game SHALL NOT implement `findMistakes`: every reachable position is legal,
+since a death is undone, not corrected, so there is no wrong-but-legal state to
+flag.
+
+#### Scenario: A death is not a mistake
+
+- **WHEN** the ball has run onto a mine
+- **THEN** no square is flagged as a mistake, and the player undoes to play on
 
 ### Requirement: The ball slides until it is stopped
 
-`executeMove` SHALL move the ball one square at a time in the move's direction,
-and for each square entered: collect a gem there (decrementing the gem count and
-clearing the square), die on a mine there, and stop when the square is a
-stop-square or when the next square in the direction is a wall. `interpretMove`
-SHALL reject a direction whose adjacent square is a wall, and SHALL reject every
-move while the ball is dead. The state SHALL record the distance traveled by the
+A move slides the ball in one of eight directions. `executeMove` SHALL move the
+ball one square at a time in the move's direction, and for each square entered:
+collect a gem there (decrementing the gem count and clearing the square), die on
+a mine there, and stop when the square is a stop-square or when the next square
+in the direction is a wall. The state SHALL record the distance traveled by the
 last move, so the renderer can animate the slide.
 
 #### Scenario: The ball collects gems on the way past
@@ -59,25 +71,31 @@ last move, so the renderer can animate the slide.
 #### Scenario: The ball dies on a mine
 
 - **WHEN** the ball's slide takes it onto a mine
-- **THEN** the resulting state is dead, the slide stops there, and no further move
-  is accepted until the player undoes
+- **THEN** the resulting state is dead and the slide stops there
+
+### Requirement: A move into a wall, or by a dead ball, is refused
+
+`interpretMove` SHALL reject a direction whose adjacent square is a wall, and
+SHALL reject every move while the ball is dead.
 
 #### Scenario: A move into a wall is refused
 
 - **WHEN** the player presses a direction whose adjacent square is a wall
 - **THEN** no move is produced and the game state is unchanged
 
+#### Scenario: A dead ball does not move
+
+- **WHEN** the ball is dead and the player presses a direction
+- **THEN** no further move is accepted until the player undoes
+
 ### Requirement: All eight directions are reachable from the keyboard
 
 The game SHALL accept the arrow keys for the four orthogonal directions and the
-digits `1`–`4` and `6`–`9` — laid out as the number pad, which is itself a
-compass — for all eight, **with or without** the `MOD_NUM_KEYPAD` modifier.
-
-Accepting the *unmodified* digits is a deliberate divergence from upstream, which
-requires the modifier. This web frontend never sets it (any single character key
-is mapped to its character code), so without this the four diagonal moves would
-be reachable only with the mouse and a keyboard-only player could not play the
-game. Inertia binds no other digit, so no other input can be shadowed.
+digits `1`–`4` and `6`–`9`, laid out as the number pad, which is itself a
+compass, for all eight, **with or without** the `MOD_NUM_KEYPAD` modifier.
+Without the unmodified digits a keyboard with no number pad, or with Num Lock
+off, could not make the four diagonal moves. Inertia binds no other digit, so
+no other input is shadowed.
 
 #### Scenario: A diagonal is reachable from the keyboard
 
@@ -90,22 +108,8 @@ Pressing the pointer **on the ball** SHALL begin a swipe rather than making a
 move: while the pointer is held, the game SHALL draw an arrow on the ball
 pointing at the direction the pointer is aimed at (the octant it lies in, seen
 from the ball), and SHALL play that direction when the pointer is released.
-
-Aiming SHALL yield no direction — and so draw no arrow, and make no move on
-release — when the pointer is back on the ball (which is how the player calls the
-swipe off) or when it is aimed at a wall (which is not a move the ball can make).
-The arrow SHALL be drawn in its own color, distinct from the hint's arrow, since
-the two mean different things ("you are about to go this way" versus "the hint
-says go this way").
-
-The whole gesture SHALL also work on the **secondary** button, because on touch a
-press that stays put for the long-press interval is delivered as one — and a
-press that stays put is exactly what holding the ball to aim looks like. Inertia
-binds nothing else to the secondary button.
-
-This is a deliberate divergence: upstream offers only the click-an-octant input,
-which stays supported, but is fiddly with a finger and gives no feedback before
-committing.
+Clicking a square away from the ball SHALL stay supported, and moves the ball
+toward the octant the click falls in.
 
 #### Scenario: Holding and dragging aims, and releasing launches
 
@@ -113,13 +117,44 @@ committing.
 - **THEN** an arrow points east while the pointer is held, and the ball sets off
   east on release
 
+### Requirement: A swipe aimed at nothing makes no move
+
+Aiming a swipe SHALL yield no direction, and so draw no aim arrow and make no
+move on release, when the pointer is back on the ball (which is how the player
+calls the swipe off) or when it is aimed at a wall (which is not a move the ball
+can make).
+
 #### Scenario: Dragging back to the ball calls the swipe off
 
 - **WHEN** the player presses on the ball, drags out, drags back onto the ball
   and releases
 - **THEN** no move is made
 
-### Requirement: Descriptions encode the grid; the start square becomes a stop
+### Requirement: The aim arrow has its own color
+
+The arrow of a swipe being aimed SHALL be drawn in its own color, distinct from
+the hint's arrow, since the two mean different things ("you are about to go this
+way" versus "the hint says go this way").
+
+#### Scenario: An aimed swipe is not mistaken for the hint
+
+- **WHEN** a swipe is aimed east while no hint is displayed
+- **THEN** the arrow on the ball is in the aim color, not the hint's
+
+### Requirement: The swipe works on the secondary button
+
+The whole swipe gesture SHALL also work on the **secondary** button, because on
+touch a press that stays put for the long-press interval is delivered as one,
+and a press that stays put is exactly what holding the ball to aim looks like.
+Inertia binds nothing else to the secondary button.
+
+#### Scenario: A held finger still aims
+
+- **WHEN** a press on the ball arrives as the secondary button, is dragged out
+  to the east and released
+- **THEN** the ball sets off east
+
+### Requirement: Descriptions encode the grid, and the start square becomes a stop
 
 The desc SHALL be exactly `w · h` characters from `{b, g, m, s, w, S}` (blank,
 gem, mine, stop, wall, start), row-major. `newState` SHALL place the ball on the
@@ -138,32 +173,13 @@ character, without exactly one start square, or without at least one gem.
 - **WHEN** `validateDesc` is given a desc containing no `g`
 - **THEN** it returns a non-null error string
 
-### Requirement: Rendering, animation and the status bar
+### Requirement: Inertia's floor and walls
 
 The game SHALL render the floor as the cell surface, ruled with the surface's
 grid line, and a wall as a flat block with no bevel, in a gray that stands a
 clear step off the floor in both schemes: darker than the floor in the light
 scheme and lighter than it in the dark one. Walls that touch SHALL be drawn as
-one mass, with no grid line between them. It SHALL render mines as spiked
-balls, black in both schemes with a rim in ink, so that a mine stands off the
-dark scheme's floor, stop-squares as rings, gems as
-diamonds in the collection's color for what the player is after (the theme
-pair's second member), and the ball as a circle in the color of where the
-player is (a jagged red splat when dead) drawn over a blitter-saved background. A move
-SHALL animate the ball sliding along its path, in a time proportional to the
-square root of the distance traveled, with each gem disappearing as the ball
-reaches it. Death SHALL flash the board red and the winning move SHALL flash it
-light. The status bar SHALL show the remaining gem count, `DEAD!` when dead,
-`COMPLETED!` when finished, and a running deaths tally.
-
-The deaths tally SHALL be incremented only for a death caused by a move the player
-just made on an unfinished board, so that undoing and redoing a fatal move does
-not re-count it.
-
-#### Scenario: Undo and redo do not re-count a death
-
-- **WHEN** the player dies, undoes the fatal move, and redoes it
-- **THEN** the deaths tally still reads 1
+one mass, with no grid line between them.
 
 #### Scenario: A wall is a flat block
 
@@ -171,31 +187,52 @@ not re-count it.
 - **THEN** the wall's square is one rectangle in the wall's color
 - **AND** nothing on the board is a bevel
 
+### Requirement: Inertia's pieces and ball
+
+The game SHALL render mines as spiked balls, black in both schemes with a rim
+in ink, so that a mine stands off the dark scheme's floor; stop-squares as
+rings; gems as diamonds in the collection's color for what the player is after
+(the theme pair's second member); and the ball as a circle in the color of
+where the player is, or a jagged red splat when dead. The ball SHALL be drawn
+over a blitter-saved background.
+
+#### Scenario: A mine keeps its rim in the dark scheme
+
+- **WHEN** a board with a mine is drawn in the dark scheme
+- **THEN** the mine is black, inside a rim in ink
+
+### Requirement: A move animates the slide, and death and the win flash
+
+A move SHALL animate the ball sliding along its path, in a time proportional to
+the square root of the distance traveled, with each gem disappearing as the ball
+reaches it. Death SHALL flash the board red, and the winning move SHALL flash
+it light.
+
+#### Scenario: A gem stays until the ball reaches it
+
+- **WHEN** a slide that collects a gem is partway through its animation and the
+  ball has not yet reached the gem's square
+- **THEN** the gem is still drawn
+
+### Requirement: Inertia's status bar
+
+The status bar SHALL show the remaining gem count, `DEAD!` when dead,
+`COMPLETED!` when finished, and a running deaths tally. The deaths tally SHALL
+be incremented only for a death caused by a move the player just made on an
+unfinished board, so that undoing and redoing a fatal move does not re-count it.
+
+#### Scenario: Undo and redo do not re-count a death
+
+- **WHEN** the player dies, undoes the fatal move, and redoes it
+- **THEN** the deaths tally still reads 1
+
 ### Requirement: The hint plans for the nearest gem the ball can safely take
 
 The game SHALL implement `hint`, planning in **legs**: a leg is the shortest walk
-to a gem, ending with the move that collects it.
-
-Each leg SHALL go for the **nearest** gem — fewest moves to collect — that the
-ball can take **without stranding itself**: a candidate leg SHALL be rejected when
-the position it leaves behind can no longer be solved, and the next-nearest tried
-instead. Where the near gems all strand the ball, the route solver's own tour
-SHALL supply the leg, its remaining route being the witness that the leg is safe.
-
-The plan SHALL NOT simply follow the route solver's tour. The tour is a heuristic,
-and a hint is **recomputed from scratch whenever the player goes their own way**:
-two tours grown from adjacent positions can disagree about which gem to fetch
-first, so the hint sends the ball one way and then, a move later, tells it to come
-back — for ever, collecting nothing. Going for the nearest safe gem cannot do
-that, because every move of a shortest walk strictly shortens the distance to a
-gem that is still safe.
-
-#### Scenario: The hint always makes progress, however the player got here
-
-- **WHEN** a hint is asked for, its first step played, and a fresh hint asked for
-  again — repeatedly, from any position the board reaches
-- **THEN** the board is solved in a finite number of moves; the hint never sends
-  the ball back and forth between two positions without collecting a gem
+to a gem, ending with the move that collects it. Each leg SHALL go for the
+**nearest** gem, fewest moves to collect, that the ball can take **without
+stranding itself**: a candidate leg SHALL be rejected when the position it
+leaves behind can no longer be solved, and the next-nearest tried instead.
 
 #### Scenario: A stranding grab is not suggested
 
@@ -203,45 +240,29 @@ gem that is still safe.
   ball where some other gem can never be reached again
 - **THEN** the hint does not suggest that slide
 
+### Requirement: The route solver's tour is the hint's fallback, never its plan
+
+Where the near gems all strand the ball, the route solver's own tour SHALL
+supply the leg, its remaining route being the witness that the leg is safe. The
+plan SHALL NOT otherwise follow the tour: a hint is recomputed from scratch
+whenever the player goes their own way, and two tours grown from adjacent
+positions can disagree about which gem to fetch first, sending the ball back
+and forth for ever.
+
+#### Scenario: The hint always makes progress, however the player got here
+
+- **WHEN** a hint is asked for, its first step played, and a fresh hint asked for
+  again, repeatedly, from any position the board reaches
+- **THEN** the board is solved in a finite number of moves; the hint never sends
+  the ball back and forth between two positions without collecting a gem
+
 ### Requirement: The hint explains each move by the gem it is going for
 
-The hint SHALL narrate every move it suggests against the gem its leg is going for,
-and SHALL claim no more than it has verified.
-
-Each leg's **subgoal** is the gem it ends by collecting — the last one along its
-final move's path, where that move sweeps up several. The subgoal SHALL be held
-**stable** across every step of its leg: derived once, from the plan, and carried.
-It SHALL NOT be re-derived per step from the ball's position, because the nearest
-gem to the ball changes as the ball moves while the gem the plan is going for does
-not — re-deriving makes the narration flip-flop between goals and read as though
-it has lost the plot.
-
-Because Inertia's gems are anonymous — there is no "tile 8" to name one by — the
-subgoal gem SHALL be marked on the board, so the narration can refer to it.
-
-Each move SHALL be narrated, and SHALL claim no more than has been **verified**:
-
-- **forced** — when every other direction the ball can set off in would run it onto
-  a mine, the narration SHALL say so; this is a genuine necessity claim. Where it
-  is instead *walls* that block every other direction, the narration SHALL say
-  that, and SHALL NOT speak of mines;
-- **collecting** — when the slide collects at least one gem, the narration SHALL
-  name what it sweeps up and what brings the ball to a halt (a stop square, or the
-  wall at the end) — the rule the game turns on, which is that the player does not
-  choose where the ball stops;
-- **stranding** — when the subgoal gem could be swept up by a single slide from
-  here, and doing so would leave some gem unreachable for ever, the narration SHALL
-  say so; this is Inertia's one provable verdict about a position;
-- **positioning** — when the slide collects nothing, the narration SHALL say that
-  no slide from here reaches the subgoal gem, and what the move is for. That
-  premise SHALL be **checked**, not assumed: a plan may decline a grab it could
-  take, so the claim is not true by construction. It SHALL NOT claim to be the
-  *only* such move unless that has been verified.
-
-A narration SHALL NOT promise that one more slide finishes the leg unless the
-plan's **own next move** is that slide — a slide merely existing is not the claim,
-because a gem can be reached from a side no single slide from here can reach, and a
-promise the plan then breaks reads as a hint that has lost the plot.
+The hint SHALL narrate every move it suggests against the gem its leg is going
+for, and SHALL claim no more than it has verified. Each leg's **subgoal** is the
+gem it ends by collecting: the last one along its final move's path, where that
+move sweeps up several. Because Inertia's gems are anonymous, the subgoal gem
+SHALL be marked on the board, so the narration can refer to it.
 
 #### Scenario: A move that collects nothing is explained by what it sets up
 
@@ -249,45 +270,120 @@ promise the plan then breaks reads as a hint that has lost the plot.
 - **THEN** its narration names the subgoal gem it is positioning for, rather than
   merely stating the direction
 
+### Requirement: The subgoal is held stable across its leg
+
+The subgoal SHALL be held **stable** across every step of its leg: derived
+once, from the plan, and carried. It SHALL NOT be re-derived per step from the
+ball's position, because the nearest gem to the ball changes as the ball moves
+while the gem the plan is going for does not, and a re-derived goal makes the
+narration flip-flop between goals.
+
 #### Scenario: The subgoal does not change under the player's feet
 
 - **WHEN** a leg takes several moves to reach its gem
 - **THEN** every step of that leg names the same subgoal gem
+
+### Requirement: A forced move is called forced, by what forces it
+
+When every other direction the ball can set off in would run it onto a mine,
+the narration SHALL say so; this is a genuine necessity claim. Where it is
+instead walls that block every other direction, the narration SHALL say that,
+and SHALL NOT speak of mines.
 
 #### Scenario: A forced move is called forced
 
 - **WHEN** every direction the ball could otherwise set off in runs it onto a mine
 - **THEN** the narration says so
 
+#### Scenario: A ball hemmed in by walls is not told of mines
+
+- **WHEN** walls block every direction but the one the hint suggests
+- **THEN** the narration says walls block every other direction, and names no mine
+
+### Requirement: A collecting move names what it sweeps up and what stops the ball
+
+When the suggested slide collects at least one gem, the narration SHALL name
+what it sweeps up. Unless the slide is also the ball's only move, in which case
+the narration gives that reason instead, it SHALL also name what brings the
+ball to a halt, a stop square or the wall at the end: the rule the game turns
+on is that the player does not choose where the ball stops.
+
+#### Scenario: A sweep names its stop
+
+- **WHEN** the hint suggests a slide that collects two gems and ends on a stop
+  square, with other safe directions open
+- **THEN** the narration says it sweeps up a gem and then the subgoal gem, and
+  that the stop square catches the ball
+
+### Requirement: A stranding grab is called out
+
+When the suggested slide collects nothing, and the subgoal gem could be swept
+up by a single slide from here that would leave some gem unreachable for ever,
+the narration SHALL say so; this is Inertia's one provable verdict about a
+position.
+
+#### Scenario: The tempting grab is named
+
+- **WHEN** one slide from here would take the subgoal gem and strand another,
+  and the hint suggests a different slide that collects nothing
+- **THEN** the narration names the grabbing slide and says it strands a gem
+
+### Requirement: A positioning move's premise is checked
+
+When the suggested slide collects nothing, the narration SHALL say what the
+move is for. Where it is not the ball's only move and a **check** finds no slide
+from here that takes the subgoal gem, it SHALL say that none reaches it: a plan
+may decline a grab, so the claim is not true by construction. Where a slide
+would take the gem and no stranding is proven, it SHALL say only that the route
+comes at it from another side. It SHALL NOT claim to be the
+*only* such move unless that has been verified.
+
 #### Scenario: The hint never says a gem is out of reach when a slide would take it
 
 - **WHEN** a step's narration says no slide from here reaches the subgoal gem
 - **THEN** no legal, non-fatal slide from that position collects it
 
-### Requirement: A hint is a nudge; only Solve is a commitment
+### Requirement: One more slide is promised only when the plan makes it
+
+A narration SHALL NOT promise that one more slide finishes the leg unless the
+plan's **own next move** is that slide. A slide merely existing is not the
+claim, because a gem can be reached from a side no single slide from here can
+reach.
+
+#### Scenario: The promise is the plan's next move
+
+- **WHEN** a step's narration says one more slide sweeps up the subgoal gem
+- **THEN** the plan's next step is the slide that collects it
+
+### Requirement: A hint is a nudge, and only Solve is a commitment
 
 `hint` SHALL NOT mark the game as solved-with-help. Solve plays the whole route,
-and the engine records that the solver was used.
-
-This separation is the reason the hint exists: Solve shows the finished board,
-but only at the price of recording the game as auto-solved, which is precisely
-the price a player asking for one nudge is trying not to pay.
-
-The game SHALL implement `hintKeepTrack`, so that a move in the displayed step's
-direction **completes** that step and the plan is kept. Without it the midend drops
-the plan on every player move — including one that faithfully follows the hint —
-and the next hint replans from scratch, which is what a stable subgoal exists to
-prevent.
+and the engine records that the solver was used; a player asking for one nudge
+does not pay that price.
 
 #### Scenario: Asking for a hint does not brand the game auto-solved
 
 - **WHEN** the player asks for a hint
 - **THEN** the status bar does not report that the auto-solver was used
 
+### Requirement: Following the hint keeps the plan
+
+The game SHALL implement `hintKeepTrack`, so that a move in the displayed step's
+direction **completes** that step and the plan is kept. Without it the plan is
+dropped on every player move, including one that faithfully follows the hint,
+and the next hint replans from scratch, which is what a stable subgoal exists
+to prevent.
+
 #### Scenario: Following the hint keeps the plan
 
 - **WHEN** the player plays the move the displayed hint step suggests
 - **THEN** the plan advances to its next step rather than being recomputed
+
+### Requirement: The hint refuses honestly when the move to make is undo
+
+`hint` SHALL refuse when the ball is dead, and when some gem can no longer be
+reached by any sequence of moves, and each refusal SHALL say that the move to
+make is to undo.
 
 #### Scenario: The hint refuses honestly when the ball is dead
 
@@ -304,13 +400,11 @@ prevent.
 ### Requirement: The hint is drawn as a marked gem and an arrow
 
 `redraw` SHALL mark the displayed step's subgoal gem with a ring in its own color,
-and SHALL draw the step's direction as an arrow on the ball. The aim arrow
-of a swipe in progress SHALL take precedence over both, being what the ball will
-actually do next.
-
-The ring SHALL be part of the tile's cache key, because it is drawn on a tile
-rather than on the ball sprite — an overlay outside the diff key is never painted
-and never erased.
+and SHALL draw the step's direction as an arrow on the ball. While a swipe is
+aimed in a direction, its aim arrow SHALL replace the hint's arrow, being what
+the ball will actually do next. The ring SHALL be part of the tile's cache key,
+because it is drawn on a tile rather than on the ball sprite, and an overlay
+outside the diff key is never painted and never erased.
 
 #### Scenario: The marked gem is ringed and the direction shown
 
@@ -320,52 +414,82 @@ and never erased.
 
 ### Requirement: Generated boards place gems only where the ball can go and come back
 
-The generator SHALL fill the grid with one fifth walls, one fifth stop-squares and
-one fifth mines plus one start square, the remainder blank, and shuffle it; then
-find the **gem candidates** — the squares for which some direction is reachable
-both *from* the start and *back to* the start, computed by two breadth-first
-searches over the `w · h · 8` square-plus-direction space — and reject the grid if
-there are fewer candidates than the required gem count. It SHALL further reject a
-grid in which some square is geometrically further than a threshold from the
-nearest candidate (the threshold starting at 2 and relaxing by one every 50
-rejections), so that reachable squares stay spread over the board. It SHALL then
-place `⌊w·h/5⌋` gems on a shuffled subset of the candidates.
-
-Searching square-plus-direction pairs rather than squares is required for
-correctness: a square may only be enterable heading one way and only leavable
-heading another, so a gem there could be collected but never returned from.
+The generator SHALL fill the grid with one fifth walls, one fifth stop-squares
+and one fifth mines plus one start square, the remainder blank, and shuffle it.
+It SHALL then find the **gem candidates**, the squares the ball can reach from
+the start and return to the start from, reject the grid if there are fewer
+candidates than the required gem count, and place `⌊w·h/5⌋` gems on a shuffled
+subset of the candidates.
 
 #### Scenario: Every generated board is completable
 
 - **WHEN** a board is generated for any preset
 - **THEN** the route solver finds a route from the start that collects every gem
 
+### Requirement: Gem candidates are searched as square-plus-direction pairs
+
+A gem candidate SHALL be a square for which some direction is reachable both
+*from* the start and *back to* the start, computed by two breadth-first
+searches over the `w · h · 8` square-plus-direction space. Searching pairs
+rather than squares is required for correctness: a square may only be enterable
+heading one way and only leavable heading another, so a gem there could be
+collected but never returned from.
+
+#### Scenario: A square entered one way and left another is no candidate
+
+- **WHEN** a square can be reached from the start only heading in directions
+  from which the ball cannot get back to the start
+- **THEN** no gem is placed there
+
+### Requirement: Generated boards keep their gem candidates spread
+
+The generator SHALL reject a grid in which some square is geometrically further
+than a threshold from the nearest gem candidate, the threshold starting at 2
+and relaxing by one every 50 rejections, so that reachable squares stay spread
+over the board. This test SHALL run before the gems are placed.
+
+#### Scenario: A board with a dead region is rejected
+
+- **WHEN** a shuffled grid has enough gem candidates, but one square lies three
+  squares from the nearest of them, on the generator's first attempt
+- **THEN** the grid is rejected and another is shuffled
+
 ### Requirement: Solve plays a computed route to the finished board
 
-`solve` SHALL compute a route — a sequence of directions from the ball's current
-position that collects every remaining gem — by building the move graph (a vertex
-at every square the ball can come to rest, plus a *directed* vertex at every gem
-the ball can slide through, since a gem passed through in one direction cannot be
-left in another), growing a tour that splices in a detour to one as-yet-uncollected
-gem after another until none remain, and then repeatedly replacing redundant
-sections of the tour with shortest paths until it stops shrinking. It SHALL return
-an error when some remaining gem is unreachable.
+`solve` SHALL compute a route, a sequence of directions from the ball's current
+position that collects every remaining gem, and SHALL return an error when some
+remaining gem is unreachable. The solve move SHALL play the whole route, so the
+board is finished, as Solve finishes every game's board. The ball SHALL jump to
+the route's end rather than animating, since one interpolated slide over a
+route of many would cross walls. The step-by-step aid is the hint's.
 
-The tour is an approximate solution to a traveling-salesman problem, not a
-deduction. Two tours SHALL be grown — one reaching for the nearest uncollected
-gem, one for the farthest — and the shorter kept.
+#### Scenario: Solve finishes the game
 
-The solve move SHALL play the whole route, so the board is finished, as Solve
-finishes every game's board. The ball SHALL jump to the route's end rather than
-animating, since the route is many slides and one interpolated slide would cross
-walls. The step-by-step aid is the hint's.
+- **WHEN** the player invokes Solve on a board with gems remaining
+- **THEN** every gem is collected and the game reports itself solved with help
+
+### Requirement: The route is a tour grown over the move graph
+
+The route SHALL be computed by building the move graph, with a vertex at every
+square the ball can come to rest and a *directed* vertex at every gem the ball
+can slide through, since a gem passed through in one direction cannot be left
+in another; growing a tour that splices in a detour to one as-yet-uncollected
+gem after another until none remain; and then repeatedly replacing redundant
+sections of the tour with shortest paths until it stops shrinking.
 
 #### Scenario: A computed route collects every gem
 
 - **WHEN** a route is computed for a board whose gems are all reachable
 - **THEN** following it collects every gem without the ball dying
 
-#### Scenario: Solve finishes the game
+### Requirement: The route is the shorter of two tours
 
-- **WHEN** the player invokes Solve on a board with gems remaining
-- **THEN** every gem is collected and the game reports itself solved with help
+The tour is an approximate solution to a traveling-salesman problem, not a
+deduction. Two tours SHALL be grown, one reaching for the nearest uncollected
+gem and one for the farthest, and the shorter kept.
+
+#### Scenario: The farthest-first tour wins when it is shorter
+
+- **WHEN** the tour grown farthest-first yields a shorter route than the one
+  grown nearest-first
+- **THEN** `solve` returns the farthest-first route

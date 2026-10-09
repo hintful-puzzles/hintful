@@ -1,66 +1,53 @@
 # app-shell Specification
 
 ## Purpose
-The app's chrome around the puzzles — the puzzle screen's commands, keyboard and
-focus handling, the press-and-release stream it delivers to a game, the board
-and params it restores and reports, and the home screen's navigation — as a
-design of this project's own. It exists so that every command has one home, the
-board keeps the keyboard, the layout holds at a phone width, a setting is
-offered only while something reads it, and nothing in the chrome presses a
-player toward a hint.
+The app's chrome around the puzzles: the puzzle screen's panels and commands,
+its keyboard and focus handling, the press-and-release stream it delivers to a
+game, the board and params it restores and reports, and the home screen's
+navigation.
 
 ## Requirements
 
 ### Requirement: Pressing a control gives the keyboard back to the board
 
-The puzzle screen SHALL return keyboard focus to `puzzle-view-interactive` after
-a control has been pressed with a pointer. The board is the screen's primary
-interaction surface and every control around it is a one-shot action on the
-puzzle, so the player must be able to carry on playing at the board rather than
-typing at the control they just pressed.
-
-This SHALL cover both routes a control can take: the command bus (every
-`data-command` control), and a pointer click anywhere in the chrome, since a
-control may be both a `data-command` and a menu trigger and only a real event's
-composed path tells those apart. Focus SHALL be handed over asynchronously,
-because the dropdown and the button each focus themselves synchronously first.
-
-A command that opens a dialog needs no exception: the dialog takes focus when it
-opens, and returns it to the board — rather than to the control that opened it —
-when it closes.
-
-Without this, `handleBubbledKeyDown`'s stray-key redirect cannot help, because it
-only fires when nothing at all is focused; a single click on any control would
-leave the board unable to receive a keystroke until it was clicked again.
+The puzzle screen SHALL return keyboard focus to `puzzle-view-interactive`
+after a control has been pressed with a pointer. This SHALL cover both routes a control can take: the
+command bus (every `data-command` control), and a pointer click anywhere in
+the chrome, since a control can be both a `data-command` and a menu trigger.
+Focus SHALL be handed over asynchronously, because the dropdown and the button
+each focus themselves synchronously first.
 
 #### Scenario: Enter reaches the board after a menu command
 
 - **WHEN** the player picks a command from a menu and then presses Enter
 - **THEN** the key reaches the puzzle, and does not reopen the menu
 
-#### Scenario: The cursor keys reach the board after a toolbar click
-
-*(The title keeps the word "toolbar" because a `MODIFIED` delta replaces a
-requirement wholesale and cannot rename a scenario — omitting the old title is
-what `openspec validate` refuses. The surface it names is the command
-surface.)*
+#### Scenario: The cursor keys reach the board after a click on a command
 
 - **WHEN** the player clicks a control in the command surface (undo, hint,
   check & save, …) and then presses a cursor key
 - **THEN** the key reaches the puzzle
 
+### Requirement: A dialog a command opens returns focus to the board
+
+A command that opens a dialog SHALL need no exception to the return of focus:
+the dialog takes focus when it opens, and SHALL return it to the board, not to
+the control that opened it, when it closes.
+
+#### Scenario: A dialog opened from a control is closed
+
+- **WHEN** the player clicks a control that opens a dialog, closes the dialog
+  and presses a cursor key
+- **THEN** the key reaches the puzzle
+
 ### Requirement: Focus is not taken from a player who is using the keyboard
 
 Returning focus to the board SHALL NOT override a player who is navigating by
-keyboard, in either of two cases.
-
-A click that *opens* a menu SHALL leave focus alone, because the open menu needs
-it for its own arrow-key navigation. A control activated *from* the keyboard —
-tabbed to and pressed, which arrives as a click with a `detail` of 0 — SHALL
-also leave focus alone, because that player is moving through the tab order
-deliberately and would lose their place. Dismissing a menu with Escape or a
-click-away SHALL continue to return focus to the menu's trigger, which is the
-conventional behavior for a dismissal.
+keyboard, in either of two cases. A click that opens a menu SHALL leave focus
+alone, because the open menu needs it for its own arrow-key navigation. A
+control activated from the keyboard, which arrives as a click with a `detail`
+of 0, SHALL also leave focus alone, because that player is moving through the
+tab order and would lose their place.
 
 #### Scenario: A menu opened with the mouse can still be driven with the keyboard
 
@@ -73,27 +60,33 @@ conventional behavior for a dismissal.
   with Enter
 - **THEN** focus stays on that control
 
+### Requirement: Dismissing a menu returns focus to its trigger
+
+Dismissing a menu with Escape or a click-away SHALL return focus to the menu's
+trigger, and not to the board.
+
+#### Scenario: A menu is dismissed with Escape
+
+- **WHEN** the player opens a menu and presses Escape without choosing
+- **THEN** the menu closes and focus is on the menu's trigger
+
 ### Requirement: Every press delivered to a puzzle is followed by exactly one release
 
 The interactive puzzle view SHALL deliver a release (or cancel) event to the
-puzzle for every press it has delivered, exactly once, regardless of the timing
-of the asynchronous round-trip that carries the press to the puzzle engine.
-
-A pointer release that occurs while the corresponding press is still in flight
-SHALL be retained and delivered once the press has been acknowledged, rather
-than discarded. A press the puzzle declines SHALL continue to be followed by an
-immediate release, as it is today.
-
-This guarantee is independent of any particular game, because it is a property
-of the input layer above the engine.
+puzzle for every press it has delivered, exactly once, in every game and
+whatever the timing of the asynchronous round-trip that carries the press to
+the engine. A pointer release that occurs while its press is still in flight
+SHALL be retained and delivered once the press has been acknowledged, not
+discarded. A press the puzzle declines SHALL be followed by an immediate
+release.
 
 #### Scenario: A click completed before the press is acknowledged still releases
 
 - **WHEN** the player presses and releases a pointer faster than the press
   reaches the puzzle engine
 - **THEN** the puzzle receives the press and then the release
-- **AND** any state the puzzle shows only while a press is held — a drag
-  highlight, a lifted piece, a drag preview — is cleared without waiting for a
+- **AND** any state the puzzle shows only while a press is held (a drag
+  highlight, a lifted piece, a drag preview) is cleared without waiting for a
   later, unrelated input
 
 #### Scenario: A release is never delivered twice
@@ -104,40 +97,15 @@ of the input layer above the engine.
 
 ### Requirement: A puzzle page reopens on the board it was last showing
 
-Opening a puzzle SHALL show the board that puzzle last dealt, rather than
-generating a new one, whenever nothing more specific applies. The order of
-preference SHALL be: a game ID supplied in the URL, then the most recent autosave,
-then the last board this puzzle dealt, then a new game.
-
-The last dealt board SHALL be recorded as a game ID in the puzzle's settings
-record, and SHALL NOT be recorded as an autosave. The autosave table is what the
-home screen reads to badge a puzzle as having a game in progress, so a row written
-for a board the player has not touched would make that badge true for every puzzle
-they have merely opened.
-
-The recorded game ID SHALL be the board's one game ID, which carries the full
-params encoding, difficulty included. Re-dealing a remembered board therefore
-restores the tier the player chose; the midend only checks that the board solves
-there, and raises a tier a mislabeling build recorded too low (engine-difficulty,
-Requirement: A loaded board carries the tier it needs).
-
-A recorded game ID that this build can no longer deal SHALL be discarded and
-replaced by a new game, without interrupting the player — they did not ask for
-that board, so its loss is not a decision to put in front of them. A game ID
-supplied in the URL is unaffected by this and continues to report its failure.
+Opening a puzzle SHALL show the board that puzzle last dealt, and not a new
+one, whenever nothing more specific applies. The order of preference SHALL be:
+a game ID supplied in the URL, then the most recent autosave, then the last
+board this puzzle dealt, then a new game.
 
 #### Scenario: An untouched board survives a reload
 
 - **WHEN** a puzzle is opened, no move is made, and the page is reloaded
 - **THEN** the same board is shown, and no autosave record exists for that puzzle
-
-#### Scenario: A reopened board keeps the difficulty it was dealt at
-
-- **WHEN** a tiered puzzle is dealt at a non-default difficulty, no move is made,
-  and the page is reloaded
-- **THEN** the same board is shown **and** the puzzle still reports that
-  difficulty, so the next new game is dealt at it
-- **AND** the type control names that difficulty rather than the default one
 
 #### Scenario: A started game still restores from its autosave
 
@@ -145,36 +113,58 @@ supplied in the URL is unaffected by this and continues to report its failure.
 - **THEN** the board and the moves are restored from the autosave, not re-dealt
   from the recorded game ID
 
+### Requirement: The last dealt board is remembered in the settings, not as an autosave
+
+The last dealt board SHALL be recorded as a game ID in the puzzle's settings
+record, and SHALL NOT be recorded as an autosave. The autosave table is what
+the home screen reads to badge a puzzle as having a game in progress, and a
+row written for a board the player has not touched would badge every puzzle
+they have merely opened.
+
 #### Scenario: Browsing puzzles does not badge them as in progress
 
 - **WHEN** a puzzle is opened and left without a move
 - **THEN** the home screen does not show that puzzle as having a game in progress
+
+### Requirement: The remembered board is its full game ID, difficulty included
+
+The recorded game ID SHALL be the board's one game ID, which carries the full
+params encoding, difficulty included, so that re-dealing a remembered board
+restores the tier the player chose.
+
+#### Scenario: A reopened board keeps the difficulty it was dealt at
+
+- **WHEN** a tiered puzzle is dealt at a non-default difficulty, no move is made,
+  and the page is reloaded
+- **THEN** the same board is shown **and** the puzzle still reports that
+  difficulty, so the next new game is dealt at it
+- **AND** the type control names that difficulty and not the default one
+
+### Requirement: A remembered board this build cannot deal is dropped quietly
+
+A recorded game ID that this build can no longer deal SHALL be discarded and
+replaced by a new game, without interrupting the player: they did not ask for
+that board, so its loss is not a decision to put in front of them. A game ID
+supplied in the URL SHALL still report its failure.
 
 #### Scenario: A remembered board this build cannot deal is dropped quietly
 
 - **WHEN** a puzzle is opened whose recorded game ID no longer validates
 - **THEN** a new game is dealt, the recorded ID is cleared, and no alert is shown
 
+#### Scenario: An id in the URL that cannot be dealt
+
+- **WHEN** a puzzle is opened by a URL whose game ID does not validate
+- **THEN** a warning says the id was ignored
+
 ### Requirement: Escape reaches the puzzle when there is no gesture to cancel
 
 Escape SHALL be delivered to the running puzzle as button `27` whenever no
-pointer gesture is in flight. When a pointer *is* down, Escape SHALL instead
-abandon that gesture — the puzzle already hears it as a drag out of bounds
-followed by a release — and SHALL NOT also arrive as a keypress, so a game
-never sees one Escape as two events.
-
-The delivery SHALL NOT suppress the browser's default handling, so Escape
-continues to compose with the reference spotlight and with any dialog above the
-board.
-
-This is the frontend half of a contract games already write to: `interpretMove`
-implementations test `button === 27` for "put it back down". Escape was
-previously swallowed unconditionally, which made every such arm a **key that can
-never fire** — the same class of defect as an upstream binding on
-`MOD_NUM_KEYPAD` or on the space *character*, and it had shipped in two games.
-
-A game whose cancel arm tests upstream's `'\b'` (8) SHALL also test `127`,
-because that is the code the key map sends for Backspace, Delete and Clear.
+pointer gesture is in flight, which is what a game's `interpretMove` tests to
+put a piece back down. When a pointer is down, Escape SHALL instead abandon
+that gesture, which the puzzle hears as a drag out of bounds followed by a
+release, and SHALL NOT also arrive as a keypress, so a game never sees one
+Escape as two events.
 
 #### Scenario: Escape with no pointer down reaches the puzzle
 
@@ -186,6 +176,29 @@ because that is the code the key map sends for Backspace, Delete and Clear.
 - **WHEN** the player presses Escape while a pointer is down
 - **THEN** the puzzle receives the gesture's own out-of-bounds drag and release
 - **AND** it does not additionally receive button `27`
+
+### Requirement: Delivering Escape leaves the browser's own handling alone
+
+The delivery of Escape to the puzzle as button `27` SHALL NOT suppress the
+browser's default handling, so that Escape composes with the reference
+spotlight and with any dialog above the board.
+
+#### Scenario: Escape with a reference spotlight showing
+
+- **WHEN** the player presses Escape at the board, with no pointer down, while
+  a reference item is spotlit on it
+- **THEN** the spotlight is cleared, and the puzzle receives button `27`
+
+### Requirement: A cancel arm that tests 8 also tests 127
+
+A game whose cancel arm tests upstream's `'\b'` (8) SHALL also test `127`,
+because that is the code the key map sends for Backspace, Delete and Clear.
+
+#### Scenario: Backspace reaches an arm written for 8
+
+- **WHEN** the player presses Backspace in a game whose cancel arm upstream
+  wrote for `'\b'`
+- **THEN** the puzzle receives button `127`, and the arm runs
 
 ### Requirement: The params a puzzle reports are the full params of the board on screen
 
@@ -203,63 +216,61 @@ from the board's game ID, which carries the full encoding.
 #### Scenario: The reported params follow a re-deal
 
 - **WHEN** a new board is dealt at a different difficulty
-- **THEN** the params reported change with it rather than keeping the first
-  value seen
+- **THEN** the params reported change with it and do not keep the first value
+  seen
 
 ### Requirement: A summary check asserts the rendered word, not merely that a token was replaced
 
-The guard over type-header summaries SHALL compare rendered text against the
-declaring source, not only assert that no `{field}` placeholder survives.
-
-The placeholder check existed and stayed green throughout, because **substituting
-the wrong word is still substituting**: it measured a neighbor of the property it
-was meant to protect. Both checks are kept — an unsubstituted token and a wrongly
-substituted one are different defects — but the second is the one that catches a
-tier list drifting from the game it describes.
+The guard over the type header's words SHALL compare the rendered text against
+the declaring source: for every tiered game and every tier, the label of a
+board at that tier SHALL contain the tier name the game's difficulty item
+declares. A check that a label was produced SHALL NOT stand in for it, because
+a wrong word is still a word, and it is the comparison that catches a tier
+list drifting from the game it describes.
 
 #### Scenario: A substituted-but-wrong word is caught
 
-- **WHEN** a template substitutes a word that is not the declared name
-- **THEN** the guard fails, even though no placeholder survives
+- **WHEN** a game's label for a tier does not contain that tier's declared name
+- **THEN** the guard fails, though a label was rendered
 
 ### Requirement: The chrome follows a recorded design direction of this project's own
 
-The app's chrome — the front page, the puzzle screen's app bar, toolbar,
-keypad and dialogs, and the design tokens they are built on — SHALL follow a
-design direction chosen by the owner and recorded in this project, rather than
-the layout inherited from `puzzles-web` with the shell.
-
-The direction SHALL be chosen on sight, from drawn alternatives, before any
-implementation begins: a visual direction is a decision the owner makes by
-looking, and code written ahead of it is work spent on a guess. The recorded
-direction SHALL be specific enough to implement from — palette tokens, type
-scale, spacing, radius, and the layout of each surface — and a change that
-alters the chrome SHALL cite it.
+The app's chrome (the front page, the puzzle screen's readout row, panels,
+keypad and dialogs, and the design tokens they are built on) SHALL follow a
+design direction chosen by the owner and recorded in this project, and not the
+layout inherited from `puzzles-web` with the shell. The recorded direction
+SHALL be specific enough to implement from (palette tokens, type scale,
+spacing, radius, and the layout of each surface), and a change that alters the
+chrome SHALL cite it.
 
 #### Scenario: A redesign is proposed
 
 - **WHEN** a change proposes to alter the look or layout of the chrome
 - **THEN** it cites the recorded design direction it implements or amends
-- **AND** where no direction is yet recorded, it produces one first, chosen by
-  the owner from drawn alternatives, and lands no code until then
+
+### Requirement: A design direction is chosen on sight, before any code
+
+The design direction SHALL be chosen by the owner on sight, from drawn
+alternatives, before any implementation begins: a visual direction is a
+decision the owner makes by looking, and code written ahead of it is work
+spent on a guess.
+
+#### Scenario: A redesign is proposed where no direction is recorded
+
+- **WHEN** a change proposes to alter the look or layout of the chrome and no
+  direction is yet recorded for it
+- **THEN** it produces one first, chosen by the owner from drawn alternatives,
+  and lands no code until then
 
 ### Requirement: Checking a board never costs a player their checkpoint
 
-The combined check-and-save command SHALL remain in the chrome's most reachable
-tier. Alongside it, where a game can check (`canCheck`: it implements
-`findMistakes` or has a hint), the puzzle screen SHALL also offer a quieter
-command that runs the same check and reports the result **without writing a
-checkpoint**.
-
-The combined command is deliberate and is what most players want: it verifies
-first and refuses to save over a mistake or a dead end, so a saved checkpoint is
-a known-good one. What it cannot serve is a narrow case created by the store:
-**the quick-save slot is one per puzzle**, so checking overwrites it. A player
-who saved deliberately before a speculative branch, and then checks while the
-board is still consistent, silently loses the position they were keeping.
-
-The quieter command SHALL appear only where the game reports that it can check,
-derived from the game rather than from a list of games.
+The combined check-and-save command SHALL remain in the chrome's most
+reachable tier, SHALL verify first, and SHALL refuse to save over a mistake or
+a dead end, so that a saved checkpoint is a known-good one. Where a game can
+check (`canCheck`: it implements `findMistakes` or has a hint), the puzzle
+screen SHALL also offer a quieter command that runs the same check and reports
+the result without writing a checkpoint: the quick-save slot is one per
+puzzle, and the combined command overwrites it.
 
 #### Scenario: Checking without saving preserves an earlier checkpoint
 
@@ -268,12 +279,6 @@ derived from the game rather than from a list of games.
 - **THEN** the mistakes are highlighted and the count reported
 - **AND** returning to the checkpoint still restores the earlier position
 
-#### Scenario: A game that cannot find mistakes
-
-- **WHEN** the game neither implements `findMistakes` nor has a hint
-- **THEN** the check-without-saving command is absent rather than present and
-  disabled
-
 #### Scenario: Checking a dead end without saving
 
 - **WHEN** the player runs the check-without-saving command on a position the
@@ -281,34 +286,44 @@ derived from the game rather than from a list of games.
 - **THEN** the hint's sentence is reported in a toast and what it names is
   marked, and nothing is saved
 
+### Requirement: Check without saving is offered only where the game can check
+
+The check-without-saving command SHALL appear only where the game reports that
+it can check, derived from the game and not from a list of games. Elsewhere it
+SHALL be absent, not present and disabled.
+
+#### Scenario: A game that cannot find mistakes
+
+- **WHEN** the game neither implements `findMistakes` nor has a hint
+- **THEN** the check-without-saving command is absent, not present and
+  disabled
+
 ### Requirement: Undo and redo have keyboard shortcuts
 
 The app SHALL bind `Ctrl/Cmd+Z` to undo and `Ctrl/Cmd+Shift+Z` and `Ctrl+Y` to
-redo, in every game, and SHALL show each binding on its control.
-
-Keys reach the game through the frontend's key map and almost nothing above it
-claims any, so the collection shipped with no way to undo from the keyboard.
-Upstream bound `u`, `r` and `n` behind a user preference and further bound
-control codes unconditionally; the port carried neither. (`Ctrl/Cmd+S` was the
-one exception, bound to the combined check-and-save; it stays bound, and now
-appears on that command's control, where it was never shown.)
-
-Single-letter shortcuts MAY additionally be offered behind a preference, and
-SHALL NOT fire for a game that consumes that letter as input. That SHALL be
-**derived from the game's own behavior, not from any declaration about it**: the
-key is offered to the game first and becomes an app command only if the game
-declines it, which the midend already reports by returning false exactly when
-`interpretMove` returned null. This is stronger than reading a game's declared
-key labels, because it also covers a game that consumes a letter without ever
-offering it on a keypad — and it is why no game has to say anything at all.
-
-The key shown on a control SHALL be asserted equal to the key that is bound, so
-a shortcut label cannot become decorative.
+redo, in every game, and `Ctrl/Cmd+S` SHALL stay bound to the combined
+check-and-save. A control whose command has a chord SHALL show the first one,
+where "The Bar does not draw a command's key" puts it.
 
 #### Scenario: Undo from the keyboard
 
 - **WHEN** a player presses `Ctrl/Cmd+Z` with moves to undo
 - **THEN** the last move is undone
+
+#### Scenario: Check & save shows its key
+
+- **WHEN** a player hovers the Bar's Check & save slot
+- **THEN** its tooltip names `Ctrl/Cmd+S`
+
+### Requirement: A bare letter is an app command only when the game declines it
+
+Single-letter shortcuts SHALL be offered only behind a preference, and SHALL
+NOT fire for a game that consumes that letter as input. That SHALL be derived
+from the game's own behavior, not any declaration about it: the key is
+offered to the game first and becomes an app command only if the game declines
+it, which the midend reports by returning false exactly when `interpretMove`
+returned null. No game SHALL have to declare anything, one that consumes a
+letter it never puts on a keypad included.
 
 #### Scenario: A game that takes letter input
 
@@ -316,6 +331,11 @@ a shortcut label cannot become decorative.
 - **AND** the game consumes that letter as input
 - **THEN** the letter reaches the game and does not trigger the app command
 - **AND** the game declared nothing to bring that about
+
+### Requirement: The key shown on a control is the key that is bound
+
+The key shown on a control SHALL be asserted equal to the key that is bound,
+so that a shortcut label cannot become decorative.
 
 #### Scenario: The shown key is the bound key
 
@@ -328,12 +348,6 @@ a shortcut label cannot become decorative.
 The puzzle screen's chrome SHALL lay out without horizontal overflow at 390 CSS
 pixels.
 
-The inherited header was a non-wrapping flex row with no minimum-width budget,
-so at 390px its last control ran underneath the one before it and the type menu
-truncated to a single character. The row above the board now carries readouts
-only, few enough to fit, and the Bar sheds entries to the Menu instead of
-squeezing them ("Only the Menu scrolls").
-
 #### Scenario: A narrow viewport
 
 - **WHEN** the puzzle screen renders at 390 CSS pixels wide
@@ -345,26 +359,10 @@ squeezing them ("Only the Menu scrolls").
 The suite SHALL sweep each bare letter in the shortcut table against every
 registered game and SHALL fail on a game that consumes one, unless that game is
 on an explicit ledger whose entry states the reason a player would accept.
-
-Deriving the collision from the game's own behavior — offering the key first and
-acting only if the game declines — needs no declaration from any game, which is
-its whole advantage. What it does not do is *notice*: a game that consumes a
-letter simply makes that shortcut do nothing, silently, in that game alone.
-Nothing about the table, the matchers or the labels is wrong when that happens,
-so every test of them stays green. Ascent consumed `u`, `r`, `n` and `h`, leaving
-undo, redo, New game and Hint unreachable from its keyboard, while the shortcut
-suite passed in full.
-
-The sweep SHALL ask on a fresh board **and** with the keyboard cursor revealed,
-because several games accept letters only once the cursor is visible; asking in
-one state alone misses them. The ledger SHALL be asserted exactly equal to the
-set found, so a game that stops claiming a letter forces its entry to be deleted.
-
-A ledger entry records a **collision, not a defect**: a game keeping its own
-meaning for a letter is the derivation working. Tents binds `n` to "not a tent"
-whenever its cursor is visible, which is exactly when a player means the cell;
-Guess and Pearl bind `h` to their own hint, which is the command the bare letter
-would have run anyway.
+Offering the key to the game first needs no declaration, and it does not
+notice: a game that consumes a letter makes that shortcut do nothing, silently,
+in that game alone, while every test of the table, the matchers and the labels
+stays green.
 
 #### Scenario: A game that swallows a shortcut letter is caught
 
@@ -372,6 +370,27 @@ would have run anyway.
   with its cursor revealed
 - **THEN** the sweep fails and names the letter and the command it cost, unless
   that game is on the ledger
+
+### Requirement: The sweep asks on a fresh board and with the cursor revealed
+
+The sweep of bare shortcut letters SHALL ask on a fresh board **and** with the
+keyboard cursor revealed, because several games accept letters only once the
+cursor is visible, and asking in one state alone misses them. Its ledger SHALL
+be asserted exactly equal to the set found, so that a game that stops claiming
+a letter forces its entry to be deleted.
+
+#### Scenario: A game on the ledger stops claiming its letter
+
+- **WHEN** a game on the ledger no longer consumes any bare shortcut letter
+- **THEN** the sweep fails until its entry is deleted
+
+### Requirement: A ledger entry records a collision, not a defect
+
+An entry on the sweep's ledger SHALL record a collision and not a defect: a
+game keeping its own meaning for a letter is the derivation working. Its
+reason SHALL say why a player is not worse off, as Tents binds `n` to "not a
+tent" whenever its cursor is visible, which is exactly when a player means
+the cell.
 
 #### Scenario: A recorded collision keeps the game's meaning
 
@@ -381,20 +400,12 @@ would have run anyway.
 ### Requirement: The chrome offers the hint and never urges it
 
 No control in the chrome SHALL be styled to recommend taking a hint. The hint
-SHALL be as reachable as any other command — same surface, same label, the same
-two beats of show-then-apply — and SHALL NOT be given an emphasis that sets it
-above the commands beside it.
-
-Explained hints are why this fork exists, and that is a fact about the fork
-rather than an instruction to a player. Rendered as the one filled control on
-the screen, it read as the second: a player opening a puzzle was met with the
-loudest thing on the board telling them to ask for help. Whether to take a hint
-is the player's call, and wanting to solve a puzzle unaided is the instinct the
-chrome should leave room for.
-
-The hint's own amber is unaffected, and the distinction is the point: the
-explanation panel is the hint **speaking**, which it may do as loudly as it
-likes once asked. The button is the chrome **offering**, which it does plainly.
+SHALL be as reachable as any other command (same surface, same label, the same
+two beats of show-then-apply) and SHALL NOT be given an emphasis that sets it
+above the commands beside it: whether to take a hint is the player's call. The
+hint's own amber is unaffected: the explanation is the hint speaking, as
+loudly as it likes once asked, and the button is the chrome offering, which it
+SHALL do plainly.
 
 #### Scenario: A player opens a puzzle they have not asked for help with
 
@@ -406,19 +417,8 @@ likes once asked. The button is the chrome **offering**, which it does plainly.
 A setting SHALL NOT be offered to a player unless the state it controls changes
 something the player can observe. Where the condition a setting reveals or hides
 can no longer occur, the setting and every surface built on it SHALL be removed
-together rather than left as an inert control.
-
-This is not tidiness. "Show experimental puzzles" revealed games carrying the
-catalog's `unfinished` flag — a flag **no puzzle has ever set**, as the field's
-own doc comment recorded. Four surfaces were maintained over that empty set: the
-preference, the home screen's `visibleIds` filter, the catalog card's
-"Experimental" badge, and a once-a-day warning dialog with its own throttle and
-its own persisted timestamp. A fifth, in the share dialog, had decayed further:
-its exclusion could not fire, which made an escape hatch for Group unreachable
-and the branch around it an unconditional return.
-
-A control that cannot change what a player sees still costs them the attention
-to read it and decide, which is the part that is not free.
+together and not left as an inert control: a control that cannot change what a
+player sees still costs them the attention to read it and decide.
 
 #### Scenario: The condition a setting gates can no longer arise
 
@@ -429,17 +429,10 @@ to read it and decide, which is the part that is not free.
 
 ### Requirement: The home screen's navigation has no layer it does not need
 
-The home screen's header SHALL present its destinations directly rather than
+The home screen's header SHALL present its destinations directly and not
 behind a menu, unless the number of destinations makes a menu the shorter path.
-A page's own title SHALL NOT be a menu trigger.
-
-The header carried an "Options" dropdown holding three items, one of which — a
-"Show intro message" checkbox — controlled a single line of text, and at the
-compact width the dropdown's trigger was the app's own name. Removing the
-checkbox left two destinations behind a menu, which is a tap spent on nothing.
-
-About needs no menu row: the footer already links to it in prose and names what
-is inside it, which tells a player more than the word "About" does.
+A page's own title SHALL NOT be a menu trigger. About SHALL have no menu row:
+the footer links to it in prose and names what is inside it.
 
 #### Scenario: A menu is left holding what a player could reach directly
 
@@ -450,14 +443,9 @@ is inside it, which tells a player more than the word "About" does.
 
 Choosing "Custom type…" from a Type menu SHALL open the game's Custom dialog
 wherever that menu is drawn, a component's own shadow root included, and the
-dialog SHALL be titled with the game's display name, never its id.
-
-A menu drawn inside a shadow root once raised "launchCustomDialog() can't find
-puzzle-context container" instead of opening, because the lookup for the
-dialog's container did not cross a shadow root. The dialog read "abcd" because
-its title was the one the engine sent, and the engine knows a game only by its
-id; the name belongs to the catalog, so the engine's form description carries
-no title at all.
+dialog SHALL be titled with the game's display name, never its id. The name
+belongs to the catalog, and the engine knows a game only by its id, so the
+engine's form description SHALL carry no title.
 
 #### Scenario: Custom type… opens from a menu inside a shadow root
 
@@ -471,13 +459,13 @@ no title at all.
 - **THEN** its title is "Custom ABCD", not "abcd"
 
 ### Requirement: Every puzzle belongs to exactly one family, and the home screen narrows by it
-Each catalog entry SHALL name exactly one family from the catalog's list of families, and the home screen SHALL offer one chip per family that narrows the list to that family's puzzles.
 
-A family is what a player browses by ("what else is like this one?") and what
-maintenance work uses to name a group of games. It is a value that the chips,
-the search box and the quick-switch consume, not a manifest. Work that takes a
-family as its population reads it through `puzzlesInFamily` rather than typing
-a list. Where code can vouch for a family, a test holds the tag to the code.
+Each catalog entry SHALL name exactly one family from the catalog's list of
+families, and the home screen SHALL offer one chip per family that narrows the
+list to that family's puzzles. A family is a value that the chips, the search
+box and the quick-switch consume, not a manifest: work that takes a family as
+its population SHALL read it through `puzzlesInFamily` and SHALL NOT type a
+list. Where code can vouch for a family, a test SHALL hold the tag to the code.
 
 #### Scenario: A family chip narrows the list, and pressing it again releases it
 - **WHEN** a player presses the "Shading" chip on the home screen
@@ -502,11 +490,11 @@ a list. Where code can vouch for a family, a test holds the tag to the code.
 - **AND** every game whose family is Latin squares uses the shared Latin engine
 
 ### Requirement: From a puzzle, the quick-switch opens on the rest of that puzzle's family
-When the quick-switch is opened from a puzzle and nothing has been typed, it SHALL list the other puzzles of the current puzzle's family first, under a heading naming the family, followed by every puzzle.
 
-Opening the switcher from a game is the moment a player asks what else is like
-it. Once anything is typed, the search answers instead, and the grouping is
-dropped.
+When the quick-switch is opened from a puzzle and nothing has been typed, it
+SHALL list the other puzzles of the current puzzle's family first, under a
+heading naming the family, followed by every puzzle. Once anything is typed,
+the search SHALL answer instead, and the grouping SHALL be dropped.
 
 #### Scenario: Opening the switcher on a Latin square
 - **WHEN** a player opens the quick-switch while playing Solo, with nothing
@@ -524,26 +512,9 @@ dropped.
 
 A press on an on-screen key SHALL NOT move keyboard focus. The panel SHALL
 suppress the focus a pointer press would otherwise give the key it lands on,
-rather than handing focus back afterwards as a command control does.
-
-The panel is an **input surface**, not a control: panel and keyboard are two
-spellings of the same keypress, and using one must not switch the other off.
-Without this, a single press left the physical keyboard dead in every game with
-a keypad until the player clicked the board again — the board listens for
-`keydown` on itself, and the stray-key redirect fires only when nothing at all
-is focused. The requirement "Pressing a control gives the keyboard back to the
-board" did not reach here: the panel carries no `data-command` and sits outside
-the chrome whose clicks that rule covers.
-
-The suppression SHALL be on the press rather than the pointer event, because
-this frontend already cannot prevent a `pointerdown` from generating a click on
-iOS Safari, and touch presses are answered on `touchstart`.
-
-**No behavioral test tier can observe this.** Every one of them delivers input
-to the engine directly, so the panel and the keyboard both work in a suite that
-is green over a game nobody can type into; the standing guard asserts the
-suppression and SHALL say plainly that it is a proxy and where the consequence
-was observed.
+and SHALL NOT hand focus back afterwards as a command control does. The panel
+is an input surface, not a control: panel and keyboard are two spellings of
+the same keypress, and using one SHALL NOT switch the other off.
 
 #### Scenario: A physical key reaches the board straight after an on-screen key
 
@@ -552,20 +523,66 @@ was observed.
 - **THEN** the keypress reaches the puzzle, with no click on the board in
   between
 
+### Requirement: The key panel suppresses focus on the press, not the pointer event
+
+The key panel's suppression of focus SHALL be on the press and not on the
+pointer event, because this frontend cannot prevent a `pointerdown` from
+generating a click on iOS Safari, and touch presses are answered on
+`touchstart`.
+
+#### Scenario: A mouse press on an on-screen key
+
+- **WHEN** a mouse press lands on an on-screen key
+- **THEN** the key is not focused, and the click that follows still types it
+
+### Requirement: The key panel's guard says that it is a proxy
+
+No behavioral test tier can observe the key panel taking focus: every one of
+them delivers input to the engine directly, so the panel and the keyboard both
+work in a suite that is green over a game nobody can type into. The standing
+guard SHALL assert the suppression, and SHALL say plainly that it is a proxy
+and where the consequence was observed.
+
+#### Scenario: The suppression is removed
+
+- **WHEN** the key panel stops suppressing the focus of a press
+- **THEN** the standing guard fails, though every behavioral test of the panel
+  and of the keyboard still passes
+
 ### Requirement: A new board is dealt to fit the space it is drawn in
 
-The puzzle view SHALL report the space available to the board, measured before any `maxScale` cap, to its `Puzzle` whenever it measures, and when it is first given a `Puzzle`, so that the first board can fit as well. Every new game the app deals SHALL pass that area to the engine's deal, which chooses which way round a board that can turn is dealt. A board already on screen SHALL NOT be turned when the space changes shape: the next new game fits the new shape.
-
-The size a player chose, whether a preset or a remembered or custom size, is a size and not an orientation, so it SHALL be dealt turned to fit on a screen held the other way round, and SHALL be remembered as chosen.
+The puzzle view SHALL report the space available to the board, measured before
+any `maxScale` cap, to its `Puzzle` whenever it measures, and when it is first
+given a `Puzzle`, so that the first board can fit as well. Every new game the
+app deals SHALL pass that area to the engine's deal, which chooses which way
+round a board that can turn is dealt. A board already on screen SHALL NOT be
+turned when the space changes shape: the next new game fits the new shape.
 
 #### Scenario: The measured area reaches the deal
 
 - **WHEN** the view has measured a wide area and a new Magnets game is dealt from its 5×6 preset
 - **THEN** the board on screen is 6×5
 
+### Requirement: A chosen size is a size and not an orientation
+
+The size a player chose, whether a preset or a remembered or custom size, is a
+size and not an orientation: it SHALL be dealt turned to fit on a screen held
+the other way round, and SHALL be remembered as chosen.
+
+#### Scenario: A chosen size on a screen held the other way round
+
+- **WHEN** a player who chose Magnets' 5×6 preset deals a new game in a wide
+  area
+- **THEN** the board is dealt 6×5, and the remembered type is still the 5×6
+  preset
+
 ### Requirement: A board dealt turned keeps its preset's name
 
-The type header SHALL name a board dealt turned on its side by the title of the preset it was dealt from, found by matching the board's params either as they are or turned back. The title names the kind of board chosen, and the preset stays checked in the menu. The Custom dialog SHALL show the size the board was dealt at.
+The type header SHALL name a board dealt turned on its side by the title of the
+preset it was dealt from, found by matching the board's params either as they
+are or turned back. The title names the kind of board chosen, and the preset
+SHALL stay checked in the menu. The Custom dialog SHALL show the size the board
+was dealt at.
 
 #### Scenario: A turned board reads as its preset
 
@@ -579,11 +596,11 @@ The type header SHALL name a board dealt turned on its side by the title of the 
 
 ### Requirement: The solve timer has its own place in the chrome
 
-While a game's timer is on, the app SHALL show the elapsed time at the end of the readout
-row above the board, at every window size. It SHALL
-be absent, not blank, while the timer is off. The solved message SHALL state the time, and
-SHALL say beside it when help was taken on the board. The app SHALL pause the timer while the
-page is hidden.
+While a game's timer is on, the app SHALL show the elapsed time at the end of
+the readout row above the board, at every window size. It SHALL be absent, not
+blank, while the timer is off. The solved message SHALL state the time, and
+SHALL say beside it when help was taken on the board. The app SHALL pause the
+timer while the page is hidden.
 
 #### Scenario: The timer is off
 
@@ -593,29 +610,53 @@ page is hidden.
 #### Scenario: A helped solve
 
 - **WHEN** a player who used a hint solves a board with the timer on
-- **THEN** the solved message reads "Finished in M:SS, with help" rather than "Solved in M:SS"
+- **THEN** the solved message reads "Finished in M:SS, with help" and not "Solved in M:SS"
 
 ### Requirement: The readouts are one row, and the chips give way first
 
-The puzzle screen SHALL hold the back link, the game's name, the type chips and, while it is on, the
-timer, on one row above the board at every window size, which does not overflow at 320 CSS px.
-The row holds readouts and the ways to another puzzle, and no command on the board. The game's
-name SHALL be a button inside the page's heading that opens the quick-switch, the same one the
-Menu's `Switch puzzle…` row opens, and SHALL show a mark that says it opens something. The move
-counter SHALL NOT appear in the row; it is the timeline's control, in the Menu's Board group.
-When the row is short of space, the chips SHALL be clipped before the game's name, and no chip
-SHALL draw outside its own box. The back link SHALL show its words where the window is wide, and
-its icon alone elsewhere, with the words as its accessible name.
+The puzzle screen SHALL hold the back link, the game's name, the type chips
+and, while it is on, the timer, on one row above the board at every window
+size, which SHALL NOT overflow at 320 CSS px. The row SHALL hold readouts and
+the ways to another puzzle, and no command on the board. When the row is short
+of space, the chips SHALL be clipped before the game's name, and no chip SHALL
+draw outside its own box.
 
 #### Scenario: A long preset title on a narrow phone
 
 - **WHEN** a game whose preset title is "Size 9 Hexagon Hard" is open at 320 px with the timer on
-- **THEN** the row does not overflow, the name is shown whole, and the chip is clipped with an ellipsis rather than running under the timer
+- **THEN** the row does not overflow, the name is shown whole, and the chip is clipped with an ellipsis and does not run under the timer
+
+### Requirement: The move counter is not in the readout row
+
+The move counter SHALL NOT appear in the readout row: it is the timeline's
+control, in the Menu's Board group.
+
+#### Scenario: The readout row with moves made
+
+- **WHEN** a player has made moves and the readout row is drawn
+- **THEN** the row shows no move counter, and the Menu's Board group does
+
+### Requirement: The game's name opens the quick-switch
+
+The game's name in the readout row SHALL be a button inside the page's heading
+that opens the quick-switch, the same one the Menu's `Switch puzzle…` row
+opens, and SHALL show a mark that says it opens something.
 
 #### Scenario: The name opens the quick-switch
 
 - **WHEN** the player taps or clicks the game's name above the board
 - **THEN** the quick-switch opens, as it does from the Menu's `Switch puzzle…` row
+
+### Requirement: The back link shows its words where the window is wide
+
+The readout row's back link SHALL show its words where the window is wide, and
+its icon alone elsewhere, with the words as its accessible name.
+
+#### Scenario: The back link on a phone
+
+- **WHEN** the puzzle screen renders in a narrow window
+- **THEN** the back link shows its icon alone, and its accessible name is
+  "All puzzles"
 
 ### Requirement: A menu inside the Menu stays open until a choice is made in it
 
@@ -639,12 +680,12 @@ an error thrown by the worker's own code during startup SHALL be reported.
 #### Scenario: The worker's script is gone after a deploy
 
 - **WHEN** a page from the previous build opens a puzzle and its worker script answers 404
-- **THEN** the page reloads once rather than showing a blank board
+- **THEN** the page reloads once and does not show a blank board
 
 #### Scenario: Reloading did not help
 
 - **WHEN** the worker's script is still missing after that reload
-- **THEN** the crash dialog reports it, rather than the board staying blank
+- **THEN** the crash dialog reports it, and the board does not stay blank
 
 ### Requirement: A remembered board type that no longer loads is replaced with a warning
 
@@ -664,24 +705,34 @@ the label SHALL say which features are still to come, by the names a player
 knows them by. A draft SHALL stay listed and playable: the label says the game
 is not yet complete and hides nothing.
 
-The home screen never loads game code, so the drafts SHALL be computed from the
-registered games at build time (`virtual:draft-puzzles`) and SHALL NOT be a
-field of the committed catalog.
-
-A game's help page SHALL list, in a generated "Not in this game" section above
-its parameters, every contract section the game declares not applicable, with
-the game's reason. A page author writes nothing for it.
-
 #### Scenario: A hintless game is labeled
 
-- **WHEN** the home screen lists Net, which has no hint and no mistake check
-- **THEN** its row carries a "Draft" label saying that Hints and Checking for
-  mistakes are still to come
+- **WHEN** the home screen lists a game that has no hint
+- **THEN** its row carries a "Draft" label saying that Hints are still to come
 
 #### Scenario: A complete game is not labeled
 
 - **WHEN** the home screen lists Palisade
 - **THEN** its row carries no draft label
+
+### Requirement: The drafts are computed at build time, not kept in the catalog
+
+The home screen never loads game code, so the drafts SHALL be computed from the
+registered games at build time (`virtual:draft-puzzles`) and SHALL NOT be a
+field of the committed catalog.
+
+#### Scenario: A draft gains its missing section
+
+- **WHEN** a draft game implements the last section it lacked and the app is
+  built
+- **THEN** its row carries no draft label, and the committed catalog is
+  unchanged
+
+### Requirement: A help page lists what is not in the game, with the game's reason
+
+A game's help page SHALL list, in a generated "Not in this game" section above
+its parameters, every contract section the game declares not applicable, with
+the game's reason. A page author SHALL write nothing for it.
 
 #### Scenario: A reason reaches the help page
 
@@ -691,7 +742,12 @@ the game's reason. A page author writes nothing for it.
 
 ### Requirement: The app hands out boards, never seeds
 
-Everything the app shows a player as naming a game, or lets them copy or share, SHALL name the board itself as its game ID (`params:desc`, full params), never a random seed. A seed names a board only through a generator, and this project's generators change, both against upstream and between versions of this app, so a seed handed out today can name a different board tomorrow. The midend's game-ID notification SHALL carry the board's one game ID and no seed, so that no part of the app can hand one out. The same ID SHALL serve showing, sharing, saving and reopening the board. A `#seed` ID arriving from a link, a paste or another collection SHALL still deal a game, the one the current generator deals for it.
+Everything the app shows a player as naming a game, or lets them copy or
+share, SHALL name the board itself as its game ID (`params:desc`, full params),
+never a random seed. A seed names a board only through a generator, and this
+project's generators change, so a seed handed out today can name a different
+board tomorrow. The same ID SHALL serve showing, sharing, saving and reopening
+the board.
 
 #### Scenario: The link to this specific game
 
@@ -709,10 +765,20 @@ Everything the app shows a player as naming a game, or lets them copy or share, 
 - **WHEN** the Share dialog is shown for a puzzle outside Simon Tatham's collection
 - **THEN** it offers no link to Simon Tatham's site
 
+### Requirement: The game-ID notification carries no seed
+
+The midend's game-ID notification SHALL carry the board's one game ID and no
+seed, so that no part of the app can hand a seed out.
+
 #### Scenario: The notification carries no seed
 
 - **WHEN** the midend deals a board from a fresh seed or a `#seed` ID
 - **THEN** its game-ID notification carries exactly the board's game ID
+
+### Requirement: A seed ID still deals a game
+
+A `#seed` ID arriving from a link, a paste or another collection SHALL still
+deal a game, the one the current generator deals for it.
 
 #### Scenario: A seed ID still opens
 
@@ -729,21 +795,36 @@ game, the board as text) SHALL NOT be sent to the engine until the first board
 exists. Sent earlier, it SHALL wait and be answered about the board that
 arrives.
 
-The methods of the engine's surface that read the board SHALL be a type of
-their own (`BoardSurface`), and the app SHALL reach them only through the wait,
-so that a method added to that type cannot be called around it.
-
-Until the first board exists, the chrome SHALL draw the controls of those
-commands unavailable. A command that needs no board (New game, the type menu,
-loading a game, opening a shared one, the puzzle switcher, preferences, help)
-SHALL be offered throughout.
-
 #### Scenario: Hint is pressed by key before the first board
 
 - **GIVEN** a page that has its controls and is still dealing its first board
 - **WHEN** the player presses the hint's key
 - **THEN** no error is shown
 - **AND** the hint is given once the board is there
+
+#### Scenario: The board arrives from a save
+
+- **WHEN** the first board is a restored autosave and not a deal
+- **THEN** the commands that waited are answered about it
+
+### Requirement: The engine's board methods are reached only through the wait
+
+The methods of the engine's surface that read the board SHALL be a type of
+their own (`BoardSurface`), and the app SHALL reach them only through the wait
+for the first board, so that a method added to that type cannot be called
+around it.
+
+#### Scenario: A method is added to the board's type
+
+- **WHEN** a method that reads the board is added to `BoardSurface`
+- **THEN** the app can call it only through the wait for the first board
+
+### Requirement: The controls of board commands are unavailable until the first board
+
+Until the first board exists, the chrome SHALL draw unavailable the controls
+of the commands that read or act on the board in play. A command that needs no
+board (New game, the type menu, loading a game, opening a shared one, the
+puzzle switcher, preferences, help) SHALL be offered throughout.
 
 #### Scenario: The controls while the first board is dealt
 
@@ -752,58 +833,31 @@ SHALL be offered throughout.
   Fill marks, Share and Copy image are drawn unavailable
 - **AND** New game and Open saved… are not
 
-#### Scenario: The board arrives from a save
-
-- **WHEN** the first board is a restored autosave and not a deal
-- **THEN** the commands that waited are answered about it
-
 ### Requirement: Undo reaches back across a Restart and a replaced board
 
 Start over and New game are the two commands that put a player's work away,
-and the app SHALL let Undo take either back (`ts-engine`, "A restart is a step
-of the history" and "The board a new one replaces is kept, one deep"). The
-Undo and Redo controls, their shortcuts and the timeline SHALL need nothing of
-their own for it: the engine's `canUndo` and `canRedo` already count a restart
-and a kept board.
-
-A loaded save replaces the board as a New game does, by `Back to last save` or
-`Open saved…`, and the board left SHALL be kept the same way: it lies beyond
-the loaded save's first position, past the save's own moves, and the timeline
-offers it at once as *Previous board*.
-
-A board's checkpoints are move numbers on that board. They SHALL leave with
-the board when it is replaced, so that a new board starts with none, and SHALL
-return with it when Undo or Redo brings it back. The app SHALL follow the
-board by the number the engine gives it and not by its id, which two boards
-can share and one board can change.
-
-When an Undo brings back a board, the app SHALL say so where a hint's words
-go, since the whole board has changed under a control that usually takes back
-one move, and SHALL take the words down when Redo returns.
-
-The timeline SHALL name each restart at its move, and SHALL offer the board
-kept before the first move as *Previous board* and the board kept after the
-last as *Next board*.
-
-The help SHALL describe both (`help/features.md`, "Taking back Start over or a
-New game").
+and the app SHALL let Undo take either back, as `ts-engine` keeps a restart as
+a step of the history and the board a new one replaces, one deep. The Undo and
+Redo controls, their shortcuts and the timeline SHALL need nothing of their
+own for it: the engine's `canUndo` and `canRedo` count a restart and a kept
+board.
 
 #### Scenario: Restart, then Undo
 
 - **WHEN** a player makes moves, chooses Start over and presses Undo
 - **THEN** the moves are back, and the timeline shows the restart ahead
 
-#### Scenario: New game, then Undo
-
-- **WHEN** a player makes moves, sets a checkpoint, chooses New game and
-  presses Undo before moving
-- **THEN** the old board is back with its moves, its checkpoint and its time
-- **AND** the app says the board is back and that Redo returns
-
 #### Scenario: A move on the new board
 
 - **WHEN** a player moves on the new board and undoes that move
 - **THEN** Undo is unavailable
+
+### Requirement: A loaded save keeps the board it replaces
+
+A loaded save replaces the board as a New game does, by `Back to last save` or
+`Open saved…`, and the board left SHALL be kept the same way: it lies beyond
+the loaded save's first position, past the save's own moves, and the timeline
+SHALL offer it at once as *Previous board*.
 
 #### Scenario: Back to last save, then Undo past the save's first move
 
@@ -812,62 +866,51 @@ New game").
 - **THEN** the first two presses take back the save's own two moves
 - **AND** the third brings back the board left, at move 4, and the app says so
 
+### Requirement: A board's checkpoints leave and return with it
+
+A board's checkpoints are move numbers on that board. They SHALL leave with
+the board when it is replaced, so that a new board starts with none, and SHALL
+return with it when Undo or Redo brings it back. The app SHALL follow the
+board by the number the engine gives it and not by its id, which two boards
+can share and one board can change.
+
+#### Scenario: New game, then Undo
+
+- **WHEN** a player makes moves, sets a checkpoint, chooses New game and
+  presses Undo before moving
+- **THEN** the old board is back with its moves, its checkpoint and its time
+
+### Requirement: The app says when Undo has brought back a board
+
+When an Undo brings back a board, the app SHALL say so where a hint's words
+go, since the whole board has changed under a control that usually takes back
+one move, and SHALL take the words down when Redo returns.
+
+#### Scenario: Undo brings back the board a New game replaced
+
+- **WHEN** a player chooses New game and presses Undo before moving
+- **THEN** the app says the board is back and that Redo returns
+
+### Requirement: The timeline names a restart and the boards kept either side
+
+The timeline SHALL name each restart at its move, and SHALL offer the board
+kept before the first move as *Previous board* and the board kept after the
+last as *Next board*. The help SHALL describe taking back both Start over and
+New game (`help/features.md`, "Taking back Start over or a New game").
+
+#### Scenario: The timeline after an Undo across a New game
+
+- **WHEN** a player chooses New game, presses Undo and opens the timeline
+- **THEN** it offers *Next board* after the last move
+
 ### Requirement: The puzzle screen is three panels, and every command is in exactly one
 
 The puzzle screen SHALL present its controls as three panels, at every window
 size: a **Bar**, a **Game controls** panel and a **Menu**. Every command the
 screen offers SHALL be reachable from exactly one place in exactly one of
-them. The one command outside them is the way out of a deal still being looked
-for, which SHALL be beside the words that say so, under the board, and nowhere
-else.
-
-Two surfaces a player must both learn is the defect this rule exists to
-prevent. A desktop rail and a phone bar with the rail behind it were one list
-drawn as two shapes, and the phone's sheet repeated what its bar already
-showed.
-
-The Bar and the Menu SHALL be drawn from one ordered list of commands. The Bar
-SHALL show the leading entries of that list and a button that opens the Menu,
-and the Menu SHALL hold every entry the Bar does not show, in the list's order.
-The Menu's contents are therefore a suffix of the list and never a selection
-from it. The first four entries (Undo, Redo, Hint, Check & save) SHALL be on
-the Bar at every size.
-
-Every control in a panel SHALL carry a visible text label, not an icon alone.
-The on-screen keys that type a character are an input surface and not
-controls ("The on-screen key panel never takes keyboard focus"): the character
-is what they carry.
-
-A control in the Bar or the Game controls SHALL draw its icon above its
-caption, the same shape for every one of them, Hint included. A command's
-caption SHALL name an action, and a mode's caption SHALL name the mode.
-
-The Bar SHALL NOT draw the key that runs a command: a slot's tooltip carries
-it, with the command's full name. A Menu row SHALL write the key beside the
-command only where a keyboard is likely: a pointer that is fine and can hover.
-
-A bottom Bar's Menu button SHALL be at the end of the Bar nearest the side the
-Menu opens on, so that the button is beside what it opens. A rule SHALL set
-the Menu button apart from the Bar's commands: it opens a panel, and they act
-on the board.
-
-Opening or closing the Menu SHALL move no slot of the Bar, in any layout, and
-the Menu SHALL NOT cover the Bar, so that the Menu button which opened the
-Menu is in view under the pointer, and a press there closes it.
-
-#### Scenario: The same press opens and closes the Menu
-
-- **WHEN** a player presses the Bar's Menu button, and presses the same point
-  again without moving
-- **THEN** the Menu opens and then closes, whether it docks beside the board,
-  opens as a sheet or opens as a drawer
-- **AND** every slot of the Bar is where it was throughout
-
-#### Scenario: The Menu button, by handedness
-
-- **WHEN** the Bar is along the bottom and the Game controls are on the right
-- **THEN** the Menu button is the Bar's first slot, on the left
-- **AND** with the Game controls on the left, it is the last, on the right
+them, so that a player never has two surfaces to learn. The one command
+outside them is the way out of a deal still being looked for, which SHALL be
+beside the words that say so, under the board, and nowhere else.
 
 #### Scenario: A command is offered twice
 
@@ -881,6 +924,15 @@ Menu is in view under the pointer, and a press there closes it.
   panels
 - **THEN** a test fails, naming the command
 
+### Requirement: The Bar and the Menu are one ordered list, cut once
+
+The Bar and the Menu SHALL be drawn from one ordered list of commands. The Bar
+SHALL show the leading entries of that list and a button that opens the Menu,
+and the Menu SHALL hold every entry the Bar does not show, in the list's
+order: its contents are a suffix of the list and never a selection from it.
+The first four entries (Undo, Redo, Hint, Check & save) SHALL be on the Bar at
+every size.
+
 #### Scenario: The Menu on a phone
 
 - **WHEN** a player on a phone opens the Menu
@@ -888,46 +940,119 @@ Menu is in view under the pointer, and a press there closes it.
 - **AND** its first rows are the entries of the list that follow the last one
   the Bar shows
 
+### Requirement: Every control in a panel carries a visible label
+
+Every control in a panel SHALL carry a visible text label, not an icon alone.
+The on-screen keys that type a character are an input surface and not
+controls ("The on-screen key panel never takes keyboard focus"): the character
+is what they carry.
+
 #### Scenario: A control carries no label
 
 - **WHEN** a panel renders a control
 - **THEN** it carries a visible text label, not an icon alone
 
+### Requirement: A slot draws its icon above its caption
+
+A control in the Bar or the Game controls SHALL draw its icon above its
+caption, the same shape for every one of them, Hint included. A command's
+caption SHALL name an action, and a mode's caption SHALL name the mode.
+
+#### Scenario: The Hint slot beside its neighbors
+
+- **WHEN** the Bar is drawn for a game with a hint
+- **THEN** the Hint slot is an icon above a caption, as Undo and Check & save
+  are
+
+### Requirement: The Bar does not draw a command's key
+
+The Bar SHALL NOT draw the key that runs a command: a slot's tooltip SHALL
+carry it, with the command's full name. A Menu row SHALL write the key beside
+the command only where a keyboard is likely: a pointer that is fine and can
+hover.
+
+#### Scenario: The Menu on a touch screen
+
+- **WHEN** the Menu is drawn where the pointer is coarse or cannot hover
+- **THEN** no row shows a key
+
+### Requirement: The Menu button is beside what it opens
+
+A bottom Bar's Menu button SHALL be at the end of the Bar nearest the side the
+Menu opens on, so that the button is beside what it opens. A rule SHALL set
+the Menu button apart from the Bar's commands: it opens a panel, and they act
+on the board.
+
+#### Scenario: The Menu button, by handedness
+
+- **WHEN** the Bar is along the bottom and the Game controls are on the right
+- **THEN** the Menu button is the Bar's first slot, on the left
+- **AND** with the Game controls on the left, it is the last, on the right
+
+### Requirement: Opening the Menu moves no slot of the Bar
+
+Opening or closing the Menu SHALL move no slot of the Bar, in any layout, and
+the Menu SHALL NOT cover the Bar, so that the Menu button which opened the
+Menu is in view under the pointer, and a press there closes it.
+
+#### Scenario: The same press opens and closes the Menu
+
+- **WHEN** a player presses the Bar's Menu button, and presses the same point
+  again without moving
+- **THEN** the Menu opens and then closes, whether it docks beside the board,
+  opens as a sheet or opens as a drawer
+- **AND** every slot of the Bar is where it was throughout
+
 ### Requirement: The Bar is the same in every game, and a game's own controls are together
 
 The Bar SHALL hold only commands every game has, so that a command keeps its
 slot from one game to the next. A game with no hint has no Hint slot; no
-command's slot otherwise depends on the game.
-
-The Bar SHALL carry the button toggle: one slot, at the end away from the Menu
-button and set apart by a rule, which while it is on sends a press on the
-board as the right mouse button and a long press as the left. It SHALL be a
-mode that is on or off: its caption and icon name the mode and SHALL NOT
-change with its state, and being on SHALL be shown by the slot being filled
-and reported as a pressed button. It is a
-function every game shares, and so it is on the Bar and not in the Game
-controls. It SHALL be shown by default, and a player can turn it off in
-Preferences. It SHALL be absent in a game that ignores the secondary button,
-which has nothing to swap to. A swap SHALL NOT outlast the puzzle it was made
-in.
-
-Everything that depends on the game in play SHALL be in the Game controls
-panel and nowhere else, in this order in every game: its keys, the note
-toggle, and its own commands (Fill or Update marks, Reference). Each SHALL be present by what
-the game is, so that no game is listed: the keys and the note toggle by the
-keys the game asks for, mark-all by `canMarkAll`, Reference by a `reference`
-hook. The Menu SHALL
-hold nothing that depends on the game, apart from the game's name in the help
-row and the commands a game cannot run at all, which are absent. A game that
-brings none of these SHALL have no Game controls panel, and the board takes
-the room.
-
-A player does not know to look in a menu for something only one game has.
+command's slot SHALL otherwise depend on the game.
 
 #### Scenario: The same slots in two games
 
 - **WHEN** the Bar is drawn at one window size for Solo and for Tracks
 - **THEN** it has the same commands in the same order
+
+### Requirement: The Bar carries the button toggle
+
+The Bar SHALL carry the button toggle: one slot, at the end away from the Menu
+button and set apart by a rule, which while it is on sends a press on the
+board as the right mouse button and a long press as the left. Every game
+shares it, so it SHALL be on the Bar and not in the Game controls. It SHALL be
+shown by default, and a player can turn it off in Preferences. It SHALL be
+absent in a game that ignores the secondary button. A swap SHALL NOT outlast
+the puzzle it was made in.
+
+#### Scenario: A run of second actions by tapping
+
+- **WHEN** a player in Tracks presses the Bar's `Right click` slot
+- **THEN** no slot of the Bar has moved, and a tap on the board does what a
+  right click does
+- **AND** in a game that ignores the secondary button the Bar has no such
+  slot
+
+### Requirement: The button toggle is a mode that is on or off
+
+The button toggle SHALL be a mode that is on or off: its caption and icon
+SHALL name the mode and SHALL NOT change with its state, and being on SHALL be
+shown by the slot being filled and reported as a pressed button.
+
+#### Scenario: The toggle is turned on
+
+- **WHEN** a player presses the Bar's `Right click` slot
+- **THEN** the slot is filled and reported as pressed, and its caption is
+  unchanged
+
+### Requirement: Everything that depends on the game is in the Game controls
+
+Everything that depends on the game in play SHALL be in the Game controls
+panel and nowhere else, in this order in every game: its keys, the note
+toggle, and its own commands (Fill or Update marks, Reference). Each SHALL be
+present by what the game is, so that no game is listed: the keys and the note
+toggle by the keys the game asks for, mark-all by `canMarkAll`, Reference by a
+`reference` hook. A player does not know to look in a menu for something only
+one game has.
 
 #### Scenario: A game with mark-all
 
@@ -941,19 +1066,18 @@ A player does not know to look in a menu for something only one game has.
 - **THEN** the Reference toggle is in the Game controls panel and not in the
   Menu
 
+### Requirement: The Menu holds nothing that depends on the game
+
+The Menu SHALL hold nothing that depends on the game, apart from the game's
+name in the help row and the commands a game cannot run at all, which SHALL be
+absent. A game that brings no keys, no note toggle and no commands of its own
+SHALL have no Game controls panel, and the board takes the room.
+
 #### Scenario: A game with nothing of its own
 
 - **WHEN** the screen renders for a game with no keys, no mark-all and no
   reference
 - **THEN** no Game controls panel is drawn
-
-#### Scenario: A run of second actions by tapping
-
-- **WHEN** a player in Tracks presses the Bar's `Right click` slot
-- **THEN** the slot is filled and its caption is unchanged, no slot of the Bar
-  has moved, and a tap on the board does what a right click does
-- **AND** in a game that ignores the secondary button the Bar has no such
-  slot
 
 ### Requirement: Only the Menu scrolls
 
@@ -961,10 +1085,9 @@ No panel other than the Menu SHALL scroll, and the Menu SHALL be the screen's
 only overflow: there is no second menu of commands inside it and no scrolling
 column beside it. The Bar SHALL fit its window by showing fewer of the list's
 leading entries, the rest moving to the head of the Menu. Game controls beside
-the board SHALL fit their height by laying the keys out in more columns.
-
-The timeline is in the Menu and opens a list of its own. It is a list of moves
-and not of commands.
+the board SHALL fit their height by laying the keys out in more columns. The
+timeline is in the Menu and opens a list of its own: it is a list of moves and
+not of commands.
 
 #### Scenario: A short desktop window
 
@@ -1002,46 +1125,19 @@ controls are on a side or under the board, and whether the Menu stays open when
 there is room. The Menu SHALL take the side opposite the Game controls, so that
 no choice can put all three panels on one side.
 
+#### Scenario: A left-handed player
+
+- **WHEN** a player sets the Game controls to the left
+- **THEN** the Game controls are on the left and the Menu on the right, in
+  every window shape
+
+### Requirement: Layout choices are kept for each window shape
+
 The side the Game controls are on SHALL be kept once for the device. The other
-choices SHALL be kept separately for each window shape (tall; wide; wide and
-short), so that a layout chosen on a wide screen does not follow a player to a
-tall one. Where a player has made no choice, the default SHALL depend on the
-window shape.
-
-A choice that cannot be honored in the current window SHALL fall back without
-being overwritten: a Menu that cannot dock without squeezing the board is
-closed, and the Bar's Menu button opens it over the board, as a sheet in a tall
-window and a drawer on the Menu's side in a wide one, in either case clear of
-the Bar. A command chosen from a
-Menu that is over the board SHALL close it; a docked Menu stays.
-
-Closing or opening the Menu from the Bar is for the visit and SHALL NOT change
-the stored choice.
-
-The window's shape SHALL choose the layout, and not its width alone: tall is
-portrait, and a landscape window is wide, or wide and short below about 34rem
-of height.
-
-The reference panel, where a game has one and it is open, SHALL be a region of
-the same layout: beside the board, beyond the Game controls, in a landscape
-window, and under the board in a tall one.
-
-Where a panel docks SHALL be decided in one place, from these choices. No panel
-SHALL carry a rule of its own about the window's size.
-
-#### Scenario: A window narrowed until the Menu cannot dock
-
-- **WHEN** a wide window with the Menu docked is narrowed until the Menu would
-  squeeze the board, and then widened again
-- **THEN** the Menu leaves the layout while it cannot dock, and is docked open
-  again when it can
-
-#### Scenario: Two window sizes either side of the old breakpoint
-
-- **WHEN** the puzzle screen renders at 768 by 1024 and at 800 by 1000 CSS
-  pixels
-- **THEN** both are tall, and the board is the window's width in each, less
-  the same margin
+layout choices SHALL be kept separately for each window shape (tall; wide;
+wide and short), so that a layout chosen on a wide screen does not follow a
+player to a tall one. Where a player has made no choice, the default SHALL
+depend on the window shape.
 
 #### Scenario: The default in a wide window
 
@@ -1055,12 +1151,6 @@ SHALL carry a rule of its own about the window's size.
 - **THEN** the Bar is along the bottom, the Game controls are under the board,
   and the Menu opens as a sheet
 
-#### Scenario: A left-handed player
-
-- **WHEN** a player sets the Game controls to the left
-- **THEN** the Game controls are on the left and the Menu on the right, in
-  every window shape
-
 #### Scenario: A choice made in one shape
 
 - **WHEN** a player moves the Bar to the side in a wide window, and later opens
@@ -1068,15 +1158,77 @@ SHALL carry a rule of its own about the window's size.
 - **THEN** the tall window shows its own layout, and the wide window's choice
   is still in force when they return to it
 
+### Requirement: A layout choice the window cannot honor falls back and is kept
+
+A layout choice that cannot be honored in the current window SHALL fall back
+without being overwritten: a Menu that cannot dock without squeezing the board
+is closed, and the Bar's Menu button opens it over the board, as a sheet in a
+tall window and a drawer on the Menu's side in a wide one, in either case
+clear of the Bar.
+
+#### Scenario: A window narrowed until the Menu cannot dock
+
+- **WHEN** a wide window with the Menu docked is narrowed until the Menu would
+  squeeze the board, and then widened again
+- **THEN** the Menu leaves the layout while it cannot dock, and is docked open
+  again when it can
+
+### Requirement: A command closes a Menu that is over the board
+
+A command chosen from a Menu that is over the board SHALL close it; a docked
+Menu SHALL stay. Closing or opening the Menu from the Bar is for the visit and
+SHALL NOT change the stored choice.
+
+#### Scenario: A command chosen from the sheet
+
+- **WHEN** a player on a phone opens the Menu and chooses Start over
+- **THEN** the sheet closes
+- **AND** the same choice from a docked Menu leaves it open
+
+### Requirement: The window's shape chooses the layout
+
+The window's shape SHALL choose the layout, and not its width alone: tall is
+portrait, and a landscape window is wide, or wide and short below 34rem of
+height.
+
+#### Scenario: Two tall windows of different widths
+
+- **WHEN** the puzzle screen renders at 768 by 1024 and at 800 by 1000 CSS
+  pixels
+- **THEN** both are tall, and the board is the window's width in each, less
+  the same margin
+
+### Requirement: The reference panel is a region of the same layout
+
+The reference panel, where a game has one and it is open, SHALL be a region of
+the puzzle screen's layout: beside the board, beyond the Game controls, in a
+landscape window, and under the board in a tall one.
+
+#### Scenario: The reference is opened on an upright phone
+
+- **WHEN** a player opens Dominosa's reference in a tall window
+- **THEN** the reference panel is under the board
+
+### Requirement: Where a panel docks is decided in one place
+
+Where a panel docks SHALL be decided in one place, from the player's layout
+choices and the window's shape. No panel SHALL carry a rule of its own about
+the window's size.
+
+#### Scenario: A panel is drawn in two window shapes
+
+- **WHEN** the same panel is drawn in a tall window and in a wide one
+- **THEN** its place in each comes from the one layout decision, and the panel
+  carries no rule of its own about the window's size
+
 ### Requirement: The family chips give way to a search
 
-While the home screen's search box holds text, the home screen SHALL show no family chip other than the pressed one, and SHALL show every family chip again once the box is empty.
-
-On a phone the chips wrap to several rows between the box and the list, and
-with the keyboard up they are what a player sees in place of the results. A
-family's label is in what the search matches, so nothing is out of reach
-while they are away. The pressed chip stays because it is still narrowing the
-list, and a narrowing with no control on screen cannot be undone.
+While the home screen's search box holds text, the home screen SHALL show no
+family chip other than the pressed one, and SHALL show every family chip again
+once the box is empty. A family's label is in what the search matches, so
+nothing is out of reach while the chips are away. The pressed chip stays
+because it is still narrowing the list, and a narrowing with no control on
+screen cannot be undone.
 
 #### Scenario: Typing lifts the list to the box
 

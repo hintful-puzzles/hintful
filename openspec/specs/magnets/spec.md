@@ -3,26 +3,35 @@
 ## Purpose
 Magnets, the puzzle of filling each domino with a magnet or a neutral piece so
 that no two like poles are orthogonally adjacent and each row and column meets
-its clued pole counts. This capability specifies its port to the TS engine, with
-input that cycles a domino's contents and marks clues done, and mistake-checking
-against the unique solution.
+its clued pole counts, with input that cycles a domino's contents and marks
+clues done, and mistake checking against the unique solution.
 
 ## Requirements
 
 ### Requirement: Magnets game implements the Game interface
 
-The engine SHALL provide a registered `magnets` game implementing
-`Game<MagnetsParams, MagnetsState, MagnetsMove, MagnetsUi, MagnetsDrawState, MagnetsMistake>`:
-fill a `w × h` grid of pre-laid 2×1 dominoes so that each domino is either a
-magnet (one `+` cell and one `−` cell) or neutral (both cells blank), no two
-orthogonally-adjacent cells share a polarity, and each row and column contains
-exactly its clue count of `+` and of `−` cells. Some dominoes MAY be fixed
-singleton squares that are permanently neutral. Params SHALL be `w`, `h`,
-`diff` (Easy / Normal) and `stripclues` (boolean), encoded `{w}x{h}` with a
-full-form `d{e|t}` difficulty suffix and an `S` strip-clues suffix (square
-shorthand `{n}`). Upstream's 8 presets and a 9×10 Easy board SHALL be offered, each turned to draw taller than wide (5×6, 7×8, 9×10). `validateParams`
-SHALL enforce `w ≥ 2`, `h ≥ 2`, a per-difficulty minimum size (Easy: `w ≥ 3`
-or `h ≥ 3`; Normal: `w ≥ 5` or `h ≥ 5`) and the area bound. The game SHALL provide `solve` and `textFormat`.
+The engine SHALL provide a registered `magnets` game implementing `Game`: fill
+a `w × h` grid of pre-laid 2×1 dominoes so that each domino is either a magnet
+(one `+` cell and one `−` cell) or neutral (both cells blank), no two
+orthogonally adjacent cells share a polarity, and each row and column contains
+exactly its clue count of `+` and of `−` cells. A layout SHALL be able to hold
+singleton squares, which are fixed and permanently neutral. The game SHALL
+provide `solve` and `textFormat`.
+
+#### Scenario: A filled board is solved
+
+- **WHEN** every domino is set, every clue count is met and no two like poles
+  touch
+- **THEN** the game reports the board solved
+
+### Requirement: Magnets' parameters
+
+Params SHALL be `w`, `h`, `diff` (Easy or Normal) and `stripclues` (boolean),
+encoded `{w}x{h}` with, in the full form, a `d{e|t}` difficulty suffix and an
+`S` strip-clues suffix; a bare `{n}` SHALL decode as a square. `w` and `h`
+SHALL each be declared bounded from 2 to 61, the largest count one description
+character writes. `validateParams` SHALL refuse Easy unless `w ≥ 3` or
+`h ≥ 3`, and Normal unless `w ≥ 5` or `h ≥ 5`.
 
 #### Scenario: Params round-trip
 
@@ -35,40 +44,62 @@ or `h ≥ 3`; Normal: `w ≥ 5` or `h ≥ 5`) and the area bound. The game SHALL
 - **WHEN** `validateParams` is given a 4×4 grid at Normal difficulty
 - **THEN** it returns a non-null error string (Normal needs a side ≥ 5)
 
+### Requirement: Magnets' presets are drawn taller than wide
+
+The presets SHALL be 5×6, 7×8 and 9×10, each stated taller than wide, and each
+offered at Easy, at Normal, and at Normal with stripped clues.
+
+#### Scenario: The largest board is offered at Easy
+
+- **WHEN** the preset menu is read
+- **THEN** it holds a 9×10 Easy board beside the two 9×10 Normal ones
+
 ### Requirement: Magnets descriptions carry the clues and domino layout
 
 The desc SHALL encode, comma-separated: the `w` column `+` counts, the `h` row
-`+` counts, the `w` column `−` counts, the `h` row `−` counts (each a digit/
-letter, or `.` for a stripped/absent clue), then a `w·h`-character row-major
-string of domino orientations (`L`/`R`/`T`/`B` for the left/right/top/bottom
-half of a domino, `*` for a singleton square). `newState` SHALL parse this into
-a per-cell domino-partner map and the `[+, −, neutral]` row/column count
-targets shared (frozen) across all states of the game, deriving each neutral
-target as `size − (+) − (−)` and marking singletons permanently neutral.
-`validateDesc` SHALL reject a short desc, characters out of range, inconsistent
-domino descriptions (an end not pointing back at its partner), and counts that
-exceed the row/column size.
+`+` counts, the `w` column `−` counts, the `h` row `−` counts (each a digit or
+letter, or `.` for a stripped or absent clue), then a `w·h`-character row-major
+string of domino orientations: `L`, `R`, `T` or `B` for the left, right, top or
+bottom half of a domino, and `*` for a singleton square.
 
 #### Scenario: A description round-trips
 
 - **WHEN** a generated desc is parsed by `newState` and re-encoded
 - **THEN** the re-encoded desc equals the original
 
+### Requirement: A Magnets description is read into a layout every state shares
+
+`newState` SHALL parse the desc into a per-cell domino-partner map and the
+`+`, `−` and neutral count targets of each row and column, shared and never
+changed across all states of the game. It SHALL derive each neutral target as
+the line's size less its `+` and `−` targets, and SHALL mark singletons
+permanently neutral.
+
+#### Scenario: A neutral target is derived
+
+- **WHEN** a row of five squares is clued two `+` and two `−`
+- **THEN** its neutral target is one
+
+### Requirement: A malformed Magnets description is refused
+
+The game's one reading of a desc, in `newState`, SHALL refuse a short desc, a
+character out of range, an inconsistent domino description (an end not pointing
+back at its partner), and a count that exceeds its row's or column's size.
+
 #### Scenario: A malformed description is rejected
 
-- **WHEN** `validateDesc` is given a desc whose domino ends are inconsistent
-- **THEN** it returns a non-null error string
+- **WHEN** a desc whose domino ends are inconsistent is validated
+- **THEN** it is refused with a non-null error string
 
 ### Requirement: Magnets input cycles domino contents and toggles clue aids
 
-Left-click or `CURSOR_SELECT` on a domino cell SHALL cycle its content
-empty → `+` → `−` → empty (setting the partner to the opposite polarity),
-refusing to start from a placed neutral. Right-click or `CURSOR_SELECT2` SHALL
-cycle empty → neutral → not-neutral(`?`) → empty over the whole domino,
-refusing to start from a magnet. A left-click on a border clue number SHALL
-toggle that clue's "done" gray highlight (a solver aid, tracked in state and
-never affecting the win condition). Cursor keys SHALL move a keyboard cursor.
-A click or cursor action on a singleton square SHALL do nothing.
+A left-click or `CURSOR_SELECT` on a domino cell SHALL cycle its content
+empty → `+` → `−` → empty, setting the partner to the opposite polarity, and
+SHALL refuse to start from a placed neutral. A right-click or `CURSOR_SELECT2`
+SHALL cycle the whole domino empty → neutral → not-neutral (`?`) → empty, and
+SHALL refuse to start from a magnet. A left-click on a border clue number SHALL
+toggle that clue's "done" gray highlight, an aid tracked in the state that
+never affects the win condition.
 
 #### Scenario: The magnet cycle sets both domino ends
 
@@ -81,19 +112,25 @@ A click or cursor action on a singleton square SHALL do nothing.
 - **WHEN** the player clicks a border clue number
 - **THEN** that clue renders grayed and the board's solved status is unchanged
 
+### Requirement: A Magnets singleton square takes no input
+
+Cursor keys SHALL move a keyboard cursor. A click or cursor action on a
+singleton square SHALL do nothing.
+
+#### Scenario: A singleton is clicked
+
+- **WHEN** the player left-clicks or right-clicks a singleton square
+- **THEN** no move is made and the board is unchanged
+
 ### Requirement: Magnets flags mistakes against the unique solution
 
-Because a generated Magnets board is uniquely solvable, the game SHALL
-implement `findMistakes`: re-solve from the dominoes and row/column counts to
-the unique solution and return every player-set cell whose content contradicts
-it, and every cell of a domino marked not-neutral (`?`) that is neutral in the
-solution. The `?` is checked because the hint reads it as a fact, and a mark the
-hint reasons from has to be one the mistake check vouches for. Empty cells, and
-a `?` on a domino that is a magnet in the solution, SHALL never be flagged; a
-board that is not uniquely solvable SHALL yield no mistakes. The renderer SHALL
-overlay the flagged cells distinctly from the always-on live error highlighting
-(two touching identical terminals, and over/under-committed clue counts, shown
-in red per upstream `check_completion`).
+Because a generated board is uniquely solvable, the game SHALL implement
+`findMistakes`: re-solve from the dominoes and the row and column counts, and
+return every player-set cell whose content contradicts the unique solution, and
+every cell of a domino marked `?` that is neutral in it, since the hint reads a
+`?` as a fact. Empty cells, and a `?` on a domino that is a magnet in the
+solution, SHALL never be flagged; a board that is not uniquely solvable SHALL
+yield no mistakes.
 
 #### Scenario: A wrong placement is flagged
 
@@ -108,37 +145,85 @@ in red per upstream `check_completion`).
 - **THEN** `findMistakes` includes its cells, and the hint refuses until the
   mark is fixed
 
+### Requirement: A Magnets mistake is drawn apart from the live errors
+
+The renderer SHALL overlay the cells `findMistakes` flags distinctly from the
+live error highlighting. That highlighting SHALL always be on, in red: two
+touching identical poles, and a clue whose count is exceeded, or is short with
+no undecided square left in its line.
+
+#### Scenario: A live error needs no check
+
+- **WHEN** the player places two `+` poles side by side
+- **THEN** both are drawn as errors at once, with no mistake check asked for
+
 ### Requirement: Magnets grades boards with a tiered deductive solver
 
-The solver SHALL return the impossible / ambiguous / solved (−1 / 0 / 1)
-verdict at each difficulty. The Easy tier
-SHALL perform: set-and-hold of initial givens, force-by-flags, the
-neither-can-be-a-magnet neutral deduction, the row/column count-full pass
-(color complete ⇒ exclude the rest; remaining unset all needed ⇒ set them),
-and the odd-length-section deduction. The Normal tier SHALL additionally
-perform: the advanced-full in-row domino-polarization pass, the
-single-neutral-left exclusion, and the two count-dominoes passes
-(all-remaining-dominoes-magnet ⇒ no neutral; one placeable end ⇒ set it). The
-solver SHALL propagate a deduction across a domino to its partner (an
-excluded color on one end excludes the opposite color on the other).
+The solver SHALL return one of three verdicts at each difficulty: impossible,
+ambiguous or solved. It SHALL propagate a deduction across a domino to its
+partner: a color excluded at one end excludes the opposite color at the other.
 
 #### Scenario: A generated board is uniquely solvable at its difficulty
 
 - **WHEN** a board generated at difficulty `d` is solved from empty
-- **THEN** the solver returns solved (1) at `d`, and — for a Normal board —
-  fails to fully solve (0) at Easy
+- **THEN** the solver returns solved at `d`, and, for a Normal board, fails to
+  fully solve it at Easy
+
+### Requirement: The deductions of Magnets' Easy tier
+
+The Easy tier SHALL perform: set-and-hold of the initial givens,
+force-by-flags, the neutral deduction that neither end can be a magnet, the
+row and column count-full pass (a color complete excludes it from the rest; the
+remaining unset squares all needed sets them), and the odd-length-section
+deduction.
+
+#### Scenario: A met count clears its line
+
+- **WHEN** a column already holds all the `+` its clue allows
+- **THEN** the solver at Easy rules `+` out of the column's other squares
+
+### Requirement: The deductions of Magnets' Normal tier
+
+The Normal tier SHALL perform the Easy tier's deductions and additionally: the
+advanced-full pass that counts the polarized dominoes lying in a row or column,
+the single-neutral-left exclusion, and the two count-dominoes passes (all
+remaining dominoes being magnets rules out neutral; a domino with one placeable
+end has it set).
+
+#### Scenario: Easy stops short of them
+
+- **WHEN** the solver is run at Easy
+- **THEN** none of the deductions the Normal tier adds is applied
 
 ### Requirement: Magnets renders under the web geometry
 
-The renderer SHALL draw the rounded-corner dominoes (per upstream
-`draw_tile_col`), the `+`/`−` magnet symbols, the neutral cross, the blue
-not-neutral `?`, singleton black squares, and the `+`/`−` clue counts on all
-four borders (top = column `+`, bottom = column `−`, left = row `+`, right =
-row `−`) with the corner `+`/`−` symbols, using the web build's
-`NARROW_BORDERS` geometry (`BORDER = 0`, an `(w+2) × (h+2)`-tile canvas). The
-mistake-overlay color SHALL be appended past the base palette. Every per-cell and per-clue overlay
-(set / error / cursor / not-neutral / flash / mistake / clue-done) SHALL be
-part of the render diff key so it repaints and clears correctly.
+The canvas SHALL be `(w+2) × (h+2)` tiles: a one-tile clue margin on each side
+and no border beyond it. The renderer SHALL draw the `+` and `−` clue counts on
+all four borders (top: column `+`; bottom: column `−`; left: row `+`; right:
+row `−`) with the corner `+` and `−` symbols.
+
+#### Scenario: A board's canvas
+
+- **WHEN** a 5×6 board is drawn at a tile size
+- **THEN** its canvas is 7 tiles wide and 8 tiles high
+
+### Requirement: What Magnets draws in a square
+
+The renderer SHALL draw rounded-corner dominoes, the `+` and `−` magnet
+symbols, the neutral cross, and the blue not-neutral `?`. A singleton square
+SHALL be drawn as bare background, with no domino on it.
+
+#### Scenario: A marked domino
+
+- **WHEN** the player marks a domino `?`
+- **THEN** each of its squares shows a blue `?`
+
+### Requirement: Every Magnets overlay is in the render diff key
+
+Every per-cell and per-clue overlay (set, error, cursor, not-neutral, flash,
+mistake, clue-done) SHALL be part of the render diff key, so it repaints and
+clears correctly. The mistake overlay's color SHALL be a palette entry of its
+own, added after the game's base colors.
 
 #### Scenario: A mistake overlay repaints on a later frame
 
@@ -154,25 +239,32 @@ firing narrated with the premise that forced it. The hint SHALL start from the
 player's placed dominoes and `?` marks, and SHALL refuse on a solved board or
 one with mistakes.
 
-A firing that places dominoes SHALL be one journey of placement legs, and one
-that concludes dominoes cannot be neutral SHALL be one journey of legs that mark
-them `?`, so every "cannot be neutral" fact a later step rests on is on the
-board. A firing that concludes only that a square cannot hold + or − SHALL
-advance the plan without being shown, because the board already says it: every
-such fact follows from a placed pole beside the square, a line whose count is
-met (counting each marked magnet lying along it as one + and one −), or the
-same fact about the domino's other end, and a later step citing one SHALL name
-it in those terms.
-
-Following a leg through the game's own press cycle SHALL keep the plan: the
-press on the way to the leg's value (a + before a −, neutral before a `?`) holds
-the leg, and the press that lands it completes the leg.
-
 #### Scenario: The hint finishes the board
 
 - **WHEN** the player asks for hints on a fresh board of any preset and follows
   every step
 - **THEN** the board is solved without a refusal
+
+### Requirement: A Magnets firing the player can write is one journey of legs
+
+A firing that places dominoes SHALL be one journey of placement legs, and one
+that concludes dominoes cannot be neutral SHALL be one journey of legs that
+mark them `?`, so every "cannot be neutral" fact a later step rests on is on
+the board.
+
+#### Scenario: Two dominoes found to be magnets
+
+- **WHEN** one firing concludes that two dominoes cannot be neutral
+- **THEN** the hint shows one journey of two legs, each marking one of them `?`
+
+### Requirement: A Magnets firing the board already says is not shown
+
+A firing that concludes only that a square cannot hold + or − SHALL advance the
+plan without being shown, because the board already says it: every such fact
+follows from a placed pole beside the square, a line whose count is met
+(counting each marked magnet lying along it as one + and one −), or the same
+fact about the domino's other end. A later step citing one SHALL name it in
+those terms.
 
 #### Scenario: A hidden fact is one the board shows
 
@@ -182,6 +274,12 @@ the leg, and the press that lands it completes the leg.
   is met counting marked magnets, or has a partner of which the same holds for
   the opposite pole
 
+### Requirement: Following a Magnets leg through its press cycle keeps the plan
+
+Following a leg through the game's own press cycle SHALL keep the plan: the
+press on the way to the leg's value (a + before a −, neutral before a `?`)
+SHALL hold the leg, and the press that lands it SHALL complete the leg.
+
 #### Scenario: Placing a − through its cycle keeps the plan
 
 - **WHEN** a leg asks for a − and the player presses the square once, making it
@@ -190,28 +288,43 @@ the leg, and the press that lands it completes the leg.
 
 ### Requirement: A Magnets count premise shows why the rest of its line is ruled out
 
-A Magnets hint step whose premise counts the squares of a line still able to take
-a pole SHALL name, in board terms, why each other empty square of that line
+A hint step whose premise counts the squares of a line still able to take a
+pole SHALL name, in board terms, why each other empty square of that line
 cannot take it: a + (or −) there would touch its own kind or overfill the
 square's row or column, or its domino's other end would then hold the opposite
-pole beside its own kind or one too many in a line, named by where that line lies
-from the counted one ("this column", "the column beside it", "a row"). The
-step's evidence SHALL be those ruled-out squares and what rules each out (the
-placed pole it touches, or the met line's clue digit), not the rest of the line,
-and its targets SHALL be only the squares that take the pole.
+pole beside its own kind or one too many in a line. That line SHALL be named by
+where it lies from the counted one: "this column", "the column beside it",
+"a row".
 
-A domino lying along the line SHALL say in its own leg why its far end cannot
-take the pole, read off the board with the journey's earlier legs placed, and no
-earlier leg SHALL ring it before that board forces it.
-
-#### Scenario: The owner's playtest board
+#### Scenario: A met column beside the counted one
 
 - **WHEN** the hint is asked of the 5x6 board
   `..31.,...2..,.0...,.2..3.,LRLRTTLRTBBLRBTLRLRBTTTTTBBBBB` with its second
   column's bottom domino neutral
 - **THEN** its first step says a + anywhere else in the third column would put
-  one − too many in the column beside it, outlines the two dominoes ruled out and
-  nothing else, and marks the second column's − clue as the reason
+  one − too many in the column beside it
+
+### Requirement: A Magnets count premise marks what rules each square out
+
+The evidence of a hint step whose premise counts the squares of a line still
+able to take a pole SHALL be the squares ruled out and what rules each out (the
+placed pole it touches, or the met line's clue digit), not the rest of the
+line. Its targets SHALL be only the squares that take the pole.
+
+#### Scenario: The outlines of a count premise
+
+- **WHEN** the hint is asked of the 5x6 board
+  `..31.,...2..,.0...,.2..3.,LRLRTTLRTBBLRBTLRLRBTTTTTBBBBB` with its second
+  column's bottom domino neutral
+- **THEN** its first step outlines the two dominoes ruled out and nothing else,
+  and marks the second column's − clue as the reason
+
+### Requirement: A domino along a counted Magnets line gives its far end's reason in its own leg
+
+In a count premise's journey, a domino lying along the counted line SHALL say
+in its own leg why its far end cannot take the pole, read off the board with
+the journey's earlier legs placed. No earlier leg SHALL ring it before that
+board forces it.
 
 #### Scenario: A leg forced by the leg before it
 
@@ -223,13 +336,9 @@ earlier leg SHALL ring it before that board forces it.
 ### Requirement: A Magnets hint hatches the line its sentence names
 
 A Magnets hint step whose sentence names a row or column SHALL hatch that line,
-its squares and both clue slots, and SHALL hatch no other: a line premise hatches
-the line it counts, and a step about a single domino hatches the one line it
-names as "its row" or "its column" when it names exactly one. A met line the step
-cites only as a reason SHALL be marked by its clue digit in the evidence color,
-never by an outline, and the step's outlines SHALL each join a square only to its
-own domino's other half. A domino step's sentence SHALL give each pole the reason
-that rules that pole out at that end.
+its squares and both clue slots, and SHALL hatch no other: a line premise
+hatches the line it counts, and a step about a single domino hatches the one
+line it names as "its row" or "its column" when it names exactly one.
 
 #### Scenario: A count premise hatches its own column only
 
@@ -237,7 +346,26 @@ that rules that pole out at that end.
   `..31.,...2..,.0...,.2..3.,LRLRTTLRTBBLRBTLRLRBTTTTTBBBBB` with its second
   column's bottom domino neutral
 - **THEN** its first step hatches the third column and its clue slots, and no
-  other line, and colors the second column's − clue as a reason
+  other line
+
+### Requirement: A met Magnets line cited as a reason is marked by its clue digit
+
+A met line a hint step cites only as a reason SHALL be marked by its clue digit
+in the evidence color, never by an outline. The outlines of a hint step whose
+sentence names a row or column SHALL each join a square only to its own
+domino's other half.
+
+#### Scenario: A cited column's clue
+
+- **WHEN** the hint is asked of the 5x6 board
+  `..31.,...2..,.0...,.2..3.,LRLRTTLRTBBLRBTLRLRBTTTTTBBBBB` with its second
+  column's bottom domino neutral
+- **THEN** its first step colors the second column's − clue as a reason
+
+### Requirement: A Magnets domino step gives each pole its own reason
+
+A hint step about a single domino SHALL give, in its sentence, each pole the
+reason that rules that pole out at that end.
 
 #### Scenario: One end of a domino, both facts read through its partner
 
@@ -271,7 +399,7 @@ outside this requirement.
 `redraw` SHALL fill a domino the player has not decided with the collection's
 cell surface, so the board recedes and a decided domino is told by its pole
 colors or its neutral color and never by a step of gray. The pole colors, the
-neutral color and the `?` mark keep their colors, which the game names.
+neutral color and the `?` mark SHALL keep their colors, which the game names.
 
 #### Scenario: An undecided domino is surface
 

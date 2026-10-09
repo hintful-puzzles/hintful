@@ -3,29 +3,30 @@
 ## Purpose
 ABCD, the puzzle of writing a letter in every cell so that no two identical
 letters touch horizontally or vertically and each edge number counts one letter
-in its row or column. This capability specifies its port to the TS engine,
-including the solver-gated generator and a refusal of the board sizes that
-generator cannot produce.
+in its row or column, with a solver-gated generator, a refusal of the board
+sizes that generator cannot produce, and an explained hint.
 
 ## Requirements
 
 ### Requirement: ABCD game implements the Game interface
 
-The engine SHALL provide `src/games/abcd/` implementing the `Game`
-interface for ABCD, registered so the puzzle is served by the TypeScript engine.
+The engine SHALL provide `src/games/abcd/` implementing the `Game` interface
+for ABCD, registered so the puzzle is served by the TypeScript engine.
+
+#### Scenario: ABCD is served by the engine
+
+- **WHEN** the registry is asked for the game `abcd`
+- **THEN** it returns ABCD's `Game`
+
+### Requirement: ABCD's parameters
 
 Parameters SHALL be a width, a height, a letter count, a "disallow diagonal
-adjacency" flag, and a "remove clues" flag. Validation SHALL require width and
-height at least 2, a letter count of at most 9 and at least 3 (at least 5 when
-diagonal adjacency is disallowed), matching upstream. A game ID SHALL encode the
-width, height, letter count and the diagonal flag and round-trip through decode;
-the "remove clues" flag is a generation-time setting and SHALL appear only in the
-full parameter encoding.
-
-Because ABCD has a unique solution, it SHALL declare a `findMistakes` hook that
-re-solves the clues to the canonical grid and reports every entered letter that
-differs from it, and every empty cell whose pencil marks are not empty yet leave
-out its answer. Marks that merely include extra letters SHALL NOT be reported.
+adjacency" flag, and a "remove clues" flag. Validation SHALL refuse a width or
+a height under 2, and a letter count over 9, under 3, or under 5 when diagonal
+adjacency is disallowed. A game ID SHALL encode the width, height,
+letter count and the diagonal flag and round-trip through decode. The "remove
+clues" flag is a generation-time setting and SHALL appear only in the full
+parameter encoding.
 
 #### Scenario: A game ID round-trips through the parameters
 
@@ -38,6 +39,20 @@ out its answer. Marks that merely include extra letters SHALL NOT be reported.
   letters with diagonal adjacency disallowed, or more than 9 letters
 - **THEN** validation rejects them with a message naming the offending bound
 
+### Requirement: ABCD's findMistakes compares the board with its one solution
+
+Because ABCD has a unique solution, it SHALL declare a `findMistakes` hook that
+re-solves the clues to the canonical grid and reports every entered letter that
+differs from it, and every empty cell whose pencil marks are not empty yet
+leave out its answer. Marks that merely include extra letters SHALL NOT be
+reported.
+
+#### Scenario: An entry that contradicts the solution is flagged
+
+- **WHEN** the mistake check runs and a cell holds a letter that differs from the
+  puzzle's unique solution
+- **THEN** that cell is reported as a mistake
+
 #### Scenario: A mark that has crossed out the answer is a mistake
 
 - **WHEN** the mistake check runs on an empty cell whose pencil marks leave out the
@@ -47,19 +62,22 @@ out its answer. Marks that merely include extra letters SHALL NOT be reported.
 ### Requirement: ABCD descriptions use the edge-clue encoding
 
 An ABCD description SHALL encode the puzzle as a comma-terminated list of
-`(width + height) × letters` clue numbers — the row clues followed by the column
-clues, each row's or column's clues in letter order — with a bare `-` standing for
-a hidden clue.
-
-Validation SHALL reject a description whose clue count is not exactly
-`(width + height) × letters`, distinguishing too few clues from too many, whose row
-clue exceeds `1 + width / 2` or whose column clue exceeds `1 + height / 2`, or that
-contains an unrecognized character. Encoding and decoding SHALL be exact inverses.
+`(width + height) × letters` clue numbers: the row clues followed by the column
+clues, each row's or column's clues in letter order, with a bare `-` standing
+for a hidden clue. Encoding and decoding SHALL be exact inverses.
 
 #### Scenario: A generated description round-trips
 
 - **WHEN** a description is generated and then decoded into a state
 - **THEN** re-encoding that state's clue numbers yields the identical description
+
+### Requirement: An ABCD description is validated against its clue count and its lines
+
+Validation SHALL reject a description whose clue count is not exactly
+`(width + height) × letters`, distinguishing too few clues from too many. It
+SHALL reject one whose row clue exceeds `1 + width / 2` or whose column clue
+exceeds `1 + height / 2`, the half rounded down, and one that contains an
+unrecognized character.
 
 #### Scenario: A description with the wrong number of clues is rejected
 
@@ -67,20 +85,15 @@ contains an unrecognized character. Encoding and decoding SHALL be exact inverse
   `(width + height) × letters` is validated
 - **THEN** it is rejected with a message distinguishing too few from too many
 
-### Requirement: ABCD ports the deductive solver and solver-gated generator
+### Requirement: ABCD's solver classifies a clue set by deduction alone
 
-ABCD SHALL provide a deductive solver that, given the clue numbers, reports whether
-the puzzle is uniquely solvable, ambiguous, or contradictory. The solver SHALL
-apply, to a fixpoint and without backtracking, elimination of a letter from a line
-whose count is already met, placement of a cell's single remaining candidate, and
-the run-length technique that forces letters when a line's maximum placement equals
-its required count. The solver SHALL NOT depend on any leaf library.
-
-The generator SHALL fill the grid with random letters that respect the no-touch
-rule, count the resulting clues, and accept the puzzle only when the solver reports
-it uniquely solvable, retrying otherwise. When "remove clues" is set, the generator
-SHALL hide clues in a randomized order, keeping each removal only while the puzzle
-stays uniquely solvable. Generation from a given seed SHALL be reproducible.
+ABCD SHALL provide a deductive solver that, given the clue numbers, reports
+whether the puzzle is uniquely solvable, ambiguous, or contradictory. The
+solver SHALL apply, to a fixpoint and without backtracking, elimination of a
+letter from a line whose count is already met, placement of a cell's single
+remaining candidate, and the run-length technique that forces letters when a
+line's maximum placement equals its required count. The solver SHALL NOT
+depend on any leaf library.
 
 #### Scenario: The solver classifies a puzzle
 
@@ -88,41 +101,90 @@ stays uniquely solvable. Generation from a given seed SHALL be reproducible.
 - **THEN** it reports uniquely solvable, ambiguous, or contradictory, and for a
   uniquely solvable set it yields the solution grid
 
+### Requirement: ABCD's solver is a certified deduction ladder
+
+ABCD's solver SHALL run its three techniques (satisfied clue, single
+possibility, runs) as a `runDeductionFixpoint` ladder, and SHALL NOT keep a
+hand-written loop beside it. A firing census SHALL walk generated boards
+covering every preset shape, diagonal mode and a thin board, and assert
+that every technique fires on the corpus, with a count of the boards solved.
+
+#### Scenario: A technique the corpus never reaches fails the census
+
+- **WHEN** a technique is removed from the ladder
+- **THEN** the census reports it as never fired, even though the generator, gated
+  on the same solver, deals only boards the weakened ladder finishes
+
+### Requirement: ABCD's generator accepts only a uniquely solvable fill
+
+The generator SHALL fill the grid with random letters that respect the
+no-touch rule, count the resulting clues, and accept the puzzle only when the
+solver reports it uniquely solvable, retrying otherwise. Generation from a
+given seed SHALL be reproducible.
+
 #### Scenario: Generation is reproducible from a seed
 
 - **WHEN** the same seed is used twice for the same parameters
 - **THEN** both runs produce the identical description
 
-### Requirement: ABCD input, entry, marks and completion
+### Requirement: Removing clues keeps the puzzle uniquely solvable
 
-ABCD SHALL be played by selecting a cell — by mouse click or arrow-key cursor — and
-entering one of the letters, with a pencil-mark mode for candidate marks. Entering a
-letter SHALL accept the letter keys and the bare digit keys `1` to `9` up to the
-letter count; clearing SHALL accept Backspace, Space, and `0`. A fill-all-marks
-command SHALL set every empty cell's candidate marks. A Solve command SHALL fill the
-grid with the unique solution.
+When "remove clues" is set, the generator SHALL hide clues in a randomized
+order, keeping each removal only while the puzzle stays uniquely solvable.
 
-An entry that would leave the state exactly as it is SHALL produce no move, and so
-no history entry: re-entering the letter a cell already holds, or clearing a cell
-that is already empty and carries no marks. Clearing an empty cell that *does*
-carry marks SHALL remain a real move, because it wipes them. The decision SHALL be
-made locally from that cell's own contents, never by comparing serialized states.
+#### Scenario: A board with clues removed still has one solution
 
-Rendering SHALL draw the letter grid with edge clues and corner letters, SHALL show
-pencil marks in empty cells and the cursor highlight, SHALL color a clue and a
-letter red while a rule is violated (a clue over- or under-satisfied, or identical
-letters adjacent — orthogonally, and diagonally when that is disallowed), and SHALL
-flash on completion. There SHALL be no move animation.
+- **WHEN** a board is generated with "remove clues" set
+- **THEN** the solver reports its description, hidden clues included, uniquely
+  solvable
 
-The game SHALL be reported solved when every cell is filled, every clue is
-satisfied, and no two identical letters are adjacent under the active adjacency
-rule.
+### Requirement: ABCD enters a letter into the selected cell
+
+ABCD SHALL be played by selecting a cell, by mouse click or arrow-key cursor,
+and entering one of the letters, with a pencil-mark mode for candidate marks.
+Entering a letter SHALL accept the letter keys and the bare digit keys `1` to
+`9` up to the letter count. Clearing SHALL accept Backspace, Space, and `0`.
 
 #### Scenario: Entering a letter fills the selected cell
 
 - **WHEN** a cell is selected and a letter key (or its digit) within the letter
   count is pressed
 - **THEN** that letter is placed in the cell
+
+### Requirement: ABCD's fill-all-marks command fills only cells with no marks
+
+While some empty cell carries no marks, the fill-all-marks command SHALL give
+every such cell every letter and SHALL NOT reset a cell the player has
+narrowed. Otherwise it SHALL strike, as one `pencilStrike`, each mark whose
+letter a touching cell already holds (diagonally too when that is disallowed)
+or whose row or column already holds its clue's count, never a cell's last
+mark, and SHALL produce no move when there is nothing to strike.
+
+#### Scenario: A narrowed cell is left as it is
+
+- **WHEN** one empty cell has been narrowed to two marks, another carries none,
+  and the command is used
+- **THEN** the cell with no marks takes every letter and the narrowed cell
+  keeps its two
+
+### Requirement: Solve fills the grid with the unique solution
+
+A Solve command SHALL fill the grid with the unique solution.
+
+#### Scenario: Solve completes a generated board
+
+- **WHEN** Solve is used on a generated board
+- **THEN** every cell holds the letter the solver's solution puts there, and
+  the game is reported solved
+
+### Requirement: An ABCD entry that changes nothing is no move
+
+An entry that would leave the state exactly as it is SHALL produce no move, and
+so no history entry: re-entering the letter a cell already holds, or clearing a
+cell that is already empty and carries no marks. Clearing an empty cell that
+does carry marks SHALL remain a real move, because it wipes them. The decision
+SHALL be made locally from that cell's own contents, never by comparing
+serialized states.
 
 #### Scenario: Re-entering the letter already present costs no undo step
 
@@ -134,53 +196,41 @@ rule.
 - **WHEN** an empty cell carrying pencil marks is cleared
 - **THEN** a move is produced, and undoing it restores the marks
 
+### Requirement: What ABCD draws
+
+Rendering SHALL draw the letter grid with edge clues and corner letters, SHALL
+show pencil marks in empty cells and the cursor highlight, and SHALL flash on
+completion. It SHALL color red a clue its line exceeds or can no longer reach,
+and a letter with an identical letter adjacent: orthogonally, and diagonally
+when that is disallowed. There SHALL be no move animation.
+
+#### Scenario: A clue its line can still reach is not red
+
+- **WHEN** a row holds fewer of a letter than its clue asks and has empty cells
+  enough to make up the difference
+- **THEN** the clue is drawn in the ordinary clue color
+- **AND** it turns red once the row's empty cells are too few
+
+### Requirement: ABCD is solved when the grid is full and every rule holds
+
+The game SHALL be reported solved when every cell is filled, every clue is
+satisfied, and no two identical letters are adjacent under the active adjacency
+rule.
+
 #### Scenario: Completing the grid correctly wins
 
 - **WHEN** the final cell is filled so that every clue is met and no identical
   letters are adjacent
 - **THEN** the game is reported solved and flashes
 
-#### Scenario: An entry that contradicts the solution is flagged
-
-- **WHEN** the mistake check runs and a cell holds a letter that differs from the
-  puzzle's unique solution
-- **THEN** that cell is reported as a mistake
-
 ### Requirement: ABCD refuses board sizes it cannot generate
 
 Parameter validation SHALL reject, when validating for generation, any
-combination of grid size and letter count whose measured generation-success rate
-is too low to produce a board in an acceptable time, giving a reason — rather
-than retrying until an attempt budget is exhausted. Generation accepts a random
-fill only when the deductive solver finds its clue counts uniquely solvable, and
-that acceptance rate falls towards zero as the board grows, so a large board can
-consume a multi-million-attempt budget and still fail.
-
-The bound SHALL be derived from measurement across grid size, grid *shape* and
-letter count, since none of them alone determines the rate: two boards of equal
-area, or of equal clue-to-cell ratio, can differ by orders of magnitude in
-acceptance rate. Diagonal mode SHALL be bounded separately, being markedly more
-generable rather than less. Validation SHALL NOT apply the bound when a
-description is already in hand, so that a previously shared game ID remains
-loadable. Every shipped preset SHALL pass validation, and the bound SHALL be
-asserted in both directions — that it admits configurations measured generable
-as well as refusing those measured un-generable.
-
-The generator's retry cap SHALL be sized to what the bound admits, so that
-exhausting it continues to signal a defect rather than an ordinary player
-request.
-
-#### Scenario: A board of the same area as a refused one is still offered
-
-- **WHEN** a long thin board is entered whose area equals that of a refused
-  squarer board
-- **THEN** it is accepted, because its generation rate is measured to be high
-
-#### Scenario: Diagonal mode is bounded on its own measurements
-
-- **WHEN** a board is entered that is un-generable with diagonal touching
-  allowed but generable without it
-- **THEN** it is refused in the first mode and accepted in the second
+combination of grid size and letter count whose measured generation-success
+rate is too low to produce a board in an acceptable time, giving a reason,
+rather than retrying until an attempt budget is exhausted. Validation SHALL NOT
+apply the bound when a description is already in hand, so that a previously
+shared game ID remains loadable.
 
 #### Scenario: An un-generable configuration is refused immediately
 
@@ -194,41 +244,58 @@ request.
   description present
 - **THEN** the board loads and is playable
 
-### Requirement: ABCD's solver is a certified deduction ladder
+### Requirement: The bound is measured across size, shape and letter count
 
-ABCD's solver SHALL run its three techniques (satisfied clue, single possibility,
-runs) as a `runDeductionFixpoint` ladder. A firing census SHALL walk generated
-boards covering every preset shape, diagonal mode and a thin board, and assert
-that every technique fires on the corpus, with a count of the boards solved. The
-hand-written loop the ladder replaced SHALL NOT be kept once the adoption is
-proved; git holds it.
+The bound on generable boards SHALL be derived from measurement across grid
+size, grid shape and letter count, since none of them alone determines the
+rate: two boards of equal area, or of equal clue-to-cell ratio, can differ
+widely in acceptance rate. Diagonal mode SHALL be bounded separately, being
+markedly more generable rather than less.
 
-#### Scenario: A technique the corpus never reaches fails the census
+#### Scenario: A board of the same area as a refused one is still offered
 
-- **WHEN** a technique is removed from the ladder
-- **THEN** the census reports it as never fired, even though the generator, gated
-  on the same solver, deals only boards the weakened ladder finishes
+- **WHEN** a long thin board is entered whose area equals that of a refused
+  squarer board
+- **THEN** it is accepted, because its generation rate is measured to be high
+
+#### Scenario: Diagonal mode is bounded on its own measurements
+
+- **WHEN** a board is entered that is un-generable with diagonal touching
+  allowed but generable without it
+- **THEN** it is refused in the first mode and accepted in the second
+
+### Requirement: The bound admits every preset and is asserted in both directions
+
+Every shipped preset SHALL pass validation for generation. The bound on
+generable boards SHALL be asserted in both directions: that it admits
+configurations measured generable as well as refusing those measured
+un-generable.
+
+#### Scenario: A tightened bound cannot bar a preset
+
+- **WHEN** each shipped preset is validated for generation
+- **THEN** none is refused
+
+### Requirement: The generator's retry cap is sized to what the bound admits
+
+The generator's retry cap SHALL be sized to what the bound on generable boards
+admits, so that exhausting it continues to signal a defect rather than an
+ordinary player request.
+
+#### Scenario: Exhausting the cap on an admitted board is an error
+
+- **WHEN** the generator spends its whole retry cap on a configuration that
+  validation admits for generation
+- **THEN** it throws, and deals no fallback board
 
 ### Requirement: ABCD offers an explained hint
 
-ABCD SHALL declare a `hint` built on the shared candidate-elimination plan walk,
-reasoning from the player's pencil marks and placed letters, with the no-touch rule
-as the walk's reach (a letter rules itself out of its orthogonal neighbors, and of
-its diagonal ones when diagonal touching is disallowed). Besides the walk's own
-steps, its rungs SHALL be one line's firing of the solver's techniques:
-
-- **Satisfied clue**: a row or column that already holds its count of a letter, or
-  whose count is 0, strikes that letter from its other cells' marks, naming the line,
-  hatching it and drawing the count it reads in the hint color.
-- **Runs**: a row or column whose cells that can still take a letter fit, with no two
-  touching, exactly as many as the line still needs places every letter that forces,
-  as one journey, outlining those cells, hatching the line and drawing its count in
-  the hint color. The arithmetic SHALL be the solver's own, so the hint and the
-  solver cannot disagree about a line.
-
-The runs technique SHALL be offered only when no other rung has a firing, as the
-solver tries it only when the cheaper techniques are spent. ABCD SHALL offer the
-`hint-notes` preference and start on the collection's `populate` reading.
+ABCD SHALL declare a `hint` built on the shared candidate-elimination plan
+walk, reasoning from the player's pencil marks and placed letters, with the
+no-touch rule as the walk's reach: a letter rules itself out of its orthogonal
+neighbors, and of its diagonal ones when diagonal touching is disallowed.
+Besides the walk's own steps, its rungs SHALL be one line's firing of the
+solver's satisfied-clue and runs techniques.
 
 #### Scenario: The hint finishes every generated board
 
@@ -236,9 +303,42 @@ solver tries it only when the cheaper techniques are spent. ABCD SHALL offer the
   either reading, and its steps are played
 - **THEN** the board is solved, and the grid is the solver's solution
 
+### Requirement: ABCD's hint starts on the populate reading
+
+ABCD SHALL offer the `hint-notes` preference and start on the collection's
+`populate` reading.
+
+#### Scenario: The preference before the player changes it
+
+- **WHEN** ABCD's preferences are read in a new game
+- **THEN** `hint-notes` is among them, and the reading it holds is `populate`
+
+### Requirement: The satisfied-clue rung strikes a letter from a line that has its count
+
+For a row or column that already holds its count of a letter, or whose count is
+0, the hint's satisfied-clue rung SHALL strike that letter from the line's
+other cells' marks, naming the line, hatching it and drawing the count it reads
+in the hint color.
+
+#### Scenario: A row that holds its one A
+
+- **WHEN** the hint shows a satisfied-clue step for a row whose clue for A is 1
+  and that holds an A
+- **THEN** it strikes A from the marks of the row's other cells that still
+  show it, names and hatches the row, and draws the clue's 1 in the hint color
+
+### Requirement: The runs rung places the letters a line's open cells force
+
+For a row or column whose cells that can still take a letter fit, with no two
+touching, exactly as many as the line still needs, the hint's runs rung SHALL
+place every letter that forces, as one journey, outlining those cells where
+there are several, hatching the line and drawing its count in the hint color. The arithmetic SHALL be the
+solver's own, so the hint and the solver cannot disagree about a line.
+
 #### Scenario: A runs step names the line and the count
 
-- **WHEN** the hint shows a runs step
+- **WHEN** the hint shows the first step of a runs journey on a line with more
+  open cells than letters to place
 - **THEN** its sentence says how many of the letter the line needs and that the
   outlined cells fit only that many apart, the line is hatched through its clue slots,
   its count for that letter is drawn in the hint color, and the cell to fill is ringed
@@ -249,9 +349,23 @@ solver tries it only when the cheaper techniques are spent. ABCD SHALL offer the
 - **THEN** every way of placing that many letters in the line's open cells with no
   two touching puts a letter on each forced position
 
+### Requirement: The runs rung is the hint's last resort
+
+The hint's runs rung SHALL be offered only when no other rung has a firing, as
+the solver tries the runs technique only when the cheaper techniques are spent.
+
+#### Scenario: A satisfied clue is spoken before a run
+
+- **WHEN** a board has both a line whose count is met with marks left to strike
+  and a line the runs arithmetic forces
+- **THEN** the hint's next step is not a runs step
+
 ### Requirement: ABCD's menu offers a board under each of its rules
 
-ABCD's presets SHALL include a board with diagonal touching disallowed, so a player reaches that rule from the menu and every cross-game sweep deals one. The rule needs five letters, which no other preset has, so writing the one field onto another preset is refused and nothing but a preset reaches it.
+ABCD's presets SHALL include a board with diagonal touching disallowed, so a
+player reaches that rule from the menu and every cross-game sweep deals one.
+The rule needs five letters, which no other preset has, so writing the one
+field onto another preset is refused and nothing but a preset reaches it.
 
 #### Scenario: The rule against diagonal touching is on the menu
 
@@ -263,22 +377,30 @@ ABCD's presets SHALL include a board with diagonal touching disallowed, so a pla
 #### Scenario: The board deals at once and the hint finishes it
 
 - **WHEN** that preset is dealt
-- **THEN** the deal takes milliseconds, and following the hint solves the board
+- **THEN** the deal is immediate, and following the hint solves the board
 
 ### Requirement: ABCD draws its letters on a quiet surface
 
 `redraw` SHALL draw every cell of the letter grid on the collection's cell
 surface, with the collection's surface grid line between cells and as the frame
-round the grid. The grid holds no given letters, so no cell takes the lifted
-surface of a given; the clues stay on the board, outside the surface. The
-corner marks that show diagonal touching is disallowed are a rule and SHALL
-keep their own color.
-
-The selection's wash and its pencil-mode corner SHALL be drawn over the cell's
-surface. The hint's marks SHALL stay on the cell's border.
+round the grid. No cell SHALL take the lifted surface of a given, since the
+grid holds no given letters, and the clues SHALL stay on the board, outside the
+surface. The corner marks that show diagonal touching is disallowed are a rule
+and SHALL keep their own color.
 
 #### Scenario: The grid recedes
 
 - **WHEN** a board is drawn
 - **THEN** every cell of the letter grid is the cell surface
 - **AND** every cell's border is the surface grid line
+
+### Requirement: ABCD's selection and hint marks keep their places on the surface
+
+The selection's wash and its pencil-mode corner SHALL be drawn over the cell's
+surface. The hint's marks SHALL stay on the cell's border.
+
+#### Scenario: A selected cell under a hint
+
+- **WHEN** a cell is selected in pencil mode while a hint rings it
+- **THEN** the corner wash is drawn over the cell's surface, and the ring runs
+  along the cell's border

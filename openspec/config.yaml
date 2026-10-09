@@ -22,11 +22,18 @@ context: |
   what was built is `openspec/changes/archive/` and the git log, and is not
   required reading.
 
-# Per-artifact rules (optional)
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
+# Shown to whoever writes that artifact. The gate holds the first two of these
+# (`openspec validate --strict` and `scripts/checks/spec-form.mjs`); the rest
+# only a reader can.
+rules:
+  specs:
+    - A requirement states what must hold, in the present tense, in SHALL sentences, in at most 500 characters before its first scenario. Split a longer one into requirements that each state one behavior.
+    - No date, no change id, no count of games or other measured figure, and no account of what the rule replaced or how it was decided. Those belong in this change's proposal and design, which the archive keeps.
+    - At most one sentence of reason, where the rule would look arbitrary without it. A longer argument goes in the guide under docs/ for that part of the tree.
+    - Name a Game hook, an exported helper, a params letter or a sentence the player reads. Do not name a test file or a private function.
+    - A change to a subject the capability already covers MODIFIES that requirement. Do not ADD a second requirement beside it titled for what this change did.
+    - A MODIFIED requirement is restated whole, and reads afterwards as the rule that now holds, with no mention of the change.
+    - A scenario gives a case the rule's sentence does not. Do not write one that restates the rule or says that a named test fails.
 
 # Per-operation guidance (optional)
 # Example:

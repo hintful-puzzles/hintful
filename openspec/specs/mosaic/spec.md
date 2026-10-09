@@ -1,28 +1,32 @@
 # mosaic Specification
 
 ## Purpose
-Mosaic, the puzzle of coloring every square black or white so that each number
-counts the black squares in the three-by-three block centered on it. This
-capability specifies its port to the TS engine: generation of boards solvable by
-deduction, toggle and straight-line paint moves, and mistake-checking against
-the deduced solution.
+Mosaic, the puzzle of deciding every square, marked or blank, so that each
+number counts the marked squares in the three-by-three block centered on it:
+boards solvable by deduction, toggle and paint moves, and a mistake check
+against the deduced solution.
 
 ## Requirements
 
 ### Requirement: Mosaic game implements the Game interface
 
-The engine SHALL provide a registered `mosaic` game implementing
-`Game<MosaicParams, MosaicState, MosaicMove, MosaicUi, MosaicDrawState>`: a
-grid-fill puzzle in which numeric clues state how many cells in the clue's
-3×3 neighborhood (including itself) are black, and the player marks every
-cell black or white. Params SHALL be `width`, `height`, and `aggressive`
-(harder generation via clue minimization), encoded `{w}x{h}` with an
-`h{0|1}` suffix when `aggressive` differs from the default (true). The 6
-upstream presets — 3×3, 5×5, 10×10, 15×15, 25×25 (aggressive) and 50×50
-(non-aggressive) — SHALL be offered, and the type summary SHALL render via
-the `width`/`height`/`aggressive-generation` config keys with `aggressive`
-surfaced as a boolean. `validateParams` SHALL reject boards smaller than 3×3
-or larger than 10000 tiles. The game SHALL provide `statusbarText`, `solve` and `textFormat`.
+The engine SHALL provide a registered `mosaic` game implementing `Game`: a
+grid-fill puzzle in which a numeric clue states how many cells of its 3×3
+neighborhood, itself included, are marked, and the player decides every cell,
+marked or blank. The game SHALL provide `statusbarText`, `solve` and
+`textFormat`.
+
+#### Scenario: The game is registered with its hooks
+
+- **WHEN** the registry is asked for `mosaic`
+- **THEN** it returns a game that has `statusbarText`, `solve` and `textFormat`
+
+### Requirement: Mosaic's parameters and their encoding
+
+Params SHALL be `width`, `height` and `aggressive`, which asks for harder
+generation by clue minimization and defaults to true. They SHALL encode as
+`{w}x{h}`, with an `h{0|1}` suffix in the full encoding when `aggressive`
+differs from its default.
 
 #### Scenario: Params round-trip
 
@@ -32,21 +36,38 @@ or larger than 10000 tiles. The game SHALL provide `statusbarText`, `solve` and 
 - **AND** `{ width: 50, height: 50, aggressive: false }` encodes to `50x50h0`
 - **AND** decoding each string round-trips the params
 
+### Requirement: Mosaic's presets and type summary
+
+The game SHALL offer six presets: 3×3, 5×5, 10×10, 15×15 and 25×25 with
+aggressive generation, and 50×50 without it. The type summary SHALL render
+through the `width`, `height` and `aggressive-generation` config keys, with
+`aggressive` surfaced as a boolean.
+
+#### Scenario: The largest preset is not aggressive
+
+- **WHEN** the presets are listed
+- **THEN** the 50×50 preset has `aggressive` false and every other preset has
+  it true
+
+### Requirement: Mosaic's size limits
+
+A board narrower or shorter than 3 SHALL be refused, by the engine, from the
+bounds the game declares on its width and height fields. `validateParams`
+SHALL refuse a board of more than 10000 tiles.
+
 #### Scenario: Invalid params are rejected
 
-- **WHEN** `validateParams` is called with a 2×3 board, or with 101×100 cells
-  (> 10000 tiles)
-- **THEN** it returns a non-null error string
+- **WHEN** the params of a 2×3 board, or of a board of 101×100 cells, are
+  checked
+- **THEN** each is refused with a non-null error string
+- **AND** a 3×3 board and a 100×100 board are accepted
 
 ### Requirement: Mosaic descriptions are run-length clue grids
 
-The desc SHALL encode the board in scan order: a digit `0`-`9` for each
-shown clue and a letter `a`-`z` for each run of 1-26 hidden cells, exactly
-as upstream. `validateDesc` SHALL reject any other character and any desc
-whose decoded length differs from `width*height`. `newState` SHALL parse
-the desc into a clue board shared (frozen, by reference) across all states
-of the game, with all cells initially unmarked and `notCompletedClues`
-equal to the number of shown clues.
+The desc SHALL encode the board in scan order: a digit `0`-`9` for each shown
+clue and a letter `a`-`z` for each run of 1-26 hidden cells. A desc holding
+any other character, or one whose decoded length differs from `width*height`,
+SHALL be refused.
 
 #### Scenario: A description round-trips
 
@@ -56,52 +77,76 @@ equal to the number of shown clues.
 
 #### Scenario: A malformed description is rejected
 
-- **WHEN** `validateDesc` is given a desc with an invalid character or a
-  decoded length mismatching the params
-- **THEN** it returns a non-null error string
+- **WHEN** a desc with an invalid character, or with a decoded length
+  mismatching the params, is checked
+- **THEN** the check returns a non-null error
+
+### Requirement: A Mosaic game's states share one clue board
+
+`newState` SHALL parse the desc into a clue board that is frozen and shared by
+reference across all states of the game. Every cell SHALL start unmarked, so
+the count of clues left equals the number of shown clues.
+
+#### Scenario: A move keeps the board
+
+- **WHEN** a move is executed on a state
+- **THEN** the resulting state holds the same board object as the one it came
+  from
 
 ### Requirement: Mosaic generates deduction-solvable boards
 
-`newDesc` SHALL generate a random black/white image (one `randomBits` bit
-per cell), compute every cell's clue (a border cell counting only in-bounds
-neighbors, with "full" detected at clue 9 interior / 6 edge / 4 corner and
-"empty" at clue 0), regenerate until the board has a usable starting
-deduction and the shuffled-order deductive solver completes it, then hide
-clues: every clue whose deduction never narrowed anything is hidden, and in
-aggressive mode the remaining clues are additionally tried for hiding in
-random order, reverting any hide that makes the board unsolvable.
+`newDesc` SHALL generate a random image of marked and blank cells, one
+`randomBits` bit per cell, and compute every cell's clue, a border cell
+counting only its in-bounds neighbors. A clue is "full" when it fills its
+neighborhood (9 interior, 6 edge, 4 corner) and "empty" at 0. `newDesc` SHALL
+regenerate until the board has a usable starting deduction and the deductive
+solver, visiting clues in shuffled order, completes it.
 
 #### Scenario: Generated boards are valid and solvable
 
 - **WHEN** `newDesc` runs for a seeded RNG across several sizes with
   aggressive generation on and off
-- **THEN** every desc passes `validateDesc`
+- **THEN** every desc is accepted as a description of its params
 - **AND** the deductive solver solves every resulting board from its visible
   clues alone
 
+### Requirement: Mosaic hides the clues a board does not need
+
+Once a generated board is solvable, `newDesc` SHALL hide every clue whose
+deduction never narrowed anything. In aggressive mode it SHALL additionally
+try hiding each remaining clue, in random order, and SHALL revert any hide
+that makes the board unsolvable.
+
+#### Scenario: An aggressive board still solves
+
+- **WHEN** a board is generated with aggressive generation on
+- **THEN** the deductive solver solves it from the clues left showing
+
 ### Requirement: Mosaic marks cells via toggle and straight-line paint moves
 
-A `MosaicMove` SHALL be one of: toggle a cell (one step, or two steps for
-the right-button/select2 cycle unmarked→marked→blank), paint a straight
-run of cells with a captured target state, or solve. `executeMove` SHALL be
-pure and throw on an out-of-bounds target. A toggle SHALL strip any
-`SOLVED`/`ERROR` overlay then cycle the cell's mark; a paint SHALL set only
-still-unmarked cells along the run. After each move the game SHALL reflag
-every affected clue — `SOLVED` when exactly satisfied with no unknowns,
-`ERROR` when overcommitted (more marks than the clue, or too few possible)
-— and recount `notCompletedClues`. A pointer press SHALL toggle the
-cell it lands on, and a drag on from it SHALL be the engine's: every further
-cell the pointer passes that held what the pressed cell held takes the same
-toggle, in any direction, so a drag from an unmarked cell lays a mark and a
-drag from a marked cell clears marks, as one step of Undo. The game SHALL
-make no `paint` move of its own; it still replays one from a saved game.
-Margin clicks are ignored; after completion only cursor movement is accepted. A keyboard
-cursor with select/select2 SHALL mirror the click behaviors.
+A `MosaicMove` SHALL be one of: toggle a cell, by one step or by two; paint a
+straight run of cells with a captured target state; fill a hint step's cells
+with one mark; or solve. `executeMove` SHALL be pure and SHALL throw on an
+out-of-bounds target. One step of a toggle takes a cell around the cycle
+unmarked, marked, blank; two steps are the right button's and select2's way
+round it.
 
 #### Scenario: Toggling cycles a cell
 
 - **WHEN** a cell is toggled three times (single steps)
 - **THEN** it passes marked → blank → unmarked
+
+#### Scenario: A double toggle goes the other way
+
+- **WHEN** an unmarked cell is toggled by two steps
+- **THEN** it is blank
+
+### Requirement: A Mosaic toggle cycles a mark and a paint fills only unmarked cells
+
+A toggle SHALL strip any `SOLVED` or `ERROR` overlay from its cell and then
+cycle the cell's mark. A paint SHALL set only the still-unmarked cells along
+its run. The game SHALL make no `paint` move of its own, and SHALL still
+replay one from a saved game.
 
 #### Scenario: Painting fills only unmarked cells
 
@@ -109,6 +154,14 @@ cursor with select/select2 SHALL mirror the click behaviors.
   cells, painting blank
 - **THEN** the unmarked cells become blank and the already-marked cell is
   unchanged
+
+### Requirement: Mosaic flags a satisfied clue and a contradicted one
+
+After each toggle, paint or fill the game SHALL reflag every clue the move
+affects: `SOLVED` when the clue is exactly satisfied with no cell of its
+neighborhood unmarked, and `ERROR` when it is overcommitted, with more cells
+marked than the clue or too few cells left that could be. The count of clues
+left SHALL follow the marks.
 
 #### Scenario: A satisfied clue grays out and a contradicted clue reddens
 
@@ -118,22 +171,52 @@ cursor with select/select2 SHALL mirror the click behaviors.
 - **AND** when more cells are marked around a clue than its value, it carries
   the `ERROR` flag (drawn red)
 
+### Requirement: A Mosaic press toggles a cell and a drag repeats it
+
+A pointer press SHALL toggle the cell it lands on, and a drag on from it SHALL
+be the engine's: every further cell the pointer passes that held what the
+pressed cell held SHALL take the same toggle, in any direction. So a drag from
+an unmarked cell lays a mark and a drag from a marked cell clears marks, and
+the whole drag SHALL be one step of Undo.
+
+#### Scenario: A drag from a marked cell clears marks
+
+- **WHEN** the player presses a marked cell with the primary button and drags
+  across a marked cell and an unmarked cell
+- **THEN** both marked cells become blank and the unmarked cell is left as it
+  was
+
+### Requirement: Mosaic's keyboard, margin and finished board
+
+A keyboard cursor with select and select2 SHALL mirror the two click
+behaviors. A click in the margin SHALL be ignored. Once the board is complete,
+the game SHALL accept only cursor movement.
+
+#### Scenario: A finished board takes no click
+
+- **WHEN** the board is complete and the player clicks a cell
+- **THEN** no move is made
+- **AND** an arrow key still moves the cursor
+
+### Requirement: Mosaic is complete when every clue is satisfied
+
+Whether the board is complete SHALL be judged from the board itself, every
+clue satisfied with no cell of its neighborhood unmarked, so a solve move
+needs no completion bookkeeping of its own. A completed board SHALL report
+`status` `"solved"`, show `COMPLETED!` in the status bar and play a flash.
+
 #### Scenario: Completing every clue solves the game
 
 - **WHEN** the last clue becomes satisfied
-- **THEN** `notCompletedClues` is 0, `status` returns `"solved"`, the status
-  bar reads `COMPLETED!`, and a 0.5s flash plays
+- **THEN** no clue is left, `status` returns `"solved"`, the status bar reads
+  `COMPLETED!`, and a 0.5s flash plays
 
-### Requirement: Mosaic solves and checks mistakes against the deduced solution
+### Requirement: Mosaic's Solve applies the deduced solution
 
 The Solve command SHALL run the deductive solver on the clue board and apply
-the full solution (cells flagged solved, status bar reading `Auto-solved.`),
-failing with an error when deduction cannot complete the board. Whether the
-board is complete SHALL be judged from the board itself (every clue satisfied),
-so a solve move needs no completion bookkeeping of its own. `findMistakes`
-SHALL return every cell the player has determined whose mark contradicts the
-deduced solution, rendered as an error-colored outline overlay, and SHALL return
-no mistakes when deduction stalls or the marks are consistent.
+the full solution, its cells flagged solved and the status bar reading
+`Auto-solved.`. It SHALL fail with an error when deduction cannot complete the
+board.
 
 #### Scenario: Solve completes the board
 
@@ -141,10 +224,17 @@ no mistakes when deduction stalls or the marks are consistent.
 - **THEN** every cell is determined, `status` returns `"solved"`, and the
   status bar reads `Auto-solved.`
 
+### Requirement: Mosaic checks mistakes against the deduced solution
+
+`findMistakes` SHALL return every cell the player has determined whose mark
+contradicts the deduced solution, and each SHALL be drawn with an
+error-colored outline overlay. It SHALL return no mistakes when deduction
+stalls or when the marks are consistent.
+
 #### Scenario: findMistakes flags a wrong mark
 
-- **WHEN** the player marks black a cell that is white in the solution and
-  Check & Save runs
+- **WHEN** the player marks a cell that is blank in the solution and Check &
+  Save runs
 - **THEN** `findMistakes` returns that cell
 - **AND** a correctly-marked board returns no mistakes
 
@@ -152,24 +242,8 @@ no mistakes when deduction stalls or the marks are consistent.
 
 `redraw` SHALL draw the board as pieces on a quiet surface. Every cell SHALL
 have the same surface whatever its mark, and the line between cells SHALL be
-the collection's thin surface grid. A marked cell (the one the other
-requirements call black, after upstream) SHALL hold the collection's shaded
-piece, inset on its cell. A blank cell (the one they call white) SHALL hold no
-piece and no fill of its own: it SHALL carry the collection's ruled-out cross,
-in the middle of the cell, or small in a corner of it where the cell has a
-number, so that the number keeps the middle. An unmarked cell SHALL be plain surface.
-
-A cell's number SHALL be drawn over whatever the cell holds and SHALL read
-against it in both color schemes: on the shaded piece it is drawn in a color
-that does not invert with the scheme. A satisfied number SHALL be drawn grayer
-than an unsatisfied one on every kind of cell, the piece included. A
-contradicted number SHALL be drawn in the error color on bare surface, and on
-the shaded piece as a badge: a disc in the error color under the number.
-
-The game SHALL name no hue of its own for either mark: its hint sentences, its
-control words and its hint-mark legend SHALL say the engine's words for a
-shaded cell and for a cell known not to be shaded, and its help page SHALL name
-the shaded color by placeholder.
+the collection's thin surface grid. A marked cell SHALL hold the collection's
+shaded piece, inset on its cell. An unmarked cell SHALL be plain surface.
 
 #### Scenario: The three marks are told apart without a fill
 
@@ -179,11 +253,24 @@ the shaded color by placeholder.
 - **AND** the marked cell holds the shaded piece, the blank cell holds a cross
   and the unmarked cell holds neither
 
+### Requirement: A blank Mosaic cell carries a cross that leaves its number the middle
+
+A blank cell SHALL hold no piece and no fill of its own. It SHALL carry the
+collection's ruled-out cross: in the middle of the cell, or small in a corner
+of it where the cell has a number, so that the number keeps the middle.
+
 #### Scenario: A blank cell's cross and its number both read
 
 - **WHEN** a blank cell that has a number is drawn
 - **THEN** the cross is small and lies wholly to the right of the number's
   center and wholly above it
+
+### Requirement: A Mosaic number reads over whatever its cell holds
+
+A cell's number SHALL be drawn over whatever the cell holds and SHALL read
+against it in both color schemes: on the shaded piece it is drawn in a color
+that does not invert with the scheme. A satisfied number SHALL be drawn grayer
+than an unsatisfied one on every kind of cell, the piece included.
 
 #### Scenario: A satisfied number grays on the piece and off it
 
@@ -192,6 +279,26 @@ the shaded color by placeholder.
   marked cell
 - **AND** a satisfied number on a blank cell is drawn in a different color
   from an unsatisfied number on a blank cell
+
+### Requirement: A contradicted Mosaic number is red, and a badge on the piece
+
+A contradicted number SHALL be drawn in the error color on bare surface. On
+the shaded piece it SHALL be drawn as a badge: a disc in the error color under
+the number.
+
+#### Scenario: A contradicted number on a marked cell
+
+- **WHEN** a marked cell's number has more marked cells around it than its
+  value
+- **THEN** a disc in the error color is drawn on the piece, and the number
+  over the disc
+
+### Requirement: Mosaic names no hue of its own for either mark
+
+The game SHALL name no hue of its own for either mark: its hint sentences, its
+control words and its hint-mark legend SHALL say the engine's words for a
+shaded cell and for a cell known not to be shaded, and its help page SHALL
+name the shaded color by placeholder.
 
 #### Scenario: A hint names the mark by the engine's word
 

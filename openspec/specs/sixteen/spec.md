@@ -2,92 +2,85 @@
 
 ## Purpose
 Sixteen, the puzzle of shifting whole rows and columns cyclically until the
-numbers read in order from the top left. This capability specifies its port to
-the TS engine, with direct row and column dragging and a heuristic hint that
-finishes the swapped-pair endgames, counts the tangles its distance measure
-cannot see, and refuses only by saying its search ran out.
+numbers read in order from the top left: the game, its direct row and column
+dragging, and a hint that plans by searching, finishes the swapped-pair
+endgames, counts the tangles its distance measure cannot see, and refuses only
+by saying its search ran out. Why the hint's searches are arranged as they are
+is in `docs/games/hints.md` § "Sliding-permutation games".
 
 ## Requirements
 
 ### Requirement: Sixteen game implements the Game interface
 
-The engine SHALL provide a registered `sixteen` game implementing `Game<SixteenParams, SixteenState, SixteenMove, SixteenUi, SixteenDrawState>`: the toroidal sliding-tile puzzle with `WxH[mM]` params (movetarget `M` > 0 selects shuffle-by-random-moves generation; otherwise random permutation with parity correction), slide moves on whole rows/columns expressed as `{ axis, index, delta }`, a keyboard cursor with Unlocked/LockTile/LockPosition modes, slide animation, completion flash, and per-tile cache rendering.
+The engine SHALL provide a registered `sixteen` game implementing `Game`: the
+toroidal sliding-tile puzzle, in which a move slides a whole row or column and
+the board is solved when the tiles read in order. The game SHALL provide a
+keyboard cursor with Unlocked, LockTile and LockPosition modes, a slide
+animation, a completion flash, and per-tile cache rendering.
+
+#### Scenario: The solved board is complete
+
+- **WHEN** the tiles read in order from the top left
+- **THEN** the state reports completed status
+
+### Requirement: Sixteen's params choose how the board is scrambled
+
+Sixteen's params SHALL be written `WxH[mM]`. A movetarget `M` greater than 0
+SHALL select generation by shuffling with random moves; otherwise the board
+SHALL be a random permutation with parity correction.
 
 #### Scenario: Random-permutation generation is solvable
 
 - **WHEN** a new game is created with movetarget 0
-- **THEN** the generated permutation is parity-corrected so the board is reachable from the solved state
-- **AND** the solved state reports completed status
+- **THEN** the generated permutation is parity-corrected so the board is
+  reachable from the solved state
+
+### Requirement: A slide is one move whatever its distance
+
+A slide of a whole row or column SHALL be expressed as
+`{ type: "slide", axis, index, delta }`, and SHALL shift every tile of that
+line by `delta` cells with toroidal wraparound. The move counter SHALL
+increment by one for a slide regardless of its distance.
 
 #### Scenario: Slide move semantics
 
-- **WHEN** a slide move `{ axis: "row", index: 1, delta: +1 }` executes
+- **WHEN** a slide move `{ type: "slide", axis: "row", index: 1, delta: +1 }`
+  executes
 - **THEN** every tile in row 1 shifts right by one cell with toroidal wraparound
 - **AND** the move counter increments by one regardless of slide distance
 
-### Requirement: The Sixteen port implements heuristic hints and rendering
+### Requirement: The Sixteen hint plans in full-slide moves
 
-The Sixteen TS port SHALL implement a hint planner that searches in
-**full-slide moves** (a slide by any distance is one move, matching player
-drags and the move counter): an exact bidirectional search that meets in the
-middle, run on **every** board, and a heuristic forward search for the boards
-that search cannot reach. When neither reaches the goal but the forward search
-improves the board, its partial path SHALL be returned as the plan (the next
-hint request continues from the improved position).
-
-**The exact search SHALL NOT be gated on how nearly finished the board looks.**
-It was — armed only at a strict local minimum on a board with at most eight tiles
-out of place — and Sixteen's 5×5 hint cycled with period 4 as a result, reaching
-four tiles from finished and walking away again for ever. A shortest plan climbs
-on the way home (the measured plan peaks at 17 tiles out of place, and at a total
-travel of 30, from 9 and 9), so any such gate switches off partway down its own
-descent and hands the board back to the heuristic. See the `engine-hints` planner
-requirement for the general rule.
-
-The planner SHALL return the whole path as a plan
-of narrated steps. Each step's narration SHALL describe what its move
-actually does: the highlighted tile is the lowest-numbered out-of-place tile
-on the moved line — except when the previous step previewed this move as the
-continuation of a tile's journey, in which case the same journey tile SHALL
-carry the narration through its second leg and the step SHALL be flagged
-`continuesPrevious` so the midend keeps the hint displayed across the legs —
-the target is the narrated
-tile's **landing cell** under the step's move (with a second-leg preview when
-the next step continues the same tile's journey perpendicular to the first),
-and the returned delta is normalized to the in-grid direction of travel.
-
-Each step's narration SHALL also explain **why** the move matters: a move (or, for
-a journey, its final leg) that lands the narrated tile in its solved cell SHALL
-narrate it as placing the tile in its **final place**; a move that leaves the
-tile out of its solved cell SHALL narrate it as a **setup/staging** move. The
-home-vs-helper wording SHALL be consistent with the project hint quality bar
-(the Palisade exemplar) and with the sibling Fifteen hint, and the *why* SHALL
-attach to a journey's end state (a journey whose later leg homes the tile reads
-as a home move).
-
-A hint SHALL give the move that gets the board home even when that move undoes
-the slide the player just made. Withholding it — which the port did, on the
-grounds that it reads as useless advice and is the shape a ping-pong takes —
-sends the player the long way round from a board one slide off finished, and
-cannot be applied to a shortest plan without destroying the property that makes
-the plan converge. The don't-undo veto SHALL remain available to the heuristic
-search, which carries no such property.
-
-The Sixteen `redraw` method
-SHALL render the current step by highlighting the tile to move (filled
-overlay), its landing cell (border highlight), and the corresponding slide
-arrow (using `COL_HINT`). Sixteen's `hintKeepTrack` SHALL report
-`"completed"` when a slide of the hinted line lands the tile on the step's
-target, `"onTrack"` for other slides of that line (adjusting the step's
-remaining delta in place), and `"off"` otherwise.
+The Sixteen hint planner SHALL search in full-slide moves: a slide by any
+distance is one move, matching a player's drag and the move counter. It SHALL
+run an exact bidirectional search that meets in the middle on every board, and
+a heuristic forward search for the boards that search cannot reach. The
+planner SHALL return the whole path as a plan of narrated steps.
 
 #### Scenario: Sixteen generates a hint plan
 
 - **WHEN** a user asks for a hint on an unsolved Sixteen board
-- **THEN** the planner returns a plan of one or more slide moves whose steps
-  each land the highlighted tile exactly on that step's highlighted target,
-  and the current step renders the tile, target, and slide arrow in the hint
-  color
+- **THEN** the planner returns a plan of one or more slide moves
+
+### Requirement: A search that falls short returns its partial path
+
+When neither search reaches the goal but the forward search improves the
+board, its partial path SHALL be returned as the plan, so that the next hint
+request continues from the improved position.
+
+#### Scenario: A board neither search can finish
+
+- **WHEN** a hint is asked on a board that is past the exact search's reach and
+  that the forward search improves without finishing
+- **THEN** the hint returns the forward search's path to its best board as the
+  plan, and the next hint request plans from where that path ends
+
+### Requirement: Sixteen's exact search is not gated on how finished the board looks
+
+The exact bidirectional search SHALL NOT be gated on how nearly finished the
+board looks. A shortest plan climbs on the way home, in tiles out of place and
+in total travel alike, so any such gate switches off partway down its own
+descent and hands the board back to the heuristic, and the hint cycles.
 
 #### Scenario: A local-minimum endgame still yields a plan
 
@@ -104,13 +97,101 @@ remaining delta in place), and `"off"` otherwise.
   walk reaches the solved board rather than returning to a position it has
   already left
 
+### Requirement: A step narrates what its move does
+
+Each step's narration SHALL describe what its move actually does. The
+highlighted tile SHALL be the lowest-numbered out-of-place tile on the moved
+line, except on the second leg of a previewed journey. The target SHALL be the
+narrated tile's landing cell under the step's move, and the returned delta
+SHALL be normalized to the in-grid direction of travel.
+
+#### Scenario: Each step lands its tile on its target
+
+- **WHEN** a user asks for a hint on an unsolved Sixteen board
+- **THEN** each step of the plan lands the highlighted tile exactly on that
+  step's highlighted target
+
+### Requirement: A journey's second leg keeps its tile
+
+When the previous step previewed this move as the continuation of a tile's
+journey, the same journey tile SHALL carry the narration through its second
+leg, and the step SHALL be flagged `continuesPrevious` so the midend keeps the
+hint displayed across the legs. A step SHALL carry a second-leg preview when
+the next step continues the same tile's journey perpendicular to the first.
+
+#### Scenario: A tile moved along a row and then a column
+
+- **WHEN** one step slides its narrated tile along a row and the next step
+  slides the column that tile landed in
+- **THEN** the first step previews the cell the second leg takes the tile to,
+  and the second step narrates the same tile and is flagged
+  `continuesPrevious`
+
+### Requirement: A step says whether its tile arrives or is staged
+
+A step's narration SHALL explain why the move matters: a journey that ends
+with the narrated tile in its solved cell SHALL be narrated as moving it to
+its final spot, and one that leaves it out of its solved cell as a setup move.
+The why SHALL attach to the journey's end state and SHALL be spoken on the
+journey's first leg; a `continuesPrevious` leg SHALL NOT repeat it. The
+wording SHALL be consistent with the hint quality bar (the Palisade exemplar)
+and with the sibling Fifteen hint.
+
 #### Scenario: Narration distinguishes a final placement from a staging move
 
-- **WHEN** a step (or a journey's final leg) lands the narrated tile in its
-  solved cell
+- **WHEN** a single-move step lands the narrated tile in its solved cell
 - **THEN** its narration states the tile is being moved into its final place
-- **WHEN** a step leaves the narrated tile out of its solved cell
-- **THEN** its narration states it is a setup/staging move
+- **WHEN** a step leaves the narrated tile out of its solved cell and no later
+  leg takes it there
+- **THEN** its narration states it is a setup move
+
+#### Scenario: A journey whose later leg homes the tile
+
+- **WHEN** a step's own move leaves the tile out of its solved cell and its
+  previewed second leg lands the tile there
+- **THEN** the first step reads as a home move
+
+### Requirement: The hint gives the move home even when it undoes the player's slide
+
+A hint SHALL give the move that gets the board home even when that move undoes
+the slide the player just made. The don't-undo veto SHALL NOT be applied to
+the exact search's shortest plan, because it would destroy the property that
+makes the plan converge. The veto SHALL remain available to the heuristic
+search, which carries no such property.
+
+#### Scenario: One slide off a finished board
+
+- **WHEN** a player slides a row of the solved board and asks for a hint
+- **THEN** the hint is the one move that slides it back
+
+### Requirement: Sixteen draws the hinted tile, its landing cell and its arrow
+
+The Sixteen `redraw` method SHALL render the current step by highlighting the
+tile to move with a filled overlay, its landing cell with a border, and the
+corresponding slide arrow, in the hint's color.
+
+#### Scenario: The current step is drawn
+
+- **WHEN** a hint step is displayed
+- **THEN** the tile, the target and the slide arrow are drawn in the hint
+  color
+
+### Requirement: hintKeepTrack follows slides of the hinted line
+
+Sixteen's `hintKeepTrack` SHALL report `"completed"` when a slide of the
+hinted line lands the tile on the step's target, `"onTrack"` for other slides
+of that line, adjusting the step's remaining delta in place, and `"off"`
+otherwise.
+
+#### Scenario: A slide that stops short
+
+- **WHEN** the step slides a row by two and the player slides that row by one
+- **THEN** the verdict is `"onTrack"` and the step's delta becomes one
+
+#### Scenario: A slide of another line
+
+- **WHEN** the player slides a line other than the hinted one
+- **THEN** the verdict is `"off"`
 
 ### Requirement: The Sixteen port supports direct row and column dragging
 
@@ -124,24 +205,10 @@ The Sixteen TS port SHALL support direct touch and mouse row/column dragging. Wh
 
 Sixteen's hint SHALL return a plan from a board whose only fault is one or two
 pairs of tiles sitting in each other's cells, and SHALL NOT refuse on it.
-
-These boards are where the collection's strongest hint guarantee actually broke.
-They are a strict local minimum of the distance measure — every slide makes the
-picture worse — and they are **nine moves** from finished while reading as two or
-four cells out, which is one move past what a search that stores every board it
-visits can afford at this size. Walking forty games of each preset one recomputed
-hint at a time, the hint stopped on twelve of forty 5×4 games and five of forty
-5×5 ones, telling the player "No move here would get you closer." on a solvable
-board after they had followed thirty-odd hints. Sixteen SHALL therefore configure
-the planner's depth-bounded deep search, and its reach SHALL cover nine moves at
-its largest preset.
-
-The guard for this SHALL name the boards rather than sample for them, and SHALL
-assert the **plan length** and not merely that a plan came back: the
-state-bounded search never returns more than eight moves at this size, so only a
-plan longer than eight proves the deep search ran. A test that asked for any plan
-at all would keep passing if the deep search were disabled and the board happened
-to be reachable another way.
+Sixteen SHALL therefore configure the planner's depth-bounded deep search, and
+its reach SHALL cover nine moves at its largest preset. Such a board is a
+strict local minimum of the distance measure, and lies one move past what a
+search that stores every board it visits can afford at this size.
 
 #### Scenario: A single swapped pair
 
@@ -155,47 +222,28 @@ to be reachable another way.
   pairs
 - **THEN** it returns a plan of more than eight moves that finishes the board
 
+### Requirement: The swapped-pair guard names its boards and asserts the plan length
+
+The guard for the swapped-pair endgames SHALL name the boards rather than
+sample for them, and SHALL assert the plan length and not merely that a plan
+came back. Only a plan longer than the state-bounded search can return proves
+the deep search ran; a test that asked for any plan at all would keep passing
+with the deep search disabled, on a board reachable another way.
+
+#### Scenario: The plan is too short to prove the deep search ran
+
+- **WHEN** the hint answers a named swapped-pair board with a plan of eight
+  moves or fewer
+- **THEN** the guard fails, although a plan came back
+
 ### Requirement: Sixteen's hint SHALL count the tangles its distance measure cannot see
 
 Sixteen's hint SHALL measure a board by the distance its tiles must travel
-**plus** the number of *tangles* it is tied in — non-trivial cycles of the tile
-permutation — and SHALL return a plan from a tangled board rather than refusing.
-
-Travel distance alone is blind to a tangle. Two tiles in each other's cells read
-as two squares from home and are nine moves away, because nothing short of
-taking other tiles out and putting them back unwinds them; four such tangles is
-thirteen-odd moves out while reading as eight. Every slide from such a board
-therefore makes the measure worse, which makes it a strict local minimum that no
-forward budget escapes — and it is past both exact searches, so nothing else
-answered either. The hint refused on one at move 33 of a 5×5 game the player had
-reached **by following its own hints**.
-
-Reaching further is not available and SHALL NOT be attempted with this
-machinery: each further ply costs about 40× at a branching factor of 40, and
-crossing nine moves already needed a kept endgame database and a five-ply walk.
-Counting the tangles is what escapes, and it costs one O(n) pass.
-
-**The count SHALL be priced only past the number of tangles the exact searches
-can unwind on their own** — two, because a tangle is about four and a half moves
-and the deep search reaches nine. On any board at or under that the measure
-SHALL be plain travel, so the boards those searches own are measured exactly as
-before. This is not tuning: the deep search is gated on the fallback finding
-nothing better than standing still, which is a statement about the measure, so a
-measure sharpened everywhere stops that gate opening and turns the complete
-nine-move plan the previous change bought into a five-move partial one.
-
-**The guarantee SHALL be asserted by walking recomputed hints to solved, not by
-the length of a single plan.** A plan that comes back proves nothing if the next
-recompute undoes it, and the first arrangement of this fix did exactly that: the
-tangle measure was armed only where travel was helpless, so consecutive
-recomputes steered by different measures and the named board ran 400 recomputed
-hints without ever solving.
-
-**The boards a guard names SHALL be even permutations.** Every slide on a square
-board of odd side is an even permutation, so an odd board — three swapped pairs
-on a 5×5, the obvious next test case after two — is unreachable and unsolvable.
-It looks exactly like this class and would convict the hint of a defect it does
-not have.
+plus a cost for the tangles it is tied in, a tangle being a non-trivial cycle
+of the tile permutation, and SHALL return a plan from a tangled board rather
+than refusing. Travel alone is blind to a tangle: every slide from a tangled
+board makes it worse, so the board is a strict local minimum that no forward
+budget escapes.
 
 #### Scenario: The board the hint refused on
 
@@ -208,46 +256,92 @@ not have.
 - **WHEN** the same is asked of a board of three tangles, and of one of five
 - **THEN** both reach solved, rather than stopping partway
 
+### Requirement: A tangled board is not answered by searching further
+
+Reaching further SHALL NOT be attempted with the planner's search machinery to
+answer a tangled board: each further ply multiplies the cost of the one before
+it. Counting the tangles, in one pass over the board, is what escapes.
+
+#### Scenario: A board past both exact searches
+
+- **WHEN** a hint is asked on a board of four tangles, which neither exact
+  search reaches
+- **THEN** the plan comes from the heuristic search steered by the tangle
+  measure, not from a search of greater reach
+
+### Requirement: The tangle count is priced only past what the exact searches unwind
+
+The tangle count SHALL be priced only past the number of tangles the exact
+searches can unwind on their own, which is two. On any board at or under that
+the measure SHALL be plain travel. The deep search is gated on the fallback
+finding nothing better than standing still, so a measure sharpened everywhere
+would stop that gate opening and replace a complete plan with a partial one.
+
 #### Scenario: A one- or two-tangle endgame is untouched
 
 - **WHEN** a hint is asked on a board whose only fault is one or two swapped
   pairs
 - **THEN** the deep search still answers it with a plan of more than eight moves
-  that finishes the board, exactly as before
+  that finishes the board
+
+### Requirement: The tangle guarantee is asserted by walking recomputed hints
+
+The guarantee that the hint gets a tangled board home SHALL be asserted by
+walking recomputed hints to solved, not by the length of a single plan. A plan
+that comes back proves nothing if the next recompute undoes it, which happens
+when consecutive recomputes are steered by different measures.
+
+#### Scenario: The walk, not the plan
+
+- **WHEN** the guard checks a named tangled board
+- **THEN** it plays the first move of each freshly computed hint and requires
+  the board to reach solved
+
+### Requirement: The boards a tangle guard names are even permutations
+
+The boards a guard names SHALL be even permutations. Every slide on a square
+board of odd side is an even permutation, so an odd board is unreachable and
+unsolvable, and would convict the hint of a defect it does not have.
+
+#### Scenario: Three swapped pairs on a 5×5 board
+
+- **WHEN** a board of three swapped pairs on a 5×5 grid is proposed as a guard
+  board
+- **THEN** it is not used, because it is an odd permutation and cannot be
+  solved
 
 ### Requirement: Sixteen's hint SHALL refuse only by saying its search ran out
 
 Where Sixteen's planner returns nothing, the hint SHALL refuse with the
-collection's constant for a search out of reach, and SHALL NOT claim that no
-move would get the player closer.
-
-Its planner reports an empty plan for exactly one reason — every search it ran
-came back inside its budget without a route — and that is a fact about the
-search, not about the board. The message this replaces asserted the second, and
-on the board that prompted the change it was false: most moves did get the
-player closer, and the hint simply could not find one.
+collection's constant for a search out of reach, `SEARCH_OUT_OF_REACH`, and
+SHALL NOT claim that no move would get the player closer. The planner reports
+an empty plan for exactly one reason, that every search it ran came back
+inside its budget without a route, and that is a fact about the search, not
+about the board.
 
 #### Scenario: A refusal that has to be true
 
 - **WHEN** Sixteen's hint cannot plan from a sound, unsolved board
 - **THEN** it says it could not find a way home, and points at what still works
 
-### Requirement: A Sixteen tile stands off the board, and its arrows are Netslide's
+### Requirement: A Sixteen tile stands off the board
 
 `redraw` SHALL draw a tile's face as the collection's lifted surface inside its
 bevel, so a tile is told from the board by more than its bevel in both schemes.
-The tile keeps its bevel: it is an object the player moves. Color 0 stays the
-board.
-
-A slide arrow SHALL be filled as Netslide fills its own in both schemes: a
-gray a step off the board, outlined in ink, which the bevel's dark-scheme swap
-does not reach. The arrow the keyboard cursor is on SHALL be filled in the
-collection's cursor color, and the arrow a hint names in the hint's.
+The tile SHALL keep its bevel: it is an object the player moves. Color 0 SHALL
+stay the board.
 
 #### Scenario: A tile is not the board's gray
 
 - **WHEN** a board is drawn at rest in either scheme
 - **THEN** every tile's face is the lifted surface
+
+### Requirement: Sixteen's slide arrows are Netslide's
+
+A slide arrow SHALL be filled as Netslide fills its own in both schemes: a
+gray a step off the board, outlined in ink, which the bevel's dark-scheme swap
+does not reach. The arrow the keyboard cursor is on SHALL be filled in the
+collection's cursor color, and the arrow a hint names in the hint's.
 
 #### Scenario: The arrows match Netslide's in the dark scheme
 
