@@ -375,6 +375,28 @@ session's, checked by a fresh reviewer where it is unsure. Decided that day:
   Whether `repo-layout`, `engine-hints` and the other long capabilities divide
   by subject is decided when they have been rewritten and can be read.
 
+## Keeping what is worth reading
+
+The owner's word (2026-10-09), on hearing that the rewrite made the specs a
+third longer: line counts do not matter, simplicity and use to us do, and
+keeping every rule is worth having as the invariant of one pass and no more.
+What stays is a rule a session would read before working on a part of the
+tree, or check a change against.
+
+So the rewrite is one commit that keeps every rule, checked by its ledgers
+(931 requirements became 2,983, and 34,282 lines 45,454), and a second pass
+cuts. `prune-brief.md` is that pass's criteria: what a type or the registry
+says of every game, a copy in prose of data the code declares, a game
+restating a rule of the collection, how a thing is built, a rule of process a
+guide holds, a rule about the finished act of porting, a rule about something
+gone, a duplicate, and a rule too particular for anyone to consult. Each cut
+is a row of `cuts/<capability>.md`, and a second agent reads the cuts for a
+rule that should not have gone.
+
+The ledgers describe the rewrite. `spec-ledger.mjs` passes on them at the
+commit that kept every rule and is not expected to after the cuts, which
+remove requirements a ledger names.
+
 The section below is kept as it was asked.
 
 ## Decisions the owner is asked to confirm

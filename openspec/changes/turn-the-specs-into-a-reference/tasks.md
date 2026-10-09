@@ -128,9 +128,9 @@ The owner's word (2026-10-09): keeping every rule is the invariant of the
 rewrite and not the aim. What stays in a spec is a rule a session would read
 before working on that part, or would check a change against.
 
-- [ ] 6a.1 The rewrite of stages 4 to 6 is committed whole first, so the
+- [x] 6a.1 The rewrite of stages 4 to 6 is committed whole first, so the
       version that kept every rule is in git before anything is cut.
-- [ ] 6a.2 The criteria for what goes are written in `design.md`, from reading
+- [x] 6a.2 The criteria for what goes are written in `design.md`, from reading
       what the rewrite left: what a type or the `Game` contract already says
       of every game, how a thing is built where only what it does matters, a
       rule so particular that only its own test would ever consult it.
