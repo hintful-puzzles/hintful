@@ -9,4 +9,4 @@
       `Midend.interpret`.
 - [x] 4 `docs/games/input.md` says where Shift goes.
 - [x] 5 Seen in the app: Shift+D and Shift+L in Guess, in notes mode and out.
-- [ ] 6 Committed, pushed and archived.
+- [x] 6 Committed, pushed and archived.

@@ -22,4 +22,4 @@
       against the bare letter. That is the shared layer's, fixed in
       `offer-a-declined-shifted-key-bare`, after which Shift+D was seen doing
       both too.
-- [ ] 5 Committed, pushed and archived.
+- [x] 5 Committed, pushed and archived.
