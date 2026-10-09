@@ -61,6 +61,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
   stripModifiers,
+  withoutShift,
 } from "./pointer.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
@@ -871,20 +872,21 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   /** Hand one input to the game and act on its answer. */
   private interpret(x: number, y: number, button: number): boolean {
-    if (this.drawState === null) return false;
+    const drawState = this.drawState;
+    if (drawState === null) return false;
 
     // A press opens its own drag or none: one left open by a release the
     // game never saw ends here.
     const pointer = stripModifiers(button);
     if (isMouseDown(pointer)) endSweep(this.ui);
 
-    const move = this.game.interpretMove(
-      this.state,
-      this.ui,
-      this.drawState,
-      { x, y },
-      button,
-    );
+    const offer = (b: number) =>
+      this.game.interpretMove(this.state, this.ui, drawState, { x, y }, b);
+    // A game that reads Shift on a key answers the first offer. One that does
+    // not declines it, and is asked about the key alone.
+    const bare = withoutShift(button);
+    const shifted = offer(button);
+    const move = shifted === null && bare !== null ? offer(bare) : shifted;
     // Only a drag event carries a drag on; anything else but its press ends it.
     const dragging = isMouseDrag(pointer);
     const joins = dragging && sweepContinues(this.ui);

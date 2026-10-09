@@ -26,6 +26,13 @@ about that pipeline shape everything below:
   `isMouseRelease` range predicates (upstream's `IS_MOUSE_*`; 27 ports each
   rewrote the three-constant chain before they were extracted), the `MOD_*`
   masks and `stripModifiers`. Never redeclare `const MOD_MASK`.
+- **Shift on a key is yours to read, and you need not strip it.** A key held
+  with Shift arrives with `MOD_SHFT` set, a capital letter included, since the
+  player held Shift to type it. If you decline it, the midend offers the same
+  key again without Shift (`withoutShift`), so `button === 'D'` matches. An
+  arrow is the exception: Shift+arrow is a gesture, and declining it is a no.
+  A game that gives a shifted key its own meaning (Untangle's Shift+Tab) must
+  answer the first offer. Ctrl and the keypad bit are not taken off for you.
 - **There are two buttons, and a tap is a click** — see § "One pointer, two
   buttons".
 - **Keyboard characters arrive as bare char codes** through the view's

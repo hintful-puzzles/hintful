@@ -38,7 +38,8 @@ places it — the digit shown on that color's button. Backspace rubs
 one out and Space holds a peg. Once the row is full the cursor rests
 one step past its last peg, where Enter submits the guess. Enter on a
 peg switches Marks mode on and off, and in Marks mode the digits rule
-colors out of the slot the cursor is on.
+colors out of the slot the cursor is on and Backspace puts them all
+back. **D** does whatever Backspace does.
 
 ## The answer row
 

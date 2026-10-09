@@ -364,12 +364,15 @@ function interpretMove(
     const slot = markSlot(ui, npegs);
     return slot >= 0 ? toggleMark(from, slot, color) : null;
   }
-  if (ui.pencilMode && isEraseKey(button)) {
+  // `D` and `d` are the erase key's letter aliases, so they follow it into
+  // whichever row the frame is on.
+  const rubOut = isEraseKey(button) || button === 0x44 || button === 0x64;
+  if (rubOut && ui.pencilMode) {
     // Clear, in notes mode, puts the cursor's answer slot back to every color.
     const slot = markSlot(ui, npegs);
     return slot >= 0 ? clearMarks(from, slot) : null;
   }
-  if (button === 0x44 || button === 0x64 || isEraseKey(button) /* 'D' | 'd' */) {
+  if (rubOut) {
     // Rub out the selected slot, or — with nothing selected, or a selection
     // sitting on a slot that is already empty — the last color the player
     // typed. Backspacing is what makes the key work on a *full* row, where the

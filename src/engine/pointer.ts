@@ -131,6 +131,22 @@ export function stripModifiers(button: number): number {
   return button & ~MOD_MASK;
 }
 
+/**
+ * `button` without its Shift, or `null` where there is none to take off or it
+ * is the player's gesture.
+ *
+ * On a character Shift is how the keyboard spells it: the frontend sends `D`
+ * with `MOD_SHFT` set, and a game comparing against `'D'` would never match.
+ * On an arrow it is a gesture of its own, so a game that declines Shift+arrow
+ * has said no to that gesture and is not asked about the plain arrow.
+ */
+export function withoutShift(button: number): number | null {
+  if ((button & MOD_SHFT) === 0) return null;
+  const base = stripModifiers(button);
+  const pointer = isMouseDown(base) || isMouseDrag(base) || isMouseRelease(base);
+  return pointer || isCursorMove(base) ? null : button & ~MOD_SHFT;
+}
+
 // --- cursor movement -----------------------------------------------
 
 /** Unit grid delta for a cursor-direction button, or `null` for any

@@ -575,6 +575,41 @@ describe("the answer row takes marks and colors", () => {
     expect(ui.currPegs).toEqual([0, 0, 0, 0]);
   });
 
+  it("the letter alias of Clear follows it into notes mode, and takes no peg", () => {
+    const { state, ui, ds } = fresh();
+    const keys = guessGame.requestKeys?.(state.params) ?? [];
+    for (let i = 0; i < state.params.npegs; i++) {
+      guessGame.interpretMove(state, ui, ds, ZERO, keys[i].button);
+    }
+    const row = [...ui.currPegs];
+    expect(row).not.toContain(0);
+    const marked = guessGame.executeMove(state, {
+      type: "mark",
+      marks: [{ pos: 1, color: 4 }],
+      ruledOut: true,
+    });
+    guessGame.interpretMove(marked, ui, ds, ZERO, PENCIL_MODE_BUTTON);
+    ui.cursor.x = 1;
+    ui.cursor.visible = true;
+    for (const letter of ["d", "D"]) {
+      expect(
+        guessGame.interpretMove(marked, ui, ds, ZERO, letter.charCodeAt(0)),
+      ).toEqual({
+        type: "mark",
+        marks: [{ pos: 1, color: 4 }],
+        ruledOut: false,
+      });
+      expect(ui.currPegs).toEqual(row);
+      expect(ui.pencilMode).toBe(true);
+    }
+    // Outside notes mode the same key rubs out the peg under the cursor.
+    guessGame.interpretMove(marked, ui, ds, ZERO, PENCIL_MODE_BUTTON);
+    expect(guessGame.interpretMove(marked, ui, ds, ZERO, "d".charCodeAt(0))).toBe(
+      UI_UPDATE,
+    );
+    expect(ui.currPegs).toEqual(row.with(1, 0));
+  });
+
   it("Enter on a slot toggles notes mode, and on the submit position submits", () => {
     const { state, ui, ds } = fresh();
     ui.cursor.visible = true;

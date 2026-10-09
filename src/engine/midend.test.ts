@@ -22,11 +22,15 @@ import {
 } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import {
+  CURSOR_UP,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MOD_CTRL,
+  MOD_SHFT,
   newCursor,
   RIGHT_BUTTON,
+  stripModifiers,
 } from "./pointer.ts";
 import { RetryLimitExceeded } from "./retry-limit.ts";
 import { decodeSave, encodeSave } from "./save.ts";
@@ -301,6 +305,63 @@ describe("Midend moves / undo / redo", () => {
   it("a non-move input returns false and changes nothing", () => {
     expect(h.m.processInput(0, 0, 0x9999)).toBe(false);
     expect(h.state()).toMatchObject({ currentMove: 0, totalMoves: 0 });
+  });
+
+  describe("a key the game declines with Shift on it", () => {
+    const LOWER = "d".charCodeAt(0);
+    const UPPER = "D".charCodeAt(0);
+    const TAB = 9;
+    /** Takes `d` and `D` bare, reads Shift on Tab itself, and takes an arrow
+     * only without Shift. */
+    function keyed() {
+      const seen: number[] = [];
+      const game: typeof fakeGame = {
+        ...fakeGame,
+        interpretMove: (_s, _ui, _ds, _p, button) => {
+          seen.push(button);
+          if (button === LOWER || button === UPPER || button === CURSOR_UP)
+            return "inc";
+          if (stripModifiers(button) === TAB) return button & MOD_SHFT ? "dec" : "inc";
+          return null;
+        },
+      };
+      const h = harness(game);
+      h.m.newGame();
+      return { h, seen };
+    }
+
+    it("is offered again without it, so a capital letter is its key", () => {
+      const { h, seen } = keyed();
+      expect(h.m.processInput(0, 0, UPPER | MOD_SHFT)).toBe(true);
+      expect(seen).toEqual([UPPER | MOD_SHFT, UPPER]);
+      expect(h.m.formatAsText()).toBe("count=1");
+    });
+
+    it("keeps the meaning of a Shift the game reads", () => {
+      const { h, seen } = keyed();
+      expect(h.m.processInput(0, 0, TAB | MOD_SHFT)).toBe(true);
+      expect(seen).toEqual([TAB | MOD_SHFT]);
+      expect(h.m.formatAsText()).toBe("count=-1");
+    });
+
+    it("stays declined on an arrow, where Shift is a gesture", () => {
+      const { h, seen } = keyed();
+      expect(h.m.processInput(0, 0, CURSOR_UP | MOD_SHFT)).toBe(false);
+      expect(seen).toEqual([CURSOR_UP | MOD_SHFT]);
+    });
+
+    it("stays declined when the bare key is declined too", () => {
+      const { h, seen } = keyed();
+      const other = "q".charCodeAt(0);
+      expect(h.m.processInput(0, 0, other | MOD_SHFT)).toBe(false);
+      expect(seen).toEqual([other | MOD_SHFT, other]);
+    });
+
+    it("keeps Ctrl on the key it offers again", () => {
+      const { h, seen } = keyed();
+      expect(h.m.processInput(0, 0, UPPER | MOD_SHFT | MOD_CTRL)).toBe(false);
+      expect(seen).toEqual([UPPER | MOD_SHFT | MOD_CTRL, UPPER | MOD_CTRL]);
+    });
   });
 
   it("undo after a move restores the prior state (property)", () => {
