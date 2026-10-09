@@ -12,4 +12,4 @@
       in the box, clearing the box restores the chips; and the same at
       1440 px.
 - [x] 2.2 The gate.
-- [ ] 2.3 The owner's eye.
+- [x] 2.3 The owner's eye. Owner, 2026-10-09: "Excellent, accepted".
