@@ -5,9 +5,10 @@ the owner's word the day before: the specs have "too many lines, many of which
 could possibly be combined or otherwise integrated, to make it more useful as
 a resource, rather than just being a write-only journal". `tasks.md` says how
 far it has got: the pilot is done, `design.md` § "What the pilot found" has
-its result, and the work waits on the owner's answer below.
+its result, and § "What was decided" the form: the reference form, for every
+capability.
 
-**The open question, which decides the form** (owner, 2026-10-08): are the
+**The question that decided the form** (owner, 2026-10-08): are the
 specs a resource a session works from, or a by-product of tracking the work?
 Reasons leave the specs for the guides in either case, into a checkable form
 where they can. What stays in a spec depends on the answer: every rule, stated

@@ -345,6 +345,38 @@ deduction under the hint, and at that point the midend throws where it should
 return the refusal. It reaches a player only through a game ID or a save that
 carries `dt`. It is raised with the owner and is not part of this change.
 
+## What was decided
+
+The owner's answer (2026-10-09): this is internal work and the decision is the
+session's, checked by a fresh reviewer where it is unsure. Decided that day:
+
+- **Every capability takes the reference form, the games included.** A fresh
+  reviewer took twelve of the Ascent rules that `pilot/held-by-ascent.md`
+  calls held by a test and asked of each whether the test would fail if the
+  rule broke: six would, five are held weakly (a snapshot alone, one case of
+  several, a bound in one direction) and one is not held. The by-product form
+  deletes on that table, so it would delete rules nothing holds; and what it
+  leaves is a list of what the tests do not cover, which goes stale the day a
+  test is written. `AGENTS.md` also has `openspec/specs/` as what is
+  normatively true, which a spec that leaves out its tested rules is not. So
+  a game's spec keeps every rule, and does not get shorter: what it gains is
+  short requirements, no history, its false rules corrected, and a spec the
+  newer validator accepts. `pilot/ascent.by-product.md` and its ledger stay
+  as the record of the form that was not taken.
+- **The second review is dropped from the stages.** In the pilot it found
+  nothing in thirty questions, while the first found about twenty-two
+  defects. Each capability gets the first.
+- **No requirement moves between capabilities while the rewrite runs in
+  parallel.** One agent rewrites each capability and a second reviews it, all
+  at once in one working tree, so each touches its own `spec.md` and ledger
+  and nothing else (`rewrite-brief.md`). The misfiled requirements of
+  Decision 3 are moved afterwards, one at a time.
+- **A capability is not bounded yet.** The requirement's bound is the tool's.
+  Whether `repo-layout`, `engine-hints` and the other long capabilities divide
+  by subject is decided when they have been rewritten and can be read.
+
+The section below is kept as it was asked.
+
 ## Decisions the owner is asked to confirm
 
 1. **What the specs are for**, by group (the section above). It decides

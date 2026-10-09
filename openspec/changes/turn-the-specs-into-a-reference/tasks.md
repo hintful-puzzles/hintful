@@ -27,9 +27,14 @@ the owner's word (2026-10-09). Each step's check is beside it.
       - `pilot/held-by-engine-difficulty.md` and `pilot/held-by-ascent.md`,
         by reading and with no test run; the counts are in `design.md` §
         "What the pilot found".
-- [ ] 1.4 The owner's answers to `design.md` § "Decisions the owner is asked to
+- [x] 1.4 The owner's answers to `design.md` § "Decisions the owner is asked to
       confirm" are recorded there, after 2.6. Nothing from 3 onward starts
       before them.
+      - The owner left the decision to the session; `design.md` § "What was
+        decided" has it. Every capability takes the reference form, each with
+        a ledger and the first review, by `rewrite-brief.md`. Stages 4 to 6
+        run in parallel, and stage 3's checks land with them, since a size
+        check written after the rewrite needs no list of exemptions.
 
 ## 2. The pilot
 
