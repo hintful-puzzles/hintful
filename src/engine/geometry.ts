@@ -23,11 +23,15 @@ export function coord(pos: number, tileSize: number, border: number): number {
  * all exactly this function (`geometry.test.ts` checks two of them).
  *
  * **The one legitimate override is `Math.trunc`.** Truncation rounds toward
- * zero, so a click inside the top/left border margin folds onto row or column 0
- * instead of landing off-grid at −1 — upstream's behavior. A game that takes it
- * says so at its own `fromCoord` and names this helper as the thing it is
+ * zero, so a click inside the top/left border margin folds onto the first row
+ * or column the game draws there (row or column 0, or a legend beside it)
+ * instead of landing one further out — upstream's behavior. A game that takes
+ * it says so at its own `fromCoord` and names this helper as the thing it is
  * declining. That is the *only* way the two spellings differ, and it is
  * player-visible.
+ *
+ * A position that keeps its fraction of a tile (Rect tells a corner from an
+ * edge by it) is not this conversion, and stays the game's own division.
  */
 export function fromCoord(pixel: number, tileSize: number, border: number): number {
   return Math.floor((pixel - border) / tileSize);

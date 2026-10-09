@@ -85,7 +85,9 @@ export function mkhighlight(defaultBackground: Color): {
 /**
  * **The board every game paints sits at the same tone.** A game's `colors()`
  * is handed the host background already shifted off pure white and pure black
- * by {@link mkhighlightBackground}, and this is the one place that hands it.
+ * by {@link mkhighlightBackground}, and whatever paints a board for a player
+ * takes the palette from here. A test that only labels a draw record calls
+ * `colors()` itself, with a background the shift leaves alone.
  *
  * Upstream shifts the background only in the games that call
  * `game_mkhighlight`; the rest take `frontend_default_colour` as-is. In dark
@@ -93,9 +95,11 @@ export function mkhighlight(defaultBackground: Color): {
  * split put boards at different tones and landed a raw-background game's white
  * flash exactly on its own board. Shifting once here makes the board tone a
  * property of the collection — and a game that calls `mkhighlight` itself gets
- * the identical trio, because the shift is exactly idempotent (a shifted
- * background is exactly K from the extreme, and the shift fires only strictly
- * inside K).
+ * the identical trio, because shifting a shifted background leaves it alone: it
+ * sits K from the extreme, and the shift fires only strictly inside K. That is
+ * exact for a gray, which is all the app hands (pure white, and the light
+ * host's gray). A tinted background can land a rounding error inside K and
+ * move again in a channel's last place.
  */
 export function resolvePalette(
   game: { colors(defaultBackground: Color): Color[] },

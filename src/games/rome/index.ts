@@ -84,6 +84,7 @@ import {
   romeCandidateMoves,
 } from "./hint.ts";
 import {
+  BORDER,
   colors,
   computeSize,
   FLASH_TIME,
@@ -218,11 +219,21 @@ const ARROW_KEYS: KeyLabel[] = [
   clearKey,
 ];
 
-/** Upstream `FROMCOORD`: C integer division **truncates toward zero**, so a
- * pixel inside the two-pixel border maps to row/column 0 rather than to -1 —
- * hence `Math.trunc`, not the shared `fromCoord`'s floor. */
-function fromCoordTrunc(pixel: number, ts: number): number {
-  return Math.trunc((pixel - origin(ts)) / ts);
+/**
+ * The row or column a pixel is over, or -1 above or left of the grid.
+ *
+ * Declines the shared `fromCoord`'s floor for the top and left outline only:
+ * it is drawn in the {@link BORDER} pixels before the first square, and
+ * upstream's truncating `FROMCOORD` gives those to row or column 0, so a press
+ * on the board's edge line grabs the square it bounds. Truncation alone would
+ * also give that square the whole tile's width before it, which here is the
+ * pencil-mode indicator's margin and not the board. A press and a release read
+ * a pixel through this one function, so they cannot disagree about it.
+ */
+function squareAt(pixel: number, ts: number): number {
+  const o = origin(ts);
+  if (pixel < o - BORDER) return -1;
+  return Math.max(0, Math.floor((pixel - o) / ts));
 }
 
 /**
@@ -242,6 +253,9 @@ function typedEntry(
   if (dir !== null) {
     if (pencil && !markable(state, x, y, dir)) return UI_UPDATE;
     if (!pencil && (here & FM_ARROWMASK) === dir) return noOpEntryResult(ui);
+  } else if (pencil ? state.pencil[y * state.w + x] === 0 : !(here & FM_ARROWMASK)) {
+    // Nothing to clear.
+    return noOpEntryResult(ui);
   }
   releaseHighlightAfterEntry(ui);
   // In notes mode Clear empties the square's *marks*: the key clears whatever
@@ -323,7 +337,8 @@ function interpretMove(
     // ...but while placement is armed, Space clears the square instead.
     if (button === CURSOR_SELECT2 && ui.kmode === KEYMODE_PLACE) {
       ui.kmode = KEYMODE_MOVE;
-      if (here & FM_FIXED) return UI_UPDATE;
+      // A clue cannot be cleared, and a square with no arrow has nothing to.
+      if (here & FM_FIXED || !(here & FM_ARROWMASK)) return UI_UPDATE;
       return { kind: "place", x, y, dir: null };
     }
 
@@ -359,8 +374,8 @@ function interpretMove(
 
     // Grab a square: left starts an arrow drag, right a pencil drag.
     if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-      const gx = fromCoordTrunc(p.x, ts);
-      const gy = fromCoordTrunc(p.y, ts);
+      const gx = squareAt(p.x, ts);
+      const gy = squareAt(p.y, ts);
       if (gx < 0 || gx >= w || gy < 0 || gy >= h) return null;
       if (grid[gy * w + gx] & FM_FIXED) return null;
 
@@ -392,8 +407,8 @@ function interpretMove(
 
     // The direction is read from the *square* the pointer is over, not from a
     // pixel offset: back on the grabbed square means "clear".
-    const cx = p.x >= origin(ts) ? fromCoordTrunc(p.x, ts) : -1;
-    const cy = p.y >= origin(ts) ? fromCoordTrunc(p.y, ts) : -1;
+    const cx = squareAt(p.x, ts);
+    const cy = squareAt(p.y, ts);
 
     let c: number;
     if (cx === gx && cy === gy) c = EMPTY;

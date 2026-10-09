@@ -2,7 +2,8 @@
  * Rendering for Map (upstream `game_colours`, `game_compute_size`,
  * `draw_square`, `draw_error`, `game_redraw`), plus the pixel↔region hit-test
  * helpers `index.ts` uses (kept here so `index → render` is the only dependency
- * direction). The layout is upstream's NARROW_BORDERS one: no border.
+ * direction). The board has no border of its own (upstream's NARROW_BORDERS
+ * layout); the canvas round it is the pencil-mode indicator's room (`origin`).
  */
 
 import { FOUR_FILLS } from "../../engine/color/colors.ts";

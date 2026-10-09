@@ -1,9 +1,9 @@
 /**
- * **Every game paints the same board.** The one place a game's `colors()` is
- * called is `resolvePalette`, which hands it the host background already shifted
- * off the extremes — so whether a port's C called `game_mkhighlight` or took
- * `frontend_default_colour` raw, the index it paints its board with resolves to
- * one tone across the collection.
+ * **Every game paints the same board.** Whatever paints a board for a player
+ * takes the game's palette from `resolvePalette`, which hands `colors()` the
+ * host background already shifted off the extremes — so whether a port's C
+ * called `game_mkhighlight` or took `frontend_default_colour` raw, the index it
+ * paints its board with resolves to one tone across the collection.
  *
  * This is measured against **pure white**, because that is what the frontend
  * hands the engine in dark mode and it is the input on which the collection
@@ -21,6 +21,7 @@ import { getTsGame, registeredGameIds } from "../engine/registry.ts";
 import type { Color } from "../engine/types.ts";
 import { oklchToColor } from "../utils/color.ts";
 import "../games/index.ts";
+import { puzzleIds } from "./catalog.ts";
 
 /** What `components/view.ts` hands the engine in dark mode. */
 const WHITE = oklchToColor([1, 0, 0]);
@@ -42,8 +43,12 @@ function boardOf(id: string, host: Color): Color {
 describe("the board every game paints", () => {
   const ids = registeredGameIds();
 
-  it("looks at every registered game", () => {
-    expect(ids.length).toBe(57);
+  it("looks at every game the app lists", () => {
+    // The registry is filled by importing the games, so an import that stopped
+    // reaching them would leave nothing to run on. The catalog is the list
+    // the app offers a player, kept apart from the registry.
+    expect([...ids].sort()).toEqual([...puzzleIds].sort());
+    expect(ids.length).toBeGreaterThan(0);
   });
 
   it.each(ids)("%s paints the collection's board tone on a white host", (id) => {

@@ -85,8 +85,10 @@ that places a whole run.
 
 ### Modified Capabilities
 
-Not known until the triage is done. Each fix that changes what is required
-carries its delta; a corrected comment carries none.
+The capabilities with a delta under `specs/`: one for each whose requirement
+was found wrong, silent where its silence disagreed with the code, or changed
+by a fix. `triage.md` names, row by row, the requirement that carries each
+finding. A corrected comment carries no delta.
 
 ## Impact
 

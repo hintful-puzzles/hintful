@@ -73,8 +73,7 @@ describe("Every game offering a shared pencil preference uses the shared wording
     }
     expect(offenders).toEqual([]);
     // A guard that matched nothing would pass silently for ever, so pin that
-    // the shared prefs are actually reached (ten and five games respectively
-    // as of adopt-declarative-config-helpers).
+    // the shared prefs are actually reached.
     expect(seen.get("sticky-pencil-mode") ?? 0).toBeGreaterThanOrEqual(10);
     expect(seen.get("pencil-keep-highlight") ?? 0).toBeGreaterThanOrEqual(5);
   });

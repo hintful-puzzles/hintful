@@ -81,6 +81,16 @@ describe("unequal params", () => {
     expect(decodeParams("5adk")).toEqual(a);
   });
 
+  it("reads a difficulty letter it does not know as the default tier", () => {
+    const p = decodeParams("5dz");
+    expect(p).toEqual({
+      order: 5,
+      mode: "unequal",
+      diff: unequalGame.defaultParams().diff,
+    });
+    expect(paramsError(unequalGame, p, true)).toBeNull();
+  });
+
   it("rejects invalid params, naming the dialog's Size field", () => {
     expect(
       paramsError(unequalGame, { order: 2, mode: "unequal", diff: "easy" }, true),

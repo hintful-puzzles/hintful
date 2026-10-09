@@ -1,5 +1,2 @@
-# No delta yet: which requirements change is what the triage finds. The first
-# requirement it corrects brings a delta, and this flag goes then.
 schema: spec-driven
 created: 2026-10-09
-skip_specs: true

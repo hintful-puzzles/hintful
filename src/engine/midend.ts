@@ -56,7 +56,6 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -212,10 +211,10 @@ export interface EngineCore {
   getCustomParamsConfig(): ConfigDescription;
   /** Current custom-params values, read off the live params. */
   getCustomParams(): ConfigValues;
-  /** Apply submitted custom-params values onto a copy of the params,
-   * validate with the game's own `validateParams`, and — on success —
-   * adopt them (so the app generates a new game at those params) or — on
-   * failure — return the validation error string without applying. */
+  /** Apply submitted custom-params values onto a copy of the params and
+   * adopt them (so the app generates a new game at those params), or return
+   * why they cannot be played without applying: a field its deciding field
+   * rules out (`only.ts`), then the params' own refusal (`paramsError`). */
   setCustomParams(values: ConfigValues): string | null;
   /** Encode the params described by `values` (built the same way as
    * `setCustomParams`) to a game-ID param string, or say why they fail
@@ -262,8 +261,8 @@ export interface EngineCore {
   setTimerPaused(paused: boolean): void;
   redraw(dr: GameDrawing): void;
   /** Drop the drawstate and redraw. The worker adapter calls this when the
-   * palette or font is replaced: neither clears the canvas, but both
-   * invalidate the colors and fonts baked into cached tiles. The game's
+   * palette is installed or replaced: that does not clear the canvas, but it
+   * invalidates the colors baked into cached tiles. The game's
    * `!ds.started` branch repaints from scratch, over the ground `redraw`
    * lays first. */
   forceRedraw(dr: GameDrawing): void;
@@ -1500,25 +1499,22 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * **The engine adds it rather than each game remembering to.** A note-taking
    * game whose keypad lacks this key has no visible way into its own notes: the
    * alternatives are a right-click, which a touch player does not have, and a
-   * long press, which in a drag-driven game is already the start of a drag. It
-   * was a per-game obligation until `derive-the-marks-key-from-having-notes`,
-   * held by a guard that read `ui.pencilMode` — a *name*, so it saw only the
-   * games that had spelled the mode that way, and Rome and Map carried notes
-   * for their whole lives with no key and nothing noticing (docs/method.md § "A scan
-   * that keys on a name finds only the games that were named that way").
+   * long press, which in a drag-driven game is already the start of a drag. A
+   * per-game obligation is one a game can miss with nothing noticing
+   * (docs/method.md § "A scan that keys on a name finds only the games that
+   * were named that way").
    *
    * Appending here is what makes the discrepancy unreachable: the keypad the
    * app renders is this one, so a game **cannot** ship notes without the key,
    * however it spells its own mode and whether or not it has a `requestKeys` at
    * all.
    *
-   * A game that already offers the key keeps its own placement; nothing is
-   * duplicated.
+   * A game never lists the key itself: one that did would show it twice, which
+   * `pencil-mode-key.test.ts` refuses.
    */
   requestKeys(): KeyLabel[] {
     const keys = this.game.requestKeys?.(this.boardParams) ?? [];
     if (!this.takesNotes()) return keys;
-    if (keys.some((k) => k.button === PENCIL_MODE_BUTTON)) return keys;
     return [...keys, pencilModeKey];
   }
 

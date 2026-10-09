@@ -443,6 +443,26 @@ describe("spokes input", () => {
     expect(getSpoke(erased.spokes[1], DIR_BOTLEFT)).toBe(1 /* SPOKE_EMPTY */);
   });
 
+  it("keeps a mark the player made on the crossing when the line is erased", () => {
+    const set = (s: SpokesState, index: number, dir: number, state: number) =>
+      spokesGame.executeMove(s, { kind: "set", index, dir, state });
+    // The player rules out (1,0)→(0,1), draws the other diagonal of that
+    // square over it, and erases the line again.
+    const marked = set(newState(FIX, FIX_DESC), 1, DIR_BOTLEFT, SPOKE_MARKED);
+    const crossed = set(marked, 0, DIR_BOTRIGHT, SPOKE_LINE);
+    expect(getSpoke(crossed.spokes[1], DIR_BOTLEFT)).toBe(SPOKE_MARKED);
+    const erased = set(crossed, 0, DIR_BOTRIGHT, 1 /* SPOKE_EMPTY */);
+    expect(getSpoke(erased.spokes[1], DIR_BOTLEFT)).toBe(SPOKE_MARKED);
+
+    // A line drawn a second time over the same mark leaves it too, and one
+    // drawn over an empty crossing still takes its own mark away.
+    const again = set(set(erased, 0, DIR_BOTRIGHT, SPOKE_LINE), 0, DIR_BOTRIGHT, 1);
+    expect(getSpoke(again.spokes[1], DIR_BOTLEFT)).toBe(SPOKE_MARKED);
+    const cleared = set(again, 1, DIR_BOTLEFT, 1 /* SPOKE_EMPTY */);
+    const redrawn = set(set(cleared, 0, DIR_BOTRIGHT, SPOKE_LINE), 0, DIR_BOTRIGHT, 1);
+    expect(getSpoke(redrawn.spokes[1], DIR_BOTLEFT)).toBe(1 /* SPOKE_EMPTY */);
+  });
+
   it("draws and marks from the half-grid keyboard cursor", () => {
     const state = newState(FIX, FIX_DESC);
     const ui = newUi();

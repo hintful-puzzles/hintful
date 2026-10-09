@@ -68,13 +68,14 @@ const MAX_ATTEMPTS = 50_000;
 const MAX_BORDER_ONLY_ATTEMPTS = 250_000;
 
 /**
- * The bound for a 4x4 Number Ball board, five times the mean of its rarest
- * cell. Measured 2026-10-06: with three numbers at Normal, 29 deals in 80 ran
- * {@link MAX_ATTEMPTS} out, nine seconds each, which is a board once in
- * 49,000 tries. A try there is a fifth of a millisecond, so this bound runs
- * out once in 150 deals and takes three quarters of a minute to do it.
+ * The bound for a 4x4 Number Ball board, twenty times the mean of its rarest
+ * cell: with three numbers at Normal a board is found once in some 48,000
+ * tries, a fifth of a millisecond each, so a deal is ten seconds in the mean.
+ * Tries to a board are geometric, so a bound of five times the mean gives up
+ * on one deal in 150 with its board still to find, and this one on none: a
+ * deal that runs it out has lost the tier.
  */
-const MAX_SMALL_NUMBERS_ATTEMPTS = 250_000;
+const MAX_SMALL_NUMBERS_ATTEMPTS = 1_000_000;
 
 function blankBoard(p: SaladParams): SaladBoard {
   const o2 = p.order * p.order;

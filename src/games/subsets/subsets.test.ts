@@ -17,6 +17,7 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -57,7 +58,7 @@ import {
   cloneState,
   DIFF_EASY,
   DIFF_NAMES,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   decodeParams,
   defaultParams,
   encodeDesc,
@@ -143,9 +144,9 @@ describe("subsets params", () => {
   it("encode/decode round-trips", () => {
     expect(encodeParams(PARAMS, true)).toBe("4x4n4de");
     expect(decodeParams("4x4n4de")).toEqual(PARAMS);
-    const tricky = { ...PARAMS, diff: DIFF_TRICKY };
-    expect(encodeParams(tricky, true)).toBe("4x4n4dt");
-    expect(decodeParams("4x4n4dt")).toEqual(tricky);
+    const normal = { ...PARAMS, diff: DIFF_NORMAL };
+    expect(encodeParams(normal, true)).toBe("4x4n4dt");
+    expect(decodeParams("4x4n4dt")).toEqual(normal);
   });
 
   it("the short form drops the tier; every tier gets its own full ID", () => {
@@ -259,7 +260,7 @@ describe("subsets solver", () => {
   it("reports unfinished for an underdetermined board", () => {
     // No givens, no arrows: nothing forces any placement.
     const state = newState(PARAMS, Array.from({ length: 16 }, () => "_").join(","));
-    expect(subsetsSolveGame(state, DIFF_TRICKY)).toBe("unfinished");
+    expect(subsetsSolveGame(state, DIFF_NORMAL)).toBe("unfinished");
   });
 
   it("validate classifies a partially-played board as unfinished", () => {
@@ -285,16 +286,16 @@ describe("subsets generator (tier 1)", () => {
 // is what only Subsets can assert — that the restored head half of
 // `applyArrowsAdvanced` is *sound*, and that the tier gate actually binds.
 
-const TRICKY = { ...PARAMS, diff: DIFF_TRICKY };
+const NORMAL = { ...PARAMS, diff: DIFF_NORMAL };
 
 describe("subsets difficulty tiers", () => {
   it("a Normal board needs the restored rung: it does not solve at Easy", () => {
     const boards = seedBudget(6, 24);
     for (let s = 0; s < boards; s++) {
-      const { desc } = newSubsetsDesc(TRICKY, randomNew(`tricky-${s}`));
-      expect(validateDesc(subsetsGame, TRICKY, desc)).toBeNull();
-      expect(subsetsSolveGame(newState(TRICKY, desc), DIFF_TRICKY)).toBe("complete");
-      expect(subsetsSolveGame(newState(TRICKY, desc), DIFF_EASY)).not.toBe("complete");
+      const { desc } = newSubsetsDesc(NORMAL, randomNew(`tricky-${s}`));
+      expect(validateDesc(subsetsGame, NORMAL, desc)).toBeNull();
+      expect(subsetsSolveGame(newState(NORMAL, desc), DIFF_NORMAL)).toBe("complete");
+      expect(subsetsSolveGame(newState(NORMAL, desc), DIFF_EASY)).not.toBe("complete");
     }
   });
 
@@ -307,9 +308,9 @@ describe("subsets difficulty tiers", () => {
     // the board's own truth rather than against the other cap.
     const boards = seedBudget(40, 200);
     for (let s = 0; s < boards; s++) {
-      const truth = generateCandidate(TRICKY, randomNew(`sound-${s}`));
-      const solved = newState(TRICKY, encodeDesc(truth));
-      expect(subsetsSolveGame(solved, DIFF_TRICKY)).toBe("complete");
+      const truth = generateCandidate(NORMAL, randomNew(`sound-${s}`));
+      const solved = newState(NORMAL, encodeDesc(truth));
+      expect(subsetsSolveGame(solved, DIFF_NORMAL)).toBe("complete");
       expect([...solved.known]).toEqual([...truth.known]);
     }
   });
@@ -330,12 +331,12 @@ describe("subsets difficulty tiers", () => {
     // stops partway with nothing to say.
     const boards = seedBudget(4, 20);
     for (let s = 0; s < boards; s++) {
-      const { desc } = newSubsetsDesc(TRICKY, randomNew(`hintable-${s}`));
-      expect(deduceHintPlan(newState(TRICKY, desc)).status).toBe("complete");
+      const { desc } = newSubsetsDesc(NORMAL, randomNew(`hintable-${s}`));
+      expect(deduceHintPlan(newState(NORMAL, desc)).status).toBe("complete");
       // And the rung is load-bearing, not decorative: capped below it the same
       // recorder stalls. Without this the Easy-plan test below would be
       // comparing two things that could never have differed.
-      expect(deduceHintPlan(newState(TRICKY, desc), DIFF_EASY).status).toBe(
+      expect(deduceHintPlan(newState(NORMAL, desc), DIFF_EASY).status).toBe(
         "unfinished",
       );
     }
@@ -511,6 +512,18 @@ describe("subsets solve (through a real Midend)", () => {
     expect(typeof text).toBe("string");
     expect(text).not.toContain("?");
     expect(status()).toBe("solved-with-help");
+  });
+
+  // A dealt board with its givens blanked: the arrows alone settle no cell.
+  // `loadDesc` plays no such board, so the game's own `solve` is asked.
+  it("refuses a board its solver cannot finish", () => {
+    const desc = "_D,_D,_,_L,_RD,_,_URDL,_,_,_RDL,_,_L,_UR,_,_U,_UL";
+    const start = newState(PARAMS, desc);
+    expect(subsetsSolveGame(newState(PARAMS, desc), DIFF_NORMAL)).toBe("unfinished");
+    expect(subsetsGame.solve?.(start, start, undefined)).toEqual({
+      ok: false,
+      error: PUZZLE_NOT_REASONABLE,
+    });
   });
 
   it("saveGame -> loadGame restores an equivalent game", () => {

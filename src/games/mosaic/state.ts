@@ -1,6 +1,6 @@
 /**
  * Mosaic state, params and desc codec (the state half of upstream's
- * `mosaic.c`). A Fill-a-Pix-style puzzle: each clue counts the black cells
+ * `mosaic.c`). A Fill-a-Pix-style puzzle: each clue counts the marked cells
  * of its 3×3 neighborhood, itself included.
  */
 

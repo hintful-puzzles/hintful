@@ -787,7 +787,7 @@ decision:
   meanings**, and your default: `ERROR`, `ERROR_TEXT`, `ERROR_WASH`,
   `HINT_ACTION`, `HINT_EVIDENCE`, `HINT_EVIDENCE_WASH`,
   `HINT_BLACKREF`/`HINT_WHITEREF`, `CURSOR`, `HELD`, `DRAG_ADD`/`DRAG_REMOVE`,
-  `FLASH`, `UNDECIDED`, `RULED_OUT`, `GRID_MID`, `GRID_DARK`, `PENCIL_BODY`,
+  `FLASH`, `RULED_OUT`, `GRID_MID`, `GRID_DARK`, `PENCIL_BODY`,
   `INK`, `PAPER`, plus the background-derived functions (`pencilColor`, `playerEntryColor`,
   `highlightWash`, `lineMaybeColor`, `lineNoColor`, `clueDoneColor`, and the
   surfaces `cellSurface`, `surfaceGrid` and `givenSurface`, and `wallFill`),
@@ -1085,7 +1085,9 @@ being told about it.
 [`neighbor-contrast.test.ts`](../../src/puzzle/neighbor-contrast.test.ts)
 paints your frames into palette indices, takes every pair that ends up side by
 side, and fails when two areas stand closer than its floor in the dark scheme
-(or a mark does, where the light scheme gave it twice the distance). If it
+(or a mark does, where the light scheme gave it twice the distance). Two
+indices that hold one color in both schemes are one role under two names and
+owe each other nothing. If it
 names a pair of yours, look at the game in the dark scheme before deciding: a
 pair that is close on purpose goes in its ledger with what it is, and a pair
 that is not gets an authored dark value on the shared role. It reads the deal

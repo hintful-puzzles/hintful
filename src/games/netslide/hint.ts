@@ -1,10 +1,10 @@
 /**
  * Netslide's explained hint.
  *
- * Netslide has no solver — the generator saves the unshuffled grid as `aux` and
- * `solve` replays it — so the hint *plans*: it searches for a short sequence of
- * slides from here to a finished network and narrates each one by the
- * consequence it actually has. The search itself is the shared
+ * Netslide has no solver — only a finished grid to aim at, the generator's
+ * `aux` or one recovered from the board — so the hint *plans*: it searches for
+ * a short sequence of slides from here to a finished network and narrates each
+ * one by the consequence it actually has. The search itself is the shared
  * [`slide-planner`](../../engine/slide-planner.ts), which Sixteen also uses; what
  * lives here is everything that makes the plan *Netslide's*:
  *

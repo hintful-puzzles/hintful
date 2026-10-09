@@ -313,6 +313,7 @@ function executeMove(state: SpokesState, move: SpokesMove): SpokesState {
 
   if (move.kind === "solve") {
     clearBoard(next);
+    next.autoMarks.clear();
     for (const { index, dir, state: s } of move.spokes) {
       if (getSpoke(next.spokes[index], dir) !== SPOKE_HIDDEN) {
         spokesPlace(next, index, dir, s);
@@ -325,7 +326,7 @@ function executeMove(state: SpokesState, move: SpokesMove): SpokesState {
   const old = getSpoke(next.spokes[move.index], move.dir);
   if (old !== SPOKE_HIDDEN) {
     spokesPlace(next, move.index, move.dir, move.state);
-    syncDiagonalBlock(next, move.index, move.dir, old, move.state);
+    syncDiagonalBlock(next, move.index, move.dir, old, move.state, next.autoMarks);
   }
   return next;
 }

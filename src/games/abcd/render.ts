@@ -201,7 +201,8 @@ export function newDrawState(state: AbcdState, tileSize: number): AbcdDrawState 
 
 // --- error computation (base render, not findMistakes) ---------------------
 
-/** Per-clue "over- or under-satisfiable" flag (upstream `abcd_count_clues`). */
+/** Per-clue flag for a count its line exceeds or can no longer reach (upstream
+ * `abcd_count_clues`). */
 function computeClueErrors(state: AbcdState): Uint8Array {
   const { w, h, n } = state.params;
   const { grid, numbers } = state;

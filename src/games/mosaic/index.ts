@@ -2,8 +2,8 @@
  * Mosaic (upstream's `mosaic.c`, Fill-a-Pix): numeric clues count the
  * shaded cells of their 3×3 neighborhood (itself included); mark every
  * cell shaded or clear. Click toggles unmarked→shaded→clear→unmarked
- * (right-click cycles the other way); aligned drags paint the click's
- * mark across a straight run.
+ * (right-click cycles the other way); a drag on from the press gives its
+ * result to every cell it passes that held what the pressed one held.
  */
 
 import type { Game, UiUpdate } from "../../engine/game.ts";

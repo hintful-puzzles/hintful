@@ -146,18 +146,29 @@ describe("the shared color vocabulary", () => {
     };
     /** The same pair as the scheme actually paints it. */
     const inDark = (c: Color): Color => darkValue(c) ?? c;
-    for (const [x, y] of [
-      [roles.HINT_ACTION, roles.HINT_EVIDENCE],
-      [roles.HINT_ACTION, roles.HINT_EVIDENCE_WASH],
-      [roles.HINT_BLACKREF, roles.HINT_WHITEREF],
-      [roles.HINT_ACTION, roles.HINT_BLACKREF],
-      [roles.HINT_ACTION, roles.HINT_WHITEREF],
-    ] as [Color, Color][]) {
-      expect(d(x, y), `${key(x)} vs ${key(y)} in light`).toBeGreaterThan(0.12);
-      expect(d(inDark(x), inDark(y)), `${key(x)} vs ${key(y)} in dark`).toBeGreaterThan(
-        0.12,
-      );
-    }
+    // Every pair among the hint roles, taken from what the palette exports
+    // under the prefix: a hint draws any two of them on one frame, and a role
+    // added later is measured against the rest without being listed here.
+    const hintRoles = Object.entries(roles).filter(
+      (entry): entry is [string, Color] =>
+        entry[0].startsWith("HINT_") && Array.isArray(entry[1]),
+    );
+    const measured = new Set(hintRoles.map(([, color]) => color));
+    for (const named of [
+      roles.HINT_ACTION,
+      roles.HINT_EVIDENCE,
+      roles.HINT_EVIDENCE_WASH,
+      roles.HINT_BLACKREF,
+      roles.HINT_WHITEREF,
+    ])
+      expect(measured.has(named), "a hint role the prefix did not find").toBe(true);
+    for (const [i, [xName, x]] of hintRoles.entries())
+      for (const [yName, y] of hintRoles.slice(i + 1)) {
+        expect(d(x, y), `${xName} vs ${yName} in light`).toBeGreaterThan(0.12);
+        expect(d(inDark(x), inDark(y)), `${xName} vs ${yName} in dark`).toBeGreaterThan(
+          0.12,
+        );
+      }
     // The acted-on color is the emphatic one in both schemes — the property a
     // reader who cannot compare hues is left with, and what lets a narration say
     // "this cell" *at all* once it has tied it to the evidence in words.
@@ -243,6 +254,33 @@ describe("the shared color vocabulary", () => {
         `${name} on the evidence wash in dark`,
       ).toBeGreaterThan(3);
     }
+  });
+
+  it("keeps the two-state pair off the hues spent on marks", () => {
+    // A piece in a mark's hue swallows the mark drawn over it. The marks are
+    // the error, the cursor, every hint role, and orange, which a game with
+    // the pair gives a hint premise no shared role names.
+    const hue = (c: Color): number => colorToOKLCH(c)[2];
+    const apart = (a: number, b: number): number => {
+      const d = Math.abs(a - b) % 360;
+      return Math.min(d, 360 - d);
+    };
+    const marks = Object.entries({ ...roles, ORANGE: colors.ORANGE }).filter(
+      (entry): entry is [string, Color] =>
+        Array.isArray(entry[1]) &&
+        (entry[0].startsWith("HINT_") ||
+          entry[1] === roles.ERROR ||
+          entry[1] === roles.CURSOR ||
+          entry[1] === colors.ORANGE),
+    );
+    expect(marks.map(([name]) => name)).toContain("HINT_ACTION");
+    for (const [name, mark] of marks)
+      colors.TWO.forEach((member, i) => {
+        expect(
+          apart(hue(member), hue(mark)),
+          `${colors.TWO_NAMES[i]} against ${name}`,
+        ).toBeGreaterThan(30);
+      });
   });
 
   it("keeps every derived role visible against both host backgrounds", () => {

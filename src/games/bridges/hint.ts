@@ -2,7 +2,7 @@
  * Bridges' explained hint: the narration half of the recording projection in
  * [`solver.ts`](./solver.ts).
  *
- * The deduction end is entirely `solver.ts`'s: the same three rungs on the same
+ * The deduction end is entirely `solver.ts`'s: the same rungs on the same
  * `runDeductionFixpoint`, run one firing at a time with a recorder standing
  * (docs/games/hints.md § "Recording the deduction", the *threaded* shape). This
  * file turns each firing into the sentence and the picture.

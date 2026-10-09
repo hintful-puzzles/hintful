@@ -52,6 +52,15 @@ interface DependencyInfo {
   }[];
 }
 
+/** What a bundled package's entry says beside its name: who publishes it, and
+ * under what license. Either can be missing from the package's metadata. */
+export function dependencyByline(
+  attribution: string | null,
+  license: string | null,
+): string {
+  return [attribution, license].filter(Boolean).join(" · ");
+}
+
 /**
  * Inline markdown, for the one input that is markdown: `[text](url)` links,
  * `` `code` `` spans and `**bold**`. Recurses into link text so a
@@ -404,10 +413,11 @@ export class AboutDialog extends LitElement {
                     // `vite-plugins/dependency-notices.ts`. Shown beside the
                     // name because the license text underneath is where a
                     // copyright line lives, and several packages state one
-                    // nowhere else.
-                    attribution
+                    // nowhere else. The license is named with it: a notice
+                    // need not say which license it is the text of.
+                    attribution || license
                       ? html`<span class="attribution" translate="no"
-                          >${attribution}</span
+                          >${dependencyByline(attribution ?? null, license)}</span
                         >`
                       : nothing
                   }
@@ -430,7 +440,8 @@ export class AboutDialog extends LitElement {
         display: contents;
       }
 
-      /* Who publishes a bundled package, beside its name in the list. Quiet:
+      /* Who publishes a bundled package and under what license, beside its
+       * name in the list. Quiet:
        * it is context for the name, not a second heading. */
       .attribution {
         color: var(--app-color-text-quiet, var(--wa-color-text-quiet));

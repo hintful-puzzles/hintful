@@ -99,8 +99,10 @@ describe("magnets desc codec", () => {
 
   it("rejects inconsistent dominoes and short descs", () => {
     const p = P(3, 3, DIFF_EASY);
-    expect(validateDesc(magnetsGame, p, "...,...,...,...,LLLLLLLLL")).toMatch(
-      /two halves/,
+    // A player reads this refusal, so it calls the piece what the hint and the
+    // help page call it.
+    expect(validateDesc(magnetsGame, p, "...,...,...,...,LLLLLLLLL")).toBe(
+      "This game ID has a tile whose two ends don't point at each other.",
     );
     expect(validateDesc(magnetsGame, p, "...")).toBe(DESC_TOO_SHORT);
   });

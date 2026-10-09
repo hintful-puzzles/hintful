@@ -2,17 +2,19 @@
  * Netslide — Richard Boulton's cross between Net and Sixteen.
  *
  * The board is a Net wiring grid whose solved form is a spanning tree rooted at
- * the center. Instead of rotating a tile, you slide a whole row or column, and
- * it wraps around. The center row and center column cannot be slid — that one
+ * the source. Instead of rotating a tile, you slide a whole row or column, and
+ * it wraps around. The source's row and column cannot be slid — that one
  * restriction is what turns a shuffle into a puzzle.
  *
- * There is no solver: the generator saves the unshuffled grid as `aux` and
- * `solve` replays it, faithful to upstream.
+ * There is no solver: the generator saves the unshuffled grid as `aux`, and
+ * `solve` replays it or, on a board that came without one, recovers the
+ * finished grid from the tiles (`reconstruct.ts`).
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { click } from "../../engine/hint-gesture.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {
@@ -140,18 +142,18 @@ function executeMove(s: NetslideState, m: NetslideMove): NetslideState {
 
 /**
  * A click in the gutter beside a row or column slides that line; the **right
- * button reverses** the direction. A click beside the center row or center
- * column does nothing — those lines cannot be slid.
+ * button reverses** the direction. A click beside the source's row or column
+ * does nothing — those lines cannot be slid.
  *
  * The keyboard cursor walks the ring of arrow positions and select slides the
  * line it is on. (As upstream, `CURSOR_SELECT2` does *not* reverse — only the
  * real right mouse button does.)
  */
 /** The cell a press lands in along one axis, the gutters being `-1` and the
- * size. The `+2 … −2` shuffle keeps the division positive so it truncates the
- * way C's does. */
+ * size. The origin is one pixel inside the border: each tile's left and top
+ * outline pixel reads as the cell before it, as upstream's hit test does. */
 function cellAt(pixel: number, ts: number): number {
-  return Math.floor((pixel - (border(ts) + 1) + 2 * ts) / ts) - 2;
+  return fromCoord(pixel, ts, border(ts) + 1);
 }
 
 /** The middle of cell `c` along one axis, as {@link cellAt} reads it. */

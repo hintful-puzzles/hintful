@@ -341,9 +341,10 @@ function drawSquare(
 
   dr.clip({ x: lx, y: ly, w: tileSize, h: tileSize });
 
-  // Background. A cell's fill *is* its association — white with one dot, black
-  // with the other, the plain surface when unassociated — which is the very thing a hint
-  // reasons about, so no hint role fills; its marks are inset rings, below.
+  // Background. The fill says a region is finished: its dot's white or black
+  // once the region is closed and symmetric, the plain surface until then,
+  // whatever the cell's arrow says. That is what a hint reasons toward, so no
+  // hint role fills; its marks are the stripes here and inset rings, below.
   const bg =
     flags & DRAW_WHITE ? COL_WHITEBG : flags & DRAW_BLACK ? COL_BLACKBG : COL_CELL;
   dr.drawRect({ x: lx, y: ly, w: tileSize, h: tileSize }, bg);

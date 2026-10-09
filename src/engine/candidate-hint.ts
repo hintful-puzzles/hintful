@@ -193,11 +193,11 @@ export type CandidateReading = "implicit" | "populate";
  * a game's `newUi` takes unless it says why not.
  *
  * `populate`, because in a game whose deductions come from clues or cages
- * (Keen, Towers, Unequal, Rome) nearly every cell ends up needing notes: an
- * implicit plan there writes notes into 50–90% of the cells one at a time and
- * is 10–25% longer than penciling everything in once. A game whose deductions
- * mostly read singles off the board overrides it (Solo and Seismic, for two).
- * Measured over every preset by `examine-implicit-candidates`.
+ * (Keen and Towers, for two) nearly every cell ends up needing notes: an
+ * implicit plan there writes notes into most of the cells one at a time and is
+ * longer than penciling everything in once. A game whose deductions mostly
+ * read singles off the board overrides it (Solo and Seismic, for two), and so
+ * does one with a reason of its own, stated at its `newUi`.
  */
 export const DEFAULT_CANDIDATE_READING: CandidateReading = "populate";
 
@@ -217,7 +217,11 @@ export interface CandidatePlanPrefs {
  * `autoPencil` defaults **off**: with no `ui` (tests/harness) the hint teaches the
  * trivial row/column/region eliminations as explicit strikes rather than folding
  * them into placements (matches the games' default-auto-pencil-off preference).
- * The reading defaults to {@link DEFAULT_CANDIDATE_READING}.
+ * The reading defaults to {@link DEFAULT_CANDIDATE_READING}, which is not the
+ * game's own default: a game that offers the reading passes
+ * `ui ?? newUi(state)`, and `candidate-reading.test.ts` holds a hint asked for
+ * with no `Ui` to the one its own fresh `Ui` gets. `null` is for a game with
+ * no reading to offer.
  */
 export function candidateHint<State, Move, Hint, Rung extends string = string>(
   state: State,

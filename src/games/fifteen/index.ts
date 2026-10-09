@@ -166,13 +166,19 @@ export type FifteenRung = (typeof FIFTEEN_RUNGS)[number];
  * - the goal moves but not home → "slide it closer" only when its Manhattan
  *   distance to home shrinks, else "slide it back a step" (a one-cell slide
  *   changes that distance by exactly one, so the goal is then further away);
- * - another tile lands in its own home → "slide tile N into place";
- * - any other slide → "slide tile N out of the way". */
+ * - another tile lands in its own home and `stays`, no later slide of the
+ *   solution moving it → "slide tile N into place";
+ * - any other slide → "slide tile N out of the way", a tile the gap only
+ *   carries through its home on the way round included.
+ *
+ * The goal's own "into place" makes no such promise: the rotation that places
+ * the next tile of its line may displace it, and restores it. */
 function narrateFifteenStep(
   board: FifteenState,
   tile: number,
   goal: number,
   dest: Point,
+  stays: boolean,
 ): { rung: FifteenRung; words: Sentence } {
   const w = board.w;
   const landsAtOwnHome = board.gapPos === tile - 1;
@@ -190,7 +196,8 @@ function narrateFifteenStep(
       : { rung: "goalReposition", words: say.goalReposition(goal) };
   }
 
-  if (landsAtOwnHome) return { rung: "tileHome", words: say.tileHome(goal, tile) };
+  if (landsAtOwnHome && stays)
+    return { rung: "tileHome", words: say.tileHome(goal, tile) };
   return { rung: "outOfWay", words: say.outOfWay(goal, tile) };
 }
 
@@ -200,7 +207,13 @@ function narrateFifteenStep(
  * solver is cheap, and the plan is recomputed only when the player
  * deviates (see `hintKeepTrack`). */
 function hint(state: FifteenState): HintResult<FifteenMove, unknown, FifteenRung> {
-  const steps: HintStep<FifteenMove, unknown, FifteenRung>[] = [];
+  /** One slide of the solution, with what its sentence is told from. */
+  const slides: {
+    board: FifteenState;
+    tile: number;
+    goal: number;
+    dest: Point;
+  }[] = [];
   let board = state;
   // The goal is the running maximum of the solver's `target` until it is
   // homed: mid-rotation the target drops to the tile being restored.
@@ -212,15 +225,22 @@ function hint(state: FifteenState): HintResult<FifteenMove, unknown, FifteenRung
     if (!dest) break; // solved
     const tile = board.tiles[dest.y * board.w + dest.x];
     goal = goal === null ? dest.target : Math.max(goal, dest.target);
-    const move: FifteenMove = { type: "move", x: dest.x, y: dest.y };
-    const { rung, words } = narrateFifteenStep(board, tile, goal, dest);
-    steps.push({ move, rung, explanation: words.text, words });
     const homedGoal = tile === goal && board.gapPos === goal - 1;
-    board = executeMove(board, move);
+    slides.push({ board, tile, goal, dest });
+    board = executeMove(board, { type: "move", x: dest.x, y: dest.y });
     if (homedGoal) goal = null;
   }
 
-  if (steps.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
+  if (slides.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
+  // Narrated once the whole solution is known: whether a tile stays where a
+  // slide leaves it is a fact about the slides that follow.
+  const lastSlideOf = new Map(slides.map((s, i) => [s.tile, i]));
+  const steps = slides.map((s, i): HintStep<FifteenMove, unknown, FifteenRung> => {
+    const stays = lastSlideOf.get(s.tile) === i;
+    const { rung, words } = narrateFifteenStep(s.board, s.tile, s.goal, s.dest, stays);
+    const move: FifteenMove = { type: "move", x: s.dest.x, y: s.dest.y };
+    return { move, rung, explanation: words.text, words };
+  });
   return { ok: true, steps };
 }
 

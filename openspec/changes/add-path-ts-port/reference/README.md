@@ -26,7 +26,7 @@ greenfield build rather than a port.
 
 **License.** MIT, © Simon Tatham and the Puzzles contributors — the same notice
 as the rest of the collection, preserved at
-[`puzzles/LICENSE`](../../../../puzzles/LICENSE). Copying it here does not change
+[`licenses/sgt-puzzles-LICENSE`](../../../../licenses/sgt-puzzles-LICENSE). Copying it here does not change
 its terms or its authorship.
 
 This directory travels with the change into `openspec/changes/archive/` when the

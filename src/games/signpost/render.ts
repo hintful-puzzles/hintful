@@ -29,6 +29,7 @@ import {
 } from "../../engine/color/palette-games.ts";
 import { drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -99,6 +100,10 @@ const F_HINT_RING = 0x100;
 const F_HINT_LINE = 0x200;
 /** The hint reasons from this square: outlined. */
 const F_HINT_OUTLINE = 0x400;
+/** The link out of this square is one the answer does not hold. Apart from
+ * `F_ERROR`, which a given's number never shows: a clash of numbers is not
+ * the given's fault, and a wrong link out of it is the player's. */
+const F_MISTAKE = 0x800;
 
 // --- palette ----------------------------------------------------------
 
@@ -253,7 +258,7 @@ function tileRedraw(
   else arrowcol = COL_ARROW;
 
   let textcol: number;
-  if (f & F_ERROR && !(f & F_IMMUTABLE)) {
+  if (f & F_MISTAKE || (f & F_ERROR && !(f & F_IMMUTABLE))) {
     textcol = COL_ERROR;
   } else {
     // A given's number is read against its lifted surface, which the faint
@@ -347,8 +352,8 @@ function drawDragIndicator(
   const ts = ds.tileSize;
   const w = ds.w;
   const asz = Math.floor((7 * ts) / 32);
-  const fx = Math.floor((ui.dx - BORDER) / ts);
-  const fy = Math.floor((ui.dy - BORDER) / ts);
+  const fx = fromCoord(ui.dx, ts, BORDER);
+  const fy = fromCoord(ui.dy, ts, BORDER);
   let ang: number;
 
   const inGrid = fx >= 0 && fx < s.w && fy >= 0 && fy < s.h;
@@ -426,8 +431,8 @@ export function redrawSignpost(
   let renderState = state;
   let postdropValid = false;
   if (ui.dragging) {
-    const x = Math.floor((ui.dx - BORDER) / ts);
-    const y = Math.floor((ui.dy - BORDER) / ts);
+    const x = fromCoord(ui.dx, ts, BORDER);
+    const y = fromCoord(ui.dy, ts, BORDER);
     const move = dragReleaseMove(state, ui, x, y);
     if (move) {
       renderState = executeMove(state, move);
@@ -475,11 +480,11 @@ export function redrawSignpost(
       if (
         renderState.impossible ||
         renderState.nums[i] < 0 ||
-        renderState.flags[i] & FLAG_ERROR ||
-        mistakeSet?.has(i)
+        renderState.flags[i] & FLAG_ERROR
       ) {
         f |= F_ERROR;
       }
+      if (mistakeSet?.has(i)) f |= F_MISTAKE;
       if (renderState.flags[i] & FLAG_IMMUTABLE) f |= F_IMMUTABLE;
       f |= hintFlags.get(i) ?? 0;
       if (renderState.next[i] !== -1) f |= F_ARROW_POINT;

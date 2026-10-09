@@ -486,8 +486,9 @@ describe("crossing input", () => {
       y: oy,
       digit: 5,
     });
-    // Re-entering the same digit, and clearing an empty cell, change nothing.
-    // (Auto-advance has moved the selection on, so put it back deliberately.)
+    // Re-entering the same digit, and clearing an empty cell, make no move.
+    // (Auto-advance has moved the selection on, so put it back deliberately,
+    // and switch it off: with it on, a re-entered digit steps the selection.)
     const filled = crossingGame.executeMove(state, {
       kind: "set",
       x: ox,
@@ -497,6 +498,7 @@ describe("crossing input", () => {
     ui.cursor.x = ox;
     ui.cursor.y = oy;
     ui.cursor.visible = true;
+    ui.autoAdvance = false;
     expect(press(filled, ui, 0x35, 0, 0)).toBeNull();
     expect(press(state, ui, 8, 0, 0)).toBeNull();
   });
@@ -576,6 +578,23 @@ describe("crossing cursor auto-advance", () => {
     // At the end of the run it holds position rather than wrapping or leaving it.
     press(state, ui, 0x39, 0, 0);
     expect(ui.cursor).toMatchObject({ x: x + len - 1, y: y });
+  });
+
+  it("steps on past a cell that already holds the digit typed", () => {
+    const { x, y } = acrossRun();
+    const c = cellCenter(x, y);
+    const filled = crossingGame.executeMove(newState(P5, FIX.desc), {
+      kind: "set",
+      x,
+      y,
+      digit: 4,
+    });
+    const ui = newUi();
+    press(filled, ui, LEFT_BUTTON, c.x, c.y);
+    // Nothing on the board changes, so no move is made; the selection moves on
+    // all the same, or the number's next digit would overwrite this cell.
+    expect(press(filled, ui, 0x34, 0, 0)).toBe(UI_UPDATE);
+    expect(ui).toMatchObject({ cursor: newCursor(x + 1, y, true) });
   });
 
   it("does not advance on a clear, on a pencil mark, or with the pref off", () => {

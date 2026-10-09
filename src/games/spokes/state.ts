@@ -276,6 +276,12 @@ export function crossingSpoke(
  * game does the bookkeeping); erasing that line clears the mark it placed. A
  * mark toggle has no crossing effect. `oldState` is the spoke's state before
  * this set, so an erase is distinguished from a mark-clear.
+ *
+ * A mark the game placed looks like one the player made, so `placed` is the
+ * record of which is which: a crossing the player had already ruled out is not
+ * in it, and keeps its mark when the line over it goes. `null` is a board with
+ * no record, a solver's working copy, where a mark under an erased line is
+ * taken for the line's.
  */
 export function syncDiagonalBlock(
   b: SpokesBoard,
@@ -283,17 +289,22 @@ export function syncDiagonalBlock(
   dir: number,
   oldState: number,
   newState: number,
+  placed: Set<number> | null,
 ): void {
   const c = crossingSpoke(b, index, dir);
   if (!c) return;
+  const key = c.i * 8 + c.d;
   if (newState === SPOKE_LINE) {
     if (getSpoke(b.spokes[c.i], c.d) === SPOKE_EMPTY) {
       spokesPlace(b, c.i, c.d, SPOKE_MARKED);
+      placed?.add(key);
     }
   } else if (oldState === SPOKE_LINE && newState === SPOKE_EMPTY) {
-    if (getSpoke(b.spokes[c.i], c.d) === SPOKE_MARKED) {
-      spokesPlace(b, c.i, c.d, SPOKE_EMPTY);
-    }
+    const ours =
+      placed === null
+        ? getSpoke(b.spokes[c.i], c.d) === SPOKE_MARKED
+        : placed.delete(key);
+    if (ours) spokesPlace(b, c.i, c.d, SPOKE_EMPTY);
   }
 }
 
@@ -400,6 +411,9 @@ export interface SpokesState extends SpokesBoard {
   /** Clues; never mutated after `newState`, so clones share the one array. */
   readonly numbers: Int8Array;
   spokes: Uint16Array;
+  /** The crossings whose mark a diagonal line placed
+   * ({@link syncDiagonalBlock}). */
+  autoMarks: Set<number>;
 }
 
 /**
@@ -452,12 +466,16 @@ export function newState(p: SpokesParams, desc: string): SpokesState {
     }
   }
 
-  return { ...b, params: p };
+  return { ...b, params: p, autoMarks: new Set() };
 }
 
 /** A new state sharing the (immutable) clues and copying the spokes. */
 export function cloneState(s: SpokesState): SpokesState {
-  return { ...s, spokes: Uint16Array.from(s.spokes) };
+  return {
+    ...s,
+    spokes: Uint16Array.from(s.spokes),
+    autoMarks: new Set(s.autoMarks),
+  };
 }
 
 // --- moves and ui -----------------------------------------------------------

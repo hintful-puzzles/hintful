@@ -366,9 +366,9 @@ describe("mathrax hint", () => {
     expect(open).toBeGreaterThan(0);
   });
 
-  it("reads correctly at the degenerate clue values", () => {
-    // `=` is a subtraction clue of 0 and a `1÷` clue is a division of 1; both
-    // mean "equal", and neither may say "differ by 0" or "divide to give 1".
+  it("reads correctly at the degenerate clue value", () => {
+    // `=` is a subtraction clue of 0. It means "equal" and may not say "differ
+    // by 0". A division of 1 is refused on load, so it has no sentence.
     let equality = 0;
     let read = 0;
     for (const p of [NORMAL, TRICKY]) {
@@ -377,7 +377,7 @@ describe("mathrax hint", () => {
         const res = mathraxGame.hint?.(st);
         if (!res?.ok) continue;
         for (const step of res.steps) {
-          expect(step.explanation).not.toMatch(/differ by 0|give 1\b|is 0 away/);
+          expect(step.explanation).not.toMatch(/differ by 0|is 0 away/);
           read++;
           if (/the = clue|matches /.test(step.explanation)) equality++;
         }

@@ -12,7 +12,7 @@
  * givens and therefore every generated desc. `DIFF_EASY` is upstream's compiled
  * strength exactly — rules and loop order verbatim, neither strengthened nor
  * weakened, which is what keeps the C fixtures reproducing byte-for-byte
- * (subsets-differential.test.ts). `DIFF_TRICKY` adds one rule *on top*: the
+ * (subsets-differential.test.ts). `DIFF_NORMAL` adds one rule *on top*: the
  * half of `applyArrowsAdvanced` that upstream wrote, commented out and never
  * compiled. Being added above rather than in place keeps the oracle intact.
  */
@@ -28,7 +28,7 @@ import {
   ALL_BITS,
   cloneState,
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   type SubsetsMistake,
   type SubsetsState,
 } from "./state.ts";
@@ -353,7 +353,7 @@ function disjoint(state: SubsetsState, cube: Uint8Array): number {
  * Callers pass a clone when they need the original preserved.
  *
  * `maxdiff` caps the deduction ladder: {@link DIFF_EASY} is upstream's shipped
- * strength exactly, {@link DIFF_TRICKY} adds the head half of
+ * strength exactly, {@link DIFF_NORMAL} adds the head half of
  * {@link applyArrowsAdvanced}. The rungs nest — Normal runs every Easy rule —
  * so a board solvable at Easy is solvable at Normal. Required, not defaulted:
  * an implicit cap is how a caller silently measures the wrong tier.
@@ -388,11 +388,11 @@ export function subsetsSolveGame(
     },
     // **The cap is an argument, not a tier** (the guards-itself convention):
     // this rung runs at every tier and does *more* at Normal. Declaring it
-    // `tier: DIFF_TRICKY` would stop it running at Easy, where upstream runs it.
+    // `tier: DIFF_NORMAL` would stop it running at Easy, where upstream runs it.
     {
       id: "arrows-advanced",
       tier: DIFF_EASY,
-      run: () => applyArrowsAdvanced(state, cube, maxdiff >= DIFF_TRICKY),
+      run: () => applyArrowsAdvanced(state, cube, maxdiff >= DIFF_NORMAL),
     },
   ];
 
@@ -463,7 +463,7 @@ export function findMistakes(state: SubsetsState): readonly SubsetsMistake[] {
  * at: an Easy board solves at Normal too (the rungs nest). */
 export function solveCopy(
   state: SubsetsState,
-  maxdiff: number = DIFF_TRICKY,
+  maxdiff: number = DIFF_NORMAL,
 ): {
   solved: SubsetsState;
   result: SubsetsStatus;
@@ -1072,7 +1072,7 @@ function nextHiddenSingle(
  */
 export function deduceHintPlan(
   orig: SubsetsState,
-  maxdiff: number = DIFF_TRICKY,
+  maxdiff: number = DIFF_NORMAL,
 ): SubsetsHintPlan {
   const work = cloneState(orig);
   const s = work.w * work.h;
@@ -1106,14 +1106,14 @@ export function deduceHintPlan(
       nextSinglePosition(state, counts, cube, why);
     if (easy) return easy;
 
-    // Rung 4 (`DIFF_TRICKY`): only once every cheaper rung is exhausted, add
+    // Rung 4 (`DIFF_NORMAL`): only once every cheaper rung is exhausted, add
     // the head half of the advanced arrow rule and try the cube again. Reaching
     // for it *last* keeps an Easy board's plan free of it — the cheaper
     // vocabulary never runs out on a board vetted as solvable without it. (The
     // Clusters hint's lookahead rung has the same shape.) Both `next*Firing`
     // calls above returned null without mutating, so re-running them here
     // repeats no work and drops no firing.
-    if (maxdiff < DIFF_TRICKY) return null;
+    if (maxdiff < DIFF_NORMAL) return null;
     shrinkCube(state, cube, why, true);
     return (
       nextCollapseFiring(state, cube, why) ??

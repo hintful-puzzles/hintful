@@ -4,6 +4,7 @@ import { query } from "lit/decorators/query.js";
 import { customElement, property, state } from "lit/decorators.js";
 import { cssWATweaks } from "../utils/css.ts";
 import { reportConsent } from "../utils/report-consent.ts";
+import { EXTENSION_ERRORS } from "../utils/sentry.ts";
 import { sleep } from "../utils/timing.ts";
 
 // Register components
@@ -21,8 +22,9 @@ const ignoreErrors: (string | RegExp)[] = [
   /TypeError.*clientX.*handleDragStop/,
   // Web Awesome: https://github.com/shoelace-style/webawesome/issues/1911:
   /TypeError.*(assignedElements|hidePopover).*disconnectedCallback/,
-  // Unknown DuckDuckGo complaint:
-  /^Error: invalid origin$/,
+  // Unknown DuckDuckGo complaint. Unanchored: the handlers wrap an error's
+  // own text ("Uncaught …  at file:line", "… [unhandled rejection]").
+  /\bError: invalid origin\b/,
   // Chrome iOS "Translate" bug (in anonymous script):
   /^RangeError: Maximum call stack size exceeded.*at \?.*undefined:/,
   /^RangeError: Maximum call stack size exceeded.*at findTopmostVisibleElement/,
@@ -34,23 +36,14 @@ const ignoreErrors: (string | RegExp)[] = [
   // We don't use eval() or new Function(), so any EvalError is almost
   // certainly caused by an extension (but may be injected into our code)
   "EvalError", // exact message text varies by browser
-  // Browser extensions and extension-only APIs:
-  // (See Sentry's longer list:
-  // https://github.com/getsentry/relay/blob/322fa6f678add6abed4772fb6046cbf7daf4814a/relay-filter/src/browser_extensions.rs#L9-L81)
-  /^(chrome(-extension)?|moz-extension|safari(-web)?-extension):\/\//,
-  "Extension context invalidated",
-  "runtime.sendMessage",
-  "webkit-masked-url",
-  "window.__firefox__",
 ] as const;
 
-function shouldIgnoreError(errorString: string) {
-  return ignoreErrors.some((pattern) =>
+const matches = (patterns: readonly (string | RegExp)[], errorString: string) =>
+  patterns.some((pattern) =>
     pattern instanceof RegExp
       ? pattern.test(errorString)
       : errorString.includes(pattern),
   );
-}
 
 async function isErrorInThirdPartyCode(error: unknown) {
   // Borrow Sentry.thirdPartyErrorFilterIntegration's stack trace filtering.
@@ -68,14 +61,19 @@ async function isErrorInThirdPartyCode(error: unknown) {
  * (to avoid getting stuck in a repeated error loop).
  */
 export async function reportError(message: string, error?: unknown) {
-  const isIgnored = shouldIgnoreError(message);
+  // (Sentry's longer list of extension errors:
+  // https://github.com/getsentry/relay/blob/322fa6f678add6abed4772fb6046cbf7daf4814a/relay-filter/src/browser_extensions.rs#L9-L81)
+  const isForeign = matches(EXTENSION_ERRORS, message);
+  const isIgnored = isForeign || matches(ignoreErrors, message);
   const isThirdParty = await isErrorInThirdPartyCode(error);
   if (isIgnored || isThirdParty) {
     if (import.meta.env.VITE_SENTRY_DSN) {
       Sentry.addBreadcrumb({
         type: "error",
         category: "error.ignored",
-        message,
+        // An extension's or another site's error is counted and not quoted:
+        // its text is the one thing a report must not carry.
+        ...(isForeign || isThirdParty ? {} : { message }),
         data: { isIgnored, isThirdParty },
       });
     }
@@ -88,13 +86,31 @@ export async function reportError(message: string, error?: unknown) {
       dialog = document.createElement("crash-dialog");
       document.body.appendChild(dialog);
     }
-    await dialog.reportError(message);
+    if ((await dialog.reportError(message)) && import.meta.env.VITE_SENTRY_DSN) {
+      dialog.listed(eventIdFor(message, error));
+    }
   } catch (err) {
     if (import.meta.env.VITE_SENTRY_DSN) {
       Sentry.captureException(err);
     }
     console.error("Error while trying to reportError", err, error);
   }
+}
+
+/**
+ * The report of an error the dialog lists.
+ *
+ * The SDK captures most errors itself. One it did not (an error event in the
+ * worker, a rejection with no Error behind it) is captured here, so that Send
+ * report sends what the dialog shows.
+ */
+function eventIdFor(message: string, error: unknown): string {
+  return (
+    reportConsent.eventIdOf(error) ??
+    (error instanceof Error
+      ? Sentry.captureException(error)
+      : Sentry.captureMessage(message, "error"))
+  );
 }
 
 @customElement("crash-dialog")
@@ -114,6 +130,8 @@ class CrashDialog extends LitElement {
 
   @state()
   private sentryLastEventId = "";
+
+  private listedEventIds: string[] = [];
 
   @state()
   private suppressErrors = false;
@@ -138,16 +156,18 @@ class CrashDialog extends LitElement {
     this.mightHavePersonalInfo = false;
     this.reportState = "unsent";
     this.sentryLastEventId = "";
+    this.listedEventIds = [];
   }
 
   /**
    * If error has previously been ignored, do nothing.
    * Otherwise, if dialog is not open, open it to show error.
    * If dialog is already open, append error to the displayed list.
+   * Resolves to whether the dialog shows the error.
    */
-  async reportError(errorString: string) {
+  async reportError(errorString: string): Promise<boolean> {
     if (this.suppressedErrors.has(errorString)) {
-      return;
+      return false;
     }
     if (!this.dialog?.open) {
       this.reset();
@@ -163,6 +183,7 @@ class CrashDialog extends LitElement {
     if (this.dialog) {
       this.dialog.open = true;
     }
+    return true;
   }
 
   protected override render() {
@@ -179,9 +200,23 @@ class CrashDialog extends LitElement {
       const noPersonal = this.mightHavePersonalInfo ? "highlight" : nothing;
       content.push(html`
         <div>
-          You can send a report of this error to the developer, so it can be fixed.
+          You can send a report to the developer, so this can be fixed.
           Nothing is sent unless you choose to.
         </div>
+        <details class="contents">
+          <summary>What a report includes</summary>
+          A report includes the errors the message shows, any other errors
+          recorded since the page was opened, and a record of recent activity
+          in the app: buttons pressed, pages opened, network requests the app
+          made and messages written to the browser’s console. It also includes
+          the app’s version, the browser and screen it happened on, and the
+          puzzle being played: which game, its type, its game ID and how many
+          moves in. It includes a few of the app’s own settings (whether
+          offline use and automatic updates are on, and whether the app is
+          installed), whether the app had to repair part of its display, and
+          any note you add. It does not include your identity or any saved
+          game.
+        </details>
         <wa-textarea
           label="What were you doing when this happened? (optional)"
           maxlength="1000"
@@ -262,7 +297,16 @@ class CrashDialog extends LitElement {
     this.mightHavePersonalInfo = /\w+@\w+/.test(this.userDescription?.value ?? "");
   }
 
-  /** The player's consent: send what was held, then their note if they wrote one. */
+  /** The report of an error listed here has this event ID. */
+  listed(eventId: string) {
+    this.listedEventIds.push(eventId);
+    reportConsent.noteListed(eventId);
+  }
+
+  /**
+   * The player's consent: send everything held, then their note if they wrote
+   * one.
+   */
   private async handleSend() {
     if (!import.meta.env.VITE_SENTRY_DSN || this.reportState !== "unsent") {
       return;
@@ -270,13 +314,22 @@ class CrashDialog extends LitElement {
     this.reportState = "sending";
     const note = this.userDescription?.value?.trim() ?? "";
     try {
-      await reportConsent.release();
-      this.sentryLastEventId = Sentry.lastEventId() ?? "";
+      const sent = await reportConsent.release();
+      // The ID to quote is that of an error listed here, or none: the SDK's
+      // own "last event" may be one captured since, which this press did not
+      // send, and the last one sent may be an error the player was never shown.
+      const quotable = sent.findLast((id) => this.listedEventIds.includes(id));
+      this.sentryLastEventId = quotable ?? "";
       if (note) {
         await Sentry.sendFeedback({
           associatedEventId: this.sentryLastEventId || undefined,
           message: note,
         });
+      }
+      if (sent.length === 0 && !note) {
+        // Nothing was held and nothing was written, so nothing went.
+        this.reportState = "unsent";
+        return;
       }
     } catch (error: unknown) {
       // Leave the button up to try again; anything captured here is held too.
@@ -350,7 +403,9 @@ class CrashDialog extends LitElement {
       }
       wa-details::part(base) {
         flex: 0 1 auto;
-        min-height: 1em;
+        /* Room for the heading and the first lines of an error: squeezed
+         * below that, the dialog shows no error at all and nothing scrolls. */
+        min-height: 7em;
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -400,6 +455,11 @@ class CrashDialog extends LitElement {
 
       wa-textarea::part(textarea) {
         max-height: 6lh;
+      }
+      /* Closed until asked for, so the note box and the buttons fit a phone. */
+      .contents > summary {
+        cursor: pointer;
+        width: fit-content;
       }
       wa-textarea::part(label) {
         font-weight: var(--wa-font-weight-normal);

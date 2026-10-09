@@ -19,9 +19,11 @@
  *    the fleet cannot accommodate, and the warning diamond between two boats
  *    that touch diagonally. These need no solver call.
  *  - the *Check & Save* overlay from `findMistakes`, which re-solves to the
- *    unique solution. It is a strict superset: it also catches a locally-legal
- *    placement no solution permits, which is exactly the board a live-only
- *    check would let Check & Save bless.
+ *    unique solution. It catches a locally-legal placement no solution
+ *    permits, which is exactly the board a live-only check would let Check &
+ *    Save bless. Its cells are not a superset of the live ones: a live flag
+ *    can sit on a given square or on a line's number, and neither is a square
+ *    the player filled.
  *
  * The per-tile cache is an `Int32Array` holding the drawn segment, the live
  * error/cursor flags, the flash phase and the hint role (docs/games/rendering.md
@@ -176,8 +178,26 @@ export interface FleetSlot {
   row: number;
 }
 
-/** The rightmost tile-unit column a fleet row may reach. */
-export const fleetRowLimit = (p: BoatsParams): number => p.w + 2;
+/**
+ * The canvas's width in tiles: the board and its column of numbers, or the
+ * fleet's longest boat where that is wider. A boat has no break to take, and
+ * a fleet may hold one as long as the board's longer side, so on a narrow
+ * tall board the canvas is what gives.
+ */
+function canvasTiles(p: BoatsParams): number {
+  const longest = p.fleetData.slice(0, p.fleet).findLastIndex((n) => n > 0) + 1;
+  return Math.max(p.w + 1, longest * FLEET_SIZE);
+}
+
+/**
+ * Where a slot on a fleet row may end at the latest: the canvas's right edge
+ * in the row's own units, which start at `FLEET_X`, plus the trailing margin a
+ * slot's width includes and nothing is drawn in. Upstream's `w + 2` is the
+ * same edge on a canvas with half a tile of border each side, which this
+ * build's has not (`BORDER`).
+ */
+const fleetRowLimit = (p: BoatsParams): number =>
+  canvasTiles(p) + FLEET_X + FLEET_MARGIN;
 
 /**
  * Where every boat in the fleet display goes — upstream's `boats_draw_fleet`
@@ -221,11 +241,12 @@ export function fleetRows(p: BoatsParams): number {
 }
 
 /** Upstream `game_compute_size`: the board plus one row/column of numbers, the
- * gutter, and the fleet rows — less the fleet's own bottom padding. */
+ * gutter, and the fleet rows — less the fleet's own bottom padding. The width
+ * is {@link canvasTiles}, which upstream's does not widen for a long boat. */
 export function computeSize(p: BoatsParams, ts: number): Size {
   const rows = fleetRows(p);
   return {
-    w: 2 * BORDER + (p.w + 1) * ts,
+    w: 2 * BORDER + Math.ceil(canvasTiles(p) * ts),
     h:
       2 * BORDER +
       gutter(ts) +

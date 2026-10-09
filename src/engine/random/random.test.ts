@@ -1,7 +1,7 @@
 /*
  * Replay the C-recorded `random.c` corpus in `__fixtures__/corpus.json`, byte
- * by byte. A mismatch means the RNG has drifted from upstream's, which changes
- * every shared game ID — never acceptable.
+ * by byte. A mismatch means the stream has moved, which silently changes the
+ * numbers every seed feeds a generator: correct the module, never the corpus.
  */
 
 import { describe, expect, it } from "vitest";

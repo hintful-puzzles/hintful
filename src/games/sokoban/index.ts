@@ -10,6 +10,7 @@
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -47,6 +48,7 @@ import { PLAN_BUDGET, search } from "./solver.ts";
 import {
   canWalkTo,
   DEEP_PIT,
+  decodeBoard,
   decodeParams,
   defaultParams,
   detargetize,
@@ -161,8 +163,8 @@ function interpretMove(
     // claimed for the drag to arrive; anywhere else only the release decides,
     // and a press that slides off before it lifts still taps where it started
     // (docs/games/input.md § "A press you do not act on must still be consumed").
-    const x = Math.floor(p.x / ts);
-    const y = Math.floor(p.y / ts);
+    const x = fromCoord(p.x, ts, 0);
+    const y = fromCoord(p.y, ts, 0);
     const inside = x >= 0 && x < state.w && y >= 0 && y < state.h;
     const onPlayer = x === state.px && y === state.py;
     if (!inside || (!onPlayer && !isBarrel(state.grid[y * state.w + x]))) return null;
@@ -184,8 +186,8 @@ function interpretMove(
       ui.aim = null;
       return aim ?? UI_UPDATE;
     }
-    const x = Math.floor(p.x / ts);
-    const y = Math.floor(p.y / ts);
+    const x = fromCoord(p.x, ts, 0);
+    const y = fromCoord(p.y, ts, 0);
     if (x < 0 || x >= state.w || y < 0 || y >= state.h) return null;
     if (x === state.px && y === state.py) return null;
     return canWalkTo(state, x, y) ? { type: "walk", x, y } : null;
@@ -287,7 +289,7 @@ export function executeMove(state: SokobanState, move: SokobanMove): SokobanStat
 /** The finished board Solve's move names: its walls must be this board's, as
  * every board pushing reaches from it has them. */
 function solvedBoard(state: SokobanState, board: string): SokobanState {
-  const next = newState({ w: state.w, h: state.h }, board);
+  const next = decodeBoard({ w: state.w, h: state.h }, board);
   next.grid.forEach((v, i) => {
     if ((v === WALL) !== (state.grid[i] === WALL))
       throw new Error("sokoban: a solution on a different board");

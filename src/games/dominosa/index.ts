@@ -518,7 +518,10 @@ function drawDomino(
   }
 }
 
-function textFormat(state: DominosaState): string {
+function textFormat(state: DominosaState): string | null {
+  // A square has three characters for its number (upstream
+  // `game_can_format_as_text_now`).
+  if (state.params.n >= 1000) return null;
   const { w, h, numbers, grid, edges } = state;
   const cw = 4;
   const ch = 2;

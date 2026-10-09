@@ -126,7 +126,6 @@ const DS_CURSOR = 0x4;
 const DS_BLACK_NUM = 0x8;
 const DS_ERROR = 0x10;
 const DS_FLASH = 0x20;
-const DS_IMPOSSIBLE = 0x40;
 const DS_MISTAKE = 0x80;
 // Hint overlay: a forced cell, an evidence cell (outlined, in a color of its
 // kind when it is a decided premise, whose state is then the reason), and a
@@ -142,9 +141,6 @@ export interface SinglesDrawState {
   w: number;
   h: number;
   cache: Int32Array;
-  /** The color the frame round the grid was last drawn in, or null before the
-   * first frame. */
-  frame: number | null;
 }
 
 export function newDrawState(state: SinglesState, tileSize: number): SinglesDrawState {
@@ -154,7 +150,6 @@ export function newDrawState(state: SinglesState, tileSize: number): SinglesDraw
     w: state.w,
     h: state.h,
     cache: new Int32Array(state.n).fill(-1),
-    frame: null,
   };
 }
 
@@ -184,7 +179,7 @@ function tileRedraw(
 
   // Grid edge first, so the cell can overwrite it: the line is the tile's
   // right and bottom pixel, and the frame closes the top and left.
-  dr.drawRect({ x, y, w: ts, h: ts }, f & DS_IMPOSSIBLE ? COL_ERROR : COL_GRID);
+  dr.drawRect({ x, y, w: ts, h: ts }, COL_GRID);
   const inner = { x, y, w: ts - 1, h: ts - 1 };
   const c = { x: x + inner.w / 2, y: y + inner.h / 2 };
   dr.drawRect(inner, !shaded && f & DS_FLASH ? COL_FLASH : COL_EMPTY);
@@ -291,15 +286,12 @@ export function redraw(
   const mistakeSet = new Set(mistakes?.map((m) => m.y * w + m.x));
 
   // The frame closes the grid on its top and left, where no tile draws a
-  // line, and is no heavier than a grid line. It takes the grid's color, the
-  // error color included.
-  const frame = state.impossible ? COL_ERROR : COL_GRID;
-  if (ds.frame !== frame) {
+  // line, and is no heavier than a grid line, whose color it takes.
+  if (!ds.started) {
     const o = coord(0, ts) - 1;
-    dr.drawRect({ x: o, y: o, w: ts * w + 1, h: 1 }, frame);
-    dr.drawRect({ x: o, y: o, w: 1, h: ts * h + 1 }, frame);
+    dr.drawRect({ x: o, y: o, w: ts * w + 1, h: 1 }, COL_GRID);
+    dr.drawRect({ x: o, y: o, w: 1, h: ts * h + 1 }, COL_GRID);
     dr.drawUpdate({ x: o, y: o, w: ts * w + 1, h: ts * h + 1 });
-    ds.frame = frame;
   }
 
   const flash = flashTime > 0 && Math.floor((flashTime * 5) / FLASH_TIME) % 2 === 1;
@@ -310,7 +302,6 @@ export function redraw(
       let f = 0;
 
       if (flash) f |= DS_FLASH;
-      if (state.impossible) f |= DS_IMPOSSIBLE;
       if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y) f |= DS_CURSOR;
       if (state.flags[i] & F_BLACK) {
         f |= DS_BLACK;

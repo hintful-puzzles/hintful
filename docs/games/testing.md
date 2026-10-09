@@ -1206,7 +1206,7 @@ Two limits to know before trusting it:
 ## Metrics and instruments
 
 **`npm run metrics` records duplication (jscpd), runtime import cycles (madge,
-calibrated), dead code (knip) and cognitive complexity (biome) into a dated
+calibrated), dead code (the gate's unused-export check) and cognitive complexity (biome) into a dated
 snapshot — deliberately not in the gate.** Its value is the diff between
 refactoring rounds: run it at the start and end of a refactoring change and
 quote the delta. File the snapshot **under your change** (`openspec archive`

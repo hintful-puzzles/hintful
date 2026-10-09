@@ -182,11 +182,17 @@ function fromEdges(n: number, edges: readonly Edge[], w: number) {
   const sx = Math.max(1, ...grid.map((p) => p.x));
   const sy = Math.max(1, ...grid.map((p) => p.y));
   const d = 2 * sx * sy;
-  return grid.map((p) => ({
+  const shift = grid.map((p) => ({
     x: sx * sy + 2 * p.x * (w - 1) * sy,
     y: sx * sy + 2 * p.y * (w - 1) * sx,
     d,
   }));
+  // `null` is the planarity test's proof alone, so a drawing of a planar
+  // graph that crosses is a fault in the drawing and no answer at all.
+  if (!isUntangled(shift, edges)) {
+    throw new Error("untangle: the planar drawing crosses itself");
+  }
+  return shift;
 }
 
 /** Layouts per board and per aux. Keyed on the frozen `edges` array, which

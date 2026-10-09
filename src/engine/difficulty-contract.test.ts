@@ -249,7 +249,15 @@ for (const { id, game, contract, tiers } of tiered) {
       // so it is not one of `tiers` here.
       for (let tier = 0; tier < tiers.length; tier++) {
         const p = paramsForTier({ id, game, contract, tiers }, tier);
-        if (p !== null) continue;
+        if (p !== null) {
+          // Accepted is not generated: deal the board, which the cases below
+          // take from the same cache.
+          expect(
+            () => dealt(game, p),
+            `${id}: tier ${tier} ("${tiers[tier]}") is accepted and deals no board`,
+          ).not.toThrow();
+          continue;
+        }
         const refusals = allLeaves(game).map((leaf) =>
           paramsError(game, withTier(game, leaf, tier), true),
         );
@@ -271,6 +279,9 @@ for (const { id, game, contract, tiers } of tiered) {
       // One board a tier passed a solver that failed at a higher cap on 7 of 8
       // of its easiest boards: the first seed happened to be one of the eighth.
       // One sample misses that rate 1 time in 8, and four about 1 time in 4,000.
+      //
+      // The hook walks the first board of each tier, which catches a solver
+      // that fails on every board; the four are walked on every push.
       //
       // The general lesson: *a guard that has never been shown to fail is not
       // known to work*, and sampling is where a cross-game guard silently

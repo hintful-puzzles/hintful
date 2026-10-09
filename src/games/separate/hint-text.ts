@@ -9,9 +9,11 @@
  * A region here is whatever the player's no-wall marks already join, so a
  * single square is a region too. When a sentence is about two regions it tells
  * them apart by their marks, one striped and one outlined, because two
- * outlined regions side by side read as one; a lone square is named by its
- * letter instead, since "region" for one letter reads as if the player had
- * missed something. Every such word is a reference to its mark
+ * outlined regions side by side read as one. A lone square is never called a
+ * region, since "region" for one letter reads as if the player had missed
+ * something: a sentence about its letter names it by the letter, and one that
+ * is not (`walledApart`, a later leg) calls it a square and keeps its mark.
+ * Every such word is a reference to its mark
  * (`engine/hint-words.ts`), and `edges` are the ringed edges the leg sets and
  * those still to come.
  */
@@ -34,9 +36,14 @@ type Squares = readonly Point[];
 
 const letterName = (letter: number): string => String.fromCharCode(65 + letter);
 
-/** "the striped and outlined regions", each word a reference to its region. */
+/** "the striped and outlined regions", each word a reference to its region. A
+ * lone square on either side is a "square": "the striped region and the
+ * outlined square". */
 function bothRegions(striped: Squares, outlined: Squares, det: string): Narration {
-  return phrase`${det} ${mark.as("stripes", whole(CELL), striped, "striped")} and ${mark.as("outline", whole(CELL), outlined, "outlined regions")}`;
+  const noun = (sqs: Squares): string => (sqs.length === 1 ? "square" : "region");
+  if (noun(striped) === noun(outlined))
+    return phrase`${det} ${mark.as("stripes", whole(CELL), striped, "striped")} and ${mark.as("outline", whole(CELL), outlined, `outlined ${noun(outlined)}s`)}`;
+  return phrase`${det} ${mark.as("stripes", whole(CELL), striped, `striped ${noun(striped)}`)} and the ${mark.as("outline", whole(CELL), outlined, `outlined ${noun(outlined)}`)}`;
 }
 
 export const say = {

@@ -63,8 +63,6 @@ export const S_NOTRACK = 2;
 export const S_ERROR = 4;
 export const S_CLUE = 8;
 export const S_MARK = 16;
-export const S_FLASH_SHIFT = 8;
-export const S_FLASH_MASK = (1 << 8) - 1;
 export const S_TRACK_SHIFT = 16;
 export const S_NOTRACK_SHIFT = 20;
 
@@ -437,28 +435,33 @@ export function status(s: TracksState): GameStatus {
   return checkCompletion(stateToBoard(s), true) ? "solved" : "ongoing";
 }
 
-// --- completion flash labeling (upstream set_flash_data) ------------------
+// --- the completion flash's route (upstream set_flash_data) ---------------
 
-/** Label each track tile with how far along the track it is (an 8-bit field),
- * so the completion flash can travel along the route. */
-function setFlashData(b: Board): void {
+/**
+ * How many squares along the track each square is, counted from the entrance,
+ * and -1 off it, so the completion flash can travel the route.
+ *
+ * Read off the laid track when it is wanted, where upstream scales the count
+ * into eight bits of the flag word as the board completes: that field holds
+ * 256 places, and a longer track had none to tell its squares apart by. On a
+ * board that is not solved the walk stops where the track from the entrance
+ * does.
+ */
+export function trackOrder(b: Board): Int32Array {
   const { w } = b;
-  let ntrack = 0;
-  for (let x = 0; x < w; x++) ntrack += b.numbers[x];
-  let n = 0;
+  const order = new Int32Array(w * b.h).fill(-1);
   let x = 0;
   let y = b.rowS;
   let d = R;
-  do {
-    b.sflags[y * w + x] &= ~(S_FLASH_MASK << S_FLASH_SHIFT);
-    b.sflags[y * w + x] |=
-      (n * Math.floor(S_FLASH_MASK / (ntrack - 1))) << S_FLASH_SHIFT;
-    n++;
+  for (let n = 0; inGrid(b, x, y) && order[y * w + x] < 0; n++) {
+    order[y * w + x] = n;
     d = FLIP(d); // the direction we just arrived from
     d = sEDirs(b, x, y, E_TRACK) & ~d; // the other track from here
+    if (NBITS[d] !== 1) break;
     x += DX(d);
     y += DY(d);
-  } while (inGrid(b, x, y));
+  }
+  return order;
 }
 
 // --- completion / error analysis (upstream check_completion) --------------
@@ -496,8 +499,8 @@ function* tracksNeighbors(b: Board, vertex: number): Iterable<number> {
 
 /**
  * Recompute error state and completion (upstream `check_completion`). With
- * `mark`, sets S_ERROR per cell and numErrors per clue and labels the flash
- * on completion. Returns whether the board is a finished, correct solution.
+ * `mark`, sets S_ERROR per cell and numErrors per clue. Returns whether the
+ * board is a finished, correct solution.
  */
 export function checkCompletion(b: Board, mark: boolean): boolean {
   const { w, h } = b;
@@ -580,7 +583,6 @@ export function checkCompletion(b: Board, mark: boolean): boolean {
     if (ntrackcomplete !== target) ret = false;
   }
 
-  if (mark && ret) setFlashData(b);
   return ret;
 }
 

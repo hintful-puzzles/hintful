@@ -1,10 +1,29 @@
 import * as Sentry from "@sentry/browser";
 import { reportConsent } from "./report-consent.ts";
 
-// This is a shorter version of the ignoreErrors list in crash-dialog.
-// (Sentry ignores many errors by default. Also there are some where
-// we don't want to show the crash-dialog but we *do* want Sentry capture.)
+/**
+ * A browser extension's own files. An error out of one is not this app's, and
+ * its text and its address are the one thing a report must not carry: they say
+ * which extensions the player has installed, and can quote another site.
+ */
+const EXTENSION_URL =
+  /(chrome(-extension)?|moz-extension|safari(-web)?-extension):\/\//;
+
+/** Errors that come from an extension, so are never captured and never shown. */
+export const EXTENSION_ERRORS: (string | RegExp)[] = [
+  EXTENSION_URL,
+  "Extension context invalidated",
+  "runtime.sendMessage",
+  "webkit-masked-url",
+  "window.__firefox__",
+];
+
+// A shorter version of the ignoreErrors list in crash-dialog, since Sentry
+// ignores many errors by default. An error on that list and not on this one is
+// captured and held without a dialog, and goes out with the report the player
+// next chooses to send (see `report-consent.ts`).
 const ignoreErrors: (string | RegExp)[] = [
+  ...EXTENSION_ERRORS,
   "Network error: Response body loading was aborted",
   // Chrome iOS "Translate" bug (in anonymous script):
   /^RangeError: Maximum call stack size exceeded.*at \?.*undefined:/,
@@ -53,10 +72,16 @@ export function initSentry(
         ...integrations,
       ],
       ignoreErrors,
+      // An error thrown from inside an extension's file.
+      denyUrls: [EXTENSION_URL],
       beforeBreadcrumb(breadcrumb, hint) {
         // The SDK records each captured error as a breadcrumb on the next
         // report, and the player may have declined to send that error.
         if (breadcrumb.category === "sentry.event") {
+          return null;
+        }
+        // A console line an extension wrote into the page names the extension.
+        if (EXTENSION_URL.test(breadcrumb.message ?? "")) {
           return null;
         }
         try {
@@ -77,13 +102,18 @@ export function initSentry(
       },
       beforeSend(event, hint) {
         // If thirdPartyErrorFilterIntegration identified third_party_code,
-        // mark the original error instance for crash-dialog to ignore.
+        // mark the original error instance for crash-dialog to ignore, and
+        // drop the event: code that is not this app's can quote data that is
+        // not this app's, so it is never held and never sent.
         if (event.tags?.["third_party_code"]) {
           if (hint?.originalException instanceof Error) {
             // @ts-expect-error: TS2339: Adding custom property to Error object
             hint.originalException.__third_party_code__ = true;
           }
-          // For drop-if-contains-third-party-frames, return null here.
+          return null;
+        }
+        if (event.event_id) {
+          reportConsent.noteCapture(hint.originalException, event.event_id);
         }
         return event;
       },
@@ -91,6 +121,12 @@ export function initSentry(
 
     // Add some additional context (synchronously) to all events.
     Sentry.addEventProcessor((event, _hint) => {
+      // Where the player came from is theirs: the SDK copies the page's
+      // referrer into every event, and it is kept only when it is this app.
+      const headers = event.request?.headers;
+      if (headers?.["Referer"] && !isThisApp(headers["Referer"])) {
+        delete headers["Referer"];
+      }
       try {
         const root = document.documentElement;
         const rootStyle = getComputedStyle(root);
@@ -113,6 +149,19 @@ export function initSentry(
       } catch {}
       return event;
     });
+  }
+}
+
+/**
+ * Whether `address` is a page of this app. Compared by parsed origin: another
+ * site's address can begin with this app's (`https://app.example.other.test`),
+ * and one that does not parse is nobody's.
+ */
+function isThisApp(address: string): boolean {
+  try {
+    return new URL(address).origin === location.origin;
+  } catch {
+    return false;
   }
 }
 

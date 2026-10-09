@@ -2,13 +2,14 @@
  * Slant rendering — faithful port of `game_redraw` / `draw_tile` /
  * `draw_clue` in slant.c. The drawstate diffs a `(w+2)×(h+2)` packed
  * `Int32Array` covering tiles −1…w × −1…h (the border ring draws border
- * clue circles and the grid's outer corner dots); every overlay — errors,
- * cursor, flash, grounded fade, the findMistakes outline, the hint marks —
- * lives in the packed word, so the diff key covers it by construction.
+ * clue circles and the grid's outer corner dots); every overlay on a square —
+ * errors, cursor, flash, grounded fade, the findMistakes outline, the hint's
+ * rings and outlines — lives in the packed word, so the diff key covers it by
+ * construction.
  *
- * The same-slant marks are keyed per tile in a second array beside the
- * packed word, since a mark straddles the side two tiles share and each tile
- * draws its own half.
+ * The same-slant marks, the notes-mode pin and a mark's mistake are keyed per
+ * tile in a second array beside the packed word, since a mark straddles the
+ * side two tiles share and each tile draws its own half.
  *
  * The border is a clue circle plus a pixel, as upstream's web build drew it,
  * grown by `pencilIndicatorReach` so the notes-mode pencil has the top-right
@@ -60,20 +61,18 @@ export const FLASH_TIME = 0.3;
 export const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 export const COL_INK = 2;
-export const COL_SLANT1 = 3;
-export const COL_SLANT2 = 4;
-export const COL_ERROR = 5;
-export const COL_CURSOR = 6;
+export const COL_ERROR = 3;
+export const COL_CURSOR = 4;
 /** The surface of a square, slashed or not: the slash is the content. */
-export const COL_CELL = 7;
-export const COL_GROUNDED = 8;
-export const COL_HINT = 9; // forced square(s), ringed on their own border
-export const COL_HINT_CELL = 10; // evidence area, outlined
-export const COL_HINT_REF = 11; // a cited filled anchor (a doubled ring)
-export const COL_PENCIL = 12; // the player's same-slant marks
-export const COL_PENCIL_BODY = 13; // the notes-mode indicator's pencil
+export const COL_CELL = 5;
+export const COL_GROUNDED = 6;
+export const COL_HINT = 7; // forced square(s), ringed on their own border
+export const COL_HINT_CELL = 8; // evidence area, outlined
+export const COL_HINT_REF = 9; // a cited filled anchor (a doubled ring)
+export const COL_PENCIL = 10; // the player's same-slant marks
+export const COL_PENCIL_BODY = 11; // the notes-mode indicator's pencil
 /** The lifted disc under a clue, and every square on the solved flash. */
-export const COL_GIVEN = 14;
+export const COL_GIVEN = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -81,8 +80,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BACKGROUND] = background;
   out[COL_GRID] = surfaceGrid(background);
   out[COL_INK] = INK;
-  out[COL_SLANT1] = INK;
-  out[COL_SLANT2] = INK;
   out[COL_ERROR] = ERROR;
   // A tile fill under the slash: the "you are here" wash, not the green mark
   // (palette.ts, `CURSOR`), whose brackets would land on the clue discs at the
@@ -204,9 +201,13 @@ function drawClue(
   hint: boolean,
 ): void {
   if (v < 0) return;
-  const ccol = (x ^ y) & 1 ? COL_SLANT1 : COL_SLANT2;
   const tcol = err ? COL_ERROR : hint ? COL_HINT : COL_INK;
-  dr.drawCircle({ x: coord(x, ts), y: coord(y, ts) }, clueRadius(ts), COL_GIVEN, ccol);
+  dr.drawCircle(
+    { x: coord(x, ts), y: coord(y, ts) },
+    clueRadius(ts),
+    COL_GIVEN,
+    COL_INK,
+  );
   dr.drawText(
     { x: coord(x, ts), y: coord(y, ts) },
     glyphFont(clueTextSize(ts)),
@@ -227,9 +228,6 @@ function drawTile(
   marks: number,
 ): void {
   const W = w + 1;
-  const chess = (x ^ y) & 1;
-  const fscol = chess ? COL_SLANT2 : COL_SLANT1;
-  const bscol = chess ? COL_SLANT1 : COL_SLANT2;
 
   dr.clip({ x: coord(x, ts), y: coord(y, ts), w: ts, h: ts });
 
@@ -279,7 +277,7 @@ function drawTile(
 
   // The slash itself: three parallel 1px lines for thickness.
   if (v & BACKSLASH) {
-    const scol = v & ERRSLASH ? COL_ERROR : v & GROUNDED ? COL_GROUNDED : bscol;
+    const scol = v & ERRSLASH ? COL_ERROR : v & GROUNDED ? COL_GROUNDED : COL_INK;
     const x0 = coord(x, ts);
     const y0 = coord(y, ts);
     const x1 = coord(x + 1, ts);
@@ -288,7 +286,7 @@ function drawTile(
     dr.drawLine({ x: x0 + 1, y: y0 }, { x: x1, y: y1 - 1 }, scol, 1);
     dr.drawLine({ x: x0, y: y0 + 1 }, { x: x1 - 1, y: y1 }, scol, 1);
   } else if (v & FORWSLASH) {
-    const scol = v & ERRSLASH ? COL_ERROR : v & GROUNDED ? COL_GROUNDED : fscol;
+    const scol = v & ERRSLASH ? COL_ERROR : v & GROUNDED ? COL_GROUNDED : COL_INK;
     const x0 = coord(x + 1, ts);
     const y0 = coord(y, ts);
     const x1 = coord(x, ts);
@@ -302,31 +300,31 @@ function drawTile(
   if (v & (L_T | BACKSLASH)) {
     dr.drawRect(
       { x: coord(x, ts), y: coord(y, ts) + 1, w: 1, h: 1 },
-      v & ERR_L_T ? COL_ERROR : bscol,
+      v & ERR_L_T ? COL_ERROR : COL_INK,
     );
   }
   if (v & (L_B | FORWSLASH)) {
     dr.drawRect(
       { x: coord(x, ts), y: coord(y + 1, ts) - 1, w: 1, h: 1 },
-      v & ERR_L_B ? COL_ERROR : fscol,
+      v & ERR_L_B ? COL_ERROR : COL_INK,
     );
   }
   if (v & (T_L | BACKSLASH)) {
     dr.drawRect(
       { x: coord(x, ts) + 1, y: coord(y, ts), w: 1, h: 1 },
-      v & ERR_T_L ? COL_ERROR : bscol,
+      v & ERR_T_L ? COL_ERROR : COL_INK,
     );
   }
   if (v & (T_R | FORWSLASH)) {
     dr.drawRect(
       { x: coord(x + 1, ts) - 1, y: coord(y, ts), w: 1, h: 1 },
-      v & ERR_T_R ? COL_ERROR : fscol,
+      v & ERR_T_R ? COL_ERROR : COL_INK,
     );
   }
   if (v & (C_TL | BACKSLASH)) {
     dr.drawRect(
       { x: coord(x, ts), y: coord(y, ts), w: 1, h: 1 },
-      v & ERR_C_TL ? COL_ERROR : bscol,
+      v & ERR_C_TL ? COL_ERROR : COL_INK,
     );
   }
 
@@ -545,8 +543,7 @@ export function redraw(
     }
   }
 
-  // Clue-vertex errors light the clue circle red in all four tiles that
-  // draw it.
+  // A clue vertex in error reddens its number in all four tiles that draw it.
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       if (state.vertexErrors[y * W + x]) {

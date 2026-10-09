@@ -12,8 +12,8 @@
  * each replace the surface, a clue's included.
  */
 
-import { PURPLE } from "../../engine/color/colors.ts";
 import {
+  CURSOR,
   cellSurface,
   ERROR_WASH,
   givenSurface,
@@ -70,8 +70,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CORRECT] = REGION_DONE;
   out[COL_ERROR] = ERROR_WASH;
   out[COL_USER] = playerEntryColor(bg);
-  // Not `CURSOR`: green is the player's own digits.
-  out[COL_CURSOR] = PURPLE;
+  out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   // The evidence is **outlined rather than washed**, though Filling is the
   // strongest case for a wash in the collection: its premise is a digit, which
@@ -277,12 +276,20 @@ export function redrawFilling(
   const sz = w * h;
 
   if (!ds.started) {
-    // The cells draw on top of this, which leaves the one line past the last
-    // row and column. The board's edge is always a region's border, so the
-    // line is ink, and with each edge cell's own border the frame is as heavy
-    // as a border between two regions and no heavier.
+    // The cells draw on top of this, which leaves the line past the last row
+    // and column and a border's width outside the board all round. The board's
+    // edge is always a region's border, so the frame is ink, and with each
+    // edge cell's own border it is as heavy as a border between two regions
+    // and no heavier: an edge cell brings one side of that border, and this
+    // brings what the missing neighbor would.
+    const bw = borderWidth(ts);
     dr.drawRect(
-      { x: border(ts), y: border(ts), w: w * ts + 1, h: h * ts + 1 },
+      {
+        x: border(ts) - bw,
+        y: border(ts) - bw,
+        w: w * ts + 1 + 2 * bw,
+        h: h * ts + 1 + 2 * bw,
+      },
       COL_INK,
     );
     ds.started = true;

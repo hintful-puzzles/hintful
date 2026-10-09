@@ -120,7 +120,7 @@ export interface GenCells {
 }
 
 /** Compute one cell's clue from the image (upstream `populate_cell`): the
- * black cells of its clipped 3×3 neighborhood, itself included. "Full"
+ * marked cells of its clipped 3×3 neighborhood, itself included. "Full"
  * means the clue saturates the neighborhood (9 interior, 6 edge, 4
  * corner), "empty" that it is 0. */
 export function populateCell(

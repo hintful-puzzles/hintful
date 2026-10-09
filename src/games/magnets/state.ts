@@ -272,7 +272,7 @@ function parseDesc(p: MagnetsParams, desc: string): DescParse<Parsed> {
       ) {
         r.fail(
           puzzleDescError(
-            "This game ID has a domino whose two halves don't point at each other.",
+            "This game ID has a tile whose two ends don't point at each other.",
           ),
         );
       }

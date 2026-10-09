@@ -28,6 +28,7 @@ import { markAllNow } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import {
+  noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
@@ -165,9 +166,11 @@ function interpretMove(
     if (n > dsf.size(i)) return null;
     // A filled square can't take a pencil mark (reachable via the cursor).
     if (ui.pencilMode && grid[i] !== 0) return null;
-    // Re-entering the number already there changes nothing.
-    if (!ui.pencilMode && grid[i] === n) return null;
     if (flags[i] & FM_FIXED) return null;
+    // Re-entering the number already there, or clearing notes a cell has not
+    // got, changes nothing.
+    if (ui.pencilMode ? n === 0 && pencil[i] === 0 : grid[i] === n)
+      return noOpEntryResult(ui);
 
     // A mouse-driven entry puts the highlight away; a keyboard one keeps it.
     releaseHighlightAfterEntry(ui);

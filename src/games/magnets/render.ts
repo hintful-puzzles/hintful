@@ -2,8 +2,9 @@
  * Magnets rendering — faithful port of `game_redraw` / `draw_tile` /
  * `draw_tile_col` / `draw_sym` / `draw_num` in `magnets.c`. Rounded-corner
  * dominoes (borrowed from dominosa), `+`/`−` magnet symbols, a green neutral
- * cross, a blue not-neutral `?`, singleton black squares, and the `+`/`−` clue
- * counts on all four borders with the corner `+`/`−` symbols.
+ * cross, a blue not-neutral `?`, and the `+`/`−` clue counts on all four
+ * borders with the corner `+`/`−` symbols. A singleton square is left as bare
+ * background, as upstream's `draw_tile_col` leaves it.
  *
  * Geometry is upstream's `NARROW_BORDERS` layout: the canvas is `(w+2) × (h+2)`
  * tiles, a one-tile clue margin each side and no border beyond it.

@@ -40,8 +40,7 @@ const dot = (black: boolean): string => (black ? "black dot" : "white dot");
 
 const els = (p: Point | null): Point[] => (p ? [p] : []);
 
-/** "this cell", or "this cell and its partner" when the move brings the cell
- * across the dot along. */
+/** "this cell": the ringed square a step opens on. */
 const thisCell = (p: Painted): Narration =>
   mark.as("ring", CELL, els(p.focus), "this cell");
 const partner = (p: Painted, words = "its partner"): Narration | string =>
@@ -152,4 +151,4 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
 }
 
 /** A step's sentence, from its highlights. */
-export const tell = (hl: GalaxiesHint): Sentence => sentenceOf(painted(hl), hl.said);
+export const say = (hl: GalaxiesHint): Sentence => sentenceOf(painted(hl), hl.said);

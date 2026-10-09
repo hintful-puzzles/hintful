@@ -612,7 +612,7 @@ function applyFiring(b: SpokesBoard, f: SpokesFiring): void {
   for (const { index, dir, state } of f.forced) {
     const old = getSpoke(b.spokes[index], dir);
     spokesPlace(b, index, dir, state);
-    syncDiagonalBlock(b, index, dir, old, state);
+    syncDiagonalBlock(b, index, dir, old, state, null);
   }
 }
 

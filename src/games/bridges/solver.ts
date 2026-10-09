@@ -69,10 +69,10 @@ export interface BridgesEvidence {
  * Why one firing is forced: the half of a hint `runDeductionFixpoint` is
  * *oblivious* to.
  *
- * One variant per narratable **premise**, not one per rung. Bridges has three
- * rungs and this is the count that matters, which is the measurement
- * `add-bridges-hint` exists to take. `island` is the island whose arithmetic
- * forces the move, and is the one the narration is about.
+ * One variant per narratable **premise**, not one per rung: a rung can fire
+ * for more than one reason, and the sentence follows the reason. `island` is
+ * the island whose arithmetic forces the move, and is the one the narration is
+ * about.
  *
  * The single rule that declares **no** reason is stage 1's "this island now has
  * all its bridges, mark it complete": a bookkeeping annotation the fork's own
@@ -348,9 +348,12 @@ class Solver {
    * reads. */
   mapCheck(): boolean {
     const st = this.st;
-    if (!st.allowloops && mapHasloops(st, true)) return false;
+    // Groups before loops: grouping is what clears the last check's marks, and
+    // marking a loop only adds to them, so a board answered on its loop alone
+    // would keep every mark an earlier check left.
     this.mapGroup(); // clears WARN and SWEEP
     const [anyfull, ngroups] = this.mapGroupFull();
+    if (!st.allowloops && mapHasloops(st, true)) return false;
     return anyfull && ngroups === 1;
   }
 
@@ -752,7 +755,8 @@ class Solver {
   // --- Driver (C solve_sub) ---
 
   /**
-   * The three stages as ladder rungs.
+   * The stages as ladder rungs: stage 2 is two of them, its counting and its
+   * sealing off, which share a tier.
    *
    * **A "rung" here sweeps every island before reporting**, which is the
    * runner's contract at the *ladder* level rather than a violation of it: the
@@ -863,7 +867,7 @@ export interface BridgesRecordingPass {
 }
 
 /**
- * The recording projection: the *same three* `DeductionTechnique` objects
+ * The recording projection: the *same* `DeductionTechnique` objects
  * `solveFromScratch` runs, through `singleFirings`, with a recorder attached —
  * no rung is reimplemented for the hint. `beforeTechnique` clears the standing
  * reason, which is what makes "a rule that declares no reason narrates

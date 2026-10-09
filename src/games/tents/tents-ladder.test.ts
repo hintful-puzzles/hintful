@@ -15,14 +15,18 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsSolve } from "./solver.ts";
-import { DIFF_EASY, DIFF_TRICKY, newState, type TentsParams, TREE } from "./state.ts";
+import {
+  DIFF_EASY,
+  DIFF_TRICKY,
+  newState,
+  presets,
+  type TentsParams,
+  TREE,
+} from "./state.ts";
 
+/** Every preset, plus a board that is not square. */
 const SHAPES: TentsParams[] = [
-  { w: 8, h: 8, diff: DIFF_EASY },
-  { w: 8, h: 8, diff: DIFF_TRICKY },
-  { w: 10, h: 10, diff: DIFF_EASY },
-  { w: 10, h: 10, diff: DIFF_TRICKY },
-  { w: 15, h: 15, diff: DIFF_TRICKY },
+  ...(presets().submenu ?? []).flatMap((leaf) => (leaf.params ? [leaf.params] : [])),
   { w: 12, h: 5, diff: DIFF_TRICKY },
 ];
 

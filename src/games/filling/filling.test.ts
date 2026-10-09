@@ -252,6 +252,26 @@ describe("filling render scenario", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
+  it("frames the board as heavily as it borders two regions, and no heavier", () => {
+    const { recording, size } = renderScenario({ game: fillingGame, id: "2x1:12" });
+    // The ink along one row of pixels through both cells: the frame's left
+    // side, the border between the two regions, the frame's right side.
+    const y = size.h >> 1;
+    const row = new Int32Array(size.w).fill(-1);
+    for (const o of recording.ops) {
+      if (o.op !== "rect" || y < o.y || y >= o.y + o.h) continue;
+      row.fill(o.color, Math.max(0, o.x), Math.min(size.w, o.x + o.w));
+    }
+    const runs: number[] = [];
+    for (let x = 0; x < size.w; x++) {
+      if (row[x] !== COL_INK) continue;
+      if (x > 0 && row[x - 1] === COL_INK) runs[runs.length - 1]++;
+      else runs.push(1);
+    }
+    expect(runs).toHaveLength(3);
+    expect(new Set(runs).size).toBe(1);
+  });
+
   it("shades a completed region and an overfull region", () => {
     // 3x1, all clues: "1 2 2" is complete (CORRECT_BG); "2 2 2" is overfull.
     const correct = renderScenario({ game: fillingGame, id: "3x1:122" });

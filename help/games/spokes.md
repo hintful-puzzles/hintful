@@ -16,7 +16,7 @@ Each hub has a dot on its rim toward every hub it can join.
 
 You can also drag from one hub to another: with the left button to draw the line between them, or with the right button to mark it as unused.
 
-Because a diagonal line visibly blocks the other diagonal of the same square, drawing one rules its crossing out for you, and erasing the line takes that mark away again. While the line stands, the crossing can't be toggled by hand.
+Because a diagonal line visibly blocks the other diagonal of the same square, drawing one rules its crossing out for you, and erasing the line takes that mark away again. A crossing you had already ruled out yourself keeps your mark. While the line stands, the crossing can't be toggled by hand.
 
 A hub is highlighted, its disc standing out from the others, once it carries as many lines as its number asks for. That's a visual reminder only — the hub stays fully editable — and it can be switched off in the game's preferences.
 

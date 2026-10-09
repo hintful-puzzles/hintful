@@ -954,7 +954,7 @@ describe("Midend.canvasCleared invalidates the drawstate (the only real signal)"
   });
 });
 
-describe("Midend.forceRedraw is canvasCleared + redraw (palette/font replacement)", () => {
+describe("Midend.forceRedraw is canvasCleared + redraw (palette replacement)", () => {
   function midend() {
     const m = new Midend(fakeGame);
     m.newGame();

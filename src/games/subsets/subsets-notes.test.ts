@@ -45,7 +45,7 @@ import {
 import {
   ADJTHAN,
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   newState,
   type SubsetsMove,
   type SubsetsState,
@@ -390,7 +390,7 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
 
 const pinned = describeHintKindPins({
   game: subsetsGame,
-  params: [{ w: 4, h: 4, n: 4, diff: DIFF_TRICKY }],
+  params: [{ w: 4, h: 4, n: 4, diff: DIFF_NORMAL }],
   kinds: { ruleOut: (step) => step.rung === "ruleOut" },
   pins: {
     /** Held on 140 of 668 positions walked. */
@@ -405,22 +405,22 @@ const pinned = describeHintKindPins({
 describe("the hint places the rule-outs it rests on", () => {
   for (const [name, diff] of [
     ["Easy", DIFF_EASY],
-    ["Tricky", DIFF_TRICKY],
+    ["Normal", DIFF_NORMAL],
   ] as const) {
     it(`${name}: every rule-out is true, needed, placed once and read off the board`, () => {
       const tally: WalkTally = { ruleOuts: 0, heads: 0, journeys: 0 };
       for (let seed = 0; seed < 12; seed++)
         walkClaims(gen(diff, `notes-walk-${seed}`), tally);
-      // Vacuity: the walk met rule-outs, and on Tricky both halves of the rule.
+      // Vacuity: the walk met rule-outs, and at Normal both halves of the rule.
       expect(tally.ruleOuts).toBeGreaterThan(10);
-      if (diff === DIFF_TRICKY) expect(tally.heads).toBeGreaterThan(0);
+      if (diff === DIFF_NORMAL) expect(tally.heads).toBeGreaterThan(0);
     });
   }
 
   it("a plan resumed from rule-outs made out of order places each once, and only where true", () => {
     let resumed = 0;
     for (let seed = 0; seed < 8; seed++) {
-      const start = gen(DIFF_TRICKY, `notes-resume-${seed}`);
+      const start = gen(DIFF_NORMAL, `notes-resume-${seed}`);
       const res = subsetsGame.hint?.(start);
       if (!res?.ok) throw new Error("no hint");
       // Make every other rule-out the plan would, in reverse order, first.

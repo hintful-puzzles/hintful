@@ -56,6 +56,7 @@ import {
   DC,
   DR,
   deduceHintPlan,
+  deductionFinishes,
   findErrors,
   fullSolve,
   generateGrid,
@@ -437,6 +438,9 @@ export const rangeGame: Game<
   status,
 
   solve,
+  // `solve` searches and returns the first answer it meets, so it cannot say a
+  // board has two. The generator's test can: deduction decides every cell.
+  finishesByDeduction: (s) => deductionFinishes(clueGrid(s), s.w, s.h),
   hint,
   hintRungs: RANGE_RUNGS,
   hintMarks: {

@@ -439,6 +439,15 @@ export function findErrors(
   return false;
 }
 
+/** Whether the three deductive rules alone decide every cell of a clue grid
+ * and break no rule doing it: the test `stripClues` keeps a clue's removal by,
+ * and the walk a hint plan narrates. */
+export function deductionFinishes(grid: Int8Array, w: number, h: number): boolean {
+  const dup = grid.slice();
+  applyRules(dup, w, h, findClues(dup, w, h));
+  return !dup.includes(EMPTY) && !findErrors(dup, w, h);
+}
+
 // --- full solve (Solve command + findMistakes) -----------------------------
 
 /** Solve a clue grid completely, returning a grid with every non-clue

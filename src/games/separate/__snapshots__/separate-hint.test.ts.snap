@@ -2074,6 +2074,6 @@ exports[`separate: pinned hint positions > says, at each pin 1`] = `
   "namesTwo": "The striped region already holds an E, so the outlined E can't join it: the edge between them must be a wall.",
   "onlyWay": "This E is walled in on every side but one, so this edge can't be a wall.",
   "sharedLetter": "These two Cs can't share a region, so the edge between them must be a wall.",
-  "walledApart": "A wall already separates the striped and outlined regions, so this edge between them must be a wall too.",
+  "walledApart": "A wall already separates the striped square and the outlined region, so this edge between them must be a wall too.",
 }
 `;

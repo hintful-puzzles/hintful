@@ -32,8 +32,7 @@ node_modules/
 # Icons under /src/assets/icons/ are committed snapshots. To produce the two
 # PNGs a new puzzle needs, open it with ?screenshot in the dev server and use
 # "Capture icons" (src/puzzle/icon-capture.ts); see openspec/specs/puzzle-icons.
-# (There is no scripts/build-icons.sh — the GTK screenshot pipeline it named was
-# deleted by drop-icon-generation.)
+# Nothing here ignores that directory, and nothing generates into it.
 
 # TypeScript incremental build info (from `tsc -b`)
 *.tsbuildinfo

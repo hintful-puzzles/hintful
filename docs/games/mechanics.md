@@ -176,14 +176,14 @@ encodable.
 **Not everything fits, and a bespoke codec stays first-class.** Float params
 (Rectangles, Net, Netslide), a leading letter before the dimensions (Cube), a
 `switch` over multi-character strings (Solo), a `while` loop over the tail
-(Dominosa) and a boolean encoded as an integer (Mosaic) are hand-written, and
+(Dominosa, Mines) and a boolean encoded as an integer (Mosaic) are hand-written, and
 should stay that way — a grammar that grew an option per game would be two
 ways plus a seam rather than one obvious way.
 
 **Whatever you write, the encodings are asserted.**
 [`params-stability.test.ts`](../../src/engine/params-stability.test.ts) holds
 every game's encoded params against a recorded table and checks that encode and
-decode are mutual inverses over 612 derived cases. Re-baselining that snapshot
+decode are mutual inverses over a corpus derived from each game's presets. Re-baselining that snapshot
 is a **compatibility decision** — every line that moves is a shared game ID
 that stops resolving to the board it named — so it needs the owner's say-so,
 not a `vitest -u`.
@@ -1005,8 +1005,9 @@ just keyboard. Exemplar: [`towers/index.ts`](../../src/games/towers/index.ts).
 a typed array of that name on its state — the noun the engine already uses
 everywhere else it speaks about notes (`Ui.pencilMode`, the `pencilSticky` and
 `pencilKeepHighlight` prefs, `pencilAll` / `pencilStrike`). The element type and
-the slot arity stay yours: one bitmask per cell, or ABCD's candidate *cube* of
-`n` contiguous slots, are both fine. Two things are outside the convention and
+the unit stay yours: one candidate bitmask per cell, or per region where regions
+are what the player fills (Map). The shared Mark-all guard and the hint's
+reading guard read it that way. Two things are outside the convention and
 keep their own words — a field that is not a candidate set (Pearl's `marks` are
 no-line marks on a cell's four edges), and a **solver's** own working candidate
 scratch, which is a different object with a different lifetime. Guarded by

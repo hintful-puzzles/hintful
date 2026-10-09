@@ -318,8 +318,9 @@ export interface Game<
   readonly id: string;
   /** The game supports the "fill every empty cell with all candidate pencil
    * marks" action (upstream's `M`/`m` key). A game that sets this MUST handle
-   * the `M`/`m` key in `interpretMove`; the app shell surfaces a toolbar button
-   * (gated on this) that injects that key. Defaults to false (no button). */
+   * the `M`/`m` key in `interpretMove`; the app shell shows a Mark-all button
+   * in the Game controls (gated on this) that injects that key. Defaults to
+   * false (no button). */
   readonly canMarkAll?: boolean;
   /**
    * The game has **no meaning for the secondary button at all**, so the

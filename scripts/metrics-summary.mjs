@@ -94,18 +94,16 @@ out.push(cycles ? `\`\`\`\n${cycles}\n\`\`\`` : "_cycle output missing._");
 out.push("");
 
 // --- dead code --------------------------------------------------------------
-out.push("## Dead code (knip)");
+out.push("## Dead code (unused exports)");
 out.push("");
-const knip = read("knip.txt").trim();
-// knip's own build chatter is noise in a summary; keep only its findings.
-const knipFindings = knip
-  .split("\n")
-  .filter(
-    (l) => !/^(vite v|transforming|rendering|computing|✓|public\/|$)/.test(l.trim()),
-  )
-  .join("\n")
-  .trim();
-out.push(knipFindings ? `\`\`\`\n${knipFindings}\n\`\`\`` : "_clean._");
+// The check prints a line when it finds nothing too, so an empty file is a
+// run that did not happen.
+const unusedExports = read("unused-exports.txt").trim();
+out.push(
+  unusedExports
+    ? `\`\`\`\n${unusedExports}\n\`\`\``
+    : "_unused-export output missing._",
+);
 out.push("");
 
 // --- complexity -------------------------------------------------------------

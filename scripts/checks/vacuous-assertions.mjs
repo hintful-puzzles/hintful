@@ -91,12 +91,7 @@ import ts from "typescript";
  *
  * @type {Record<string, string>}
  */
-const SCANS_FOR_A_CASE = {
-  "src/engine/difficulty-contract.test.ts :: either generates every declared tier, or refuses it with a reason":
-    "it speaks only about a tier that FAILS to generate, and every tier " +
-    "generating is the healthy state — a count floor here would demand a " +
-    "broken game.",
-};
+const SCANS_FOR_A_CASE = {};
 
 /** Below these the input is broken rather than the tree clean. */
 const FLOORS = { files: 200, tests: 3000 };

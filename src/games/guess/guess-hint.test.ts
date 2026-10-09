@@ -18,6 +18,7 @@ import {
   LEFT_RELEASE,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
+  RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -507,10 +508,42 @@ describe("the answer row takes marks and colors", () => {
     expect(ui.cursor.x).toBe(1);
   });
 
-  it("a right-click or held finger on an answer slot marks nothing", () => {
+  it("a right-click or held finger on an answer slot marks nothing, and selects it as a tap does", () => {
     const { state, ui, ds } = fresh();
     const at = slotPoints(ds, 1)[0];
     expect(guessGame.interpretMove(state, ui, ds, at, RIGHT_BUTTON)).toBeNull();
+    // The declined press is answered with its release at the same point. A
+    // finger that rested on the slot past the touch hold is still a tap on it.
+    expect(guessGame.interpretMove(state, ui, ds, at, RIGHT_RELEASE)).toBe(UI_UPDATE);
+    expect(ui.pencilMode).toBe(true);
+    expect(ui.cursor).toMatchObject({ x: 1, visible: true });
+  });
+
+  it("a row submitted in notes mode leaves the cursor on a slot", () => {
+    // Every peg held, so the next working row arrives full and markable, which
+    // outside notes mode rests the cursor on the submit position.
+    const { state, ui, ds } = fresh();
+    const pegs = [4, 3, 2, 1];
+    for (let i = 0; i < pegs.length; i++) {
+      ui.currPegs[i] = pegs[i];
+      ui.holds[i] = true;
+    }
+    ui.markable = true;
+    guessGame.interpretMove(state, ui, ds, slotPoints(ds, 2)[0], LEFT_RELEASE);
+    expect(ui.pencilMode).toBe(true);
+    const submit = guessGame.requestKeys?.(state.params)?.at(-1)?.button ?? -1;
+    const guess = guessGame.interpretMove(state, ui, ds, ZERO, submit) as GuessMove;
+    expect(guess.type).toBe("guess");
+    const next = guessGame.executeMove(state, guess);
+    guessGame.changedState?.(ui, state, next);
+    expect(ui.currPegs).toEqual(pegs);
+    expect(ui.cursor.x).toBeLessThan(state.params.npegs);
+    // So a color key still has a slot to mark.
+    const key = guessGame.requestKeys?.(state.params)?.[4].button ?? -1;
+    expect(guessGame.interpretMove(next, ui, ds, ZERO, key)).toMatchObject({
+      type: "mark",
+      ruledOut: true,
+    });
   });
 
   it("in notes mode a color key marks, and Clear empties the slot", () => {

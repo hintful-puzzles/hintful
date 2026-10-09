@@ -13,7 +13,7 @@
 # freshness — which is why it is deliberately NOT part of scripts/gate.sh or
 # .husky/pre-commit. A slow whole-tree scan in a gate optimized for wall-clock
 # would buy nothing; see the build-pipeline spec, "Refactoring metrics are
-# measured on demand and ratcheted in the gate".
+# measured on demand".
 #
 # What is measured, and what is deliberately not:
 #
@@ -25,8 +25,7 @@
 #                2026-08-01: raw 20, runtime 1. See scripts/metrics-cycles.mjs.
 #                Working, and pinned to that by TypeScript's major version —
 #                see the loud arm in the madge section below before upgrading.
-#   dead code    knip. Expect a small haul; this is a maintained tree, not a
-#                port with #ifdef-orphaned helpers.
+#   dead code    scripts/checks/unused-exports.mjs, the check the gate runs.
 #   complexity   biome's noExcessiveCognitiveComplexity (the same published Sonar
 #                algorithm eslint-plugin-sonarjs implements — do not add a second
 #                lint toolchain for it). NOTE: biome's counter SATURATES AT 255,
@@ -95,44 +94,12 @@ else
 fi
 
 # --- dead code --------------------------------------------------------------
-# knip.json cannot carry comments, so the non-obvious half of its config is
-# recorded here. Until 2026-08-05 knip reported NOTHING — not even a file with
-# no importer at all — and read as "the tree is clean". Cause: knip resolves
-# `import.meta.glob` as a module reference, and three globs anchored at src/
-# root (two in asset-integrity.test.ts, one in module-layering.test.ts) match
-# every .ts file under src/. Those globs use `query: "?raw"`/`"?url"` — they
-# read file TEXT, never a module's exports — so they are not dependency edges,
-# but knip counts them anyway, making every file "referenced" and unused-file
-# detection structurally impossible.
-#
-# The fix needs BOTH halves, which do different jobs:
-#   knip.json `vitest.entry` negations  — knip's vitest plugin re-adds every
-#     *.test.ts as an entry, overriding a top-level `entry` negation. Excluding
-#     the two files THERE is what removes their globs from the reference graph.
-#   knip.json `ignore`                  — suppresses *reporting* only. Without
-#     it the two files then report as unused themselves.
-# Neither alone works; that is why they look redundant and are not.
-#
-# Config hints are deliberately NOT suppressed (`--no-config-hints` was what
-# hid the diagnosis). They are quiet when the config is right.
-#
-# THE REPORT IS AT ZERO, AND THAT IS THE POINT. Three further settings got it
-# there without hiding anything real, so a single line of output now means a
-# genuine finding rather than a number to be squinted at:
-#   ignoreExportsUsedInFile  stops reporting an export that its own file uses.
-#     Those are over-exports, not dead code, and de-exporting them piecemeal
-#     splits documented families (border-grid's MAYBE/YES/NO tri-state,
-#     hat-tables' kitemap*/metamap*) across two visibilities to please a tool.
-#   the two barrels as `entry`  engine/index.ts and grid/index.ts ARE entry
-#     points — grid/index.ts's doc comment tells callers to import from it — so
-#     their re-exports are public API, not dead code.
-#   tags: ["-public"]  one export (grid-core.ts gridNewSquare) is reached only
-#     through the barrel and knip cannot follow that re-export chain; the
-#     `@public` tag on it carries the reason. It is the ONLY one in the tree.
-# Re-verify the zero rather than trusting it: plant a file nothing imports and
-# knip must report it. That check is what caught the original blindness.
-echo "  knip…"
-npx knip >"$OUT/knip.txt" 2>&1 || true
+# The gate's own unused-export check, so the harness and the gate cannot
+# disagree about what is dead. It exits non-zero when it finds something, and
+# what it found is the measurement, so the exit code is not the discriminator:
+# the summary reports an empty file as missing output, never as a clean tree.
+echo "  unused exports…"
+node scripts/checks/unused-exports.mjs >"$OUT/unused-exports.txt" 2>&1 || true
 
 # --- cognitive complexity ---------------------------------------------------
 # Threshold 15 here is the MEASURING threshold (biome's default), deliberately

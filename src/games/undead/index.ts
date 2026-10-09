@@ -148,6 +148,23 @@ function anyEmptyLacksNotes(guess: Uint8Array, pencil: Uint8Array): boolean {
   return guess.some((g, i) => g === MON_NONE && pencil[i] === 0);
 }
 
+/**
+ * The square of the bordered grid a pixel falls in, the clues being its outer
+ * ring: column `0` and row `0` are clues, and the row of monster counts above
+ * the grid is row `-1`.
+ *
+ * Truncation toward zero, which declines `fromCoord` of `engine/geometry.ts`:
+ * it folds a press in the margin left of the grid onto column `0`, so the
+ * margin beside a clue reaches that clue, where the helper's floor would
+ * answer `-1` and put the press off the board.
+ */
+function gridAt(p: Point, border: number, ts: number): Point {
+  return {
+    x: Math.trunc((p.x - border - 1) / ts),
+    y: Math.trunc((p.y - border - 2) / ts) - 1,
+  };
+}
+
 function interpretMove(
   state: UndeadState,
   ui: UndeadUi,
@@ -165,8 +182,7 @@ function interpretMove(
   const button = stripModifiers(rawButton);
   // `1`, `2`, `3` place the three monsters in menu order; `0` clears.
   const digit = digitOf(button);
-  const gx = Math.trunc((point.x - b - 1) / ts);
-  const gy = Math.trunc((point.y - b - 2) / ts) - 1;
+  const { x: gx, y: gy } = gridAt(point, b, ts);
   // A left-click on a count block (place/remove by clicking the tally).
   let cc = -1;
   if (button === LEFT_BUTTON && ds) cc = countBlockAt(ds, point.x, point.y);
@@ -303,12 +319,8 @@ export const clueDrag = dragMarkVerbs<
     const { w, h } = state.common;
     const ts = ds.tileSize;
     const b = border(ts);
-    const clue = grid2range(
-      Math.trunc((p.x - b - 1) / ts),
-      Math.trunc((p.y - b - 2) / ts) - 1,
-      w,
-      h,
-    );
+    const at = gridAt(p, b, ts);
+    const clue = grid2range(at.x, at.y, w, h);
     return clue === -1 ? null : clue;
   },
   apply: (_state, clue) => ({ type: "hintDone", clue }),

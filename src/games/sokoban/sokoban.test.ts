@@ -478,6 +478,21 @@ describe("Sokoban midend lifecycle", () => {
     expect(h.status()).toBe("solved");
   });
 
+  it("solves a hand-typed level with a labeled barrel, and the save loads", () => {
+    // The finished board holds the labeled barrel on its target, which the
+    // board stores as a control character no game ID can write.
+    const h = harness();
+    const me = h.m;
+    expect(me.newGameFromId("5x5:w6uAtw2s3w2s3w6")).toBeNull();
+    expect(me.solve()).toBeNull();
+    expect(h.status()).toBe("solved-with-help");
+    const before = renderOps(me);
+
+    const me2 = new Midend(sokobanGame);
+    expect(me2.loadGame(me.saveGame())).toBeNull();
+    expect(renderOps(me2)).toEqual(before);
+  });
+
   it("save -> load preserves the board (render-equivalent)", () => {
     const me = new Midend(sokobanGame);
     expect(me.newGameFromId("12x10#sokoban-save")).toBeNull();

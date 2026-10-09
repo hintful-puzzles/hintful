@@ -542,7 +542,8 @@ function refreshHintStep(
  * The on-screen keypad, faithful to upstream `game_request_keys`. Unlike the
  * shared `digitKeys`, Unequal switches to a `'0'`-based keypad for order ≥ 10
  * (`'0'..'9'` = 1..10, then `'a','b',…` = 11.., mirroring `c2n`), then the
- * clear key. Orders run 3..32, so the high range is genuinely reachable.
+ * clear key. The size's bounds in `paramConfig` admit orders past 10, so the
+ * letter range is reachable.
  */
 function unequalKeys(order: number): KeyLabel[] {
   const keys: KeyLabel[] = [];

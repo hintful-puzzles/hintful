@@ -102,7 +102,8 @@ function changedState(
 
 /** Pixel → grid cell, truncating toward zero like upstream's `FROMDRAW`, so
  * a click in the left/top border margin folds onto cell 0 (where `(0,0)`
- * is the reveal button). */
+ * is the reveal button). This declines the shared `fromCoord` of
+ * `engine/geometry.ts`, whose floor would put that click off the grid. */
 function fromDraw(px: number, ts: number): number {
   return Math.trunc((px - borderFor(ts)) / ts);
 }

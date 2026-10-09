@@ -15,11 +15,10 @@
  * § "Lead with the indication"). The rules are in `help/games/mathrax.md` too;
  * one clause per step is what earns its room here.
  *
- * Every arm reads correctly at the degenerate clue values a hand-written
- * description can hold, even though the generator never emits them: a `0−`
- * clue and a `1÷` clue both mean "equal", and neither says "differ by 0" or
- * "divide to give 1" (docs/games/hints.md § "Sanity-read at the degenerate
- * extremes").
+ * The subtraction arms read correctly at the degenerate value: a `0−` clue is
+ * the `=` clue and means "equal", never "differ by 0" (docs/games/hints.md
+ * § "Sanity-read at the degenerate extremes"). Division has no such value: the
+ * desc reader in `state.ts` refuses a quotient of 1.
  */
 
 import { joinOr, thisCell } from "../../engine/hint-text.ts";
@@ -49,7 +48,7 @@ function diagonalRule(clue: number): string {
     case CLUE_MUL:
       return `multiply to ${n}`;
     case CLUE_DIV:
-      return n === 1 ? "are equal" : `divide to give ${n}`;
+      return `divide to give ${n}`;
     default:
       return "go together";
   }
@@ -70,7 +69,7 @@ function pairClause(clue: number, list: string): string {
     case CLUE_MUL:
       return `multiplies with ${list} to make ${n}`;
     case CLUE_DIV:
-      return n === 1 ? `matches ${list}` : `divides with ${list} to give ${n}`;
+      return `divides with ${list} to give ${n}`;
     default:
       return `goes with ${list}`;
   }

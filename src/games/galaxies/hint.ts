@@ -18,7 +18,7 @@ import { deduceHintPlan, type HintPlanResult } from "../../engine/hint-plan.ts";
 import type { HintStep } from "../../engine/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
-import { type GalaxiesSaid, tell } from "./hint-text.ts";
+import { type GalaxiesSaid, say } from "./hint-text.ts";
 import type { GalaxiesMove } from "./index.ts";
 import { okToAddAssocWithOpposite, reachableFromDot } from "./moves.ts";
 import { type GalaxiesFiring, RUNGS } from "./solver.ts";
@@ -80,7 +80,7 @@ export interface GalaxiesHint {
    * color, so "the ringed dot" is never ambiguous). */
   refDots: Point[];
   /** What the sentence reads off the board besides these marks, so a step
-   * re-reads from its highlights when they shrink (`tell`). */
+   * re-reads from its highlights when they shrink (`say`). */
   said: GalaxiesSaid;
 }
 
@@ -303,7 +303,7 @@ function saidOf(s: GalaxiesState, firing: GalaxiesFiring): GalaxiesSaid {
 
 /** A firing's sentence, as its step speaks it. */
 export function narrate(s: GalaxiesState, firing: GalaxiesFiring): string {
-  return tell(highlightsOf(s, firing)).text;
+  return say(highlightsOf(s, firing)).text;
 }
 
 // --- highlights -------------------------------------------------------
@@ -411,7 +411,7 @@ export function galaxiesHintSteps(
 ): HintStep<GalaxiesMove, GalaxiesHint, GalaxiesRung>[] {
   return galaxiesHintPlan(state).plan.map((p) => {
     const highlights = highlightsOf(state, p.firing);
-    const words = tell(highlights);
+    const words = say(highlights);
     return {
       move: moveOf(p.firing),
       rung: p.firing.kind,

@@ -128,14 +128,16 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 /** Highlight payload a Solo hint step carries (built in `index.ts`). The
- * element-type legend (docs/games/hints.md § "The element-type color legend"): the driving region's cells shaded
- * `COL_HINT_CELL`, the acted-on cell(s) `COL_HINT`, the ruled-out candidate(s)
- * shown struck. */
+ * element-type legend (docs/games/hints.md § "The element-type color legend"):
+ * the cells the reason rests on outlined `COL_HINT_CELL` in the gutter, the
+ * acted-on cell(s) ringed `COL_HINT`, the ruled-out candidate(s) shown struck.
+ * The region a sentence names is hatched from the step's marks, not from here. */
 export interface SoloHint {
-  /** The driving region's cells (evidence), shaded `COL_HINT_CELL`. A forcing
-   * chain's cells additionally carry their place in it, drawn as an ordinal. */
+  /** The cells the reason rests on (evidence), outlined `COL_HINT_CELL`. A
+   * forcing chain's cells additionally carry their place in it, drawn as an
+   * ordinal. */
   area: OrderedCell[];
-  /** The cell(s) the deduction acts on, marked `COL_HINT`. */
+  /** The cell(s) the deduction acts on, ringed `COL_HINT`. */
   targets: { x: number; y: number }[];
   /** The candidate number(s) ruled out, shown struck among the pencil marks. */
   marks: { x: number; y: number; n: number }[];

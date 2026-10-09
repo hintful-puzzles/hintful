@@ -2,10 +2,9 @@
  * Solo (Sudoku) — native TS port of `solo.c`. Fill a `cr × cr` grid (`cr = c·r`)
  * with digits `1..cr` so every row, column and sub-block holds each digit once;
  * variants add irregular (jigsaw) blocks, two main diagonals (X), and digit-sum
- * cages (killer). Left-click / cursor-select highlights a cell for a real entry;
- * right-click / select2 highlights it for a pencil mark (or toggles sticky
- * pencil mode); a digit enters (or pencil-toggles) that value; backspace/space
- * clears. Duplicate digits and over-full cages highlight live; Check & Save
+ * cages (killer). A press highlights a cell by the note-taking cell's rules
+ * (`note-taking-cell.ts`); cursor-select and the Marks key toggle pencil mode;
+ * a digit enters (or pencil-toggles) that value; backspace/space clears. Duplicate digits and over-full cages highlight live; Check & Save
  * additionally flags cells that contradict the unique solution.
  */
 

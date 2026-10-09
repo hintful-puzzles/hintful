@@ -6,7 +6,7 @@
  * conclusion in the necessity voice (docs/games/hints.md § "Writing the
  * narration"). Each deduction is written as a **premise**, and the sentence
  * ends on whichever conclusion the step's leg acts on: the ringed squares are
- * mines, are safe, or carry a flag that must come off.
+ * mines, or are safe.
  *
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`): the squares the step decides are ringed; the

@@ -387,20 +387,28 @@ export const EIGHT_FILLS: readonly Color[] = [
 /**
  * **The two states of a two-state game**, where neither is the important one:
  * Unruly's two kinds of square. A game takes the pair from here and names no
- * hue of its own, so a different pair is this line and {@link TWO_NAMES}.
+ * hue of its own, so a different pair is this line, {@link TWO_NAMES} and
+ * {@link TWO_WASH}.
  *
  * Purple and yellow because a board of pieces still has marks drawn on it:
- * red is an error, blue the hint's ring, green the cursor and orange the
- * hint's outline, and a piece in any of those swallows that mark. Of what is
- * left, this pair stands furthest apart in lightness, which is what a
- * color-blind player has when hue fails. The pieces also differ in shape
- * (`engine/piece.ts`), so the pair is not the only carrier.
+ * red is an error, blue the hint's ring, teal its evidence, green and pink
+ * its two premise references, green the cursor too, and orange the outline a
+ * game with the pair gives a premise no shared role names (Unruly's reference
+ * ring). A piece in any of those swallows that mark. Of what is left, this
+ * pair stands furthest apart in lightness, which is what a color-blind player
+ * has when hue fails. The pieces also differ in shape (`engine/piece.ts`), so
+ * the pair is not the only carrier.
  */
 export const TWO: readonly [Color, Color] = [PURPLE, YELLOW];
 
 /** {@link TWO}, as a player would say them: the words a hint puts in a
  * sentence, exported beside the colors as {@link TEN_NAMES} is. */
 export const TWO_NAMES: readonly [string, string] = ["purple", "yellow"];
+
+/** The wash of each member of {@link TWO}, indexed alike: a fill in the
+ * member's hue that content stays readable on. The roles built on the pair
+ * take their fills from here, so they follow the pair when it is replaced. */
+export const TWO_WASH: readonly [Color, Color] = [PURPLE_WASH, YELLOW_WASH];
 
 /**
  * **Four fills**, for the one set in the collection whose size is a *theorem* —

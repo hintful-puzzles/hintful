@@ -72,8 +72,8 @@ highest *tier* that fired as the grade. The runner owns:
   byte-for-byte unchanged (see hints.md on the budget guard). **The failure
   names the culprit**: the thrown error appends the techniques by firing count,
   most-fired first, so the runaway one is identified without bisecting the
-  ladder. Counting happens only where a budget does, so the generator path
-  allocates nothing;
+  ladder. Counting happens only where a budget does or the caller passes its
+  own `firings` tally, so the generator path allocates nothing;
 - the optional **`settled` early-out** — *"stop, there is nothing left for the
   ladder to do"*. Deliberately broader than "solved", which is what it was
   called until it had five callers and meant solved for two of them: Undead

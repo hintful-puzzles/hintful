@@ -19,7 +19,9 @@ import {
 
 export const PREFERRED_TILE_SIZE = 32;
 
-const sepWidth = (ts: number) => Math.floor(ts / 32);
+/** Never zero: a phone gives the offered boards a tile under 32, and the line
+ * between two regions and the frame are drawn there too. */
+const sepWidth = (ts: number) => Math.max(1, Math.floor(ts / 32));
 const cursorInset = (ts: number) => Math.floor(ts / 8);
 const border = (ts: number) => Math.floor(ts / 2);
 const coord = (n: number, ts: number) => n * ts + border(ts);

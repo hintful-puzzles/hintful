@@ -204,7 +204,7 @@ function sokobanGenerate(w: number, h: number, rs: RandomState): Uint8Array {
  * longest from the opening are the ones whose every hint is slowest, so the
  * budget is also what keeps a dealt board's hints quick
  * (`strengthen-the-sokoban-solver` design D8). */
-const DEAL_BUDGET = 20_000;
+export const DEAL_BUDGET = 20_000;
 
 /**
  * Levels a deal may generate on a board of `area` squares: five times the

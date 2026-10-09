@@ -23,15 +23,16 @@ letters it uses.
 ## Hints
 
 **Hint** explains the next step rather than simply making it. A region, in a
-hint's sentence, is a group of squares your own "no wall" marks already join,
-so a single square counts as one too.
+hint's sentence, is a group of squares your own "no wall" marks already join.
+A square they join to nothing is reasoned about in the same way.
 
 {{hint-marks}}
 
 When a hint talks about two regions, one is striped and the other outlined,
 so you can tell them apart even where they touch: "the striped and outlined
 regions both hold an A" means those two regions, and no others. A single
-square is named by its letter instead ("these two Ds").
+square is named by its letter ("these two Ds") or called a square ("the
+striped square and the outlined region"), never a region.
 
 ## Separate parameters
 

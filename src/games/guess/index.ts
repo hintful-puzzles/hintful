@@ -140,10 +140,15 @@ function firstEmpty(ui: GuessUi, npegs: number): number {
  * `fallback` is where to rest when the row is full but cannot be submitted (a
  * repeated color under `allowMultiple: false`): the submit position would draw
  * the submit box around a row that will not go.
+ *
+ * In notes mode the cursor names the answer slot the next mark goes in, and the
+ * submit position is not one: a full row there rests on its last slot, where
+ * the Marks key puts a cursor it finds on the submit position.
  */
 function restCursor(ui: GuessUi, npegs: number, fallback = 0): void {
   const open = firstEmpty(ui, npegs);
-  ui.cursor.x = open >= 0 ? open : ui.markable ? npegs : fallback;
+  const full = ui.pencilMode ? npegs - 1 : ui.markable ? npegs : fallback;
+  ui.cursor.x = open >= 0 ? open : full;
 }
 
 /**

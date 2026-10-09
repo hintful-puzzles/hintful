@@ -650,7 +650,7 @@ export const minesGame: Game<
   hintRungs: MINES_RUNGS,
   hintMarks: {
     roles: {
-      ring: "each square the step decides: it must be a mine, it must be safe, or its flag must come off, as the sentence says.",
+      ring: "each square the step decides: it must be a mine, or it must be safe, as the sentence says.",
       outline:
         "what the step reasons from: the numbers it counts, and the mines one of them already touches.",
       stripes:

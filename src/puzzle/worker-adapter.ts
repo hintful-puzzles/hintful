@@ -265,8 +265,9 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     if (this.drawing && this.paletteReady) this.engine.redraw(this.drawing);
   }
 
-  /** A full repaint with the per-game drawstate dropped, for a replaced
-   * palette, where a plain `engine.redraw` would honor the stale cache. Not on
+  /** A full repaint with the per-game drawstate dropped, for a palette's first
+   * install or its replacement: a plain `engine.redraw` would honor a cache
+   * keyed against the old palette, or one built before any palette. Not on
    * `PuzzleEngineSurface`: the app's own redraw path is `redraw()`. */
   private forceRedraw(): void {
     if (this.drawing && this.paletteReady) this.engine.forceRedraw(this.drawing);

@@ -13,6 +13,7 @@
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -409,10 +410,11 @@ function aimedAt(
  * through the middles of two squares crosses the edge between them there. */
 const RAIL_DRAG_REACH = 0.3;
 
-/** The square a pixel falls in along one axis, `-1` in the top/left border
- * (the clues sit a whole tile in, hence the `- 1`). */
+/** The square a pixel falls in along one axis. The squares sit a whole tile
+ * in, past the clues, hence the `- 1`; the clues' tile is `-1`, and the
+ * top/left border beyond it is held to `-1` as well. */
 function gridCoord(px: number, m: ReturnType<typeof metrics>): number {
-  return px < m.border ? -1 : Math.floor((px - m.border) / m.tile) - 1;
+  return Math.max(-1, fromCoord(px, m.tile, m.border) - 1);
 }
 
 function interpretMove(
@@ -606,7 +608,7 @@ export const tracksGame: Game<
     roles: {
       ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a cross in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",
       outline:
-        "what the step reasons from, in a second color: an outline round the squares it counts, a short bar on a side whose state is part of the argument, and the clue number it counts with, recolored in the margin.",
+        "what the step reasons from: an outline round the squares it counts and a short bar on a side whose state is part of the argument, both in a second color, and the clue number it counts with, drawn in the hint color in the margin.",
       stripes:
         "the row or column the sentence calls “this row” or “this column”, striped through its clue, or the closed block a sentence about crossings is about.",
     },

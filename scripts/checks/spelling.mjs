@@ -47,7 +47,7 @@ const EXCLUDED = [
   /^metrics\//,
   /^package-lock\.json$/,
   /\.snap$/,
-  /\.[ch]$/,
+  /^openspec\/changes\/[^/]+\/reference\/.*\.[ch]$/,
   /^scripts\/checks\/spelling(-[a-z]+)?\.mjs$/,
   /\.(png|ico|jpg|jpeg|webp|woff2?)$/,
 ];

@@ -30,7 +30,7 @@ More information: http://www.janko.at/Raetsel/Hidoku/index.htm
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. Every step places one number, and it reasons only from the numbers on the board and, in {{choice:ruleset:3}} mode, the arrows, so it carries on from wherever you are, as long as none of your numbers is wrong; if one is, it asks you to fix the highlighted mistakes first. Lines you have drawn are yours: the hint neither reads them nor draws any.
+**Hint** explains the next step rather than simply making it. A step places one number, or one whole run where that run has only one route, and it reasons only from the numbers on the board and, in {{choice:ruleset:3}} mode, the arrows, so it carries on from wherever you are, as long as none of your numbers is wrong; if one is, it asks you to fix the highlighted mistakes first. Lines you have drawn are yours: the hint neither reads them nor draws any.
 
 {{hint-marks}}
 

@@ -845,6 +845,39 @@ describe("Galaxies association gestures (left button, and cell→dot)", () => {
     }
   });
 
+  it("a canceled press on a tile with an arrow leaves the arrow", () => {
+    // The synthesized drag arrives before the release, so the press has
+    // "traveled" by the time it is released: read as a drag, it would lift
+    // the arrow under the press and drop it off the board.
+    const { s, ui } = board();
+    const arrowed = galaxiesGame.executeMove(s, {
+      ops: [{ kind: "assoc", x: 1, y: 3, ax: 3, ay: 3 }],
+      solving: false,
+    });
+    expect(arrowed.flags[idx(arrowed, 1, 3)] & F_TILE_ASSOC).toBeTruthy();
+    // The right button too: its press lifts the arrow at once, and it is the
+    // button a finger held on the tile arrives as.
+    for (const [press, drag, release] of [
+      [LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE],
+      [RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE],
+    ]) {
+      expect(move(arrowed, ui, 48, 80, press)).toBe(UI_UPDATE);
+      const dragged = move(arrowed, ui, -100, -100, drag);
+      const released = move(arrowed, ui, -100, -100, release);
+      for (const r of [dragged, released]) {
+        expect(r === null || r === UI_UPDATE).toBe(true);
+      }
+      expect(ui.dragging).toBe(false);
+    }
+    // A real drag off the board is still how an arrow is removed.
+    expect(move(arrowed, ui, 48, 80, LEFT_BUTTON)).toBe(UI_UPDATE);
+    expect(move(arrowed, ui, 48, 2, LEFT_DRAG)).toBe(UI_UPDATE);
+    expect(move(arrowed, ui, 48, 2, LEFT_RELEASE)).toEqual({
+      ops: [{ kind: "unassoc", x: 1, y: 3 }],
+      solving: false,
+    });
+  });
+
   it("a drag from a plain cell picks the dot, and commits the pair", () => {
     const { s, ui } = board();
     // Tile (0,1) = doubled (1,3). Its only legal dot is (3,3): the 180°

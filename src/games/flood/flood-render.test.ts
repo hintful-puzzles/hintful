@@ -54,6 +54,19 @@ describe("Flood redraw", () => {
     expect(ops.some((o) => o.op === "rect" && o.color === 12 && o.w === 1)).toBe(true);
   });
 
+  it("keeps the line and the frame on a tile smaller than the preferred one", () => {
+    // What a phone gives the 16x16 presets.
+    const small = 22;
+    const state = newState({ w: 2, h: 1, colors: 3, leniency: 0 }, "01,9");
+    const ds = floodGame.newDrawState(state, small) as FloodDrawState;
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, ds, null, state, 1, UI, 0, 0);
+    expect(ops[0]).toMatchObject({ op: "rect", color: 12, w: 2 * small + 2 });
+    expect(
+      ops.some((o) => o.op === "rect" && o.color === 12 && o.w === 1 && o.h === small),
+    ).toBe(true);
+  });
+
   it("draws the cursor outline when the cursor is visible", () => {
     const state = newState({ w: 2, h: 2, colors: 3, leniency: 0 }, "0112,9");
     const ds = freshDs(state);

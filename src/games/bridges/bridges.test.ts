@@ -43,6 +43,7 @@ import {
   G_LINEV,
   G_MARK,
   G_NOLINEH,
+  G_WARN,
   newStateFromDesc,
 } from "./state.ts";
 
@@ -238,6 +239,46 @@ describe("bridges input model (drag → move)", () => {
     expect(s2.gridCount(1, 0, G_LINEH)).toBe(1);
   });
 
+  it("a canceled press on an island draws no bridge", () => {
+    // The frontend reports a canceled press as a drag far off the canvas's top
+    // left corner and then a release there. From island (2,0) that point lies
+    // up and to the left, where island (0,0) is in line.
+    for (const [press, drag, release] of [
+      [LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE],
+      [RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE],
+    ]) {
+      const s = twoIslands();
+      const ui = bridgesGame.newUi(s);
+      const ds = newDrawState(s, ts);
+      const at = { x: center(2), y: center(0) };
+      expect(bridgesGame.interpretMove(s, ui, ds, at, press)).toBe(UI_UPDATE);
+      const off = { x: -100, y: -100 };
+      for (const button of [drag, release]) {
+        const r = bridgesGame.interpretMove(s, ui, ds, off, button);
+        expect(r === null || r === UI_UPDATE).toBe(true);
+      }
+      expect(ui.drag.live).toBe(false);
+    }
+  });
+
+  it("a drag that overshoots the canvas's left edge still draws its bridge", () => {
+    const s = twoIslands();
+    const ui = bridgesGame.newUi(s);
+    const ds = newDrawState(s, ts);
+    const row = center(0);
+    bridgesGame.interpretMove(s, ui, ds, { x: center(2), y: row }, LEFT_BUTTON);
+    bridgesGame.interpretMove(s, ui, ds, { x: center(1), y: row }, LEFT_DRAG);
+    bridgesGame.interpretMove(s, ui, ds, { x: -30, y: row }, LEFT_DRAG);
+    const move = bridgesGame.interpretMove(
+      s,
+      ui,
+      ds,
+      { x: -30, y: row },
+      LEFT_RELEASE,
+    ) as BridgesMove;
+    expect(move.ops).toEqual([{ op: "L", x1: 2, y1: 0, x2: 0, y2: 0, n: 1 }]);
+  });
+
   /** A right-drag from island (0,0) to island (2,0), as the pointer sends it. */
   const rightDrag = (s: BridgesState): ReturnType<typeof bridgesGame.interpretMove> => {
     const ui = bridgesGame.newUi(s);
@@ -299,6 +340,30 @@ describe("bridges input model (drag → move)", () => {
     expect(() =>
       bridgesGame.executeMove(two, { ops: [{ op: "C", ...span, n: 1 }] }),
     ).toThrow(/C limit/);
+  });
+
+  it("stops marking a loop's bridges once it is opened, while another loop stands", () => {
+    // Two squares of four islands side by side, on a board that forbids loops.
+    const p = { ...BRIDGES_PRESETS[0], w: 7, h: 3, allowloops: false };
+    const board = newStateFromDesc(p, "2a2a2a2g2a2a2a2");
+    const square = (x: number): BridgesOp[] => [
+      { op: "L", x1: x, y1: 0, x2: x + 2, y2: 0, n: 1 },
+      { op: "L", x1: x, y1: 2, x2: x + 2, y2: 2, n: 1 },
+      { op: "L", x1: x, y1: 0, x2: x, y2: 2, n: 1 },
+      { op: "L", x1: x + 2, y1: 0, x2: x + 2, y2: 2, n: 1 },
+    ];
+    const both = bridgesGame.executeMove(board, { ops: [...square(0), ...square(4)] });
+    expect(both.gridAt(1, 0) & G_WARN).toBeTruthy();
+    expect(both.gridAt(5, 0) & G_WARN).toBeTruthy();
+
+    const opened = bridgesGame.executeMove(both, {
+      ops: [{ op: "L", x1: 0, y1: 0, x2: 2, y2: 0, n: 0 }],
+    });
+    // The left square is a loop no more, and none of its bridges is marked;
+    // the right one still is.
+    expect(opened.gridAt(1, 2) & G_WARN).toBeFalsy();
+    expect(opened.gridAt(0, 1) & G_WARN).toBeFalsy();
+    expect(opened.gridAt(5, 0) & G_WARN).toBeTruthy();
   });
 
   it("a plain click toggles the island mark", () => {

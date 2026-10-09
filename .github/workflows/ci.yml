@@ -1,25 +1,16 @@
 # CI backstop for this project.
 #
 # Trunk-based (no PRs), so the gate runs post-push on `main`: it runs the SAME
-# gate as the husky pre-commit hook (`npm run gate`: the typechecker over both projects →
-# biome ci → probe-anchor check → vitest run → vite build), so a `--no-verify` commit or
-# a fresh clone whose hooks never installed can no longer land breakage on
-# `main` undetected. The deploy waits only on the gate's fast checks and the
-# build (the `build` job); the full gate runs beside it and marks the commit red
-# after the fact. (If contributors arrive later and PRs become useful, add a
-# `pull_request:` trigger here.)
+# gate as the husky pre-commit hook, `npm run gate`, whose steps are defined in
+# `scripts/gate.sh` and nowhere else. So a `--no-verify` commit or a fresh
+# clone whose hooks never installed cannot land breakage on `main` undetected.
+# The deploy waits only on the gate's fast checks and the build (the `build`
+# job); the full gate runs beside it and marks the commit red after the fact.
+# (If contributors arrive later and PRs become useful, add a `pull_request:`
+# trigger here.)
 #
-# Nothing is generated, so this job is `npm ci` and the gate. It used to say the
-# opposite — "no cheap no-WASM tier", because `src/puzzle/{catalog,types,worker}.ts`
-# imported artifacts out of `src/assets/puzzles/` — and it carried an emsdk
-# setup, apt packages, a `build:wasm` step and a cache of the wasm output keyed
-# on `hashFiles('puzzles/**')` to keep all that off the critical path.
-# `retire-c-engine` deleted the C engine: the catalog is committed source
-# (`src/puzzle/catalog-data.ts`) and the types are hand-authored. An apt install
-# of halibut and a `build:assets` step outlived it by one change, to build the
-# in-app manual; `retire-the-upstream-help-tree` deleted the manual, so the last
-# native tool and the last generated artifact went with it. There is no longer
-# any tool to provision here, on any platform.
+# Nothing is generated and no native tool is provisioned, so each job is
+# `npm ci` and the gate.
 name: CI
 
 on:
@@ -55,12 +46,13 @@ jobs:
           cache: npm
       - name: Install npm dependencies
         run: npm ci
-      - name: Run the gate (typecheck → lint/format → test → prod build)
+      - name: Run the gate
         run: npm run gate
 
   # The gate's fast checks and the production build, which is the artifact
-  # that ships: typecheck, lint, the source checks and openspec validation run
-  # first, so a commit that breaks any of those still does not deploy.
+  # that ships. The fast checks are the prefix of `scripts/gate.sh`, which is
+  # where they are listed; they run first, so a commit that fails one of them
+  # still does not deploy.
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -91,11 +83,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          # Current LTS-track major; matches the local dev environment. (This
-          # used to be pinned by a hard requirement — the deleted
-          # `vite-plugins/wasm-sourcemaps.ts` used `RegExp.escape`, which needs
-          # V8 in Node 24, and `vite build` failed on Node 22. That plugin went
-          # with the wasm it patched, so the pin is now a preference.)
+          # Current LTS-track major; matches the local dev environment. A
+          # preference: nothing in the build needs this major.
           node-version: 24
           cache: npm
 
@@ -125,8 +114,8 @@ jobs:
   # check: Cloudflare offers no "deploy only if CI passed" setting. It would
   # therefore publish exactly the commits this workflow exists to catch — a
   # `--no-verify` commit, or one from a clone whose hooks never installed —
-  # which is what the build-pipeline requirement "a failing gate does not reach
-  # the public URL" forbids. It would also mean a second build environment,
+  # which is what `build-pipeline`, "The app is published once the fast checks
+  # and the build pass" forbids. It would also mean a second build environment,
   # built from the same source by a different toolchain, free to drift.
   deploy:
     needs: build

@@ -112,6 +112,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TENT] = ORANGE;
   out[COL_ERROR] = ERROR;
   out[COL_ERRTEXT] = ERROR_TEXT;
+  // Red's bold step, not the error role: the trunk of a tree in error has to be
+  // told from the red leaves it is drawn under.
   out[COL_ERRTRUNK] = RED_BOLD;
   out[COL_MISTAKE] = ERROR;
   out[COL_HINT] = HINT_ACTION;

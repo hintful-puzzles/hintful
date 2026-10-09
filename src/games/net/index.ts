@@ -11,6 +11,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {
@@ -208,8 +209,10 @@ function pressedTile(s: NetState, ds: NetDrawState, p: Point, ui: NetUi) {
   const lt = lineThick(ts);
   const px = Math.floor(p.x) - boardMargin(ts) - lt;
   const py = Math.floor(p.y) - boardMargin(ts) - lt;
-  const tx = Math.floor(px / ts);
-  const ty = Math.floor(py / ts);
+  // The tile is the shared conversion; the fraction of a tile, which it
+  // floors away, is read off the same pixel below.
+  const tx = fromCoord(px, ts, 0);
+  const ty = fromCoord(py, ts, 0);
   if (px < 0 || py < 0 || tx >= s.w || ty >= s.h) return null;
   return {
     x: (tx + ui.orgX) % s.w,

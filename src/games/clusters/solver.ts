@@ -284,7 +284,15 @@ export interface ClustersDeduction {
 /** The whole remaining plan. `verdict` COMPLETE means the deductions solve
  * the board — which also *certifies the position*: the error conditions are
  * monotone, so a complete zero-error grid is the unique solution, and a
- * position containing a wrong tile can only end INVALID or UNFINISHED. */
+ * position containing a wrong tile cannot end COMPLETE.
+ *
+ * On a board this deduction solves from its givens, which every dealt board
+ * is, such a position ends INVALID and never UNFINISHED. Each refutation the
+ * solve from the givens used still holds with more cells filled, so the plan
+ * goes on placing solution colors until it meets the wrong tile, and that
+ * tile's own refutation is then on the board: an error at once, or one the
+ * single-cell forcings run into. UNFINISHED is left for a board the deduction
+ * cannot finish from its givens, which only a typed-in description can be. */
 export interface ClustersHintPlan {
   verdict: ClustersStatus;
   deductions: ClustersDeduction[];

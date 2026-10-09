@@ -127,11 +127,9 @@ const INERT_PANEL_KEYS: Record<string, string[]> = {
 
 /**
  * Games that answer a button they cannot possibly have acted on, each with the
- * reason — and the reason must also be in that game's spec, not only here.
- *
- * Empty, and meant to stay so. Ascent was the only entry: its `interpretMove`
- * gated the `mouseClick` call on the *coordinates* alone, so every key sent to
- * the keyboard origin fell through to the `finishTyping` tail's `UI_UPDATE`.
+ * reason. Empty, and meant to stay so: the shape that fills it is an
+ * `interpretMove` that gates its pointer arm on the *coordinates* alone, so a
+ * key sent to the keyboard origin falls through to a tail's `UI_UPDATE`.
  */
 const CLAIMS_UNACTIONABLE: Record<string, string> = {};
 

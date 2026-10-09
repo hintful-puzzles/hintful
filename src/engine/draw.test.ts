@@ -39,7 +39,7 @@ describe("drawRecessedBorder", () => {
     expect(opsOfKind(ops, "polygon")[1].points).toHaveLength(5);
   });
 
-  it("places the highlight wedge on the top/right corner", () => {
+  it("places the highlight wedge on the bottom-right corner", () => {
     const { dr, ops } = recordingDrawing();
     drawRecessedBorder(dr, bounds, inset, HI, LO);
     expect(opsOfKind(ops, "polygon")[0].points).toEqual([

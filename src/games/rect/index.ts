@@ -160,9 +160,12 @@ function interpretMove(
   const button = stripModifiers(rawButton);
   const { w, h } = state;
   const tile = ds.tileSize;
-  const fromCoord = (px: number) => (px - BORDER) / tile;
+  // A position in tiles, fraction kept: `coordRound` needs how far into the
+  // tile the pointer is to tell a corner from an edge from a center, which the
+  // engine's `fromCoord` floors away.
+  const inTiles = (px: number) => (px - BORDER) / tile;
 
-  let [xc, yc] = coordRound(fromCoord(p.x), fromCoord(p.y));
+  let [xc, yc] = coordRound(inTiles(p.x), inTiles(p.y));
 
   let startdrag = false;
   let enddrag = false;

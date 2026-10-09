@@ -132,8 +132,9 @@ function createBorderClues(b: BoatsBoard): void {
  * is orientation-independent.
  *
  * This is not an optimization — it is the **only** guard against a hang.
- * `newBoatsDesc` retries fleet placement in an unbounded loop, so an
- * unfittable fleet (the default 3,2,1 in 5×4, measured) would spin for ever.
+ * `newBoatsDesc` retries fleet placement until it succeeds, inside each of
+ * its counted attempts and with no count of its own, so an unfittable fleet
+ * (the default 3,2,1 in 5×4, measured) would spin for ever.
  */
 export function fleetFits(p: BoatsParams): boolean {
   const board = blankBoard(

@@ -22,7 +22,8 @@
     "vite.config.ts",
     "vitest.config.ts",
     "vite-plugins",
-    "scripts/checks",
-    "scripts/hint-scan.ts"
+    /* The whole directory and not its files by name, so a script added beside
+       these cannot be left outside the project. */
+    "scripts"
   ]
 }

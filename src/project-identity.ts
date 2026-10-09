@@ -2,20 +2,25 @@
  * How this project names itself and where it sends players for support.
  *
  * The **product** is Hintful Puzzles; the **repository** is `hintful`. They
- * are different names for different things, and only the product name reaches
- * a player. Every surface that shows it — the About dialog, the PWA manifest
- * (the label under an installed icon), the front page's title and heading —
- * reads it from here, so a rename is one edit and the copies cannot drift.
+ * are different names for different things, and a player is shown the
+ * repository's only as the address of a link. The surfaces built from code or
+ * a template — the About dialog, the PWA manifest (the label under an
+ * installed icon), the page titles and the front page's heading — read the
+ * product name from here. The static pages (the privacy notes, the
+ * unsupported-browser and not-found pages, the help site's own pages) write it
+ * out, so a rename is this file and those.
  *
  * The support links point at *this* project's repository. Links that exist to
  * credit a predecessor (puzzles-web, Simon Tatham's site, `puzzles-unreleased`)
  * are attribution, not support, and live beside the credits that use them.
  *
  * The app presents itself as **maintained by** its maintainer, never "by": the
- * puzzles are other people's designs. Outside the About dialog no surface
- * names another project, and every player-facing sentence outside
- * `help/games/` is this project's own writing; those pages keep upstream's
- * wording on purpose. The logo (`public/favicon.svg`) is this project's own
+ * puzzles are other people's designs. The header and the page titles name no
+ * other project: the lineage is credited in the About dialog and the help
+ * pages on the collection's origin, and the unsupported-browser page links to
+ * the predecessors as other places to play. Every player-facing sentence
+ * outside `help/games/` is this project's own writing; those pages keep
+ * upstream's wording on purpose. The logo (`public/favicon.svg`) is this project's own
  * drawing, and no third-party logo ships.
  *
  * Imported by `vite.config.ts` as well as the app, so it must stay a leaf:

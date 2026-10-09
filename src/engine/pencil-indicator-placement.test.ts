@@ -10,8 +10,9 @@
  * **What is asserted is where the pixels land, not which helper was called.** A
  * game that computed the same corner by hand would pass, which is correct — the
  * requirement is about the player's eye — and a game that kept its own corner
- * fails however tidily it is written. The population is derived from the `Ui`
- * each `newUi` returns, so a game joins by having the mode
+ * fails however tidily it is written. The population is {@link takesNotes}, the
+ * definition the midend offers the Marks key by, so a game given the key is
+ * held to showing what the key did
  * (`docs/doctrine.md` § "Convention over configuration"; `testing/enrollment.ts`).
  *
  * The frame is taken twice, with the mode off and on, and only the ops the
@@ -21,6 +22,7 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
+import { takesNotes } from "./key-labels.ts";
 import { type PencilIndicatorBox, pencilIndicatorBox } from "./pencil-indicator.ts";
 import { type AnyGame, builtGames, enrolledIn } from "./testing/enrollment.ts";
 import { paramsCorpus } from "./testing/params-corpus.ts";
@@ -32,8 +34,7 @@ import type { Size } from "./types.ts";
 
 beforeAll(registerAllGames);
 
-/** A game takes notes iff its own `Ui` carries the collection's mode flag. */
-const noteTaking = enrolledIn((g) => typeof g.ui["pencilMode"] === "boolean");
+const noteTaking = enrolledIn((g) => takesNotes(g.state, g.ui));
 
 /** Every corner a draw op touches. `clip`/`unclip` bound nothing themselves. */
 function cornersOf(op: DrawOp): { x: number; y: number }[] {

@@ -21,7 +21,12 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
+import {
+  CURSOR_SELECT2,
+  DELETE,
+  LEFT_BUTTON,
+  RIGHT_BUTTON,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -213,11 +218,11 @@ describe("seismic params", () => {
       /at most 100 in Tectonic mode/,
     );
 
-    // Every preset stays inside its mode's bound — and presets stop well short
-    // of it, because a preset is a wait nobody chose (see the doc comment).
+    // Every preset stays inside its mode's bound, and inside the smaller of
+    // the two in either mode: a preset is a wait nobody chose.
     for (const p of PRESETS) {
       expect(valid(p)).toBeNull();
-      expect(p.w * p.h).toBeLessThanOrEqual(8 * 8);
+      expect(p.w * p.h).toBeLessThanOrEqual(MAX_CELLS_SEISMIC);
     }
   });
 
@@ -662,6 +667,39 @@ describe("seismic input", () => {
         0x31,
       ),
     ).toBeNull();
+  });
+
+  it("makes no move of a pencil-mode clear on a cell with no notes", () => {
+    const state = stateOf(SMALL);
+    const ui = newUi(state);
+    const cell = firstFreeCell(state);
+    const ds = preferredDrawState(seismicGame, state);
+    ui.cursor.visible = true;
+    ui.cursorFromKeyboard = true;
+    ui.cursor.x = cell.x;
+    ui.cursor.y = cell.y;
+    ui.pencilMode = true;
+    expect(state.pencil[cell.i]).toBe(0);
+    for (const clear of [DELETE, CURSOR_SELECT2, 0x30])
+      expect(
+        seismicGame.interpretMove(state, ui, ds, { x: 0, y: 0 }, clear),
+      ).toBeNull();
+
+    // With a note to wipe the same key is a move.
+    const noted = seismicGame.executeMove(state, {
+      type: "set",
+      x: cell.x,
+      y: cell.y,
+      n: 1,
+      pencil: true,
+    });
+    expect(seismicGame.interpretMove(noted, ui, ds, { x: 0, y: 0 }, DELETE)).toEqual({
+      type: "set",
+      x: cell.x,
+      y: cell.y,
+      n: 0,
+      pencil: true,
+    });
   });
 
   it("never leaves a given cell highlighted", () => {

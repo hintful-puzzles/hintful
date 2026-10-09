@@ -104,12 +104,16 @@ const GAMES = (() => {
 const DRAWING = GAMES.filter((g) => g.bevels.length > 0);
 
 describe("the bevels on the frames", () => {
-  it("finds the games that draw one", () => {
-    const drawing = DRAWING.map((g) => g.id);
-    // The games whose tiles the player moves, which are the ones that keep a
-    // bevel (`docs/games/rendering.md` § "What a board looks like: pieces on a
-    // quiet surface").
-    expect(drawing.sort()).toEqual(["fifteen", "sixteen", "twiddle"]);
+  it("finds a bevel in every game that calls a helper, and in some game", () => {
+    // The two instruments are independent: the shape read off the frames and
+    // the spies on the helpers. A shape the reader stopped recognizing leaves a
+    // calling game out of the first list, and a reader that found nothing
+    // would leave every test below with no game to run on.
+    const calling = GAMES.filter((g) => [...g.calls.values()].some((n) => n > 0));
+    expect(
+      calling.map((g) => g.id).filter((id) => !DRAWING.some((g) => g.id === id)),
+    ).toEqual([]);
+    expect(DRAWING.length).toBeGreaterThan(0);
   });
 });
 

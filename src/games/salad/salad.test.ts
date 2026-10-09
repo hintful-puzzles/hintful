@@ -24,6 +24,7 @@ import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
+  DELETE,
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
@@ -619,6 +620,46 @@ describe("salad input", () => {
     });
   });
 
+  it("makes no move of an entry that would leave the square as it is", () => {
+    const blank = newState(LETTERS.p, LETTERS.desc);
+    const key = (ch: string) => ch.charCodeAt(0);
+    const press = (s: SaladState, pencil: boolean, button: number) => {
+      const ui = newUi(s);
+      ui.cursor = { x: 1, y: 2, visible: true };
+      ui.cursorFromKeyboard = true;
+      ui.pencilMode = pencil;
+      return saladGame.interpretMove(
+        s,
+        ui,
+        preferredDrawState(saladGame, s),
+        at(1, 2),
+        button,
+      );
+    };
+    const played = (s: SaladState, pencil: boolean, button: number) =>
+      saladGame.executeMove(s, press(s, pencil, button) as SaladMove);
+
+    // Clearing a blank square, in either mode.
+    expect(press(blank, false, DELETE)).toBeNull();
+    expect(press(blank, true, DELETE)).toBeNull();
+    // Re-entering the symbol, the cross or the ball the square holds.
+    const lettered = played(blank, false, key("B"));
+    expect(press(lettered, false, key("B"))).toBeNull();
+    expect(press(lettered, false, key("A"))).not.toBeNull();
+    const crossed = played(blank, false, key("X"));
+    expect(press(crossed, false, key("X"))).toBeNull();
+    const ringed = played(blank, false, key("O"));
+    expect(press(ringed, false, key("O"))).toBeNull();
+    // A penciled ball on a crossed square toggles nothing.
+    expect(press(crossed, true, key("O"))).toBeNull();
+    // Each of those squares still clears, and a note still toggles off.
+    for (const s of [lettered, crossed, ringed])
+      expect(press(s, false, DELETE)).not.toBeNull();
+    const noted = played(blank, true, key("B"));
+    expect(press(noted, true, key("B"))).not.toBeNull();
+    expect(press(noted, false, DELETE)).not.toBeNull();
+  });
+
   it("refuses a symbol beyond the puzzle's range", () => {
     const s = newState(LETTERS.p, LETTERS.desc);
     const ui = newUi(s);
@@ -697,15 +738,18 @@ describe("salad input", () => {
       return k.button;
     };
     saladGame.interpretMove(s0, ui, ds, at(2, 1), LEFT_BUTTON);
+    // Each is played, so the clear has the cross to take away.
+    let s = s0;
     for (const [label, value] of [
       ["O", "circle"],
       ["X", "cross"],
       [clearKey.label, "clear"],
     ] as const) {
-      const move = saladGame.interpretMove(s0, ui, ds, at(0, 0), key(label));
+      const move = saladGame.interpretMove(s, ui, ds, at(0, 0), key(label));
       expect(move).toEqual({ type: "set", x: 2, y: 1, value });
+      s = saladGame.executeMove(s, move as SaladMove);
       // An entry by pointer drops the highlight; select the square again.
-      saladGame.interpretMove(s0, ui, ds, at(2, 1), LEFT_BUTTON);
+      saladGame.interpretMove(s, ui, ds, at(2, 1), LEFT_BUTTON);
     }
   });
 

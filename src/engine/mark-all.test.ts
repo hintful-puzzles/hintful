@@ -59,9 +59,9 @@ const MARK_ALL_GAMES: Row[] = registeredGameIds()
   .map((id) => ({ name: id, game: getTsGame(id) as AnyGame }));
 
 /** Every note-taking game keeps its candidates in `pencil`, one bitmask per
- * cell, so the probe reads one field rather than being told where to look, per
- * game. A game storing one flag per candidate instead would fail the narrowing
- * test below, which looks for a cell word holding two candidates. */
+ * cell (Abcd's letters included), so the probe reads one field rather than
+ * being told where to look, per game. The narrowing test below depends on that
+ * layout: it looks for a cell word holding two candidates. */
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 const notesOf = (state: any): Int32Array | Uint8Array | Uint16Array => state.pencil;
 
@@ -87,8 +87,9 @@ describe("every game declaring the press answers it, and no other game does", ()
   /*
    * **The declaration held to the behavior**, which the check above does not do:
    * it compares the roster with the flag, so a flag that lies agrees with a
-   * roster that repeats the lie. `canMarkAll` decides whether the toolbar shows
-   * a Mark-all button (`components/history.ts`), so a game declaring it without
+   * roster that repeats the lie. `canMarkAll` decides whether the Game controls
+   * show a Mark-all button (`puzzle/components/game-controls.ts`), so a game
+   * declaring it without
    * answering `M` ships a dead button, and a game answering `M` without
    * declaring it hides a press it handles.
    *
@@ -183,8 +184,8 @@ describe("every game declaring the press answers it, and no other game does", ()
   });
 });
 
-/** Press `M` — ASCII **77**, exactly what the toolbar button injects
- * (`puzzle-history.ts` `handleMarkAll`) — and apply whatever it asks for. Returns
+/** Press `M` — ASCII **77**, exactly what the Mark-all button injects
+ * (`screens/puzzle-screen.ts` `handleMarkAll`) — and apply whatever it asks for. Returns
  * the new state, or `null` when the press is a true no-op.
  *
  * Uppercase matters: Group intercepts only `'M'`, because lowercase `'m'` is its

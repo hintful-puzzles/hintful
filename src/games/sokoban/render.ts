@@ -26,6 +26,7 @@ import {
 import { sokobanPit } from "../../engine/color/palette-games.ts";
 import { drawMoveArrow, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -38,7 +39,6 @@ import {
   barrelLabel,
   DEEP_PIT,
   detargetize,
-  INITIAL,
   isBarrel,
   isOnTarget,
   isPlayer,
@@ -363,10 +363,10 @@ export function redraw(
   const spritesAt = new Map<number, Sprite[]>();
   const reach = Math.floor(ts / 3) + 1;
   for (const s of sprites) {
-    const x0 = Math.floor((s.x - reach) / ts);
-    const x1 = Math.floor((s.x + reach) / ts);
-    const y0 = Math.floor((s.y - reach) / ts);
-    const y1 = Math.floor((s.y + reach) / ts);
+    const x0 = fromCoord(s.x - reach, ts, 0);
+    const x1 = fromCoord(s.x + reach, ts, 0);
+    const y0 = fromCoord(s.y - reach, ts, 0);
+    const y1 = fromCoord(s.y + reach, ts, 0);
     for (let y = Math.max(y0, 0); y <= Math.min(y1, h - 1); y++)
       for (let x = Math.max(x0, 0); x <= Math.min(x1, w - 1); x++) {
         const i = y * w + x;
@@ -374,8 +374,7 @@ export function redraw(
       }
   }
 
-  // A hand-typed desc may carry generation's INITIAL; it draws as a wall.
-  const isWall = (i: number) => grid[i] === WALL || grid[i] === INITIAL;
+  const isWall = (i: number) => grid[i] === WALL;
 
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -385,7 +384,6 @@ export function redraw(
         v = v === TARGET ? PLAYERTARGET : PLAYER;
       }
       const here = spritesAt.get(i) ?? [];
-      if (isWall(i)) v = WALL;
       const arrows = arrowsAt.get(i) ?? [];
       const tile: TileMarks =
         ringed.has(i) ||

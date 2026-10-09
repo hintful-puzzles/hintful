@@ -11,7 +11,16 @@
  */
 import { render } from "lit";
 import { beforeEach, describe, expect, it } from "vitest";
-import { licenseTextToHTML } from "./about-dialog";
+import { dependencyByline, licenseTextToHTML } from "./about-dialog";
+
+describe("a bundled package's entry names its publisher and its license", () => {
+  it("names both, and either alone", () => {
+    // A NOTICE file need not say which license it is a notice under.
+    expect(dependencyByline("Surma", "Apache-2.0")).toBe("Surma · Apache-2.0");
+    expect(dependencyByline(null, "MIT")).toBe("MIT");
+    expect(dependencyByline("Surma", null)).toBe("Surma");
+  });
+});
 
 let host: HTMLElement;
 

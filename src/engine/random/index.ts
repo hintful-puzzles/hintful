@@ -1,7 +1,8 @@
 /*
  * Upstream `random.c` (Simon Tatham's portable RNG), byte for byte: identical
- * seeds produce identical streams, which is what keeps shared game IDs
- * reproducible. `__fixtures__/corpus.json` is a C-recorded replay corpus of it.
+ * seeds produce identical streams in every build, so a seed keeps feeding a
+ * generator the same numbers. `__fixtures__/corpus.json` is a C-recorded replay
+ * corpus of it.
  */
 
 import { shaSimple } from "./sha1.ts";

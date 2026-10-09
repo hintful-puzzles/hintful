@@ -652,8 +652,8 @@ export function status(s: SoloState): "solved" | "ongoing" {
 export type SoloMove =
   /** Enter (or pencil-toggle) digit `n` at `(x, y)`; `n = 0` clears. `autoElim`
    * (auto-pencil mode, baked at move-creation so replay is deterministic)
-   * additionally strikes `n` from the pencil marks of every cell sharing a row,
-   * column, block (or diagonal) with `(x, y)` on a real placement. */
+   * additionally strikes `n` from the pencil marks of every cell sharing one of
+   * {@link regionsOf}'s regions with `(x, y)` on a real placement. */
   | {
       type: "set";
       x: number;
@@ -662,7 +662,8 @@ export type SoloMove =
       pencil: boolean;
       autoElim?: boolean;
     }
-  /** Fill every empty cell's pencil marks (the `M` key / fill-all button). */
+  /** Fill the pencil marks of every empty cell that has none (the `M` key /
+   * fill-all button). */
   | { type: "pencilAll" }
   /** Strike (clear) the listed pencil candidates atomically (hint elimination). */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
@@ -682,7 +683,8 @@ export interface SoloUi {
   pencilKeepHighlight: boolean;
   /** Pref (default on): right-click toggles a sticky pencil mode. */
   pencilSticky: boolean;
-  /** Pref (default off): a placement strikes that digit from its row/col/block. */
+  /** Pref (default off): a placement strikes that digit from the notes of every
+   * cell it shares one of {@link regionsOf}'s regions with. */
   autoPencil: boolean;
   /** Pref: how a hint pencils (`CandidateReading`). */
   candidateReading: CandidateReading;

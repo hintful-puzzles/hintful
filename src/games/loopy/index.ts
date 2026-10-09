@@ -334,10 +334,12 @@ function setEdge(
 
 /** The edge nearest a pointer position, or `null` off the grid. */
 function edgeAt(g: Grid, tileSize: number, p: Point): GridEdge | null {
-  // Screen coordinates to grid coordinates. `Math.trunc`, not `Math.floor`:
-  // this mirrors C's integer division, which rounds towards zero, and grid
-  // coordinates are genuinely negative for several tilings (and for any click
-  // in the border), where the two disagree.
+  // Screen coordinates to grid coordinates. This is a change of scale to the
+  // tiling's own units and not a cell index, so it is not `fromCoord` of
+  // `engine/geometry.ts`: the nearest edge is found in those units below.
+  // `Math.trunc`, not `Math.floor`: this mirrors C's integer division, which
+  // rounds towards zero, and grid coordinates are genuinely negative for
+  // several tilings (and for any click in the border), where the two disagree.
   const gx = Math.trunc(((p.x - border(tileSize)) * g.tileSize) / tileSize) + g.lowestX;
   const gy = Math.trunc(((p.y - border(tileSize)) * g.tileSize) / tileSize) + g.lowestY;
   return gridNearestEdge(g, gx, gy);

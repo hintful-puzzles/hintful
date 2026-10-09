@@ -19,18 +19,13 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newAbcdDesc } from "./generator.ts";
 import { newSolverBoard, type SolverBoard, solveBoard } from "./solver.ts";
-import { type AbcdParams, newState } from "./state.ts";
+import { type AbcdParams, abcdPresets, newState } from "./state.ts";
 
-/** Every preset shape, plus diagonal mode and a thin board: hidden clues are
- * what make the runs technique work for its living, and diagonal mode rules
- * out more per placement. */
+/** Every preset, plus the diagonal board with its clues hidden and a thin
+ * board: hidden clues are what make the runs technique work for its living,
+ * and diagonal mode rules out more per placement. */
 const SHAPES: AbcdParams[] = [
-  { w: 4, h: 4, n: 4, diag: false, removenums: false },
-  { w: 4, h: 4, n: 4, diag: false, removenums: true },
-  { w: 5, h: 5, n: 4, diag: false, removenums: false },
-  { w: 5, h: 5, n: 4, diag: false, removenums: true },
-  { w: 6, h: 6, n: 4, diag: false, removenums: false },
-  { w: 7, h: 7, n: 3, diag: false, removenums: false },
+  ...abcdPresets,
   { w: 6, h: 6, n: 5, diag: true, removenums: true },
   { w: 3, h: 9, n: 3, diag: false, removenums: true },
 ];

@@ -659,8 +659,8 @@ be decided without it. **The limit itself never defers** — a sentence you just
 wrote too long fails your commit, at every tier and every preset.
 
 **A sentence that genuinely needs more room goes in the ledger**
-(`LONG_NARRATIONS`), one entry per template with its reason and a `games`
-roster, held to 300 instead. The ledger is asserted both ways — an unlisted
+(`LONG_NARRATIONS`), one entry per reason with the `rungs` that speak it and a
+`games` roster, held to 300 instead. The ledger is asserted both ways — an unlisted
 long step fails, and so does a *listing* that matches nothing long — so
 shortening a sentence means deleting its entry. What earned a place when the
 limit was introduced is worth knowing before you add one: chain Tactics whose
@@ -668,7 +668,7 @@ form the spec mandates (name both ends, cite links, state the case split),
 owner-endorsed exemplar wording, two-premise deductions, and an owner-requested
 second sentence.
 
-**The unit of both halves is the `(entry, game)` listing**, which matters for
+**The unit of both halves is the `(entry, game, rung)` listing**, which matters for
 the sentences the engine writes on several games' behalf. A roster read off the
 solver — "this game records `forcing`, so it speaks the chain sentence" — is an
 inference, and a false one: Mathrax records `forcing` about ten times in sixteen
@@ -1452,11 +1452,6 @@ draws it. That is why `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
 - **A board `findMistakes` passes that is still doomed.** Bricks, Bridges,
   Clusters, Subsets and Loopy check further and say `CONTRADICTION_UNLOCALIZED`
   when the board is inconsistent with no entry provably wrong.
-- **A finished board its status does not call finished.** Fifteen, Sixteen and
-  Netslide count a board solved from the move that sorts it, so a game ID typed
-  already sorted is finished at move 0 while the status says ongoing; each
-  checks its tiles and says `ALREADY_SOLVED`. A game whose status covers every
-  finished board (most of them) writes nothing.
 - **A lost board.** The midend does not refuse on `"lost"`, because a lost board
   is not always over: Flood plays on past its move limit and its hint still
   leads home. Guess's revealed answer and Flood's board flooded past the limit

@@ -4,18 +4,17 @@
  *
  * A game's params appear inside every shared game ID, so changing how a game
  * encodes them silently invalidates every link anyone has ever shared of it.
- * `ts-migration` states that as policy — *"existing games keep their
- * byte-stable codecs permanently"* — and until this file nothing in the tree
- * asserted it. The frozen differentials cover **descs**, not params, so a codec
- * could have been rewritten with the whole suite green.
+ * The `ts-migration` spec asks for an assertion and not policy alone ("Encoded
+ * params are byte-stable, and the guard is derived"), and this file is it. The
+ * frozen differentials cover **descs**, not params, so without it a codec
+ * could be rewritten with the whole suite green.
  *
  * Two guarantees, and they do different jobs:
  *
- * 1. **Encode and decode are mutual inverses**, for all 612 cases. This is a
- *    property, not a fixture — it stays true when a preset is added and it
- *    cannot be re-baselined by a careless `vitest -u`. It held for all 57 games
- *    on the day it was written, so it is asserted for all of them with no
- *    exemption roster.
+ * 1. **Encode and decode are mutual inverses**, for every case of every game.
+ *    This is a property, not a fixture — it stays true when a preset is added
+ *    and it cannot be re-baselined by a careless `vitest -u`. It is asserted
+ *    of every registered game with no exemption roster.
  * 2. **The recorded encodings do not move**, as a per-game snapshot. This is
  *    the fixture, and it is the one that makes replacing a codec safe: a
  *    derived codec that produces a different string for any reachable params is

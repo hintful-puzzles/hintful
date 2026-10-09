@@ -148,14 +148,16 @@ function clustersGenerate(
   // the next attempt re-randomizes, but a completed one has no blank cells left,
   // so step 1 would change nothing and draw no randomness, step 2 would find no
   // isolated cell in a solved board, and step 3 would re-derive the very same
-  // clues — a fixed point that spins for ever.
+  // clues — a fixed point that spins until the next forced attempt
+  // (`FORCE_EVERY`) re-randomizes every cell.
   //
   // One flipped cell is enough to break it, and is much the better break: this
-  // retry loop is a hill-climb rather than independent sampling — it keeps what
-  // the solver proved and re-rolls the rest — so clearing the grid instead would
-  // throw away the whole climb and buy a fresh one on every too-easy candidate.
-  // Measured over 50 seeds: clearing costs 5x the median at 7x7 (316 ms against
-  // 66) and 7x at 8x8, where its worst case is 20.7 s against 3.7 s.
+  // retry loop is a hill-climb rather than independent sampling — between
+  // forced attempts it keeps what the solver proved and re-rolls the rest — so
+  // clearing the grid instead would throw away the whole climb and buy a fresh
+  // one on every too-easy candidate. Measured over 50 seeds: clearing costs 5x
+  // the median at 7x7 (316 ms against 66) and 7x at 8x8, where its worst case
+  // is 20.7 s against 3.7 s.
   if (easy === COMPLETE) {
     const i = randomUpto(rng, s);
     grid[i] ^= COLMASK;

@@ -29,6 +29,7 @@
  * cursor pass, being the rendering *of this mechanic*.
  */
 import { Dsf } from "./dsf.ts";
+import { fromCoord } from "./geometry.ts";
 import { cursorDelta, type GridCursor } from "./pointer.ts";
 import type { TargetGeometry, TargetVerbs } from "./target-verb.ts";
 
@@ -73,11 +74,6 @@ const clamp = (v: number, lo: number, hi: number): number =>
 /** Half a tile of slack around the grid, so a border on the outer edge is
  * clickable and drawable. */
 export const margin = (ts: number): number => Math.floor(ts / 2);
-
-/** Pixel coordinate → grid coordinate along one axis. */
-function fromCoord(coord: number, ts: number): number {
-  return Math.floor((coord - margin(ts)) / ts);
-}
 
 // --- the input mechanic ------------------------------------------------------
 
@@ -126,8 +122,8 @@ export function pointerEdge(
   ts: number,
 ): BorderEdge | null {
   const { w, h } = state;
-  const gx = fromCoord(px0, ts);
-  const gy = fromCoord(py0, ts);
+  const gx = fromCoord(px0, ts, margin(ts));
+  const gy = fromCoord(py0, ts, margin(ts));
   if (outOfBounds(gx, gy, w, h)) return null;
 
   // Find the edge of cell (gx,gy) closest to the click: eliminate the far half

@@ -3,17 +3,17 @@
  *
  * Every other game's cursor is a cell on an axis-aligned grid, and the engine's
  * shared `GridCursor` (`pointer.ts`) is that shape. Loopy has no such grid: its
- * input is per-*edge*, across eighteen tilings including aperiodic ones, so an
- * edge has no row and no column to arrow between. What every tiling *does*
+ * input is per-*edge*, across tilings that include aperiodic ones, so an edge
+ * has no row and no column to arrow between. What every tiling *does*
  * have is a ring of edges around each dot — `GridDot.edges`, which `grid.ts`
  * supplies in rotational order — so the cursor lives on a dot, and an arrow key
- * chooses one of that dot's edges. An edge is reached as (dot, direction),
+ * names one of that dot's edges. An edge is reached as (dot, direction),
  * which is also how a player thinks about drawing a loop: you are at a corner
  * and you go *that* way.
  *
  * The shape is Loopy's own rather than `GridCursor` because the position is a
- * dot index, not an `(x, y)`, and an arrow press does not *move* it — it picks
- * an edge. It still sits under `ui.cursor`, the collection's one name for the
+ * dot index, not an `(x, y)`, and it carries the edge an arrow chose beside the
+ * dot it stands on. It still sits under `ui.cursor`, the collection's one name for the
  * thing (`engine-input`, "One keyboard-cursor vocabulary across games").
  *
  * ## Walking, and aiming
@@ -28,15 +28,16 @@
  * nearest choice from *either* endpoint would be unselectable. Ties break in
  * opposite senses for opposite arrows ({@link edgesByDirection}), which covers
  * the triangular grid by construction; the sweep in `loopy-keyboard.test.ts`
- * then finds every edge of every preset walkable **except nine on Penrose
+ * then finds every edge of every tiling walkable **except a few on Penrose
  * kite/dart**, whose degree-5 dots at 72° leave an edge that loses the nearest
  * contest at both ends. For those, **Shift+arrow aims without moving**
  * ({@link nextEdgeFor}): the first press chooses the nearest edge in that
  * direction, a repeat of the same arrow the next one round, so every incident
  * edge has some rank for every arrow and is reachable in at most `degree`
  * presses. Plain is *go*; Shift is *look*. The test asserts both halves — the
- * walk alone covers 22 presets, and walk plus aim covers the 23rd — so the
- * residue cannot grow silently.
+ * walk alone covers every other tiling, and walk plus aim covers Penrose
+ * kite/dart, whose unwalkable count it pins — so the residue cannot grow
+ * silently.
  */
 
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
@@ -108,9 +109,9 @@ export function farDot(edge: GridEdge, dot: GridDot): GridDot {
  * makes a *walk* cover the triangular grid: an edge tied at 60° either side of
  * Right from one end sits at the mirror tie either side of Left from its other
  * end, and Left breaks the tie the other way — so every tied edge is the first
- * choice from one of its endpoints. (Measured over all 23 presets, the
- * same-sense tie-break strands 120 of the triangular grid's 397 edges; this
- * one strands none there.) `null` for a non-arrow button.
+ * choice from one of its endpoints. (A same-sense tie-break strands about a
+ * third of the triangular preset's edges; this one strands none there.) `null`
+ * for a non-arrow button.
  */
 function edgesByDirection(dot: GridDot, button: number): GridEdge[] | null {
   const v = arrowVector(button);

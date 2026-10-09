@@ -3,9 +3,9 @@
  *
  * Netslide (Richard Boulton's cross between Net and Sixteen) is a grid of
  * Net wire tiles whose solved configuration is a spanning tree rooted at the
- * center tile. The player slides whole rows and columns toroidally — every
- * line except the center row and the center column — until every tile is
- * connected to, and therefore powered by, the center.
+ * source tile. The player slides whole rows and columns toroidally — every
+ * line except the source's row and column — until every tile is connected to,
+ * and therefore powered by, the source.
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";

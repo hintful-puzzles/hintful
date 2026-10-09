@@ -26,15 +26,16 @@ export interface BevelBounds {
 }
 
 /**
- * Draw the upstream recessed bevel that frames a playfield: a top-right
- * `highlight` wedge and a bottom-left `lowlight` wedge, each a filled pentagon
- * inset by `inset` (the tile size). The two pentagons share their two diagonal
- * vertices, so together they bevel the whole border. Winding is irrelevant to
- * the fill, so a single canonical ordering reproduces every caller's pixels.
+ * Draw the upstream recessed bevel that frames a playfield: a `highlight`
+ * wedge along the bottom and right edges and a `lowlight` wedge along the top
+ * and left, each a filled pentagon inset by `inset` (the tile size). Lit from
+ * the top-left, a frame that is sunk catches the light on the two edges that
+ * face it. The two pentagons share their two diagonal vertices, so together
+ * they bevel the whole border. Winding is irrelevant to the fill, so a single
+ * canonical ordering reproduces every caller's pixels.
  *
- * Keyed on the outer pixel bounds rather than `(w, h, hw)`, so a game deriving
- * its edges differently (Samegame's constant highlight width and gap offset)
- * fits the same helper.
+ * Keyed on the outer pixel bounds rather than `(w, h, hw)`, so a game that
+ * derives its edges its own way fits the same helper.
  */
 export function drawRecessedBorder(
   dr: GameDrawing,
@@ -45,7 +46,7 @@ export function drawRecessedBorder(
 ): void {
   const { left, top, right, bottom } = bounds;
 
-  // Highlight wedge (top/right).
+  // Highlight wedge: holds the bottom-right corner.
   dr.drawPolygon(
     [
       { x: right, y: bottom },
@@ -58,7 +59,7 @@ export function drawRecessedBorder(
     highlight,
   );
 
-  // Lowlight wedge (bottom/left): the same pentagon's complementary half.
+  // Lowlight wedge: holds the top-left corner, the frame's other half.
   dr.drawPolygon(
     [
       { x: left, y: top },
@@ -154,8 +155,9 @@ export function drawRaisedBevel(
 }
 
 /**
- * Upstream `draw_rect_outline`: a 1px-thick rectangle border, inclusive
- * corners from `(x, y)` to `(x + w - 1, y + h - 1)`.
+ * Upstream `draw_rect_outline`: a rectangle border as four lines, inclusive
+ * corners from `(x, y)` to `(x + w - 1, y + h - 1)`. Upstream's is always a
+ * hairline; `thickness` is this port's addition.
  */
 export function drawRectOutline(
   dr: GameDrawing,

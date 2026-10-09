@@ -45,14 +45,13 @@ import {
   GRAY_BOLD,
   GREEN,
   PINK,
-  PURPLE_WASH,
   RED,
   RED_WASH,
   TEAL_BOLD,
   TEAL_WASH_QUIET,
   TWO,
+  TWO_WASH,
   YELLOW,
-  YELLOW_WASH,
 } from "./colors.ts";
 
 // --- ink and paper ----------------------------------------------------
@@ -79,11 +78,6 @@ export const GRID_MID: Color = GRAY;
  * Pattern, Pearl's white pearls, Spokes' hub outline, Crossing's walls.
  * {@link GRID_MID} would be swallowed by the cells it separates. */
 export const GRID_DARK: Color = GRAY_BOLD;
-
-/** **Undecided** — a cell the player has neither filled nor ruled out
- * (Pattern). Sits between the two states it is not, which is why it is the mid
- * gray and not a color. */
-export const UNDECIDED: Color = GRAY;
 
 /**
  * **Ruled out** — the small cross or dot a player puts down to say "nothing
@@ -221,8 +215,8 @@ export const HINT_EVIDENCE: Color = TEAL_BOLD;
 
 /**
  * The same "this is the evidence" meaning as a **fill**, for a game whose
- * evidence cells carry nothing the player has to read — Range's undecided cells,
- * Pattern's unfilled squares.
+ * evidence cells carry nothing the player has to read: Light Up's unlit
+ * squares.
  *
  * A game reaching for this is claiming *nothing is drawn here*. Where content
  * does sit on the evidence, a wash loses whichever way it is tuned: pale enough
@@ -398,8 +392,8 @@ export const MOVED: Color = TWO[0];
 export const GOAL: Color = TWO[1];
 
 /** **The cell a {@link GOAL} is in**, where the goal is a place and content is
- * drawn on it. */
-export const GOAL_WASH: Color = YELLOW_WASH;
+ * drawn on it. The wash of the pair's second member. */
+export const GOAL_WASH: Color = TWO_WASH[1];
 
 /**
  * **This region is finished and correct**: the surface of a region the player
@@ -409,7 +403,7 @@ export const GOAL_WASH: Color = YELLOW_WASH;
  * not be this: darker is a hole in the dark scheme, and lighter is a given's
  * lifted cell ({@link givenSurface}).
  */
-export const REGION_DONE: Color = PURPLE_WASH;
+export const REGION_DONE: Color = TWO_WASH[0];
 
 /**
  * **The line between two cells of a surface**, thin and quiet: the grid is

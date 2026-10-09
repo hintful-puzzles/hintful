@@ -6,8 +6,9 @@
  *
  *   Easy (`DIFF_TRIVIAL`)   → generic simple (positional/numeric single).
  *   Normal (`DIFF_NORMAL`)  → {@link solverNormal} (associativity forward-deduction).
- *   Tricky (`DIFF_HARD`)    → {@link solverHard} (identity-hidden elimination).
- *   Hard (`DIFF_EXTREME`)   → generic set-elimination + forcing.
+ *   Tricky (`DIFF_HARD`)    → {@link solverHard} (ruling elements out as the
+ *                             identity), then generic set elimination.
+ *   Hard (`DIFF_EXTREME`)   → the harder set elimination + forcing.
  *   Unreasonable            → generic recursion.
  *
  * The cube is indexed `(x·o + y)·o + (n−1)` and the grid `y·o + x`, as in
@@ -247,12 +248,13 @@ function solverNormal(solver: LatinSolver): number {
 }
 
 /**
- * Tricky deduction (`solver_hard`): systematically rule out identities in
- * identity-hidden mode. A filled `ab` that is neither `a` nor `b` proves that
- * *neither* `a` nor `b` is the identity — so neither can act as the identity on
- * any element, and we strike `ij = j` / `ji = j` candidates directly on the
- * cube. Uses the transposed `grid(x,y)` macro (`grid[y*w+x]`). Returns 1 if it
- * eliminated any candidate, else 0.
+ * Tricky deduction (`solver_hard`): rule elements out as the identity, one at
+ * a time, whichever way the identity is shown. A filled product of `a` with
+ * some `b` that is not `b` proves `a` is not the identity (the product may be
+ * `a` itself), so `a` cannot act as the identity on any element, and every
+ * `a·j = j` / `j·a = j` candidate is struck directly on the cube. Uses the
+ * transposed `grid(x,y)` macro (`grid[y*w+x]`). Returns 1 if it eliminated any
+ * candidate, else 0.
  */
 function solverHard(solver: LatinSolver): number {
   const w = solver.o;

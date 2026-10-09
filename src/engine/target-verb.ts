@@ -31,6 +31,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "./game.ts";
+import { fromCoord } from "./geometry.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
   BACKSPACE,
@@ -235,8 +236,8 @@ export function squareGrid<
     noun: "square",
     pointerTarget(s, ds, p) {
       const b = options.border(ds.tileSize, s);
-      const x = Math.floor((p.x - b) / ds.tileSize);
-      const y = Math.floor((p.y - b) / ds.tileSize);
+      const x = fromCoord(p.x, ds.tileSize, b);
+      const y = fromCoord(p.y, ds.tileSize, b);
       return inGrid(s, x, y) ? { x, y } : null;
     },
     pointAt(s, ds, t) {

@@ -46,6 +46,14 @@ function stageReplacement(m: { solve(): string | null; undo(): void }, id: strin
   m.undo();
 }
 
+/**
+ * Games whose drag no bare press at a probe point arms, each with the gesture
+ * it takes. The release case below says nothing about them, so the set is
+ * asserted exact: a game whose drag stops arming fails here. Empty, and meant
+ * to stay so.
+ */
+const NOT_ARMED_BY_A_PRESS: Record<string, string> = {};
+
 describe("a drag does not survive a state replacement", () => {
   it("finds a non-trivial population, derived from what the games carry", () => {
     // The vacuity guard. An empty sweep would make every assertion below pass
@@ -90,6 +98,7 @@ describe("a drag does not survive a state replacement", () => {
     // to Pegs for. So this drives a real press, replaces the state under it,
     // and releases.
     let exercised = 0;
+    const unarmed: string[] = [];
     for (const { id, game } of dragGames()) {
       const { m, ui, moves, reset } = probeBoard(game, id);
       const size = m.preferredSize();
@@ -106,7 +115,10 @@ describe("a drag does not survive a state replacement", () => {
           break;
         }
       }
-      if (!armed) continue; // this game's drag needs a gesture this sweep can't make
+      if (!armed) {
+        unarmed.push(id);
+        continue;
+      }
       exercised++;
 
       // Replace the state under the live drag, then release where the drag is.
@@ -118,8 +130,8 @@ describe("a drag does not survive a state replacement", () => {
         `${id}: a release after the board changed still committed a move`,
       ).toBe(before);
     }
-    // Not every game's drag is reachable by a bare press at a probe point, but
-    // if *none* is the sweep proved nothing.
+    // A game no press armed was asserted nothing about, so it is named.
+    expect(unarmed.sort()).toEqual(Object.keys(NOT_ARMED_BY_A_PRESS).sort());
     expect(exercised).toBeGreaterThan(0);
   });
 

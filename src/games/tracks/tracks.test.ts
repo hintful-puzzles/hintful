@@ -160,7 +160,7 @@ describe("tracks solver", () => {
     "pin-83",
     "pin-94",
     "pin-96",
-  ])("deals 15x15 Hard from seed %s, at exactly Hard", (seed) => {
+  ])("deals 15x15 at DIFF_HARD (shown as Tricky) from seed %s, at exactly that tier", (seed) => {
     const p: TracksParams = { w: 15, h: 15, diff: DIFF_HARD, singleOnes: true };
     const { desc } = newDesc(p, randomNew(seed));
     const strip = () => copyAndStrip(stateToBoard(newState(p, desc)), -1);

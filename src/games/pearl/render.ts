@@ -29,6 +29,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { fromCoord as cellAt } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -173,7 +174,7 @@ export function centeredCoord(x: number, m: Metrics): number {
   return coord(x, m) + ((m.tile / 2) | 0);
 }
 export function fromCoord(px: number, m: Metrics): number {
-  return px < m.border ? -1 : Math.floor((px - m.border) / m.tile);
+  return cellAt(px, m.tile, m.border);
 }
 
 export function computeSize(p: PearlParams, tileSize: number): Size {

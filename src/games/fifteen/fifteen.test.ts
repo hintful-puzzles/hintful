@@ -373,6 +373,36 @@ describe("Fifteen hint", () => {
     expect(sawHelper).toBe(true);
   });
 
+  it("says 'into place' of another tile only when no later slide moves it", () => {
+    // A tile the gap carries through its own home on the way round is moved
+    // again, and is not in place.
+    let placed = 0;
+    for (const [w, h, seed] of [
+      [3, 3, "settles-a"],
+      [4, 4, "settles-b"],
+      [4, 4, "settles-c"],
+      [5, 5, "settles-d"],
+    ] as const) {
+      const p = { w, h };
+      let board = newState(p, newDesc(p, randomNew(seed)).desc);
+      const result = fifteenGame.hint?.(board);
+      if (!result?.ok) throw new Error("expected a plan");
+      /** The tile each step slides. */
+      const slid: number[] = [];
+      for (const step of result.steps) {
+        if (step.move.type !== "move") throw new Error("expected a slide");
+        slid.push(board.tiles[step.move.y * w + step.move.x]);
+        board = executeMove(board, step.move);
+      }
+      result.steps.forEach((step, i) => {
+        if (step.rung !== "tileHome") return;
+        placed++;
+        expect(slid.slice(i + 1), step.explanation).not.toContain(slid[i]);
+      });
+    }
+    expect(placed).toBeGreaterThan(5);
+  });
+
   it("never says 'closer' when the target tile is being pushed away (owner board)", () => {
     // Tile 8 sits one cell below its home (the spot 12 occupies); the greedy
     // step slides 8 DOWN, away from home, to walk the gap around it. The hint

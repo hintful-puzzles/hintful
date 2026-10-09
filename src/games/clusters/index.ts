@@ -366,8 +366,10 @@ function hint(
   // below.
   const plan = deduceHintPlan(state.grid, state.w, state.h);
   // COMPLETE certifies the position (the error rules are monotone, so a wrong
-  // tile can never extend to a zero-error grid); anything else means some
-  // tile already placed must be wrong, and hinting would lead deeper in.
+  // tile can never extend to a zero-error grid). INVALID means some tile
+  // already placed must be wrong, and hinting would lead deeper in. A wrong
+  // tile on a dealt board always ends there (see `ClustersHintPlan`), so the
+  // stall below is a board the deduction cannot finish even from its givens.
   if (plan.verdict === INVALID) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
   if (plan.verdict !== COMPLETE || plan.deductions.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };

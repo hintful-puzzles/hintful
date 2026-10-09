@@ -31,10 +31,12 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import {
   CURSOR_SELECT,
@@ -307,10 +309,9 @@ const geometry: TargetGeometry<SubsetsState, SubsetsUi, SubsetsDrawState, Slot> 
   pointerTarget(s, ds, p) {
     const ts = ds.tileSize;
     if (p.x < ts / 2 || p.y < ts / 2) return null;
-    // Upstream FROM_COORD: the board is inset by half a tile.
-    const gx = Math.floor((p.x - Math.floor(ts / 2)) / ts);
-    const gy = Math.floor((p.y - Math.floor(ts / 2)) / ts);
-    return slotAt(s, gx, gy);
+    // The board is inset by half a tile.
+    const border = Math.floor(ts / 2);
+    return slotAt(s, fromCoord(p.x, ts, border), fromCoord(p.y, ts, border));
   },
   pointAt(_s, ds, slot) {
     const ts = ds.tileSize;
@@ -464,7 +465,9 @@ function status(s: SubsetsState): GameStatus {
 function solve(orig: SubsetsState): SolveResult<SubsetsMove> {
   const { solved, result } = solveCopy(orig);
   if (result === "invalid") return { ok: false, error: NO_SOLUTION };
-  // An unfinished solve still emits the partial deduction (upstream).
+  // The midend takes a Solve move only if it leaves the board solved, and
+  // upstream's partial fill does not.
+  if (result === "unfinished") return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return {
     ok: true,
     move: {

@@ -247,12 +247,7 @@ function interpretMove(
     // Suppress no-op moves locally rather than comparing states (docs/games/README.md § "Before you start").
     if (walls[i]) return null;
     if (ui.pencilMode && state.grid[i] !== 0) return null; // notes can't touch a filled cell
-    if (!ui.pencilMode && state.grid[i] === (digit ?? 0)) return null;
     if (ui.pencilMode && digit === null && state.pencil[i] === 0) return null;
-
-    const move: CrossingMove = ui.pencilMode
-      ? { kind: "pencil", x: ui.cursor.x, y: ui.cursor.y, digit }
-      : { kind: "set", x: ui.cursor.x, y: ui.cursor.y, digit };
 
     // Auto-advance (fork, default on): entering a digit steps the selection to
     // the next cell of the run being filled, so a whole number can be typed
@@ -263,12 +258,22 @@ function interpretMove(
       ui.autoAdvance && !ui.pencilMode && digit !== null
         ? nextInRun(state.puzzle, ui.cursor.x, ui.cursor.y, ui.dir)
         : null;
+    const unchanged = !ui.pencilMode && state.grid[i] === (digit ?? 0);
+    // A digit the cell already holds makes no move, and still steps on: a
+    // number typed over it would otherwise put its next digit in this cell.
+    if (unchanged && !advanced) return null;
+
+    const move: CrossingMove = ui.pencilMode
+      ? { kind: "pencil", x: ui.cursor.x, y: ui.cursor.y, digit }
+      : { kind: "set", x: ui.cursor.x, y: ui.cursor.y, digit };
+
     if (advanced) {
       ui.cursor.x = advanced.x;
       ui.cursor.y = advanced.y;
       // Keep the selection up so the next digit lands where it is shown; a
       // mouse-driven entry would otherwise dismiss it (upstream, below).
       ui.cursor.visible = true;
+      if (unchanged) return UI_UPDATE;
     } else {
       // Upstream: a mouse-driven ink entry hides the selection again; the
       // keyboard cursor and pencil mode both persist.

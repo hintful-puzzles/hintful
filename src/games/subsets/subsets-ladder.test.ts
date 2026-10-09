@@ -11,12 +11,12 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { subsetsSolveGame } from "./solver.ts";
-import { DIFF_EASY, DIFF_TRICKY, newState, type SubsetsParams } from "./state.ts";
+import { DIFF_EASY, DIFF_NORMAL, newState, type SubsetsParams } from "./state.ts";
 
 /** Subsets has one board shape; the tier is its only axis. */
 const SHAPES: SubsetsParams[] = [
   { w: 4, h: 4, n: 4, diff: DIFF_EASY },
-  { w: 4, h: 4, n: 4, diff: DIFF_TRICKY },
+  { w: 4, h: 4, n: 4, diff: DIFF_NORMAL },
 ];
 
 const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e"];
@@ -33,7 +33,7 @@ describeLadderCensus({
   game: "subsets",
   rungs: ["arrows", "disjoint", "bits-from-cube", "single-position", "arrows-advanced"],
   unreached: {},
-  caps: [DIFF_EASY, DIFF_TRICKY],
+  caps: [DIFF_EASY, DIFF_NORMAL],
   cases,
   solve: subsetsSolveGame,
 });

@@ -129,7 +129,7 @@ function changedLines() {
 
 const files = changedLines();
 if (files.size === 0) {
-  console.log("no changes in the working tree.");
+  console.log("no changes in the working tree: 0 changed lines inspected.");
   process.exit(0);
 }
 

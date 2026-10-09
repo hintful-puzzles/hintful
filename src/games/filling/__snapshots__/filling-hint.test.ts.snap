@@ -13,12 +13,12 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   },
   {
     "color": 9,
-    "h": 225,
+    "h": 227,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
-    "w": 289,
-    "x": 16,
-    "y": 16,
+    "w": 291,
+    "x": 15,
+    "y": 15,
   },
   {
     "h": 32,

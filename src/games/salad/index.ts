@@ -31,6 +31,7 @@ import { markAllNow } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
+  noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
@@ -133,6 +134,29 @@ function symbolFor(button: number): number | "clear" | null {
   return null;
 }
 
+/** Whether entering `value` at square `i` would change nothing, read off the
+ * arm of `executeMove` the entry reaches. A penciled symbol or cross is a
+ * toggle, so it always changes its mark. */
+function leavesSquareAsItIs(
+  state: SaladState,
+  i: number,
+  pencil: boolean,
+  value: SaladEntry,
+): boolean {
+  const { grid, holes } = state;
+  if (value === "clear")
+    return (
+      grid[i] === 0 &&
+      (holes[i] === CROSS || state.pencil[i] === 0) &&
+      (holes[i] === 0 || state.gridclues[i] === CIRCLE)
+    );
+  if (value === "circle")
+    return pencil ? holes[i] === CROSS : grid[i] === 0 && holes[i] === CIRCLE;
+  if (pencil) return false;
+  if (value === "cross") return grid[i] === 0 && holes[i] === CROSS;
+  return grid[i] === value && holes[i] === CIRCLE;
+}
+
 function interpretMove(
   state: SaladState,
   ui: SaladUi,
@@ -180,7 +204,9 @@ function interpretMove(
   if (ui.cursor.visible && selectable(pos)) {
     const type = ui.pencilMode ? "pencil" : "set";
     /** Upstream: a mouse-driven real entry drops the highlight afterwards. */
-    const commit = (value: SaladEntry): SaladMove => {
+    const commit = (value: SaladEntry): SaladMove | UiUpdate | null => {
+      if (leavesSquareAsItIs(state, pos, ui.pencilMode, value))
+        return noOpEntryResult(ui);
       releaseHighlightAfterEntry(ui);
       return { type, x: ui.cursor.x, y: ui.cursor.y, value };
     };

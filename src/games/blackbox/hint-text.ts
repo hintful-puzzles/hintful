@@ -35,7 +35,7 @@ export const BUTTON: MarkKind<"button"> = { name: "button", key: () => "button" 
 /** What each mark means here, as the help's list of marks gives it. */
 export const HINT_MARKS: HintMarkLegend = {
   roles: {
-    ring: "what the step decides: the square to mark as known or to put a ball on or take one off, the laser to fire, or the button that checks your answer.",
+    ring: "what the step decides: the square to mark as known or to put a ball on, the laser to fire, or the button that checks your answer.",
     outline: "the ends of the fired laser the step reasons from.",
   },
 };

@@ -2,10 +2,10 @@
  * Towers (Skyscrapers) — native TS port of `towers.c`. Fill a `w × w` grid so
  * every row and column holds each height `1..w` once, and so each outside clue
  * equals the number of towers visible from that edge (a taller tower hides
- * every shorter one behind it). Left-click / cursor select highlights a cell
- * for a real entry; right-click / select2 highlights it for a pencil mark; a
- * digit enters (or pencil-toggles) that height; a click or shift/ctrl-cursor
- * on an outside clue strikes it through. Rule violations highlight live; Check
+ * every shorter one behind it). A press highlights a cell and the arrow keys
+ * move the highlight (`note-taking-cell.ts` has the press rules and the pencil
+ * toggle); a digit enters (or pencil-toggles) that height and Space clears the
+ * cell; a click or shift/ctrl-cursor on an outside clue strikes it through. Rule violations highlight live; Check
  * & Save additionally flags cells that contradict the unique solution.
  */
 
@@ -179,8 +179,9 @@ function interpretMove(
   let ty = fromCoord(p.y, ts);
 
   if (ui.threeD) {
-    // A click may land on a tower protruding up-left from a neighboring cell;
-    // check the tops of nearby towers and retarget if so.
+    // A tower's top is drawn up and to the right of its cell, so a click may
+    // land on the tower of the cell below, to the left or below-left; check
+    // those tops and retarget if so.
     for (let dy = 0; dy <= 1; dy++) {
       for (let dx = 0; dx >= -1; dx--) {
         const cx = tx + dx;
@@ -491,8 +492,9 @@ function sightLine(clue: number, w: number): { x: number; y: number }[] {
  *     with its forced height, to be placed as one ordered journey;
  *   - clue == 1: the line sees only the tallest, so height w must stand next to
  *     the clue — returns that single cell.
- * The board is mistake-free when the planner runs (`hint` refuses otherwise), so
- * any already-filled cell in such a line is guaranteed to match. Returns every
+ * The board is mistake-free when the planner runs (the midend refuses a hint
+ * on a board with mistakes before asking the game), so any already-filled cell
+ * in such a line is guaranteed to match. Returns every
  * applicable clue, full lines first. */
 function extremeClueLines(
   clues: Int32Array,

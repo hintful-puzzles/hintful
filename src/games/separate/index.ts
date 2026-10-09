@@ -184,9 +184,8 @@ export type SeparateRung = (typeof SEPARATE_RUNGS)[number];
 
 /**
  * The deduction from the player's own marks to the end, as one journey per
- * firing. Refuses on a solved board or one carrying a mistake, so no firing is
- * built on a wrong edge, and on a board the solver cannot finish from empty,
- * whose marks nothing can vouch for.
+ * firing. Refuses on a board the solver cannot finish from empty, whose marks
+ * nothing can vouch for, and when the deduction has nothing left to set.
  */
 function hint(
   state: SeparateState,
@@ -280,8 +279,8 @@ export const separateGame: Game<
     roles: {
       ring: 'the edges the step decides, drawn in the hint color along the edge itself: a wall, or a mark saying "no wall here". When one reason decides several edges at once they are all marked together.',
       outline:
-        "a second region the step reasons from, or a lone square it names by its letter.",
-      stripes: "the region the sentence is about.",
+        "a second region the step reasons from, or a lone square, which the sentence names by its letter or calls a square.",
+      stripes: "the region the sentence is about, which can be a lone square.",
     },
   },
   hintRungs: SEPARATE_RUNGS,

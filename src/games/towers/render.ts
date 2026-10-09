@@ -5,9 +5,10 @@
  * The board is modeled as a `(w+2) × (w+2)` array of tiles: a ring of clue
  * cells around a `w × w` play area. A filled play cell is drawn — under the 3D
  * appearance preference — as a tower whose drawn solid scales with its height
- * (the left and bottom faces protrude up-left), or, in 2D, as a plain centered
- * digit. Empty cells show their pencil marks in an auto-sized grid. Because a
- * 3D tower paints up-left into its neighbors, a changed tile is diffed and
+ * (its top sits up and to the right of its cell, over a left and a bottom
+ * face), or, in 2D, as a plain centered digit. Empty cells show their pencil
+ * marks in an auto-sized grid. Because a 3D tower paints into the cells above
+ * and to the right of its own, a changed tile is diffed and
  * repainted along with the three neighbors whose towers can reach into it
  * (the upstream four-corner cache key).
  */
@@ -558,7 +559,7 @@ export function redraw(
 
   // The hint marks, **once per frame after the tile loop** and outside every
   // clip. Once, because Towers repaints each tile up to four times inside a
-  // single clip (a 3D tower spills into the cells up and to the left of its
+  // single clip (a 3D tower spills into the cells up and to the right of its
   // own); after and unclipped, so a neighbor's tower cannot bury the mark.
   const targets: MarkCell[] = [];
   const evidence: MarkCell[] = [];

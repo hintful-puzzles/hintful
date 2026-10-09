@@ -368,6 +368,12 @@ describe("every puzzle command is in exactly one of the three panels", () => {
     }
   });
 
+  it("fills the Bar's four with the next entry where a game has no hint", async () => {
+    const found = await homes(fullyCapablePuzzle({ canHint: false }), MIN_BAR_LENGTH);
+    expect(found.Bar).toEqual(["undo", "redo", "check-and-save", "quick-load"]);
+    expect(found.Menu).not.toContain("quick-load");
+  });
+
   it("shows the help banner exactly once, whether or not the game can hint", () => {
     // Solve refuses in the banner, and a game can offer Solve with no hint
     // (Mines): its banner was once rendered only under the hint's control, so

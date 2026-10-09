@@ -31,6 +31,7 @@
  */
 import { describe, expect, it } from "vitest";
 import * as colors from "./colors.ts";
+import * as roles from "./palette.ts";
 import * as gameTokens from "./palette-games.ts";
 
 /** The meanings layer, as text — a named color counts as used when a meaning
@@ -294,4 +295,33 @@ it("declares no named color nothing can show", () => {
       (table.match(new RegExp(`\\b${n}\\b`, "g")) ?? []).length < 2,
   );
   expect(dead).toEqual([]);
+});
+
+/**
+ * A **shared role** is one because two or more games mean the same thing by
+ * it. One game's color is that game's, declared under its id in
+ * `palette-games.ts`, and a role no game takes is a decision nothing on any
+ * board shows.
+ *
+ * A hint role owes one game and not two: what `HINT_EVIDENCE_WASH` means is
+ * settled by the hint vocabulary it is a member of, whichever games' evidence
+ * happens to be empty cells.
+ */
+it("declares no shared role fewer than two games take", () => {
+  const takenBy = new Map<string, Set<string>>();
+  for (const { rel, src } of gameSources())
+    for (const m of src.matchAll(
+      /^import\s*\{([^}]*)\}\s*from\s*"[^"]*\/palette\.ts"/gm,
+    ))
+      for (const name of m[1].split(",").map((n) => n.trim()))
+        takenBy.set(name, (takenBy.get(name) ?? new Set()).add(rel.split("/")[0]));
+  const lonely = Object.keys(roles)
+    .map((name) => ({
+      name,
+      games: [...(takenBy.get(name) ?? [])].sort(),
+      owed: name.startsWith("HINT_") ? 1 : 2,
+    }))
+    .filter(({ games, owed }) => games.length < owed)
+    .map(({ name, games }) => `${name}: ${games.join(", ") || "no game"}`);
+  expect(lonely).toEqual([]);
 });

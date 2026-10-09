@@ -8,7 +8,17 @@ import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { tracksGame } from "./index.ts";
 import { COL_FLASH, flashLength, PREFERRED_TILE_SIZE } from "./render.ts";
-import { newState, type TracksParams, type TracksState } from "./state.ts";
+import {
+  blankBoard,
+  D,
+  E_TRACK,
+  L,
+  newState,
+  R,
+  sESet,
+  type TracksParams,
+  type TracksState,
+} from "./state.ts";
 
 const P: TracksParams = { w: 6, h: 6, diff: 0, singleOnes: true };
 const DESC = "f6pCkC,2,3,3,2,3,S3,3,S3,3,3,2,2";
@@ -34,6 +44,55 @@ function lit(state: TracksState, time: number): string[] {
   }
   return [...squares];
 }
+
+/** A solved `n`-square board whose track is every square: along the top row,
+ * down a square, back along the next, and out through the bottom of the first
+ * column. `n` is even. */
+function serpentine(n: number): TracksState {
+  const b = blankBoard(n, n);
+  for (let y = 0; y < n; y++) {
+    const leftward = y % 2 === 1;
+    for (let x = 0; x < n; x++) {
+      if (x + 1 < n) sESet(b, x, y, R, E_TRACK);
+      const turn = leftward ? x === 0 : x === n - 1;
+      if (turn && y + 1 < n) sESet(b, x, y, D, E_TRACK);
+    }
+  }
+  sESet(b, 0, 0, L, E_TRACK);
+  sESet(b, 0, n - 1, D, E_TRACK);
+  b.numbers.fill(n);
+  b.rowS = 0;
+  b.colS = 0;
+  const state: TracksState = {
+    w: n,
+    h: n,
+    diff: 0,
+    singleOnes: true,
+    sflags: b.sflags,
+    numbers: { numbers: b.numbers, rowS: 0, colS: 0 },
+    numErrors: b.numErrors,
+  };
+  // Through a move, so the state is one `executeMove` made.
+  return tracksGame.executeMove(state, { ops: [] });
+}
+
+describe("Tracks: the win flash on a track of several hundred squares", () => {
+  const state = serpentine(18);
+  const total = flashLength(state);
+
+  it("is a solved board", () => {
+    expect(tracksGame.status(state)).toBe("solved");
+  });
+
+  it("lights every square in turn, a few at a time", () => {
+    const frames = Array.from({ length: 400 }, (_, i) =>
+      lit(state, (total * (i + 1)) / 401),
+    );
+    for (const frame of frames) expect(frame.length).toBeLessThanOrEqual(3);
+    expect(new Set(frames.flat()).size).toBe(18 * 18);
+    expect(lit(state, total)).toEqual([]);
+  });
+});
 
 describe("Tracks: the win flash runs the track from A to B", () => {
   const state = solved();

@@ -69,6 +69,9 @@ npm run -s tsc -- -b --noEmit
 # option rolldown neither declares nor reads) and a `defineConfig` overload
 # failure. Same strictness, different runtime.
 npm run -s tsc -- --noEmit -p tsconfig.node.json
+# A file in neither project above is checked by nothing, and neither compiler
+# run can say so, since each reports on the files it was given. ~3s.
+node scripts/checks/typescript-projects.mjs
 
 # Biome checks lint rules AND formatting AND import order in one read-only pass
 # (the `check`/`ci` form — not `lint`, which misses formatting; not
@@ -286,17 +289,26 @@ fi
 # test and are not build inputs — `openspec/` is already covered by the
 # `validate --all --strict` above, and `docs/` and `AGENTS.md` are read by
 # nothing at all. `src/gate-scope.test.ts` asserts that, by scanning for any
-# glob or file read naming them, so the day a test starts reading `docs/` this
-# path stops being safe *and says so*. `help/` is deliberately absent: it is
-# both a `vite build` input and `help-coverage.test.ts`'s subject.
+# glob, file read or import naming them, so the day a test starts reading
+# `docs/` this path stops being safe *and says so*. It takes the list from the
+# pattern below, so there is no second copy to fall behind. `help/` is
+# deliberately absent: it is both a `vite build` input and
+# `help-coverage.test.ts`'s subject. So are `README.md`, which
+# `src/project-identity.test.ts` reads, and `LICENSE.md`, which the About
+# dialog imports.
 #
 # Anything outside the list — one `src/` file, one `help/` page, one license —
 # and the whole gate runs. The default is "run everything"; this is the
 # exception, and it fails closed.
+#
+# The staged set is every path the commit changes in any way: a deleted file by
+# its path, and a moved one by both (`--no-renames` lists the path it left
+# beside the one it arrived at). A deletion under `src/` can break a test as
+# surely as an edit, and a file moved from `src/` into `docs/` has left `src/`.
 if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
-  staged=$(git diff --cached --name-only --diff-filter=ACMR)
+  staged=$(git diff --cached --name-only --no-renames)
   if [ -n "$staged" ] && ! printf '%s\n' "$staged" |
-    grep -qvE '^(docs/|openspec/|AGENTS\.md$|CLAUDE\.md$|CREDITS\.md$|README\.md$|LICENSE\.md$)'; then
+    grep -qvE '^(docs/|openspec/|AGENTS\.md$|CLAUDE\.md$|CREDITS\.md$)'; then
     echo "✓ documentation-only commit — skipping vitest and vite build."
     echo "  (CI runs the full gate on push; \`npm run gate\` runs it here.)"
     ci_notice

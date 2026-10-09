@@ -39,7 +39,7 @@ export const DIFF_EASY = 0;
 /** Adds the *head* half of `applyArrowsAdvanced` — the mirror elimination
  * upstream wrote, commented out under `// TODO repair this`, and never
  * compiled. */
-export const DIFF_TRICKY = 1;
+export const DIFF_NORMAL = 1;
 const DIFFCOUNT = 2;
 
 /** The collection's two-tier names; upstream offers no difficulty here. */
@@ -88,7 +88,7 @@ export interface SubsetsParams {
   h: number;
   /** Universe size: the grid holds all `2^n` sets over `n` letters. */
   n: number;
-  /** {@link DIFF_EASY} or {@link DIFF_TRICKY}. */
+  /** {@link DIFF_EASY} or {@link DIFF_NORMAL}. */
   diff: number;
 }
 

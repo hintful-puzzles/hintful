@@ -6,9 +6,10 @@
 import { describe, expect, it } from "vitest";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
-import { dealTries, dealtLevel, sokobanLevel } from "./generator.ts";
+import { DEAL_BUDGET, dealTries, dealtLevel, sokobanLevel } from "./generator.ts";
 import { sokobanGame } from "./index.ts";
 import {
+  PLAN_BUDGET,
   type Position,
   type Push,
   SokobanBoard,
@@ -193,17 +194,28 @@ describe("the search's reach", () => {
   // Openings of generated 16×20 levels that the search could not finish
   // within 300,000 positions before it ranked pushes by how far they are from
   // a barrel or target still out of place (2026-10-04). Positions are
-  // counted, never timed, so this is the same on every machine.
+  // counted, never timed, so this is the same on every machine. Each is held
+  // to the budget a deal gives a level, so each is a level a deal would deal.
   const OPENINGS = [
-    "16x20:w20s4tst2w8bs2bsfb2stw3t2btsts5bwtw2bswbtbsbs4tsw2s2tbs2btsbfsbsw3ts3bts4tb2w2tbs4ts2ts2fuw2bs3wt2fbst2b2w2stbs3bs2bts3w3sbtsbs4b2tsw3s2bt2bstbt2stw2s2tw3sfs4bsw2bsbt2wts2fbstbw2tbsbsfsbs4t2w2ts4bts4bwtw2btbsbsbsbts2tbw2stb2sbstbs3bsw2ts2ts3t2sbts2w17",
     "16x20:w20s2wtw2tftbsw3sb2s3wt2bs3w3s2ts2bsb2s2fsw2sts2ts6fubw2sbtbts2ws2bsbtw2t2bs3fstststw3bs3bs2bstbsbtw2s2ws5btws2tw2tsbts3btwtfsbw3s2b2s2fs4bsw2tbst2s4bs2fsw2tbswbswswtswbsw3tfs4btsbt3w4bs2wb2sbs3bw4s2ts2ts3tbsw2ts7fs3t2w2bsbfbtbwtbsbtbw2s2wtw2tw3tbs2w17",
     "16x20:w18s3tstsbtw2s2w2sfs2bsbs5btw2tbs3bs2wsbts2w2s3t2stfs6w2sbtbfs2bfsbswsw2stwbubstwtst2bw2sws2fsbswbsbfsw2sws2tst2s2t2btw2sts2bs2wbsbws2w2s2ws4ws5bw2sbtbsbtbsws3tw2s2btstws2bfsfw3sbts2wtbtsfts2w2s2tws3ts2tsb2w3b2tswb2stb2t2w2tbsbs9w4ts3bsws5w3tbs2tbtwtbs2btw17",
   ];
   for (const [i, id] of OPENINGS.entries()) {
-    it(`finishes opening ${i + 1} within 30,000`, () => {
+    it(`finishes opening ${i + 1} within a deal's budget`, () => {
       const [params, desc] = id.split(":");
       const s = sokobanGame.newState(sokobanGame.decodeParams(params), desc);
-      expect(search(s, 30_000).kind).toBe("found");
+      expect(search(s, DEAL_BUDGET).kind).toBe("found");
     });
   }
+
+  // An opening the same ranking brought within reach that a deal's budget
+  // still passes over: the hint's own budget opens it.
+  it("finishes an opening a deal passes over within the hint's budget", () => {
+    const s = sokobanGame.newState(
+      sokobanGame.decodeParams("16x20"),
+      "w20s4tst2w8bs2bsfb2stw3t2btsts5bwtw2bswbtbsbs4tsw2s2tbs2btsbfsbsw3ts3bts4tb2w2tbs4ts2ts2fuw2bs3wt2fbst2b2w2stbs3bs2bts3w3sbtsbs4b2tsw3s2bt2bstbt2stw2s2tw3sfs4bsw2bsbt2wts2fbstbw2tbsbsfsbs4t2w2ts4bts4bwtw2btbsbsbsbts2tbw2stb2sbstbs3bsw2ts2ts3t2sbts2w17",
+    );
+    expect(search(s, DEAL_BUDGET).kind).toBe("out-of-reach");
+    expect(search(s, PLAN_BUDGET).kind).toBe("found");
+  });
 });

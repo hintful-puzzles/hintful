@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -21,9 +22,11 @@ import {
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
+import { netslideGame } from "../netslide/index.ts";
+import { COL_LOWLIGHT } from "../netslide/render.ts";
 import { say } from "./hint-text.ts";
 import { executeMove, sixteenGame } from "./index.ts";
-import type { SixteenHintHighlights } from "./render.ts";
+import { COL_ARROW, type SixteenHintHighlights } from "./render.ts";
 import {
   decodeParams,
   defaultParams,
@@ -357,6 +360,24 @@ describe("Sixteen colors", () => {
     const bg: [number, number, number] = [0.9, 0.9, 0.9];
     const palette = sixteenGame.colors(bg);
     expect(palette).toHaveLength(8);
+  });
+
+  it("fills a slide arrow as Netslide fills its own, clear of the bevel's swap", () => {
+    // The two derive the gray differently and meet where the board's tone is
+    // the one a near-white page resolves to, which is every page the dark
+    // scheme draws on: it generates from pure white.
+    const white: [number, number, number] = [1, 1, 1];
+    const own = resolvePalette(sixteenGame, white)[COL_ARROW];
+    const netslides = resolvePalette(netslideGame, white)[COL_LOWLIGHT];
+    expect(own.map((v) => Math.round(v * 255))).toEqual(
+      netslides.map((v) => Math.round(v * 255)),
+    );
+    // Equal before the dark pass is equal after it only while neither slot is
+    // half of a swap.
+    expect(sixteenGame.paletteScheme?.darkSwaps?.flat() ?? []).not.toContain(COL_ARROW);
+    expect(netslideGame.paletteScheme?.darkSwaps?.flat() ?? []).not.toContain(
+      COL_LOWLIGHT,
+    );
   });
 });
 

@@ -48,11 +48,14 @@ describe("Signpost render scenarios", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("mistake overlay: a wrong link recolors a number COL_ERROR", () => {
+  it.each([
+    ["a free square", false],
+    ["a given", true],
+  ])("mistake overlay: a wrong link out of %s recolors its number COL_ERROR", (_, given) => {
     const p: SignpostParams = { w: 5, h: 5, forceCornerStart: true };
-    // Find a seed + a legal-but-wrong link out of a free cell that the
-    // board's own error check leaves alone, so only the overlay can color
-    // its number. (A clue's number keeps its own color under the overlay.)
+    // Find a seed + a legal-but-wrong link that the board's own error check
+    // leaves alone, so only the overlay can color the number of the square it
+    // leaves.
     let scenarioId = "";
     let wrongMove: SignpostMove | null = null;
     for (let attempt = 0; attempt < 20 && !wrongMove; attempt++) {
@@ -61,7 +64,9 @@ describe("Signpost render scenarios", () => {
       const solved = cloneState(s0);
       if (solveState(solved) !== 1) continue;
       for (let from = 0; from < s0.n && !wrongMove; from++) {
-        if (s0.flags[from] & FLAG_IMMUTABLE) continue;
+        if (!(s0.flags[from] & FLAG_IMMUTABLE) === given) continue;
+        // The given a link leaves has to be one with no link already.
+        if (s0.next[from] !== -1) continue;
         for (let target = 0; target < s0.n; target++) {
           if (target === solved.next[from]) continue;
           const m: SignpostMove = {

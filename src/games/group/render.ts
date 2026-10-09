@@ -159,8 +159,14 @@ export function coord(pos: number, ts: number): number {
   return pos * ts + border(ts) + legend(ts);
 }
 
-/** `FROMCOORD` — display column/row for a pixel (C integer division, so a click
- * in the legend area yields -1). */
+/** `FROMCOORD` — display column/row for a pixel, the legend being −1.
+ *
+ * This declines the shared `fromCoord` (`engine/geometry.ts`) for its
+ * `Math.trunc` override, with the legend as the row or column a margin press
+ * folds onto: truncation toward zero gives a press in the outer margin, beyond
+ * the legend, −1 as well, so the margin beside a heading grabs that heading
+ * for a drag. The shared helper's floor would answer −2 there and leave a
+ * heading only its own tile to be grabbed by. */
 export function fromCoord(px: number, ts: number): number {
   return Math.trunc((px + (ts - border(ts) - legend(ts))) / ts) - 1;
 }

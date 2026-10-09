@@ -41,18 +41,39 @@ const FLOOR = 30;
  * heading, and one whose whole audience is a single named consumer.
  */
 const NOT_CATALOGED = {
-  // Empty, and meant to stay so: every module under `src/engine/` is something
-  // a game author could reach for, and the catalog's own promise is that it
-  // makes sure you know a module exists before you re-roll it. An entry here
-  // is a finding under management, with the change that owns it named.
+  // Empty, and meant to stay so: every module directly under `src/engine/`,
+  // and every directory of them, is something a game author could reach for,
+  // and the catalog's own promise is that it makes sure you know one exists
+  // before you re-roll it. An entry here is a finding under management, with
+  // the change that owns it named.
 };
 
 const catalog = readFileSync(CATALOG, "utf8");
 
+const isModule = (e) =>
+  e.isFile() && e.name.endsWith(".ts") && !e.name.includes(".test.");
+
+/**
+ * A module directly under `src/engine/` by its file name, and a subdirectory
+ * that holds modules by its own name with a slash (`grid/`): a directory is one
+ * helper behind one entry, and its files are that helper's own parts.
+ */
 const modules = readdirSync(ENGINE, { withFileTypes: true })
-  .filter((e) => e.isFile() && e.name.endsWith(".ts") && !e.name.includes(".test."))
-  .map((e) => e.name)
+  .filter(
+    (e) =>
+      isModule(e) ||
+      (e.isDirectory() &&
+        readdirSync(`${ENGINE}/${e.name}`, { withFileTypes: true }).some(isModule)),
+  )
+  .map((e) => (e.isDirectory() ? `${e.name}/` : e.name))
   .sort();
+
+/** Whether the catalog names `m`: a file in backticks, a directory as the
+ * start of a backticked path or after `src/engine/`. */
+const named = (m) =>
+  m.endsWith("/")
+    ? catalog.includes(`\`${m}`) || catalog.includes(`${ENGINE}/${m}`)
+    : catalog.includes(`\`${m}\``);
 
 if (modules.length < FLOOR) {
   console.error(
@@ -62,9 +83,7 @@ if (modules.length < FLOOR) {
   process.exit(1);
 }
 
-const missing = modules.filter(
-  (m) => !(m in NOT_CATALOGED) && !catalog.includes(`\`${m}\``),
-);
+const missing = modules.filter((m) => !(m in NOT_CATALOGED) && !named(m));
 const stale = Object.keys(NOT_CATALOGED).filter((m) => !modules.includes(m));
 
 if (missing.length || stale.length) {

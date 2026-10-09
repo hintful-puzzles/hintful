@@ -1,9 +1,10 @@
 /**
  * Singles (Hitori) generator, a port of `new_game_desc` from `singles.c`. The
  * Latin-square machinery lives in the shared `engine/latin.ts` and stays
- * RNG-faithful, so over the bit-identical `random.ts` the whole chain still
+ * RNG-faithful, so over the bit-identical `random.ts` the whole chain
  * reproduces the C desc byte-for-byte for the same seed (see
- * `singles-differential.test.ts`).
+ * `singles-differential.test.ts`), except at Normal on a grid under 4 squares
+ * one way: upstream deals Easy there, and this deals the tier asked for.
  */
 
 import { latinGenerateRect } from "../../engine/latin.ts";

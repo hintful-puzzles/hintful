@@ -134,11 +134,12 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 /** Highlight payload an Unequal hint step carries (built in `index.ts`). The
- * element-type legend (docs/games/hints.md § "The element-type color legend"): the driving clue's cells shaded
- * `COL_HINT_CELL`, the acted-on cell(s) `COL_HINT`, the ruled-out candidate(s)
- * shown struck. */
+ * element-type legend (docs/games/hints.md § "The element-type color legend"): the driving clue's cells outlined
+ * `COL_HINT_CELL`, the acted-on cell(s) ringed `COL_HINT`, the ruled-out
+ * candidate(s) shown struck. Outline and ring sit in the gap around a cell, so
+ * neither covers what the cell holds. */
 export interface UnequalHint {
-  /** The driving clue's cells (evidence), shaded `COL_HINT_CELL`. A forcing
+  /** The driving clue's cells (evidence), outlined `COL_HINT_CELL`. A forcing
    * chain's cells additionally carry their place in it, drawn as an ordinal. */
   area: OrderedCell[];
   /** The cell(s) the deduction acts on, marked `COL_HINT`. */

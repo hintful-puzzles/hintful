@@ -35,7 +35,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 import {
   describeAbsentTiers,
@@ -60,7 +60,6 @@ import {
   computeSize,
   FLASH_TIME,
   fleetLayout,
-  fleetRowLimit,
   fleetRows,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
@@ -91,10 +90,17 @@ import {
   SHIP_RIGHT,
   SHIP_SINGLE,
   SHIP_VAGUE,
+  STATUS_INVALID,
   textFormat,
   WATER,
 } from "./state.ts";
-import { adjustShips, checkFleet, countShips } from "./validate.ts";
+import {
+  adjustShips,
+  checkCollision,
+  checkFleet,
+  countShips,
+  validateGridClues,
+} from "./validate.ts";
 
 const params = (over: Partial<BoatsParams> = {}): BoatsParams => ({
   w: 6,
@@ -698,6 +704,65 @@ describe("boats solve", () => {
 // --- mistakes --------------------------------------------------------------
 
 describe("boats findMistakes", () => {
+  it("reports a square on every board the live flags mark", () => {
+    // The live flags fall on numbers and given squares too, which are never
+    // reported, so the claim is about the board and not about each flag.
+    const liveFlagged = (s: BoatsState): boolean => {
+      const board = boardOf(s);
+      const lines = new Int32Array(s.params.w + s.params.h);
+      const cells = new Int32Array(s.params.w * s.params.h);
+      countShips(board, undefined, undefined, lines);
+      checkFleet(board, undefined, cells);
+      validateGridClues(board, cells);
+      checkCollision(board, cells);
+      return lines.includes(STATUS_INVALID) || cells.some((f) => f !== 0);
+    };
+    const fill = (s: BoatsState, i: number, to: "B" | "W"): BoatsState => {
+      const [x, y] = [i % s.params.w, Math.floor(i / s.params.w)];
+      return boatsGame.executeMove(s, {
+        kind: "fill",
+        x0: x,
+        y0: y,
+        x1: x,
+        y1: y,
+        from: "*",
+        to,
+      });
+    };
+    // A board is built that agrees with the answer wherever it is filled, which
+    // no flag may mark, and then one square is filled against the answer: a
+    // boat or water, since a flag can rest on either alone.
+    let flagged = 0;
+    const kinds = new Set<string>();
+    for (let preset = 0; preset < PRESETS.length; preset++) {
+      const p = presetParams(preset);
+      const rng = randomNew(`boats-live-${preset}`);
+      const start = generated(p, `boats-live-board-${preset}`);
+      const solved = solveToGrid(start);
+      if (!solved.ok) throw new Error("a dealt board has an answer");
+      const open: number[] = [];
+      for (let i = 0; i < p.w * p.h; i++)
+        if (start.gridClues[i] === EMPTY) open.push(i);
+      for (let trial = 0; trial < 60; trial++) {
+        let state = start;
+        for (const i of open)
+          if (randomUpto(rng, 4) > 0)
+            state = fill(state, i, isShip(solved.grid[i]) ? "B" : "W");
+        expect(liveFlagged(state), `${preset}/${trial} agrees`).toBe(false);
+
+        const wrong = open[randomUpto(rng, open.length)];
+        const to = isShip(solved.grid[wrong]) ? "W" : "B";
+        state = fill(state, wrong, to);
+        if (!liveFlagged(state)) continue;
+        flagged++;
+        kinds.add(to);
+        expect(findMistakes(state).length, `${preset}/${trial}`).toBeGreaterThan(0);
+      }
+    }
+    expect(flagged).toBeGreaterThan(100);
+    expect([...kinds].sort()).toEqual(["B", "W"]);
+  });
+
   it("flags a square the unique solution contradicts, and only that square", () => {
     const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });
     const state = generated(p, "boats-mistake-1");
@@ -934,13 +999,55 @@ describe("boats fleet display layout", () => {
   /** No boat may be drawn past the right edge of the canvas — the guarantee
    * behind upstream's `TODO ui: Certain custom fleets don't fit in the UI`. */
   const fitsOnItsRow = (p: BoatsParams): boolean =>
-    [...fleetLayout(p)].every((s) => s.fx + s.width <= fleetRowLimit(p));
+    fleetInkRight(p) <= computeSize(p, PREFERRED_TILE_SIZE).w;
+
+  /** The right edge of the furthest boat the fleet display paints. The board
+   * is empty, so every shape in the boat color is the fleet's. */
+  function fleetInkRight(p: BoatsParams): number {
+    const state = newState(p, "0,".repeat(p.w + p.h));
+    const rec = new RecordingDrawing(boatsGame.colors([1, 1, 1]));
+    boatsGame.redraw(
+      rec,
+      preferredDrawState(boatsGame, state),
+      null,
+      state,
+      1,
+      boatsGame.newUi(state),
+      0,
+      0,
+    );
+    let right = 0;
+    for (const op of rec.ops) {
+      if (op.op === "circle" && op.fill === COL_SHIP)
+        right = Math.max(right, op.cx + op.r);
+      if (op.op === "polygon" && op.fill === COL_SHIP)
+        right = Math.max(right, ...op.points.map(([x]) => x));
+    }
+    expect(right, "the fleet display drew nothing").toBeGreaterThan(0);
+    return right;
+  }
 
   it("keeps every shipped preset's fleet inside the canvas", () => {
     for (let i = 0; i < PRESETS.length; i++) {
       const p = presetParams(i);
       expect(fitsOnItsRow(p), encodeParams(p, true)).toBe(true);
     }
+  });
+
+  it("keeps a fleet inside the canvas where the row's last boat ends past the board", () => {
+    // Three singles and two doubles reach 6.25 tiles on a 5-wide board, whose
+    // canvas is the board and its column of numbers: 6 tiles.
+    const p = params({ w: 5, h: 5, fleet: 2, fleetData: [3, 2] });
+    expect(fitsOnItsRow(p)).toBe(true);
+    expect(fleetRows(p)).toBe(2);
+  });
+
+  it("widens the canvas for a boat longer than the board is wide", () => {
+    // One boat has no break to take, so the canvas grows to hold it.
+    const p = params({ w: 2, h: 9, fleet: 9, fleetData: [0, 0, 0, 0, 0, 0, 0, 0, 1] });
+    expect(refusal(p, true)).toBeNull();
+    expect(fitsOnItsRow(p)).toBe(true);
+    expect(computeSize(p, 32).w).toBeGreaterThan(3 * 32);
   });
 
   it("wraps a batch wider than a whole row rather than overflowing it", () => {
@@ -955,8 +1062,9 @@ describe("boats fleet display layout", () => {
 
   it("lays out exactly as upstream wherever upstream fitted", () => {
     // Upstream's algorithm verbatim: break only between whole batches, and let
-    // an over-wide batch run off the edge. Wherever it stayed inside the row
-    // limit its layout is the contract, so the repair must reproduce it.
+    // an over-wide batch run off the edge. Wherever every boat it placed ends
+    // inside this build's canvas (the board and its column of numbers, with no
+    // border), its layout is the contract, so the repair must reproduce it.
     const upstream = (p: BoatsParams): { fx: number; row: number; width: number }[] => {
       const out: { fx: number; row: number; width: number }[] = [];
       let fx = 0.5;
@@ -984,7 +1092,7 @@ describe("boats fleet display layout", () => {
     let compared = 0;
     for (const p of cases) {
       const want = upstream(p);
-      if (!want.every((s) => s.fx + s.width <= p.w + 2)) continue;
+      if (!want.every((s) => s.fx - 0.5 + s.width - 0.25 <= p.w + 1)) continue;
       compared++;
       const got = [...fleetLayout(p)].map(({ fx, row, width }) => ({ fx, row, width }));
       expect(got, encodeParams(p, true)).toEqual(want);

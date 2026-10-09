@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import {
+  DESC_NOT_DEDUCIBLE,
+  loadVerdict,
+  validateDesc,
+} from "../../engine/desc-error.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/pointer.ts";
@@ -75,6 +79,19 @@ describe("desc codec", () => {
     expect(validateDesc(rangeGame, p, "j")).not.toBeNull(); // 10 cells — too many
     expect(validateDesc(rangeGame, p, "2!2")).not.toBeNull(); // invalid char
     expect(validateDesc(rangeGame, p, "99i")).not.toBeNull(); // clue > w+h-1 (=5)
+  });
+
+  it("loads only a board its deductions finish", () => {
+    const p = { w: 4, h: 4 };
+    // Three answers: the squares at (2,1) and (2,2) can each be shaded or
+    // neither, and Check would call a mark that fits another answer a mistake.
+    expect(validateDesc(rangeGame, p, "c6h3_6b")).toBeNull();
+    expect(loadVerdict(rangeGame, p, "c6h3_6b")).toBe(DESC_NOT_DEDUCIBLE);
+    // Every board the generator deals passed the same test.
+    for (let seed = 0; seed < 20; seed++) {
+      const { desc } = rangeGame.newDesc(p, randomNew(`range-load-${seed}`));
+      expect(loadVerdict(rangeGame, p, desc), desc).toBeNull();
+    }
   });
 
   it("refuses what encodeDesc never writes", () => {

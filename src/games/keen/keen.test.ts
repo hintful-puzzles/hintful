@@ -156,6 +156,12 @@ describe("keen params codec", () => {
     });
   });
 
+  it("reads a difficulty letter it does not know as the default tier", () => {
+    const p = decodeParams("6dq");
+    expect(p).toEqual({ ...keenGame.defaultParams(), w: 6 });
+    expect(paramsError(keenGame, p, true)).toBeNull();
+  });
+
   it("rejects invalid params", () => {
     const error = (p: KeenParams) => paramsError(keenGame, p, true);
     expect(error({ w: 2, diff: "easy", multiplicationOnly: false })).toBe(

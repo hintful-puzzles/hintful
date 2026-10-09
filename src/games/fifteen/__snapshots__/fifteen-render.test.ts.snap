@@ -7,6 +7,6 @@ exports[`fifteen: pinned hint positions > says, at each pin 1`] = `
   "goalReposition": "Working on tile 3: slide it back a step, leaving the hole between it and its home.",
   "outOfWay": "Working on tile 1: slide tile 12 out of the way.",
   "slide": "Working on tile 1: slide tile 12 out of the way.",
-  "tileHome": "Working on tile 1: slide tile 7 into place.",
+  "tileHome": "Working on tile 3: slide tile 4 into place.",
 }
 `;

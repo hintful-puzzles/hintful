@@ -278,10 +278,18 @@ per-game border supplied by the caller. `fromCoord` floors directly (correct
 for border-region pixels without the C macro's truncating-division idiom).
 Most games' `interpretMove` starts here.
 
+A conversion written out by hand is held by `coord-conversion.test.ts`: a
+floor or a truncation of a division by the tile size, outside this module, is
+either a call to `fromCoord` or an entry in that test's ledger, and the site
+says what it does that the helper would not (a margin folded onto the first
+row, a kept fraction of a tile, a change of scale). Read a press and its
+release with one function. Rome once read the press truncated and the release
+floored, so a press in the margin beside the grid placed an arrow.
+
 ### `findloop.ts` — loop/bridge finding
 
 Tarjan bridge-finding for live loop-error highlighting. Consumers: Slant,
-Bridges, Dominosa, Loopy, Tracks.
+Bridges, Dominosa, Tracks, Net.
 
 ### `n-times-root-k.ts` — exact `round(n · √k)`
 

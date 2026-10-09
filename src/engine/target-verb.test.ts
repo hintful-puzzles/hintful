@@ -373,30 +373,32 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
       bySight: true,
     });
     for (const verb of verbs.keyOnly) {
-      const byKey = new Set<string>();
-      for (const k of verb.keys)
-        for (const code of k.codes)
-          for (const board of sighted.key(code)) byKey.add(board);
-      expect(byKey.size, `${verb.does}: its keys reach no board`).toBeGreaterThan(0);
       const route = verb.pointer;
       const button = route.button === "primary" ? LEFT_BUTTON : RIGHT_BUTTON;
-      if (route.kind === "repeat") {
-        const byPointer = sighted.presses(Array(route.times).fill(button));
-        expect(byKey, `${verb.does}: against ${route.times} presses`).toEqual(
-          byPointer,
-        );
-        continue;
-      }
       const byPointer =
-        route.kind === "cycle"
-          ? sighted.presses(Array(CYCLE_PRESSES).fill(button), { every: true })
-          : sighted.presses([button], { before: [PENCIL_MODE_BUTTON] });
-      const unreached = [...byKey].filter((board) => !byPointer.has(board));
-      expect(
-        unreached.length,
-        `${verb.does}: ${unreached.length} of ${byKey.size} boards its keys reach ` +
-          `are not on its ${route.kind} route`,
-      ).toBe(0);
+        route.kind === "repeat"
+          ? sighted.presses(Array(route.times).fill(button))
+          : route.kind === "cycle"
+            ? sighted.presses(Array(CYCLE_PRESSES).fill(button), { every: true })
+            : sighted.presses([button], { before: [PENCIL_MODE_BUTTON] });
+      // Each code on its own: a dead key, or a dead case of a letter, would
+      // hide in the union beside a live one.
+      for (const k of verb.keys)
+        for (const code of k.codes) {
+          const what = `${verb.does}: ${k.name} (code ${code})`;
+          const byKey = sighted.key(code);
+          expect(byKey.size, `${what} reaches no board`).toBeGreaterThan(0);
+          if (route.kind === "repeat") {
+            expect(byKey, `${what} against ${route.times} presses`).toEqual(byPointer);
+            continue;
+          }
+          const unreached = [...byKey].filter((board) => !byPointer.has(board));
+          expect(
+            unreached.length,
+            `${what}: ${unreached.length} of ${byKey.size} boards it reaches ` +
+              `are not on its ${route.kind} route`,
+          ).toBe(0);
+        }
     }
   });
 });

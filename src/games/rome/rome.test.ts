@@ -45,7 +45,7 @@ import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import { romeGame } from "./index.ts";
-import { origin, PREFERRED_TILE_SIZE } from "./render.ts";
+import { BORDER, origin, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   ARROWS_ALREADY_SOLVED,
   GOAL_NOT_ALONE,
@@ -432,9 +432,25 @@ describe("the on-screen keypad", () => {
     expect(press(56)).toEqual({ kind: "pencil", x: 1, y: 1, dir: FM_UP });
     // …and Clear clears whatever the mode is entering, rather than always the
     // arrow: a control that does the one thing the player did not ask for.
-    expect(press(CLEAR_BUTTON)).toEqual({ kind: "pencil", x: 1, y: 1, dir: null });
+    const noted = romeGame.executeMove(st, { kind: "pencil", x: 1, y: 1, dir: FM_UP });
+    expect(
+      romeGame.interpretMove(noted, ui, ds, cellPoint(1, 1), CLEAR_BUTTON),
+    ).toEqual({
+      kind: "pencil",
+      x: 1,
+      y: 1,
+      dir: null,
+    });
     press(PENCIL_MODE_BUTTON);
-    expect(press(CLEAR_BUTTON)).toEqual({ kind: "place", x: 1, y: 1, dir: null });
+    const held = romeGame.executeMove(st, { kind: "place", x: 1, y: 1, dir: FM_UP });
+    expect(romeGame.interpretMove(held, ui, ds, cellPoint(1, 1), CLEAR_BUTTON)).toEqual(
+      {
+        kind: "place",
+        x: 1,
+        y: 1,
+        dir: null,
+      },
+    );
   });
 
   it("offers one key per arrow, so every mark a square can hold is on the panel", () => {
@@ -529,6 +545,67 @@ describe("input", () => {
     const ui = newUi();
     expect(romeGame.interpretMove(st, ui, ds, cellPoint(2, 0), LEFT_BUTTON)).toBeNull();
     expect(ui.mmode).toBe(0);
+  });
+
+  it("a press in the margin beside the grid grabs nothing", () => {
+    const st = board(3, 3, EMPTY_3);
+    const row = cellPoint(0, 1).y;
+    // Past the outline, on the left and above: the room the pencil-mode
+    // indicator takes, where no square is.
+    for (const p of [
+      { x: origin(TS) - BORDER - 1, y: row },
+      { x: row, y: origin(TS) - BORDER - 1 },
+      { x: 0, y: row },
+    ]) {
+      const ui = newUi();
+      expect(
+        romeGame.interpretMove(st, ui, ds, p, LEFT_BUTTON),
+        `${p.x},${p.y}`,
+      ).toBeNull();
+      expect(ui.mmode).toBe(0);
+      expect(romeGame.interpretMove(st, ui, ds, p, LEFT_RELEASE)).toBeNull();
+    }
+    // On the outline itself the press is the first column's, and a release
+    // there reads the same square: a tap, which selects and places nothing.
+    const ui = newUi();
+    const outline = { x: origin(TS) - 1, y: row };
+    expect(romeGame.interpretMove(st, ui, ds, outline, LEFT_BUTTON)).toBe(UI_UPDATE);
+    expect(romeGame.interpretMove(st, ui, ds, outline, LEFT_RELEASE)).toBe(UI_UPDATE);
+    expect(ui.cursor).toMatchObject({ x: 0, y: 1, visible: true });
+  });
+
+  it("makes no move of a clear on a square with nothing to clear", () => {
+    const st = board(3, 3, EMPTY_3);
+    // Clear at a tapped square, in each mode.
+    for (const marks of [false, true]) {
+      const ui = newUi();
+      if (marks)
+        romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), PENCIL_MODE_BUTTON);
+      drag(st, ui, [1, 1], [1, 1], LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE);
+      const res = romeGame.interpretMove(st, ui, ds, cellPoint(1, 1), CLEAR_BUTTON);
+      expect(res === null || res === UI_UPDATE, `marks=${marks}`).toBe(true);
+    }
+    // Space while placement is armed.
+    const ui = newUi();
+    romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_SELECT);
+    expect(romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_SELECT2)).toBe(
+      UI_UPDATE,
+    );
+    expect(ui.kmode).toBe(KEYMODE_MOVE);
+
+    // With something there, each is still a move.
+    const held = romeGame.executeMove(st, { kind: "place", x: 0, y: 0, dir: FM_DOWN });
+    romeGame.interpretMove(held, ui, ds, cellPoint(0, 0), CURSOR_SELECT);
+    expect(
+      romeGame.interpretMove(held, ui, ds, cellPoint(0, 0), CURSOR_SELECT2),
+    ).toEqual({ kind: "place", x: 0, y: 0, dir: null });
+    const noted = romeGame.executeMove(st, { kind: "pencil", x: 1, y: 1, dir: FM_UP });
+    const marksUi = newUi();
+    romeGame.interpretMove(noted, marksUi, ds, cellPoint(0, 0), PENCIL_MODE_BUTTON);
+    drag(noted, marksUi, [1, 1], [1, 1], LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE);
+    expect(
+      romeGame.interpretMove(noted, marksUi, ds, cellPoint(1, 1), CLEAR_BUTTON),
+    ).toEqual({ kind: "pencil", x: 1, y: 1, dir: null });
   });
 
   it("moves the keyboard cursor, then places with Enter and a direction", () => {
@@ -630,7 +707,8 @@ describe("input", () => {
         dir,
       });
     }
-    expect(romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), 8)).toEqual({
+    const held = romeGame.executeMove(st, { kind: "place", x: 1, y: 0, dir: FM_UP });
+    expect(romeGame.interpretMove(held, ui, ds, cellPoint(0, 0), 8)).toEqual({
       kind: "place",
       x: 1,
       y: 0,

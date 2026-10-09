@@ -68,4 +68,15 @@ describe("hint sentences live in one file per game", () => {
       "these games have a hint-text.ts, but their hint says nothing",
     ).toEqual([]);
   });
+
+  it("every text module exports its sentences as `say`", async () => {
+    const modules = import.meta.glob<Record<string, unknown>>(
+      "../games/*/hint-text.ts",
+    );
+    const without: string[] = [];
+    for (const [path, load] of Object.entries(modules))
+      if (!("say" in (await load()))) without.push(path.split("/")[2]);
+    expect(Object.keys(modules).length).toBe(WITH_TEXT.size);
+    expect(without, "these text modules export no `say`").toEqual([]);
+  });
 });

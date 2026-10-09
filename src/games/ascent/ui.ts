@@ -12,6 +12,7 @@
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -738,8 +739,9 @@ export function interpretAscentMove(
       }
     }
   } else {
-    gy = oy < 0 ? -1 : Math.trunc(oy / tileSize);
-    gx = ox < 0 ? -1 : Math.trunc(ox / tileSize);
+    // Anywhere above or left of the board is the one row or column `-1`.
+    gy = Math.max(-1, fromCoord(oy, tileSize, 0));
+    gx = Math.max(-1, fromCoord(ox, tileSize, 0));
   }
 
   if (isMouseDown(button)) {

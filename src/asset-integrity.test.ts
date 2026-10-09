@@ -206,7 +206,7 @@ describe("no doc comment describes a member that was deleted out from under it",
   });
 });
 
-describe("every cataloged puzzle has its generated icons", () => {
+describe("every cataloged puzzle has its committed icons", () => {
   it.each(puzzleIds)("%s", (puzzleId) => {
     for (const suffix of ["64d8", "128d8"] as const) {
       const path = `./assets/icons/${puzzleId}-${suffix}.png`;

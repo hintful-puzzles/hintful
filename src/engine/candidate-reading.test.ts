@@ -14,7 +14,7 @@
  * so it is also what enrolls it here.
  */
 import { describe, expect, it } from "vitest";
-import type { CandidateReading } from "./candidate-hint.ts";
+import { type CandidateReading, candidateHint } from "./candidate-hint.ts";
 import { permitsSearch } from "./difficulty.ts";
 import type { Narration } from "./hint-words.ts";
 import { dealt } from "./testing/dealt.ts";
@@ -163,6 +163,59 @@ const blankPremises: Record<CandidateReading, number> = { implicit: 0, populate:
  * for the setup check, which reads effects off the board and would agree about
  * a board reader that saw none. */
 const seenSetUp: Record<CandidateReading, number> = { implicit: 0, populate: 0 };
+
+/**
+ * A hint asked for with no `Ui`, beside the one asked for with the game's own
+ * fresh `Ui`. `candidateHint` given no `Ui` reads
+ * `DEFAULT_CANDIDATE_READING`, so the two agree only where the game's `hint`
+ * supplies its own `newUi` or starts on the convention.
+ */
+function withAndWithoutUi(
+  game: Pick<AnyGame, "hint" | "newUi">,
+  state: unknown,
+  aux?: string,
+) {
+  // What the player is shown and what is played, step by step. A plan's steps
+  // also carry closures, which no two builds of the same plan share.
+  const shown = (res?: ReturnType<NonNullable<AnyGame["hint"]>>) =>
+    res?.ok
+      ? res.steps.map((s) => JSON.stringify([s.rung, s.explanation, s.move]))
+      : null;
+  return {
+    bare: shown(game.hint?.(state, aux)),
+    own: shown(game.hint?.(state, aux, game.newUi(state))),
+  };
+}
+
+describe("a hint asked for with no Ui", () => {
+  it("differs from the game's own where a hint drops the Ui it was not given", () => {
+    // The defect the cases below exist for, on a game made to have it.
+    const dropsIt: Pick<AnyGame, "hint" | "newUi"> = {
+      newUi: () => ({ candidateReading: "implicit" }),
+      hint: (
+        state: unknown,
+        _aux?: string,
+        ui?: { candidateReading: CandidateReading },
+      ) =>
+        candidateHint(state, ui ?? null, (_state, prefs) => [
+          { move: null, rung: "only", explanation: prefs.reading },
+        ]),
+    };
+    const { bare, own } = withAndWithoutUi(dropsIt, {});
+    expect(bare).not.toEqual(own);
+  });
+
+  for (const id of OFFERING.ids) {
+    it(`${id}: is the hint its own fresh Ui gets`, () => {
+      const game = gameOf(id);
+      const [{ params }] = presetsOf(game);
+      const { desc, aux } = dealt(game, params);
+      const { bare, own } = withAndWithoutUi(game, game.newState(params, desc), aux);
+      expect(own?.length, `${id} refuses its first board`).toBeGreaterThan(0);
+      expect(bare).toEqual(own);
+    });
+  }
+});
 
 describe("the hint-notes preference", () => {
   it("is offered by a derived population, each member with a hint and the pref", () => {

@@ -189,8 +189,64 @@ describe("the privacy notes say what the app does with a player's data", () => {
     );
     expect(text).toMatch(/anonymous actions only/i);
     expect(text).toMatch(/no cookies and no identifier/i);
-    expect(text).toMatch(/does not include your identity or anything you have saved/i);
+    expect(text).toMatch(/does not include your identity or any saved game/i);
     expect(text).toMatch(/Nothing is sent unless you choose to send it/i);
+  });
+
+  it("says what a report carries, in the words the crash dialog uses", () => {
+    // A report holds more than the error on screen, and the player's choice
+    // to send one is only theirs if both places say so. The dialog's words
+    // are the panel's, whole: two tellings in different terms are two things
+    // to keep true.
+    const dialog = sources["./dialogs/crash-dialog.ts"].replace(/\s+/g, " ");
+    const told = /<summary>What a report includes<\/summary>(.*?)<\/details>/
+      .exec(dialog)?.[1]
+      .trim();
+    expect(told?.length ?? 0).toBeGreaterThan(200);
+    expect(text).toContain(told);
+    // Everything the reporting attaches is in those words.
+    for (const carried of [
+      /any other errors recorded since the page was opened/i,
+      /buttons pressed/i,
+      /pages opened/i,
+      /network requests the app made/i,
+      /console/i,
+      /the app’s version/i,
+      /browser and screen/i,
+      /game ID/i,
+      /offline use and automatic updates/i,
+      /installed/i,
+      /repair/i,
+      /any note you add/i,
+    ])
+      expect(told).toMatch(carried);
+  });
+
+  it("names in its words every tag and context the app attaches to a report", () => {
+    // A tag added to a report with no word for it in the notes is how the
+    // notes stop being true. Each is listed here beside the word that covers
+    // it, and the list is held to what the sources set through the SDK's
+    // `setTag`, `setTags` and `setContext`.
+    const COVERED_BY: Record<string, RegExp> = {
+      puzzleId: /which game/i,
+      Puzzle: /its type, its game ID and how many moves in/i,
+      "pwa.allowOfflineUse": /whether offline use/i,
+      "pwa.autoUpdate": /automatic updates are on/i,
+      "pwa.isRunningAsApp": /whether the app is installed/i,
+      "lit.repair_font_tags": /repair part of its display/i,
+      "lit.render_recovery": /repair part of its display/i,
+    };
+    const set = new Set<string>();
+    for (const [file, source] of Object.entries(sources)) {
+      if (file.endsWith(".test.ts")) continue;
+      for (const m of source.matchAll(/Sentry\.set(?:Tag|Context)\(\s*"([^"]+)"/g))
+        set.add(m[1]);
+      for (const block of source.matchAll(/Sentry\.setTags\(\{([^}]*)\}/g))
+        for (const key of block[1].matchAll(/"([^"]+)":/g)) set.add(key[1]);
+    }
+    expect([...set].sort()).toEqual(Object.keys(COVERED_BY).sort());
+    for (const [name, words] of Object.entries(COVERED_BY))
+      expect(text, `${name} is attached and the notes do not say so`).toMatch(words);
   });
 
   it("keeps the crash-report promises bound to the code that keeps them", () => {
@@ -199,7 +255,8 @@ describe("the privacy notes say what the app does with a player's data", () => {
     expect(sources["./utils/sentry.ts"]).toMatch(/sendDefaultPii: false/);
     // "Nothing is sent unless you choose": `report-consent.test.ts` drives the
     // real `initSentry` and checks that nothing reaches the transport before
-    // consent. This holds `initSentry` to the gate that test exercises.
+    // consent, and what does after it. This holds `initSentry` to the gate
+    // that test exercises.
     expect(sources["./utils/sentry.ts"]).toMatch(/transport: reportConsent\.gate\(/);
     // "Nothing you have saved": no save is attached to a report anywhere.
     const attaching = Object.entries(sources)

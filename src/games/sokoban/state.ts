@@ -171,7 +171,7 @@ export type SokobanPush = {
   n: number;
 };
 
-/** Solve's move: the finished board, written as a game ID writes a board. */
+/** Solve's move: the finished board, as {@link encodeBoard} writes it. */
 export type SokobanSolve = { type: "solve"; board: string };
 
 export type SokobanMove = SokobanStep | SokobanWalk | SokobanPush | SokobanSolve;
@@ -234,11 +234,13 @@ export function canWalkTo(s: SokobanState, x: number, y: number): boolean {
 }
 
 /** The board as a game ID writes it: each cell's letter, the player's
- * square's as the player, a run of one letter as the letter and its count. */
+ * square's as the player, a run of one letter as the letter and its count. A
+ * labeled barrel on a target is written as the control character the grid
+ * holds, which {@link decodeBoard} reads and a game ID cannot carry. */
 export function encodeBoard(s: SokobanState): string {
   const at = s.py * s.w + s.px;
   const chars = Array.from(s.grid, (v, i) =>
-    i === at ? (v === TARGET ? PLAYERTARGET : PLAYER) : v === INITIAL ? WALL : v,
+    i === at ? (v === TARGET ? PLAYERTARGET : PLAYER) : v,
   ).map((v) => String.fromCharCode(v));
   let out = "";
   for (let i = 0; i < chars.length; ) {
@@ -258,14 +260,23 @@ export function encodeBoard(s: SokobanState): string {
  * `INITIAL` square and a labeled barrel's on-target control character have no
  * place in an ID.
  */
-const DESC_LETTERS = /^[swptdbfuvA-Z]$/;
+const isDescLetter = (ch: string): boolean => /^[swptdbfuvA-Z]$/.test(ch);
+
+/** The letters {@link encodeBoard} writes of a board in play: a desc's, and a
+ * labeled barrel's on-target control character, which pushing it home makes. */
+const isBoardLetter = (ch: string): boolean =>
+  isDescLetter(ch) || barrelLabel(ch.charCodeAt(0)) !== 0;
 
 /**
  * Runs of a cell letter and a repeat count of at least 2 (a single cell is
  * written bare), filling the board, with exactly one player. The player's cell
  * is stored as the SPACE or TARGET beneath it, as upstream's `new_game` does.
  */
-function parseDesc(p: SokobanParams, desc: string): DescParse<SokobanState> {
+function parseDesc(
+  p: SokobanParams,
+  desc: string,
+  isLetter = isDescLetter,
+): DescParse<SokobanState> {
   const area = p.w * p.h;
   return readDesc(desc, (r) => {
     const grid = new Uint8Array(area);
@@ -273,7 +284,7 @@ function parseDesc(p: SokobanParams, desc: string): DescParse<SokobanState> {
     let at = -1;
     let i = 0;
     while (i < area) {
-      const ch = r.char((ch) => DESC_LETTERS.test(ch)).charCodeAt(0);
+      const ch = r.char(isLetter).charCodeAt(0);
       const n = r.peekIs(isDigit) ? r.int(2, area) : 1;
       if (i + n > area) r.fail(DESC_TOO_LONG);
       let cell = ch;
@@ -293,6 +304,12 @@ function parseDesc(p: SokobanParams, desc: string): DescParse<SokobanState> {
 
 export function newState(p: SokobanParams, desc: string): SokobanState {
   return descValue(parseDesc(p, desc));
+}
+
+/** The board {@link encodeBoard} wrote, which may be one in play: a game ID's
+ * letters and a labeled barrel on a target. */
+export function decodeBoard(p: SokobanParams, board: string): SokobanState {
+  return descValue(parseDesc(p, board, isBoardLetter));
 }
 
 // --- move classification ----------------------------------------------

@@ -23,6 +23,7 @@ import {
   noSuchTier,
   tierNames,
 } from "../../engine/difficulty.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   DEDUCTION_EXHAUSTED,
@@ -79,7 +80,7 @@ import {
   outstanding,
   stepSatisfied,
 } from "./hint.ts";
-import { tell } from "./hint-text.ts";
+import { say } from "./hint-text.ts";
 import {
   addAssocWithOpposite,
   legalDotsFor,
@@ -216,7 +217,10 @@ export { GalaxiesDiff };
 
 /** Edge-rounded grid coord from a pixel coord. Mirrors
  * `coord_round_to_edge` plus the (2 * FROMCOORD + 0.5)
- * grid-rounding in upstream's `interpret_move`. */
+ * grid-rounding in upstream's `interpret_move`. This and
+ * {@link gridRoundDouble} divide for themselves: which edge or dot of a tile
+ * the pointer is nearest is in the fraction of a tile, which `fromCoord` of
+ * `engine/geometry.ts` floors away. */
 function coordRoundToEdge(
   px: number,
   py: number,
@@ -273,7 +277,7 @@ function scoord(c: number, tileSize: number, border: number): number {
  * `2*FROMCOORD(x + TILE_SIZE) - 1`; always yields an odd (tile)
  * coordinate, possibly off-grid when the pointer leaves the board. */
 function snapToTile(p: number, tileSize: number, border: number): number {
-  return 2 * Math.floor((p - border + tileSize) / tileSize) - 1;
+  return 2 * fromCoord(p + tileSize, tileSize, border) - 1;
 }
 
 // --- the click half: edges as targets ---------------------------------
@@ -676,6 +680,13 @@ function interpretMove(
   if (isMouseDrag(button)) {
     if (ui.pressPending && traveled(ui, x, y)) {
       ui.pressPending = false;
+      // `view-interactive.ts`'s cancelPointerTracking reports a canceled
+      // press as a drag off the canvas's top left corner and then a release
+      // there. That is no place the player dragged to, and a press that was
+      // still only a press started nothing: read as a drag from the press
+      // point it would lift the arrow under the press and drop it off the
+      // board.
+      if (x < 0 || y < 0) return null;
       // A left press on a line drags walls: the click's own verb, on every
       // edge the drag passes. Anywhere else it is the association.
       const wall =
@@ -697,6 +708,20 @@ function interpretMove(
     }
     if (sweepOpen(ui)) return sweepTo(targetVerbs, s, ui, ds, p);
     if (!ui.dragging) return null;
+    // The same canceled press, where the press itself began the drag: the
+    // right button on a dot or an arrow. A drag whose target has not left its
+    // source tile has gone nowhere yet, so the report from off the canvas ends
+    // it and the arrow it lifted is put back. One that has moved is not told
+    // apart from an arrow dragged off the board, which removes it.
+    if (
+      !ui.dragToDot &&
+      ui.targetX === ui.srcx &&
+      ui.targetY === ui.srcy &&
+      (x < 0 || y < 0)
+    ) {
+      ui.dragging = false;
+      return UI_UPDATE;
+    }
     return aimDrag(s, ui, x, y, tile, border) ? UI_UPDATE : null;
   }
 
@@ -716,11 +741,9 @@ function interpretMove(
       return dropDrag(s, ui, ui.targetX, ui.targetY);
     }
     // A press that never became a drag is a click — but only if it ended
-    // where it started. `view-interactive.ts`'s cancelPointerTracking
-    // synthesizes a release at (-100, -100) when the pointer leaves the
-    // canvas mid-press, and that must not toggle an edge on the far side of
-    // the board. Measuring against the press pixel covers it without a
-    // special case.
+    // where it started. A release can arrive far from its press with no drag
+    // between, and that must not toggle an edge on the far side of the board.
+    // Measuring against the press pixel covers it without a special case.
     if (button !== LEFT_RELEASE || !pending || traveled(ui, x, y)) return null;
     // The click: the declared verb on the edge the press addressed, which is
     // where the keyboard carries on from.
@@ -1029,7 +1052,7 @@ function refreshHintStep(
   );
   if (targets.length === hl.targets.length) return step;
   const highlights = { ...hl, targets };
-  const words = tell(highlights);
+  const words = say(highlights);
   return { ...step, highlights, words, explanation: words.text };
 }
 

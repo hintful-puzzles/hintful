@@ -1,7 +1,7 @@
 /**
  * Pearl generator — port of `pearl_loopgen` + `new_clues` + `new_game_desc`
- * (pearl.c). Byte-match critical: the RNG draw order is reproduced exactly so
- * `newDesc(p, randomNew(seed))` equals the C output.
+ * (pearl.c). The RNG draw order is pearl.c's, since the frozen differential
+ * compares `newDesc(p, randomNew(seed))` with its desc byte for byte.
  *
  * The generator: build a random loop over the shared `generateLoop` (biased
  * toward black-pearl corners), derive the maximal clue set, gate on the
@@ -145,7 +145,8 @@ function pearlLoopgen(
  * unique solution at `difficulty` (and — for Normal — not solvable one tier
  * easier), then greedily minimized. Writes `clues` and the solution
  * `gridOut` (both length w*h). Follows `new_clues`, including the upstream
- * `corners`-array duplication quirk and the 5×5-Normal→Easy downgrade.
+ * `corners`-array duplication quirk. The tier is the one asked for: a Normal
+ * board too small to be Normal is refused by `validateParams` before this.
  */
 function newClues(
   params: PearlParams,

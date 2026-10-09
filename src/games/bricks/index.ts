@@ -24,6 +24,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { fromCoord } from "../../engine/geometry.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
@@ -201,14 +202,14 @@ const inHex = (s: BricksState, x: number, y: number) =>
 
 const geometry: TargetGeometry<BricksState, BricksUi, BricksDrawState, Point> = {
   noun: "cell",
-  // Undo the shear, then floor to a cell.
+  // Undo the shear, then floor to a cell. A row above the board shears by a
+  // row that is not there, and `inHex` turns it away whatever column comes of
+  // it.
   pointerTarget(s, ds, p) {
     const ts = ds.tileSize;
     const { ox, oy } = offsets(s.h, ts);
-    const py = p.y - oy;
-    const y = py < 0 ? -1 : (py / ts) | 0;
-    const px = p.x - ox - y * (ts >> 1);
-    const x = px < 0 ? -1 : (px / ts) | 0;
+    const y = fromCoord(p.y, ts, oy);
+    const x = fromCoord(p.x - y * (ts >> 1), ts, ox);
     return inHex(s, x, y) ? { x, y } : null;
   },
   pointAt(s, ds, t) {

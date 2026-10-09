@@ -43,7 +43,7 @@ export function newDesc(
   // shuffle, because that is the grid the barriers have to be compatible with.
   const barrierCandidates = collectBarrierCandidates(tiles, w, h, p.wrapping);
 
-  // The unshuffled grid is the solution; `solve()` just replays it.
+  // The unshuffled grid is the solution, saved before the shuffle below.
   const aux = Array.from(tiles, (t) => (t & 0xf).toString(16)).join("");
 
   shuffle(tiles, p, cx, cy, rs);

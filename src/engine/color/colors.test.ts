@@ -296,6 +296,15 @@ describe("the named colors", () => {
     expect(new Set(colors.TWO_NAMES).size).toBe(colors.TWO.length);
   });
 
+  it("gives each member of the pair a wash of its own hue", () => {
+    // The roles built on the pair's washes follow the pair only while each
+    // wash is its member's: the three declarations are edited together.
+    for (const scheme of [light, dark])
+      colors.TWO.forEach((member, i) => {
+        expect(scheme(colors.TWO_WASH[i])[2]).toBeCloseTo(scheme(member)[2], 0);
+      });
+  });
+
   it("says the ten's names alongside the ten", () => {
     // Flood's hint reads "Fill with orange". The only thing between that and a
     // lie is that the word and the color are handed out together.

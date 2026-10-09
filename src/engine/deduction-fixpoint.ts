@@ -21,8 +21,16 @@
  * should.** The ladder *shape* is near-universal, but the bookkeeping wrapped
  * around it is per-game and often decides which puzzles exist, so a solver whose
  * loop *looks* like this one is not evidence that it is this one; the
- * differential is. Loopy and Lightup each break a promise this runner makes, and
- * that list is re-derived whenever this contract changes, never carried forward
+ * differential is. Two solvers each break a promise this runner makes:
+ *
+ * - **Loopy** breaks *a pass attempts every technique at or below the cap*: each
+ *   of its firings reports the cheapest rung that could use the new
+ *   information, and the next pass skips the techniques below it.
+ * - **Lightup** breaks *return after first firing*: it has no ladder, only two
+ *   techniques interleaved per cell inside one grid scan whose order decides
+ *   which boards generate.
+ *
+ * That list is re-derived whenever this contract changes, never carried forward
  * (`docs/games/solver-and-generator.md` § "Where the fixpoint does not fit").
  *
  * **A conditionally-available technique guards itself in `run` and returns `0`**

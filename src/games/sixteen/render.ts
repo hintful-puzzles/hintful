@@ -44,7 +44,7 @@ const COL_TILE = 5;
 /** A slide arrow's fill. The bevel's lowlight in a slot of its own, so the
  * bevel's dark-scheme swap leaves it alone and the arrows are the gray
  * Netslide's are in both schemes. */
-const COL_ARROW = 6;
+export const COL_ARROW = 6;
 /** The arrow the keyboard cursor is on. */
 const COL_CURSOR = 7;
 

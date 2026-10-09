@@ -246,6 +246,16 @@ describe("dominosa moves + completion", () => {
     expect(edged.edges[0]).not.toBe(0);
     expect(edged.edges[w]).not.toBe(0);
   });
+
+  it("has no text rendering once a number needs a fourth digit", () => {
+    const p = { n: 3, diff: DIFF_TRIVIAL, tall: false };
+    const state = newState(p, newDominosaDesc(p, randomNew("text")).desc);
+    expect(dominosaGame.textFormat?.(state)?.split("\n")).toHaveLength(2 * state.h + 2);
+    // The text grid gives a square three characters, and a set's numbers run
+    // to its order. The board itself is not read before the order is.
+    const huge: DominosaState = { ...state, params: { ...p, n: 1000 } };
+    expect(dominosaGame.textFormat?.(huge)).toBeNull();
+  });
 });
 
 describe("dominosa findMistakes + solve", () => {
