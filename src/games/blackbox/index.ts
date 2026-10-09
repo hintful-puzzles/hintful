@@ -15,6 +15,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   dimensionParamConfig,
@@ -433,6 +434,7 @@ export const blackboxGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   findMistakes,
 

@@ -15,6 +15,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   DEDUCTION_EXHAUSTED,
@@ -463,6 +464,7 @@ export const patternGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  finishesByDeduction: (s) => hintAndSolveFinish(patternGame, s),
   status,
 
   solve(orig) {

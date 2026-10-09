@@ -6,6 +6,7 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click } from "../../engine/hint-gesture.ts";
 import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
@@ -284,6 +285,7 @@ export const fifteenGame: Game<
 
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   notApplicable: {
     findMistakes:

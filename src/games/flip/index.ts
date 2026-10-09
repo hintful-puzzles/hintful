@@ -7,6 +7,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   dimensionParamConfig,
   type Game,
@@ -261,6 +262,7 @@ export const flipGame: Game<
 
   executeMove,
 
+  finishesByDeduction: nothingToDeduce,
   /** Every square is lit. */
   status(s) {
     return s.grid.every((v) => v === 0) ? "solved" : "ongoing";

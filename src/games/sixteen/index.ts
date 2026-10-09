@@ -7,6 +7,7 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -715,6 +716,7 @@ export const sixteenGame: Game<
 
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   notApplicable: {
     findMistakes:

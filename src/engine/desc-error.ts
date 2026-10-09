@@ -185,7 +185,8 @@ export function readBoard<P, S>(
  * **A board loads only if the game's own solver solves it.** That is the test
  * every generator deals by: some cap of a tiered game's solver solves the
  * board, whatever tier its ID states, or an untiered game's
- * `finishesByDeduction` says its deductions finish it. A tier named
+ * `finishesByDeduction` says its deductions finish it, which every untiered
+ * game that deduces has to answer. A tier named
  * Unreasonable is a cap like any other, so a board that needs trial and error
  * loads exactly where the game has such a tier.
  */
@@ -204,8 +205,11 @@ function solverVerdict<P, S>(
   state: S,
 ): DescError | null {
   const contract = game.difficulty;
-  if (contract === undefined)
+  if (contract === undefined) {
+    // A registered game always answers (`registerGame`); only a bare codec
+    // handed in by a test has nothing to ask.
     return (game.finishesByDeduction?.(state) ?? true) ? null : DESC_NOT_DEDUCIBLE;
+  }
   const solve = cappedSolveFor(contract, p, desc);
   if (solve(tierOf(game, p)) === "solved") return null;
   const tiers = difficultyTiers(game) ?? [];

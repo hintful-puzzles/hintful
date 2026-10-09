@@ -18,6 +18,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { coord, fromCoord } from "../../engine/geometry.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -281,6 +282,7 @@ export const inertiaGame: Game<
   interpretMove,
   executeMove,
 
+  finishesByDeduction: nothingToDeduce,
   status: (s: InertiaState): GameStatus => (s.gems === 0 ? "solved" : "ongoing"),
   notApplicable: {
     findMistakes:

@@ -670,10 +670,16 @@ export interface Game<
    * in the moment it declares this. */
   difficulty?: DifficultyContract<Params>;
 
-  /** Whether deduction alone finishes this board from its opening position,
-   * for a deductive game with no difficulty tiers. `loadDesc` refuses a board
-   * that fails it, so no board is played that needs trial and error. A tiered
-   * game answers through {@link difficulty} instead. */
+  /** Whether deduction alone finishes this board from its opening position.
+   * `loadDesc` refuses a board that fails it, so no board is played that needs
+   * trial and error.
+   *
+   * **Every game without difficulty tiers answers**, and `registerGame` refuses
+   * one that does not: its own test where its hint or solver deduces
+   * (`hintAndSolveFinish` unless the game has a cheaper one as true), and
+   * `nothingToDeduce` where the board is worked by moving, searching or
+   * guessing. A tiered game answers through {@link difficulty} and leaves
+   * this out. */
   finishesByDeduction?(state: State): boolean;
 
   /** RGB palette (each component 0..1), index 0 is conventionally the

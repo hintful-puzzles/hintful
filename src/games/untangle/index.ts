@@ -32,6 +32,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { descValue } from "../../engine/desc-error.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
   type Game,
@@ -372,6 +373,7 @@ export const untangleGame: Game<
     return ns;
   },
 
+  finishesByDeduction: nothingToDeduce,
   status: (s) => (s.crosses.includes(true) ? "ongoing" : "solved"),
   notApplicable: {
     findMistakes:

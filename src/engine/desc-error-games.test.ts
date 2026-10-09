@@ -139,10 +139,12 @@ describe("a near-miss game ID", () => {
   // one answer usually leaves it with several or none. It was 1,270 once
   // loading asked whether deduction finishes the board
   // (`retire-the-unchecked-board-options`): a solver that gives up proves
-  // neither, and such a board used to load.
+  // neither, and such a board used to load. It was 1,028 once nine untiered
+  // games that had not been asking did
+  // (`refuse-a-board-an-untiered-solver-cannot-finish`).
   itOverWholeSweep("loaded enough accepted near misses to mean something", () => {
     expect(accepted.size).toBe(REGISTERED_GAME_COUNT);
     const total = [...accepted.values()].reduce((a, b) => a + b, 0);
-    expect(total).toBeGreaterThanOrEqual(1100);
+    expect(total).toBeGreaterThanOrEqual(900);
   });
 });

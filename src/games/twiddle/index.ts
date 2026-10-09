@@ -9,6 +9,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {
   dimensionParamConfig,
@@ -285,6 +286,7 @@ export const twiddleGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   notApplicable: {
     findMistakes:

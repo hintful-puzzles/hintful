@@ -29,6 +29,7 @@ import type {
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { numberItem, parseConfigInt } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -335,6 +336,7 @@ export const slideGame: Game<
 
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   notApplicable: {
     findMistakes:

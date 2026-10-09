@@ -28,6 +28,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { CELL } from "../../engine/hint-words.ts";
@@ -716,6 +717,7 @@ export const crossingGame: Game<
 
   interpretMove,
   executeMove,
+  finishesByDeduction: (s) => hintAndSolveFinish(crossingGame, s),
   status,
 
   solve,

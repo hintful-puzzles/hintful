@@ -101,6 +101,19 @@ assert that every technique fires.
 - **WHEN** a preset is added to ABCD's preset list
 - **THEN** the census walks boards generated at it with no edit to the census
 
+### Requirement: ABCD's Solve does not claim a second answer it has not found
+
+"Ambiguous" is the ladder stopping short, which proves no second answer. The
+game's `solve` SHALL refuse such a clue set with `PUZZLE_NOT_REASONABLE` and
+SHALL NOT say the puzzle has more than one solution, so a game ID naming one
+is refused as needing trial and error.
+
+#### Scenario: A game ID the ladder cannot finish
+
+- **WHEN** a hand-built 10×10 ABCD game ID whose clues the ladder stops short
+  on is opened
+- **THEN** it is refused with `DESC_NOT_DEDUCIBLE`, not with `DESC_NOT_UNIQUE`
+
 ### Requirement: ABCD's generator accepts only a uniquely solvable fill
 
 The generator SHALL fill the grid with random letters that respect the

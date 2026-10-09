@@ -1051,9 +1051,18 @@ of the game's difficulty contract solves (`DESC_NO_SINGLE_ANSWER` in a game
 with an Unreasonable tier, `DESC_NOT_DEDUCIBLE` in one without), or that an
 untiered game's `finishesByDeduction` turns away
 (`DESC_NOT_DEDUCIBLE`). A tiered game supplies nothing new; an untiered
-deductive game supplies that one method
+game supplies that one method, and is not registered without it: usually
+`hintAndSolveFinish`, or `nothingToDeduce` where the board is moved or searched
 ([solver-and-generator.md](./solver-and-generator.md) § "No option switches the
 generator's checks off").
+
+### `hint-finishes.ts` — an untiered game's answer to "does deduction finish it"
+
+`hintAndSolveFinish(game, state)` is `Game.finishesByDeduction` for an
+untiered game whose hint deduces: Solve answers the board and the hint,
+followed a whole plan at a time, ends on a solved one. `nothingToDeduce` is
+the answer of a game that moves, searches or guesses. Write a test of your own
+only where the game has one as true and cheaper.
 
 ### `desc-reader.ts` — the cursor a desc parser drives
 

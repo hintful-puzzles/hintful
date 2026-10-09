@@ -15,6 +15,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click } from "../../engine/hint-gesture.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {
@@ -306,6 +307,7 @@ export const netslideGame: Game<
   interpretMove,
   executeMove,
 
+  finishesByDeduction: nothingToDeduce,
   status: (s): GameStatus => (isComplete(s) ? "solved" : "ongoing"),
   notApplicable: {
     findMistakes:

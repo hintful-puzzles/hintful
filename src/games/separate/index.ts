@@ -30,6 +30,7 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   DEDUCTION_EXHAUSTED,
@@ -264,6 +265,7 @@ export const separateGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  finishesByDeduction: (s) => hintAndSolveFinish(separateGame, s),
   status,
 
   solve(orig, _curr) {

@@ -12,6 +12,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { colorKeysZeroIsTen } from "../../engine/key-labels.ts";
 import { modifierItem } from "../../engine/modifier.ts";
@@ -580,6 +581,7 @@ export const guessGame: Game<
 
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   findMistakes,
   notApplicable: {

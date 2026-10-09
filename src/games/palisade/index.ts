@@ -29,6 +29,7 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
@@ -270,6 +271,7 @@ export const palisadeGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  finishesByDeduction: (s) => hintAndSolveFinish(palisadeGame, s),
   status,
 
   solve(orig, _curr) {

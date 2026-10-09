@@ -19,6 +19,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "canMarkAll",
       "changedState",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -133,6 +134,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "changedState",
       "findMistakes",
+      "finishesByDeduction",
       "flashLength",
       "hint",
       "hintGesture",
@@ -309,6 +311,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "changedState",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -350,6 +353,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "cube",
     "members": [
       "animLength",
+      "finishesByDeduction",
       "flashLength",
       "ignoresSecondaryButton",
       "notApplicable",
@@ -408,6 +412,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "fifteen",
     "members": [
       "animLength",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -441,6 +446,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "changedState",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -471,6 +477,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "flip",
     "members": [
       "animLength",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -501,6 +508,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "flood",
     "members": [
       "animLength",
+      "finishesByDeduction",
       "flashLength",
       "hint",
       "hintGesture",
@@ -664,6 +672,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "decodeUi",
       "encodeUi",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -702,6 +711,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "finishesByDeduction",
       "flashLength",
       "hint",
       "hintGesture",
@@ -1027,6 +1037,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1109,6 +1120,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "netslide",
     "members": [
       "animLength",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1139,6 +1151,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1170,6 +1183,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "pattern",
     "members": [
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1243,6 +1257,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "changedState",
       "deserializeMove",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1442,6 +1457,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "finishesByDeduction",
       "flashLength",
       "notApplicable",
       "paramConfig",
@@ -1511,6 +1527,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1551,6 +1568,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "changedState",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1629,6 +1647,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "sixteen",
     "members": [
       "animLength",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1694,6 +1713,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "finishesByDeduction",
       "notApplicable",
       "paletteScheme",
       "paramConfig",
@@ -1724,6 +1744,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1844,6 +1865,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "findMistakes",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -2042,6 +2064,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "twiddle",
     "members": [
       "animLength",
+      "finishesByDeduction",
       "notApplicable",
       "paletteScheme",
       "paramConfig",
@@ -2214,6 +2237,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",

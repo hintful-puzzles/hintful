@@ -28,6 +28,16 @@ export function registerGame<P, S, M, U, D>(game: Game<P, S, M, U, D>): void {
     }
     return;
   }
+  // A pasted board is held to the game's solver through one of the two, and a
+  // game that names neither would load every board as if it had been asked.
+  const tiered = game.difficulty !== undefined;
+  if (tiered === (game.finishesByDeduction !== undefined)) {
+    throw new Error(
+      tiered
+        ? `${game.id}: a game with difficulty tiers is held to them, so it leaves finishesByDeduction out`
+        : `${game.id}: a game without difficulty tiers says whether deduction finishes a board (finishesByDeduction), with nothingToDeduce where it deduces nothing`,
+    );
+  }
   factories.set(game.id, () => new Midend(game));
   games.set(game.id, game);
 }

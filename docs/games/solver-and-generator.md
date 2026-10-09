@@ -387,7 +387,33 @@ game's own solver cannot solve:
   with such a tier. A board no cap solves is refused with
   `DESC_NO_SINGLE_ANSWER` where the game has that tier and `DESC_NOT_DEDUCIBLE`
   where it does not, since only there is trial and error what is wrong;
-- an untiered deductive game declares `Game.finishesByDeduction(state)`.
+- an untiered game answers `Game.finishesByDeduction(state)`, and
+  `registerGame` throws for one that leaves it out, since a missing answer
+  used to read as yes and Palisade opened a board with no clues on it.
+
+**An untiered game gives one of three answers.** Where its hint can run out of
+deduction, `hintAndSolveFinish` (`engine/hint-finishes.ts`): Solve answers the
+board, and the game's own hint, played from the opening a whole plan at a
+time, ends on a solved one. That is the default because it asks the thing a
+player meets, and it is cheap: under 30 ms on the largest preset of each of
+the eight games that took it, against a deal of up to 1.8 s (measured
+2026-10-10). A game writes its own test only where it has one as true and
+cheaper, as Range does from its three rules.
+
+**Before a game takes it, deal thousands of boards and ask it of each.** It
+refuses a board the hint cannot finish, so a generator that asks only the
+solver will have dealt boards it refuses, and a player may hold one. Filling
+is the case: its solver finishes one dealt board in about 480 that its hint
+does not, which 762 boards did not show and 6,688 did, so its answer is its
+solver alone until `close-the-solver-hint-gap-in-filling`. Where nothing is deduced (a
+sliding puzzle, a search, a guessing game), `nothingToDeduce`.
+`untiered-load.test.ts` holds that last answer to the game's code: it is given
+exactly by the games whose hint cannot end in `DEDUCTION_EXHAUSTED`.
+
+**The hint's refusals are what that walk reads**, so a hint that meets a board
+it cannot finish returns a refusal and does not throw. Whether the sentence is
+`DEDUCTION_EXHAUSTED` or `PUZZLE_NOT_REASONABLE`, no player reads it: the board
+did not load.
 
 Upstream's own generator fails this in one place: its Mathrax Recursive tier
 accepts a board with several answers, and all three such fixtures are refused

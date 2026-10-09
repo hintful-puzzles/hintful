@@ -7,6 +7,7 @@
  */
 
 import type { Game, UiUpdate } from "../../engine/game.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
@@ -163,6 +164,7 @@ export const mosaicGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  finishesByDeduction: (s) => hintAndSolveFinish(mosaicGame, s),
   status,
 
   solve(orig, _curr) {

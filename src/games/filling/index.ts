@@ -363,6 +363,10 @@ export const fillingGame: Game<
 
   interpretMove,
   executeMove,
+  // The solver alone, and not the hint as well: about one dealt board in 480
+  // is one the solver finishes from its clues and the hint's replanning does
+  // not, and a board a player holds has to keep opening.
+  finishesByDeduction: (s) => solveFilling(s.clues, s.w, s.h).solved,
   status,
 
   solve,

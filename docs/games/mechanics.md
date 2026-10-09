@@ -512,6 +512,14 @@ ladder, which declares tier *numbers* and is built inside a solve
 What a tier *means*, and the grading that enforces it, is
 [solver & generator](./solver-and-generator.md) § "A tier means exactly its rung".
 
+**A game with no tiers declares `finishesByDeduction` instead**, and
+`registerGame` throws without it. The tiers are how a pasted board is held to
+the game's solver, so a game without them says for itself whether deduction
+finishes a board: `(s) => hintAndSolveFinish(yourGame, s)` where the hint
+deduces, `nothingToDeduce` where the board is moved, searched or guessed
+([solver & generator](./solver-and-generator.md) § "No option switches the
+generator's checks off").
+
 ## Descriptions and state
 
 `newDesc(p, rng)` generates a board (see

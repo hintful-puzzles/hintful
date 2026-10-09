@@ -14,6 +14,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import type { SolveResult } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
   type Game,
@@ -301,6 +302,7 @@ export const pegsGame: Game<
   changedState,
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   notApplicable: {
     findMistakes:

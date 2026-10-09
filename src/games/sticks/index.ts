@@ -25,6 +25,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
@@ -536,6 +537,7 @@ export const sticksGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  finishesByDeduction: (s) => hintAndSolveFinish(sticksGame, s),
   status,
 
   solve,

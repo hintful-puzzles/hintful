@@ -12,6 +12,7 @@
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -348,6 +349,7 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
 
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   notApplicable: {
     findMistakes:

@@ -23,7 +23,9 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import { markAllNow } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
@@ -45,7 +47,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
 import {
@@ -278,7 +280,8 @@ function changedState(ui: AbcdUi, oldSt: AbcdState | null, newSt: AbcdState): vo
 function solve(orig: AbcdState): SolveResult<AbcdMove> {
   const res = solveAbcd(orig.params, orig.numbers);
   if (res.status === "contradiction") return { ok: false, error: NO_SOLUTION };
-  if (res.status === "ambiguous") return { ok: false, error: MULTIPLE_SOLUTIONS };
+  // The ladder stopped short, which is not a second answer found.
+  if (res.status === "ambiguous") return { ok: false, error: PUZZLE_NOT_REASONABLE };
   // The move carries letter indices, as the saves that replay it always have.
   return {
     ok: true,
@@ -342,6 +345,7 @@ export const abcdGame: Game<
 
   interpretMove,
   executeMove,
+  finishesByDeduction: (s) => hintAndSolveFinish(abcdGame, s),
   status,
 
   solve,

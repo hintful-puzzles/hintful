@@ -14,11 +14,17 @@ cannot finish, and the app then crashes or lies about it.
   pressing Hint raises the "Something went wrong" dialog with "palisade: the
   hint ran out of deduction at move 0, but the game has no tier that allows
   trial and error". `4x4n4:2` does the same after two hinted moves.
-- **Read in the code and not run:** Signpost, Crossing and Sticks load such a
-  board too. Check & Save finds nothing wrong on it; Solve refuses, and in
-  Sticks fills in a partial deduction as if it had succeeded; Sticks' hint
-  ends in the same refusal Palisade's does. Crossing loads even a board whose
-  clues contradict.
+- **Seen in Chrome on 2026-10-10**, with the old verdict put back for the
+  look: Signpost, Crossing and Sticks load such a board too
+  (`4x4c:1eceeedagdahgbbb16a`,
+  `5x5:3a2b6a1a1a1a4,13,29,69,88,735,973,1388,3993,7832`,
+  `5x5b20s2:1aB_1_2bBcB1aB3cB_1a3aB0a1`). On each, Check & save answers "No
+  mistakes. Saved." Signpost's Hint and Show solution both answer "This
+  puzzle's solution can't be determined." Crossing's and Sticks' Hint give
+  steps that later run out, and Sticks' Show solution throws "Solve's move
+  leaves a board whose status is ongoing, not solved".
+- **The games are nine, not four.** Filling, Mosaic, Pattern, Separate and
+  ABCD had the same gap (`design.md`, Decision 1).
 - **The cause** is one line: `solverVerdict` in `src/engine/desc-error.ts`
   reads a game with no difficulty contract and no `finishesByDeduction` as
   able to finish every board (`game.finishesByDeduction?.(state) ?? true`).

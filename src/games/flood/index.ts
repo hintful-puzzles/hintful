@@ -6,6 +6,7 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { GAME_OVER, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import {
   dimensionParamConfig,
@@ -248,6 +249,7 @@ export const floodGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   notApplicable: {
     findMistakes:

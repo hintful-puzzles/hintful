@@ -1,6 +1,7 @@
 import { rejectMove } from "../../engine/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -226,6 +227,7 @@ export const samegameGame: Game<
 
   interpretMove,
   executeMove,
+  finishesByDeduction: nothingToDeduce,
   status,
   notApplicable: {
     findMistakes:

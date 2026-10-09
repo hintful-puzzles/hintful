@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  DESC_NOT_UNIQUE,
+  DESC_NOT_DEDUCIBLE,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -193,10 +193,10 @@ describe("abcd generable-size bound", () => {
     expect(refusal(p, false)).toBeNull();
 
     // The bound lets the ID through to the board's own verdict. This board,
-    // hand-built from repeated clues, has many answers, so its answers refuse
-    // it rather than the bound.
+    // hand-built from repeated clues, is one the solver's ladder stops short
+    // on, so the solver refuses it rather than the bound.
     const m = new Midend(abcdGame);
-    expect(m.newGameFromId(`10x10n4:${desc}`)).toBe(DESC_NOT_UNIQUE);
+    expect(m.newGameFromId(`10x10n4:${desc}`)).toBe(DESC_NOT_DEDUCIBLE);
   });
 });
 

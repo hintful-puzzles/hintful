@@ -7,6 +7,7 @@
 
 import { descValue } from "../../engine/desc-error.ts";
 import type { GamePref } from "../../engine/game.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
@@ -390,6 +391,7 @@ export const signpostGame: Game<
 
   interpretMove,
   executeMove,
+  finishesByDeduction: (s) => hintAndSolveFinish(signpostGame, s),
   status,
 
   solve,
