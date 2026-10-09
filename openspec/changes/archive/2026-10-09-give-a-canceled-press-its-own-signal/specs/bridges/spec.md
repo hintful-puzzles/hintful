@@ -7,9 +7,8 @@ SHALL add a bridge between them, or one more to those there, wrapping back to
 zero once the span's limit is exceeded. The island the drag points at SHALL be
 tracked as the pointer moves, and the move SHALL be committed on release. A
 drag that does not run cleanly between two in-line islands SHALL be canceled
-with no change. A drag reads only a direction, so one that runs on past the
-canvas's edge still points at its island. A secondary drag is Requirement: A
-secondary drag lowers a Bridges span's limit by one.
+with no change. A secondary drag is Requirement: A secondary drag lowers a
+Bridges span's limit by one.
 
 #### Scenario: Dragging cycles the bridge count
 

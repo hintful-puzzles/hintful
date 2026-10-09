@@ -159,10 +159,10 @@ supplied in the URL SHALL still report its failure.
 
 Escape SHALL be delivered to the running puzzle as button `27` whenever no
 pointer gesture is in flight, which is what a game's `interpretMove` tests to
-put a piece back down. When a pointer is down, Escape SHALL instead abandon
-that gesture, which the puzzle hears as a drag out of bounds followed by a
-release, and SHALL NOT also arrive as a keypress, so a game never sees one
-Escape as two events.
+put a piece back down. When a pointer is down, Escape SHALL instead cancel
+that gesture, as a canceled pointer does (`engine-input`, "A canceled press
+leaves the game as it was before the press"), and SHALL NOT also arrive as a
+keypress, so a game never sees one Escape as two events.
 
 #### Scenario: Escape with no pointer down reaches the puzzle
 
@@ -172,7 +172,7 @@ Escape as two events.
 #### Scenario: Escape with a pointer down cancels the gesture only
 
 - **WHEN** the player presses Escape while a pointer is down
-- **THEN** the puzzle receives the gesture's own out-of-bounds drag and release
+- **THEN** the puzzle receives a cancel of the press, and no drag or release
 - **AND** it does not additionally receive button `27`
 
 ### Requirement: Delivering Escape leaves the browser's own handling alone
@@ -1172,3 +1172,17 @@ SHALL offer no command that has no home elsewhere on the screen.
 - **WHEN** Solve finishes a board
 - **THEN** the notification offers New game, Share, Change type and the way
   back to all puzzles, as it does on a board the player solved
+
+### Requirement: A canceled pointer cancels its press
+
+When the browser cancels a pointer whose press a puzzle claimed, the
+interactive puzzle view SHALL tell the puzzle the press is canceled, once, and
+SHALL NOT send a drag or a release for it at any position. A cancel that
+arrives while its press is still in flight SHALL be retained and delivered once
+the press has been acknowledged.
+
+#### Scenario: A touch is taken over mid-press
+
+- **WHEN** a finger is down on the board and the browser reports
+  `pointercancel` for it
+- **THEN** the puzzle receives the press and then its cancel, and nothing else

@@ -89,6 +89,12 @@ Bridges span's limit by one.
   island lies
 - **THEN** the board is unchanged
 
+#### Scenario: A drag that overshoots the canvas still draws
+
+- **WHEN** a drag from an island toward its left neighbor runs on past the
+  canvas's left edge and is released there
+- **THEN** the bridge to that neighbor is drawn
+
 ### Requirement: Bridges has a keyboard cursor that drags
 
 Cursor keys SHALL move a keyboard cursor, and a digit SHALL jump a shown
@@ -595,23 +601,3 @@ island is settled, and the board between islands SHALL stay the board.
   error
 - **THEN** its rim and count are drawn in ink as before, and the squares
   between islands are the board's own background
-
-### Requirement: A canceled press on an island draws no bridge
-
-A press on an island that is canceled before the pointer has moved SHALL change
-nothing. The frontend reports it as a drag far off the canvas's top left corner
-and a release there, which a drag that reads only a direction would take as
-pointing at the island up or to the left. The rule covers a press that had not
-moved: a drag already under way is released where the frontend reports it.
-
-#### Scenario: A press is canceled on an island with a neighbor to its left
-
-- **WHEN** an island with an in-line neighbor to its left is pressed and the
-  press is canceled with no pointer movement
-- **THEN** no bridge is drawn and no history entry is added
-
-#### Scenario: A drag that overshoots the canvas still draws
-
-- **WHEN** a drag from an island toward its left neighbor runs on past the
-  canvas's left edge and is released there
-- **THEN** the bridge to that neighbor is drawn

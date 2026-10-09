@@ -74,4 +74,4 @@ Read `docs/games/input.md` and `openspec/specs/engine-input/spec.md` first.
       32 gestures (drags and holds), Bridges 20, Galaxies 7, Untangle its six
       points dragged. The touch check was not run against the old build; the
       mouse sweep of 1.2 is the before.
-- [ ] 3.3 Committed, pushed and archived.
+- [x] 3.3 Committed, pushed and archived.
