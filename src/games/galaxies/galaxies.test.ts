@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { descBadCharacter, validateDesc } from "../../engine/desc-error.ts";
 import { difficultyTiers } from "../../engine/difficulty.ts";
-import { UI_UPDATE } from "../../engine/index.ts";
+import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -823,59 +823,89 @@ describe("Galaxies association gestures (left button, and cell→dot)", () => {
     });
   });
 
-  it("a press that ends far away commits nothing (the canceled-pointer path)", () => {
-    // view-interactive.ts's cancelPointerTracking synthesizes a drag and a
-    // release at (-100, -100) when the pointer leaves the canvas mid-press.
-    // Measuring the release against the press pixel is what stops that
-    // toggling an edge on the far side of the board — and the drag it also
-    // synthesizes must land nothing either, whichever gesture the press
-    // turned out to have started.
+  it("a release far from its press, with no drag between, commits nothing", () => {
+    // Measuring the release against the press pixel is what stops it toggling
+    // an edge on the far side of the board.
     for (const [px, py] of [
-      [64, 80], // inside a dot's catchment: a classic drag, dragged off-board
-      [48, 48], // a plain cell: a reverse drag with no dot ever in reach
+      [64, 80], // inside a dot's catchment
+      [48, 48], // a plain cell
       [65, 113], // near an edge: the press that meant to be a click
     ]) {
       const { s, ui } = board();
       expect(move(s, ui, px, py, LEFT_BUTTON)).toBe(UI_UPDATE);
-      const dragged = move(s, ui, -100, -100, LEFT_DRAG);
-      const released = move(s, ui, -100, -100, LEFT_RELEASE);
-      for (const r of [dragged, released]) {
-        expect(r === null || r === UI_UPDATE).toBe(true);
-      }
+      expect(move(s, ui, -100, -100, LEFT_RELEASE)).toBeNull();
     }
   });
 
   it("a canceled press on a tile with an arrow leaves the arrow", () => {
-    // The synthesized drag arrives before the release, so the press has
-    // "traveled" by the time it is released: read as a drag, it would lift
-    // the arrow under the press and drop it off the board.
-    const { s, ui } = board();
-    const arrowed = galaxiesGame.executeMove(s, {
+    // A dealt board, since the midend opens only one with a single solution,
+    // and on it the first tile some dot can take, given that dot's arrow.
+    const p = galaxiesGame.defaultParams();
+    const desc = newGameDesc(p, randomNew("galaxies-cancel"));
+    const s = galaxiesGame.newState(p, desc);
+    let arrow: { x: number; y: number; ax: number; ay: number } | null = null;
+    for (let y = 1; y < s.sy && arrow === null; y += 2)
+      for (let x = 1; x < s.sx && arrow === null; x += 2) {
+        const dot = legalDotsFor(s, x, y)[0];
+        if (dot && !(s.flags[idx(s, x, y)] & F_TILE_ASSOC))
+          arrow = { x, y, ax: dot.x, ay: dot.y };
+      }
+    if (arrow === null) throw new Error("no tile on this board can take an arrow");
+    const m = new Midend(galaxiesGame);
+    expect(m.newGameFromId(`${galaxiesGame.encodeParams(p, true)}:${desc}`)).toBeNull();
+    m.playMoves([{ ops: [{ kind: "assoc", ...arrow }], solving: false }]);
+    const arrowed = m.saveGame();
+    // A tile at doubled (x, y) has its center at 32 + 16x, 32 + 16y.
+    const at = { x: 32 + 16 * arrow.x, y: 32 + 16 * arrow.y };
+    // The right button too: its press lifts the arrow at once, and it is the
+    // button a finger held on the tile arrives as. Canceled where it was
+    // pressed, and after a drag off each side of the board.
+    for (const [press, drag] of [
+      [LEFT_BUTTON, LEFT_DRAG],
+      [RIGHT_BUTTON, RIGHT_DRAG],
+    ]) {
+      for (const to of [
+        null,
+        { x: at.x, y: -20 },
+        { x: -20, y: at.y },
+        { x: 900, y: 900 },
+      ]) {
+        expect(m.processInput(at.x, at.y, press)).toBe(true);
+        if (to !== null) m.processInput(to.x, to.y, drag);
+        expect(m.cancelPress()).toBe(true);
+        expect(m.saveGame()).toEqual(arrowed);
+      }
+    }
+    // The same drag released, not canceled, is how the arrow is removed: the
+    // presses above were on it.
+    m.processInput(at.x, at.y, LEFT_BUTTON);
+    m.processInput(at.x, -20, LEFT_DRAG);
+    m.processInput(at.x, -20, LEFT_RELEASE);
+    expect(m.saveGame()).not.toEqual(arrowed);
+  });
+
+  it("an arrow dragged off any side of the board is removed", () => {
+    const arrowed = galaxiesGame.executeMove(board().s, {
       ops: [{ kind: "assoc", x: 1, y: 3, ax: 3, ay: 3 }],
       solving: false,
     });
     expect(arrowed.flags[idx(arrowed, 1, 3)] & F_TILE_ASSOC).toBeTruthy();
-    // The right button too: its press lifts the arrow at once, and it is the
-    // button a finger held on the tile arrives as.
-    for (const [press, drag, release] of [
-      [LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE],
-      [RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE],
+    // Straight off, with no drag event on the board between: the top and the
+    // left as much as the bottom and the right.
+    for (const [x, y] of [
+      [48, -20],
+      [-20, 80],
+      [48, 400],
+      [400, 80],
     ]) {
-      expect(move(arrowed, ui, 48, 80, press)).toBe(UI_UPDATE);
-      const dragged = move(arrowed, ui, -100, -100, drag);
-      const released = move(arrowed, ui, -100, -100, release);
-      for (const r of [dragged, released]) {
-        expect(r === null || r === UI_UPDATE).toBe(true);
-      }
-      expect(ui.dragging).toBe(false);
+      const ui = galaxiesGame.newUi(arrowed);
+      expect(move(arrowed, ui, 48, 80, LEFT_BUTTON)).toBe(UI_UPDATE);
+      expect(move(arrowed, ui, x, y, LEFT_DRAG)).toBe(UI_UPDATE);
+      expect(move(arrowed, ui, x, y, LEFT_RELEASE)).toEqual({
+        ops: [{ kind: "unassoc", x: 1, y: 3 }],
+        solving: false,
+      });
     }
-    // A real drag off the board is still how an arrow is removed.
-    expect(move(arrowed, ui, 48, 80, LEFT_BUTTON)).toBe(UI_UPDATE);
-    expect(move(arrowed, ui, 48, 2, LEFT_DRAG)).toBe(UI_UPDATE);
-    expect(move(arrowed, ui, 48, 2, LEFT_RELEASE)).toEqual({
-      ops: [{ kind: "unassoc", x: 1, y: 3 }],
-      solving: false,
-    });
   });
 
   it("a drag from a plain cell picks the dot, and commits the pair", () => {

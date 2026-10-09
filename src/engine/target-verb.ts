@@ -417,11 +417,6 @@ export function sweepTo<S, U extends object, D, T, M>(
   const { geometry } = verbs;
   const first = sw.first as T;
 
-  // A pointer that leaves the canvas is reported as a drag far off its top
-  // left corner. That is no place the player dragged to, and the line there
-  // from the last position would cross the board marking as it went.
-  if (p.x < 0 || p.y < 0) return null;
-
   // Every target between the last pointer position and this one.
   const dx = p.x - sw.last.x;
   const dy = p.y - sw.last.y;

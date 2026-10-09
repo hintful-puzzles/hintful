@@ -8,7 +8,7 @@
  *    face's corner is resolved and compared with `dlineIndexFromFace`, which
  *    `dlines.test.ts` holds to the grid.
  * 2. **The gestures.** A tap cycles a corner and a drag a pair; a touch hold (the
- *    right button) cycles the other way; a canceled press notes nothing; the
+ *    right button) cycles the other way; a drag off the board notes nothing; the
  *    keyboard's Enter is the tap on the same corner.
  * 3. **A note survives a save**, and draws: pencil, red when wrong, the indicator
  *    below the board and never on it.
@@ -262,7 +262,7 @@ describe("notes mode by pointer", () => {
     expect(apply(b, drag(RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE))).toMatchObject({
       relation: "match",
     });
-    // A canceled press is released off the board, and notes nothing.
+    // A drag released off the board notes nothing.
     expect(drag(LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE, { x: -100, y: -100 })).toBe(
       UI_UPDATE,
     );

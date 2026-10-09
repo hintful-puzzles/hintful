@@ -680,13 +680,6 @@ function interpretMove(
   if (isMouseDrag(button)) {
     if (ui.pressPending && traveled(ui, x, y)) {
       ui.pressPending = false;
-      // `view-interactive.ts`'s cancelPointerTracking reports a canceled
-      // press as a drag off the canvas's top left corner and then a release
-      // there. That is no place the player dragged to, and a press that was
-      // still only a press started nothing: read as a drag from the press
-      // point it would lift the arrow under the press and drop it off the
-      // board.
-      if (x < 0 || y < 0) return null;
       // A left press on a line drags walls: the click's own verb, on every
       // edge the drag passes. Anywhere else it is the association.
       const wall =
@@ -708,20 +701,6 @@ function interpretMove(
     }
     if (sweepOpen(ui)) return sweepTo(targetVerbs, s, ui, ds, p);
     if (!ui.dragging) return null;
-    // The same canceled press, where the press itself began the drag: the
-    // right button on a dot or an arrow. A drag whose target has not left its
-    // source tile has gone nowhere yet, so the report from off the canvas ends
-    // it and the arrow it lifted is put back. One that has moved is not told
-    // apart from an arrow dragged off the board, which removes it.
-    if (
-      !ui.dragToDot &&
-      ui.targetX === ui.srcx &&
-      ui.targetY === ui.srcy &&
-      (x < 0 || y < 0)
-    ) {
-      ui.dragging = false;
-      return UI_UPDATE;
-    }
     return aimDrag(s, ui, x, y, tile, border) ? UI_UPDATE : null;
   }
 

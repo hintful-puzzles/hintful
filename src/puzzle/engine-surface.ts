@@ -63,6 +63,8 @@ export interface BoardSurface {
 
   processKey(key: number): boolean;
   processMouse(point: Point, button: number): boolean;
+  /** The open pointer press was canceled (`EngineCore.cancelPress`). */
+  cancelPress(): boolean;
   /** Pointer moved over the board with no button down, or left it
    * (`null`). Repaints at most; never a move, never history. */
   processHover(point: Point | null): boolean;

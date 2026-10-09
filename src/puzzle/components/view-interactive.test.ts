@@ -145,7 +145,7 @@ function pointerEvent(type: string, overrides: Record<string, unknown> = {}) {
  * the buttons the puzzle actually received, in order.
  */
 function makePointerView(consumed = true, canvasOrigin = { left: 0, top: 0 }) {
-  const received: number[] = [];
+  const received: (number | "cancel")[] = [];
   const locations: { x: number; y: number }[] = [];
   let releasePress: (() => void) | null = null;
   const pressLanded = new Promise<void>((resolve) => {
@@ -153,6 +153,9 @@ function makePointerView(consumed = true, canvasOrigin = { left: 0, top: 0 }) {
   });
 
   const puzzle = {
+    cancelPress: vi.fn(async () => {
+      received.push("cancel");
+    }),
     processMouse: vi.fn(async (location: { x: number; y: number }, button: number) => {
       received.push(button);
       locations.push(location);
@@ -211,12 +214,8 @@ describe("press/release delivery", () => {
     answerPress();
     await down;
 
-    // `cancelPointerTracking` sends the drag out of bounds, then the release.
-    expect(received).toEqual([
-      PuzzleButton.LEFT_BUTTON,
-      PuzzleButton.LEFT_DRAG,
-      PuzzleButton.LEFT_RELEASE,
-    ]);
+    // The press, then its cancel: no drag and no release at any position.
+    expect(received).toEqual([PuzzleButton.LEFT_BUTTON, "cancel"]);
   });
 
   it("delivers exactly one release for an ordinary press-then-release", async () => {
@@ -265,14 +264,17 @@ describe("press/release delivery", () => {
  * swallow it when there is no gesture to cancel.
  *
  * The two arms are asserted separately because they are different jobs: with a
- * pointer down, Escape abandons *that gesture* and the puzzle hears a release,
+ * pointer down, Escape abandons *that gesture* and the puzzle hears its cancel,
  * so it must not also arrive as a keypress.
  */
 describe("Escape delivery", () => {
   function makeKeyView() {
     const keys: number[] = [];
-    const mouse: number[] = [];
+    const mouse: (number | "cancel")[] = [];
     const puzzle = {
+      cancelPress: vi.fn(async () => {
+        mouse.push("cancel");
+      }),
       processKey: vi.fn(async (button: number) => {
         keys.push(button);
         return true;
@@ -310,9 +312,9 @@ describe("Escape delivery", () => {
 
     await view.handleKeyEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 
-    // The gesture ends as a drag out of bounds then a release — and Escape does
+    // The gesture ends as a cancel, with no drag or release, and Escape does
     // *not* also arrive as a keypress.
-    expect(mouse).toEqual([PuzzleButton.LEFT_DRAG, PuzzleButton.LEFT_RELEASE]);
+    expect(mouse).toEqual(["cancel"]);
     expect(keys).toEqual([]);
   });
 

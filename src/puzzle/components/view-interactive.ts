@@ -206,8 +206,8 @@ export class PuzzleViewInteractive extends PuzzleView {
       return;
     }
     if (event.key === "Escape" && this.pointerTracking) {
-      // A pointer is down: Escape abandons *that* gesture, and the game hears
-      // about it as a release, so it must not also arrive as a keypress.
+      // A pointer is down: Escape cancels *that* gesture, so it must not also
+      // arrive as a keypress.
       event.preventDefault();
       await this.cancelPointerTracking();
       return;
@@ -516,22 +516,15 @@ export class PuzzleViewInteractive extends PuzzleView {
   }
 
   private async cancelPointerTracking() {
-    // There's no specific way to tell the midend to cancel an in-progress
-    // click or drag, but many puzzles treat dragging outside the drawing area
-    // as "cancel."
+    // The puzzle is told the press is canceled, and sent no drag or release:
+    // a position to end the gesture at would be somewhere the player never
+    // dragged to.
     if (this.pointerTracking) {
-      const { drag, release } = this.pointerTracking;
       if (this.canvas?.hasPointerCapture(this.pointerTracking.pointerId)) {
         this.canvas.releasePointerCapture(this.pointerTracking.pointerId);
       }
       this.pointerTracking = undefined;
-      if (this.puzzle) {
-        const location = { x: -100, y: -100 };
-        await Promise.all([
-          this.puzzle.processMouse(location, drag),
-          this.puzzle.processMouse(location, release),
-        ]);
-      }
+      await this.puzzle?.cancelPress();
     }
   }
 

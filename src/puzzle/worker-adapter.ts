@@ -130,6 +130,9 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   processMouse({ x, y }: Point, button: number): boolean {
     return this.engine.processInput(x, y, button);
   }
+  cancelPress(): boolean {
+    return this.engine.cancelPress();
+  }
   tracksHover(): boolean {
     return this.engine.tracksHover;
   }

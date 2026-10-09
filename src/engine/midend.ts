@@ -53,6 +53,7 @@ import {
   cancelDrags,
   isMouseDown,
   isMouseDrag,
+  isMouseRelease,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
@@ -82,6 +83,7 @@ import type {
   Size,
   TimerReadout,
 } from "./types.ts";
+import { copyUi, restoreUi } from "./ui-snapshot.ts";
 
 /** Wall-clock duration (seconds) of a hint-executed move's slow-motion
  * animation, whatever the game's own move-animation time. Keep it equal to
@@ -119,6 +121,19 @@ interface BoardLeft {
   id: string;
   /** Whether its log holds anything. */
   played: boolean;
+}
+
+/** What a pointer press found, kept so a cancel can put it back. The history
+ * fields are the arrays themselves: a move replaces them and never writes
+ * into them, so they still hold what the press saw. */
+interface OpenPress<State, Move, Ui> {
+  ui: Ui;
+  history: State[];
+  moveLog: (Move | Restart)[];
+  joined: boolean[];
+  pos: number;
+  replaced: BoardLeft | null;
+  undone: BoardLeft | null;
 }
 
 export type NotifyChange = (message: ChangeNotification) => void;
@@ -191,6 +206,10 @@ export interface EngineCore {
    * that wants none. */
   requestKeys(): KeyLabel[];
   processInput(x: number, y: number, button: number): boolean;
+  /** The pointer press that is open was canceled: put the board, the history
+   * and the `Ui` back as they were just before it. False, and nothing
+   * changed, when no press is open. */
+  cancelPress(): boolean;
   /** Whether the running game tracks the pointer between presses. */
   readonly tracksHover: boolean;
   /** Pointer moved over the board with no button down, or left it (`null`). */
@@ -321,6 +340,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** The boards begun so far: the last serial handed out. */
   private boards = 0;
   private ui!: Ui;
+  /** The pointer press whose gesture is still open, or null. Dropped at the
+   * release, and whenever anything but the gesture's own pointer events
+   * replaces the state or writes the `Ui`: what it holds would then put back
+   * a board or a preference that is no longer the one in play. */
+  private press: OpenPress<State, Move, Ui> | null = null;
   private drawState: DrawState | null = null;
   /** Set by `freshDrawState` alone, so `size()` at an unchanged tile size
    * never arms it: the next `redraw` lays the ground first. */
@@ -758,6 +782,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * The convention ships with its override.
    */
   private stateReplaced(prev: State | null, next: State): void {
+    this.press = null;
     cancelDrags(this.ui);
     this.game.changedState?.(this.ui, prev, next);
   }
@@ -799,8 +824,57 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // non-null `ds` true rather than merely usually-true.
     if (this.drawState === null) return false;
 
+    const pointer = stripModifiers(button);
+    if (isMouseDown(pointer)) {
+      this.press = {
+        ui: copyUi(this.ui),
+        history: this.history,
+        moveLog: this.moveLog,
+        joined: this.joined,
+        pos: this.pos,
+        replaced: this.replaced,
+        undone: this.undone,
+      };
+    }
+    const press = this.press;
+    const consumed = this.interpret(x, y, button);
+    // A move replaces the state, which drops the open press. The gesture's
+    // own moves are the one replacement its press outlives: a cancel takes
+    // them back with the rest.
+    if (isMouseDown(pointer) || isMouseDrag(pointer)) this.press = press;
+    else if (isMouseRelease(pointer)) this.press = null;
+    return consumed;
+  }
+
+  cancelPress(): boolean {
+    const press = this.press;
+    if (press === null) return false;
+    this.press = null;
+    if (this.history !== press.history) {
+      this.history = press.history;
+      this.moveLog = press.moveLog;
+      this.joined = press.joined;
+      this.pos = press.pos;
+      this.replaced = press.replaced;
+      this.undone = press.undone;
+      // As Undo does: the plan was made for, or advanced by, a move that is
+      // no longer on the board.
+      this.clearHint();
+    }
+    restoreUi(this.ui, press.ui);
+    // A sweep is kept beside the `Ui` and not in it, so it is ended by name.
+    endSweep(this.ui);
+    this.clearAnimation();
+    this.afterTransition();
+    return true;
+  }
+
+  /** Hand one input to the game and act on its answer. */
+  private interpret(x: number, y: number, button: number): boolean {
+    if (this.drawState === null) return false;
+
     // A press opens its own drag or none: one left open by a release the
-    // game never saw (the pointer left the canvas) ends here.
+    // game never saw ends here.
     const pointer = stripModifiers(button);
     if (isMouseDown(pointer)) endSweep(this.ui);
 
@@ -871,7 +945,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // A drag's later marks join its first in the history, and one pointer
     // event can pass over several targets: ask again until it has no more.
     this.commitMove(next, move, joins);
-    if (dragging && sweepPending(this.ui)) this.processInput(x, y, button);
+    if (dragging && sweepPending(this.ui)) this.interpret(x, y, button);
     return true;
   }
 
@@ -1111,6 +1185,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   selectReference(key: string | null): void {
     if (!this.game.selectReference) return;
+    this.press = null;
     if (this.game.selectReference(this.ui, key)) {
       this.clearAnimation();
       this.afterTransition();
@@ -1738,6 +1813,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * legacy value may arrive loosely typed). Applies only keys present in
    * `prefValues`, leaving the `newUi` default for the rest. */
   private applyPrefs(): void {
+    this.press = null;
     for (const p of this.game.prefs ?? []) {
       const v = this.prefValues[p.kw];
       if (v === undefined) continue;

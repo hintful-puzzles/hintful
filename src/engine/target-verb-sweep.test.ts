@@ -144,13 +144,15 @@ describe("the sweep, in the model", () => {
     expect(b.row()).toBe("x.xx#.");
   });
 
-  it("a pointer that leaves the canvas marks nothing on its way out", () => {
+  it("a drag off the left edge marks what it passed, as one off the right does", () => {
     const b = play();
     b.send(LEFT_BUTTON, mid(5));
-    // The frontend's report of a pointer gone: far off the top left corner.
-    expect(b.send(LEFT_DRAG, { x: -100, y: -100 })).toBeNull();
-    expect(b.send(LEFT_DRAG, { x: -100, y: 5 })).toBeNull();
-    expect(b.row()).toBe("..x.#x");
+    const off = { x: -100, y: 5 };
+    expect(b.send(LEFT_DRAG, off)).toBe(3);
+    expect(b.send(LEFT_DRAG, off)).toBe(1);
+    expect(b.send(LEFT_DRAG, off)).toBe(0);
+    expect(b.send(LEFT_DRAG, off)).toBeNull();
+    expect(b.row()).toBe("xxxx#x");
   });
 
   it("the Controls paragraph says the drag", () => {

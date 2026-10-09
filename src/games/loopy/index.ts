@@ -395,7 +395,7 @@ function pairMove(
 
 /** What a notes-mode press comes to when it is released: a tap cycles the corner
  * it went down in, and a drag from one edge to another cycles their pair. A
- * release off the board, as the frontend sends for a canceled press, is neither. */
+ * release off the board is neither. */
 function releaseNote(
   state: LoopyState,
   ds: LoopyDrawState,

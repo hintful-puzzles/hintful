@@ -66,6 +66,9 @@ have to remember they exist; you do have to know what they will tell you.
 - [`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts) — the
   source scan for a key that can never fire (§ "The numeric keypad never
   arrives").
+- [`canceled-press.test.ts`](../../src/engine/canceled-press.test.ts) — a press
+  the browser or Escape cancels leaves the board and the `Ui` as they were
+  (§ "A canceled press is the engine's").
 - [`hint-gesture.test.ts`](../../src/engine/hint-gesture.test.ts) — every hint
   step is played through your `interpretMove` by the gesture your
   `hintGesture` gives for it, so a hint can only ask for what the pointer does
@@ -896,10 +899,10 @@ or a barrel, which walks the player round behind it), and its length from how
 many tiles the drag reaches, clamped to how far the barrel can go, so one drag
 makes a long straight push. Two things it needed that Inertia's swipe did not:
 
-- **A drag off the board aims at nothing.** The frontend reports a pointer
-  that leaves the canvas as a drag and a release at `(-100, -100)`; read as an
-  offset from the player, that is a long push up and to the left, made the
-  moment the pointer slipped off. Anything outside the board clears the aim.
+- **A drag off the board aims at nothing.** The canvas captures the pointer,
+  so a drag goes on reporting positions past its edge; read as an offset from
+  the player, one far outside is a long push made the moment the pointer
+  slipped off. Anything outside the board clears the aim.
 - **Split the meanings by where the press lands, not by how far it travels.**
   A press on the player or a barrel is only ever a drag, so it is claimed; a
   press anywhere else is only ever a tap, so it is declined and the tap acts on
@@ -920,12 +923,11 @@ costs more here than the disambiguation does.
 
 Two things make it work, and neither is obvious:
 
-- **Measure the release against the press, not a `dragStarted` flag.**
-  `view-interactive.ts`'s `cancelPointerTracking` synthesizes a drag *and* a
-  release at `(-100, -100)` when the pointer leaves the canvas mid-press, so a
-  press that never became a drag *will* arrive at a release far from where it
-  started. A distance test rejects it for free; a flag needs the case spelled
-  out.
+- **Measure the release against the press, not a `dragStarted` flag.** A
+  release can arrive far from its press with no drag between that the game
+  took as one (each drag event was inside the travel threshold of the last
+  place it looked). A distance test rejects it for free; a flag needs the case
+  spelled out.
 - **Claim the press anyway** — see the next section, which is where this cost
   a session.
 
@@ -987,6 +989,41 @@ and still asked "was the *press* consumed" to decide whether there was anything
 to compare — so a release-only game was skipped entirely and the sweep reported
 health. It now asks whether the gesture *acted*, which is the question the guard
 was named for.
+
+## A canceled press is the engine's
+
+**A game never hears of a cancel, and writes nothing for one.** The browser
+cancels a pointer when a scroll or a system gesture takes a touch over, and the
+view cancels one when Escape is pressed with a pointer down. Either way the
+view calls `Midend.cancelPress`, which puts back what the midend kept at the
+press: the `Ui`, copied ([`engine/ui-snapshot.ts`](../../src/engine/ui-snapshot.ts)),
+and the place in the history. A move the press or its drag made is gone, the
+moves ahead of it for Redo are back, and a held piece, a drag preview or a
+selection is as it was. Normative: `engine-input`, "A canceled press leaves
+the game as it was before the press".
+
+**Why the engine, and not a cancel code a game handles.** A reset arm in every
+`interpretMove` is wrong silently in whichever game forgets a field, and a
+game that acts on the press has made its move before a cancel could reach it.
+A cancel sent as a drag off the board is worse: Galaxies read it as an arrow
+dropped off the board, Bridges as a bridge up or to the left, Untangle as a
+point moved to the corner.
+
+What it asks of a game:
+
+- **Keep what a gesture changes in the `Ui` or the state**, where the engine
+  puts it back. Something a press writes to the draw state, or to a variable of
+  the module, outlives a cancel.
+- **Keep the `Ui` copyable**: plain objects, arrays, typed arrays, `Map`,
+  `Set`, and classes whose content is their own fields (`GridDrag`). `copyUi`
+  refuses anything else by name at the first press, so it cannot be missed.
+- **Do not test for a drag off the top left of the board as a cancel.** That
+  point is only somewhere a player dragged to.
+
+[`canceled-press.test.ts`](../../src/engine/canceled-press.test.ts) presses
+and cancels across every game's board, with both buttons, where it pressed and
+after a drag, on the opening board and on one played on, and requires the board
+and the `Ui` to be what they were (`canceledPresses` in the probe module).
 
 ## A button you did not act on must not be claimed
 

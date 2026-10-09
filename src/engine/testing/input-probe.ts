@@ -30,6 +30,7 @@ import {
   RIGHT_RELEASE,
 } from "../pointer.ts";
 import { randomNew } from "../random/index.ts";
+import { sweepOpen } from "../target-verb.ts";
 import type { Color, ConfigValues, Point, Size } from "../types.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./render-scenario.ts";
@@ -54,6 +55,11 @@ export interface ProbeBoard {
   /** A digest of the state together with the `Ui` — where the player is, and
    * not only what the board says. Read without painting a frame. */
   readonly where: () => string;
+  /** The `Ui` together with the midend's own save: the board, the whole move
+   * log and the place in it. Dearer than {@link where}, and the one to read
+   * across a `cancelPress`, which takes moves back without a word to the
+   * game, so that the state behind {@link board} is not told. */
+  readonly held: () => string;
   /** The state and `Ui` behind {@link where}, live — the midend's own objects,
    * to be read and never written. */
   readonly live: () => { readonly state: unknown; readonly ui: unknown };
@@ -116,6 +122,11 @@ export function probeBoard(
     executeMove: (...args) => {
       current = game.executeMove(...args);
       return current;
+    },
+    // Undo, Redo and a restart make no move: this is where they are heard.
+    changedState: (ui, prev, next) => {
+      current = next;
+      game.changedState?.(ui, prev, next);
     },
     redraw: (dr, ds, prev, s, dir, ui, ...rest) => {
       seen = ui;
@@ -192,6 +203,7 @@ export function probeBoard(
     moves: () => moveCount,
     board: stateDigest,
     where: () => `${digest(liveUi)}|${stateDigest()}`,
+    held: () => `${digest(liveUi)}|${fingerprint(m)}`,
     live: () => ({ state: current, ui: liveUi }),
     digestOf,
     seen: frameNow,
@@ -644,4 +656,92 @@ export function secondaryMeaning(game: AnyGame, id: string): SecondaryMeaning {
     }
   }
   return { used: false, evidence: null };
+}
+
+/** What became of the presses a game claimed and then had canceled. */
+export interface CanceledPresses {
+  /** How many presses the game claimed, each then canceled: the sweep's
+   * power. A press the game declines has no gesture to cancel. */
+  readonly canceled: number;
+  /** How many of those had moved a tile before the cancel. */
+  readonly moved: number;
+  /** Each canceled press after which the board or the `Ui` was not what it
+   * had been before the press. */
+  readonly left: string[];
+}
+
+/**
+ * **Does a canceled press leave anything behind?**
+ *
+ * Every probe point is pressed with each button and canceled: once where it
+ * was pressed, and once after a drag to each neighboring tile, since a game
+ * that has seen a drag holds more than one that has seen only a press. What
+ * is compared is what the midend held just before that press, so the board
+ * needs no fixed starting position, and between rounds it is played on
+ * (`play`), because what a press picks up depends on what is there: on the
+ * opening board no Galaxies tile has an arrow to lift.
+ */
+export function canceledPresses(game: AnyGame, id: string): CanceledPresses {
+  const b = probeBoard(game, id);
+  const { m, size, tileSize } = b;
+  const points = probePoints(size);
+  const neighbors = (p: Point) =>
+    [
+      { x: p.x + tileSize, y: p.y },
+      { x: p.x, y: p.y + tileSize },
+      { x: p.x - tileSize, y: p.y },
+      { x: p.x, y: p.y - tileSize },
+    ].filter((q) => q.x >= 0 && q.y >= 0 && q.x < size.w && q.y < size.h);
+  const buttons = [
+    { name: "left", press: LEFT_BUTTON, drag: LEFT_DRAG, release: LEFT_RELEASE },
+    { name: "right", press: RIGHT_BUTTON, drag: RIGHT_DRAG, release: RIGHT_RELEASE },
+  ];
+
+  let canceled = 0;
+  let moved = 0;
+  const left: string[] = [];
+  const round = (label: string) => {
+    for (const p of points)
+      for (const button of buttons)
+        for (const q of [null, ...neighbors(p)]) {
+          const before = { held: b.held(), moves: b.moves() };
+          if (!m.processInput(p.x, p.y, button.press)) {
+            // Declined: the view sends the release at once and tracks nothing.
+            m.processInput(p.x, p.y, button.release);
+            continue;
+          }
+          if (q !== null) m.processInput(q.x, q.y, button.drag);
+          m.cancelPress();
+          canceled++;
+          if (q !== null) moved++;
+          const what =
+            b.moves() !== before.moves
+              ? "a move was made"
+              : b.held() !== before.held
+                ? "the Ui or the history was left changed"
+                : sweepOpen(b.live().ui)
+                  ? "a sweep was left open"
+                  : null;
+          if (what !== null)
+            left.push(
+              `${label}: ${button.name} press at (${p.x},${p.y})` +
+                `${q === null ? "" : ` dragged to (${q.x},${q.y})`}, canceled: ${what}`,
+            );
+        }
+  };
+  /** Clicks and drags across the board, completed, so that the next round
+   * presses on what a game in play has on it. */
+  const play = () => {
+    points.forEach((p, i) => {
+      const button = buttons[i % 3 === 2 ? 1 : 0];
+      const to = i % 2 === 1 ? (neighbors(p)[i % neighbors(p).length] ?? p) : p;
+      if (m.processInput(p.x, p.y, button.press) && to !== p)
+        m.processInput(to.x, to.y, button.drag);
+      m.processInput(to.x, to.y, button.release);
+    });
+  };
+  round("on the opening board");
+  play();
+  round("on a board played on");
+  return { canceled, moved, left };
 }

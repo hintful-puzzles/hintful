@@ -277,13 +277,6 @@ function interpretMove(
   }
 
   if (btn === LEFT_DRAG || btn === RIGHT_DRAG) {
-    // `view-interactive.ts`'s cancelPointerTracking reports a canceled press
-    // as a drag off the canvas's top left corner and then a release there. A
-    // drag only has a direction, so that point would read as "toward the
-    // island up or to the left" and the release would draw the bridge. A real
-    // drag reaches the canvas's edge through its own row or column first and
-    // has `dragged` by then, so only a press that never moved is ended here.
-    if (!ui.dragged && (p.x < 0 || p.y < 0)) return uiCancelDrag(ui);
     if (
       s.inGrid(ui.drag.sx, ui.drag.sy) &&
       (gx !== ui.drag.sx || gy !== ui.drag.sy) &&

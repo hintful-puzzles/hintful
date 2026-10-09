@@ -850,6 +850,13 @@ export class Puzzle {
     return consumed;
   }
 
+  /** The pointer whose press the game claimed was canceled, by the browser or
+   * by Escape: the game is put back as it was before the press. Queued with
+   * the press and its drags, so it cannot overtake them. */
+  public async cancelPress(): Promise<void> {
+    await this.enqueueInput(async () => (await this.board()).cancelPress());
+  }
+
   /** Whether the running game tracks the pointer between presses. The view
    * asks once per game and sends no hover at all when it is false, so a game
    * without one costs nothing on a pointer sweep. */

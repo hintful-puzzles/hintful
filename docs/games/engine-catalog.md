@@ -183,6 +183,13 @@ game whose buttons each do one thing to what they land on, a drag game's click
 half included; `target-verb.test.ts` holds a declaring game's keys to its buttons.
 How to adopt it is [`input.md`](./input.md) § "Targets and verbs".
 
+### `ui-snapshot.ts` — a `Ui` kept to be put back
+
+`copyUi` and `restoreUi`: the midend's own, for a canceled press
+([`input.md`](./input.md) § "A canceled press is the engine's"). A game calls
+neither. What it owes is a `Ui` the copy can take: plain objects, arrays,
+typed arrays, `Map`, `Set`, and classes whose content is their own fields.
+
 ### `note-taking-cell.ts` — the shared highlight-and-type mechanic
 
 *Highlight a cell, type a value into it, pencil candidate marks in it* — the

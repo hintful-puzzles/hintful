@@ -240,24 +240,21 @@ describe("bridges input model (drag → move)", () => {
   });
 
   it("a canceled press on an island draws no bridge", () => {
-    // The frontend reports a canceled press as a drag far off the canvas's top
-    // left corner and then a release there. From island (2,0) that point lies
-    // up and to the left, where island (0,0) is in line.
-    for (const [press, drag, release] of [
-      [LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE],
-      [RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE],
+    const m = new Midend(bridgesGame);
+    expect(m.newGameFromId(`${encodeParams(p3, true)}:1a1f`)).toBeNull();
+    const opening = m.saveGame();
+    // Canceled where it was pressed, and after a drag at the island to its
+    // left, which a release there would join.
+    for (const [press, drag] of [
+      [LEFT_BUTTON, LEFT_DRAG],
+      [RIGHT_BUTTON, RIGHT_DRAG],
     ]) {
-      const s = twoIslands();
-      const ui = bridgesGame.newUi(s);
-      const ds = newDrawState(s, ts);
-      const at = { x: center(2), y: center(0) };
-      expect(bridgesGame.interpretMove(s, ui, ds, at, press)).toBe(UI_UPDATE);
-      const off = { x: -100, y: -100 };
-      for (const button of [drag, release]) {
-        const r = bridgesGame.interpretMove(s, ui, ds, off, button);
-        expect(r === null || r === UI_UPDATE).toBe(true);
+      for (const to of [null, { x: center(0), y: center(0) }]) {
+        expect(m.processInput(center(2), center(0), press)).toBe(true);
+        if (to !== null) m.processInput(to.x, to.y, drag);
+        expect(m.cancelPress()).toBe(true);
+        expect(m.saveGame()).toEqual(opening);
       }
-      expect(ui.drag.live).toBe(false);
     }
   });
 
