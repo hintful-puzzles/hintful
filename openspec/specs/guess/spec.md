@@ -2,33 +2,18 @@
 
 ## Purpose
 Guess, the Mastermind puzzle of deducing a hidden combination of colors from the
-feedback each submitted row earns: obfuscated solution descriptions, Knuth-style
-scoring, the row a player composes with keys, taps and holds, the answer row the
-player keeps rule-out marks in, and the hint that fills it.
+feedback each submitted row earns: its params and obfuscated solution
+descriptions, Knuth-style scoring, the row a player composes with keys, taps and
+holds, the answer row the player keeps rule-out marks in, the mistake check on
+those marks, and the hint that fills the row and suggests a guess.
 
 ## Requirements
-
-### Requirement: Guess game implements the Game interface
-
-The engine SHALL provide a registered `guess` game implementing `Game`: a
-Mastermind clone in which the player deduces a hidden combination of `npegs`
-color pegs drawn from `ncolors` colors within `nguesses` guess rows. The game
-SHALL provide `statusbarText`, `solve` and `findMistakes`, and SHALL NOT provide
-`textFormat`.
-
-#### Scenario: The game is registered without a text format
-
-- **WHEN** the registry is asked for the game `guess`
-- **THEN** it returns a game that has `statusbarText`, `solve` and
-  `findMistakes` and has no `textFormat`
 
 ### Requirement: Guess's parameters
 
 Params SHALL be `ncolors`, `npegs`, `nguesses`, `allowBlank` and
 `allowMultiple`, encoded `c{ncolors}p{npegs}g{nguesses}{b|B}{m|M}`, with a
-lenient decode that ignores unknown letters. Three presets SHALL be offered:
-Standard (`6,4,10,false,true`), Super (`8,5,12,false,true`), and a third that is
-Standard with duplicates forbidden.
+lenient decode that ignores unknown letters.
 
 #### Scenario: Params round-trip and lenient decode
 
@@ -79,9 +64,8 @@ de-obfuscated bytes fall outside `1..ncolors`.
 ### Requirement: A Guess move is a submitted row or a set of marks
 
 A `GuessMove` SHALL be a guess submission carrying the working row's pegs and
-holds (`{ type: "guess", pegs, holds }`), or a set of answer-row marks.
-`executeMove` SHALL be pure. Solve SHALL submit the answer as the next guess,
-which wins.
+holds (`{ type: "guess", pegs, holds }`), or a set of answer-row marks. Solve
+SHALL submit the answer as the next guess, which wins.
 
 #### Scenario: Solve plays the answer
 
@@ -112,10 +96,11 @@ unless every peg is in the correct place.
 
 ### Requirement: Guess is won or lost by the rows on the board
 
-The game SHALL be won when the last submitted row has every peg in the correct
+Guess SHALL be a Mastermind clone: the player deduces a hidden combination of
+`npegs` color pegs drawn from `ncolors` colors within `nguesses` guess rows. The
+game SHALL be won when the last submitted row has every peg in the correct
 place, and lost, with the solution revealed, when the rows are exhausted
-without a win. Won and lost SHALL be judged from the rows on the board, never
-from a separate record of the outcome.
+without a win.
 
 #### Scenario: A correct guess wins
 
@@ -274,9 +259,7 @@ Outside notes mode the erase key SHALL clear the selected slot when it holds a
 color, and otherwise SHALL backspace: rub out the rightmost filled slot the
 player is not holding. Backspacing SHALL walk past a held slot, which was
 carried over rather than typed, and SHALL be declined when every filled slot is
-held. The key SHALL never write past the last peg: the slot SHALL come from a
-scan of the row or from a cursor checked against `npegs`, rather than from
-declining the key.
+held. The key SHALL never write past the last peg.
 
 #### Scenario: Clearing on the submit position backspaces
 
@@ -293,10 +276,10 @@ declining the key.
 
 ### Requirement: Guess says why a row will not go
 
-Guess SHALL provide `statusbarText`. While the game is in play the line SHALL
-name the guess in progress and the number available, and, when the working row
-cannot be submitted because a color repeats under `allowMultiple: false`, SHALL
-say so: a submit that is silently declined reads to a player as a broken key.
+While the game is in play the status line SHALL name the guess in progress and
+the number available, and, when the working row cannot be submitted because a
+color repeats under `allowMultiple: false`, SHALL say so: a submit that is
+silently declined reads to a player as a broken key.
 
 #### Scenario: A repeat under no-duplicates is explained
 
@@ -331,15 +314,10 @@ SHALL leave the cursor where the next color will go.
 - **WHEN** `decodeUi` is given a peg outside `1..ncolors`
 - **THEN** that slot is left empty and the rest of the row still decodes
 
-### Requirement: Guess composes a row from colors, holds and keyboard input
+### Requirement: Guess leaves the hint letters to the app
 
-`interpretMove` SHALL support: placing a color from a panel key or from the
-matching digit on a physical keyboard; selecting a slot with a pointer release
-over it; right-clicking a current-row slot to toggle its hold; a
-one-dimensional keyboard cursor over the pegs, with erase, hold
-(`CURSOR_SELECT2`) and submit (`CURSOR_SELECT` on the submit position); and a
-Submit key. Guess SHALL NOT consume `'h'`, `'H'` or `'?'`, which reach the app's
-Hint command.
+Guess SHALL NOT consume `'h'`, `'H'` or `'?'`, which reach the app's Hint
+command.
 
 #### Scenario: The hint letters reach the app
 
@@ -552,9 +530,9 @@ can be placed by a hint step idempotently.
 Where the selection is SHALL decide what a color key does. A pointer release
 anywhere on an answer slot, its gap and margin included, SHALL select that slot
 and switch notes mode on; a release on a working-row peg SHALL select it and
-switch notes mode off. The pointer SHALL never act on one color inside a slot. A
-right-click or held finger on the answer row SHALL mark nothing: its press SHALL
-be declined, and its release SHALL select the slot as a tap does.
+switch notes mode off. A right-click or held finger on the answer row SHALL mark
+nothing: its press SHALL be declined, and its release SHALL select the slot as a
+tap does.
 
 #### Scenario: A tap anywhere on an answer slot selects it for marking
 

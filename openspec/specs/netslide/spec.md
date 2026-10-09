@@ -3,15 +3,17 @@
 ## Purpose
 Netslide, the puzzle of sliding rows and columns, all but the source's own row
 and column, until the wires on the tiles join one connected network with no
-loops. It has no solver, so Solve and the hint recover the finished grid from
-the board itself and work from any position without the generator's answer,
-and the hint explains and draws each slide it proposes.
+loops. This spec holds the rules, the params and description encodings, what
+the generator promises, the controls, how the board is drawn, and the hint: it
+has no solver, so Solve and the hint recover the finished grid from the board
+itself and work from any position, and the hint explains and draws each slide
+it proposes.
 
 ## Requirements
 
-### Requirement: Netslide game implements the Game interface
+### Requirement: Netslide's board, its source and the lines that never slide
 
-The engine SHALL provide a registered `netslide` game implementing `Game`: a
+Netslide SHALL be played on a
 `w × h` grid of Net wire tiles, each a 4-bit mask of connections `R=1`, `U=2`,
 `L=4`, `D=8`, whose solved configuration is a spanning tree rooted at the
 source, the tile at `⌊w/2⌋, ⌊h/2⌋`, scrambled by toroidal row and column
@@ -37,45 +39,14 @@ the `m` suffix in both, because the target move count is part of the puzzle.
   movetarget: 20 }` are encoded in full
 - **THEN** the result is `5x5wb0.5m20` and decoding it round-trips the params
 
-### Requirement: Netslide offers three sizes at three difficulties
-
-The presets SHALL be the upstream ones: 3×3, 4×4 and 5×5, each at easy, medium
-and hard.
-
-#### Scenario: Every size at every difficulty
-
-- **WHEN** the game's presets are listed
-- **THEN** each of the three sizes is among them three times
-
-### Requirement: Netslide's params are held to their ranges
-
-The width and the height SHALL both be greater than one, the barrier
-probability SHALL lie in `[0, 1]`, and the move target SHALL NOT be negative.
-Each SHALL be declared as the `bounds` of its `paramConfig` item, so that the
-engine's params check refuses a value outside them.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** the engine's params check is given a width or height of 1, a
-  negative or greater-than-one barrier probability, or a negative move target
-- **THEN** it returns a non-null error string
-
-### Requirement: Netslide provides Solve and a status bar, and no text format
-
-The game SHALL provide `solve` and `statusbarText`, and SHALL NOT provide
-`textFormat`.
-
-#### Scenario: What the game offers
-
-- **WHEN** the midend reads the game
-- **THEN** it offers Solve and a status bar, and no text rendering of the board
-
 ### Requirement: Netslide descriptions encode wires and barriers
 
 The desc SHALL encode the grid row-major: one hexadecimal digit per tile
 giving its wire mask, each optionally followed by `v`, a barrier to the right
 of that tile, and/or `h`, a barrier below it. A desc holding an unexpected
-character, or one shorter or longer than `w × h` tiles, SHALL be refused.
+character, or one shorter or longer than `w × h` tiles, SHALL be refused. A
+game that is not wrapping SHALL be walled around its whole border, which the
+desc does not write.
 
 #### Scenario: A description round-trips
 
@@ -87,36 +58,16 @@ character, or one shorter or longer than `w × h` tiles, SHALL be refused.
 - **WHEN** a desc of `w × h − 1` tiles is offered for a `w × h` grid
 - **THEN** it is refused
 
-### Requirement: newState builds the barrier grid
-
-`newState` SHALL parse the desc into the wire grid and the barrier grid, SHALL
-add barriers around the whole border when the game is not wrapping, and SHALL
-derive each barrier's corner-joining flags, the `RU`, `UL`, `LD` and `DR` bits
-used to draw barrier junctions cleanly.
-
 #### Scenario: A non-wrapping game is walled in
 
 - **WHEN** `newState` builds a non-wrapping game
 - **THEN** every tile on the outer edge carries a barrier on its outward side
 
-### Requirement: Every state of a game shares one barrier grid
-
-Barriers never change during play, so every state of a game SHALL share the
-one barrier grid by reference, and nothing after `newState` SHALL write to it.
-
-#### Scenario: A slide keeps the barrier grid
-
-- **WHEN** a slide is executed
-- **THEN** the new state's barrier grid is the same array the old state held
-
 ### Requirement: The solved grid is grown from the source as a spanning tree
 
-`newDesc` SHALL construct the solved grid by growing outward from the source.
-It SHALL keep a set of candidate `(x, y, direction)` extensions ordered by
-`x`, then `y`, then `direction`, repeatedly pick one uniformly at random,
-connect it, and update the set so that no tile ever becomes a full cross of
-four arms and no closed loop is ever formed. The result SHALL be a spanning
-tree over every tile.
+The solved grid `newDesc` builds SHALL be a spanning tree over every tile,
+grown outward from the source: no tile SHALL be a full cross of four arms, and
+the wires SHALL form no closed loop.
 
 #### Scenario: The solved grid is a spanning tree
 
@@ -136,29 +87,6 @@ SHALL be `movetarget` when it is set, and otherwise `2 · (w−1) · (h−1)`.
 
 - **WHEN** a 3×3 grid is generated with no move target set
 - **THEN** the shuffle applies eight slides, not counting any it declined
-
-### Requirement: Barriers are chosen after the shuffle
-
-`newDesc` SHALL choose barrier locations after shuffling, drawing them one at
-a time from the candidate set, so that on a fixed seed raising the barrier
-probability yields a superset of the barriers a lower probability produced.
-
-#### Scenario: Raising the barrier probability on one seed adds barriers
-
-- **WHEN** the same seed and grid params are generated at barrier probability
-  0.5 and then at 1.0
-- **THEN** the shuffled grid is identical and the 0.5 barrier set is a subset
-  of the 1.0 barrier set
-
-### Requirement: The generator saves the unshuffled grid as aux
-
-`newDesc` SHALL save the unshuffled grid as `aux`.
-
-#### Scenario: The aux of a generated game
-
-- **WHEN** a game is generated
-- **THEN** its `aux` holds the solved grid as it stood before the shuffle, a
-  grid on which every tile is powered
 
 ### Requirement: A move is one step of one line
 
@@ -221,8 +149,8 @@ complete when every tile is active.
 `redraw` SHALL draw each tile's wires in the powered color when the tile is
 active and in the wire color otherwise, with a box at the source and at every
 endpoint, a tile of a single arm, and SHALL draw the connection stubs across
-tile borders. Barriers SHALL be drawn in the barrier color, with their corner
-flags joining them cleanly at junctions.
+tile borders. Barriers SHALL be drawn in the barrier color, joined cleanly
+where they meet at a corner.
 
 #### Scenario: Powered and unpowered wires differ
 
@@ -234,8 +162,7 @@ flags joining them cleanly at junctions.
 
 Slide arrows SHALL be drawn in the border gutter beside every slidable row and
 column, with the cursor's arrow highlighted. The arrows SHALL stay on the
-board, outlined in ink. The border gutter SHALL be `⌊3 · tileSize / 4⌋ + 1`
-wide.
+board, outlined in ink.
 
 #### Scenario: No arrow beside the source's lines
 
@@ -258,28 +185,13 @@ outward from the source.
 ### Requirement: The status bar counts moves and powered tiles
 
 The game's status bar text SHALL report the move count, the target move count
-when one is set, and how many tiles are currently active. Whether the game is
-complete or was auto-solved SHALL be said by the engine's completion words,
-which the game SHALL NOT write itself.
+when one is set, and how many tiles are currently active.
 
 #### Scenario: A game with a move target
 
 - **WHEN** three slides have been made on a game whose move target is 20
 - **THEN** the status bar gives three moves, the target of 20, and the number
   of active tiles out of all the tiles
-
-### Requirement: Netslide offers an explained hint
-
-Netslide SHALL implement `Game.hint` and `Game.hintKeepTrack`, planning a
-sequence of slides that rebuilds the network and narrating each one by the
-consequence it actually has. The hint SHALL meet the collection's hint quality
-bar.
-
-#### Scenario: A hint on a board one move from solved
-
-- **WHEN** a hint is requested on a board one slide away from a finished network
-- **THEN** the plan is a single step whose move completes the board, and its
-  explanation says that it puts a tile where it belongs
 
 ### Requirement: The hint plans against a finished grid
 
@@ -468,27 +380,6 @@ the legs of its journey, and SHALL mark that tile on the board.
 - **THEN** the tile it marks is the tile the first leg marked, in the cell the
   first leg's slide landed it in
 
-### Requirement: Netslide is covered by the cross-game hint-resume guard
-
-Netslide SHALL be covered by the cross-game hint-resume guard.
-
-#### Scenario: The guard's population
-
-- **WHEN** the hint-resume guard takes its games from those that have a hint
-- **THEN** Netslide is among them
-
-### Requirement: Netslide can be solved without the generator's answer
-
-`Game.solve` SHALL work on a board that carries no `aux`, a game created from
-a descriptive `params:desc` id such as a shared link or a bookmark, by
-recovering the finished grid from the board itself, and SHALL NOT refuse it.
-
-#### Scenario: Solving a game built from a descriptive id
-
-- **WHEN** Solve is used on a game created from a `params:desc` id
-- **THEN** the board is completed, and Solve is not refused as having no
-  solution to give
-
 ### Requirement: Netslide renders the displayed hint step
 
 `redraw` SHALL show the current hint step: the tile being placed highlighted,
@@ -512,29 +403,6 @@ answer.
 - **WHEN** a displayed step takes its tile to a cell the finished board does
   not want its wires in
 - **THEN** that cell's mark differs from the mark of a cell a tile belongs in
-
-### Requirement: Hint colors come after the upstream color enum
-
-Hint colors SHALL be appended past the upstream color enum, so that the game's
-palette stays index-for-index with it.
-
-#### Scenario: The hint color's index
-
-- **WHEN** the game's palette is built
-- **THEN** the hint color's index is higher than that of every color the
-  upstream enum lists
-
-### Requirement: The hint overlay is part of the render cache's diff key
-
-The hint overlay SHALL be part of the render cache's diff key, so that it
-repaints on the frame the hint is requested even though the underlying tiles
-did not change that frame.
-
-#### Scenario: A hint repaints on a board that did not otherwise change
-
-- **WHEN** a board is drawn, a hint is then requested, and the same draw state is
-  redrawn
-- **THEN** the hint highlight appears on that second paint
 
 ### Requirement: The tile mark travels with the tile during a slide
 
@@ -566,16 +434,23 @@ the animation's offset.
 
 ### Requirement: Netslide solves from the generator's grid when it has one
 
-The game has no deduction solver. `solve` SHALL replay the unshuffled grid
-saved in the generator's `aux` when the game came with one, and otherwise
-SHALL recover the finished grid from the board, as "Netslide can be solved
-without the generator's answer" requires.
+The game has no deduction solver. `newDesc` SHALL save the unshuffled grid as
+`aux`, and `solve` SHALL replay it when the game came with one. On a board
+that carries no `aux`, a game created from a `params:desc` id such as a shared
+link or a bookmark, `solve` SHALL recover the finished grid from the board
+itself, and SHALL NOT refuse it as upstream does.
 
 #### Scenario: Solve on a freshly generated game
 
 - **WHEN** Solve is invoked on a game created from a random seed
 - **THEN** the board is restored to the generator's unshuffled grid and is
   reported solved-with-help
+
+#### Scenario: Solving a game built from a descriptive id
+
+- **WHEN** Solve is used on a game created from a `params:desc` id
+- **THEN** the board is completed, and Solve is not refused as having no
+  solution to give
 
 ### Requirement: Netslide has no mistake check
 

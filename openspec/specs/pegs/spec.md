@@ -2,13 +2,20 @@
 
 ## Purpose
 Pegs (peg solitaire), the puzzle of jumping pegs over one another, removing each
-peg jumped, until one remains.
+peg jumped, until one remains. This spec holds the rules and what a Random
+board promises, the drag and the keyboard jump, what the hint and Solve do and
+say, and how the board is drawn.
 
 ## Requirements
 
-### Requirement: Pegs game implements the Game interface
+### Requirement: Pegs is won when one peg remains
 
-The engine SHALL provide a registered `pegs` game implementing `Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawState>` with three board types (Cross, Octagon, Random), drag-to-jump input, keyboard cursor with jump-select, per-tile render cache, blitter-based drag sprite, and win flash.
+A jump SHALL move a peg two cells along a row or column, over a peg beside it
+into the empty hole beyond, and SHALL remove the peg jumped. The game SHALL be
+complete when exactly one peg remains. The board SHALL be one of three types:
+Cross, Octagon or Random. A Random board SHALL be built by playing jumps
+backwards from a single peg, so it can always be finished, and SHALL touch all
+four edges of its grid.
 
 #### Scenario: Cross board generation and play
 
@@ -23,6 +30,15 @@ The engine SHALL provide a registered `pegs` game implementing `Game<PegsParams,
 - **THEN** the generator builds the board by reverse-moves from a single peg
 - **AND** the resulting board touches all four edges of the grid
 - **AND** the board is guaranteed soluble (every move is reversible)
+
+### Requirement: A peg jumps by a drag, or from the keyboard
+
+Pressing on a peg SHALL pick it up, the peg SHALL follow the pointer, and
+releasing it SHALL make the jump where it is released on a legal landing and
+otherwise SHALL end the drag with no move. From the keyboard, select on a peg
+under the cursor SHALL arm a jump; an arrow SHALL then jump that way where a
+peg and then a hole lie in its direction, moving the cursor to the landing;
+select again SHALL disarm it.
 
 #### Scenario: Drag input
 
@@ -147,28 +163,19 @@ Pegs SHALL provide `solve`, whose move leaves one peg on the square the search's
 
 ### Requirement: Pegs draws its pegs as pieces on a quiet board
 
-`redraw` SHALL draw the board as pieces on a quiet surface, with no bevel:
-the board is not a thing the player moves. Every playable cell SHALL be the
-plain cell surface, with the surface's grid line between two cells and round
-the board's outline, whatever its shape. A peg SHALL be the collection's disc
-piece, inset on its cell, in a color that none of the marks drawn on the board
-uses.
+The board SHALL be drawn as pieces on a quiet surface, with no bevel: it is
+not a thing the player moves. Every playable cell SHALL be the plain cell
+surface, with the surface's grid line between two cells and round the board's
+outline, whatever its shape. A peg SHALL be the collection's disc piece, inset
+on its cell, in a color no mark drawn on the board uses. An empty hole SHALL
+be a ring on that surface, never a fill of its own, so no state is a step of
+gray.
 
 #### Scenario: A peg and a hole on one surface
 
 - **WHEN** a board holding pegs and one empty hole is drawn
 - **THEN** every playable cell is the same cell surface
 - **AND** each peg is a disc in the peg's color and the hole is an unfilled ring
-
-### Requirement: An empty hole is a ring, never a fill
-
-An empty hole SHALL be a ring on the cell's surface and SHALL NOT be told by a
-fill of its own, so no state is a step of gray.
-
-#### Scenario: A hole beside a peg
-
-- **WHEN** a jump empties a cell
-- **THEN** the cell shows an unfilled ring on the same surface a cell holding a peg has
 
 ### Requirement: Pegs' marks sit beside the peg and never recolor it
 
@@ -198,13 +205,3 @@ beats.
 
 - **WHEN** the board is drawn on a lit beat of the completion flash
 - **THEN** every playable cell is the lifted surface, pegs and holes drawn on it as usual
-
-### Requirement: Pegs names no hue and swaps no palette
-
-The game SHALL declare no palette swap for the dark scheme, and its hint
-sentences and help page SHALL name no hue.
-
-#### Scenario: A hint sentence names no hue
-
-- **WHEN** a hint step points at a peg, a hole or a jump
-- **THEN** its sentence names no hue

@@ -6,13 +6,14 @@ How this repository decides that a tree is fit to commit, publish and run, and
 what that decision is allowed to cost: the gate that `scripts/gate.sh` defines
 and that the pre-commit hook and CI both run; the rule that no correctness
 check is dropped or weakened to buy speed, and the scopings by role permitted
-instead; how a test earns its place on the per-commit path, and how one is
-retired or deferred by measurement and not by category; the on-demand
-instruments that are not gates and are never ratcheted (`npm run metrics`,
-`npm run probe`, `npm run diff`); the build's
-independence from any native toolchain; and the deploy, which publishes the
-gate's own artifact and is verified against the deployed origin. What any
-single test asserts belongs to the capability that test serves.
+instead; what the hook may select, narrow or defer to the push, and what a
+deferral must leave covered; the guards the gate carries of its own; the
+metrics harness, which is not a gate; the compiler-strictness decisions; the
+build's independence from any native toolchain, and what the build asserts of
+its own output; error reporting; and the deploy, which publishes the gate's
+own artifact and is verified against the deployed origin. What any single
+test asserts belongs to the capability that test serves, and how a cost is
+measured or a test made cheaper is `docs/games/testing.md`.
 
 ## Requirements
 
@@ -29,25 +30,6 @@ installed.
 
 - **WHEN** a commit is pushed to `main` (including one made with `--no-verify`)
 - **THEN** the workflow runs `npm run gate` and fails the run on any gate failure
-
-### Requirement: The gate needs no generated asset, and CI provisions no native tool
-
-The gate SHALL require no generated assets: a clean checkout type-checks, tests
-and builds with nothing generated. The workflow SHALL NOT provision a wasm
-toolchain or any other native tool, and SHALL NOT cache generated assets to
-make the gate viable. The job is `npm ci` and the gate.
-
-#### Scenario: The gate runs without generated assets
-
-- **WHEN** the workflow runs on a clean checkout
-- **THEN** no wasm toolchain is provisioned and no asset cache is consulted
-- **AND** the typecheck, tests and production build all succeed
-
-#### Scenario: The workflow installs no system package
-
-- **WHEN** the workflow's steps are inspected
-- **THEN** the only setup is `actions/setup-node` and `npm ci`
-- **AND** no `apt-get`, `brew` or other native-tool provisioning step is present
 
 ### Requirement: The pre-commit gate minimizes wall-clock without dropping checks
 
@@ -99,10 +81,8 @@ requirement that introduced it.
 The gate SHALL verify that every case in the local-feedback corpus still
 applies: its anchor is present and unique in the module it names. The check
 SHALL run no tests and SHALL assert nothing about the corpus's result. The
-gate SHALL invoke `scripts/feedback-probe.mjs --verify` with node directly and
-not through npm. The corpus is verbatim excerpts of engine source, so a
-refactor of a probed line otherwise leaves the harness measuring a smaller
-corpus and reporting success.
+corpus is verbatim excerpts of engine source, so a refactor of a probed line
+otherwise leaves the harness measuring a smaller corpus and reporting success.
 
 #### Scenario: A refactor moves a line the probe corpus anchors on
 
@@ -111,34 +91,6 @@ corpus and reporting success.
   retired) as part of that commit
 - **AND** re-anchoring is the moment a person decides whether the case still
   states the defect it claims to
-
-### Requirement: The probe's rate is never gated
-
-The probe's rate SHALL NOT be gated or ratcheted. A survivor is a finding to
-read, and only a case that no longer applies is a failure. A gated feedback
-number invites tests written against the number and not against behavior,
-which the `repo-layout` requirement the probe serves forbids.
-
-#### Scenario: A probe run reports a survivor
-
-- **WHEN** a run of `npm run probe` reports a case that no test caught
-- **THEN** no gate fails on it, and the survivor is read as a finding
-
-### Requirement: The spelling guard runs ahead of the documentation-only shortcut
-
-The spelling guard (`scripts/checks/spelling.mjs`), which scans every tracked
-file outside the record and other people's words for a British stem, as the
-`repo-layout` spelling requirement asks, SHALL run in the fast prefix, ahead of
-the documentation-only shortcut. The shortcut skips `vitest run`, and a test
-may not read `docs/` or `openspec/` at all, so a vitest guard would be blind to
-the commits most likely to bring a British spelling back.
-
-#### Scenario: A documentation-only commit is still spell-checked
-
-- **WHEN** a commit stages only `docs/`, `openspec/` or the root agent files,
-  and one of them carries a British spelling outside an allowance
-- **THEN** the spelling guard fails in the fast prefix and blocks the commit,
-  before the documentation-only shortcut is reached
 
 ### Requirement: The gate's biome step checks formatting and import order
 
@@ -248,10 +200,9 @@ against a walk narrowed beneath it reports a finding it has not measured.
 
 A deferred assertion SHALL run in CI on every push to `main`: it SHALL be
 selected by the role toggle the hook sets and by nothing else. Deferring into a
-tier that runs only on request is the slow tier's business, under its own
-requirements. In the hook the assertion SHALL be skipped at the runner level,
-so a run that did not check it says so; it SHALL NOT be left to pass over a
-sample it could not take.
+tier that runs only on request is the slow tier's business. In the hook the
+assertion SHALL be skipped at the runner level, so a run that did not check it
+says so; it SHALL NOT be left to pass over a sample it could not take.
 
 #### Scenario: The hook skips a deferred assertion
 
@@ -355,32 +306,6 @@ keeps `repo-layout`'s rule that a tool SHALL NOT write its output into an
 - **AND** the snapshot is committed under that change's directory, not at the
   repository root
 
-### Requirement: The top-level metrics directory holds only live instruments
-
-A top-level `metrics/` directory SHALL hold only live instruments: output that
-something still reads. A finished round's output left at the
-root reads as a current measurement of the current tree, which it is not.
-
-#### Scenario: A finished round's snapshot is not left at the root
-
-- **WHEN** a round's work is archived
-- **THEN** its dated snapshot is archived with it
-- **AND** the top-level `metrics/` directory contains only output that something
-  still reads
-
-### Requirement: A snapshot's note points at something checkable
-
-A snapshot SHALL be accompanied by a note recording that it cannot be
-regenerated, and that note SHALL point at something checkable in the files and
-not merely assert it.
-
-#### Scenario: A reader doubts that a snapshot is stale
-
-- **WHEN** a reader opens an archived snapshot's note
-- **THEN** it names something in the snapshot's own files that shows the tree it
-  measured is gone, such as every path in its summary lying under a directory
-  since deleted
-
 ### Requirement: Cognitive complexity comes from Biome
 
 Cognitive complexity SHALL be obtained from Biome's
@@ -392,21 +317,6 @@ NOT be added to compute it.
 
 - **WHEN** the metrics harness measures cognitive complexity
 - **THEN** it runs Biome with that rule, and no other linter is installed for it
-
-### Requirement: An enforced metric's threshold is a ratchet
-
-Where a metric is enforced and not merely recorded, its threshold SHALL be a
-ratchet: set to the value the tree currently achieves, and lowered only by a
-change that does the work to earn the lower value. A threshold SHALL NOT be set
-to an aspiration, because a gate that fails on work in progress is a gate that
-gets disabled.
-
-#### Scenario: A lower threshold is wanted
-
-- **WHEN** a change wants an enforced metric's threshold lower than the tree
-  achieves
-- **THEN** it first brings the tree to that value, and lowers the threshold with
-  that work
 
 ### Requirement: A static-analysis finding is triaged against the type information behind it
 
@@ -505,57 +415,10 @@ word of an analysis that cannot see them.
 - **THEN** it tests the read explicitly before using it, and that test stays
   whatever a type-aware analysis says of it
 
-### Requirement: The commit gate's cost is proportional to what it protects
-
-The pre-commit gate SHALL be kept affordable per commit, and a test that costs
-a large share of it SHALL justify that share by what it would catch. A test
-whose cost is dominated by more of the same (a larger board, additional seeds
-beyond the point of detection) SHALL be reduced or moved to the opt-in tier,
-not left to be paid on every commit.
-
-#### Scenario: A test is made cheaper
-
-- **WHEN** a test's cost is reduced by any of the three treatments
-- **THEN** it is verified to still discriminate, by breaking the code it covers
-  and confirming it fails
-- **BECAUSE** the failure this optimization most easily causes is a test that
-  still passes, still reads as coverage, and no longer catches anything
-
-### Requirement: A test is made cheaper by one of three treatments, in order of preference
-
-A test's cost SHALL be reduced by one of three treatments, preferred in this
-order because they lose different amounts: short-circuit a deterministic
-search, by recording the pair a scan of generated boards finds so the scan
-starts there; reduce a confidence dial; defer to the opt-in tier,
-`npm run test:slow`. The first loses nothing, since the same board is
-returned, and correctness SHALL NOT depend on the recorded value being
-current: a stale pin falls back to the full scan.
-
-#### Scenario: A recorded pin goes stale
-
-- **WHEN** a generator change means the recorded pair no longer exhibits the
-  case
-- **THEN** the test falls back to the full scan and still finds a board that
-  does
-
-### Requirement: A seed count is reduced only for a systematic property
-
-A seed count that expresses how many boards a test scans SHALL be reduced for
-the gate only where a violation of the property would be systematic and not
-rare, and where the remaining scan still exercises the assertion many times.
-The change SHALL state that count.
-
-#### Scenario: A property test's seed count is lowered
-
-- **WHEN** a change lowers the number of boards a property test scans in the
-  gate
-- **THEN** the property is one whose violation would show on most boards, and
-  the change states how many times the assertion still runs
-
 ### Requirement: A test is not deferred when it is the only cover of a configuration
 
-Deferral to the opt-in tier SHALL be reserved for cases where the cost is board
-size and not configuration. A test SHALL NOT be deferred when it is the only
+Deferral to the opt-in tier, `npm run test:slow`, SHALL be reserved for cases
+where the cost is board size and not configuration. A test SHALL NOT be deferred when it is the only
 one covering some configuration: deferring the only fixture for a grid type
 silently removes that grid type from every commit. The remaining coverage
 SHALL be stated where the deferral is made.
@@ -569,39 +432,13 @@ SHALL be stated where the deferral is made.
 - **BECAUSE** the differentials are the refactoring net: a refactor that changes a
   solver's verdict must still change a desc the gate checks
 
-### Requirement: The opt-in tier is run in every refactoring round
-
-The opt-in tier SHALL be run as part of a refactoring round, alongside
-`npm run metrics`. A tier nobody ever runs is worse than a deleted test,
-because the file still reads as coverage.
-
-#### Scenario: A refactoring round is run
-
-- **WHEN** a change orders a refactoring round
-- **THEN** it runs the opt-in tier as well as the metrics harness
-
-### Requirement: A gate saving is quoted in CPU time
-
-A saving claimed for the gate SHALL be quoted in CPU time (`user + sys` over
-the whole run), not in wall clock and not in summed per-test durations. Summed
-per-test duration is wall clock per test, so on a box running other work it
-inflates exactly the heavy tests a right-sizing pass removes, and flatters the
-result.
-
-#### Scenario: A gate saving is reported
-
-- **WHEN** a change claims to have reduced the gate's cost
-- **THEN** the figure quoted is CPU time before and after
-- **BECAUSE** a wall-clock or summed-duration figure measures how long the tests
-  appeared to take under whatever else the box was doing, not what they cost
-
 ### Requirement: The app builds from a clean checkout with no toolchain but Node
 
 A clean checkout SHALL build the complete app (every game, every help page, the
-service worker and the PWA assets) with `npm install` as the entire setup. No
-native toolchain, no system package and no generated artifact SHALL be
-required, at config-load time or at build time. The build configuration SHALL
-NOT depend on any generated, gitignored artifact at config-load time.
+service worker and the PWA assets) with `npm install` as the entire setup, and
+SHALL pass the gate in CI with `npm ci` as the entire setup. No native
+toolchain, no system package and no generated artifact SHALL be required, at
+config-load time or at build time, and CI SHALL NOT provision or cache one.
 
 #### Scenario: A clean checkout builds with nothing installed but Node
 
@@ -611,6 +448,12 @@ NOT depend on any generated, gitignored artifact at config-load time.
 - **AND** every game and every help page is present in `dist/`
 - **AND** nothing is missing or degraded relative to a machine that has such
   tools
+
+#### Scenario: The workflow installs no system package
+
+- **WHEN** the CI workflow's steps are inspected
+- **THEN** the only setup is `actions/setup-node` and `npm ci`
+- **AND** no `apt-get`, `brew` or other native-tool provisioning step is present
 
 ### Requirement: Nothing is generated into the source tree
 
@@ -767,46 +610,21 @@ weaker than one that does not, for no benefit.
 
 The `_headers` file the build emits SHALL contain a number of rules that does
 not depend on how many puzzles the catalog holds, and the build SHALL fail if
-the rendered file exceeds the host's rule limit. That limit is a parser limit
-and not a quota: it cannot be raised by migrating or by paying, and rules past
-it are dropped with no error and no visible change, so one rule per puzzle
-page would turn it into a limit on the number of games.
+the rendered file exceeds the host's rule limit or holds no rule at all. That
+limit is a parser limit and not a quota: it cannot be raised by migrating or
+by paying, and rules past it are dropped with no error and no visible change,
+so one rule per puzzle page would turn it into a limit on the number of games.
 
 #### Scenario: Adding a puzzle does not add a header rule
 
 - **WHEN** a puzzle is added to the catalog
 - **THEN** the number of rules in the emitted `_headers` file is unchanged
 
-### Requirement: A broad header rule carries the common value, and the exceptions detach
-
-Where a broad rule and a narrow rule would otherwise merge, the broad rule
-SHALL carry the value the many paths want and the few exceptions SHALL detach
-and replace it, and not the reverse. Nothing about a cache policy depends on
-the size of the catalog, and this is what makes a per-page rule unnecessary.
-
-#### Scenario: The entry pages share one cache rule
-
-- **WHEN** the HTML entry points want a short cache and the hashed assets a long
-  one
-- **THEN** one broad rule carries the short cache for every page, and the rules
-  for the hashed asset paths detach it and set their own
-
-### Requirement: The header rule count is asserted by the build
-
-The rule count SHALL be asserted by the build and not recorded in a comment,
-and the assertion SHALL carry a vacuity guard, since a render producing no
-rules would otherwise satisfy a limit check while measuring nothing.
-
 #### Scenario: A build whose header rules would be silently truncated
 
 - **WHEN** the rendered `_headers` file contains more rules than the host will
-  parse
+  parse, or no rule at all
 - **THEN** the build fails, naming the count and the limit
-
-#### Scenario: The header template renders no rules
-
-- **WHEN** the rendered `_headers` file holds no rule at all
-- **THEN** the build fails, and the limit check does not pass over nothing
 
 ### Requirement: A test is retired or deferred by measurement, never by category
 
@@ -825,78 +643,6 @@ because a change to a solver's verdict changes which boards exist.
 - **BECAUSE** a silently removed configuration reads identically to one that was
   never covered
 
-### Requirement: A retirement audit ranks and counts its population
-
-Before anything is retired or deferred, the population SHALL be ranked and
-counted (how many test files were examined, and how many classified), so an
-audit cannot quietly look at the dozen files somebody remembered.
-
-#### Scenario: A retirement is proposed for a category of tests
-
-- **WHEN** a change proposes to retire tests because of what they were written for
-- **THEN** it ranks the population by measured cost first, and answers per file
-  what that file uniquely protects
-- **BECAUSE** the era a test was written in does not predict what it catches
-
-### Requirement: Suite cost is attributed per game, and quoted in CPU
-
-A measurement of what the test suite costs SHALL attribute each cross-game
-guard's per-game case to the game it names, not to the file or directory the
-guard lives in. The guards title their cases `"<gameId>: …"`, which is the join
-key. Attribution by directory reports the cross-game guards as undifferentiated
-engine cost and hides which game makes them expensive.
-
-#### Scenario: A cross-game guard's case is costed
-
-- **WHEN** a cost measurement meets a case titled for one game inside a guard
-  that lives under the engine
-- **THEN** the case's time is counted against that game
-
-### Requirement: A cost figure is CPU from a single-file run, with the machine's conditions recorded
-
-Every cost figure SHALL be CPU (`user + sys`) from `/usr/bin/time` on a
-single-file run, measured on a quiet box. The measurement SHALL record the
-load average, free memory and swap in use. Wall clock on a shared box measures
-the contention, and unevenly, so it distorts the ranking and not merely the
-total. Summed per-test duration SHALL be used only for locating cost.
-
-#### Scenario: A suite-cost finding is reported
-
-- **WHEN** a change reports what a test file or a game costs the suite
-- **THEN** the figure is CPU time, and the machine's load at the time is stated
-- **BECAUSE** a figure taken on a loaded box measures the contention
-
-### Requirement: A figure taken under paging is an upper bound
-
-A cost figure taken under paging SHALL be treated as an upper bound and not as
-a measurement. Under paging `sys` time is page-fault time, so `user + sys`
-carries the contention that moving off wall clock was meant to remove, and the
-load average is a proxy for the wrong variable. A ratio between two figures
-taken under comparable conditions survives; an absolute second does not.
-
-#### Scenario: Two files are costed while the box is paging
-
-- **WHEN** a measurement is taken with swap in use and little memory free
-- **THEN** its seconds are reported as upper bounds, and only the ratio between
-  figures taken under the same conditions is relied on
-
-### Requirement: The opt-in slow tier is invokable for one area at a time
-
-`npm run test:slow` SHALL forward its arguments to the test runner, and the
-targeted form SHALL be documented where the tier is defined, because the bare
-command runs the entire gate suite as well as the deferred cases and the
-widened seed budgets. A change that defers work into the tier SHALL say which
-targeted invocation exercises it, `npm run test:slow -- <path>`, and SHALL NOT
-rely on a whole-tier run that a person will decline to wait for.
-
-#### Scenario: Work is deferred into the slow tier
-
-- **WHEN** a test or fixture is moved out of the per-commit path
-- **THEN** the change names the targeted command that runs it, and the site
-  states what still covers the configuration on every commit
-- **BECAUSE** a tier nobody invokes is not coverage, and a tier that can only be
-  invoked whole is a tier nobody invokes
-
 ### Requirement: A cross-game guard bounds its cost on the axis the game varies
 
 Where a cross-game guard walks a game's presets, it SHALL slice them on the
@@ -908,22 +654,6 @@ property the game already has and not from a list of game ids.
 - **WHEN** a cross-game guard needs to walk some games less than the rest
 - **THEN** the games are found from a property each already has, read from the
   game, and the guard carries no list of ids
-
-### Requirement: A game whose hint searches is sliced by board size in the gate
-
-A game whose hint plans by searching SHALL be sliced by board size in the gate
-and walked in full in the slow tier: a search pays for board size once per move
-and again in the number of moves, and a guard that recomputes a hint after
-every move multiplies that. The population SHALL be derived from the game's
-own source and not declared: `SEARCH_PLANNING_GAMES` reads each game for a call
-to the shared slide planner.
-
-#### Scenario: A game joins the searching-hint population
-
-- **WHEN** a new game's hint calls the shared slide planner
-- **THEN** it is enrolled by the derivation automatically
-- **BECAUSE** an exemption roster rots exactly as quietly as the membership
-  roster it replaced
 
 ### Requirement: The hint-resume walk excuses the games that can say a search ran out
 
@@ -1167,10 +897,7 @@ a new dead export, and an empty ledger is itself a claim.
 ### Requirement: The unused-export check floors what it read
 
 The check SHALL carry vacuity floors on the files it parsed, the exports it
-found and the fraction of internal import specifiers it resolved. The floor on
-the resolved fraction SHALL count only specifiers the check was asked to
-resolve, since counting package imports as unresolved makes the floor read a
-failure that is not one.
+found and the fraction of internal import specifiers it resolved.
 
 #### Scenario: the resolver stops following this tree's imports
 
@@ -1195,24 +922,6 @@ reads the module as text, SHALL NOT count as a use.
 - **THEN** its exports are NOT thereby counted as used, because neither is a use
 - **AND** the check's report is verified against a deliberately planted dead
   export, since both of those blind spots are silent and not wrong
-
-### Requirement: A type named by a reached signature is used, and only then
-
-A name used only in another export's signature SHALL be resolved to a fixpoint
-after the dead set is known, and only from an owner something reaches, so a
-dead exported function cannot keep its own options type alive. Without the
-rule a type an exported signature names would have to be un-exported, which
-makes it unnameable by the caller who has to satisfy it, or carried in the
-ledger.
-
-#### Scenario: a type is named only by the signature that takes it
-
-- **WHEN** an exported type is named by an exported function's parameter and
-  nothing imports the type
-- **THEN** it is NOT reported, because the caller reaches it through the
-  function
-- **AND** a type no reached export names IS reported, which is what a planted
-  dead `interface` proves
 
 ### Requirement: The unused-export check is the repository's own, not knip
 
@@ -1533,20 +1242,6 @@ it still runs.
 - **BECAUSE** that floor is read from the games without building a board, so
   narrowing the cases does not narrow it
 
-### Requirement: A helper that globs a broad tree is kept apart
-
-A helper module that reads a broad tree through a glob SHALL be kept apart from
-helpers that do not, so that importing one does not make a guard read the whole
-tree. The narrowing works at the grain of a module, and a glob reached through
-a shared helper makes every importer of that helper run whole.
-
-#### Scenario: A guard needs a helper that reads no source
-
-- **WHEN** a helper that reads no source shares a module with one that globs
-  the whole engine tree
-- **THEN** every guard importing either runs whole on an engine commit, which is
-  why the two are kept in separate modules
-
 ### Requirement: The per-commit hook walks one board of each kind, and the push walks the rest
 
 A cross-game sweep SHALL do less work in the automatic per-commit hook than
@@ -1604,15 +1299,3 @@ which preset a mode is walked on.
 - **WHEN** a sentence over the length limit is spoken only on a board the hook
   walks and the push does not, or the reverse
 - **THEN** the ledger lists it with a board that speaks it, and both runs pass
-
-### Requirement: A session runs a sweep wide before committing a change to what it guards
-
-A session that changes the code a sweep guards SHALL run that sweep wide before
-committing (`npx vitest run <the sweep's file>`), because the hook no longer
-does. The guide for writing tests names the sweeps.
-
-#### Scenario: A hint planner is changed
-
-- **WHEN** a session edits a hint planner and commits
-- **THEN** it has run the hint sweeps wide for that planner's games first, and
-  the hook's narrower run is not what it relied on

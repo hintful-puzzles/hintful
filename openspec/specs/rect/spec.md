@@ -2,32 +2,18 @@
 
 ## Purpose
 Rectangles (Shikaku), the puzzle of dividing a grid into rectangles that each
-contain exactly one number, equal to its area: its encoding, its solver and
-generator, completion and mistake reporting, its hint, and its input and
-rendering.
+contain exactly one number, equal to its area: its params and description
+encodings, what its generator promises of a board, completion and mistake
+reporting, its hint, its input, and the look that is its own.
 
 ## Requirements
-
-### Requirement: Rectangles game implements the Game interface
-
-The engine SHALL provide a registered `rect` game implementing `Game`: divide
-a `w × h` grid into rectangles so that every rectangle contains exactly one
-numbered square and its area equals that number. The game SHALL provide `solve`
-and `textFormat`, and SHALL give a completion flash through `solvedFlash`,
-which does not play after Solve.
-
-#### Scenario: The game is registered
-
-- **WHEN** the registry is asked for the game `rect`
-- **THEN** it returns Rectangles, with `solve`, `textFormat` and `solvedFlash`
 
 ### Requirement: Rectangles' parameters and their encoding
 
 Params SHALL be `w`, `h` and `expandfactor`, a non-negative float that
 defaults to 0. They SHALL encode as `{w}x{h}`, with an `e{%g}` suffix for a
 non-zero expansion factor in the full form only, and a bare `{n}` SHALL decode
-as a square of that side. The presets SHALL be the square boards of side 7, 9,
-11, 13, 15, 17 and 19.
+as a square of that side. A grid whose area is less than 2 SHALL be refused.
 
 #### Scenario: Params round-trip
 
@@ -40,6 +26,11 @@ as a square of that side. The presets SHALL be the square boards of side 7, 9,
   form
 - **THEN** the result is `7x7`
 
+#### Scenario: A grid of one square is refused
+
+- **WHEN** params of a 1×1 grid are validated
+- **THEN** they are refused with an error string
+
 ### Requirement: Rectangles reads past upstream's unchecked-board letter
 
 Decoding SHALL read past upstream's trailing `a`, which asks for a board with
@@ -50,18 +41,6 @@ no promised single answer, and encoding SHALL never write it.
 - **WHEN** `9x7a` is decoded
 - **THEN** the params are those of `9x7`, and a board dealt from them has one
   solution
-
-### Requirement: Rectangles refuses params outside its bounds
-
-A width or a height below 1, and a negative expansion factor, SHALL be refused
-by the bounds the game declares in `paramConfig`, which the engine checks.
-`validateParams` SHALL refuse a grid whose area is less than 2.
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** the params are a grid whose area is less than 2, a width of 0, or a
-  negative expansion factor
-- **THEN** each is refused with an error string
 
 ### Requirement: Rectangles loads only a board its hint finishes
 
@@ -81,9 +60,7 @@ The desc SHALL encode the `w × h` grid row-major as a run-length string: a
 lowercase letter `a`–`z` for a run of 1–26 consecutive empty (non-numbered)
 squares, a decimal number for each numbered square, and a `_` between two
 adjacent numbers. A desc with an unknown character, or whose decoded square
-count does not exactly fill the grid, SHALL be refused. `newState` SHALL parse
-the desc into the immutable grid of numbers, with all edges initially clear
-and the correctness overlay computed.
+count does not exactly fill the grid, SHALL be refused.
 
 #### Scenario: A description round-trips
 
@@ -129,11 +106,6 @@ any mistake is present.
   contain, and `findMistakes` is invoked
 - **THEN** that edge is returned as a mistake
 
-#### Scenario: A correct partial board has no mistakes
-
-- **WHEN** the player has drawn only edges that the unique solution contains
-- **THEN** `findMistakes` returns an empty result
-
 ### Requirement: Rectangles input
 
 `interpretMove` SHALL support a left-drag drawing a rectangle outline, a
@@ -157,10 +129,7 @@ SHALL produce no move.
 
 ### Requirement: Rectangles rendering
 
-`redraw` SHALL render the grid, the number text, the correct-rectangle fill,
-the cursor's corner brackets, the computed corner pixels where edges meet and
-the completion flash, with a border of one pixel around the grid. An edge
-SHALL be drawn in one of three colors: a drawn line solid in ink, a drag's
+An edge SHALL be drawn in one of three colors: a drawn line solid in ink, a drag's
 drawing preview in the shared drag-add color, and its erasing preview in the
 shared drag-remove color. An edge flagged as a mistake SHALL be drawn in the
 error color.
@@ -176,26 +145,11 @@ error color.
 - **WHEN** `redraw` is given a mistake on an edge of a square already drawn
 - **THEN** the square is repainted with that edge in the error color
 
-### Requirement: Rectangles ports the solver and solver-gated generator
-
-The solver SHALL enumerate the candidate placements of every rectangle and
-deduce in a loop: marking a number's sole remaining position, marking the
-squares every placement of a rectangle covers, and eliminating placements
-rectangle by rectangle and square by square. During generation it SHALL also
-winnow the candidate positions of each number, drawing from the generator's
-random state.
-
-#### Scenario: Generated boards are uniquely solvable
-
-- **WHEN** a board is generated and solved from its numbers
-- **THEN** the solver reaches a single consistent rectangle placement for every
-  number
-
 ### Requirement: Rectangles generates by tiling, stretching and solving
 
 The generator SHALL tile the base grid at random, remove singletons, stretch
-it to full size with the two-pass expand-and-transpose, call the solver on
-every layout, and encode the run-length desc.
+it to full size by the expansion factor, and call the solver on every layout,
+returning only one the solver reaches a unique placement for.
 
 #### Scenario: A layout the solver cannot make unique is discarded
 
@@ -218,8 +172,7 @@ edges.
 Rectangles SHALL offer a hint whose every step draws one rectangle or one line
 and says why it is forced, reasoning only from the clues and the lines drawn.
 A clue's fits are the rectangles of its area that contain it, stay on the
-board, take in no other clue and cross no drawn line. The hint SHALL refuse on
-a board with a wrong line.
+board, take in no other clue and cross no drawn line.
 
 #### Scenario: The player draws the rectangle a side at a time
 

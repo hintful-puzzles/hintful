@@ -10,13 +10,12 @@ is in `docs/games/hints.md` § "Sliding-permutation games".
 
 ## Requirements
 
-### Requirement: Sixteen game implements the Game interface
+### Requirement: Sixteen slides whole rows and columns until the tiles read in order
 
-The engine SHALL provide a registered `sixteen` game implementing `Game`: the
-toroidal sliding-tile puzzle, in which a move slides a whole row or column and
-the board is solved when the tiles read in order. The game SHALL provide a
-keyboard cursor with Unlocked, LockTile and LockPosition modes, a slide
-animation, a completion flash, and per-tile cache rendering.
+Sixteen SHALL be the toroidal sliding-tile puzzle, in which a move slides a
+whole row or column and the board is solved when the tiles read in order. The
+game SHALL provide a keyboard cursor with Unlocked, LockTile and LockPosition
+modes, and SHALL animate a slide.
 
 #### Scenario: The solved board is complete
 
@@ -52,50 +51,13 @@ increment by one for a slide regardless of its distance.
 ### Requirement: The Sixteen hint plans in full-slide moves
 
 The Sixteen hint planner SHALL search in full-slide moves: a slide by any
-distance is one move, matching a player's drag and the move counter. It SHALL
-run an exact bidirectional search that meets in the middle on every board, and
-a heuristic forward search for the boards that search cannot reach. The
+distance is one move, matching a player's drag and the move counter. The
 planner SHALL return the whole path as a plan of narrated steps.
 
 #### Scenario: Sixteen generates a hint plan
 
 - **WHEN** a user asks for a hint on an unsolved Sixteen board
 - **THEN** the planner returns a plan of one or more slide moves
-
-### Requirement: A search that falls short returns its partial path
-
-When neither search reaches the goal but the forward search improves the
-board, its partial path SHALL be returned as the plan, so that the next hint
-request continues from the improved position.
-
-#### Scenario: A board neither search can finish
-
-- **WHEN** a hint is asked on a board that is past the exact search's reach and
-  that the forward search improves without finishing
-- **THEN** the hint returns the forward search's path to its best board as the
-  plan, and the next hint request plans from where that path ends
-
-### Requirement: Sixteen's exact search is not gated on how finished the board looks
-
-The exact bidirectional search SHALL NOT be gated on how nearly finished the
-board looks. A shortest plan climbs on the way home, in tiles out of place and
-in total travel alike, so any such gate switches off partway down its own
-descent and hands the board back to the heuristic, and the hint cycles.
-
-#### Scenario: A local-minimum endgame still yields a plan
-
-- **WHEN** a user asks for a hint on a near-solved board where every single
-  slide worsens the distance heuristic (e.g. two disjoint swapped pairs)
-- **THEN** the exact bidirectional search produces a shortest full-slide plan,
-  and following or auto-playing the stored plan reaches the solved state
-
-#### Scenario: A player who re-asks after every move still arrives
-
-- **WHEN** a player asks for a hint, plays only its first move, and asks again,
-  from a board the exact search can reach
-- **THEN** each fresh plan is exactly one move shorter than the last, and the
-  walk reaches the solved board rather than returning to a position it has
-  already left
 
 ### Requirement: A step narrates what its move does
 
@@ -133,9 +95,7 @@ A step's narration SHALL explain why the move matters: a journey that ends
 with the narrated tile in its solved cell SHALL be narrated as moving it to
 its final spot, and one that leaves it out of its solved cell as a setup move.
 The why SHALL attach to the journey's end state and SHALL be spoken on the
-journey's first leg; a `continuesPrevious` leg SHALL NOT repeat it. The
-wording SHALL be consistent with the hint quality bar (the Palisade exemplar)
-and with the sibling Fifteen hint.
+journey's first leg; a `continuesPrevious` leg SHALL NOT repeat it.
 
 #### Scenario: Narration distinguishes a final placement from a staging move
 
@@ -195,7 +155,7 @@ otherwise.
 
 ### Requirement: The Sixteen port supports direct row and column dragging
 
-The Sixteen TS port SHALL support direct touch and mouse row/column dragging. When a user drags on a tile in the grid, the game SHALL track the horizontal or vertical drag vector and visually offset the dragged row/column in real-time. When released, the slide SHALL snap to the nearest cell alignment and execute the move if the drag distance exceeds half of a tile width.
+Sixteen SHALL support direct touch and mouse row/column dragging. When a user drags on a tile in the grid, the game SHALL track the horizontal or vertical drag vector and visually offset the dragged row/column in real-time. When released, the slide SHALL snap to the nearest cell alignment and execute the move if the drag distance exceeds half of a tile width.
 
 #### Scenario: Dragging a row to slide it right
 - **WHEN** a user pointerdowns on tile (0, 1), pointermoves right by 1.2 tiles, and pointerups
@@ -221,20 +181,6 @@ search that stores every board it visits can afford at this size.
 - **WHEN** a hint is asked on a 5×5 board that is solved except for two such
   pairs
 - **THEN** it returns a plan of more than eight moves that finishes the board
-
-### Requirement: The swapped-pair guard names its boards and asserts the plan length
-
-The guard for the swapped-pair endgames SHALL name the boards rather than
-sample for them, and SHALL assert the plan length and not merely that a plan
-came back. Only a plan longer than the state-bounded search can return proves
-the deep search ran; a test that asked for any plan at all would keep passing
-with the deep search disabled, on a board reachable another way.
-
-#### Scenario: The plan is too short to prove the deep search ran
-
-- **WHEN** the hint answers a named swapped-pair board with a plan of eight
-  moves or fewer
-- **THEN** the guard fails, although a plan came back
 
 ### Requirement: Sixteen's hint SHALL count the tangles its distance measure cannot see
 
@@ -283,19 +229,6 @@ would stop that gate opening and replace a complete plan with a partial one.
   pairs
 - **THEN** the deep search still answers it with a plan of more than eight moves
   that finishes the board
-
-### Requirement: The tangle guarantee is asserted by walking recomputed hints
-
-The guarantee that the hint gets a tangled board home SHALL be asserted by
-walking recomputed hints to solved, not by the length of a single plan. A plan
-that comes back proves nothing if the next recompute undoes it, which happens
-when consecutive recomputes are steered by different measures.
-
-#### Scenario: The walk, not the plan
-
-- **WHEN** the guard checks a named tangled board
-- **THEN** it plays the first move of each freshly computed hint and requires
-  the board to reach solved
 
 ### Requirement: The boards a tangle guard names are even permutations
 

@@ -1,0 +1,13 @@
+# Cuts: combi
+
+Requirements: 8 before, 4 after.
+
+| Requirement or sentence cut | Word | What holds it now, or why it is gone |
+| --- | --- | --- |
+| Upstream combi-test.c is ported to Vitest | port | A rule about translating the C test and reproducing its printed format, which constrains nothing now. The enumeration a reader can check by eye stays as the scenario "A hand-spelled enumeration matches". |
+| "The module SHALL live under `src/engine/`, because it is an engine library." (TypeScript combi module enumerates subsets in lexicographic order) | how | Which directory the module lives in; the requirement's first sentence already names the path. |
+| "The module SHALL expose, at minimum, the public surface its sole consumer, Light Up's solver, uses: construction from `(r, n)`, advance to the next tuple, and read access to the current `r`-tuple." (Combi exposes construction, advance, read and reset) | type | The `Combi` class in `src/engine/combi/index.ts` and its importer `src/games/lightup/solver.ts`; the compiler holds the surface. What `reset()` does stays, retitled "reset rewinds the enumeration to its start". |
+| "this is asserted by a test driving `reset()` directly, not as a side effect of replaying a recording" (same requirement, scenario) | obsolete | There is no recording left to replay: `src/engine/combi/combi.test.ts` holds no C-recorded corpus and drives `reset()` directly. |
+| Enumeration correctness is asserted in closed form, not by replay | process | `docs/test-strength.md` § "4a. A frozen capture used as a *quality bar* is on the wrong side of the line" ("ask whether the quantity has an independent derivation. If it does, compute it and delete the capture"), and `docs/games/engine-catalog.md` § "`combi/` — r-of-n combination iterator" ("Exhaustively property-tested"). Its scenario, the count, the order and the distinctness, moved to "TypeScript combi module enumerates subsets in lexicographic order". |
+| A frozen fixture is retired only where every fact it asserts is derivable | process | `docs/test-strength.md` § "4. The boundary with the differentials — state it, then verify it" and § 4a: a fixture recording something underivable (a generator's boards, an RNG stream) is the specification and stays; one with an independent derivation is computed and deleted. Not a rule about `combi`. |
+| Retiring a fixture accounts for everything it covered | process | `docs/test-strength.md` § 4a ("when you delete one, account for every fact it carried, not just the headline") and `AGENTS.md` § "What the project is for" ("Where it drops an assurance, the change says what replaces it"). |

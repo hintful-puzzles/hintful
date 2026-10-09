@@ -95,10 +95,9 @@ and corrected it. Every ledger passes `spec-ledger.mjs`, every spec validates
 under 1.14.1, and `rewrite-report.md` has what the agents reported.
 
 - [x] 4.1 `engine-hints` and `engine-candidate-hints`.
-- [ ] 4.2 `ts-engine`, with its misfiled requirements moved (Decision 3).
-      - Rewritten. Nothing has moved between capabilities:
-        `rewrite-report.md` § "Requirements that look misfiled" lists what
-        the agents would move, and 6a decides it with the cuts.
+- [x] 4.2 `ts-engine`, with its misfiled requirements moved (Decision 3).
+      - Rewritten, and nothing moved, here or in any capability: `design.md`
+        § "Where it ended" says why, and both reports list what would move.
 - [x] 4.3 `engine-input`, `engine-params`, `engine-colors`, `engine-notes`,
       `engine-drawing`, `engine-helpers`.
 - [x] 4.4 Every citation of a renamed engine requirement is repointed. Check:
@@ -119,8 +118,10 @@ under 1.14.1, and `rewrite-report.md` has what the agents reported.
       batch gets the second.
       - In the reference form, all at once, each with the first review
         (`design.md` § "What was decided").
-- [ ] 6.2 The guide for porting a game says what a game's spec holds, and the
+- [x] 6.2 The guide for porting a game says what a game's spec holds, and the
       scaffolding script's spec skeleton matches.
+      - `docs/games/README.md` § "What a game's spec holds".
+        `scripts/new-game-port.sh` writes no spec, so there is no skeleton.
 
 ## 6a. Keep only what is worth reading
 
@@ -134,22 +135,29 @@ before working on that part, or would check a change against.
       what the rewrite left: what a type or the `Game` contract already says
       of every game, how a thing is built where only what it does matters, a
       rule so particular that only its own test would ever consult it.
-- [ ] 6a.3 Each capability is pruned by those criteria, with what was cut and
+- [x] 6a.3 Each capability is pruned by those criteria, with what was cut and
       why recorded beside its ledger, and a fresh reviewer reads the cuts for
       a decision the owner made or a rule a player would notice broken.
+      - `cuts/<capability>.md` for all 80, by `prune-brief.md`;
+        `prune-report.md` has what was restored and what was kept for doubt.
 
 ## 7. Close
 
-- [ ] 7.1 The exempt list is empty and removed, and the size check reads every
+- [x] 7.1 The exempt list is empty and removed, and the size check reads every
       capability.
-- [ ] 7.2 `AGENTS.md`'s read-first table and each guide name the capability
+      - There never was a list: the checks landed with the rewrite.
+- [x] 7.2 `AGENTS.md`'s read-first table and each guide name the capability
       that binds the part of the tree, within the root brief's bound.
+      - The guides named theirs already; `AGENTS.md` now says to read it.
 - [x] 7.3 The pin moves to openspec 1.14.1 or whatever is latest then, and the
       gate's `validate --all --strict` passes under it with no requirement
       reported as too long.
       - 1.14.1, the latest on 2026-10-09. The deltas of `add-numgame-ts-port`
         and `add-path-ts-port` had three requirements over the bound and are
         split to pass it.
-- [ ] 7.4 The census is run again and before and after are recorded in
+- [x] 7.4 The census is run again and before and after are recorded in
       `design.md`.
-- [ ] 7.5 The owner's acceptance (`proposal.md` § "Acceptance").
+- [x] 7.5 The owner's acceptance (`proposal.md` § "Acceptance").
+      - The owner's word (2026-10-09): this is internal work, and the session
+        being satisfied is the acceptance. The second criterion, the pin at
+        1.14.1 with the gate passing under it, is met.

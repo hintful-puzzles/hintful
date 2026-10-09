@@ -1,9 +1,11 @@
 # engine-candidate-hints Specification
 
 ## Purpose
-The hint plan shared by the candidate-elimination games: the walk that
-records a solver's firings, the regions and readings it works over, the Latin
-family's shared narration, and the premise each recorded firing names.
+The hint plan shared by the candidate-elimination games: the entry and the
+walk that turn a solver's recorded firings into steps, the order the frontier
+takes them in, the regions and the two readings of an unmarked cell the walk
+works over, the Latin family's shared narration, and the premise each recorded
+firing names, with the guards that hold it.
 
 ## Requirements
 
@@ -50,8 +52,7 @@ is unaffected.
 ### Requirement: The obvious-candidate cleanup is one strike step
 
 The cleanup SHALL be a single `pencilStrike` step with its marks baked in at
-plan time, emitted by the shared `emitObviousCleanStep` so every game produces
-it identically. It SHALL be flagged `continuesPrevious` when it directly follows
+plan time. It SHALL be flagged `continuesPrevious` when it directly follows
 the populate fill, so that fill and clean read and auto-play as one setup
 journey, and SHALL stand alone when the board was already noted. The struck
 marks SHALL be applied to the plan's working notes, so the rest of the walk
@@ -161,11 +162,6 @@ earlier step opens exactly as the rung order says.
   wrote
 - **THEN** the plan takes the strike next, though the naked single's rung comes first
 
-#### Scenario: a fresh plan opens where the rung order says
-
-- **WHEN** a plan is built from a board with no earlier step to continue from
-- **THEN** its first step is the first firing of the first rung that has one
-
 #### Scenario: a firing continues from the evidence it shades
 
 - **WHEN** two firings are available after a step that wrote one cell, the rung order
@@ -261,9 +257,8 @@ explores in a different order because of it.
 ### Requirement: Plan continuity is measured over a derived population
 
 The population the continuity guard measures SHALL be derived from the games'
-own sources, and SHALL be keyed on the shape every entry into the walk shares,
-not on one entry point's name, so a preset over the walk does not silently
-remove its games from the measurement. The guard SHALL walk every reading of an
+own sources: every game that walks its plan with the shared candidate-plan
+walk, by any entry into it. The guard SHALL walk every reading of an
 unmarked cell a game offers the player, derived from the game's `Ui`, and SHALL
 read each step's premise as the frontier does.
 
@@ -275,14 +270,6 @@ read each step's premise as the frontier does.
   already-available firing that did
 - **THEN** fewer than one such step in ten passed over one, and the check fails when
   the frontier's preference is reversed
-
-#### Scenario: the measured population survives a new entry point
-
-- **WHEN** a preset over the walk is added and the games taking it stop naming the
-  general entry point
-- **THEN** those games remain in the measured population, and a key that stops matching
-  a call site fails against a second, independent derivation of the same population
-  and does not pass over a smaller one
 
 ### Requirement: A reading over the continuity bound is named in a ledger
 
@@ -494,14 +481,11 @@ family has already answered.
 - **THEN** the firing becomes one leg per cell, in the order the cells first
   appear in it
 
-### Requirement: The engine provides the pure plan helpers
+### Requirement: A placement's bookkeeping is not a firing to teach
 
-The engine SHALL provide pure plan helpers over a working grid and notes and a
-recorded `DeductionRecord[]` script: every naked single (`nakedSingles`),
-whether any empty cell lacks notes (`anyEmptyLacksNotes`), the first recorded
-placement not yet on the working grid (`nextPlace`), every still-live strike
-firing a plan could take now, excluding the placement-bookkeeping `dup`
-eliminations (`availableFirings`), and `joinNums`.
+The recorded strike firings a plan could take now (`availableFirings`) SHALL
+be the still-live ones, and SHALL leave out the placement-bookkeeping `dup`
+eliminations, which the walk strikes as the placement's own cull.
 
 #### Scenario: A placement's bookkeeping is not a firing to teach
 
@@ -522,21 +506,6 @@ and over `CandidateHighlights`.
 - **WHEN** the player clears one of a strike step's marks with a pencil toggle
 - **THEN** the step shrinks to the marks left and stays on track, and clearing
   the last one completes it
-
-### Requirement: The placement classifier takes any region list
-
-The placement classifier SHALL classify over an arbitrary region list, so a game
-reasoning over sub-blocks and diagonals classifies a hidden single in any of its
-regions, while a plain row/column square reasons over its row and column alone.
-
-#### Scenario: A hidden single is classified in a non-row/column region
-
-- **WHEN** a game reasoning over sub-blocks or diagonals (Solo) forces a placement that
-  is a hidden single within a sub-block or diagonal
-- **THEN** the shared classifier identifies the region and the narration names it
-  (e.g. "every other cell in this block / diagonal rules out N, so this cell must be
-  N"), the same way the
-  row/column games name a row or column
 
 ### Requirement: A row/column Latin square answers no question its regions already settle
 
@@ -1067,20 +1036,6 @@ follows.
 - **WHEN** a game's words for a clue deduction stop naming the line the clue reads
 - **THEN** the guard reports the firings that no longer follow from their premise
 
-### Requirement: The premise audit checks its own instrument
-
-The audit SHALL first replay the firing from the recorded state and report one
-it cannot reproduce as a fault of the instrument, not of the premise. It SHALL
-report a recording that offered it no replay, and SHALL count the cells it
-actually tested.
-
-#### Scenario: A replay that cannot make the firing again is not a finding
-
-- **WHEN** the replay, run from the recorded state with nothing returned, does
-  not make the recorded firing
-- **THEN** the audit reports the firing as unreproduced and says nothing about
-  its premise
-
 ### Requirement: A guard runs the premise audit over every game on the walk
 
 A guard SHALL run the audit over every game whose hint is the candidate walk,
@@ -1125,12 +1080,6 @@ step.
 - **THEN** each of those lines is striped whole
 - **AND** the outlined cells all lie in the striped lines
 - **AND** every struck cell lies outside them
-
-#### Scenario: The premise the step marks is the premise the firing needs
-
-- **WHEN** the premise audit replays such a firing from only the cells its
-  step marks
-- **THEN** the firing strikes the same candidates
 
 ### Requirement: The solver says which lines confine a value
 

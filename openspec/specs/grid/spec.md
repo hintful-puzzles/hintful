@@ -25,8 +25,8 @@ clockwise-ordered edges and faces.
 
 ### Requirement: A grid is immutable once built and shared by reference
 
-A `Grid` SHALL be immutable after construction and SHALL be shared by reference,
-with no reference count. The one write after construction SHALL be the incenter
+A `Grid` SHALL be immutable after construction and SHALL be shared by reference.
+The one write after construction SHALL be the incenter
 that "Face incenter for label placement" caches on a face.
 
 #### Scenario: A built grid is held in more than one place
@@ -35,46 +35,12 @@ that "Face incenter for label placement" caches on a face.
 - **THEN** each holds the same `Grid` object, and none alters its faces, edges
   or dots
 
-### Requirement: The grid module is imported through its barrel
-
-`src/engine/grid/index.ts` SHALL be a barrel re-exporting the grid module's
-parts, which live beside it under `src/engine/grid/`, and its doc comment SHALL
-tell callers to import from it rather than from the parts. Its being a barrel
-SHALL be kept, because `scripts/feedback-probe.mjs` counts a test importing the
-barrel as a local test of every part it re-exports.
-
-#### Scenario: A game needs a grid helper
-
-- **WHEN** a game needs `gridNearestEdge` or a tiling generator
-- **THEN** it imports it from `src/engine/grid/index.ts`, not from the file that
-  defines it
-
-### Requirement: The square tiling is built deterministically
-
-The grid module SHALL provide `gridNewSquare(width, height)`, building the
-square tiling from `(width, height)` alone, with no randomness and no floating
-point: one four-dot face per cell with `tileSize = 20`, and shared corner dots
-deduplicated.
-
-#### Scenario: A square grid has the expected incidence
-
-- **WHEN** `gridNewSquare(w, h)` is built
-- **THEN** it has `w*h` faces, each a four-sided face whose edges join its
-  consecutive corner dots, every interior edge references two faces and every
-  border edge references one face (the other being the exterior), and shared
-  corner dots are a single dot instance
-
-#### Scenario: Square construction is deterministic
-
-- **WHEN** `gridNewSquare(w, h)` is built twice with the same `w`, `h`
-- **THEN** the two grids have identical faces, edges and dots in the same order
-
 ### Requirement: makeConsistent derives the incidence from the faces' dots
 
 A shared `makeConsistent` step SHALL derive, from faces that know their
 clockwise dots: the edges, deduplicated by their dot pair, each assigned its one
-or two faces; the per-face edge lists; the per-dot edge and face rings, walked
-clockwise and then anticlockwise past the exterior face; and the bounding box.
+or two faces; the per-face edge lists; the per-dot edge and face rings, complete
+even at a dot on the boundary; and the bounding box.
 Every ordering tie-break in building a grid SHALL be by array index.
 
 #### Scenario: Two faces share a side
@@ -85,20 +51,27 @@ Every ordering tie-break in building a grid SHALL be by array index.
 #### Scenario: A dot on the boundary gets a complete ring
 
 - **WHEN** a dot touches the exterior face
-- **THEN** its edge and face rings are complete, the walk having resumed
-  anticlockwise where the exterior stopped it, and its face ring holds null for
-  the exterior
+- **THEN** its edge and face rings are complete, and its face ring holds null
+  for the exterior
 
-### Requirement: Periodic tilings
+### Requirement: Every tiling builds a fully linked grid
 
-The grid module SHALL provide a generator for each periodic tiling, selected by
-a `GridType`: square, honeycomb, triangular, snub-square, Cairo,
-great-hexagonal, Kagome, octagonal, kites, floret, dodecagonal,
-great-dodecagonal, great-great-dodecagonal and compass-dodecagonal.
+The grid module SHALL provide a generator for every `GridType` in
+`ALL_GRID_TYPES`, reached through `gridNew(type, width, height, desc)`: the
+periodic tilings, and the four aperiodic ones, which are Penrose P2 (kite and
+dart), Penrose P3 (thick and thin rhombs), hats and spectres.
 
 #### Scenario: Every periodic tiling builds a consistent grid
 
 - **WHEN** any periodic tiling is built at a legal size
+- **THEN** the grid is fully linked: every face's edges join its consecutive
+  dots, every edge references one or two faces (a null face being the exterior),
+  and every dot's edge and face rings are complete
+
+#### Scenario: Every aperiodic tiling builds a consistent grid
+
+- **WHEN** any aperiodic tiling is built at a legal size from a valid
+  description
 - **THEN** the grid is fully linked: every face's edges join its consecutive
   dots, every edge references one or two faces (a null face being the exterior),
   and every dot's edge and face rings are complete
@@ -181,10 +154,8 @@ its bounding box will generally not equal its reported extent.
 ### Requirement: Nearest-edge hit testing
 
 The grid module SHALL provide `gridNearestEdge(grid, x, y)` returning the edge
-nearest a point, or null when no edge is close enough. Eligibility SHALL be
-decided by exact integer arithmetic on squared lengths; only the perpendicular
-distance comparison is floating point. The nearest-edge comparison SHALL be
-strict, so that on an exact tie the lowest-index edge wins by iteration order.
+nearest a point, or null when no edge is close enough. The comparison SHALL be
+strict, so that on an exact tie the lowest-index edge wins.
 
 #### Scenario: A click near an edge selects it
 
@@ -240,14 +211,6 @@ board.
 - **WHEN** the best point found for a face has the coordinate `-134.98`
 - **THEN** the stored coordinate is `-135`, not `-134`
 
-### Requirement: The incenter's quality is asserted against an independent optimum
-
-The quality of the returned point SHALL be asserted against the largest circle
-independently computable at any integer point of the face, and SHALL NOT be
-asserted against another implementation's answer, since a comparison to a peer
-passes whenever both are wrong in the same way. The sweep SHALL enumerate its
-tilings from `ALL_GRID_TYPES`, so a newly added tiling joins it unasked.
-
 #### Scenario: The incenter admits nearly the largest circle the face allows
 
 - **WHEN** the inscribed radius at the returned point is compared with the best
@@ -274,33 +237,6 @@ a property of the consuming game, not of the geometry.
 
 - **WHEN** `gridValidateParams` is given a legal size for any tiling
 - **THEN** it returns null
-
-### Requirement: Aperiodic tilings
-
-The grid module SHALL provide a generator for each of the four aperiodic
-tilings, selected by the same `GridType` as the periodic ones: Penrose P2
-(kite and dart), Penrose P3 (thick and thin rhombs), hats and spectres.
-
-#### Scenario: Every aperiodic tiling builds a consistent grid
-
-- **WHEN** any aperiodic tiling is built at a legal size from a valid
-  description
-- **THEN** the grid is fully linked: every face's edges join its consecutive
-  dots, every edge references one or two faces (a null face being the exterior),
-  and every dot's edge and face rings are complete
-
-### Requirement: Aperiodic generators are deterministic functions of their description
-
-Each aperiodic generator SHALL be a pure deterministic function of
-`(width, height, desc)`: all randomness SHALL be confined to grid-description
-generation.
-
-#### Scenario: Aperiodic construction is deterministic given a description
-
-- **WHEN** the same aperiodic tiling is built twice from the same
-  `(width, height, desc)`
-- **THEN** the two grids are identical in every dot coordinate, edge and face,
-  and in the same order, and no dot coordinate is fractional or negative zero
 
 ### Requirement: Aperiodic arithmetic is exact and rounds once
 
@@ -394,25 +330,14 @@ The engine SHALL provide `src/engine/loopgen.ts` exposing
 `generateLoop(grid, board, rng, bias?)`, which colors every face of `grid`
 inside (white) or outside (black) so that the white/black boundary is a single
 closed loop, writing the coloring into `board`. Given a fixed seed, the
-generated loop SHALL be reproducible across builds.
+generated loop SHALL be reproducible across builds: no ordering in it SHALL
+depend on anything but the random stream and, last, the face index.
 
 #### Scenario: Loop generation yields a single closed loop
 
 - **WHEN** `generateLoop` runs on a square grid with a fixed seed and no bias
 - **THEN** the resulting white/black face coloring has a boundary that is one
   closed loop, and the same seed yields the same coloring every run
-
-### Requirement: Loop generation orders candidates by the random stream alone
-
-`generateLoop` SHALL order its candidate faces by score, then by their random
-score field, then by face index, so that no ordering depends on anything but the
-random stream.
-
-#### Scenario: Two candidate faces have the same score
-
-- **WHEN** two candidate faces score equally
-- **THEN** the one with the lower random score field comes first, and the face
-  index decides only when those are equal too
 
 ### Requirement: A bias callback steers loop generation
 
@@ -455,13 +380,21 @@ not use one.
 ### Requirement: gridNewDesc is the only function that consumes randomness
 
 `gridNewDesc` SHALL be the only randomness-consuming function in the grid
-module. It SHALL return `"0"` for the triangular tiling and null for every other
-periodic tiling.
+module: `gridNew` SHALL be a deterministic function of
+`(type, width, height, desc)`. `gridNewDesc` SHALL return `"0"` for the
+triangular tiling and null for every other periodic tiling.
 
 #### Scenario: A periodic tiling is asked for a description
 
 - **WHEN** `gridNewDesc` is called for the honeycomb tiling
 - **THEN** it returns null and draws nothing from `rng`
+
+#### Scenario: Aperiodic construction is deterministic given a description
+
+- **WHEN** the same aperiodic tiling is built twice from the same
+  `(width, height, desc)`
+- **THEN** the two grids are identical in every dot coordinate, edge and face,
+  and in the same order, and no dot coordinate is fractional or negative zero
 
 ### Requirement: Aperiodic description generation is stable across builds
 
@@ -489,13 +422,3 @@ different grid for the same description with no detectable error.
 - **THEN** the fallback generator is created at the same step both times and
   the two grids are identical
 
-### Requirement: Description parsing checks length before counting coordinates
-
-Description parsing SHALL validate the length of the description before
-deriving a coordinate count from it.
-
-#### Scenario: A one-character spectre description
-
-- **WHEN** `gridValidateDesc` is given a spectre description of one character
-- **THEN** it returns an error message saying the description is too short, and
-  no coordinate count is derived from it

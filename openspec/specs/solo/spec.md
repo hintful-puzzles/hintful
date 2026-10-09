@@ -1,36 +1,23 @@
 # solo Specification
 
 ## Purpose
-Solo, the Sudoku family: fill a grid so that each number appears once in every
-row, column and block, in variants that add jigsaw blocks, killer cages or X
-diagonals, alone or combined. It has its own graded solver, pencil marks and
-their preferences, mistake checking, on-screen key labels, and an explained
-deduction hint.
+Solo, the Sudoku family: fill a `cr × cr` grid (`cr = c·r`) so that each digit
+`1..cr` appears once in every row, column and block, in variants that add
+jigsaw blocks, killer cages or X diagonals, alone or combined. This spec holds
+what is Solo's own: its encodings, its graded solver and generator, its look,
+its preferences and its hint's techniques and words. What Solo shares with
+every note-taking game is in `engine-notes`, and what its hint shares with
+every candidate-elimination hint is in `engine-candidate-hints`.
 
 ## Requirements
-
-### Requirement: Solo game implements the Game interface
-
-The engine SHALL provide a registered `solo` game implementing `Game`: a
-Latin-square puzzle on a `cr × cr` grid (`cr = c·r`) in which the player places
-a digit `1..cr` in every cell so each row, each column and each sub-block
-contains every digit exactly once, with a subset of cells given. The game SHALL
-provide `solve` and `findMistakes`, and SHALL report `canMarkAll = true`.
-
-#### Scenario: Solo is found in the registry
-
-- **WHEN** the registry is asked for `solo`
-- **THEN** it returns a game with `solve`, `findMistakes` and a hint, whose
-  `canMarkAll` is true
 
 ### Requirement: Solo's four variants compose
 
 The game SHALL support four composable variants: **standard** (rectangular
 `c × r` sub-blocks), **jigsaw** (`r === 1`, irregular sub-blocks), **X**
 (`xtype`: the two main diagonals must also contain every digit), and **killer**
-(`killer`: a second cage partition with digit-sum clues). Params SHALL be
-`{ c, r, symm, diff, kdiff, xtype, killer }`, with two difficulty axes: the
-standard solver difficulty and the killer-cage difficulty.
+(`killer`: a second cage partition with digit-sum clues). There SHALL be two
+difficulty axes: the standard solver difficulty and the killer-cage difficulty.
 
 #### Scenario: Variants are served from one registered game
 
@@ -108,23 +95,9 @@ block-structure**, then `","` and the **cage-sum grid** encoding.
   sums match what was encoded
 - **AND** non-given cells start empty with no pencil marks
 
-### Requirement: Solo decodes a description into its partitions
-
-`newState` SHALL rebuild the block partition and, for killer, the cage
-partition and the sum of each cage, flagging given cells immutable.
-`validateDesc` SHALL reject a malformed grid, block structure, or cage-sum
-grid.
-
-#### Scenario: Malformed description is rejected
-
-- **WHEN** `validateDesc` receives a malformed grid, block structure, or (killer)
-  cage-sum grid
-- **THEN** it returns a non-null error string
-
 ### Requirement: Solo solves with its bespoke graded solver
 
-Solo's solver SHALL be its own, not the shared Latin solver: a per-cell
-candidate cube plus per-constraint-group position grids, built from a
+Solo's solver SHALL be its own, not the shared Latin solver, built from a
 constraint-group list (rows, columns, sub-blocks and, when `xtype`, the two
 diagonals) so that X-type and jigsaw fall out of the shared technique loops.
 `solveSolo(...)` SHALL return the difficulty reached, or an impossible or
@@ -248,33 +221,27 @@ no sentence says a cage's other cells are filled while any is open.
 
 ### Requirement: Solo selects a cell by pointer or keyboard
 
-`interpretMove` SHALL support a left-click that highlights a cell for a real
-entry, and a right-click that highlights an empty cell for a pencil mark and,
-in sticky pencil mode, toggles a persistent pencil mode. In sticky pencil mode
-a right-click on a given or filled cell SHALL toggle pencil mode but not select
-that cell; with sticky off it SHALL turn pencil mode on and show no highlight.
-The cursor keys SHALL move the highlight, and the select key SHALL toggle
-pencil mode while it shows.
+A left-click SHALL highlight a cell for a real entry and a right-click an empty
+cell for a pencil mark, as the note-taking cell does in every game. The cursor
+keys SHALL move the highlight, and the select key SHALL toggle pencil mode
+while it shows.
 
-#### Scenario: A sticky right-click on a given changes only the mode
+#### Scenario: The select key switches the mode
 
-- **WHEN** sticky pencil mode is on and a given cell is right-clicked
-- **THEN** pencil mode toggles and the highlight stays where it was
+- **WHEN** the highlight shows and the select key is pressed
+- **THEN** pencil mode toggles and the highlight stays where it is
 
 ### Requirement: Solo interprets digit, pencil, and mark-all input
 
 A digit key `1..cr` SHALL enter that digit in the highlighted non-given cell
 or, in pencil mode, toggle that pencil mark in the highlighted empty cell;
-backspace or space SHALL clear the cell. Entering a digit equal to a cell's
-current contents (no pencil marks) SHALL be a no-op that hides the mouse
-highlight. `executeMove` SHALL return a new state and never mutate its input.
+backspace or space SHALL clear the cell.
 
 #### Scenario: Placing and penciling digits
 
 - **WHEN** a non-given cell is highlighted and a digit key is pressed
 - **THEN** `interpretMove` yields a `set` move that places (or, in pencil mode,
   toggles the pencil mark of) that digit
-- **AND** `executeMove` applies it to a new state without mutating the old one
 
 ### Requirement: Auto-pencil strikes a placed digit from its no-repeat regions
 
@@ -289,71 +256,20 @@ cage under Killer.
 - **THEN** that digit leaves the pencil marks of the other cells of its cage, as
   well as of its row, column and sub-block
 
-### Requirement: Mark-all fills the cells without notes, then clears the obvious
+### Requirement: Solo draws its cages, digits, pencil marks and live errors
 
-The `M`/`m` key SHALL yield a `pencilAll` move while any empty cell has no
-pencil marks, and that move SHALL fill every such cell with all candidate
-pencil marks, leaving a cell that has marks as it is. On a board whose empty
-cells all have marks the key SHALL instead strike, as one `pencilStrike`, the
-candidates that a digit placed in one of the cell's no-repeat regions rules
-out, and SHALL make no move when there are none.
-
-#### Scenario: Mark-all fills pencil candidates
-
-- **WHEN** the `M` key is pressed on a board with no pencil marks
-- **THEN** `interpretMove` yields a `pencilAll` move
-- **AND** `executeMove` fills every empty cell with all candidate pencil marks
-
-### Requirement: Solo renders blocks, cages, diagonals, digits, pencil marks, and overlays
-
-`redraw` SHALL draw the grid with thick sub-block boundaries derived from the
-block partition, so that rectangular and jigsaw-irregular blocks use the same
-pass; the killer cage outlines and cage-sum labels (at each cage's
-top-left-most cell) when `killer`; given digits distinct from player digits; an
-auto-sized grid of pencil marks per empty cell; the cursor and pencil-mode
-highlights; live rule-violation errors; the Check & Save mistake overlay; and a
-completion flash.
+`redraw` SHALL draw the block boundaries from the block partition, so that
+rectangular and jigsaw-irregular blocks look alike; the killer cage outlines
+and cage-sum labels (at each cage's top-left-most cell) when `killer`; given
+digits distinct from player digits; an auto-sized grid of pencil marks per
+empty cell; live rule-violation errors; and a completion flash.
 
 #### Scenario: Variant decorations are drawn
 
-- **WHEN** a jigsaw, killer, or X board is rendered to a recording drawing
+- **WHEN** a jigsaw or killer board is rendered to a recording drawing
 - **THEN** a jigsaw board draws block boundaries along the irregular partition
 - **AND** a killer board draws the cage-sum label at each cage and the cage
   outlines
-- **AND** an X board strokes the two main diagonals through their cells
-
-### Requirement: A pencil-mode indicator shows while pencil mode is on
-
-A CapsLock-style pencil-mode indicator SHALL be shown while pencil mode is on.
-
-#### Scenario: The indicator follows the mode
-
-- **WHEN** a sticky right-click turns pencil mode on, and another turns it off
-- **THEN** the indicator is drawn after the first and removed after the second
-
-### Requirement: Solo's palette keeps the upstream indices
-
-The palette SHALL keep the upstream color enum's indices, with the fork's own
-colors appended past it.
-
-#### Scenario: The fork's colors come last
-
-- **WHEN** the palette is built
-- **THEN** the background, X-diagonal, grid, clue, user, highlight, error,
-  pencil and killer colors hold the first indices in that order, and every
-  color the fork adds has a higher index
-
-### Requirement: Solo's tile cache repaints a cell an overlay changes
-
-Rendering SHALL use a per-tile diff cache keyed on an `Int32Array`, with every
-overlay that is not part of the tile value (the mistake overlay) included in
-the diff key so it repaints on an already-drawn cell.
-
-#### Scenario: Mistake overlay repaints on an already-drawn cell
-
-- **WHEN** a cell is drawn, then `findMistakes` flags it, then the board is
-  redrawn against the same draw state
-- **THEN** the mistake highlight is painted on the second redraw
 
 ### Requirement: Solo draws its digits on a quiet surface, with a given's cell lifted
 
@@ -394,15 +310,6 @@ digit and pencil marks, and SHALL NOT be told by a shade of the cell's surface.
 - **THEN** each cell on a main diagonal carries a corner-to-corner stroke under
   its content, on the same surface as a cell off the diagonals
 
-### Requirement: The hint's ring and outline stay in the gutter
-
-The hint's ring and its outline SHALL stay in the gutter at the cell's edge.
-
-#### Scenario: A ring does not cover what it rings
-
-- **WHEN** a hint step rings a cell that holds pencil marks
-- **THEN** the ring is drawn in the gutter round the cell, clear of the marks
-
 ### Requirement: Solo flags mistakes against its unique solution
 
 The game SHALL implement `findMistakes`: re-solve from the given cells (and,
@@ -425,9 +332,8 @@ solvable from the givens the result SHALL be empty.
 The game SHALL expose, via the `prefs` hook, a sticky-pencil-mode preference
 (default on; right-click toggles a persistent pencil mode), an auto-pencil
 preference (**default off**), and a keep-mouse-highlight-after-pencil
-preference (default on). Preference values SHALL live on the `Ui` and be set as
-defaults by `newUi`. With auto-pencil off, note cleanup is manual: the player
-removes obvious candidates via the mark-all control or a hint.
+preference (default on). With auto-pencil off, note cleanup is manual: the
+player removes obvious candidates via the mark-all control or a hint.
 
 #### Scenario: Pencil preferences are exposed with their defaults
 
@@ -464,35 +370,10 @@ a note can be wrong.
 - **THEN** the hint returns a step whose `pencilStrike` move clears exactly those
   candidates
 
-### Requirement: The order Solo's hint prefers
-
-At each step the plan SHALL prefer a **naked single**, an empty cell whose live
-notes have collapsed to a single candidate, placed via a `set` move; else the
-setup of the notes; else the next **deductive elimination**, one technique
-firing whose ruled-out candidates are struck via one or more `pencilStrike`
-moves linked as one journey; else a forced **placement**.
-
-#### Scenario: A collapsed cell is placed before anything is struck
-
-- **WHEN** a hint is requested on a board where an empty cell's notes have
-  collapsed to a single candidate and a deductive elimination is also available
-- **THEN** the first step is a `set` move placing a naked single, and no strike
-  comes before it
-
-### Requirement: The setup of the notes follows the reading the player chose
+### Requirement: Solo's hint starts on the implicit reading
 
 Solo SHALL start its hint on the implicit reading of a cell with no notes, and
-under it the plan SHALL emit no fill-all step. Under the populate reading the
-plan SHALL fill every empty cell's candidate notes via the fill-all `pencilAll`
-move, emitted only when some empty cell lacks notes. Under either, the setup
-SHALL strike via `pencilStrike` the eliminations a placed or given value
-implies: the digit struck from the rest of its no-repeat regions.
-
-#### Scenario: An empty board is populated before elimination
-
-- **WHEN** the player asks for a hint, under the populate reading, on a board
-  with no pencil notes
-- **THEN** the first elimination is preceded by the fill-all populate step
+under it the plan SHALL emit no fill-all step.
 
 #### Scenario: Nothing is filled in under Solo's own reading
 
@@ -514,25 +395,6 @@ sum-combination, or a deduced extra-cage.
 - **THEN** the hint returns a `pencilStrike` step naming the cage by the total
   it must make and concluding in the necessity voice
 
-### Requirement: A forced placement is narrated by which single it is
-
-A forced placement SHALL be narrated and highlighted by *which* it is: a naked
-single, where the cell's own candidates have collapsed to one, or a positional
-(hidden) single, where a digit fits only one cell of a row, column, sub-block
-or diagonal while the cell itself still shows several candidates. The recorded
-reason conflates them, so the *why* SHALL be re-derived from the working board.
-
-#### Scenario: A positional single is named by its region, not the cell
-
-- **WHEN** the hint forces a placement into a cell that still shows several
-  candidates, because the placed digit fits nowhere else in its row (or column,
-  block, or diagonal)
-- **THEN** the narration names that region ("every other cell in this row rules out
-  N, so this cell must be N") rather than claiming every number is ruled out in the
-  cell
-- **AND** the whole region is striped as evidence, with the cell ringed as the
-  placement target
-
 ### Requirement: Solo's narration leads with what was spotted
 
 Each step SHALL carry a narration that leads with the spotted indication (the
@@ -547,20 +409,6 @@ N" for an elimination, and "can only be N" or "must be N" for a placement.
 - **THEN** the narration names the firing region (row / column / sub-block /
   diagonal, or a killer cage by its sum clue) and concludes in the necessity voice
 
-### Requirement: One firing is one journey and one group
-
-A single technique firing forcing several strikes SHALL be one journey
-(continuation legs flagged `continuesPrevious`), and equivalent strikes of one
-firing SHALL share the target hint color. One recorded deduction *firing* (one
-region's elimination, one cage's pruning) SHALL map to exactly one `group`, so
-a hint step never mixes regions.
-
-#### Scenario: Two cells struck by one firing read as one hint
-
-- **WHEN** one firing strikes candidates from two cells in two steps
-- **THEN** the second step continues the first's journey
-- **AND** both cells are ringed in the same hint color
-
 ### Requirement: Solo's hint marks pair each color with a shape
 
 When a single step names two or more board-element types at once, each type
@@ -574,30 +422,6 @@ candidate.
 - **WHEN** a strike step that names a region is shown
 - **THEN** the region's cells are striped, the cell acted on is ringed, and the
   struck candidates are crossed through among its pencil marks
-
-### Requirement: Auto-pencil governs the eliminations a placement implies
-
-The trivial region eliminations a placement implies SHALL be governed by the
-auto-pencil preference (read from `ui`): with it on they are folded silently
-into the placement; with it off they are taught as explicit `continuesPrevious`
-strike continuations.
-
-#### Scenario: A placement's cull is taught when auto-pencil is off
-
-- **WHEN** auto-pencil is off and the hint places a digit that a cell in the
-  same row still shows among its pencil marks
-- **THEN** a strike step follows the placement and continues its journey
-
-### Requirement: A hint is refused on a solved or mistaken board
-
-A hint SHALL be refused when the board is solved or when `findMistakes` is
-non-empty, and the refusal over mistakes SHALL light the mistake overlay. Both
-refusals are the midend's, given before the game's `hint` is asked.
-
-#### Scenario: The hint refuses on a board with mistakes
-
-- **WHEN** a hint is requested while `findMistakes` is non-empty
-- **THEN** the hint refuses and the engine lights the mistake overlay
 
 ### Requirement: Solo's hint never narrates a guess
 
@@ -627,38 +451,10 @@ SHALL skip any operation already reflected on the board.
 - **THEN** the freshly-recomputed hint makes progress and, applied step by step
   with recompute, leads to a solved board
 
-### Requirement: Solo keeps a displayed plan on track
-
-`hintKeepTrack` SHALL advance the plan when the player's move matches the
-displayed step's intent, and SHALL drop the plan (`off`) otherwise. On a strike
-step a pencil toggle clearing one of the step's marks is `onTrack` (the step
-shrinks in place), or `completed` when it was the last, and a `pencilStrike` of
-exactly the step's marks is `completed`. On a placement step a placement of the
-hinted value is `completed`.
-
-#### Scenario: Crossing out one of two hinted candidates keeps the plan
-
-- **WHEN** the displayed step strikes two candidates and the player crosses out
-  one of them
-- **THEN** the verdict is `onTrack` and the step strikes only the other
-
-### Requirement: A kept step is refreshed before it is shown
-
-`refreshHintStep` SHALL drop a stored step's dead marks (or resolve the step)
-before each (re-)display, so a kept plan never tells the player to remove a
-candidate already gone.
-
-#### Scenario: A candidate the player already removed is not asked for again
-
-- **WHEN** a kept step strikes two candidates and one of them is gone from the
-  board when the step is shown again
-- **THEN** the step shown strikes only the one still there
-
 ### Requirement: Recording leaves the solve path unchanged
 
 The solver's recording mode SHALL be gated so that with recording off the
-generator and solve path is **unchanged**. Solo's solver is its own, so the
-recording mode is added to Solo's own techniques.
+generator and solve path is **unchanged**.
 
 #### Scenario: Generating and solving record nothing
 
@@ -676,11 +472,6 @@ code `8`, the backspace, labeled `"Clear"`).
 
 - **WHEN** the key labels are requested for a `3×3` Solo board
 - **THEN** the result is the buttons `1,2,…,9` followed by a clear key
-
-#### Scenario: A smaller board shows fewer digits
-
-- **WHEN** the key labels are requested for a `2×2` Solo board
-- **THEN** the result is the buttons `1,2,3,4` followed by a clear key
 
 ### Requirement: Solo generates boards uniquely solvable at exactly the requested difficulty
 
@@ -710,16 +501,6 @@ requested difficulty and the requested killer difficulty.
 
 - **WHEN** a board is generated with 4-way rotation
 - **THEN** its pattern of givens is unchanged by a quarter turn
-
-### Requirement: Generation is bounded
-
-Generation SHALL carry a capped-iteration backstop that throws rather than
-hanging.
-
-#### Scenario: A generator that never accepts a board stops
-
-- **WHEN** no candidate board is accepted within the cap
-- **THEN** `newDesc` throws
 
 ### Requirement: Solo marks every board element its hint sentence points at
 
@@ -754,28 +535,6 @@ positions across several lines.
 - **AND** it outlines the cells of those lines the digit can still take
 - **AND** the narration points at both marks, and says how many lines there
   are each way
-
-### Requirement: Solo's single-digit pattern step marks the lines it read
-
-A Solo hint step that strikes a candidate because one digit is confined, across
-several lines, to a pattern of cells SHALL mark every cell the deduction read:
-the cells the digit is left with, and the other cells of the lines that confine
-it. Its narration SHALL point at those marks, and SHALL name the confined lines
-as rows or columns according to the firing.
-
-#### Scenario: A replay from the marked cells reaches the same strike
-
-- **WHEN** the premise audit replays a single-digit pattern firing from only
-  the cells its step marks
-- **THEN** the firing strikes the same candidates
-- **AND** no ledger entry excuses it
-
-#### Scenario: The player can check the step from the frame
-
-- **WHEN** the hint shows a single-digit pattern step
-- **THEN** each line the sentence speaks of is marked on the board
-- **AND** the cells the digit is left with are told apart from the rest of
-  those lines
 
 ### Requirement: A single-digit pattern step names the fewer lines
 

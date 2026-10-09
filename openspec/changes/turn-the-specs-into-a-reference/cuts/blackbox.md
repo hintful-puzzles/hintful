@@ -1,0 +1,15 @@
+# Cuts: blackbox
+
+Requirements: 40 before, 37 after.
+
+| Requirement or sentence cut | Word | What holds it now, or why it is gone |
+| --- | --- | --- |
+| "Black Box game implements the Game interface", whole: that a registered `blackbox` game implements `Game` with its six types, that it provides `statusbarText`, `solve`, `hint` and `findMistakes` and no `textFormat`, and the scenario asking the registry for them. | type | The compiler and the registry say it of every game; the members are the game object itself, and `ts-engine` "Solve, the status bar and text export follow from the game's methods" derives the capabilities from them. What the puzzle is stays in the Purpose. |
+| "Black Box offers its presets", whole: the five presets by name, and the scenario reading two of them from the menu. | declared | `PRESETS` in `src/games/blackbox/state.ts`, which the engine reads. The params encoding and the wording of the type summary stay. |
+| "Black Box descriptions are obfuscated ball-layout bitmaps": "The shared codec SHALL live at `src/engine/obfuscate.ts`." | how | Which module holds the codec; the import says it. The encoding stays. |
+| "Black Box marks, fires, locks, and reveals via moves": "A `BlackboxMove` SHALL be one of: toggle a guessed ball …, or solve". | type | The `BlackboxMove` union, which `executeMove` switches over exhaustively. What each move does stays in its own requirement. |
+| "Black Box marks, fires, locks, and reveals via moves": "`executeMove` SHALL be pure, returning a new state", and the scenario "A move leaves its state alone". | collection | `ts-engine` "Applying a move returns a new state". |
+| "Black Box marks, fires, locks, and reveals via moves": "and SHALL reject an illegal move by throwing." | duplicate | "A laser is fired once" and "A reveal is gated on the ball count" name the moves refused and that they throw; `ts-engine` "A game rejects a move it cannot play, rather than guessing" covers a move the dispatch does not know. |
+| "Black Box verifies guesses, and a reveal is a win": "the game's own status text SHALL NOT announce the win, which is the engine's to announce". | collection | `ts-engine` "No game writes the completion words itself" and "The status bar's completion words come from the engine". That the text then holds only the error count stays. |
+| "A board is dealt a ball at a time": "built a ball at a time: each ball goes on a random free square where the board so far has one answer at its count", and "When no square of a bounded number of tries keeps one answer, the build SHALL start again." Retitled "A dealt board has one answer across its whole ball range". | how | The way `newDesc` builds a board; what it promises of one, and that the promise is judged against the whole range, stays. |
+| "A mistake is framed in the error color": "held in the tile's cache key so it repaints when it comes and goes." | how | Which field caches what; `engine-drawing` "A warm frame matches a fresh paint of the same state" holds the repaint. |

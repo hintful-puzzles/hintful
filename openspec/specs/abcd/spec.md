@@ -8,16 +8,6 @@ sizes that generator cannot produce, and an explained hint.
 
 ## Requirements
 
-### Requirement: ABCD game implements the Game interface
-
-The engine SHALL provide `src/games/abcd/` implementing the `Game` interface
-for ABCD, registered so the puzzle is served by the TypeScript engine.
-
-#### Scenario: ABCD is served by the engine
-
-- **WHEN** the registry is asked for the game `abcd`
-- **THEN** it returns ABCD's `Game`
-
 ### Requirement: ABCD's parameters
 
 Parameters SHALL be a width, a height, a letter count, a "disallow diagonal
@@ -42,10 +32,9 @@ parameter encoding.
 ### Requirement: ABCD's findMistakes compares the board with its one solution
 
 Because ABCD has a unique solution, it SHALL declare a `findMistakes` hook that
-re-solves the clues to the canonical grid and reports every entered letter that
-differs from it, and every empty cell whose pencil marks are not empty yet
-leave out its answer. Marks that merely include extra letters SHALL NOT be
-reported.
+reports every entered letter that differs from that solution, and every empty
+cell whose pencil marks are not empty yet leave out its answer. Marks that
+merely include extra letters SHALL NOT be reported.
 
 #### Scenario: An entry that contradicts the solution is flagged
 
@@ -87,27 +76,18 @@ unrecognized character.
 
 ### Requirement: ABCD's solver classifies a clue set by deduction alone
 
-ABCD SHALL provide a deductive solver that, given the clue numbers, reports
-whether the puzzle is uniquely solvable, ambiguous, or contradictory. The
-solver SHALL apply, to a fixpoint and without backtracking, elimination of a
-letter from a line whose count is already met, placement of a cell's single
-remaining candidate, and the run-length technique that forces letters when a
-line's maximum placement equals its required count. The solver SHALL NOT
-depend on any leaf library.
+ABCD's solver SHALL report a clue set uniquely solvable, ambiguous or
+contradictory. It SHALL apply, to a fixpoint and without backtracking, three
+techniques: satisfied clue, striking a letter from a line whose count is met;
+single possibility, placing a cell's one remaining candidate; and runs,
+forcing letters when the most a line can still take equals the count it needs.
+A firing census over generated boards SHALL assert that every technique fires.
 
 #### Scenario: The solver classifies a puzzle
 
 - **WHEN** the solver is run on a clue set
 - **THEN** it reports uniquely solvable, ambiguous, or contradictory, and for a
   uniquely solvable set it yields the solution grid
-
-### Requirement: ABCD's solver is a certified deduction ladder
-
-ABCD's solver SHALL run its three techniques (satisfied clue, single
-possibility, runs) as a `runDeductionFixpoint` ladder, and SHALL NOT keep a
-hand-written loop beside it. A firing census SHALL walk generated boards
-covering every preset shape, diagonal mode and a thin board, and assert
-that every technique fires on the corpus, with a count of the boards solved.
 
 #### Scenario: A technique the corpus never reaches fails the census
 
@@ -119,18 +99,15 @@ that every technique fires on the corpus, with a count of the boards solved.
 
 The generator SHALL fill the grid with random letters that respect the
 no-touch rule, count the resulting clues, and accept the puzzle only when the
-solver reports it uniquely solvable, retrying otherwise. Generation from a
-given seed SHALL be reproducible.
+solver reports it uniquely solvable, retrying otherwise. When "remove clues" is
+set, it SHALL then hide clues in a randomized order, keeping each removal only
+while the puzzle stays uniquely solvable. Generation from a given seed SHALL be
+reproducible.
 
 #### Scenario: Generation is reproducible from a seed
 
 - **WHEN** the same seed is used twice for the same parameters
 - **THEN** both runs produce the identical description
-
-### Requirement: Removing clues keeps the puzzle uniquely solvable
-
-When "remove clues" is set, the generator SHALL hide clues in a randomized
-order, keeping each removal only while the puzzle stays uniquely solvable.
 
 #### Scenario: A board with clues removed still has one solution
 
@@ -167,24 +144,12 @@ mark, and SHALL produce no move when there is nothing to strike.
 - **THEN** the cell with no marks takes every letter and the narrowed cell
   keeps its two
 
-### Requirement: Solve fills the grid with the unique solution
-
-A Solve command SHALL fill the grid with the unique solution.
-
-#### Scenario: Solve completes a generated board
-
-- **WHEN** Solve is used on a generated board
-- **THEN** every cell holds the letter the solver's solution puts there, and
-  the game is reported solved
-
 ### Requirement: An ABCD entry that changes nothing is no move
 
 An entry that would leave the state exactly as it is SHALL produce no move, and
 so no history entry: re-entering the letter a cell already holds, or clearing a
 cell that is already empty and carries no marks. Clearing an empty cell that
-does carry marks SHALL remain a real move, because it wipes them. The decision
-SHALL be made locally from that cell's own contents, never by comparing
-serialized states.
+does carry marks SHALL remain a real move, because it wipes them.
 
 #### Scenario: Re-entering the letter already present costs no undo step
 
@@ -303,16 +268,6 @@ solver's satisfied-clue and runs techniques.
   either reading, and its steps are played
 - **THEN** the board is solved, and the grid is the solver's solution
 
-### Requirement: ABCD's hint starts on the populate reading
-
-ABCD SHALL offer the `hint-notes` preference and start on the collection's
-`populate` reading.
-
-#### Scenario: The preference before the player changes it
-
-- **WHEN** ABCD's preferences are read in a new game
-- **THEN** `hint-notes` is among them, and the reading it holds is `populate`
-
 ### Requirement: The satisfied-clue rung strikes a letter from a line that has its count
 
 For a row or column that already holds its count of a letter, or whose count is
@@ -393,14 +348,3 @@ and SHALL keep their own color.
 - **WHEN** a board is drawn
 - **THEN** every cell of the letter grid is the cell surface
 - **AND** every cell's border is the surface grid line
-
-### Requirement: ABCD's selection and hint marks keep their places on the surface
-
-The selection's wash and its pencil-mode corner SHALL be drawn over the cell's
-surface. The hint's marks SHALL stay on the cell's border.
-
-#### Scenario: A selected cell under a hint
-
-- **WHEN** a cell is selected in pencil mode while a hint rings it
-- **THEN** the corner wash is drawn over the cell's surface, and the ring runs
-  along the cell's border

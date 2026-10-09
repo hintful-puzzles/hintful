@@ -2,18 +2,19 @@
 
 ## Purpose
 Fifteen, the sliding-tile puzzle of putting numbered tiles in order from the top
-left, with the hole in the bottom-right corner: pure slide and solve moves, the
-tiles and their slide animation, and a hint that plays out a full greedy
-solution, saying of each slide whether it puts a tile home or sets one up.
+left, with the hole in the bottom-right corner: what counts as solved, the
+params encoding, what the generator promises, what a click and an arrow do, the
+move count, how the tiles look and slide, and a hint that plays out a full
+greedy solution, saying of each slide whether it puts a tile home or sets one
+up.
 
 ## Requirements
 
-### Requirement: Fifteen game implements the Game interface
+### Requirement: Fifteen is solved when its tiles read in order with the gap last
 
-The engine SHALL provide a registered `fifteen` game implementing `Game`: a
-`w×h` grid of numbered tiles with one empty gap, solved when the tiles read
-`1..n-1` in row-major order with the gap last. The game SHALL provide
-`statusbarText`, `solve` and `textFormat`. It SHALL NOT provide a
+The board SHALL be a `w×h` grid of numbered tiles with one empty gap, solved
+when the tiles read `1..n-1` in row-major order with the gap last. The game
+SHALL provide `statusbarText`, `solve` and `textFormat`. It SHALL NOT provide a
 `findMistakes` hook, since every reachable position is legal.
 
 #### Scenario: The board is solved exactly when its tiles are in order
@@ -27,9 +28,7 @@ The engine SHALL provide a registered `fifteen` game implementing `Game`: a
 ### Requirement: Fifteen's params are a width and a height
 
 Params SHALL be `w` and `h`, encoded `WxH` with lenient decode: a bare `W`
-yields a square `W×W` board. Presets of `3x3`, `4x4` and `5x5` SHALL be
-offered. Params with `w < 2` or `h < 2` SHALL be refused, by the minimum of 2
-that both fields declare in `paramConfig`.
+yields a square `W×W` board. Params with `w < 2` or `h < 2` SHALL be refused.
 
 #### Scenario: Params round-trip and lenient decode
 
@@ -57,22 +56,26 @@ SHALL NOT deal the solved arrangement.
 - **AND** the initial state is not in the solved arrangement and reports a
   not-completed status
 
-### Requirement: Fifteen slide and solve moves transform state purely
+### Requirement: A Fifteen slide shifts the whole line between its target and the gap
 
 A `FifteenMove` SHALL be either a slide carrying the destination gap cell
-(`{ type: "move", x, y }`) or a solve (`{ type: "solve" }`). `executeMove`
-SHALL be pure, returning a new state. A slide SHALL shift every tile on the
-line between the old and new gap one cell toward the old gap, incrementing the
-move count once per shifted tile. A solve SHALL replace the grid with the
-solved permutation and count as one move.
+(`{ type: "move", x, y }`) or a solve (`{ type: "solve" }`). A slide SHALL
+shift every tile on the line between the old and new gap one cell toward the
+old gap, incrementing the move count once per shifted tile. A solve SHALL
+replace the grid with the solved permutation and count as one move.
 
 #### Scenario: A slide shifts a line of tiles into the gap
 
 - **WHEN** a slide move targets a cell sharing one coordinate with the gap,
   three tiles away along that line
 - **THEN** all three tiles shift one cell toward the old gap, the gap lands on
-  the targeted cell, the move count increases by three, and the source state
-  is unmutated
+  the targeted cell, and the move count increases by three
+
+#### Scenario: Solve snaps to the solved board
+
+- **WHEN** the solve move executes
+- **THEN** the new state is the solved permutation with the move count one
+  higher
 
 ### Requirement: A click slides only along the gap's row or column
 
@@ -92,19 +95,6 @@ semantics: the pressed arrow moves a tile in that direction.
 
 - **WHEN** the gap is in the bottom-right corner and the Down arrow is pressed
 - **THEN** the tile above the gap slides down into it
-
-### Requirement: Fifteen's state records neither completion nor the solver
-
-The state SHALL keep no record of completion or of the solver: the board is
-solved exactly while its tiles are in order. That Solve was used SHALL be the
-engine's to record, and the engine SHALL suppress the completion flash for the
-Solve command.
-
-#### Scenario: Solve snaps to the solved board
-
-- **WHEN** the solve move executes
-- **THEN** the new state is the solved permutation with the move count one
-  higher, and the completion flash is suppressed on the following redraw
 
 ### Requirement: Fifteen offers a greedy full-solution hint plan
 
@@ -134,10 +124,7 @@ solvable board SHALL reach the solved state.
 Each step's narration SHALL explain why the move matters, not merely which
 tile slides. A step whose slid tile lands in its solved cell SHALL narrate it
 as placing that tile home. Any other step SHALL narrate a setup move, naming
-the target tile it is working toward its home. The wording SHALL be consistent
-with the hint quality bar (the Palisade exemplar) and with Sixteen's hint. The
-narration SHALL NOT alter a step's move, the tile it highlights, the plan's
-tracking or its length.
+the target tile it is working toward its home.
 
 #### Scenario: Narration distinguishes a home move from a setup move
 
@@ -160,12 +147,10 @@ recomputes it.
 - **THEN** `hintKeepTrack` reports the step completed and the plan advances
 - **AND** a different move reports `"off"`, dropping the plan
 
-### Requirement: Fifteen renders tiles, border, and slide animation
+### Requirement: Fifteen draws beveled numbered tiles in a recessed border
 
-`redraw` SHALL draw a recessed beveled border once, then each tile as a
-beveled square with its centered number. It SHALL keep a per-tile cache, so a
-tile is repainted only when it changed, is animating, or the flash color or
-the hinted tile changed.
+`redraw` SHALL draw a recessed beveled border, and each tile as a beveled
+square with its centered number.
 
 #### Scenario: First draw emits the border and numbered tiles
 
@@ -174,11 +159,10 @@ the hinted tile changed.
 - **THEN** the recorded operations include the recessed border and one beveled
   tile with its number for each non-gap cell
 
-### Requirement: A Fifteen slide animates in two passes
+### Requirement: A Fifteen slide animates its tiles between cells
 
-A slide SHALL animate in two passes: the cells vacated by moving tiles are
-blanked first, then each moving tile is drawn interpolated one cell from its
-old position toward the gap, over the animation duration.
+A slide SHALL animate: each moving tile is drawn interpolated one cell from
+its old position toward the gap, over the animation duration.
 
 #### Scenario: A slide animates between cells
 
@@ -189,20 +173,17 @@ old position toward the gap, over the animation duration.
 
 ### Requirement: A genuine Fifteen completion flashes for two frames
 
-A genuine completion SHALL flash the tiles' faces for two frames. A board
-solved by the Solve command SHALL NOT flash.
+A genuine completion SHALL flash the tiles' faces for two frames.
 
-#### Scenario: The last slide flashes and Solve does not
+#### Scenario: The last slide flashes
 
 - **WHEN** the player's slide puts the last tile in order
 - **THEN** the tiles' faces flash for two frames
-- **AND** a board brought to the solved arrangement by Solve does not flash
 
 ### Requirement: Fifteen's status bar shows the move count
 
-The status bar SHALL show the move count after the engine's completion words:
-`COMPLETED!` when solved, `Auto-solved.` or `Auto-solver used.` once Solve was
-used. The move count SHALL never freeze or reset.
+The status bar SHALL show the move count after the engine's completion words.
+The move count SHALL never freeze or reset.
 
 #### Scenario: The count follows the completion words
 

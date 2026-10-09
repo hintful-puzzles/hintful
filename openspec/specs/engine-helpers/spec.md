@@ -2,33 +2,23 @@
 
 ## Purpose
 The shared algorithmic helpers a game would otherwise copy, and the catalog
-that names them: the disjoint-set forest, loop finding, the deduction fixpoint,
-grid coordinates and the small parsers.
+that names them: the disjoint-set forest, loop finding, grid coordinates, the
+small parsers, and the contract of the deduction fixpoint that a solver and its
+hint share.
 
 ## Requirements
 
 ### Requirement: The engine provides a shared disjoint-set forest (dsf)
 
-The engine SHALL provide the `Dsf` class in `src/engine/dsf.ts`. The class
-SHALL support `constructor(n)`, `reinit()`, `canonify(i)`, `merge(a, b)`,
-`size(i)` (the number of elements in `i`'s class) and `equivalent(a, b)`
-(whether `a` and `b` share a class), with path compression and union by size.
-A game that needs union-find SHALL import it from this shared location.
+The engine SHALL provide the disjoint-set forest `Dsf` in `src/engine/dsf.ts`.
+A game that needs union-find SHALL import it from there and SHALL NOT hold a
+copy of its own.
 
 #### Scenario: A game imports the shared Dsf
 
 - **WHEN** a game needs disjoint-set operations
 - **THEN** it imports `Dsf` from `src/engine/dsf.ts`
 - **AND** no game directory contains a local `dsf.ts`
-
-#### Scenario: Size and equivalence reflect merges
-
-- **WHEN** elements are merged into a class and `size` and `equivalent` are
-  queried
-- **THEN** `size(i)` returns the count of elements in `i`'s class for any
-  member `i`
-- **AND** `equivalent(a, b)` returns true if and only if `a` and `b` are in
-  the same class
 
 ### Requirement: The engine provides shared grid-coordinate helpers
 
@@ -243,8 +233,7 @@ obligation that is vacuous, and not satisfied, SHALL be recorded as unmet.
 ### Requirement: The engine provides a shared loop-finding helper
 
 The engine SHALL provide `findLoops(nvertices, neighbors)` in
-`src/engine/findloop.ts`: Tarjan's bridge finding, non-recursive linked-list
-form. It takes a neighbor callback `(vertex: number) => Iterable<number>` over
+`src/engine/findloop.ts`. It takes a neighbor callback `(vertex: number) => Iterable<number>` over
 an undirected graph and returns `{ anyLoop, isLoopEdge(u, v), isBridge(u, v)
 }`. An edge SHALL be a loop edge exactly when
 it is not a bridge: removing it would not disconnect its component. `isBridge`
@@ -277,22 +266,17 @@ consume `findLoops` and SHALL NOT re-roll it.
 ### Requirement: The engine catalog names every shared helper there is
 
 `docs/games/engine-catalog.md` SHALL carry an entry for every module under
-`src/engine/`, so that the menu a game author consults before re-rolling a
-helper cannot silently shrink. A module deliberately without an entry of its
-own SHALL be recorded in a ledger carrying its reason, and that ledger SHALL
-fail when it names a module that no longer exists.
+`src/engine/`, so the menu a game author consults cannot silently shrink. A
+module deliberately without one SHALL be recorded in a ledger carrying its
+reason, which SHALL fail when it names a module that no longer exists. The
+check SHALL run in the gate's fast prefix, ahead of the documentation-only
+shortcut, and SHALL NOT be a vitest file: a test that read `docs/` would make
+that shortcut unsafe.
 
 #### Scenario: A new engine module ships without a catalog entry
 
 - **WHEN** a module is added under `src/engine/` and the catalog is not updated
 - **THEN** the gate fails, naming the module and pointing at the catalog
-
-### Requirement: The catalog check runs ahead of the documentation-only shortcut
-
-The check that holds the catalog complete SHALL run in the pre-commit gate's
-fast prefix, ahead of the documentation-only shortcut. It SHALL NOT be a vitest
-file, because a test that read `docs/` would make that shortcut unsafe
-(`repo-layout`).
 
 #### Scenario: A documentation-only commit deleting an entry is still checked
 
@@ -317,26 +301,6 @@ not reach a player.
   suite's slowdown is weighed only as suite cost
 - **AND** if the constant stays local, the comment says so with its measurement
   and does not assert a bare multiplier
-
-### Requirement: A timing comparison warms every arm and carries a control
-
-Where two implementations are compared by timing, every arm SHALL be exercised
-once before the clock starts, the arms SHALL be interleaved with rotating
-order, and the minimum SHALL be reported beside the median. An A/A control arm
-SHALL be timed alongside them, so that a ratio that is an artifact of module
-load order or of warm-up has somewhere to show up.
-
-#### Scenario: an arm is timed against another
-
-- **WHEN** an imported table is timed against a module-local one
-- **THEN** both arms and the control are run once before the clock starts, and
-  then timed interleaved in rotating order
-
-#### Scenario: a control looks suspiciously tight
-
-- **WHEN** a paired-timing control is suspected of flattering itself
-- **THEN** the suspicion is checked by warming the arms, not by loading a
-  second module instance
 
 ### Requirement: The engine provides a shared leading-integer parser
 
@@ -373,9 +337,3 @@ percentage) is not a digit run, and is written with the shared `isDigit`.
 - **THEN** no game file declares a copy under any name
 - **AND** the guard finds a copy by its shape (a relational comparison against
   a one-digit string), not by the name `parseLeadingInt`
-
-#### Scenario: A desc codec reads a number the same way
-
-- **WHEN** a game's desc carries a decimal number (a clue, a run length, a
-  coordinate)
-- **THEN** the codec reads it with `parseLeadingInt`

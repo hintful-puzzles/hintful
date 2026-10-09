@@ -3,33 +3,32 @@
 ## Purpose
 Tents, the puzzle of placing tents so that each tree can be matched to its own
 orthogonally adjacent tent, no two tents touch even diagonally, and each row and
-column holds its clued count. This capability specifies the game: its graded
-solver and generator, live errors and completion, drag, cursor and direct-key
-input, the link notation, mistake-checking and the explained hint.
+column holds its clued count. This capability specifies the game: what counts
+as solved, its params and description encodings, its solver ladder, tiers and
+generator, live errors and its look, drag, cursor and direct-key input, the
+link notation, mistake-checking and the explained hint.
 
 ## Requirements
 
-### Requirement: Tents game implements the Game interface
+### Requirement: Tents completion is judged from the board
 
-The engine SHALL provide a registered `tents` game implementing `Game`: place
-tents on a `w × h` grid of fixed trees so that each tent is orthogonally
-adjacent to a tree in a one-to-one matching of trees and tents, no two tents
-are even diagonally adjacent, and each row and column contains exactly its
-edge-clue number of tents. The game SHALL provide `solve` and `textFormat`.
+Tents are placed on a `w × h` grid of fixed trees. The board SHALL be reported
+complete when the tent count equals the tree count, every row and column holds
+exactly its edge number of tents, no two tents are adjacent even diagonally,
+and the trees and tents admit a one-to-one matching of each tent to an
+orthogonally adjacent tree.
 
-#### Scenario: Tents is registered
+#### Scenario: Completion requires a valid matching
 
-- **WHEN** the registry is asked for the game with the id `tents`
-- **THEN** it returns this game, with its `solve` and its `textFormat`
+- **WHEN** the tents match all edge numbers and are non-adjacent but no
+  perfect matching of trees and tents exists
+- **THEN** the state does not report completed
 
 ### Requirement: Tents' parameters
 
 Params SHALL be `w`, `h` and `diff` (Easy or Normal), encoded
 `{w}x{h}d{e|t}`, with the short form `{w}x{h}` and the square shorthand `{n}`.
-The presets SHALL be 8×8, 10×10 and 15×15, each at Easy and at Normal. The
-width and the height SHALL each be at least 4, declared as the bounds of the
-dimension fields, so that the engine's check of the params refuses a smaller
-grid.
+The width and the height SHALL each be at least 4.
 
 #### Scenario: Params round-trip
 
@@ -47,25 +46,19 @@ grid.
 The desc SHALL encode the tree grid row-major as a run-length code, where `_`
 is a tree, `a`–`y` a run of 1–25 blanks then a tree, `z` a run of 25 blanks,
 and the sequence terminates with a tree-past-the-end marker. The `w + h` edge
-numbers SHALL follow, columns then rows, each preceded by a comma.
+numbers SHALL follow, columns then rows, each preceded by a comma. A desc with
+an invalid character, a wrong grid area, or a missing or malformed number SHALL
+be refused.
 
 #### Scenario: A description round-trips
 
 - **WHEN** a generated desc is parsed by `newState` and re-encoded
 - **THEN** the re-encoded desc equals the original
 
-### Requirement: A malformed Tents description is rejected
-
-`validateDesc` SHALL reject invalid characters, a wrong grid area, and missing
-or malformed numbers. `newState` SHALL parse the desc into a tree grid and an
-edge-number array that every state of the game shares and none writes, with
-all non-tree squares initially blank.
-
 #### Scenario: A malformed description is rejected
 
-- **WHEN** `validateDesc` is given a desc with a bad grid area or a missing
-  number
-- **THEN** it returns a non-null error string
+- **WHEN** a desc with a bad grid area or a missing number is loaded
+- **THEN** it is refused with an error
 
 ### Requirement: Adjacent tents are marked with an error diamond
 
@@ -98,30 +91,16 @@ together fall below the clue.
 
 ### Requirement: An over-committed group of tents or trees is red
 
-`redraw` SHALL take two connected-component passes over the adjacency of trees
-and tents, the second counting a blank square as a possible tent. A tent in a
-component with fewer trees than tents SHALL be drawn in the error color. A tree
-in a component with more trees than tents and blank squares together SHALL be
-drawn with an error trunk and error leaves.
+A tent in a connected group of adjacent trees and tents with fewer trees than
+tents SHALL be drawn in the error color. A tree in a connected group of
+adjacent trees, tents and blank squares, a blank counting as a possible tent,
+with more trees than tents and blanks together SHALL be drawn with an error
+trunk and error leaves.
 
 #### Scenario: Two tents on one tree are flagged
 
 - **WHEN** two tents stand beside the same tree and beside no other
 - **THEN** both tents are drawn in the error color
-
-### Requirement: Tents completion is judged from the board
-
-The board SHALL be reported complete when the tent count equals the tree
-count, every edge number is met, no two tents are adjacent, and the trees and
-tents admit a perfect adjacency matching. Completion SHALL be judged from the
-board however it was reached, and the win flash SHALL NOT play for the Solve
-command.
-
-#### Scenario: Completion requires a valid matching
-
-- **WHEN** the tents match all edge numbers and are non-adjacent but no
-  perfect matching of trees and tents exists
-- **THEN** the state does not report completed
 
 ### Requirement: Tents places tents and grass by click and drag
 
@@ -144,10 +123,9 @@ gesture producing no change, by pointer or by key, SHALL return no move.
 
 ### Requirement: Tents takes a cursor and direct keys
 
-Arrow keys SHALL move a cursor, revealing it first. Select SHALL set the
-cursor square to a tent, and select2 to a non-tent, or clear it. The literal
-keys `T`, `N` and `B` SHALL set the cursor square directly: to a tent, to a
-non-tent and to blank.
+Select SHALL set the keyboard cursor's square to a tent, and select2 to a
+non-tent, or clear it. The literal keys `T`, `N` and `B` SHALL set the cursor
+square directly: to a tent, to a non-tent and to blank.
 
 #### Scenario: A letter sets the cursor square
 
@@ -217,25 +195,13 @@ color.
   solution gives it, and `findMistakes` runs
 - **THEN** that link is reported and drawn in the mistake color
 
-### Requirement: Tents solves with a graded deductive solver
-
-The solver SHALL return the impossible, unique or non-converged verdict (0, 1
-or 2) at each difficulty. The solver SHALL be reused by `solve()`, the
-generator's difficulty gate, and `findMistakes`.
-
-#### Scenario: Solve recovers from a wrong mid-game state
-
-- **WHEN** `solve()` runs against a state containing wrong tents
-- **THEN** the returned move yields the unique solution
-
 ### Requirement: Tents generates solver-gated boards reproducibly
 
 `newDesc` SHALL generate the same board for the same seed. It SHALL place
-`w*h/5` tents, rounded down, at squares taken in a random permutation, no two
-of them adjacent even diagonally; place the trees by the bipartite `matching`;
-reject any layout with a row or column that holds neither a tree nor a tent;
-derive the edge numbers; and accept only when the solver succeeds at the target
-difficulty and fails to converge one level below.
+`w*h/5` tents, rounded down, no two of them adjacent even diagonally, and a
+tree beside each in a one-to-one matching; reject any layout with a row or
+column that holds neither a tree nor a tent; and accept only when the solver
+succeeds at the target difficulty and fails to converge one level below.
 
 #### Scenario: Generation is reproducible from a seed
 
@@ -266,19 +232,6 @@ tents blanked on the flashed phases.
 
 - **WHEN** the completion flash is in a flashed phase
 - **THEN** a tree's square is drawn as grass, without its tree
-
-### Requirement: Every Tents overlay is in the diff key
-
-The drawstate SHALL diff a packed `Int32Array` word per tile, holding the
-square value plus every error, cursor, flash and mistake overlay bit, and a
-separate diff array for the edge numbers, so that every overlay is in the diff
-key.
-
-#### Scenario: A mistake overlay repaints an unchanged tile
-
-- **WHEN** a tile is painted, `findMistakes` flags it, and `redraw` runs
-  again with no square-value change
-- **THEN** the second paint renders the mistake overlay
 
 ### Requirement: Tents' solver is a certified deduction ladder
 
@@ -398,27 +351,16 @@ first pending link be drawn anyway.
 
 ### Requirement: A Tents hint step says why and marks what it uses
 
-Each step SHALL name why it is forced, in one sentence of at most 120
-characters, ring what it decides, outline what it reasons from, hatch the row
-or column it counts with, color that clue in the action color, and draw a link
-it asks for in the action color.
+Each step SHALL name why it is forced, in one sentence, ring what it decides,
+outline what it reasons from, hatch the row or column it counts with, color
+that clue in the action color, and draw a link it asks for in the action
+color.
 
 #### Scenario: A line count's picture
 
 - **WHEN** the displayed step counts a row
 - **THEN** the row is hatched, its clue is in the action color and the squares
   the step decides are ringed
-
-### Requirement: The Tents hint is refused on a solved or mistaken board
-
-The hint SHALL be refused on a solved board and while `findMistakes` reports
-anything.
-
-#### Scenario: A wrong link refuses the hint
-
-- **WHEN** the board holds a link that no pairing of the solution holds and a
-  hint is asked for
-- **THEN** the hint is refused
 
 ### Requirement: Tents' hintKeepTrack judges a move by what it changes
 

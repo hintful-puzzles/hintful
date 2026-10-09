@@ -3,26 +3,11 @@
 ## Purpose
 Flood, the puzzle of turning the whole grid one color within a move limit by
 repeatedly flood-filling from the top-left corner. This capability specifies
-the game: its params, its fill and solve moves, win and lose status, a hint
-plan backed by the solver, and how the board is drawn.
+what is the game's own: its params encoding and limits, what a dealt board
+promises, what a fill does and when one is offered, winning and losing, the
+status bar, the solver's hint plan, and how the board is drawn.
 
 ## Requirements
-
-### Requirement: Flood game implements the Game interface
-
-The engine SHALL provide a registered `flood` game implementing
-`Game<FloodParams, FloodState, FloodMove, FloodUi, FloodDrawState>`: a `w×h`
-grid of colored squares solved by flood-filling the top-left corner until the
-whole grid is one color within a move limit. The game SHALL provide
-`statusbarText`, `solve` and `textFormat`, and SHALL NOT provide
-`findMistakes`: no single move is a mistake, and the failure mode is the lose
-status.
-
-#### Scenario: The game's optional hooks
-
-- **WHEN** the registered `flood` game is read
-- **THEN** it has `statusbarText`, `solve` and `textFormat`
-- **AND** it has no `findMistakes`
 
 ### Requirement: Flood params are a size, a color count and a leniency
 
@@ -39,24 +24,10 @@ moves allowed beyond the solver's own count. They SHALL be encoded `WxH`, with
 - **AND** decoding `12x12c6m5` round-trips, and a bare `12` decodes to a 12×12
   board with the default colors and leniency
 
-### Requirement: Flood offers its presets
-
-The presets SHALL be, in this order: 12×12 in six colors at leniency 5, 2 and
-0, titled `12x12 Easy`, `12x12 Medium` and `12x12 Hard`; 16×16 in six colors
-at leniency 2 and 0, titled `16x16 Medium` and `16x16 Hard`; and 12×12 at
-leniency 0 in three colors and in four.
-
-#### Scenario: The first preset is the default board
-
-- **WHEN** the preset menu is read
-- **THEN** its first entry is `12x12 Easy`, a 12×12 board in six colors with a
-  leniency of 5
-
 ### Requirement: Flood refuses params it cannot deal
 
 `validateParams` SHALL reject a grid with `w·h < 2`. A `colors` outside 3–10
-and a negative `leniency` SHALL be refused too, by the engine, from the bounds
-the game declares on those two fields in its `paramConfig`.
+and a negative `leniency` SHALL be refused too.
 
 #### Scenario: A one-square grid is refused
 
@@ -80,30 +51,24 @@ the number of fills the solver takes on that grid plus the leniency.
 - **THEN** the grid is not already one color, and the move limit equals the
   solver's move count plus the leniency
 
-### Requirement: Flood fill and solve moves transform state purely
+### Requirement: A Flood fill recolors the corner region and costs one move
 
-A `FloodMove` SHALL be a fill carrying a color (`{ type: "fill", color }`) or a
-solve (`{ type: "solve" }`). `executeMove` SHALL be pure: a fill floods the
-corner region to the chosen color and increments the move count, and a solve
-SHALL run the solver and apply its fills to reach the solved grid.
+The board is a `w×h` grid of colored squares, and the controlled region is the
+one holding the top-left corner. A fill SHALL turn that region the chosen
+color, joining to it every square of that color it then touches, and SHALL
+count one move. Solve SHALL apply the solver's fills, each counted as a move.
 
 #### Scenario: A fill floods the corner region
 
 - **WHEN** a fill move with a color adjacent to the controlled region executes
 - **THEN** the corner region and all newly-adjacent same-color squares become
-  that color, the move count increases by one, and the source state is unmutated
-
-#### Scenario: Solve snaps to a completed grid
-
-- **WHEN** the solve move executes
-- **THEN** the grid becomes a single color and the game reports itself solved
-  with help
+  that color, and the move count increases by one
 
 ### Requirement: Flood input fills with the chosen square's color
 
 `interpretMove` SHALL produce a fill only when the clicked or cursor-selected
 cell's color differs from the current corner color and the game is not
-complete. Cursor keys SHALL move the cursor, clamped to the grid.
+complete.
 
 #### Scenario: A fill that does not change the corner color is rejected
 
@@ -121,22 +86,11 @@ is a loss.
 - **WHEN** the moves already spent plus the solver's fills exceed the move limit
 - **THEN** Solve refuses, and the board is unchanged
 
-### Requirement: Flood's state records neither completion nor the solver
-
-The state SHALL keep no record of completion or of the solver: the grid is
-complete exactly when it is one color, and the engine records that Solve was
-used.
-
-#### Scenario: Completion is read off the grid
-
-- **WHEN** a fill leaves every square one color
-- **THEN** the state is complete, with no field of the state set to say so
-
 ### Requirement: Flood reports win and lose status
 
 The Flood `status()` SHALL return `"solved"` when the grid is complete within the
 move limit, `"lost"` when the move count reaches the limit before completing,
-and `"ongoing"` otherwise.
+and `"ongoing"` otherwise. The grid is complete exactly when it is one color.
 
 #### Scenario: Exhausting the move limit loses
 
@@ -151,9 +105,8 @@ and `"ongoing"` otherwise.
 
 ### Requirement: Flood's status bar counts moves against the limit
 
-The status bar SHALL reflect the move count against the limit, opening with
-`FAILED!` on a lost board, `COMPLETED!` on a board the player solved and
-`Auto-solved` on one Solve finished.
+The status bar SHALL give the move count against the limit, opening with
+`FAILED!` on a lost board.
 
 #### Scenario: A lost board says so
 

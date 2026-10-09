@@ -124,8 +124,7 @@ without the rest of the mechanic.
 
 Every game in the mechanic SHALL offer the keep-highlight pencil preference,
 defaulted the same way, so one gesture does one thing across the family and the
-player who wants the other still has it. Both halves SHALL be guarded over the
-derived population: the default, and that the preference is offered at all. The
+player who wants the other still has it. The
 members that offer the sticky pencil preference SHALL default it the same way.
 
 #### Scenario: The family answers a preference question once
@@ -191,53 +190,6 @@ offer.
 - **THEN** the guard does not convict it, by a stated path rule rather than by an
   enumerated exemption for that game
 
-### Requirement: The vocabulary guard scans for a retired spelling as a typed-array field
-
-The convention SHALL be enforced by scanning for the retired spellings, `marks`
-and `pencils`, as a typed-array field declaration rather than by enumerating
-the games that have notes, because nothing at run time says that an array holds
-candidates. A bare name scan SHALL NOT be used, because `marks` remains live
-and correct elsewhere: `HintMarks`, the `pencilStrike` move's `marks`, a
-`Mark[]`.
-
-#### Scenario: A game declares its candidate notes under a retired spelling
-
-- **WHEN** a game's state declares `marks` or `pencils` as a typed array
-- **THEN** the vocabulary guard fails, naming the file and line, and offers both
-  remedies: rename it, or ledger it as not being a candidate set
-
-#### Scenario: A ledgered exception that stops being true fails
-
-- **WHEN** a file ledgered as not holding candidate notes no longer declares a
-  retired spelling
-- **THEN** the guard fails, so the ledger cannot outlive the finding it records
-
-### Requirement: The Mark-all guard derives its roster from the capability
-
-The cross-game Mark-all guard SHALL derive the games it exercises from
-`Game.canMarkAll` and read each game's notes through the shared field name,
-rather than carrying a hand-written row per game. The only per-game datum it
-SHALL admit is one a game genuinely answers differently, the slot arity, and a
-ledger of it SHALL be asserted to name only games that offer the press.
-
-#### Scenario: A newly ported game shipping Mark-all is guarded immediately
-
-- **WHEN** a game is registered that sets `canMarkAll`
-- **THEN** it is exercised by every Mark-all property without any row being added
-
-### Requirement: The Mark-all flag is held to what the game does
-
-An enrollment check comparing a hand-written roster with the flag it was copied
-from SHALL NOT be kept once the roster is derived from that flag, because it is
-then a tautology. Whether the flag matches what the game does SHALL be asserted
-separately.
-
-#### Scenario: A flag that disagrees with the game
-
-- **WHEN** a game sets `canMarkAll` and does not answer the `M` key, or answers
-  it without setting the flag
-- **THEN** the guard fails, naming that game
-
 ### Requirement: The engine owns the pencil-mode indicator, not only its glyph
 
 The engine SHALL provide the whole pencil-mode indicator: the background box,
@@ -276,27 +228,20 @@ pass no first-frame flag for it.
   as it was
 - **THEN** the indicator's box is painted on the first frame
 
-### Requirement: The engine surface exposes an opt-in "fill all pencil marks" capability
-
-The engine surface SHALL expose `canMarkAll` in its static attributes, true if
-and only if the active game supports the "fill every empty cell with all
-candidate pencil marks" action. The `Game` interface SHALL define an optional
-`readonly canMarkAll?: boolean` flag, and the `Midend` SHALL surface it as
-`canMarkAll: game.canMarkAll ?? false`.
-
-#### Scenario: A game without pencil marks shows no control
-
-- **WHEN** the active game does not set `canMarkAll`
-- **THEN** `canMarkAll` is false and the app shell renders no mark-all control
-
 ### Requirement: The Mark-all action is the M key
 
 The action SHALL reuse the keyboard input path rather than a new engine method:
 a game that sets `canMarkAll` SHALL handle the `M`/`m` key in `interpretMove`
-and return its mark-all move. The app shell SHALL render the control among the
-game's on-screen controls, beside the Marks key, shown only when `canMarkAll`
+and return its mark-all move, and a game SHALL NOT answer that key without
+setting the flag. The app shell SHALL show the control only when `canMarkAll`
 is true, and on activation it SHALL inject the `M` key via the surface's
 `processKey`.
+
+#### Scenario: A flag that disagrees with the game
+
+- **WHEN** a game sets `canMarkAll` and does not answer the `M` key, or answers
+  it without setting the flag
+- **THEN** the cross-game guard fails, naming that game
 
 #### Scenario: A pencil-mark game shows the control and fills candidates
 
@@ -447,18 +392,6 @@ quietly stops handling the key fails rather than joining the exceptions.
 
 - **WHEN** a note-taking game does not consume the pencil-mode button
 - **THEN** the cross-game guard names it, rather than passing over it
-
-### Requirement: The pencil-mode indicator sits where the engine computes
-
-The mode's on-screen indicator SHALL be the collection's: the shared pencil
-glyph, at the position the engine computes, in every game that has the mode. A game SHALL reserve the room for it rather than choose
-a different place for it.
-
-#### Scenario: The indicator is in the same place in every game
-
-- **WHEN** pencil mode is on in any game that has it
-- **THEN** the glyph is drawn in the position the engine computes, not one the game
-  chose for itself
 
 ### Requirement: A sticky notes mode is visible on the board
 

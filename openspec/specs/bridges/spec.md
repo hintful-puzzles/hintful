@@ -3,21 +3,22 @@
 ## Purpose
 Bridges (Hashiwokakero), the puzzle of linking every island into one network
 with bridges that never cross, at most a set number (usually two) between any
-pair, each island carrying as many bridges as its number. It has live errors, a
-mistake check, a limit the player can write on a span, an optional lift of
-satisfied islands that locks nothing, and a hint that explains the next
-deduction and marks it in the game's own vocabulary.
+pair, each island carrying as many bridges as its number. This spec holds the
+rules, the description format, the controls, what each difficulty tier's
+solver may deduce, the live errors and mistake check, the limit a player can
+write on a span, the optional lift of satisfied islands that locks nothing,
+and the hint: what it explains, in what steps, and how it marks them in the
+game's own vocabulary.
 
 ## Requirements
 
-### Requirement: Bridges game implements the Game interface
+### Requirement: Bridges links every island into one network
 
-The engine SHALL provide a registered `bridges` game implementing `Game`:
-connect the numbered islands on a `w × h` grid with horizontal and vertical
-bridges so that each island carries exactly its number of bridge-ends, at most
-`maxb` bridges join any pair of islands, bridges run only between two islands
-directly in line and never cross an island or another bridge, and all islands
-form a single connected group. The game SHALL provide `solve` and `textFormat`.
+A Bridges board SHALL be solved when the numbered islands on a `w × h` grid are
+connected with horizontal and vertical bridges so that each island carries
+exactly its number of bridge-ends, at most `maxb` bridges join any pair of
+islands, bridges run only between two islands directly in line and never cross
+an island or another bridge, and all islands form a single connected group.
 
 #### Scenario: Two finished groups are not a solution
 
@@ -43,27 +44,11 @@ islands), `expansion` (a percentage), `allowloops` (boolean) and `difficulty`
   three at a tier above Easy (e.g. `3×3` Normal at the default density)
 - **THEN** it returns a non-null error string
 
-### Requirement: Bridges offers three square sizes at every tier and one board without loops
-
-The presets SHALL be a square 7, 10 and 15 board at each of Easy, Normal and
-Tricky, each with `maxb = 2`, `islands = 30`, `expansion = 10` and
-`allowloops = true`, and after all of them one board that is 10×10 Normal with
-`allowloops = false`.
-
-#### Scenario: The board without loops is last
-
-- **WHEN** the presets are listed
-- **THEN** the last is the 10×10 Normal board with `allowloops = false`, and
-  every preset before it allows loops
-
 ### Requirement: Bridges descriptions encode the island clue grid
 
 The desc SHALL encode the island positions and their bridge counts row-major: a
 digit or letter gives an island with that count at the current cell, and a
-run-length letter skips that many empty cells. `newState` SHALL parse the desc
-into the island list, the per-cell island flags and the reverse index from cell
-to island, and SHALL share that immutable clue data across all states of a
-game.
+run-length letter skips that many empty cells.
 
 #### Scenario: A description round-trips
 
@@ -108,8 +93,7 @@ Bridges span's limit by one.
 
 Cursor keys SHALL move a keyboard cursor. `CURSOR_SELECT` SHALL grab a
 keyboard drag at the cursor's island, for an arrow to carry out, and a second
-`CURSOR_SELECT` SHALL drop it. The game SHALL NOT map any editor-only move
-letter.
+`CURSOR_SELECT` SHALL drop it.
 
 #### Scenario: Select and an arrow draw a bridge
 
@@ -146,20 +130,26 @@ SHALL yield no mistakes.
   without yet over-committing an island
 - **THEN** `findMistakes` includes that bridge and Check & Save refuses to save
 
-### Requirement: Bridges error and mistake marks are in the tile diff key
+### Requirement: Every Bridges mark is in the tile diff key
 
 The `findMistakes` overlay SHALL be drawn in the live-error red, with no
-palette entry of its own. The live errors and the mistake overlay SHALL both be
-part of the tile cache's diff key, so each repaints on a later frame and
-repaints clean when it clears. An island's face SHALL be part of that key too,
-so the auto-mark aid's face is taken as soon as the island's count is met and
-reverts when a bridge is removed.
+palette entry of its own. The live errors, the mistake overlay, an island's
+face, a span's limit and the hint marks SHALL each be part of the tile cache's
+diff key, so each is painted on a frame later than the move that drew the
+board and repaints clean when it clears. An island's recolored hint rim SHALL
+reach the four tiles its arcs intrude into.
 
 #### Scenario: A mistake overlay repaints on a later frame
 
 - **WHEN** a bridge is drawn, then `findMistakes` flags it on a subsequent frame
   without that bridge's own value changing
 - **THEN** the mistake overlay is painted on that later frame
+
+#### Scenario: A displayed hint repaints an otherwise unchanged frame
+
+- **WHEN** the board is painted, a hint is displayed, and `redraw` runs again
+  with nothing else changed
+- **THEN** the frame carries the step's marks
 
 ### Requirement: Bridges auto-marks satisfied islands (fork aid)
 
@@ -181,11 +171,11 @@ the live-error red, on the rim and count.
 
 ### Requirement: Bridges explains the next deduction
 
-A hint SHALL be refused when the board is solved or `findMistakes` reports a
-wrong span, by the midend before it asks the game. Otherwise `hint(state)`
-SHALL return the forced deductions from the player's own marks as an ordered
-plan, each step narrating why its moves are forced from premises the sentence
-itself states.
+`hint(state)` SHALL return the forced deductions from the player's own marks as
+an ordered plan, each step narrating why its moves are forced from premises the
+sentence itself states. Where the deduction contradicts itself on a board
+`findMistakes` finds nothing wrong with, it SHALL refuse with the collection's
+unlocalized-contradiction wording.
 
 #### Scenario: A hint explains an island with exactly enough room left
 
@@ -194,12 +184,6 @@ itself states.
 - **THEN** the step's narration states that count, its move draws exactly that
   many bridges, and the island it names is the one the hint recolors
 
-#### Scenario: A hint refuses rather than reasoning from a wrong board
-
-- **WHEN** a bridge contradicts the unique solution and a hint is requested
-- **THEN** the hint refuses with the collection's shared mistakes wording and
-  produces no plan
-
 #### Scenario: A hint says so honestly when the annotation is what is wrong
 
 - **WHEN** an island is marked complete before it is, so `findMistakes` reports
@@ -207,14 +191,10 @@ itself states.
 - **THEN** the hint refuses with the collection's unlocalized-contradiction
   wording, which asks the player to undo rather than promising a highlight
 
-### Requirement: Bridges plans a hint with the solver's own techniques
+### Requirement: A Bridges hint's ladder is capped at the board's own difficulty
 
-The plan SHALL be produced by the same `DeductionTechnique` objects the
-from-scratch solve runs, stepped one firing at a time through `singleFirings`
-with a recorder attached to the solver. No rung SHALL be reimplemented for the
-hint, and recording SHALL NOT change the generator's solve path. The ladder
-SHALL be capped at the board's own difficulty and not at the top rung, since
-that is the tier the generator certified it soluble at.
+The hint's ladder SHALL be capped at the board's own difficulty and not at the
+top rung, since that is the tier the generator certified it soluble at.
 
 #### Scenario: Following the plan solves the board at every tier
 
@@ -309,8 +289,7 @@ player's board does not.
 
 Where a rung can be forced by more than one cause, the firing SHALL carry
 which. Stage 3's limit SHALL be narrated as a finished group sealed off or as a
-named island left short of its clue, and the cause SHALL be read while the
-trial still stands, because rolling the trial back destroys both answers.
+named island left short of its clue.
 
 #### Scenario: A limit forced by a starved island says so
 
@@ -363,26 +342,11 @@ of one color and not at one mark of each.
 - **THEN** every island of that group, the one the bridge would start from
   included, takes the evidence color and none takes the action color
 
-### Requirement: Bridges hint marks are in the tile diff key
-
-The hint marks SHALL be carried in a per-cell word compared in the tile cache's
-diff key, in the same island and line layout the packed descriptor uses, so
-that a hint requested a frame after the move that drew the board still
-repaints, and an island's recolored rim reaches the four tiles its arcs
-intrude into.
-
-#### Scenario: A displayed hint repaints an otherwise unchanged frame
-
-- **WHEN** the board is painted, a hint is displayed, and `redraw` runs again
-  with nothing else changed
-- **THEN** the frame carries the step's marks
-
 ### Requirement: Bridges solves with a graded multi-stage deductive solver
 
 The solver SHALL run its stages gated by difficulty, and SHALL report whether
 it solved the board. It SHALL be purely deductive and SHALL NOT guess and
-verify. It SHALL maintain the per-cell possible and maximum bridge counts as
-deductions are applied.
+verify.
 
 #### Scenario: A generated board is uniquely solvable at its difficulty
 
@@ -444,19 +408,6 @@ already dealt that way SHALL still load.
 - **WHEN** a Tricky board with `maxb` 1 is asked to be generated
 - **THEN** the params are refused with a reason, and a `params:desc` id with
   those params still loads
-
-### Requirement: Bridges generates boards soluble at exactly their difficulty
-
-The generator SHALL place a random initial island, grow the map by repeatedly
-selecting an island and direction and joining or expanding to a new island,
-until the island-density target is met, then derive the clue counts and reject
-boards not soluble at exactly the target difficulty, retrying until one is found.
-
-#### Scenario: A generated board is graded at its requested difficulty
-
-- **WHEN** `newDesc` is run for a preset
-- **THEN** the solver grades the board it produces at exactly the requested
-  difficulty
 
 ### Requirement: Bridges renders islands, bridges, marks and the win flash
 
@@ -540,7 +491,6 @@ bridges drawn, above `maxb`, or of none.
 A limit SHALL be drawn as `≤n` on a patch of background at the middle square of
 its span, in the span's own color, so it reads over a bridge already drawn
 through that square and turns red with the span when `findMistakes` flags it.
-The limit SHALL be part of the tile cache's diff key.
 
 #### Scenario: A limit on a bridged span is read over the bridge
 

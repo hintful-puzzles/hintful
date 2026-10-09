@@ -2,19 +2,20 @@
 
 ## Purpose
 Twiddle, the puzzle of rotating square sections of the grid until the tiles
-stand in order from the top left and, in orientable mode, the right way up: its
-params, its pure rotation and solve moves, and the tiles, cursor, rotation
-animation and completion flash.
+stand in order from the top left and, in orientable mode, the right way up:
+what counts as solved, its params encoding, what a rotation and a Solve do, its
+click, cursor and fixed-block keys, and the look of its tiles, its turning
+block, its well and its completion flash.
 
 ## Requirements
 
-### Requirement: Twiddle game implements the Game interface
+### Requirement: Twiddle is solved when its tiles read in order
 
-The engine SHALL provide a registered `twiddle` game implementing
-`Game<TwiddleParams, TwiddleState, TwiddleMove, TwiddleUi, TwiddleDrawState>`:
-a `w×h` grid of numbered tiles, solved when the tile numbers read in
-non-decreasing row-major order and, when `orientable`, every tile is upright.
-The game SHALL provide `statusbarText`, `solve` and `textFormat`.
+Twiddle SHALL be a `w×h` grid of numbered tiles, solved when the tile numbers
+read in non-decreasing row-major order and, when `orientable`, every tile is
+upright. A generated board SHALL be a scramble of the solved arrangement by
+rotations, and SHALL NOT itself be solved. The game SHALL provide
+`statusbarText`, `solve` and `textFormat`.
 
 #### Scenario: A generated board is scrambled and starts unsolved
 
@@ -40,10 +41,8 @@ board, and a missing `nN` yields `n = 2`.
 
 ### Requirement: Twiddle's presets hold one orientable board
 
-The presets SHALL be the 3×3 board with one number per row, the plain 3×3
-board, the orientable 3×3 board, the 4×4 board with blocks of 2 and with blocks
-of 3, the 5×5 board with blocks of 3, and the 6×6 board with blocks of 4. Every
-3×3 preset SHALL rotate blocks of 2. Exactly one preset SHALL be orientable.
+The presets SHALL be upstream's, with one orientable board where upstream had
+two: exactly one preset SHALL be orientable.
 
 #### Scenario: The orientable preset is the 3×3
 
@@ -54,14 +53,11 @@ of 3, the 5×5 board with blocks of 3, and the 6×6 board with blocks of 4. Ever
 ### Requirement: Twiddle refuses a board smaller than its block
 
 `validateParams` SHALL reject `w < n`, `h < n` and an unreasonably large `w·h`,
-each with a human-readable reason. The game SHALL declare a lower bound of 2 on
-`n` and of 0 on `movetarget` in its `paramConfig`, so that the engine refuses
-`n < 2` and a negative `movetarget` with a human-readable reason.
+each with a human-readable reason.
 
-#### Scenario: Invalid params are rejected
+#### Scenario: A board narrower than its block is rejected
 
-- **WHEN** the engine's params check receives `{ n: 1 }`, or `{ w: 2, n: 3 }`,
-  or a negative `movetarget`
+- **WHEN** the engine's params check receives `{ w: 2, n: 3 }`
 - **THEN** it returns a non-null human-readable reason
 
 ### Requirement: Twiddle has no mistake check and no hint
@@ -74,21 +70,18 @@ position is legal. It SHALL NOT provide a `hint` hook.
 - **WHEN** the registered `twiddle` game is inspected
 - **THEN** it has no `findMistakes` and no `hint`
 
-### Requirement: Twiddle rotation and solve moves transform state purely
+### Requirement: A rotation turns the block and its tiles
 
-A `TwiddleMove` SHALL be either a rotation carrying the top-left corner of the
-`n×n` region and a direction, `{ type: "rotate", x, y, dir: 1 | -1 }`, or a
-solve, `{ type: "solve" }`. `executeMove` SHALL be pure, returning a new state.
-A rotation SHALL turn the `n×n` block 90° in `dir`, SHALL advance the
-orientation of each tile in it when `orientable`, and SHALL increment the move
-count.
+A rotation SHALL turn the `n×n` block whose top-left corner it names 90° in
+its direction, SHALL advance the orientation of each tile in the block when
+`orientable`, and SHALL increment the move count.
 
 #### Scenario: A rotation turns the block and is reversible
 
 - **WHEN** a `dir +1` rotation executes on a block, then a `dir −1` rotation
   executes on the same block
-- **THEN** the grid returns to its original arrangement, the source states are
-  unmutated, and the move count increased by one per rotation
+- **THEN** the grid returns to its original arrangement, and the move count
+  increased by one per rotation
 
 #### Scenario: Orientation matters in orientable mode
 
@@ -114,14 +107,14 @@ rotate `dir +1` and a right-click `dir −1`.
 ### Requirement: The Twiddle cursor moves over the rotation origins
 
 Cursor keys SHALL move a cursor over the `(w−n+1)×(h−n+1)` space of rotation
-origins, clamped at the edges without wrapping, and SHALL return a UI update.
-`CURSOR_SELECT` SHALL rotate the cursor's block `dir +1` and `CURSOR_SELECT2`
-`dir −1`. A select pressed while the cursor is hidden SHALL only reveal it.
+origins, clamped at the edges without wrapping. When the cursor is visible, its
+`n×n` block SHALL be outlined with cursor-colored bevel edges.
 
-#### Scenario: A first select reveals the cursor
+#### Scenario: The cursor's block is outlined
 
-- **WHEN** `CURSOR_SELECT` is pressed while the cursor is hidden
-- **THEN** the cursor becomes visible and no rotation is produced
+- **WHEN** the cursor is visible on a block and the board is drawn at rest
+- **THEN** the bevel edges along that block's four sides are outlined in the
+  cursor color, and no other tile's are
 
 ### Requirement: Letter and numpad keys rotate fixed blocks
 
@@ -151,27 +144,13 @@ every orientation, and SHALL count as one move.
 
 - **WHEN** the solve move executes
 - **THEN** the new state is the solved arrangement with cleared orientations and
-  the move count one higher, and the completion flash is suppressed on the
-  following redraw
-
-### Requirement: Twiddle state keeps no record of completion or of the solver
-
-The state SHALL keep no record of completion or of the solver: the board is
-solved exactly while it is in the solved arrangement. The engine SHALL be what
-records that Solve was used and what suppresses the completion flash for the
-Solve command.
-
-#### Scenario: A solved board turned again is unsolved
-
-- **WHEN** a rotation executes on a board in the solved arrangement and leaves
-  it out of order
-- **THEN** the state reports a not-completed status
+  the move count one higher
 
 ### Requirement: Twiddle draws a recessed border and beveled numbered tiles
 
-The Twiddle `redraw` SHALL draw a recessed beveled border once, and then each
-tile as a beveled square with its number centered and, when `orientable`, an
-orientation triangle.
+The Twiddle `redraw` SHALL draw a recessed beveled border, and each tile as a
+beveled square with its number centered and, when `orientable`, an orientation
+triangle.
 
 #### Scenario: First draw emits the border and numbered tiles
 
@@ -179,18 +158,6 @@ orientation triangle.
   board
 - **THEN** the recorded operations include the recessed border and one beveled
   tile with its number for each cell
-
-### Requirement: A Twiddle tile is repainted only when it changed
-
-`redraw` SHALL maintain a per-tile cache, so that a tile is repainted only when
-its number or orientation changed, it lies within an animating block, the
-cursor moved onto or off it, or the flash background changed.
-
-#### Scenario: An unchanged board repaints nothing
-
-- **WHEN** `redraw` runs a second time on the same state, with the cursor
-  unmoved and no animation or flash
-- **THEN** no tile is drawn
 
 ### Requirement: A rotation animates the block turning about its center
 
@@ -217,23 +184,10 @@ A completion reached by a solve SHALL NOT.
 - **THEN** the redraw flashes the background for the flash duration
 - **AND** when the board is solved via the solve move, no flash occurs
 
-### Requirement: The Twiddle cursor outlines its block
-
-When the cursor is visible, its `n×n` region SHALL be outlined with
-cursor-colored bevel edges.
-
-#### Scenario: The cursor's block is outlined
-
-- **WHEN** the cursor is visible on a block and the board is drawn at rest
-- **THEN** the bevel edges along that block's four sides are outlined in the
-  cursor color, and no other tile's are
-
 ### Requirement: The Twiddle status bar shows a move count that never resets
 
 The status bar SHALL show the move count, which never freezes and never resets,
-with the `(target K)` suffix when a move target is set. The count SHALL follow
-the engine's completion words: `COMPLETED!` when solved, and `Auto-solved.` or
-`Auto-solver used.` once Solve was used.
+with the `(target K)` suffix when a move target is set.
 
 #### Scenario: The count keeps running after a win
 

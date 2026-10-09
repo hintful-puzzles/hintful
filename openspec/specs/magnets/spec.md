@@ -3,20 +3,21 @@
 ## Purpose
 Magnets, the puzzle of filling each domino with a magnet or a neutral piece so
 that no two like poles are orthogonally adjacent and each row and column meets
-its clued pole counts, with input that cycles a domino's contents and marks
-clues done, and mistake checking against the unique solution.
+its clued pole counts: its description and params encodings, input that cycles
+a domino's contents and marks clues done, mistake checking against the unique
+solution, the two solver tiers, the board's look, and an explained hint whose
+sentences and marks are read off the board.
 
 ## Requirements
 
-### Requirement: Magnets game implements the Game interface
+### Requirement: What a Magnets board asks, and when it is solved
 
-The engine SHALL provide a registered `magnets` game implementing `Game`: fill
-a `w × h` grid of pre-laid 2×1 dominoes so that each domino is either a magnet
-(one `+` cell and one `−` cell) or neutral (both cells blank), no two
-orthogonally adjacent cells share a polarity, and each row and column contains
-exactly its clue count of `+` and of `−` cells. A layout SHALL be able to hold
-singleton squares, which are fixed and permanently neutral. The game SHALL
-provide `solve` and `textFormat`.
+A Magnets board SHALL be a `w × h` grid of pre-laid 2×1 dominoes, solved when
+each domino is either a magnet (one `+` cell and one `−` cell) or neutral (both
+cells blank), no two orthogonally adjacent cells share a polarity, and each row
+and column contains exactly its clue count of `+` and of `−` cells. A layout
+SHALL be able to hold singleton squares, which are fixed and permanently
+neutral.
 
 #### Scenario: A filled board is solved
 
@@ -44,10 +45,10 @@ character writes. `validateParams` SHALL refuse Easy unless `w ≥ 3` or
 - **WHEN** `validateParams` is given a 4×4 grid at Normal difficulty
 - **THEN** it returns a non-null error string (Normal needs a side ≥ 5)
 
-### Requirement: Magnets' presets are drawn taller than wide
+### Requirement: Every Magnets preset size is offered at each tier
 
-The presets SHALL be 5×6, 7×8 and 9×10, each stated taller than wide, and each
-offered at Easy, at Normal, and at Normal with stripped clues.
+Each preset size, the largest included, SHALL be offered at Easy, at Normal,
+and at Normal with stripped clues.
 
 #### Scenario: The largest board is offered at Easy
 
@@ -67,22 +68,9 @@ bottom half of a domino, and `*` for a singleton square.
 - **WHEN** a generated desc is parsed by `newState` and re-encoded
 - **THEN** the re-encoded desc equals the original
 
-### Requirement: A Magnets description is read into a layout every state shares
-
-`newState` SHALL parse the desc into a per-cell domino-partner map and the
-`+`, `−` and neutral count targets of each row and column, shared and never
-changed across all states of the game. It SHALL derive each neutral target as
-the line's size less its `+` and `−` targets, and SHALL mark singletons
-permanently neutral.
-
-#### Scenario: A neutral target is derived
-
-- **WHEN** a row of five squares is clued two `+` and two `−`
-- **THEN** its neutral target is one
-
 ### Requirement: A malformed Magnets description is refused
 
-The game's one reading of a desc, in `newState`, SHALL refuse a short desc, a
+The game's reading of a desc SHALL refuse a short desc, a
 character out of range, an inconsistent domino description (an end not pointing
 back at its partner), and a count that exceeds its row's or column's size.
 
@@ -114,8 +102,7 @@ never affects the win condition.
 
 ### Requirement: A Magnets singleton square takes no input
 
-Cursor keys SHALL move a keyboard cursor. A click or cursor action on a
-singleton square SHALL do nothing.
+A click or cursor action on a singleton square SHALL do nothing.
 
 #### Scenario: A singleton is clicked
 
@@ -159,9 +146,10 @@ no undecided square left in its line.
 
 ### Requirement: Magnets grades boards with a tiered deductive solver
 
-The solver SHALL return one of three verdicts at each difficulty: impossible,
-ambiguous or solved. It SHALL propagate a deduction across a domino to its
-partner: a color excluded at one end excludes the opposite color at the other.
+A generated board SHALL be solved by the solver at its own difficulty, and a
+Normal board SHALL NOT be solved at Easy. The solver SHALL propagate a
+deduction across a domino to its partner: a color excluded at one end excludes
+the opposite color at the other.
 
 #### Scenario: A generated board is uniquely solvable at its difficulty
 
@@ -218,26 +206,12 @@ SHALL be drawn as bare background, with no domino on it.
 - **WHEN** the player marks a domino `?`
 - **THEN** each of its squares shows a blue `?`
 
-### Requirement: Every Magnets overlay is in the render diff key
-
-Every per-cell and per-clue overlay (set, error, cursor, not-neutral, flash,
-mistake, clue-done) SHALL be part of the render diff key, so it repaints and
-clears correctly. The mistake overlay's color SHALL be a palette entry of its
-own, added after the game's base colors.
-
-#### Scenario: A mistake overlay repaints on a later frame
-
-- **WHEN** a cell is drawn, then `findMistakes` flags it on a subsequent frame
-  without the cell's own value changing
-- **THEN** the mistake overlay is painted on that later frame
-
 ### Requirement: Magnets offers an explained hint
 
 Magnets SHALL implement `hint` as the recording projection of its graded
 solver: the same ladder, run one firing at a time from the player's board, each
 firing narrated with the premise that forced it. The hint SHALL start from the
-player's placed dominoes and `?` marks, and SHALL refuse on a solved board or
-one with mistakes.
+player's placed dominoes and `?` marks.
 
 #### Scenario: The hint finishes the board
 

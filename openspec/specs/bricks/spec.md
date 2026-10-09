@@ -4,22 +4,11 @@
 Bricks (Tawamurenga), the puzzle of shading cells of an offset brick grid so
 that every shaded cell above the bottom row rests on a shaded cell below, no
 three shaded cells run in a row, and each number counts the shaded cells around
-it. This capability specifies the game: its board and its IDs, its input,
-mistake-checking, an explained deduction hint, its difficulty tiers, its solver
-and generator, and how it is drawn.
+it. This capability holds what is Bricks' own: its board and its IDs, its
+controls, its mistake check, its explained hint and when it refuses, its two
+tiers and the retired third, what its generator promises, and how it is drawn.
 
 ## Requirements
-
-### Requirement: Bricks game implements the Game interface
-
-The engine SHALL provide `src/games/bricks/` implementing the `Game` interface for
-Bricks, registered so the puzzle is served by the TypeScript engine.
-
-#### Scenario: Every preset produces a soluble board
-
-- **WHEN** a new game is generated for any preset or legal size
-- **THEN** a board is produced whose unique solution the solver reaches, marking it
-  complete
 
 ### Requirement: Bricks parameters are a width, a height and a difficulty
 
@@ -40,29 +29,19 @@ existing game ID names the same board.
 - **WHEN** parameters with a width of 1 are checked
 - **THEN** they are refused
 
-### Requirement: The harder Bricks tier is named Unreasonable
+### Requirement: Bricks offers Easy and Unreasonable, and no third tier
 
-The harder tier SHALL be named `Unreasonable`, because its rung commits a cell by
-solving the rest of the board from a hypothesis, and only a tier of that name
-may ship such a rung.
+Bricks SHALL offer two tiers, Easy and `Unreasonable`. The harder SHALL carry
+that name because its rung commits a cell by solving the rest of the board from
+a hypothesis, and only a tier of that name may ship such a rung. Upstream's
+third tier, whose sub-solve recurses in turn, names no boards, so it SHALL NOT
+be offered under any name: not in the preset menu, the difficulty contract or
+the custom-params dialog.
 
-#### Scenario: The harder presets carry the name
+#### Scenario: The preset menu offers two tiers
 
 - **WHEN** the preset menu is listed
-- **THEN** each size is offered as Easy and as `Unreasonable`
-
-### Requirement: Bricks tier names have a single definition
-
-The tier names SHALL have a single definition in the game, read by the preset
-menu, the difficulty contract and the custom-params dialog alike, so that no two
-of them can disagree.
-
-#### Scenario: The menu, the contract and the custom dialog offer the same tiers
-
-- **WHEN** the tier names the preset menu shows, the tiers the difficulty
-  contract declares, and the choices the custom-params difficulty field offers
-  are compared
-- **THEN** they are the same list
+- **THEN** every entry is Easy or `Unreasonable`
 
 ### Requirement: The Bricks board is a hexagon stored as a padded parallelogram
 
@@ -278,18 +257,6 @@ position.
 - **THEN** no move is hinted and an explanatory banner is shown, and for the
   last case the banner states that a placed cell must be wrong
 
-### Requirement: Bricks offers only difficulties that exist
-
-Bricks SHALL offer Easy and `Unreasonable`, and SHALL NOT offer a third tier as
-a name at all: the tier whose sub-solve recurses in turn names no boards, so it
-SHALL appear in neither the preset menu, the difficulty contract, nor the
-custom-params dialog.
-
-#### Scenario: The preset menu offers two tiers
-
-- **WHEN** the preset menu is listed
-- **THEN** every entry is Easy or `Unreasonable`
-
 ### Requirement: The undeclared Bricks tier still loads and is never dealt
 
 The undeclared tier SHALL remain decodable: its difficulty letter is kept, so a
@@ -331,18 +298,6 @@ hint and Solve use it as "try as hard as you can".
 - **WHEN** the player asks for the solution of a board
 - **THEN** the solver is run at depth 2, whatever tier the board was dealt at
 
-### Requirement: The Bricks suite holds the undeclared tier's letter
-
-The cross-game difficulty contract covers only declared tiers, so it does not
-cover the undeclared one. The game's own suite SHALL assert that its difficulty
-character still round-trips through a game ID, so that dropping the name cannot
-silently change what an existing ID means.
-
-#### Scenario: The letter stops round-tripping
-
-- **WHEN** the undeclared tier's letter no longer decodes to that tier
-- **THEN** a test of the game's own suite fails
-
 ### Requirement: Bricks grades the tiers it does offer
 
 A Bricks board generated at a difficulty above the easiest SHALL NOT be soluble at
@@ -354,18 +309,6 @@ one requested.
 - **WHEN** a board generated at `Unreasonable` is solved at Easy
 - **THEN** the solver does not reach a solution
 - **AND** solving the same board at `Unreasonable` does
-
-### Requirement: Bricks solves and generates by deduction
-
-Bricks SHALL provide a solver that decides whether a grid is complete, still
-unfinished, or invalid, from three rules: no three consecutive shaded cells in a
-horizontal line, every shaded cell supported by a shaded cell below it, and every
-numbered cell's shaded-neighbor count consistent with its clue.
-
-#### Scenario: The solver reaches the unique solution
-
-- **WHEN** a generated board is solved
-- **THEN** the solver marks it complete and its cells match the intended solution
 
 ### Requirement: The Bricks solver places cells by contradiction
 
@@ -380,35 +323,14 @@ by pure deduction; the solver SHALL NOT rely on guessing.
   that has a solution
 - **THEN** the solver finds shading it invalid and sets it unshaded
 
-### Requirement: The Bricks generator keeps every puzzle uniquely solvable
+### Requirement: The Bricks generator deals only a board with one solution its solver completes
 
-The generator SHALL use the solver to keep every puzzle uniquely solvable at its
-target difficulty: it SHALL fill the grid under the support and run-length
-constraints, number it, then remove numbers in a randomized order, keeping a
-removal only while the puzzle stays uniquely solvable. Generation from a given seed
-SHALL be reproducible.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
-
-### Requirement: Bricks presets draw tall, and a Bricks board is never turned
-
-Bricks SHALL offer its presets at 6×7 and 8×10, which draw taller than wide. Bricks SHALL NOT declare `transposeParams`: a shaded brick rests on the row below it and no three may lie in a horizontal line, so a tall board is a different puzzle from a wide one rather than the same one turned.
-
-#### Scenario: A Bricks board is dealt as chosen
-
-- **WHEN** a Bricks board is dealt to fit a wide area
-- **THEN** it is dealt at the size chosen
-
-### Requirement: A dealt Bricks board has a solution
-
-The Bricks generator SHALL write out only a board its solver completes at the
-difficulty asked for. Before it removes any number it SHALL solve the fully
-numbered board, and SHALL start again when that solve does not complete: the
-numbering made after the Easy solve can take away the brick another brick rests
-on, and removing numbers cannot repair a board that does not solve.
+The generator SHALL write out only a board with exactly one solution, which its
+solver completes at the difficulty asked for. Before it removes any number it
+SHALL solve the fully numbered board, and SHALL start again when that solve does
+not complete: the numbering made after the Easy solve can take away the brick
+another brick rests on, and removing numbers cannot repair a board that does not
+solve. Generation from a given seed SHALL be reproducible.
 
 #### Scenario: A board two squares wide loads from its own ID
 
@@ -422,36 +344,38 @@ on, and removing numbers cannot repair a board that does not solve.
 - **WHEN** a board is dealt at a height of two
 - **THEN** loading the board's game ID is accepted
 
-### Requirement: Bricks draws its shaded cells as pieces on a quiet surface
+#### Scenario: Generation is reproducible from a seed
 
-`redraw` SHALL draw the board as pieces on a quiet surface. A shaded cell SHALL
-hold the collection's shaded piece, in its color and shape, inset on its cell;
-a cell is a square whatever its row's offset, so the piece is the square one.
+- **WHEN** the same seed is used twice for the same parameters
+- **THEN** both runs produce the identical board description
 
-#### Scenario: A shaded cell holds the square piece
+### Requirement: A Bricks board is never turned
 
-- **WHEN** a board holding a shaded cell is drawn
-- **THEN** the cell holds the collection's square piece in the shaded color,
-  smaller than the cell
+Bricks SHALL declare `transposeParams` not applicable: a shaded brick rests on
+the row below it and no three may lie in a horizontal line, so a tall board is a
+different puzzle from a wide one rather than the same one turned.
 
-### Requirement: No Bricks cell state is a fill of the whole cell
+#### Scenario: A Bricks board is dealt as chosen
 
-A cell the player has ruled out SHALL be the same surface as an undecided cell
-with the collection's ruled-out cross on it, and an undecided cell SHALL be the
-plain surface: no state SHALL be a fill of the whole cell or a step of gray.
+- **WHEN** a Bricks board is dealt to fit a wide area
+- **THEN** it is dealt at the size chosen
+
+### Requirement: Bricks draws its board as pieces on a quiet surface
+
+The board SHALL be drawn as pieces on the collection's quiet surface. A shaded
+cell SHALL hold the collection's shaded piece inset on its cell, the square one,
+since a cell is a square whatever its row's offset. A ruled-out cell SHALL be
+the undecided cell's plain surface with the collection's ruled-out cross on it,
+and a clue SHALL sit on the lifted surface of a given. No state SHALL be a fill
+of the whole cell or a step of gray, and no cell SHALL carry a bevel.
 
 #### Scenario: The three states are told apart without a fill
 
 - **WHEN** a board holding a shaded cell, a ruled-out cell and an undecided
   cell is drawn
 - **THEN** all three cells have the same surface color
-- **AND** the shaded one holds a piece in the shaded color, the ruled-out one a
-  cross, and the undecided one nothing
-
-### Requirement: A Bricks clue sits on the lifted surface, and no cell is beveled
-
-A clue SHALL sit on the lifted surface of a given. The line between cells SHALL
-be the surface's grid line, and no cell SHALL carry a bevel.
+- **AND** the shaded one holds a piece in the shaded color, smaller than the
+  cell, the ruled-out one a cross, and the undecided one nothing
 
 #### Scenario: A clue is told from a cell the player decides
 

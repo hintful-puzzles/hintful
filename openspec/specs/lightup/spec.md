@@ -8,22 +8,6 @@ element-type legend, and no tier below Unreasonable that requires guessing.
 
 ## Requirements
 
-### Requirement: Light Up game implements the Game interface
-
-The engine SHALL provide a registered `lightup` game implementing
-`Game<LightupParams, LightupState, LightupMove, LightupUi, LightupDrawState>`:
-place bulbs on open squares of a `w × h` grid so that every open square is lit
-(a bulb shines along its row and column until a wall blocks it), no bulb is
-lit by another bulb, and every numbered wall has exactly that many
-orthogonally adjacent bulbs. The game SHALL provide `solve` and `textFormat`
-and SHALL drive a solve-completion flash.
-
-#### Scenario: A bulb lights its row and column
-
-- **WHEN** a bulb is placed on an open square
-- **THEN** every open square along its row and its column, as far as the
-  nearest wall each way, is lit
-
 ### Requirement: Light Up's parameters
 
 Params SHALL be `w`, `h`, `blackpc` (the percentage of walls), `symm` (none,
@@ -37,18 +21,6 @@ form.
 - **WHEN** params `{ w: 10, h: 10, blackpc: 20, symm: ROT2, difficulty: 1 }`
   are encoded in full
 - **THEN** the result is `10x10b20s2d1` and decoding it round-trips the params
-
-### Requirement: Light Up's presets
-
-The game SHALL offer as presets a 7×7 grid with 4-way rotational symmetry, a
-10×10 grid with 2-way rotational symmetry and a 14×14 grid with 2-way
-rotational symmetry, each with 20% walls and each at Easy, Normal and
-Unreasonable.
-
-#### Scenario: Every size is offered at every tier
-
-- **WHEN** the preset menu is read
-- **THEN** it lists 7×7, 10×10 and 14×14, each three times, once per tier
 
 ### Requirement: Light Up decodes params leniently
 
@@ -87,8 +59,7 @@ both below 3.
 The desc SHALL encode the grid row-major, one character per wall
 (`B` unnumbered, `0`–`4` numbered) with maximal runs of open squares
 compressed as `a`–`z` (a run of 1 to 26). `validateDesc` SHALL reject unknown
-characters, short descs and over-long descs. `newState` SHALL parse the desc
-into wall and numbered flags and clue values, with every open square unlit.
+characters, short descs and over-long descs.
 
 #### Scenario: A description round-trips
 
@@ -138,20 +109,26 @@ Completing the board SHALL hide the cursor.
 
 In `executeMove` a bulb and an impossible-mark SHALL be mutually exclusive on
 a square: placing a bulb SHALL clear any mark there, and placing a mark SHALL
-remove any bulb there. `executeMove` SHALL recompute the lit counts of every
-square a changed bulb lights.
+remove any bulb there.
 
 #### Scenario: A bulb placed over a mark
 
 - **WHEN** a move places a bulb on a square that carries an impossible-mark
 - **THEN** the square holds the bulb and no mark
-- **AND** the squares the bulb lights count one more bulb lighting them
 
 ### Requirement: Light Up is solved exactly while the grid is correct
 
-The board SHALL be reported solved exactly while the grid is correct: every
-open square is lit, no bulb is lit by another, and every clue is exactly
-satisfied.
+Bulbs go on the open squares of a `w × h` grid. A bulb SHALL light its own
+square and every open square along its row and its column, as far as the
+nearest wall each way. The board SHALL be reported solved exactly while the
+grid is correct: every open square is lit, no bulb is lit by another, and
+every numbered wall has exactly that many orthogonally adjacent bulbs.
+
+#### Scenario: A bulb lights its row and column
+
+- **WHEN** a bulb is placed on an open square
+- **THEN** every open square along its row and its column, as far as the
+  nearest wall each way, is lit
 
 #### Scenario: Completion is detected
 
@@ -185,24 +162,12 @@ repaints on the frame it is computed.
 
 The game SHALL implement `hint()` returning a plan of narrated steps computed
 by the game's own solver techniques from the player's current position,
-honoring the bulbs and impossible-marks already placed. No displayed step
-SHALL be a generic, un-narrated fallback.
+honoring the bulbs and impossible-marks already placed.
 
 #### Scenario: The plan completes deductive boards
 
 - **WHEN** the plan is computed on any generated Easy or Normal board
 - **THEN** following it step by step solves the board with no un-narrated step
-
-### Requirement: A Light Up hint is refused on a solved board and on a wrong one
-
-A hint SHALL be refused on a solved board, and on a board where `findMistakes`
-is non-empty, where the refusal SHALL come with the mistake overlay and the
-banner. The midend makes both refusals before it calls the game's `hint()`.
-
-#### Scenario: Refusal on a wrong board
-
-- **WHEN** a hint is asked for on a board where `findMistakes` is non-empty
-- **THEN** it is refused with an error, and the mistake overlay is displayed
 
 ### Requirement: A Light Up hint step names its technique and says why
 
@@ -312,24 +277,6 @@ line in the digit's white inside the ring.
 - **WHEN** any grouped clue step is displayed
 - **THEN** every target square lies within the narrated clue's neighbor set
 
-### Requirement: No non-Unreasonable Light Up tier requires guessing
-
-Light Up SHALL comply with the `ts-migration` narratable-deduction generation
-policy: every difficulty tier offered under a name other than `Unreasonable`
-SHALL generate only boards solvable by the narrated deductive techniques with
-no recursion. The tier whose boards require recursion SHALL be offered as
-`Unreasonable`.
-
-#### Scenario: Deductive tiers are hint-complete
-
-- **WHEN** a board is generated at a non-`Unreasonable` tier
-- **THEN** the hint's narrated techniques solve it to completion
-
-#### Scenario: The guess tier is honestly named
-
-- **WHEN** a tier's boards require recursion to solve
-- **THEN** that tier is offered only under the name `Unreasonable`
-
 ### Requirement: On an Unreasonable board the hint stops at the guess point
 
 On a board of the `Unreasonable` tier the hint SHALL narrate the deductions
@@ -363,9 +310,8 @@ At Normal and above the solver SHALL test every set of which one square must
 hold a bulb against candidate squares that would rule the whole set out,
 marking such a candidate impossible. A set SHALL come from an unlit square, or
 from each combination of `n−m+1` of a clue's `n` free neighbors where `m`
-bulbs are still owed, enumerated with `Combi`. Candidates SHALL be those that
-rule out the member with the fewest rule-outs. The cheap deductions SHALL
-restart after the first successful discount.
+bulbs are still owed. The cheap deductions SHALL restart after the first
+successful discount.
 
 #### Scenario: A clue owing one bulb among three neighbors
 
@@ -375,10 +321,9 @@ restart after the first successful discount.
 
 ### Requirement: Unreasonable adds depth-capped recursion
 
-At Unreasonable the solver SHALL additionally recurse on the candidate square
-that would light the most unlit squares, to a depth of at most 5. Where a
-unique solution is required, a branch that hits the depth limit SHALL make the
-result "unknown". Solution counts SHALL be summed across branches.
+At Unreasonable the solver SHALL additionally recurse, to a depth of at most
+5. Where a unique solution is required, a branch that hits the depth limit
+SHALL make the result "unknown".
 
 #### Scenario: A board with two solutions
 
@@ -386,26 +331,25 @@ result "unknown". Solution counts SHALL be summed across branches.
   has a solution on each branch of it
 - **THEN** the solver reports two solutions, so the board is not unique
 
-### Requirement: The solver records the clues it used and serves solve and findMistakes
+### Requirement: Solve works from the player's position, then from the clues
 
-The solver SHALL track which clue numbers it used, for the generator's
-stripping. The same solver SHALL be reused by `solve()` and by
-`findMistakes`.
+`solve()` SHALL solve from the player's current position where that reaches a
+solution, and from the clean clues where it does not. It SHALL NOT require
+the solution to be unique.
 
 #### Scenario: Solve recovers a solution from a dirty board
 
 - **WHEN** `solve()` is invoked on a mid-game state containing wrong bulbs
 - **THEN** it returns a move that leaves the board correctly and completely
-  lit (solving from the current position when possible, else from the clean
-  clues)
+  lit
 
 ### Requirement: Light Up generates solver-gated boards
 
-The generator SHALL place walls symmetrically per the symmetry mode, with a
-random draw for the center square of an odd 4-way-rotational grid. It SHALL
-place a correct random set of lights by filling every open square and then
-removing lights in a marked sweep, SHALL number every wall, and SHALL accept
-the grid only when the solver solves it at the target difficulty. Generation
+The generator SHALL place walls symmetrically per the symmetry mode, SHALL
+number every wall from a correct set of bulbs, and SHALL accept the grid only
+when the solver solves it at the target difficulty. It SHALL then strip
+numbers, keeping each removal only while the puzzle stays good, and SHALL
+reject a board that is then still solvable one difficulty lower. Generation
 from a given seed SHALL be reproducible.
 
 #### Scenario: Generation is reproducible from a seed
@@ -413,19 +357,11 @@ from a given seed SHALL be reproducible.
 - **WHEN** `newDesc` is run twice for the same preset and seed
 - **THEN** both runs produce the identical description
 
-### Requirement: The generator strips clues while the puzzle stays good
-
-Of an accepted grid, the generator SHALL strip the numbers the solver did not
-use where the puzzle stays good, and SHALL then remove the surviving numbers
-one by one, in an order shuffled once for the whole generation, keeping each
-removal only while the puzzle stays good. It SHALL reject a board that is then
-still solvable one difficulty lower.
-
 #### Scenario: A removal that breaks the puzzle is put back
 
 - **WHEN** removing a number leaves the board unsolvable at the target
   difficulty
-- **THEN** the number is restored and the next one in the order is tried
+- **THEN** the number is restored
 
 ### Requirement: The generator adds walls when no board turns up
 
@@ -488,8 +424,7 @@ alike.
 
 The mark for a square that cannot hold a bulb SHALL be the collection's
 ruled-out cross. It SHALL be suppressed on a lit square when the
-`show-lit-blobs` preference is off. That preference SHALL be declared through
-the `Game.prefs` hook and SHALL default to on.
+`show-lit-blobs` preference is off. That preference SHALL default to on.
 
 #### Scenario: Lit blobs honor the preference
 
@@ -518,15 +453,3 @@ wall, and SHALL NOT call it a black square.
 
 - **WHEN** the Custom dialog is opened
 - **THEN** the field for `blackpc` is labeled as a percentage of walls
-
-### Requirement: Light Up's tile cache keys on one packed word
-
-The per-tile packed flags SHALL be the render cache key, held in an
-`Int32Array`. Every overlay SHALL be a bit of that word, so that a change to
-it repaints the tile: the `findMistakes` highlight, the `show-lit-blobs`
-preference and every hint bit.
-
-#### Scenario: A hint step changes
-
-- **WHEN** the displayed hint step moves from one square to another
-- **THEN** both squares' packed words change and both tiles repaint

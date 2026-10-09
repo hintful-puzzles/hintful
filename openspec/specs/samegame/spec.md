@@ -1,28 +1,14 @@
 # samegame Specification
 
 ## Purpose
-Same Game, the puzzle of clearing the board by removing connected groups of one
-color, scoring more for larger groups. This capability specifies the game:
-its params, the boards it deals, removal with scoring and compaction, two-click
-selection, keyboard input, a live score, and what it draws.
+Same Game, the puzzle of clearing a `w×h` grid of colored tiles by removing
+orthogonally-connected groups of one color, scoring more for larger groups.
+This capability holds the game's own rules: its params and description
+encodings, the promise that a dealt board can be cleared, removal with scoring
+and compaction, what a stuck board is, the two-click selection and its keys,
+the status bar's words, and how the board is drawn.
 
 ## Requirements
-
-### Requirement: Same Game implements the Game interface
-
-The engine SHALL provide a registered `samegame` game implementing
-`Game<SamegameParams, SamegameState, SamegameMove, SamegameUi,
-SamegameDrawState>`: a block-clearing puzzle on a `w×h` grid of colored tiles
-(colors `1..ncols`, `0` = empty) in which the player removes
-orthogonally-connected groups of one color. The game SHALL provide
-`statusbarText` and `textFormat`, and SHALL NOT provide `solve`, `hint`, or
-`findMistakes`.
-
-#### Scenario: The game is registered without a solver
-
-- **WHEN** the registry is asked for `samegame`
-- **THEN** it returns the game, with `statusbarText` and `textFormat`
-- **AND** the game has no `solve`, no `hint` and no `findMistakes`
 
 ### Requirement: Same Game's params are a size, a color count and a scoring system
 
@@ -39,17 +25,6 @@ no promise the grid can be cleared, and encoding SHALL never write it.
 - **AND** decoding `15x10c4s2` round-trips those params
 - **AND** decoding `15x10c4s2r` yields the same params
 
-### Requirement: Same Game offers five presets
-
-Five presets SHALL be offered: `5×5`, `5×10` and `10×15` with 3 colors, and
-`10×15` and `15×20` with 4 colors, all with `scoresub = 2`.
-
-#### Scenario: The preset menu
-
-- **WHEN** the presets are listed
-- **THEN** there are five, each `w×h` no wider than tall
-- **AND** every one has `scoresub = 2`
-
 ### Requirement: Same Game does not turn its board
 
 Tiles fall down and emptied columns close leftward, so a board of Same Game
@@ -64,29 +39,21 @@ wide one, not the same one turned.
 ### Requirement: Same Game refuses params it cannot deal
 
 Params SHALL be refused unless `w ≥ 1`, `h ≥ 1`, `3 ≤ ncols ≤ 9`,
-`scoresub ∈ {1,2}` and `w·h > 1`. `validateParams` SHALL refuse `ncols < 3`
-and `w·h ≤ 1`. The declared bounds of the width, height and color-count fields
-and the scoring system's list of choices SHALL carry the rest, which the
-engine's params check refuses.
+`scoresub ∈ {1,2}` and `w·h > 1`.
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** `validateParams` is called with `ncols: 2`
-- **THEN** it returns a non-null error string
-- **AND** a `1×1` grid also returns a non-null error string
-
-#### Scenario: A declared bound is refused by the engine's check
-
-- **WHEN** the engine's params check is given `ncols: 10`, or `scoresub: 3`
+- **WHEN** the engine's params check is given `ncols: 2`, `ncols: 10`,
+  `scoresub: 3`, or a `1×1` grid
 - **THEN** it returns a non-null error string
 
 ### Requirement: Same Game removes connected groups, scores, and compacts
 
 A `SamegameMove` SHALL be `{ type: "remove"; tiles: number[] }` carrying the grid
-indices to clear. `executeMove` SHALL be pure: it SHALL range-check each index,
-set those tiles empty, add `max(0, n − scoresub)²` to the score (where `n` is the
-number of removed tiles), let remaining tiles fall to the bottom of their
-columns, and shuffle non-empty columns to the left.
+indices to clear. `executeMove` SHALL range-check each index, set those tiles
+empty, add `max(0, n − scoresub)²` to the score (where `n` is the number of
+removed tiles), let remaining tiles fall to the bottom of their columns, and
+shuffle non-empty columns to the left.
 
 #### Scenario: Removing a group scores and compacts
 
@@ -94,7 +61,7 @@ columns, and shuffle non-empty columns to the left.
   `scoresub = 2`
 - **THEN** the new state's score increases by `(4 − 2)² = 4`
 - **AND** tiles above the cleared cells have fallen and empty columns have moved
-  right, and the source state is unmutated
+  right
 
 #### Scenario: An index off the grid is refused
 
@@ -192,11 +159,8 @@ when the board is impossible. On a cleared board `statusbarText` SHALL return
 
 ### Requirement: Same Game generates boards that can be cleared
 
-`newDesc` SHALL produce the board as a comma-separated list of `w·h` color
-integers in row-major order, using the inverse-move generator: it repeatedly
-inserts a verified connected blob whose removal reproduces the prior grid, so
-the board is clearable. No parameter SHALL deal a grid that may not be
-clearable.
+Every board `newDesc` deals SHALL be one that some order of removals empties.
+No parameter SHALL deal a grid that may not be clearable.
 
 #### Scenario: A generated description is well-formed
 
@@ -205,9 +169,9 @@ clearable.
 
 ### Requirement: A Same Game description is one color for every tile
 
-A desc without exactly `w·h` comma-separated integers, or with any integer
-outside `1..ncols`, SHALL be refused: a dealt board is full, so no desc names
-an empty cell. `newState` SHALL parse the desc into the tile grid with score
+A desc SHALL be the tiles' colors in row-major order, comma-separated. A desc
+without exactly `w·h` integers, or with any integer outside `1..ncols`, SHALL
+be refused: a dealt board is full, so no desc names an empty cell. `newState` SHALL parse the desc into the tile grid with score
 0, and SHALL read `impossible` off the tiles.
 
 #### Scenario: A malformed description is rejected

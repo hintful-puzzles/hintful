@@ -1,9 +1,10 @@
 # engine-difficulty Specification
 
 ## Purpose
-Difficulty tiers: the contract a tiered game declares, the collection-wide
-scale its tier names come from, and the guards that hold a board to the tier
-it was dealt at. Why each rule is as it is, and how to follow it, is in
+Difficulty tiers: the contract a tiered game declares, what a tier promises,
+the collection-wide scale its tier names come from, the guard that holds a
+dealt board to its preset's tier, and the tier the midend gives a loaded board
+and holds a hint to. Why each rule is as it is, and how to follow it, is in
 `docs/games/solver-and-generator.md` § "Difficulty tiers".
 
 ## Requirements
@@ -215,10 +216,9 @@ rather than restate it. A title that names no difficulty is permitted.
 ### Requirement: A cross-game guard asserts that tiers bind
 
 A cross-game guard SHALL require that a board dealt from a preset whose tier
-the contract can read solves at that tier and at no lower one. Its population
-SHALL be derived from the registry, with no enrollment list. It SHALL be keyed
-on the presets a player can pick, each at its own tier, and never on a tier
-written onto another preset.
+the contract can read solves at that tier and at no lower one. It SHALL be
+keyed on the presets a player can pick, each at its own tier, and never on a
+tier written onto another preset.
 
 #### Scenario: A generator downgrades a tier
 
@@ -238,31 +238,6 @@ written onto another preset.
 - **WHEN** a tier is one no preset of that size carries
 - **THEN** the guard asserts nothing of it: that `validateParams` accepts a
   params record is not evidence that a board can carry the tier in it
-
-#### Scenario: A new game joins
-
-- **WHEN** a game is registered that offers a difficulty choice
-- **THEN** the guard asserts it from its first commit, with no line added to
-  enroll it
-
-### Requirement: The tier-binding guard has no exemption list and counts its cases
-
-The guard SHALL take an exception only from a declaration the game already
-makes: a tier a size cannot carry is refused by `validateParams` with a reason.
-The guard SHALL assert that the number of preset cases it checked is above a
-floor. Its per-commit run SHALL sample seeds through the shared budget helper,
-and the full matrix SHALL run in the opt-in slow tier.
-
-#### Scenario: A tier is unreachable at a size
-
-- **WHEN** a declared tier cannot be generated at some preset's size
-- **THEN** the game refuses those params with a reason, and the guard asserts
-  nothing about a board that was never dealt
-
-#### Scenario: A contract stops reporting tiers
-
-- **WHEN** a change leaves the guard with no preset whose tier it can read
-- **THEN** the floor on its count of cases fails
 
 ### Requirement: Shared generation machinery is argued from economy
 
@@ -298,18 +273,6 @@ deduction, so the refusal's sentence would be false of it.
   `Unreasonable`
 - **THEN** the midend returns `DEDUCTION_EXHAUSTED` as a refusal and throws
   nothing
-
-### Requirement: One helper says which tiers permit search
-
-Whether a tier permits search SHALL be decided by one engine helper,
-`permitsSearch`, read by the midend and by the test walk over dealt boards, so
-the runtime check and the test cannot disagree.
-
-#### Scenario: The walk meets a board the midend would throw on
-
-- **WHEN** the test walk follows a hint to `DEDUCTION_EXHAUSTED` on a dealt
-  board
-- **THEN** it fails for exactly the tiers at which the midend throws
 
 ### Requirement: Auto-Hint stops when a step throws
 

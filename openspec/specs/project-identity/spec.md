@@ -12,9 +12,10 @@ lineage is the `licensing` capability; this one is the presentational side.
 
 The product SHALL be presented to players as **Hintful Puzzles**, with the
 short label **Hintful** where a full name does not fit, as under an installed
-icon. The repository's name, `hintful` in the `hintful-puzzles` organization,
-SHALL NOT be presented as the product's: the product and the codebase are
-different things with different names.
+icon. The repository's name, `hintful`, SHALL NOT be presented as the
+product's. The name, the tagline and the support links SHALL have one source
+in the code, `src/project-identity.ts`, and every surface that shows one SHALL
+read it from there.
 
 #### Scenario: Every surface shows the same name
 
@@ -29,24 +30,11 @@ different things with different names.
 - **THEN** the dialog title and the manifest show that name
 - **AND** the license panel still labels the MIT notice with the project name
 
-### Requirement: The name and the support links are read from one source
+#### Scenario: No surface carries its own copy
 
-The name and the support links SHALL have one source in the code,
-`src/project-identity.ts`. Every surface that shows a support link SHALL read
-it from there. The name SHALL be read from there by the About dialog's title
-and description, the PWA manifest, the front page's title and heading, and the
-home screen's header.
-
-#### Scenario: No listed surface carries its own copy
-
-- **WHEN** the front page heading, the manifest and the About dialog's title
-  and description show the name
-- **THEN** none of them carries its own copy of the string
-
-#### Scenario: The source-code link
-
-- **WHEN** the About dialog and the front page's footer link to the source code
-- **THEN** both take the address from `src/project-identity.ts`
+- **WHEN** a surface shows the name, or links to the source code or the bug
+  reports
+- **THEN** it takes the string from `src/project-identity.ts`
 
 ### Requirement: Player-facing text is this project's own, and the lineage is credited in one place
 

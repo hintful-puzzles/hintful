@@ -65,15 +65,16 @@ and the hint does not call the position a dead end.
 
 Where the check behind Check & save finds mistakes or a dead end, the app
 SHALL NOT write the quick-save slot, so the previous quick-save is left
-intact, and SHALL report why: the count of mistakes while the mistaken cells
-are highlighted, or the hint's own sentence while any cause it names is
-marked.
+intact. It SHALL interrupt with a modal alert that says nothing was saved and
+why: the count of mistakes while the mistaken cells are highlighted, or the
+hint's own sentence while any cause it names is marked.
 
 #### Scenario: Board with mistakes is not checkpointed
 
 - **WHEN** the player activates Check & save and the board has mistakes
 - **THEN** no quick-save is written, the previous quick-save (if any)
-  remains, the mistaken cells are highlighted, and the count is reported
+  remains, the mistaken cells are highlighted, and a modal alert reports the
+  count and that nothing was saved
 
 #### Scenario: A dead end is not checkpointed
 
@@ -86,13 +87,15 @@ marked.
 ### Requirement: A position the hint's search cannot settle is saved
 
 Where the check behind Check & save finds no mistakes and the hint's search
-could not settle the position, the board SHALL be quick-saved.
+could not settle the position, the board SHALL be quick-saved, and a
+non-blocking toast SHALL say the check could not tell whether the position can
+still be finished. The toast SHALL be announced in place of the confirmation.
 
 #### Scenario: A position past the search's reach is saved
 
 - **WHEN** the hint's search cannot settle the position
-- **THEN** the board is quick-saved, and the player is told the check could not
-  tell whether it can still be finished
+- **THEN** the board is quick-saved, the control reads "Saved", and a toast
+  says the check could not tell whether the position can still be finished
 
 ### Requirement: A game that cannot check gets a plain quick-save
 
@@ -132,17 +135,6 @@ as the save where a check ran: "No mistakes. Saved." where `findMistakes` ran.
   mistake-checking
 - **THEN** a screen reader is told the board had no mistakes and was saved
 
-### Requirement: An unsettled save says so in a toast
-
-A save the check could not settle SHALL say so in a non-blocking toast, which
-SHALL be announced in place of the confirmation.
-
-#### Scenario: An unsettled save says so without interrupting
-
-- **WHEN** Check & save saves a position past the hint's search
-- **THEN** the control reads "Saved" and a toast says the check could not tell
-  whether the position can still be finished
-
 ### Requirement: Check & save is drawn like the commands beside it
 
 The Check & save control SHALL be drawn like the commands beside it, and SHALL
@@ -153,17 +145,6 @@ NOT be drawn as a bordered or outlined button.
 - **WHEN** the Bar shows Check & save beside its other commands
 - **THEN** Check & save is drawn like them, and not as a bordered or outlined
   button
-
-### Requirement: Only a refused save interrupts
-
-A refused save, where Check & save found mistakes or a dead end, SHALL remain
-a modal alert, because it must interrupt: it SHALL report that nothing was
-saved and why.
-
-#### Scenario: A refused save still interrupts
-
-- **WHEN** Check & save finds mistakes and refuses to save
-- **THEN** a modal alert reports the count and that nothing was saved
 
 ### Requirement: A successful Quick-load confirms with a toast
 

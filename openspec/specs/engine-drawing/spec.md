@@ -1,9 +1,9 @@
 # engine-drawing Specification
 
 ## Purpose
-Drawing: the shared drawing helpers, the draw state a game is handed, how the
-midend repaints and sizes a board, and the guard that a warm frame matches a
-fresh paint.
+Drawing: which shapes a game draws through the shared helpers, the draw state
+a game is handed, how the midend sizes and repaints a board and lays the ground
+under it, and the guard that a warm frame matches a fresh paint.
 
 ## Requirements
 
@@ -14,8 +14,7 @@ lowlight)` in `src/engine/draw.ts`, where `bounds` is the playfield's outer
 pixel box (`{ left, top, right, bottom }`, edges inclusive), `inset` is the
 bevel depth (the tile size), and `highlight` and `lowlight` are the two palette
 colors. It SHALL draw the two-pentagon recessed bevel, a highlight wedge along
-the bottom and right edges and a lowlight wedge along the top and left, in one
-canonical winding.
+the bottom and right edges and a lowlight wedge along the top and left.
 
 #### Scenario: The two wedges split the frame along its diagonal
 
@@ -27,16 +26,17 @@ canonical winding.
 ### Requirement: A game draws its beveled frame through the recessed-border helper
 
 Games that draw a beveled frame SHALL call `drawRecessedBorder`, each supplying
-its own edge derivation, instead of re-deriving the polygons locally. Per-game
-extras that are not the bevel, such as a separator rectangle just outside the
-grid, SHALL remain at the call site.
+its own edge derivation as the playfield's outer pixel box, edges inclusive,
+instead of re-deriving the polygons locally. Per-game extras that are not the
+bevel, such as a separator rectangle just outside the grid, SHALL remain at the
+call site. A cross-game guard SHALL fail a game whose frames hold a bevel of
+the helpers' shape that no call to a shared helper drew.
 
-#### Scenario: A beveled game draws its frame through the helper
+#### Scenario: A game draws a bevel of its own
 
-- **WHEN** a game with a recessed border (Fifteen, Sixteen, Twiddle) draws its
-  first frame
-- **THEN** it calls `drawRecessedBorder` with its computed bounds, tile size, and
-  highlight and lowlight colors
+- **WHEN** a game's frames hold a two-triangle or a two-pentagon bevel that no
+  call to a shared helper drew
+- **THEN** the guard fails for that game
 
 ### Requirement: The engine provides a shared rectangle-outline drawing helper
 
@@ -92,9 +92,9 @@ stale.
 The engine SHALL provide `drawRaisedTile(dr, body, tileSize, face, highlight,
 lowlight)` in `src/engine/draw.ts`, where `body` is the rectangle of pixels the
 tile covers. It SHALL draw the raised block over `body`, a bottom-right
-lowlight triangle and a top-left highlight triangle, lowlight first, in one
-canonical winding, and then `face` over the middle, inset by
-`raisedBevelWidth(tileSize)` on all four sides.
+lowlight triangle and a top-left highlight triangle, lowlight first, and then
+`face` over the middle, inset by `raisedBevelWidth(tileSize)` on all four
+sides.
 
 #### Scenario: A tile inside a grid line has a border on every side
 
@@ -131,18 +131,12 @@ inclusive), for a relief that has no face of its own.
 
 ### Requirement: A game draws a raised tile through the shared helper
 
-Games that draw a raised tile SHALL call `drawRaisedTile` instead of
-re-deriving the triangles or the inset locally. A game whose tile keeps a grid
-line SHALL pass the box inside the line as `body`, so the border is the same
-width on every side. A beveled shape that is not the two-triangle block SHALL
-NOT be expressed through this helper, and keeps its own drawing code.
-
-#### Scenario: A raised-tile game draws its bevel through the helper
-
-- **WHEN** a game with a raised tile (Fifteen, Sixteen) draws a tile
-- **THEN** it calls `drawRaisedTile` with that tile's own body, its face color
-  and its highlight and lowlight colors
-- **AND** it computes no bevel width or inner rectangle of its own
+Games that draw a raised tile SHALL call `drawRaisedTile`, or `drawRaisedBevel`
+for a relief with no face, instead of re-deriving the triangles or the inset
+locally. A game whose tile keeps a grid line SHALL pass the box inside the line
+as `body`, so the border is the same width on every side. A beveled shape that
+is not the two-triangle block SHALL NOT be expressed through these helpers, and
+keeps its own drawing code.
 
 #### Scenario: A pressed-in tile swaps the two colors
 
@@ -154,28 +148,7 @@ NOT be expressed through this helper, and keeps its own drawing code.
 - **WHEN** a game draws a beveled shape that is not the two-triangle block:
   Twiddle's four trapezoids meeting a center point, each taking its own
   cursor-highlight color and rotating during its animation
-- **THEN** it SHALL NOT be expressed through this helper, and keeps its own
-  drawing code
-
-### Requirement: No game re-derives a bevel
-
-A cross-game guard SHALL read each game's sample frames for a bevel by shape,
-two polygons drawn one after the other that split one box along its diagonal,
-and count the game's calls to the shared helpers while those frames are drawn.
-Every game SHALL draw exactly as many two-triangle bevels as it made calls to
-`drawRaisedTile` and `drawRaisedBevel`, and exactly as many two-pentagon bevels
-as it made calls to `drawRecessedBorder`.
-
-#### Scenario: A game draws a bevel of its own
-
-- **WHEN** a game's frames hold a two-triangle or a two-pentagon bevel that no
-  call to a shared helper drew
-- **THEN** the guard fails for that game
-
-#### Scenario: The guard reads nothing
-
-- **WHEN** the guard finds no game drawing a bevel, or no call to a helper
-- **THEN** it fails, so it cannot pass by reading nothing
+- **THEN** it keeps its own drawing code
 
 ### Requirement: The engine provides a shared centered-glyph text-options helper
 
@@ -191,12 +164,6 @@ the helper SHALL NOT grow a parameter to cover the case.
 - **WHEN** a game's renderer draws a glyph centered in a tile
 - **THEN** it takes its text options from the engine helper, passing only the size
 
-#### Scenario: a game needs different text options
-
-- **WHEN** a game draws fixed-width or non-centered text
-- **THEN** it writes the options it needs, and the helper does not grow a
-  parameter to cover the case
-
 ### Requirement: A game's render test records through the shared recording drawing
 
 A test asserting what a game draws SHALL drive the engine's shared recording
@@ -211,77 +178,26 @@ or stops drawing something, leaves such a test green.
 - **THEN** the recording contains it, whether or not the test asserts on it
 - **AND** a test asserting the frame as a whole shows it as a reviewable diff
 
-#### Scenario: a migrated test still catches its own defect
+### Requirement: The capability snapshot records a draw state's field names and judges none
 
-- **WHEN** a test moves from a local double to the shared recorder
-- **THEN** the defect named in the test's title is planted, seen red, and restored
-- **AND** a test that cannot be made red is reported as the finding it is
-
-### Requirement: A repaint cue belongs in the tile cache before a sidecar
-
-Where a cue can be expressed as a bit in a game's existing per-tile cache key,
-the game SHOULD express it that way rather than adding a second cache keyed on
-its own scalar. A second cache is a second key, and a key that stops naming one
-of its inputs fails silently: the cue simply never repaints.
-
-A game SHALL add a sidecar cache only where the cue has no tile to live in, and
-SHALL then name every input the painter reads in that cache's key.
-
-#### Scenario: a cue that has a tile available
-
-- **GIVEN** a cue whose position coincides with a tile the game already caches
-- **WHEN** the game renders it
-- **THEN** it packs the cue into that tile's key rather than comparing a scalar
-  on the draw state
-
-### Requirement: The capability snapshot records the draw state its constructor builds
-
-The derived capability snapshot SHALL record the field names of a game's **draw
-state** as well as of its `Ui`, so that a divergence in either is a reviewable
-line in a text diff rather than something a reader must go looking for. It
-SHALL record names only, not sizes, values or types, so that the snapshot moves
-when a game's vocabulary moves and at no other time.
+The derived capability snapshot SHALL record the field names of a game's draw
+state as well as of its `Ui`, read as `newDrawState` returns it at the game's
+preferred tile size, before any `redraw`. It SHALL record names only, and SHALL
+assert nothing about which names a game uses: its job is to make a change a
+reviewable line in a diff, and an approved vocabulary would be a list only this
+check reads.
 
 #### Scenario: a game's draw state loses a field
 
 - **GIVEN** a change that removes a field from one game's draw state
 - **WHEN** the suite runs
 - **THEN** the snapshot moves, and the loss is visible in the diff
-
-### Requirement: The capability snapshot permits and forbids no name
-
-The capability snapshot SHALL continue to assert nothing about *which* names a
-game uses in its draw state or its `Ui`. Its whole job is to make a change
-visible, not to permit or forbid one: an approved vocabulary would be a list
-that only this check reads and no mechanism consumes.
-
-#### Scenario: a shared mechanic is added to several games at once
-
-- **GIVEN** a mechanic that several games remember in their draw state
-- **WHEN** the snapshot is next taken
-- **THEN** the field appears against each of those games in one place
-- **AND** no assertion is made about what it should be called
-
-### Requirement: The capability snapshot reads the draw state as newDrawState returns it
-
-The capability snapshot SHALL read a game's draw state **as `newDrawState`
-returns it** at the game's preferred tile size, before any `redraw`. A draw
-state is built at its size and no step of the `Game` contract assigns into it
-afterwards, so no later step can put back a field the constructor lost before
-its names are taken.
-
-#### Scenario: a field built from the tile size
-
-- **GIVEN** a game whose `newDrawState` builds a field from the tile size it is
-  handed
-- **WHEN** a change removes that field
-- **THEN** the snapshot moves, as it does for every other field `newDrawState`
-  builds
+- **AND** no assertion is made about what any field should be called
 
 ### Requirement: Fit-to-window sizing fills the slot
 
 `Midend.size(maxSize)` SHALL resolve the tile size as the largest integer tile
-size whose `computeSize` result fits `maxSize` (binary search), growing beyond
+size whose `computeSize` result fits `maxSize`, growing beyond
 the game's preferred tile size when the slot allows, so that a game occupies
 the layout slot it is given rather than freezing at its preferred size. Capping
 the board at a multiple of its preferred size is the `maxScale` setting's job,
@@ -475,18 +391,6 @@ snapshot, which starts from a fresh draw state, sees none of it.
 - **THEN** the warm frame differs from the fresh one and the test fails, naming
   the game, the frame, the event before it and the differing pixel
 
-#### Scenario: A packed field overflows onto another
-
-- **WHEN** a value shifted into a key wraps onto another field's bit
-- **THEN** two different draw states share a key, the warm frame keeps the older
-  one, and the test fails
-
-#### Scenario: Two flags share a bit
-
-- **WHEN** two flags a painter reads are packed into the same bit of a key
-- **THEN** a change from one to the other leaves the key unmoved, the warm
-  frame keeps the older picture, and the test fails
-
 ### Requirement: The warm-frame comparison drives every registered game on a real Midend
 
 A cross-game test SHALL drive each game through seeded input on a real `Midend`
@@ -502,38 +406,13 @@ the test SHALL assert that it looked at the whole registry and compared frames.
 
 ### Requirement: The warm-frame comparison answers for what it reached
 
-The run behind "A warm frame matches a fresh paint of the same state" SHALL
-paint the frames a player sees between two settled ones, and SHALL report what
-it showed each game, because a pass says nothing about a frame the run never
-painted. The requirements that follow state which frames it paints and what the
-test requires of the report.
-
-#### Scenario: A hinted game is never shown its hint
-
-- **WHEN** the run shows a game that has a hint no hint frame
-- **THEN** the test fails for that game, rather than passing over a hint overlay
-  it never painted
-
-### Requirement: The comparison counts the frames and marks it painted
-
-The run SHALL count the frames painted mid-animation, with a hint displayed,
-and with a mistake overlay, and the events after which an animation was armed.
-It SHALL record, as `role|kind`, the marks the painted frames carried, and
-every mark the renderer asked the displayed marks for (`StepMarks.of`). Mistake
-frames are counted and not required, because reaching a mistaken board
-takes a move specific to the game.
-
-#### Scenario: A run that paints no mistake frame
-
-- **WHEN** a game's run paints no frame with a mistake overlay
-- **THEN** the count is zero and the test does not fail on it
-
-### Requirement: The comparison paints the frames of an animation
-
-After every event the run SHALL advance the midend's clock in steps shorter
-than any animation or flash in the collection, painting each frame until one is
-still. `Midend.timer` takes seconds. The test SHALL require that an armed
-animation was painted part-way.
+The warm-frame run SHALL paint the frames a player sees between two settled
+ones, because a pass says nothing about a frame never painted: an animation's
+frames, in clock steps shorter than any animation or flash in the collection; a
+drag's preview before its release; and the check Check & save makes. The test
+SHALL require that an armed animation was painted part-way. Mistake frames are
+counted and not required: reaching a mistaken board takes a move specific to
+the game.
 
 #### Scenario: The clock ticks in whole seconds
 
@@ -542,16 +421,11 @@ animation was painted part-way.
 - **THEN** the animation ends inside the tick with none of its frames painted,
   and the test fails for that game
 
-### Requirement: The comparison paints a drag's preview and a check
+#### Scenario: A hinted game is never shown its hint
 
-The run SHALL paint a drag's preview before the drag is released. Its events
-SHALL include the check Check & save makes, so that a marked dead end is
-painted.
-
-#### Scenario: A drag in the seeded run
-
-- **WHEN** the run presses, drags and releases
-- **THEN** it paints and compares a frame after the drag and before the release
+- **WHEN** the run shows a game that has a hint no hint frame
+- **THEN** the test fails for that game, rather than passing over a hint overlay
+  it never painted
 
 ### Requirement: The comparison shows a hint and walks its plan to the end
 

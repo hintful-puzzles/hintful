@@ -1,19 +1,23 @@
 # engine-input Specification
 
 ## Purpose
-Pointer, keyboard and touch input: the shared button and key vocabulary, the
-gesture layer, the on-screen key panel, the keyboard cursor, and the
-declarative targets-and-verbs form of a click game.
+Pointer, keyboard and touch input: the shared button, key and digit
+vocabulary, the two-button pointer and its touch gesture layer, the on-screen
+key panel, the keyboard cursor, the grid drag, the declarative
+targets-and-verbs form of a click game with its drag sweeps, and the rules the
+collection-wide input guards hold every game to.
 
 ## Requirements
 
 ### Requirement: The engine provides shared pointer button constants
 
-The engine SHALL export the button codes (`LEFT_BUTTON`, `RIGHT_BUTTON`,
-`RIGHT_DRAG`, `RIGHT_RELEASE`, the cursor keys and the rest) from
-`pointer.ts`, equal to the values of `PuzzleButton` in the engine's own
-`types.ts`. They SHALL be plain `const` values, not an enum. A game SHALL
-compare a button against these and SHALL NOT declare a button code of its own.
+The engine SHALL export the button codes (`LEFT_BUTTON`, `RIGHT_BUTTON`, the
+drags and releases, the cursor keys and the rest) from `pointer.ts`, equal to
+the values of `PuzzleButton` in the engine's own `types.ts`, with the keyboard
+modifier masks (`MOD_MASK`, `MOD_NUM_KEYPAD`, `MOD_SHFT`, `MOD_CTRL`) and
+`stripModifiers(button)`, which clears the `MOD_MASK` bits and nothing else. A
+game SHALL compare a button against these and SHALL NOT declare a button code
+or a modifier mask of its own.
 
 #### Scenario: A game imports shared button constants
 
@@ -22,24 +26,12 @@ compare a button against these and SHALL NOT declare a button code of its own.
   of locally-declared values
 - **AND** no game file contains duplicate button code declarations
 
-### Requirement: The engine provides a shared cursor button-to-delta helper
+#### Scenario: A game strips modifier bits from a button
 
-The engine SHALL provide `cursorDelta(button)` in `pointer.ts`, returning the
-unit grid delta for the four cursor-direction buttons (`CURSOR_UP` `{0,-1}`,
-`CURSOR_DOWN` `{0,+1}`, `CURSOR_LEFT` `{-1,0}`, `CURSOR_RIGHT` `{+1,0}`) and
-`null` for any other button, and an `isCursorMove(button)` predicate that is
-true exactly for those four buttons.
-
-#### Scenario: A cursor key yields its unit delta
-
-- **WHEN** a game calls `cursorDelta(CURSOR_LEFT)`
-- **THEN** it receives `{ dx: -1, dy: 0 }`
-
-#### Scenario: A non-cursor button yields null
-
-- **WHEN** a game calls `cursorDelta(LEFT_BUTTON)`
-- **THEN** it receives `null`, and the game falls through to its other input
-  handling
+- **WHEN** a game's `interpretMove` receives a button with modifier bits set
+  and calls `stripModifiers(button)`
+- **THEN** the result has the `MOD_MASK` bits cleared and the base button code
+  and any unrelated high bits preserved
 
 ### Requirement: gridCursorMove moves a position on a bounded grid
 
@@ -80,24 +72,6 @@ cursors) and for whatever a game does while the cursor moves.
 - **THEN** the clamp or the wrap is the engine helper's
 - **AND** the game declares no clamp helper of its own
 
-### Requirement: The engine provides shared keyboard modifier-mask constants
-
-The engine SHALL provide the keyboard modifier-mask constants `MOD_MASK`
-(`0x7000`), `MOD_NUM_KEYPAD` (`0x4000`), `MOD_SHFT` (`0x2000`) and `MOD_CTRL`
-(`0x1000`) in `pointer.ts`, as plain `const` values, not an enum, plus a
-`stripModifiers(button)` helper returning `button & ~MOD_MASK`. A game that
-masks modifier bits off an incoming button SHALL import these and SHALL NOT
-redeclare the numbers locally.
-
-#### Scenario: A game strips modifier bits from a button
-
-- **WHEN** a game's `interpretMove` receives a button with modifier bits set
-  and calls `stripModifiers(button)`
-- **THEN** the result has the `MOD_MASK` bits cleared and the base button code
-  and any unrelated high bits preserved
-- **AND** no game file contains a local `MOD_MASK`, `MOD_NUM_KEYPAD`,
-  `MOD_SHFT` or `MOD_CTRL` declaration
-
 ### Requirement: Games may expose on-screen key labels
 
 The engine SHALL support an optional `Game.requestKeys(params)` hook returning
@@ -130,9 +104,8 @@ renders. The engine SHALL NOT re-derive a label from a button code.
 The `EngineCore` surface SHALL expose `requestKeys(): KeyLabel[]`. The midend
 SHALL return `game.requestKeys(params)` for the current params when the hook
 is present and an empty list when it is absent, in either case with the Marks
-key appended for a note-taking game that does not list it. The worker adapter
-SHALL forward that result and SHALL NOT return a fixed list, so the app shows
-the keypad the game declares.
+key appended for a note-taking game that does not list it. The app SHALL show the keypad
+the midend returns.
 
 #### Scenario: A keypad game's labels are served
 
@@ -243,24 +216,16 @@ does something the primary does not would fail that game.
 
 `detectSecondaryButton` SHALL have direct tests, separate from the per-game
 sweeps: a guard that hands a game a synthetic `RIGHT_BUTTON` shows the game
-copes with the decision, not that the decision was right. The tests SHALL
-cover the hold window, the drag threshold and a wobble inside it, a pointer
-type that is not touch, both affordances disabled, the two-finger tap from
-either finger's release, and the second finger's timer reset, which makes the
-worst case twice the hold time.
+copes with the decision, not that the decision was right. They SHALL cover its
+timings and `unhandledEvent`, which the view replays: without it a tap faster
+than the detection round trip loses its release entirely, and any state the
+puzzle shows only while a press is held stays on screen.
 
 #### Scenario: A stationary finger past the hold window is secondary
 
 - **WHEN** a touch press stays within the drag threshold for longer than the
   hold time
 - **THEN** the detector reports the secondary button
-
-### Requirement: The gesture layer's replayed event is tested
-
-The tests of `detectSecondaryButton` SHALL also cover `unhandledEvent`, which
-the view replays: without it a tap faster than the detection round trip loses
-its release entirely, and any state the puzzle shows only while a press is
-held stays on screen.
 
 #### Scenario: A finger that moves is not secondary
 
@@ -302,20 +267,6 @@ a single-keypress probe scores every such game deaf.
 - **WHEN** a game picks a piece up with a select, moves, and puts it down with
   a second select
 - **THEN** the probe finds that sequence and the game passes
-
-### Requirement: Keyboard coverage is derived through the registry
-
-The keyboard-reachability check SHALL derive a game's coverage through the
-registry and the shared input helpers, not by reading its `index.ts` alone: a
-game declaring `targetVerbs` hands its arrows and select keys to
-`interpretTargetVerbs`, and a border-grid game reaches it through
-`borderGridVerbs`, with no direct `CURSOR_*` reference of its own.
-
-#### Scenario: Cursor handling through a shared helper counts
-
-- **WHEN** a game's cursor input is supplied by `interpretTargetVerbs` or
-  another shared helper and not by its own `CURSOR_*` branches
-- **THEN** the guard recognizes it as covered
 
 ### Requirement: Every on-screen key a game offers reaches that game
 
@@ -362,18 +313,6 @@ offers it on its keypad.
 - **WHEN** the scan evaluates a comparison against button `8`
 - **THEN** it is accepted in a game whose `requestKeys` includes the clear
   key, and reported in a game that declares no keypad
-
-### Requirement: The unsendable-code scan reads switch cases
-
-A scan for a button compared against an unsendable code SHALL cover
-`switch (button) { case <code>: }` as well as `button === <code>`, since a
-`case` label is neither a comparison nor a declaration.
-
-#### Scenario: A dead binding inside a switch is caught
-
-- **WHEN** a game contains `switch (button)` with a `case` label for a control
-  code neither the key map nor that game's own panel can send
-- **THEN** the scan reports it, naming the file and line
 
 ### Requirement: One keyboard-cursor vocabulary across games
 
@@ -461,39 +400,6 @@ own players.
   handling removed
 - **THEN** the keyboard-reachability guard fails for that game
 
-### Requirement: The unactionable probe codes are asserted, not assumed
-
-The probe codes SHALL be asserted unactionable against the shared button
-vocabulary itself: free of every bit in `MOD_MASK`, outside the mouse and
-cursor ranges, outside the printable-ASCII and cancel-key codes, and absent
-from every game's `requestKeys`. Unicode's private-use area SHALL NOT be used:
-button codes are not Unicode, and `0xE000` decodes as
-`MOD_NUM_KEYPAD | MOD_SHFT | 0x8000`, which a game reading the keypad bit
-rightly answers.
-
-#### Scenario: The probe codes are checked before the games are
-
-- **WHEN** the guard runs
-- **THEN** each probe code is asserted to carry no modifier bit, to be no
-  mouse, cursor, cancel or printable-ASCII code, and to be offered by no
-  game's keypad
-
-### Requirement: The unactionable probe is sent at the keyboard origin
-
-The unactionable probe SHALL be sent at the keyboard origin `(0, 0)` as well
-as across the board, because a game gating on pointer coordinates alone
-answers every key that arrives there, and a board-only sweep scores it
-healthy. The guard asserts that a code with no meaning leaves the board
-untouched, the one direction with no innocent reading; this SHALL NOT be read
-as reopening "did the board change" as the question the other input guards
-ask, for which "consumed" remains the right one.
-
-#### Scenario: A game gating on coordinates alone is caught
-
-- **WHEN** a game answers every key that arrives at `(0, 0)` because it tests
-  only where the press landed
-- **THEN** the guard fails for that game
-
 ### Requirement: A game claiming an unactionable code is on an exact ledger
 
 A game that claims an unactionable code SHALL appear on an explicit ledger
@@ -567,20 +473,6 @@ digit code that is then compared against the button.
   string with a relational operator
 - **THEN** the guard reports the game and line, whatever the game named the
   value and wherever in its sources the line sits
-
-### Requirement: The digit-code guard keys on the codes
-
-A guard SHALL find every site where a game spells a digit code by its codes,
-in any operand position in any game source (the button, a desc character, a
-helper's parameter under any name), and SHALL prove itself on planted copies
-of each shape before scanning. The guard's one stated blind spot is a constant
-holding a digit code that is passed as an argument and not used as an operand.
-
-#### Scenario: The guard is proved before it scans
-
-- **WHEN** the guard runs
-- **THEN** it reports a planted copy of each shape it claims to find, so a
-  clean scan of the game sources is not a scan that matched nothing
 
 ### Requirement: The meaning of a digit key stays with the game
 
@@ -676,20 +568,6 @@ equal.
 - **WHEN** a caller reads `digitValue("7")` and `digitValue("x")`
 - **THEN** it receives `7` and `null`
 
-### Requirement: The digit helpers take a character, and the caller checks the bounds
-
-`isDigit` and `digitValue` SHALL take a character, never `string | undefined`:
-indexing past the end of a string yields `undefined` while typed `string`, and
-a signature that absorbs that spreads a runtime fact through every helper
-built on it. The caller holding the index SHALL carry the bounds check
-(`i < s.length && isDigit(s[i])`), as `parseLeadingInt` does.
-
-#### Scenario: A scan stops at the end of the string
-
-- **WHEN** a digit run extends to the end of a string
-- **THEN** the loop reading it tests the index against the length before it
-  asks `isDigit`, and the helper is never handed `undefined`
-
 ### Requirement: A game reads and writes a digit character through the engine
 
 A game SHALL read a digit character through `isDigit` and `digitValue` and
@@ -744,11 +622,6 @@ not replace it.
 - **WHEN** a game returns a `KeyLabel` with a `swatch`
 - **THEN** the on-screen key is painted in the color that palette index holds,
   and follows it when the color scheme changes
-
-#### Scenario: An ordinary key is untouched
-
-- **WHEN** a game returns a `KeyLabel` with no `swatch`
-- **THEN** the key carries no color of its own
 
 ### Requirement: A swatch key is painted from the published palette
 
@@ -845,11 +718,12 @@ gesture committed SHALL stay the game's, as a question about the puzzle.
 ### Requirement: A game offers a keypad exactly when touch play needs one to type
 
 A game whose board carries a `pencil` array (the board arm of `takesNotes`,
-exported as `hasPencilArray`) SHALL offer a non-empty `requestKeys`, because
-its notes are written by typing a symbol and on touch the keypad is the only
-way to type. A game that offers a keypad without such an array SHALL be named,
-with the reason, in the input-parity guard's ledger of keypads without a
-pencil array.
+exported as `hasPencilArray`) SHALL offer a non-empty `requestKeys`: its notes
+are written by typing a symbol, and on touch the keypad is the only way to
+type. A game that offers a keypad without such an array SHALL be named, with
+the reason, in the input-parity guard's ledger. The guard SHALL check this per
+game, as a biconditional, and SHALL NOT rely on a floor under the number of
+keypad games.
 
 #### Scenario: A keypad without a pencil array must be ledgered
 
@@ -857,14 +731,6 @@ pencil array.
   ledger
 - **THEN** that game's input-parity case fails and asks for a ledger entry
   with the reason
-
-### Requirement: The keypad rule is checked per game
-
-The input-parity guard SHALL check per game, as a biconditional, that a game
-offers a keypad exactly when its board carries a `pencil` array or it is on
-the ledger, so that losing a keypad fails that game's own case and gaining one
-without a pencil array fails until it is ledgered. The guard SHALL NOT rely on
-a floor under the number of keypad games.
 
 #### Scenario: A note-taking game that loses its keypad fails its own case
 
@@ -1046,21 +912,11 @@ convenience.
 - **THEN** a player with only a pointer reaches it through a mode they turn on
   or through a key on the on-screen keypad
 
-### Requirement: A key-only verb declares the pointer's route to it
-
-A target-verb game's key-only verb SHALL declare how a pointer alone reaches
-the same move, as a `pointer` route the verb cannot be declared without, so
-that a verb no button applies directly is a type error unless the pointer has
-a way to it.
-
-#### Scenario: A key-only verb without a route does not compile
-
-- **WHEN** a game declares a key-only verb with keys and no `pointer` route
-- **THEN** the typecheck fails
-
 ### Requirement: A pointer route is a repeat, a cycle or a notes-mode press
 
-A key-only verb's `pointer` route SHALL be one of: the verb's target pressed
+A target-verb game's key-only verb SHALL declare how a pointer alone reaches
+the same move, as a `pointer` route its type requires. The route SHALL be one
+of: the verb's target pressed
 with a button a stated number of times (`repeat`); pressed with a button until
 its cycle reaches the verb's result (`cycle`); or pressed with a button in
 notes mode, at a stated place on the target where the game reads where the
@@ -1177,13 +1033,21 @@ The generated Controls paragraph SHALL say the drag for a game that declares a
 sweep. A cross-game guard SHALL hold the declaration to the behavior: for
 every game declaring a sweep, and each button it names, a drag between two
 targets that hold the same thing leaves both holding the press's result, and
-one Undo returns the board to where the press found it.
+one Undo returns the board to where the press found it. A draggable mark
+declared outside `targetVerbs` SHALL be held to the same check.
 
 #### Scenario: A game that drops its drags fails
 
 - **WHEN** a game declares a sweep and its `interpretMove` never hands a drag
   event to the engine
 - **THEN** the guard fails for that game
+
+#### Scenario: A drag-mark declaration that does not drag fails
+
+- **WHEN** a mark declared with `dragMarkVerbs` is dragged between two targets
+  that hold the same thing
+- **THEN** the check fails unless both hold the mark and one Undo takes both
+  back
 
 ### Requirement: A mark a player wants on several targets can be dragged
 
@@ -1213,18 +1077,6 @@ opened on one declaration SHALL NOT be carried on with another.
 - **WHEN** the player presses a clue beside a Towers grid, marking it done,
   and drags along the clues beside it
 - **THEN** each clue passed that was not done is marked done
-
-### Requirement: A mark declared outside targetVerbs is held to the same check
-
-Each draggable mark declared outside `targetVerbs` SHALL be held to the same
-behavioral check as a declared sweep.
-
-#### Scenario: A drag-mark declaration that does not drag fails
-
-- **WHEN** a mark declared with `dragMarkVerbs` is dragged between two targets
-  that hold the same thing
-- **THEN** the check fails unless both hold the mark and one Undo takes both
-  back
 
 ### Requirement: A drag does not repeat a move
 

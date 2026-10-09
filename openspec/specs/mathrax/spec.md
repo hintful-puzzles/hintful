@@ -2,20 +2,24 @@
 
 ## Purpose
 Mathrax, the Latin-square puzzle whose clues sit on grid intersections and
-constrain the four digits around each: its parameters and descriptions, its
-notes and mistake checking against the unique solution, its graded difficulty
-tiers, its hint and its drawing.
+constrain the four digits around each: its rules, its parameters and
+descriptions, its controls, its mistake check against the unique solution,
+what its generator promises of a board at each tier, what its hint says and
+marks, and the look that is its own.
 
 ## Requirements
 
-### Requirement: Mathrax game implements the Game interface
-
-The engine SHALL provide a complete implementation of the `Game<…>` engine
-interface for Mathrax, registered so the puzzle is served by the TypeScript
-engine.
+### Requirement: Mathrax is solved when the filled grid breaks no rule
 
 The objective SHALL be to fill the grid with digits from 1 to the grid size so
-that no digit repeats in any row or column and every clue is satisfied.
+that no digit repeats in any row or column and every clue is satisfied. The
+game SHALL be reported solved when every cell is filled with no row, column or
+clue violation.
+
+#### Scenario: Completing the grid correctly wins
+
+- **WHEN** the last cell is filled so that every row, column and clue is satisfied
+- **THEN** the game is reported solved
 
 #### Scenario: A full grid that repeats a digit is not the objective
 
@@ -45,21 +49,14 @@ clue-type set means all clue types are enabled.
 
 ### Requirement: Mathrax refuses a size, a difficulty or a clue-type set it cannot play
 
-Mathrax SHALL declare its size with bounds of 3 and 9 and its difficulty as a
-choice among its tiers, so the engine's parameter check refuses a size below 3
-or above 9 and a difficulty that is not known. `validateParams` SHALL refuse,
-when validating for generation, a parameter set with no clue type enabled.
+Mathrax SHALL play sizes 3 to 9, one digit to a cell, and SHALL refuse a size
+outside them. `validateParams` SHALL refuse, when validating for generation, a
+parameter set with no clue type enabled.
 
 #### Scenario: A size below the bound is refused
 
 - **WHEN** a parameter set of size 2 is checked
 - **THEN** it is refused with a message saying the size must be at least 3
-
-#### Scenario: An unknown difficulty character is refused
-
-- **WHEN** a game ID whose difficulty character names no tier is decoded and
-  checked
-- **THEN** it is refused
 
 ### Requirement: Mathrax clues constrain the four digits around each intersection
 
@@ -73,11 +70,6 @@ even clue SHALL require all four digits to be even and an odd clue all four to b
 
 - **WHEN** the four digits around an addition clue showing `n` are examined
 - **THEN** the two diagonally-opposite pairs each sum to `n`
-
-#### Scenario: A parity clue constrains all four digits
-
-- **WHEN** an even clue sits on an intersection
-- **THEN** all four digits around it are even
 
 ### Requirement: Mathrax descriptions use the run-length grid-and-clue encoding
 
@@ -111,12 +103,13 @@ that size, or whose grid or clue part stops short of covering the grid.
 - **WHEN** a description of a size-5 board carries an addition clue of 11
 - **THEN** it is rejected
 
-### Requirement: Mathrax input, notes and completion
+### Requirement: Mathrax input and keypad
 
 Mathrax SHALL be played with the Solo-style control scheme: a cell is selected
 for ink by left-click or cursor, digit keys enter a value or toggle a pencil
 mark, and backspace, space or zero clear. Immutable given cells SHALL NOT be
-editable. Entering the value already present in a cell SHALL be a no-op.
+editable. Entering the value already present in a cell SHALL be a no-op. The
+on-screen keypad SHALL offer the digits 1 to the grid size and a clear key.
 
 #### Scenario: A digit is entered into a selected cell
 
@@ -128,72 +121,33 @@ editable. Entering the value already present in a cell SHALL be a no-op.
 - **WHEN** the cursor is on a given cell and a different digit is typed
 - **THEN** no move is made
 
-### Requirement: A right-click in Mathrax toggles pencil mode or selects a cell for pencil marks
+### Requirement: Mathrax offers the sticky pencil and auto-pencil preferences
 
-Mathrax SHALL offer the collection's sticky pencil preference, defaulting on.
-When it is on, a right-click SHALL toggle a persistent pencil mode; when it is
-off, a right-click SHALL select the clicked cell for pencil marks.
+Mathrax SHALL offer the collection's sticky pencil preference, defaulting on,
+and its auto-pencil preference. When auto-pencil is on a placement SHALL remove
+its digit from the pencil marks of the rest of its row and column, both on the
+board and in the hint's plan.
 
-#### Scenario: Sticky pencil mode off, a right-click selects for pencil marks
+#### Scenario: A placement clears its digit from its row and column
 
-- **WHEN** the sticky pencil preference is off and an empty cell is
-  right-clicked, then a digit is typed
-- **THEN** that digit is toggled as a pencil mark in the cell
-
-### Requirement: Mathrax fills pencil marks in bulk and offers a digit keypad
-
-The game SHALL support filling every empty cell that has no pencil marks with
-all candidate pencil marks, leaving a cell that already carries marks as it
-is. It SHALL provide an on-screen digit keypad sized to the grid.
-
-#### Scenario: An on-screen keypad is offered for digit entry
-
-- **WHEN** the on-screen keys are requested for a size-`o` game
-- **THEN** the keypad offers the digits 1 to `o` and a clear key
-
-#### Scenario: A narrowed cell keeps its marks
-
-- **WHEN** the bulk fill runs on a board where one empty cell carries two
-  pencil marks and the others none
-- **THEN** that cell still carries exactly those two marks
-
-### Requirement: Mathrax is solved when the filled grid breaks no rule
-
-The game SHALL be reported solved when every cell is filled with no row,
-column or clue violation, and SHALL flash on completion.
-
-#### Scenario: Completing the grid correctly wins
-
-- **WHEN** the last cell is filled so that every row, column and clue is satisfied
-- **THEN** the game is reported solved and flashes
+- **WHEN** the auto-pencil preference is on and a digit is entered in a cell
+  whose row and column hold that digit as a pencil mark
+- **THEN** those pencil marks are removed with the entry
 
 ### Requirement: Mathrax flags mistakes against the unique solution
 
-Mathrax SHALL provide `findMistakes`, so that Check & Save can hard-block
-saving a wrong board. It SHALL re-solve from the given digits and the clues to
-the unique solution, never from the player's entries or notes, and flag every
-placed digit that contradicts it and every empty cell whose non-empty pencil
-notes have crossed out its solution value. A cell whose notes merely carry
-extra candidates SHALL NOT be flagged. When the board is not uniquely
-deducible, no cell SHALL be flagged.
+Mathrax SHALL provide `findMistakes`. It SHALL re-solve from the given digits
+and the clues to the unique solution, never from the player's entries or
+notes, and flag every placed digit that contradicts it and every empty cell
+whose non-empty pencil notes have crossed out its solution value. A cell whose
+notes merely carry extra candidates SHALL NOT be flagged. When the board is
+not uniquely deducible, no cell SHALL be flagged.
 
 #### Scenario: A wrong placed digit is flagged
 
 - **WHEN** a cell holds a digit that differs from the unique solution and mistakes are
   checked
 - **THEN** that cell is reported as a mistake
-
-#### Scenario: A note that rules out the solution value is flagged
-
-- **WHEN** an empty cell's pencil notes are non-empty and have crossed out that cell's
-  solution value
-- **THEN** that cell is reported as a mistake
-
-#### Scenario: Extra candidate notes are not a mistake
-
-- **WHEN** an empty cell's pencil notes include the solution value alongside other
-  candidates
-- **THEN** that cell is not reported as a mistake
 
 ### Requirement: Mathrax grades its difficulty tiers honestly
 
@@ -211,29 +165,19 @@ and that loop SHALL be bounded.
 
 Mathrax SHALL refuse to *generate* a size-3 board at Normal or at the top tier,
 because a 3×3 grid's four intersections cannot separate those tiers from their
-neighbors. `validateParams` SHALL reject those combinations when asked for a
-full (generation-capable) parameter set, and SHALL accept them otherwise so a
-saved game or a game ID carrying its own description still loads. Size 3 at
+neighbors. `validateParams` SHALL reject those combinations for a full
+(generation-capable) parameter set and accept them otherwise, so a saved game
+or a game ID carrying its own description still loads. The refusal SHALL name
+the tiers from the game's tier list, as the difficulty menu does. Size 3 at
 Tricky SHALL be unaffected.
 
 #### Scenario: An unsupported size and tier are refused
 
 - **WHEN** a full parameter set requesting size 3 at Normal or the top tier is
   validated
-- **THEN** it is rejected with a message naming the size
+- **THEN** it is rejected with a message naming the size, and Normal and the
+  top tier exactly as the difficulty menu does
 - **AND** the same parameters validate successfully when a description is supplied
-
-### Requirement: The size-3 refusal names its tiers from the tier list
-
-The message refusing size 3 at Normal or at the top tier SHALL name those tiers
-from the game's tier list and SHALL NOT spell them in prose, so it cannot
-survive a rename while the menu moves on.
-
-#### Scenario: The refusal reads as the difficulty menu does
-
-- **WHEN** a full parameter set requesting size 3 at the top tier is refused
-- **THEN** the message names Normal and the top tier exactly as the difficulty
-  menu does
 
 ### Requirement: Mathrax solves and generates over the shared Latin-square framework
 
@@ -248,30 +192,13 @@ Normal, Tricky and `Unreasonable` difficulty levels.
 - **THEN** the returned grid is the board's unique Latin-square solution and satisfies
   every clue
 
-### Requirement: Mathrax's generator strips a full board while it stays uniquely solvable
-
-The generator SHALL produce a full Latin square, derive a candidate clue at
-every interior intersection, and then remove given digits and clues in a
-randomized order while the puzzle remains **uniquely** solvable at the target
-difficulty. Generation from a given seed SHALL be reproducible.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
-
-#### Scenario: Every preset produces a uniquely solvable board
-
-- **WHEN** a new game is generated for any preset or legal size
-- **THEN** a board is produced whose filled solution is unique and satisfies every
-  clue
-
 ### Requirement: A Mathrax board has one solution at every difficulty
 
 Uniqueness SHALL be required at *every* difficulty, including the
 guess-and-verify `Unreasonable` tier, because a board with no unique answer
 cannot be mistake-checked. The generator SHALL NOT take an ambiguous solver
-verdict as grounds to keep removing.
+verdict as grounds to keep removing. Generation from a given seed SHALL be
+reproducible.
 
 #### Scenario: Even the guess-and-verify tier yields a unique solution
 
@@ -279,41 +206,23 @@ verdict as grounds to keep removing.
 - **THEN** it has exactly one solution, and it cannot be solved without the
   guess-and-verify step
 
-### Requirement: Mathrax explains the next deduction
+#### Scenario: Generation is reproducible from a seed
 
-A hint SHALL be refused when the board is solved or `findMistakes` reports a
-mistake, by the midend before it asks the game, and `hint(state, aux, ui)` SHALL
-otherwise return the forced steps from the player's own board as an ordered plan,
-each step narrating why its move is forced from premises the sentence itself
-states.
-
-#### Scenario: Refusing a solved or mistaken board
-
-- **WHEN** a hint is requested on a completed board, or on one where
-  `findMistakes` reports a wrong digit or a note that crosses out the answer
-- **THEN** the hint refuses with the collection's shared wording and returns
-  no plan
+- **WHEN** the same seed is used twice for the same parameters
+- **THEN** both runs produce the identical board description
 
 ### Requirement: Mathrax's hint plan is the shared candidate-elimination walk
 
 The plan SHALL be built by the shared candidate-elimination walk over Mathrax's
-row and column regions, so it clears in one setup step what the digits already
-placed rule out, and offers naked singles, the recorded strikes and the
-recorded placements in that order. Under the reading that pencils in every
-candidate first, it SHALL fill notes with the additive `pencilAll` before a
-deduction first needs them. Mathrax SHALL start on the reading that pencils in
-only the notes a deduction needs.
+row and column regions; a clue is not a region. Mathrax SHALL start on the
+reading that pencils in only the notes a deduction needs, because a clue reads
+the cell across it and the rest is singles, so a plan writes notes into few
+cells.
 
-#### Scenario: The populate reading fills notes before the first strike
+#### Scenario: A hint with no Ui pencils in only what it needs
 
-- **WHEN** a hint is requested on a board with no notes under the reading that
-  pencils in every candidate first
-- **THEN** the plan's first step is `pencilAll`, ahead of any strike
-
-#### Scenario: Notes already present are not filled again
-
-- **WHEN** a hint is requested on a board whose empty cells all carry notes
-- **THEN** the plan's first step is not `pencilAll`
+- **WHEN** a hint is requested with no `Ui` on a board with no notes
+- **THEN** no step of the plan is `pencilAll`
 
 ### Requirement: The recording solve reads placed digits and stops below the guess-and-verify tier
 
@@ -390,18 +299,6 @@ intersection.
 - **THEN** the step says all four numbers around the clue are even or odd, and
   outlines the block of four cells around that intersection
 
-### Requirement: Mathrax offers the auto-pencil preference
-
-Mathrax SHALL offer the collection's auto-pencil preference, and when it is on a
-placement SHALL remove its digit from the pencil marks of the rest of its row and
-column, both on the board and in the hint's plan.
-
-#### Scenario: A placement clears its digit from its row and column
-
-- **WHEN** the auto-pencil preference is on and a digit is entered in a cell
-  whose row and column hold that digit as a pencil mark
-- **THEN** those pencil marks are removed with the entry
-
 ### Requirement: Mathrax draws its cells on a quiet surface and lifts a given
 
 `redraw` SHALL draw every cell the player fills on the collection's cell
@@ -435,14 +332,3 @@ error colors.
 - **WHEN** a board with a satisfied clue is drawn
 - **THEN** the clue's disc is the lifted surface's color and its ring and label
   are ink
-
-### Requirement: Mathrax's highlight, notes and hint marks keep their places
-
-The selected cell's wash, its notes corner and the pencil marks SHALL be drawn
-on the cell's surface, and the hint's marks SHALL stay on the cell's edge.
-
-#### Scenario: A hint's ring lies on the cell's border
-
-- **WHEN** a hint step that acts on one cell is drawn
-- **THEN** the ring round that cell lies on the cell's own border and not over
-  its number or its pencil marks

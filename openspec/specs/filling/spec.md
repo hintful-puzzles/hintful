@@ -3,31 +3,15 @@
 ## Purpose
 Filling (Fillomino), the puzzle of writing numbers so that every connected group
 of equal numbers has exactly that many cells, with uniquely solvable
-generation, mistake checking, on-screen key labels, and an explained deduction
-hint with its own color legend.
+generation, mistake checking, a selection the player fills with one digit, and
+an explained deduction hint with its own color legend.
 
 ## Requirements
 
-### Requirement: Filling game implements the Game interface
-
-The engine SHALL provide a registered `filling` game implementing
-`Game<FillingParams, FillingState, FillingMove, FillingUi, FillingDrawState>`:
-Fillomino on a `w × h` grid, in which every cell is filled with a number `n`
-such that each maximal orthogonally-connected region of equal numbers contains
-exactly `n` cells. The game SHALL provide `solve` and `textFormat`, and SHALL
-NOT provide `statusbarText`.
-
-#### Scenario: A full grid with an oversized region is not a solution
-
-- **WHEN** every cell is filled and one connected region of 3s holds four cells
-- **THEN** the board is not solved
-
 ### Requirement: Filling's parameters
 
-Params SHALL be `w` and `h`, encoded `{w}x{h}`, with presets 7×9, 9×13 (the
-default) and 13×17. A `w` or an `h` below 1 SHALL be refused, by the bounds the
-width and height fields declare, and `validateParams` SHALL refuse a `w·h` that
-is unreasonably large.
+Params SHALL be `w` and `h`, encoded `{w}x{h}`. A `w` or an `h` below 1 SHALL
+be refused, and so SHALL a `w·h` that is unreasonably large.
 
 #### Scenario: Params round-trip
 
@@ -36,18 +20,12 @@ is unreasonably large.
 - **AND** decoding it round-trips the params
 - **AND** decoding a bare `9` yields a 9×9 square grid
 
-#### Scenario: Invalid params are rejected
-
-- **WHEN** the engine's `paramsError` is asked about params with `w < 1` or
-  `h < 1`
-- **THEN** it returns a non-null error string
-
 ### Requirement: Filling descriptions are run-length number grids
 
 The desc SHALL encode the immutable clue cells in scan order: a lowercase letter
 `a`–`z` advances past a run of `1`–`26` empty (unclued) cells, and a digit
-places a clue of that value. `newState` SHALL decode the desc into an immutable
-`clues` grid and a mutable player `board` initialized to a copy of the clues.
+places a clue of that value. A clue SHALL be immutable, and every other cell
+SHALL start empty and player-editable.
 
 #### Scenario: Description decodes to the clued board
 
@@ -74,11 +52,10 @@ SHALL require the decoded area to equal `w·h` exactly.
 
 ### Requirement: Filling generates uniquely solvable boards
 
-`newDesc` SHALL build a board by partitioning the grid into regions whose sizes
-equal their cell values, capped at `min(max(max(w,h),3), 9)`, and then reduce
-the clue set, removing whole regions and then individual clues. It SHALL keep a
-removal only while the solver still solves the board, so the published clues
-uniquely determine the solution.
+`newDesc` SHALL deal a board whose regions are no larger than
+`min(max(max(w,h),3), 9)` cells, and SHALL publish only a clue set from which
+the solver still solves the board, so the clues uniquely determine the
+solution.
 
 #### Scenario: Every generated board is solvable
 
@@ -91,9 +68,7 @@ uniquely determine the solution.
 The solver SHALL apply four sound, confluent deductive techniques to fixpoint:
 forced single-direction region growth, capacity-forced expansion or the drop of
 an isolated `1`, critical distant squares, and per-cell possible-number bitmap
-elimination, which includes inferring unclued "ghost" regions. It SHALL report
-whether the board was fully solved. `solve` SHALL return the completed board as
-a move.
+elimination, which includes inferring unclued "ghost" regions.
 
 #### Scenario: Solver completes a generated board
 
@@ -134,14 +109,15 @@ board being `3` in place of `max(w,h)`.
 
 ### Requirement: A Filling grid is solved when every cell equals its region's size
 
-`executeMove` SHALL write the move's value into each cell the move lists. A
-state SHALL report `solved` when every cell's value equals the size of its
-region, and not before.
+Filling is Fillomino on a `w × h` grid: every cell is filled with a number `n`
+such that each maximal orthogonally-connected region of equal numbers contains
+exactly `n` cells. A state SHALL report `solved` when every cell's value equals
+the size of its region, and not before.
 
-#### Scenario: A completed grid is detected
+#### Scenario: A full grid with an oversized region is not a solution
 
-- **WHEN** a move fills the last cells so every region's size equals its number
-- **THEN** the resulting state reports `solved`
+- **WHEN** every cell is filled and one connected region of 3s holds four cells
+- **THEN** the board is not solved
 
 ### Requirement: Filling rendering shows regions, errors, and completion
 
@@ -176,24 +152,12 @@ On the transition to solved, and not when Solve made it, the board SHALL flash.
 - **THEN** the board flashes
 - **AND** a board completed by Solve does not
 
-### Requirement: Filling's renderer paints no pixels the engine owns
-
-The renderer SHALL paint no pixels the engine owns: the first-draw branch SHALL
-draw the grid frame, and each cell SHALL fill its own background.
-
-#### Scenario: The opening frame
-
-- **WHEN** the first frame of a board is drawn
-- **THEN** the grid frame is drawn once and every cell paints its own
-  background
-
 ### Requirement: Filling reports mistakes for Check & Save
 
 The game SHALL implement `findMistakes(state)` by re-solving from the immutable
 clues to the unique solution and returning every player-filled cell whose number
 contradicts the solution, returning an empty result when the clues are not
-uniquely solvable. This makes the shell's Check & Save control hard-block a save
-on a wrong board.
+uniquely solvable.
 
 #### Scenario: A wrong fill is flagged and clears
 
@@ -218,20 +182,6 @@ the deduction that forces it and SHALL avoid repeating the region's number.
 - **AND** each step's move is a legal `executeMove` whose narration names the
   deduction (region growth / lonely cell / elimination) that forces its squares
 - **AND** applying every step's move in order solves the board
-
-### Requirement: A Filling hint is refused on a solved or mistaken board
-
-A hint SHALL be refused, with an explanatory error, when the board is already
-solved or when `findMistakes(state)` is non-empty, since a deduction seeded
-from contradictory marks would mislead. The midend SHALL make both refusals
-before it asks the game's `hint`.
-
-#### Scenario: Hint refuses on a solved or mistaken board
-
-- **WHEN** a hint is requested on a solved board, or on a board where the
-  player has filled a cell contradicting the unique solution
-- **THEN** the request is refused with an explanatory error, and the game's
-  `hint` is not asked
 
 ### Requirement: One region-growth firing is one hint step
 

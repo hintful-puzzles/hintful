@@ -2,34 +2,25 @@
 
 ## Purpose
 Slide, the sliding-block puzzle of moving blocks until the key block reaches the
-exit, with a shortest-path solver, a board that reads by color and not by bevel
-alone, and full play from the keyboard.
+exit: its params and description format, how a block is grabbed and moved by
+pointer and by keyboard, what its solver and generator promise, and how its
+board is colored.
 
 ## Requirements
 
-### Requirement: Slide game implements the Game interface
+### Requirement: Slide's params are a width, a height and a solution-length limit
 
-The engine SHALL provide `src/games/slide/` implementing the `Game` interface
-for Slide (Klotski), registered so the engine serves the puzzle. Parameters
-SHALL be a width, a height, and a solution-length limit (`maxmoves`, where a
-negative value means no limit). A game ID SHALL encode the width, height and
-limit and round-trip through decode.
-
-#### Scenario: Every preset produces a soluble board
-
-- **WHEN** a new game is generated for any preset or legal size
-- **THEN** a board is produced whose main block can be slid to the target within
-  the recorded minimum number of moves
+Slide's parameters SHALL be a width, a height, and a solution-length limit
+(`maxmoves`, where a negative value means no limit). A game ID SHALL encode the
+width, height and limit and round-trip through decode.
 
 #### Scenario: A game ID round-trips through the parameters
 
 - **WHEN** a parameter set is encoded to a game ID and decoded
 - **THEN** the same width, height and solution-length limit are recovered
 
-### Requirement: Slide bounds its width, its height and its limit
+### Requirement: A solution-length limit of zero is refused
 
-Slide SHALL declare on its `paramConfig` items a width of at least 5 and at most
-251 and a height of at least 4, so the engine refuses a size outside them.
 `validateParams` SHALL reject a solution-length limit of zero, which asks for a
 board that starts finished and which the generator provably cannot satisfy.
 
@@ -38,11 +29,6 @@ board that starts finished and which the generator provably cannot satisfy.
 - **WHEN** parameters with a solution-length limit of zero are validated
 - **THEN** they are rejected with a message the custom-parameters dialog can show
 - **AND** a limit of one and a negative limit are both accepted
-
-#### Scenario: A width below the bound is refused
-
-- **WHEN** a board four squares wide is validated
-- **THEN** it is refused with a message naming the width
 
 ### Requirement: A Slide board too large to generate is rejected
 
@@ -168,12 +154,12 @@ game's board.
 ### Requirement: Bringing the main block to the target completes the board
 
 Slide SHALL report the game solved when the main block is on the target
-position, and SHALL flash on completion.
+position.
 
 #### Scenario: Bringing the main block to the target wins
 
 - **WHEN** the main block is slid onto the target position
-- **THEN** the game is reported solved and flashes
+- **THEN** the game is reported solved
 
 ### Requirement: Slide draws a held block where it would land, with no slide animation
 
@@ -188,13 +174,12 @@ animation: a block released goes straight to its cell.
 - **THEN** the block is drawn lit up at the nearest cell it can reach, and the
   squares it has left are drawn empty
 
-### Requirement: Slide's solver finds a shortest path by breadth-first search
+### Requirement: Slide's solver finds a shortest solution, within a limit when given one
 
 Slide SHALL provide a solver that finds the minimum number of moves to bring the
-main block to the target, or reports that no solution exists. It SHALL be a
-breadth-first search over canonical board layouts, deduplicating already-seen
-layouts by exact board equality and expanding them in first-in-first-out order,
-so that the first path found to the target is a shortest one.
+main block to the target, or reports that no solution exists. Given a move
+limit, it SHALL abandon the search once every remaining candidate exceeds it,
+and SHALL then report that no solution exists within the limit.
 
 #### Scenario: The solver returns the shortest solution
 
@@ -202,28 +187,10 @@ so that the first path found to the target is a shortest one.
 - **THEN** the reported move count equals the length of a shortest sequence that
   brings the main block to the target, and the returned moves realize it
 
-### Requirement: Slide's solver respects a move limit
-
-The solver SHALL respect a move limit by abandoning the search once every
-remaining candidate exceeds it, and SHALL then report that no solution exists
-within the limit.
-
 #### Scenario: A board whose shortest solution is longer than the limit
 
 - **WHEN** a board is solved under a limit smaller than its minimum move count
 - **THEN** the solver reports no solution
-
-### Requirement: Slide's solver does not depend on an ordered collection
-
-The solver SHALL NOT depend on the semantics of an ordered collection. Its
-result SHALL depend only on the breadth-first order and on exact layout
-deduplication.
-
-#### Scenario: The visited layouts are a set, not a sorted collection
-
-- **WHEN** the solver asks whether a layout has been seen
-- **THEN** the answer depends only on whether an identical board was seen, and
-  no ordering among the seen boards is read
 
 ### Requirement: Slide's generator keeps every board soluble
 
@@ -231,6 +198,12 @@ The generator SHALL use the solver to keep every board soluble: it SHALL remove
 singleton blocks until the board becomes soluble, then attempt to merge adjacent
 blocks in a randomized order, keeping a merge only while the board stays
 soluble. Generation from a given seed SHALL be reproducible.
+
+#### Scenario: Every generated board is soluble
+
+- **WHEN** a new game is generated for any preset or legal size
+- **THEN** a board is produced whose main block can be slid to the target within
+  the recorded minimum number of moves
 
 #### Scenario: Generation is reproducible from a seed
 
@@ -242,7 +215,7 @@ soluble. Generation from a given seed SHALL be reproducible.
 
 The generator SHALL test solubility after its final singleton removal as well as
 before each one, because a board can become soluble only once its last singleton
-goes. The added check SHALL draw no randomness.
+goes.
 
 #### Scenario: A board at the smallest legal size is generated
 
@@ -250,11 +223,9 @@ goes. The added check SHALL draw no randomness.
   is freed only by removing every singleton
 - **THEN** a soluble board is produced, and generation does not fail
 
-### Requirement: Slide presets draw tall, and a Slide board is never turned
+### Requirement: A Slide board is never turned
 
-Slide SHALL offer its default and presets at 6×7 (limits 40 and 25, and no
-limit) and 6×8 (no limit), which draw taller than wide. Slide SHALL NOT declare
-`transposeParams`: the key block starts in the top-left corner and leaves by a
+Slide SHALL NOT declare `transposeParams`: the key block starts in the top-left corner and leaves by a
 gate in the right-hand wall, so a board turned on its side is a different
 puzzle.
 
@@ -267,19 +238,15 @@ puzzle.
 
 The floor, the walls, the ordinary blocks and the main block SHALL be
 distinguishable from one another by fill, not solely by their bevels, in both
-the light and the dark presentation.
+the light and the dark presentation. Each of the four fills SHALL be a function
+of the host background rather than an authored color, so that one inversion rule
+maps all four and their ordering survives the scheme flip by construction.
 
 #### Scenario: The pieces are told apart without relying on bevels
 
 - **WHEN** the board is rendered in either color scheme
 - **THEN** floor, wall, ordinary block and main block each read as a distinct
   fill, and the target marker remains the most prominent
-
-### Requirement: Slide's fills are functions of the host background
-
-Each of the floor, wall, ordinary-block and main-block fills SHALL be a function
-of the host background rather than an authored color, so that one inversion rule
-maps all four and their ordering survives the scheme flip by construction.
 
 #### Scenario: The ladder inverts as a whole
 
@@ -326,23 +293,10 @@ usually lies on top of the exit area and two fills cannot both be seen.
 - **THEN** the exit's tint is still drawn across that square, and the gate is
   marked only along the edges where it meets something that is not the gate
 
-### Requirement: Slide's colors come from the shared palette and are checked in both schemes
-
-Every color SHALL come from the shared palette, and SHALL be checked in both
-schemes: a fill that reads as contrast against a light background SHALL NOT read
-as a bright patch against a dark one.
-
-#### Scenario: A fill is judged against the dark board too
-
-- **WHEN** a fill is chosen because it contrasts with the light board
-- **THEN** it is also looked at on the dark board, and it is not kept if it
-  reads there as a bright patch
-
 ### Requirement: Slide plays from the keyboard alone
 
 Slide SHALL be playable by keyboard as well as by pointer, both driving the same
-move machinery. A keyboard that cannot express a legal move is the defect this
-requirement removes: every move the pointer can make SHALL be reachable from the
+move machinery: every move the pointer can make SHALL be reachable from the
 keyboard.
 
 #### Scenario: A board can be completed without a pointer
@@ -351,21 +305,10 @@ keyboard.
 - **THEN** every move the pointer can make is reachable, and the board can be
   driven to completion
 
-### Requirement: A cell cursor moves over the Slide board
-
-A cell cursor SHALL move over the board with the cursor keys, clamped to the
-grid. It SHALL be hidden until the first cursor key or select key, and hidden
-again by any pointer press.
-
-#### Scenario: A cursor key at the edge of the grid
-
-- **WHEN** the cursor is on the leftmost column and the left cursor key is
-  pressed
-- **THEN** the cursor stays on the leftmost column
-
 ### Requirement: The keyboard select grabs with the pointer's grab
 
-Selecting on a cell belonging to a block SHALL grab that block, computing the
+Selecting SHALL show the cursor, and on a cell belonging to a block SHALL grab
+that block, computing the
 same reachable set the pointer grab computes. There SHALL be one grab
 implementation, reached from both the pointer press and the keyboard select.
 While a block is grabbed, selecting again SHALL commit the move, and canceling
@@ -396,9 +339,7 @@ can reach.
 
 A keyboard journey of several cells SHALL produce one move, identical to the
 move the equivalent drag produces. The keyboard SHALL be a second way to drive
-the existing move construction, and SHALL NOT be a second movement model. A
-multi-step keyboard journey SHALL count as a single move exactly as the
-equivalent drag does.
+the existing move construction, and SHALL NOT be a second movement model.
 
 #### Scenario: A keyboard journey and the equivalent drag produce the same move
 

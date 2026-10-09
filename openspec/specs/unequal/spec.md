@@ -3,26 +3,27 @@
 ## Purpose
 Unequal (Futoshiki), the Latin-square puzzle whose clues between squares
 constrain neighbors: greater-than signs in Unequal mode, and in Adjacent mode
-bars on exactly the pairs of consecutive values. It has pencil marks and their
-preferences, mistake-checking, on-screen key labels, and an explained deduction
-hint.
+bars on exactly the pairs of consecutive values. This spec holds the puzzle's
+rules, its params and description formats, its controls and keypad, what its
+generator promises, how its board looks, its mistake check, and its explained
+deduction hint. What it shares with every note-taking game is in
+`engine-notes`, `engine-hints` and `engine-candidate-hints`.
 
 ## Requirements
 
-### Requirement: Unequal game implements the Game interface
+### Requirement: Unequal is a Latin square with clues between neighbors
 
-The engine SHALL provide a registered `unequal` game implementing `Game`: a
-Latin-square puzzle on an `order × order` grid in which the player places a
-number `1..order` in every cell so each row and column contains every number
-exactly once, subject to clues between orthogonally adjacent cells. The game
-SHALL provide `solve` and `textFormat`, SHALL NOT provide `statusbarText`, and
-SHALL report `canMarkAll = true`.
+Unequal SHALL be a Latin-square puzzle on an `order × order` grid: the player
+places a number `1..order` in every cell so each row and column contains every
+number exactly once, subject to clues between orthogonally adjacent cells. The
+board SHALL be reported solved exactly while the filled grid satisfies every
+row, column and clue constraint. The game SHALL provide `solve` and
+`textFormat`, and SHALL NOT provide `statusbarText`.
 
-#### Scenario: The game's optional hooks
+#### Scenario: Entering the last correct number completes the board
 
-- **WHEN** the registered `unequal` game is read
-- **THEN** it has `solve` and `textFormat`, no `statusbarText`, and
-  `canMarkAll` is `true`
+- **WHEN** the player enters the final number that completes a correct grid
+- **THEN** `status` reports the resulting state as solved
 
 ### Requirement: Unequal has two modes
 
@@ -43,7 +44,7 @@ Params SHALL be `order`, `mode` (Unequal or Adjacent), and `diff`, held as the
 values `"trivial"`, `"easy"`, `"tricky"`, `"extreme"` and `"recursive"`. They
 SHALL be encoded `{order}` with an `a` suffix for Adjacent mode and a `d{c}`
 suffix for difficulty when full, `c` being `t`, `e`, `k`, `x` or `r` in that
-order of the values. Each mode's presets SHALL be a grid of sizes by tiers.
+order of the values.
 
 #### Scenario: Params round-trip
 
@@ -53,26 +54,18 @@ order of the values. Each mode's presets SHALL be a grid of sizes by tiers.
 - **AND** decoding it round-trips the params
 - **AND** encoding with `full = false` yields `5a`
 
-### Requirement: Unequal's tier names have one definition
+### Requirement: Unequal's top tier is named Unreasonable and keeps its character
 
 The five difficulty values SHALL be named Easy, Normal, Tricky, Hard and
 Unreasonable, in the order of the values. The top tier SHALL be named
 Unreasonable because it branches and backtracks, which is the one thing the
 collection reserves that name for. Its difficulty character SHALL stay `r`, so
-an existing game ID names the same board. The tier names SHALL have a single
-definition in the game, read by both the preset menu and the custom-params
-dialog, so the two cannot disagree.
+an existing game ID names the same board.
 
 #### Scenario: The top tier keeps its difficulty character
 
 - **WHEN** params at the top tier are encoded with `full = true`
 - **THEN** the difficulty suffix is `dr`
-
-#### Scenario: The menu and the custom dialog offer the same tiers
-
-- **WHEN** the tier names the preset menu shows are compared with the choices the
-  custom-params difficulty field offers
-- **THEN** they are the same list
 
 ### Requirement: Unequal refuses the parameters it cannot deal
 
@@ -99,14 +92,12 @@ board needs.
 The desc SHALL encode the grid in scan order as one field per cell, each ending
 in a comma: a decimal number (`0` for a blank cell) followed by zero or more of
 the flag letters `U`, `R`, `D`, `L`, in that order, marking an adjacency clue
-toward the up, right, down, or left neighbor. `newState` SHALL decode the
-numbers into both an immutable givens array and the working grid, and the flags
-into an immutable clue-flag array.
+toward the up, right, down, or left neighbor.
 
 #### Scenario: Description round-trips through generate and decode
 
 - **WHEN** a board is generated and its desc decoded by `newState`
-- **THEN** every given number appears in both the immutable array and the grid
+- **THEN** every given number is on the board and cannot be edited
 - **AND** every adjacency flag is placed at its decoded cell
 - **AND** every non-given cell starts empty with no pencil marks
 
@@ -132,12 +123,11 @@ written out: a letter standing for a run of blank cells SHALL be refused.
 
 ### Requirement: Unequal generates uniquely-solvable boards at the target difficulty
 
-`newDesc` SHALL generate a full Latin square as the solution and build a clue
-set for it, and SHALL regenerate until the puzzle is solvable at the chosen
-difficulty and not below it. It SHALL NOT fall back to an easier difficulty: it
+`newDesc` SHALL deal a puzzle solvable at the chosen difficulty and not below
+it. It SHALL NOT fall back to an easier difficulty: it
 keeps looking, and a tier no board of the size needs is refused by
 `validateParams` before a board is dealt. The result SHALL be uniquely
-solvable. `newDesc` SHALL also return an `aux` solution string.
+solvable.
 
 #### Scenario: Generated board is unique and correctly graded
 
@@ -145,12 +135,11 @@ solvable. `newDesc` SHALL also return an `aux` solution string.
 - **THEN** the solver solves it at difficulty `d`
 - **AND** the solved grid is a valid Latin square satisfying every clue
 
-### Requirement: Unequal builds its clue set by adding and then stripping
+### Requirement: An Adjacent board carries every bar
 
-In Unequal mode `newDesc` SHALL build the clue set by greedily adding number
-and inequality clues until the graded solver solves the board, then stripping
-redundant clues. In Adjacent mode it SHALL seed every adjacency flag implied by
-the solution, so that only number givens are added and stripped.
+In Adjacent mode `newDesc` SHALL flag every adjacency the solution implies, so
+that the absence of a bar is a clue, and only number givens are added and
+stripped.
 
 #### Scenario: An Adjacent board carries every bar
 
@@ -196,17 +185,6 @@ out.
 - **WHEN** the player presses `M` on a board with no pencil marks
 - **THEN** every empty cell holds every candidate `1..order`
 
-### Requirement: Unequal applies a move purely and is solved by its rules
-
-`executeMove` SHALL apply the move purely, returning a new state, and the board
-SHALL be reported solved exactly while the filled grid satisfies every
-row/column and clue constraint.
-
-#### Scenario: Entering the last correct number completes the board
-
-- **WHEN** the player enters the final number that completes a correct grid
-- **THEN** `status` reports the state `executeMove` returns as solved
-
 ### Requirement: Unequal renders greater-than signs or adjacency bars between cells
 
 `redraw` SHALL render the `order × order` grid with a gap between cells,
@@ -238,49 +216,20 @@ auto-sized grid layout.
 - **THEN** the entered number is drawn in the error color, and a given is still
   drawn in the color of a given
 
-### Requirement: Unequal draws the selection, the pencil mode, the cursor and the flash
-
-The renderer SHALL highlight the selected cell, with a full highlight for real
-entry and a corner wedge for pencil mode, SHALL draw a pencil-mode indicator
-while pencil mode is active, SHALL draw the keyboard cursor, and SHALL flash on
-completion.
-
-#### Scenario: Pencil mode is shown twice
-
-- **WHEN** an empty cell is selected while pencil mode is active
-- **THEN** the cell carries a corner wedge and not the full highlight, and the
-  pencil-mode indicator is drawn
-
-### Requirement: Unequal's tile cache accounts for the clues and the mistake overlay
-
-Cells SHALL be diffed against a per-tile cache that also accounts for the gap
-clues and the mistake overlay.
-
-#### Scenario: A mistake check repaints a drawn cell
-
-- **WHEN** a cell already drawn is reported as a mistake and nothing else about
-  it changes
-- **THEN** the next redraw repaints that cell with the mistake overlay
-
 ### Requirement: Unequal exposes pencil-mark preferences
 
-The game SHALL expose, via the `prefs` hook, a "sticky pencil mode" boolean
-(default on: right-click toggles a persistent pencil mode), an "auto-pencil"
-boolean (default off: when on, placing a number strikes it from the pencil
-marks of its row and column), and a "keep mouse highlight after changing a
-pencil mark" boolean (default on), each stored on the `Ui` and applied by
-`interpretMove`/`executeMove`.
+The game SHALL offer a "sticky pencil mode" preference (default on: right-click
+toggles a persistent pencil mode), an "auto-pencil" preference (default off:
+when on, placing a number strikes it from the pencil marks of its row and
+column), and a "keep mouse highlight after changing a pencil mark" preference
+(default on). With auto-pencil off, note cleanup SHALL be manual: the player
+removes obvious candidates via the mark-all control or a hint.
 
 #### Scenario: Sticky pencil mode persists across left-clicks
 
 - **WHEN** sticky pencil mode is on and the player right-clicks to enter pencil
   mode, then left-clicks another empty cell
 - **THEN** the new cell is highlighted for pencil entry (the mode is not reset)
-
-### Requirement: Note cleanup is manual while auto-pencil is off
-
-With auto-pencil off, which is the default, note cleanup SHALL be manual: the
-player removes obvious candidates via the mark-all control or a hint.
 
 #### Scenario: A placement with auto-pencil off
 
@@ -290,12 +239,11 @@ player removes obvious candidates via the mark-all control or a hint.
 
 ### Requirement: Unequal checks for mistakes against the unique solution
 
-The game SHALL implement `findMistakes`: it re-solves the board from its
-immutable givens and clues to the unique solution and returns every
-player-entered grid cell whose number contradicts that solution, plus every
-empty cell whose non-empty pencil notes have crossed out that cell's solution
-value (a note mistake). The solution SHALL be derived from the placed givens
-only, never from the player's notes.
+`findMistakes` SHALL re-solve the board from its givens and clues, never from
+the player's notes, and return every player-entered cell whose number
+contradicts the unique solution, plus every empty cell whose non-empty pencil
+notes have crossed out its solution value. When the board is not uniquely
+solvable from the givens it SHALL return an empty result.
 
 #### Scenario: A wrong number is flagged, ordinary notes are not
 
@@ -303,11 +251,6 @@ only, never from the player's notes.
 - **THEN** `findMistakes` includes that cell
 - **AND** a cell carrying notes that still include its solution value is never
   included
-
-### Requirement: A board with no unique solution has no mistakes to report
-
-When the board is not uniquely solvable from the givens, `findMistakes` SHALL
-return an empty result.
 
 #### Scenario: An ambiguous board
 
@@ -317,12 +260,11 @@ return an empty result.
 
 ### Requirement: Unequal provides an explained deduction hint
 
-The game SHALL implement `hint(state, aux?, ui?)`, returning a plan of
-`HintStep`s that teaches the player the next deduction in pencil-notes terms.
+The game's hint SHALL teach the player the next deduction in pencil-notes
+terms.
 It SHALL work in a sound candidate cube seeded from the placed givens and
 entries only, never from the player's pencil notes: a note can be wrong, and
-that is what `findMistakes` flags. The plan SHALL be built by walking a working
-copy of the board the way a person solves it.
+that is what `findMistakes` flags.
 
 #### Scenario: An inequality bound is taught as a note strike
 
@@ -383,36 +325,15 @@ legs flagged `continuesPrevious`.
 - **THEN** the two strikes are consecutive steps, the second flagged
   `continuesPrevious`
 
-### Requirement: The solver's recording is gated
-
-The solver's recording mode SHALL be gated so that with recording off the
-generator and solve path is unchanged.
-
-#### Scenario: A solve with no recorder
-
-- **WHEN** the generator grades a board or `solve` solves one
-- **THEN** the solver is given no recorder, and a pass over the clues does not
-  stop at its first firing
-
 ### Requirement: The hint starts on the implicit reading
 
 Unequal's `newUi` SHALL state the implicit reading of an unmarked cell, because
-a sign strikes from one cell at a time. Under it the plan SHALL emit no
-fill-all step: a strike from an empty cell with no notes SHALL instead write
-what it leaves there by a `pencilAdd` move, or place the one value left. Under
-the populate reading the plan SHALL fill every empty cell's candidate notes via
-the fill-all `pencilAll` move before the first elimination, lazily, and only
-when some empty cell lacks notes.
+a sign strikes from one cell at a time.
 
-#### Scenario: An empty board is populated before elimination
+#### Scenario: A hint on a board with no notes
 
-- **WHEN** the player asks for a hint under the populate reading on a board with
-  no pencil notes
-- **THEN** the first elimination is preceded by the fill-all populate step
-
-#### Scenario: Populate is skipped once notes are present
-
-- **WHEN** a hint is asked on a board every empty cell of which has notes
+- **WHEN** a hint is asked, under the game's own default reading, on a board
+  with no pencil notes
 - **THEN** no step is the fill-all move
 
 ### Requirement: Unequal's hint narration meets the hint quality bar
@@ -443,35 +364,6 @@ target hint color.
 - **WHEN** an Unequal-mode link elimination is the displayed step
 - **THEN** the clue's two cells are outlined, the struck cell is ringed, and the
   struck candidates are drawn with a line through them
-
-### Requirement: The auto-pencil preference governs a placement's row and column strikes
-
-The trivial row/column eliminations a placement implies SHALL be governed by
-the auto-pencil preference, read from `ui`: with it on they are folded silently
-into the placement; with it off they are taught as explicit
-`continuesPrevious` strike continuations.
-
-#### Scenario: The cull after a hinted placement
-
-- **WHEN** a hinted placement leaves its value among the notes of its row or
-  column
-- **THEN** with auto-pencil off the next step strikes those notes and is
-  flagged `continuesPrevious`
-- **AND** with auto-pencil on no such step follows, and the placement's own
-  move strikes them
-
-### Requirement: The hint is refused on a solved or mistaken board
-
-A hint SHALL be refused (`{ ok: false, error }`) when the board is solved or
-when `findMistakes` is non-empty, and the refusal SHALL light the mistake
-overlay. Both refusals are the midend's, made before the game is asked, through
-the engine's coupling of a refusal to `findMistakes`; the game's `hint` SHALL
-give neither.
-
-#### Scenario: The hint refuses on a board with mistakes
-
-- **WHEN** a hint is requested while `findMistakes` is non-empty
-- **THEN** the hint is refused and the engine lights the mistake overlay
 
 ### Requirement: The hint's deduction is capped below recursion
 
@@ -513,18 +405,6 @@ hinted value is `completed`. Any other move SHALL drop the plan (`off`).
   pencil toggle
 - **THEN** the verdict is `onTrack` and the step shrinks to the mark left
 - **AND** clearing that one is `completed`
-
-### Requirement: A stored step is refreshed before it is shown
-
-`refreshHintStep` SHALL drop a stored step's dead marks, or resolve the step,
-before each display and re-display, so a kept plan never tells the player to
-remove a candidate already gone.
-
-#### Scenario: A mark the player already removed
-
-- **WHEN** a stored strike step names a candidate the player has since cleared
-- **THEN** the step is shown without that mark, or not at all when it was the
-  last
 
 ### Requirement: Unequal provides on-screen key labels
 

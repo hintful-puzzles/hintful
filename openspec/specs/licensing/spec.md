@@ -55,45 +55,27 @@ layer.
 
 ### Requirement: Upstream notices are kept byte-identical in licenses/
 
-Upstream notices SHALL live in `licenses/`, one file per upstream project, each
-byte-identical to what that project ships, with a README recording what each one
-covers. The directory and file names are this project's and follow its spelling
-convention; the contents are the upstream projects' words and SHALL NOT be
-edited, which a rename does not do.
+Upstream notices SHALL live in the top-level `licenses/`, one file per upstream
+project, each byte-identical to what that project ships, with a README recording
+what each one covers. They SHALL NOT live inside the source tree: they cover the
+whole of `src/engine/`, `src/games/` and the help sources. The file names are
+this project's and follow its spelling convention; the contents are the upstream
+projects' words and SHALL NOT be edited, which a rename does not do.
 
 #### Scenario: Renaming a notice file leaves its bytes alone
 
 - **WHEN** a notice file or the directory holding it is renamed
 - **THEN** the file's content hash before and after the rename is identical
 
-### Requirement: The upstream notices sit outside the source they cover
-
-The upstream notices SHALL NOT live inside a subdirectory of the source tree,
-because what they cover is the whole of `src/engine/` and `src/games/` and the
-served help sources, and not one directory of them.
-
-#### Scenario: A notice beside the code it covers
-
-- **WHEN** an upstream notice is placed under `src/games/`
-- **THEN** it is in the wrong home, and belongs in the top-level `licenses/`
-
 ### Requirement: The upstream notices are reachable from the app
 
 The upstream notices SHALL remain reachable from the app: the About dialog
-`?raw`-imports each one and shows it to players. They are
-therefore live build inputs, and a change that moves or renames one SHALL
-repoint that import in the same commit, since the production build breaks
-without it.
+shows each one to players, from the files in `licenses/`.
 
 #### Scenario: The notices are shown in the app
 
 - **WHEN** a player opens the About dialog
 - **THEN** the upstream notices are rendered from the files in `licenses/`
-
-#### Scenario: A rename repoints the imports
-
-- **WHEN** a notice file or the directory holding it is renamed
-- **THEN** the About dialog's `?raw` imports are repointed in the same commit
 
 ### Requirement: CREDITS.md file thanking lineage
 
@@ -198,15 +180,3 @@ notice contains no copyright line.
 - **WHEN** a package declares no author, no contributors and no repository
 - **AND** its notice contains no copyright line
 - **THEN** the build fails, rather than shipping an uncredited package
-
-### Requirement: The notice check refuses an implausibly short listing
-
-The build SHALL fail on the count where the bundled-package listing is
-implausibly short, so the checks on the entries cannot pass over an empty or
-nearly empty list.
-
-#### Scenario: The check cannot pass over an empty list
-
-- **WHEN** the bundled-package listing is implausibly short
-- **THEN** the build fails on the count rather than reporting that every entry
-  is fine

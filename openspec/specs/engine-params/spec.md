@@ -2,8 +2,10 @@
 
 ## Purpose
 A game's params and the boards they describe: the declared fields the Custom
-dialog is built from, the presets menu, the params codec and its labels, and
-what happens when a game ID or description will not load.
+dialog, the validity check, the codec, the labels and the help are built from;
+rulesets, modifiers and what one setting leaves of another; the shape of the
+preset menu; which way round a board is dealt; the description in play; and
+which game IDs and descriptions load, and what a refusal says.
 
 ## Requirements
 
@@ -31,9 +33,7 @@ its own params fields and parsing any suffix from `next`.
 ### Requirement: The engine exposes each game's custom-params configuration UI
 
 The `Game` interface SHALL define a declarative `paramConfig` from which the
-app's "Custom type…" dialog is built: an ordered list of field descriptors,
-each with a stable keyword, a display name, a type (`string` for a text field,
-`choices` for a select, `boolean` for a checkbox) and `get`/`set` accessors
+app's "Custom type…" dialog is built: an ordered list of field descriptors
 over the game's `Params`. A shared width/height helper SHALL supply the
 dimension fields, so a plain width-by-height game declares them in one line.
 
@@ -68,18 +68,6 @@ applies nothing. For a game with no `paramConfig` the form SHALL be empty.
 
 - **WHEN** a game declares no `paramConfig`
 - **THEN** its form has no fields and a submission changes nothing
-
-### Requirement: The worker-side adapter forwards the Custom form to the midend
-
-The worker-side adapter SHALL forward the requests for the custom-params
-configuration and values, and the submission of a form, to the midend, and
-SHALL NOT answer with an empty configuration of its own.
-
-#### Scenario: The app asks the worker for a game's form
-
-- **WHEN** the app asks the worker for the custom-params configuration of a
-  game that declares `paramConfig`
-- **THEN** it receives the midend's, with an entry for each item
 
 ### Requirement: No game ships an empty custom-params dialog
 
@@ -245,8 +233,9 @@ Every refusal `paramsError` returns SHALL be one sentence with its full stop:
 the bounds and choice messages it generates, and every string a game's
 `validateParams` can return. The Custom dialog and the Enter Game ID dialog
 SHALL show a refusal as it comes, adding no punctuation of their own. Which
-refusals a game has SHALL stay the game's own, because most are rules about
-one puzzle; only the form is the collection's.
+refusals a game has SHALL stay the game's own; only the form is the
+collection's, and a guard SHALL read every string a `validateParams` can
+return.
 
 #### Scenario: A game's refusal reaches the Enter Game ID dialog
 
@@ -254,23 +243,10 @@ one puzzle; only the form is the collection's.
 - **THEN** the dialog shows the game's sentence after "That game won’t open.",
   with the full stop the game wrote
 
-### Requirement: A guard reads every string a validateParams can return
-
-A guard SHALL hold the games' half of the sentence rule by reading every
-function named `validateParams` and following each `return` through
-conditionals, templates, top-level constants and the functions it calls. It
-SHALL fail a string it cannot read as well as one that is not a sentence.
-
 #### Scenario: A fragment is refused at commit
 
 - **WHEN** a game's `validateParams` returns "Too many mines for grid size"
 - **THEN** the guard fails, naming the file and line
-
-#### Scenario: A constant shared by games is read once
-
-- **WHEN** several games return `AREA_TOO_LARGE`
-- **THEN** the guard reads the constant's own text and names it once, where it
-  is written
 
 ### Requirement: A game declares its params encoding once, and both codec halves are derived
 
@@ -299,29 +275,15 @@ one bare letter per choice (Salad's `L` and `B`, Seismic's `T` or nothing).
 - **THEN** the width and the height are both 9
 - **AND** encoding those params writes `9x9`
 
-### Requirement: The codec's options are the variations several games share
-
-A segment's options SHALL be `full` for a generator-only field the brief
-encoding omits, `invalid` for the out-of-range value an unrecognized
-difficulty letter leaves behind, `means` for a letter written when its field
-is off, `omitWhen` for a field written only when non-zero, and `whenAbsent`
-for a default computed from params already decoded.
-
-#### Scenario: A generator-only field
-
-- **WHEN** a segment is declared `full` and params are encoded in the brief
-  form
-- **THEN** the segment is left out, and the full form writes it
-
 ### Requirement: A codec segment names a paramConfig field by its kw
 
-A segment SHALL name a `paramConfig` field by its `kw` and reuse that item's
-`get` and `set`, so a field cannot be in the Custom dialog and dropped from
-the game ID, or the reverse, and a field's stored representation stays the
-game's own. An integer that is not a text field's value, a choices field
-written as its stored number (Bridges' `i30`, Loopy's `t4`) or a field the
-dialog does not offer, SHALL be encoded by handing `num` an accessor pair in
-place of the `kw`.
+A segment SHALL name a `paramConfig` field by its `kw` and reuse its `get` and
+`set`, so a field cannot be in the Custom dialog and dropped from the game ID,
+or the reverse, and a field's stored representation stays the game's own. A
+segment naming a `kw` no item declares SHALL throw. An integer that is not a
+text field's value, a choices field written as its stored number (Bridges'
+`i30`) or a field the dialog does not offer, SHALL be encoded by a `num` given
+an accessor pair, not a `kw`.
 
 #### Scenario: A choices field written as its stored number
 
@@ -329,30 +291,11 @@ place of the `kw`.
 - **THEN** its segment is a `num` given an accessor pair, and the Custom dialog
   still offers the field as choices
 
-### Requirement: A segment naming an undeclared field throws
-
-A segment naming a `kw` no `paramConfig` item declares SHALL throw, and SHALL
-NOT encode nothing.
-
 #### Scenario: A segment naming an undeclared field is refused
 
 - **WHEN** a segment names a `kw` that the game's `paramConfig` does not
   declare
 - **THEN** building the codec throws, naming the missing `kw`
-
-### Requirement: A codec moves to declared only when it reads and writes the same
-
-A game's codec SHALL move from hand-written to declared only when decoding is
-identical on every string the old codec accepted, shown by a differential over
-the recorded corpus, each entry truncated and with junk appended, and the
-legacy forms the old decoder handles, and encoding is identical for every
-record the engine's params check accepts.
-
-#### Scenario: The two decoders disagree on one string
-
-- **WHEN** the differential finds a truncated corpus entry the declared codec
-  decodes differently from the hand-written one
-- **THEN** the codec is not moved as declared
 
 ### Requirement: A params encoding the grammar does not fit stays hand-written
 
@@ -391,7 +334,7 @@ shipped game IDs.
 Each writer of a desc value alphabet SHALL throw on a value it cannot write
 and SHALL NOT walk into punctuation. Each reader SHALL return `null` for a
 character outside its alphabet, a lowercase letter included for the run-length
-alphabet, and its return type SHALL say so. A game whose desc writes a value
+alphabet. A game whose desc writes a value
 above nine SHALL use the alphabet its grammar implies and SHALL keep its own
 bound beside the call.
 
@@ -923,17 +866,6 @@ call of the escape by its shape, in the games and the engine alike.
 - **WHEN** two games pass the same sentence to the escape
 - **THEN** the guard fails, naming the sentence and both games
 
-### Requirement: A malformed description is refused by returning
-
-`validateDesc` SHALL refuse a malformed description by returning, never by
-throwing.
-
-#### Scenario: Garbage is refused, not thrown
-
-- **WHEN** any game's `validateDesc` is given an empty string, punctuation, or
-  an overlong run of one character
-- **THEN** it returns without throwing, and refuses at least one of them
-
 ### Requirement: A game reads its description once
 
 Every game SHALL read its description with one parser returning a `DescParse`
@@ -1001,31 +933,11 @@ replaced by a neighbor).
   `redraw` then throws
 - **THEN** the test fails, naming the game ID that threw
 
-### Requirement: Near misses come from boards dealt at a fixed seed
+#### Scenario: Garbage is refused, not thrown
 
-The near misses of the cross-game test SHALL come from one board per value of
-each preset axis, generated from a fixed seed, so a failure names the same
-game ID every run.
-
-#### Scenario: A failure is seen twice
-
-- **WHEN** the test fails on two runs over the same tree
-- **THEN** it names the same game ID both times
-
-### Requirement: The near-miss test says what it cannot see
-
-The near-miss test can see only a `newState` or `redraw` that throws something
-other than a refusal. It SHALL say so where it is defined, with the measured
-split of games for which that holds, so that a green run is not read as proof
-that a parser refuses what it does not recognize. It SHALL state a floor for
-the mutants reaching `newState` across the collection, and SHALL fail below
-it.
-
-#### Scenario: A mutator that stopped producing near misses
-
-- **WHEN** the mutants reaching `newState` across the collection fall below
-  the floor the test states
-- **THEN** the test fails and does not pass over nothing
+- **WHEN** any game is given an empty string, punctuation, or an overlong run
+  of one character as its description
+- **THEN** nothing throws, and the game refuses at least one of them
 
 ### Requirement: A board with a mistake check loads only with exactly one answer
 

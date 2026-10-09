@@ -1,28 +1,16 @@
 # separate Specification
 
 ## Purpose
-Separate, the puzzle of dividing a lettered grid along its edges into regions
-that each contain exactly one of each letter. This capability specifies the
-game: its three-valued walls and half-grid cursor, its shading of completed
-regions, its mistake-checking and its deduction hint, on a border-marking
-mechanic it shares rather than owns.
+Separate: every cell of a `w × h` grid holds one of `k` letters, each letter
+occurring `w·h/k` times, and the player draws walls along the edges to divide
+the grid into connected regions of `k` cells that each hold one of each letter.
+This capability specifies the game's own part: its params and description, its
+three-valued walls and half-grid cursor, what counts as solved and as a
+mistake, what its generator promises, its shading of completed regions, and its
+deduction hint and that hint's words. The border-marking mechanic is shared
+with Palisade, and this spec says what is shared and what stays Separate's.
 
 ## Requirements
-
-### Requirement: Separate game implements the Game interface
-
-The engine SHALL provide a registered `separate` game implementing `Game`: the
-grid-partition puzzle on a `w × h` grid in which every cell holds one of `k`
-letters, each letter occurring `w·h/k` times, and the player divides the grid
-into disjoint connected `k`-ominoes such that each region contains exactly one
-of each letter. The game SHALL offer a menu of presets, provide `solve` and
-`textFormat`, and drive a solve-completion flash.
-
-#### Scenario: The game is registered
-
-- **WHEN** the registry is asked for the game with id `separate`
-- **THEN** it returns a game whose `presets`, `solve`, `textFormat` and
-  `solvedFlash` are defined
 
 ### Requirement: Separate's parameters are a size and a letter count
 
@@ -38,7 +26,6 @@ bare `{w}` SHALL decode to a square `w × w` grid with `k = w`.
 
 ### Requirement: Separate refuses a letter count the grid cannot be divided by
 
-The bounds the params declare SHALL refuse a `w`, an `h` or a `k` below 1.
 `validateParams` SHALL refuse a `k` that does not divide `w·h`, and an
 unreasonably large `w·h`. Under full validation it SHALL also refuse a `k`
 equal to the whole grid.
@@ -48,11 +35,6 @@ equal to the whole grid.
 - **WHEN** params are fully validated with a `k` that does not divide `w·h`,
   or with `k = w·h`
 - **THEN** the result is a non-null error string
-
-#### Scenario: A width of zero is refused by its bound
-
-- **WHEN** params `{ w: 0, h: 5, k: 5 }` are validated
-- **THEN** the refusal is "Width must be at least 1."
 
 ### Requirement: Separate descriptions encode the letters grid
 
@@ -75,8 +57,8 @@ reject one of the wrong length, and one containing a character outside
 
 ### Requirement: A new Separate board holds its letters and only the rim walls
 
-`newState` SHALL parse the desc into the immutable letters array and an
-all-unknown wall state, with only the grid-rim walls set.
+`newState` SHALL parse the desc into the letters and an all-unknown wall
+state, with only the grid-rim walls set.
 
 #### Scenario: A fresh board has no interior wall
 
@@ -140,43 +122,17 @@ exactly once, and no wall lies interior to a component. `status` SHALL report
 - **WHEN** a wall-bounded region has size `k` but contains a repeated letter
 - **THEN** `status` reports `ongoing`
 
-### Requirement: Separate ports the DSF solver and gates generation on it
+### Requirement: Every generated Separate board is solved by its own solver
 
-The solver SHALL deduce over a disjoint-set forest of squares, run to a
-fixpoint, and report solved, progressed or stuck. The generator SHALL keep a
-board only when the solver fully solves it, so every generated board is
-uniquely solvable by that solver.
+The generator SHALL keep a board only when the solver, run to a fixpoint,
+fully solves it, so every generated board has one partition and that solver
+reaches it.
 
 #### Scenario: Generated boards are uniquely solvable
 
 - **WHEN** the generator produces a board for given params
 - **THEN** the solver run to a fixpoint partitions it into `k`-ominoes each
   holding one of each letter
-
-### Requirement: The generator refills one partition's letters until the solver solves it
-
-The generator SHALL build a random `k`-omino partition with `divvyRectangle`,
-then repeatedly fill each omino with a shuffled set of the `k` letters, keeping
-the letters of the squares the solver has already depended on, and re-solve.
-All RNG draws SHALL go through the engine's seeded random state.
-
-#### Scenario: A refill keeps the letters the solver used
-
-- **WHEN** a solve attempt makes progress without solving the board
-- **THEN** the next fill leaves the letter of every square a deduction depended
-  on where it was
-- **AND** each omino still holds one of each of the `k` letters
-
-### Requirement: The Solve command draws the unique partition's walls
-
-`solve()` SHALL run the solver to the unique partition and return a move that
-draws a wall on every edge between two different components. It SHALL report
-failure when the board is not uniquely deducible.
-
-#### Scenario: Solve draws the unique partition's walls
-
-- **WHEN** `solve()` is invoked on a generated board
-- **THEN** the returned move yields a solved state
 
 ### Requirement: Separate shades completed correct regions
 
@@ -194,11 +150,6 @@ drawn, not a check against the unique solution.
 - **THEN** exactly that region's `k` cells render with the finished-region fill
 - **AND** the untouched remainder does not
 
-### Requirement: Separate's finished-region fill follows the board
-
-The finished-region overlay SHALL be part of the render cache diff key, so the
-fill appears and clears as regions are completed and broken.
-
 #### Scenario: Breaking a region clears its fill
 
 - **WHEN** the player removes a wall from the boundary of a filled region
@@ -209,40 +160,38 @@ fill appears and clears as regions are completed and broken.
 Because Separate is uniquely solvable, the game SHALL implement `findMistakes`:
 re-solve the fixed letters to the unique partition and return every player edge
 whose state contradicts it, a wall where the solution has none or a no-wall
-mark where the solution has a wall. When the board is not uniquely deducible
-`findMistakes` SHALL return an empty list.
+mark where the solution has a wall. A flagged edge SHALL be drawn in the error
+color. When the board is not uniquely deducible `findMistakes` SHALL return an
+empty list.
 
 #### Scenario: A contradicting wall is flagged
 
 - **WHEN** the player draws a wall that the unique solution does not have and
   Check & Save runs
 - **THEN** `findMistakes` includes that edge
-
-### Requirement: A flagged mistake reddens its edge on the frame it is found
-
-The edges `findMistakes` flags SHALL render with a distinct error overlay, and
-the overlay SHALL be part of the render cache diff key so it repaints on the
-frame Check & Save runs.
-
-#### Scenario: A flagged wall is drawn in the error color
-
-- **WHEN** Check & Save flags a wall the unique solution does not have
-- **THEN** the next `redraw` draws that edge in the error color
+- **AND** the next `redraw` draws that edge in the error color
 
 ### Requirement: Separate shares its border-marking mechanic rather than owning a copy
 
-Separate SHALL obtain the grid-edge marking mechanic it shares with Palisade
-from a shared engine module rather than from its own copy: the border and
-disabled bit vocabulary and direction tables, the closest-edge hit test from a
-pointer coordinate, the edge's three states as the left and right buttons
-toggle them, the paired edit of the two cells adjacent to a marked edge, and
-the half-cell keyboard cursor coordinate scheme.
+Separate SHALL take the grid-edge marking mechanic it shares with Palisade
+from the shared engine modules and own no copy: the edge bits and
+direction tables, the nearest-edge hit test, the three-state toggle, the paired
+edit of an edge's two cells, the half-cell cursor, and its look: the geometry,
+the edge rects, the tile skeleton and the live error model (a region over or
+under size, a wall separating nothing). A change to what counts as a wrong
+wall SHALL take effect in both games at once.
 
 #### Scenario: Both games' edits come from the shared module
 
 - **WHEN** a click and a cursor key address the same interior edge in Separate
 - **THEN** both produce the paired edits the shared module computes for that
   edge
+
+#### Scenario: The error model is the shared module's
+
+- **WHEN** the player's no-wall marks join more than `k` cells in Separate
+- **THEN** the edges between that region and its neighbors are drawn in the
+  error color by the shared module's test, not by one of Separate's own
 
 ### Requirement: The games' move formats stay independent
 
@@ -255,21 +204,6 @@ would couple two save formats that have no reason to be identical.
 
 - **WHEN** the shared module reports the paired edits for an edge
 - **THEN** Separate returns them inside its own `edges` move
-
-### Requirement: The border-marking mechanic's look is shared on the same terms
-
-Separate SHALL take from the shared module the board geometry, the four
-three-valued edge rects, the tile skeleton around them, the half-cell cursor
-the module moves, and the live error model: a region larger than the target
-size, one smaller, or a wall that separates nothing. These are properties of
-the marking mechanic, not of Separate, and a change to what counts as a wrong
-wall SHALL take effect in both games at once.
-
-#### Scenario: The error model is the shared module's
-
-- **WHEN** the player's no-wall marks join more than `k` cells in Separate
-- **THEN** the edges between that region and its neighbors are drawn in the
-  error color by the shared module's test, not by one of Separate's own
 
 ### Requirement: A game adopting the border-grid input adopts its look
 
@@ -299,19 +233,6 @@ a tile, and SHALL NOT branch on which game is drawing.
 - **THEN** Separate's own tile callback draws both of those letters in the
   error color
 
-### Requirement: Sharing the mechanic changes no board and no frame
-
-Moving Separate's code into the shared module SHALL NOT change any board
-Separate generates for a given seed or any frame it draws. Sharing the look
-SHALL change no draw call: a render snapshot records every draw call with its
-coordinates and its resolved color, so a changed one is a defect.
-
-#### Scenario: The shared mechanic is adopted without moving a board
-
-- **WHEN** Separate is changed to consume the shared border-grid module
-- **THEN** every board Separate generates for a given seed is unchanged
-- **AND** every Separate render snapshot passes without being re-recorded
-
 ### Requirement: Separate runs its solver as a declared ladder that its hint shares
 
 Separate's solver SHALL run on `runDeductionFixpoint` as three tier-0
@@ -338,19 +259,6 @@ square, marking the edges between them "no wall".
 - **WHEN** two adjacent lone squares hold the same letter
 - **THEN** `shared-letter` disconnects them and walls the edge between them
 
-### Requirement: The ladder deals the frozen boards and every technique fires
-
-The ladder SHALL generate exactly the boards the frozen differential records
-for each seed, and a firing census over generator runs SHALL assert that every
-technique fires. A hand-written solver loop SHALL NOT be kept beside the
-ladder.
-
-#### Scenario: The ladder moves no board
-
-- **WHEN** the generator runs on the ladder
-- **THEN** the frozen differential's descs are unchanged
-- **AND** the firing census over generator runs, which keep one scratch across letter refills, reaches every rung
-
 ### Requirement: Separate offers a deduction-based hint
 
 Separate SHALL provide `hint()`, seeded from the player's own marks (no-wall
@@ -362,18 +270,16 @@ its ladder, each leg setting one edge.
 - **WHEN** hints are followed one recomputed step at a time from a fresh board or from a board revealing a random share of the solution's edges
 - **THEN** the board is solved and no hint refuses
 
-### Requirement: A hint is refused on a solved, mistaken or unsolvable board
+### Requirement: The hint refuses a board its solver cannot finish
 
-A hint SHALL be refused on a solved board and on a board carrying a mistake, by
-the midend before it asks the game. `hint()` SHALL refuse on a board its solver
-cannot finish from empty.
+`hint()` SHALL refuse on a board its solver cannot finish from empty, since
+nothing can vouch for the marks on such a board.
 
-#### Scenario: A wrong wall refuses the hint
+#### Scenario: A board the solver cannot divide gets no hint
 
-- **WHEN** a hint is requested on a board carrying a wall the unique solution
-  lacks
-- **THEN** `findMistakes` flags that wall and the midend refuses the hint
-  without calling `hint()`
+- **WHEN** a hint is requested on a board whose letters the solver cannot
+  divide from the bare rim
+- **THEN** `hint()` refuses and returns no step
 
 ### Requirement: A hint sentence rests on the player's own marks
 
@@ -410,13 +316,15 @@ The border grid's hint highlight, the journey a firing becomes, the keep-track
 verdict on a click, the per-tile hint flags, the drawing of a striped region
 and outlined squares, and the later-leg sentence SHALL come from the engine,
 shared by Separate and Palisade. Each game SHALL keep its deduction, its
-sentences and its own `Move`, wrapping the shared edits itself. Sharing the
-layer SHALL change no Palisade frame.
+sentences and its own `Move`, wrapping the shared edits itself.
 
-#### Scenario: Palisade's hint frames survive the extraction
+#### Scenario: Separate's hint step is drawn by the shared layer
 
-- **WHEN** Palisade draws its hint through the shared layer
-- **THEN** its render snapshots pass without being re-recorded
+- **WHEN** Separate displays a hint step that stripes one region and outlines
+  another
+- **THEN** the ringed edges, the stripes and the outline are drawn by the
+  shared border-grid renderer from the step's words
+- **AND** the sentence and the `edges` move are Separate's own
 
 ### Requirement: Separate draws its cells on the collection's quiet surface
 

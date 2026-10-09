@@ -1,0 +1,18 @@
+# Cuts: rect
+
+Requirements: 21 before, 18 after.
+
+| Requirement or sentence cut | Word | What holds it now, or why it is gone |
+| --- | --- | --- |
+| "Rectangles game implements the Game interface" (whole requirement and its scenario): that a registered `rect` game implements `Game` and provides `solve`, `textFormat` and `solvedFlash` | type | The compiler and the registry say it of every game; `ts-engine` "Solve, the status bar and text export follow from the game's methods" reads the methods' presence. |
+| "Rectangles game implements the Game interface": the statement of the puzzle's rules | duplicate | "Rectangles reports completion and mistakes", and the Purpose. |
+| "Rectangles game implements the Game interface": that the completion flash does not play after Solve | collection | `ts-engine` "The win flash plays on a forward move that solves the board". |
+| "Rectangles' parameters and their encoding": "The presets SHALL be the square boards of side 7, 9, 11, 13, 15, 17 and 19." | declared | `PRESET_SIZES` in `src/games/rect/state.ts`, which the engine reads. |
+| "Rectangles refuses params outside its bounds": a width or height below 1 and a negative expansion factor are refused by the bounds in `paramConfig` | declared | The `bounds` of the `paramConfig` items in `src/games/rect/index.ts`; `engine-params` "The paramConfig item is the one place a field's facts are read from" has the engine check them. |
+| "Rectangles refuses params outside its bounds": the requirement as a separate one | duplicate | Its one rule of the game's own, the refusal of a grid of area less than 2, is now a sentence and a scenario of "Rectangles' parameters and their encoding". |
+| "Rectangles descriptions use the upstream encoding": "`newState` SHALL parse the desc into the immutable grid of numbers, with all edges initially clear and the correctness overlay computed." | how | Which fields the state holds and when the overlay is computed; the encoding and its refusals stay. |
+| "Rectangles flags a drawn edge the solution lacks": the scenario "A correct partial board has no mistakes" | duplicate | Restates the rule; the scenario of a flagged wall stays. |
+| "Rectangles rendering": "`redraw` SHALL render the grid, the number text, the correct-rectangle fill, the cursor's corner brackets, the computed corner pixels where edges meet and the completion flash, with a border of one pixel around the grid." | duplicate | The surface, the fill and the cursor each have their own requirement ("…draws its squares on the collection's quiet surface", "A finished rectangle fills whole…", "The Rectangles cursor is brackets…"); the corner pixels and the one-pixel border are how the frame is built. The edge colors stay. |
+| "Rectangles ports the solver and solver-gated generator" (whole requirement): the solver's enumeration, its deduction loop and its winnowing of number positions during generation | how | Which algorithm the solver runs. What it promises, a unique placement for every dealt board, is now the last clause of "Rectangles generates by tiling, stretching and solving", whose scenario already discarded a layout that is not unique. |
+| "Rectangles generates by tiling, stretching and solving": "the two-pass expand-and-transpose" and "encode the run-length desc" | how | The way the stretch is done; the desc encoding is "Rectangles descriptions use the upstream encoding". |
+| "Rectangles offers an explained hint that reads only the board": "The hint SHALL refuse on a board with a wrong line." | collection | `engine-hints` "The midend SHALL refuse a hint on a finished or wrong board before asking the game": the midend gives that refusal from `findMistakes`, and a game's `hint` may not write it. |

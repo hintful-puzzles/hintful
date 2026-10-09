@@ -3,33 +3,17 @@
 ## Purpose
 Singles (Hitori), the puzzle of shading squares so that no number repeats
 in a row or column, no two shaded squares share an edge, and the squares left
-clear stay connected, with difficulty-graded unique generation, the
-show-black-numbers preference, mistake-checking, and an explained deduction
-hint with its own legend of marks.
+clear stay connected: its params and description formats, its controls and
+its show-black-numbers preference, how the board is drawn, what its two
+difficulty tiers mean and what the generator promises, mistake-checking, and
+an explained deduction hint with its own legend of marks.
 
 ## Requirements
-
-### Requirement: Singles game implements the Game interface
-
-The engine SHALL provide a registered `singles` game implementing `Game`: the
-puzzle Hitori on a `w × h` grid of numbers, in which the player blackens cells
-so that no number repeats among the remaining (white) cells of any row or
-column, no two black cells are orthogonally adjacent, and the white cells form
-one orthogonally-connected region. The game SHALL provide `solve` and
-`textFormat`, and SHALL NOT provide `statusbarText`.
-
-#### Scenario: The registered game offers Solve and a text export
-
-- **WHEN** the registry is asked for `singles`
-- **THEN** it returns a game that has `solve` and `textFormat`
-- **AND** the game has no `statusbarText`
 
 ### Requirement: Singles params are a size and a difficulty
 
 Params SHALL be `w`, `h`, and `diff` (Easy or Normal), encoded `{w}x{h}d{c}`
 when full (`c` = `e` for Easy, `k` for Normal) and `{w}x{h}` otherwise.
-Presets SHALL be 5×5, 6×6, 8×8, 10×10, and 12×12, each in both Easy and
-Normal.
 
 #### Scenario: Params round-trip
 
@@ -60,14 +44,7 @@ alphabet writes, and a cell holds a number up to `max(w, h)`.
 The desc SHALL encode the board's numbers in scan order, one character per cell:
 digits `0`–`9` for `0`–`9`, letters `a`–`z` for `10`–`35`, `A`–`Z` for `36`–`61`.
 A desc SHALL be refused unless its length equals `w·h` exactly and every
-decoded number lies in `1..max(w,h)`. `newState` SHALL decode the desc into an
-immutable `nums` grid with all flags blank.
-
-#### Scenario: Description decodes to the number grid
-
-- **WHEN** a valid desc for a `w × h` board is decoded by `newState`
-- **THEN** each cell holds its decoded number
-- **AND** every cell starts neither black nor circled
+decoded number lies in `1..max(w,h)`.
 
 #### Scenario: Wrong-length description is rejected
 
@@ -99,22 +76,13 @@ SHALL return a `UI_UPDATE` rather than a history move.
 - **THEN** the preference is on and `interpretMove` returns `UI_UPDATE`
 - **AND** no cell changes
 
-### Requirement: Singles keyboard cursor moves are not history moves
+### Requirement: Singles is solved when the board breaks no rule
 
-Keyboard cursor moves SHALL move the cursor and SHALL return a `UI_UPDATE`
-(revealing the cursor on the first arrow press) rather than a history move.
-
-#### Scenario: The first arrow press reveals the cursor
-
-- **WHEN** an arrow key is pressed while the cursor is hidden
-- **THEN** the cursor is visible and `interpretMove` returns `UI_UPDATE`
-- **AND** no cell changes
-
-### Requirement: Singles moves replace a cell's mark, and completion is read from the board
-
-`executeMove` SHALL clear both the black and circle bits on each targeted cell
-before applying the new value. `status` SHALL report the game solved when
-`checkComplete` reports no errors on the board.
+The puzzle is Hitori on a `w × h` grid of numbers. `status` SHALL report the
+game solved when no number repeats among the cells left white in any row or
+column, no two black cells are orthogonally adjacent, and the white cells form
+one orthogonally-connected region. A cell that is not black counts as white,
+circled or not.
 
 #### Scenario: Completion is detected
 
@@ -141,7 +109,7 @@ cell with no white escape, or a contradiction in the cascade).
 
 `solve` SHALL attempt to solve the current state and then the initial state,
 returning the move that completes the board or an error when neither can be
-solved. The move SHALL be marked as the solver's (`solve: true`).
+solved.
 
 #### Scenario: Solve reports failure on an unsolvable position
 
@@ -215,8 +183,8 @@ each lands beside the piece and the ring and never on them.
 
 ### Requirement: Singles completion flash
 
-A completion that is not the Solve command's SHALL trigger the completion
-flash, which SHALL lift the surface of every cell that holds no piece.
+The completion flash SHALL lift the surface of every cell that holds no
+piece, and SHALL leave a blackened cell's piece as it was.
 
 #### Scenario: A hand-made completion flashes
 
@@ -224,30 +192,11 @@ flash, which SHALL lift the surface of every cell that holds no piece.
 - **THEN** the flash plays on the surface of every cell that holds no piece
 - **AND** a blackened cell's piece is drawn as it was
 
-#### Scenario: Solve does not flash
-
-- **WHEN** the Solve command completes the board
-- **THEN** no flash plays
-
-### Requirement: Singles names no hue of its own
-
-The game SHALL name no hue of its own for a blackened cell: its hint
-sentences, its control words and its preference's label SHALL say the
-collection's word for the shaded color and its word for a cell that is not
-shaded, and its help page SHALL name the shaded color by placeholder.
-
-#### Scenario: A hint names the color the piece is drawn in
-
-- **WHEN** a hint step concludes that a cell must be blackened
-- **THEN** its sentence says the collection's word for the shaded color
-- **AND** applying the step draws the shaded piece in that cell
-
 ### Requirement: Singles show-black-numbers preference
 
 The game SHALL expose a single boolean preference (keyword `show-black-nums`),
 labeled "Show numbers on … squares" with the collection's word for the shaded
-color, via the engine `prefs` hook, stored on the `Ui` and read by `redraw`. It
-SHALL default to off.
+color. It SHALL default to off.
 
 #### Scenario: Preference toggles numbers on black squares
 
@@ -260,20 +209,18 @@ The game SHALL implement `findMistakes(state)`: re-solve the board from its
 immutable numbers to the unique solution and return every player cell whose
 black/white choice contradicts that solution (a cell marked black where the
 solution is white, or circled where the solution is black). Undecided cells SHALL
-never be reported. It SHALL return an empty result when the board is consistent
-with the unique solution, so Check & Save hard-blocks a save only on a
-genuine mistake.
+never be reported.
 
 #### Scenario: A wrong black is flagged
 
 - **WHEN** the player blackens a cell that the unique solution leaves white
 - **THEN** `findMistakes` includes that cell
 
-#### Scenario: A correct partial board reports no mistakes
+#### Scenario: An undecided cell is never a mistake
 
-- **WHEN** every black/circle the player has placed agrees with the unique
-  solution
-- **THEN** `findMistakes` returns an empty result
+- **WHEN** the player has left a cell that the unique solution blackens neither
+  black nor circled
+- **THEN** `findMistakes` does not include that cell
 
 ### Requirement: Singles provides an explained deduction hint
 
@@ -292,20 +239,6 @@ sequence of narrated `HintStep`s (the remaining solution).
   the deduction (sandwich / pair / corner / offset / connectivity / cascade)
   that forces its cell
 - **AND** applying every step's move in order solves the board
-
-### Requirement: A Singles hint is refused on a solved or mistaken board
-
-A hint SHALL be refused when the board is already solved or when
-`findMistakes(state)` is non-empty, since a deduction seeded from
-contradictory marks would mislead. Both refusals SHALL be the midend's, given
-before the game's `hint` is asked.
-
-#### Scenario: Hint refuses on a solved or mistaken board
-
-- **WHEN** a hint is requested on a solved board, or on a board where the
-  player has marked a cell contradicting the unique solution
-- **THEN** it is refused with an explanatory error
-- **AND** the game's `hint` is not called
 
 ### Requirement: A Singles hint step states the number pattern that forces its cell
 
@@ -346,17 +279,6 @@ two.
 - **WHEN** the deduction that fires forces two cells simultaneously (a 2×2
   corner with four matching numbers, or an offset-pair pattern)
 - **THEN** the hint emits a single `HintStep` whose move sets both cells
-
-### Requirement: A Singles hint draws its target without the forced mark
-
-`redraw` SHALL render the displayed step's target cell(s) ringed in the hint
-color at the cell's edge, drawn without the forced mark: the narration says
-whether to shade or circle.
-
-#### Scenario: A cell a hint says to shade is drawn empty
-
-- **WHEN** a displayed step concludes that an undecided cell must be shaded
-- **THEN** the cell is ringed in the hint color and holds no piece
 
 ### Requirement: A Singles hint outlines its evidence
 
@@ -450,11 +372,16 @@ color in every hint that cites one).
 
 ### Requirement: The forced cell, the number premises and the corner have their own colors
 
-The forced cell(s) (the move) SHALL be banded `COL_HINT` with no mark preview
-drawn. An undecided number premise (the matching numbers a deduction reasons
+The forced cell(s) (the move) SHALL be banded `COL_HINT` and drawn without
+the forced mark: the narration says whether to shade or circle. An undecided number premise (the matching numbers a deduction reasons
 over) SHALL be banded `COL_HINT_CELL`. The protected corner of a corner
 deduction SHALL be banded `COL_HINT_STRAND`. The row or column a sentence
 names SHALL be striped in `COL_HINT`.
+
+#### Scenario: A cell a hint says to shade is drawn empty
+
+- **WHEN** a displayed step concludes that an undecided cell must be shaded
+- **THEN** the cell is banded `COL_HINT` and holds no piece
 
 #### Scenario: Number premises and corners take their own colors
 
@@ -491,27 +418,13 @@ drawn as the cue that is not a color.
   the reason)
 - **THEN** the cited circled premise is banded `COL_HINT_WHITEREF`
 
-### Requirement: A Singles hint's marks are read from the step's words
-
-Which cell takes which mark SHALL be read from the step's words, with the
-`SinglesHint` payload's `strand` telling the protected corner from the other
-outlined cells.
-
-#### Scenario: The strand picks the corner out of the outlined cells
-
-- **WHEN** a corner deduction from two matching numbers is displayed
-- **THEN** the outlined cell the step's `strand` lists is banded
-  `COL_HINT_STRAND`, and the other outlined cells take an evidence color
-
 ### Requirement: Singles generates unique, difficulty-graded boards
 
-`newDesc` SHALL generate a board by constructing a Latin rectangle, adding black
-squares at random with solver assistance (forced whites laid between
-placements), and assigning numbers under the black squares so the solution stays
-unique. It SHALL accept the board only when it is solvable at the requested
-difficulty and *not* solvable one difficulty level below (with the sneaky
-generation-artifact deduction enabled), regenerating otherwise. Generation from
-a given seed SHALL be reproducible.
+`newDesc` SHALL deal a board with exactly one solution. It SHALL accept a
+board only when it is solvable at the requested difficulty and *not* solvable
+one difficulty level below (with the sneaky generation-artifact deduction
+enabled), regenerating otherwise. Generation from a given seed SHALL be
+reproducible.
 
 #### Scenario: Generated boards are uniquely solvable at their difficulty
 

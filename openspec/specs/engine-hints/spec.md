@@ -183,15 +183,13 @@ the single target color.
 
 Each legend color SHALL be paired with a non-color cue (ring against shade
 against fill, the drawn digit or clue, or position) so the mapping from color
-to kind survives for colorblind players. Color SHALL NOT be the sole carrier,
-and color names SHALL NOT appear in the narration text.
+to kind survives for colorblind players. Color SHALL NOT be the sole carrier.
 
 #### Scenario: Two kinds of element are highlighted in one step
 
 - **WHEN** a displayed step highlights two kinds of element in their legend
   colors
-- **THEN** each is also told apart by a distinguishing non-color cue, and the
-  narration names neither color
+- **THEN** each is also told apart by a distinguishing non-color cue
 
 ### Requirement: Hint explanation surfaces independent of the status bar
 
@@ -199,9 +197,7 @@ The displayed step's explanation SHALL reach the UI's hint banner whenever a
 hint is displayed, whether or not the game has a status bar (provides
 `statusbarText`). It SHALL ride the `status-bar-change` notification beside the
 status-bar text, and the `Midend` SHALL emit that notification for a game that
-has either a status bar or a `hint`. The status-bar DOM stays gated on the
-app's `wantsStatusbar` attribute, so the empty status-bar text emitted for a
-game with no status bar is inert.
+has either a status bar or a `hint`.
 
 #### Scenario: A no-status-bar game shows and clears the hint banner
 
@@ -213,8 +209,7 @@ game with no status bar is inert.
 ### Requirement: executeHint supports a single-step (hide-after) mode
 
 `midend.executeHint(hideAfter?)` SHALL accept an optional `hideAfter` flag,
-false by default, threaded through `PuzzleEngineSurface` and the worker
-adapter. When it is true the executed step SHALL still stay displayed through
+false by default. When it is true the executed step SHALL still stay displayed through
 its animation, and on settle the plan SHALL advance and then be hidden, the
 same hidden-but-stored state a manual step completion produces, so nothing is
 previewed. The next `midend.hint()` SHALL re-display the advanced step without
@@ -571,23 +566,6 @@ that cell's cache key.
 - **THEN** the mark is still whole on the next frame
 - **AND** when the hint is dismissed or moves, the space it occupied is restored
 
-### Requirement: The mark guards assert shape and derive their games
-
-Guards on the marks SHALL assert the mark's shape: that a target is a ring of
-thin sides and not a solid fill, and that a contiguous evidence region is one
-contour and not a ring per cell. An assertion that some primitive carries the
-hint color SHALL NOT stand in for it. The cross-game guard SHALL derive each
-game's hint palette indices from that game's own renderer and not from a list
-maintained beside it, and SHALL assert how many games it examined, so that it
-cannot shrink in silence.
-
-#### Scenario: A target is drawn as a fill in the hint color
-
-- **WHEN** a game's renderer marks its target with a solid fill in the hint
-  color
-- **THEN** the guard fails, because it asserts a ring of thin sides and not the
-  presence of the color
-
 ### Requirement: The necessity-voice rule applies to every hinting game not ledgered as narrating moves
 
 The cross-game narration guard SHALL derive the games subject to the
@@ -683,101 +661,6 @@ commit, with no line added anywhere to enroll it.
 - **THEN** it is walked from that commit, with no line added anywhere to enroll
   it
 
-### Requirement: The per-commit slice keeps one preset per value of every axis
-
-The walk's cost SHALL be tiered and not paid in full per commit. The
-per-commit slice SHALL keep at least one preset per value of every axis the
-game actually varies, with the axes derived from the game's own `paramConfig`
-and not named by the sweep. A field every preset holds one value at is not an
-axis: no preset reaches a second value, so no slice can walk one.
-
-#### Scenario: A game's second mode is walked per commit
-
-- **WHEN** a game's presets differ in a `"boolean"` or `"choices"` param (a
-  Killer grid, an Adjacent clue set, a Tectonic region shape, a tiling) and the
-  mode's presets share their tier with a plainer board earlier in the menu
-- **THEN** the per-commit slice walks a board carrying that mode, on the smallest
-  preset offering it, and does not de-duplicate it away against the plainer
-  board
-- **BECAUSE** a mode is a different set of deductions and sentences, not a
-  larger board
-
-### Requirement: A param's type decides what covering its axis means
-
-The types of a game's `paramConfig` items SHALL decide what covering an axis
-means. A `"string"` item is a free scalar whose values lie on a line, so both
-ends cover it. A `"boolean"` or `"choices"` item is a selection from a closed
-set with nothing between its members, so every value covers it. Difficulty is a
-`"choices"` item, so one preset per tier follows from the general rule and
-SHALL NOT be a case of its own.
-
-#### Scenario: An untiered game's largest board is walked per commit
-
-- **WHEN** a hinting game declares no difficulty contract, so every preset it
-  offers carries the same tier key
-- **THEN** the per-commit slice walks the largest board it offers as well as the
-  smallest, and does not collapse the game to one board, unless the game's
-  hint plans by searching, where board size is sliced away under the
-  `build-pipeline` cost requirement and a named per-game test covers the largest
-  board instead
-- **AND** "largest" is the extreme of each scalar axis, not the last entry in
-  the menu: Flood's last preset has an interior color count and a leniency an
-  earlier board already claimed, and is not its largest board
-
-### Requirement: The slice takes presets in menu order
-
-The slice SHALL take presets in menu order, keeping one that supplies a value
-no earlier one did. That claims each value on the smallest board offering it,
-so a mode costs about what the game's easiest board costs.
-
-#### Scenario: A mode is offered at two sizes
-
-- **WHEN** a mode's presets include a small board and, later in the menu, a
-  large one
-- **THEN** the slice walks the mode on the small board
-
-### Requirement: Every cross-game sweep over presets derives its boards from the game
-
-Any cross-game sweep over presets SHALL ask which boards cover the game, and
-the answer SHALL be derived from the game and not assumed. The shared preset
-enumeration these sweeps take their population from, and the slice itself,
-SHALL live with the other cross-game hint testing helpers, so a sweep does not
-answer the question again. A sweep that varies params by tier SHALL vary a game
-with no difficulty contract by preset and SHALL NOT skip it.
-
-#### Scenario: A sweep meets a game with no tiers
-
-- **WHEN** a cross-game sweep varies a game's params by tier, and the game
-  declares no difficulty contract
-- **THEN** it varies that game by preset instead of skipping it, and its vacuity
-  count counts what it actually looked at
-
-### Requirement: The slice's vacuity floor sits above its collapses
-
-The slice's own vacuity floor SHALL sit above the ways it can collapse, and not
-merely above zero. One board per game and one board per tier are both counts a
-broken derivation produces while every walk stays green, so a floor beneath
-either asserts nothing about the axis keying.
-
-#### Scenario: The derivation collapses to one board per tier
-
-- **WHEN** the slice's derivation breaks and yields one board per tier
-- **THEN** the vacuity floor fails, although every walk it made passed
-
-### Requirement: A sweep's finding is pinned by its shape
-
-A sweep's finding SHALL be pinned by its shape where it has one, and not by
-more sampling. Where every instance of a defect is the same recognizable board
-shape, a test that names such boards SHALL assert the property
-deterministically. Seeds are the wrong dial to turn.
-
-#### Scenario: A defect appears on a fraction of boards of one shape
-
-- **WHEN** a sweep finds a defect on a minority of boards, every one of the same
-  recognizable shape
-- **THEN** a test names boards of that shape and asserts the property on them,
-  and the seed count is not raised to catch it
-
 ### Requirement: Deduction running out on a sound board SHALL have one wording
 
 A hinting game that finds no move on a board which is sound, unsolved and free
@@ -799,20 +682,6 @@ hint.
 - **WHEN** a game returns its own sentence for deduction having run out
 - **THEN** the program does not typecheck, whether the sentence is written at
   the game's call site or inside a shared module
-
-### Requirement: A hint builder imports the refusal constants
-
-Every builder of a `hint()` SHALL import the refusal constants, shared builders
-included, and SHALL NOT retype their values. The check that reads refusals
-SHALL read the engine's hint builders as well as `src/games/`, since a refusal
-lives wherever a `hint()` is built.
-
-#### Scenario: A shared hint builder names a dead end
-
-- **WHEN** a module under `src/engine/` that builds a `hint()` passes a
-  sentence through an escape
-- **THEN** the conformance check reads that call as it reads a game's, because
-  its scan covers the engine's hint builders and not only `src/games/`
 
 ### Requirement: Deduction runs out only where the tier permits search
 
@@ -907,28 +776,13 @@ shortest plan does not look like progress on the way home.
 
 A game's exact-search budget SHALL be the smallest that still crosses its worst
 endgame and not the largest it can afford, because a search on a board too far
-away to reach spends its whole budget and comes back empty. The planner's own
-state storage SHALL be allocation-free and packed, since the cost of a failed
-search decides whether running it on every board is affordable.
+away to reach spends its whole budget and comes back empty.
 
 #### Scenario: A board is too far away for the exact search
 
 - **WHEN** the exact search is run on a board beyond its budget
 - **THEN** it comes back empty having spent the budget, and the heuristic search
   answers
-
-### Requirement: The slide planner's games are guarded by the resume walk
-
-The planner's consumers SHALL be guarded by their own hint suites and by the
-cross-game resume walk, which recomputes the hint after every move. A walk that
-follows one plan to its end never recomputes, and so is green on a game whose
-hint ping-pongs.
-
-#### Scenario: A hint walks a board out and back
-
-- **WHEN** a sliding game's recomputed hints return the board to a position it
-  already left
-- **THEN** the resume walk fails to converge
 
 ### Requirement: The slide planner SHALL carry a last resort bounded by depth rather than by memory
 
@@ -1035,28 +889,6 @@ the guard is reporting the truth and not a regression.
 - **THEN** the walk fails, because the relaxation covers only the searching
   games
 
-### Requirement: The searching games are derived and their reasons ledgered
-
-The relaxation SHALL be derived from what the game is, by reading out of each
-game's own comment-stripped source whether it names the refusal for a search
-out of reach or calls `searchRefusal`, and never from a declaration a game
-makes for the guard's benefit. Where the derivation cannot see why a member has a reach, that reason
-SHALL be recorded per member, and the derivation SHALL assert the ledger is
-exactly right, so an empty derivation fails and does not silently restore the
-promise.
-
-#### Scenario: A game borrows the search refusal
-
-- **WHEN** a game with no ledgered reach comes to name the search-out-of-reach
-  refusal
-- **THEN** the ledger equality fails until the reason it has a reach is written
-
-#### Scenario: The derivation finds nobody
-
-- **WHEN** the source scan that derives the searching games matches nothing
-- **THEN** the ledger equality fails, and the walks do not silently pass under
-  the unrelaxed promise
-
 ### Requirement: A plan steered by a measure SHALL be steered by one measure
 
 Where a `hint()` plans by searching under a heuristic measure of the board,
@@ -1118,35 +950,6 @@ narration-quality bar, not a way of satisfying this rule.
 
 - **WHEN** a narration that set its reasoning off with an em-dash is rewritten
 - **THEN** the reasoning is still in the sentence, joined by other punctuation
-
-### Requirement: The em-dash guard scans the games and the engine's shipped code
-
-The guard SHALL find its population from the games that declare a `hint()`, and
-SHALL additionally scan the engine's own shipped code, because a family's
-narration is often written once in the engine. The engine scan SHALL exclude
-test files and the `engine/testing/` tree by those structural facts and not by
-a roster of filenames, so a new shared narration module is covered and a new
-test helper excluded with no list to maintain.
-
-#### Scenario: Shared engine narration adds an em-dash
-
-- **WHEN** a shared narration or refusal string in the engine's shipped code
-  writes an em-dash
-- **THEN** the guard fails, naming the module and the line, even though no game
-  directory changed
-
-### Requirement: The source scans and the runtime sweep both apply the em-dash rule
-
-Both the source scans and the runtime narration sweep SHALL apply the em-dash
-rule. They are overlapping nets on purpose: the runtime sweep sees only the
-narration arms that fire on the boards it walks, and a source scan sees only
-what is written as a literal.
-
-#### Scenario: An em-dash is assembled at run time
-
-- **WHEN** a narration's em-dash is not written as a literal in the scanned
-  source and its arm fires on a board the sweep walks
-- **THEN** the runtime sweep fails on the step's explanation
 
 ### Requirement: A hint SHALL show only steps the player's board does not already decide
 
@@ -1226,18 +1029,6 @@ the board.
 - **WHEN** a sentence reads differently for one square and for several
 - **THEN** the narration passes the count, and the text module chooses the word
 
-### Requirement: The games with a text module are derived
-
-The population of text modules SHALL be derived, not declared: a cross-game
-test SHALL find the games whose hint speaks, and assert that each has a text
-module and that no text module belongs to a game whose hint does not speak.
-
-#### Scenario: A new game's hint speaks
-
-- **WHEN** a game gains a `hint()` whose steps carry narration and no
-  `hint-text.ts`
-- **THEN** the cross-game guard fails, naming the game
-
 ### Requirement: Hint narration SHALL be short enough to read at a glance
 
 Every hint step's narration SHALL be at most 120 characters. The check SHALL
@@ -1316,37 +1107,6 @@ that stops speaking a shared rung at length.
   rung over the limit, while the others do
 - **THEN** the check fails naming that game and that entry, and does not pass
   on the strength of the games that do speak it
-
-### Requirement: The ledger's reverse direction defers with the corner walk
-
-The ledger's forward direction SHALL run on every commit. The reverse
-direction SHALL defer with the corner rule its verdict is decided against, and
-SHALL be skipped and not evaluated when that rule did not run, because with the
-corner unwalked it would report a live listing as dead.
-
-#### Scenario: The rot half is skipped when the corner walk did not run
-
-- **WHEN** the run is the automatic per-commit hook, so the last-preset corner
-  is not walked
-- **THEN** the reverse direction is reported as skipped and not evaluated,
-  and the forward direction still runs in full
-- **BECAUSE** a listing whose only sentence lives in the unwalked corner would
-  otherwise be reported dead on a walk that could not have heard it
-
-### Requirement: A listing is not called dead on a walk that looked at nothing
-
-Because the reverse direction asserts a negative over the walk's sample, the
-check SHALL carry a vacuity floor per listed game as well as one over the whole
-walk, so that a game whose boards all failed to generate cannot read as a dead
-listing. A listing SHALL NOT be deleted on the gate walk's silence alone, but
-on a widened walk of that game recorded beside the entry.
-
-#### Scenario: A listed game whose walk examined nothing is not reported as dead
-
-- **WHEN** every board for a listed game fails to generate, so its walk
-  contributes no steps
-- **THEN** the check fails reporting that the game's walk looked at nothing,
-  and does not report its listings as dead exemptions
 
 ### Requirement: A Hint press in flight is dropped, and a slow one says it is thinking
 

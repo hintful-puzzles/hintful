@@ -1,9 +1,9 @@
 # puzzle-icons Specification
 
 ## Purpose
-The per-puzzle thumbnail icons the catalog shows: committed PNGs rather than a
-generated asset, the manual screenshot workflow a new puzzle follows to add its
-pair, and the dev-only capture mode that workflow uses.
+The per-puzzle thumbnail icons the catalog shows: two committed PNGs a puzzle,
+never a generated asset; the procedure a new puzzle follows to capture its
+pair from the running app; and the dev-only capture mode that procedure uses.
 
 ## Requirements
 
@@ -22,19 +22,11 @@ the directory is a committed snapshot, not a generated one.
 - **THEN** the test suite fails
 - **AND** the failure names the missing file's path
 
-#### Scenario: A new puzzle is added to the catalog
-
-- **WHEN** a contributor adds a puzzle to `src/puzzle/catalog-data.ts` and
-  provides no matching pair of files in `src/assets/icons/`
-- **THEN** the test suite fails on catalog completeness
-
 ### Requirement: The catalog card reads only the two icon files
 
 The two files SHALL be the only icon-asset shapes the home-screen catalog
-reads. The catalog card (`src/components/catalog-card.ts`) SHALL resolve
-`<puzzleId>-64d8.png` as the 1× image and `<puzzleId>-128d8.png` as the 2×
-image through `new URL(..., import.meta.url)`, and SHALL render them through
-`<img srcset>`.
+reads: the catalog card offers `<puzzleId>-64d8.png` as the 1× image and
+`<puzzleId>-128d8.png` as the 2× image.
 
 #### Scenario: A card renders its icon
 
@@ -69,29 +61,13 @@ no rule for any directory under `src/`.
 
 ### Requirement: Adding a new puzzle's icons is a manual screenshot workflow
 
-A contributor adding a puzzle to the catalog SHALL produce its two PNGs,
-before merge, by running the app, capturing a representative screenshot of the
-puzzle canvas and resizing it to the two required sizes. The work SHALL NOT
-require a brew toolchain (GTK, ImageMagick, oxipng), nor any wasm or C build
-step.
-
-#### Scenario: A new puzzle's icons are produced without a build toolchain
-
-- **WHEN** a contributor adds a puzzle and needs its icons
-- **THEN** registering the game and adding its catalog entry is enough to open
-  it in the dev server
-- **AND** no wasm or C toolchain step is involved
-
-### Requirement: The preferred procedure captures the icons in the dev server
-
-The preferred procedure SHALL be, in order:
-
-1. Register the puzzle in `src/games/index.ts`, add its catalog entry to
-   `src/puzzle/catalog-data.ts`, and run `npm run dev`.
-2. Open `/<puzzleId>?screenshot` in the dev server, accept the default preset,
-   and re-roll with **New game** until the board is representative.
-3. Activate **Capture icons**, which downloads the two PNGs, correctly named
-   (`<puzzleId>-64d8.png`, `<puzzleId>-128d8.png`) and correctly sized.
+A contributor adding a puzzle SHALL produce its two PNGs, before merge, by
+capturing them from the running app; the work SHALL NOT require an
+icon-generation script or an image toolchain. The procedure, in order:
+register and catalog the puzzle and run `npm run dev`; open
+`/<puzzleId>?screenshot`, accept the default preset and re-roll with
+**New game** until the board is representative; activate **Capture icons**
+and commit the two downloads to `src/assets/icons/`.
 
 #### Scenario: The contributor follows the procedure
 

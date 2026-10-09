@@ -8,34 +8,28 @@ crossings.
 
 ## Requirements
 
-### Requirement: Untangle game implements the Game interface
+### Requirement: Crossed edges are Untangle's only mistake feedback
 
-The engine SHALL provide a registered `untangle` game implementing
-`Game<UntangleParams, UntangleState, UntangleMove, UntangleUi, UntangleDrawState>`:
-a planar graph of `n` vertices joined by edges, drawn tangled, solved when the
-player has dragged the vertices so that no two edges cross. It SHALL provide
-`solve` and a `hint` hook. It SHALL NOT provide `statusbarText`, `textFormat`
-or `findMistakes`: crossed edges are the built-in mistake feedback.
+Untangle SHALL NOT provide `findMistakes`: any layout with no crossing wins, so
+there is no one answer to check a move against, and crossed edges are the
+built-in mistake feedback. It SHALL NOT provide `statusbarText` or
+`textFormat`.
 
-#### Scenario: The hooks Untangle has and lacks
+#### Scenario: The hooks Untangle lacks
 
 - **WHEN** the registered `untangle` game is read
-- **THEN** it has `solve` and `hint`, and has no `statusbarText`, `textFormat`
-  or `findMistakes`
+- **THEN** it has no `findMistakes`, `statusbarText` or `textFormat`
 
 ### Requirement: Untangle's params are a vertex count
 
-Params SHALL be `{ n }`, the vertex count, encoded as the integer. Presets of
-6, 10, 15, 20 and 25 vertices SHALL be offered, and the default SHALL be
-`n = 10`. The `n` field SHALL declare a lower bound of 4 and an upper bound, so
-that the engine's params check refuses an `n` under 4 and an unreasonably large
-`n`.
+Params SHALL be `{ n }`, the vertex count, encoded as the integer. The `n`
+field SHALL declare a lower bound of 4 and an upper bound, so that the engine's
+params check refuses an `n` under 4 and an unreasonably large `n`.
 
 #### Scenario: Params round-trip
 
 - **WHEN** params `{ n: 10 }` are encoded and decoded
-- **THEN** the round-trip yields `{ n: 10 }`, and the five presets (6/10/15/20/25)
-  are offered
+- **THEN** the round-trip yields `{ n: 10 }`
 
 #### Scenario: Invalid params are rejected
 
@@ -45,12 +39,10 @@ that the engine's params check refuses an `n` under 4 and an unreasonably large
 
 ### Requirement: Generation yields a planar graph drawn tangled
 
-`newDesc` SHALL build a graph that is planar by construction: points scattered
-on a grid, edges added greedily lowest-degree-vertex-first, each accepted only
-when it crosses no existing point and no existing edge, with every vertex
-degree capped at 4. It SHALL then lay the vertices on a circle in a shuffled
-order, re-rolled until at least one non-adjacent edge pair crosses, so the
-puzzle never starts solved.
+`newDesc` SHALL build a graph that is planar by construction, with every vertex
+degree capped at 4. A new board SHALL lay the vertices on a circle, in an order
+under which at least one non-adjacent edge pair crosses, so the puzzle never
+starts solved.
 
 #### Scenario: A generated board is planar, degree-capped, and starts tangled
 
@@ -86,9 +78,7 @@ The game SHALL determine whether two edges cross using an exact integer
 segment-intersection test over the rational vertex coordinates (no
 floating-point epsilon), treating collinear overlap and an endpoint lying on
 the other segment as crossings, and considering only non-adjacent edge pairs.
-`status` SHALL report `"solved"` exactly when no edge pair crosses. The
-crossing set SHALL be recomputed on every state transition and exposed to
-`redraw` so crossed edges can be highlighted.
+`status` SHALL report `"solved"` exactly when no edge pair crosses.
 
 #### Scenario: A board with no crossings is solved
 
@@ -105,8 +95,7 @@ crossing set SHALL be recomputed on every state transition and exposed to
 `interpretMove` SHALL let the player move one vertex at a time. A pointer
 press near a vertex SHALL begin a drag, motion SHALL preview the vertex
 following the pointer as a `UI_UPDATE` with no history entry, and release SHALL
-commit a move placing that vertex at its position. The editor-only edge
-add and delete moves SHALL NOT be mapped.
+commit a move placing that vertex at its position.
 
 #### Scenario: A drag moves one vertex and updates crossings
 
@@ -146,8 +135,6 @@ and cycle the selection.
 `executeMove` SHALL apply the placement or placements and recompute the
 crossings. It SHALL throw on a malformed move, a non-integer coordinate
 included: the exact crossing test depends on `RationalPoint` holding integers.
-The move SHALL be structured-clone-safe, using the default serialize and
-deserialize.
 
 #### Scenario: A fractional coordinate is refused
 
@@ -188,7 +175,7 @@ one being dragged the pair's first, so the held vertex's neighbors stand
 against the rest. The dragged vertex SHALL be the collection's color for a
 thing picked up and the keyboard-cursor vertex the collection's cursor color.
 The two SHALL never be shown together, and picking a vertex up SHALL be told by
-its neighbors changing color. The hint SHALL be the collection's hint color.
+its neighbors changing color.
 
 #### Scenario: Picking up the cursor vertex
 
@@ -202,18 +189,18 @@ its neighbors changing color. The hint SHALL be the collection's hint color.
 crossing-free layout, choosing among the eight dihedral symmetries of that
 layout the one with the most vertices already in place and then the least
 motion. `solve` SHALL refuse only a graph that is not planar. The solve SHALL
-animate and SHALL be marked as solved-with-help.
+animate.
 
 #### Scenario: Solve from a fresh game lands crossing-free
 
 - **WHEN** the player invokes Solve on a freshly generated game
-- **THEN** every vertex moves to a position where no edges cross, the move is marked
-  solved-with-help, and it animates
+- **THEN** every vertex moves to a position where no edges cross, and the move
+  animates
 
 #### Scenario: Solve works on a loaded game
 
 - **WHEN** the player invokes Solve on a game restored from a save (no `aux`)
-- **THEN** the board is solved, marked solved-with-help
+- **THEN** the board is solved
 
 #### Scenario: Solve refuses a non-planar graph
 
@@ -224,8 +211,7 @@ animate and SHALL be marked as solved-with-help.
 
 The solved layout SHALL be the generator's `aux` when the session has it,
 scaled to fill the play box, and otherwise a layout computed from the edges
-alone: a planarity embedding and a straight-line grid drawing, spread by a
-relaxation that never lets it tangle. Every layout SHALL be exact rationals,
+alone. Every layout SHALL be exact rationals,
 checked crossing-free with the game's exact crossing test before use.
 
 #### Scenario: A layout from the edges alone passes the game's own test
@@ -236,8 +222,7 @@ checked crossing-free with the game's exact crossing test before use.
 
 ### Requirement: Untangle hints move the point that removes the most crossings
 
-The `untangle` game SHALL implement the `hint` hook. Each step SHALL move one
-vertex, and SHALL be a leg of a journey (see "Untangle hints finish a knot of
+Each hint step SHALL move one vertex, and SHALL be a leg of a journey (see "Untangle hints finish a knot of
 crossings as one journey") or, when no journey is found, a clearing step or a
 placing step. A placing step SHALL be given only when no single move removes a
 crossing. Executing a step SHALL animate the vertex sliding to its
@@ -347,16 +332,15 @@ step.
 
 ### Requirement: Untangle's hint refusals
 
-A hint on a solved board SHALL be refused with the collection's already-solved
-wording, by the midend before it asks the game. `hint` SHALL refuse with its
-no-move-worth-making wording on a non-planar board once no single move removes
-a crossing.
+`hint` SHALL refuse with the collection's no-move-worth-making wording on a
+non-planar board once no single move removes a crossing. Until then it SHALL
+still give the moves that remove crossings.
 
-#### Scenario: Hint refuses on a solved board
+#### Scenario: A hand-typed K5 is helped, then refused
 
-- **WHEN** a hint is requested on a board with no crossings
-- **THEN** the midend refuses it with the collection's already-solved message,
-  without asking the game's `hint`
+- **WHEN** hints are followed on a hand-typed description of K5
+- **THEN** hints are given while a single move removes a crossing, and the
+  next is refused as no move worth making, with crossings still on the board
 
 ### Requirement: A hint step marks its vertex, its destination and the crossings it removes
 

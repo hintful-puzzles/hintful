@@ -11,9 +11,6 @@ grids and in an Edges mode clued by arrows around the board.
 
 Ascent SHALL be complete when every cell is filled, the numbers form a single
 path from the lowest to the highest, and every arrow clue is satisfied.
-`src/games/ascent/` SHALL implement `Game` for it and be registered. Because a
-board has one solution, the game SHALL implement `findMistakes` and an
-explained hint.
 
 #### Scenario: Completing the path wins
 
@@ -84,11 +81,10 @@ Custom's. The game's default SHALL be the menu's first line.
 
 ### Requirement: Ascent's square grids turn and its hexagonal grids do not
 
-Ascent's Orthogonal and Classic presets SHALL draw taller than wide (6×7), and
-its Honeycomb preset SHALL be 6×8. `transposeParams` SHALL turn the square-grid
-modes and return `null` for Hexagon and Honeycomb, because a hexagonal grid on
-its side is another grid. Hexagon mode's board is wider than tall at every
-size, and SHALL be recorded as wide by nature in the portrait guard's ledger.
+`transposeParams` SHALL turn the square-grid modes and return `null` for
+Hexagon and Honeycomb, because a hexagonal grid on its side is another grid.
+Hexagon mode's board is wider than tall at every size, and SHALL be recorded as
+wide by nature in the portrait guard's ledger.
 
 #### Scenario: A hexagonal board is never turned
 
@@ -149,13 +145,9 @@ through a cell, so Ascent has a secondary meaning and SHALL NOT declare
   exactly as many cells as there are numbers between them
 - **THEN** those cells take the numbers
 
-### Requirement: Ascent's moves are a union, and entry state is the UI's
+### Requirement: A number cannot be placed on a given
 
-A move SHALL be a discriminated union of place, places (a hint's whole run,
-which no gesture makes), line, clear and solve, and not an upstream move
-string. Placing a number on a given cell SHALL be rejected.
-Entry state that is not yet a move SHALL live on the UI and never on the game
-state, and an input that changes nothing SHALL add no history entry.
+Placing a number on a cell the puzzle fixed SHALL be rejected.
 
 #### Scenario: A number is placed on a given
 
@@ -188,19 +180,6 @@ SHALL act on the release, so that a drag from the number places what it offers.
   are both missing, then taps an empty square beside it
 - **THEN** the number before it is placed there, and a further tap on the
   number instead deselects it
-
-### Requirement: Ascent acts on a pointer button, not on a pointer coordinate
-
-`interpretMove` SHALL enter its board arm only for a pointer button, which is a
-press, a drag or a release, and not for any button whose coordinates fall
-inside the grid: a key arrives at `(0, 0)`, inside every grid, and a game that
-answers it takes the app's bare-letter shortcuts from its players.
-
-#### Scenario: A key that is not a pointer button is declined
-
-- **WHEN** a button that is neither a press, a drag nor a release is delivered at
-  coordinates inside the grid, and Ascent has no other meaning for it
-- **THEN** `interpretMove` returns `null`, so the app's bare-letter shortcuts run
 
 ### Requirement: The UI_UPDATE tail of interpretMove is kept
 
@@ -282,10 +261,9 @@ player does.
 
 ### Requirement: Ascent's generator keeps every board soluble at its tier
 
-The generator SHALL build a Hamiltonian path by the backbite algorithm. Outside
-Edges it SHALL then remove clue numbers while the graded solver still solves,
-honoring the symmetry and keep-endpoints options; in Edges it SHALL move
-numbers out to arrow clues by a maximal bipartite matching, retrying until
+Outside Edges the generator SHALL remove clue numbers from a full path while
+the graded solver still solves, honoring the symmetry and keep-endpoints
+options; in Edges it SHALL move numbers out to arrow clues, retrying until
 soluble. Its loop SHALL be bounded, and generation from a seed SHALL be
 reproducible.
 
@@ -564,10 +542,8 @@ gives up.
 
 ### Requirement: What Ascent draws
 
-Rendering SHALL draw numbers, walls, drawn path segments and, in Edges mode,
-border arrows; SHALL show endpoint candidate hints for a single-number path;
-and SHALL flash on completion. Moves SHALL be applied instantly, with no
-interpolated animation.
+Rendering SHALL show endpoint candidate hints for a single-number path. Moves
+SHALL be applied instantly, with no interpolated animation.
 
 #### Scenario: A move is drawn at once
 

@@ -3,20 +3,21 @@
 ## Purpose
 Range (Kurodoko), the puzzle of shading squares so that no two shaded
 squares touch, the squares left clear stay connected, and each number counts
-the clear squares it sees in four directions, itself included. The game
-highlights errors live, checks mistakes against the solution, and gives an
-explained deduction hint with its own legend of marks.
+the clear squares it sees in four directions, itself included. This spec
+holds the puzzle's rules, its params and description encodings, what its
+generator promises, its controls, its live error highlighting and mistake
+check, its explained deduction hint with the marks it draws, and how the
+board looks.
 
 ## Requirements
 
-### Requirement: Range game implements the Game interface
+### Requirement: Range is solved exactly while it has no error
 
-The engine SHALL provide a registered `range` game implementing `Game`. The
-player paints some white squares black so that no two black squares are
+The player paints some white squares black so that no two black squares are
 orthogonally adjacent, all white squares stay connected, and every numbered
 clue equals the number of white squares visible from it in a straight line,
-itself counted once (`h + v - 1`). The game SHALL provide `solve` and
-`textFormat`, and SHALL NOT provide `statusbarText`.
+itself counted once (`h + v - 1`). The board SHALL be reported solved exactly
+while `findErrors` finds no error on it.
 
 #### Scenario: A clue counts itself once
 
@@ -24,11 +25,16 @@ itself counted once (`h + v - 1`). The game SHALL provide `solve` and
   2, each run including the clue's own square
 - **THEN** the clue it must equal is 4
 
+#### Scenario: Completing the board is detected
+
+- **WHEN** a move paints the final black square of the unique solution
+- **THEN** `findErrors` reports no error, `status` returns `"solved"`, and a
+  flash plays
+
 ### Requirement: Range params are a width and a height
 
 Params SHALL be `w` and `h`, encoded `{w}x{h}`, and a bare number SHALL decode
-as a square board of that size. Four presets SHALL be offered, each taller
-than wide: 6×9, 8×12, 9×13 and 11×16.
+as a square board of that size.
 
 #### Scenario: Params round-trip
 
@@ -39,26 +45,20 @@ than wide: 6×9, 8×12, 9×13 and 11×16.
 
 ### Requirement: Range params are refused outside their bounds
 
-The width and height items SHALL each declare a lower bound of 1, from which
-the engine refuses a non-positive dimension. `validateParams` SHALL refuse a
-`w + h` above 128, which overflows the cell encoding, and, when `full`, a grid
-with both dimensions at most 2 (1×1, 1×2, 2×1 and 2×2), which admits no good
-puzzle.
+`validateParams` SHALL refuse a `w + h` above 128, which overflows the cell
+encoding, and, when `full`, a grid with both dimensions at most 2 (1×1, 1×2,
+2×1 and 2×2), which admits no good puzzle.
 
 #### Scenario: Invalid params are rejected
 
 - **WHEN** `validateParams` is called with full generation on a 2×2 grid
 - **THEN** it returns a non-null error string
-- **AND** params with a non-positive dimension are refused by the engine from
-  the declared bound
 
 ### Requirement: Range descriptions are run-length clue grids
 
 The desc SHALL encode the board in scan order: the decimal digits of each
 clue, a letter `a`-`z` for each run of 1-26 blank (non-clue) cells, and `_`
 as an explicit separator exactly where two clues would otherwise merge.
-`newState` SHALL parse the desc into the grid with clue cells holding their
-value and every other cell `EMPTY`.
 
 #### Scenario: A description round-trips
 
@@ -70,8 +70,7 @@ value and every other cell `EMPTY`.
 
 Parsing a desc SHALL refuse any character other than a digit, a run letter or
 a separating `_`, any clue outside `1 .. w + h - 1`, and any desc whose
-decoded cell count differs from `w * h`. The refusal SHALL be raised by
-`newState`'s parse, from which the engine derives its verdict on a desc.
+decoded cell count differs from `w * h`.
 
 #### Scenario: A malformed description is rejected
 
@@ -82,9 +81,10 @@ decoded cell count differs from `w * h`. The refusal SHALL be raised by
 ### Requirement: Range generates uniquely solvable symmetric boards
 
 Every board `newDesc` generates SHALL be uniquely solvable by the deductive
-solver without search and SHALL have two-way rotationally symmetric clues. On
-a grid at least two squares each way it SHALL contain at least one black
-square.
+solver without search and SHALL have two-way rotationally symmetric clues,
+none of them opposite a black square of the solution, and no symmetric pair
+of them removable without the board then needing search. On a grid at least
+two squares each way it SHALL contain at least one black square.
 
 #### Scenario: Generated boards are valid and solvable
 
@@ -92,16 +92,6 @@ square.
 - **THEN** every desc is accepted as a valid description
 - **AND** the deductive solver, without search, solves every resulting board
   from its visible clues alone to a state with no errors
-
-### Requirement: Range's generator paints black squares, then strips clues
-
-`newDesc` SHALL paint black up to `n / 3` randomly chosen squares, skipping
-any that would touch a black square or disconnect the white region, and
-compute every white square's clue from its horizontal and vertical white
-runs. It SHALL then remove every clue rotationally symmetric to a black
-square, retrying the whole generation when that leaves the board unsolvable
-without search, and then remove rotationally symmetric pairs in random order,
-keeping only a removal that leaves it so solvable.
 
 #### Scenario: A removal that needs search is put back
 
@@ -167,24 +157,10 @@ A clue cell SHALL be inert.
 - **WHEN** a marking action targets a cell holding a clue
 - **THEN** `interpretMove` returns `null` and the cell is unchanged
 
-### Requirement: Range is solved exactly while it has no error
-
-The board SHALL be reported solved exactly while `findErrors` finds no error
-on it, judged from the board however it was reached.
-
-#### Scenario: Completing the board is detected
-
-- **WHEN** a move paints the final black square of the unique solution
-- **THEN** `findErrors` reports no error, `status` returns `"solved"`, and a
-  flash plays
-
 ### Requirement: Range's keyboard cursor marks white with shift
 
 A keyboard cursor SHALL move within the grid, and shift with a cursor
-direction SHALL mark the vacated and/or entered empty cells white. The cursor
-SHALL be the collection's shared `(x, y)` shape, so `cursor.x` is this game's
-column and `cursor.y` its row, while the row-major grid's own helpers take
-`(r, c)`.
+direction SHALL mark the vacated and/or entered empty cells white.
 
 #### Scenario: A shifted step crosses both empty cells
 
@@ -234,19 +210,16 @@ without search, and return one narrated `HintStep` per forced cell.
   the deduction (adjacency / clue / connectedness) that forces its cell
 - **AND** applying every step's move in order solves the board
 
-### Requirement: A Range hint is refused on a solved or mistaken board
+### Requirement: A Range hint is refused only when the rules force no cell
 
-A hint SHALL be refused when the board is already solved or when
-`findMistakes(state)` is non-empty, since a deduction seeded from
-contradictory marks would mislead. The engine makes both refusals before it
-calls the game, and `hint` itself SHALL refuse, with the engine's
-deduction-exhausted refusal, only when the rules force no cell.
+`hint` itself SHALL refuse only when the three rules force no cell from the
+player's marks, and then with the engine's deduction-exhausted refusal.
 
-#### Scenario: Hint refuses on a solved or mistaken board
+#### Scenario: Deduction that forces nothing is refused
 
-- **WHEN** a hint is requested on a solved board, or on a board where the
-  player has marked a cell contradicting the unique solution
-- **THEN** the request is refused with an explanatory error
+- **WHEN** `hint` is asked about an unsolved, mistake-free board on which none
+  of the three rules forces a cell
+- **THEN** it returns the engine's deduction-exhausted refusal and no steps
 
 ### Requirement: A Range hint step states the deduction that forces its cell
 
@@ -303,18 +276,6 @@ follows the plan. It SHALL never include the target cell itself.
   white run and a later step is forced because that clue is then satisfied
 - **THEN** the later step's outlined line of sight includes the cell the
   earlier step whitened
-
-### Requirement: A known-white Range cell is told without a fill
-
-Independently of hints, `redraw` SHALL render a known-white cell so that it
-is told from an undecided one without a fill of its own: a clue by the lifted
-surface under it, since clues are implicitly white, and a player white mark
-by its cross, leaving an undecided cell the plain cell surface.
-
-#### Scenario: A white mark differs from an undecided cell only by its cross
-
-- **WHEN** a cell marked white and an undecided cell are drawn
-- **THEN** both are the plain cell surface and only the first holds a cross
 
 ### Requirement: Range hint color legend
 
@@ -415,26 +376,13 @@ standing.
 - **THEN** every cell is the given's surface
 - **AND** every shaded cell still holds its piece
 
-### Requirement: Range's cursor and hint marks sit at the cell's edge
+### Requirement: Range's cursor sits at the cell's corners
 
-The keyboard cursor and every hint mark SHALL be drawn at the cell's edge,
-beside the piece.
+The keyboard cursor SHALL be drawn out at the cell's corners, beside the
+piece.
 
 #### Scenario: The cursor on a shaded cell leaves the piece whole
 
 - **WHEN** the keyboard cursor is shown on a shaded cell
 - **THEN** the cell holds its shaded piece
 - **AND** the cursor is drawn out at the cell's corners
-
-### Requirement: Range names no hue of its own
-
-The game SHALL name no hue of its own. Its hint sentences, its control words
-and its hint-mark legend SHALL say the collection's word for the shaded color
-and its word for a cell that is not shaded, and its help page SHALL name the
-shaded color by placeholder.
-
-#### Scenario: A hint says the word for the color the piece is drawn in
-
-- **WHEN** a hint step concludes that a cell must be shaded
-- **THEN** its sentence says the collection's word for the shaded color
-- **AND** applying the step draws the shaded piece in the cell

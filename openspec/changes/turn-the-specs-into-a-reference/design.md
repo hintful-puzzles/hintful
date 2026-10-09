@@ -397,6 +397,52 @@ The ledgers describe the rewrite. `spec-ledger.mjs` passes on them at the
 commit that kept every rule and is not expected to after the cuts, which
 remove requirements a ledger names.
 
+## Where it ended
+
+By `node scripts/checks/spec-census.mjs`, on 2026-10-09:
+
+| | Lines | Requirements | Over 500 characters | With a date or a change id |
+| --- | --- | --- | --- | --- |
+| Before | 34,282 | 931 | 784 | 6% |
+| Rewritten, every rule kept | 45,454 | 2,983 | 0 | none |
+| Pruned | 39,194 | 2,533 | 0 | none |
+
+The specs are longer than they were and that is the tool's doing: a
+requirement is a heading, at most 500 characters and a scenario of its own,
+and the scenarios are now 16,000 of the lines. What changed is what a
+requirement is. It states one behavior, it can be found by its title, a
+`MODIFIED` delta restates a few lines, and nothing in it tells the story of a
+change.
+
+- **The rewrite corrected 490 rules** that were false of the code, each an
+  `untrue:` row of a ledger, and its reviewers corrected 372 defects in the
+  rewrites themselves.
+- **The pruning cut about a thousand requirements and sentences** (the rows
+  of `cuts/`): 301 restated a rule of the collection, 217 said how a thing is
+  built, 212 were duplicates, 110 were what a type says, 87 were process a
+  guide holds, 68 were copies of declared data, and the rest were about the
+  port, about things gone, or too particular. Its reviewers restored 51.
+- **It was cautious, by instruction, and 442 requirements were kept only for
+  doubt.** `prune-report.md` lists each with the question that would settle
+  it. That list, and not another pass by the same criteria, is where the
+  specs get simpler from here.
+
+**Not done, and why.**
+
+- *Nothing moved between capabilities, and no capability was divided.* Both
+  reports list what the agents would move (the help-page rules and the hint
+  harness out of `repo-layout`, a game's input rules that are the engine's),
+  and `repo-layout` is still 2,375 lines. Moving a requirement is a decision
+  about where a session will look for it, taken one at a time and not by
+  eighty agents at once, and it is the first thing a later change should do.
+- *What the agents found wrong with the code is not acted on.*
+  `rewrite-report.md` § "Where the code looks wrong and the spec right" has
+  172 entries. Most are stale comments. Some read as defects a player could
+  meet (a canceled press in Galaxies, a right-click on an answer slot in
+  Guess) and one as a hole in the gate (the documentation-only shortcut skips
+  the suite for `README.md` and `LICENSE.md`, which a test and the build
+  read). None was reproduced, and each is its own piece of work.
+
 The section below is kept as it was asked.
 
 ## Decisions the owner is asked to confirm

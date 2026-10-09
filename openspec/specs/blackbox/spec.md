@@ -8,23 +8,6 @@ guess rests on its deterministic laser tracing.
 
 ## Requirements
 
-### Requirement: Black Box game implements the Game interface
-
-The engine SHALL provide a registered `blackbox` game implementing the `Game`
-interface with `BlackboxParams`, `BlackboxState`, `BlackboxMove`, `BlackboxUi`,
-`BlackboxDrawState` and `Point`: a deduction puzzle in which the player locates
-hidden balls in a `w`×`h` arena by firing lasers from the surrounding range and
-observing how they hit, reflect, or exit. The game SHALL provide
-`statusbarText`, `solve`, `hint` and `findMistakes`, and SHALL NOT provide
-`textFormat`.
-
-#### Scenario: The game is registered
-
-- **WHEN** the registry is asked for `blackbox`
-- **THEN** it returns the game, with a `hint`, a `solve`, a `findMistakes` and a
-  `statusbarText`
-- **AND** the game has no `textFormat`
-
 ### Requirement: Black Box params are a size and a ball range
 
 Params SHALL be `w`, `h`, `minballs` and `maxballs`, encoded
@@ -36,17 +19,6 @@ not know is ignored.
 - **WHEN** params `{ w: 8, h: 8, minballs: 3, maxballs: 6 }` are encoded
 - **THEN** the result is `w8h8m3M6`
 - **AND** decoding `w8h8m3M6` round-trips those params
-
-### Requirement: Black Box offers its presets
-
-The presets offered SHALL be `5×5, 3 balls`, `8×8, 5 balls`, `8×8, 3-6 balls`,
-`10×10, 5 balls` and `10×10, 4-10 balls`.
-
-#### Scenario: A preset with a range of balls
-
-- **WHEN** the preset menu is read
-- **THEN** it holds an 8×8 box with `minballs` 3 and `maxballs` 6
-- **AND** an 8×8 box with `minballs` and `maxballs` both 5
 
 ### Requirement: The type summary names the size and the ball count
 
@@ -98,8 +70,7 @@ their board SHALL NOT be held to the limit.
 A desc SHALL encode `[w, h, ball1x, ball1y, …]` as a byte-per-value bitmap,
 apply the shared `obfuscateBitmap` SHA-1 masking, and hex-encode the result
 (`encodeBalls`). `newState` SHALL recover the ball layout by hex-decoding and
-de-obfuscating the desc. The shared codec SHALL live at
-`src/engine/obfuscate.ts`.
+de-obfuscating the desc.
 
 #### Scenario: A description round-trips through obfuscation
 
@@ -158,19 +129,6 @@ cells with a shared incrementing laser number.
 
 - **WHEN** a laser is fired across an arena with no ball in its path
 - **THEN** both the entry and exit cells carry the same laser number
-
-### Requirement: Black Box marks, fires, locks, and reveals via moves
-
-A `BlackboxMove` SHALL be one of: toggle a guessed ball at an arena cell, toggle
-a per-cell lock, lock or unlock a whole column or row, fire a laser at a range
-cell, reveal (verify) the current guesses, or solve (guess the real balls and
-reveal). `executeMove` SHALL be pure, returning a new state, and SHALL reject
-an illegal move by throwing.
-
-#### Scenario: A move leaves its state alone
-
-- **WHEN** `executeMove` applies a toggle-ball to a state
-- **THEN** the state it was given is unchanged and the new one holds the ball
 
 ### Requirement: A ball toggle updates the guess count, and a locked cell takes none
 
@@ -259,9 +217,8 @@ Solve SHALL guess exactly the real balls and reveal.
 
 `status` SHALL return `"solved"` when revealed and `"ongoing"` before. A reveal
 SHALL only ever be of a guess proven to be the answer, or Solve's, so a Black
-Box board is never lost. On a reveal the game's own status text SHALL NOT
-announce the win, which is the engine's to announce: it holds only the session
-error count, when there is one.
+Box board is never lost. On a reveal the game's own status text SHALL hold only
+the session error count, when there is one.
 
 #### Scenario: The status text after a win
 
@@ -374,12 +331,10 @@ SHALL agree with trying every layout on boards small enough to try.
 - **WHEN** a board small enough to try every layout is counted
 - **THEN** the count says one answer exactly when trying every layout finds one
 
-### Requirement: A board is dealt a ball at a time
+### Requirement: A dealt board has one answer across its whole ball range
 
-`newDesc` SHALL deal only a board with one answer, built a ball at a time: each
-ball goes on a random free square where the board so far has one answer at its
-count, and the last is judged against the params' whole range. When no square
-of a bounded number of tries keeps one answer, the build SHALL start again.
+`newDesc` SHALL deal only a board with one answer, judged against the params'
+whole range of ball counts.
 
 #### Scenario: A dealt board
 
@@ -421,8 +376,7 @@ nothing once the answer is revealed.
 
 ### Requirement: A mistake is framed in the error color
 
-A mistake SHALL be drawn as a frame in the error color inside the square, held
-in the tile's cache key so it repaints when it comes and goes.
+A mistake SHALL be drawn as a frame in the error color inside the square.
 
 #### Scenario: Check & Save with a wrong guess
 

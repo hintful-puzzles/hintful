@@ -3,31 +3,17 @@
 ## Purpose
 Sokoban, the puzzle of pushing, never pulling, every barrel onto a target, where
 no barrel can be pushed into a wall or another barrel. This capability specifies
-movement and pushing, completion, reproducible generation that is solvable by
-construction, the hint and Solve with the search beneath them, and rendering.
+the params and description formats, the keys, tap and drag, what a push does and
+when the board is complete, what a deal promises of a level, the hint and Solve
+with the search beneath them, and how the board looks and moves.
 
 ## Requirements
-
-### Requirement: Sokoban game implements the Game interface
-
-The engine SHALL provide `src/games/sokoban/` implementing the `Game` interface for
-Sokoban, registered so the puzzle is served by the TypeScript engine. Sokoban SHALL
-implement `solve` and `hint`, both by searching within a budget. Because every reachable
-position is legal and any line of pushes that fills the targets wins, it SHALL NOT
-implement `findMistakes`; Check & Save SHALL ask the hint whether the position is a dead
-end instead.
-
-#### Scenario: A new game produces a solvable board
-
-- **WHEN** a new game is generated at a legal size
-- **THEN** a board is produced with exactly one player and at least one barrel and
-  target, and the board is solvable (it is constructed by reversing a solution)
 
 ### Requirement: Sokoban's parameters are a width and a height
 
 Sokoban SHALL support rectangular boards parameterized by width and height, both at
-least 4, with presets 10×12, 12×16 and 16×20. A parameter string SHALL encode the width
-and the height, and a bare single number SHALL be read as a square board.
+least 4. A parameter string SHALL encode the width and the height, and a bare single
+number SHALL be read as a square board.
 
 #### Scenario: Parameters round-trip
 
@@ -123,8 +109,7 @@ board SHALL make no move.
 
 ### Requirement: An illegal Sokoban move leaves no history
 
-An illegal move SHALL produce no state change and no history entry. Undo and redo SHALL
-be provided by the engine with no game-specific state.
+An illegal move SHALL produce no state change and no history entry.
 
 #### Scenario: A step into a wall
 
@@ -156,15 +141,14 @@ target square), so that levels with spare barrels or pits still complete.
 
 ### Requirement: Sokoban rendering
 
-Sokoban SHALL render each cell as its content: walls as flat blocks, targets, pits, deep
-pits and the player as discs, barrels as squares, and labeled barrels with their letter,
-over grid lines drawn once, on the ground the midend lays. The floor SHALL be the cell
-surface and the grid the surface's grid line. The board SHALL flash on completion.
+Sokoban SHALL draw a pit, a deep pit and the player each as a disc, a pit and a deep
+pit in colors of their own. The floor SHALL be the cell surface and the grid the
+surface's grid line.
 
-#### Scenario: A completed board flashes
+#### Scenario: A pit and the player are discs on the floor
 
-- **WHEN** a move transitions the board from not-completed to completed
-- **THEN** the board flashes for the completion flash duration and then settles
+- **WHEN** a board with a pit, a deep pit and the player is drawn
+- **THEN** each is a disc on a square of the cell surface, and the two pits differ in color
 
 ### Requirement: A barrel is a square in the color for a thing the player pushes
 
@@ -225,6 +209,12 @@ reproducible. A level SHALL be generated exactly as upstream generates it.
 
 - **WHEN** the same size and seed are used twice to generate a game
 - **THEN** both runs produce the identical description
+
+#### Scenario: A new game produces a solvable board
+
+- **WHEN** a new game is generated at a legal size
+- **THEN** a board is produced with exactly one player and at least one barrel and
+  target, and the board is solvable (it is constructed by reversing a solution)
 
 ### Requirement: Sokoban deals the first level its hint's search can finish
 

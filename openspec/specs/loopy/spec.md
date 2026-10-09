@@ -3,18 +3,17 @@
 ## Purpose
 Loopy (Slitherlink), the puzzle of drawing one closed loop along grid edges so
 that each numbered face has that many of its edges on the loop, on the square
-grid and many other tilings. This capability specifies the game on the TS
-engine: its graded solver, its deals on the aperiodic tilings, full play from
-the keyboard alone, its notes, and its hint.
+grid and many other tilings. This capability specifies what is Loopy's own:
+its description and grid-ordering formats, its graded solver, its deals on the
+aperiodic tilings, its pointer and keyboard controls, its play aids, its
+corner and pair notes, its hint, and its presets.
 
 ## Requirements
 
-### Requirement: Loopy game implements the Game interface
+### Requirement: Loopy offers every tiling the geometry module provides
 
-The engine SHALL provide `src/games/loopy/` implementing the `Game`
-interface for Loopy, registered so the puzzle is served by the TypeScript
-engine. Loopy SHALL support every grid type the geometry module provides, each
-a row of `LOOPY_GRIDS`.
+Loopy SHALL support every grid type the geometry module provides, each a row
+of `LOOPY_GRIDS`.
 
 #### Scenario: Every grid type produces a playable board
 
@@ -229,25 +228,17 @@ Loopy's own tests SHALL guard it.
 - **THEN** `ui.cursor` holds a dot index, no chosen edge, no arrow, and is not
   visible
 
-### Requirement: Loopy pointer and keyboard input, and rendering
+### Requirement: A click sets the nearest edge to an absolute state
 
-Loopy SHALL be played with mouse, touch or keyboard. A pointer SHALL reach an
-edge by nearest-edge hit testing, and the keyboard through the cursor that "A
-plain arrow walks Loopy's cursor along an edge" describes; both SHALL then set
-it through the same code. A click SHALL set an edge to an absolute state rather than
-toggling relative to an unknown one, so that replaying a move is idempotent.
+A pointer SHALL reach an edge by nearest-edge hit testing. A click SHALL set
+an edge to an absolute state rather than toggling relative to an unknown one,
+so that replaying a move is idempotent.
 
 #### Scenario: A click sets the edge nearest the pointer
 
 - **WHEN** the board is clicked near an edge
 - **THEN** that edge changes to the state the button and its current state
   determine
-
-#### Scenario: A keyboard select sets the chosen edge
-
-- **WHEN** Enter, Space or the erase key is pressed with an edge chosen
-- **THEN** that edge changes exactly as a left or right click on it would, and the
-  erase key returns it to unknown
 
 ### Requirement: Each button sets its own state and clears a decided edge
 
@@ -461,7 +452,8 @@ Loopy SHALL let the player note, on every tiling and with pointer, touch and
 keyboard, the two kinds of fact its deductions from Normal up rest on: a corner
 (two edges adjacent around a dot) carrying at least one line, at most one, or
 exactly one; and a pair of any two edges that match (both lines or neither) or
-are opposites (exactly one is a line).
+are opposites (exactly one is a line). Notes mode SHALL be the collection's
+pencil mode, `ui.pencilMode`, off on a new game.
 
 #### Scenario: A corner takes each of its three notes on any tiling
 
@@ -480,19 +472,6 @@ them and a save replays them. A save holding only line moves SHALL still load.
 - **WHEN** a game with lines, a corner note and a pair note is saved and loaded
 - **THEN** the loaded game holds the same notes, and a save holding only line moves
   loads too
-
-### Requirement: Notes mode is the collection's pencil mode
-
-Notes mode SHALL be `ui.pencilMode`, off on a new game, toggled by the
-collection's shared pencil-mode toggle rather than by anything of Loopy's own,
-and shown by the collection's pencil glyph in the collection's place for it.
-With the mode off, input SHALL be unchanged.
-
-#### Scenario: The shared toggle turns notes mode on
-
-- **WHEN** the collection's pencil-mode toggle is sent on a new game
-- **THEN** `ui.pencilMode` is on and the pencil glyph is drawn, and sending it
-  again restores the input the game started with
 
 ### Requirement: Loopy's gutter fits a corner note on a rim dot
 
@@ -734,8 +713,7 @@ clue, because the same firing covers faces where the loop goes round nothing.
 
 ### Requirement: Loopy's presets draw tall, read width first, and turn where the tiling allows
 
-Every Loopy preset SHALL draw no wider than tall. A tiling that turns SHALL
-keep upstream's preset size, turned where it was landscape. Preset titles SHALL
+A tiling that turns SHALL keep upstream's preset size, turned where it was landscape. Preset titles SHALL
 print the width first, as every other game's titles and the Custom dialog do.
 
 #### Scenario: Titles read width first
@@ -747,8 +725,7 @@ print the width first, as every other game's titles and the Custom dialog do.
 
 A preset of a tiling that cannot turn SHALL take a size of its own that draws
 taller than wide where upstream's preset is landscape, chosen to keep about the
-drawn area of upstream's preset: Triangular 9×14, Kites 4×6, Dodecagonal 3×6
-and Hats 9×11.
+drawn area of upstream's preset.
 
 #### Scenario: The Triangular preset is taller than wide
 

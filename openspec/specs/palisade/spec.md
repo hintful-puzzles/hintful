@@ -1,33 +1,22 @@
 # palisade Specification
 
 ## Purpose
-Palisade, the puzzle of dividing a grid along its edges into regions of one
-given size, each numbered square having that many of its edges walled. This
-capability specifies the game: its three-valued shared edges, its
-mistake-checking, its shading of completed regions, and the deduction hint that
-sets this collection's bar for what an explained hint is.
+Palisade, the puzzle of dividing a grid along its edges into connected regions
+of one given size `k`, each numbered square having that many of its edges
+walled. This capability specifies what is the game's own: its params and
+description encodings, its three-valued shared edges and how the buttons set
+them, what counts as solved and as a mistake, what the generator promises, how
+the board looks, and the deduction hint that sets this collection's bar for
+what an explained hint is. What every game does the same way (Solve, the win
+flash, the mistake overlay, the midend's hint refusals) is the engine
+capabilities' to state.
 
 ## Requirements
 
-### Requirement: Palisade game implements the Game interface
-
-The engine SHALL provide a registered `palisade` game implementing `Game`: a
-region-division puzzle in which numeric clues count the walls around each cell,
-and the player draws walls so the grid divides into connected regions of
-exactly `k` cells with every clue equal to its cell's wall count. The game
-SHALL provide `statusbarText`, `solve` and `textFormat`.
-
-#### Scenario: The game is registered
-
-- **WHEN** the registry is asked for the game with id `palisade`
-- **THEN** it returns a game whose `statusbarText`, `solve` and `textFormat`
-  are defined
-
 ### Requirement: Palisade's parameters are a size and a region size
 
-Params SHALL be `w`, `h` and `k` (the region size), encoded `{w}x{h}n{k}`.
-Four presets SHALL be offered: 5×5n5, 6×8n6, 8×10n8 and 12×15n10. The type
-summary SHALL render via the `width`, `height` and `region-size` config keys.
+Params SHALL be `w`, `h` and `k` (the region size), encoded `{w}x{h}n{k}`. A
+bare number SHALL decode as a square grid whose region size is its width.
 
 #### Scenario: Params round-trip
 
@@ -74,9 +63,8 @@ nor a run letter, and a desc describing more than `w·h` squares.
 
 ### Requirement: A new Palisade board holds its clues and only the rim walls
 
-`newState` SHALL parse the desc into a clue board shared by reference across
-all states and never written after it is parsed, with the grid-rim walls set
-and all interior edges unknown.
+`newState` SHALL build a board holding the desc's clues, with the grid-rim
+walls set and all interior edges unknown.
 
 #### Scenario: A fresh board has no interior wall
 
@@ -86,12 +74,9 @@ and all interior edges unknown.
 
 ### Requirement: Palisade generates uniquely solvable boards
 
-`newDesc` SHALL divide the rectangle into random equal-size regions
-(`divvyRectangle`), derive each cell's clue and the solution walls from that
-division, regenerate until the deductive solver solves the full-clue board,
-then strip clues in a shuffled order, keeping a clue removed only while the
-solver still uniquely solves the board. The emitted desc SHALL be the
-run-length clue grid.
+`newDesc` SHALL emit only a board the deductive solver solves from its clues
+alone, so every board has one division and needs no guess. It SHALL then strip
+clues, keeping a clue removed only while the solver still solves the board.
 
 #### Scenario: Generated boards are solvable
 
@@ -143,9 +128,7 @@ cursor: it moves by half a cell, and select toggles the edge it rests on.
 
 `isSolved` SHALL report a state solved iff the walls divide the grid into
 connected components every of size `k`, every clue equals its cell's wall
-count, and no wall lies within a single component (no stray border). `status`
-SHALL report a win exactly when `isSolved` holds of the board, however it was
-reached.
+count, and no wall lies within a single component (no stray border).
 
 #### Scenario: A correct division is complete
 
@@ -158,31 +141,6 @@ reached.
 - **WHEN** a correct division also carries a wall between two cells of one
   region
 - **THEN** `isSolved` returns false
-
-### Requirement: The Solve command fills in the unique division
-
-The `solve` command SHALL run the deductive solver from the bare rim and, on
-success, emit the full solution border set as a `solve` move. The engine
-records that the solver was used.
-
-#### Scenario: Solve fills a correct division
-
-- **WHEN** the `solve` command runs on a solvable board
-- **THEN** the resulting state is solved and the game reports itself solved
-  with help
-
-### Requirement: Palisade renders walls, clues, live errors, and a solve flash
-
-`redraw` SHALL draw the grid-corner dots once on the first draw. It SHALL then
-draw each tile whose flags differ from the cached flags of its last draw: the
-four border edges colored wall, no-wall or unknown, the clue text, and the
-half-grid cursor box.
-
-#### Scenario: An unchanged tile is not redrawn
-
-- **WHEN** `redraw` runs twice on the same board, cursor, hint, mistakes and
-  flash phase
-- **THEN** the second run draws no tile
 
 ### Requirement: Palisade reddens what the board already contradicts
 
@@ -204,51 +162,25 @@ walls than the clue, or too few edges free of a no-wall mark to reach it.
 - **THEN** `redraw` emits the walls between that region and its neighbors in
   the error color
 
-### Requirement: A player's completing move flashes and the Solve command does not
-
-A 0.7-second flash SHALL play whenever a player move brings the board into a
-solved state, including a genuine manual completion after a prior Solve, and
-SHALL NOT play on the Solve command itself. The game SHALL supply the
-duration (`solvedFlash`); when the flash plays is the engine's, read off the
-board's status.
-
-#### Scenario: A player completion flashes; the Solve command does not
-
-- **WHEN** a player move brings the board into a solved state, whether a first
-  manual completion or a manual re-completion after a prior Solve
-- **THEN** a 0.7-second flash plays
-- **AND** none plays on the Solve command itself, nor when a move breaks a
-  previously-solved board
-
 ### Requirement: Palisade checks mistakes against the unique solution
 
-The game SHALL implement `findMistakes(state)`: it re-solves the clue set from
-the bare grid rim with the deductive solver and, on a unique solution, returns
-a `PalisadeMistake { x, y, dir }` for every edge where the player has drawn a
-wall the solution lacks or set a no-wall mark where the solution has a wall.
-When the clue set is not uniquely solvable, it SHALL return an empty result,
-never a false positive.
+`findMistakes(state)` SHALL re-solve the clue set from the bare grid rim with
+the deductive solver and, on a unique solution, flag every edge where the
+player has drawn a wall the solution lacks or set a no-wall mark where the
+solution has a wall. When the clue set is not uniquely solvable, it SHALL
+return an empty result, never a false positive. `redraw` SHALL redden each
+flagged edge.
 
 #### Scenario: A wrong wall is flagged
 
 - **WHEN** the player draws a wall that the unique solution does not contain
 - **THEN** `findMistakes` includes that edge
+- **AND** `redraw`, given that mistake, draws the edge in the error color
 
 #### Scenario: A correct partial board is clean
 
 - **WHEN** every wall the player has drawn agrees with the unique solution
 - **THEN** `findMistakes` returns an empty result
-
-### Requirement: A flagged mistake reddens its edge until the next transition
-
-The midend overlay SHALL pass the mistakes `findMistakes` returns to `redraw`,
-which SHALL redden the flagged edges and clear them on the next transition, so
-Check & Save can block on real mistakes.
-
-#### Scenario: A flagged edge draws in the error color
-
-- **WHEN** `redraw` is given a mistake on one edge of a cell
-- **THEN** that edge is drawn in the error color
 
 ### Requirement: Palisade offers a deduction-based hint
 
@@ -256,7 +188,8 @@ The `palisade` game SHALL implement `Game.hint()` and `Game.hintKeepTrack()`,
 surfacing its deductive solver as a narrated, highlighted hint plan.
 `hint(state)` SHALL return the full chain of forced edges as the plan, in
 discovery order, so a single request shows the next deduction with all its
-legs and auto-hint can play the whole chain.
+legs and auto-hint can play the whole chain. Each leg's move SHALL be the
+two-sided `edges` edit that sets its edge to the forced state.
 
 #### Scenario: Next deduction is surfaced and solves the board
 
@@ -307,23 +240,6 @@ hint's recording.
 - **THEN** no forced edge is recorded, and the walls it reaches are the
   solver's own
 
-### Requirement: All edges forced by one firing form one journey
-
-All edges forced by one firing, the `equivalentEdges` pair and each
-`numberExhausted` sweep that resolves several of a clue's sides, SHALL become a
-contiguous run of `HintStep`s: the first leg unflagged with the full
-explanation, the remaining legs flagged `continuesPrevious` with abbreviated
-narration. Single-edge firings SHALL remain single steps, and distinct firings
-separate hints. Each leg's move SHALL be the two-sided `edges` edit that sets
-its edge to the forced state.
-
-#### Scenario: A coupled deduction is one multi-leg journey
-
-- **WHEN** the next deduction is an `equivalentEdges` firing (two edges of a
-  clue that border the same region)
-- **THEN** the plan contains both edges as a contiguous run: the first leg
-  unflagged, the second leg flagged `continuesPrevious`
-
 ### Requirement: A hint sentence is advice that has not been applied
 
 Each leg's explanation SHALL name the rule that fired, phrased as advice that
@@ -349,6 +265,8 @@ the conclusion across the set ("draw them all", "both must be walls").
 - **WHEN** the next deduction is an `equivalentEdges` firing of two edges
 - **THEN** the first leg's explanation states that the two edges share a fate
   (both walls or both open) and names the clue that decides them
+- **AND** the plan holds both edges as one journey, the second leg flagged
+  `continuesPrevious`
 
 ### Requirement: Each hint leg marks every element its sentence references
 
@@ -363,20 +281,15 @@ the region the deduction reasons about.
 - **THEN** its marks include the other edge as a sibling and the shared region
   as referenced cells
 
-### Requirement: A hint is refused on a solved or mistaken board
+### Requirement: The hint refuses when the deductions force no edge
 
-A hint SHALL be refused with a readable reason when the board is already
-solved, or when `findMistakes(state)` reports any mistake, by the midend before
-it asks the game, so a hint is never derived from a wrong wall or mark. When
-the deductions force no edge, as on a clue set that is not uniquely solvable,
-`hint()` SHALL return an error rather than a plan.
+When the deductions force no edge, as on a clue set that is not uniquely
+solvable, `hint()` SHALL return an error rather than a plan.
 
-#### Scenario: Hint refuses on a mistaken or solved board
+#### Scenario: A board the deductions cannot advance gets no plan
 
-- **WHEN** a hint is requested on a board carrying a wall the unique solution
-  lacks, or on an already-solved board
-- **THEN** the midend refuses it with a human-readable error before calling
-  `hint()`, and no plan is shown
+- **WHEN** `hint()` is asked about a clue set from which no edge is forced
+- **THEN** it returns an error and no plan is shown
 
 ### Requirement: Making the hinted edit completes the step
 
@@ -398,8 +311,7 @@ same edge SHALL NOT complete the step.
 The renderer SHALL paint every edge of the current step's firing that is not
 yet set, the leg's own edge and the firing's others alike, in `COL_HINT`: they
 share a fate (all walls or all open), so they share a color, signaling the
-player to treat them as one set. The highlight SHALL be part of the per-tile
-cache key, so it appears when shown and clears when the midend drops the plan.
+player to treat them as one set.
 
 #### Scenario: The hint highlights a firing's edges as one set
 
@@ -430,32 +342,6 @@ cell that decides the edges.
 - **THEN** every cell of the region it names is hatched, and for
   `equivalentEdges` the clue cell is neither hatched nor outlined
 
-### Requirement: Palisade hint color legend
-
-When a Palisade hint is displayed, `redraw` SHALL distinguish the element types
-the deduction names by a stable legend, consistent across the deduction rules,
-each color paired with a non-color cue. The forced edges SHALL be drawn
-`COL_HINT` as wall segments on the relevant cell borders. A cited clue SHALL be
-identified by its drawn digit on the outlined cell, the digit being its
-non-color cue, and SHALL NOT be given a separate fill color.
-
-#### Scenario: A cited clue keeps its digit and takes no fill
-
-- **WHEN** a `numberExhausted` step cites a clue
-- **THEN** the clue's cell is outlined in `COL_HINT_CELL` with its digit drawn
-  on it, and its body takes no hint fill
-
-### Requirement: Equivalent forced edges share one legend color
-
-A firing that forces several equivalent edges SHALL draw them all in the same
-`COL_HINT`: the legend governs element types, not distinct cells of one type.
-
-#### Scenario: Equivalent forced edges share one color
-
-- **WHEN** one firing forces several edges that share a fate (e.g. all remaining
-  edges of an exhausted clue)
-- **THEN** every forced edge draws the same `COL_HINT`, not distinct colors
-
 ### Requirement: Palisade shades completed correct regions
 
 The render SHALL fill a wall-bounded region with the shared finished-region
@@ -471,11 +357,6 @@ not a check against the unique solution.
 - **THEN** every region renders with the `COL_CORRECT` background
 - **AND** the untouched board (no interior walls) renders none
 
-### Requirement: The finished-region fill follows the board
-
-The finished-region overlay SHALL be part of the render cache diff key, so the
-fill appears and clears as regions are completed and broken.
-
 #### Scenario: Breaking a finished region clears its fill
 
 - **WHEN** the player adds a wall inside a filled region
@@ -483,33 +364,20 @@ fill appears and clears as regions are completed and broken.
 
 ### Requirement: Palisade shares its border-marking mechanic rather than owning a copy
 
-Palisade SHALL obtain the grid-edge marking mechanic it shares with Separate
-from a shared engine module rather than from its own copy: the border and
-disabled bit vocabulary and direction tables, the closest-edge hit test from a
-pointer coordinate, the edge's three states as the left and right buttons
-toggle them, the paired edit of the two cells adjacent to a marked edge, and
-the half-cell keyboard cursor coordinate scheme.
+Palisade SHALL take the grid-edge marking mechanic it shares with Separate
+from the shared engine modules and own no copy of it: the edge bits and
+direction tables, the nearest-edge hit test, the three-state toggle, the paired
+edit of an edge's two cells, the half-cell cursor, and its look: the geometry,
+the edge rects, the tile skeleton and the live error model. A change to what
+counts as a wrong wall SHALL take effect in both games at once.
 
 #### Scenario: A fix to the shared mechanic reaches both games
 
-- **WHEN** a defect is found in the edge hit test or the three-state toggle
+- **WHEN** a defect is found in the edge hit test, the three-state toggle or
+  the test for a wall that separates nothing
 - **THEN** it is fixed once in the shared module
 - **AND** both Palisade and Separate receive the fix, rather than one game
   silently retaining the defect
-
-### Requirement: The border-marking mechanic's look is shared on the same terms
-
-Palisade SHALL take from the shared module the board geometry, the four
-three-valued edge rects, the tile skeleton around them, the half-cell cursor
-the module moves, and the live error model: a region larger than the target
-size, one smaller, or a wall that separates nothing. These are properties of
-the marking mechanic, not of Palisade, and a change to what counts as a wrong
-wall SHALL take effect in both games at once.
-
-#### Scenario: The error model is the shared module's
-
-- **WHEN** Palisade and Separate each draw a wall that separates nothing
-- **THEN** both redden it by the same shared test
 
 ### Requirement: Palisade's clue layer stays its own
 

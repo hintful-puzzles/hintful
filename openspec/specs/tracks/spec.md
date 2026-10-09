@@ -2,25 +2,27 @@
 
 ## Purpose
 Tracks, the puzzle of laying a single railway from A to B so that each row and
-column holds its clued number of track segments, with live errors, mistake
-checking, and a hint that explains the next deduction and marks it in the
-game's own vocabulary.
+column holds its clued number of track segments: its rules, encodings and
+controls, its tiers and what the generator promises, how it looks, and a hint
+that explains the next deduction and marks it in the game's own vocabulary.
 
 ## Requirements
 
-### Requirement: Tracks game implements the Game interface
+### Requirement: Tracks judges completion from the board
 
-The engine SHALL provide a registered `tracks` game implementing `Game`: the
-player lays a single continuous train track from an entrance on the left edge
-to an exit on the bottom edge of a `w × h` grid, using only straight and curved
-rails that neither cross nor form a loop, so that every row and column clue
-counts the track-bearing cells in that row or column. The game SHALL provide
-`solve` and `textFormat`.
+The player lays a single continuous train track from an entrance on the left
+edge to an exit on the bottom edge of a `w × h` grid, using only straight and
+curved rails that neither cross nor form a loop, so that every row and column
+clue counts the track-bearing cells in its line. The board SHALL be reported
+solved exactly while no errors exist and every clue's completed track count
+matches, judged from the board however it was reached.
 
-#### Scenario: The game is registered
+#### Scenario: Completion follows the board
 
-- **WHEN** the registry is asked for the game with the id `tracks`
-- **THEN** it returns a game that provides `solve` and `textFormat`
+- **WHEN** a continuous entrance→exit track is laid meeting every clue with no
+  loop
+- **THEN** `status` reports the board solved
+- **AND** a later move that breaks the track or a clue reports it unsolved again
 
 ### Requirement: Tracks' parameters
 
@@ -53,18 +55,6 @@ the words of `noSuchTier`, because no 4×4 board needs a higher tier.
 - **WHEN** the params `4x4dt` or `4x4dh` are checked for a deal
 - **THEN** they are refused, and no board is dealt
 
-### Requirement: Tracks' presets are drawn taller than wide
-
-The presets SHALL be 8×8, 8×10, 10×10, 10×15 and 15×15 at Easy and at Normal,
-and 10×10 and 15×15 at Tricky as well, each with `singleOnes` on. A preset
-that is not square SHALL be the size that draws taller than wide.
-
-#### Scenario: No preset is wider than tall
-
-- **WHEN** the preset menu is read
-- **THEN** it offers 8×10 and 10×15, and no preset whose width exceeds its
-  height
-
 ### Requirement: Tracks descriptions use the upstream encoding
 
 The desc SHALL encode the `w × h` square grid row-major: one lowercase
@@ -81,9 +71,8 @@ marking the exit column and the entrance row.
 
 ### Requirement: newState parses a Tracks description and refuses a malformed one
 
-`newState` SHALL parse the desc into per-cell track edges and the shared,
-immutable clue-number and station data, with the player grid initially blank.
-It SHALL refuse, as a desc error the engine's `validateDesc` reports, a desc
+`newState` SHALL parse the desc into a board whose player grid is blank. It
+SHALL refuse, as a desc error the engine's `validateDesc` reports, a desc
 with an unknown character, clue flags whose bit-count is not exactly two, a
 number list that is too short, or anything but exactly one entrance and one
 exit.
@@ -195,23 +184,9 @@ uniquely solvable.
   `findMistakes` runs
 - **THEN** that cell is reported and rendered red
 
-### Requirement: A Tracks mistake is drawn in the mistake styling
-
-Mistakes SHALL render with the collection's red mistake styling, carried in
-the render diff key so a mistake highlights even on a tile that did not
-otherwise change.
-
-#### Scenario: A mistake overlay repaints an unchanged tile
-
-- **WHEN** a tile is painted, `findMistakes` flags it, and `redraw` runs again
-  with no other change to that tile
-- **THEN** the second paint renders the red mistake styling
-
 ### Requirement: Tracks explains the next deduction
 
-A hint SHALL be refused when the board is solved or `findMistakes` reports any
-mark, by the midend before it asks the game. `hint(state)` SHALL otherwise
-return the forced deductions from the player's current marks as an ordered
+`hint(state)` SHALL return the forced deductions from the player's current marks as an ordered
 plan, each step narrating why its moves are forced from premises the sentence
 itself states.
 
@@ -221,30 +196,11 @@ itself states.
 - **THEN** the plan is deduced from those marks and its first step is a
   deduction that follows from them
 
-#### Scenario: A hint refuses rather than reasoning from a wrong board
-
-- **WHEN** a mark contradicts the unique solution and a hint is requested
-- **THEN** the hint refuses with the collection's shared mistakes wording and
-  produces no plan
-
 #### Scenario: Following the plan solves the board at every tier
 
 - **WHEN** a hint is requested, its first step applied, and the hint requested
   again, repeatedly, on a board of any tier
 - **THEN** deduction never runs out before the board is solved
-
-### Requirement: The Tracks hint runs the solver's own rungs
-
-The plan SHALL be produced by the same `DeductionTechnique` objects
-`tracksSolve` runs, taken one firing at a time through the engine's
-`singleFirings`, with a recorder attached to the working `Board`. No rung
-SHALL be reimplemented for the hint, and the generator's solve path SHALL
-remain unchanged.
-
-#### Scenario: The generator solves without a recorder
-
-- **WHEN** the solver runs for the generator or for `findMistakes`
-- **THEN** its board carries no recorder
 
 ### Requirement: The Tracks hint is capped at the board's own tier
 
@@ -335,46 +291,15 @@ deduction and is not on the grid.
 - **THEN** the clue's track squares carry the evidence contour and the clue's
   digit is recolored in the margin
 
-### Requirement: A Tracks hint is part of the tile's cache key and the clue row's
-
-The per-square hint marks SHALL be carried in an `Int32Array` compared in the
-tile cache's diff key, so that a hint requested a frame after the move that
-drew the board still repaints. The hint SHALL be part of the clue row's cache
-key as well as the per-tile one, which the recolored digit requires.
-
-#### Scenario: A displayed hint repaints an otherwise unchanged frame
-
-- **WHEN** the board is painted, a hint is displayed, and `redraw` runs again
-  with nothing else changed
-- **THEN** the frame carries the step's marks
-
-### Requirement: Tracks solves with a graded deductive solver
-
-The solver SHALL run its deductions in rung order at each difficulty, a higher
-difficulty adding its rungs to those below it. The solver SHALL return
-impossible, unique and non-converged verdicts, and SHALL be reused by
-`solve()` and `findMistakes`.
-
-#### Scenario: Generated boards solve at exactly their difficulty
-
-- **WHEN** a board generated at Tricky is solved
-- **THEN** the Tricky solver reaches the unique solution
-- **AND** the Normal solver fails to converge on it
-
-#### Scenario: Solve recovers from a wrong mid-game state
-
-- **WHEN** `solve()` runs against a state containing wrong track marks
-- **THEN** the returned move yields the unique solution
-
 ### Requirement: Each Tracks difficulty adds its rungs
 
 Easy SHALL run edge and square flag propagation (`update-flags`), row and
 column track counts (`count-clues`) and immediate loop avoidance
-over a `Dsf` (`check-loop`). Normal SHALL add single-track reasoning
+(`check-loop`). Normal SHALL add single-track reasoning
 (`check-single`), loose-end reasoning (`check-loose-ends`) and the one-way
 neighbor deduction (`check-neighbors`). Tricky SHALL add the two-way neighbor
 deduction (`check-neighbors-both-ways`) and the bridge-parity argument
-(`check-bridge-parity`) over the shared `findLoops` bridge finder.
+(`check-bridge-parity`).
 
 #### Scenario: A capped solve leaves the higher rungs out
 
@@ -384,28 +309,16 @@ deduction (`check-neighbors-both-ways`) and the bridge-parity argument
 
 ### Requirement: Tracks generates solver-gated boards reproducibly
 
-`newDesc` SHALL generate the same board for the same seed. It SHALL lay a path
-as a random walk from a random left-edge entrance to a bottom exit and derive
-the clue numbers from it. It SHALL reject a boring board (one with a clue of
-0) and, under `singleOnes`, a board with a 1 as the clue of the entrance's
-column or of the exit's row, or with two 1 clues next to each other in the
-list of column clues then row clues.
+`newDesc` SHALL generate the same board for the same seed, and SHALL strip
+every clue the board solves at its tier without. It SHALL reject a boring
+board (one with a clue of 0) and, under `singleOnes`, a board with a 1 as the
+clue of the entrance's column or of the exit's row, or with two 1 clues next
+to each other in the list of column clues then row clues.
 
 #### Scenario: Generation is reproducible from a seed
 
 - **WHEN** `newDesc` runs twice with the same params and seed
 - **THEN** both runs emit the identical Tracks description
-
-### Requirement: Tracks lays clues until the board solves at exactly its tier
-
-`newDesc` SHALL lay clues until the board is soluble at exactly the target
-difficulty, then strip redundant clues, re-running the solver on each
-candidate.
-
-#### Scenario: A dealt board is graded at its preset's tier
-
-- **WHEN** a board is generated at a preset's tier
-- **THEN** it solves at that tier and, above Easy, not at the tier below
 
 ### Requirement: Tracks rejects a bare board as too easy only when it solves
 
@@ -453,19 +366,6 @@ the cursor highlight, and the completion flash.
 - **WHEN** a left-drag is in progress over blank cells
 - **THEN** the covered cells render their provisional track in the drag color
 
-### Requirement: The Tracks drawstate diffs committed and drag flags
-
-The drawstate SHALL diff per-cell `Int32Array`s of committed and drag flags
-plus a clue-error sidecar, with the findMistakes overlay carried in the diff
-key.
-
-#### Scenario: A drag repaints only the squares its preview changes
-
-- **WHEN** a left-drag in progress extends over one more blank square and
-  `redraw` runs
-- **THEN** that square is repainted and a square whose flags did not change is
-  not
-
 ### Requirement: The Tracks completion flash runs the track from A to B
 
 The completion flash SHALL be a highlight a few squares long that runs the
@@ -496,8 +396,7 @@ and the track bed in both color schemes.
 ### Requirement: Tracks computes live errors on every move
 
 `executeMove` SHALL recompute error state: a cell with more than two track
-edges is an error; every cell on a track loop (via the shared `findLoops` over
-the track graph) is an error; and once a continuous entrance→exit path exists,
+edges is an error; every cell on a track loop is an error; and once a continuous entrance→exit path exists,
 any track cell not on that path is an error.
 
 #### Scenario: A loop is flagged
@@ -516,19 +415,6 @@ path exists and no cell is in error.
 
 - **WHEN** a row has more track cells than its clue number
 - **THEN** that row's clue is marked in error
-
-### Requirement: Tracks judges completion from the board
-
-The board SHALL be reported solved exactly while no errors exist and every
-clue's completed track count matches, judged from the board however it was
-reached.
-
-#### Scenario: Completion follows the board
-
-- **WHEN** a continuous entrance→exit track is laid meeting every clue with no
-  loop
-- **THEN** `status` reports the board solved
-- **AND** a later move that breaks the track or a clue reports it unsolved again
 
 ### Requirement: An undecided Tracks square is the cell surface
 

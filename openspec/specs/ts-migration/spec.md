@@ -1,43 +1,15 @@
 # ts-migration Specification
 
 ## Purpose
-The rules the port from upstream's C to native TypeScript follows and leaves
-standing: upstream's C as a readable reference and not a byte-oracle, a clean
-save format with stable game IDs, narratable-deduction generation, acceptance
-by exercising a game and not by a green suite, byte-stable params encodings,
-and the difficulty-tier and shared-helper rules that keep generated boards
-honest.
+The rules the port from upstream's C to native TypeScript left standing:
+upstream's C as a readable reference and not a byte-oracle, a clean save
+format with stable game IDs, narratable-deduction generation, acceptance by
+exercising a game and not by a green suite, with touch accepted on a device,
+byte-stable params encodings, what a difficulty tier promises of a board and
+what a generator does when it cannot keep that promise, and the rules for a
+shared helper's scope and labels.
 
 ## Requirements
-
-### Requirement: Migration proceeds top-down, product-value first
-
-The TypeScript migration SHALL proceed top-down: the TS midend and a clean
-`Game` interface SHALL be built before any game is ported, and games SHALL
-then be ported by user-facing priority: the simplest first to establish the
-pattern, then the games the owner wants to enhance, then outward to the rest.
-The migration SHALL NOT be ordered bottom-up by library-dependency depth:
-delivering user-visible capability early takes precedence over how much
-downstream code a port unblocks.
-
-#### Scenario: Midend precedes game ports
-
-- **WHEN** a game is to be ported
-- **THEN** the TS midend and the `Game` interface exist already
-- **AND** no per-game port is attempted before that interface exists
-
-### Requirement: A leaf library is ported when a game needs it
-
-A leaf library (dsf, tree234, sort, findloop and the like) SHALL be ported
-lazily and idiomatically, as an ordinary TS dependency, when a game being
-ported needs it. It SHALL NOT be ported as a standalone bridged seam with a
-characterization corpus.
-
-#### Scenario: A game port pulls in only the leaf libs it needs
-
-- **WHEN** a game is ported to TS and depends on a union-find / dsf helper
-- **THEN** an idiomatic TS equivalent is written as a normal module dependency
-- **AND** no characterization corpus is recorded for that helper
 
 ### Requirement: Clean TS save format, and future game IDs stay stable
 
@@ -92,21 +64,6 @@ position in the ladder.
   that fired declares a lower tier than an earlier one that fired
 - **THEN** the board's grade is the higher tier
 
-### Requirement: A game narrates every deduction it accepts, or rejects the board at generation
-
-A logic game SHALL meet the narratable-deduction policy by one of two means:
-either narrating every deduction it accepts (promoting any catch-all into an
-honest technique), or rejecting at generation the boards whose solution needs
-an un-narratable deduction. The choice SHALL be made per game, against a measured
-cost.
-
-#### Scenario: A solver has a catch-all deduction
-
-- **WHEN** a game's generator accepts boards that need a deduction its hint
-  has no technique for
-- **THEN** the game either narrates that deduction as a technique or rejects
-  those boards at generation
-
 ### Requirement: A rejecting generation gate is measured before it is adopted
 
 A generation gate that rejects boards SHALL be adopted only after measuring
@@ -140,80 +97,14 @@ there is no solver to unify.
 - **THEN** that tier requiring a guess, and its hint being non-deductive
   there, do not violate this policy
 
-### Requirement: The C engine is fully retired once every game is ported
-
-Once the last game is ported and registered at parity, the C/WASM engine SHALL
-be gone entirely: no game is served by C at runtime, and the C sources, the
-Embind adapter, the Emscripten build, the worker's WASM dispatch path and the
-leaf-bridge flag machinery SHALL all be deleted.
-
-#### Scenario: No game runs on C after retirement
-
-- **WHEN** the app opens any game
-- **THEN** the game is served by the TypeScript engine
-- **AND** no wasm artifact is loaded and no C source is compiled
-
-### Requirement: The catalog and the manual are built without the C toolchain
-
-The game catalog and the in-app manual, which the app depends on, SHALL be
-generated without the C toolchain. The game catalog's metadata SHALL be a
-committed TypeScript source.
-
-#### Scenario: The catalog and manual survive the toolchain removal
-
-- **WHEN** the app is built from a clean checkout with no Emscripten toolchain
-  present
-- **THEN** the game catalog and the in-app manual are produced
-- **AND** the app lists every game and serves its help pages
-
-### Requirement: `puzzles/` does not survive the migration
-
-The directory `puzzles/` SHALL NOT exist. No C source and no build system for
-it SHALL remain in the repository's working tree, with one exception: a
-reading reference kept with the change that reads it.
-
-#### Scenario: `puzzles/` does not survive the migration
-
-- **WHEN** the repository is inspected
-- **THEN** `puzzles/` does not exist
-- **AND** the served help sources are under `help/` and the MIT notices under
-  `licenses/`
-- **AND** no C source outside a change's `reference/` directory, and no build
-  system for C, is in the working tree
-
-### Requirement: The served help sources live under `help/`
-
-The sources of the help pages the app serves SHALL live under `help/`, because
-a page the app serves is an input to this project's build and not upstream
-reference material.
-
-#### Scenario: A game's help page has its source under `help/`
-
-- **WHEN** the app serves a game's help page
-- **THEN** the page is built from a source file under `help/`
-
-### Requirement: The upstream MIT notices live in `licenses/`, byte-identical
-
-The upstream MIT notices SHALL live in `licenses/`, each byte-identical to
-what its upstream project ships. They sit at the top level because what they
-cover is the whole of `src/engine/` and `src/games/` and the served help
-sources. The directory and file names are this project's, spelled its way; the
-bytes inside are upstream's.
-
-#### Scenario: A notice is compared with upstream's
-
-- **WHEN** a file in `licenses/` is compared with the notice its upstream
-  project ships under the name `LICENCE`
-- **THEN** the bytes are identical, though the file's name is not
-
 ### Requirement: A C source kept as a reading reference lives with its change
 
 A C source kept as a reading reference for scaffolded future work SHALL live
-with the change that reads it (`openspec/changes/<change>/reference/`), not in
-`puzzles/`, and SHALL carry a README recording its provenance, its license,
-and the fact that it cannot be compiled or run. The reference is thereby
-archived with the work that consumed it, and one nobody needed is deleted with
-its change.
+with the change that reads it (`openspec/changes/<change>/reference/`), and
+SHALL carry a README recording its provenance, its license, and the fact that
+it cannot be compiled or run. No other C source, and no build system for C,
+SHALL be in the working tree. The reference is thereby archived with the work
+that consumed it, and one nobody needed is deleted with its change.
 
 #### Scenario: A reading reference is kept with its change
 
@@ -222,6 +113,8 @@ its change.
 - **THEN** it lives under that change's `reference/` directory
 - **AND** a README there states its provenance, its license, and that it does
   not compile
+- **AND** no C source outside a change's `reference/` directory, and no build
+  system for C, is in the working tree
 
 ### Requirement: Game work is accepted by exercising it, not by a green suite
 
@@ -238,13 +131,6 @@ nothing. A shortfall found this way SHALL NOT be dismissed as "cosmetic" or
 - **WHEN** a game's automated tests pass but its rendering, animation and
   input have not been exercised
 - **THEN** the work is not accepted, and the change is not archived
-
-#### Scenario: A parity shortfall is not deferred silently
-
-- **WHEN** exercising a game surfaces a rendering, animation or input
-  shortfall
-- **THEN** it is fixed, or deferred only with explicit owner agreement, and
-  never reclassified as out of scope to avoid fixing it
 
 ### Requirement: A shared abstraction states its actual scope, not an aspirational one
 
@@ -288,37 +174,6 @@ differential and no render snapshot moves.
   `paramConfig`
 - **THEN** it calls `dimensionParamConfig()` rather than writing the table
 - **AND** its Custom-type dialog behaves identically to every other game's
-
-#### Scenario: A dialog-only change is verified where the suite cannot see it
-
-- **WHEN** a change alters a `paramConfig` or preference declaration
-- **THEN** the affected dialogs are opened and checked in a browser
-- **BECAUSE** a regression here surfaces as an empty or mislabeled dialog
-
-#### Scenario: A get/set round-trip is offered as the guard
-
-- **WHEN** a declarative item's `get` and `set` name the same field, and a
-  test asserts `set∘get` is the identity
-- **THEN** that test does NOT establish which field the item drives, and a
-  direct assertion naming the field is added where the game defines it
-- **BECAUSE** a test whose only observer is the thing under test cannot
-  establish ground truth: the round trip is the identity whether "Width"
-  drives `w2` or `h2`
-
-### Requirement: A game's params fields are not renamed to fit a helper
-
-A game SHALL NOT have its params fields renamed to fit a helper. Where a game
-spells its dimensions differently, either the helper SHALL be widened to
-accept an accessor or the game SHALL keep its own table with the reason
-recorded: game-specific code is not contorted to fit a shared contract.
-
-#### Scenario: A helper does not fit a game
-
-- **WHEN** a game's params spell their dimensions differently from the
-  helper's constraint
-- **THEN** either the helper gains an accessor parameter, or the game keeps
-  its own table with the reason recorded
-- **AND** the game's fields are not renamed to satisfy the helper
 
 ### Requirement: A per-game label states only what holds on every board
 
@@ -370,20 +225,6 @@ curve: the player chose the tier.
   "solvable one tier down" is not a meaningful test
 - **THEN** that is recorded in the game's specification with its reason,
   rather than left as an unbinding setting
-
-### Requirement: A corrected tier gate retires or re-founds the game's differential
-
-Where correcting the tier gate changes which boards a game generates, the
-game's differential SHALL be retired or re-founded on the property that every
-generated board is uniquely solvable at exactly its stated difficulty.
-Reproducing upstream's boards SHALL NOT be a goal.
-
-#### Scenario: A differential pinned the boards an unbinding gate dealt
-
-- **WHEN** a game's tier gate is corrected and its differential no longer
-  matches the boards it deals
-- **THEN** the differential is retired, or re-founded on every board being
-  uniquely solvable at exactly its stated difficulty
 
 ### Requirement: The tier gate's cost is measured by its worst case
 
@@ -503,12 +344,19 @@ effects.
 A game's params encoding appears inside every shared game ID, so it SHALL be
 held byte-stable by an assertion rather than by policy alone, and the corpus
 that assertion runs over SHALL be derived from each game's own declarations
-rather than authored.
+rather than authored. The corpus SHALL carry a vacuity guard on both the
+number of games and the number of cases.
 
 #### Scenario: A changed encoding is reported before it ships
 
 - **WHEN** a change alters the string any game encodes for reachable params
 - **THEN** the byte-stability snapshot fails, naming the game and the case
+
+#### Scenario: The guard cannot pass over an empty corpus
+
+- **WHEN** the registry is unpopulated, or a game contributes no cases
+- **THEN** the vacuity guard fails rather than every downstream assertion
+  passing over nothing
 
 ### Requirement: Encode and decode are mutual inverses over the corpus
 
@@ -535,37 +383,6 @@ formatting fix with `vitest -u`.
 - **WHEN** a change makes a game encode a recorded case as a different string
 - **THEN** the snapshot is not re-baselined until the owner has agreed to the
   break with its cost stated
-
-### Requirement: The params corpus is derived and guarded against vacuity
-
-The corpus SHALL be derived: each game's default params and presets, each of
-its difficulty tiers written through its own `paramConfig` item, and one
-perturbation of each number or boolean field of its default params that the
-difficulty item does not write. It SHALL carry a vacuity guard on both the
-number of games and the number of cases. A perturbed params object is often
-invalid, which is deliberate: the codec is asked only to be an inverse, never
-to be a validator.
-
-#### Scenario: The guard cannot pass over an empty corpus
-
-- **WHEN** the registry is unpopulated, or a game contributes no cases
-- **THEN** the vacuity guard fails rather than every downstream assertion
-  passing over nothing
-
-### Requirement: A field that is the length of another field is not perturbed alone
-
-A field that is the length of another field SHALL NOT be perturbed alone:
-Boats' fleet size and its list of boat sizes are one fact in two fields, and
-bumping the count alone builds a params record that contradicts itself. The
-exclusion SHALL be derived from the record's shape, a number equal to some
-sibling array's length, rather than from a roster of games, so a future game
-with the same shape is covered the day it lands.
-
-#### Scenario: A count beside the list it counts
-
-- **WHEN** a game's default params hold a number equal to the length of a
-  sibling array
-- **THEN** the corpus holds no case that bumps that number alone
 
 ### Requirement: Upstream's C is a readable reference, not a byte-oracle
 
@@ -649,15 +466,6 @@ hand. The property is a statement about what a difficulty tier means.
 - **THEN** the cross-game monotonicity guard fails, naming the game and seed
 - **AND** the solver is fixed: no declaration excuses the game from the guard
 
-#### Scenario: A solver is converted to the shared deduction runner
-
-- **WHEN** a game's hand-rolled deduction ladder is moved onto the shared
-  runner
-- **THEN** its differential fixture passes unmodified, because a solver
-  reaching the same verdicts generates the same boards
-- **AND** the cross-game monotonicity guard already covers it, with no bespoke
-  per-game test to add or later delete
-
 ### Requirement: A non-monotone solver is repaired, never declared
 
 A solver found non-monotone SHALL be repaired, and the difficulty contract
@@ -672,19 +480,6 @@ a check.
 - **THEN** its contract has no field to say so, and the guard fails until the
   cause is found and repaired
 - **AND** the game is never silently skipped
-
-### Requirement: The cross-game guard holds every offered tier to generating or a refusal
-
-The same cross-game guard SHALL also assert that every tier a game offers
-either generates or is refused with a reason. The tiers it walks SHALL be the
-difficulty choices the game's custom-params form offers, so a game that gains
-a tier cannot ship a stale list.
-
-#### Scenario: A tier generates nowhere and says nothing
-
-- **WHEN** a tier a game offers is accepted for dealing at none of its
-  presets, and parameter validation gives no reason at one of them
-- **THEN** the guard fails, naming the game and the tier
 
 ### Requirement: The monotonicity guard samples enough boards to catch its defect
 

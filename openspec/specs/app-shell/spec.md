@@ -14,8 +14,6 @@ The puzzle screen SHALL return keyboard focus to `puzzle-view-interactive`
 after a control has been pressed with a pointer. This SHALL cover both routes a control can take: the
 command bus (every `data-command` control), and a pointer click anywhere in
 the chrome, since a control can be both a `data-command` and a menu trigger.
-Focus SHALL be handed over asynchronously, because the dropdown and the button
-each focus themselves synchronously first.
 
 #### Scenario: Enter reaches the board after a menu command
 
@@ -189,17 +187,6 @@ spotlight and with any dialog above the board.
   a reference item is spotlit on it
 - **THEN** the spotlight is cleared, and the puzzle receives button `27`
 
-### Requirement: A cancel arm that tests 8 also tests 127
-
-A game whose cancel arm tests upstream's `'\b'` (8) SHALL also test `127`,
-because that is the code the key map sends for Backspace, Delete and Clear.
-
-#### Scenario: Backspace reaches an arm written for 8
-
-- **WHEN** the player presses Backspace in a game whose cancel arm upstream
-  wrote for `'\b'`
-- **THEN** the puzzle receives button `127`, and the arm runs
-
 ### Requirement: The params a puzzle reports are the full params of the board on screen
 
 The params a puzzle reports for display SHALL be the **full** encoding of the
@@ -218,20 +205,6 @@ from the board's game ID, which carries the full encoding.
 - **WHEN** a new board is dealt at a different difficulty
 - **THEN** the params reported change with it and do not keep the first value
   seen
-
-### Requirement: A summary check asserts the rendered word, not merely that a token was replaced
-
-The guard over the type header's words SHALL compare the rendered text against
-the declaring source: for every tiered game and every tier, the label of a
-board at that tier SHALL contain the tier name the game's difficulty item
-declares. A check that a label was produced SHALL NOT stand in for it, because
-a wrong word is still a word, and it is the comparison that catches a tier
-list drifting from the game it describes.
-
-#### Scenario: A substituted-but-wrong word is caught
-
-- **WHEN** a game's label for a tier does not contain that tier's declared name
-- **THEN** the guard fails, though a label was rendered
 
 ### Requirement: The chrome follows a recorded design direction of this project's own
 
@@ -343,26 +316,15 @@ so that a shortcut label cannot become decorative.
 - **THEN** a test asserts that pressing exactly that key invokes exactly that
   command
 
-### Requirement: The chrome does not overflow at a phone width
-
-The puzzle screen's chrome SHALL lay out without horizontal overflow at 390 CSS
-pixels.
-
-#### Scenario: A narrow viewport
-
-- **WHEN** the puzzle screen renders at 390 CSS pixels wide
-- **THEN** no chrome element overlaps another, and no control's label is
-  truncated to fewer characters than it needs
-
 ### Requirement: Every bare shortcut letter is swept against every game
 
 The suite SHALL sweep each bare letter in the shortcut table against every
-registered game and SHALL fail on a game that consumes one, unless that game is
-on an explicit ledger whose entry states the reason a player would accept.
-Offering the key to the game first needs no declaration, and it does not
-notice: a game that consumes a letter makes that shortcut do nothing, silently,
-in that game alone, while every test of the table, the matchers and the labels
-stays green.
+registered game, on a fresh board and with the keyboard cursor revealed, and
+SHALL fail on a game that consumes one: that shortcut does nothing in that
+game, silently, while every test of the table stays green. A game that keeps
+its own meaning for a letter SHALL be on a ledger whose entry says why a
+player is not worse off, and the ledger SHALL be asserted exactly equal to the
+set found.
 
 #### Scenario: A game that swallows a shortcut letter is caught
 
@@ -371,31 +333,10 @@ stays green.
 - **THEN** the sweep fails and names the letter and the command it cost, unless
   that game is on the ledger
 
-### Requirement: The sweep asks on a fresh board and with the cursor revealed
-
-The sweep of bare shortcut letters SHALL ask on a fresh board **and** with the
-keyboard cursor revealed, because several games accept letters only once the
-cursor is visible, and asking in one state alone misses them. Its ledger SHALL
-be asserted exactly equal to the set found, so that a game that stops claiming
-a letter forces its entry to be deleted.
-
 #### Scenario: A game on the ledger stops claiming its letter
 
 - **WHEN** a game on the ledger no longer consumes any bare shortcut letter
 - **THEN** the sweep fails until its entry is deleted
-
-### Requirement: A ledger entry records a collision, not a defect
-
-An entry on the sweep's ledger SHALL record a collision and not a defect: a
-game keeping its own meaning for a letter is the derivation working. Its
-reason SHALL say why a player is not worse off, as Tents binds `n` to "not a
-tent" whenever its cursor is visible, which is exactly when a player means
-the cell.
-
-#### Scenario: A recorded collision keeps the game's meaning
-
-- **WHEN** a game on the ledger consumes its letter
-- **THEN** the sweep passes, and the entry states why a player is not worse off
 
 ### Requirement: The chrome offers the hint and never urges it
 
@@ -523,31 +464,10 @@ the same keypress, and using one SHALL NOT switch the other off.
 - **THEN** the keypress reaches the puzzle, with no click on the board in
   between
 
-### Requirement: The key panel suppresses focus on the press, not the pointer event
-
-The key panel's suppression of focus SHALL be on the press and not on the
-pointer event, because this frontend cannot prevent a `pointerdown` from
-generating a click on iOS Safari, and touch presses are answered on
-`touchstart`.
-
 #### Scenario: A mouse press on an on-screen key
 
 - **WHEN** a mouse press lands on an on-screen key
 - **THEN** the key is not focused, and the click that follows still types it
-
-### Requirement: The key panel's guard says that it is a proxy
-
-No behavioral test tier can observe the key panel taking focus: every one of
-them delivers input to the engine directly, so the panel and the keyboard both
-work in a suite that is green over a game nobody can type into. The standing
-guard SHALL assert the suppression, and SHALL say plainly that it is a proxy
-and where the consequence was observed.
-
-#### Scenario: The suppression is removed
-
-- **WHEN** the key panel stops suppressing the focus of a press
-- **THEN** the standing guard fails, though every behavioral test of the panel
-  and of the keyboard still passes
 
 ### Requirement: A new board is dealt to fit the space it is drawn in
 
@@ -703,7 +623,9 @@ saying the last board type could not be restored.
 The home screen SHALL label each draft game's row "Draft", beside its name, and
 the label SHALL say which features are still to come, by the names a player
 knows them by. A draft SHALL stay listed and playable: the label says the game
-is not yet complete and hides nothing.
+is not yet complete and hides nothing. Which games are drafts SHALL be
+computed from the registered games when the app is built, and SHALL NOT be a
+field of the committed catalog.
 
 #### Scenario: A hintless game is labeled
 
@@ -714,12 +636,6 @@ is not yet complete and hides nothing.
 
 - **WHEN** the home screen lists Palisade
 - **THEN** its row carries no draft label
-
-### Requirement: The drafts are computed at build time, not kept in the catalog
-
-The home screen never loads game code, so the drafts SHALL be computed from the
-registered games at build time (`virtual:draft-puzzles`) and SHALL NOT be a
-field of the committed catalog.
 
 #### Scenario: A draft gains its missing section
 
@@ -765,16 +681,6 @@ the board.
 - **WHEN** the Share dialog is shown for a puzzle outside Simon Tatham's collection
 - **THEN** it offers no link to Simon Tatham's site
 
-### Requirement: The game-ID notification carries no seed
-
-The midend's game-ID notification SHALL carry the board's one game ID and no
-seed, so that no part of the app can hand a seed out.
-
-#### Scenario: The notification carries no seed
-
-- **WHEN** the midend deals a board from a fresh seed or a `#seed` ID
-- **THEN** its game-ID notification carries exactly the board's game ID
-
 ### Requirement: A seed ID still deals a game
 
 A `#seed` ID arriving from a link, a paste or another collection SHALL still
@@ -807,18 +713,6 @@ arrives.
 - **WHEN** the first board is a restored autosave and not a deal
 - **THEN** the commands that waited are answered about it
 
-### Requirement: The engine's board methods are reached only through the wait
-
-The methods of the engine's surface that read the board SHALL be a type of
-their own (`BoardSurface`), and the app SHALL reach them only through the wait
-for the first board, so that a method added to that type cannot be called
-around it.
-
-#### Scenario: A method is added to the board's type
-
-- **WHEN** a method that reads the board is added to `BoardSurface`
-- **THEN** the app can call it only through the wait for the first board
-
 ### Requirement: The controls of board commands are unavailable until the first board
 
 Until the first board exists, the chrome SHALL draw unavailable the controls
@@ -837,10 +731,7 @@ puzzle switcher, preferences, help) SHALL be offered throughout.
 
 Start over and New game are the two commands that put a player's work away,
 and the app SHALL let Undo take either back, as `ts-engine` keeps a restart as
-a step of the history and the board a new one replaces, one deep. The Undo and
-Redo controls, their shortcuts and the timeline SHALL need nothing of their
-own for it: the engine's `canUndo` and `canRedo` count a restart and a kept
-board.
+a step of the history and the board a new one replaces, one deep.
 
 #### Scenario: Restart, then Undo
 
@@ -1189,7 +1080,9 @@ SHALL NOT change the stored choice.
 
 The window's shape SHALL choose the layout, and not its width alone: tall is
 portrait, and a landscape window is wide, or wide and short below 34rem of
-height.
+height. Where a panel docks SHALL be decided in one place, from the player's
+layout choices and that shape, and no panel SHALL carry a rule of its own
+about the window's size.
 
 #### Scenario: Two tall windows of different widths
 
@@ -1208,18 +1101,6 @@ landscape window, and under the board in a tall one.
 
 - **WHEN** a player opens Dominosa's reference in a tall window
 - **THEN** the reference panel is under the board
-
-### Requirement: Where a panel docks is decided in one place
-
-Where a panel docks SHALL be decided in one place, from the player's layout
-choices and the window's shape. No panel SHALL carry a rule of its own about
-the window's size.
-
-#### Scenario: A panel is drawn in two window shapes
-
-- **WHEN** the same panel is drawn in a tall window and in a wide one
-- **THEN** its place in each comes from the one layout decision, and the panel
-  carries no rule of its own about the window's size
 
 ### Requirement: The family chips give way to a search
 

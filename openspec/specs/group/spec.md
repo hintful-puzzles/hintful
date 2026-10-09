@@ -2,26 +2,19 @@
 
 ## Purpose
 Group, the Latin-square puzzle whose completed grid must be a group's Cayley
-table: Latin and associative. It rides on the shared Latin solver and adds its
-own associativity and identity deductions, the reordering of rows and columns,
-subgroup dividers, an explained hint and Check & Save.
+table: Latin and associative. It rides on the shared Latin solver and the
+shared candidate hint walk, and this spec holds what is Group's own: its tiers
+and their associativity and identity deductions, the hidden identity, the
+reordering of rows and columns, subgroup dividers, what its hint teaches, and
+that Check & Save flags pencil marks that have crossed out the answer.
 
 ## Requirements
 
-### Requirement: Group game implements the Game interface
+### Requirement: A Group board is solved by a group table
 
-The engine SHALL provide `src/games/group/` implementing the `Game` interface
-for Group, registered so the puzzle is served by the TypeScript engine. A
-board SHALL be solved when every cell is filled and the grid is a valid group
+A board SHALL be solved when every cell is filled and the grid is a valid group
 Cayley table: Latin and associative. Because a board has one solution, Group
 SHALL provide `findMistakes`, so Check & Save applies.
-
-#### Scenario: A generated board is a solvable group table
-
-- **WHEN** a new game is generated for a legal size and difficulty in either
-  identity mode
-- **THEN** its clues admit exactly one completion, that completion is a valid
-  group table, and the solver grades it at the requested difficulty
 
 #### Scenario: A completed valid table wins
 
@@ -45,22 +38,13 @@ cannot hide its identity.
 
 Group SHALL declare that hiding the identity leaves every tier but Easy (the
 modifier's `only`), because an identity-hidden board has two blank rows and
-columns that only a deduction above Easy can tell apart. The engine SHALL
-build the refusal of an identity-hidden Easy deal from that declaration. A
-board that arrives already written SHALL NOT be held to it, since nothing
-reads its tier.
+columns that only a deduction above Easy can tell apart.
 
 #### Scenario: An identity-hidden Easy deal is refused
 
 - **WHEN** parameters about to deal a board request an identity-hidden Easy
   puzzle
 - **THEN** the engine refuses them with a reason
-
-#### Scenario: The Custom dialog hides the identity with Easy chosen
-
-- **WHEN** the player unticks "Show identity" while Easy is chosen
-- **THEN** Easy is disabled and the difficulty shows Normal, and OK deals a
-  board with no refusal
 
 ### Requirement: A size is refused at a tier none of its boards need
 
@@ -122,14 +106,12 @@ out-of-range number and an unknown character.
   validated
 - **THEN** it is rejected with a message distinguishing which
 
-### Requirement: Group ports the graded group-axiom solver over the shared Latin solver
+### Requirement: Group's solver has five tiers and no technique beyond them
 
-Group SHALL solve using the shared `src/engine/latin.ts` engine, supplying
-only its group-specific deductions and its validator. A completed grid SHALL
-be accepted only if it is associative. The solver SHALL NOT have a tier beyond
-its five, and SHALL NOT implement an inverse-based, a hard-mode-associativity
-or an element-order technique: the difficulty grading depends on their
-absence.
+A completed grid SHALL be accepted only if it is associative. The solver SHALL
+NOT have a tier beyond its five, and SHALL NOT implement an inverse-based, a
+hard-mode-associativity or an element-order technique: the difficulty grading
+depends on their absence.
 
 #### Scenario: The solver grades a board at the intended difficulty
 
@@ -152,27 +134,26 @@ a Group-specific technique.
   blank at Normal or harder
 - **THEN** the solver places `a(bc)` equal to `(ab)c`
 
-### Requirement: Group generation from the group data table
+### Requirement: A Group board is a group from the data table
 
-Group SHALL generate a board by selecting a group of the requested order from
-the transcribed group data table, decompressing its generators into the full
-Cayley table by breadth-first search, permuting its elements (fixing the
-identity in place when the identity is shown), then removing clues one at a
-time while the board stays uniquely solvable at the requested difficulty.
-Generation SHALL reject a board that is solvable one tier below the target.
+Group SHALL deal a board whose solution is a group of the requested order
+taken from the transcribed group data table, its elements permuted, with the
+identity kept in place when the identity is shown. Its clues SHALL admit
+exactly one completion, at the requested difficulty.
 
-#### Scenario: A board is never a tier too easy
+#### Scenario: A generated board is a solvable group table
 
-- **WHEN** a board is generated above Easy
-- **THEN** the solver capped one tier below the requested difficulty does not
-  solve it
+- **WHEN** a new game is generated for a legal size and difficulty in either
+  identity mode
+- **THEN** its clues admit exactly one completion, that completion is a valid
+  group table, and the solver grades it at the requested difficulty
 
 ### Requirement: An identity-hidden board blanks two rows and columns
 
 In identity-hidden mode, generation SHALL blank the identity's row and column
 and one further row and column before it removes clues, so the identity cannot
-be read directly, and SHALL check that the board is still solvable at its
-difficulty afterward, starting again when it is not.
+be read directly, and the board SHALL still be solvable at its difficulty
+afterward.
 
 #### Scenario: Identity-hidden boards do not reveal the identity
 
@@ -180,23 +161,12 @@ difficulty afterward, starting again when it is not.
 - **THEN** the identity's row and column, and one further row and column, are
   blank, and the board is still uniquely solvable at its difficulty
 
-### Requirement: Group fills a cell from a selection
-
-Group SHALL be played with mouse and keyboard: selecting a cell and typing an
-element's letter fills it, and a right-click selects a cell for pencil marks.
-Filling a cell SHALL be idempotent. Setting an immutable cell to the value it
-already holds SHALL be permitted, so a multifill need not detour around it.
-
-#### Scenario: Typing the letter a cell already holds
-
-- **WHEN** a selected cell holds an element and the player types that
-  element's letter
-- **THEN** the cell still holds it
-
 ### Requirement: A diagonal drag fills a whole diagonal at once
 
 A diagonal drag from a selected cell SHALL extend the selection along that
 diagonal, and an element entered then SHALL fill every cell of it at once.
+Filling a cell SHALL be idempotent. Setting an immutable cell to the value it
+already holds SHALL be permitted, so a multifill need not detour around it.
 
 #### Scenario: A diagonal multifill sets several cells at once
 
@@ -218,18 +188,6 @@ elements are dragged apart.
 - **WHEN** a row header is dragged to a new position such that a divider's two
   bordering elements are no longer adjacent
 - **THEN** the affected divider is removed
-
-### Requirement: Group's table order and subgroup lines have keyboard routes
-
-Every change Group's pointer makes to the table's arrangement SHALL also be
-reachable by the keyboard alone, each making the same move as its pointer
-route.
-
-#### Scenario: The keyboard and the pointer make one move
-
-- **WHEN** the cursor shows on a column and the player presses Shift+Right
-- **THEN** the move is the one dragging that column's heading one column right
-  makes
 
 ### Requirement: Shift and an arrow move the cursor's row or column
 
@@ -282,7 +240,8 @@ associativity failures in the error color, and flash on completion.
 collection's cell surface, and every cell holding a given element on the
 collection's lifted surface of a given, so that a given is told by the cell
 under it as well as by its ink. The legend SHALL stay on the board, outside
-the surface.
+the surface. The selection's wash and its pencil-mode corner SHALL be drawn
+over whichever surface the cell has.
 
 #### Scenario: A given is told by the cell under it
 
@@ -315,25 +274,11 @@ pencil marks, and SHALL NOT be told by a shade of the cell's surface.
 - **THEN** the given's cell is the lifted surface and the other the cell
   surface, each with the stroke under its content
 
-### Requirement: The selection and the hint keep clear of a cell's surface
+### Requirement: Group's hint deduces from the placed entries, never the notes
 
-The selection's wash and its pencil-mode corner SHALL be drawn over whichever
-surface the cell has. The hint's marks SHALL stay at the cell's edge.
-
-#### Scenario: A hint rings a cell
-
-- **WHEN** a hint step acts on a cell
-- **THEN** its ring is drawn on the cell's border, and the cell's element or
-  pencil marks are not painted over
-
-### Requirement: Group provides an explained deduction hint
-
-The game SHALL implement `hint(state, aux?, ui?)`, returning a plan of
-`HintStep`s that teaches the player the next deduction. The plan SHALL be
-built by walking a working copy of the board the way a person solves it, over
-a sound candidate cube seeded from the placed entries only and never from the
-player's pencil notes: a note can be wrong, which is what `findMistakes`
-flags.
+The hint's plan SHALL be deduced over a sound candidate cube seeded from the
+placed entries only and never from the player's pencil notes: a note can be
+wrong, which is what `findMistakes` flags.
 
 #### Scenario: A wrong note does not steer the deduction
 
@@ -345,10 +290,11 @@ flags.
 ### Requirement: Group's own placements lead the eliminations
 
 The plan SHALL prefer a naked single, placed by a `set` move: an empty cell
-whose notes have collapsed to one candidate. Next SHALL come an associativity placement or an identity
-fill wherever the board shows its premise, and, until the notes are set up,
-any single the board shows. Then SHALL come the eliminations, and last a
-forced generic placement.
+whose notes have collapsed to one candidate. Next SHALL come an associativity
+placement or an identity fill wherever the board shows its premise, and, until
+the notes are set up, any single the board shows. Then SHALL come the
+eliminations, and last a forced generic placement. Group SHALL start on the
+implicit reading, which has no populate step.
 
 #### Scenario: Associativity is taught before any note is needed
 
@@ -356,21 +302,6 @@ forced generic placement.
   `(a·b)·c` are filled but `a·(b·c)` is not
 - **THEN** the plan's first step is a placement, and no note is written
   before it
-
-### Requirement: Notes are penciled in only when an elimination needs them
-
-Under the populate reading, a populate step SHALL fill every empty cell's
-candidate notes by the `pencilAll` move, and SHALL be emitted only when some
-empty cell lacks notes. Group SHALL start on the
-implicit reading, which has no populate step. Each placement SHALL teach the
-row and column eliminations its value implies, struck by a `pencilStrike`
-move.
-
-#### Scenario: A placement teaches its cull
-
-- **WHEN** a hint places an element in a cell whose row or column holds notes
-  of that element
-- **THEN** a strike of those notes continues the placement's journey
 
 ### Requirement: The hint teaches Group's three deductions
 
@@ -401,29 +332,12 @@ shows is not the identity.
   of `a`, narrated from that product: it is not `b`, as it would be if `a`
   were the identity
 
-### Requirement: A generic placement says whether it is naked or hidden
+### Requirement: A Group hint names cells by their letters and associativity by its triple
 
-A forced generic placement SHALL be narrated and highlighted by which it is: a
-naked single (the cell's own candidates collapsed to one) or a hidden single
-(a value that fits only one cell of a row or column, the cell still showing
-several candidates). The recorded reason does not tell them apart, so the
-reason SHALL be re-derived from the working board.
-
-#### Scenario: A hidden single names its line
-
-- **WHEN** the hint places a value that fits only one cell of a row, in a cell
-  that still shows several candidates
-- **THEN** the step is narrated as a hidden single in that row, and not as a
-  naked single
-
-### Requirement: A Group hint's narration explains why
-
-Each step SHALL carry a narration meeting the hint quality bar: it leads with
-the spotted indication, then the reasoning, then a conclusion in the voice of
-necessity. It SHALL refer to each cell by the element letter it shows. The
-associativity step SHALL state the actual triple and the three known products
-that force the fourth, teaching the technique and not merely pointing at the
-cell.
+A step's narration SHALL refer to each cell by the element letter it shows.
+The associativity step SHALL state the actual triple and the three known
+products that force the fourth, teaching the technique and not merely pointing
+at the cell.
 
 #### Scenario: The associativity step names its triple
 
@@ -431,13 +345,11 @@ cell.
 - **THEN** its narration gives the three products as equations in the letters
   the board shows, and says the other bracketing must be the same element
 
-### Requirement: One firing of a deduction is one journey
+### Requirement: Learning the identity fills its row and column as one journey
 
-A single firing that forces several cells (the identity fill) SHALL be one
-journey, its continuation legs flagged `continuesPrevious`, and equivalent
-placements of one firing SHALL share the target hint color. One recorded
-firing SHALL map to exactly one `group`, so a hint step never mixes
-deductions.
+Learning the identity forces every empty cell of its row and column at once.
+Those placements SHALL be one journey, its continuation legs flagged
+`continuesPrevious`, and never separate hints.
 
 #### Scenario: The identity's row and column are filled as one journey
 
@@ -446,71 +358,6 @@ deductions.
 - **THEN** the placements filling the identity's row and column are emitted as a
   single multi-leg journey (continuation legs flagged `continuesPrevious`), not as
   separate hints
-
-### Requirement: A Group hint is refused on a solved or mistaken board
-
-A hint SHALL be refused when the board is solved or when `findMistakes` is
-non-empty, by the midend before it asks the game, and the mistakes refusal
-SHALL light the mistake overlay.
-
-#### Scenario: The hint refuses on a board with mistakes
-
-- **WHEN** a hint is requested while `findMistakes` is non-empty
-- **THEN** the hint refuses and the engine lights the mistake overlay
-
-### Requirement: The hint never teaches a guess
-
-The deduction SHALL be capped below recursion, since a guess is not a
-teachable step. When no forced move exists below recursion the hint SHALL
-refuse honestly and SHALL NOT invent one.
-
-#### Scenario: Only a guess is left
-
-- **WHEN** a hint is requested on a board whose next cell only recursion
-  decides
-- **THEN** the hint refuses
-
-### Requirement: Every hint step is monotone progress
-
-Every step SHALL be monotone progress, never undone by the hint: a note added,
-a note removed by a strike, or a cell filled by a placement. A freshly
-recomputed hint from any solvable, mistake-free mid-game position SHALL
-therefore make progress and lead to a solved board. On recompute the plan
-SHALL skip any operation already reflected on the board.
-
-#### Scenario: The hint resumes from a self-played mid-game position
-
-- **WHEN** a hint is requested from a solvable, mistake-free board the player
-  reached by their own placements
-- **THEN** the freshly-recomputed hint makes progress and, applied step by step
-  with recompute, leads to a solved board
-
-### Requirement: A stored Group plan follows the player's moves
-
-`hintKeepTrack` SHALL advance the plan when the player's move matches the
-displayed step's intent: a `set` of the hinted value is `completed`, and a
-pencil strike clearing a subset of the step's marks is `onTrack` or
-`completed`. Any other move SHALL drop the plan (`off`). `refreshHintStep`
-SHALL drop a stored step's dead marks, or resolve the step, before each
-display, so a kept plan never tells the player to act on something already
-resolved.
-
-#### Scenario: The player strikes one of a step's marks
-
-- **WHEN** the displayed step strikes several marks and the player clears one
-  of them
-- **THEN** the verdict is `onTrack`, and the step is shown again without that
-  mark
-
-### Requirement: Recording leaves the solver's verdicts alone
-
-Every recording branch of the solver SHALL be gated on the recorder, so that
-with recording off the generator and solve path is byte-for-byte unchanged.
-
-#### Scenario: The generator solves with no recorder
-
-- **WHEN** the generator or `solve` runs the solver, which passes no recorder
-- **THEN** no recording branch runs
 
 ### Requirement: Group's Check & Save flags pencil marks that have crossed out the answer
 

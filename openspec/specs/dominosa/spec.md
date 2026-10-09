@@ -2,21 +2,21 @@
 
 ## Purpose
 Dominosa, the puzzle of tiling a grid of numbers with dominoes so that every
-pairing, doubles included, appears exactly once, with an explained deductive
-hint drawn distinctly and a domino reference that highlights where each pair
-can occur.
+pairing, doubles included, appears exactly once: its rules, its params and
+description encodings, its controls, what each tier's solver may use, its
+explained deductive hint, its domino reference with a spotlight on where a
+pair can go, and the decisions about how its board is drawn.
 
 ## Requirements
 
-### Requirement: Dominosa game implements the Game interface
+### Requirement: Dominosa tiles a grid of numbers with one of every domino
 
-The engine SHALL provide a registered `dominosa` game implementing `Game`:
-partition a grid of numbers, each `0…n`, into 2×1 dominoes so that the placed
-dominoes are exactly the `DCOUNT(n) = (n+1)(n+2)/2` distinct number-pairs
-`0-0 … n-n`, one of each, with every domino's two numbers matching the
-underlying clues. The grid SHALL be `n+1` wide and `n+2` tall when `tall` is
-set, and `n+2` wide and `n+1` tall when it is not. The game SHALL provide
-`solve`, and `textFormat` for `n < 1000`.
+The puzzle SHALL be to partition a grid of numbers, each `0…n`, into 2×1
+dominoes so that the placed dominoes are exactly the
+`DCOUNT(n) = (n+1)(n+2)/2` distinct number-pairs `0-0 … n-n`, one of each,
+with every domino's two numbers matching the underlying clues. The grid SHALL
+be `n+1` wide and `n+2` tall when `tall` is set, and `n+2` wide and `n+1` tall
+when it is not.
 
 #### Scenario: A board that is not tall is the wide one
 
@@ -71,15 +71,6 @@ default tier stands.
 - **WHEN** `"6da"` is decoded
 - **THEN** `diff` is the default tier, Normal, and the params are valid
 
-### Requirement: Dominosa offers upstream's presets, dealt tall
-
-Every one of upstream's presets SHALL be offered, each dealt tall.
-
-#### Scenario: Every preset is tall
-
-- **WHEN** the presets are listed
-- **THEN** each one's params have `tall` set
-
 ### Requirement: Dominosa refuses params outside its bounds
 
 Params with `n` below 1, or with a difficulty that is no tier, SHALL be
@@ -103,11 +94,10 @@ that size reaches.
 ### Requirement: Dominosa descriptions carry the clue grid
 
 The desc SHALL be a row-major string of the `w·h` clue numbers, each rendered as
-a single digit or, for a number ≥ 10, as `[NN]` in decimal. `newState` SHALL
-parse this into a frozen per-square `numbers` array shared across all states of
-the game. `validateDesc` SHALL reject a desc that is too short or too long, a
-number out of the range `0…n`, a missing `]`, and a clue grid in which any
-number `0…n` does not occur exactly `n+2` times.
+a single digit or, for a number ≥ 10, as `[NN]` in decimal. `validateDesc`
+SHALL reject a desc that is too short or too long, a number out of the range
+`0…n`, a missing `]`, and a clue grid in which any number `0…n` does not occur
+exactly `n+2` times.
 
 #### Scenario: A description round-trips
 
@@ -164,15 +154,13 @@ Cursor keys SHALL move a half-grid keyboard cursor over the
 
 The game SHALL mark the board completed when the placed dominoes cover every
 square as the full set of `DCOUNT(n)` distinct number-pairs with no repeated
-value, and SHALL flash on the transition to completed, unless it is reached via
-Solve.
+value.
 
 #### Scenario: The last domino of the set completes the board
 
 - **WHEN** every other domino of the set is in place and the player places
   the one still missing
-- **THEN** the board is completed and the flash plays
-- **AND** a board completed by Solve plays no flash
+- **THEN** the board is completed
 
 ### Requirement: Dominosa flags a domino the unique solution lacks
 
@@ -252,17 +240,16 @@ display while still advancing the deduction.
 - **THEN** the plan shows a step for the other spot only, and the deduction
   goes on as if both were ruled out
 
-### Requirement: A hint is refused on a solved, mistaken or ambiguous board
+### Requirement: A hint is refused on an ambiguous board
 
-A hint SHALL be refused when the board is already solved or contains a mistake,
-lighting the `findMistakes` overlay, by the midend before it asks the game.
 `hint()` SHALL refuse (`{ ok: false, error }`) on a board that is not uniquely
 solvable, which has no forced deduction to teach.
 
-#### Scenario: A hint refuses on a solved board
+#### Scenario: A board with two solutions gets no plan
 
-- **WHEN** a hint is requested on a completed board
-- **THEN** the midend refuses it with a non-empty message before calling `hint`
+- **WHEN** a hint is requested on a board whose clue grid has more than one
+  solution
+- **THEN** `hint()` returns a refusal and no step
 
 ### Requirement: The hint recorder is gated
 
@@ -278,10 +265,7 @@ path the generator runs is unchanged by it.
 
 The renderer SHALL draw the current hint step's forced cells (a placement's two
 squares, or a barrier's two squares and its edge) in `COL_HINT`, and the
-deduction's evidence squares in `COL_HINT_CELL`, with the hint-overlay palette
-entries appended past the colors the board, dominoes, barrier edges and value
-highlights take, and every hint bit included in the render diff key so the
-overlay paints and clears correctly.
+deduction's evidence squares in `COL_HINT_CELL`.
 
 #### Scenario: A placement hint highlights the target domino cells
 
@@ -291,34 +275,25 @@ overlay paints and clears correctly.
 ### Requirement: Dominosa provides a domino reference with pair-occurrence highlight
 
 Dominosa SHALL implement the engine reference-aid hooks so the app shows a
-domino reference: a checklist of the game's fixed inventory of
-`DCOUNT(n) = (n+1)(n+2)/2` distinct number-pairs (`0-0 … n-n`), each with found
-status, and a click-to-highlight of a pair's candidate placements.
+domino reference: a checklist of exactly one item for each of the game's
+`DCOUNT(n)` distinct number-pairs (`0-0 … n-n`), each carrying its two face
+values as `pips`, an `"a–b"` `label` and its found status, with a
+click-to-highlight of a pair's candidate placements. The model's `selected`
+SHALL be the highlighted pair's key, or null.
 
 #### Scenario: The reference lists the whole set
 
-- **WHEN** `reference()` is asked on any board of maximum number `n`
-- **THEN** it returns `DCOUNT(n)` items, one for each pair from `0-0` to `n-n`
-
-### Requirement: The reference has one item for each domino
-
-`reference(state, ui)` SHALL enumerate exactly one `ReferenceItem` per domino
-index `0 … DCOUNT(n)-1`, each carrying its two face values as `pips` and an
-`"a–b"` `label`. The model's `selected` SHALL be the currently highlighted
-pair's key, or null.
-
-#### Scenario: Nothing is selected until a pair is highlighted
-
-- **WHEN** `reference()` is asked while no pair is highlighted
-- **THEN** `selected` is null, and each item carries its two numbers as `pips`
+- **WHEN** `reference()` is asked on any board of maximum number `n` while no
+  pair is highlighted
+- **THEN** it returns `DCOUNT(n)` items, one for each pair from `0-0` to `n-n`,
+  each carrying its two numbers as `pips`, and `selected` is null
 
 ### Requirement: A reference item's status counts the player's own dominoes
 
 Status SHALL be derived purely from the player's placed dominoes, with no
-solver and no solution information, by scanning `grid`: for each square `i`
-with `grid[i] > i`, the placed pair is `DINDEX(numbers[i], numbers[grid[i]])`.
-An index placed zero times SHALL be `outstanding`, once SHALL be `placed`, and
-two or more times SHALL be `conflict`.
+solver and no solution information. A pair placed zero times SHALL be
+`outstanding`, once SHALL be `placed`, and two or more times SHALL be
+`conflict`.
 
 #### Scenario: The checklist reflects placed, outstanding, and conflicting pairs
 
@@ -327,27 +302,12 @@ two or more times SHALL be `conflict`.
 - **THEN** `reference()` returns `DCOUNT(n)` items in which `2-5` is `placed`,
   `0-0` is `outstanding`, and `1-3` is `conflict`
 
-### Requirement: The highlighted pair is Ui-only state
+### Requirement: The highlighted pair clears on completion and survives a move
 
-The `DominosaUi` SHALL carry a `highlightPair: number | null` field, a domino
-index or null. `selectReference(ui, key)` SHALL set it from the item key, or
-clear it, and report whether it changed. It SHALL coexist with the
-number-highlight aid as an independent visual channel, and is `Ui`-only state:
-never a move, never serialized.
-
-#### Scenario: Selecting a pair adds nothing to the game's record
-
-- **WHEN** a pair is highlighted and the highlight is later cleared
-- **THEN** neither selecting nor clearing it added a move, an undo entry, or
-  anything to the saved game
-
-### Requirement: The highlighted pair clears on completion and on a board tap, and survives a move
-
-`highlightPair` SHALL be reset to null when the board is completed, together
-with the number-highlight slots, and SHALL be dismissed by any board tap. It
-SHALL NOT otherwise be cleared by `executeMove`, so a programmatic move or the
-panel closing keeps it, which is what lets a player mark a pair, close the
-panel and then place it.
+The highlighted pair SHALL be reset to null when the board is completed,
+together with the number-highlight slots. It SHALL NOT otherwise be cleared by
+`executeMove`, so a programmatic move or the panel closing keeps it, which is
+what lets a player mark a pair, close the panel and then place it.
 
 #### Scenario: The highlight clears on completion
 
@@ -376,9 +336,8 @@ When `highlightPair` is set, `redraw` SHALL box **both** squares of every
 orthogonally adjacent square-pair whose two clue values are that domino, which
 are all its candidate placements, and SHALL box no other squares. The box SHALL
 be in a dedicated `COL_REFERENCE`, the collection's color for what the player
-is after, which no domino, mistake, hint or value highlight takes. The
-highlight state SHALL be folded into the render cache key so the box appears
-and clears on selection change.
+is after, which no domino, mistake, hint or value highlight takes. It SHALL
+coexist with the number-highlight aid as an independent visual channel.
 
 #### Scenario: Selecting a pair boxes exactly its candidate placements
 
@@ -388,19 +347,19 @@ and clears on selection change.
 - **AND** selecting it again clears the boxes, and selecting another pair
   replaces them
 
-### Requirement: Dominosa solves with a graded deductive solver
+### Requirement: A generated Dominosa board needs its tier and no more
 
-The solver SHALL grade by difficulty, returning the impossible / unique /
-ambiguous (0 / 1 / 2) verdict, and SHALL track the maximum difficulty level
-actually used.
+A board generated at a tier SHALL have exactly one solution, which the solver
+finds when capped at that tier and, above Easy, does not find when capped one
+tier below.
 
 #### Scenario: A generated board is uniquely solvable at its difficulty
 
 - **WHEN** a board generated at difficulty `d` is solved from empty
-- **THEN** the solver returns unique (1) and reports the maximum difficulty
-  used as `d`
-- **AND** for a board above Easy, it fails to reach a unique solution (returns
-  2) when capped at the difficulty one level below `d`
+- **THEN** the solver returns unique and reports the maximum difficulty used
+  as `d`
+- **AND** for a board above Easy, it fails to reach a unique solution when
+  capped at the difficulty one level below `d`
 
 ### Requirement: Each Dominosa tier adds its deductions to the tier below
 
@@ -417,17 +376,16 @@ forcing-chain deduction.
   Normal
 - **THEN** the verdict is ambiguous (2)
 
-### Requirement: Parity and forcing chains are found on the placement graph
+### Requirement: What the parity and forcing-chain deductions conclude
 
 The parity deduction SHALL rule out a domino whose placement would split the
-unfilled area into two odd-sized regions, detected by bridge-finding over the
-placement graph. The forcing-chain deduction SHALL follow parity-linked chains
-of forced placements, using a flip DSF.
+unfilled area into two odd-sized regions. The forcing-chain deduction SHALL
+follow parity-linked chains of forced placements.
 
-#### Scenario: A placement that is a bridge is ruled out
+#### Scenario: A placement that splits the board oddly is ruled out
 
-- **WHEN** a spot is a bridge of the placement graph, and a domino on it would
-  leave an odd number of unfilled squares on each side
+- **WHEN** a domino on a spot would leave an odd number of unfilled squares on
+  each side of it
 - **THEN** the parity deduction rules a domino out of that spot
 
 ### Requirement: The forcing chain grades boards and is never narrated
@@ -444,13 +402,12 @@ over all placements is a search and no hint narrates a search on any tier.
 
 ### Requirement: Dominosa renders dominoes, barriers and overlays under the web geometry
 
-The renderer SHALL draw the rounded-corner domino ends (circles plus
-rectangles), the clue numbers, the barrier edge lines, the two value-highlight
+The renderer SHALL draw the rounded-corner domino ends, the clue numbers, the barrier edge lines, the two value-highlight
 colors, the red clash fill, the half-grid cursor corners, and the completion
 flash, with the board's border set to minus the domino gutter, so the gutters
 bleed to the canvas edge. Every per-square overlay (domino type / clash /
-highlight / edge / cursor / flash / mistake) SHALL be part of the render diff
-key so it repaints and clears correctly.
+highlight / edge / cursor / flash / mistake / hint / reference spotlight) SHALL
+be part of the render diff key so it repaints and clears correctly.
 
 #### Scenario: A clash renders red
 

@@ -5,28 +5,18 @@ Galaxies, the puzzle of dividing a grid along its edges into regions that each
 have two-way rotational symmetry about the one dot they contain: uniquely
 solvable boards at each difficulty, a two-way drag that assigns squares to
 dots, mistake highlighting, and a deduction hint narrated in terms of which dot
-a square belongs to.
+a square belongs to. What every game does the same way (registration, pure
+moves, the win flash, the hint's refusal on a mistaken board) is in `ts-engine`
+and `engine-hints`, and is not restated here.
 
 ## Requirements
 
-### Requirement: Galaxies parameters and presets
-
-Galaxies SHALL support a width, a height, and a difficulty of `Easy` or
-`Unreasonable`. It SHALL offer the presets 7×7, 10×10 and 15×15, each in Easy
-and in Unreasonable.
-
-#### Scenario: Preset and game-ID parameters select a board
-
-- **WHEN** a Galaxies preset or a `params:desc` / `params#seed` game ID is
-  chosen
-- **THEN** the engine produces a Galaxies board of the requested size and
-  difficulty
-
 ### Requirement: Galaxies parameter strings decode leniently and round-trip
 
-Parameter decoding SHALL accept a bare size as a square board (`"7"` is 7×7),
-the form `WxH`, and an optional trailing `dn` for the Easy tier or `du` for
-Unreasonable. Encoding SHALL round-trip a decoded parameter set.
+Galaxies' parameters SHALL be a width, a height, and a difficulty of `Easy` or
+`Unreasonable`. Parameter decoding SHALL accept a bare size as a square board
+(`"7"` is 7×7), the form `WxH`, and an optional trailing `dn` for the Easy tier
+or `du` for Unreasonable. Encoding SHALL round-trip a decoded parameter set.
 
 #### Scenario: The lenient forms decode
 
@@ -35,24 +25,13 @@ Unreasonable. Encoding SHALL round-trip a decoded parameter set.
   for the last
 - **AND** encoding each result and decoding it again gives the same parameters
 
-### Requirement: Galaxies refuses a size outside its bounds with a reason
-
-A width or a height below 3, or unreasonably large, SHALL be refused with a
-human-readable reason.
-
-#### Scenario: A board too small is refused
-
-- **WHEN** a 2×7 board is asked for
-- **THEN** it is refused with a sentence saying the width must be at least 3
-
 ### Requirement: Galaxies generates uniquely-solvable boards at the requested difficulty
 
 For every preset, `newDesc` SHALL produce a board whose layout of dots admits
 exactly one valid tile-to-dot association under 180° rotational symmetry about
 each dot, and whose minimum solver difficulty matches the requested `Easy` or
-`Unreasonable`. The generator SHALL retry until the solver-verified difficulty
-matches. A board the solver diagnoses as `Ambiguous`, `Impossible`, or at a
-different difficulty than requested SHALL NOT be returned.
+`Unreasonable`. A board the solver diagnoses as `Ambiguous`, `Impossible`, or
+at a different difficulty than requested SHALL NOT be returned.
 
 #### Scenario: Generated boards are uniquely solvable at the right difficulty
 
@@ -73,40 +52,16 @@ verdicts `Normal` (solvable at the Easy tier), `Unreasonable`, `Ambiguous`,
 - **WHEN** the solver runs on a position with no consistent association
 - **THEN** it reports `Impossible` rather than returning a move
 
-### Requirement: Galaxies moves are pure
-
-`executeMove` SHALL be pure, returning a new state, for every kind of move: an
-edge toggle, an association added during a drag, an association removed
-together with its opposite, a dot-hold toggle, and the solver's move.
-
-#### Scenario: An edge toggle leaves the earlier state alone
-
-- **WHEN** a move toggles an edge
-- **THEN** the state `executeMove` returns has the edge toggled
-- **AND** the state it was given is unchanged
-
 ### Requirement: Galaxies reports solved from its edges
 
 The game SHALL report `solved` when the set edges divide the board into regions
 that are each symmetric about the one dot at their center, with no other dot on
-them and no set edge inside them. The status SHALL be upgraded to
-`solved-with-help` if the solver was used to get there.
+them and no set edge inside them.
 
 #### Scenario: Solving and completion
 
 - **WHEN** the player completes the partition into a valid galaxy for every dot
 - **THEN** the game status becomes `solved`
-- **AND** if the built-in solver was used to get there it is `solved-with-help`
-
-### Requirement: Moving the keyboard cursor adds no history
-
-Moving the keyboard cursor SHALL redraw and SHALL NOT add a history entry.
-
-#### Scenario: The cursor walks without touching Undo
-
-- **WHEN** the player moves the cursor with the cursor keys
-- **THEN** the board redraws with the cursor in its new place
-- **AND** Undo has nothing new to undo
 
 ### Requirement: The association drag runs from either button, the keyboard, and either end
 
@@ -249,15 +204,6 @@ filled in its dot's color. An association SHALL NOT color a tile.
   not yet closed
 - **THEN** the tile shows its arrow on the plain cell surface
 
-### Requirement: Galaxies flashes on completion
-
-Completion SHALL trigger a flash.
-
-#### Scenario: The last wall flashes the board
-
-- **WHEN** the move that completes the board is made
-- **THEN** the board flashes
-
 ### Requirement: Galaxies reports its difficulty in the status bar
 
 The game SHALL provide a status-bar string reporting the current puzzle's
@@ -276,18 +222,6 @@ The game SHALL provide a plain-text format of the board.
 
 - **WHEN** the board is asked for as text
 - **THEN** each dot is an `o` and each set edge is a `|` or a `-`
-
-### Requirement: Galaxies derives its surfaces from the host background
-
-The colors of Galaxies' surfaces SHALL be derived from the supplied default
-background. `redraw` SHALL paint the outer border on its first draw, over the
-ground the midend lays.
-
-#### Scenario: The palette follows the host
-
-- **WHEN** Galaxies is played through the app
-- **THEN** the cell surface, the grid line and the region fills are derived
-  from the host background
 
 ### Requirement: An association drag previews discretely
 
@@ -429,16 +363,6 @@ next transition by the engine's mistake lifecycle.
 - **THEN** the renderer highlights the tile, and draws the wall in the mistake
   color
 
-### Requirement: Galaxies is registered in the engine registry
-
-The `galaxies` puzzle SHALL be implemented as a native TS `Game` registered in
-the engine registry, so the worker serves `galaxies` via the TS midend.
-
-#### Scenario: Galaxies loads on the TS engine
-
-- **WHEN** the app opens `galaxies`
-- **THEN** it is constructed by the TS-midend-backed puzzle
-
 ### Requirement: Galaxies explains its deductions in association vocabulary
 
 Galaxies SHALL implement the engine's `hint()` hook as a recorded projection of
@@ -507,19 +431,6 @@ marks the same objects, a dot and a cell, while the player follows a hint.
 - **THEN** its evidence and its action are drawn in the hint legend's two
   colors, neither of them the drag preview's
 
-### Requirement: A hint refuses on a board with a mistake
-
-The hint SHALL couple to mistake checking: a request on a board with any
-flagged mistake, tile or wall, SHALL refuse with the banner and light the
-mistakes instead.
-
-#### Scenario: Refusal on a mistaken board
-
-- **WHEN** a hint is requested while any tile or wall contradicts the unique
-  solution
-- **THEN** the hint refuses with the banner and the mistake overlay lights the
-  offenders
-
 ### Requirement: A stored plan survives the player working ahead
 
 A stored plan SHALL survive the player working ahead: a step whose tile the
@@ -561,15 +472,6 @@ reaching it is what the Unreasonable tier means.
 - **WHEN** hints are followed from a fresh board at the Easy tier
 - **THEN** every step is a deduction whose premise is visible on the board as
   it stands, and the board reaches solved
-
-### Requirement: Galaxies is in the cross-game hint guards
-
-Galaxies SHALL be enrolled in the cross-game hint guards.
-
-#### Scenario: The guards derive their games
-
-- **WHEN** the cross-game hint guards take the games that declare `hint()`
-- **THEN** `galaxies` is among them
 
 ### Requirement: Galaxies draws its cells on the collection's quiet surface
 

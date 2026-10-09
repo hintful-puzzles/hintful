@@ -9,19 +9,12 @@ go and what a cell can hold.
 
 ## Requirements
 
-### Requirement: Subsets game implements the Game interface
+### Requirement: Subsets is solved when every set is placed once and every clue holds
 
-The engine SHALL provide `src/games/subsets/` implementing the `Game`
-interface for Subsets, registered so the puzzle is served by the TypeScript
-engine. The game SHALL be solved when every set is placed exactly once and
-every clue holds. Subsets is a deductive puzzle with a unique solution, so it
-SHALL declare a `findMistakes` hook.
-
-#### Scenario: The preset produces a soluble board
-
-- **WHEN** a new game is generated for any preset
-- **THEN** a board is produced whose given clues are internally consistent and
-  whose full solution the solver reaches at that preset's tier
+The game SHALL be solved when every set is placed exactly once and every clue
+holds. A horseshoe between two neighbors says that one cell's set contains the
+other's; two neighbors with no horseshoe between them SHALL hold sets neither
+of which contains the other.
 
 #### Scenario: Completing the grid wins and flashes
 
@@ -34,7 +27,8 @@ Parameters SHALL be a width, a height, a universe size `n` and a difficulty
 tier. Validation SHALL accept only `4×4` with `n = 4`. There SHALL be one
 preset per tier. A game ID SHALL encode the width, height, universe size and
 tier and round-trip through decode, and each tier SHALL encode to a *distinct*
-ID.
+ID. A game ID whose difficulty character names no tier SHALL be refused, and
+SHALL NOT be played at another tier in its place.
 
 #### Scenario: A game ID round-trips through the parameters
 
@@ -45,11 +39,6 @@ ID.
 
 - **WHEN** parameters other than `4×4` with `n = 4` are validated
 - **THEN** they are rejected: "Currently only 4x4 puzzles are supported."
-
-### Requirement: A tier naming no rung is refused
-
-A game ID whose difficulty character names no tier SHALL be refused, and SHALL
-NOT be played at another tier in its place.
 
 #### Scenario: An unrecognized difficulty character is rejected
 
@@ -66,18 +55,6 @@ shape has exactly one legal value, so the tier is the only field.
 - **WHEN** the Custom dialog is opened for Subsets
 - **THEN** it holds one field, the difficulty, and none for the width, the
   height or the universe size
-
-### Requirement: Subsets declares the difficulty contract
-
-Subsets SHALL declare the `Game.difficulty` contract, so its tiers fall under
-the cross-game cap-monotonicity and tier-reachability guards rather than
-under hand-written per-game ones.
-
-#### Scenario: The contract solves a board at a cap
-
-- **WHEN** the contract is asked to solve a generated board's description at
-  the board's own tier
-- **THEN** it reports the board solved
 
 ### Requirement: Subsets descriptions use the per-cell arrow encoding
 
@@ -118,8 +95,7 @@ Subsets SHALL be played by toggling individual letter slots within each cell.
 A left-click or select SHALL cycle a slot unknown → known → cleared → unknown,
 a right-click or secondary select SHALL cycle unknown → cleared → known →
 unknown, and Backspace SHALL reset a slot to unknown. A given (immutable) slot
-SHALL NOT change. A move SHALL be modeled as a discriminated union, not a move
-string.
+SHALL NOT change.
 
 #### Scenario: Toggling a letter slot cycles its state
 
@@ -157,18 +133,6 @@ mistake color.
 
 - **WHEN** a set is ruled out of the cell the unique solution puts it in
 - **THEN** `findMistakes` reports that rule-out and the hint refuses
-
-### Requirement: Solve fills the board without the win flash
-
-A Solve action SHALL fill the board from the solver unless the board is
-invalid, and SHALL complete the game as solved-with-help without firing the
-win flash.
-
-#### Scenario: Solve is used on a generated board
-
-- **WHEN** Solve is used on an unfinished generated board
-- **THEN** every cell holds its set, the game is reported solved with help, and
-  no flash plays
 
 ### Requirement: What Subsets draws
 
@@ -359,8 +323,7 @@ unfinished or invalid, driven by a candidate-elimination fixpoint over the set
 of possible set-values per cell. It SHALL apply arrow propagation (a superset
 cell contains its subset neighbor's confirmed letters, and a subset cell cannot
 hold letters its superset lacks), missing-arrow disjointness, single-count and
-single-position placement, and the advanced arrow-subset elimination, in the
-upstream order.
+single-position placement, and the advanced arrow-subset elimination.
 
 #### Scenario: The solver classifies a board
 

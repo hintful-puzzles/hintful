@@ -4,21 +4,10 @@
 Seismic, the puzzle of numbering each area of size N with 1 to N, under either
 the Seismic rule that equal numbers N in a line have at least N cells between
 them or the Tectonic rule that equal numbers never touch, even diagonally. It
-has note-taking, mistake-checking against the unique solution, an explained
-hint, and an on-screen keypad sized to the largest area its generator produces.
+has note-taking, an explained hint, a size bound measured for each mode, and
+an on-screen keypad sized to the largest area its generator produces.
 
 ## Requirements
-
-### Requirement: Seismic game implements the Game interface
-
-The engine SHALL provide `src/games/seismic/` implementing the `Game`
-interface for Seismic (Hakyuu / Ripple Effect), registered so the puzzle is
-served by the TypeScript engine.
-
-#### Scenario: Seismic is served
-
-- **WHEN** the registry is asked for the game `seismic`
-- **THEN** it returns the game `src/games/seismic/` registers
 
 ### Requirement: Seismic's parameters
 
@@ -46,19 +35,6 @@ adjacent.
 - **WHEN** in Seismic mode two 2s stand in one row with one cell between them
 - **THEN** the board is not solved, and both are in breach of the keep-apart
   rule
-
-### Requirement: Regions live on the shared disjoint-set structure
-
-Regions SHALL be represented on the shared disjoint-set structure. Because the
-wall layout is determined by region membership alone, generation from a given
-seed SHALL be reproducible without matching any particular canonical-element
-choice.
-
-#### Scenario: A wall does not depend on a region's canonical element
-
-- **WHEN** a wall between two cells is encoded or drawn
-- **THEN** it is decided by whether the two cells are in one region, whichever
-  cell the structure holds as that region's canonical element
 
 ### Requirement: The size bound is measured, per mode, and says why
 
@@ -106,17 +82,6 @@ several seeds, and the bound SHALL NOT be set from medians.
 - **THEN** it is rejected with a stated reason naming the mode, rather than
   accepted and left to churn until its retry budget is exhausted
 
-### Requirement: The generator's retry loops are finite
-
-The retry loops below any size bound SHALL be finite, so a divergence fails
-with a labeled error rather than running forever.
-
-#### Scenario: A generation that diverges
-
-- **WHEN** the generator discards attempt after attempt for one board
-- **THEN** it stops at its retry limit with an error labeled with the game and
-  the size, and does not run on
-
 ### Requirement: A preset is never a long wait
 
 A preset SHALL NOT be a size that takes seconds to generate: it is offered to
@@ -153,8 +118,7 @@ Validation SHALL reject a description that uses an unknown wall or clue
 character, that forms a region larger than nine cells, or that places a clue
 larger than its region's size. It SHALL also reject a clue of 0, and a wall
 list or a clue list that does not cover the board exactly, and SHALL otherwise
-accept a description of the two comma-separated parts. Decoding a description
-SHALL rebuild the region structure and the fixed clues.
+accept a description of the two comma-separated parts.
 
 #### Scenario: An over-large clue is rejected
 
@@ -166,9 +130,9 @@ SHALL rebuild the region structure and the fixed clues.
 Seismic SHALL be played with the Solo control scheme: a left-click or the
 cursor keys select a cell for number entry, a right-click selects a cell for
 pencil marks, and a mode toggle switches between entering numbers and pencil
-marks. The game SHALL offer a sticky pencil mode preference and a pencil-mode
-indicator. The game SHALL be solved when every cell is filled and every region
-and keep-apart rule is satisfied.
+marks. The game SHALL offer a sticky pencil mode preference. The game SHALL be
+solved when every cell is filled and every region and keep-apart rule is
+satisfied.
 
 #### Scenario: Completing the grid wins
 
@@ -203,51 +167,19 @@ notes.
 ### Requirement: Seismic draws its numbers, its notes and a broken rule
 
 Rendering SHALL draw the region boundaries, the placed numbers, and the pencil
-marks, SHALL highlight a duplicate-in-region or a keep-apart violation in an
-error color as it is entered, and SHALL flash on completion. There SHALL be no
-move animation.
+marks, and SHALL highlight a duplicate-in-region or a keep-apart violation in
+an error color as it is entered. There SHALL be no move animation.
 
 #### Scenario: A duplicate in a region is shown as it is entered
 
 - **WHEN** the player enters a number its region already holds
 - **THEN** the number entered is drawn in the error color on the next frame
 
-### Requirement: Seismic flags mistakes against the unique solution
-
-Because Seismic has a unique solution, it SHALL implement `findMistakes` so
-that Check-&-Save can hard-block a save on a wrong board. Given a state, the
-game SHALL re-solve from the fixed clues to the unique solution and flag every
-placed cell whose value contradicts the solution, and every empty cell whose
-non-empty pencil notes have crossed out that cell's solution value.
-
-#### Scenario: A wrong placement is flagged
-
-- **WHEN** the player enters a number that differs from the unique solution and
-  runs Check
-- **THEN** that cell is reported as a mistake and Check-&-Save refuses to save
-
-#### Scenario: A crossed-out note is flagged
-
-- **WHEN** an empty cell's pencil notes exclude the value the unique solution
-  requires there
-- **THEN** that cell is reported as a mistake
-
-### Requirement: findMistakes flags nothing it cannot be sure of
-
-A cell with only extra, non-contradicting notes SHALL NOT be flagged, and when
-the givens are not uniquely soluble no cell SHALL be flagged.
-
-#### Scenario: A correct partial board reports no mistakes
-
-- **WHEN** every placed number matches the unique solution and no note crosses out
-  a required value
-- **THEN** no cell is flagged
-
 ### Requirement: A flagged cell carries its own mistake overlay
 
-The flagged cells SHALL be rendered with a distinct mistake overlay, and the
-overlay SHALL be part of what the renderer compares from frame to frame, so
-that it repaints on the frame after the offending move.
+The cells Check flags SHALL be rendered with a distinct mistake overlay, and
+the overlay SHALL appear on the frame after the check, on a cell whose contents
+did not change included.
 
 #### Scenario: A mistake appears on a cell whose contents did not change
 
@@ -257,25 +189,12 @@ that it repaints on the frame after the offending move.
 ### Requirement: The on-screen keypad offers only digits a board can accept
 
 Seismic's `requestKeys` SHALL offer the digits up to the largest region the
-generator produces in the mode, plus a clear key, and SHALL NOT offer a digit
-that no board the generator produces could accept. Entry is capped at the
-pressed cell's region size, and on touch the panel is the only digit-entry
-route there is, so such a key is a control that does nothing when pressed.
-
-#### Scenario: No offered digit is unreachable
-
-- **WHEN** the collection-wide on-screen-key guard sweeps Seismic
-- **THEN** every button `requestKeys` returns is one `interpretMove` accepts
-  somewhere on a generated board
-
-### Requirement: The keypad derives its bound from the generator
-
-The requirement is on the relationship, not on a number: whichever bound the
-generator's region-size distribution has, the panel SHALL match it, and
-widening one SHALL widen the other. The panel SHALL derive that bound from the
-generator's own size distribution and SHALL NOT restate it as a literal. The
-bound SHALL be the generator's, not the format's, which admits larger regions
-than the generator produces.
+generator produces in the mode, plus a clear key: entry is capped at the
+pressed cell's region size, so a digit no generated board accepts is a key that
+does nothing. The panel SHALL derive that bound from the generator's own size
+distribution and SHALL NOT restate it as a literal. The bound SHALL be the
+generator's, not the format's, which admits larger regions than the generator
+produces.
 
 #### Scenario: Widening the generator widens the panel
 
@@ -283,35 +202,20 @@ than the generator produces.
   region
 - **THEN** the keypad admits the corresponding digits
 
-### Requirement: Seismic solves by candidate elimination and generates regions before numbers
+### Requirement: Seismic solves by candidate elimination, graded Easy or Normal
 
 Seismic SHALL provide a solver that fills the grid by candidate elimination: a
 naked single and a hidden single within a region at Easy, plus a
 trial-placement deduction at Normal. It SHALL report the difficulty reached or
 that the puzzle is not uniquely soluble, and SHALL enforce the mode's
 keep-apart rule and the one-of-each-number-per-region rule while eliminating
-candidates. The generator SHALL partition the grid into connected regions
-before placing any number.
+candidates.
 
 #### Scenario: The solver grades a puzzle's difficulty
 
 - **WHEN** a uniquely soluble puzzle is solved
 - **THEN** the solver reports the lowest difficulty at which its deductions
   complete the grid
-
-### Requirement: The generator fills each region by the solver's own propagation
-
-Once the grid is partitioned, the generator SHALL fill each region with the
-numbers 1 to its size by searching over the solver's own candidate
-propagation, so that a region holds exactly the numbers it requires by
-construction. It SHALL NOT depend on a post-hoc test that a randomly merged
-region happens to hold a valid number set.
-
-#### Scenario: A filled region needs no check to be valid
-
-- **WHEN** the fill completes on a partition
-- **THEN** every region of size N holds exactly the numbers 1 to N, without any
-  region having been tested and discarded afterward
 
 ### Requirement: The generator strips clues and accepts only a board of its tier
 
@@ -347,11 +251,10 @@ round-trips through the codec.
 
 ### Requirement: Seismic explains the next deduction
 
-A hint SHALL be refused when the board is solved or `findMistakes` reports a
-mistake, by the midend before it asks the game, and `hint(state)` SHALL
-otherwise return the forced steps from the player's own board as an ordered
-plan, each step narrating why its move is forced from premises the sentence
-itself states.
+`hint(state)` SHALL return the forced steps from the player's own board as an
+ordered plan, each step narrating why its move is forced from premises the
+sentence itself states. Asking SHALL leave the state unchanged, the region
+partition every state of the game shares included.
 
 #### Scenario: Asking for a hint leaves the board untouched
 
@@ -397,20 +300,6 @@ cell's notes still hold that answer.
   answer and asks for a hint
 - **THEN** the plan does not fill notes again, and following it finishes the board
 
-### Requirement: The hint sets the notes up before a deduction reads them
-
-Under the populate reading the plan SHALL fill notes with the additive
-`pencilAll` before a deduction first needs them. Under either reading it SHALL
-strike what the numbers already placed rule out in one setup step before any
-deduction reads the notes.
-
-#### Scenario: Stale notes are struck first
-
-- **WHEN** a hint is requested on a board whose notes still hold a number a
-  placed number rules out
-- **THEN** one setup step strikes every such note before any step that reads
-  the notes
-
 ### Requirement: The deductions the hint makes
 
 The hint's deductions SHALL be: an empty area of one cell can only hold a 1; a
@@ -435,17 +324,6 @@ only when no other is available.
   out in this cell"
 - **THEN** the cell's working notes are genuinely a single candidate (a true naked
   single); a hidden single uses its own narration instead
-
-### Requirement: A placement is followed by the strikes it causes
-
-A placement SHALL be followed by a continuation step striking exactly the
-notes the placed number rules out, as `placeNumber` itself would.
-
-#### Scenario: A placed number's cull
-
-- **WHEN** a step places a number while cells it rules that number out of still
-  note it
-- **THEN** the next step strikes that number from exactly those cells
 
 ### Requirement: The starved-area deduction is the solver's trial rung
 

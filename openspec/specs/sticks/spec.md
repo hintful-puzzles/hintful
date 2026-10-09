@@ -10,20 +10,6 @@ and the drawing.
 
 ## Requirements
 
-### Requirement: Sticks game implements the Game interface
-
-The engine SHALL provide `src/games/sticks/` implementing the `Game`
-interface for Sticks (Tatebo-Yokobo), registered so the puzzle is served by the
-TypeScript engine. Sticks SHALL be a uniquely-solvable logic puzzle and SHALL
-therefore declare a `findMistakes` hook, so Check & Save can hard-block a save
-that contradicts the solution.
-
-#### Scenario: Every preset produces a uniquely solvable board
-
-- **WHEN** a new game is generated for any preset or legal size
-- **THEN** a board is produced that the deductive solver can complete to the
-  unique solution
-
 ### Requirement: Sticks parameters and what each check refuses
 
 Parameters SHALL be a width, a height, a percentage of blocks, and a symmetry
@@ -226,36 +212,6 @@ interpolated animation of line placement.
 - **WHEN** every blank cell carries a line consistent with all clues
 - **THEN** the game is reported solved and flashes
 
-### Requirement: Sticks provides an explained hint
-
-Sticks SHALL implement `hint()`, planning from the player's **current** marks
-and narrating each forced move as the deduction that forces it. Declaring
-`hint` SHALL be its whole enrollment in the cross-game hint guards, so the
-resume, purity, no-op, overlay and narration-quality guards cover it.
-
-#### Scenario: A hint resumes from a self-played position
-
-- **WHEN** a hint is requested from a board the player reached by their own
-  correct moves
-- **THEN** the plan makes progress and continues to lead to the solved board
-
-#### Scenario: A hint never repeats a move already made
-
-- **WHEN** a plan step is reached
-- **THEN** the move it asks for changes the board
-
-### Requirement: Every Sticks hint step names its technique
-
-Every step SHALL name the technique that forces it. There SHALL be no generic
-catch-all step: the shipped deduction decides every uniquely-solvable board
-this generator produces, so a plan has no un-narratable residue to fall back
-on.
-
-#### Scenario: A plan runs to the solved board with every step named
-
-- **WHEN** a generated board is hinted from its opening position to completion
-- **THEN** every step carries one of the game's declared techniques
-
 ### Requirement: A Sticks hint names the clue a tentative line would break, and how
 
 A step's explanation SHALL name **which clue** the tentative line would break
@@ -333,28 +289,6 @@ cursor color, which the board has not otherwise spent.
 
 - **WHEN** the keyboard cursor sits on a square while a hint step is displayed
 - **THEN** the cursor's frame and the hint's forced line are different colors
-
-### Requirement: A hint on a mistaken Sticks board is refused
-
-Requesting a hint on a board that carries a mistake SHALL refuse and surface
-the mistakes, rather than deducing from a wrong position.
-
-#### Scenario: A mistaken board is refused honestly
-
-- **WHEN** a hint is requested on a board with a line `findMistakes` flags
-- **THEN** the hint refuses and the contradicting squares are highlighted
-
-### Requirement: Sticks hint recording is confined to the hint path
-
-Recording SHALL be confined to the hint path: the generator's solve calls SHALL
-be unchanged.
-
-#### Scenario: Recording does not disturb generation
-
-- **WHEN** boards are generated for a fixed seed with the hint recorder present
-  in the build
-- **THEN** the descriptions are identical to those the generator produces for
-  the same seed when no hint has been requested
 
 ### Requirement: Sticks draws its cells on the collection's quiet surface
 

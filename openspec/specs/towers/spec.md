@@ -2,21 +2,22 @@
 
 ## Purpose
 Towers (Skyscrapers), the Latin-square puzzle whose edge clues count the towers
-visible from that side: its 3D and 2D styles, a sticky pencil mode, an optional
+visible from that side: its params and description formats, its 3D and 2D
+styles and the surfaces they stand on, its sticky pencil mode, an optional
 auto-pencil that strikes a placed height from its row and column, clue
 striking, a mistake check that also catches a pencil note excluding the true
-height, on-screen key labels, and a hint explained through pencil notes.
+height, its keypad, and what is Towers' own in a hint explained through pencil
+notes.
 
 ## Requirements
 
-### Requirement: Towers game implements the Game interface
+### Requirement: Towers is Skyscrapers on a Latin square
 
-The engine SHALL provide a registered `towers` game implementing `Game`: the
-puzzle Skyscrapers on a `w × w` grid, in which the player places a tower of
-height `1..w` in every cell so that each row and column contains every height
-exactly once, and so that each outside clue equals the number of towers visible
-from that edge (a taller tower hides every shorter one behind it). The game
-SHALL provide `solve` and `textFormat`, and SHALL NOT provide `statusbarText`.
+Towers SHALL be the puzzle Skyscrapers on a `w × w` grid, in which the player
+places a tower of height `1..w` in every cell so that each row and column
+contains every height exactly once, and so that each outside clue equals the
+number of towers visible from that edge (a taller tower hides every shorter one
+behind it).
 
 #### Scenario: A taller tower hides the shorter ones behind it
 
@@ -25,10 +26,9 @@ SHALL provide `solve` and `textFormat`, and SHALL NOT provide `statusbarText`.
 
 ### Requirement: Towers' parameters are a grid size and a difficulty
 
-Params SHALL be `w` and `diff` (Easy, Normal, Tricky, or Unreasonable, held as
-the values `"easy"`, `"hard"`, `"extreme"` and `"unreasonable"`), encoded
-`{w}d{c}` when full (`c` = `e`/`h`/`x`/`u`) and `{w}` otherwise, with presets
-at 4×4, 5×5 and 6×6, each at every tier.
+Params SHALL be `w` and a difficulty (Easy, Normal, Tricky, or Unreasonable),
+encoded `{w}d{c}` when full, with `c` being `e`, `h`, `x` or `u` in that order
+of tier, and `{w}` otherwise.
 
 #### Scenario: Params round-trip
 
@@ -69,8 +69,6 @@ givens that stand next to each other.
 The reading of the desc that `newState` builds from SHALL refuse the wrong
 number of clue fields, a clue out of `1..w`, an out-of-range given, grid data of
 a length other than `w²`, and a `_` anywhere but between two adjacent givens.
-`newState` SHALL decode the clues into an immutable `clues` array and the
-givens into both the immutable `immutable` array and the working `grid`.
 
 #### Scenario: Malformed description is rejected
 
@@ -78,20 +76,12 @@ givens into both the immutable `immutable` array and the working `grid`.
   read
 - **THEN** it is refused with an error and no state is built
 
-#### Scenario: A given is decoded into both arrays
-
-- **WHEN** a generated board's desc is decoded by `newState`
-- **THEN** every given tower appears in both `immutable` and `grid`
-- **AND** every non-given cell starts empty with no pencil marks
-
 ### Requirement: Towers generates uniquely-solvable boards at the target difficulty
 
-`newDesc` SHALL generate a full Latin square, derive all `4w` edge clues from
-it, then remove grid givens and (above Easy) clues for as long as the puzzle
-remains solvable by the graded solver at the chosen difficulty, regenerating
-until the puzzle is solvable at exactly that difficulty and no lower. The
-result SHALL be uniquely solvable. `newDesc` SHALL also return an `aux`
-solution string.
+A generated board SHALL be uniquely solvable, and solvable by the graded solver
+at exactly the chosen difficulty and no lower. An Easy board SHALL keep every
+one of its `4w` edge clues; above Easy the generator SHALL remove clues as well
+as grid givens, for as long as the board stays solvable at that difficulty.
 
 #### Scenario: Generated board is unique and correctly graded
 
@@ -102,12 +92,10 @@ solution string.
 
 ### Requirement: Towers selects a cell by pointer or by keyboard cursor
 
-`interpretMove` SHALL select a cell by pointer or by keyboard cursor, and the
-highlight it leaves SHALL be either for a real entry or for a pencil mark.
 Under the 3D appearance the pointer's hit-testing SHALL follow the towers, so a
 press on a tower protruding from a neighboring cell selects that neighbor.
 From the keyboard, Enter (`CURSOR_SELECT`) while the highlight shows SHALL
-switch between the two kinds of highlight.
+switch the highlight between real entry and pencil marks.
 
 #### Scenario: A press lands on a neighbor's tower
 
@@ -120,8 +108,7 @@ switch between the two kinds of highlight.
 With a cell highlighted, a digit `1..w` SHALL enter that tower, or toggle that
 pencil mark in pencil mode, and Backspace, Space (`CURSOR_SELECT2`) or `0`
 SHALL clear the cell; entering a value a cell already holds SHALL be a
-no-op. Immutable (given) cells SHALL reject entry. `executeMove` SHALL apply
-the move purely, returning a new state.
+no-op. Immutable (given) cells SHALL reject entry.
 
 #### Scenario: Entry into an immutable cell is rejected
 
@@ -171,9 +158,7 @@ auto-sized grid layout.
 ### Requirement: Towers tells its inks and its selection apart
 
 The renderer SHALL color given towers, user-entered towers, struck-through
-("done") clues, and error cells distinctly. It SHALL highlight the selected
-cell, with a full highlight for real entry and a corner wedge for pencil mode,
-SHALL draw the keyboard cursor, and SHALL flash on completion.
+("done") clues, and error cells distinctly.
 
 #### Scenario: Two towers of one height in a row
 
@@ -191,12 +176,10 @@ protrusion into the neighbors above it and to its right.
 - **THEN** the cells above it, to its right and diagonally above-right are
   repainted in the same frame as its own
 
-### Requirement: Towers exposes appearance and pencil-highlight preferences
+### Requirement: Towers exposes an appearance preference
 
-The game SHALL expose, via the `prefs` hook, an "appearance" choice (2D / 3D,
-default 3D) and a "keep mouse highlight after changing a pencil mark" boolean
-(default on), each stored on the `Ui` and applied by `interpretMove` or
-`redraw`.
+The game SHALL offer an appearance preference under the key `appearance`, a
+choice of 2D or 3D in that order, defaulting to 3D.
 
 #### Scenario: Appearance preference drives rendering style
 
@@ -205,13 +188,12 @@ default 3D) and a "keep mouse highlight after changing a pencil mark" boolean
 
 ### Requirement: Towers checks for mistakes against the unique solution
 
-The game SHALL implement `findMistakes`: it re-solves the board from its
-immutable clues and givens to the unique solution, never from the player's pencil notes, and
-returns every player marking that contradicts it. A filled cell whose tower
-differs from the solution height is `kind: "cell"`, and a cell whose non-empty
-candidate set does not contain its solution height is `kind: "note"`. When the
-board is not uniquely solvable from the givens, `findMistakes` SHALL return an
-empty result.
+`findMistakes` SHALL re-solve the board from its clues and givens, never from
+the player's pencil notes, and return every marking that contradicts the unique
+solution: a filled cell whose tower differs from it (`kind: "cell"`), and a
+cell whose non-empty candidate set lacks its solution height (`kind: "note"`).
+Both kinds SHALL render as the same red cell overlay. When the board is not
+uniquely solvable from the givens, `findMistakes` SHALL return an empty result.
 
 #### Scenario: A wrong tower is flagged
 
@@ -224,42 +206,14 @@ empty result.
   solution height
 - **THEN** `findMistakes` includes that cell with `kind: "note"`
 
-### Requirement: A note is a mistake only when it excludes the correct height
-
-A note set that merely contains extra, non-solution candidates SHALL NOT be
-reported, since that is ordinary mid-solve state; only a non-empty note set
-that excludes the solution height is a mistake. Both kinds of mistake SHALL
-render as the same red cell overlay.
-
-#### Scenario: A note with extra candidates is not a mistake
-
-- **WHEN** an empty cell carries pencil notes that do include the solution
-  height, alongside other (incorrect) candidates
-- **THEN** `findMistakes` does not include that cell
-
-### Requirement: Check & Save refuses a board with an invalid note
-
-Because Check & Save gates the quick-save on `findMistakes`, a board carrying a
-note that has eliminated the correct height SHALL be refused a quick-save with
-the offending cells highlighted and the prior checkpoint left intact, exactly
-as a wrong filled cell is.
-
-#### Scenario: Check-&-Save refuses a board with an invalid note
-
-- **WHEN** the player activates Check & Save on a board where a cell's notes have
-  crossed out the correct height
-- **THEN** the quick-save is refused, the offending cell is highlighted, the
-  prior checkpoint remains intact, and the mistake count is reported
-
 ### Requirement: Towers offers a sticky pencil mode
 
-Towers SHALL offer a sticky pencil-entry mode, a `Game.prefs` boolean
-(`Ui.pencilSticky`) that defaults on. When sticky mode is on, a
-right-click (`RIGHT_BUTTON`) SHALL toggle a persistent pencil mode and move the
-highlight to the clicked cell, unless that cell can take no pencil mark, when
-the highlight stays where it was. A left-click (`LEFT_BUTTON`) SHALL only move
-the highlight, preserving the current pencil or real mode. The keyboard path
-SHALL be the same with sticky mode on or off.
+Towers SHALL offer the sticky pencil preference, on by default. With it on, a
+right-click SHALL toggle a persistent pencil mode and move the highlight to the
+clicked cell, unless that cell can take no pencil mark, and a left-click SHALL
+only move the highlight, preserving the current pencil or real mode. With it off, a
+left-click SHALL revert to real entry and a right-click SHALL be a per-cell
+pencil select. The keyboard path SHALL be the same with sticky mode on or off.
 
 #### Scenario: Sticky mode keeps pencil entry across left-clicks
 
@@ -269,44 +223,19 @@ SHALL be the same with sticky mode on or off.
   digit there writes a pencil mark (not a real entry)
 - **AND** the on-screen pencil-mode indicator is shown the whole time
 
-#### Scenario: Right-click toggles the mode off
-
-- **WHEN** sticky pencil mode is on and active, and the player right-clicks again
-- **THEN** pencil mode turns off, real entry resumes, and the indicator clears
-
-### Requirement: With sticky mode off a click chooses the kind of entry
-
-When sticky mode is off, a left-click SHALL revert to real entry and a
-right-click SHALL be a per-cell pencil select.
-
 #### Scenario: Sticky mode off, a left-click reverts to real entry
 
 - **WHEN** the sticky pencil preference is off and the player right-clicks a cell
   to pencil it, then left-clicks another cell
 - **THEN** the left-click reverts to real entry
 
-### Requirement: Towers shows an on-screen indicator while pencil mode is active
-
-While pencil mode is active, Towers SHALL draw an on-screen mode indicator (a
-small pencil glyph) in a fixed board location that no tower overlaps, so the
-player can always see which mode they are in. The indicator SHALL appear and
-clear together with the pencil mode and SHALL NOT alter game state.
-
-#### Scenario: The indicator follows the mode
-
-- **WHEN** pencil mode is switched on and then off again
-- **THEN** the glyph is drawn while the mode is on and gone once it is off
-- **AND** the board's state is the same before and after
-
 ### Requirement: Towers provides an explained, pencil-notes-based deduction hint
 
-The game SHALL implement `hint(state, aux?, ui?)` and `hintKeepTrack(...)`,
-delivering an explained hint that teaches Towers' candidate-elimination
-reasoning by setting and striking pencil notes. The hint SHALL be the solver's
-own narrated deduction script: the recording solver runs on a sound candidate
-cube seeded from the placed grid only, never from the player's notes, and its
-ordered operations are expressed against the player's live notes and grid as a
-sequence of `HintStep`s.
+The hint SHALL teach Towers' candidate-elimination reasoning by setting and
+striking pencil notes. It SHALL be the solver's own narrated deduction script:
+the recording solver runs on a sound candidate cube seeded from the placed grid
+only, never from the player's notes, and its ordered operations are expressed
+against the player's live notes and grid as a sequence of `HintStep`s.
 
 #### Scenario: The player has edited the notes
 
@@ -330,20 +259,6 @@ steps that fill a cell whose sound candidates have collapsed to one.
   line-of-sight deduction rules a height out of one or more cells
 - **THEN** the hint returns a step whose `pencilStrike` move clears exactly those
   candidates
-
-#### Scenario: An empty board is populated before elimination
-
-- **WHEN** the player asks for a hint on a board with no pencil notes, under
-  the `populate` reading, and nothing can be placed without notes
-- **THEN** the next step fills the empty cells' candidate notes (the fill-all
-  move)
-- **AND** subsequent steps strike candidates and place cells
-
-#### Scenario: A collapsed cell is placed
-
-- **WHEN** a cell's sound candidate set has collapsed to a single height
-- **THEN** the hint returns a `set` step placing that height, narrating that every
-  other height is ruled out there
 
 ### Requirement: A Towers hint is ordered the way a person solves
 
@@ -386,20 +301,6 @@ sharing the target's mark.
 - **THEN** the driving clue is outlined, its line of sight is striped, each
   cell struck from is ringed and each struck candidate is crossed through
 
-### Requirement: A hint is refused on a solved board or one with mistakes
-
-A hint SHALL be refused (`{ ok: false, error }`) when the board is solved
-or when `findMistakes` is non-empty, and the refusal over a mistake SHALL light
-the mistake overlay. The midend SHALL give both refusals before Towers' `hint`
-is asked, and Towers' `hint` SHALL write neither.
-
-#### Scenario: The hint refuses on a board with mistakes
-
-- **WHEN** a hint is requested while `findMistakes` is non-empty (a wrong tower or
-  a note that excludes the truth)
-- **THEN** the hint refuses with an explanatory message and the mistaken cells are
-  highlighted
-
 ### Requirement: Every Towers hint step is progress the hint never undoes
 
 Every step SHALL be monotone progress: a note added by populate, a note removed
@@ -433,23 +334,12 @@ A move that does not match SHALL drop the plan to recompute (`off`).
 - **THEN** the verdict is `onTrack` and the step's move strikes the other mark
   alone
 
-### Requirement: Recording a deduction script leaves the generator's solve unchanged
-
-The solver's recording mode SHALL be gated, so that with recording off the
-generator's solve path is unchanged. The hint's fixpoint SHALL be guarded by a
-step budget.
-
-#### Scenario: A board is generated
-
-- **WHEN** `newDesc` grades a candidate board
-- **THEN** the solver runs with no recorder and takes the path it takes
-  without the hint
-
 ### Requirement: Towers auto-pencils row/column eliminations on placement
 
 The game SHALL provide an auto-pencil preference, off by default: when it is on
 and the player places a tower height, the game SHALL strike that height from
-the pencil marks of every other cell in the same row and column. The decision
+the pencil marks of every other cell in the same row and column, and when it is
+off a placement SHALL leave other cells' pencil marks untouched. The decision
 SHALL be fixed at move-creation time, recorded on the move, so that replaying a
 saved game is deterministic regardless of the preference's later value.
 
@@ -460,33 +350,10 @@ saved game is deterministic regardless of the preference's later value.
   from its pencil marks
 - **AND** cells sharing neither the row nor the column keep candidate `n`
 
-### Requirement: With auto-pencil off a placement leaves the notes alone
-
-When the auto-pencil preference is off, which is the default, a placement SHALL
-leave other cells' pencil marks untouched, and note cleanup is manual: the
-player removes obvious candidates through the mark-all control or a hint.
-
 #### Scenario: Auto-pencil off leaves notes untouched
 
 - **WHEN** auto-pencil is off and the player places a height
 - **THEN** no other cell's pencil marks change
-
-### Requirement: Auto-pencil decides whether a hint teaches a placement's eliminations
-
-The auto-pencil preference SHALL also govern the hint, which SHALL receive the
-game's `Ui` so that it can read it. With the preference on, the trivial
-row/column eliminations a placement implies ("this number already sits in this
-line") SHALL be folded silently into the placement and not emitted as steps;
-with it off they SHALL be taught as an explicit strike that continues the
-placement (`continuesPrevious`).
-
-#### Scenario: A placement's eliminations are taught with auto-pencil off
-
-- **WHEN** a hint places a height with auto-pencil off, and other cells of its
-  row or column still note that height
-- **THEN** the next step strikes it from those cells, flagged
-  `continuesPrevious`
-- **AND** with auto-pencil on no such step is emitted
 
 ### Requirement: Towers provides on-screen key labels
 

@@ -4,19 +4,32 @@
 Pearl (Masyu), the puzzle of drawing one closed loop through square centers that
 turns at every black pearl but not in the squares either side of it, and runs
 straight through every white pearl with a turn in at least one square beside it.
-This capability specifies the game: the deductive solver and the generator gated
-on it, completion and mistake reporting, its hint, and its input and rendering.
+This capability specifies the game: its rules, its description and params
+encodings, completion and mistake reporting, its controls, the solver's ladder
+and what the generator promises, its hint, and how it looks.
 
 ## Requirements
+
+### Requirement: The rules of Pearl
+
+The player SHALL draw a single closed loop through grid cells so that it turns
+a right angle at every black pearl (and goes straight through at least one
+cell on each side of it) and passes straight through every white pearl
+(turning immediately before or after).
+
+#### Scenario: A loop that runs straight through a black pearl
+
+- **WHEN** the lines form one closed loop that runs straight through a black
+  pearl
+- **THEN** the board is not reported solved, and that pearl carries an error
+  mark
 
 ### Requirement: Pearl descriptions use the upstream run-length encoding
 
 The desc SHALL encode the clue grid row-major as a run-length string: lowercase
 letters compress runs of unclued cells, `B` marks a black pearl and `W` marks a
 white pearl. `validateDesc` SHALL reject an unknown character and a description
-whose decoded cell count does not exactly fill the grid. `newState` SHALL parse
-the desc into the immutable clue grid, with the loop lines and no-line marks
-initially empty.
+whose decoded cell count does not exactly fill the grid.
 
 #### Scenario: A description round-trips
 
@@ -32,10 +45,9 @@ initially empty.
 ### Requirement: Pearl reports completion and mistakes
 
 The game SHALL report the board solved exactly while the lines form one closed
-loop satisfying every clue. It SHALL compute always-on error marks from a
-union-find classification of the loop, flagging squares of degree greater than
-two and clue contradictions. A move that leaves a line with no reciprocal line
-in the neighboring square SHALL be refused.
+loop satisfying every clue. It SHALL show always-on error marks, flagging
+squares of degree greater than two and clue contradictions. A move that leaves
+a line with no reciprocal line in the neighboring square SHALL be refused.
 
 #### Scenario: A loop that misses a pearl is not solved
 
@@ -70,12 +82,11 @@ board the solver cannot finish SHALL yield no mistakes.
   contains
 - **THEN** `findMistakes` returns an empty result
 
-### Requirement: Pearl's mistakes gate Check & Save and draw apart from its error marks
+### Requirement: Pearl's mistakes draw apart from its error marks
 
-Check & Save depends on `findMistakes` and SHALL refuse to save while any
-mistake is present. The always-on error marks and the `findMistakes` overlay
-are distinct signals; the overlay SHALL draw a wrong cross in the mistake
-color.
+The always-on error marks and the `findMistakes` overlay are distinct signals;
+the overlay SHALL draw a flagged-mistake segment and a wrong cross in the
+mistake color.
 
 #### Scenario: A flagged cross is drawn as a mistake
 
@@ -96,6 +107,17 @@ when that would leave the square with more than two lines.
 
 - **WHEN** the player left-drags along a sequence of grid edges
 - **THEN** `interpretMove` yields a move whose execution sets those loop segments
+
+### Requirement: Pearl previews a drag in progress
+
+While a line drag is in progress, `redraw` SHALL preview it: the segments the
+drag would add and the segments it would remove, each in its drag color.
+
+#### Scenario: A drag in progress is previewed
+
+- **WHEN** the board is redrawn while a line drag is in progress
+- **THEN** the segments the drag would add and the segments it would remove are
+  drawn in the drag colors
 
 ### Requirement: Pearl marks no-line crosses with the secondary drag
 
@@ -141,34 +163,6 @@ Upstream's in-place autosolve move SHALL still replay from a saved game.
   loaded
 - **THEN** the move is replayed and not refused
 
-### Requirement: What Pearl draws
-
-`redraw` SHALL render the grid in the selected appearance style (traditional
-square outlines, or loopy center-dots plus inter-cell grid), the black and
-white pearls, the no-line crosses, the loop segments (with the drag preview and
-error recoloring), the flagged-mistake segment color, the displayed hint step,
-and the completion flash.
-
-#### Scenario: A drag in progress is previewed
-
-- **WHEN** the board is redrawn while a line drag is in progress
-- **THEN** the segments the drag would add and the segments it would remove are
-  drawn in the drag colors
-
-### Requirement: Pearl game is registered and implements the Game interface
-
-The engine SHALL provide a registered `pearl` game implementing `Game`: draw a
-single closed loop through grid cells so that it turns a right angle at every
-black pearl (and goes straight through at least one cell on each side of it)
-and passes straight through every white pearl (turning immediately before or
-after). The game SHALL provide `solve` and `textFormat`, and SHALL drive a
-completion flash suppressed after Solve.
-
-#### Scenario: Solve finishes the board without a flash
-
-- **WHEN** the board becomes solved through the Solve command
-- **THEN** no completion flash plays
-
 ### Requirement: Pearl's parameters
 
 Params SHALL be `w`, `h` and `difficulty` (Easy or Normal), encoded `{w}x{h}`
@@ -204,16 +198,6 @@ enforce that width×height does not overflow, and that a Normal board has
 - **WHEN** params with `w < 5` or `h < 5` are checked for validity
 - **THEN** they are refused
 
-### Requirement: Pearl's presets
-
-Eight presets SHALL be offered: 6×6, 8×8, 10×10 and 8×12, each at Easy and
-Normal.
-
-#### Scenario: The one preset that is not square
-
-- **WHEN** the presets are listed
-- **THEN** the board that is not square is 8 wide and 12 high, at both tiers
-
 ### Requirement: Pearl's appearance preference
 
 The two appearance styles (traditional Masyu and loopy) SHALL be selectable via
@@ -224,29 +208,11 @@ an `appearance` preference (default traditional).
 - **WHEN** the game is opened with no `appearance` preference stored
 - **THEN** the board is drawn in the traditional style
 
-### Requirement: Pearl's solver is pure constraint propagation
-
-The solver SHALL be pure iterative constraint propagation (no guessing or
-recursion) over the edge/square workspace: edge↔square elimination, the
-black-pearl and white-pearl clue deductions, and shortcut-loop detection over
-a union-find, with the Normal tier additionally applying the
-premature-short-loop rules. It SHALL return the three-valued
-verdict (inconsistent / unique / ambiguous), and a grading routine SHALL return
-the easiest difficulty that yields a unique solution.
-
-#### Scenario: A Normal board is not unique at Easy
-
-- **WHEN** a board generated at Normal is solved with the Easy cap, and then
-  graded
-- **THEN** the Easy verdict is not unique, and the grading routine returns
-  Normal
-
 ### Requirement: Pearl's generator gates every board on the solver
 
-The generator SHALL build a random loop via the shared `generateLoop` (biased
-toward black-pearl corners), derive a maximal clue set, gate every board on the
-solver finding a unique solution at the requested difficulty (and failing one
-tier easier), then greedily minimize the clues.
+The generator SHALL gate every board on the solver finding a unique solution
+at the requested difficulty (and failing one tier easier), and SHALL then
+greedily minimize the clues.
 
 #### Scenario: Generated boards are uniquely solvable at their difficulty
 
@@ -266,22 +232,17 @@ clues.
 
 ### Requirement: Pearl's solver is a certified deduction ladder
 
-Pearl's solver SHALL run its deductions as a `runDeductionFixpoint` ladder of
-these rungs: square shapes from known edges, edges from surviving shapes, the
-pearl clue deductions, and a closed-loop rung, all at Easy; and the
-shortcut-loop rule at Normal. The closed-loop rung SHALL end the ladder through
-`settled` once a loop has closed and everything off it is blank. The solver
-SHALL NOT keep the hand-written loop the ladder replaced.
+Pearl's solver SHALL deduce only, with no guessing or recursion, as a
+`runDeductionFixpoint` ladder of these rungs: square shapes from known edges,
+edges from surviving shapes, the pearl clue deductions, and a closed-loop rung,
+all at Easy; and the shortcut-loop rule at Normal. The closed-loop rung SHALL
+end the ladder through `settled` once a loop has closed and everything off it
+is blank. A firing census SHALL assert that every rung fires, at both caps.
 
 #### Scenario: A mis-tiered shortcut rung fails
 
 - **WHEN** the shortcut-loop rung is declared at Easy
 - **THEN** boards that need it pass as Easy, and the frozen differential fails
-
-### Requirement: Every rung of Pearl's ladder fires on a census
-
-A firing census SHALL walk generated boards at both tiers, at both caps, and
-assert that every rung of the solver's ladder fires on the corpus.
 
 #### Scenario: A silenced rung fails
 
@@ -293,8 +254,7 @@ assert that every rung of the solver's ladder fires on the corpus.
 The game SHALL implement `hint` as a recording projection of its own solver
 ladder, one premise per step: a square read off its own edges (one axis of a
 black pearl at a time), each of the four pearl rules, an edge that would close
-a loop early, and a square state that would. The hint SHALL refuse on a solved
-board and while `findMistakes` reports anything.
+a loop early, and a square state that would.
 
 #### Scenario: Following the hint finishes a board
 
@@ -302,11 +262,6 @@ board and while `findMistakes` reports anything.
   first step of a fresh hint
 - **THEN** the board is completed, and every line a step asked for is in the
   solution and every cross is not
-
-#### Scenario: A wrong cross is refused
-
-- **WHEN** the player has crossed out an edge the solution uses and asks for a hint
-- **THEN** the hint refuses and asks for the highlighted mistakes to be fixed first
 
 ### Requirement: A Pearl hint step rests only on edges and pearls
 
@@ -335,9 +290,9 @@ lines.
 
 ### Requirement: A Pearl hint step says why and marks what it decides
 
-Each hint step SHALL name why its edges are forced, in one sentence of at most
-120 characters, draw each decided edge in the hint's action color as the line
-or cross it asks for, and outline the squares it reasons from.
+Each hint step SHALL name why its edges are forced, draw each decided edge in
+the hint's action color as the line or cross it asks for, and outline the
+squares it reasons from.
 
 #### Scenario: A step that asks for a cross
 

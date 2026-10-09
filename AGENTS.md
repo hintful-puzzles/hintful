@@ -161,6 +161,9 @@ The long form, with the shapes to search for, is `docs/method.md`.
 | A help page | `docs/help-pages.md` |
 | A framework or cross-game design decision | `docs/doctrine.md` |
 
+Then read the spec the guide names at its top, and for a game
+`openspec/specs/<game>/spec.md`: the rules a change is checked against.
+
 Work is tracked with openspec, through the skills it installs; one change per
 coherent unit of work.
 

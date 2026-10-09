@@ -4,32 +4,21 @@
 Undead, the puzzle of filling a mirrored grid with ghosts, vampires and zombies
 to given totals so that each edge count matches the monsters visible along its
 sightline, a ghost counting only after a reflection and a vampire only before
-one. This capability specifies the game: sightline tracing through the mirrors,
-pencil and clue moves, live legality errors, mistake checking, on-screen key
-labels, and an explained deduction hint that stops, rather than searches, where
-deduction runs out.
+one. Every cell is a fixed diagonal mirror or a monster cell, and the player
+places one monster in every monster cell. This capability specifies what is the
+game's own: its params and description formats, the sightline rule, what the
+generator promises of a board at each tier, its controls, its live legality
+errors and mistake check, how it looks, and an explained deduction hint that
+stops, rather than searches, where deduction runs out.
 
 ## Requirements
-
-### Requirement: Undead game implements the Game interface
-
-The engine SHALL provide a registered `undead` game implementing `Game`: a grid
-in which every cell is either a fixed diagonal mirror (`\` or `/`) or a monster
-cell, and the player places one of three monsters, Ghost, Vampire or Zombie, in
-every monster cell. The game SHALL provide `solve` and `textFormat`, SHALL NOT
-provide `statusbarText`, and SHALL report `canMarkAll = true`.
-
-#### Scenario: Solve fills the unique solution
-
-- **WHEN** `solve` is invoked on a freshly generated game
-- **THEN** it returns a move that places every monster at its unique-solution type
 
 ### Requirement: Undead's parameters and their encoding
 
 Params SHALL be `w`, `h` and `diff`, a tier of Easy, Normal or `Unreasonable`
 held as the values `"easy"`, `"normal"` and `"tricky"`. They SHALL encode as
 `{w}x{h}` without `full` and as `{w}x{h}d{c}` with `full`, `c` being `e`, `n`
-or `t`. Presets SHALL be 4×4, 5×5 and 7×7, each at every tier.
+or `t`.
 
 #### Scenario: Params round-trip
 
@@ -94,29 +83,12 @@ sightings, or trailing data.
   grid, a monster count mismatch, or the wrong number of sightings is read
 - **THEN** the engine's description verdict is a non-null error
 
-### Requirement: newState builds Undead's shared structure
-
-`newState` SHALL build the immutable shared structure: the grid, the
-cell→monster-index map, the monster totals, the fixed-cell flags, and the
-traced sightlines. Every non-fixed monster cell SHALL start undecided.
-
-#### Scenario: A fresh board starts empty
-
-- **WHEN** a generated board's desc is decoded by `newState`
-- **THEN** every non-fixed monster cell starts undecided with no pencil marks
-
-#### Scenario: A hand-fixed monster starts in place
-
-- **WHEN** a desc whose grid holds a `G` is decoded
-- **THEN** that cell starts holding a ghost and is flagged fixed
-
 ### Requirement: Undead traces sightlines through the mirror maze
 
-`newState` SHALL trace every sightline of the grid: starting from each of the
-`2·(w + h)` edge positions (clockwise from the top-left), following a straight
-path that reflects at each `\` or `/` mirror until it exits at another edge
-position. It SHALL record for each line its ordered monster cells, its two end
-clue positions, and its two sighting counts.
+A sightline SHALL start from each of the `2·(w + h)` edge positions (clockwise
+from the top-left) and follow a straight path that reflects at each `\` or `/`
+mirror until it exits at another edge position. Each line SHALL carry a
+sighting clue at both of its ends.
 
 #### Scenario: A column with no mirror
 
@@ -142,11 +114,10 @@ zombie always.
 ### Requirement: Undead solves and generates uniquely-solvable graded boards
 
 `newDesc` SHALL generate a grid of random mirrors and monster cells, rejecting
-a grid that is too sparse, too dense, or has an over-long sightline. It SHALL
-seed unique-solution sightlines until a difficulty-dependent fraction of the
-grid is determined, and fill the remainder with random monsters. Every
-generated board SHALL be uniquely solvable, verified against the brute-force
-oracle.
+a grid that is too sparse or too dense in monster cells, or that has a
+sightline over the tier's length limit. Every generated board SHALL be uniquely
+solvable, verified against the brute-force oracle independently of the grading
+ladder.
 
 #### Scenario: Generated board is unique
 
@@ -181,11 +152,6 @@ is not nested recursion.
 - **WHEN** any board is accepted for any tier (Easy, Normal, `Unreasonable`)
 - **THEN** the deductive ladder (arc-consistency + counting + depth-1 forcing) solves
   it to completion without invoking the brute-force/recursive search
-
-#### Scenario: Recursion-only boards are rejected
-
-- **WHEN** a candidate board is solvable only by recursion (nested hypothesizing)
-- **THEN** it is rejected at generation
 
 ### Requirement: Undead supports monster, pencil, and clue moves with a cursor
 
@@ -252,8 +218,7 @@ change state SHALL return no history entry.
 
 ### Requirement: Undead is solved when the grid is full and every count holds
 
-`executeMove` SHALL apply the move and recompute the live error overlays. The
-game SHALL be solved when every monster cell is filled and all counts and
+The game SHALL be solved when every monster cell is filled and all counts and
 sightings are satisfied.
 
 #### Scenario: The last monster goes in
@@ -262,9 +227,9 @@ sightings are satisfied.
   every sighting clue hold
 - **THEN** the game's status is solved
 
-### Requirement: Undead shows live legality errors and supports Check & Save
+### Requirement: Undead shows live legality errors
 
-`executeMove` SHALL recompute the live legality flags. A monster type whose
+Every move SHALL bring the live legality flags up to date. A monster type whose
 placed count exceeds its total, or differs from it once the grid is full, SHALL
 flag that count and every placed cell of that type. A sightline whose placed
 monsters already exceed its clue, or whose clue can no longer be reached even
@@ -303,24 +268,13 @@ player's notes.
 - **AND** an empty cell whose notes have crossed out its solution monster is also
   reported, while a cell with merely extra notes is not
 
-### Requirement: Undead's error and mistake overlays are in the render diff key
-
-The live legality flags and the `findMistakes` overlay SHALL both be tracked in
-the render diff key, so they repaint on the frame they are computed.
-
-#### Scenario: A mistake appears on an unchanged board
-
-- **WHEN** Check & Save reports a cell on a board no move has changed
-- **THEN** that cell repaints with its mistake outline on that frame
-
 ### Requirement: Undead renders monsters, mirrors, counts, and sightline hints
 
 `redraw` SHALL draw the monster-count row at the top, three blocks G/V/Z; the
 sighting clue numbers around the grid edge, dimmed when struck through and red
 on error; and each interior cell as a mirror (a thick diagonal), a placed
 monster (a drawn ghost, vampire or zombie shape, or the letter G, V or Z when
-the letters display is selected), or a 2×2 grid of pencil notes. The render
-SHALL use a per-cell diff cache.
+the letters display is selected), or a 2×2 grid of pencil notes.
 
 #### Scenario: A struck clue that is also in error
 
@@ -353,16 +307,6 @@ toggle; the count style has no in-play toggle.
   dialog and toggles the letters display in play
 - **THEN** the count blocks re-render in the new style and monsters render as letters
 - **AND** the letters option is also available through the preferences dialog
-
-### Requirement: Undead flashes on solving
-
-The render SHALL flash on solving, and SHALL NOT flash when the board is filled
-by Solve.
-
-#### Scenario: Solve does not flash
-
-- **WHEN** the Solve command fills the board
-- **THEN** no flash plays
 
 ### Requirement: Undead explained deduction hint
 
@@ -419,21 +363,6 @@ neither failure passes quietly.
 - **THEN** the hints continue while deduction does, and then refuse with a
   message saying deduction has run out
 - **AND** the plan neither reaches a solved board nor is empty from the start
-
-### Requirement: An Undead hint is refused on a solved or contradictory board
-
-A hint SHALL be refused when the board is already solved or when `findMistakes`
-reports any contradiction, by the midend before it asks the game, lighting the
-mistake overlay for the contradiction. An empty cell whose non-empty notes
-exclude the solution monster is a `note` mistake, so a hint refused for
-mistakes SHALL highlight those cells too.
-
-#### Scenario: The hint refuses on a solved or contradictory board
-
-- **WHEN** a hint is requested on an already-solved board, or on a board where
-  `findMistakes` reports a contradiction
-- **THEN** the midend refuses the hint before asking the game, and (for the
-  mistake case) the mistake overlay highlights the offending cells
 
 ### Requirement: A sightline step speaks of the line and its two clues
 
@@ -505,12 +434,10 @@ the grid line.
   area while the leg targets a single cell, which is ringed and still shows its
   notes
 
-### Requirement: A struck candidate stays legible and the hint is in the draw cache
+### Requirement: A struck candidate stays legible
 
-A struck candidate SHALL be drawn in its normal pencil color with a
-strikethrough, on a background that is not `COL_HINT`, so it stays legible. The
-hint signature SHALL be folded into the per-cell draw-state cache so the
-overlay repaints and clears correctly.
+A candidate a hint step strikes SHALL be drawn in its normal pencil color with
+a strikethrough, on a background that is not `COL_HINT`, so it stays legible.
 
 #### Scenario: A hint is dismissed
 
@@ -552,14 +479,3 @@ a mirror SHALL stay in ink.
 - **WHEN** the opening frame is drawn
 - **THEN** the line round the grid is one pixel of the surface's grid line, as
   the line between two cells is
-
-### Requirement: Undead's selection is drawn on the cell's surface
-
-The selected cell's wash and notes corner SHALL be drawn on the cell's surface,
-under the hint's marks, which stay on the cell's edge.
-
-#### Scenario: A selected cell that a hint also marks
-
-- **WHEN** the selected cell is the target of the hint on screen
-- **THEN** the wash fills the cell's surface and the hint's ring stays on the
-  cell's edge

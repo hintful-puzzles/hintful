@@ -3,22 +3,26 @@
 ## Purpose
 Mines (Minesweeper), the puzzle of uncovering every square that is not a mine,
 guided by the neighbor counts the uncovered squares reveal. Four guarantees keep
-it fair: the first click is never a mine, every preset board is solvable without
+it fair: the first click is never a mine, every board is solvable without
 guessing, a death can be undone, and chording never reveals more than it must.
+It also holds what a saved game and a game ID depend on, since the board is
+laid out by the first click, what the hint reasons from, and how the board
+looks.
 
 ## Requirements
 
-### Requirement: Mines game implements the Game interface
+### Requirement: The rules of Mines
 
-The engine SHALL provide a registered `mines` game implementing `Game`: a
-`w × h` grid concealing `n` mines, in which the player uncovers squares,
-deduces from the revealed neighbor counts where the mines are, and flags them.
-The game SHALL provide `solve`, `textFormat` and `statusbarText`.
+Mines SHALL be a `w × h` grid concealing `n` mines, in which the player
+uncovers squares, deduces from the revealed neighbor counts where the mines
+are, and flags them. The board SHALL be solved when every square without a
+mine is open.
 
-#### Scenario: The game is registered
+#### Scenario: The last safe square is opened
 
-- **WHEN** the engine's registry is asked for the game with the id `mines`
-- **THEN** it answers with the Mines game
+- **WHEN** the player opens the last square that holds no mine, on a board
+  they have not died on
+- **THEN** the board is solved, whether or not the mines are flagged
 
 ### Requirement: Mines' parameters
 
@@ -42,22 +46,11 @@ read whether it says `u` or `a`.
 - **WHEN** `16x16n40aX3Y4` is decoded
 - **THEN** the params are those of `16x16n40X3Y4`
 
-### Requirement: Mines' presets
-
-The presets offered SHALL be 9×9 with 10 mines, 9×9 with 35, 16×16 with 40,
-16×16 with 99, and 16 wide by 30 tall with 99 and with 170. The two largest
-SHALL be taller than wide.
-
-#### Scenario: The largest boards stand upright
-
-- **WHEN** the presets are listed
-- **THEN** the last two have `w` 16 and `h` 30, with 99 and 170 mines
-
 ### Requirement: Mines' parameters leave room for a safe first click
 
 `validateParams` SHALL require `n ≤ w·h − 9`, and `w > 2 && h > 2` for a board
 about to be generated. The mine count's `paramConfig` item SHALL declare a
-minimum of 1, which the engine checks before it asks the game.
+minimum of 1.
 
 #### Scenario: Too many mines for a safe first click
 
@@ -122,6 +115,11 @@ only a win taken with the Solve function SHALL report as solved-with-help.
 - **THEN** play resumes on the same board, the game status is still "ongoing", and the status
   bar reports the death
 
+#### Scenario: Solve on a dead board
+
+- **WHEN** the player opens a mine and then uses Solve
+- **THEN** the board is completed and the game reports solved-with-help
+
 ### Requirement: The count of deaths persists
 
 The count of deaths SHALL persist in the status bar for the rest of the game,
@@ -174,35 +172,22 @@ its single-cell "about to open" highlight.
 ### Requirement: The clock reflects the state of play
 
 Mines SHALL leave when its solve timer runs to the engine's rule, stating only
-that a dead board holds it (`timerHolds`). The timer SHALL therefore not run
-before the first click, when there is no board yet, SHALL run during play,
-SHALL stop on death and on completion, and SHALL run again when the player
-undoes out of either.
+that a dead board holds it (`timerHolds`): a death is not a loss, yet nobody
+is playing a dead board. The timer SHALL stop on death and SHALL run again
+when the player undoes it.
 
-#### Scenario: The clock starts on the first click
+#### Scenario: The clock stops on a death
 
-- **WHEN** a new Mines game is displayed and the player has not yet clicked
-- **THEN** the clock is not running; it starts when the first click uncovers the board
-
-### Requirement: Solve stops the clock, and elapsed time survives a save
-
-Solve SHALL complete the board, dead or alive, so the game reports
-solved-with-help and the timer stops. Elapsed time SHALL survive a save and
-restore.
-
-#### Scenario: Solve on a dead board
-
-- **WHEN** the player opens a mine and then uses Solve
-- **THEN** the board is completed, the game reports solved-with-help, and the
-  timer stops
+- **WHEN** the player opens a mine, and then undoes
+- **THEN** the clock stops while the board is dead, and runs again after the
+  undo
 
 ### Requirement: Mines checks flags against its mines
 
 Mines SHALL implement `findMistakes`, reporting every flag on a square with no
 mine under it, and nothing before the first click lays the mines out. An opened
 mine SHALL NOT be reported: the hint's dead-board refusal answers it. The mistake
-SHALL be drawn as a frame in the error color around the flagged square, held in
-the tile's cache key so it repaints when it comes and goes.
+SHALL be drawn as a frame in the error color around the flagged square.
 
 #### Scenario: Check & Save on Mines
 

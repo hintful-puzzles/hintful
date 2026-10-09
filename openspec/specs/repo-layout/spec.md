@@ -3,10 +3,12 @@
 ## Purpose
 How this repository is organized and kept honest: where code, help, docs and
 tooling live, the in-process test tiers and the determinism they rely on, the
-developer guides under `docs/`, and the checks and audits that hold module
-layering, test strength, bulk edits, comments, spelling, change-id citations and
-the openspec workflow to what they claim. It is mainly the contract for working
-in the tree; what the served help must cover is its one player-facing part.
+harness that pins a hint's test positions, the developer guides under `docs/`
+and the agent brief, and the checks and audits that hold module layering, test
+strength, bulk edits, comments, spelling and change-id citations to what they
+claim. It is mainly the contract for working in the tree; what the served help
+must cover is its one player-facing part. How a change is accepted and
+archived is in `docs/work-management.md`.
 
 ## Requirements
 
@@ -152,18 +154,6 @@ renaming a file is a refactor.
 - **AND** `templates/*.html.hbs` and every template using `<puzzle-…>` are
   untouched
 
-### Requirement: A relocation within `src/` preserves git history
-
-Files relocated from `src/` root into a subdirectory SHALL be moved with
-`git mv`, not deleted and added, so that the history of the new path reaches
-back before the move.
-
-#### Scenario: Renames preserve git history
-
-- **WHEN** files are relocated from `src/` root into a subdirectory
-- **THEN** `git mv` is used (not delete + add) so
-  `git log --follow <new path>` walks back into pre-move history
-
 ### Requirement: The puzzle logic lives in `src/engine/` and `src/games/<puzzleId>/`
 
 The puzzle logic, everything that runs in the worker, SHALL live in two sibling
@@ -189,16 +179,14 @@ directories at `src/` root:
 
 A shared leaf library, such as `random/` and `combi/`, is an engine library and
 SHALL live under `src/engine/`, keeping its own frozen characterization corpus
-where it has one. There SHALL NOT be a separate top-level category for a ported
-shared or leaf module, and no module SHALL carry a `bridge.ts`: configuration
-for a removed toolchain is removed with it.
+where it has one. There SHALL NOT be a separate top-level category for a
+shared or leaf module.
 
 #### Scenario: A shared library is not given its own top-level directory
 
 - **WHEN** a contributor adds a shared library used by the engine or by
   more than one game
 - **THEN** it lands under `src/engine/`, not as a sibling of it
-- **AND** it carries no `bridge.ts`
 
 ### Requirement: Engine modules that are meaningless apart are grouped, and the rest stay flat
 
@@ -229,32 +217,6 @@ the file SHALL stay flat.
 - **THEN** it lands flat in `src/engine/`
 - **AND** a new subdirectory is created only for a family whose members have no
   readership apart from each other
-
-### Requirement: `src/native/` does not exist
-
-`src/native/` SHALL NOT exist: a directory name that encodes a distinction the
-codebase no longer makes is a false signal.
-
-#### Scenario: `src/native/` is not in the tree
-
-- **WHEN** the repository is inspected
-- **THEN** `git ls-files src/native` returns no rows
-- **AND** the only use of the word "native" in a path under `src/` is
-  `src/css/native.css`, which means native HTML elements
-
-### Requirement: A module is not required to carry a C-captured fixture corpus
-
-A module SHALL NOT be required to carry a `__fixtures__/` characterization
-corpus captured from the native C build: correctness is established by
-behavioral and property tests. Fixtures a module keeps because they aid
-behavioral testing SHALL NOT be treated as a mandated layout element or as an
-acceptance gate.
-
-#### Scenario: A module ships without a fixture corpus
-
-- **WHEN** a module ships with behavioral and property tests and an empty
-  `__fixtures__/`
-- **THEN** nothing in the layout rejects it
 
 ### Requirement: Behavior is testable in-process across three tiers
 
@@ -307,22 +269,6 @@ rather than relying on a human eyeballing a browser run.
   with a fake `Puzzle`
 - **THEN** the Check & save command saves on zero mistakes and refuses to
   save on a positive mistake count, asserted in-process
-
-### Requirement: Rendering is verifiable in-process, agent-checkable
-
-The project SHALL provide an in-process way to capture a game's `redraw` output
-as a deterministic draw record, driven through the real `Midend`, so per-frame
-visual correctness can be asserted and snapshot-tested without a browser and
-without a human in the loop. The harness SHALL be dev/test-only, with no
-runtime or bundle impact.
-
-#### Scenario: A hint frame is asserted without a browser or a human
-
-- **WHEN** the scenario driver replays a game's prefix moves, requests a hint,
-  and captures the resulting frame
-- **THEN** targeted assertions confirm the hint's highlight ops in the expected
-  colors
-- **AND** no browser, worker, OffscreenCanvas, or human eyeball is involved
 
 ### Requirement: The render harness is one recorder and one scenario driver
 
@@ -391,11 +337,9 @@ silently contradict a requirement.
 
 ### Requirement: The game guides are organized by concern
 
-The game guides SHALL be the `docs/games/` set, organized by concern:
-`README.md` (the map, the game lifecycle and the definition of done),
-`mechanics.md`, `input.md`, `rendering.md`, `solver-and-generator.md`,
-`hints.md`, `testing.md` and `engine-catalog.md`. A repo-wide guide SHALL sit
-directly under `docs/`.
+The game guides SHALL be the `docs/games/` set, one guide for each concern,
+with `README.md` the map, the game lifecycle and the definition of done. A
+repo-wide guide SHALL sit directly under `docs/`.
 
 #### Scenario: A lesson about rendering is written down
 
@@ -813,19 +757,6 @@ a directory added later is then allowed silently.
 - **AND** it fails without the rule having been updated to know about that
   directory
 
-### Requirement: Each layering rule is seen to fail
-
-Each layering rule SHALL be verified to fail when violated, by introducing a
-violation, observing the failure and reverting, before the check is considered
-done. A rule that has never fired may not work, and its value lies in firing
-long after it was written.
-
-#### Scenario: A layering rule is added
-
-- **WHEN** a rule is added to the layering check
-- **THEN** a violation of it is planted and the check is seen to fail on it
-- **AND** the violation is reverted before the rule is committed
-
 ### Requirement: The layering check guards its own reach
 
 The layering check SHALL assert what it actually inspected: that every relative
@@ -930,27 +861,6 @@ against behavior.
 - **WHEN** an audit reports a lower score than the one before it
 - **THEN** no commit is blocked by it, and its survivors are triaged
 
-### Requirement: A measuring harness is checked before its results are trusted
-
-The audit's harness SHALL be sanity-checked before its results are trusted, by
-introducing a deliberate bug and confirming the suite catches it. A measuring
-script that counts violations of a stated rule SHALL have its unit of
-measurement checked against the unit the rule is about before its count is
-believed or acted on: a stricter unit does not make a check safer, it makes it
-wrong in the other direction.
-
-#### Scenario: An audit reports a high score
-
-- **WHEN** a harness reports that the suite kills nearly every mutant
-- **THEN** a deliberate bug is planted and the suite is seen to catch it, before
-  the score is read as strength rather than as tests that never ran
-
-#### Scenario: An audit instrument reports a count
-
-- **WHEN** a measuring script counts violations of a rule stated per `describe`
-  block, and counts them per `it` block
-- **THEN** its count is not believed until the unit is corrected to the rule's
-
 ### Requirement: A shared module's tests give feedback where the code lives
 
 A module in `src/engine/` SHALL be able to fail its own tests when its behavior
@@ -1034,19 +944,6 @@ deliberately let through.
 - **THEN** its test file says the differential holds that guarantee
 - **AND** the differential has been seen to fail on that defect
 
-### Requirement: A feedback claim read off a tool's field checks what the field means
-
-A claim about where feedback lives that is derived from a field a tool emits,
-rather than from planting a defect and running the tests, SHALL NOT be acted on
-until the field's documented meaning has been checked.
-
-#### Scenario: A feedback metric is derived from a tool's internals
-
-- **WHEN** a mutation tool's report names the test that killed each mutant, and
-  the runner stops at the first covering test to fail
-- **THEN** the field is read as file execution order, and not as the tests
-  capable of catching the defect
-
 ### Requirement: An assertion's two sides do not derive from the same value
 
 A test SHALL NOT compare a quantity against the thing that produced it:
@@ -1077,17 +974,10 @@ change is a record and SHALL be left as written.
   corrected in the same change
 - **AND** archived changes are left as written, being a record of what was true
 
-### Requirement: A path sweep of a pending change is scoped, and re-validated
+### Requirement: A path sweep of a pending change is scoped
 
 The sweep of a pending change SHALL correct references to the moved paths and
-nothing else. A pending change edited this way SHALL be re-checked with
-`openspec validate <id> --strict`, since a spec delta may quote a path inside a
-requirement it must still parse.
-
-#### Scenario: A corrected change is re-validated
-
-- **WHEN** the sweep has corrected a path in a pending change
-- **THEN** that change re-validates strictly
+nothing else.
 
 #### Scenario: The sweep is scoped to what the move actually invalidated
 
@@ -1165,19 +1055,6 @@ re-added, and lives as long as the file that hosts it.
 - **WHEN** a sweep removes mentions of a retired build
 - **THEN** a comment saying which upstream file a port derives from stays
 - **AND** so does a note saying that a piece of machinery was removed on purpose
-
-### Requirement: A procedure is retired whole, never partly repointed
-
-A partially repointed procedure SHALL NOT be produced. Where several lines of a
-procedure are dead, the whole procedure SHALL be retired: correcting only the
-line a path sweep can see leaves something that looks maintained and fails on
-its first line, which is worse than leaving it visibly stale.
-
-#### Scenario: A dead recipe is repointed rather than retired
-
-- **WHEN** a path sweep would update one path inside a procedure whose other
-  steps are also dead
-- **THEN** the whole procedure is retired instead
 
 ### Requirement: A file marked generated names a generator that exists
 
@@ -1315,39 +1192,6 @@ remain the regression net for refactoring.
 - **AND** a change that deliberately diverges retires or re-founds it, rather than
   re-recording it against a C build that no longer exists
 
-### Requirement: A peer-comparison bar is replaced by the independent computation
-
-A C capture used as a relative quality bar, asserting that this
-implementation's answer is as good as the other implementation's for a quantity
-that is independently computable, SHALL be replaced by the independent
-computation rather than kept. Such a bar is green whenever both
-implementations are wrong in the same way, and its tolerance cannot be
-tightened.
-
-#### Scenario: A peer-comparison bar is replaced by the real yardstick
-
-- **WHEN** a test asserts only that this implementation's answer is within a
-  tolerance of the C implementation's, for a quantity with a definition that can
-  be computed directly
-- **THEN** the fixture is deleted and the quantity is computed independently in the
-  test, from a derivation sharing no code with the implementation under test
-- **AND** the replacement covers at least the cases the fixture covered, enumerated
-  from the source of truth rather than from the fixture's own list
-
-### Requirement: Retiring a fixture accounts for every fact it asserted
-
-Deciding whether a fixture is kept or replaced SHALL ask the question of every
-fact the fixture asserts, not only its headline one. A fixture's case list,
-face counts and setup scaffolding are assertions too, and a replacement that
-drops them narrows the guarantee while appearing to widen it.
-
-#### Scenario: Retiring a fixture accounts for its incidental assertions
-
-- **WHEN** a fixture is deleted
-- **THEN** every check that rode along with it (case enumeration, element counts,
-  skip reporting) is either re-founded on the code or explicitly recorded as
-  dropped with its reason
-
 ### Requirement: Design-fiction docs are labeled and quarantined
 
 Design-fiction documents, which describe a designed but unimplemented
@@ -1392,6 +1236,20 @@ obeys it.
   specs and updates the fiction so no file claims unshipped behavior in the
   present tense
 
+### Requirement: A withdrawn or completed vision item is struck through and kept
+
+While a vision is live, a withdrawn or completed item SHALL be struck through
+and kept with its argument, never deleted: a deletion leaves the next session
+free to propose it again. Each withdrawal SHALL also have its postmortem under
+`openspec/postmortems/`, which is where the argument outlives the vision.
+
+#### Scenario: A vision item is withdrawn
+
+- **WHEN** an item a live vision argues for is withdrawn
+- **THEN** its passage is struck through and its argument stays on the page
+- **AND** a postmortem for the withdrawal is written under
+  `openspec/postmortems/`
+
 ### Requirement: The openspec CLI is pinned by the repository and its floor is asserted
 
 The `openspec` CLI SHALL be declared as a dependency of this repository at a
@@ -1429,43 +1287,6 @@ surfacing at archive time.
 - **WHEN** an open change carries a MODIFIED delta omitting a scenario the live
   requirement still has
 - **THEN** the commit gate fails, naming the scenarios to copy back
-
-### Requirement: A change the agent scoped and decided is archived without an acceptance checkpoint
-
-A change whose scope, design and implementation the agent decided SHALL be
-implemented, verified, committed and archived in the same session, without
-pausing for the owner to accept it. That covers an internal contract, a
-helper's shape, a test harness, a documentation restructure, and a spec
-requirement recording a decision the agent made and can defend.
-
-#### Scenario: An agent-initiated change completes without a checkpoint
-
-- **WHEN** the agent has scoped, implemented and verified a change it decided on
-- **THEN** it commits and archives the change in the same session
-- **AND** it does not ask for acceptance first
-
-### Requirement: Owner acceptance is required only where the owner is the only judge
-
-Owner acceptance SHALL be required only where the owner is the only possible
-judge of correctness:
-
-- work a player can see or feel: how a game plays, renders, animates or
-  responds to input, and any wording a player reads;
-- work the owner specified by name, where they described the outcome;
-- anything that breaks compatibility with data a player already holds, which
-  SHALL be raised before the work, with the cost stated.
-
-#### Scenario: Player-visible work still waits
-
-- **WHEN** a change alters how a game plays, renders or reads to a player
-- **THEN** owner acceptance is required before archiving, on the terms in
-  `docs/work-management.md` § "What the owner accepts"
-
-#### Scenario: A compatibility break is raised before the work, not after
-
-- **WHEN** a change would invalidate saves, preference keys or shared game IDs a
-  player already holds
-- **THEN** the owner is asked before the work starts, with the cost stated
 
 ### Requirement: The site-level help documents the features this fork adds
 
@@ -1602,12 +1423,6 @@ reports a survivor, which is indistinguishable from a finding.
   names
 - **THEN** the run aborts rather than choosing one
 
-#### Scenario: Re-anchoring preserves every measurement
-
-- **WHEN** the corpus is re-anchored
-- **THEN** a full probe run reports the same cases, the same catches and the
-  same per-module rate as before the change
-
 ### Requirement: Source, documentation and specs use American English spelling
 
 Every word this project writes SHALL use American English spelling: in
@@ -1708,59 +1523,6 @@ the scan because their generators are scanned.
 - **WHEN** a render snapshot or a generated report holds a word
 - **THEN** the guard does not read it, and reads the file that generated it
 
-### Requirement: A design-fiction doc SHALL NOT carry a hand-maintained status column
-
-A design-fiction document SHALL NOT hold a progress table, a readiness column,
-or any other per-item status the repository maintains by hand. An item's
-outcome SHALL be stated at the claim it corrects, and "what remains" SHALL
-resolve through `openspec list` and the archive rather than through a column. A
-status column rots because keeping it true is nobody's job at the moment it
-becomes false, whereas a marker at the claim is edited by whoever changes the
-claim.
-
-#### Scenario: A vision item completes
-
-- **WHEN** a change realizing part of the vision is archived
-- **THEN** the vision states the outcome at the passage that claimed it, and no
-  status column anywhere in the directory needs editing to stay true
-
-#### Scenario: A reader asks how far along the framework is
-
-- **WHEN** somebody opens a design-fiction directory
-- **THEN** it answers with the argument and points at `openspec list` and the
-  archive for state, rather than answering from a table
-
-### Requirement: A withdrawn or completed vision item is struck through and kept
-
-While a vision is live, a withdrawn or completed item SHALL be struck through
-and kept with its argument, never deleted: a deletion leaves the next session
-free to propose it again. Each withdrawal SHALL also have its postmortem under
-`openspec/postmortems/`, which is where the argument outlives the vision.
-
-#### Scenario: A vision item is withdrawn
-
-- **WHEN** an item a live vision argues for is withdrawn
-- **THEN** its passage is struck through and its argument stays on the page
-- **AND** a postmortem for the withdrawal is written under
-  `openspec/postmortems/`
-
-### Requirement: A vision with nothing left to report is retired
-
-When every item a vision argues for has shipped, completed, been withdrawn or
-reported, the vision SHALL be retired: every section is accounted for, each
-rule it still holds moves to `AGENTS.md`, a `docs/games/` guide or a spec, each
-withdrawal is confirmed to have its postmortem, the live citations of the
-directory are repointed, and the directory is deleted. The archive keeps the
-text.
-
-#### Scenario: A vision has nothing left to report
-
-- **WHEN** every item in a design-fiction directory has shipped, completed, been
-  withdrawn or reported
-- **THEN** its live rules move to the real guides and specs, every withdrawal has
-  a postmortem, the directory's live citations are repointed, and it is deleted
-  rather than kept as a record
-
 ### Requirement: A change id cited outside the archive SHALL resolve
 
 A change id written in `docs/` or `AGENTS.md` SHALL resolve to an open change
@@ -1818,15 +1580,11 @@ ids, comes back the other way.
 - **WHEN** the guard runs over a tree whose archive names a renamed change
 - **THEN** the archive is neither reported nor edited
 
-### Requirement: The citation resolver knows every home, and the scan is floored
+### Requirement: The citation scan is floored
 
-The citation resolver SHALL know every home a citation has: an open change, an
-archive entry with its date prefix and without, a postmortem, which is where a
-withdrawn change's record lives once its directory is gone, and a capability's
-name. The scan
-SHALL carry a vacuity number: the files scanned and the tokens found SHALL be
-floored, so a docs restructure that stops the scan matching fails loudly rather
-than passing over nothing.
+The citation scan SHALL carry a vacuity number: the files scanned and the
+tokens found SHALL be floored, so a docs restructure that stops the scan
+matching fails loudly rather than passing over nothing.
 
 #### Scenario: The scan matches nothing
 
@@ -2423,12 +2181,6 @@ be edited to be correct is a file whose corrections have an expiry date.
 - **WHEN** the repository is searched for an openspec-generated instruction file
 - **THEN** neither `openspec/AGENTS.md` nor `openspec/OPENSPEC_AGENTS.md` exists
 - **AND** the workflow is reached through the installed `openspec-*` skills
-
-#### Scenario: Running the tool's update does not silently overwrite
-
-- **WHEN** a contributor runs `openspec update`
-- **THEN** it reports what it would change and requires confirmation or `--force` rather than rewriting files unprompted
-- **AND** project-authored content in `AGENTS.md` survives the run untouched
 
 ### Requirement: No record of completed work is hand-maintained
 

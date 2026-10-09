@@ -125,20 +125,6 @@ hint SHALL therefore never propose it.
 - **AND WHEN** the player erases the diagonal line
 - **THEN** the automatic mark on the crossing is removed
 
-### Requirement: Spokes game implements the Game interface
-
-The engine SHALL provide `src/games/spokes/` implementing the `Game`
-interface for Spokes, registered so the puzzle is served by the TypeScript engine.
-Spokes SHALL be a uniquely-solvable line-drawing puzzle and SHALL declare a
-`findMistakes` hook, so that Check & Save flags a wrong board rather than saving it
-silently.
-
-#### Scenario: Every preset produces a soluble board
-
-- **WHEN** a new game is generated for any preset or legal size
-- **THEN** a board is produced whose hubs can be connected into one satisfied,
-  fully connected group, deducible at the requested difficulty
-
 ### Requirement: Spokes' parameters
 
 Parameters SHALL be a width, a height, and a difficulty: Easy, Normal or
@@ -256,11 +242,9 @@ performance dial, since lifting it would silently make the middle tier a search.
 
 ### Requirement: Spokes' generator keeps every board uniquely soluble
 
-The generator SHALL use the solver to keep every board uniquely soluble: it SHALL
-start from every horizontal and vertical line plus a random diagonal per cell,
-then remove lines in a randomized order, keeping a removal only while every hub
-retains at least one line and the board stays uniquely soluble at the target
-difficulty. Generation from a given seed SHALL be reproducible.
+The generator SHALL use the solver to keep every board uniquely soluble at the
+target difficulty, and every hub of a generated board SHALL carry at least one
+line. Generation from a given seed SHALL be reproducible.
 
 #### Scenario: Generation is reproducible from a seed
 
@@ -371,34 +355,6 @@ SHALL refuse with a message saying no further move can be deduced.
 - **WHEN** a hint plan is computed for the same board at the top tier and at
   Normal
 - **THEN** the two plans are the same sequence of firings
-
-### Requirement: Spokes' solver keeps the unbounded rung
-
-The solver SHALL retain the unbounded rung the hint withholds, so that generation
-and grading are unchanged by what the hint narrates.
-
-#### Scenario: A board the hint gives up on is still solved
-
-- **WHEN** the hint refuses a board generated at `Unreasonable` because bounded
-  reasoning has run out
-- **THEN** the solver at `Unreasonable` still reaches that board's solution
-
-### Requirement: The bounded-hint guarantee is asserted structurally
-
-The guarantee that the unbounded rung contributes no firing SHALL be structural
-rather than a check on the wording: both rungs are the same function and produce
-the same narration, so a vocabulary guard cannot tell them apart. The game's tests
-SHALL therefore assert the property directly, with a control that prevents it
-holding vacuously.
-
-#### Scenario: The equality of the plans is not vacuous
-
-- **WHEN** hint plans are computed for sampled boards at Easy, at Normal and at the
-  top tier
-- **THEN** the Normal plan and the top tier's are the same on every board
-- **AND** on at least one sampled board the Normal plan is longer than the Easy
-  one, so the equality is a fact about the top tier rather than about every tier
-  producing the same plan
 
 ### Requirement: Spokes' difficulty tiers bind the boards they generate
 

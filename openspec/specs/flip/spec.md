@@ -2,29 +2,24 @@
 
 ## Purpose
 Flip, the puzzle of lighting every square by pressing squares, where each press
-also flips a fixed pattern of neighbors. Its boards are generated solvable and
-not already solved, and its solver finds a shortest set of presses by
-elimination over GF(2).
+also flips a fixed pattern of neighbors, in two rulesets. Its boards are
+generated solvable and not already solved, its solver finds a shortest set of
+presses by elimination over GF(2), and its hint presses that answer in reading
+order, saying what forces each press.
 
 ## Requirements
 
-### Requirement: Flip parameters and presets
+### Requirement: Flip's params encoding
 
-Flip SHALL support a width, a height, and a matrix type of `crosses` or
-`random`. It SHALL offer the presets 3×3, 4×4 and 5×5 in each of Crosses and
-Random. Parameter decoding SHALL accept the lenient forms: `"5"` is 5×5,
-`"5x4"` names both dimensions, and a trailing `c` or `r` is optional, a string
-without one decoding as `crosses`. The full encoding SHALL round-trip a decoded
-parameter set.
+The params encoding SHALL be the width and height, followed in the full form
+by `c` for Crosses or `r` for Random. Decoding SHALL accept the lenient forms:
+`"5"` is 5×5, `"5x4"` names both dimensions, and the trailing letter is
+optional, a string without one decoding as Crosses.
 
-#### Scenario: Preset and game-ID parameters select a board
+#### Scenario: The lenient forms decode
 
-- **WHEN** a Flip preset or a `params:desc` / `params#seed` game ID is
-  chosen
-- **THEN** the engine produces a Flip board of the requested size and
-  matrix type
-- **AND** `"5"`, `"5x4"`, and `"5x5r"` all decode to the expected
-  parameters
+- **WHEN** `"5"`, `"5x4"` and `"5x5r"` are decoded
+- **THEN** they give 5×5 Crosses, 5×4 Crosses and 5×5 Random
 
 ### Requirement: Flip refuses a size it cannot use
 
@@ -57,11 +52,9 @@ board.
 
 The `crosses` matrix SHALL be the deterministic plus-shaped neighborhood
 matrix: a square flips itself and the squares directly above, below and to
-either side of it. The `random` matrix SHALL be grown by the ordered-multiset
-growth algorithm, in which each square's set starts as the square itself and
-grows within the eight squares around it, with every choice drawn from the
-engine's seeded random source, and a matrix with two identical rows SHALL be
-discarded and grown again.
+either side of it. In the `random` matrix each square's set SHALL start as
+the square itself and grow within the eight squares around it, and a matrix
+with two identical rows SHALL be discarded and grown again.
 
 #### Scenario: A corner square in Crosses
 
@@ -97,50 +90,32 @@ one move.
 ### Requirement: A press flips the square and its matrix-defined neighbors
 
 Clicking a square, or selecting it with the keyboard cursor, SHALL toggle the
-square and its matrix-defined neighbors. `executeMove` SHALL be pure: it
-returns a new state. Moving the keyboard cursor SHALL redraw without adding a
-history entry.
+square and its matrix-defined neighbors.
 
-#### Scenario: A press leaves the state it was made on alone
+#### Scenario: A press
 
-- **WHEN** `executeMove` applies a press to a state
-- **THEN** the state it returns has the pressed square's matrix row flipped
-- **AND** the state it was given is unchanged
-
-#### Scenario: The cursor moves
-
-- **WHEN** the player moves the keyboard cursor to another square
-- **THEN** the cursor is redrawn there and undo has nothing new to take back
+- **WHEN** the player presses a square
+- **THEN** every square in the pressed square's matrix row is flipped, and no
+  other
 
 ### Requirement: Flip is solved when every square is lit
 
-The game SHALL report `solved` when every square is lit, upgraded to
-`solved-with-help` when the solver was used. The upgrade is the engine's,
-made on the `solved` that Flip's own `status` reports.
+The game SHALL report `solved` when every square is lit.
 
 #### Scenario: Solving and completion
 
 - **WHEN** the player flips cells until every square is lit
 - **THEN** the game status becomes `solved`
-- **AND** if the built-in solver was used to get there it is
-  `solved-with-help`
 
-### Requirement: Flip rendering, timing, and text format
+### Requirement: Flip's status bar counts the moves, and the board has a text format
 
-Flip SHALL render the grid, the per-square toggle diagram and the keyboard
-cursor through `GameDrawing`, with a flip animation on a move and a win flash
-on completion. It SHALL provide a status bar string reporting the move count,
-which the engine's completed and auto-solved words are prefixed to, and a
-plain-text format of the board. The background, the squares' surface and the
-grid lines SHALL be derived from the supplied default background.
+Flip SHALL provide a status bar string reporting the move count, and a
+plain-text format of the board.
 
-#### Scenario: Flip renders and animates through the engine
+#### Scenario: The status bar after a press
 
-- **WHEN** Flip is played through the app
-- **THEN** moves animate, completion flashes, the status bar shows the
-  move count and completion wording, and the surface is derived from
-  the host background
-- **AND** the board has a correct plain-text representation
+- **WHEN** the player presses a square on a fresh board
+- **THEN** the status bar reports one move
 
 ### Requirement: A square's state is a piece of the two-state pair
 
@@ -199,16 +174,6 @@ two pieces by placeholder and by shape.
 - **WHEN** a player reads Flip's help page
 - **THEN** an unlit square's piece and a lit square's are each named by the
   pair's placeholder and its shape, and by no color word written in the page
-
-### Requirement: Flip is registered in the engine registry
-
-The `flip` puzzle SHALL be implemented as a `Game` registered in the engine
-registry, so the worker serves `flip` through the midend.
-
-#### Scenario: Flip loads on the engine
-
-- **WHEN** the app opens `flip`
-- **THEN** it is constructed by the midend-backed puzzle
 
 ### Requirement: Flip's hint presses the shortest answer in reading order and says what forces each press
 
@@ -297,13 +262,7 @@ solution cannot be determined.
 Flip SHALL declare Crosses and Random as its two rulesets, each with the rule
 for which squares a press flips, so the Type menu holds a section for each, a
 params label starts with the ruleset's name, and the help page states each
-one's rule in its opening list. The params encoding SHALL be the width and
-height, followed in the full form by `c` for Crosses or `r` for Random.
-
-#### Scenario: The menu keeps the two apart
-
-- **WHEN** the player opens Flip's Type menu
-- **THEN** the Crosses presets and the Random presets are in separate sections
+one's rule in its opening list.
 
 #### Scenario: The help says what Random changes
 

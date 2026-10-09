@@ -3,34 +3,20 @@
 ## Purpose
 The shared Latin-square solver and generator, so that a game built on rows and
 columns of distinct symbols supplies only its own deductions rather than a whole
-solver. It specifies the generic deductions, the generator, and the support for
-a symbol, such as an empty square, that may repeat in a line.
+solver. It specifies what the solver deduces and returns, the layout of the
+candidate cube a game's deductions read, the support for a symbol, such as an
+empty square, that may repeat in a line, and what the generator promises.
 
 ## Requirements
 
-### Requirement: Shared generic Latin-square solver
-
-The engine SHALL provide a generic Latin-square solver in
-`src/engine/latin.ts`, for reuse by every Latin-square game. It SHALL expose a
-`latinSolver(grid, o, cfg)` entry point that takes an `o × o` grid (0 = blank)
-seeded with a game's fixed cells, and a configuration carrying `maxdiff`,
-`diffSimple`, `diffSet0`, `diffSet1`, `diffForcing`, `diffRecursive`,
-`usersolvers`, `valid` and `ctx`.
-
-#### Scenario: Solves a uniquely-determined board
-
-- **WHEN** `latinSolver` runs on a board with a unique completion, with
-  recursion permitted
-- **THEN** it returns a non-sentinel difficulty
-- **AND** the grid is written back as a valid Latin square
-
 ### Requirement: The solver applies the generic deductions up to the difficulty ceiling
 
-`latinSolver` SHALL apply, up to `maxdiff`, positional and numeric elimination,
-row and column set elimination, single-number set elimination, forcing chains,
-and guess-and-verify recursion. These SHALL be interleaved with the game's own
-`usersolvers` at their declared difficulty levels and validated by the game's
-`valid` callback.
+The engine SHALL provide one generic Latin-square solver, `latinSolver`, for
+every Latin-square game. It SHALL apply, up to `maxdiff`, positional and
+numeric elimination, row and column set elimination, single-number set
+elimination, forcing chains, and guess-and-verify recursion. These SHALL be
+interleaved with the game's own `usersolvers` at their declared difficulty
+levels and validated by the game's `valid` callback.
 
 #### Scenario: Respects the difficulty ceiling
 
@@ -41,8 +27,8 @@ and guess-and-verify recursion. These SHALL be interleaved with the game's own
 ### Requirement: The solver writes the grid back and returns a difficulty or a sentinel
 
 `latinSolver` SHALL write the solved grid back in place and return the
-difficulty level at which it solved, or one of the numeric sentinels
-`DIFF_IMPOSSIBLE` (10), `DIFF_AMBIGUOUS` (11) and `DIFF_UNFINISHED` (12).
+difficulty level at which it solved, or one of the sentinels `DIFF_IMPOSSIBLE`,
+`DIFF_AMBIGUOUS` and `DIFF_UNFINISHED`.
 
 #### Scenario: Reports ambiguity
 
@@ -68,9 +54,10 @@ Latin cube supports a symbol that may repeat in a line").
 
 The shared Latin-square solver SHALL support puzzles in which one declared
 symbol may appear a stated number of times in each row and column, rather than
-exactly once, and SHALL express it in the cube, so that deduction techniques can be written about it. The support SHALL be opt-in, and SHALL be inert when
-not requested: a puzzle that declares no repeatable symbol SHALL produce exactly
-the deductions, in exactly the order, that it produces without the support.
+exactly once, and SHALL express it in the cube, so that deduction techniques can
+be written about it. The support SHALL be opt-in, and SHALL be inert when not
+requested: a puzzle that declares no repeatable symbol SHALL produce exactly the
+deductions, in exactly the order, that it produces without the support.
 
 #### Scenario: A pseudo-Latin puzzle is expressed directly
 
@@ -86,11 +73,10 @@ the deductions, in exactly the order, that it produces without the support.
 
 ### Requirement: The engine provides a shared, seeded Latin-square generator
 
-The engine SHALL provide, in `src/engine/latin.ts`, the Latin-square
-generator: `matching` (randomized bipartite matching), `latinGenerate(o, rng)`,
-and `latinGenerateRect(w, h, rng)`. Given the same random state they SHALL
-produce the same square, so a seeded game ID keeps its board. Singles SHALL
-consume the shared implementation.
+The engine SHALL provide the Latin-square generator, square and rectangular,
+and a game that deals from a Latin square SHALL use it and hold no copy. Given
+the same random state it SHALL produce the same square, so a seeded game ID
+keeps its board.
 
 #### Scenario: Generated square is Latin and deterministic per seed
 

@@ -8,12 +8,12 @@ and its player can note the sides of tiles.
 
 ## Requirements
 
-### Requirement: Net game implements the Game interface
+### Requirement: Net's board and what counts as solved
 
-The engine SHALL provide a registered `net` game implementing `Game`: a
-`w × h` grid of wire tiles (a 4-bit mask of connections `R=1`, `U=2`, `L=4`,
-`D=8`) whose solved configuration is a spanning tree rooted at a source square.
-The player SHALL rotate tiles until every tile is connected to the source and
+A Net board SHALL be a `w × h` grid of wire tiles, each a 4-bit mask of
+connections (`R=1`, `U=2`, `L=4`, `D=8`), whose solved configuration is a
+spanning tree rooted at a source square. The player SHALL rotate tiles, and
+the game SHALL be solved when every tile is connected to the source and
 powered.
 
 #### Scenario: The last tile is turned into place
@@ -41,10 +41,11 @@ with no promised single answer, and encoding SHALL never write it.
 - **WHEN** `7x9wb0.25a` is decoded
 - **THEN** the params are those of `7x9wb0.25`
 
-### Requirement: No Net preset draws wider than tall
+### Requirement: Net offers one wrapping preset
 
-The presets SHALL be the bounded boards 5×5, 7×7, 9×9, 11×11 and 11×13, and
-one wrapping board. No preset SHALL be wider than it is tall.
+The presets SHALL be upstream's bounded sizes, its 13×11 stood upright as
+11×13, and one wrapping board; where upstream offers every size wrapping too,
+the other sizes SHALL wrap only from the Custom dialog.
 
 #### Scenario: The largest preset stands upright
 
@@ -53,10 +54,9 @@ one wrapping board. No preset SHALL be wider than it is tall.
 
 ### Requirement: Net loads only a board its hint finishes
 
-The game SHALL provide `solve` and `statusbarText`, and SHALL NOT provide
-`textFormat`. It SHALL implement `finishesByDeduction` as its solver settling
-every tile and its hint's engine finishing the board, so that a board that
-loads is one its hint finishes.
+The game SHALL implement `finishesByDeduction` as its solver settling every
+tile and its hint's engine finishing the board, so that a board that loads is
+one its hint finishes.
 
 #### Scenario: A board the hint cannot finish
 
@@ -97,10 +97,9 @@ reaches the lock. A locked tile SHALL NOT rotate.
 
 ### Requirement: No-op inputs are suppressed locally
 
-An input that changes nothing SHALL be suppressed in `interpretMove` by
-returning no move, and never by comparing serialized game states: a click
-outside the grid, a rotating click in the gutter between tiles, and a rotate
-on a locked tile.
+An input that changes nothing SHALL produce no move: a click outside the
+grid, a rotating click in the gutter between tiles, and a rotate on a locked
+tile. A turn that undoes the turn before it SHALL still be a move of its own.
 
 #### Scenario: Rotating a locked tile does nothing
 
@@ -110,17 +109,24 @@ on a locked tile.
 #### Scenario: A tile rotated full circle leaves ordinary undo history
 
 - **WHEN** the player rotates a tile anticlockwise and then clockwise
-- **THEN** the board is back to its original wiring and there are two ordinary undo entries:
-  the engine performs no state-equality suppression
+- **THEN** the board is back to its original wiring and there are two ordinary undo entries
 
 ### Requirement: Jumble is deterministic on replay
 
-The `j` jumble SHALL rotate every unlocked tile by a random amount, and SHALL record the result as an explicit per-tile rotation list so that replaying the move log reproduces the same board without the RNG. The RNG SHALL NOT be part of the Ui: it is neither where the player is nor anything replay reads.
+The `j` jumble SHALL rotate every unlocked tile by a random amount, and SHALL
+record the result as an explicit per-tile rotation list so that replaying the
+move log reproduces the same board without the RNG. The keypad SHALL offer a
+Jumble key, making the same move as `J`.
 
 #### Scenario: A jumbled board restores exactly on load
 
 - **WHEN** a game is jumbled, saved, and restored
 - **THEN** the restored board matches the jumbled board tile-for-tile
+
+#### Scenario: The Jumble key jumbles
+
+- **WHEN** the player presses the keypad's Jumble key
+- **THEN** a jumble move is made, as `J` makes it
 
 ### Requirement: The source and origin are movable Ui state
 
@@ -150,9 +156,8 @@ side with a wall on it SHALL take no note.
 
 ### Requirement: The pointer notes the side a tap lands nearest
 
-Notes SHALL be taken in the collection's notes mode (`ui.pencilMode`, toggled
-by the Marks key and `P`, shown by the pencil at the canvas's top-right). In
-notes mode a left-click SHALL note a wire across the side of the tile it lands
+Notes SHALL be taken in the collection's notes mode. In notes mode a
+left-click SHALL note a wire across the side of the tile it lands
 nearest and a right-click, or a held finger, SHALL note none, each toggling
 off a note it would repeat.
 
@@ -220,15 +225,6 @@ make.
 - **THEN** the plan holds a rotation of that tile and then its lock, the lock
   continuing the rotation's step
 
-### Requirement: Net gives no hint while a lock or note is wrong
-
-No hint SHALL be given while `findMistakes` reports a wrong lock or note.
-
-#### Scenario: A wrong note stops the hint
-
-- **WHEN** a note the solution contradicts is on the board
-- **THEN** the hint is refused and the player is asked to fix the mistakes first
-
 ### Requirement: Net's view controls and jumble have pointer routes
 
 Every action Net's keyboard offers outside its verbs SHALL also be reachable
@@ -254,15 +250,6 @@ still move the source.
 
 - **WHEN** the player presses the Source key and then taps a square
 - **THEN** the network is lit from that square, no move is recorded, and Source mode is off
-
-### Requirement: The keypad offers a Jumble key
-
-The keypad SHALL offer a Jumble key, making the same move as `J`.
-
-#### Scenario: The Jumble key jumbles
-
-- **WHEN** the player presses the keypad's Jumble key
-- **THEN** a jumble move is made, as `J` makes it
 
 ### Requirement: A margin drag scrolls a wrapping grid
 

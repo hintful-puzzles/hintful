@@ -1,0 +1,17 @@
+# Cuts: magnets
+
+Requirements: 28 before, 26 after.
+
+| Requirement or sentence cut | Word | What holds it now, or why it is gone |
+| --- | --- | --- |
+| "Magnets game implements the Game interface": that the engine provides a registered `magnets` game implementing `Game`, and that it provides `solve` and `textFormat`. The rules of the puzzle stay under the new title "What a Magnets board asks, and when it is solved". | type | The compiler and the registry say it of every game; `ts-engine` "Solve, the status bar and text export follow from the game's methods" holds the two methods. |
+| "Magnets' presets are drawn taller than wide": "The presets SHALL be 5×6, 7×8 and 9×10" | declared | `PRESETS` in `src/games/magnets/state.ts`, which the engine reads. The rule about the data stays as "Every Magnets preset size is offered at each tier" (upstream offers no largest board at Easy). |
+| "Magnets' presets are drawn taller than wide": "each stated taller than wide" | collection | `engine-params` "Every default and preset draws no wider than tall". |
+| "A Magnets description is read into a layout every state shares" (whole): the per-cell partner map and the count targets shared and never changed across states, the neutral target derived as the line's size less its `+` and `−` targets, and the scenario "A neutral target is derived" | how | How `newState` stores what the description says; the neutral target is arithmetic on the two clues the description format requirement keeps. |
+| "A Magnets description is read into a layout every state shares": "SHALL mark singletons permanently neutral" | duplicate | "What a Magnets board asks, and when it is solved": singletons are fixed and permanently neutral. |
+| "A malformed Magnets description is refused": "The game's one reading of a desc, in `newState`" | collection | `engine-params` "A game reads its description once" and "The engine derives a description's verdict from newState". What is refused stays. |
+| "A Magnets singleton square takes no input": "Cursor keys SHALL move a keyboard cursor" | collection | `engine-input` "One arrow press reveals the cursor and moves it". |
+| "Magnets grades boards with a tiered deductive solver": "The solver SHALL return one of three verdicts at each difficulty: impossible, ambiguous or solved" | how | The solver's return shape; what a player or a porter relies on is the promise the scenario already made, now stated in the requirement: a board is solved at its own tier and a Normal one is not solved at Easy. |
+| "Every Magnets overlay is in the render diff key": every per-cell and per-clue overlay is part of the render diff key, and the scenario "A mistake overlay repaints on a later frame" | process | `docs/games/rendering.md` § "Overlay sidecars": every overlay not in the tile value must be in the diff key. |
+| "Every Magnets overlay is in the render diff key": "The mistake overlay's color SHALL be a palette entry of its own, added after the game's base colors" | port | A rule for keeping upstream's color enum intact while porting; nothing reads the order now, and "A Magnets mistake is drawn apart from the live errors" keeps what the player sees. |
+| "Magnets offers an explained hint": "and SHALL refuse on a solved board or one with mistakes" | collection | `engine-hints` "The midend SHALL refuse a hint on a finished or wrong board before asking the game", which forbids the game writing either refusal. |

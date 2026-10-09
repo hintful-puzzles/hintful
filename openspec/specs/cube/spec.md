@@ -2,18 +2,18 @@
 
 ## Purpose
 Cube, the puzzle of rolling a solid across a grid to gather every painted square
-onto its faces in as few moves as possible. This capability specifies how a roll
-turns the solid and exchanges paint with the grid, and how the solid and its
-rolling animation are drawn.
+onto its faces in as few moves as possible. This capability specifies the
+params encoding, how a roll turns the solid and exchanges paint with the grid,
+when the board is solved, and how the arena, the solid and its roll are drawn.
 
 ## Requirements
 
-### Requirement: Cube game implements the Game interface
+### Requirement: A Cube board is a solid on an arena of painted squares
 
-The engine SHALL provide a registered `cube` game implementing
-`Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawState>`: a polyhedron
-rolled around a tiled arena to collect paint from painted grid squares onto the
-solid's faces.
+A Cube board SHALL be a polyhedron on a tiled arena, rolled around it to
+collect paint from painted grid squares onto the solid's faces. A generated
+board SHALL paint a non-empty set of squares and start the solid on a square
+with no face painted.
 
 #### Scenario: A generated board is winnable and starts unsolved
 
@@ -34,16 +34,6 @@ where `x<d2>` is missing `d2` SHALL default to `d1`.
 - **THEN** the result is `c4x4`
 - **AND** decoding `c4x4`, `4x4`, and `4` all yield well-formed params with
   `d2` defaulting to `d1` when the `x<d2>` segment is absent
-
-### Requirement: Cube offers one preset for each solid
-
-The four presets SHALL be offered: Cube `c4x4`, Tetrahedron `t1x2`, Octahedron
-`o2x2` and Icosahedron `i3x3`.
-
-#### Scenario: The presets are the four solids
-
-- **WHEN** the presets are listed
-- **THEN** they encode as `c4x4`, `t1x2`, `o2x2` and `i3x3`
 
 ### Requirement: Cube has a status bar and neither a solver nor a text format
 
@@ -72,18 +62,17 @@ always one of the four.
 
 ### Requirement: Cube roll moves transform orientation and swap paint
 
-`executeMove` SHALL be pure, returning a new state. It SHALL compute the
-destination square and the solid's new resting face from the current
-orientation key-points, and SHALL exchange paint between the destination
-square and the face that lands on it, except that a solid with every face
-painted SHALL roll without exchanging paint.
+A roll SHALL move the solid to the destination square, tipped onto a new
+resting face, and SHALL exchange paint between the destination square and the
+face that lands on it, except that a solid with every face painted SHALL roll
+without exchanging paint.
 
 #### Scenario: Rolling tips the solid onto a new face
 
 - **WHEN** a roll move executes from a given orientation
 - **THEN** the new state's resting face differs per the polyhedron's geometry
 - **AND** paint is exchanged between the destination square and the landing
-  face, leaving the source state unmutated
+  face
 
 ### Requirement: Cube is solved exactly while every face is painted
 
@@ -96,20 +85,12 @@ painted, and the move count SHALL keep counting every roll.
 - **THEN** no paint is exchanged, the game is still reported solved, and the
   move count rises by one
 
-### Requirement: Cube renders the solid, grid, and rolling animation
+### Requirement: Cube draws the solid in projection and animates a roll
 
-The Cube `redraw` SHALL draw the arena's grid squares, painted squares
-distinguished from plain ones, and the solid projected to two dimensions with
-its isometric shear and back-face culling. It SHALL draw a roll animation
+The Cube `redraw` SHALL draw the solid projected to two dimensions with its
+isometric shear and back-face culling. It SHALL draw a roll animation
 interpolating the solid's orientation from the previous square to the current
 one over the roll duration.
-
-#### Scenario: Draw output contains grid squares and the solid
-
-- **WHEN** `redraw` runs against a recording `GameDrawing` double for a fresh
-  board
-- **THEN** the recorded operations include the grid squares (with painted
-  squares drawn in the paint's color) and the solid's projected polygons
 
 #### Scenario: A roll animates between squares
 
@@ -117,17 +98,6 @@ one over the roll duration.
 - **THEN** the solid is drawn at an interpolated orientation between its
   previous and current squares, settling exactly on the destination square at
   animation end
-
-### Requirement: Cube repaints its whole scene every frame
-
-Cube SHALL fully repaint every frame, with no per-tile cache, since its scene
-is a handful of polygons. Cube SHALL fill its background rect on every frame,
-which erases the previous one.
-
-#### Scenario: A frame opens with the background
-
-- **WHEN** `redraw` runs on any frame
-- **THEN** the background rect is filled before any square or face is drawn
 
 ### Requirement: Cube has no win flash
 

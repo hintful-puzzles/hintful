@@ -8,19 +8,6 @@ rule but contradicts the unique solution.
 
 ## Requirements
 
-### Requirement: Rome game implements the Game interface
-
-The engine SHALL provide `src/games/rome/` implementing the `Game` interface
-for Rome (Nikoli's *Roma*), registered so the puzzle is served by the
-TypeScript engine. Because a Rome board has one solution and every difficulty
-tier is pure deduction, the game SHALL implement `findMistakes`, and Check &
-Save SHALL hard-block while any mistake is present.
-
-#### Scenario: A mistake blocks the save
-
-- **WHEN** Check & Save is run on a board `findMistakes` reports a mistake on
-- **THEN** the save is refused
-
 ### Requirement: Rome's parameters
 
 Parameters SHALL be a width, a height, and a difficulty (Easy, Normal or
@@ -95,20 +82,9 @@ existing arrow SHALL produce no state change and no history entry.
 - **WHEN** a square holding a fixed arrow is pressed
 - **THEN** no move is made and the board is unchanged
 
-### Requirement: Pencil marks are part of Rome's state
-
-Pencil marks SHALL be part of the state and SHALL round-trip through the save
-codec.
-
-#### Scenario: A saved game keeps its marks
-
-- **WHEN** a game holding pencil marks is saved and loaded
-- **THEN** every square carries the marks it had
-
 ### Requirement: Rome is complete when every arrow leads to a goal
 
-Placing an arrow SHALL show it. Completing the board SHALL report the game
-solved, and a board is complete when every square is filled with arrows
+Completing the board SHALL report the game solved, and a board is complete when every square is filled with arrows
 leading to a goal, with no loop, no off-grid arrow and no duplicate arrow
 within a region.
 
@@ -123,8 +99,8 @@ within a region.
 Rendering SHALL draw the region outlines, arrows and goals, pencil marks in
 the cell quadrants, an optional highlight of squares whose arrows reach a goal,
 an inline error tint on the square of an off-grid arrow, a duplicate arrow
-the player placed in the error color, and a completion flash. There SHALL be no interpolated arrow
-animation.
+the player placed in the error color, and a completion flash. There SHALL be
+no interpolated arrow animation.
 
 #### Scenario: An arrow appears at once
 
@@ -145,40 +121,17 @@ difficulty.
 - **THEN** every square is filled by deduction and the result reaches a goal from
   every square with no loops and no duplicate arrows in any region
 
-### Requirement: Rome judges validity with a forest of arrows
-
-Validity SHALL be judged by merging each arrow with the square it points at
-into a disjoint-set forest and flagging any arrow that points off the grid,
-any duplicate arrow within an outlined region, and any arrow that forms a
-loop.
-
-#### Scenario: Arrows that chase each other are a loop
-
-- **WHEN** two adjacent squares hold arrows pointing at each other
-- **THEN** both arrows are flagged as a loop and the board is not valid
-
 ### Requirement: Rome's generator keeps every board soluble at its tier
 
-The generator SHALL use the solver to keep every board soluble. It SHALL fill
-the grid with arrows in single-cell regions, merge outlined regions randomly
-while keeping arrows within a region distinct, and remove redundant clues. It
-SHALL accept a board only when it is soluble at the target difficulty and not
-soluble at the difficulty below.
+The generator SHALL accept a board only when the solver finds it soluble at
+the target difficulty and not soluble at the difficulty below. Generation from
+a given seed SHALL be reproducible.
 
 #### Scenario: Every preset produces a soluble board
 
 - **WHEN** a new game is generated for any preset or legal size and difficulty
 - **THEN** a board is produced that is solvable by pure deduction at exactly that
   difficulty
-
-### Requirement: Rome generation is reproducible from a seed
-
-Generation from a given seed SHALL be reproducible.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same size, difficulty and seed are used twice
-- **THEN** both runs produce the identical board description
 
 ### Requirement: Mistake-checking reports the rule violations the board shows
 
@@ -219,46 +172,31 @@ carrying no marks SHALL NOT be reported as a mistake.
 - **THEN** a `note` mistake is reported for that square and Check & Save is
   hard-blocked
 
-#### Scenario: A square with no marks at all is not a mistake
-
-- **WHEN** an empty square carries no pencil marks
-- **THEN** no mistake is reported for it, because it is claiming nothing
-
 ### Requirement: Rome fills and cleans candidate marks in one press
 
-Rome SHALL answer the Mark-all press and declare `canMarkAll`. The press SHALL
-be adaptive: while any empty square has no marks it SHALL fill every such
-square with the arrows that square could legally hold, and otherwise it SHALL
-strike from each empty square every arrow already placed in that square's own
-outlined region, returning no move when there is nothing left to strike.
-
-#### Scenario: A later press removes only, and converges
-
-- **WHEN** Mark-all is pressed repeatedly on a fully marked board
-- **THEN** each press only ever removes marks, and a press on a fully cleaned
-  board is a true no-op that adds no history entry
-
-### Requirement: The arrows a square can hold are counted per square
-
-The set of arrows a square can legally hold SHALL be per square: all four less
-any that would point off the grid. It SHALL be the same set the solver seeds
-its candidates with and the hint's populate step fills. The Mark-all fill
-SHALL be additive: a square the player has already narrowed keeps its marks.
+Rome SHALL answer the Mark-all press. The set of arrows a square can legally
+hold SHALL be per square: all four less any that would point off the grid. It
+SHALL be the set the Mark-all fill writes, the solver seeds its candidates
+with and the hint's populate step fills. The cleanup SHALL strike from each
+empty square every arrow already placed in that square's own outlined region.
 
 #### Scenario: The first press fills only what the grid's edges allow
 
 - **WHEN** Mark-all is pressed on a board with unmarked empty squares
-- **THEN** every such square gains the arrows it could legally hold, a top-row
-  square gains no up arrow, and a square the player had already narrowed is left
-  bit-for-bit alone
+- **THEN** every such square gains the arrows it could legally hold, and a
+  top-row square gains no up arrow
+
+#### Scenario: A later press strikes within the outlined region
+
+- **WHEN** Mark-all is pressed on a board whose empty squares are all marked
+- **THEN** each empty square loses the marks for arrows already placed in its
+  own outlined region, and no other mark
 
 ### Requirement: Rome explains its next deduction
 
-Rome SHALL provide an explained `hint()` meeting the project's hint quality
-bar, built on the shared candidate-elimination plan. A hint SHALL refuse on a
-solved board and on a board the mistake check flags, and SHALL otherwise
-narrate the next forced move by the premise that forces it, in Rome's own
-vocabulary of arrows, squares and areas.
+Rome SHALL provide an explained `hint()` that narrates the next forced move by
+the premise that forces it, in Rome's own vocabulary of arrows, squares and
+areas.
 
 #### Scenario: A hint can be followed to a finished board
 
@@ -337,20 +275,6 @@ selection the keys cannot be reached at all.
 
 - **WHEN** a press and release land on the same square, in either mode
 - **THEN** no move is made and the cursor is left on that square
-
-### Requirement: A Rome selection follows the note-taking cell's rule
-
-What a tap's selection does to the highlight and to notes mode SHALL be the
-note-taking cell's rule, with the button the gesture used: a right tap selects
-for notes, or latches them with the sticky preference, and the highlight shows
-only where the mode could write. A mouse-driven highlight SHALL go away after
-an arrow is placed and stay through a mark, as the note-taking games' does.
-
-#### Scenario: Placing an arrow lets the highlight go
-
-- **WHEN** a square is selected by a tap, with notes mode off, and an arrow key
-  places an arrow in it
-- **THEN** the square's highlight goes away
 
 ### Requirement: The selected square is drawn with the note-taking cell's picture
 

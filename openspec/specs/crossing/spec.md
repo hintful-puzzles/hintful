@@ -8,20 +8,6 @@ no cell a clue cannot reach, and the hint explains one deduction at a time.
 
 ## Requirements
 
-### Requirement: Crossing game implements the Game interface
-
-`src/games/crossing/` SHALL implement the `Game` interface for Crossing
-(Nansuke, Number Skeleton) and be registered, so the puzzle is served by the
-TypeScript engine. Because a board has a unique solution that deduction alone
-reaches, the game SHALL implement `findMistakes`, so that Check & Save can
-hard-block a save while a wrong digit or note is present. It SHALL request the
-on-screen digit keypad and SHALL support pencil marks.
-
-#### Scenario: The keypad offers the digits
-
-- **WHEN** the game's on-screen keys are requested
-- **THEN** the digits 1 to 9 are among them
-
 ### Requirement: Crossing's parameters
 
 Parameters SHALL be a width, a height and a symmetric-walls flag. Each
@@ -29,7 +15,7 @@ dimension SHALL be declared with a lower bound of 2, and `validateParams` SHALL
 refuse a board whose width and height are both below 4. The params encoding
 SHALL carry the width and height, a string that omits the height SHALL decode
 as a square board, and the full encoding SHALL also carry the symmetry as a
-trailing `S`. An encoding SHALL round-trip through decode.
+trailing `S`.
 
 #### Scenario: A game ID round-trips through the parameters
 
@@ -109,12 +95,11 @@ clue number and each clue number is used exactly once.
 
 ### Requirement: Crossing's generator keeps every board uniquely solvable
 
-The generator SHALL use the solver to keep every board uniquely solvable. It
-SHALL grow open cells from a single shuffled pass until no 2×2 block is fully
-closed and all open cells are connected, fill a candidate solution with random
-digits, read the runs into the clue list, and accept the board only when the
-solver reports it valid, retrying otherwise. Generation from a given seed SHALL
-be reproducible.
+The generator SHALL accept a board only when the solver reports it valid, so
+that every board has one solution and deduction alone reaches it, and SHALL
+retry otherwise. On a generated board no 2×2 block SHALL be fully closed and
+the open cells SHALL be connected. Generation from a given seed SHALL be
+reproducible.
 
 #### Scenario: Every preset produces a uniquely-solvable board
 
@@ -189,9 +174,14 @@ digit and pencil entry.
 ### Requirement: A digit key enters, and Backspace, Space or 0 clears
 
 With a cell selected, a digit key `1` to `9` SHALL place that digit, or in
-pencil mode toggle that note, and Backspace, Space or `0` SHALL clear. Walls
-SHALL NOT be editable, and a move that changes nothing SHALL produce no history
-entry.
+pencil mode toggle that note, and Backspace, Space or `0` SHALL clear. The
+on-screen keypad SHALL offer the digits 1 to 9. Walls SHALL NOT be editable,
+and a move that changes nothing SHALL produce no history entry.
+
+#### Scenario: The keypad offers the digits
+
+- **WHEN** the game's on-screen keys are requested
+- **THEN** the digits 1 to 9 are among them
 
 #### Scenario: A no-op entry makes no move
 
@@ -389,19 +379,6 @@ clue already written into the board SHALL indicate the run it occupies.
 
 - **WHEN** a clue that has been written into a run is clicked
 - **THEN** the run it occupies is indicated
-
-### Requirement: Crossing's clue panel repaints when the held clue changes
-Crossing SHALL treat the held clue as an input to its clue-panel cache, so that
-picking a clue up marks it on the next frame and putting it back unmarks it,
-whether or not the draw state has painted before.
-
-#### Scenario: picking a clue up on a draw state that has already painted
-
-- **GIVEN** a board whose draw state has painted one frame with nothing held
-- **WHEN** the player picks up a clue and the game redraws on that same draw
-  state
-- **THEN** the panel marks that clue as held
-- **AND** putting the clue back removes the mark on the following frame
 
 ### Requirement: Crossing explains its next deduction from the board
 

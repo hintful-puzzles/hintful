@@ -2,19 +2,18 @@
 
 ## Purpose
 Signpost, the puzzle of linking every square into one numbered sequence in which
-each square's arrow points toward the next: its linked-chain state model, its
-deductive solver, its mistake checking, and a drag sprite drawn with a blitter.
+each square's arrow points toward the next: its rules, its params and
+description encodings, how the chains are numbered and colored, its mistake
+checking, what its solver deduces, and how its squares look.
 
 ## Requirements
 
-### Requirement: Signpost game implements the Game interface
+### Requirement: Signpost links every square into one numbered chain
 
-The engine SHALL provide a registered `signpost` game implementing `Game`: a
-`w × h` grid in which every cell carries an arrow, one of 8 directions, and some
-cells carry immutable sequence numbers; the player links cells into a single
-chain `1 … n`, where `n = w*h`, in which every link follows its cell's arrow
-and the numbers run consecutively. The game SHALL provide `solve` and
-`textFormat`.
+Signpost SHALL be played on a `w × h` grid in which every cell carries an
+arrow, one of 8 directions, and some cells carry immutable sequence numbers;
+the player links cells into a single chain `1 … n`, where `n = w*h`, in which
+every link follows its cell's arrow and the numbers run consecutively.
 
 #### Scenario: A finished chain solves the board
 
@@ -40,17 +39,6 @@ full generation.
 
 - **WHEN** `validateParams` is given a 1×1 grid for full generation
 - **THEN** it returns a non-null error string
-
-### Requirement: Signpost's presets
-
-The game SHALL offer these presets: 4×4, 4×4 free ends, 5×5, 5×5 free ends,
-6×6 and 7×7.
-
-#### Scenario: Both kinds of 4×4 are offered
-
-- **WHEN** the preset menu is listed
-- **THEN** it holds a 4×4 whose sequence starts and ends in corners and a 4×4
-  with free ends
 
 ### Requirement: Signpost descriptions use the upstream per-cell encoding
 
@@ -88,26 +76,18 @@ numbers of which the lower one's arrow points at the higher.
 - **THEN** the new state holds the link from `k` to `k+1`, and no link the
   givens do not make
 
-### Requirement: Signpost maintains the linked-chain state model
-
-`SignpostState` SHALL maintain, in addition to the immutable arrows and clues,
-the player's `next`/`prev` links, a disjoint-set forest binding linked cells
-into regions, and a derived per-cell sequence number and region color group. On
-every move the derived numbering SHALL be recomputed. State SHALL be immutable
-and cloned per move.
-
-#### Scenario: Linking renumbers a region
-
-- **WHEN** the player links a cell numbered `k` to a blank cell it points at
-- **THEN** the blank cell derives number `k+1` and the two cells share one
-  region and color group
-
 ### Requirement: Signpost's region colors follow the links
 
 When the numbering is recomputed, merging two regions SHALL keep the larger
 region's color group, adding a blank cell to a numbered region SHALL inherit
 that region's color and extend its numbering, and joining two blank cells SHALL
 pick the lowest unused color group.
+
+#### Scenario: Linking renumbers a region
+
+- **WHEN** the player links a cell numbered `k` to a blank cell it points at
+- **THEN** the blank cell derives number `k+1` and the two cells share one
+  region and color group
 
 #### Scenario: Merging keeps the dominant color
 
@@ -119,15 +99,16 @@ pick the lowest unused color group.
 Because generated boards are uniquely solvable, `signpost` SHALL implement
 `findMistakes(state)`: it SHALL re-solve from the immutable clues and, if that
 yields a unique complete chain, flag every cell whose player `next` link
-disagrees with the solution's link. Cells with no outgoing player link SHALL
-never be flagged. If the board is not uniquely solvable, `findMistakes` SHALL
-return no mistakes.
+disagrees with the solution's link, and a flagged cell SHALL be drawn with the
+error styling. Cells with no outgoing player link SHALL never be flagged. If
+the board is not uniquely solvable, `findMistakes` SHALL return no mistakes.
 
 #### Scenario: A wrong link is flagged
 
 - **WHEN** the player links two cells that are not consecutive in the unique
   solution and requests Check & Save
-- **THEN** `findMistakes` flags that link and the save is refused
+- **THEN** `findMistakes` flags that link, its cell is drawn with the error
+  styling on the next paint, and the save is refused
 
 #### Scenario: A hand-typed ambiguous board reports nothing
 
@@ -148,10 +129,10 @@ which is what `findMistakes` reports.
 
 ### Requirement: Signpost exposes the victory-flash preference
 
-`signpost` SHALL expose its sole preference through the `Game.prefs` hook:
-`flash-type`, a choice of "unidirectional" or "meshing gears" victory rotation.
-Setting it SHALL change the win flash's pattern of spin directions and SHALL
-persist through the standard preferences mechanism.
+`signpost` SHALL expose one preference, `flash-type`, a choice of
+"unidirectional" or "meshing gears" victory rotation. The win flash SHALL spin
+the arrows: every arrow one way when unidirectional, and alternate squares in
+opposite ways when meshing gears.
 
 #### Scenario: The flash preference is offered and applied
 
@@ -182,74 +163,24 @@ would bridge. The solver SHALL report the board solved, stuck, or impossible.
 ### Requirement: Signpost generates solver-gated boards reproducibly
 
 For a given random seed and params, `newDesc` SHALL produce the same desc on
-every run. That SHALL hold of each of its stages: the random walk that grows
-the path from its head and its tail, the selection of clues in a shuffled order
-gated by the solver, and the final encoding.
+every run, and the clues it leaves SHALL be enough for the solver to solve the
+board.
 
 #### Scenario: Generation is reproducible from a seed
 
 - **WHEN** `newDesc` runs twice with the same params and seed
 - **THEN** both runs emit the identical Signpost description
 
-### Requirement: Signpost's palette carries four ramps over the region colors
+### Requirement: An arrow follows a Signpost drag
 
-The palette SHALL carry four ramps with one entry for each region color, for
-the region backgrounds and the mid and dim arrow colors.
-
-#### Scenario: Region colors repaint after linking
-
-- **WHEN** a render scenario links a sequence of cells
-- **THEN** the recorded draw ops show each region's cells drawn with its
-  assigned background-ramp color, and a subsequent link that merges regions
-  repaints the affected cells with the surviving color
-
-### Requirement: Signpost repaints a square only when what it shows changed
-
-`redraw` SHALL repaint a square only on the first draw, when the spin angle
-changed, or when its derived number, the direction of its inbound link or its
-packed flag word differs from the previous frame's. The flag word SHALL hold
-the immutable, error, cursor, drag-origin, dimmed and linked bits and the
-hint's marks, and its error bit SHALL include the `findMistakes` overlay. Every
-overlay SHALL be rebuilt each frame so it is in the key.
-
-#### Scenario: A wrong link renders red
-
-- **WHEN** the findMistakes overlay is active for a wrong link
-- **THEN** that cell is drawn with the error styling on the next paint
-
-### Requirement: Signpost's drag sprite uses a blitter
-
-The arrow that follows a drag SHALL be drawn as a sprite over a blitter: the
-pixels under it SHALL be saved before it is drawn and restored before the next
-frame paints.
+While a drag is in progress an arrow SHALL be drawn at the pointer, over the
+board, and SHALL leave nothing behind it when the pointer moves.
 
 #### Scenario: The sprite moves
 
 - **WHEN** a drag moves between two frames
-- **THEN** the second frame restores the pixels the first sprite covered and
-  then draws the sprite at the new position
-
-### Requirement: Signpost's win flash spins the arrows
-
-The win flash SHALL spin the arrows, honoring the `flash-type` preference:
-every arrow one way when unidirectional, and alternate squares in opposite
-ways when meshing gears. The flash SHALL NOT play after Solve.
-
-#### Scenario: Solve does not spin
-
-- **WHEN** the player uses Solve and the board becomes solved
-- **THEN** no win flash plays
-
-### Requirement: Signpost paints the grid frame on the first draw
-
-The first draw SHALL paint the frame round the grid over the ground the midend
-lays.
-
-#### Scenario: The first frame
-
-- **WHEN** a board is drawn for the first time
-- **THEN** the frame round the grid is painted, and a later frame does not
-  paint it again
+- **THEN** the second frame shows the arrow at the new position and the board
+  as it was where the first frame drew it
 
 ### Requirement: Signpost draws its squares on the collection's quiet surface
 

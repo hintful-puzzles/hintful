@@ -3,23 +3,11 @@
 ## Purpose
 Mosaic, the puzzle of deciding every square, marked or blank, so that each
 number counts the marked squares in the three-by-three block centered on it:
-boards solvable by deduction, toggle and paint moves, and a mistake check
-against the deduced solution.
+its params and description formats, what its generator promises of a board,
+what a press and a drag do, the mistake check against the deduced solution,
+and how its marks and numbers are drawn.
 
 ## Requirements
-
-### Requirement: Mosaic game implements the Game interface
-
-The engine SHALL provide a registered `mosaic` game implementing `Game`: a
-grid-fill puzzle in which a numeric clue states how many cells of its 3×3
-neighborhood, itself included, are marked, and the player decides every cell,
-marked or blank. The game SHALL provide `statusbarText`, `solve` and
-`textFormat`.
-
-#### Scenario: The game is registered with its hooks
-
-- **WHEN** the registry is asked for `mosaic`
-- **THEN** it returns a game that has `statusbarText`, `solve` and `textFormat`
 
 ### Requirement: Mosaic's parameters and their encoding
 
@@ -36,12 +24,10 @@ differs from its default.
 - **AND** `{ width: 50, height: 50, aggressive: false }` encodes to `50x50h0`
 - **AND** decoding each string round-trips the params
 
-### Requirement: Mosaic's presets and type summary
+### Requirement: Mosaic's largest preset deals without aggressive generation
 
-The game SHALL offer six presets: 3×3, 5×5, 10×10, 15×15 and 25×25 with
-aggressive generation, and 50×50 without it. The type summary SHALL render
-through the `width`, `height` and `aggressive-generation` config keys, with
-`aggressive` surfaced as a boolean.
+Every preset SHALL ask for aggressive generation except the largest, 50×50,
+where it is too slow.
 
 #### Scenario: The largest preset is not aggressive
 
@@ -81,26 +67,12 @@ SHALL be refused.
   mismatching the params, is checked
 - **THEN** the check returns a non-null error
 
-### Requirement: A Mosaic game's states share one clue board
-
-`newState` SHALL parse the desc into a clue board that is frozen and shared by
-reference across all states of the game. Every cell SHALL start unmarked, so
-the count of clues left equals the number of shown clues.
-
-#### Scenario: A move keeps the board
-
-- **WHEN** a move is executed on a state
-- **THEN** the resulting state holds the same board object as the one it came
-  from
-
 ### Requirement: Mosaic generates deduction-solvable boards
 
-`newDesc` SHALL generate a random image of marked and blank cells, one
-`randomBits` bit per cell, and compute every cell's clue, a border cell
-counting only its in-bounds neighbors. A clue is "full" when it fills its
-neighborhood (9 interior, 6 edge, 4 corner) and "empty" at 0. `newDesc` SHALL
-regenerate until the board has a usable starting deduction and the deductive
-solver, visiting clues in shuffled order, completes it.
+`newDesc` SHALL generate a random image of marked and blank cells and compute
+every cell's clue from it, a border cell counting only its in-bounds
+neighbors. It SHALL regenerate until the deductive solver completes the board
+from its clues alone.
 
 #### Scenario: Generated boards are valid and solvable
 
@@ -122,14 +94,13 @@ that makes the board unsolvable.
 - **WHEN** a board is generated with aggressive generation on
 - **THEN** the deductive solver solves it from the clues left showing
 
-### Requirement: Mosaic marks cells via toggle and straight-line paint moves
+### Requirement: A Mosaic toggle cycles a mark and a paint fills only unmarked cells
 
-A `MosaicMove` SHALL be one of: toggle a cell, by one step or by two; paint a
-straight run of cells with a captured target state; fill a hint step's cells
-with one mark; or solve. `executeMove` SHALL be pure and SHALL throw on an
-out-of-bounds target. One step of a toggle takes a cell around the cycle
-unmarked, marked, blank; two steps are the right button's and select2's way
-round it.
+One step of a toggle SHALL take a cell around the cycle unmarked, marked,
+blank; two steps are the right button's and select2's way round it. A paint
+SHALL set only the still-unmarked cells along its straight run. The game
+SHALL make no `paint` move of its own, and SHALL still replay one from a
+saved game. `executeMove` SHALL throw on an out-of-bounds target.
 
 #### Scenario: Toggling cycles a cell
 
@@ -140,13 +111,6 @@ round it.
 
 - **WHEN** an unmarked cell is toggled by two steps
 - **THEN** it is blank
-
-### Requirement: A Mosaic toggle cycles a mark and a paint fills only unmarked cells
-
-A toggle SHALL strip any `SOLVED` or `ERROR` overlay from its cell and then
-cycle the cell's mark. A paint SHALL set only the still-unmarked cells along
-its run. The game SHALL make no `paint` move of its own, and SHALL still
-replay one from a saved game.
 
 #### Scenario: Painting fills only unmarked cells
 
@@ -174,10 +138,10 @@ left SHALL follow the marks.
 ### Requirement: A Mosaic press toggles a cell and a drag repeats it
 
 A pointer press SHALL toggle the cell it lands on, and a drag on from it SHALL
-be the engine's: every further cell the pointer passes that held what the
-pressed cell held SHALL take the same toggle, in any direction. So a drag from
-an unmarked cell lays a mark and a drag from a marked cell clears marks, and
-the whole drag SHALL be one step of Undo.
+be the engine's sweep over the cells holding the mark the pressed cell held:
+a drag from an unmarked cell lays a mark and a drag from a marked cell clears
+marks. A click in the margin SHALL be ignored. Once the board is complete,
+the game SHALL accept only cursor movement.
 
 #### Scenario: A drag from a marked cell clears marks
 
@@ -185,12 +149,6 @@ the whole drag SHALL be one step of Undo.
   across a marked cell and an unmarked cell
 - **THEN** both marked cells become blank and the unmarked cell is left as it
   was
-
-### Requirement: Mosaic's keyboard, margin and finished board
-
-A keyboard cursor with select and select2 SHALL mirror the two click
-behaviors. A click in the margin SHALL be ignored. Once the board is complete,
-the game SHALL accept only cursor movement.
 
 #### Scenario: A finished board takes no click
 
@@ -200,29 +158,26 @@ the game SHALL accept only cursor movement.
 
 ### Requirement: Mosaic is complete when every clue is satisfied
 
-Whether the board is complete SHALL be judged from the board itself, every
-clue satisfied with no cell of its neighborhood unmarked, so a solve move
-needs no completion bookkeeping of its own. A completed board SHALL report
-`status` `"solved"`, show `COMPLETED!` in the status bar and play a flash.
+A clue SHALL count the marked cells of its 3×3 neighborhood, itself included.
+The board SHALL be complete exactly when every shown clue is satisfied with no
+cell of its neighborhood unmarked, and completing it SHALL play a 0.5s flash.
 
 #### Scenario: Completing every clue solves the game
 
 - **WHEN** the last clue becomes satisfied
-- **THEN** no clue is left, `status` returns `"solved"`, the status bar reads
-  `COMPLETED!`, and a 0.5s flash plays
+- **THEN** no clue is left, `status` returns `"solved"`, and a 0.5s flash
+  plays
 
 ### Requirement: Mosaic's Solve applies the deduced solution
 
 The Solve command SHALL run the deductive solver on the clue board and apply
-the full solution, its cells flagged solved and the status bar reading
-`Auto-solved.`. It SHALL fail with an error when deduction cannot complete the
-board.
+the full solution, its cells flagged solved. It SHALL fail with an error when
+deduction cannot complete the board.
 
 #### Scenario: Solve completes the board
 
 - **WHEN** the Solve command runs on a generated board
-- **THEN** every cell is determined, `status` returns `"solved"`, and the
-  status bar reads `Auto-solved.`
+- **THEN** every cell is determined and the board is solved
 
 ### Requirement: Mosaic checks mistakes against the deduced solution
 

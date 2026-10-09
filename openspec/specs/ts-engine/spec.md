@@ -1,11 +1,12 @@
 # ts-engine Specification
 
 ## Purpose
-The core of the native-TypeScript puzzle engine every game runs on: the
-idiomatic `Game` interface each game implements, the `Midend` that drives one
-behind the worker's Comlink surface, the registry, the save format,
-preferences, a board's history, status and timer, Solve and mistake-checking,
-and the rule that a game joins a shared mechanic by having it.
+The core of the puzzle engine every game runs on: what a `Game` owes the
+`Midend` and the midend owes it, the registry, the save format, preferences, a
+board's history with its restarts and the board a new one replaced, status and
+timer, Solve and mistake-checking, the reference aid, the boards dealt ahead of
+a New game, the one spelling of absence, and the rule that a game joins a
+shared mechanic, and the sweeps that walk every game, by having it.
 
 The shared layer's subjects each have a capability of their own beside this
 one: `engine-hints` and `engine-candidate-hints`, `engine-input`,
@@ -14,21 +15,6 @@ one: `engine-hints` and `engine-candidate-hints`, `engine-input`,
 subjects belongs there, and this capability holds what is about no one of them.
 
 ## Requirements
-
-### Requirement: The native engine defines one idiomatic `Game` interface that every port implements
-
-The engine SHALL define a single `Game` interface that every game implements,
-generic over the game's parameter, state, move, UI and draw-state types. The
-interface SHALL NOT require manual duplicate or free of game values, SHALL NOT
-pass opaque handles, and SHALL use union and boolean types in place of integer
-sentinels: a game-status union, not the sign of an int.
-
-#### Scenario: Game status is a typed union
-
-- **WHEN** the engine asks a game for its status
-- **THEN** the answer is a member of the shared game-status union (`ongoing`,
-  `solved`, `solved-with-help` or `lost`), not an integer whose sign encodes
-  win or loss
 
 ### Requirement: Applying a move returns a new state
 
@@ -51,36 +37,6 @@ directly. The interface is the sole contract between a game and the engine.
 - **WHEN** a game is implemented
 - **THEN** it implements `Game` with its own parameter, state and move types
 - **AND** it does not reference the midend implementation
-
-### Requirement: The TS midend orchestrates a game behind the existing Comlink surface
-
-The engine SHALL provide a midend that owns, per live game: the selected
-`Game`, its parameters, the move, undo and redo history, the UI and draw state,
-the random source its deals draw from, timer bookkeeping, and preset and
-configuration handling.
-
-#### Scenario: A move is made, undone and redone
-
-- **WHEN** a player makes a move, undoes it and redoes it
-- **THEN** the midend's history supplies each position, and the game is handed
-  the state, the UI and the draw state on each call
-
-### Requirement: The midend provides the app-facing surface and its notifications
-
-The midend SHALL provide the app-facing Comlink surface, whose shape
-`PuzzleEngineSurface` states: new game, new game from ID, restart, key and
-mouse input, undo, redo, solve, redraw, presets, status, serialize and
-deserialize, and timer. It SHALL emit the change notifications the app
-consumes. The app shell, screen, dialog, drawing-canvas and store code SHALL
-NOT require changes to drive a game.
-
-#### Scenario: A game is driven through the app surface
-
-- **WHEN** the app opens a game
-- **THEN** it drives it through the Comlink surface and the change
-  notifications
-- **AND** no app-shell, screen, dialog, drawing-canvas or store code changes to
-  make that so
 
 ### Requirement: Per-game engine selection is a runtime registry, not a build flag
 
@@ -125,13 +81,6 @@ format SHALL NOT be required to load.
   availability
 - **AND** the saved payload carries a format version field
 
-#### Scenario: C-format save is not required to load
-
-- **WHEN** a payload in upstream's serialization format is presented to the
-  midend
-- **THEN** the midend is not required to load it
-- **AND** this is not treated as a defect
-
 ### Requirement: The save envelope records the solver's use and not the solve
 
 The envelope SHALL carry the midend's record that the solver was used, as
@@ -168,40 +117,6 @@ or an older one whose fields are missing or malformed, SHALL be rejected.
   version whose fields are missing or of the wrong type
 - **THEN** decoding fails
 
-### Requirement: Midend correctness is established by behavioral tests, not a corpus
-
-Midend correctness SHALL be established by behavioral and property tests driven
-by a small in-repo fake `Game`, and SHALL NOT be established by a
-byte-identical characterization corpus. The suite SHALL cover undo and redo
-invariants, history truncation after a move following an undo, status
-transitions, change-notification emission, timer accumulation, preset-tree
-parsing, and save and restore round-tripping.
-
-#### Scenario: The midend is validated without a golden corpus
-
-- **WHEN** the engine layer is tested
-- **THEN** its tests drive a fake `Game` and assert behavioral invariants,
-  including `undo` after a move restoring the prior state
-- **AND** no characterization corpus is required for the midend to be accepted
-
-### Requirement: The `Game` drawing, color, and input-feedback contract is fully specified
-
-The engine SHALL specify in full the drawing surface, the UI-only input
-feedback and the color derivation of the `Game` contract. `GameDrawing` SHALL
-expose the full puzzle drawing API: filled rectangle, line, polygon, circle,
-text, clip and unclip, start and end draw, draw-update, and the blitter
-save/restore quartet, with the coordinate and palette-index semantics the
-canvas drawing surface honors. The canvas `Drawing` SHALL satisfy `GameDrawing`
-structurally without modification.
-
-#### Scenario: A game draws through the full surface
-
-- **WHEN** a registered game's `redraw` runs
-- **THEN** it can use rectangles, lines, polygons, circles, text, clipping and
-  blitters through `GameDrawing`
-- **AND** the canvas drawing implementation services them with no change to
-  that implementation
-
 ### Requirement: The engine imposes no redraw policy
 
 The engine SHALL NOT impose a full-versus-incremental redraw policy. Redraw
@@ -227,36 +142,6 @@ move it SHALL apply the move to the history.
 - **WHEN** input changes only UI state, such as moving a keyboard cursor
 - **THEN** the engine redraws and emits a state notification
 - **AND** undo offers no extra step for that input
-
-### Requirement: A game derives its palette from the host background
-
-A game's `colors` SHALL receive the frontend's default background, as the
-engine hands it to every game, and the engine SHALL thread that default from
-the worker surface through the midend to the game, so a game can derive its
-palette from the host background.
-
-#### Scenario: Palette is derived from the host background
-
-- **WHEN** the app requests the color palette with its default background
-- **THEN** the game is handed a background derived from it and returns a
-  palette derived from that, not from a hardcoded background
-
-### Requirement: The worker exposes one shared puzzle-engine surface
-
-The worker SHALL expose exactly one puzzle-engine implementation, the
-TS-midend-backed puzzle, behind the `PuzzleEngineSurface` interface the app
-drives over Comlink, and its dispatch SHALL always construct that engine and
-SHALL NOT choose between implementations. The worker SHALL hold no
-C/WASM-backed implementation, no WASM-instantiation path and no leaf-bridge
-coherence check. `PuzzleEngineSurface` SHALL state the shape of the app-facing
-remote puzzle type.
-
-#### Scenario: The worker constructs the TS engine unconditionally
-
-- **WHEN** the worker opens any game
-- **THEN** it constructs the TS-midend-backed puzzle
-- **AND** there is no C/WASM implementation or WASM-coherence check to select
-  between
 
 ### Requirement: The midend reconciles persisted Ui across state transitions
 
@@ -315,19 +200,6 @@ that read and write the value on the game's `Ui`, so `interpretMove` and
 - **AND** `getPreferences()` returns the current value of each preference, read
   from the live `Ui`
 
-### Requirement: A game with no preferences of its own reports only the engine's
-
-For a game that omits `prefs`, the engine SHALL report no preference but its
-own `show-timer` ("Every game has a solve timer, and it runs while the board is
-undecided"), with no error.
-
-#### Scenario: A game with no preferences of its own
-
-- **WHEN** the engine is asked for the preferences of a started game that omits
-  `prefs`, such as Flip
-- **THEN** `getPreferencesConfig()` returns the one item `show-timer`, and
-  `getPreferences()` returns its value alone
-
 ### Requirement: The midend translates preferences to the app's config shapes
 
 The `Midend`, and the `EngineCore` surface it implements, SHALL expose
@@ -374,9 +246,7 @@ game, load and game from ID.
 ### Requirement: Preferences are not part of a save
 
 Preferences SHALL NOT be written into the save file: they are app-level,
-persisted per puzzle by the settings store. The engine SHALL NOT carry a
-binary `savePreferences`/`loadPreferences` surface, and an import or export
-feature SHALL choose its own wire format.
+persisted per puzzle by the settings store.
 
 #### Scenario: A save is loaded under other preferences
 
@@ -443,23 +313,6 @@ interactive while open, in both of its layouts.
   board
 - **THEN** the board input is unaffected by the panel, and the panel's
   checklist status reflects the new board without being reopened
-
-### Requirement: The reference panel docks beside the board or presents as a bottom sheet
-
-Where there is room to dock, a wide viewport that is not in the app's
-short-landscape "horizontal" orientation, the panel SHALL dock beside the
-board, the board reflowing to make room, with no scrim over the board. On a
-narrow viewport, or in the "horizontal" orientation, where a side dock would
-push the board off-center against the toolbar column, the panel SHALL present
-as a bottom sheet, leaving the board visible and centered above it, with an
-explicit close affordance and no scrim.
-
-#### Scenario: A short landscape screen
-
-- **WHEN** the panel is opened in the app's "horizontal" orientation, however
-  wide the viewport
-- **THEN** it is a bottom sheet with a close affordance, and the board stays
-  centered above it
 
 ### Requirement: The reference panel renders each item and selects on a click
 
@@ -536,47 +389,6 @@ not a move.
 - **THEN** the reported encoding changes, while moving the keyboard cursor,
   which the save does not record, leaves it unchanged
 
-### Requirement: The engine owns its type vocabulary and depends on nothing above it
-
-The engine's shared puzzle vocabulary SHALL live under `src/engine/` and SHALL
-be imported from there by the app; it SHALL NOT live in the app layer and be
-imported upward by the engine and the games. The vocabulary is `Color`,
-`Point`, `Size`, `Rect`, `KeyLabel`, `PresetMenuEntry`, `DrawTextOptions`,
-`ConfigDescription` and the change notifications the engine emits.
-
-#### Scenario: The app consumes the engine's vocabulary
-
-- **WHEN** a Lit component or the main-thread `Puzzle` needs `Rect` or
-  `PresetMenuEntry`
-- **THEN** it imports them from the engine, the dependency running from the app
-  to the engine
-
-### Requirement: The Comlink adapter lives on the app side of the seam
-
-The Comlink-facing adapter, `TsWorkerPuzzle`, which implements
-`PuzzleEngineSurface`, SHALL live in `src/puzzle/` and SHALL NOT live inside
-`src/engine/`. It presents the engine in the shape the app's `Puzzle` expects,
-and an adapter belongs with what it adapts to.
-
-#### Scenario: The adapter needs an app type
-
-- **WHEN** `TsWorkerPuzzle` imports the app's drawing canvas
-- **THEN** no module under `src/engine/` imports upward on its account
-
-### Requirement: The engine and the games import nothing above them, with no exception
-
-The layering invariant of the `repo-layout` capability, that the engine and the
-games import nothing under `src/` outside their own two directories, SHALL hold
-with no exceptions and no allowlist, and SHALL be checked automatically, not
-kept by convention.
-
-#### Scenario: A game imports the drawing vocabulary
-
-- **WHEN** a game's renderer needs the `Color` type for its `colors()`
-- **THEN** it imports it from the engine
-- **AND** no module under `src/engine/` or `src/games/` imports from
-  `src/puzzle/`, `src/utils/`, `src/store/` or any other app directory
-
 ### Requirement: A game rejects a move it cannot play, rather than guessing
 
 `Game.executeMove` SHALL reject a move that its dispatch does not recognize, by
@@ -626,6 +438,8 @@ Every optional member of the `Game` interface SHALL have at least one game
 implementing it and at least one consumer reading it. The two SHALL be checked
 separately, because they fail differently: no implementer is dead weight in the
 interface, and no consumer means every implementer wrote code that never runs.
+A mention in a comment, or a value copied into a field of the same name, SHALL
+NOT count as a consumer: relaying is not reading.
 
 #### Scenario: An optional hook nothing invokes is reported
 
@@ -638,13 +452,6 @@ interface, and no consumer means every implementer wrote code that never runs.
 
 - **WHEN** an optional member of the `Game` interface has no implementer
 - **THEN** the check reports it as surface to remove
-
-#### Scenario: The check states how much it inspected
-
-- **WHEN** the check runs
-- **THEN** it asserts the number of interface members it examined, the number
-  of modules it scanned for consumers, and the size of the registry it read
-  implementers from, so a sweep that matched nothing cannot report success
 
 ### Requirement: A `Game` member read only by a guard, or by nothing, is recorded
 
@@ -659,18 +466,6 @@ stand.
 - **WHEN** a member recorded as having no consumer acquires one
 - **THEN** the check fails, so the record is corrected and not left describing
   a finding that no longer exists
-
-### Requirement: A consumer of a `Game` member is read from the syntax tree
-
-Consumers SHALL be derived from the source's syntax tree and SHALL NOT be found
-by matching text, because a comment is not a consumer. A value copied into a
-field of the same name SHALL NOT count as a consumer: relaying is not reading.
-
-#### Scenario: A member is named only in a comment
-
-- **WHEN** a member's only mention outside the games is a commented-out line
-  proposing to read it
-- **THEN** the check reports the member as having no consumer
 
 ### Requirement: The static-attributes relay carries no field the app does not read
 
@@ -687,13 +482,6 @@ names: `canMarkAll` is also a `Game` member, so an engine read of
 - **THEN** the check reports it by name, so the midend stops computing and
   shipping a value for nobody
 
-#### Scenario: The check states how much it inspected
-
-- **WHEN** the check runs
-- **THEN** it asserts the number of fields it examined and the number of
-  app-shell modules it scanned, so a sweep that matched nothing cannot report
-  success
-
 ### Requirement: A shared mechanic is joined by having it, not by declaring it
 
 A game SHALL join a shared engine mechanic by having it: registering the
@@ -708,60 +496,6 @@ add itself to a list in order to be guarded.
 - **THEN** it is covered by every cross-game hint guard, including the
   necessity-voice rule, without any list being edited
 
-### Requirement: An enrollment fact is read off the game, through the shared helper
-
-The enrollment fact SHALL be one of: the registered game object (a member's
-presence, a flag's value, a contract section's state), the `Ui` its `newUi`
-returns, or the game's own source with comments removed.
-`src/engine/testing/enrollment.ts` SHALL be the shared way to ask those
-questions, and a guard needing one of them SHALL use it and SHALL NOT re-derive
-the population.
-
-#### Scenario: A guard asks which games carry a Ui field
-
-- **WHEN** a cross-game guard needs the games whose `Ui` carries a given field
-- **THEN** it asks the shared helper, which reads the `Ui` each game's `newUi`
-  returns
-
-### Requirement: A derived sweep puts a floor under the population it drew from
-
-Every derived sweep SHALL assert a floor on the population it drew from, not
-only on the set it filtered out of that population.
-
-#### Scenario: A derived sweep that found nothing fails rather than passing
-
-- **WHEN** the registry a cross-game guard draws from is empty or short
-- **THEN** the guard fails on the population floor and does not report health
-  over an empty set
-
-### Requirement: A guard's exemptions are a ledger held equal to the derivation
-
-Where the derived set holds members the guard's rule must not apply to, the
-guard SHALL record them as a ledger in the guard, one entry per member, each
-carrying its reason, and SHALL assert that the ledger equals what the
-derivation found. A ledger entry SHALL NOT be the enrollment key: the
-derivation says which games are members, and the ledger says only why a member
-is excused. An empty ledger is a valid and meaningful assertion.
-
-#### Scenario: A ledger entry that has stopped being true fails
-
-- **WHEN** a guard's exemption ledger names a game the derivation no longer
-  places in the exempt set
-- **THEN** the guard fails, naming the stale entry
-
-### Requirement: An absent contract section is excused by the game's reason, not by a ledger
-
-An excuse that says the game has no such contract section SHALL NOT be a ledger
-entry in a guard: it is the game's `notApplicable` reason, which the help page
-shows and the guard reads.
-
-#### Scenario: A guard's ledger of absences reads the game's reasons
-
-- **WHEN** a cross-game guard would excuse a game for having no such section:
-  no mistakes to check, no solver to cheat with, no turn
-- **THEN** it derives the excuse from the game's section state and not from a
-  ledger entry in the guard
-
 ### Requirement: A cross-game sweep SHALL take its boards from the shared slice, not build them
 
 A test that walks the collection SHALL obtain the boards it walks from the one
@@ -773,37 +507,6 @@ of a game's parts, such as a game's first preset or a tier written onto it.
 - **WHEN** a new cross-game test needs a board per game
 - **THEN** it calls the shared slice, and gains every game's every mode with no
   key of its own to maintain
-
-#### Scenario: A guard's own population is synthesized from a base preset
-
-- **WHEN** a cross-game guard builds its boards by writing a tier onto one
-  preset's params
-- **THEN** that is the tell of a population the games did not offer, and the
-  guard is re-keyed on the presets menu, unless its subject is what a params
-  record does and not what a board carries, which it SHALL say at the site
-
-#### Scenario: A hand-maintained roster patches the narrow population
-
-- **WHEN** a guard carries a per-game entry naming a bigger or different preset
-  to use, because the population it built is too small to reach the behavior
-- **THEN** reading the presets menu retires the roster, because the board the
-  entry named by hand is the board the derivation picks
-
-### Requirement: The sweeps that build their own boards are derived and ledgered
-
-Which sweeps still build their own boards SHALL be derived and ledgered, and
-SHALL NOT be counted in prose. A scan of the suite's own comment-stripped
-sources for calls of `firstLeaf` and `withTier` SHALL name the files, and each
-SHALL be held to an entry saying which behavior needs a params record the
-presets menu does not offer.
-
-#### Scenario: A sweep is written that builds its own boards anyway
-
-- **WHEN** a test file calls `firstLeaf` or `withTier` and is not in the ledger
-- **THEN** the suite scan fails, naming the file and the guide section, and the
-  author either calls the slice or writes down which behavior needs the record
-- **AND** an entry left behind by a file that stopped doing it fails the same
-  check from the other side
 
 #### Scenario: A guard needs a configuration the presets menu does not offer
 
@@ -826,23 +529,6 @@ to keep.
   by searching
 - **THEN** the slice holds every mode, each on the smallest board offering it,
   and no large board, with no count of presets to raise when a mode is added
-
-### Requirement: Widening a sweep does not widen what it asserts
-
-A sweep widened to more boards SHALL run the same assertions over them. A rule
-that then fails has found either a defect or a vocabulary its own subject uses
-and it had never heard, and both SHALL be treated as findings.
-
-#### Scenario: A lexical narration rule meets a construction it has never heard
-
-- **WHEN** a rule that recognizes narration by vocabulary is run over the modes
-  and tiers for the first time
-- **THEN** a phrasing the collection has used all along can fail it, and the
-  vocabulary is extended with the reason, the sentence not being flattened to
-  fit: "can take one line at most" is a proved bound, and "none of its
-  remaining edges can be walls" is a negated possibility
-- **AND** where the wording is owner-endorsed, it is recorded as a declared
-  idiom and not rewritten
 
 ### Requirement: The engine supports an ephemeral, opt-in mistake-checking hook
 
@@ -930,20 +616,6 @@ anything changed.
   model, whose `items` reflect the current board and whose `selected` matches
   the spotlighted key
 
-### Requirement: The reference model is plain, serializable data
-
-`ReferenceModel` SHALL be
-`{ items: ReferenceItem[]; selected: string | null; columns?: number }`, and
-`ReferenceItem` SHALL be `{ key: string; label: string; pips?: readonly
-number[]; status: "outstanding" | "placed" | "conflict" }`. `key` is a stable
-id, `pips` is optional face-value data for a game whose pieces render as pips,
-and `selected` echoes the spotlighted key, or null.
-
-#### Scenario: A model crosses the worker boundary
-
-- **WHEN** `getReference()` answers the app across the worker
-- **THEN** the model arrives whole, since it holds plain data only
-
 ### Requirement: The midend surfaces the reference aid without touching the history
 
 The `Midend` SHALL report `hasReference` in its static attributes, true when
@@ -960,20 +632,6 @@ an undo entry, alter the move log, or be serialized into a save.
 - **THEN** the board repaints with that item spotlighted, and no move is added:
   the move log, undo and redo availability, and any later save are
   byte-for-byte what they were before the call
-
-### Requirement: The reference aid is reached through the shared engine surface
-
-`hasReference`, `getReference` and `selectReference` SHALL be part of the
-shared `PuzzleEngineSurface`, so the app reaches them through the same surface
-as every other engine call. For a game that does not define `reference`,
-`hasReference` SHALL be false, `getReference()` SHALL return null, and
-`selectReference()` SHALL be a no-op.
-
-#### Scenario: A game without a reference aid reports none
-
-- **WHEN** the active game does not define `reference`
-- **THEN** `hasReference` is false, `getReference()` returns null,
-  `selectReference()` does nothing, and no reference control is shown
 
 ### Requirement: Absence has one spelling
 
@@ -1504,20 +1162,6 @@ be kept anywhere.
 - **THEN** it deals nothing the menu leaves out, which is right only for a
   sweep whose subject is the menu or the slicing rule
 
-### Requirement: A value no preset holds is dealt on the first preset that accepts it
-
-Each such value SHALL be written onto the first preset, in menu order, that the
-params check accepts it on, so a value costs what the game's cheapest board
-costs. Writing one field onto a preset SHALL NOT be used instead of reading the
-menu: here it is dealt beside the slice, for a value the menu has no board to
-read. A tier written onto a small grid is a board the dialog deals and need not
-be a hard one, so it SHALL NOT stand in for a preset at that tier.
-
-#### Scenario: Several presets accept a value
-
-- **WHEN** a value no preset holds is accepted on more than one preset
-- **THEN** it is dealt on the first of them in menu order
-
 ### Requirement: Every value is dealt, the generator's choices included
 
 Every value SHALL be dealt, the generator's own choices, such as symmetry and
@@ -1528,21 +1172,6 @@ SHALL NOT be kept: it would be a second copy to keep true.
 
 - **WHEN** a game's dialog offers a symmetry that no preset holds
 - **THEN** a board is dealt at it, as for a tier or a rule
-
-### Requirement: A value no preset accepts is held to a ledger
-
-A value no preset accepts has no board, and SHALL be held to a ledger with a
-reason for each entry, asserted equal to what the derivation finds. A free
-scalar (`"string"`) SHALL NOT be walked this way: it has no list of values to
-hold a menu against, and its ends are the slice's.
-
-#### Scenario: A value depends on another field
-
-- **WHEN** every preset refuses a value, because the field is valid only with
-  another field at a value no preset holds
-- **THEN** the census fails naming the game, the field and the value, and the
-  author gives the menu a board that carries it, or writes a ledger entry
-  saying what does deal it
 
 ### Requirement: Whether every value is dealt is asserted apart from the derivation
 
@@ -1986,16 +1615,3 @@ SHALL be kept and thrown again.
 - **WHEN** the generator runs out its retries on a params set
 - **THEN** every sweep asking for that board gets the same refusal, and the
   generator runs once
-
-### Requirement: A sweep does not seed a deal from its own name
-
-A cross-game sweep SHALL NOT seed a deal from its own name. Where a property
-needs more than one board of the same params, the sweep SHALL take the later
-ones by `n`. Where it needs a particular board, the board SHALL be pinned by
-its description and not reached through the dealer. A game's own tests are not
-bound by this: the requirement is on the sweeps that walk every game.
-
-#### Scenario: A property needs two boards of one preset
-
-- **WHEN** a cross-game sweep needs a second board of the same params
-- **THEN** it asks the dealer for `n` of 1, and seeds nothing itself

@@ -3,32 +3,30 @@
 ## Purpose
 Inertia, the puzzle of steering a ball that slides until a wall or stop halts
 it, collecting every gem without running onto a mine. This capability specifies
-the game: eight-direction keyboard and swipe control, gems placed only where
-the ball can go and come back from, and a hint that heads for the nearest gem
-it can safely take and explains each move by it.
+what is the game's own: its rules and description format, eight-direction
+keyboard and swipe control, how the board looks, gems placed only where the
+ball can go and come back from, and a hint that heads for the nearest gem it
+can safely take and explains each move by it. What every game shares is in the
+engine capabilities.
 
 ## Requirements
 
-### Requirement: Inertia game implements the Game interface
+### Requirement: Inertia's board and what solves it
 
-The engine SHALL provide a registered `inertia` game implementing
-`Game<InertiaParams, InertiaState, InertiaMove, InertiaUi, InertiaDrawState>`: a
-`w × h` grid whose cells are blank, a gem, a mine, a stop-square or a wall, with
-a single ball starting on a stop-square. The game is won when every gem has been
-collected. The game SHALL provide `solve`, `textFormat`, `statusbarText` and
-`hint`.
+The board SHALL be a `w × h` grid whose cells are blank, a gem, a mine, a
+stop-square or a wall, with a single ball starting on a stop-square. The game
+is won when every gem has been collected.
 
 #### Scenario: Collecting the last gem wins
 
 - **WHEN** a slide collects the last gem on the board
 - **THEN** the game's status is solved
 
-### Requirement: Inertia's parameters and presets
+### Requirement: Inertia's parameters
 
-Params SHALL be `w` and `h`, and three presets (8×10, 12×15, 16×20) SHALL be
-offered. The dimensions' declared bounds SHALL put each at 2 or more, which the
-engine refuses below, and `validateParams` SHALL refuse a grid whose area is
-below 6 squares.
+Params SHALL be `w` and `h`, encoded `WxH`. Each dimension SHALL be 2 or more,
+and a grid whose area is below 6 squares SHALL be refused: the generator places
+one gem for every five squares and needs at least one.
 
 #### Scenario: Params round-trip
 
@@ -38,8 +36,7 @@ below 6 squares.
 #### Scenario: Degenerate params are rejected
 
 - **WHEN** params have a dimension below 2, or an area below 6 squares
-- **THEN** they are refused with a non-null error string: the dimension by the
-  engine's bounds check, the area by `validateParams`
+- **THEN** they are refused
 
 ### Requirement: Inertia has no mistake check
 
@@ -58,8 +55,7 @@ A move slides the ball in one of eight directions. `executeMove` SHALL move the
 ball one square at a time in the move's direction, and for each square entered:
 collect a gem there (decrementing the gem count and clearing the square), die on
 a mine there, and stop when the square is a stop-square or when the next square
-in the direction is a wall. The state SHALL record the distance traveled by the
-last move, so the renderer can animate the slide.
+in the direction is a wall.
 
 #### Scenario: The ball collects gems on the way past
 
@@ -193,8 +189,7 @@ The game SHALL render mines as spiked balls, black in both schemes with a rim
 in ink, so that a mine stands off the dark scheme's floor; stop-squares as
 rings; gems as diamonds in the collection's color for what the player is after
 (the theme pair's second member); and the ball as a circle in the color of
-where the player is, or a jagged red splat when dead. The ball SHALL be drawn
-over a blitter-saved background.
+where the player is, or a jagged red splat when dead.
 
 #### Scenario: A mine keeps its rim in the dark scheme
 
@@ -216,10 +211,10 @@ it light.
 
 ### Requirement: Inertia's status bar
 
-The status bar SHALL show the remaining gem count, `DEAD!` when dead,
-`COMPLETED!` when finished, and a running deaths tally. The deaths tally SHALL
-be incremented only for a death caused by a move the player just made on an
-unfinished board, so that undoing and redoing a fatal move does not re-count it.
+The status bar SHALL show the remaining gem count, or `DEAD!` when dead, and a
+running deaths tally. The deaths tally SHALL be incremented only for a death
+caused by a move the player just made on an unfinished board, so that undoing
+and redoing a fatal move does not re-count it.
 
 #### Scenario: Undo and redo do not re-count a death
 
@@ -402,9 +397,7 @@ make is to undo.
 `redraw` SHALL mark the displayed step's subgoal gem with a ring in its own color,
 and SHALL draw the step's direction as an arrow on the ball. While a swipe is
 aimed in a direction, its aim arrow SHALL replace the hint's arrow, being what
-the ball will actually do next. The ring SHALL be part of the tile's cache key,
-because it is drawn on a tile rather than on the ball sprite, and an overlay
-outside the diff key is never painted and never erased.
+the ball will actually do next.
 
 #### Scenario: The marked gem is ringed and the direction shown
 
@@ -428,12 +421,11 @@ subset of the candidates.
 
 ### Requirement: Gem candidates are searched as square-plus-direction pairs
 
-A gem candidate SHALL be a square for which some direction is reachable both
-*from* the start and *back to* the start, computed by two breadth-first
-searches over the `w · h · 8` square-plus-direction space. Searching pairs
-rather than squares is required for correctness: a square may only be enterable
-heading one way and only leavable heading another, so a gem there could be
-collected but never returned from.
+A gem candidate SHALL be a square for which some one direction of travel is
+reachable both *from* the start and *back to* the start. Judging pairs of
+square and direction, not squares, is required for correctness: a square may
+only be enterable heading one way and only leavable heading another, so a gem
+there could be collected but never returned from.
 
 #### Scenario: A square entered one way and left another is no candidate
 
@@ -457,39 +449,13 @@ over the board. This test SHALL run before the gems are placed.
 ### Requirement: Solve plays a computed route to the finished board
 
 `solve` SHALL compute a route, a sequence of directions from the ball's current
-position that collects every remaining gem, and SHALL return an error when some
-remaining gem is unreachable. The solve move SHALL play the whole route, so the
-board is finished, as Solve finishes every game's board. The ball SHALL jump to
-the route's end rather than animating, since one interpolated slide over a
-route of many would cross walls. The step-by-step aid is the hint's.
+position that collects every remaining gem without the ball dying, and SHALL
+return an error when some remaining gem is unreachable. The route is a tour
+found by approximation and need not be the shortest. The solve move SHALL play
+the whole route, and the ball SHALL jump to its end rather than animating,
+since one interpolated slide over a route of many would cross walls.
 
 #### Scenario: Solve finishes the game
 
 - **WHEN** the player invokes Solve on a board with gems remaining
 - **THEN** every gem is collected and the game reports itself solved with help
-
-### Requirement: The route is a tour grown over the move graph
-
-The route SHALL be computed by building the move graph, with a vertex at every
-square the ball can come to rest and a *directed* vertex at every gem the ball
-can slide through, since a gem passed through in one direction cannot be left
-in another; growing a tour that splices in a detour to one as-yet-uncollected
-gem after another until none remain; and then repeatedly replacing redundant
-sections of the tour with shortest paths until it stops shrinking.
-
-#### Scenario: A computed route collects every gem
-
-- **WHEN** a route is computed for a board whose gems are all reachable
-- **THEN** following it collects every gem without the ball dying
-
-### Requirement: The route is the shorter of two tours
-
-The tour is an approximate solution to a traveling-salesman problem, not a
-deduction. Two tours SHALL be grown, one reaching for the nearest uncollected
-gem and one for the farthest, and the shorter kept.
-
-#### Scenario: The farthest-first tour wins when it is shorter
-
-- **WHEN** the tour grown farthest-first yields a shorter route than the one
-  grown nearest-first
-- **THEN** `solve` returns the farthest-first route

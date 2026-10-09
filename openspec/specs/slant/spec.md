@@ -3,42 +3,39 @@
 ## Purpose
 Slant (Gokigen Naname), the puzzle of drawing a diagonal in every square so that
 no loop forms and each numbered point meets that many lines. This capability
-specifies the game: its live errors, its two preferences, its same-slant marks,
-its mistake-checking, and an explained deductive hint drawn in the element-type
-legend.
+specifies the game: its formats and controls, its live errors, its two
+preferences, its same-slant marks, its mistake-checking, what each difficulty's
+solver may use and what the generator promises, how the board is drawn, and an
+explained deductive hint drawn in the element-type legend.
 
 ## Requirements
 
-### Requirement: Slant game implements the Game interface
+### Requirement: Slant is solved when every square is slashed, every clue met and no loop closed
 
-The engine SHALL provide a registered `slant` game implementing `Game`: fill
-every square of a `w × h` grid with a `/` or `\` diagonal so that every
-numbered vertex clue (0–4, on the `(w+1) × (h+1)` point grid) is met by
-exactly that many incident diagonals and the diagonals form no closed loop.
-The game SHALL provide `solve` and `textFormat`, and SHALL declare its
-completion flash through `solvedFlash`, which is not played after Solve.
+Every square of the `w × h` grid SHALL take a `/` or `\` diagonal so that every
+numbered vertex clue (0–4, on the `(w+1) × (h+1)` point grid) is met by exactly
+that many incident diagonals and the diagonals form no closed loop. The board
+SHALL be reported solved exactly while no errors exist and no square is blank.
 
-#### Scenario: The game is registered
+#### Scenario: Completion follows the board
 
-- **WHEN** the registry is asked for the game with id `slant`
-- **THEN** it returns a game whose `solve`, `textFormat` and `solvedFlash` are
-  defined
+- **WHEN** the last blank square is filled consistently with all clues and
+  no loop exists
+- **THEN** `status` reports the board solved
+- **AND** a later move that leaves a square blank or makes an error reports it
+  unsolved again
 
 ### Requirement: Slant's parameters are a size and a difficulty
 
 Params SHALL be `w`, `h` and `diff` (Easy or Normal), encoded `{w}x{h}d{e|h}`,
-with the short form `{w}x{h}` and the square shorthand `{n}`. The presets SHALL
-be 5×5, 8×8 and 10×12, each at Easy and at Normal.
+with the short form `{w}x{h}` and the square shorthand `{n}`. A `w` or an `h`
+below 2 SHALL be refused.
 
 #### Scenario: Params round-trip
 
 - **WHEN** params `{ w: 12, h: 10, diff: DIFF_HARD }` (the Normal tier) are
   encoded in full
 - **THEN** the result is `12x10dh` and decoding it round-trips the params
-
-### Requirement: Slant refuses a grid narrower or shorter than two squares
-
-The bounds the params declare SHALL refuse a `w` or an `h` below 2.
 
 #### Scenario: Invalid params are rejected
 
@@ -63,17 +60,6 @@ desc that overruns it.
 - **WHEN** a desc with an invalid character, or with a clue count not matching
   `(w+1) × (h+1)`, is validated
 - **THEN** the result is a non-null error
-
-### Requirement: A new Slant board holds its clues and blank squares
-
-`newState` SHALL parse the desc into a clue grid that every state of the game
-shares by reference and no move writes, with every square initially blank.
-
-#### Scenario: A move leaves the clues shared
-
-- **WHEN** a move is made on a new board
-- **THEN** the state it returns holds the same clue grid, by reference, as the
-  state before it
 
 ### Requirement: A click cycles a square through its three states
 
@@ -160,17 +146,6 @@ solver seeded with the placed diagonals and the player's same-slant marks.
 - **WHEN** the plan is computed on any generated Easy or Normal board
 - **THEN** following it step-by-step solves the board with no un-narrated step
 
-### Requirement: A Slant hint is refused on a solved or mistaken board
-
-A hint SHALL be refused on a solved board, and on a board with detectable
-mistakes, where the refusal SHALL come with the `findMistakes` overlay and the
-banner.
-
-#### Scenario: Refusal on a wrong board
-
-- **WHEN** `hint()` is invoked on a board where `findMistakes` is non-empty
-- **THEN** it refuses with an error and the mistake overlay is displayed
-
 ### Requirement: The hint's recorder leaves the generator's solve unchanged
 
 The plan's recording and seeding SHALL be options of the solver that are off
@@ -185,8 +160,7 @@ changes no verdict the generator reads.
 ### Requirement: Each hint step names its technique and says why the move is forced
 
 Each step SHALL name its technique, lead with the recognizable indication,
-state why the move is forced and conclude in the necessity voice. No displayed
-step SHALL be a generic, un-narrated fallback.
+state why the move is forced and conclude in the necessity voice.
 
 #### Scenario: Loop and dead-end firings name the connectivity reason
 
@@ -196,11 +170,13 @@ step SHALL be a generic, un-narrated fallback.
   loop (or seal points off from the grid's edge), and its evidence shades the
   connected chain / trapped components involved
 
-### Requirement: One deduction firing is one journey
+### Requirement: Each Slant technique is narrated by its own reason
 
-One firing of a deduction SHALL be one journey. A clue firing that forces
-several squares SHALL be one multi-leg journey, its later legs flagged
-`continuesPrevious`, and SHALL NOT be several independent hints.
+A clue-counting step SHALL name the clue and say why its count forces the
+slants, and SHALL fill every square the clue forces in one journey. A
+loop-avoidance step SHALL say that the ruled-out slant would close a loop, and
+a dead-end step that it would seal points off from the grid's edge; each SHALL
+shade the chain or the trapped components involved.
 
 #### Scenario: A clue-counting firing is explained and grouped
 
@@ -268,18 +244,6 @@ step cites SHALL be drawn `COL_HINT_CELL`, the clues it reads recolored
 - **WHEN** any step is displayed
 - **THEN** it carries a non-empty evidence area, a ringed anchor, a clue it
   reads or a mark it cites, never a bare conclusion
-
-### Requirement: Every hint bit is part of what the tile cache compares
-
-The hint colors SHALL be appended to the palette after `COL_BACKGROUND`
-through `COL_GROUNDED`, whose indices they leave as they are, and every hint
-bit SHALL participate in the per-tile render-cache diff key.
-
-#### Scenario: A hint repaints an unchanged tile
-
-- **WHEN** a tile is painted and a hint step then rings it, with no change to
-  the board
-- **THEN** the next `redraw` paints the tile again, ringed
 
 ### Requirement: Slant solves with a graded deductive solver
 
@@ -350,24 +314,17 @@ ruled out becomes equivalent.
 
 ### Requirement: Slant generates solver-gated boards reproducibly
 
-`newDesc` SHALL generate the same board for the same seed. It SHALL grow a
-filled grid over a shuffled square order, a square taking the slant the vertex
-DSF forces where the other would form a loop and otherwise one random draw of
-two, derive every clue, remove clues under the solver, and regenerate while the
-board is solvable one difficulty level down.
+`newDesc` SHALL generate the same board for the same seed. A generated board
+SHALL have a unique solution that its difficulty's solver finds, and above Easy
+SHALL NOT be solvable one level down. A clue SHALL stay removed only while that
+solver still finds the solution, and above Easy the obvious starting points
+(4s, 0s, border 2s and corner 1s) SHALL be tried for removal before the rest,
+so that few of them survive.
 
 #### Scenario: Generation is reproducible from a seed
 
 - **WHEN** `newDesc` runs twice with the same params and seed
 - **THEN** both runs emit the identical Slant description
-
-### Requirement: Clue removal runs in two solver-gated passes
-
-After a single shuffle of the clue order, `newDesc` SHALL try removing each
-clue in two passes, keeping a removal only while the solver at the board's
-difficulty still finds the unique solution. Pass 0 SHALL take the obvious
-starting points (4s, 0s, border 2s and corner 1s), or every clue at Easy, and
-pass 1 the rest.
 
 #### Scenario: A removal the solver cannot bear is undone
 
@@ -439,23 +396,11 @@ reads in both schemes.
 - **WHEN** the flash is in its middle third
 - **THEN** the squares are drawn on the cell surface
 
-### Requirement: The drawstate diffs a packed word for every tile and the ring
-
-The drawstate SHALL diff a `(w+2) × (h+2)` packed `Int32Array` covering the
-border ring, rebuilt every frame, with the `findMistakes` overlay carried in
-the diff key.
-
-#### Scenario: A mistake overlay repaints an unchanged tile
-
-- **WHEN** a tile is painted, `findMistakes` flags it, and `redraw` runs
-  again with no tile change
-- **THEN** the second paint renders the red mistake styling
-
 ### Requirement: Slant notes mode marks squares that slant alike
 
 The game SHALL offer a same-slant mark between any two squares that share a
-side, stored per square as a mark to the right and a mark below, and set or
-cleared by an absolute `alike` move so that replaying one is harmless.
+side, set or cleared by an absolute `alike` move so that replaying one is
+harmless.
 
 #### Scenario: A move log of diagonals alone replays without marks
 
@@ -465,9 +410,8 @@ cleared by an absolute `alike` move so that replaying one is harmless.
 ### Requirement: The Marks key turns Slant's notes mode on and off
 
 Notes mode (`ui.pencilMode`) SHALL be toggled by the collection's Marks key,
-which SHALL be the only key on Slant's keypad. While notes mode is on, the
-pencil indicator SHALL show at `pencilIndicatorBox`. With notes mode off,
-input SHALL be unchanged.
+which SHALL be the only key on Slant's keypad. With notes mode off, input
+SHALL be unchanged.
 
 #### Scenario: Notes mode off leaves a click cycling
 
@@ -512,8 +456,7 @@ in the pencil color.
 ### Requirement: Slant computes live errors after every move
 
 The state `executeMove` returns SHALL carry the board's errors: every diagonal
-lying on a loop edge, found by the engine's `findLoops` over the vertex graph,
-is a loop error; every clue vertex whose degree exceeds its clue, or whose
+lying on a loop edge is a loop error; every clue vertex whose degree exceeds its clue, or whose
 maximum achievable degree is below its clue, is a vertex error; and every
 diagonal in the border-connected vertex component is grounded.
 
@@ -526,16 +469,3 @@ diagonal in the border-connected vertex component is grounded.
 
 - **WHEN** a vertex clue `1` has two incident diagonals
 - **THEN** that vertex carries the vertex-error flag
-
-### Requirement: Slant judges completion from the board
-
-The board SHALL be reported solved exactly while no errors exist and no square
-is blank, judged from the board however it was reached.
-
-#### Scenario: Completion follows the board
-
-- **WHEN** the last blank square is filled consistently with all clues and
-  no loop exists
-- **THEN** `status` reports the board solved
-- **AND** a later move that leaves a square blank or makes an error reports it
-  unsolved again

@@ -2,25 +2,13 @@
 
 ## Purpose
 Map, the puzzle of four-coloring a map so that no two regions sharing an edge
-have the same color, given a few regions already colored. This capability
-specifies the game: its graded solver and the generator gated on it,
-completion and mistake reporting, its hint, and its input, preferences and
-rendering.
+have the same color, given a few regions already colored as clues that cannot
+be changed. This capability specifies what is Map's own: its params and
+description encodings, what its tiers mean and what the generator promises,
+completion and mistakes, its drags, keys and selection, its hint, and the
+decisions about how the map is drawn.
 
 ## Requirements
-
-### Requirement: Map game implements the Game interface
-
-The engine SHALL provide a registered `map` game implementing `Game`: color
-every region of a map so that no two adjacent regions share a color, given some
-regions pre-colored as immutable clues. The game SHALL provide `solve`, and
-SHALL drive a completion flash that is suppressed after Solve.
-
-#### Scenario: The flash follows the player's last move, not Solve
-
-- **WHEN** the player colors the last region so that the board is complete
-- **THEN** the completion flash plays
-- **AND** a board completed by Solve does not flash
 
 ### Requirement: Map's parameters
 
@@ -46,28 +34,14 @@ omitted `nN` defaults `n` to `w*h/8`, a `.` in the region count is tolerated
 - **THEN** it yields `w = 12`, `h = 12`, `n = 12*12/8`, and the default
   difficulty
 
-### Requirement: Map's presets
-
-Eight presets SHALL be offered: 15×20 with 30 regions and 25×30 with 75
-regions, each at every difficulty.
-
-#### Scenario: Each size is offered at every tier
-
-- **WHEN** the preset menu is read
-- **THEN** it holds 15×20 with 30 regions at Easy, Normal, Tricky and
-  Unreasonable, and 25×30 with 75 regions at the same four
-
 ### Requirement: Map refuses params that describe no map
 
-The game SHALL declare, in `paramConfig`, a minimum of 2 for the width and the
-height and of 5 for the number of regions, which the engine refuses a value
-below. `validateParams` SHALL refuse more regions than grid squares
-(`n > w*h`), and a width and height whose product overflows.
+`validateParams` SHALL refuse more regions than grid squares (`n > w*h`), and
+a width and height whose product overflows.
 
-#### Scenario: Invalid params are rejected
+#### Scenario: More regions than squares
 
-- **WHEN** params with fewer than five regions, or with more regions than grid
-  squares, are validated
+- **WHEN** params with more regions than grid squares are validated
 - **THEN** a non-null error string is returned
 
 ### Requirement: Map descriptions use the upstream two-part encoding
@@ -99,9 +73,9 @@ regions, with `z` meaning a run of 26.
 ### Requirement: A malformed Map description is refused
 
 Reading a desc, which is what the engine's `validateDesc` reports on, SHALL
-rebuild the regions from the edge list via a union-find over non-edges, and
-SHALL reject an unknown character, an edge list that defines the wrong number
-of regions, and a clue list whose region count does not equal `n`.
+rebuild the regions from the edge list, and SHALL reject an unknown character,
+an edge list that defines the wrong number of regions, and a clue list whose
+region count does not equal `n`.
 
 #### Scenario: A malformed description is rejected
 
@@ -109,12 +83,10 @@ of regions, and a clue list whose region count does not equal `n`.
   other than `n`, or whose edge list defines the wrong number of regions
 - **THEN** it returns a non-null error string
 
-### Requirement: newState builds the immutable map
+### Requirement: One description draws one map
 
-`newState` SHALL parse the desc into the immutable region structure (the
-four-quadrant map, the adjacency graph, the clue coloring), run the
-desc-seeded diagonal-smoothing pass, and compute the canonical edge and region
-label points.
+The pass that smooths region borders into diagonals SHALL be seeded from the
+desc alone, so a desc draws the same map every time it is opened.
 
 #### Scenario: The same description draws the same map
 
@@ -153,17 +125,6 @@ color. A blank region with no dots SHALL never be a mistake.
   one the unique solution gives it, and `findMistakes` is invoked
 - **THEN** that region is returned as a mistake, and a hint is refused until it
   is fixed
-
-### Requirement: Check & Save refuses a Map board with a mistake
-
-Check & Save depends on `findMistakes` and SHALL refuse to save while any
-mistake is present.
-
-#### Scenario: A wrong color blocks the save
-
-- **WHEN** a region is colored against the unique solution and the player
-  presses Check & Save
-- **THEN** the board is not saved
 
 ### Requirement: Map's adjacency error markers are always on
 
@@ -226,8 +187,8 @@ diagonally-split cell that the pointer uses.
 
 The three preferences victory-flash effect, number-regions and stipple display
 style SHALL be exposed through the `prefs` hook under the keywords
-`flash-type`, `show-numbers` and `stipple-style`, and stored on the `Ui` with
-`newUi` defaults. The `l`/`L` key SHALL toggle region numbers in play.
+`flash-type`, `show-numbers` and `stipple-style`. The `l`/`L` key SHALL toggle
+region numbers in play.
 
 #### Scenario: A key shows and hides the region numbers
 
@@ -239,9 +200,8 @@ style SHALL be exposed through the `prefs` hook under the keywords
 `redraw` SHALL render region fills, the diagonal second-region triangle of a
 split cell, pencil-mark stipples, grid lines on region boundaries, the red
 adjacency error diamonds, optional region numbers, the flagged-mistake region
-outline, the selected region's band, the floating drag blob (a blitter sprite)
-while a color or its marks are carried, and the selected completion-flash
-style.
+outline, the selected region's band, the floating drag blob while a color or
+its marks are carried, and the selected completion-flash style.
 
 #### Scenario: A split cell shows both of its regions
 
@@ -277,22 +237,12 @@ additionally recurse (guess and verify).
 - **THEN** the solver does not report a unique solution
 - **AND** with the Normal cap it does
 
-### Requirement: The solver returns a three-valued verdict
-
-The solver SHALL return the three-valued verdict (impossible, unique, or stuck
-or ambiguous), and a grading routine SHALL return the easiest difficulty that
-yields a unique solution.
-
-#### Scenario: Clashing clues are impossible
-
-- **WHEN** the solver is given clues that color two adjacent regions alike
-- **THEN** its verdict is impossible, at every difficulty
-
 ### Requirement: Map's generator is gated on the solver
 
-The generator SHALL grow voronoi regions over the cumulative-frequency table,
-four-color them recursively, reduce clues under the solver's gate without ever
-removing the last region of a color, and retry below a difficulty floor.
+A generated board SHALL have one solution, which the solver finds at the
+requested difficulty and not at the one below it. The clues SHALL be reduced
+without ever removing the last clue of a color, so every color is on the board
+to be picked up.
 
 #### Scenario: Generated boards are uniquely solvable at their difficulty
 
@@ -371,9 +321,7 @@ color when it is not a clue, and a mark when it is blank.
 
 Selection SHALL name the region the pointer was on, not merely its cell. The
 cursor is a cell plus the direction it last moved, which is how a
-diagonally-split cell names one of the regions it holds, and the translation
-from a pixel SHALL derive that direction from the same quadrant test the
-pixel-to-region hit-test uses and SHALL NOT restate it.
+diagonally-split cell names one of the regions it holds.
 
 #### Scenario: A tap on a split cell selects the region under the finger
 
@@ -401,8 +349,7 @@ SHALL NOT change, because in this game the fill is the answer.
 A color carried by the keyboard SHALL be drawn inside the triangle the cursor
 names on a divided cell, at that triangle's centroid, a third of a tile from
 the cell's center, so the carried color says which half of a divided cell its
-drop will land in. On a whole cell it SHALL be drawn with a one-pixel nudge
-from the center.
+drop will land in.
 
 #### Scenario: The carried color sits on the cursor's side of a diagonal
 
@@ -425,11 +372,9 @@ second way in and SHALL NOT replace either.
 
 ### Requirement: Map explains the next deduction
 
-A hint SHALL be refused when the board is solved or `findMistakes` reports a
-mistake, by the midend before it asks the game. `hint(state)` SHALL refuse
-with `DEDUCTION_EXHAUSTED` when nothing follows, which only an Unreasonable
-board allows, and otherwise SHALL return the forced steps from the player's
-own board as an ordered plan.
+`hint(state)` SHALL refuse with `DEDUCTION_EXHAUSTED` when nothing follows,
+which only an Unreasonable board allows, and otherwise SHALL return the forced
+steps from the player's own board as an ordered plan.
 
 #### Scenario: A board that needs a guess is refused
 
@@ -576,17 +521,6 @@ selection band SHALL stay visible just inside a hint band on the same region.
 - **THEN** the dashed line and the solid band on either side of that border do
   not touch
 
-### Requirement: The generator does not call the hint
-
-The generator SHALL NOT call the hint, and splitting the rungs into functions
-SHALL change no solver verdict.
-
-#### Scenario: The hint reads the rungs without applying them
-
-- **WHEN** the hint collects a rung's firings from a board
-- **THEN** the solver's verdict on that board, and the board a seed generates,
-  are what they would be had no hint been asked
-
 ### Requirement: Map's Mark-all press is adaptive
 
 Map SHALL declare `canMarkAll` and answer the `M` key with an adaptive
@@ -611,11 +545,10 @@ do SHALL be no move.
 
 ### Requirement: Map offers the player's reading of an undotted region
 
-Map SHALL offer the shared `hint-notes` preference through a
-`candidateReading` field in its `Ui`, defaulting to `implicit` with the reason
-stated in `newUi`. Under `implicit` the hint SHALL plan as the requirements
-from "Map explains the next deduction" to "The generator does not call the
-hint" state.
+Map SHALL offer the shared `hint-notes` preference, defaulting to `implicit`.
+Under `implicit` the hint SHALL plan as the requirements from "Map explains
+the next deduction" to "A premise's regions are outlined apart from the ring"
+state.
 
 #### Scenario: The implicit reading never fills
 

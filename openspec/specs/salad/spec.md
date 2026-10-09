@@ -3,17 +3,16 @@
 ## Purpose
 Salad, the Latin-square puzzle in which some squares stay empty, clued mainly by
 the letter seen first from each edge in ABC End View mode, or by balls and
-crosses in Number Ball mode. Its solver is a consumer of the shared Latin-square
-solver that reasons about the empty square directly, its tiers are graded, and
-its hint is explained as pencil-note deductions.
+crosses in Number Ball mode. This spec holds its two modes, its parameters and
+description format, its controls, what its two difficulties and its generator
+promise, the decision that its solver reasons about the empty square in the
+shared Latin cube, its look, and what its hint teaches and says.
 
 ## Requirements
 
-### Requirement: Salad game implements the Game interface
+### Requirement: Salad has two game modes
 
-The engine SHALL provide `src/games/salad/` implementing the `Game` interface
-for Salad, registered so the puzzle is served by the TypeScript engine. Salad
-SHALL support both of its game modes: **ABC End View** (letters, with clues on
+Salad SHALL support both of its game modes: **ABC End View** (letters, with clues on
 the grid's borders naming the first character seen looking inward) and **Number
 Ball** (numbers, with in-grid ball and cross clues).
 
@@ -41,11 +40,10 @@ count, mode and difficulty and round-trip through decode.
 - **WHEN** parameters whose `nums` equals their `order` are validated
 - **THEN** `validateParams` refuses them
 
-### Requirement: Salad declares a mistake check and an on-screen keypad
+### Requirement: Salad's keypad holds its symbols and the two markers
 
-Salad SHALL declare a `findMistakes` hook, because it has a unique solution, and
-SHALL surface its `nums` symbol keys plus the empty and not-empty markers as an
-on-screen keypad.
+Salad SHALL surface its `nums` symbol keys plus the empty and not-empty markers
+as an on-screen keypad.
 
 #### Scenario: The keypad of a three-symbol board
 
@@ -72,7 +70,7 @@ Ball mode it SHALL be the grid clues alone.
 Validation SHALL reject a description that carries more or fewer squares than
 the relevant array holds, with a message that tells too many from too few, one
 that contains an out-of-range clue value, and one that uses an unknown
-character. The messages SHALL be the collection's shared description errors.
+character.
 
 #### Scenario: A description with the wrong number of squares is rejected
 
@@ -80,12 +78,11 @@ character. The messages SHALL be the collection's shared description errors.
   validated
 - **THEN** it is rejected with a message distinguishing too much from too little
 
-### Requirement: Salad ports the solver as a shared Latin-square consumer
+### Requirement: Salad has two difficulties, both solved by deduction alone
 
-Salad SHALL provide a solver built on the shared `engine/latin.ts` framework,
-adding as its own deduction the border-clue deduction, in ABC End View mode. The
-solver SHALL provide two difficulties, Easy and Normal, and both SHALL be
-solvable by pure deduction without guessing.
+Salad's solver SHALL provide two difficulties, Easy and Normal, and both SHALL
+be solvable by pure deduction without guessing. To the shared Latin deductions
+it SHALL add one of its own, the border-clue deduction, in ABC End View mode.
 
 #### Scenario: The solver deduces the unique solution without guessing
 
@@ -97,9 +94,11 @@ solvable by pure deduction without guessing.
 
 Salad's solver SHALL declare the empty square to the shared cube as its repeated
 symbol: `nums + 1`, appearing `order − nums` times per line. A cross SHALL be
-that symbol placed and a ball that symbol struck, and the board's marker array
-SHALL be read back off the solved cube. The solver SHALL NOT translate between
-holes and candidates at the game's edge.
+that symbol placed and a ball that symbol struck. The empty-square deductions
+SHALL be the cube's own: the solver SHALL NOT translate between holes and
+candidates at the game's edge, nor keep a hand-written sync-and-count layer.
+The Number Ball quality gate, whether the holes fall out with no number
+entered, SHALL be asked of that cube.
 
 #### Scenario: The empty square is reasoned about directly
 
@@ -108,35 +107,16 @@ holes and candidates at the game's edge.
 - **THEN** that deduction is expressed over the shared cube's repeatable symbol,
   with no translation step at the game boundary
 
-### Requirement: Salad's empty-square deductions are the shared cube's own
-
-The empty-square deductions SHALL be the shared cube's own: positional
-elimination with the symbol's multiplicity, numeric elimination, the line strike
-once a line holds all its empties, and multiplicity-aware set elimination. They
-SHALL NOT be a hand-written sync-and-count layer. The Number Ball quality gate, which asks
-whether the holes fall out with no number entered, SHALL ask it of that cube.
-
 #### Scenario: A line that can hold its empties in only one way
 
 - **WHEN** exactly `order − nums` squares of a line can still be empty
 - **THEN** the cube's positional elimination places the empty-square symbol in
   each of them
 
-### Requirement: Salad's generator strips clues while the board stays uniquely solvable
-
-The generator SHALL use the solver to keep every board uniquely solvable: it
-SHALL generate a full Latin square, then remove clues in a randomized order,
-keeping a removal only while the puzzle stays uniquely solvable at the target
-difficulty. Generation from a given seed SHALL be reproducible.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
-
 ### Requirement: Salad's Normal tier is never soluble at Easy
 
-A Salad board generated at Normal SHALL NOT be soluble at Easy.
+Every board Salad generates SHALL have exactly one solution, reached at its
+stated difficulty, and a board generated at Normal SHALL NOT be soluble at Easy.
 
 #### Scenario: A Normal board genuinely needs the Normal tier
 
@@ -226,8 +206,7 @@ satisfied.
 
 Rendering SHALL draw symbols, balls and crosses, pencil-mark candidate grids,
 border clues in the surrounding margin, a live highlight of rule violations, and
-a completion flash. Rendering SHALL aim at a neat presentation and SHALL NOT be
-held to pixel parity with upstream's.
+a completion flash.
 
 #### Scenario: A symbol repeated in a line
 
@@ -301,18 +280,6 @@ non-deductive fallback step.
 - **THEN** every step carries its reason, and the walk reaches a solved board
   with no step that guesses
 
-### Requirement: A Salad hint is refused on a wrong or a complete board
-
-A hint SHALL be refused, with the board's mistakes highlighted, when the current
-board contradicts the unique solution, and SHALL be refused when the board is
-already complete.
-
-#### Scenario: A hint is refused while the board holds a mistake
-
-- **WHEN** a hint is requested on a board that contradicts the unique solution
-- **THEN** no plan is shown, the contradicting squares are highlighted, and the
-  refusal says a mistake must be fixed first
-
 ### Requirement: Salad's hint plan is recomputable from any position
 
 The hint plan SHALL be recomputable from any mid-game position: a plan computed
@@ -325,18 +292,6 @@ moves nor stall.
   requested again
 - **THEN** the new plan starts from the current board, repeating none of the moves
   already reflected on it
-
-### Requirement: Computing a hint leaves Salad's generation unchanged
-
-Computing a hint SHALL NOT change which puzzles Salad generates: the deduction
-recorder the hint reads SHALL be inert on the generator's solving path.
-
-#### Scenario: Recording a hint's deductions leaves generation unchanged
-
-- **WHEN** a board is generated from a seed, with the hint's deduction recorder
-  in the codebase
-- **THEN** its description is byte-for-byte the one generated without the
-  recorder
 
 ### Requirement: Salad's hint strikes a circled square's empty-square mark wherever the circle came from
 
@@ -358,20 +313,6 @@ then goes their own way, and the mark would then hide the placement behind it.
   empty", and the circle is right
 - **THEN** the hint's next step strikes that mark, and the walk reaches a
   solved board
-
-### Requirement: Salad's hint teaches every deduction that rules a square out as empty
-
-Salad's hint SHALL teach each deduction that rules a square out as empty, on
-every board Salad deals at either difficulty. Where a line already holds all its
-empty squares, the hint SHALL say so as a count and mark the line's other
-squares as holding a symbol.
-
-#### Scenario: A line holds all its empty squares
-
-- **WHEN** a line carries every empty-square marker it may hold, and other
-  squares of it are still blank
-- **THEN** the hint's step gives the count as its reason and marks those squares
-  as holding a symbol
 
 ### Requirement: A set or a chain that rules a square out as empty strikes its mark
 

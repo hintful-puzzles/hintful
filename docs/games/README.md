@@ -101,6 +101,34 @@ For a new game:
    [`puzzle-icons`](../../openspec/specs/puzzle-icons/spec.md).
 6. **Owner acceptance**, then close out (below).
 
+## What a game's spec holds
+
+`openspec/specs/<game>/spec.md` is read before working on the game and checked
+against when changing it. It holds what a session could not get right from the
+code alone, because the code says what happens and not what was meant:
+
+- the rules of the puzzle and what counts as solved;
+- the description and params encodings, and anything else a save or a shared
+  link depends on;
+- what each control does;
+- what the hint does and says: its techniques and their order, its wording
+  rules, its marks, when it refuses;
+- what each difficulty tier means, and what the generator promises of a board;
+- a decision about how the game looks that is the game's own, and a
+  deliberate difference from upstream.
+
+It does not hold what the `Game` type or the registry says of every game, a
+copy in prose of a preset table or a palette, a rule of the collection that
+the game merely follows (that is the engine capability's to state, once), or
+how a thing is built.
+
+A requirement is one behavior in `SHALL` sentences, within the 500 characters
+the validator allows before the first scenario, with no date, no change id and
+no account of how it was decided. The gate holds those; the rest is in
+`openspec/config.yaml`, which the tool shows whoever writes a delta. A change
+to something the spec already covers modifies that requirement, so the spec
+keeps reading as the game and not as its history.
+
 ## File anatomy
 
 The file shape that has held across all 57 games (Galaxies is the reference;

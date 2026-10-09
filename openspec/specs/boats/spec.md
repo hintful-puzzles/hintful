@@ -4,25 +4,10 @@
 Boats, the battleships puzzle of placing a given fleet so that no two boats
 touch, even diagonally, and each row and column holds its clued number of boat
 cells. This capability specifies the game on the TS engine, with a hint that
-explains one deduction at a time and refuses a board it cannot honestly advise,
-and a fleet display that fits every legal fleet.
+explains one deduction at a time and never reasons from a board that cannot be
+completed, and a fleet display that fits every legal fleet.
 
 ## Requirements
-
-### Requirement: Boats game implements the Game interface
-
-The engine SHALL provide `src/games/boats/` implementing the `Game`
-interface for Boats (Battleships), registered so the puzzle is served by the
-TypeScript engine.
-
-Because Boats has a unique solution, it SHALL declare a `findMistakes` hook so
-that Check & Save hard-blocks a save while a provably wrong cell is present.
-
-#### Scenario: Every preset produces a uniquely soluble board
-
-- **WHEN** a new game is generated for any preset
-- **THEN** a board is produced whose fleet can be located by deduction alone at
-  exactly the requested difficulty, with a unique solution
 
 ### Requirement: Boats parameters are a board, a fleet, a difficulty and a remove-numbers flag
 
@@ -119,8 +104,7 @@ Boats SHALL be played by mouse or touch and by keyboard. A left-click SHALL
 cycle a cell between empty, a boat segment and water; a right-click SHALL place
 water on an empty cell and empty a filled one; a drag SHALL fill a run along a
 single row or column; and a keyboard cursor with a place-segment key, a
-place-water key and modifier-drag SHALL provide the same placements. Undo and
-redo SHALL be provided by the engine with no game-specific state.
+place-water key and modifier-drag SHALL provide the same placements.
 
 #### Scenario: Filling a run of cells along a row
 
@@ -167,27 +151,24 @@ solver completes, a board the live flags mark SHALL be a board on which
   on a square the unique solution has as water
 - **THEN** `findMistakes` reports that square
 
-### Requirement: Boats draws its cells, clues and fleet with no interpolated animation
+### Requirement: Boats is solved when the fleet is placed, without the water
 
-Rendering SHALL draw each cell as water or its boat-segment shape, the row and
-column count clues on the edges, and the fleet list, with wrong cells and
-counts in their error colors. There SHALL be no interpolated animation, and the
-board SHALL flash on completion.
+The board SHALL be solved once every row and column count is met and the fleet
+is exactly accounted for, whether or not the remaining squares have been marked
+as water.
 
 #### Scenario: Completing the fleet wins, without filling in the water
 
 - **WHEN** the last boat is placed so that every row and column count is met and
   the fleet is exactly accounted for
-- **THEN** the game is reported solved and flashes, even if squares the player
-  never marked as water remain undecided
+- **THEN** the game is reported solved, even if squares the player never marked
+  as water remain undecided
 
-### Requirement: Boats explains its next deduction
+### Requirement: The Boats hint replays the solver's deductions one firing at a time
 
-Boats SHALL provide an explained hint that computes a plan of forced moves from
-the player's current board and narrates each one by the deduction that forces
-it, meeting the project's hint quality bar: the narration SHALL state why the
-move is forced, the premise that singles out this conclusion, and not merely
-what to place.
+The hint SHALL be derived from the same deduction engine as the solver,
+replayed one firing at a time from the player's current board, and SHALL
+narrate each firing by the deduction that forces it.
 
 #### Scenario: A hint names the technique that forces the move
 
@@ -195,12 +176,6 @@ what to place.
   its number allows
 - **THEN** the remaining squares in that row are offered as water, and the
   explanation states that the row's number is already met
-
-### Requirement: The Boats hint replays the solver's deductions one firing at a time
-
-The hint SHALL be derived from the same deduction engine as the solver,
-replayed one firing at a time, and SHALL NOT alter the solver, the generator or
-the description codec.
 
 #### Scenario: A hint resumes from the player's board
 
@@ -247,19 +222,17 @@ hint SHALL NOT fall back on an unexplained "this is the only possibility" step.
   number, two boats touching, or a boat the fleet cannot hold) rather than
   asserting the square is forced without reason
 
-### Requirement: One deduction is one hint
+### Requirement: Water forced by the never-touch rule belongs to the step that places the boat
 
-A single deduction that forces several squares SHALL be presented as one hint,
-a multi-leg journey whose continuation legs are marked as continuing the
-previous one, and not as several disjoint hints. Squares that follow from a
-placement by the never-touch rule SHALL be shown as part of that step and SHALL
-NOT be narrated as further deductions.
+Squares that follow from a placement by the never-touch rule SHALL be shown as
+part of that step and SHALL NOT be narrated as further deductions.
 
-#### Scenario: A line filled by one deduction is a single hint
+#### Scenario: A placed segment brings its water with it
 
-- **WHEN** a deduction completes a whole row with water
-- **THEN** one hint is presented covering every square in that row, not one hint
-  per square
+- **WHEN** a hint step places a boat segment whose neighbors the never-touch
+  rule makes water
+- **THEN** that water is shown in the same step, and no later hint narrates it
+  as a deduction of its own
 
 ### Requirement: A Boats hint marks a boat and water each in its own shape
 
@@ -279,14 +252,8 @@ hint color cannot stand for two different actions.
 
 ### Requirement: Boats refuses to hint a board it cannot honestly advise
 
-A hint request SHALL be refused, with a reason, when the board is already
-solved, when the player has placed a square that contradicts the puzzle's
-unique solution, or when no further deduction is available. On the mistake
-refusal the offending squares SHALL be surfaced through the existing mistake
-overlay.
-
 A placement that breaks no rule yet but that no solution permits SHALL be
-treated as a mistake for this purpose, so that the hint never reasons onward
+treated as a mistake by the hint, so that the hint never reasons onward
 from a board that cannot be completed.
 
 #### Scenario: A wrong-but-legal placement is refused rather than reasoned from
@@ -311,11 +278,9 @@ across the board does not draw past the right edge.
 - **THEN** that batch wraps onto a further row, every boat is drawn inside the
   canvas width, and the reported canvas is tall enough for the extra row
 
-### Requirement: The fleet layout is computed once and leaves a fitting fleet as it was
+### Requirement: A fleet whose batches fit is laid out by the batch rule alone
 
-The layout SHALL be computed once and shared by the size calculation and the
-renderer, so the reported canvas height always matches the number of rows
-drawn. Wherever breaking rows only between whole batches keeps every boat
+Wherever breaking rows only between whole batches keeps every boat
 inside the row limit, the layout SHALL be identical to the one that rule alone
 gives.
 
@@ -339,19 +304,6 @@ Boats satisfies the guess-free-generation policy at every named difficulty.
 - **WHEN** a soluble board is solved
 - **THEN** the returned tier equals the hardest technique tier the deduction
   needed, and the completed grid is the unique solution
-
-### Requirement: A boat's first square is the smallest element of its class
-
-Boat connectivity SHALL be computed over the shared disjoint-set structure.
-Where the solver needs a boat's first square (whether a boat is finished, and
-which way an unfinished one must grow) it SHALL ask for the smallest element of
-the boat's class, and SHALL NOT read the class's root, which union-by-size
-leaves on a boat's second square.
-
-#### Scenario: A finished boat is seen as finished
-
-- **WHEN** the largest boats of the fleet are all placed and bounded by water
-- **THEN** the solver does not report a contradiction
 
 ### Requirement: The Boats solver is monotone in its difficulty cap
 

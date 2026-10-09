@@ -2,33 +2,31 @@
 
 ## Purpose
 Pattern (Nonogram), the puzzle of shading a grid so that the runs of shaded
-squares in each row and column match its clue list, with drag-to-fill and
-cursor input, an error overlay, and an explained deductive hint with its own
-color legend.
+squares in each row and column match its clue list: what counts as solved, the
+params and description encodings, what the generator promises, what a press, a
+drag and the keyboard do, how the picture and its errors look, and what the
+explained deductive hint says and marks.
 
 ## Requirements
 
-### Requirement: Pattern game implements the Game interface
+### Requirement: Pattern is solved when every row and column matches its clues
 
-The engine SHALL provide a registered `pattern` game implementing `Game`: the
-nonogram (Pattern, Picross, Paint-by-numbers) on a `w × h` grid in which each
-cell is `Full` or `Empty` so that each row and column matches its sequence of
-run-length clues. The game SHALL provide
-`solve` and `textFormat`, and SHALL drive a solve-completion flash.
+Pattern is the nonogram (Picross, Paint-by-numbers) on a `w × h` grid in which
+each cell is `Unknown`, `Full` or `Empty`. The board SHALL be solved when no
+cell is `Unknown` and the runs of `Full` cells in every row and column equal
+that line's sequence of run-length clues.
 
 #### Scenario: Completing the picture solves the game
 
 - **WHEN** the last move leaves every row and column with no `Unknown` cell and
   with runs equal to its clues
-- **THEN** the game reports solved and the completion flash runs
+- **THEN** the game reports solved
 
 ### Requirement: Pattern's parameters are a width and a height
 
 Params SHALL be `w` and `h`, positive integers, encoded `{w}x{h}`, with a bare
-`{w}` decoding to a square `w × w` grid. The presets SHALL be the square grids
-of side 10, 15, 20, 25 and 30. A non-positive dimension SHALL be refused, by
-the bound the width and height fields declare, and `validateParams` SHALL
-refuse an unreasonably large `w·h`.
+`{w}` decoding to a square `w × w` grid. `validateParams` SHALL refuse an
+unreasonably large `w·h`.
 
 #### Scenario: Params round-trip
 
@@ -47,9 +45,8 @@ refuse an unreasonably large `w·h`.
 
 The desc SHALL encode the `w` column clues followed by the `h` row clues as a
 `/`-separated list, each line a `.`-separated list of positive run lengths, an
-empty line being an empty section. `newState` SHALL parse the desc into the
-immutable clue arrays and an all-`Unknown` grid, with any immutable suffix
-applied.
+empty line being an empty section. The board it opens SHALL be all `Unknown`,
+apart from any square an immutable suffix names.
 
 #### Scenario: A description round-trips
 
@@ -82,13 +79,12 @@ specifications, and any unrecognized character in either section.
   specifications, or an invalid character is validated
 - **THEN** a non-null error is returned
 
-### Requirement: Pattern ports the per-line solver and gates generation on it
+### Requirement: Pattern generates only boards the per-line solver solves uniquely
 
-The game SHALL implement the per-line nonogram solver: the row and column
-fixpoint that narrows each line against its run-length clue until no further
-cell is forced. The generator SHALL produce a random grid and accept it only
-when it is uniquely line-solvable from its derived clues. The solver SHALL be
-reused by `solve()` and `findMistakes`.
+The per-line solver is the row and column fixpoint that narrows each line
+against its run-length clue until no further cell is forced. The generator
+SHALL produce a random grid and accept it only when that solver, from the
+grid's derived clues alone, completes it to one fully determined grid.
 
 #### Scenario: Generated boards are uniquely line-solvable
 
@@ -96,11 +92,6 @@ reused by `solve()` and `findMistakes`.
   all-unknown grid
 - **THEN** the solver completes to a single fully-determined grid (no remaining
   unknown cells, no contradiction)
-
-#### Scenario: Solve recovers the unique grid
-
-- **WHEN** `solve()` is invoked on a generated game
-- **THEN** it returns the fully-solved `Full`/`Empty` grid
 
 ### Requirement: A Pattern press cycles the pressed cell and begins a drag
 
@@ -165,12 +156,10 @@ Space as a right press does.
 - **THEN** the cell moves to the same next state, and likewise a right-click and
   Space
 
-### Requirement: Pattern renders clues, the error overlay, and mistakes
+### Requirement: A completed Pattern line that contradicts its clue shows the clue in the error color
 
-`redraw` SHALL draw the grid, the row and column clue numbers, the cursor and
-the drag-rectangle preview, and SHALL drive the solve-completion flash. When a
-line is fully determined (no `Unknown` cells) but its runs contradict its clue,
-that line's clue numbers SHALL be drawn in the error color.
+When a line is fully determined (no `Unknown` cells) but its runs contradict
+its clue, that line's clue numbers SHALL be drawn in the error color.
 
 #### Scenario: A contradicting completed line shows red clues
 
@@ -181,37 +170,23 @@ that line's clue numbers SHALL be drawn in the error color.
 
 The game SHALL implement `findMistakes(state)`: every player-marked cell whose
 `Full` or `Empty` value contradicts the unique solution SHALL be flagged, and
-an `Unknown` cell SHALL never be flagged. A flagged cell SHALL be rendered with
-the mistake outline, in the error color.
+an `Unknown` cell SHALL never be flagged. A flagged cell's outline SHALL be
+drawn in the error color at the cell's edge, beside the piece.
 
-#### Scenario: Check & Save flags a wrong cell
+#### Scenario: A wrong shaded cell is outlined
 
 - **WHEN** `findMistakes` runs on a board with a cell marked `Full` where the
   unique solution is `Empty`
-- **THEN** that cell is returned as a mistake and rendered with the mistake
-  overlay on the next redraw
-
-### Requirement: Pattern's overlays are part of the render cache key
-
-Every overlay that is not part of the packed cell value, the mistake highlight
-and the per-line error flag among them, SHALL be included in the render cache
-diff key so that it repaints on the frame it is computed.
-
-#### Scenario: A mistake appears on the frame it is found
-
-- **WHEN** a redraw is given a mistake on a cell whose value has not changed
-  since the last frame
-- **THEN** that cell is repainted with the mistake outline
+- **THEN** that cell is returned as a mistake
+- **AND** its outline is drawn at the cell's edge and the shaded piece stays
+  visible inside it
 
 ### Requirement: Pattern provides an explained, deductive hint
 
-Pattern SHALL implement the Hint System hooks (`hint`, `hintKeepTrack`, and
-rendering of the displayed step) to the explained-hint quality bar. Each hint
-SHALL teach why the move is forced
-by a recognizable line technique, not merely state the move: run overlap, cells
-no run can reach, a line with no clues, or the general single-line
-intersection, the cells forced in every arrangement of one line's runs
-consistent with its marks.
+Each hint SHALL teach why the move is forced by a recognizable line technique,
+not merely state the move: run overlap, cells no run can reach, a line with no
+clues, or the general single-line intersection, the cells forced in every
+arrangement of one line's runs consistent with its marks.
 
 #### Scenario: A hint explains a forced line deduction
 
@@ -260,15 +235,13 @@ stay` or `are always`), never with a bare state-of-being verb.
 - **AND** it ends by saying the cells `must be` the engine's word for the
   shaded piece
 
-### Requirement: Every Pattern hint step names a technique
+### Requirement: The single-line intersection is Pattern's bottom rung
 
-Every displayed step SHALL name a technique. The hint SHALL NOT emit a generic,
-unexplained step for a deduction its named techniques do not group, and SHALL
-NOT use the wording "only one arrangement fits". Where the other techniques do
-not cover a forced cell, the plan SHALL narrate the single-line intersection as
-the deductive bottom rung, in the necessity voice: every way the line's runs
-can fit covers the cells, or leaves them out, so they must be `Full`, or
-`Empty`.
+Where the other techniques do not cover a forced cell, the plan SHALL narrate
+the single-line intersection as the deductive bottom rung, in the necessity
+voice: every way the line's runs can fit covers the cells, or leaves them out,
+so they must be `Full`, or `Empty`. The hint SHALL NOT use the wording "only
+one arrangement fits".
 
 #### Scenario: No hint step is a generic un-narrated fallback
 
@@ -276,18 +249,6 @@ can fit covers the cells, or leaves them out, so they must be `Full`, or
 - **THEN** every step carries a named line technique (overlap, unreachable, a
   line with no clues, or the single-line intersection bottom rung)
 - **AND** no step carries a generic "only one arrangement fits" explanation
-
-### Requirement: A Pattern hint is refused on a solved or mistaken board
-
-A hint SHALL be refused with an error string when the board is already solved
-or when `findMistakes` reports mistakes. The midend SHALL refuse it before it
-asks the game, and the refusal SHALL light the mistake overlay and the banner.
-
-#### Scenario: A hint refuses on a wrong board
-
-- **WHEN** a hint is requested while `findMistakes` reports at least one mistake
-- **THEN** the midend refuses it with a message before calling `hint`, and the
-  mistaken cells are highlighted
 
 ### Requirement: Pattern's hintKeepTrack follows partial progress
 
@@ -307,9 +268,7 @@ otherwise.
 
 The displayed hint SHALL render forced cells in `COL_HINT` as a ring only,
 never pre-drawing the piece or the cross the move would place: the cell's own
-state stays visible and the narration says which it must be. Hint overlay bits
-SHALL be folded into the per-cell render cache key so they repaint on the frame
-they are shown.
+state stays visible and the narration says which it must be.
 
 #### Scenario: Forced cells are highlighted, not pre-filled
 
@@ -375,14 +334,3 @@ shaded color by placeholder.
 - **WHEN** a hint step concludes that cells must be `Full`, or must be `Empty`
 - **THEN** its sentence says the engine's word for the shaded piece, or its
   word for a cell known not to be shaded
-
-### Requirement: Pattern's mistake outline sits beside the piece
-
-The Check & Save mistake outline SHALL sit at the cell's edge, beside the
-piece.
-
-#### Scenario: A wrong shaded cell is outlined
-
-- **WHEN** a `Full` cell is flagged by Check & Save
-- **THEN** the outline is drawn at the cell's edge and the shaded piece stays
-  visible inside it
