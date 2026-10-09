@@ -1,0 +1,4 @@
+# No delta yet: it comes with task 4, and this flag goes then.
+schema: spec-driven
+created: 2026-10-09
+skip_specs: true

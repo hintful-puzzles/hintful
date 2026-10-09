@@ -1,0 +1,5 @@
+# No delta yet: which way it goes is task 2.1's finding. The delta comes with
+# task 2.3, and this flag goes then.
+schema: spec-driven
+created: 2026-10-09
+skip_specs: true

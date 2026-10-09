@@ -5,6 +5,13 @@
 defect that change fixed in two games, found again in the shared layer
 (`docs/work-management.md` § "The backlog is being drained").
 
+The owner approved it and five decisions that session brought (2026-10-09),
+to be taken one a session in this order: this change,
+`deal-or-refuse-large-tracks-boards`,
+`keep-marks-under-pattern-keyboard-paint`,
+`make-guess-d-clear-in-notes-mode`, `wash-crossing-runs-in-pencil-mode`,
+`preview-a-bridges-drag-as-a-line`. `regroup-the-specs` follows them.
+
 ## Why
 
 When the browser cancels a pointer (a touch taken over by a scroll or a
