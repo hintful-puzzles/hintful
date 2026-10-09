@@ -12,10 +12,11 @@ near one of its sides addresses the edge there.
 
 {{controls}}
 
-A left-drag that starts in the middle of a square, and any right-drag, marks
+A left-drag from a square that holds no track yet, and any right-drag, marks
 squares instead: drag along a row or column to lay a straight line of is-track
 or is-not-track indicators, useful for filling in rows or columns to match the
-clue. Either kind of drag is one step of Undo.
+clue. So mark the squares first, then drag through them to lay the track.
+Either kind of drag is one step of Undo.
 
 A right-click crosses an edge only when it lands on the narrow strip right
 along that edge; anywhere else in a square it marks the square, which is the
@@ -41,7 +42,7 @@ is counting are the ones outlined.
 
 Every hint is a deduction you could have made from what is on the board, so it
 never guesses. It is refused while anything you have marked contradicts the
-solution; the offending squares light up instead, exactly as they do for
+solution; the offending squares are marked in red instead, exactly as they are for
 **Check & save**.
 
 ## Tracks parameters

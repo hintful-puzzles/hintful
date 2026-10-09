@@ -2029,6 +2029,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "drag",
       "notrack",
       "painting",
+      "rails",
     ],
   },
   {

@@ -48,7 +48,6 @@ const NOT_A_PIECE: Record<string, Partial<Record<Kind, string>>> = {
   rome: { dark: "a shaded square is a tint of the board, not a piece" },
   slide: { light: "'lights up' is the keyboard selection" },
   tents: { light: "'light up red' is what a miscount does" },
-  tracks: { light: "'light up' is what a mistake does, in red" },
 };
 
 /** Whether the palette holds a color that is `kind` in both schemes by its own

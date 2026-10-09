@@ -7,5 +7,5 @@
 
 - [x] 2.1 In the app at 320 px and in a wide window: the row fits, the chevron
       shows, and a press opens the quick-switch.
-- [ ] 2.2 The gate.
-- [ ] 2.3 The owner's eye.
+- [x] 2.2 The gate.
+- [x] 2.3 The owner's eye. Owner, 2026-10-09: "Consider it all accepted".

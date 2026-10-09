@@ -68,8 +68,12 @@ and from the keyboard, and SHALL run in **either direction** — from a
 dot out to a cell, or from a cell back to the dot that owns it.
 Because the left button carries both meanings, a left press SHALL be
 resolved by what follows it: a release close to the press toggles an
-edge, and travel beyond a small slop starts an association drag from
-the press point instead. A press that ends far from where it began
+edge, and travel beyond a small slop starts a drag from the press
+point instead. That drag is the association drag, unless the press
+landed on an edge's line with no dot under it: then it SHALL toggle
+every edge the pointer passes the middle of that held what the pressed
+edge held, the pressed edge first, turning corners freely, as one
+step of Undo. A press that ends far from where it began
 SHALL commit nothing at all — that is the shape the frontend's
 pointer-cancellation synthesizes, and it must not toggle an edge on
 the far side of the board.
@@ -105,9 +109,14 @@ the far side of the board.
   moving
 - **THEN** the nearest legal edge toggles, exactly as a left click
   always has
-- **AND WHEN** the player presses and then moves beyond the slop
+- **AND WHEN** the player presses inside a tile, away from its edges,
+  and then moves beyond the slop
 - **THEN** an association drag begins from the press point and the
   release commits it, toggling no edge
+- **AND WHEN** the player presses on an edge's line and drags along
+  the grid past the middles of two more edges with no line
+- **THEN** all three edges gain a line, the release toggles nothing
+  more, and one Undo removes all three
 
 #### Scenario: Only an association some galaxy could contain is offered
 

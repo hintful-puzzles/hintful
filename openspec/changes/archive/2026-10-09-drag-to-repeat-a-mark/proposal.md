@@ -40,6 +40,19 @@ The owner's answers, 2026-10-08, to the design put to them:
   drags the square marks along its row or column, as before. A left press on
   an edge drags segments over every edge the pointer crosses, and a left drag
   that starts on an edge no longer lays square marks.
+- **Tracks' two left drags are told apart by the pressed square, not by where
+  in it the press lands** (owner, 2026-10-09: a drag from an empty square
+  "sometimes" laid track across boundaries, which was a press landing off
+  center; "a drag draw should always only repeat the same action"). From a
+  square that carries no track a left drag lays square marks; from one that
+  carries track it lays segments across the edges it crosses, or takes them
+  away when the first edge has one. This replaces the press-position split
+  above. Dragging from a marked square no longer clears a run of square
+  marks; the owner accepted that, since Undo does it.
+- **Tracks' win flash runs from A to B** (owner, 2026-10-09). It already
+  traveled the track, in half a second with a band half the track long, so
+  the whole track lit at once. It is a highlight three squares long at one
+  pace on every board, in the theme's yellow.
 - **Tracks' right button is the square's** (owner, 2026-10-09, playing the
   first part: a run of crosses on edges "actually isn't useful at all", and a
   cross on an edge is "significantly less useful" than one on a square). A

@@ -89,10 +89,13 @@ pure and throw on an out-of-bounds target. A toggle SHALL strip any
 still-unmarked cells along the run. After each move the game SHALL reflag
 every affected clue — `SOLVED` when exactly satisfied with no unknowns,
 `ERROR` when overcommitted (more marks than the clue, or too few possible)
-— and recount `notCompletedClues`. Pointer input SHALL capture the
-post-toggle state of the clicked cell and paint it through aligned drags
-and the release; non-aligned drags reset the anchor; margin clicks are
-ignored; after completion only cursor movement is accepted. A keyboard
+— and recount `notCompletedClues`. A pointer press SHALL toggle the
+cell it lands on, and a drag on from it SHALL be the engine's: every further
+cell the pointer passes that held what the pressed cell held takes the same
+toggle, in any direction, so a drag from an unmarked cell lays a mark and a
+drag from a marked cell clears marks, as one step of Undo. The game SHALL
+make no `paint` move of its own; it still replays one from a saved game.
+Margin clicks are ignored; after completion only cursor movement is accepted. A keyboard
 cursor with select/select2 SHALL mirror the click behaviors.
 
 #### Scenario: Toggling cycles a cell

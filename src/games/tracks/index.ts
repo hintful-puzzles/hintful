@@ -24,6 +24,7 @@ import {
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
+  LEFT_BUTTON,
   moveDrag,
   newCursor,
   newDrag,
@@ -61,7 +62,7 @@ import {
   centeredCoord,
   colors,
   computeSize,
-  FLASH_TIME,
+  flashLength,
   metrics,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -88,6 +89,7 @@ import {
   R,
   S_NOTRACK,
   S_TRACK,
+  sECount,
   sEDirs,
   sEFlags,
   stateToBoard,
@@ -107,6 +109,7 @@ function newUi(_state: TracksState): TracksUi {
     painting: false,
     clearing: false,
     notrack: false,
+    rails: false,
     clickx: 0,
     clicky: 0,
     cursor: newCursor(1, 1),
@@ -289,10 +292,10 @@ const targetVerbs: TargetVerbs<
   geometry,
   primary: trackVerb,
   secondary: noTrackVerb,
-  // A left drag that starts on an edge lays segments on the edges it crosses.
-  // One that starts in a square's middle, and every right drag, is the square
-  // drag, `interpretMove`'s own: a run of crosses on edges is no use to a
-  // player, and a run of them on squares is.
+  // A left drag from a square that carries track lays segments on the edges
+  // it crosses, opened by `interpretMove` at the first one. One from any other
+  // square, and every right drag, is the square drag, `interpretMove`'s own:
+  // a run of crosses on edges is no use to a player, and one on squares is.
   sweep: {
     buttons: ["primary"],
     holds(state, t) {
@@ -303,8 +306,16 @@ const targetVerbs: TargetVerbs<
       const flags = sEFlags(stateToBoard(state), spot.x, spot.y, spot.dir);
       return `e${flags & (E_TRACK | E_NOTRACK)}`;
     },
-    reaches: (state, first, next) =>
-      spotAt(state, first)?.kind === "edge" && spotAt(state, next)?.kind === "edge",
+    // From an edge beside a square that carries track, to edges.
+    reaches(state, first, next) {
+      const from = spotAt(state, first);
+      if (from?.kind !== "edge" || spotAt(state, next)?.kind !== "edge") return false;
+      const board = stateToBoard(state);
+      return (
+        carriesTrack(board, from.x, from.y) ||
+        carriesTrack(board, from.x + DX(from.dir), from.y + DY(from.dir))
+      );
+    },
     within: (ds) => metrics(ds.tileSize).tile * RAIL_DRAG_REACH,
     middle(ds, state, t) {
       // An edge is the left or the top side of its spot's square.
@@ -317,10 +328,48 @@ const targetVerbs: TargetVerbs<
       };
     },
     says:
-      "Press on an edge and drag from square to square to lay track across " +
-      "every edge you cross, or, starting on a segment, to take them away.",
+      "Drag from a square that already holds track, through the squares " +
+      "beside it, to lay a segment across every edge you cross, or, when the " +
+      "first edge has one, to take them away.",
   },
 };
+
+/** Whether square `(x, y)` carries track: the player said so, or a segment
+ * reaches it. The squares drawn on the track bed, and the puzzle's own. */
+function carriesTrack(b: Board, x: number, y: number): boolean {
+  return (b.sflags[y * b.w + x] & S_TRACK) !== 0 || sECount(b, x, y, E_TRACK) > 0;
+}
+
+/**
+ * The first edge a drag from `from` to `to` crosses whose segment the track
+ * verb can lay or take away, with the point it was crossed at and the move.
+ * Sampled along the way, so a fast drag's first event misses none.
+ */
+function firstEdgeCrossed(
+  state: TracksState,
+  ds: TracksDrawState,
+  ui: TracksUi,
+  from: Point,
+  to: Point,
+): { edge: Point; at: Point; move: TracksMove } | null {
+  const sweep = targetVerbs.sweep;
+  if (!sweep?.within || !sweep.middle) return null;
+  const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 3));
+  for (let i = 1; i <= steps; i++) {
+    const at = {
+      x: from.x + ((to.x - from.x) * i) / steps,
+      y: from.y + ((to.y - from.y) * i) / steps,
+    };
+    const edge = geometry.pointerTarget(state, ds, at, ui);
+    if (edge === null || spotAt(state, edge)?.kind !== "edge") continue;
+    const mid = sweep.middle(ds, state, edge);
+    if (Math.hypot(at.x - mid.x, at.y - mid.y) > sweep.within(ds, state, edge))
+      continue;
+    const move = trackVerb.apply(state, edge, ui);
+    if (move !== null && move !== UI_UPDATE) return { edge, at, move };
+  }
+  return null;
+}
 
 /** How near an edge's line a right-click lands to cross the edge and not the
  * square, in pixels: an eighth of a tile either side, and never under four.
@@ -398,11 +447,14 @@ function interpretMove(
     ui.clicky = p.y;
     const aimed = aimedAt(state, ds, ui, p, button);
     if (aimed) pressTarget(targetVerbs, ui, aimed);
-    // A left press on an edge drags along edges. One in a square's middle,
-    // and any right press, drags the square marks down its row or column.
-    if (button !== RIGHT_BUTTON && aimed && spotAt(state, aimed)?.kind === "edge") {
+    // What the pressed square holds says what a left drag from it lays: from
+    // a square that carries track, segments across the edges it crosses; from
+    // any other, and with the right button, the square marks down its row or
+    // column. Where in the square the press lands changes nothing, so a drag
+    // never does one thing or the other by a few pixels.
+    ui.rails = button !== RIGHT_BUTTON && carriesTrack(board, gx, gy);
+    if (ui.rails) {
       endDrag(ui.drag);
-      beginSweep(targetVerbs, state, ui, aimed, button, p, false);
       return UI_UPDATE;
     }
     startDrag(ui.drag, gx, gy);
@@ -411,16 +463,25 @@ function interpretMove(
 
   if (isMouseDrag(button)) {
     ui.cursor.visible = false;
-    if (sweepOpen(ui)) return sweepTo(targetVerbs, state, ui, ds, p) ?? UI_UPDATE;
+    if (ui.rails) {
+      if (sweepOpen(ui)) return sweepTo(targetVerbs, state, ui, ds, p) ?? UI_UPDATE;
+      // The first edge the drag crosses opens it and takes its segment (or
+      // loses one); the model carries on from there.
+      const first = firstEdgeCrossed(state, ds, ui, { x: ui.clickx, y: ui.clicky }, p);
+      if (first === null) return UI_UPDATE;
+      beginSweep(targetVerbs, state, ui, first.edge, LEFT_BUTTON, first.at, true);
+      return first.move;
+    }
     updateUiDrag(state, ui, gx, gy);
     return UI_UPDATE;
   }
 
   if (isMouseRelease(button)) {
     ui.cursor.visible = false;
-    if (sweepOpen(ui)) {
-      // An edge drag made its moves as it went. One that reached no second
-      // edge is a click on the edge it pressed, if it ends in that square.
+    if (ui.rails) {
+      ui.rails = false;
+      // A rail drag made its moves as it went. One that crossed no edge is a
+      // click on what it pressed, if it ends in that square.
       if (endSweep(ui)) return UI_UPDATE;
       const pressed = { x: ui.clickx, y: ui.clicky };
       if (gridCoord(pressed.x, m) !== gx || gridCoord(pressed.y, m) !== gy)
@@ -577,7 +638,7 @@ export const tracksGame: Game<
   newDrawState,
   redraw,
 
-  solvedFlash: () => FLASH_TIME,
+  solvedFlash: (state) => flashLength(state),
 };
 
 registerGame(tracksGame);

@@ -22,7 +22,7 @@ import {
   DRAG_ADD,
   DRAG_REMOVE,
   ERROR,
-  FLASH,
+  GOAL,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -71,7 +71,24 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 33;
-export const FLASH_TIME = 0.5;
+
+/** The win flash: a highlight a few squares long that runs the track from
+ * the entrance to the exit, at one pace on every board. */
+const FLASH_SQUARES = 3;
+const FLASH_SECONDS_A_SQUARE = 0.07;
+
+/** How many squares the track covers: the column clues' sum. */
+function trackLength(state: TracksState): number {
+  let n = 0;
+  for (let x = 0; x < state.w; x++) n += state.numbers.numbers[x];
+  return n;
+}
+
+/** How long the win flash runs on `state`: the time the highlight takes to
+ * run the whole track and off its end, never under a second. */
+export function flashLength(state: TracksState): number {
+  return Math.max(1, (trackLength(state) + FLASH_SQUARES) * FLASH_SECONDS_A_SQUARE);
+}
 
 // --- palette --------------------------------------------------------------
 export const COL_BACKGROUND = 0;
@@ -135,7 +152,10 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_DRAGON] = DRAG_ADD;
   out[COL_DRAGOFF] = DRAG_REMOVE;
-  out[COL_FLASH] = FLASH;
+  // The theme's yellow and not FLASH: the highlight runs along ink rails over
+  // the purple bed, and FLASH is the paper's tone, which is the rails' own
+  // opposite in one scheme and nearly the bed's in the other.
+  out[COL_FLASH] = GOAL;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_NOTRACK] = RULED_OUT;
@@ -807,19 +827,22 @@ export function redraw(
 
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
+  // The win flash's head, in squares along the track, and the step between
+  // two squares' labels (`setFlashData`). The head starts at the entrance and
+  // ends a highlight's length past the exit, so the last square goes dark too.
+  const squares = trackLength(state);
+  const flashStep = squares > 1 ? Math.floor(S_FLASH_MASK / (squares - 1)) : 0;
+  const flashHead = (flashTime / flashLength(state)) * (squares - 1 + FLASH_SQUARES);
+
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const i = y * w + x;
       let flashing = 0;
-      if (flashTime > 0) {
-        const flashpos =
-          ((state.sflags[i] >> S_FLASH_SHIFT) & S_FLASH_MASK) / S_FLASH_MASK;
-        if (
-          flashTime > (FLASH_TIME / 2) * flashpos &&
-          flashTime <= (FLASH_TIME / 2) * (flashpos + 1)
-        ) {
+      if (flashTime > 0 && flashStep > 0) {
+        // How many squares along the track this one is, from the entrance.
+        const along = ((state.sflags[i] >> S_FLASH_SHIFT) & S_FLASH_MASK) / flashStep;
+        if (along <= flashHead && along > flashHead - FLASH_SQUARES)
           flashing = DS_FLASH;
-        }
       }
       const f = s2dFlags(board, x, y, ui) | flashing;
       const fD = dragBoard ? s2dFlags(dragBoard, x, y, ui) : f;

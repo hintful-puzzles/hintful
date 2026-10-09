@@ -130,6 +130,9 @@ export interface TracksUi {
   painting: boolean;
   clearing: boolean;
   notrack: boolean;
+  /** Whether the press went down in a square that carries track, so a left
+   * drag from it lays segments and not square marks. */
+  rails: boolean;
   clickx: number;
   clicky: number;
   /** Keyboard cursor over the half-size grid (0..2w, 0..2h). */

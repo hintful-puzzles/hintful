@@ -40,9 +40,17 @@
       (`sweep.middle`), for it, Tracks and Pearl.
 - [x] 3.9 Mosaic's cursor left a pixel at the grid's bottom right corner,
       which the new drag reached and `warm-repaint.test.ts` caught.
-- [ ] 3.10 The gate.
+- [x] 3.10 The gate.
 
 ## 4. Tracks' right button, from the owner's play of part 2
 
 - [x] 4.1 A right-drag crosses squares only, wherever it starts.
 - [x] 4.2 A right-click crosses an edge only on the strip along it.
+
+## 5. Tracks' left drag and win flash, from the owner's play
+
+- [x] 5.1 The left drag is decided by what the pressed square holds.
+- [x] 5.2 The win flash is a short highlight that runs the track from A to B,
+      seen in the app on an auto-solved board.
+- [x] 5.3 The gate.
+- [x] 5.4 The owner's eye. Owner, 2026-10-09: "Consider it all accepted".

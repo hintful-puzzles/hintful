@@ -541,9 +541,13 @@ A game whose own arm takes the press (a click that acts on the release, or a
 drag of its own beside this one) opens the same drag with `beginSweep`,
 continues it with `sweepTo` and asks `endSweep` on the release whether the
 drag made a move, in which case the release is not a click. **Split two drags
-by where the press lands**, as Tracks does (a square's middle drags squares,
-an edge drags edges) and Galaxies (a press on a line drags lines, anywhere
-else is the association).
+by what the press lands on, and prefer what it holds to where in it the press
+falls.** Tracks first split by position (a square's middle dragged squares,
+its rim dragged edges), and a drag from an empty square then laid track or
+square marks by a few pixels, which read as a fault. It splits by content
+now: a square that carries track drags segments, any other drags square
+marks. Galaxies has no such content to read, so a press on a line drags lines
+and anywhere else is the association.
 `target-verb-sweep.test.ts` plays every declaring game: a drag between two
 like targets marks both, and one Undo takes it back.
 
