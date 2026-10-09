@@ -13,4 +13,4 @@
         banner reads "Nothing further follows by deduction here. This board's
         difficulty allows positions that need trial and error", with no
         dialog.
-- [ ] 4 Committed, pushed and archived.
+- [x] 4 Committed, pushed and archived.
