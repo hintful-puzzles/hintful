@@ -29,6 +29,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color } from "../../engine/types.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { PIECE, SPAN } from "./hint-text.ts";
+import { dragReleaseOps, executeMove } from "./moves.ts";
 import type { BridgesSpan } from "./solver.ts";
 import {
   type BridgesMistake,
@@ -912,6 +913,11 @@ export function redrawBridges(
     }
   }
 
+  // The board the release would leave. The drag's span is drawn from it, so
+  // the preview is whatever the release does.
+  const releaseOps = dragDst ? dragReleaseOps(s, ui) : null;
+  const released = releaseOps ? executeMove(s, { ops: releaseOps }) : null;
+
   const mistakeMask = buildMistakeMask(s, mistakes);
   const newgrid = ds.newgrid;
   newgrid.fill(0);
@@ -971,20 +977,22 @@ export function redrawBridges(
           if (dragSrc.x !== dragDst.x) selh = true;
           else selv = true;
         }
-        const [lv, lh] = linesLvlh(s, ui, x, y, v);
+        const drawn = released && (selh || selv) ? released : s;
+        const dv = drawn.gridAt(x, y);
+        const [lv, lh] = linesLvlh(drawn, ui, x, y, dv);
 
         let hdata =
-          v & G_NOLINEH
+          dv & G_NOLINEH
             ? DL_COUNT_CROSS
-            : v & G_LINEH
+            : dv & G_LINEH
               ? lh
               : ui.showPossible && betweenIsland(s, x, y, 1, 0)
                 ? DL_COUNT_POSSIBLE
                 : 0;
         let vdata =
-          v & G_NOLINEV
+          dv & G_NOLINEV
             ? DL_COUNT_CROSS
-            : v & G_LINEV
+            : dv & G_LINEV
               ? lv
               : ui.showPossible && betweenIsland(s, x, y, 0, 1)
                 ? DL_COUNT_POSSIBLE
@@ -1025,12 +1033,14 @@ export function redrawBridges(
 
   // Each limit on its span's middle square. Spans are walked from their left
   // or top island so each is visited once; a limit under a cross is the cross.
+  // Read after the release, which differs only on the drag's own span.
+  const limited = released ?? s;
   for (const is of s.islands) {
     for (const pt of is.points) {
       if (pt.dx === -1 || pt.dy === -1 || !pt.off) continue;
-      const limit = s.maximum(pt.dx, pt.x, pt.y);
+      const limit = limited.maximum(pt.dx, pt.x, pt.y);
       if (limit >= s.maxb) continue;
-      if (s.gridAt(pt.x, pt.y) & (pt.dx ? G_NOLINEH : G_NOLINEV)) continue;
+      if (limited.gridAt(pt.x, pt.y) & (pt.dx ? G_NOLINEH : G_NOLINEV)) continue;
       const m = middleOf({
         x1: is.x,
         y1: is.y,

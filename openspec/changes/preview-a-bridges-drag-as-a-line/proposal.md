@@ -28,7 +28,9 @@ easy to miss under a finger.
 ### Modified Capabilities
 
 - `bridges`: "Bridges renders islands, bridges, marks and the win flash",
-  whose scenario today says a drag over an empty span draws no line.
+  whose scenario today says a drag over an empty span draws no line. It is
+  replaced under a name that includes the preview, since a scenario cannot be
+  dropped from a requirement that keeps its name.
 
 ## Impact
 

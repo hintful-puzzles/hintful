@@ -10,20 +10,39 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import { Midend } from "../../engine/index.ts";
 import {
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  RIGHT_BUTTON,
+  RIGHT_DRAG,
+} from "../../engine/pointer.ts";
+import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { bridgesGame } from "./index.ts";
 import {
+  border,
   COL_FOREGROUND,
   COL_HINT,
   COL_HINT_CELL,
+  COL_SELECTED,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
-import { BRIDGES_PRESETS, type BridgesMove, G_LINEH, G_LINEV } from "./state.ts";
+import {
+  BRIDGES_PRESETS,
+  type BridgesMove,
+  type BridgesOp,
+  encodeParams,
+  G_LINEH,
+  G_LINEV,
+} from "./state.ts";
 
 const P = BRIDGES_PRESETS[2];
 const ID = `${bridgesGame.encodeParams(P, true)}#bridges-scenario`;
@@ -175,5 +194,151 @@ describe("Bridges render scenarios", () => {
       recording.ops.some((o) => o.op === "rect" && o.color === COL_FOREGROUND),
       "the board's own bridges vanished behind the hint",
     ).toBe(true);
+  });
+});
+
+describe("Bridges drag preview", () => {
+  // A 4 in the corner of a 3x3 board with a 2 along the row and a 2 down the
+  // column, one empty square between each pair: two spans to drag along and to
+  // move a drag between.
+  const BOARD = `${encodeParams({ ...BRIDGES_PRESETS[0], w: 3, h: 3 }, true)}:4a2c2b`;
+  const ACROSS = { x1: 0, y1: 0, x2: 2, y2: 0 };
+  const TS = PREFERRED_TILE_SIZE;
+  const center = (cell: number): number => cell * TS + border(TS) + TS / 2;
+  type Board = ReturnType<typeof board>;
+
+  /** A board with `ops` played, painted once so a later frame has a cache to
+   * beat. */
+  function board(ops: BridgesOp[] = []) {
+    const m = new Midend(bridgesGame);
+    expect(m.newGameFromId(BOARD)).toBeNull();
+    if (ops.length > 0) m.playMoves([{ ops }]);
+    m.redraw(new RecordingDrawing(m.getColorPalette(DEFAULT_BACKGROUND)));
+    return m;
+  }
+
+  /** What the next frame paints on the square at (x, y): the color of each
+   * bridge bar, of each cross stroke and of the limit written there. `null`
+   * when the frame leaves the square alone. */
+  function frame(m: Board, x: number, y: number) {
+    const rec = new RecordingDrawing(m.getColorPalette(DEFAULT_BACKGROUND));
+    m.redraw(rec);
+    const ox = x * TS + border(TS);
+    const oy = y * TS + border(TS);
+    const from = rec.ops.findIndex(
+      (o) => o.op === "clip" && o.x === ox && o.y === oy && o.w === TS && o.h === TS,
+    );
+    if (from < 0) return null;
+    const to = rec.ops.findIndex((o, i) => i > from && o.op === "unclip");
+    const ops = rec.ops.slice(from, to);
+    return {
+      // A bar runs the square's whole length and is an eighth of it across.
+      bars: ops.flatMap((o) =>
+        o.op === "rect" && Math.max(o.w, o.h) === TS && Math.min(o.w, o.h) === TS / 8
+          ? [o.color]
+          : [],
+      ),
+      crosses: ops.flatMap((o) => (o.op === "line" ? [o.color] : [])),
+      limit: ops.flatMap((o) =>
+        o.op === "text" && o.text.startsWith("≤") ? [[o.text, o.color]] : [],
+      ),
+    };
+  }
+  type Shown = NonNullable<ReturnType<typeof frame>>;
+
+  const BARE: Shown = { bars: [], crosses: [], limit: [] };
+  const press = (m: Board, button: number): void => {
+    m.processInput(center(0), center(0), button);
+  };
+  const across = (m: Board, button: number): void => {
+    m.processInput(center(2), center(0), button);
+  };
+
+  it.each([
+    ["an empty span shows the first bridge", [], [COL_SELECTED]],
+    [
+      "a span with one bridge shows the two it would carry",
+      [{ op: "L", ...ACROSS, n: 1 }],
+      [COL_SELECTED, COL_SELECTED],
+    ],
+    ["a span at its limit shows them lifted off", [{ op: "L", ...ACROSS, n: 2 }], []],
+  ] satisfies [
+    string,
+    BridgesOp[],
+    number[],
+  ][])("a bridge drag over %s", (_name, ops, bars) => {
+    const m = board(ops);
+    press(m, LEFT_BUTTON);
+    across(m, LEFT_DRAG);
+    expect(frame(m, 1, 0)).toEqual({ ...BARE, bars });
+  });
+
+  it.each([
+    [
+      "an unlimited span shows the limit it would write",
+      [],
+      { ...BARE, limit: [["≤1", COL_SELECTED]] },
+    ],
+    [
+      "a span limited to one shows the cross",
+      [{ op: "C", ...ACROSS, n: 1 }],
+      { ...BARE, crosses: Array<number>(4).fill(COL_SELECTED) },
+    ],
+    ["a crossed span shows it bare", [{ op: "N", ...ACROSS }], BARE],
+    [
+      "a limit already down at its bridge shows the limit lifted",
+      [
+        { op: "L", ...ACROSS, n: 1 },
+        { op: "C", ...ACROSS, n: 1 },
+      ],
+      { ...BARE, bars: [COL_SELECTED] },
+    ],
+  ] satisfies [
+    string,
+    BridgesOp[],
+    Shown,
+  ][])("a secondary drag over %s", (_name, ops, shown) => {
+    const m = board(ops);
+    press(m, RIGHT_BUTTON);
+    across(m, RIGHT_DRAG);
+    expect(frame(m, 1, 0)).toEqual(shown);
+  });
+
+  it("the release leaves what the preview showed, in board ink", () => {
+    const m = board();
+    press(m, LEFT_BUTTON);
+    across(m, LEFT_DRAG);
+    frame(m, 1, 0);
+    across(m, LEFT_RELEASE);
+    expect(frame(m, 1, 0)).toEqual({ ...BARE, bars: [COL_FOREGROUND] });
+  });
+
+  it("a drag that turns to another island moves the preview and leaves no trail", () => {
+    const m = board();
+    press(m, LEFT_BUTTON);
+    across(m, LEFT_DRAG);
+    frame(m, 1, 0);
+    m.processInput(center(0), center(2), LEFT_DRAG);
+    const left = frame(m, 1, 0);
+    // A frame is consumed by reading it, so the square the drag turned to is
+    // read from a second turn.
+    across(m, LEFT_DRAG);
+    frame(m, 1, 0);
+    m.processInput(center(0), center(2), LEFT_DRAG);
+    expect([left, frame(m, 0, 1)]).toEqual([BARE, { ...BARE, bars: [COL_SELECTED] }]);
+  });
+
+  it("a drag that returns to its island, or is canceled, puts the span back", () => {
+    const m = board();
+    press(m, LEFT_BUTTON);
+    across(m, LEFT_DRAG);
+    frame(m, 1, 0);
+    press(m, LEFT_DRAG);
+    expect(frame(m, 1, 0)).toEqual(BARE);
+
+    across(m, LEFT_DRAG);
+    frame(m, 1, 0);
+    expect(m.cancelPress()).toBe(true);
+    expect(frame(m, 1, 0)).toEqual(BARE);
   });
 });

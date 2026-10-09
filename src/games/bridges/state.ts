@@ -325,9 +325,8 @@ export interface BridgesUi {
    * The name is the collection's — `docs/games/input.md` § "A button with two
    * meanings resolves on the release". */
   dragged: boolean;
-  todraw: number;
+  /** The drag is the secondary one, which lowers the span's limit. */
   dragIsNoline: boolean;
-  nlines: number;
   cursor: GridCursor;
   /** Upstream's "show hints" preference: draw a bevel line along every span a
    * bridge *could* run down. Not the hint system, whose colors and marks are

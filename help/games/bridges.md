@@ -16,7 +16,11 @@ says when one does:
 Click on an island and drag left, right, up or down to draw a bridge
 to the next island in that direction. Do the same again to create a
 double bridge (or more, where the board allows them), and once more
-past the limit to remove the bridge if you change your mind. Click on an island without dragging to mark the island as
+past the limit to remove the bridge if you change your mind. While you
+drag, the line between the two islands shows in green what letting go
+would leave there, so a drag that is about to remove a bridge shows the
+line empty; drag back onto the island you started from to leave things as
+they were. Click on an island without dragging to mark the island as
 completed once you think you have placed all its bridges.
 
 Drag with the right mouse button instead (or, on a touch screen, hold your

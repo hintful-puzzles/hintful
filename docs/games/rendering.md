@@ -364,6 +364,18 @@ release-move helper, and if those live in `index.ts`, `render ↔ index` is an
 import cycle. Split them into a small `moves.ts` both import. Exemplar:
 [`signpost/moves.ts`](../../src/games/signpost/moves.ts).
 
+**Reach for this shape before a table of cases.** A drag whose release does
+one of several things (Bridges: add a bridge, lift a full bundle off, lower a
+limit, place or clear a cross) can be previewed by asking the release's own
+function for its move, executing it, and drawing *only the gesture's own
+cells* from the result. `render.ts` then holds no second statement of what a
+drag does, and where the changed cells are packed into the tile key the cache
+repaints and restores them unasked. Read no more than those cells from the
+executed board: it also carries the release's consequences elsewhere (an
+island turned red), and showing those recolors pieces the finger is not on.
+Exemplar: [`bridges/moves.ts`](../../src/games/bridges/moves.ts)
+(`dragReleaseOps`).
+
 ### `changedState` cancels a dangling drag
 
 **A drag preview names a piece on the board, and the board can change while
