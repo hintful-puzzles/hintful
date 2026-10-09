@@ -18,6 +18,7 @@ const FENCE = /^\s*(```|~~~)/;
  * @property {number} line        1-based line of the heading
  * @property {string} body        the text between the heading and the first scenario, trimmed
  * @property {number} bodyLines   lines of that text, blank ones included
+ * @property {number} chars       the length openspec's validator bounds: see `ruleChars`
  * @property {{name: string, text: string}[]} scenarios
  * @property {number} scenarioLines
  * @property {string} text        heading to the line before the next requirement
@@ -49,6 +50,7 @@ export function parseSpec(markdown) {
       line: current.line,
       body: body.join("\n"),
       bodyLines: body.length,
+      chars: ruleChars(body),
       scenarios: current.scenarios.map((s) => ({
         name: s.name,
         text: trimTail(s.rows).join("\n"),
@@ -99,6 +101,25 @@ export function parseSpec(markdown) {
   // A file ends with a newline, which `split` reports as one more row.
   const count = markdown.endsWith("\n") ? lines.length - 1 : lines.length;
   return { lines: count, requirements };
+}
+
+/**
+ * A requirement's length as openspec's validator takes it, from 1.14.1: the
+ * lines before the first scenario, outside a code fence, trimmed, with the
+ * blank ones dropped and the rest joined by a newline
+ * (`extractRequirementBody` in the tool's `parsers/requirement-text.js`).
+ */
+function ruleChars(rows) {
+  let fenced = false;
+  const kept = [];
+  for (const row of rows) {
+    if (FENCE.test(row)) {
+      fenced = !fenced;
+      continue;
+    }
+    if (!fenced && row.trim() !== "") kept.push(row.trim());
+  }
+  return kept.join("\n").length;
 }
 
 /** Every capability under `openspec/specs/`, by name. */

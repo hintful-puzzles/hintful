@@ -59,9 +59,8 @@ export type DifficultyVerdict = "solved" | "unsolved" | "impossible";
 export type CappedSolve = (cap: number) => DifficultyVerdict;
 
 /**
- * How to solve a tiered game capped at a tier, and which of its tiers are
- * exceptions to the shared guards. Optional on `Game`: a game without tiers
- * omits it.
+ * How to solve a tiered game capped at a tier. Optional on `Game`: a game
+ * without tiers omits it.
  *
  * **The tier list, and how params hold a tier, are not here** — both are the
  * game's difficulty item ({@link difficultyItem}), from which

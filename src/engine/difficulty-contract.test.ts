@@ -242,11 +242,11 @@ for (const { id, game, contract, tiers } of tiered) {
     });
 
     it("either generates every declared tier, or refuses it with a reason", () => {
-      // A tier that exists in the solver but that no size can generate is allowed
-      // — `grade-difficulty-tiers-honestly` deliberately created two, refusing
-      // them at generation rather than silently downgrading them (Bricks' Tricky
-      // rung never decides anything its Normal rung has not). What is *not*
-      // allowed is a tier that fails to generate and says nothing about why.
+      // An offered tier that no preset's size can generate is allowed, so long
+      // as generation refuses it rather than silently downgrading it. What is
+      // *not* allowed is a tier that fails to generate and says nothing about
+      // why. A retired tier (`retired` on the difficulty item) is not offered,
+      // so it is not one of `tiers` here.
       for (let tier = 0; tier < tiers.length; tier++) {
         const p = paramsForTier({ id, game, contract, tiers }, tier);
         if (p !== null) continue;

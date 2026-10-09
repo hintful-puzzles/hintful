@@ -5,43 +5,61 @@ the owner's word (2026-10-09). Each step's check is beside it.
 
 ## 1. Measure, and get the owner's word
 
-- [ ] 1.1 The spec census is a script under `scripts/checks/`: per capability,
+- [x] 1.1 The spec census is a script under `scripts/checks/`: per capability,
       its lines, requirements, body and scenario lines, and the shapes
       `proposal.md` § "Why" counts. Check: it reproduces that table, or the
       table is corrected.
-      - Begun 2026-10-09: `scripts/checks/spec-parse.mjs` reads a `spec.md`
-        into requirements, bodies and scenarios, and its totals agree with
-        `wc -l` and a `grep -c` of the requirement headings (34,282 lines and
-        931 requirements that day, 784 of them over 500 characters before the
-        first scenario). The census that prints the table from it is not
-        written, and the table in `proposal.md` is the day before's.
-- [ ] 1.2 The use measurements are beside it: the archive's deltas by verb and
+      - `scripts/checks/spec-census.mjs`, over `spec-parse.mjs`. Its totals
+        agree with `wc -l` and a `grep -c` of the requirement headings, and
+        its count of over-long requirements with openspec 1.14.1's own (784).
+        The table in `proposal.md` is corrected to its figures; the three
+        shape counts moved by a few points, since the shapes are heuristics
+        and this script's are not the first parse's.
+- [x] 1.2 The use measurements are beside it: the archive's deltas by verb and
       month, and the requirements cited by title outside `openspec/`. Check: it
       reproduces `design.md` § "What the repository shows about use", or that
       section is corrected.
-- [ ] 1.3 Every rule of `engine-difficulty` and of Ascent's spec is sorted by
+      - The same script prints both, and the section is corrected to them.
+- [x] 1.3 Every rule of `engine-difficulty` and of Ascent's spec is sorted by
       what already holds it: a type, a guard, a declaration the engine
       consumes, a guide, or nothing but the spec. Check: the counts are
       recorded in `design.md`.
+      - `pilot/held-by-engine-difficulty.md` and `pilot/held-by-ascent.md`,
+        by reading and with no test run; the counts are in `design.md` §
+        "What the pilot found".
 - [ ] 1.4 The owner's answers to `design.md` § "Decisions the owner is asked to
       confirm" are recorded there, after 2.6. Nothing from 3 onward starts
       before them.
 
 ## 2. The pilot
 
-- [ ] 2.1 The ledger checker (Decision 6). Check: it fails on a ledger with a
+- [x] 2.1 The ledger checker (Decision 6). Check: it fails on a ledger with a
       row removed and on one naming a requirement that does not exist.
-- [ ] 2.2 `engine-difficulty` is rewritten, with its ledger. Check: the checker
+      - `scripts/checks/spec-ledger.mjs`. Seen to fail on a section removed,
+        a requirement that does not exist, a guide heading that does not
+        exist, and a new requirement no row leads to.
+- [x] 2.2 `engine-difficulty` is rewritten, with its ledger. Check: the checker
       passes, the `SHALL` count is accounted for, and
       `openspec validate --specs --strict` passes.
-- [ ] 2.3 Ascent's spec is rewritten twice, in the two forms, each with a
+      - In place, with `ledgers/engine-difficulty.md`. Four rules were false
+        of the code and are corrected; the guides and the two comments that
+        repeated one of them are corrected with it.
+- [x] 2.3 Ascent's spec is rewritten twice, in the two forms, each with a
       ledger.
-- [ ] 2.4 Two fresh-context reviews of each pilot spec (Decision 6), with what
+      - `pilot/ascent.reference.md` and `pilot/ascent.by-product.md`, with a
+        ledger each. `openspec/specs/ascent/spec.md` is untouched until the
+        owner chooses a form, so its three false rules still stand there.
+- [x] 2.4 Two fresh-context reviews of each pilot spec (Decision 6), with what
       each found recorded in `design.md`.
-- [ ] 2.5 The bounds for a requirement and a capability are set from the pilot,
+      - Both reviews of `engine-difficulty` and of Ascent's reference form.
+        The by-product form of Ascent has had neither, and gets its first
+        when the owner has chosen it.
+- [x] 2.5 The bounds for a requirement and a capability are set from the pilot,
       and the measured ratio replaces the estimate.
-- [ ] 2.6 The owner is shown the pilot: both capabilities before and after,
+- [x] 2.6 The owner is shown the pilot: both capabilities before and after,
       with the counts from 1.3.
+      - `design.md` § "What the pilot found" opened in the preview, with the
+        paths of the before and after of each.
 
 ## 3. What keeps it
 

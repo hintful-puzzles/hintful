@@ -4,7 +4,8 @@
 the owner's word the day before: the specs have "too many lines, many of which
 could possibly be combined or otherwise integrated, to make it more useful as
 a resource, rather than just being a write-only journal". `tasks.md` says how
-far it has got.
+far it has got: the pilot is done, `design.md` § "What the pilot found" has
+its result, and the work waits on the owner's answer below.
 
 **The open question, which decides the form** (owner, 2026-10-08): are the
 specs a resource a session works from, or a by-product of tracking the work?
@@ -17,32 +18,33 @@ decides the form". "What Changes" below describes the reference form.
 ## Why
 
 `openspec/specs/` is written by every change and read by almost none. Measured
-on 2026-10-08 (a parse of every `spec.md` into requirements, bodies and
-scenarios; step 1.1 of the design's order of work puts that parse in the
-tree):
+on 2026-10-09, before any spec was rewritten, by
+`node scripts/checks/spec-census.mjs`, whose totals agree with `wc -l` and a
+`grep -c` of the requirement headings:
 
 | | Capabilities | Lines | Requirements |
 | --- | --- | --- | --- |
-| The engine (`ts-engine`, `engine-*`) | 10 | 9,007 | 222 |
-| The games | 57 | 18,152 | 548 |
-| The rest (`repo-layout`, `build-pipeline`, `app-shell` and ten more) | 13 | 6,799 | 154 |
-| All | 80 | 33,958 | 924 |
+| The engine (`ts-engine`, `engine-*`) | 10 | 9,089 | 224 |
+| The games | 57 | 18,187 | 549 |
+| The rest (`repo-layout`, `build-pipeline`, `app-shell` and ten more) | 13 | 7,006 | 158 |
+| All | 80 | 34,282 | 931 |
 
 The guides under `docs/` that a session is told to read first come to about
 15,000 lines (`wc -l docs/*.md docs/games/*.md`). The specs are more than twice
 that, and nothing tells a session to read one.
 
-- **A requirement is an essay.** 194 of the engine's 222 have more than 500
-  characters before their first scenario and 35 have more than 2,000. The
-  longest runs 244 lines. A requirement carries about six `SHALL`s on average,
-  in all three groups.
+- **A requirement is an essay.** 196 of the engine's 224 have more than 500
+  characters before their first scenario and 34 have more than 2,000. The
+  longest runs 244 lines. A requirement carries five to six `SHALL`s on
+  average, in all three groups.
 - **A requirement holds more than its rule.** Read whole, the first four
   requirements of `engine-difficulty` each mix the rule with the reason for the
   design, what the design replaced, a count of games taken on some earlier day,
   the proposals that were refused, and the names of functions and test files.
-  By shape, across the engine: 32% of requirement bodies speak of a decision in
-  the past tense, 31% name a source file and 11% cite a change id or a date.
-  In the 13 other capabilities the same three figures are 50%, 31% and 25%.
+  By shape, across the engine: 38% of requirement bodies speak in the past
+  tense, 30% name a source file and 8% cite a change id or a date. In the 13
+  other capabilities the same three figures are 56%, 29% and 22%, and in the
+  games 17%, 2% and none.
 - **A game's spec grows by one requirement a change.** Ascent has nineteen,
   eight of them about its hint, each titled for what one change did. The 57
   game specs are over half of all the lines.
@@ -65,8 +67,9 @@ changes carry deltas for their own games' specs only
 
 - **Every spec is rewritten to be read whole.** A requirement states what must
   hold, in the present tense, with one sentence of reason where the rule would
-  otherwise look arbitrary. Requirements about one subject become one
-  requirement. A scenario stays where it states a case the rule does not.
+  otherwise look arbitrary. Requirements about one subject sit together,
+  each within the tool's 500 characters. A scenario stays where it states a
+  case the rule does not.
 - **What leaves a requirement goes to its one home, or goes.** A reason a
   session needs is in the guide for that part of the tree, which mostly holds
   it already. How a decision was reached is in the archive, which already has
@@ -116,5 +119,6 @@ Two criteria, the second set by the owner on 2026-10-08:
   that part of the tree taken from the spec alone.
 - **The repository moves to openspec 1.14.1**, or the latest release at the
   time. From 1.14.1 `validate --strict` fails on a requirement over 500
-  characters, and 779 of the 924 here are; the pin is held at 1.14.0 until the
+  characters, and 784 of the 931 here were on 2026-10-09, by the census and by
+  1.14.1 itself; the pin is held at 1.14.0 until the
   specs pass (`move-openspec-to-1-14-0`).

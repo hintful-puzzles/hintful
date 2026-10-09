@@ -1,8 +1,9 @@
 # Design
 
-Written 2026-10-08, before any spec was rewritten. Nothing here has been tried
-yet; the pilot in "The order of work", 2, is where it first meets a real
-capability.
+Written 2026-10-08, before any spec was rewritten. The pilot of "The order of
+work", 2, ran the day after, and "What the pilot found" is where the design
+met two real capabilities; where that section and a decision disagree, the
+section is the later word.
 
 ## Context
 
@@ -208,23 +209,26 @@ the gate resolves.
 
 ### What the repository shows about use
 
-Measured 2026-10-08, by a parse of every delta in the archive and a search of
-`src/`, `docs/` and `scripts/` for the first 40 characters of each
-requirement's title. The search misses a citation that paraphrases its title.
+Measured 2026-10-09 by `node scripts/checks/spec-census.mjs`: a parse of every
+delta in the archive, and a search of `src/`, `docs/`, `scripts/` and
+`AGENTS.md` for the first 40 characters of each requirement's title, with a
+citation that wraps across lines folded. The search misses a citation that
+paraphrases its title.
 
 | | Requirements | Cited by title outside `openspec/` |
 | --- | --- | --- |
-| The engine | 222 | 25 |
-| The games | 548 | 3 |
-| The rest | 154 | 27 |
+| The engine | 224 | 25 |
+| The games | 549 | 3 |
+| The rest | 158 | 29 |
 
 - **Nothing consumes a spec.** No test and no build step reads a requirement's
   text. Three checks read the directory, for a capability's name and for
   spelling.
 - **A session does read a requirement in order to change it.** Of the
-  requirements the archive's deltas carry, 1,075 were `ADDED`, 653 `MODIFIED`
-  and 147 `REMOVED`. Until August nearly all were additions; in September and
-  October modifications and additions run about level.
+  requirements the archive's deltas carry, 1,089 were `ADDED`, 678 `MODIFIED`
+  and 154 `REMOVED`. Until August nearly all were additions (512 against 53
+  modified, May to July); from August on modifications run level with them
+  (625 against 577).
 - **The guides lean on the engine's and the repository's specs** and almost
   never on a game's: `openspec/specs/` is named 44 times in `docs/` and once in
   `src/`.
@@ -257,15 +261,102 @@ The pilot is built to inform the answer: step 1.3 sorts each rule of the two
 pilot capabilities by what already holds it, and Ascent is rewritten in both
 forms.
 
+## What the pilot found
+
+Done 2026-10-09 on `engine-difficulty`, rewritten in place in the reference
+form, and on Ascent's spec, written in both forms under `pilot/` with the live
+spec left as it was. The ledgers are under `ledgers/`, and
+`pilot/held-by-*.md` sort every rule of the two specs by what else holds it.
+
+**The tool's bound decides the shape of a requirement.** The acceptance
+criterion is `validate --strict` under 1.14.1, which fails a requirement over
+500 characters before its first scenario, and the figure is a constant of the
+tool. So Decision 3's "requirements about one subject become one requirement"
+cannot be done: a subject becomes a run of short requirements, each with the
+scenario the validator asks for, and the count of requirements rises.
+
+| | Lines | Requirements | `SHALL` | Longest body |
+| --- | --- | --- | --- | --- |
+| `engine-difficulty` before | 436 | 8 | 52 | all 8 over 500 |
+| `engine-difficulty`, reference | 347 | 20 | 56 | 395 |
+| Ascent before | 576 | 20 | 114 | 1,987 |
+| Ascent, reference | 654 | 42 | 122 | 493 |
+| Ascent, by-product | 93 | 7 | 20 | 356 |
+
+(`node scripts/checks/spec-census.mjs --file <spec>...`, and
+`node scripts/checks/spec-ledger.mjs ledgers/*.md` for the `SHALL`s.)
+
+- **The estimate of a third was wrong.** The reference form took a fifth off
+  the engine capability and added an eighth to the game's. What it buys is
+  the form: no history, no figures, a requirement a `MODIFIED` delta can
+  restate, and a spec the newer validator accepts.
+- **A game's spec is nearly all rule already.** The census has 17% of the
+  games' requirement bodies in the past tense and none citing a change,
+  against 38% and 8% in the engine. There is little in a game's spec for the
+  reference form to remove, and the bound doubles its requirements.
+- **Most of a game's rules are held by its tests.** Of Ascent's 148 rules, 112
+  are held by a type or a test (25 of them by a cross-game guard), 4 by a
+  declaration, 7 by a guide, 9 by the help page alone, 15 by the code alone,
+  and one by nothing. The by-product form keeps the 24 that no check and no
+  guide holds. Of `engine-difficulty`'s 68, a type or a test holds 40, a
+  declaration 3, a guide 14, the code alone 3 and the spec alone 8: the engine's rules lean on the
+  guides and the spec far more than a game's do.
+- **Both specs held rules that are false of the code.** `engine-difficulty`
+  had four (a tier with no boards is retired and hidden, not "still offered",
+  and it is the engine that refuses it; the contract declares no exceptions;
+  no tier promises ambiguity) and Ascent's three (an 8×10 preset that does not exist, a move union one arm
+  short, "every step places one number"). Each ledger has them as `untrue`
+  rows. The non-goal of auditing the specs stands, and a rewrite still finds
+  about three a capability.
+
+**What the reviews found** (Decision 6, task 2.4):
+
+- *The first review, old text beside new, earned its place.* On
+  `engine-difficulty` it found about ten weakenings or changes of meaning in
+  a rewrite of eight requirements, and on Ascent about a dozen in twenty: a dropped
+  qualifier ("only", "by two cells"), a `MAY` that turned three obligations
+  into permissions, a condition that fell off a split requirement, a
+  prohibition filed as a reason. All were corrected. None would have failed
+  the ledger script, which checks that a destination exists and never that it
+  says the same.
+- *The second review, the new spec alone, answered every question.* Thirty
+  questions whose answers were in the old specs, 14 on `engine-difficulty` and
+  16 on Ascent: all answered from the stated text, with the gaps it reported
+  (no table of presets, the two Hex mode letters not told apart, no signature
+  for a helper) being gaps of the old specs too.
+- *The by-product form of Ascent has had neither review.* Its ledger rests on
+  the holder table, and that table says of seven rows that reading could not
+  settle them, and of six that only a render snapshot holds the rule.
+
+**What a capability costs.** Sorting Ascent's rules by holder took one agent
+about 340,000 tokens, and each first review about 100,000. A game in either
+form is some hundreds of thousands of tokens, and the 57 are tens of millions.
+
+**The bounds** (task 2.5): a requirement is 500 characters before its first
+scenario, as the tool measures it (`chars` in `scripts/checks/spec-parse.mjs`,
+which agreed with 1.14.1 on all 784 over-long requirements). A capability is
+50 requirements, past which it divides by subject; that figure is from two
+capabilities and is confirmed or moved when the first stage lands.
+
+**A defect the pilot turned up.** A Bricks board loaded under its retired tier
+letter (`6x7dt:<desc>`) keeps tier index 2, which has no name, so
+`permitsSearch` is false; all twelve boards dealt at Unreasonable ran out of
+deduction under the hint, and at that point the midend throws where it should
+return the refusal. It reaches a player only through a game ID or a save that
+carries `dt`. It is raised with the owner and is not part of this change.
+
 ## Decisions the owner is asked to confirm
 
 1. **What the specs are for**, by group (the section above). It decides
    Decision 3 and 4 and the size of the work, so nothing past the pilot starts
-   without it.
-2. **The target.** From one sample, the first requirement of
-   `engine-difficulty`, the rules are about a third of the lines in the
-   reference form. That is an estimate from a single requirement and the pilot
-   replaces it, for both forms.
+   without it. The pilot strengthens the recommendation: the reference form
+   for the engine and the rest, where it removes a journal and a guide already
+   holds the reasons; the by-product form for the games, where the reference
+   form makes the spec longer and the tests already hold three rules in four.
+2. **The target** is no longer a line count. For a reference capability it is
+   every requirement under the tool's 500 characters and nothing but rules in
+   it, at about four fifths of the lines. For a game in the by-product form it
+   is about a sixth of the lines.
 
 ## Risks / Trade-offs
 

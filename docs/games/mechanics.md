@@ -473,8 +473,7 @@ word or an enum, `difficultyItem(TIERS, { get, set })` — and nobody writes
 `kw: "difficulty"` by hand. The engine's `tierOf(game, p)` and
 `withTier(game, p, tier)` read and move a tier through that item, because eight
 games type their difficulty as a string union or enum and no cross-game caller
-can write `{ ...p, diff: cap }`. The contract is only the capped solve and its
-declared exceptions. The point is that properties *about* tiers — above all
+can write `{ ...p, diff: cap }`. The contract is only the capped solve. The point is that properties *about* tiers — above all
 cap-monotonicity, whose absence silently broke Check & Save on every Boats Easy
 board — are asserted for all tiered games at once by
 `difficulty-contract.test.ts`; declaring the contract enrolls the game in those

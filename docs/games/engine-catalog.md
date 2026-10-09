@@ -480,8 +480,7 @@ answers itself.
 `difficultyItem`: the Custom dialog's difficulty field, which a tiered game
 declares instead of writing one, and which `tierOf`/`withTier`/`tierNameOf` read
 (eight games don't hold a number in their params at all). `DifficultyContract`:
-a discriminated solve-at-cap verdict and the declared exceptions to the tier
-guards. Declaring it enrolls the game in the shared guards (`difficulty-contract.test.ts`) — above all **cap-monotonicity**, which
+a discriminated solve-at-cap verdict. Declaring it enrolls the game in the shared guards (`difficulty-contract.test.ts`) — above all **cap-monotonicity**, which
 Boats shipped without, silently breaking Check & Save on every Easy board.
 Details: [`mechanics.md`](./mechanics.md) (declaring) and
 [`solver-and-generator.md`](./solver-and-generator.md) (grading).

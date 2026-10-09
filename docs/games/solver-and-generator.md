@@ -612,7 +612,7 @@ hold a tier (`tierOf`/`withTier`), come from the game's difficulty item
 
 **Don't try to derive them from the technique ladder.** The framework fiction
 proposed it and `declare-deduction-techniques` looks like the lever, but three
-things independently defeat it, and the `engine-difficulty` spec records them so the
+things independently defeat it, and the `engine-difficulty` spec refuses it so the
 survey is not repeated: `DeductionTechnique.tier` is a *number* while a tier list
 is *names*; `runDeductionFixpoint` **receives** `maxTier`, and every ladder in
 the collection is an array literal built inside a solve from board state, so
@@ -634,8 +634,9 @@ for the next caller. A tier probe runs on state uncontaminated by earlier
 candidates (the `ts-migration` requirement of that name).
 
 **`solveAtCap` also runs whenever a board is loaded, not only while one is
-dealt.** The midend checks a loaded board's tier against it (`engine-difficulty` §
-"A loaded board carries the tier it needs"): an id without a tier (upstream's
+dealt.** The midend checks a loaded board's tier against it (`engine-difficulty`,
+"A pinned tier is kept or raised and never lowered" and the requirement before
+it): an id without a tier (upstream's
 game IDs omit it) is graded outright, and a tier pinned by an id or a save is
 kept only if the board solves there,
 because a build that once mislabeled a board wrote the wrong pin into the
