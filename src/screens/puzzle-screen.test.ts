@@ -64,6 +64,7 @@ afterEach(() => {
 // only that this file's own fake was called — the shape of guard this repo keeps
 // catching (a check aimed at a neighbor of the thing it claims to check).
 import type { CheckVerdict } from "../engine/types.ts";
+import { type CommandPuzzle, commandList } from "../puzzle/command-list.ts";
 import type { DealOutcome } from "../puzzle/puzzle.ts";
 import { CHECK_OUT_OF_REACH, justSaved } from "../puzzle/quick-save-actions.ts";
 import { settings } from "../store/settings.ts";
@@ -146,8 +147,17 @@ describe("puzzle-screen: Check-&-Save command", () => {
       // A screen reader hears the check as well as the save: "did the board
       // survive?" is what the player pressed the button to find out.
       expect(announce).toHaveBeenCalledWith("No mistakes. Saved.");
+      const slot = () =>
+        commandList({ puzzleId: "galaxies" } as CommandPuzzle, "").find(
+          (entry) => entry.id === "check-and-save",
+        );
+      const saved = slot();
       vi.runAllTimers();
       expect(justSaved("galaxies")).toBe(false);
+      // The Bar sizes the slot for the caption named here, so "Saved" must
+      // name the one it replaces or the slots beside it move.
+      expect(saved?.label).toBe("Saved");
+      expect(saved?.standsInFor).toBe(slot()?.label);
     } finally {
       vi.useRealTimers();
     }

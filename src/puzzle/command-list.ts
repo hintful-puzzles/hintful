@@ -40,6 +40,9 @@ export interface CommandEntry {
   readonly label: string;
   /** The caption on the Bar, where it must be shorter than the Menu's row. */
   readonly barLabel?: string;
+  /** The caption this one stands in for, for a moment. The Bar's slot keeps
+   * that caption's room meanwhile, so the swap moves no neighbor. */
+  readonly standsInFor?: string;
   /** Unavailable for now (nothing to undo). A command the game cannot run at
    * all is not in the list: "present and grayed out" teaches a player that the
    * app is broken for this puzzle. */
@@ -62,6 +65,8 @@ export type CommandPuzzle = Pick<
   | "hintArmedToApply"
   | "autoHintActive"
 >;
+
+const CHECK_AND_SAVE = "Check & save";
 
 /** The Bar never shows fewer than this many of the list's leading entries. */
 export const MIN_BAR_LENGTH = 4;
@@ -98,8 +103,10 @@ export function commandList(puzzle: CommandPuzzle, gameName: string): CommandEnt
       ),
     ),
     justSaved(puzzle.puzzleId)
-      ? command("bar", "check-and-save", "success", "Saved")
-      : command("bar", "check-and-save", "check-and-save", "Check & save"),
+      ? command("bar", "check-and-save", "success", "Saved", {
+          standsInFor: CHECK_AND_SAVE,
+        })
+      : command("bar", "check-and-save", "check-and-save", CHECK_AND_SAVE),
     command("bar", "quick-load", "back-to-last-save", "Back to last save", {
       barLabel: "Load",
       disabled: !savedGames.hasQuickSave(puzzle.puzzleId),

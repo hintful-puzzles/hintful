@@ -211,9 +211,21 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
           ?disabled=${entry.disabled === true || awaitsFirstBoard(entry.id, this.puzzle ?? null)}
       >
         <wa-icon name=${entry.icon}></wa-icon>
-        <span part="caption">${entry.barLabel ?? entry.label}</span>
+        ${this.renderCaption(entry)}
       </button>
     `;
+  }
+
+  /**
+   * A caption standing in for another is drawn over the room of the one it
+   * replaces: a slot is as wide as its caption, and the hint's slot takes
+   * whatever its neighbors give up, so a shorter caption would move both.
+   */
+  private renderCaption(entry: CommandEntry) {
+    const caption = entry.barLabel ?? entry.label;
+    return entry.standsInFor === undefined
+      ? html`<span part="caption">${caption}</span>`
+      : html`<span part="caption" data-room=${entry.standsInFor}><span>${caption}</span></span>`;
   }
 
   private handleMenuButton() {
@@ -350,6 +362,24 @@ export class PuzzleBar extends SignalWatcher(LitElement) {
         line-height: 1.15;
         text-align: center;
         text-wrap: balance;
+      }
+
+      /* The caption replaced is laid out unseen in the cell of the one
+       * showing, and the cell is as wide and as tall as the larger. */
+      [part="caption"][data-room] {
+        display: grid;
+        justify-items: center;
+        align-items: center;
+
+        &::before {
+          content: attr(data-room);
+          visibility: hidden;
+        }
+
+        &::before,
+        & > span {
+          grid-area: 1 / 1;
+        }
       }
 
       :host([roomy]) [part~="slot"] {
