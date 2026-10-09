@@ -100,7 +100,7 @@ fi
 #
 # What is gated is only "every anchor applies". The probe's rate is NEVER gated
 # or ratcheted: a gated feedback number invites tests written against the number
-# rather than against behavior, which is exactly what the repo-layout
+# rather than against behavior, which is exactly what the testing
 # requirement it serves forbids. A survivor is a finding to read.
 #
 # If this fails, re-anchor the case on surrounding text — and take the prompt to

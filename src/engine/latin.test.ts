@@ -22,7 +22,7 @@
  * order-independent, so every assertion below is blind to it by construction,
  * and that is the right division of labor rather than a gap in it.
  *
- * `repo-layout` requires that split to be verified, not stated, so it was:
+ * `testing` requires that split to be verified, not stated, so it was:
  * disabling the DFS adjacency swap (`if (rs && adjsizes[L] - j > 1)` → `false`)
  * leaves **all 21 tests in this file green** and fails **34 assertions** across
  * `towers-differential.test.ts` and `singles-differential.test.ts`. Do not add a

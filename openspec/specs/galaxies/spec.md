@@ -241,7 +241,10 @@ The game SHALL provide a plain-text format of the board.
 #### Scenario: The board is copied as text
 
 - **WHEN** the board is asked for as text
-- **THEN** each dot is an `o` and each set edge is a `|` or a `-`
+- **THEN** each dot is an `o`, each grid vertex with no dot a `+`, each set
+  edge a `|` or a `-`, and each tile associated with a dot a `W` or a `B` for
+  that dot's color
+- **AND** an edge that is not set and a tile with no association are spaces
 
 ### Requirement: An association drag previews discretely
 
@@ -304,7 +307,7 @@ construction not prominent against it, in either scheme.
 ### Requirement: Candidate dots are ringed during a cell-to-dot drag, by preference
 
 While a cell-to-dot drag is in progress, every dot the cell could legally join
-SHALL be ringed and the picked one emphasized. The rings SHALL be subject to a
+SHALL be ringed and the picked one emphasized. Under the key `galaxies-show-drag-candidates`, on by default, the rings SHALL be subject to a
 preference, because they are a solving aid. The gesture SHALL NOT be gated by
 that preference.
 
@@ -374,8 +377,7 @@ that is not unique, Galaxies SHALL flag nothing.
 ### Requirement: Galaxies highlights the mistakes it finds
 
 Galaxies SHALL render the flagged tiles and walls with a distinct mistake
-highlight, drawn while the engine supplies the mistake list and cleared on the
-next transition by the engine's mistake lifecycle.
+highlight.
 
 #### Scenario: A flagged tile and a flagged wall are lit
 

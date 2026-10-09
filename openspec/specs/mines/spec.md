@@ -48,9 +48,8 @@ read whether it says `u` or `a`.
 
 ### Requirement: Mines' parameters leave room for a safe first click
 
-`validateParams` SHALL require `n ≤ w·h − 9`, and `w > 2 && h > 2` for a board
-about to be generated. The mine count's `paramConfig` item SHALL declare a
-minimum of 1.
+Params SHALL be refused unless `1 ≤ n ≤ w·h − 9`, and, for a board about to be
+generated, unless `w > 2 && h > 2`.
 
 #### Scenario: Too many mines for a safe first click
 
@@ -319,7 +318,7 @@ a bevel.
 
 A square held down by the pointer SHALL take the opened surface until it is
 released. The count digits SHALL keep their own colors, and the flag, the mine
-and the too-many-flags tint SHALL be drawn on the two flat surfaces.
+and the tint on a number with more flags beside it than it counts SHALL be drawn on the two flat surfaces.
 
 #### Scenario: A pressed square previews the opened surface
 

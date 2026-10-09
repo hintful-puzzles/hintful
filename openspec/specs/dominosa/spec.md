@@ -73,18 +73,15 @@ default tier stands.
 
 ### Requirement: Dominosa refuses params outside its bounds
 
-Params with `n` below 1, or with a difficulty that is no tier, SHALL be
-refused, by the engine from the minimum the `n` item declares and the tiers the
-difficulty item declares. `validateParams` SHALL enforce the bound on `n` that
-keeps the grid's area from overflowing, and SHALL refuse in full form a tier
-above Easy at `n = 1` and a tier above Normal at `n = 2`, which no board of
-that size reaches.
+Params with `n` below 1 SHALL be refused. `validateParams` SHALL enforce the
+bound on `n` that keeps the grid's area from overflowing, and SHALL refuse in
+full form a tier above Easy at `n = 1` and a tier above Normal at `n = 2`,
+which no board of that size reaches.
 
 #### Scenario: Invalid params are rejected
 
 - **WHEN** params with `n = 0` are checked
-- **THEN** the engine returns a non-null error string, from the `n` item's
-  minimum
+- **THEN** they are refused with a non-null error string
 
 #### Scenario: A tier the smallest set cannot reach is refused
 
@@ -251,16 +248,6 @@ solvable, which has no forced deduction to teach.
   solution
 - **THEN** `hint()` returns a refusal and no step
 
-### Requirement: The hint recorder is gated
-
-The recorder that captures a firing for the hint SHALL be gated, so the solver
-path the generator runs is unchanged by it.
-
-#### Scenario: The generator's solve records nothing
-
-- **WHEN** the generator runs the solver to grade a board
-- **THEN** the recorder is off and no firing is captured
-
 ### Requirement: Dominosa renders the hint distinctly
 
 The renderer SHALL draw the current hint step's forced cells (a placement's two
@@ -346,20 +333,6 @@ coexist with the number-highlight aid as an independent visual channel.
   adjacent square-pair showing a 2 next to a 5, and around no other squares
 - **AND** selecting it again clears the boxes, and selecting another pair
   replaces them
-
-### Requirement: A generated Dominosa board needs its tier and no more
-
-A board generated at a tier SHALL have exactly one solution, which the solver
-finds when capped at that tier and, above Easy, does not find when capped one
-tier below.
-
-#### Scenario: A generated board is uniquely solvable at its difficulty
-
-- **WHEN** a board generated at difficulty `d` is solved from empty
-- **THEN** the solver returns unique and reports the maximum difficulty used
-  as `d`
-- **AND** for a board above Easy, it fails to reach a unique solution when
-  capped at the difficulty one level below `d`
 
 ### Requirement: Each Dominosa tier adds its deductions to the tier below
 

@@ -200,18 +200,17 @@ two-sided `edges` edit that sets its edge to the forced state.
 
 ### Requirement: The hint is seeded from the player's own walls and marks
 
-`hint(state)` SHALL seed the solver from the player's current state: the
-player's walls copied into the solver's borders, and every player no-wall mark
-(`DISABLED` bit) pre-merged into the solver's DSF. It SHALL then run the six
-deductions to a fixpoint. Seeding the hint from the player's state SHALL NOT
-mutate that state.
+`hint(state)` SHALL start the solver from the player's current state: the
+player's walls as walls already drawn, and every edge the player has marked
+"no wall" as a join already made. It SHALL then run the six deductions to a
+fixpoint.
 
 #### Scenario: A player no-wall mark is not re-hinted
 
 - **WHEN** the player has marked an edge "no wall" that the solver would also
   deduce as no-wall
-- **THEN** that edge does not appear as a step in the returned plan (its fact is
-  already seeded into the solver's DSF)
+- **THEN** that edge does not appear as a step in the returned plan, since its
+  fact is part of what the solver starts from
 
 ### Requirement: The hint records every edge the deductions force
 
@@ -362,31 +361,12 @@ not a check against the unique solution.
 - **WHEN** the player adds a wall inside a filled region
 - **THEN** the next `redraw` draws that region's cells without the fill
 
-### Requirement: Palisade shares its border-marking mechanic rather than owning a copy
-
-Palisade SHALL take the grid-edge marking mechanic it shares with Separate
-from the shared engine modules and own no copy of it: the edge bits and
-direction tables, the nearest-edge hit test, the three-state toggle, the paired
-edit of an edge's two cells, the half-cell cursor, and its look: the geometry,
-the edge rects, the tile skeleton and the live error model. A change to what
-counts as a wrong wall SHALL take effect in both games at once.
-
-#### Scenario: A fix to the shared mechanic reaches both games
-
-- **WHEN** a defect is found in the edge hit test, the three-state toggle or
-  the test for a wall that separates nothing
-- **THEN** it is fixed once in the shared module
-- **AND** both Palisade and Separate receive the fix, rather than one game
-  silently retaining the defect
-
 ### Requirement: Palisade's clue layer stays its own
 
 Palisade's clue semantics (each cell's count of adjacent walls), its solver,
 its generator, its difficulty grading and its clue rendering SHALL remain
 entirely its own: the digit, the clue-satisfaction test that decides when a
-region is finished, and the explained hint's sentences. The shared renderer
-SHALL take Palisade's palette indices and a callback for the middle of a tile,
-and SHALL NOT branch on which game is drawing.
+region is finished, and the explained hint's sentences.
 
 #### Scenario: The explained hint survives the shared renderer
 

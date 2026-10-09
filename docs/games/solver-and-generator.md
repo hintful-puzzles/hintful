@@ -3,7 +3,7 @@
 How a game's deduction engine, difficulty tiers, generator, `solve()` and
 `findMistakes` fit together. This file is the followable *how*; the normative
 *what* lives in the specs — chiefly the
-[`ts-migration`](../../openspec/specs/ts-migration/spec.md) requirements
+[`engine-difficulty`](../../openspec/specs/engine-difficulty/spec.md) requirements
 **"Narratable-deduction generation policy"**, **"A difficulty-capped solver is
 monotone in its cap"**, **"A difficulty tier binds the board it generates"**
 and **"An unbindable tier is refused, not silently downgraded"**, and the
@@ -338,7 +338,7 @@ stated per game rather than assumed, and normative here — `engine-helpers`,
 
 **An explained hint can exist only if the board is solvable by pure deduction
 — so guess-freedom is a *generation* policy, not merely a hint policy**
-(owner decision, 2026-06-24; normative home: the `ts-migration`
+(owner decision, 2026-06-24; normative home: the `engine-difficulty`
 **Narratable-deduction generation policy** requirement). A hint that falls
 back on the known solution or a backtracking search isn't teaching a *why*;
 it's revealing the answer.
@@ -631,7 +631,7 @@ discriminated verdict exists to hold. The one genuinely shared mapping,
 `grade-difficulty-tiers-honestly`'s first Ascent gate under-rejected — a
 retained field deliberately weakened that solver and left side effects behind
 for the next caller. A tier probe runs on state uncontaminated by earlier
-candidates (the `ts-migration` requirement of that name).
+candidates (the `engine-difficulty` requirement of that name).
 
 **`solveAtCap` also runs whenever a board is loaded, not only while one is
 dealt.** The midend checks a loaded board's tier against it (`engine-difficulty`,
@@ -661,7 +661,7 @@ separate times because there was nowhere to put it). Notes:
   `index.ts` without a cycle, but it can always close over its solver
   (`cappedSolveFor` when you do hold a contract).
 - **A tier that cannot bind is refused, not silently downgraded** — the
-  `ts-migration` requirement of that name; two tiers were *removed* rather
+  `engine-difficulty` requirement of that name; two tiers were *removed* rather
   than left generating boards of a different difficulty than their label.
 - **It is now checked cross-game.** `difficulty-contract.test.ts` deals a board
   from every preset whose tier the contract can read and requires its lowest
@@ -703,7 +703,7 @@ grade.
 
 **A generator never settles for a lower tier than it was asked for.** Where a
 size has no board that needs the tier, `validateParams` refuses the pair when
-a board is to be dealt, and the generator trusts that (`ts-migration` spec,
+a board is to be dealt, and the generator trusts that (`engine-difficulty` spec,
 "An unbindable tier is refused, not silently downgraded"). Upstream wrote the
 other answer three ways, and each has been found here: a table of sizes that
 deals the tier below (`if (w === 3 && diff > NORMAL) diff = NORMAL`), a count
@@ -870,7 +870,7 @@ matters.
 
 **A difficulty-capped solver must be monotone in its cap: a board solvable at
 cap `d` solves at every cap above `d`** (normative:
-`ts-migration` § "A difficulty-capped solver is monotone in its cap").
+`engine-difficulty` § "A difficulty-capped solver is monotone in its cap").
 Every technique is sound and a higher cap only adds some, so a solver that
 fails at a higher cap has a technique or a check that is wrong, and that is
 where to look.

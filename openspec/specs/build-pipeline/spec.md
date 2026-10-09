@@ -10,10 +10,10 @@ instead; what the hook may select, narrow or defer to the push, and what a
 deferral must leave covered; the guards the gate carries of its own; the
 metrics harness, which is not a gate; the compiler-strictness decisions; the
 build's independence from any native toolchain, and what the build asserts of
-its own output; error reporting; and the deploy, which publishes the gate's
-own artifact and is verified against the deployed origin. What any single
-test asserts belongs to the capability that test serves, and how a cost is
-measured or a test made cheaper is `docs/games/testing.md`.
+its own output; and the deploy, which publishes the gate's own artifact and is
+verified against the deployed origin. What any single test asserts belongs to
+the capability that test serves, how tests are written and judged is
+`testing`, and what a crash report sends is `error-reporting`.
 
 ## Requirements
 
@@ -303,7 +303,7 @@ exercises the production build.
 ### Requirement: Pool tuning keeps the suite deterministic, or is reverted
 
 Any vitest pool or isolation tuning adopted to reduce per-file module-load
-overhead SHALL preserve the `repo-layout` requirement "The test suite is
+overhead SHALL preserve the `testing` requirement "The test suite is
 deterministic under parallel load", verified by a green full run repeated
 under the new configuration, including under file-order shuffle, which
 stresses the shared module state a non-isolated pool exposes. Otherwise it
@@ -736,46 +736,6 @@ because a change to a solver's verdict changes which boards exist.
 - **BECAUSE** a silently removed configuration reads identically to one that was
   never covered
 
-### Requirement: A cross-game guard bounds its cost on the axis the game varies
-
-Where a cross-game guard walks a game's presets, it SHALL slice them on the
-axis that game actually varies, and it SHALL derive any cost exemption from a
-property the game already has and not from a list of game ids.
-
-#### Scenario: A guard excuses some games a cost
-
-- **WHEN** a cross-game guard needs to walk some games less than the rest
-- **THEN** the games are found from a property each already has, read from the
-  game, and the guard carries no list of ids
-
-### Requirement: The hint-resume walk excuses the games that can say a search ran out
-
-Which games the hint-resume walk excuses its completion promise SHALL be a
-separate population, `SEARCH_REACH_GAMES`: the games whose own code names
-`SEARCH_OUT_OF_REACH`, the refusal that admits a search ran out, or hands a
-search's outcome to `searchRefusal`, which names it for them. A game can
-search without the slide planner, so the excuse SHALL NOT be keyed on the
-planner.
-
-#### Scenario: A game that searches without the slide planner may refuse past its reach
-
-- **WHEN** a game's hint can say `SEARCH_OUT_OF_REACH` from a search of its own
-- **THEN** the hint-resume walk excuses it by the same derivation, and its ledger
-  entry is required before the guard passes
-
-### Requirement: An excused game's reason and remaining cover are recorded per member
-
-The reason a member is excused, and the test that still covers its largest
-board on every commit, SHALL be recorded per member, with the derivation
-asserted to be exactly the ledger, so a game that later joins the mechanic
-fails the guard until someone writes that sentence.
-
-#### Scenario: A newly enrolled game has no ledger entry
-
-- **WHEN** the derivation enrolls a game the ledger does not name
-- **THEN** the ledger's equality assertion fails until its entry names what
-  covers its largest board
-
 ### Requirement: Import-graph selection alone is unsound here, and is used only in a union
 
 Selecting which tests a commit runs by walking the static import graph alone
@@ -795,11 +755,11 @@ which "The pre-commit hook may run a selected subset of the suite" specifies.
 
 ### Requirement: A test selector is accepted only against two experiments
 
-A scheme that selects on what a test actually read at runtime is acceptable
-too. Any selection scheme SHALL be accepted only against two experiments, a
-change to one game's source and a change to a `help/` page, and only if it
-selects the glob-based guards for both. It SHALL treat an unclassifiable
-change as "run everything" and never as "run nothing".
+Any scheme that selects the tests a commit runs, one that selects on what a
+test actually read at runtime included, SHALL be accepted only against two
+experiments, a change to one game's source and a change to a `help/` page, and
+only if it selects the glob-based guards for both. It SHALL treat an
+unclassifiable change as "run everything" and never as "run nothing".
 
 #### Scenario: A test-impact selector is proposed
 
@@ -894,59 +854,6 @@ not report a small selection.
 - **WHEN** a change to the walk makes it miss a glob that a test reaches only
   through a helper
 - **THEN** the gate fails on the known coupling
-
-### Requirement: The gate rejects a test whose every assertion is conditional
-
-The gate SHALL fail on a test whose every assertion sits behind a condition
-without the test also asserting how many cases it examined, and the check SHALL
-carry a floor on the test files and the tests it scanned. A condition means an
-`if`, and equally `if (…) continue;` or `if (…) return;`, the same guard
-written the other way round. A test that cannot fail passes forever, and a
-green test and a vacuous one are the same observation.
-
-#### Scenario: a test scans for a case and finds none
-
-- **WHEN** a test's assertions run only inside a conditional
-- **THEN** the gate fails unless the test also asserts the number of cases it
-  examined, outside that conditional
-- **AND** a fixture that stops producing the case then fails and does not pass
-  silently
-
-#### Scenario: a test has already written its own vacuity guard
-
-- **WHEN** a scan returns on finding its case and ends in an unconditional
-  `throw`, or an `if`/`else` asserts on both branches
-- **THEN** the guard is silent, because one of those paths always runs
-- **AND** the exemption is derived from the syntax and not held in a roster
-
-#### Scenario: a test genuinely cannot count what it examined
-
-- **WHEN** the healthy state of the system is that the condition never fires
-- **THEN** the test is carried in the guard's ledger with the reason, keyed on
-  its title and not its line, so the entry survives edits above it
-- **AND** the ledger is asserted exactly equal to the guard's findings, so an
-  entry that stops being needed fails as loudly as a new offender
-
-#### Scenario: the guard is proven before it is trusted
-
-- **WHEN** the guard runs
-- **THEN** it first checks itself against fixtures for every shape it claims to
-  catch and every exemption it claims to make, and fails if any behaves wrongly
-- **AND** a guard about tests that cannot fail is therefore never one itself
-
-### Requirement: Which test shapes the gate guards is decided by measurement
-
-Which shapes are guarded SHALL be decided by measuring each candidate against a
-corpus of tests known to be vacuous, not by how confident a shape looks. Of the
-candidates measured, only "every assertion conditional" is built. "Both sides
-of an assertion are one expression" and "a bound the type guarantees" caught
-none of the corpus, and reported only sound or already-reviewed sites.
-
-#### Scenario: A new shape is proposed for the check
-
-- **WHEN** a change proposes that the check also reject another shape of test
-- **THEN** the candidate is run over tests known to be vacuous, and what it
-  catches there and what else it reports decide whether it is built
 
 ### Requirement: A complexity ceiling is set from the tree's own distribution
 
@@ -1062,75 +969,6 @@ memory, and SHALL floor the files, unions and comparisons it examined.
 
 - **WHEN** the file listing, the parse or the program load examines fewer files, unions or comparisons than its floor
 - **THEN** the guard fails and says which floor, and does not pass
-
-### Requirement: A stated reporting rule matches what the build does
-
-Where this project states that errors reach an error-reporting service, a
-deployed build SHALL actually be able to send them, or the statement SHALL be
-amended to say that it does not. A rule enforced against nothing is worse than
-no rule: it reads as a guarantee, code is written to satisfy it, and nobody
-discovers it is inert until the failure it exists for is the one nobody heard
-about.
-
-#### Scenario: A reporting rule is stated but no build implements it
-
-- **WHEN** the project documents that unrecoverable errors reach a reporting
-  service
-- **THEN** either the deployed build can send them, or the documentation records
-  that reporting is deliberately off
-
-### Requirement: Turning on error reporting settles its side effects deliberately
-
-Enabling error reporting SHALL NOT be treated as setting one variable. Setting
-`VITE_SENTRY_DSN` widens the Content-Security-Policy's `connect-src` to the
-reporting origin, and SHALL NOT turn on anything else a player's browser sends
-by itself: the build requests no high-entropy client hints (`Accept-CH`), the
-SDK tracks no sessions and sends no client reports, and nothing is sent while
-nothing has gone wrong.
-
-#### Scenario: Error reporting is switched on for a deployment
-
-- **WHEN** a deployment sets `VITE_SENTRY_DSN`
-- **THEN** the CSP's `connect-src` names the reporting origin
-- **AND** no `Accept-CH` header is emitted
-
-### Requirement: A public DSN is restricted at the reporting service
-
-A client-side DSN is public by construction: it is compiled into the shipped
-bundle and readable from the deployed assets, whatever it is stored in. The
-reporting service's own allowed-domains list and rate limits are the controls
-that restrict its use, and both SHALL be configured, since an unrestricted
-public DSN accepts traffic from anywhere.
-
-#### Scenario: A DSN is set for a deployment
-
-- **WHEN** a deployment sets `VITE_SENTRY_DSN`
-- **THEN** the service's allowed domains and rate limits are configured
-
-### Requirement: Error reporting is verified on the deployed origin
-
-Reporting SHALL be verified on the deployed origin by observing a deliberately
-triggered and consented report arrive, since a DSN that is set but wrong is
-indistinguishable from an app that never crashes.
-
-#### Scenario: Reporting has just been switched on
-
-- **WHEN** a deployment sets `VITE_SENTRY_DSN`
-- **THEN** a deliberately triggered report the player agreed to is observed
-  arriving
-
-### Requirement: What a crash report carries matches what the privacy notes promise
-
-The privacy notes a player can read SHALL describe what a crash report actually
-contains. Before reporting is enabled, one real payload SHALL be read against
-those notes, and any excess SHALL be turned off or the notes amended in the same
-change.
-
-#### Scenario: A crash report would carry more than the notes describe
-
-- **WHEN** the payload a deployment would send exceeds what the privacy notes
-  promise
-- **THEN** the excess is disabled, or the notes are corrected in the same change
 
 ### Requirement: The gate runs the source-scan tests as a pass ahead of the rest of the suite
 
@@ -1350,18 +1188,6 @@ steps of one board's plan.
 - **BECAUSE** the first board catches a defect that shows on every board of the
   tier, and the others catch what a push can catch in time
 
-### Requirement: A sweep's per-commit amount is chosen through perCommit
-
-The amount a sweep does in the hook SHALL be chosen through
-`perCommit(hook, wide)` in `src/engine/testing/slow.ts`, which reads the role
-toggle the hook sets and nothing else, so CI, a manual `npm run gate` and a
-bare `vitest` all do the wide amount.
-
-#### Scenario: A sweep is run outside the hook
-
-- **WHEN** a sweep's file is run by a bare `vitest`, with no toggle set
-- **THEN** it walks the wide amount
-
 ### Requirement: The hook keeps a board of every kind and every check one board can fail
 
 For every sweep the hook SHALL keep: at least one board of every params set the
@@ -1378,17 +1204,3 @@ the hook's amount still walks.
   largest
 - **THEN** the hook still walks a board with that value
 - **BECAUSE** the lever takes off size, never a mode
-
-### Requirement: A sweep's ledger is true of the hook's boards and of the push's
-
-An assertion held against what a sweep found (a ledger of sentences heard, a
-floor on boards walked) SHALL be true of the hook's boards and of the push's.
-The two can differ by more than size: the slice takes the smallest preset
-supplying each value still wanted, so leaving out the largest board can change
-which preset a mode is walked on.
-
-#### Scenario: A ledger is held against the hook's walk and the push's
-
-- **WHEN** a sentence over the length limit is spoken only on a board the hook
-  walks and the push does not, or the reverse
-- **THEN** the ledger lists it with a board that speaks it, and both runs pass

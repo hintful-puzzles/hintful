@@ -38,17 +38,6 @@ one gem for every five squares and needs at least one.
 - **WHEN** params have a dimension below 2, or an area below 6 squares
 - **THEN** they are refused
 
-### Requirement: Inertia has no mistake check
-
-The game SHALL NOT implement `findMistakes`: every reachable position is legal,
-since a death is undone, not corrected, so there is no wrong-but-legal state to
-flag.
-
-#### Scenario: A death is not a mistake
-
-- **WHEN** the ball has run onto a mine
-- **THEN** no square is flagged as a mistake, and the player undoes to play on
-
 ### Requirement: The ball slides until it is stopped
 
 A move slides the ball in one of eight directions. `executeMove` SHALL move the
@@ -393,7 +382,7 @@ to prevent.
 ### Requirement: The hint refuses honestly when the move to make is undo
 
 `hint` SHALL refuse when the ball is dead, and when some gem can no longer be
-reached by any sequence of moves, and each refusal SHALL say that the move to
+reached by any sequence of moves, outlining each such gem, and each refusal SHALL say that the move to
 make is to undo.
 
 #### Scenario: The hint refuses honestly when the ball is dead

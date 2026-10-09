@@ -13,9 +13,7 @@ up.
 ### Requirement: Fifteen is solved when its tiles read in order with the gap last
 
 The board SHALL be a `w×h` grid of numbered tiles with one empty gap, solved
-when the tiles read `1..n-1` in row-major order with the gap last. The game
-SHALL provide `statusbarText`, `solve` and `textFormat`. It SHALL NOT provide a
-`findMistakes` hook, since every reachable position is legal.
+when the tiles read `1..n-1` in row-major order with the gap last.
 
 #### Scenario: The board is solved exactly when its tiles are in order
 
@@ -82,8 +80,8 @@ replace the grid with the solved permutation and count as one move.
 `interpretMove` SHALL produce a slide from a click only when the target cell
 shares exactly one coordinate with the current gap: a click sharing zero or
 both coordinates, or out of bounds, SHALL produce nothing. Cursor keys SHALL
-slide the adjacent tile into the gap immediately, with the default arrow
-semantics: the pressed arrow moves a tile in that direction.
+slide the adjacent tile into the gap immediately: the pressed arrow moves a
+tile in that direction.
 
 #### Scenario: Click geometry constrains legal slides
 
@@ -121,12 +119,12 @@ solvable board SHALL reach the solved state.
 
 ### Requirement: A Fifteen hint step says whether its slide places a tile home
 
-Each step's narration SHALL say why the move matters, naming the goal tile it
-works toward its home: one tile, held until it is home. A step landing the
-goal in its solved cell SHALL say it slides into place. A step landing another
-tile in its solved cell SHALL say so only when no later slide of the plan
-moves that tile; otherwise, like any other setup slide, it SHALL say the tile
-slides out of the way.
+Each step's narration SHALL name the goal tile it works toward its home: one
+tile, held until it is home, so a restoration reads as part of one goal. A
+slide of the goal SHALL say it slides into place, closer, or back a step, as
+it lands home, nearer or further. A slide of another tile SHALL say that tile
+slides into place only where it lands in its solved cell and no later slide of
+the plan moves it, and otherwise that it slides out of the way.
 
 #### Scenario: Narration distinguishes a home move from a setup move
 
@@ -136,6 +134,12 @@ slides out of the way.
 - **WHEN** a step only maneuvers (it does not land a tile in its solved cell)
 - **THEN** its narration states it is a setup move and names the goal tile
   being worked toward its home
+
+#### Scenario: The goal slides away from its home
+
+- **WHEN** a step slides the goal tile one cell further from its solved cell
+- **THEN** it says the goal slides back a step, leaving the hole between it and
+  its home, and a step that slides it nearer says it slides closer
 
 #### Scenario: A tile carried through its own home
 
@@ -160,15 +164,14 @@ slides out of the way.
 ### Requirement: Fifteen's hintKeepTrack completes on the hinted slide alone
 
 `hintKeepTrack` SHALL return `"completed"` for a player move that produces
-exactly the board the current step expects, advancing the plan. It SHALL
-return `"off"` for any other move, dropping the plan so the next request
-recomputes it.
+exactly the board the current step expects, and `"off"` for any other move. It
+SHALL never return `"onTrack"`.
 
-#### Scenario: Following the plan keeps it displayed; deviating drops it
+#### Scenario: The hinted slide completes the step and any other is off
 
 - **WHEN** the player makes exactly the move the current step describes
-- **THEN** `hintKeepTrack` reports the step completed and the plan advances
-- **AND** a different move reports `"off"`, dropping the plan
+- **THEN** `hintKeepTrack` reports the step completed
+- **AND** a different move reports `"off"`
 
 ### Requirement: Fifteen draws beveled numbered tiles in a recessed border
 
@@ -220,7 +223,6 @@ The move count SHALL never freeze or reset.
 bevel, and the gap, with whatever a sliding tile uncovers, as the collection's
 cell surface, so a tile is told from the well by more than its bevel in both
 schemes. The tile SHALL keep its bevel: it is an object the player moves.
-Color 0 SHALL stay the board.
 
 #### Scenario: A tile is not the board's gray
 

@@ -123,8 +123,7 @@ Because a generated board is uniquely solvable, the game SHALL implement
 return every player-set cell whose content contradicts the unique solution, and
 every cell of a domino marked `?` that is neutral in it, since the hint reads a
 `?` as a fact. Empty cells, and a `?` on a domino that is a magnet in the
-solution, SHALL never be flagged; a board that is not uniquely solvable SHALL
-yield no mistakes.
+solution, SHALL never be flagged.
 
 #### Scenario: A wrong placement is flagged
 

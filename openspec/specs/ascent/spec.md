@@ -281,21 +281,13 @@ reproducible.
 ### Requirement: Ascent grades its difficulty tiers honestly
 
 A board generated above Easy SHALL NOT be soluble at the tier below it, in any
-grid mode. The generator's probe of the easier tier SHALL run on solver scratch
-state that carries nothing from an earlier candidate: Ascent's scratch keeps a
-flag across solves that weakens the solver once set, so a probe on reused
-scratch under-rejects and leaves its own state behind for the next candidate.
+grid mode.
 
 #### Scenario: A board above Easy genuinely needs its own tier
 
 - **WHEN** a board generated above Easy is solved at the tier below it
 - **THEN** the solver does not reach a solution
 - **AND** solving the same board at its own tier does
-
-#### Scenario: The probe is not weakened by the candidate before it
-
-- **WHEN** the generator tests whether the easier tier solves a candidate
-- **THEN** the solver runs from scratch state initialized for that board alone
 
 ### Requirement: Ascent explains the next number
 
@@ -542,7 +534,7 @@ gives up.
 
 ### Requirement: What Ascent draws
 
-Rendering SHALL show endpoint candidate hints for a single-number path. Moves
+Where a drawn path holds only a single number, rendering SHALL show at its endpoints the one or two smaller numbers valid there. Moves
 SHALL be applied instantly, with no interpolated animation.
 
 #### Scenario: A move is drawn at once

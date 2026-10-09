@@ -398,23 +398,6 @@ shared hint library, and SHALL NOT be re-derived per game.
   inherits plan lifecycle, mark-vs-animation placement, overlay cache
   invalidation and the narration vocabulary from the engine
 
-### Requirement: A per-cell overlay reaches the render cache through the shared sidecar
-
-Any per-cell overlay a game paints on top of its tiles, the hint overlay and
-the mistake overlay alike, SHALL reach the render cache through the shared
-overlay sidecar (`engine/overlay-sidecar.ts`) and not through a per-game
-re-derivation of the repack, stale and commit steps. The one exception is a
-game whose overlay does not fit the per-cell shape, which SHALL be recorded as
-a no-go with its reason.
-
-#### Scenario: A mistake overlay reaches the cache the same way the hint overlay does
-
-- **WHEN** a game paints a per-cell mistake overlay (the `findMistakes`
-  highlight) over tiles whose values are otherwise unchanged
-- **THEN** the overlay is carried by the shared overlay sidecar (packed per
-  frame, stale-compared in the cache-miss test, committed after draw), so a
-  Check & Save on an already-drawn board repaints the flagged cells
-
 ### Requirement: A shared hint mechanism costs no game its narration
 
 A shared hint mechanism SHALL NOT cost a game any of its narration. The
@@ -1180,7 +1163,7 @@ A game SHALL meet the technique rule by one of two strategies. It narrates
 every deduction its generator accepts, promoting any catch-all into an honest
 technique, however non-local or tedious, as Filling narrates its global
 candidate elimination. Or it rejects at generation the boards whose solution
-needs a deduction it cannot narrate (the `ts-migration` narratable-deduction
+needs a deduction it cannot narrate (the `engine-difficulty` narratable-deduction
 generation policy, to which this is the hint system's companion).
 
 #### Scenario: A solver has a catch-all rung
@@ -1330,79 +1313,6 @@ one), with a control that prevents the assertion holding vacuously.
 - **THEN** the game asserts structurally that its hint reaches only the bounded
   one
 
-### Requirement: Only a tier named Unreasonable requires Search
-
-A tier whose boards can require Search SHALL be named `Unreasonable`, and no
-other tier name SHALL require it.
-
-#### Scenario: A tier that can require guessing says so in its name
-
-- **WHEN** a game's generator can emit, at a given tier, a board whose solution
-  needs a propagating trial
-- **THEN** that tier is named `Unreasonable`
-
-### Requirement: A propagating trial on a hard tier moves up or renames the tier
-
-A game whose hard tier ships a propagating trial SHALL NOT delete the tier.
-Where a tier named `Unreasonable` sits above the rung's tier, the rung SHALL
-move up to it and the lower tier be re-graded by what remains. Where the
-rung's tier is the game's top tier, it SHALL be renamed `Unreasonable`. Where
-emptying the tier would leave it the technique set of the tier below, so that
-it generates nothing, the game SHALL first build the missing deductive rung
-and re-grade, then move the trial up.
-
-#### Scenario: The trial sits on the game's top tier
-
-- **WHEN** a game's top tier ships a propagating trial
-- **THEN** that tier is renamed `Unreasonable`, and is not deleted
-
-### Requirement: A name is dropped only from a tier that generates nothing
-
-The rule against deleting a tier is about tiers that name boards. A name SHALL
-be dropped from the tier list only where a rename would leave an ordering a
-player cannot read because a name above it belongs to a tier that generates
-nothing, one already refused at generation on a measurement. Its encoded
-difficulty character SHALL still decode and round-trip, so that no existing
-game ID or saved game changes meaning, and the refusal SHALL keep its reason.
-
-#### Scenario: A game ID names a tier whose name was dropped
-
-- **WHEN** a game ID carries the difficulty character of a tier dropped from
-  the list
-- **THEN** it still decodes and round-trips, and nothing a player could
-  previously play is removed
-
-### Requirement: A tier list has one definition per game
-
-A tier list SHALL have one definition per game, read by the preset menu, the
-difficulty contract and the custom-params dialog alike. Dropping a
-name from a declared tier list drops whatever cross-game guard iterates that
-list, so a game that shortens its list SHALL re-establish the lost guarantee in
-its own tests: at minimum, that the undeclared tier's difficulty character
-still round-trips.
-
-#### Scenario: A tier is renamed
-
-- **WHEN** a game renames a tier
-- **THEN** the preset menu and the custom-params dialog show the new name
-  together, because both read the one list
-
-### Requirement: A moved rung leaves its old tier generable
-
-A rung that moves SHALL be shown to leave its old tier still generable, at
-every size the game offers, before the move is called done. A size and tier
-pair that becomes ungenerable SHALL be refused by `validateParams` with a
-reason and SHALL NOT be silently downgraded.
-
-#### Scenario: Moving a trial rung up leaves the tier below still generable
-
-- **WHEN** a propagating rung is moved off a tier to the game's `Unreasonable`
-  tier
-- **THEN** every size the game offers still generates at the vacated tier, or
-  that size/tier pair is refused by `validateParams` with a reason the player
-  can read: the tier is never left silently unreachable, and never quietly
-  downgraded to another difficulty
-
 ### Requirement: A narration identifies every element it refers to
 
 Where a deductive game's displayed step marks more than one element, its narration
@@ -1529,29 +1439,6 @@ overlay, a fact the player has no way to record.
 - **THEN** every premise its sentence names is a clue, an entry the player placed,
   or a mark the player can make
 
-### Requirement: GameDrawing draws the hint's line hatch
-
-`GameDrawing` SHALL expose `drawHatch(rect, color, period)`: translucent
-diagonal bands of `color`, half of `period` wide, clipped to `rect` and laid on
-the lines `x + y = k · period` of the whole canvas, so neighboring rects
-hatched separately form one unbroken pattern. Every `GameDrawing`
-implementation SHALL take the band geometry from the engine's `hatchBands` and
-the opacity from its one constant, and a hatching game's stripes SHALL be
-visible against its board in both color schemes.
-
-#### Scenario: Two tiles hatched separately join up
-
-- **WHEN** a game hatches two adjacent tiles in separate calls
-- **THEN** whether any point is striped depends on its canvas coordinates alone,
-  so the stripes run on across the shared edge
-
-#### Scenario: A hatching game's stripes show in both schemes
-
-- **WHEN** a game whose code calls `drawHatch` shows a hint that hatches a line
-- **THEN** the hatch color blended over its board background at the hatch
-  opacity differs from the background by more than the stripe-visibility bar, in
-  the light and the dark palette the app paints
-
 ### Requirement: A hint hatches the one line its sentence names
 
 A hint step whose sentence names exactly one row or column as the line it
@@ -1605,19 +1492,6 @@ mark SHALL name it by its stripes.
 
 - **WHEN** a Keen step reasons that no way to fill a cage puts a number in a cell
 - **THEN** the step hatches exactly that cage's cells and outlines none of them
-
-### Requirement: A set outlines the cells it rests on
-
-A generic Latin set elimination SHALL record the cells whose candidates account for the
-values it strikes, and a game's hint SHALL outline them as the step's evidence, so the
-sentence that names them ("the outlined cells already account for …") points at cells
-the player can see.
-
-#### Scenario: A set's sentence names outlined cells
-
-- **WHEN** a row/column game's hint strikes a candidate by a set
-- **THEN** the step outlines the cells of the set and its sentence speaks of the
-  outlined cells
 
 ### Requirement: A preference change drops the stored hint plan
 
@@ -1801,20 +1675,6 @@ so the sentence never names a note the step no longer strikes.
   been struck by the time it is shown
 - **THEN** the refreshed step reads "…so we must cross out 2" and rings only the 2
 
-### Requirement: A bound game's help SHALL list its marks from its legend
-
-A bound game's help page SHALL mark where its list of marks goes, and the help
-build SHALL replace that mark with one entry per role in the game's legend, led
-by the engine's words for the role. A bound game's page without the mark, or an
-unbound game's page with one, SHALL fail the build.
-
-#### Scenario: A game binds its hint
-
-- **WHEN** a game declares `hintMarks`
-- **THEN** its help page's Hints section lists "A ring marks …", "An outline
-  marks …" and "Stripes mark …" for the roles its legend lists, in the game's
-  own words for what each marks there
-
 ### Requirement: Every hinted game SHALL be bound
 
 Every game that declares a `hint` SHALL declare the `hintMarks` section, so
@@ -1906,19 +1766,6 @@ SHALL throw, naming the target, where no button's verb keeps the step.
   shrinks the step as it is followed
 - **THEN** the step the midend holds, and the player's `Ui`, are unchanged by
   the derivation
-
-### Requirement: A drag game's press arm goes through the engine's verbs
-
-A drag game's own press arm SHALL park the cursor through the engine's
-`pressTarget`, and the release of a drag that never left its target SHALL apply
-the verb the engine's `buttonVerb` names for the button, so the arm names
-neither the cursor's handling nor which verb a button applies.
-
-#### Scenario: A drag is released where it was pressed
-
-- **WHEN** a drag game's target is pressed and released without the pointer
-  leaving it
-- **THEN** the move is the one `buttonVerb` names for that button
 
 ### Requirement: The midend SHALL refuse a hint on a finished or wrong board before asking the game
 
@@ -2301,53 +2148,56 @@ thing under test.
 - **WHEN** the sentence of a step a test pins is reworded
 - **THEN** the pin still finds the step, because it reads the rung
 
-### Requirement: The candidate walk stamps the steps it builds
+### Requirement: The solver and the hint are two projections of one deduction engine
 
-The candidate walk SHALL stamp the steps it builds: a placement or a strike
-with the kind of the reason it narrates, and its own setup steps and a
-placement's cull with ids the engine owns. A game on the walk SHALL therefore
-write its list and no stamp. Where a game's words for a placement narrate
-another of its reasons than the one the walk handed it, the game SHALL say
-which, so that a step's rung and its sentence name the same deduction.
+A logic game's deductive solver and its hint SHALL be two projections of one
+deduction engine. The generator runs the techniques to a fixpoint with the
+recorder off and SHALL accept a board only when the techniques fully solve it;
+the hint runs the same techniques with the recorder on. Deductive completion
+implies uniqueness, so no separate uniqueness pass SHALL be required. The
+difficulty grade SHALL be the highest **tier** reached, never a technique's
+position in the ladder.
 
-#### Scenario: A candidate game writes no stamp
+#### Scenario: A board is graded by tier and not by position
 
-- **WHEN** a game builds its plan through the shared candidate walk
-- **THEN** each step's rung is the kind of the reason the walk narrated, or
-  the engine's id for a setup step or a cull
-- **AND** the game's list is the engine's ids and its own reasons' kinds
+- **WHEN** the techniques solve a board, and the last technique in the ladder
+  that fired declares a lower tier than an earlier one that fired
+- **THEN** the board's grade is the higher tier
 
-#### Scenario: A sentence of another reason
+### Requirement: The hint-resume walk excuses the games that can say a search ran out
 
-- **WHEN** a game's words for a placement are those of a reason other than
-  the one the walk found, as a one-cell area's are a singleton's
-- **THEN** the step carries that reason's rung, not the one the walk found
+Which games the hint-resume walk excuses its completion promise SHALL be a
+population apart from a sweep's cost exemption (`testing`), `SEARCH_REACH_GAMES`: the games whose own code names
+`SEARCH_OUT_OF_REACH`, the refusal that admits a search ran out, or hands a
+search's outcome to `searchRefusal`, which names it for them. A game can
+search without the slide planner, so the excuse SHALL NOT be keyed on the
+planner.
 
-### Requirement: A rung list holds only the rungs of the readings its plan walks
+#### Scenario: A game that searches without the slide planner may refuse past its reach
 
-A game's list SHALL hold only the rungs of the readings its plan walks. A plan
-that gives a setup of its own walks the populate reading alone, and cannot
-speak two of the walk's rungs: the implicit reading's note step, and the single
-read off a cell with no notes. Such a plan's step type SHALL lack both, so its
-game's list lacks them and its tests excuse neither.
+- **WHEN** a game's hint can say `SEARCH_OUT_OF_REACH` from a search of its own
+- **THEN** the hint-resume walk excuses it by the same derivation, and its ledger
+  entry is required before the guard passes
 
-#### Scenario: A plan on the populate reading alone
+### Requirement: An excused game's reason and remaining cover are recorded per member
 
-- **WHEN** a game's plan gives a setup of its own
-- **THEN** its rung list holds neither the note step nor the single of a cell
-  with no notes, and its tests pin a board for every rung left
+The reason a member is excused, and the test that still covers its largest
+board on every commit, SHALL be recorded per member, with the derivation
+asserted to be exactly the ledger, so a game that later joins the mechanic
+fails the guard until someone writes that sentence.
 
-### Requirement: A plan's setup declares the reading it walks
+#### Scenario: A newly enrolled game has no ledger entry
 
-The setup is the declaration of the reading, since the walk already runs it. A
-plan typed on the populate reading alone SHALL NOT compile without a setup, a
-plan typed on both readings SHALL NOT compile with one, and the walk SHALL
-throw, and not read a single off a cell with no notes, on a plan that gave a
-setup.
+- **WHEN** the derivation enrolls a game the ledger does not name
+- **THEN** the ledger's equality assertion fails until its entry names what
+  covers its largest board
 
-#### Scenario: The walk would read a single off a cell with no notes
+### Requirement: Auto-Hint stops when a step throws
 
-- **WHEN** a plan that gave a setup of its own reaches a single the walk would
-  read off a cell with no notes
-- **THEN** the walk throws, naming the plan, where it would have stamped the
-  step with a rung the list lacks
+Auto-Hint SHALL stop when a step's hint throws, so the error reaches the app's
+reporter and the loop is not left marked active with nothing driving it.
+
+#### Scenario: Auto-Hint meets a thrown step
+
+- **WHEN** Auto-Hint is running and a step's hint throws
+- **THEN** Auto-Hint stops and the error propagates to the app's reporter

@@ -28,7 +28,7 @@
  * 2. **No RNG draw-order cases.** Reordering a shuffle or a comparator changes
  *    *which boards exist*, which is a differential's guarantee by design, not a
  *    local test's. Probing for it here would manufacture "findings" that the
- *    `repo-layout` requirement explicitly says belong elsewhere. Where that
+ *    `testing` requirement explicitly says belong elsewhere. Where that
  *    boundary is load-bearing the module's own test file states it in prose and
  *    verifies it (`symmetric-blacks.test.ts` is the worked example).
  * 3. **The corpus includes a control group.** `wires.ts`, `divvy.ts` and
@@ -1237,7 +1237,7 @@ export const MODULES = [
     // wrong side of that line: reversing `faceScore`'s sign, and counting
     // opposite-colored neighbors in `faceNumNeighbors`. Both survive the local
     // tests and should: they change which loop a seed yields, not whether it is
-    // one. Carrying them would have manufactured findings the `repo-layout`
+    // one. Carrying them would have manufactured findings the `testing`
     // requirement says belong elsewhere — and elsewhere does catch them, checked
     // rather than assumed: under the `faceScore` reversal
     // `pearl-differential.test.ts` goes from 14 passed / 1 skipped to 7 failed,

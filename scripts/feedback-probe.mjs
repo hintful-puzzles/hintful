@@ -449,7 +449,7 @@ function main() {
     console.log(
       "\nEach is either a test worth writing or a guarantee that genuinely belongs\n" +
         "to a differential — and if it is the second, say so in the test file and\n" +
-        "verify the differential does fail on it (repo-layout requires both).",
+        "verify the differential does fail on it (the testing spec requires both).",
     );
   }
 }

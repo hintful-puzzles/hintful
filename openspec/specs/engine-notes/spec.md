@@ -595,7 +595,7 @@ press that ran them would switch the mode on the way into every right-drag.
 ### Requirement: The pencil-mode indicator is legible against the canvas
 
 The pencil-mode indicator's glyph SHALL be sized by `pencilIndicatorBox` as half
-a tile less its insets, clamped between 20 and 48 CSS pixels, so a board of many
+a tile less its insets, clamped between a floor and a ceiling in CSS pixels, so a board of many
 small tiles still shows a glyph that reads against its canvas and a coarse board
 on a large screen does not grow it past the size of a toolbar icon.
 

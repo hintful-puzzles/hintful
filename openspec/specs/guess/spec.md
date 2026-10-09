@@ -282,10 +282,11 @@ silently declined reads to a player as a broken key.
 ### Requirement: Guess remembers a half-composed row across a save
 
 Guess SHALL provide `encodeUi` and `decodeUi`, carrying the working row and the
-live holds, which replaying the move log cannot recover: a row is recorded only
-once it is submitted, and a hold only as part of the guess that carries it.
-`decodeUi` SHALL treat a peg the params have no color for as an empty slot, and
-SHALL leave the cursor where the next color will go.
+live holds, which replaying the move log cannot recover. The encoding SHALL be
+one field per slot, comma-separated: the peg's color number, `0` for an empty
+slot, followed by `_` when the slot is held (`3_,0,5,2`). `decodeUi` SHALL
+treat a peg the params have no color for as an empty slot, and SHALL leave the
+cursor where the next color will go.
 
 #### Scenario: A half-composed row survives a save
 

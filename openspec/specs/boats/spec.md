@@ -213,6 +213,8 @@ technique, so the hint SHALL ask them again before it tries a harder one.
 
 Every named technique SHALL be narratable. Boats guesses at no tier, so the
 hint SHALL NOT fall back on an unexplained "this is the only possibility" step.
+A step forced only because the opposite placement contradicts the board SHALL
+name the rule that placement would break.
 
 #### Scenario: A refutation names the rule the alternative would break
 
@@ -249,19 +251,6 @@ hint color cannot stand for two different actions.
   second with waves, both in the hint color
 - **AND** a square the step only reasons from is outlined and carries neither
   mark
-
-### Requirement: Boats refuses to hint a board it cannot honestly advise
-
-A placement that breaks no rule yet but that no solution permits SHALL be
-treated as a mistake by the hint, so that the hint never reasons onward
-from a board that cannot be completed.
-
-#### Scenario: A wrong-but-legal placement is refused rather than reasoned from
-
-- **WHEN** a hint is requested on a board carrying a boat segment that breaks no
-  rule but appears in no solution
-- **THEN** the hint refuses and the offending square is highlighted, rather than a
-  plan being computed from the unsolvable position
 
 ### Requirement: The fleet display fits the canvas for every legal fleet
 

@@ -1,4 +1,4 @@
-// Tier-2 render test (see the `repo-layout` spec): drive Cube's `redraw`
+// Tier-2 render test (see the `testing` spec): drive Cube's `redraw`
 // against the engine's shared `RecordingDrawing` and assert the structure of
 // the draw calls — a background fill, one polygon per grid square (painted
 // squares in COL_PAINT), the projected solid's faces, and a final update.

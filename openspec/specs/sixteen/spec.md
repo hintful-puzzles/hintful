@@ -241,33 +241,6 @@ would stop that gate opening and replace a complete plan with a partial one.
 - **THEN** the deep search still answers it with a plan of more than eight moves
   that finishes the board
 
-### Requirement: The boards a tangle guard names are even permutations
-
-The boards a guard names SHALL be even permutations. Every slide on a square
-board of odd side is an even permutation, so an odd board is unreachable and
-unsolvable, and would convict the hint of a defect it does not have.
-
-#### Scenario: Three swapped pairs on a 5×5 board
-
-- **WHEN** a board of three swapped pairs on a 5×5 grid is proposed as a guard
-  board
-- **THEN** it is not used, because it is an odd permutation and cannot be
-  solved
-
-### Requirement: Sixteen's hint SHALL refuse only by saying its search ran out
-
-Where Sixteen's planner returns nothing, the hint SHALL refuse with the
-collection's constant for a search out of reach, `SEARCH_OUT_OF_REACH`, and
-SHALL NOT claim that no move would get the player closer. The planner reports
-an empty plan for exactly one reason, that every search it ran came back
-inside its budget without a route, and that is a fact about the search, not
-about the board.
-
-#### Scenario: A refusal that has to be true
-
-- **WHEN** Sixteen's hint cannot plan from a sound, unsolved board
-- **THEN** it says it could not find a way home, and points at what still works
-
 ### Requirement: A Sixteen tile stands off the board
 
 `redraw` SHALL draw a tile's face as the collection's lifted surface inside its

@@ -75,8 +75,7 @@ deductions, in exactly the order, that it produces without the support.
 
 The engine SHALL provide the Latin-square generator, square and rectangular,
 and a game that deals from a Latin square SHALL use it and hold no copy. Given
-the same random state it SHALL produce the same square, so a seeded game ID
-keeps its board.
+the same random state it SHALL produce the same square.
 
 #### Scenario: Generated square is Latin and deterministic per seed
 

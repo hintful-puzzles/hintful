@@ -28,13 +28,15 @@ a convention somebody has not made yet.
 one repoints every citation in the same change.
 
 Authoritative specs:
-[`ts-migration`](../../openspec/specs/ts-migration/spec.md) (strategy,
-acceptance gate, test discipline) ·
+[`ts-migration`](../../openspec/specs/ts-migration/spec.md) (what the port
+left standing, the acceptance gate) ·
 [`ts-engine`](../../openspec/specs/ts-engine/spec.md) (the `Game` interface,
 the `Midend`) and the `engine-*` specs beside it, one per subject (hints,
 input, params, difficulty, notes, colors, drawing, helpers) ·
-[`repo-layout`](../../openspec/specs/repo-layout/spec.md) (where things live,
-the in-process test tiers) · per-game specs under `openspec/specs/<game>/`.
+[`repo-layout`](../../openspec/specs/repo-layout/spec.md) (where things live) ·
+[`testing`](../../openspec/specs/testing/spec.md) (the in-process test tiers) ·
+[`help-pages`](../../openspec/specs/help-pages/spec.md) (a game's help page) ·
+per-game specs under `openspec/specs/<game>/`.
 Doctrine: [`doctrine.md`](../doctrine.md). **Exemplar to read
 end-to-end before starting:** [`src/games/galaxies/`](../../src/games/galaxies/)
 (idiomatic six-file split, smaller than the C it replaced).

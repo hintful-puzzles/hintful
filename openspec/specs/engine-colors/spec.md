@@ -508,18 +508,6 @@ record, so a game is covered by being registered.
   paints them side by side, as areas or as marks
 - **THEN** the pair owes no distance, being one role under two names
 
-### Requirement: A pair that is close on purpose is recorded
-
-A pair of side-by-side colors that is closer in the dark scheme than the
-stated distance on purpose SHALL be recorded with what it is, one entry per
-pair, and an entry whose pair is no longer close SHALL fail.
-
-#### Scenario: An excused pair that stops being close fails
-
-- **WHEN** a recorded pair's dark distance rises above the stated distance, or
-  the game stops painting the pair
-- **THEN** the guard fails until the entry is removed
-
 ### Requirement: A lightness a help page names is pinned in the game's palette
 
 A game whose help page calls something black, shaded, white or lit SHALL hold

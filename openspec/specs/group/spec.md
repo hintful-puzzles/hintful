@@ -106,12 +106,10 @@ out-of-range number and an unknown character.
   validated
 - **THEN** it is rejected with a message distinguishing which
 
-### Requirement: Group's solver has five tiers and no technique beyond them
+### Requirement: Group's solver accepts only an associative grid and grades a board at its tier
 
-A completed grid SHALL be accepted only if it is associative. The solver SHALL
-NOT have a tier beyond its five, and SHALL NOT implement an inverse-based, a
-hard-mode-associativity or an element-order technique: the difficulty grading
-depends on their absence.
+The solver SHALL accept a completed grid only if it is associative. A board
+dealt at a difficulty SHALL be solvable at that tier and not at the tier below.
 
 #### Scenario: The solver grades a board at the intended difficulty
 

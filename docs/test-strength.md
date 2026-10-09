@@ -3,16 +3,16 @@
 **How to find out whether a test would actually catch anything** — and how to
 avoid being lied to by the tool you use to find out.
 
-This is the companion to [`porting/game-port-playbook.md`](porting/game-port-playbook.md)
-§5, which covers *writing* tests (the tiers, the render harness, keeping the gate
-cheap). This one covers *assessing* them, which is a different activity and
+This is the companion to [`games/testing.md`](games/testing.md) § "The test
+tiers" and § "Render scenarios", which cover *writing* tests (the tiers, the
+render harness, keeping the gate cheap). This one covers *assessing* them, which is a different activity and
 applies to the whole tree, not just game ports.
 
-Normative rules live in the specs — [`repo-layout`](../openspec/specs/repo-layout/spec.md)
+Normative rules live in the specs — [`testing`](../openspec/specs/testing/spec.md)
 ("The test suite's strength is audited, not assumed"; "A shared module's tests
 give feedback where the code lives") and
-[`build-pipeline`](../openspec/specs/build-pipeline/spec.md) ("The commit gate's
-cost is proportional to what it protects"). This is the followable *how*.
+[`build-pipeline`](../openspec/specs/build-pipeline/spec.md) ("No correctness
+check is removed or weakened to buy speed"). This is the followable *how*.
 
 Provenance: everything below was measured, most of it in
 `2026-08-02-audit-test-suite-strength` (2,168 mutants, 398 minutes),

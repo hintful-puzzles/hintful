@@ -8,7 +8,7 @@
  * either. Kill the parent and that worker reparents to init and spins a core
  * for ever (see `scripts/reap-orphaned-workers.sh`, which reaps the ones that
  * still escape). A bound turns "hangs the machine" into "throws in seconds" —
- * which is what the `repo-layout` determinism requirement asks for: a finite
+ * which is what the `testing` determinism requirement asks for: a finite
  * iteration cap rather than probabilistic termination inside a timeout.
  *
  * WHY A CAP CANNOT MOVE A GENERATED BOARD. A working generator converges in a

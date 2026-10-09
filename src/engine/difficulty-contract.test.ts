@@ -320,7 +320,7 @@ for (const { id, game, contract, tiers } of tiered) {
     });
 
     it("deals boards that need the tier the preset claims", () => {
-      // THE PROPERTY `ts-migration` NAMED AND NOTHING CHECKED. "A difficulty tier
+      // THE PROPERTY `engine-difficulty` NAMES AND NOTHING CHECKED. "A difficulty tier
       // binds the board it generates" has been a requirement since the byte-match
       // oracle was released, and `engine/difficulty.ts`'s `solvableAtExactlyTier`
       // is its one expression — but no test in the collection ever compared the

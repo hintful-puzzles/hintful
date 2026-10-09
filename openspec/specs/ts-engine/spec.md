@@ -1,18 +1,20 @@
 # ts-engine Specification
 
 ## Purpose
+
 The core of the puzzle engine every game runs on: what a `Game` owes the
 `Midend` and the midend owes it, the registry, the save format, preferences, a
 board's history with its restarts and the board a new one replaced, status and
-timer, Solve and mistake-checking, the reference aid, the boards dealt ahead of
-a New game, the one spelling of absence, and the rule that a game joins a
-shared mechanic, and the sweeps that walk every game, by having it.
+timer, Solve and mistake-checking, the reference aid, the one spelling of
+absence, and the rule that a game joins a shared mechanic by having it.
 
 The shared layer's subjects each have a capability of their own beside this
 one: `engine-hints` and `engine-candidate-hints`, `engine-input`,
 `engine-params`, `engine-difficulty`, `engine-notes`, `engine-colors`,
 `engine-drawing` and `engine-helpers`. A requirement about one of those
 subjects belongs there, and this capability holds what is about no one of them.
+How the app deals a board ahead of a New game is `dealing`, and the boards a
+cross-game sweep walks are `testing`'s.
 
 ## Requirements
 
@@ -38,13 +40,12 @@ directly. The interface is the sole contract between a game and the engine.
 - **THEN** it implements `Game` with its own parameter, state and move types
 - **AND** it does not reference the midend implementation
 
-### Requirement: Per-game engine selection is a runtime registry, not a build flag
+### Requirement: A game is resolved at runtime through the registry, and an unregistered id fails
 
 The engine SHALL resolve a game's implementation at runtime through a registry
-keyed by `puzzleId`, populated by `registerGame(...)` side effects, never
-through a build flag and never per game at build time. A `puzzleId` absent from
-the registry is unplayable: the worker SHALL fail explicitly for it and SHALL
-NOT fall through to another implementation.
+keyed by `puzzleId`, populated by `registerGame(...)` side effects. A
+`puzzleId` absent from the registry is unplayable: the worker SHALL fail
+explicitly for it and SHALL NOT fall through to another implementation.
 
 #### Scenario: An unregistered puzzle id fails explicitly
 
@@ -276,80 +277,6 @@ solution as unknown for those.
 - **THEN** the midend passes no aux and the game reports the solution is not
   known, leaving the board unchanged
 
-### Requirement: The Untangle port exposes its three preferences via the hook
-
-Untangle SHALL expose three preferences through `prefs`, under the keywords
-`snap-to-grid` (boolean), `show-crossed-edges` (boolean) and `vertex-style` (a
-two-way choice, Circles or Numbers). Its `newUi` SHALL set the defaults:
-show-crossed-edges on, since it doubles as the built-in mistake feedback,
-snap-to-grid off, and vertex-style Circles.
-
-#### Scenario: Untangle preferences round-trip through the engine
-
-- **WHEN** `getPreferencesConfig()` is called for Untangle
-- **THEN** it returns two booleans and one two-way choice of the game's own,
-  beside the engine's `show-timer`, and `getPreferences()` reports
-  show-crossed-edges true by default
-- **AND** `setPreferences({ "show-crossed-edges": false })` turns off the
-  crossed-edge highlight and repaints, leaving the others unchanged
-
-### Requirement: The app shell shows a non-blocking, responsive reference panel
-
-The app shell SHALL render a reference control in the same toolbar button group
-as Hint, shown only when `hasReference` is true. Activating it SHALL toggle a
-`<reference-panel>` open and closed like a disclosure, not a one-shot modal.
-The panel SHALL be non-blocking and SHALL keep the board visible and
-interactive while open, in both of its layouts.
-
-#### Scenario: The control appears only for a reference-bearing game
-
-- **WHEN** the active game reports `hasReference` true
-- **THEN** a reference toggle button is shown next to Hint; for a game
-  reporting false, no such button is shown
-
-#### Scenario: The panel keeps the board interactive and updates live
-
-- **WHEN** the panel is open and the player places or removes a piece on the
-  board
-- **THEN** the board input is unaffected by the panel, and the panel's
-  checklist status reflects the new board without being reopened
-
-### Requirement: The reference panel renders each item and selects on a click
-
-The panel SHALL render each `ReferenceItem` with status-distinct styling,
-drawing `pips` as piece faces when present and `label` otherwise, and SHALL
-reflect found status live as the board changes. A click on an item SHALL toggle
-its selection and call `selectReference` with the item's `key`, or `null` when
-deselecting. Selection feedback in the list SHALL be immediate and SHALL NOT
-wait on the asynchronous model refresh.
-
-#### Scenario: Clicking an item spotlights it on the still-visible board
-
-- **WHEN** the player clicks an outstanding item in the open panel
-- **THEN** the item shows as selected immediately, and the board, still visible
-  beside or above the panel, highlights that item's occurrences
-- **AND** clicking it again clears the highlight
-
-### Requirement: The board spotlight persists when the reference panel is closed
-
-Closing the panel SHALL NOT clear the board spotlight. Acting on the board
-SHALL clear it: a game clears it in `interpretMove` on any board tap. The
-Escape key SHALL clear it whether the panel is open, which stays open, or
-closed, and clicking the selected item again SHALL clear it.
-
-#### Scenario: The spotlight persists after close
-
-- **WHEN** a reference item is spotlighted and the player closes the panel
-- **THEN** the board spotlight remains, so the player can act on it with the
-  panel out of the way
-
-#### Scenario: Escape clears the spotlight
-
-- **WHEN** a reference item is spotlighted and the player presses Escape, with
-  the panel open or closed
-- **THEN** the spotlight is cleared, and an open panel deselects its item and
-  stays open
-
 ### Requirement: The engine serializes Ui state a move-log replay cannot reconstruct
 
 The engine SHALL support optional `encodeUi(ui): string` and
@@ -495,40 +422,6 @@ add itself to a list in order to be guarded.
 - **WHEN** a game is registered that declares `hint()`
 - **THEN** it is covered by every cross-game hint guard, including the
   necessity-voice rule, without any list being edited
-
-### Requirement: A cross-game sweep SHALL take its boards from the shared slice, not build them
-
-A test that walks the collection SHALL obtain the boards it walks from the one
-shared preset enumeration, and SHALL NOT construct a population of its own out
-of a game's parts, such as a game's first preset or a tier written onto it.
-
-#### Scenario: A sweep is written that walks the collection
-
-- **WHEN** a new cross-game test needs a board per game
-- **THEN** it calls the shared slice, and gains every game's every mode with no
-  key of its own to maintain
-
-#### Scenario: A guard needs a configuration the presets menu does not offer
-
-- **WHEN** the behavior a guard observes needs a params combination no preset
-  carries, such as a small grid at a hard tier, which a menu never pairs
-- **THEN** the guard walks the slice and that combination, and says which
-  behavior needs it
-
-### Requirement: The shared slice holds the cost discipline of a searching hint
-
-A hint that plans by searching pays for board size in each search and in the
-number of moves to make. The shared enumeration SHALL give such games every
-mode on the smallest board offering it and no large board at all, derived from
-the same axes as every other game's slice. It SHALL NOT be a count of presets
-to keep.
-
-#### Scenario: A slice is taken for a game whose hint searches
-
-- **WHEN** the shared enumeration slices the presets of a game whose hint plans
-  by searching
-- **THEN** the slice holds every mode, each on the smallest board offering it,
-  and no large board, with no count of presets to raise when a mode is added
 
 ### Requirement: The engine supports an ephemeral, opt-in mistake-checking hook
 
@@ -711,38 +604,6 @@ absence has one spelling.
 - **WHEN** a save envelope leaves an optional key out
 - **THEN** the key stays absent on disk, and is not written as `null` to
   satisfy the rule
-
-### Requirement: A refused Solve is shown in the help banner
-
-A Solve the engine refuses SHALL show the refusal's own text in the same
-transient banner a refused Hint uses, whichever control asked for it, in every
-game that offers Solve, including a game with no hint: the banner SHALL NOT
-depend on the hint controls being rendered. A Solve that lands SHALL add no
-message of its own. The app SHALL NOT rewrite the refusal's wording, which is
-the collection's ("Solve failures are worded once for the whole collection").
-
-#### Scenario: Solve on an unstarted Mines board
-
-- **WHEN** the player presses Solve on a fresh Mines board, before the first
-  click
-- **THEN** the banner says there is nothing to solve until the first move lays
-  the board out, and the board is unchanged
-
-#### Scenario: A Solve that lands shows no banner
-
-- **WHEN** the player presses Solve and the game's solver solves the board
-- **THEN** the board shows the solution and no banner message is added
-
-### Requirement: Solve is ordered with the other queued input
-
-Solve applies a move, so it SHALL be ordered with the other queued input: a
-Solve pressed while an Auto-Hint step is being applied SHALL land after that
-step, never inside it.
-
-#### Scenario: Solve waits behind a step in flight
-
-- **WHEN** Solve is pressed while a hint step is still being applied
-- **THEN** the worker receives the solve only after that step has finished
 
 ### Requirement: Solve, the status bar and text export follow from the game's methods
 
@@ -1131,258 +992,6 @@ positions reached by playing its own input into it.
   input reaches
 - **THEN** the test fails for that game
 
-### Requirement: A cross-game sweep SHALL deal every choice the Custom dialog offers
-
-The shared preset enumeration a cross-game sweep takes its boards from SHALL
-deal, beside the slice of the menu, a board for every value of a `"boolean"` or
-`"choices"` param that no preset holds. A game is dealt on everything its
-dialog offers by having a `paramConfig`, and no list of games or values SHALL
-be kept anywhere.
-
-#### Scenario: A game's dialog offers a tier its menu stops short of
-
-- **WHEN** a game's difficulty item lists a tier and none of its presets is at
-  that tier
-- **THEN** every cross-game sweep that takes its boards from the shared
-  enumeration deals a board at that tier, on the first preset that accepts it,
-  per commit and in the slow tier
-- **AND** a throw planted in a hint arm only that tier reaches turns those
-  sweeps red
-
-#### Scenario: A game gains a choice
-
-- **WHEN** a game's `paramConfig` gains a checkbox or a choice, or a list of
-  choices gains a member, and no preset is changed
-- **THEN** the new value is dealt from that commit, with no line added anywhere
-  to enroll it
-
-#### Scenario: A sweep reads the menu by itself
-
-- **WHEN** a cross-game sweep slices or lists a game's presets directly
-- **THEN** it deals nothing the menu leaves out, which is right only for a
-  sweep whose subject is the menu or the slicing rule
-
-### Requirement: Every value is dealt, the generator's choices included
-
-Every value SHALL be dealt, the generator's own choices, such as symmetry and
-density, included. A ledger excusing the values a hint is unlikely to read
-SHALL NOT be kept: it would be a second copy to keep true.
-
-#### Scenario: A generator choice no preset holds
-
-- **WHEN** a game's dialog offers a symmetry that no preset holds
-- **THEN** a board is dealt at it, as for a tier or a rule
-
-### Requirement: Whether every value is dealt is asserted apart from the derivation
-
-Whether every value is dealt SHALL be asserted from `paramConfig` and the dealt
-boards alone, not through the derivation that deals them, and the assertion
-SHALL name known boards by the params they carry.
-
-#### Scenario: The derivation drops a value
-
-- **WHEN** the derivation that deals the boards stops dealing a value a
-  dialog offers
-- **THEN** the assertion, reading `paramConfig` and the dealt boards, fails
-
-### Requirement: The next board is dealt ahead and kept
-
-The app SHALL deal the board the next New game would deal before it is asked
-for, off the thread that serves the board in play, and SHALL keep it until that
-New game comes. A New game that finds a board kept for the params it deals at
-SHALL play that board without running the generator, and SHALL otherwise wait
-for one as "A deal a player waits for runs off the board's thread and can be
-stopped" requires.
-
-#### Scenario: The second deal of a slow type arrives at once
-
-- **WHEN** a type whose boards take seconds to find has been dealt once, and
-  the board dealt ahead has been found
-- **THEN** New game plays the kept board without running the generator
-- **AND** another board of that type is dealt ahead
-
-### Requirement: Every type is dealt ahead, and a quick one keeps one board
-
-A board SHALL be dealt ahead for every type, whatever its deal costs, and one
-board SHALL be kept for a type whose deals are quick: a New game that finds
-none kept there waits milliseconds.
-
-#### Scenario: A quick type keeps one board
-
-- **WHEN** a type's deal ahead took less than the time that makes a deal slow
-- **THEN** one board is kept for it, and no further board is dealt ahead until
-  that one is played
-
-### Requirement: A type whose deal was slow keeps three boards
-
-A type SHALL keep three boards once a deal of it was slow, so that a board
-passed over, by New game pressed again straight away, is followed by one
-already found. The boards SHALL be dealt one at a time, and of several kept for
-a type New game SHALL play the one kept longest.
-
-#### Scenario: Boards of a slow type passed over are each followed by a kept one
-
-- **WHEN** three boards are kept for a type whose deal ahead was slow, and New
-  game is pressed three times running
-- **THEN** each press plays a kept board, the one kept longest first, and none
-  runs the generator
-- **AND** boards of that type are dealt ahead until three are kept again
-
-### Requirement: A deal is slow by its generator's time alone
-
-A deal is slow where its generator ran for as long as a New game may go
-unanswered before the app says it is looking for a board. The time SHALL be the
-generator's alone, and SHALL NOT count starting the thread it ran on. One slow
-deal SHALL make the type slow for the rest of the visit, and for a later visit
-while a board that was slow to find is still kept: a search for a rare board
-ends at the first one it meets, so one quick deal says little about the next.
-
-#### Scenario: A slow type's next deal is quick
-
-- **WHEN** a type had a slow deal and its next deal ahead is found quickly
-- **THEN** the type still keeps three boards for the rest of the visit
-
-### Requirement: A kept board is keyed by its puzzle and its full params
-
-A kept board SHALL be keyed by its puzzle and by the full encoding of the
-params it was dealt at, which are the params the deal would use after turning
-the board to fit the screen. It SHALL be kept across visits, apart from the
-player's saved games and settings, and SHALL be handed to one deal only.
-
-#### Scenario: A kept board is for the board as it will be dealt
-
-- **WHEN** the chosen type would be dealt turned on its side to fit the screen
-- **THEN** the board dealt ahead is dealt at the turned params
-- **AND** a kept board of the unturned params is not played in its place
-
-### Requirement: A kept board is played only by the build that dealt it
-
-A kept board SHALL be played as its generator wrote it: its tier is taken on
-trust and its `aux` is retained for Solve, as for a board dealt on the spot. It
-SHALL therefore be played only by the build that dealt it, and a board another
-build kept SHALL read as absent.
-
-#### Scenario: A kept board survives a visit and not a build
-
-- **WHEN** the page is reopened by the build that kept a board
-- **THEN** New game plays that board
-- **AND** a build with another version stamp finds no board kept and deals
-
-### Requirement: A deal ahead is abandoned when its type is no longer wanted
-
-A deal ahead SHALL be abandoned when the type it is for stops being the one the
-next New game deals, unless a player is waiting for its board. A type whose
-deal found no board, whose params the game refuses to deal, or whose deal the
-player stopped SHALL NOT be dealt ahead again until a board of it is asked for.
-
-#### Scenario: Choosing another type abandons the deal ahead
-
-- **WHEN** a board is being dealt ahead and the player chooses another type
-- **THEN** that deal is stopped and one for the new type begins
-
-### Requirement: A deal a player waits for runs off the board's thread and can be stopped
-
-A New game that finds no board kept SHALL wait on a deal run off the thread
-that serves the board in play, and SHALL hand the board that deal finds to the
-engine to play as a kept board is played. The engine's own thread SHALL NOT run
-a generator for a New game. Where a deal ahead is already under way for the
-type, the New game SHALL wait on that deal and SHALL NOT start a second, and
-the board it finds SHALL be played and not kept as well.
-
-#### Scenario: The board in play is played through a wait
-
-- **WHEN** a New game finds no board kept for a type whose deal takes many
-  seconds
-- **THEN** the board in play stays on screen and takes moves and hints
-- **AND** the board the deal finds replaces it when it arrives
-
-#### Scenario: One deal serves the type just chosen
-
-- **WHEN** a type is chosen, its deal ahead begins, and New game is asked for
-  before that deal ends
-- **THEN** the New game waits on that deal and plays its board
-- **AND** no second deal is started and the board is not kept
-
-### Requirement: A search for a board offers a way to stop it
-
-While the app says it is looking for a board it SHALL offer a control that
-stops the search, reachable by touch, by keyboard and by mouse. The words and
-the control SHALL stand apart from the place a hint's words are shown, so that
-a hint asked of the board in play does not remove the way out.
-
-#### Scenario: A slow deal with no board kept says what it is doing
-
-- **WHEN** New game finds no board kept and no board has been found within a
-  second
-- **THEN** the app says it is looking for a board until one is dealt, the
-  generator gives up, or the player stops the search
-
-#### Scenario: A hint during the wait leaves the way out
-
-- **WHEN** the app is looking for a board and the player asks the board in play
-  for a hint
-- **THEN** the hint's words are shown and the control that stops the search is
-  still offered
-
-### Requirement: Stopping a search leaves the board in play as it was
-
-Stopping SHALL end the deal at once, leave the board in play and its moves as
-they were, and put the type chosen back to that board's, as a deal that found
-no board does. A stopped deal SHALL say nothing further.
-
-#### Scenario: A player stops the search
-
-- **WHEN** the app says it is looking for a board and the player uses the
-  control beside those words
-- **THEN** the deal ends at once and the board in play is as it was, with its
-  moves
-- **AND** the type chosen is that board's again
-- **AND** the type left is not dealt ahead until a New game asks for it
-
-#### Scenario: Asking again deals again
-
-- **WHEN** a search was stopped and the player asks for the same type again
-- **THEN** a deal for it begins and the app waits on it
-
-### Requirement: A deal that finds no board says so in the engine's sentence
-
-A deal that found no board SHALL answer with the sentence the engine gives for
-a generator that gave up, and SHALL leave the board in play and put the type
-chosen back to its type.
-
-#### Scenario: A deal that finds nothing says so
-
-- **WHEN** the deal a New game waits on runs its retry bound out
-- **THEN** the player is told no board of the type was found, in the engine's
-  sentence, and the board in play and its type stay
-
-### Requirement: A wait for a board ends when another board is opened
-
-A wait SHALL end, without a board, when the player opens another board by its
-id or from a save, and SHALL give way to a later New game. Where the type
-chosen changes during a wait and no New game follows, the board found for the
-type left SHALL NOT be handed to the engine; the wait SHALL go on for the type
-now chosen.
-
-#### Scenario: A save is opened during a wait
-
-- **WHEN** the app is looking for a board and the player loads a saved game
-- **THEN** the wait ends, and the board the search finds does not replace the
-  loaded one
-
-### Requirement: Stopping a search with no board in play deals the first preset
-
-Where no board is in play, stopping SHALL fall back as a deal that found no
-board does there: the app deals the game's first preset. That deal, having
-nothing to go back to, SHALL offer no control to stop it.
-
-#### Scenario: Stopping with no board in play
-
-- **WHEN** a page opens on a type whose deal is slow, with no board to show,
-  and the player stops the search
-- **THEN** the game's first preset is dealt, and that deal offers no control to
-  stop it
-
 ### Requirement: A restart is a step of the history
 
 `restartGame` SHALL enter the board as it started as the next step of the
@@ -1589,29 +1198,14 @@ of.
 - **WHEN** a save of many moves is loaded
 - **THEN** one state notification is sent, at the saved position
 
-### Requirement: A cross-game sweep deals each board once
+### Requirement: A mistake check compares with the one answer, hidden or not
 
-A cross-game sweep that needs a board of given params SHALL take it from
-`dealt(game, params, n)` in `src/engine/testing/dealt.ts`, and a sweep that
-drives a `Midend` SHALL begin it with `beginDealt`, which hands the midend the
-same board by the route New game takes with a board dealt ahead, the
-generator's `aux` included. The dealer SHALL keep each board for the life of
-the worker, so every sweep in a worker reads one deal of it. A deal that throws
-SHALL be kept and thrown again.
+A game's `findMistakes` SHALL compare the player's marks with the board's one
+answer, including where the answer is hidden from the player. A hidden answer
+SHALL NOT be a reason in `notApplicable.findMistakes`.
 
-#### Scenario: Two sweeps walk the same preset
+#### Scenario: A hidden answer is checked
 
-- **WHEN** two cross-game sweeps in one worker each walk Group's 8x8 at Hard
-- **THEN** the board is dealt once and both walk it
-
-#### Scenario: A sweep drives a midend
-
-- **WHEN** a sweep begins a midend on a dealt board
-- **THEN** the midend holds the generator's `aux` for it, as it does for a
-  board a player was dealt
-
-#### Scenario: A board cannot be dealt
-
-- **WHEN** the generator runs out its retries on a params set
-- **THEN** every sweep asking for that board gets the same refusal, and the
-  generator runs once
+- **WHEN** the player runs Check & Save in Mines with a flag on a square that
+  has no mine
+- **THEN** the flag is highlighted as a mistake and the board is not saved

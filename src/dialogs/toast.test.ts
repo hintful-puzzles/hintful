@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 //
-// Tier-3 component test (see the `repo-layout` spec): the transient toast
+// Tier-3 component test (see the `testing` spec): the transient toast
 // mounts into a polite live region, replaces rather than stacks, and
 // auto-dismisses — driven in-process under happy-dom, no browser.
 import { afterEach, describe, expect, it, vi } from "vitest";

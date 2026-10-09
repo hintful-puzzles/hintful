@@ -1080,7 +1080,7 @@ made it.
 
 **On writing the probe**, if you extend the guard: the codes must be checked, not
 assumed. Unicode's private-use area is the obvious choice and it is **wrong** —
-button codes are not Unicode, `MOD_MASK` is `0x7800`, and `0xE000` decodes as
+button codes are not Unicode, `MOD_MASK` is `0x7000`, and `0xE000` decodes as
 `MOD_NUM_KEYPAD | MOD_SHFT | 0x8000`. Picking it convicted Sixteen, which reads
 the keypad bit and was behaving exactly as designed, and inflated a
 one-game finding into a two-game one that reached a proposal. `UNACTIONABLE` in

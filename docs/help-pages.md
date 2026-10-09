@@ -1,8 +1,9 @@
 # Help pages
 
-The rules for the pages under `help/`. `src/help-coverage.test.ts` holds most
-of them; read it for what is checked. This guide is the part a test cannot
-say.
+The rules for the pages under `help/`. What must hold is the
+[`help-pages`](../openspec/specs/help-pages/spec.md) capability, and
+`src/help-coverage.test.ts` holds most of it; read it for what is checked.
+This guide is the part a test cannot say.
 
 ## One directory, owned by this project
 

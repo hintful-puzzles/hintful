@@ -44,17 +44,6 @@ shipped preset, and the measurements that set it SHALL be recorded with it.
 - **THEN** they are rejected with a message the custom-parameters dialog can show,
   rather than being accepted and then exhausting memory during generation
 
-### Requirement: Slide declares no findMistakes hook
-
-Slide SHALL declare no `findMistakes` hook, because every reachable board is a
-legal state and the puzzle has no notion of a wrong-but-legal position.
-
-#### Scenario: A move away from the exit is not a mistake
-
-- **WHEN** a player slides a block so that the main block is further from the
-  target than before
-- **THEN** nothing on the board is reported as a mistake
-
 ### Requirement: Slide descriptions use the upstream run-length block encoding
 
 A Slide description SHALL encode the board in canonical left-to-right,
@@ -210,29 +199,6 @@ soluble. Generation from a given seed SHALL be reproducible.
 - **WHEN** the same seed is used twice for the same parameters
 - **THEN** both runs produce the identical board description and minimum move
   count
-
-### Requirement: The generator tests solubility after its final singleton removal
-
-The generator SHALL test solubility after its final singleton removal as well as
-before each one, because a board can become soluble only once its last singleton
-goes.
-
-#### Scenario: A board at the smallest legal size is generated
-
-- **WHEN** a board is generated at the smallest legal size, where the main block
-  is freed only by removing every singleton
-- **THEN** a soluble board is produced, and generation does not fail
-
-### Requirement: A Slide board is never turned
-
-Slide SHALL NOT declare `transposeParams`: the key block starts in the top-left corner and leaves by a
-gate in the right-hand wall, so a board turned on its side is a different
-puzzle.
-
-#### Scenario: A Slide board is dealt as chosen
-
-- **WHEN** a Slide board is dealt to fit a wide area
-- **THEN** it is dealt at the size chosen
 
 ### Requirement: Slide's board reads by color, not by bevel alone
 

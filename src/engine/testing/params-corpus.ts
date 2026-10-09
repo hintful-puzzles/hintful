@@ -3,7 +3,7 @@
  * never authored**.
  *
  * It holds each game's encoded params byte-stable: params appear in shared game
- * IDs, so an encoding is a promise to players (`ts-migration` spec, "Encoded
+ * IDs, so an encoding is a promise to players (`engine-params` spec, "Encoded
  * params are byte-stable, and the guard is derived").
  *
  * **Where the cases come from**, in order of how much they are worth:

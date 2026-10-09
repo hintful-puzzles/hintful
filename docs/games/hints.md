@@ -1030,7 +1030,7 @@ The `Game` hooks and the `Midend` lifecycle are in
   asked for. The mechanism is generic; a game just emits grouped steps.
 - **`refreshHintStep(step, state)`** — validate-at-display (§ "Stale plans
   and refreshHintStep").
-- **`hintGesture(state, ui, ds, move)`** — how the pointer makes the step's
+- **`hintGesture(state, ui, ds, move, step)`** — how the pointer makes the step's
   move (§ "Every step is a gesture"). Required of every hinted game.
 - **`hintRungs`** — every rung a step can be (§ "Name the rung a step
   speaks"). Required of every hinted game.
@@ -1833,7 +1833,7 @@ narration names more than one distinct *kind* of board element, give each
 stable (a "shaded square" is the *same* color in every hint that cites one),
 so the player learns it. Normative rule + scenarios:
 [`engine-hints`](../../openspec/specs/engine-hints/spec.md)
-("element-type color legend"). Three non-negotiables:
+("A hint naming several kinds of element colors them by a stable legend"). Three non-negotiables:
 
 - **Color is never the sole carrier** (colorblind users). Every legend
   color is paired with a non-color cue — ring vs shade vs fill, the drawn
@@ -1867,7 +1867,7 @@ to a similar game:
 | Filling | target square(s), *mild* `COL_HINT` fill, **no digit** | region premise → `COL_HINT_CELL` shade + digit on top |
 | Towers | struck candidate digit(s) `COL_HINT` + cross-through (on a *non*-`COL_HINT` cell so the digit shows); placement target `COL_HINT` fill (no digit to hide) | driving **clue cell(s)** *and* their line of sight → `COL_HINT_CELL` shade (clue + sightline read as one premise region) |
 | Pattern | forced cell(s), blue `COL_HINT` fill (highlight only, no mark) — the reasoned line's clue digits also recolor `COL_HINT` to tie clue↔line | reasoned **row/column** → `COL_HINT_CELL` shade on its *undecided* cells; an overlap run's anchoring **black** mark → teal `COL_HINT_BLACKREF` ring (white anchors → violet `COL_HINT_WHITEREF`). White ("no run reaches here") firings ring *nothing* — that deduction leans on the whole line's packing, so a ring would over-claim; the shaded line + highlighted clue is the evidence. |
-| Light Up | forced square(s), blue `COL_HINT` fill (bulb *and* mark targets identical — the narration says which) | evidence squares carried as one list, cue split by the cell's own state: a **dark** square → `COL_HINT_CELL` shade, a **lit/bulb** square → teal `COL_HINT_LITERF` ring (a fill would hide the "already lit" premise); the unlit square a deduction protects → amber `COL_HINT_DARKREF` ring; the driving clue → its digit recolors `COL_HINT` (the light `COL_HINT_CELL` was tried first and is unreadable as a cue — nearly white on black) |
+| Light Up | forced square(s), ringed `COL_HINT` so a light or blob already on one stays visible (bulb *and* mark targets identical — the narration says which) | evidence squares carried as one list, cue split by the cell's own state: a **dark** square → `COL_HINT_CELL` shade, a **lit/bulb** square → teal `COL_HINT_LITERF` ring (a fill would hide the "already lit" premise); the unlit square a deduction protects → amber `COL_HINT_DARKREF` ring; the driving clue → its wall ringed `COL_HINT_CLUE`, the digit left white (no hint hue reads as a glyph on the wall's gray in both schemes) |
 | Slant | forced square(s), blue `COL_HINT` ring (no slash preview); a clue firing rings all its forced squares and drops them as its multi-leg journey advances; a same-slant mark the step places, its bars in `COL_HINT` | a **clue** firing → the clue's digit recolors `COL_HINT` + its already-decided neighbor squares `COL_HINT_CELL` outlined; a **loop/dead-end** firing → the connectivity chain / trapped-point components outlined (plus the trapped points' incident squares); an **equivalence** firing → teal `COL_HINT_REF` ring on the placed square, and the marks it cites in `COL_HINT_CELL`; a **v-shape mark** → the clues it names recolored and the pairs across a 2 outlined |
 | Netslide | the tile being placed, `COL_HINT` fill (its wires still drawn on top); the border arrow to press, `COL_HINT` | its destination outlined `COL_HINT` — **solid** when the finished board really wants that tile's wires there, **dashed** when the plan is only passing through (the non-color cue distinguishing *arrived* from *setting up*) |
 | Crossing | the squares to write into (digits or notes), ringed **green** `COL_HINT` on the square's own border (green, not the collection's blue — see below); the notes to write are named only in the sentence; a struck note keeps its normal `COL_PENCIL` digit + strikethrough on a *non*-target background | the run(s) reasoned over → pale-green `COL_HINT_CELL` shade; **and the still-fitting listed numbers → the same two shades as a patch behind their text in the clue panel** (§ "Off-board evidence") |
@@ -4398,7 +4398,7 @@ for half its arms, which reads worse than the duplication. The rule that
 held: extract the entry/arms that are *verbatim* across ≥2 games, leave the
 ones that diverge local. (Normative:
 [`engine-candidate-hints`](../../openspec/specs/engine-candidate-hints/spec.md) "A shared narrator for
-generic Latin deduction reasons" — a recorded local-narrate decision is a
+generic Latin placements and strike premises" — a recorded local-narrate decision is a
 conforming outcome.)
 
 **…and the *value vocabulary* is a parameter**, which brought Group and Salad
@@ -4597,6 +4597,12 @@ reading.
   firing that no longer follows is the finding. `firing-replay.test.ts` runs it
   over every candidate walk. A solver on `latinSolver` takes part with no code
   of its own; a bespoke one writes a `ReplayAdapter` (Rome's, Solo's).
+- **The audit checks itself before it judges.** For each firing it first runs
+  the replay from the recorded state with nothing returned, and a replay that
+  does not make the recorded firing again is filed as `unreproduced`: a fault
+  in the instrument (a `ReplayAdapter` that does not rerun the technique the
+  recording ran), never a finding against the premise. The guard fails on one,
+  so a new adapter is proved to reproduce before any premise is tested with it.
 - **What it cannot see, it says.** A technique reading more to decide
   *whether* to fire than its conclusion rests on (Mathrax's Easy gate, Rome's
   `expand`) is flagged though its premise is honest, so the guard ledgers each

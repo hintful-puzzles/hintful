@@ -7,7 +7,7 @@
  *
  * The key is a shape, and the superset is accepted: a backticked capability
  * name followed by a quoted string, with "spec", "requirement", a comma or a
- * section sign between them. What that catches and is not a citation is
+ * section sign between them, and the name may be a markdown link's text. What that catches and is not a citation is
  * listed in `NOT_A_TITLE`, which is held exactly equal to the unresolved set,
  * so an entry that starts resolving has to be removed.
  *
@@ -29,7 +29,7 @@ const NOT_A_TITLE = new Map([]);
 const fold = (text) =>
   text.replace(/\s*\n\s*(?:\*|\/\/|#|>)?\s*/g, " ").replace(/\s+/g, " ");
 const CITATION =
-  /`([a-z0-9]+(?:-[a-z0-9]+)*)`(?: (?:spec|capability|requirement))?(?:,| §|:)? ?\(?["“]([^"”]{8,}?)["”]/g;
+  /`([a-z0-9]+(?:-[a-z0-9]+)*)`(?: spec)?(?:\]\([^)\s]*\))?(?: (?:spec|capability|requirement))?(?:,| §|:)? ?\(?["“]([^"”]{8,}?)["”]/g;
 
 const titles = new Map(
   capabilityNames().map((name) => [

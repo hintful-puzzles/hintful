@@ -400,17 +400,6 @@ own players.
   handling removed
 - **THEN** the keyboard-reachability guard fails for that game
 
-### Requirement: A game claiming an unactionable code is on an exact ledger
-
-A game that claims an unactionable code SHALL appear on an explicit ledger
-whose entry states why, and the ledger SHALL be asserted exactly equal to the
-set the sweep finds, so an entry cannot outlive the behavior it excuses.
-
-#### Scenario: A fixed game cannot stay on the ledger
-
-- **WHEN** a game on the ledger stops claiming unactionable codes
-- **THEN** the guard fails until its entry is deleted
-
 ### Requirement: The collection's input guards share one behavioral probe
 
 The questions the collection-wide input guards ask of a game SHALL live in one
@@ -552,60 +541,6 @@ move from a board that no longer exists.
   press and the release
 - **WHEN** the player releases
 - **THEN** no move is committed, by any path the release can take
-
-### Requirement: The engine answers which character is a digit, once
-
-The engine SHALL provide, in `decimal.ts`, `isDigit(c: string): boolean` and
-`digitValue(c: string): number | null`: the value `0`–`9` a decimal digit
-character stands for, or `null` for any other character. The absent case SHALL
-sit outside the number domain, so no caller can use the result without
-discriminating it. `digitValue` on a character, `c2n` on a desc character and
-`digitOf` on a key SHALL agree on every digit, and a test SHALL hold them
-equal.
-
-#### Scenario: A character that is no digit has no value
-
-- **WHEN** a caller reads `digitValue("7")` and `digitValue("x")`
-- **THEN** it receives `7` and `null`
-
-### Requirement: A game reads and writes a digit character through the engine
-
-A game SHALL read a digit character through `isDigit` and `digitValue` and
-SHALL write a single digit as `String(n)`. It SHALL NOT declare its own
-`isDigit`, compare a character against a one-digit string with a relational
-operator, subtract a digit code from a character code, or add one to build a
-character. A hex nibble read case-insensitively (a bitmap of mines or lit
-cells) is not a decimal digit and is read with `Number.parseInt(c, 16)`.
-
-#### Scenario: A private copy fails the build
-
-- **WHEN** a game source declares an `isDigit`, `digitValue`,
-  `parseLeadingInt`, `n2c`, `c2n`, `n2cUpper`, `c2nUpper`, `scanRunLength` or
-  `encodeRunLength` of its own
-- **THEN** a guard reports it, the reserved names being read from the fact
-  modules' own export lists
-
-### Requirement: The meaning of a digit character stays with the game
-
-What a digit character's value means SHALL stay with the game: the bound it
-accepts and what an out-of-range value does (an error message, a sentinel, a
-rejected desc) are written beside the call. A write into a typed array SHALL
-name that array's own absent constant (`?? EMPTY`, `?? -1`) and SHALL NOT
-inherit a codec's, and a write that is safe only because `validateDesc`
-screened the character SHALL say so at the write.
-
-#### Scenario: A run-length game reads a bounded clue
-
-- **WHEN** Slant's `validateDesc` meets a value token
-- **THEN** it reads `digitValue(tok.value)` and applies its own bound of `4`,
-  rejecting `5` with its own message and a letter with its own message
-
-#### Scenario: A stray character cannot be stored without a decision
-
-- **WHEN** Filling's `newState` writes a clue into its `Uint8Array`, whose
-  absent value is `0`
-- **THEN** the write names `EMPTY` for a character that is not a digit, and a
-  non-digit can never be stored as `255`
 
 ### Requirement: An on-screen key may name a palette color
 
@@ -1184,3 +1119,16 @@ compares against the letter never sees it.
 
 - **WHEN** a game acts on a plain arrow and declines that arrow with Shift
 - **THEN** the shifted arrow is not consumed and the game is asked once
+
+### Requirement: A drag game's press arm goes through the engine's verbs
+
+A drag game's own press arm SHALL park the cursor through the engine's
+`pressTarget`, and the release of a drag that never left its target SHALL apply
+the verb the engine's `buttonVerb` names for the button, so the arm names
+neither the cursor's handling nor which verb a button applies.
+
+#### Scenario: A drag is released where it was pressed
+
+- **WHEN** a drag game's target is pressed and released without the pointer
+  leaving it
+- **THEN** the move is the one `buttonVerb` names for that button

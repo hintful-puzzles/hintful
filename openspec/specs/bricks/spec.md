@@ -56,8 +56,7 @@ The board SHALL be a hexagon stored as a padded parallelogram: the actual grid
 width SHALL be the parameter width plus the ceiling of half the height minus one,
 with the two triangular corners masked as boundary cells, leaving exactly
 width-by-height playable cells. Neighbors SHALL be the fixed six-direction hex
-step set. This geometry SHALL be bespoke and SHALL NOT depend on the shared grid
-tiling engine.
+step set.
 
 #### Scenario: A board six wide and seven high
 
@@ -247,22 +246,19 @@ SHALL claim that a chain of forced consequences was followed.
   agrees with its solution
 - **THEN** every forced cell is given one of the named rules, and nothing throws
 
-### Requirement: A Bricks hint is refused on a solved, mistaken or contradicted board
+### Requirement: A Bricks hint is refused on a board that contradicts its solution without breaking a rule
 
-A hint SHALL be refused, with an explanatory banner, when the board is already
-solved, when the board contains a rule violation (as reported by
-`findMistakes`), or when the player's placed cells contradict the unique solution
-without yet breaking a local rule. In the last case the banner SHALL say a
-placed cell must be wrong, and the hint SHALL NOT deduce onward from a doomed
-position.
+A hint SHALL be refused, with an explanatory banner, when the player's placed
+cells contradict the unique solution without yet breaking a local rule, which
+`findMistakes` does not report. The banner SHALL say a placed cell must be
+wrong, and the hint SHALL NOT deduce onward from a doomed position.
 
-#### Scenario: A hint is refused on a solved, mistaken, or wrong-but-legal board
+#### Scenario: A hint is refused on a wrong-but-legal board
 
-- **WHEN** a hint is requested on a board that is solved, that contains a
-  rule-violating cell, or whose placed cells contradict the unique solution
-  without yet breaking a local rule
-- **THEN** no move is hinted and an explanatory banner is shown, and for the
-  last case the banner states that a placed cell must be wrong
+- **WHEN** a hint is requested on a board whose placed cells contradict the
+  unique solution without yet breaking a local rule
+- **THEN** no move is hinted and an explanatory banner is shown, which states
+  that a placed cell must be wrong
 
 ### Requirement: The undeclared Bricks tier still loads and is never dealt
 
@@ -336,7 +332,7 @@ solver completes at the difficulty asked for. Before it removes any number it
 SHALL solve the fully numbered board, and SHALL start again when that solve does
 not complete: the numbering made after the Easy solve can take away the brick
 another brick rests on, and removing numbers cannot repair a board that does not
-solve. Generation from a given seed SHALL be reproducible.
+solve.
 
 #### Scenario: A board two squares wide loads from its own ID
 
@@ -349,11 +345,6 @@ solve. Generation from a given seed SHALL be reproducible.
 
 - **WHEN** a board is dealt at a height of two
 - **THEN** loading the board's game ID is accepted
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
 
 ### Requirement: A Bricks board is never turned
 

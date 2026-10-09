@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 //
-// Tier-3 component tests for `PuzzleScreen` (see the `repo-layout` spec): the
+// Tier-3 component tests for `PuzzleScreen` (see the `testing` spec): the
 // Check-&-Save command path — the seam whose symptom path
 // (save-when-it-should-not) the wall-mistake bug traveled — the reference-panel
 // toggle, focus return, and which board a page opens with. Driven in-process

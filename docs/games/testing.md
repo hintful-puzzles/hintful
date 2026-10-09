@@ -7,10 +7,12 @@
 > [`docs/test-strength.md`](../test-strength.md)** — the five-minute mutation
 > probe, `npm run probe`, and the instrument traps that make an assessment lie.
 >
-> Authoritative specs: [`repo-layout`](../../openspec/specs/repo-layout/spec.md)
+> Authoritative specs: [`testing`](../../openspec/specs/testing/spec.md)
 > (the in-process tiers, the render harness, determinism under load, the
-> differential helper) ·
-> [`ts-migration`](../../openspec/specs/ts-migration/spec.md) (test discipline).
+> differential helper, a hint test's pins, the boards a cross-game sweep
+> walks) ·
+> [`build-pipeline`](../../openspec/specs/build-pipeline/spec.md) (what the
+> gate runs, and what it may defer to the push).
 > Neighboring guides: [`rendering.md`](./rendering.md) (what to draw),
 > [`hints.md`](./hints.md) (hint verification recipe),
 > [`solver-and-generator.md`](./solver-and-generator.md) (when to diverge from a
@@ -20,7 +22,7 @@
 
 **Reach for the lowest tier that fits; Playwright is visual/integration smoke
 only.** The tiers are codified in the
-[`repo-layout`](../../openspec/specs/repo-layout/spec.md) spec; in brief:
+[`testing`](../../openspec/specs/testing/spec.md) spec; in brief:
 
 - **Tier 1** — pure logic (`Game` impl, solver, generator, codecs). Default
   `node` environment, no setup.
@@ -50,6 +52,15 @@ the sequencer's choice, not yours. Spy on the real export in a `beforeEach`
 `afterEach`; the importer reads the export at call time, whenever it loaded.
 `src/no-module-mocks.test.ts` refuses `vi.mock`, `vi.doMock` and `vi.hoisted`;
 `src/screens/puzzle-screen.test.ts` is the exemplar.
+
+**A pointer press focuses nothing in `happy-dom`.** It does not focus an
+element on `mousedown`, so a Tier 3 test cannot observe where keyboard focus
+lands after a press, and a test of "this press does not take focus from the
+board" passes whether or not the code is right. Assert the cause the code
+controls (that the `mousedown` default was prevented, say), write in the test
+that it is a proxy, and look at the consequence in Chrome:
+`document.activeElement` after the press, and a physical key reaching the game
+straight after. `src/puzzle/components/keys.test.ts` is the worked case.
 
 **A test that needs a specific board should find it deterministically, not by
 scanning further.** The idiom for reaching a specific deduction or board state
@@ -401,7 +412,7 @@ then dealt another board, and the tier contract grades what it deals.
 
 The full statement lives once, in
 [`differential.ts`](../../src/engine/testing/differential.ts) (the shared
-helper's header), per the `repo-layout` requirement — **a differential test
+helper's header), per the `testing` requirement — **a differential test
 file must not carry a regeneration recipe, because none can be executed.**
 
 Two shapes, both live:
@@ -567,12 +578,18 @@ violating them:
   process on the same seeds. Re-measure outside the runner before designing a
   fix for a "slow" generator.
 
-Normative: `repo-layout`, "The test suite is deterministic under parallel load".
+Normative: `testing`, "The test suite is deterministic under parallel load".
 "Contention on work that terminates" is a complete diagnosis and its fix is
 removing the clock gate — reach for the other causes (shared state, order
 dependence, non-termination) only when evidence points there; re-run the file
-alone, then the suite under `--sequence.shuffle.files=true` to localize a
-cross-file leak.
+alone.
+
+**Localize a suspected cross-file leak in one worker, in both orders.** A test
+that fails only in a full run and passes alone is localized by forcing the
+suspected files into one worker (`VITEST_MAX_WORKERS=1 vitest run <a> <b>`) and
+running them in both orders, with `--sequence.shuffle.files` under recorded
+seeds. One worker still runs its files in the order the sequencer picks, so a
+pair run once can pass by scheduling the victim first.
 
 ## Right-sizing the gate
 
@@ -957,8 +974,9 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
 4. **Where the game must declare a flag because production needs the answer
    synchronously, hold the flag to the behavior.** The `Game` contract carries
    boolean declarations, and each is asserted equal to a derivation rather
-   than trusted: `ignoresSecondaryButton` iff the game consumes `RIGHT_BUTTON`
-   (`input-parity.test.ts`), `canMarkAll` iff its `interpretMove` answers `M`
+   than trusted: `ignoresSecondaryButton` iff the secondary button means nothing
+   the player can perceive (`input-parity.test.ts`; consuming `RIGHT_BUTTON`
+   with a bare repaint is not a meaning), `canMarkAll` iff its `interpretMove` answers `M`
    (`mark-all.test.ts`). A flag that only turns a
    guard *off* is the one that most needs this — nothing else notices when it
    lies.

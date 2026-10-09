@@ -97,8 +97,7 @@ Because boards are uniquely solvable, the game SHALL implement `findMistakes`:
 re-solve from the numbers to the unique solution's edges and return every edge
 the player has drawn that the unique solution does not contain. A missing edge
 SHALL NOT be a mistake, and a board that is not uniquely solvable SHALL yield
-no mistakes. Check & Save depends on this hook and SHALL refuse to save while
-any mistake is present.
+no mistakes.
 
 #### Scenario: A wall the solution does not contain is flagged
 
@@ -109,11 +108,12 @@ any mistake is present.
 ### Requirement: Rectangles input
 
 `interpretMove` SHALL support a left-drag drawing a rectangle outline, a
-right-drag erasing interior edges, a click near an edge toggling that single
-edge, and a half-grid keyboard cursor with press-to-drag. A pointer position
-SHALL be allocated to a grid corner or a square's center when it is close to
-one, and otherwise to the nearer edge. A drag or click that changes no edge
-SHALL produce no move.
+right-drag erasing interior edges, a click near an edge toggling it,
+and a half-grid keyboard cursor with press-to-drag. Escape, Backspace or
+Delete SHALL cancel that drag, or else hide the cursor. A pointer position
+SHALL resolve to a grid corner or a square's center when close to one, else
+to the nearer edge. A drag or click that changes no edge SHALL produce no
+move. The status bar SHALL show a dragged rectangle's size.
 
 #### Scenario: A drag draws a rectangle outline
 
@@ -126,6 +126,11 @@ SHALL produce no move.
 
 - **WHEN** the player clicks in a way that would change no edge
 - **THEN** `interpretMove` yields no move (returns null or a UI update only)
+
+#### Scenario: The status bar gives the dragged size
+
+- **WHEN** a drag spans a rectangle three squares wide and two tall
+- **THEN** the status bar reads `3x2`, and it is empty once the drag ends
 
 ### Requirement: Rectangles rendering
 
@@ -147,7 +152,7 @@ error color.
 
 ### Requirement: Rectangles generates by tiling, stretching and solving
 
-The generator SHALL tile the base grid at random, remove singletons, stretch
+The generator SHALL tile the base grid at random, leave no rectangle of one square, stretch
 it to full size by the expansion factor, and call the solver on every layout,
 returning only one the solver reaches a unique placement for.
 

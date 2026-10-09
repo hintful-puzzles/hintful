@@ -178,61 +178,12 @@ empty list.
 - **THEN** `findMistakes` includes that edge
 - **AND** the next `redraw` draws that edge in the error color
 
-### Requirement: Separate shares its border-marking mechanic rather than owning a copy
-
-Separate SHALL take the grid-edge marking mechanic it shares with Palisade
-from the shared engine modules and own no copy: the edge bits and
-direction tables, the nearest-edge hit test, the three-state toggle, the paired
-edit of an edge's two cells, the half-cell cursor, and its look: the geometry,
-the edge rects, the tile skeleton and the live error model (a region over or
-under size, a wall separating nothing). A change to what counts as a wrong
-wall SHALL take effect in both games at once.
-
-#### Scenario: Both games' edits come from the shared module
-
-- **WHEN** a click and a cursor key address the same interior edge in Separate
-- **THEN** both produce the paired edits the shared module computes for that
-  edge
-
-#### Scenario: The error model is the shared module's
-
-- **WHEN** the player's no-wall marks join more than `k` cells in Separate
-- **THEN** the edges between that region and its neighbors are drawn in the
-  error color by the shared module's test, not by one of Separate's own
-
-### Requirement: The games' move formats stay independent
-
-The shared module SHALL report which edge a pointer or cursor action targets
-and how its state should cycle, and each game SHALL construct its own `Move`
-from that description. The module SHALL NOT define a shared move type, which
-would couple two save formats that have no reason to be identical.
-
-#### Scenario: Separate wraps the shared edits in its own move
-
-- **WHEN** the shared module reports the paired edits for an edge
-- **THEN** Separate returns them inside its own `edges` move
-
-### Requirement: A game adopting the border-grid input adopts its look
-
-A game that uses the shared border-grid input mechanic SHALL draw through the
-shared border-grid renderer, and a guard SHALL fail the build for one that does
-not, since nothing else would see a second hand-written renderer of the one
-mechanic being written.
-
-#### Scenario: A game adopting the input mechanic adopts its look
-
-- **WHEN** a game uses the shared border-grid input mechanic
-- **AND** its sources never reference the shared border-grid renderer
-- **THEN** the build fails, naming that game
-
 ### Requirement: Separate's clue layer stays its own
 
 Separate's region constraints (required region sizes and the cells that must
 be kept apart), its solver, its generator and its clue rendering SHALL remain
 entirely its own: the letter, the repeated-letter error inside a completed
-region, and the test that decides when a region is finished. The shared
-renderer SHALL take Separate's palette indices and a callback for the middle of
-a tile, and SHALL NOT branch on which game is drawing.
+region, and the test that decides when a region is finished.
 
 #### Scenario: A repeated letter in a completed region is Separate's error
 
@@ -317,22 +268,6 @@ be outlined.
   lone one, and the sentence calls it a square: "A wall already separates the
   striped square and the outlined region" where the square is the striped one,
   and "the striped region and the outlined square" where it is the outlined
-
-### Requirement: Border-grid games share the hint's notation layer
-
-The border grid's hint highlight, the journey a firing becomes, the keep-track
-verdict on a click, the per-tile hint flags, the drawing of a striped region
-and outlined squares, and the later-leg sentence SHALL come from the engine,
-shared by Separate and Palisade. Each game SHALL keep its deduction, its
-sentences and its own `Move`, wrapping the shared edits itself.
-
-#### Scenario: Separate's hint step is drawn by the shared layer
-
-- **WHEN** Separate displays a hint step that stripes one region and outlines
-  another
-- **THEN** the ringed edges, the stripes and the outline are drawn by the
-  shared border-grid renderer from the step's words
-- **AND** the sentence and the `edges` move are Separate's own
 
 ### Requirement: Separate draws its cells on the collection's quiet surface
 

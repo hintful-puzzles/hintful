@@ -94,20 +94,6 @@ satisfied advances nothing and SHALL NOT be hinted.
   met count forces a helpful rule-out
 - **THEN** the hint offers the lines first
 
-### Requirement: Spokes refuses to hint from a position it cannot vouch for
-
-Spokes SHALL refuse a hint, with an explanation, when the board is already solved,
-when the board contradicts the unique solution, when the board already breaks a
-rule the game marks, or when no deduction applies. It SHALL NOT present a move as
-forced when that move follows only from a mistake the player has made.
-
-#### Scenario: A wrong board is corrected rather than hinted
-
-- **WHEN** the player asks for a hint on a board carrying a line the solution
-  forbids
-- **THEN** no hint step is offered, the offending lines are highlighted, and the
-  player is told to resolve them first
-
 ### Requirement: A diagonal line automatically rules out its crossing
 
 Spokes SHALL rule out a diagonal's crossing automatically, because a drawn
@@ -373,9 +359,7 @@ SHALL refuse with a message saying no further move can be deduced.
 ### Requirement: Spokes' difficulty tiers bind the boards they generate
 
 A Spokes board generated at a difficulty above the easiest SHALL NOT be soluble at
-the tier below it. The acceptance check that decides this SHALL run from an empty
-position, so that its verdict describes the board being offered rather than any
-state left over from an earlier candidate.
+the tier below it.
 
 #### Scenario: An Unreasonable board genuinely needs its own tier
 

@@ -10,7 +10,7 @@
 # (4h40m old, ~78% CPU each) were the main reason this box sat at load 13-96.
 # Signals are the only layer above an uninterruptible sync loop, so an external
 # reaper is the floor; scripts/gate.sh and the pre{test,test:run} npm hooks call
-# it. See openspec/specs/repo-layout/spec.md, "Test worker processes do not
+# it. See openspec/specs/testing/spec.md, "Test worker processes do not
 # outlive their runner".
 #
 # WHY BEFORE A RUN, NOT AFTER. The interrupt that orphans a worker also kills

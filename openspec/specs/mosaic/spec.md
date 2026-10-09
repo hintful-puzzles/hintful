@@ -37,9 +37,8 @@ where it is too slow.
 
 ### Requirement: Mosaic's size limits
 
-A board narrower or shorter than 3 SHALL be refused, by the engine, from the
-bounds the game declares on its width and height fields. `validateParams`
-SHALL refuse a board of more than 10000 tiles.
+A board narrower or shorter than 3 SHALL be refused. `validateParams` SHALL
+refuse a board of more than 10000 tiles.
 
 #### Scenario: Invalid params are rejected
 
@@ -86,7 +85,7 @@ from its clues alone.
 
 Once a generated board is solvable, `newDesc` SHALL hide every clue whose
 deduction never narrowed anything. In aggressive mode it SHALL additionally
-try hiding each remaining clue, in random order, and SHALL revert any hide
+try hiding each remaining clue and SHALL revert any hide
 that makes the board unsolvable.
 
 #### Scenario: An aggressive board still solves
@@ -121,11 +120,10 @@ saved game. `executeMove` SHALL throw on an out-of-bounds target.
 
 ### Requirement: Mosaic flags a satisfied clue and a contradicted one
 
-After each toggle, paint or fill the game SHALL reflag every clue the move
-affects: `SOLVED` when the clue is exactly satisfied with no cell of its
-neighborhood unmarked, and `ERROR` when it is overcommitted, with more cells
-marked than the clue or too few cells left that could be. The count of clues
-left SHALL follow the marks.
+A clue SHALL be flagged `SOLVED` when it is exactly satisfied with no cell of
+its neighborhood unmarked, and `ERROR` when it is overcommitted, with more
+cells marked than the clue or too few cells left that could be. The flags and
+the count of clues left SHALL follow the marks.
 
 #### Scenario: A satisfied clue grays out and a contradicted clue reddens
 

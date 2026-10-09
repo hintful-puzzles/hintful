@@ -275,9 +275,9 @@ consistent across the deduction kinds (`growth` exact and partial, `blocked`,
 
 ### Requirement: Filling provides on-screen key labels
 
-Filling SHALL implement `requestKeys()` returning the fixed digit keypad `1..9`
-(labeled by the digit character) followed by a clear key (button code `8`,
-labeled `"Clear"`), fixed to digits 1–9 regardless of board size.
+Filling's on-screen keypad SHALL be the digits `1` to `9`, each labeled by its
+digit, followed by the collection's Clear key. It SHALL be those keys whatever
+the board's size.
 
 #### Scenario: The keypad is digits 1–9 plus clear
 

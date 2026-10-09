@@ -1,11 +1,12 @@
 # flip Specification
 
 ## Purpose
+
 Flip, the puzzle of lighting every square by pressing squares, where each press
 also flips a fixed pattern of neighbors, in two rulesets. Its boards are
 generated solvable and not already solved, its solver finds a shortest set of
-presses by elimination over GF(2), and its hint presses that answer in reading
-order, saying what forces each press.
+presses, and its hint presses that answer in reading order, saying what forces
+each press.
 
 ## Requirements
 
@@ -70,10 +71,9 @@ with two identical rows SHALL be discarded and grown again.
 
 ### Requirement: Flip's solver finds a shortest set of presses
 
-The Flip solver SHALL perform Gaussian elimination over GF(2) on the toggle
-matrix and return a shortest set of presses, or report that no solution exists
-for a hand-entered position. Solve SHALL press every square of the solution in
-one move.
+The Flip solver SHALL return a shortest set of presses, or report that no
+solution exists for a hand-entered position. Solve SHALL press every square of
+the solution in one move.
 
 #### Scenario: Unsolvable hand-entered position
 
@@ -107,10 +107,9 @@ The game SHALL report `solved` when every square is lit.
 - **WHEN** the player flips cells until every square is lit
 - **THEN** the game status becomes `solved`
 
-### Requirement: Flip's status bar counts the moves, and the board has a text format
+### Requirement: Flip's status bar counts the moves
 
-Flip SHALL provide a status bar string reporting the move count, and a
-plain-text format of the board.
+Flip SHALL provide a status bar string reporting the move count.
 
 #### Scenario: The status bar after a press
 
@@ -260,9 +259,7 @@ solution cannot be determined.
 ### Requirement: Flip's rulesets are Crosses and Random
 
 Flip SHALL declare Crosses and Random as its two rulesets, each with the rule
-for which squares a press flips, so the Type menu holds a section for each, a
-params label starts with the ruleset's name, and the help page states each
-one's rule in its opening list.
+for which squares a press flips.
 
 #### Scenario: The help says what Random changes
 

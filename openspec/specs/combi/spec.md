@@ -7,6 +7,7 @@ searches over subsets. This is what a caller may rely on: the order, the
 degenerate cases, what `reset()` and an advance past the end do, and which
 `(r, n)` are refused.
 ## Requirements
+
 ### Requirement: TypeScript combi module enumerates subsets in lexicographic order
 
 The implementation in `src/engine/combi/index.ts` SHALL enumerate, for a given
@@ -65,10 +66,10 @@ which is `false`, and SHALL NOT throw.
 
 ### Requirement: Combi refuses an invalid (r, n) at construction
 
-The implementation SHALL enforce the preconditions `r <= n` and `n >= 1` by
-throwing on construction.
+The implementation SHALL enforce the preconditions `0 <= r <= n` and `n >= 1`
+by throwing on construction.
 
 #### Scenario: precondition violations throw
 
-- **WHEN** the implementation is constructed with `r > n` or `n < 1`
+- **WHEN** the implementation is constructed with `r < 0`, `r > n` or `n < 1`
 - **THEN** construction throws

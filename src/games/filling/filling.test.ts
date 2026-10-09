@@ -102,7 +102,7 @@ describe("filling generator + solver", () => {
     // Heavy but seed-deterministic: the retry-until-unique generator + solver
     // does fixed work per fixed seed (the 17×13 worst case is ~1.2s solo).
     // Nothing here is clock-gated: a regression surfaces as a wrong verdict
-    // below, never as slowness. (See repo-layout test-determinism spec.)
+    // below, never as slowness. (See the determinism rules of the `testing` spec.)
     it(`generates uniquely solvable ${p.w}x${p.h} boards`, () => {
       for (let seed = 0; seed < 4; seed++) {
         const { desc } = newFillingDesc(p, randomNew(`filling-${p.w}x${p.h}-${seed}`));

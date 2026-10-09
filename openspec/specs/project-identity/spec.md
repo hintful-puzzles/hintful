@@ -59,11 +59,13 @@ pages, and the privacy notes. Text inherited from `puzzles-web` SHALL NOT
 survive verbatim on those surfaces. The per-game pages under `help/games/` are
 excluded on purpose and keep upstream's wording.
 
-#### Scenario: Inherited copy is gone
+#### Scenario: A page outside the per-game help is written or revised
 
-- **WHEN** the front page, the help site's own pages, the unsupported-browser
-  page and the not-found page are compared with `puzzles-web`'s
-- **THEN** no paragraph is shared verbatim
+- **WHEN** the front page, one of the help site's own pages, the
+  unsupported-browser page, the not-found page or the privacy notes is written
+  or revised
+- **THEN** its text is written for this project, and no paragraph of
+  `puzzles-web`'s is carried into it verbatim
 
 ### Requirement: The header and the page titles speak for the product
 
@@ -153,7 +155,7 @@ the player's note, and no identity and no saved game.
 
 ### Requirement: The privacy notes promise no more than the code keeps
 
-The privacy notes SHALL NOT be a development placeholder, and SHALL NOT promise
+The privacy notes SHALL NOT promise
 more than the code keeps. The crash-report description is bound to
 `sendDefaultPii: false` and to the consent gate in `src/utils/sentry.ts`. The
 measurement description is bound to whatever analytics block a deployment
@@ -262,95 +264,3 @@ places to play the same puzzles, are outward links of this kind.
 - **THEN** its link to try again leads back to this app
 - **AND** its other links lead to Simon Tatham's collection and Mike Edmunds'
   web version, as other places to play
-
-### Requirement: A crash report leaves the device only with the player's consent
-
-When an unexpected error opens the crash dialog in a build with reporting
-switched on, the app SHALL send nothing to the reporting service until the
-player chooses to send the report. Declining, closing the dialog or reloading
-the page SHALL discard what was held, and it SHALL never be sent afterwards.
-
-#### Scenario: A player declines
-
-- **WHEN** an error opens the crash dialog and the player presses *Don't send*,
-  closes the dialog, or reloads
-- **THEN** no request reaches the reporting service for that error, then or
-  later
-
-#### Scenario: A player sends
-
-- **WHEN** the player presses *Send report*, optionally with a note
-- **THEN** the held report is sent, followed by the note
-- **AND** the dialog shows the report's event ID
-
-### Requirement: Consent is enforced at the reporting SDK's transport
-
-The consent SHALL be enforced where every outgoing request passes, the SDK's
-transport, so that no integration can send around it. Nothing SHALL be sent
-before the player sends a report, and held reports SHALL NOT be written to
-storage. A sent report SHALL carry what was recorded since the page opened or
-the player last answered, up to a bound on the reports held: the errors the
-dialog lists, errors captured without a dialog, and the record of activity.
-Nothing personal SHALL be recorded.
-
-#### Scenario: More errors than are held
-
-- **WHEN** an error is captured while as many reports are held as the bound
-  allows
-- **THEN** the oldest held report of an error the dialog does not list is
-  dropped to make room, and a listed error's report goes only when every held
-  report is of a listed error
-
-#### Scenario: A report is held while the player has not answered
-
-- **WHEN** the SDK captures an error and the player has not chosen to send
-- **THEN** the report is held in memory and nothing reaches the reporting
-  service
-- **AND** nothing of it is written to storage
-
-#### Scenario: Errors that never opened the dialog, then one that does
-
-- **WHEN** the SDK captures an error the dialog does not show (one on the
-  dialog's ignore list, a service worker failure the app caught, a dialog that
-  failed to open, an earlier send that failed), and the player later presses
-  *Send report* for a different error
-- **THEN** every held report is sent, with the console lines and the note of
-  each ignored error in the record
-- **AND** had the player not pressed it, none would have been
-
-#### Scenario: An error out of a browser extension or third-party code
-
-- **WHEN** an error's text or stack names a browser extension's file, or its
-  stack runs through code that is not this app's
-- **THEN** no report of it is held, the dialog does not open, and the record
-  notes only that an error was ignored, without its text
-- **BECAUSE** such an error can name the player's extensions or quote another
-  site
-
-#### Scenario: Third-party code in a build with reporting off
-
-- **WHEN** a build has no reporting configured and an error's stack runs
-  through code that is not this app's, with no extension's file in its text
-- **THEN** the dialog shows it, since telling whose code a stack runs through
-  is the SDK's, and nothing is held or sent in such a build
-
-#### Scenario: The player arrived from another site
-
-- **WHEN** the page was reached from a link on another site, one whose
-  address begins with this app's own included
-- **THEN** a report does not carry that address, and carries the address of a
-  page of this app the player came from
-
-#### Scenario: The dialog shows an error the SDK captured nothing for
-
-- **WHEN** the dialog lists an error the SDK did not capture, such as one
-  thrown in the puzzle worker or a rejection with no error object
-- **THEN** a report of it is captured as the dialog shows it, and *Send report*
-  sends that report
-
-#### Scenario: The event ID the dialog shows
-
-- **WHEN** several reports are sent by one press
-- **THEN** the event ID shown is that of an error the dialog listed
-- **AND** where no report of a listed error went, as when the SDK's own filter
-  turned the listed error away, no event ID is shown

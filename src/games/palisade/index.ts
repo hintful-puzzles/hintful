@@ -192,11 +192,10 @@ const PALISADE_RUNGS = [
 type PalisadeRung = (typeof PALISADE_RUNGS)[number];
 
 /** Compute the next deductions as a hint plan, seeded from the player's
- * current borders and no-wall marks. Refuses on a solved board or one
- * carrying a mistake, so a hint is never built on a wrong wall. Edges
- * forced by one firing (the `equivalentEdges` pair, a `numberExhausted`
- * sweep) form one multi-leg journey; distinct firings stay separate
- * hints. */
+ * current borders and no-wall marks. Refuses only when the deductions
+ * force no edge. Edges forced by one firing (the `equivalentEdges` pair,
+ * a `numberExhausted` sweep) form one multi-leg journey; distinct firings
+ * stay separate hints. */
 function hint(
   state: PalisadeState,
 ): HintResult<PalisadeMove, PalisadeHint, PalisadeRung> {

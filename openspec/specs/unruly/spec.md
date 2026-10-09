@@ -80,8 +80,7 @@ sum to exactly `w2·h2 + 1`.
 
 `validateDesc` SHALL reject a desc holding any character outside the
 run-length alphabet and any desc whose decoded length differs from
-`w2·h2 + 1`. `newState` SHALL parse the desc into the grid with clue cells
-holding their color and marked immutable, and every other cell empty.
+`w2·h2 + 1`.
 
 #### Scenario: A malformed description is rejected
 
@@ -154,7 +153,7 @@ create three-in-a-row, that color is forced elsewhere.
 
 ### Requirement: A placement on a clue or off the board is rejected
 
-`executeMove` SHALL be pure and SHALL reject a placement whose target is out
+`executeMove` SHALL reject a placement whose target is out
 of bounds or an immutable clue cell.
 
 #### Scenario: A placement on a clue is rejected

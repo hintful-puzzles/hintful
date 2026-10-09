@@ -191,7 +191,7 @@ an error color as it is entered. There SHALL be no move animation.
 
 ### Requirement: A flagged cell carries its own mistake overlay
 
-The cells Check flags SHALL be rendered with a distinct mistake overlay, and
+The cells Check flags SHALL be rendered with a mistake overlay of their own, an inset double outline that reads apart from the red number a broken rule gets, and
 the overlay SHALL appear on the frame after the check, on a cell whose contents
 did not change included.
 
@@ -316,13 +316,12 @@ cell's notes still hold that answer.
 
 ### Requirement: The deductions the hint makes
 
-The hint's deductions SHALL be: an empty area of one cell can only hold a 1; a
-cell with one candidate left can only hold that number; a number with one cell
-left in its area must go there, unless that cell's candidates are already down
-to the number, which is the previous deduction; and a number is struck from
-every cell outside an area that clashes, under the mode's keep-apart rule,
-with every cell the area still has for that number. The last SHALL be taken
-only when no other is available.
+The hint SHALL deduce: an empty area of one cell can only hold a 1; a cell with
+one candidate left can only hold it; a number with one cell left in its area
+must go there, unless that cell's candidates are down to it already, which is
+the previous deduction; and a number is struck from every cell outside an area
+that clashes, under the mode's keep-apart rule, with every cell the area still
+has for it. The last SHALL be taken only when no other applies.
 
 #### Scenario: An area starved of a number rules it out of every cell that clashes with all its homes
 
@@ -332,12 +331,12 @@ only when no other is available.
 - **THEN** the step strikes 3 from every such cell at once, rings those cells,
   hatches the area, and says the area can put its 3 only within that reach of them
 
-#### Scenario: The naked-single phrasing is never used on a multi-candidate cell
+#### Scenario: A number's last home that has one candidate left is a one-candidate step
 
-- **WHEN** any Latin-family hint emits a placement step whose narration says "ruled
-  out in this cell"
-- **THEN** the cell's working notes are genuinely a single candidate (a true naked
-  single); a hidden single uses its own narration instead
+- **WHEN** a number has one cell left in its area and that cell's notes are
+  already down to that number
+- **THEN** the step is narrated as a cell with one candidate left, and the
+  one-cell-left narration is used only where the cell still notes another number
 
 ### Requirement: The starved-area deduction is the solver's trial rung
 

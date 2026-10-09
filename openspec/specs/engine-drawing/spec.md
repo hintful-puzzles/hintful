@@ -1,9 +1,12 @@
 # engine-drawing Specification
 
 ## Purpose
-Drawing: which shapes a game draws through the shared helpers, the draw state
-a game is handed, how the midend sizes and repaints a board and lays the ground
-under it, and the guard that a warm frame matches a fresh paint.
+
+Drawing: which shapes a game draws through the shared helpers, the hint's
+line hatch among them, the draw state a game is handed, the sidecar a
+per-cell overlay reaches the render cache through, how the midend sizes and
+repaints a board and lays the ground under it, and the guard that a warm frame
+matches a fresh paint.
 
 ## Requirements
 
@@ -163,36 +166,6 @@ the helper SHALL NOT grow a parameter to cover the case.
 
 - **WHEN** a game's renderer draws a glyph centered in a tile
 - **THEN** it takes its text options from the engine helper, passing only the size
-
-### Requirement: A game's render test records through the shared recording drawing
-
-A test asserting what a game draws SHALL drive the engine's shared recording
-drawing rather than a double of its own, so that the record it asserts against
-contains every primitive the game emitted. A hand-rolled double records only
-the calls its author anticipated, so a game that begins drawing something new,
-or stops drawing something, leaves such a test green.
-
-#### Scenario: a game changes what it draws
-
-- **WHEN** a game's renderer emits a primitive it did not emit before
-- **THEN** the recording contains it, whether or not the test asserts on it
-- **AND** a test asserting the frame as a whole shows it as a reviewable diff
-
-### Requirement: The capability snapshot records a draw state's field names and judges none
-
-The derived capability snapshot SHALL record the field names of a game's draw
-state as well as of its `Ui`, read as `newDrawState` returns it at the game's
-preferred tile size, before any `redraw`. It SHALL record names only, and SHALL
-assert nothing about which names a game uses: its job is to make a change a
-reviewable line in a diff, and an approved vocabulary would be a list only this
-check reads.
-
-#### Scenario: a game's draw state loses a field
-
-- **GIVEN** a change that removes a field from one game's draw state
-- **WHEN** the suite runs
-- **THEN** the snapshot moves, and the loss is visible in the diff
-- **AND** no assertion is made about what any field should be called
 
 ### Requirement: Fit-to-window sizing fills the slot
 
@@ -500,3 +473,43 @@ stream.
   never paints that mark
 - **THEN** the game's comparison from a pinned board that shows the mark fails,
   where the seeded run alone would pass
+
+### Requirement: A per-cell overlay reaches the render cache through the shared sidecar
+
+Any per-cell overlay a game paints on top of its tiles, the hint overlay and
+the mistake overlay alike, SHALL reach the render cache through the shared
+overlay sidecar (`engine/overlay-sidecar.ts`) and not through a per-game
+re-derivation of the repack, stale and commit steps. The one exception is a
+game whose overlay does not fit the per-cell shape, which SHALL be recorded as
+a no-go with its reason.
+
+#### Scenario: A mistake overlay reaches the cache the same way the hint overlay does
+
+- **WHEN** a game paints a per-cell mistake overlay (the `findMistakes`
+  highlight) over tiles whose values are otherwise unchanged
+- **THEN** the overlay is carried by the shared overlay sidecar (packed per
+  frame, stale-compared in the cache-miss test, committed after draw), so a
+  Check & Save on an already-drawn board repaints the flagged cells
+
+### Requirement: GameDrawing draws the hint's line hatch
+
+`GameDrawing` SHALL expose `drawHatch(rect, color, period)`: translucent
+diagonal bands of `color`, half of `period` wide, clipped to `rect` and laid on
+the lines `x + y = k · period` of the whole canvas, so neighboring rects
+hatched separately form one unbroken pattern. Every `GameDrawing`
+implementation SHALL take the band geometry from the engine's `hatchBands` and
+the opacity from its one constant, and a hatching game's stripes SHALL be
+visible against its board in both color schemes.
+
+#### Scenario: Two tiles hatched separately join up
+
+- **WHEN** a game hatches two adjacent tiles in separate calls
+- **THEN** whether any point is striped depends on its canvas coordinates alone,
+  so the stripes run on across the shared edge
+
+#### Scenario: A hatching game's stripes show in both schemes
+
+- **WHEN** a game whose code calls `drawHatch` shows a hint that hatches a line
+- **THEN** the hatch color blended over its board background at the hatch
+  opacity differs from the background by more than the stripe-visibility bar, in
+  the light and the dark palette the app paints

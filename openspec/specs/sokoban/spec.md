@@ -202,8 +202,7 @@ one barrel (Solve's) SHALL be shown at once.
 ### Requirement: Sokoban generation is deterministic
 
 Sokoban generation SHALL use a reverse-move generator over the shared seeded RNG, so
-that a given seed always produces the same board and shared game IDs remain
-reproducible. A level SHALL be generated exactly as upstream generates it.
+that a given seed always produces the same board.
 
 #### Scenario: The same seed reproduces the same board
 

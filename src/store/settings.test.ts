@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 //
-// Tier-3 persistence test (see the `repo-layout` spec): the settings store
+// Tier-3 persistence test (see the `testing` spec): the settings store
 // against `fake-indexeddb`, via the shared setup that also shims Dexie's IDB2
 // array `maxKey`. happy-dom because the `Settings` singleton registers a
 // `pageshow` listener in its constructor, so importing it needs a `window`.

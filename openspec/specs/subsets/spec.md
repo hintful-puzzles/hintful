@@ -150,9 +150,9 @@ There SHALL be no move animation.
 ### Requirement: Subsets provides an explained hint
 
 Subsets SHALL implement `hint()`, planning from the player's current marks and
-rule-outs and narrating each firing as the deduction that forces it. A firing
-that decides several letter slots SHALL be one journey. A hint on a board that
-contradicts its own clues SHALL be refused, pointing at the mistakes.
+rule-outs and narrating each firing as the deduction that forces it. A hint on
+a board that contradicts its own clues SHALL be refused, pointing at the
+mistakes.
 
 #### Scenario: A hint narrates an arrow deduction
 
@@ -165,12 +165,6 @@ contradicts its own clues SHALL be refused, pointing at the mistakes.
 - **WHEN** a set has exactly one cell it can still legally occupy
 - **THEN** the hint places it there and spotlights that cell as the only
   candidate
-
-#### Scenario: A deduction deciding several letters reads as one journey
-
-- **WHEN** one firing decides more than one letter slot
-- **THEN** the steps are emitted as a single continued journey rather than
-  several separate hints
 
 #### Scenario: A mistaken board is refused honestly
 

@@ -282,19 +282,13 @@ preference for drawing excluded lines faintly.
 Rendering SHALL draw edges in a fixed color order so that mistaken edges paint
 over all others, SHALL place clue text at each face's incenter, SHALL highlight
 the edges of every closed loop but the largest when more than one exists, and
-SHALL flash on completion. Clue text positions depend on tile size and SHALL be
-recomputed when it changes.
+SHALL flash on completion.
 
 #### Scenario: Completing a single loop wins
 
 - **WHEN** the drawn lines form exactly one closed loop with no stray paths and
   every clue is satisfied
 - **THEN** the game is reported solved and flashes
-
-#### Scenario: Clue positions survive a resize
-
-- **WHEN** the drawing surface is resized after the board has been drawn
-- **THEN** clue text is drawn at the correct position for the new tile size
 
 ### Requirement: Loopy grades boards with a four-tier deductive solver
 
@@ -575,12 +569,11 @@ color, and the hint SHALL refuse while one stands.
 
 ### Requirement: Loopy explains the next deduction from notes the player can make
 
-A hint SHALL be refused when the board is solved or `findMistakes` reports a
-mistake, by the midend before it asks the game, and `hint(state)` SHALL otherwise
-return the lines the solver can decide from the player's own board as an ordered
-plan, each step narrating why its move is forced from premises the sentence
-itself states. Because the mistake check vouches for every mark, the plan SHALL
-take the player's lines, ruled-out edges and notes as facts.
+`hint(state)` SHALL return the lines the solver can decide from the player's
+own board as an ordered plan, each step narrating why its move is forced from
+premises the sentence itself states. Because the mistake check vouches for
+every mark before the game is asked, the plan SHALL take the player's lines,
+ruled-out edges and notes as facts.
 
 #### Scenario: Following the plan finishes the board on every tiling
 
@@ -588,13 +581,6 @@ take the player's lines, ruled-out edges and notes as facts.
   followed one step at a time from the empty board
 - **THEN** every step sets only lines and notes that agree with the solution, and
   the board ends solved
-
-#### Scenario: A wrong mark refuses the hint
-
-- **WHEN** the player has drawn a line the solution does not use and asks for a
-  hint
-- **THEN** the hint refuses with the collection's mistake refusal and the mistaken
-  edge is highlighted
 
 ### Requirement: The hint plan is the solver's own rungs, easiest tier first
 

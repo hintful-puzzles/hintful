@@ -11,7 +11,7 @@ Authoritative specs:
 [`engine-drawing`](../../openspec/specs/engine-drawing/spec.md) (the `GameDrawing`
 contract; the repaint/animation requirement, which also owns the
 ground/`canvasCleared` doctrine) ·
-[`repo-layout`](../../openspec/specs/repo-layout/spec.md) (in-process render
+[`testing`](../../openspec/specs/testing/spec.md) (in-process render
 verification). Exemplar to read end-to-end:
 [`galaxies/render.ts`](../../src/games/galaxies/render.ts).
 

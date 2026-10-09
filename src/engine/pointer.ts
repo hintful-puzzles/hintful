@@ -183,12 +183,11 @@ export function isCursorMove(button: number): boolean {
  * button. Returns the new coordinates, or `null` when `button` is not a
  * cursor key or the move is a no-op against a clamped edge.
  *
- * Position-only by design: this never owns or mutates a game's `ui`. The
- * per-game policy that genuinely varies — which field holds the cursor,
- * `changed`-tracking, the "first arrow-press only reveals the cursor"
- * idiom, the null-vs-`UI_UPDATE` return — stays in each game. Custom
- * traversal (obstacle-skipping, lock modes, paint-while-traversing,
- * rolling cursors) keeps using `cursorDelta` or its own logic.
+ * Position-only by design: this never owns or mutates a game's `ui`.
+ * {@link moveCursor} is the form that holds the cursor, reveals it and
+ * reports whether anything changed. Custom traversal (obstacle-skipping,
+ * lock modes, paint-while-traversing, rolling cursors) keeps using
+ * `cursorDelta` or its own logic.
  *
  * With `wrap` false (default) the result is clamped to `[0, w) × [0, h)`;
  * with `wrap` true it wraps toroidally (so an edge move never no-ops).

@@ -79,12 +79,17 @@ shows each one to players, from the files in `licenses/`.
 
 ### Requirement: CREDITS.md file thanking lineage
 
-The repository SHALL contain a top-level `CREDITS.md` file that thanks upstream Simon Tatham + contributors and the medmunds/puzzles-web project, with links to both source repositories.
+The repository SHALL contain a top-level `CREDITS.md` file that thanks upstream
+Simon Tatham + contributors, Lennard Sprong (x-sheep) for the
+`puzzles-unreleased` puzzles, and the medmunds/puzzles-web project, with a
+link to each of the three source repositories.
 
-#### Scenario: CREDITS.md links to both upstream sources
+#### Scenario: CREDITS.md links to every upstream source
 
 - **WHEN** a reader opens `CREDITS.md`
-- **THEN** the file thanks Simon Tatham + upstream puzzles contributors and links to the upstream repository
+- **THEN** the file thanks Simon Tatham + upstream puzzles contributors and
+  links to the upstream repository
+- **AND** it thanks Lennard Sprong and links to `puzzles-unreleased`
 - **AND** it thanks Mike Edmunds and links to puzzles-web
 
 ### Requirement: The About box credits every bundled package, and never a template
@@ -131,34 +136,6 @@ this project's own unfinished work.
 - **THEN** the entry names the license beside the package's name and no
   publisher, and the copyright line in the notice is the credit
 
-### Requirement: A filled-in Apache appendix is the package's notice
-
-Apache-2.0's text ends with an appendix headed "How to apply the Apache License
-to your work", a template for authors. Where a bundled package fills its
-copyright line in, the filled-in appendix is the closest thing that package has
-to a NOTICE and SHALL be used as one.
-
-#### Scenario: A package fills the appendix in
-
-- **WHEN** a bundled package's appendix names a real copyright holder
-- **THEN** that line is used as the package's notice
-
-### Requirement: An unfilled Apache appendix is removed
-
-Where a bundled package ships the Apache-2.0 appendix with its copyright line
-left as the template, the appendix SHALL be removed and SHALL NOT be reproduced,
-in the extracted form or within the license text the entry falls back to. The
-entry SHALL still reproduce the license grant: the appendix is addressed to
-authors and is not part of the grant.
-
-#### Scenario: A package ships the Apache appendix unfilled
-
-- **WHEN** a bundled package's license text contains the appendix with its
-  copyright line left as the template
-- **THEN** the appendix is not reproduced, in the extracted form or within the
-  license text it would otherwise fall back to
-- **AND** the entry still reproduces the license grant itself
-
 ### Requirement: Attribution is derived from each package's own metadata
 
 A bundled package's attribution SHALL be derived from that package's own
@@ -189,14 +166,32 @@ statement is in the notice text below the attribution and speaks for itself.
 
 ### Requirement: A package's own NOTICE file takes precedence
 
-A bundled package's own `NOTICE` file SHALL take precedence over everything
-else as the notice reproduced for it, which Apache-2.0 §4(d) requires.
+The notice reproduced for a bundled package SHALL be its own `NOTICE` file,
+which Apache-2.0 §4(d) requires; else the Apache-2.0 appendix, where the
+package filled its copyright line in, as the closest thing it has to a NOTICE;
+else its license text. An appendix left as the template SHALL be removed and
+SHALL NOT be reproduced, extracted or within the license text. The entry SHALL
+still reproduce the grant: the appendix is addressed to authors and is no part
+of it.
 
 #### Scenario: A NOTICE file beside a filled-in appendix
 
 - **WHEN** a bundled Apache-2.0 package ships a `NOTICE` file and also fills in
   its appendix
 - **THEN** the `NOTICE` file is what the entry reproduces
+
+#### Scenario: A package fills the appendix in
+
+- **WHEN** a bundled package's appendix names a real copyright holder
+- **THEN** that line is used as the package's notice
+
+#### Scenario: A package ships the Apache appendix unfilled
+
+- **WHEN** a bundled package's license text contains the appendix with its
+  copyright line left as the template
+- **THEN** the appendix is not reproduced, in the extracted form or within the
+  license text it would otherwise fall back to
+- **AND** the entry still reproduces the license grant itself
 
 ### Requirement: A package that credits nobody fails the build
 

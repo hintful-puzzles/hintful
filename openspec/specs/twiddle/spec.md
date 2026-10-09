@@ -39,17 +39,6 @@ board, and a missing `nN` yields `n = 2`.
 - **AND** decoding `4x4n3`, `4n3` (square shorthand), and `4x4n3o` all round-trip
   to the corresponding params, with `o` setting `orientable`
 
-### Requirement: Twiddle's presets hold one orientable board
-
-The presets SHALL be upstream's, with one orientable board where upstream had
-two: exactly one preset SHALL be orientable.
-
-#### Scenario: The orientable preset is the 3×3
-
-- **WHEN** the presets are listed
-- **THEN** exactly one has `orientable` set, and it is a 3×3 board with blocks
-  of 2
-
 ### Requirement: Twiddle refuses a board smaller than its block
 
 `validateParams` SHALL reject `w < n`, `h < n` and an unreasonably large `w·h`,
@@ -59,16 +48,6 @@ each with a human-readable reason.
 
 - **WHEN** the engine's params check receives `{ w: 2, n: 3 }`
 - **THEN** it returns a non-null human-readable reason
-
-### Requirement: Twiddle has no mistake check and no hint
-
-The game SHALL NOT provide a `findMistakes` hook, because every reachable
-position is legal. It SHALL NOT provide a `hint` hook.
-
-#### Scenario: Neither hook is present
-
-- **WHEN** the registered `twiddle` game is inspected
-- **THEN** it has no `findMistakes` and no `hint`
 
 ### Requirement: A rotation turns the block and its tiles
 
@@ -96,7 +75,7 @@ its direction, SHALL advance the orientation of each tile in the block when
 the click by `(n−1)/2` tiles, so that it selects the region centered on the
 click, and mapping the result to grid coordinates. It SHALL reject a click
 whose region falls outside `0 ≤ x ≤ w−n`, `0 ≤ y ≤ h−n`. A left-click SHALL
-rotate `dir +1` and a right-click `dir −1`.
+rotate anticlockwise (`dir +1`) and a right-click clockwise (`dir −1`).
 
 #### Scenario: Click geometry constrains legal rotations
 
@@ -118,7 +97,7 @@ origins, clamped at the edges without wrapping. When the cursor is visible, its
 
 ### Requirement: Letter and numpad keys rotate fixed blocks
 
-The letters `a`, `b`, `c` and `d` SHALL each rotate one corner block `dir +1`,
+The letters `a`, `b`, `c` and `d` SHALL each rotate one corner block anticlockwise (`dir +1`),
 and the shifted `A`, `B`, `C` and `D` SHALL rotate the same block `dir −1`. The
 numpad digits SHALL also produce rotations: a corner digit rotates its corner
 block, and an edge digit or the center digit rotates the block midway along

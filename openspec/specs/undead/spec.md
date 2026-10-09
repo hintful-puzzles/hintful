@@ -244,7 +244,7 @@ by filling every blank, SHALL flag the clue and every cell of the line.
 ### Requirement: Undead paints a flagged count and a flagged clue red
 
 `redraw` SHALL paint a flagged count block and a flagged sighting clue in the
-error color. A flagged cell is tracked for repaint and is not recolored.
+error color. A flagged cell is not recolored: upstream computes that flag and never draws it, and neither does Undead.
 
 #### Scenario: Over-placing a monster type reddens it live
 

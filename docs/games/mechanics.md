@@ -157,8 +157,9 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 Six segment kinds cover the grammar the collection actually uses: `dims`
 (`WxH`, with upstream's square fallback), `size` (one untagged leading
-integer, for square-board games), `num` (`n12`), `choice` (`d` + a letter from
-a table), and `flag` (a bare boolean letter). `full: true` marks a
+integer, for square-board games), `num` (`n12`), `letters` (one bare, untagged
+letter per choice, where a choice may write nothing), `choice` (`d` + a letter
+from a table), and `flag` (a bare boolean letter). `full: true` marks a
 generator-only field the brief encoding omits; `invalid` declares the
 out-of-range value an unrecognized difficulty letter should leave behind;
 `means: false` says the letter is written when the field is *off*; `omitWhen`

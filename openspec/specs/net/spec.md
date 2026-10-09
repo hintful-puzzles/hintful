@@ -41,17 +41,6 @@ with no promised single answer, and encoding SHALL never write it.
 - **WHEN** `7x9wb0.25a` is decoded
 - **THEN** the params are those of `7x9wb0.25`
 
-### Requirement: Net offers one wrapping preset
-
-The presets SHALL be upstream's bounded sizes, its 13×11 stood upright as
-11×13, and one wrapping board; where upstream offers every size wrapping too,
-the other sizes SHALL wrap only from the Custom dialog.
-
-#### Scenario: The largest preset stands upright
-
-- **WHEN** the presets are listed
-- **THEN** the largest is 11 wide and 13 tall, and exactly one preset wraps
-
 ### Requirement: Net loads only a board its hint finishes
 
 The game SHALL implement `finishesByDeduction` as its solver settling every
@@ -84,7 +73,7 @@ otherwise. No parameter SHALL deal a board that requires guessing or that the hi
 
 ### Requirement: Tiles rotate and lock
 
-Left-click SHALL rotate a tile anticlockwise, right-click clockwise, and `f`
+Left-click or `a` SHALL rotate a tile anticlockwise, right-click or `d` clockwise, and `f`
 by 180°. `s` SHALL toggle a tile's lock, and so SHALL a tap in the middle
 third of a tile in notes mode, where the pointer's other taps note sides:
 outside notes mode both buttons rotate, so notes mode is where the pointer
@@ -216,8 +205,7 @@ name each reason it rests on.
 ### Requirement: A hint's lock is one journey of the turn and the lock
 
 A lock step of Net's hint whose tile must turn first SHALL be one journey of
-the turn and the lock. Every step's moves SHALL be ones the declared verbs
-make.
+the turn and the lock.
 
 #### Scenario: A lock that needs a turn
 

@@ -319,18 +319,6 @@ clues.
 - **THEN** every mark its `pencilStrike` clears lies in one cell, and that cell
   is one of the two the clue sits between
 
-### Requirement: A firing that forces several strikes is one journey
-
-A single firing forcing several strikes SHALL be one journey, its continuation
-legs flagged `continuesPrevious`.
-
-#### Scenario: Both ends of a link
-
-- **WHEN** on a fully-penciled board one greater-than link rules values out of
-  both of its cells
-- **THEN** the two strikes are consecutive steps, the second flagged
-  `continuesPrevious`
-
 ### Requirement: The hint starts on the implicit reading
 
 Unequal's `newUi` SHALL state the implicit reading of an unmarked cell, because

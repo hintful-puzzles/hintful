@@ -42,8 +42,13 @@ against it.
 
 ### New Capabilities
 
-Decided by the work: a `help` capability and others, where a division makes
-one.
+- `help-pages`: the help the app serves, divided out of `repo-layout`.
+- `testing`: how behavior is tested, divided out of `repo-layout`.
+- `dealing`: how the app gets a board to play.
+- `error-reporting`: what a crash sends, and when.
+- `border-grid`: the edge-marking mechanic Palisade and Separate share.
+
+`moves.md` says what each holds and why.
 
 ### Modified Capabilities
 

@@ -1,11 +1,12 @@
 # engine-candidate-hints Specification
 
 ## Purpose
+
 The hint plan shared by the candidate-elimination games: the entry and the
-walk that turn a solver's recorded firings into steps, the order the frontier
-takes them in, the regions and the two readings of an unmarked cell the walk
-works over, the Latin family's shared narration, and the premise each recorded
-firing names, with the guards that hold it.
+walk that turn a solver's recorded firings into steps and stamp each with its
+rung, the order the frontier takes them in, the regions and the two readings
+of an unmarked cell the walk works over, the Latin family's shared narration,
+and the premise each recorded firing names, with the guards that hold it.
 
 ## Requirements
 
@@ -270,18 +271,6 @@ read each step's premise as the frontier does.
   already-available firing that did
 - **THEN** fewer than one such step in ten passed over one, and the check fails when
   the frontier's preference is reversed
-
-### Requirement: A reading over the continuity bound is named in a ledger
-
-A reading known to exceed the continuity bound SHALL be named, with the change
-that owns it, in a ledger the guard holds still over the bound.
-
-#### Scenario: both readings are measured
-
-- **WHEN** a game offers the player both readings of an unmarked cell
-- **THEN** its plans are measured under each, and a reading over the bound fails the
-  guard unless the ledger names it, while a named reading that has come under the
-  bound fails it too
 
 ### Requirement: A cell's regions are one definition per relation
 
@@ -645,51 +634,6 @@ they can follow.
   cell it started from
 - **THEN** the cells of that walk are the ones found on this board, outlined
   and numbered in the order the player follows them
-
-### Requirement: The recording path steps the ladder one firing at a time through the engine
-
-The engine SHALL provide, beside the deduction-fixpoint runner, a driver that
-runs the same ladder one firing per call (`singleFirings`), and a hint that
-records a firing at a time SHALL use it and SHALL NOT bend the runner's
-early-out into a stop condition. The driver and the runner SHALL share one pass
-down the ladder, so the tier cap, the restart rule and the budget cannot differ
-between the solver's projection and the hint's.
-
-#### Scenario: One firing per call
-
-- **WHEN** a hint calls the driver on a board where two techniques each have
-  work to do
-- **THEN** each call returns exactly one firing, restarting from the easiest
-  technique
-- **AND** a call after the ladder is exhausted returns nothing
-
-### Requirement: A call of the driver returns one firing, and a contradiction is sticky
-
-Each call SHALL run the ladder from its first technique and return the technique
-that fired, or nothing when no technique fires or the early-out says there is
-nothing left to do. A contradiction SHALL be sticky: once a technique proves the
-board inconsistent, the driver SHALL report it and SHALL run no technique again.
-The step budget SHALL be required, and its attribution tally SHALL outlive a
-single call, so a technique that runs away across many calls is named.
-
-#### Scenario: A contradiction stops the driver for good
-
-- **WHEN** a technique proves the board inconsistent
-- **THEN** the driver reports the contradiction and returns nothing
-- **AND** no technique runs on any later call
-
-### Requirement: The driver returns a firing the player cannot see
-
-The driver SHALL return every firing, including one that changed nothing the
-player can see. Whether a firing is shown SHALL be the plan loop's decision,
-where a hidden firing still advances the board and is counted: a driver that
-skipped such firings would hide them where nothing counts them.
-
-#### Scenario: A firing with nothing to show is still returned
-
-- **WHEN** a technique fires but records no move the player could make
-- **THEN** the driver returns it like any other firing
-- **AND** the plan loop's `showable` hides it and counts it as hidden
 
 ### Requirement: The hint frontier keys on whatever a game's steps act on
 
@@ -1109,3 +1053,67 @@ repeated values SHALL record whichever is fewer lines.
 - **WHEN** the shared Latin solver confines a value in two columns of a board
   five cells wide, which is also three rows confined to three columns
 - **THEN** the recorded reason names the two columns
+
+### Requirement: A set outlines the cells it rests on
+
+A generic Latin set elimination SHALL record the cells whose candidates account for the
+values it strikes, and a game's hint SHALL outline them as the step's evidence, so the
+sentence that names them ("the outlined cells already account for …") points at cells
+the player can see.
+
+#### Scenario: A set's sentence names outlined cells
+
+- **WHEN** a row/column game's hint strikes a candidate by a set
+- **THEN** the step outlines the cells of the set and its sentence speaks of the
+  outlined cells
+
+### Requirement: The candidate walk stamps the steps it builds
+
+The candidate walk SHALL stamp the steps it builds: a placement or a strike
+with the kind of the reason it narrates, and its own setup steps and a
+placement's cull with ids the engine owns. A game on the walk SHALL therefore
+write its `hintRungs` list and no stamp. Where a game's words for a placement narrate
+another of its reasons than the one the walk handed it, the game SHALL say
+which, so that a step's rung and its sentence name the same deduction.
+
+#### Scenario: A candidate game writes no stamp
+
+- **WHEN** a game builds its plan through the shared candidate walk
+- **THEN** each step's rung is the kind of the reason the walk narrated, or
+  the engine's id for a setup step or a cull
+- **AND** the game's list is the engine's ids and its own reasons' kinds
+
+#### Scenario: A sentence of another reason
+
+- **WHEN** a game's words for a placement are those of a reason other than
+  the one the walk found, as a one-cell area's are a singleton's
+- **THEN** the step carries that reason's rung, not the one the walk found
+
+### Requirement: A rung list holds only the rungs of the readings its plan walks
+
+A game's list SHALL hold only the rungs of the readings its plan walks. A plan
+that gives a setup of its own walks the populate reading alone, and cannot
+speak two of the walk's rungs: the implicit reading's note step, and the single
+read off a cell with no notes. Such a plan's step type SHALL lack both, so its
+game's list lacks them and its tests excuse neither.
+
+#### Scenario: A plan on the populate reading alone
+
+- **WHEN** a game's plan gives a setup of its own
+- **THEN** its rung list holds neither the note step nor the single of a cell
+  with no notes, and its tests pin a board for every rung left
+
+### Requirement: A plan's setup declares the reading it walks
+
+The setup is the declaration of the reading, since the walk already runs it. A
+plan typed on the populate reading alone SHALL NOT compile without a setup, a
+plan typed on both readings SHALL NOT compile with one, and the walk SHALL
+throw, and not read a single off a cell with no notes, on a plan that gave a
+setup.
+
+#### Scenario: The walk would read a single off a cell with no notes
+
+- **WHEN** a plan that gave a setup of its own reaches a single the walk would
+  read off a cell with no notes
+- **THEN** the walk throws, naming the plan, where it would have stamped the
+  step with a rung the list lacks

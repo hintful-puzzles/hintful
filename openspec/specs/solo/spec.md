@@ -509,16 +509,6 @@ SHALL skip any operation already reflected on the board.
 - **THEN** the freshly-recomputed hint makes progress and, applied step by step
   with recompute, leads to a solved board
 
-### Requirement: Recording leaves the solve path unchanged
-
-The solver's recording mode SHALL be gated so that with recording off the
-generator and solve path is **unchanged**.
-
-#### Scenario: Generating and solving record nothing
-
-- **WHEN** a board is generated, solved or checked for mistakes
-- **THEN** the solver runs with no recorder attached, and records nothing
-
 ### Requirement: Solo provides on-screen key labels
 
 Solo SHALL implement `requestKeys(params)` returning the digit keypad for its grid:

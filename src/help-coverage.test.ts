@@ -334,7 +334,7 @@ describe("the All-the-puzzles page lists the whole collection", () => {
 });
 
 describe("a help page introduces the puzzle, not its implementation", () => {
-  // `repo-layout`: these pages "SHALL NOT carry development status, known-issue
+  // `help-pages`: these pages "SHALL NOT carry development status, known-issue
   // lists or roadmap notes". That rule has been in force since
   // `audit-author-known-issues` stripped `## Status` sections from the thirteen
   // third-party pages — and it was still being violated, in two pages, by a

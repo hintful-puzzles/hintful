@@ -25,17 +25,6 @@ no promise the grid can be cleared, and encoding SHALL never write it.
 - **AND** decoding `15x10c4s2` round-trips those params
 - **AND** decoding `15x10c4s2r` yields the same params
 
-### Requirement: Same Game does not turn its board
-
-Tiles fall down and emptied columns close leftward, so a board of Same Game
-SHALL NOT declare `transposeParams`: a tall board is a different game from a
-wide one, not the same one turned.
-
-#### Scenario: A tall board stays tall
-
-- **WHEN** a `5×10` board is dealt for a window wider than it is tall
-- **THEN** the board dealt is 5 wide and 10 tall
-
 ### Requirement: Same Game refuses params it cannot deal
 
 Params SHALL be refused unless `w ≥ 1`, `h ≥ 1`, `3 ≤ ncols ≤ 9`,
@@ -90,7 +79,7 @@ SHALL NOT be `"lost"`, because Undo rescues it.
 ### Requirement: A first click in Same Game selects the group
 
 `interpretMove` SHALL implement the two-click select-then-remove gesture using a
-selection held in `SamegameUi` (not in the game state). Clicking a removable tile
+selection that is no move: selecting adds no step to Undo. Clicking a removable tile
 (part of a same-color group of size ≥ 2) SHALL flood-select the connected region
 and return a UI update. Clicking an empty or lone tile SHALL select nothing.
 `changedState` SHALL clear the selection on every real transition.
@@ -127,7 +116,7 @@ selection, or `CURSOR_SELECT2` on it, SHALL clear it and return a UI update.
 
 ### Requirement: Same Game's keyboard cursor acts where it stands
 
-A keyboard cursor SHALL move with the cursor keys, and a select key SHALL act
+A keyboard cursor SHALL move with the cursor keys, wrapping at the board's edges, and a select key SHALL act
 on the tile at the cursor as a click there does.
 
 #### Scenario: Select at the cursor picks the group, then removes it

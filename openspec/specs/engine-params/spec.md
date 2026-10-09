@@ -234,7 +234,7 @@ the bounds and choice messages it generates, and every string a game's
 `validateParams` can return. The Custom dialog and the Enter Game ID dialog
 SHALL show a refusal as it comes, adding no punctuation of their own. Which
 refusals a game has SHALL stay the game's own; only the form is the
-collection's, and a guard SHALL read every string a `validateParams` can
+collection's, and a guard SHALL read, and fail where it cannot read, every string a `validateParams` can
 return.
 
 #### Scenario: A game's refusal reaches the Enter Game ID dialog
@@ -961,18 +961,6 @@ verdict passing.
   fixture
 - **THEN** it loads
 
-### Requirement: A mistake check compares with the one answer, hidden or not
-
-A game's `findMistakes` SHALL compare the player's marks with the board's one
-answer, including where the answer is hidden from the player. A hidden answer
-SHALL NOT be a reason in `notApplicable.findMistakes`.
-
-#### Scenario: A hidden answer is checked
-
-- **WHEN** the player runs Check & Save in Mines with a flag on a square that
-  has no mine
-- **THEN** the flag is highlighted as a mistake and the board is not saved
-
 ### Requirement: A board loads only if the game's own solver solves it
 
 The engine SHALL refuse to load a description, whoever wrote it, when the
@@ -1018,16 +1006,59 @@ opening state, which SHALL be refused with `DESC_NOT_DEDUCIBLE`.
   numbers do not determine every square
 - **THEN** it is refused with `DESC_NOT_DEDUCIBLE`, as is a save of that board
 
-### Requirement: No parameter or tier switches a generator's checks off
+### Requirement: Encoded params are byte-stable, and the guard is derived
 
-No game SHALL offer a parameter or a tier that switches its generator's checks
-off: a board that needs trial and error SHALL be dealt only at a tier named
-Unreasonable, and every board dealt SHALL have one solution.
+A game's params encoding appears inside every shared game ID, so it SHALL be
+held byte-stable by an assertion rather than by policy alone, and the corpus
+that assertion runs over SHALL be derived from each game's own declarations
+rather than authored. The corpus SHALL carry a vacuity guard on both the
+number of games and the number of cases.
 
-#### Scenario: A game ID upstream wrote with its checks on
+#### Scenario: A changed encoding is reported before it ships
 
-- **WHEN** a desc from a frozen upstream fixture is loaded under the params its
-  fixture states
-- **THEN** it loads, unless the fixture records that upstream's own solver
-  found several answers on it, and a fixture naming an option that switches a
-  generator's checks off names it at the value that leaves them on
+- **WHEN** a change alters the string any game encodes for reachable params
+- **THEN** the byte-stability snapshot fails, naming the game and the case
+
+#### Scenario: The guard cannot pass over an empty corpus
+
+- **WHEN** the registry is unpopulated, or a game contributes no cases
+- **THEN** the vacuity guard fails rather than every downstream assertion
+  passing over nothing
+
+### Requirement: Encode and decode are mutual inverses over the corpus
+
+Encode and decode SHALL be mutual inverses for every case in the corpus,
+compared through the encoded string. This SHALL be asserted as a property and
+not a fixture, for every registered game with no exemption roster: it survives
+a preset being added and cannot be re-baselined.
+
+#### Scenario: A codec that stops being invertible is reported
+
+- **WHEN** a decoder stops recovering a field its encoder writes
+- **THEN** the mutual-inverse assertion fails for that game, independently of
+  the snapshot
+
+### Requirement: The recorded params encodings do not move
+
+The recorded encodings SHALL NOT move, held as a per-game snapshot.
+Re-baselining the snapshot is a compatibility decision that SHALL go to the
+owner beforehand with the cost stated, and SHALL NOT be applied as a
+formatting fix with `vitest -u`.
+
+#### Scenario: A change would move a recorded encoding
+
+- **WHEN** a change makes a game encode a recorded case as a different string
+- **THEN** the snapshot is not re-baselined until the owner has agreed to the
+  break with its cost stated
+
+### Requirement: A preset title that names a difficulty names its own tier
+
+A preset title that uses one of the collection's difficulty words SHALL use the
+word for that preset's own tier, and SHALL derive it from the game's tier list
+rather than restate it. A title that names no difficulty is permitted.
+
+#### Scenario: A preset named for something else
+
+- **WHEN** a preset's title names a symbol range or a mode and no difficulty,
+  as Salad's and Solo's Killer preset do
+- **THEN** it passes, with no exemption list

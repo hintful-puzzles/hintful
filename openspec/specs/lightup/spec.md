@@ -87,11 +87,13 @@ characters, short descs and over-long descs.
 
 ### Requirement: Light Up accepts pointer and cursor input
 
-A left-click SHALL toggle a bulb on an open square that carries no mark. A
-right-click SHALL toggle the impossible-mark on an open square that carries no
-bulb. A click on a wall or outside the grid SHALL be a no-op. A left-click on
-a marked square, and a right-click on a bulb, SHALL be rejected without a
-history entry.
+A left-click SHALL toggle a bulb on an open square that carries no mark, and a
+right-click the impossible-mark on an open square that carries no bulb. A
+click on a wall or outside the grid SHALL be a no-op. A left-click on a marked
+square, and a right-click on a bulb, SHALL be rejected without a history
+entry. A right-drag SHALL repeat the right-click on the squares it passes that held
+what the pressed square held, and a left-drag SHALL repeat nothing, because a
+row of bulbs light each other.
 
 #### Scenario: Left-click places and toggles a bulb
 
@@ -104,6 +106,13 @@ history entry.
 
 - **WHEN** the player left-clicks a square carrying an impossible-mark
 - **THEN** no move is produced and no history entry is created
+
+#### Scenario: A right-drag crosses a row
+
+- **WHEN** the player right-drags across three empty open squares
+- **THEN** all three carry the impossible-mark
+- **AND WHEN** the player left-drags across three empty open squares
+- **THEN** only the first holds a bulb
 
 ### Requirement: Light Up's keyboard cursor
 

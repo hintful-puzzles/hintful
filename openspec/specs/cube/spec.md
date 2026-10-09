@@ -35,17 +35,6 @@ where `x<d2>` is missing `d2` SHALL default to `d1`.
 - **AND** decoding `c4x4`, `4x4`, and `4` all yield well-formed params with
   `d2` defaulting to `d1` when the `x<d2>` segment is absent
 
-### Requirement: Cube has a status bar and neither a solver nor a text format
-
-The game SHALL provide `statusbarText`, and SHALL NOT provide `solve` or
-`textFormat`: Cube is a route puzzle with no solver, hint, mistake check or
-text format.
-
-#### Scenario: The game object carries no solver
-
-- **WHEN** the registered `cube` game is inspected
-- **THEN** it has a `statusbarText` hook and no `solve` or `textFormat` hook
-
 ### Requirement: A Cube move is one of four orthogonal rolls
 
 A `CubeMove` SHALL be a roll in one of the four orthogonal directions. Input

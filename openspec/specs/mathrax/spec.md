@@ -192,12 +192,15 @@ Tricky SHALL be unaffected.
   top tier exactly as the difficulty menu does
 - **AND** the same parameters validate successfully when a description is supplied
 
-### Requirement: Mathrax solves and generates over the shared Latin-square framework
+### Requirement: What separates Mathrax's difficulty tiers
 
-Mathrax SHALL solve using the shared Latin-square solver framework, contributing its
-own clue deductions: for each cell it SHALL intersect its candidate digits with those
-permitted by each adjacent clue given the opposite cell's candidates, across the Easy,
-Normal, Tricky and `Unreasonable` difficulty levels.
+Beside the shared Latin deductions, Mathrax's clue deduction SHALL keep in a
+cell only the digits every clue at its corners permits, given the candidates of
+the cell across that clue. Easy SHALL read an arithmetic clue only when the cell
+across it is down to one digit. Easy and Normal SHALL act only where one digit
+is left; Tricky SHALL strike all that is ruled out. Normal SHALL add the shared
+set elimination, Tricky the harder one and forcing chains, and `Unreasonable`
+guessing and verifying.
 
 #### Scenario: The solver solves a generated board
 

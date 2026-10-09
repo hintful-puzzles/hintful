@@ -56,7 +56,7 @@ export const COL_LIT = 4; // yellow lit-square fill
 export const COL_ERROR = 5;
 export const COL_CURSOR = 6;
 // Fork hint colors.
-export const COL_HINT = 7; // forced cell(s), blue fill (highlight only)
+export const COL_HINT = 7; // forced cell(s), blue ring (highlight only)
 export const COL_HINT_CELL = 8; // evidence: the shade on a *dark* square
 export const COL_HINT_LITERF = 9; // cited lit/bulb premise (green ring)
 export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (pink ring)
@@ -130,7 +130,7 @@ const DF_WRONG = 512;
 /** Fork addition: the show-lit-blobs pref, in the key so a toggle repaints. */
 const DF_BLOBS_PREF = 1024;
 // Fork additions: the displayed hint step, in the key so hint changes repaint.
-const DF_HINT_TARGET = 2048; // forced cell — blue COL_HINT fill
+const DF_HINT_TARGET = 2048; // forced cell — blue COL_HINT ring
 const DF_HINT_AREA = 4096; // evidence — shade when dark, green ring when lit
 const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — pink ring
 const DF_HINT_CLUE = 16384; // driving clue: its wall ringed

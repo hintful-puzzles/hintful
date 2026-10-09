@@ -461,18 +461,6 @@ grid its tiles can be slid into, which no generator writes, SHALL be refused.
 - **THEN** the board is dealt and Solve is refused with "This game ID doesn't
   include its solution, and this puzzle has no solver to work one out."
 
-### Requirement: Netslide has no mistake check
-
-Netslide SHALL NOT implement `findMistakes`. Every reachable board is legal,
-since the solution can still be reached from any state by sliding, so there is
-no wrong-but-legal state to flag, and Check & Save SHALL flag no mistake on
-any board.
-
-#### Scenario: Check & Save on a scrambled board
-
-- **WHEN** Check & Save is used on a board the player has slid about
-- **THEN** no mistake is flagged
-
 ### Requirement: Netslide draws its tiles on a quiet surface
 
 `redraw` SHALL draw each tile's face as the collection's cell surface, with

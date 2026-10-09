@@ -148,7 +148,7 @@ export default defineConfig({
     // ONE generous ceiling for the whole suite; no test sets its own.
     //
     // A timeout here is a backstop against a runaway test, NOT a performance
-    // assertion — the `repo-layout` determinism requirement forbids failing a
+    // assertion — the `testing` determinism requirement forbids failing a
     // test as a function of CPU contention, and this box is deliberately busy,
     // so an otherwise-good commit must never be rejected merely for elapsed
     // time. The heaviest suites are correct-but-slow by nature (Sixteen's exact
@@ -193,7 +193,7 @@ export default defineConfig({
     // `optimize-test-suite-performance`.
     //
     // Safe ONLY because the suite is order-independent under shared module
-    // state (the `repo-layout` "deterministic under parallel load"
+    // state (the `testing` "deterministic under parallel load"
     // requirement). There are **two** shared mutable singletons, not one:
     //
     //  - the game `registerGame` registry, populated by an idempotent

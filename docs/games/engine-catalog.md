@@ -1385,7 +1385,8 @@ meaning-first discipline: [`rendering.md`](./rendering.md) § "The palette: thre
 ### `random/` — the bit-identical RNG
 
 Upstream `random.c`, byte-for-byte: identical seeds produce identical
-streams, which is what keeps shared game IDs reproducible across builds.
+streams, so a seed keeps feeding a generator the same numbers, which the
+fixtures and seeded tests rest on.
 Frozen replay corpus in `__fixtures__/`. **Any generator that must reproduce
 a seed treats every draw as an observable side effect** (see the grid rules
 above).

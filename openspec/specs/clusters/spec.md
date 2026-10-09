@@ -113,8 +113,10 @@ by the single-cell reasoning alone, and a board dealt at Normal SHALL NOT be.
 
 ### Requirement: Clusters refuses to generate Normal on a board too small for it
 
-Clusters SHALL refuse to generate at Normal on a board too small to admit one,
-reporting it through parameter validation with `full` set, so that a saved game
+Clusters SHALL refuse to generate at Normal on a board of fewer than 12
+squares, or one whose shorter side is less than two, which is too small to
+admit one. It SHALL
+report this through parameter validation with `full` set, so that a saved game
 or a game ID carrying its own description still loads at any size.
 
 #### Scenario: A board too small for the harder tier refuses it

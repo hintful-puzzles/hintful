@@ -257,7 +257,7 @@ ordinary player request.
 
 - **WHEN** the generator spends its whole retry cap on a configuration that
   validation admits for generation
-- **THEN** it throws, and deals no fallback board
+- **THEN** it throws `RetryLimitExceeded` and deals no fallback board, and the player is shown the engine's sentence that no board was found
 
 ### Requirement: ABCD offers an explained hint
 

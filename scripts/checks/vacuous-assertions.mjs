@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * The vacuity guard: a test whose every assertion sits under an `if` must also
- * say how many cases it examined (`build-pipeline`, "The gate rejects a
+ * say how many cases it examined (`testing`, "The gate rejects a
  * test whose every assertion is conditional").
  *
  * **Why this exists.** `tidy-the-code-after-the-port` gave every agent one

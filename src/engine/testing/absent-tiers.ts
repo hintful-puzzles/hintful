@@ -1,6 +1,6 @@
 /**
  * The cells a game refuses because no board of that size needs the tier asked
- * for (`ts-migration` spec, "An unbindable tier is refused, not silently
+ * for (`engine-difficulty` spec, "An unbindable tier is refused, not silently
  * downgraded"), and what each owes.
  *
  * A refusal of this kind is a claim of absence, and a claim of absence is

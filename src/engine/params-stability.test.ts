@@ -4,7 +4,7 @@
  *
  * A game's params appear inside every shared game ID, so changing how a game
  * encodes them silently invalidates every link anyone has ever shared of it.
- * The `ts-migration` spec asks for an assertion and not policy alone ("Encoded
+ * The `engine-params` spec asks for an assertion and not policy alone ("Encoded
  * params are byte-stable, and the guard is derived"), and this file is it. The
  * frozen differentials cover **descs**, not params, so without it a codec
  * could be rewritten with the whole suite green.

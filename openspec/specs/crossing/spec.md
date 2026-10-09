@@ -83,16 +83,6 @@ whose candidates collapse to a single digit, iterating to a fixpoint.
 - **THEN** the solver fills every open cell so that each clue number appears
   exactly once across the runs, and reports the board valid
 
-### Requirement: The solver calls a board valid only when every clue is used once
-
-The solver SHALL report a board valid only when every run matches exactly one
-clue number and each clue number is used exactly once.
-
-#### Scenario: A board the propagation cannot finish is not valid
-
-- **WHEN** the propagation reaches a fixpoint with an open cell still undecided
-- **THEN** the solver reports the board as not fully determined, and not as valid
-
 ### Requirement: Crossing's generator keeps every board uniquely solvable
 
 The generator SHALL accept a board only when the solver reports it valid, so
@@ -433,11 +423,10 @@ merely what to enter.
 - **THEN** the hint offers that number as a single placement filling the whole
   run, and the explanation states that only one number still fits
 
-### Requirement: The hint replays the solver's deduction and leaves the solver alone
+### Requirement: The hint replays the solver's deduction
 
 The hint SHALL be derived from the same deduction engine as the solver,
-replayed one firing at a time, and SHALL NOT alter the solver, the generator or
-the description codec.
+replayed one firing at a time.
 
 #### Scenario: Following the hint solves the board
 
@@ -516,9 +505,8 @@ and SHALL NOT cite entries the board does not carry.
 
 ### Requirement: Every Crossing hint step is narrated
 
-Crossing admits no guessing at any difficulty, so every step SHALL be
-narratable and the hint SHALL NOT fall back on an unexplained "this is the only
-possibility" step.
+Every step of a Crossing hint plan SHALL carry an explanation that names the
+run its deduction reasons over.
 
 #### Scenario: Every step of a plan has its deduction
 

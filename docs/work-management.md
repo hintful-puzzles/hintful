@@ -46,6 +46,16 @@ Three things, and no others:
   cannot read what a newer one writes is not a cost and is never asked about;
   the app is served, and there is one current version.
 
+A new visual direction for the chrome is the first of the three and is never
+a call to make alone: the owner chooses it on sight, from drawn alternatives,
+before any implementation begins. A visual direction is a decision made by
+looking, and code written ahead of it is work spent on a guess. This is about
+a direction (a palette, a type scale, the layout of a surface) where none is
+recorded for the surface being changed; a change inside the recorded direction
+cites it and goes ahead (`app-shell`, "The chrome follows a recorded design
+direction of this project's own"; the head of `src/css/theme.css` names the
+one in force).
+
 During a run of framework refactoring the owner may defer testing to the end
 of the arc. Take that as said only when it is said.
 

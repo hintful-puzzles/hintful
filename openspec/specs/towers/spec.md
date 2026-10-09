@@ -155,7 +155,7 @@ auto-sized grid layout.
 - **WHEN** the same board is rendered with the appearance preference set to 2D
 - **THEN** given towers are drawn as centered digits with no tower polygons
 
-### Requirement: Towers tells its inks and its selection apart
+### Requirement: Towers tells its inks apart
 
 The renderer SHALL color given towers, user-entered towers, struck-through
 ("done") clues, and error cells distinctly.

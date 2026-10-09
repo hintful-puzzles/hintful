@@ -92,6 +92,9 @@ too few squares.
 Salad's solver SHALL provide two difficulties, Easy and Normal, and both SHALL
 be solvable by pure deduction without guessing. To the shared Latin deductions
 it SHALL add one of its own, the border-clue deduction, in ABC End View mode.
+Easy SHALL be that deduction and the shared positional and numeric
+eliminations, and Normal SHALL add the shared set elimination and forcing
+chains.
 
 #### Scenario: The solver deduces the unique solution without guessing
 
@@ -388,9 +391,8 @@ past the board's symbols.
 Salad's presets SHALL include boards at each difficulty the game deals, so a
 player reaches Normal from the menu and every cross-game guard that deals from a
 game's presets deals a Normal Salad board. The Normal presets SHALL be shapes
-whose deal stays well under a second. The menu SHALL hold one section for each
-game mode, and within a section each shape's Normal preset SHALL follow its Easy
-one.
+whose deal stays well under a second. Within a mode each shape's Normal preset
+SHALL follow its Easy one.
 
 #### Scenario: Normal is on the menu
 
@@ -404,12 +406,6 @@ one.
   field they vary
 - **THEN** difficulty is one of those fields, and a Normal board is among the
   boards it deals
-
-#### Scenario: Each mode has a section
-
-- **WHEN** Salad's preset menu is read
-- **THEN** its top level is two sections, one for each game mode, and every
-  preset sits in the section of its own mode
 
 ### Requirement: Salad draws its squares on a quiet surface, with a given's lifted
 

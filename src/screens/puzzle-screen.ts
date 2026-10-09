@@ -648,8 +648,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     if (!opensAMenu) this.focusBoard();
   };
 
-  /** Toggle the non-blocking reference panel (the toolbar reference button and
-   * the game menu both route here via `data-command="toggle-reference"`).
+  /** Toggle the non-blocking reference panel (the Game controls' reference
+   * button routes here via `data-command="toggle-reference"`).
    * Closing deliberately KEEPS any board spotlight: on a small screen the common
    * flow is mark a domino, close the (large) panel to see the board, then place
    * it. Escape (or re-clicking the chip) clears the spotlight. */

@@ -34,7 +34,7 @@ export type FifteenMove = { type: "move"; x: number; y: number } | { type: "solv
 export interface FifteenUi {
   /** Upstream's arrow-semantics preference: `false` means the pressed arrow
    * moves a *tile* that way, so the gap moves the opposite way. Always
-   * `false`, because the engine has no preferences hook to expose it. */
+   * `false`: the game declares no preference that sets it. */
   invertCursor: boolean;
 }
 

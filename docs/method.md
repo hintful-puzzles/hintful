@@ -36,7 +36,10 @@ passing.
 
 An unmatched `import.meta.glob` yields `{}`, an empty directory yields no
 iterations, and a filter can exclude everything. Every assertion downstream
-then passes over nothing. Count the inputs and assert the count.
+then passes over nothing. Count the inputs and assert the count. The count is
+a floor set well below the true value, because its job is to tell working
+from resolving nothing; it is not one of the ratcheted thresholds of
+`docs/games/testing.md` § "Metrics and instruments".
 
 ## A sweep that finds zero owes a power argument
 

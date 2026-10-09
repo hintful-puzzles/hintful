@@ -24,10 +24,11 @@ codec the library uses, so it works for every game without per-game code.
 - **AND** a second quick-save overwrites the slot rather than adding a
   second record
 
-### Requirement: The presence of a quick-save is observable
+### Requirement: Quick-load is unavailable until the puzzle has a quick-save
 
-Whether a puzzle has a quick-save SHALL be observable reactively, so that a
-quick-load control can enable and disable itself.
+The Quick-load control SHALL be disabled while the current puzzle has no
+quick-save, and SHALL become enabled as soon as one is made, without the page
+being reloaded.
 
 #### Scenario: Quick-load disabled with no slot
 
