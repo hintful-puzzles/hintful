@@ -4,8 +4,7 @@
  * (paint-twice, so the overlay is proven to live in the diff key).
  *
  * Heavy solver checks use frozen fixture descs (not fresh generation), so they
- * are fast and deterministic; the generator's Easy byte-match and the grade of
- * C's boards are covered by `tracks-differential.test.ts`.
+ * are fast and deterministic.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -36,7 +35,7 @@ import { tracksGame } from "./index.ts";
 // A 4x4 above Easy.
 describeAbsentTiers(tracksGame, ["4x4dt", "4x4dh"]);
 
-// The size beside it, whose Hard is rare enough to have set the retry budget.
+// The size beside it, which deals both.
 describeDealtTiers(tracksGame, ["4x5dt", "4x5dh"], { deals: 8 });
 
 import { executeMove, uiCanFlipSquare } from "./moves.ts";
@@ -139,7 +138,7 @@ describe("tracks solver", () => {
 
   it("grades the HARD fixture Tricky, and the Normal solver cannot finish it", () => {
     const strip = () => copyAndStrip(stateToBoard(newState(HARD.p, HARD.desc)), -1);
-    expect(tracksSolve(strip(), DIFF_COUNT).maxDiff).toBe(2 /* DIFF_HARD */);
+    expect(tracksSolve(strip(), DIFF_COUNT).maxDiff).toBe(DIFF_HARD);
     expect(tracksSolve(strip(), DIFF_TRICKY).ret).toBeLessThan(1);
   });
 
@@ -150,22 +149,19 @@ describe("tracks solver", () => {
     expect(tracksSolve(solved, DIFF_COUNT).ret).toBe(1);
   });
 
-  // These seeds exhausted `retryLimit` at 15x15 Hard while `addClues` rejected
-  // every bare board that stalled short of Hard (`deal-every-tracks-board`).
+  // Sizes upstream's walk could not span: it kept one walk in 100,000 at 60x8,
+  // and none of those under `singleOnes`.
   it.each([
-    "pin-0",
-    "pin-66",
-    "pin-71",
-    "pin-79",
-    "pin-83",
-    "pin-94",
-    "pin-96",
-  ])("deals 15x15 at DIFF_HARD (shown as Tricky) from seed %s, at exactly that tier", (seed) => {
-    const p: TracksParams = { w: 15, h: 15, diff: DIFF_HARD, singleOnes: true };
-    const { desc } = newDesc(p, randomNew(seed));
-    const strip = () => copyAndStrip(stateToBoard(newState(p, desc)), -1);
-    expect(tracksSolve(strip(), DIFF_HARD)).toEqual({ ret: 1, maxDiff: DIFF_HARD });
-    expect(tracksSolve(strip(), DIFF_TRICKY).ret).toBeLessThan(1);
+    ["60x8", 60, 8],
+    ["8x60", 8, 60],
+    ["40x12", 40, 12],
+    ["24x24", 24, 24],
+  ])("deals a %s at Easy with a track in every row and column", (_, w, h) => {
+    const p: TracksParams = { w, h, diff: 0, singleOnes: true };
+    const { desc } = newDesc(p, randomNew(`tracks-large-${w}x${h}`));
+    const board = stateToBoard(newState(p, desc));
+    expect([...board.numbers].every((n) => n > 0)).toBe(true);
+    expect(tracksSolve(copyAndStrip(board, -1), 0)).toEqual({ ret: 1, maxDiff: 0 });
   });
 });
 

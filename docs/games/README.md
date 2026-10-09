@@ -356,9 +356,10 @@ C engine, its build system, and finally the `puzzles/` tree entirely
 (`retire-c-engine` → `rehome-upstream-help-sources`, 2026-08-01). The C is
 readable in git history (`git show pre-ts-pivot:puzzles/<game>.c`); there is no
 running build to ask new questions of, so a new question is answered
-behaviorally. The 48 frozen JSON differentials still run and are the
-refactoring net — do not delete them, and do not try to re-baseline one (you
-cannot; see [`testing.md`](./testing.md) § "The frozen differentials").
+behaviorally. The frozen JSON differentials that remain are a refactoring
+net: do not try to re-baseline one (you cannot), and delete one a divergence
+has left nothing to hold (see [`testing.md`](./testing.md) § "The frozen
+differentials").
 Byte-parity with upstream was a porting tool, released on 2026-08-01: diverge
 where it buys the player something, and say what replaces the oracle
 ([`solver-and-generator.md`](./solver-and-generator.md) § "Divergence and what

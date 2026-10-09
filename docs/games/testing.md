@@ -383,15 +383,21 @@ completed board. Exemplar: [`tracks.test.ts`](../../src/games/tracks/tracks.test
 
 ## The frozen differentials
 
-**48 games carry `<game>-differential.test.ts` against a frozen
+**Most games carry `<game>-differential.test.ts` against a frozen
 `__fixtures__/*.json` recorded from the C build before `retire-c-engine`
 (2026-08-01). The fixtures cannot be regenerated — ever — and that is by
 decision, not accident.** There is no C build to ask "what would upstream have
 produced?", so a deliberate divergence *retires or re-founds* its fixture
-rather than re-recording it. What a fixture still does, and why all are kept:
+rather than re-recording it. What a fixture still does:
 **it is the net under refactoring**. A change that alters a solver's verdict
 alters which boards exist, which is exactly what these catch — nothing else in
 the suite would notice a solver that got quietly stronger.
+
+**None is kept for parity's sake**, and a fixture may be deleted with its test
+(owner, 2026-10-09: *"we're really long past our need to maintain parity with
+upstream during the port, and I'd be absolutely ok with you removing any such
+old fixtures"*). Tracks' went when its path was laid another way: every seed
+then dealt another board, and the tier contract grades what it deals.
 
 The full statement lives once, in
 [`differential.ts`](../../src/engine/testing/differential.ts) (the shared

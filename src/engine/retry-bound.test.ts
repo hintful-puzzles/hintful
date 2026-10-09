@@ -175,9 +175,10 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   "games/solo/generator.ts › newSoloDesc": [
     "each pass merges cages or leaves, and misses count `ntries` to 50",
   ],
-  "games/tracks/generator.ts › layPath": [
-    "lays track on an empty cell each pass, or stops",
+  "games/tracks/generator.ts › spreadOnes": [
+    "each bend leaves one line fewer with a clue of 1, or it stops",
   ],
+  "games/tracks/generator.ts › walk": ["enters a free square each pass, or stops"],
   "games/twiddle/state.ts › newDesc": [
     "rejection sampling over rotations, and its condition skips the board where none is acceptable",
   ],

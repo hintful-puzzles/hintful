@@ -630,11 +630,11 @@ Dealt 2026-10-06: up to 4 deals a cell, a ladder ended by a deal over 10 s, a de
 
 ## tracks
 
-- `15x15de` quick · `23x23de` 0.3 s, slowest 0.6 · `30x30de` 1 s, slowest 2 · `45x45de` 2 s, slowest 2, gave up on 4 of 4 · `60x60de` 3 s, slowest 3, gave up on 4 of 4 · `90x90de` 5 s, slowest 5, gave up on 2 of 2 · `120x120de` 8 s, slowest 8, gave up on 2 of 2
-- `15x15dt` 0.1 s, slowest 0.1 · `23x23dt` 0.6 s, slowest 0.8 · `30x30dt` 2 s, slowest 3, gave up on 2 of 4 · `45x45dt` 9 s, slowest 16, gave up on 1 of 2
-- `15x15dh` 0.2 s, slowest 0.4 · `23x23dh` 1 s, slowest 1 · `30x30dh` 4 s, slowest 5 · `45x45dh` 2 s, slowest 2, gave up on 4 of 4 · `60x60dh` 3 s, slowest 3, gave up on 4 of 4 · `90x90dh` 5 s, slowest 5, gave up on 2 of 2 · `120x120dh` 8 s, slowest 8, gave up on 2 of 2
+- `15x15de` quick · `23x23de` 0.5 s, slowest 0.7 · `30x30de` 0.8 s, slowest 1 · `45x45de` 15 s, slowest 15
+- `15x15dt` 0.1 s, slowest 0.1 · `23x23dt` 0.6 s, slowest 0.9 · `30x30dt` 3 s, slowest 4 · `45x45dt` 20 s, slowest 20
+- `15x15dh` 0.1 s, slowest 0.1 · `23x23dh` 1 s, slowest 2 · `30x30dh` 5 s, slowest 7 · `45x45dh` 43 s, slowest 43
 
-Dealt 2026-10-06: up to 4 deals a cell, a ladder ended by a deal over 10 s, a deal killed at 60 s, a 2048 MB heap, 3 games at once; at its start, load 3.2, 0.5 GB free, swap total = 10240.00M  used = 8740.31M  free = 1499.69M  (encrypted).
+Dealt 2026-10-09: up to 4 deals a cell, a ladder ended by a deal over 10 s, a deal killed at 60 s, a 2048 MB heap, games dealt at once: 1; at its start, load 6.1, 0.5 GB free, swap total = 14336.00M  used = 13782.25M  free = 553.75M  (encrypted).
 
 ## twiddle
 

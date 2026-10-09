@@ -1066,6 +1066,32 @@ count*, which neither a `w` bound nor an `h` bound would have expressed.
 Exemplar: [`seismic/state.ts`](../../src/games/seismic/state.ts)
 (`MAX_CELLS`, measurement table in its doc comment).
 
+**A filter that throws away what a draw could have been made to produce is a
+fourth case, and its fix is neither a retry nor a refusal: build it in.**
+Tracks drew a free random walk and threw away every one that left a row or
+column without track, and then every one whose clues had two 1s together. The
+walk is about 25 squares long at any size, so the first filter kept one walk
+in 13 at 8x8 and one in 100,000 at 60x8, and the second kept none of the
+tracks of a 200x8. Lifting the bound showed nothing else failing: clue-laying
+took one to three tracks a board at every size. Two things to take from
+[`tracks/generator.ts`](../../src/games/tracks/generator.ts):
+
+- **Ask what each try is thrown away for before sizing a budget to the rate.**
+  Count the tries each filter turns away, by size. A rate that falls with size
+  while the stage after it holds steady is a property the draw could have had
+  from the start. Here the walk may not leave while a line is bare and never
+  steps where the free squares no longer reach every bare line, which finishes
+  two times in three from 5x5 to 50x50; and a forbidden 1 is bent out of a
+  finished track.
+- **Making a draw succeed makes each try cost a whole draw, so every filter
+  left behind it gets dearer.** With only the walk fixed, a 200x8 went from
+  running out in a second to grinding through 10,000 whole tracks before
+  saying no. Walk the thin shapes as well as the square ones, and time the
+  run-out again after the fix.
+
+It changes which boards are dealt, and that is a thing to measure and say:
+the tracks of a 15x15 went from 83 squares to 100.
+
 ### Bound a generator by its tail, not its median
 
 **One seed per size is not a measurement.** Seismic's size bound was first

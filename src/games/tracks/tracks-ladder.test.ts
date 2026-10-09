@@ -3,11 +3,10 @@
  * fire. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
- * **The byte-match differential cannot certify the ladder on its own.**
- * Mis-declare a rung's *tier* and it goes red, but delete `check-single`
- * entirely and it stays green: that rung fires on no board this generator
- * produces (measured: 324 solves, every other rung firing, that one zero), and
- * no corpus can guard what nothing reaches.
+ * **No corpus of boards can certify the ladder on its own.** Delete
+ * `check-single` entirely and every board still grades as it did: that rung
+ * fired on no board in 324 solves, every other rung firing, and no corpus can
+ * guard what nothing reaches.
  */
 
 import { randomNew } from "../../engine/random/index.ts";
