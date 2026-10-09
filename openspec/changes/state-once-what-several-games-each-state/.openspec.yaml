@@ -1,0 +1,4 @@
+# No delta yet: the session that takes this up writes it, and removes this flag.
+schema: spec-driven
+created: 2026-10-09
+skip_specs: true

@@ -53,12 +53,12 @@ incident only what a later session acts on: the rule, and the shape to look for.
   anything they asked for by name, and a compatibility break (asked before).
 - **A decision is persisted by a commit, or it did not happen.** Never cite an
   agent-private note to the owner.
-- **An issue your change turned up, and gave you the context for, is yours
-  now.** The same defect in the next game or the shared layer: file its change
-  and do it in this session, unasked. Ask only about a distinct thing: what it
-  is, and whether to take it on here, in a new session, or not at all, with a
-  recommendation. Otherwise the session ends by handing an existing change to
-  a fresh one (`docs/work-management.md` § "The backlog is being drained").
+- **What your change turned up is yours to file, unasked.** The same defect in
+  the next game or the shared layer: do it in this session. A bug or a
+  worthwhile opportunity the work found, where you can say what to do: scaffold
+  its change and hand it to a fresh session. The here, later or never ask is
+  for new optional work only (`docs/work-management.md` § "The backlog is
+  being drained").
 - **Bring a question with everything you could find out.** Run the app,
   measure, read the code first. Never report to the owner that you did not
   look at something you could have.
@@ -187,5 +187,5 @@ coherent unit of work.
   start without an answer from the owner, commit, push and leave the tree
   clean, then call `mcp__continue-session__continueInNewSession` with the
   prompt `Hi, please take on openspec/changes/<id>` as the last action of the
-  turn. Nothing carries over but the repo. Only a session that owes the owner
-  a decision, or has no such change or no tool, ends the ordinary way.
+  turn. Nothing carries over but the repo. A question for the owner goes in
+  the change it blocks. Stop only when no change can start without an answer.

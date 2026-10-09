@@ -80,31 +80,35 @@ nothing. The next session starts from the repo.
 ## The backlog is being drained
 
 The owner's decision (2026-10-07): the open changes are worked down to none
-before new product work starts, and a session does not add to them. Changes
-were being opened as fast as they were closed, about ten a day each way, and a
-well-scoped change goes stale when the code moves under it.
+before new product work starts, and a session adds to them only what its own
+work found. Changes were being opened as fast as they were closed, about ten
+a day each way, and a well-scoped change goes stale when the code moves under
+it.
 
-- **A session ends one of two ways.** Its change is archived and it hands an
-  existing change to a fresh session; or it found a distinct new issue, and it
-  asks the owner. It takes as long as the change needs.
+- **A session ends by handing a change to a fresh session**, once its own is
+  archived. It stops, with its questions, only when no open change can start
+  without the owner's answer. It takes as long as the change needs.
 - **An issue the change gave you the context for is taken on at once** (owner,
   2026-10-08): the defect just fixed, found again in another game or in the
   shared layer. The session that fixed the first holds everything the second
   needs, and a fresh session would rebuild it. File a change of its own, after
   the first is archived, and do it without asking.
-- **A session files no other change on its own.** For a distinct issue, the ask
-  says what it is and what it costs a player, and offers three answers with a
-  recommendation: take it on in this session, in a new session (the owner's
-  yes is what files the change), or not at all.
-- **The ask carries what an informed answer needs** (owner, 2026-10-08): the
-  defect seen in the running app, how often it occurs, what the fix would
-  touch. An ask that says what the session did not check is not ready.
-- **Only an issue whose benefit is unambiguously strong is worth the ask**: a
-  player hits the defect, or data is at risk. That several games write the
-  same thing is not such a benefit while the backlog drains, however true.
-  What is small and needed by the change's own goal is fixed there, unasked.
-- **Finish the change before asking.** The ask comes with the change
-  archived, unless the issue blocks it.
+- **What the work found is filed, unasked, and handed on** (owner,
+  2026-10-09): a bug the change turned up, or an opportunity you judge worth
+  the work, where you can say what to do about it. Scaffold its change with
+  its `tasks.md`, after your own is archived, and hand it to a fresh session.
+  The proposal carries what an informed reader needs: the defect seen in the
+  running app, how it is reached, what the fix would touch. A finding you
+  would not spend a session on is not filed; say that you looked.
+- **The three-way ask is for new optional work only**: something nobody's
+  change found, that the product does not need. The ask says what it is and
+  what it costs a player, and offers three answers with a recommendation:
+  take it on in this session, in a new session, or not at all.
+- **A question for the owner is written into the change it blocks**, and that
+  change waits as a draft while the session takes another. An ask that says
+  what the session did not check is not ready (owner, 2026-10-08).
+- **What is small and needed by the change's own goal is fixed there**,
+  unasked.
 - **A change does not grow to hold what would have been filed.** It absorbs
   what its goal requires and no more.
 - **Game ports and hints wait.** `add-*-ts-port`, a game's hint and
