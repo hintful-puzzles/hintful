@@ -1,11 +1,10 @@
 # turn-the-specs-into-a-reference
 
-**Status: scaffolded, not started (2026-10-08).** Filed on the owner's word the
-same day: the specs have "too many lines, many of which could possibly be
-combined or otherwise integrated, to make it more useful as a resource, rather
-than just being a write-only journal". The owner asked for it to be filed and
-not yet done: it waits for their word to start, and a session choosing its
-next change passes over it.
+**Status: in progress, taken up on the owner's word (2026-10-09).** Filed on
+the owner's word the day before: the specs have "too many lines, many of which
+could possibly be combined or otherwise integrated, to make it more useful as
+a resource, rather than just being a write-only journal". `tasks.md` says how
+far it has got.
 
 **The open question, which decides the form** (owner, 2026-10-08): are the
 specs a resource a session works from, or a by-product of tracking the work?
