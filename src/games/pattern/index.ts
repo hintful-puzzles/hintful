@@ -270,9 +270,14 @@ function interpretMove(
     const ret = moveCursor(ui.cursor, button, w, h) ? UI_UPDATE : null;
 
     const newstate: GridVal = control ? (shift ? GRID_UNKNOWN : GRID_FULL) : GRID_EMPTY;
+    // A paint stroke (not a clear) only fills blank squares, as the paint drag
+    // does: Enter and Space are the way to change a square already marked.
+    const onlyBlank = newstate !== GRID_UNKNOWN;
+    const wouldChange = (v: number) =>
+      onlyBlank ? v === GRID_UNKNOWN : v !== newstate;
     if (
-      grid[oy * w + ox] === newstate &&
-      grid[ui.cursor.y * w + ui.cursor.x] === newstate
+      !wouldChange(grid[oy * w + ox]) &&
+      !wouldChange(grid[ui.cursor.y * w + ui.cursor.x])
     ) {
       return ret;
     }
@@ -283,6 +288,7 @@ function interpretMove(
       y: Math.min(oy, ui.cursor.y),
       w: Math.abs(ox - ui.cursor.x) + 1,
       h: Math.abs(oy - ui.cursor.y) + 1,
+      onlyBlank,
     };
   }
 

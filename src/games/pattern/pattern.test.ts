@@ -15,10 +15,13 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
+  CURSOR_RIGHT,
   CURSOR_SELECT,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MOD_CTRL,
+  MOD_SHFT,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -36,6 +39,7 @@ import {
   GRID_EMPTY,
   GRID_FULL,
   GRID_UNKNOWN,
+  type GridVal,
   isComplete,
   newState,
   type PatternMove,
@@ -397,6 +401,50 @@ describe("pattern drag-paint skips placed marks", () => {
       GRID_UNKNOWN,
       GRID_UNKNOWN,
     ]);
+  });
+});
+
+describe("pattern keyboard stroke skips placed marks", () => {
+  /** The top row's first two squares set to `marks`, the cursor on (0,0), and
+   * one arrow right with `mods` held: the move and the board after it. */
+  function stroke(marks: [GridVal, GridVal], mods: number) {
+    let st = newState({ w: 5, h: 5 }, "4/2.2/2/1/2/2/2/1/3.1/4");
+    marks.forEach((value, x) => {
+      st = executeMove(st, { type: "fill", value, x, y: 0, w: 1, h: 1 });
+    });
+    const ui = patternGame.newUi(st);
+    const move = patternGame.interpretMove(
+      st,
+      ui,
+      preferredDrawState(patternGame, st),
+      { x: 0, y: 0 },
+      CURSOR_RIGHT | mods,
+    );
+    const after =
+      move !== null && move !== UI_UPDATE ? executeMove(st, move as PatternMove) : st;
+    return { move, ui, cells: [after.grid[0], after.grid[1]] };
+  }
+
+  it("shades the blank square and leaves the one marked clear", () => {
+    const { cells, ui } = stroke([GRID_EMPTY, GRID_UNKNOWN], MOD_CTRL);
+    expect(cells).toEqual([GRID_EMPTY, GRID_FULL]);
+    expect(ui.cursor.x).toBe(1);
+  });
+
+  it("marks the blank square clear and leaves the shaded one", () => {
+    const { cells } = stroke([GRID_UNKNOWN, GRID_FULL], MOD_SHFT);
+    expect(cells).toEqual([GRID_EMPTY, GRID_FULL]);
+  });
+
+  it("makes no move over two marked squares, and still moves the cursor", () => {
+    const { move, ui } = stroke([GRID_EMPTY, GRID_EMPTY], MOD_CTRL);
+    expect(move).toBe(UI_UPDATE);
+    expect(ui.cursor.x).toBe(1);
+  });
+
+  it("clears both marked squares with Ctrl and Shift together", () => {
+    const { cells } = stroke([GRID_EMPTY, GRID_FULL], MOD_CTRL | MOD_SHFT);
+    expect(cells).toEqual([GRID_UNKNOWN, GRID_UNKNOWN]);
   });
 });
 

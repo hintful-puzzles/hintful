@@ -14,8 +14,10 @@ square with nothing in it is one you have not decided yet.
 Drag along a row or column to give every undecided square on it what
 the first square turned into. A drag whose first square turns back to
 undecided erases instead, and it erases a whole rectangle, not just a
-row or column. Hold Ctrl while moving the cursor to shade squares as
-you go, Shift to mark them clear, and both to return them to undecided.
+row or column. Hold Ctrl while moving the cursor to shade undecided
+squares as you go, Shift to mark them clear, and both to return any
+square to undecided. Like a drag, Ctrl or Shift alone leaves a square
+you have already marked as it is.
 
 ## Hints
 
