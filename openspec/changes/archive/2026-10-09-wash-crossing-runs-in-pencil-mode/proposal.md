@@ -24,6 +24,13 @@ question, which runs is this cell in, and gets no answer.
   a click places it in that run, and in pencil mode a click only holds the
   clue.
 
+- Found in the app while checking the wash (2026-10-09), and fixed here
+  because the wash under a pencil selection makes each one the common case:
+  pencil marks on a washed square take the ink a placed digit takes there
+  (the pencil ink all but vanished on the run color); the square selected
+  for pencil marks keeps its own surface under the notes triangle; and a
+  filled square shows the pencil selection, where it showed nothing.
+
 ## Capabilities
 
 ### Modified Capabilities

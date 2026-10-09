@@ -313,12 +313,12 @@ that the aid does not perform the puzzle's deduction.
 
 ### Requirement: Selecting a cell shows which clues fit its runs
 
-Selecting a cell for digit entry SHALL indicate which clues can still go in
-either run through it, since clicking one places it in the corresponding run;
-each of the two aids is a preference, on by default. A clue already written
-into the grid SHALL remain distinguishable from one that merely cannot go in
-the selected run. A cell selected for pencil marks SHALL show neither the
-marked runs nor the colors of the clues that fit.
+Selecting a cell SHALL mark the runs through it on the board. Selecting it for
+digit entry SHALL also indicate which clues can still go in either run, since
+clicking one places it there; selecting it for pencil marks SHALL leave the
+clues uncolored. Each of the two aids is a preference, on by default. A clue
+already written into the grid SHALL remain distinguishable from one that merely
+cannot go in the selected run.
 
 #### Scenario: Both runs through the selected cell are answered for
 
@@ -337,8 +337,26 @@ marked runs nor the colors of the clues that fit.
 
 - **WHEN** a cell lying in both a horizontal and a vertical run is selected
   while pencil mode is on
-- **THEN** the cell carries the pencil selection alone, no run is marked for
-  it, and every clue not yet written into the grid is in the plain ink
+- **THEN** the other cells of both runs are marked, each in its direction's
+  color, the selected cell carries the pencil selection on its own surface, and
+  every clue not yet written into the grid is in the plain ink
+
+### Requirement: Pencil marks and the pencil selection stay visible on a marked run
+
+Pencil marks in a cell of a marked run SHALL remain legible, and a cell
+selected for pencil marks SHALL show that selection whether or not it holds a
+digit.
+
+#### Scenario: Candidates in a marked run can be read
+
+- **WHEN** a run is marked and one of its empty cells holds pencil marks
+- **THEN** those marks are drawn in the ink a placed digit takes on the run's
+  color, not in the pencil ink
+
+#### Scenario: A filled cell selected for pencil marks
+
+- **WHEN** a cell holding a digit is selected while pencil mode is on
+- **THEN** the cell shows the pencil selection
 
 ### Requirement: Across and down each have one color, on the board and in the list
 

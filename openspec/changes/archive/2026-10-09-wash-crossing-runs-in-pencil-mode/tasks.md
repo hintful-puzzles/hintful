@@ -23,4 +23,4 @@ Read `docs/games/rendering.md` first.
         note-taking game draws it on both.
 - [x] 4 The `crossing` delta restates "Selecting a cell shows which clues fit
       its runs"; `help/games/crossing.md` follows.
-- [ ] 5 Committed, pushed and archived.
+- [x] 5 Committed, pushed and archived.
