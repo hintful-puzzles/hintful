@@ -24,10 +24,9 @@ import {
   familyLabel,
   type PuzzleFamily,
   puzzleDataMap,
-  puzzleFamilies,
   puzzleIds,
 } from "../puzzle/catalog.ts";
-import { matchesQuery } from "../puzzle/catalog-search.ts";
+import { familiesOffered, matchesQuery } from "../puzzle/catalog-search.ts";
 import { puzzlePageUrl } from "../routing.ts";
 import { savedGames } from "../store/saved-games.ts";
 import { settings } from "../store/settings.ts";
@@ -209,6 +208,7 @@ export class HomeScreen extends SignalWatcher(Screen) {
 
   private renderCatalog() {
     const listed = this.listedIds;
+    const families = familiesOffered(this.search, this.family);
     return html`
       <section part="section">
         <div part="catalog-controls">
@@ -235,22 +235,22 @@ export class HomeScreen extends SignalWatcher(Screen) {
               `,
             )}
           </div>
-          <div part="families" role="group" aria-label="Family">
-            ${puzzleFamilies.map(
-              ({ id, label }) => html`
-                <button
-                    part="family"
-                    type="button"
-                    aria-pressed=${String(this.family === id)}
-                    @click=${() => {
-                      // Pressing the pressed chip again lets go of it: there
-                      // is no "all families" chip to go back to.
-                      this.family = this.family === id ? null : id;
-                    }}
-                >${label}</button>
-              `,
-            )}
-          </div>
+          ${
+            families.length > 0
+              ? html`<div part="families" role="group" aria-label="Family">
+                  ${families.map(
+                    ({ id, label }) => html`
+                      <button
+                          part="family"
+                          type="button"
+                          aria-pressed=${String(this.family === id)}
+                          @click=${() => this.toggleFamily(id)}
+                      >${label}</button>
+                    `,
+                  )}
+                </div>`
+              : null
+          }
         </div>
 
         ${
@@ -302,6 +302,19 @@ export class HomeScreen extends SignalWatcher(Screen) {
         .missing=${draftPuzzles[puzzleId] ?? []}
       ></catalog-card>
     `;
+  }
+
+  /** Pressing the pressed chip again lets go of it: there is no "all families"
+   * chip to go back to. */
+  private toggleFamily(id: PuzzleFamily) {
+    const released = this.family === id;
+    this.family = released ? null : id;
+    // Released beside a search, the chip leaves the page with the focus on it.
+    if (released && familiesOffered(this.search, null).length === 0) {
+      this.shadowRoot
+        ?.querySelector<HTMLInputElement>('[part="search"] input')
+        ?.focus();
+    }
   }
 
   private handleSearchInput(event: Event) {

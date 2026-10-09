@@ -11,6 +11,7 @@ import {
   SCANNED_SOURCE_FILES,
 } from "../engine/testing/enrollment.ts";
 import { puzzleFamilies, puzzleIds, puzzlesInFamily } from "./catalog.ts";
+import { familiesOffered } from "./catalog-search.ts";
 
 describe("the family taxonomy", () => {
   it("puts every game in exactly one family, with no family of fewer than two", () => {
@@ -33,6 +34,20 @@ describe("the family taxonomy", () => {
   it("gives every family a distinct label", () => {
     const labels = puzzleFamilies.map(({ label }) => label.toLowerCase());
     expect(new Set(labels).size).toBe(labels.length);
+  });
+});
+
+describe("the chips beside a search", () => {
+  const pressed = puzzleFamilies[0].id;
+
+  it("offers every family until something is typed", () => {
+    expect(familiesOffered("", null)).toEqual(puzzleFamilies);
+    expect(familiesOffered("  ", pressed)).toEqual(puzzleFamilies);
+  });
+
+  it("offers only the pressed family once something is typed", () => {
+    expect(familiesOffered("solo", null)).toEqual([]);
+    expect(familiesOffered("solo", pressed).map(({ id }) => id)).toEqual([pressed]);
   });
 });
 

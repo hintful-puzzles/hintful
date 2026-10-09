@@ -10,7 +10,12 @@
  * wants ABCD. Missing the game they meant costs far more than surfacing one
  * they did not.
  */
-import { familyLabel, puzzleDataMap } from "./catalog.ts";
+import {
+  familyLabel,
+  type PuzzleFamily,
+  puzzleDataMap,
+  puzzleFamilies,
+} from "./catalog.ts";
 
 /** Everything a query is matched against for `puzzleId`, lowercased. Built per
  * call: the catalog is 57 entries and a keystroke is not a hot loop. */
@@ -29,4 +34,17 @@ export function matchesQuery(puzzleId: string, query: string): boolean {
   const needle = query.trim().toLowerCase();
   if (!needle) return true;
   return searchHaystack(puzzleId).includes(needle);
+}
+
+/** The family chips the home screen offers beside `query`. Once something is
+ * typed the search answers, a family's label included, and on a phone the chips
+ * are four rows standing between the box and its results under the keyboard.
+ * The pressed chip stays: it is still narrowing the list, and a narrowing with
+ * no control on screen cannot be undone. */
+export function familiesOffered(
+  query: string,
+  pressed: PuzzleFamily | null,
+): readonly (typeof puzzleFamilies)[number][] {
+  if (!query.trim()) return puzzleFamilies;
+  return puzzleFamilies.filter(({ id }) => id === pressed);
 }
