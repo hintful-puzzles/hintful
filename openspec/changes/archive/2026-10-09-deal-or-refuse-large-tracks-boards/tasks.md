@@ -32,4 +32,4 @@ tier") and `docs/method.md` first.
 
 ## 3. Close
 
-- [ ] 3.1 Committed, pushed and archived.
+- [x] 3.1 Committed, pushed and archived.

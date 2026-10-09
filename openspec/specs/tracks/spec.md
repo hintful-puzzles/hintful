@@ -311,42 +311,37 @@ deduction (`check-neighbors-both-ways`) and the bridge-parity argument
 ### Requirement: Tracks generates solver-gated boards reproducibly
 
 `newDesc` SHALL generate the same board for the same seed, and SHALL strip
-every clue the board solves at its tier without. It SHALL reject a boring
-board (one with a clue of 0) and, under `singleOnes`, a board with a 1 as the
-clue of the entrance's column or of the exit's row, or with two 1 clues next
-to each other in the list of column clues then row clues.
+every clue the board solves at its tier without. It SHALL lay the track by
+construction and not by throwing tracks away: a walk that does not leave the
+board while a row or column holds no track, and that never steps where the
+squares still free no longer reach every such row and column and the bottom
+edge. Every clue of a dealt board SHALL therefore be at least 1, at any size
+the params allow.
 
 #### Scenario: Generation is reproducible from a seed
 
 - **WHEN** `newDesc` runs twice with the same params and seed
 - **THEN** both runs emit the identical Tracks description
 
-### Requirement: Tracks rejects a bare board as too easy only when it solves
+#### Scenario: A long thin board deals
 
-The generator SHALL reject a laid path as too easy only when its bare board
-(the row and column counts, the entrance and the exit) solves completely
-without reaching the target tier. A bare board that stalls SHALL go on to
-clue-laying whatever rungs fired before it stalled, since the clue-laying loop
-already refuses any clue that finishes the board below the target tier.
+- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy
+- **THEN** it returns a board that solves at Easy, with every clue at least 1,
+  and does not throw `RetryLimitExceeded`
 
-#### Scenario: A stalled bare board is not too easy
+### Requirement: Tracks meets singleOnes by bending the track
 
-- **WHEN** the bare board of a laid path stalls at the target tier without any
-  of that tier's rungs having fired
-- **THEN** the generator lays clues on it and does not ask for a new path
+Under `singleOnes` a dealt board SHALL have no 1 as the clue of the entrance's
+column or of the exit's row, and no two 1 clues next to each other in the list
+of column clues then row clues. The generator SHALL reach that by bending the
+laid track, taking the one step that crosses two such lines round three sides
+of a square, and SHALL lay another track only where a bend has no room.
 
-#### Scenario: 15x15 deals at the top tier
+#### Scenario: A long thin board has no forbidden 1
 
-- **WHEN** `newDesc` runs at 15x15 Tricky (`DIFF_HARD`) from any of the seeds
-  `pin-0`, `pin-66`, `pin-71`, `pin-79`, `pin-83`, `pin-94` and `pin-96`
-- **THEN** it returns a board that solves at Tricky and not at Normal, and
-  does not throw `RetryLimitExceeded`
-
-#### Scenario: Easy boards are unchanged
-
-- **WHEN** `newDesc` runs at an Easy preset from a seed recorded against
-  upstream's generator
-- **THEN** it emits upstream's desc byte-for-byte
+- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy with `singleOnes`
+- **THEN** it returns a board with no 1 clue where `singleOnes` forbids one,
+  and does not throw `RetryLimitExceeded`
 
 ### Requirement: Tracks renders rails, clues, drag previews and the completion flash
 
@@ -494,3 +489,17 @@ The keyboard cursor's outline SHALL be at least two pixels thick.
 
 - **WHEN** the cursor is shown at a tile size whose marks are one pixel thick
 - **THEN** the cursor's outline is two pixels thick
+
+### Requirement: A stalled bare Tracks board goes on to clue-laying
+
+The generator SHALL reject a laid track as too easy only when its bare board
+(the row and column counts, the entrance and the exit) solves completely
+without reaching the target tier. A bare board that stalls SHALL go on to
+clue-laying whatever rungs fired before it stalled, since the clue-laying loop
+already refuses any clue that finishes the board below the target tier.
+
+#### Scenario: A stalled bare board is not too easy
+
+- **WHEN** the bare board of a laid track stalls at the target tier without any
+  of that tier's rungs having fired
+- **THEN** the generator lays clues on it and does not ask for a new track

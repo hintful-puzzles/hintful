@@ -10,12 +10,6 @@ squares still free no longer reach every such row and column and the bottom
 edge. Every clue of a dealt board SHALL therefore be at least 1, at any size
 the params allow.
 
-Under `singleOnes` a dealt board SHALL have no 1 as the clue of the entrance's
-column or of the exit's row, and no two 1 clues next to each other in the list
-of column clues then row clues. The generator SHALL reach that by bending the
-laid track, taking the one step that crosses two such lines round three sides
-of a square, and SHALL lay another track only where a bend has no room.
-
 #### Scenario: Generation is reproducible from a seed
 
 - **WHEN** `newDesc` runs twice with the same params and seed
@@ -23,7 +17,7 @@ of a square, and SHALL lay another track only where a bend has no room.
 
 #### Scenario: A long thin board deals
 
-- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy with `singleOnes`
+- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy
 - **THEN** it returns a board that solves at Easy, with every clue at least 1,
   and does not throw `RetryLimitExceeded`
 
@@ -45,6 +39,20 @@ to clue-laying". That every preset deals at exactly its tier is the
 `engine-difficulty` requirement "A cross-game guard asserts that tiers bind".
 
 ## ADDED Requirements
+
+### Requirement: Tracks meets singleOnes by bending the track
+
+Under `singleOnes` a dealt board SHALL have no 1 as the clue of the entrance's
+column or of the exit's row, and no two 1 clues next to each other in the list
+of column clues then row clues. The generator SHALL reach that by bending the
+laid track, taking the one step that crosses two such lines round three sides
+of a square, and SHALL lay another track only where a bend has no room.
+
+#### Scenario: A long thin board has no forbidden 1
+
+- **WHEN** `newDesc` runs at 60x8, 8x60 or 40x12 at Easy with `singleOnes`
+- **THEN** it returns a board with no 1 clue where `singleOnes` forbids one,
+  and does not throw `RetryLimitExceeded`
 
 ### Requirement: A stalled bare Tracks board goes on to clue-laying
 

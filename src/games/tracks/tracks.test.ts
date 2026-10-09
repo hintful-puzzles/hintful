@@ -156,11 +156,15 @@ describe("tracks solver", () => {
     ["8x60", 8, 60],
     ["40x12", 40, 12],
     ["24x24", 24, 24],
-  ])("deals a %s at Easy with a track in every row and column", (_, w, h) => {
+  ])("deals a %s at Easy with a track in every row and column, and no forbidden 1", (_, w, h) => {
     const p: TracksParams = { w, h, diff: 0, singleOnes: true };
     const { desc } = newDesc(p, randomNew(`tracks-large-${w}x${h}`));
     const board = stateToBoard(newState(p, desc));
-    expect([...board.numbers].every((n) => n > 0)).toBe(true);
+    const clues = [...board.numbers];
+    expect(clues.every((n) => n > 0)).toBe(true);
+    expect(clues[0]).not.toBe(1);
+    expect(clues[w + h - 1]).not.toBe(1);
+    expect(clues.some((n, i) => i > 0 && n === 1 && clues[i - 1] === 1)).toBe(false);
     expect(tracksSolve(copyAndStrip(board, -1), 0)).toEqual({ ret: 1, maxDiff: 0 });
   });
 });
