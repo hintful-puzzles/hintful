@@ -24,6 +24,8 @@ The number list is an input surface, not just a reference. Click a number to pic
 
 Across and down runs are drawn in two different colors, and each number in the list is written in the color of the run a click would send it to — so the list always tells you where the number is going. Numbers already written into the grid stay distinguishable from ones that simply don't fit the square you have selected.
 
+A square selected for pencil marks colors its two runs in the same way. The list stays plain then, because a click on a number picks it up rather than placing it.
+
 Both the auto-advance and the two clue-list aids — highlighting the runs through the selected cell, and coloring the list by where each number could go — can be switched off in the game's preferences.
 
 ## Where the puzzle comes from

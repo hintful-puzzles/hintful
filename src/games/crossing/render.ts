@@ -66,6 +66,7 @@ import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
+  HIGHLIGHT_NOTES,
   highlightFill,
   highlightIsOn,
 } from "../../engine/note-taking-cell.ts";
@@ -124,8 +125,8 @@ export const COL_GHOST = 11;
  * is marked by a shape — the hues below are reserved for saying *direction*. */
 export const COL_HELD = 12;
 /**
- * Two hues, one per dimension, each in a pale wash for the board and a
- * saturated ink for the clue list: **blue = horizontal, amber = vertical**,
+ * Two hues, one per dimension, each filling a run on the board and inking a
+ * clue in the list: **blue = horizontal, amber = vertical**,
  * everywhere and always. A run washed blue and a clue written in blue are
  * saying the same thing, so the list needs no legend. Tying the hue to the
  * dimension rather than to "the run being filled" keeps it stable — otherwise
@@ -408,7 +409,8 @@ function drawMarks(
   tx: number,
   ty: number,
   marks: number,
-  struck = 0,
+  struck: number,
+  ink: number,
 ): void {
   let nhints = 0;
   for (let i = 0; i < 9; i++) if (marks & (1 << i)) nhints++;
@@ -432,12 +434,12 @@ function drawMarks(
     dr.drawText(
       { x: cx, y: cy },
       textOpts(fontsz, "center", "mathematical"),
-      COL_PENCIL,
+      ink,
       String(i + 1),
     );
     if (struck & (1 << i)) {
       const r = Math.max(2, Math.floor(fontsz / 3));
-      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
+      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, ink, 2);
     }
     j++;
   }
@@ -490,6 +492,12 @@ function drawCell(
   // `n` so it indexes the same way as the pencil grid.
   const runWash = flags & DF_ACROSS ? COL_ACROSS : flags & DF_DOWN ? COL_DOWN : -1;
   const wash = runWash >= 0 ? runWash : digit ? COL_PLACED : COL_CELL;
+  // A square selected for pencil marks keeps its plain surface under the notes
+  // triangle, a gap in the run wash as the entry selection is: the candidates
+  // being edited stay in the pencil ink, on the surface it is tuned for, and
+  // none of them lands half on the triangle in the run's ink.
+  const surface =
+    highlight === HIGHLIGHT_NOTES ? (digit ? COL_PLACED : COL_CELL) : wash;
 
   if (!digit) {
     drawCellBackground(
@@ -497,7 +505,7 @@ function drawCell(
       { x: tx, y: ty, w: ts, h: ts },
       highlight,
       COL_SELECTED,
-      wash,
+      surface,
     );
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
   }
@@ -514,16 +522,17 @@ function drawCell(
     //
     // The completion flash sweeps a diagonal bright/dim wave across the board
     // (the shape ABCD uses) in place of upstream's color cycle. A selected
-    // square takes the highlight's wash, as an empty square does.
+    // square takes its highlight, as an empty square does.
     const mid =
       flash < 0
-        ? highlightFill(highlight, COL_SELECTED, wash)
+        ? highlightFill(highlight, COL_SELECTED, surface)
         : (x + y) % 3 === flash
           ? COL_FLASH
           : (x + y + 2) % 3 === flash
             ? COL_SELECTED
             : COL_PLACED;
-    dr.drawRect(body, mid);
+    if (flash < 0) drawCellBackground(dr, body, highlight, COL_SELECTED, surface);
+    else dr.drawRect(body, mid);
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
     dr.drawText(
       { x: tileCenter(x, ts), y: tileCenter(y, ts) },
@@ -559,7 +568,19 @@ function drawCell(
       String(ghost),
     );
   } else if (!walls[i] && !digit) {
-    drawMarks(dr, ts, tx, ty, (flags >> K_MARKS) & 0x1ff, struck);
+    // On a run wash the pencil ink all but vanishes, as `COL_TEXT` does, so
+    // the candidates there take the ink a placed digit takes on it.
+    drawMarks(
+      dr,
+      ts,
+      tx,
+      ty,
+      (flags >> K_MARKS) & 0x1ff,
+      struck,
+      highlightFill(highlight, COL_SELECTED, surface) === runWash
+        ? COL_RUNTEXT
+        : COL_PENCIL,
+    );
   }
 
   // The cursor cue on a wall. Everywhere else the highlight is the background
@@ -842,8 +863,10 @@ export function redraw(
 
   // Both runs through the selected cell are washed, each in its dimension's
   // hue — the hue its clues take in the list below. Washing only one would
-  // leave the other's clues with nothing on the board to point at.
-  const selCell = cursorShown && !ui.pencilMode ? ui.cursor.y * w + ui.cursor.x : -1;
+  // leave the other's clues with nothing on the board to point at. A cell
+  // selected for pencil marks is washed too: the runs it lies in are what its
+  // candidates are worked out from.
+  const selCell = cursorShown ? ui.cursor.y * w + ui.cursor.x : -1;
   if (ui.highlightRuns && selCell >= 0) {
     for (const r of [puzzle.acrossRun[selCell], puzzle.downRun[selCell]]) {
       if (r >= 0) markRun(r);
@@ -945,9 +968,10 @@ export function redraw(
   const colorClass = (l: number): number => {
     if (done[l] > 1) return 2;
     if (done[l] === 1) return 1; // already on the board — struck off
-    if (ui.fitHighlight && selCell >= 0) {
+    if (ui.fitHighlight && selCell >= 0 && !ui.pencilMode) {
       // A clue that fits either run through the selected cell is one click
-      // from being placed there, and takes that run's color. *Which* run is
+      // from being placed there, and takes that run's color. In pencil mode a
+      // click only holds the clue, so the list promises nothing. *Which* run is
       // asked of `runForNumber`, the function the click itself goes through,
       // so the color can never name one run while a click sends the clue to
       // the other: both runs often admit a clue, and the tie is settled by how

@@ -48,7 +48,9 @@ import {
   COL_GHOST,
   COL_HELD,
   COL_OUTERBG,
+  COL_PENCIL,
   COL_PLACED,
+  COL_RUNTEXT,
   COL_SELECTED,
   COL_TEXT,
   COL_WALL,
@@ -1056,6 +1058,75 @@ describe("crossing number-list placement", () => {
     const noList = { ...base, fitHighlight: false };
     expect(washedCells(paintWith(state, noList))).toBeGreaterThan(0);
     expect(listColored(noList)).toBe(false);
+  });
+
+  it("washes both runs through a cell selected for pencil marks, list uncolored", () => {
+    const state = newState(P5, FIX.desc);
+    const puzzle = state.puzzle;
+    let cell = -1;
+    for (let i = 0; i < 25 && cell < 0; i++) {
+      if (puzzle.acrossRun[i] >= 0 && puzzle.downRun[i] >= 0) cell = i;
+    }
+    expect(cell).toBeGreaterThanOrEqual(0);
+    const digitEntry: CrossingUi = {
+      ...newUi(),
+      cursor: newCursor(cell % 5, Math.floor(cell / 5), true),
+    };
+    const penciling: CrossingUi = { ...digitEntry, pencilMode: true };
+    const tilesIn = (dr: RecordingDrawing, color: number): number =>
+      new Set(
+        dr.ops.flatMap((o) =>
+          o.op === "rect" && o.color === color
+            ? [`${Math.floor(o.x / TS)},${Math.floor(o.y / TS)}`]
+            : [],
+        ),
+      ).size;
+
+    const dr = paintWith(state, penciling);
+    const across = puzzle.runs[puzzle.acrossRun[cell]].cells.length;
+    const down = puzzle.runs[puzzle.downRun[cell]].cells.length;
+    // The selected cell is the gap in both: its own surface, under the notes
+    // triangle.
+    expect(tilesIn(dr, COL_ACROSS)).toBe(across - 1);
+    expect(tilesIn(dr, COL_DOWN)).toBe(down - 1);
+    const triangles = (d: RecordingDrawing): number =>
+      d.ops.filter((o) => o.op === "polygon" && o.fill === COL_SELECTED).length;
+    expect(triangles(dr)).toBe(1);
+
+    // Candidates on a washed square are in the ink a placed digit takes
+    // there, and the ones being edited keep the pencil ink.
+    const other = puzzle.runs[puzzle.acrossRun[cell]].cells.find((c) => c !== cell);
+    if (other === undefined) throw new Error("a run of one cell");
+    const noted = structuredClone(state);
+    noted.pencil[other] = 1 << 0;
+    noted.pencil[cell] = 1 << 1;
+    const inkOf = (d: RecordingDrawing, text: string): number[] =>
+      d.ops.flatMap((o) => (o.op === "text" && o.text === text ? [o.color] : []));
+    const marked = paintWith(noted, penciling);
+    expect(inkOf(marked, "1")).toEqual([COL_RUNTEXT]);
+    expect(inkOf(marked, "2")).toEqual([COL_PENCIL]);
+    expect(inkOf(paintWith(noted, newUi()), "1")).toEqual([COL_PENCIL]);
+
+    // A filled square shows the pencil selection too.
+    const filled = structuredClone(state);
+    filled.grid[cell] = 7;
+    expect(triangles(paintWith(filled, penciling))).toBe(1);
+
+    // A colored clue promises that a click places it, and in pencil mode a
+    // click only holds it: every clue stays in the plain ink, not even dimmed.
+    const listInks = (d: RecordingDrawing): number[] =>
+      d.ops.flatMap((o) =>
+        o.op === "text" && puzzle.numbers.some((n) => n.join("") === o.text)
+          ? [o.color]
+          : [],
+      );
+    expect(listInks(dr).length).toBe(puzzle.numbers.length);
+    for (const c of listInks(dr)) expect(c).toBe(COL_TEXT);
+    expect(listInks(paintWith(state, digitEntry))).toContain(COL_ACROSSFIT);
+
+    // The wash is under the same preference as a digit-entry selection's.
+    const washOff = { ...penciling, highlightRuns: false };
+    expect(washedCells(paintWith(state, washOff))).toBe(0);
   });
 
   it("crosses a clue off the list once it is on the board, without dimming alone", () => {
