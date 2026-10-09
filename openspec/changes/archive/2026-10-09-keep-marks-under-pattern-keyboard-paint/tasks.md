@@ -10,4 +10,4 @@
 - [x] 4 Seen in the app with the keyboard: the stroke over a marked square,
       over a blank one, and Ctrl+Shift clearing both. The help page read
       there.
-- [ ] 5 Committed, pushed and archived.
+- [x] 5 Committed, pushed and archived.

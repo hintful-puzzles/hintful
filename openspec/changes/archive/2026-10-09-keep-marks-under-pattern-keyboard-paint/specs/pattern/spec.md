@@ -4,15 +4,11 @@
 
 A cursor move with Ctrl held SHALL set the square it leaves and the square it
 reaches to `Full`, with Shift to `Empty` and with both to `Unknown`, through
-the same rectangle `fill` move. A stroke that paints `Full` or `Empty` SHALL
-carry `onlyBlank`, as the pointer's multi-cell paint drag does, so it fills
-only a square currently `Unknown` and never rewrites a mark the player already
-placed; this diverges from upstream, whose stroke overwrites. A stroke that
-clears, with both held, SHALL still reset marked squares. A stroke that would
-change neither square SHALL produce no history-affecting move, and SHALL still
-move the cursor. The cursor-select keys SHALL cycle the cursor's cell: Enter as
-a left press does, Space as a right press does, and they are the keyboard's
-way to change a square already marked.
+the same rectangle `fill` move. A stroke that paints SHALL carry `onlyBlank`,
+as the pointer's paint drag does and upstream's stroke does not; one that
+clears SHALL NOT. A stroke that changes neither square SHALL make no move. The
+cursor-select keys SHALL cycle the cursor's cell: Enter as a left press does,
+Space as a right press does.
 
 #### Scenario: A click and Enter agree
 
