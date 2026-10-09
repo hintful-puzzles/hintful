@@ -25,4 +25,4 @@ hole") and `docs/games/input.md` first.
       pointer and leaves no trail.
 - [x] 5 The `bridges` delta restates the rendering requirement; the help page
       says what the line shows while dragging.
-- [ ] 6 Committed, pushed and archived.
+- [x] 6 Committed, pushed and archived.
