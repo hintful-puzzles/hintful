@@ -1,0 +1,5 @@
+# No delta yet: the moves and the cuts are deltas (design.md, Decision 3), and
+# the first one written removes this flag.
+schema: spec-driven
+created: 2026-10-09
+skip_specs: true
