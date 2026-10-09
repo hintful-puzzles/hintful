@@ -103,13 +103,20 @@ that size, or whose grid or clue part stops short of covering the grid.
 - **WHEN** a description of a size-5 board carries an addition clue of 11
 - **THEN** it is rejected
 
+#### Scenario: A quotient of 1 is rejected
+
+- **WHEN** a description carries a division clue of 1
+- **THEN** it is rejected, because two equal cells are shown by the `=` clue,
+  which is a difference of 0
+
 ### Requirement: Mathrax input and keypad
 
 Mathrax SHALL be played with the Solo-style control scheme: a cell is selected
-for ink by left-click or cursor, digit keys enter a value or toggle a pencil
-mark, and backspace, space or zero clear. Immutable given cells SHALL NOT be
-editable. Entering the value already present in a cell SHALL be a no-op. The
-on-screen keypad SHALL offer the digits 1 to the grid size and a clear key.
+by left-click or cursor, for ink outside pencil mode and for pencil marks in
+it; digit keys enter a value or toggle a pencil mark; and backspace, space or
+zero clear. Immutable given cells SHALL NOT be editable. Entering the value
+already present in a cell SHALL be a no-op. The on-screen keypad SHALL offer
+the digits 1 to the grid size and a clear key.
 
 #### Scenario: A digit is entered into a selected cell
 
@@ -120,6 +127,12 @@ on-screen keypad SHALL offer the digits 1 to the grid size and a clear key.
 
 - **WHEN** the cursor is on a given cell and a different digit is typed
 - **THEN** no move is made
+
+#### Scenario: A left-click in pencil mode
+
+- **WHEN** pencil mode is on under the sticky pencil preference and the player
+  left-clicks an empty cell and types a digit
+- **THEN** the digit is toggled as a pencil mark in that cell
 
 ### Requirement: Mathrax offers the sticky pencil and auto-pencil preferences
 

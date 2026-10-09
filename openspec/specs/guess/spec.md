@@ -44,10 +44,10 @@ them. `validateParams` SHALL reject `allowMultiple = false` with
 
 `newDesc` SHALL draw a random color sequence, each peg uniformly from
 `1..ncolors` and redrawn on a repeat when `allowMultiple` is false, encode it as
-a byte-per-peg bitmap, apply the engine's SHA-1 masking (`obfuscateBitmap`), and
-hex-encode the result. `newState` SHALL recover the solution by hex-decoding and
-de-obfuscating the desc, and SHALL refuse a desc of the wrong length or one whose
-de-obfuscated bytes fall outside `1..ncolors`.
+a byte-per-peg bitmap, apply `obfuscateBitmap`, and hex-encode the result.
+`newState` SHALL recover the solution by reversing that, and SHALL refuse a desc
+of the wrong length, one whose bytes fall outside `1..ncolors`, and, when
+`allowMultiple` is false, one that repeats a color.
 
 #### Scenario: A description round-trips through obfuscation
 
@@ -60,6 +60,12 @@ de-obfuscated bytes fall outside `1..ncolors`.
 - **WHEN** the engine validates a desc of the wrong length, or one that
   de-obfuscates to a color outside `1..ncolors`
 - **THEN** it returns a refusal with its reason
+
+#### Scenario: A hand-typed answer with a repeat is refused where repeats are off
+
+- **WHEN** a desc that de-obfuscates to the same color in two slots is offered
+  to a game with `allowMultiple: false`
+- **THEN** it is refused as repeating a color
 
 ### Requirement: A Guess move is a submitted row or a set of marks
 
@@ -259,7 +265,8 @@ Outside notes mode the erase key SHALL clear the selected slot when it holds a
 color, and otherwise SHALL backspace: rub out the rightmost filled slot the
 player is not holding. Backspacing SHALL walk past a held slot, which was
 carried over rather than typed, and SHALL be declined when every filled slot is
-held. The key SHALL never write past the last peg.
+held. The key SHALL never write past the last peg. `D` and `d` SHALL rub out the
+same way in notes mode too, reading the cursor's column as the selected slot.
 
 #### Scenario: Clearing on the submit position backspaces
 
@@ -273,6 +280,13 @@ held. The key SHALL never write past the last peg.
 - **WHEN** the only filled slots left are held ones and the clear key is pressed
   with nothing selected
 - **THEN** no move and no UI update is produced and the held colors are kept
+
+#### Scenario: The letter key edits the working row from notes mode
+
+- **WHEN** notes mode is on with the frame on the second answer slot, the
+  working row is full, and `d` is pressed
+- **THEN** the second peg of the working row is rubbed out, no mark changes,
+  and notes mode stays on
 
 ### Requirement: Guess says why a row will not go
 
@@ -330,9 +344,9 @@ A color the player enters SHALL land in the slot they have selected, and, when
 none is selected, in the first empty slot of the working row, because holds
 carry a row pre-filled out of order. After any transition that changes the row
 being played, and after every entry, the cursor SHALL rest on the first empty
-slot. When the row has none it SHALL rest on the submit position if the row is
-markable, and otherwise on a slot: the one just entered, or the first after a
-transition.
+slot. With none it SHALL rest on the last slot in notes mode, else on the submit
+position when the row is markable, else on the slot just entered, or the first
+after a transition.
 
 #### Scenario: The first key after a submit does not overwrite a held peg
 
@@ -549,8 +563,10 @@ tap does.
 
 #### Scenario: A held finger on the answer row marks nothing
 
-- **WHEN** the right button is pressed on an answer slot
-- **THEN** `interpretMove` returns `null`
+- **WHEN** the right button is pressed on an answer slot and released there, as
+  a right-click or a finger held past the touch hold arrives
+- **THEN** the press returns `null`, and the release shows the cursor on that
+  slot with notes mode on and no color ruled out
 
 ### Requirement: In notes mode a color key rules its color out
 
@@ -573,16 +589,24 @@ that slot. With no slot selected, both SHALL be declined.
 ### Requirement: Notes mode is the engine's pencil mode
 
 Notes mode SHALL be `GuessUi.pencilMode`, so that the engine supplies the Marks
-key and the pencil-mode indicator. In notes mode the cursor SHALL be drawn round
-the answer slot rather than on the working row, in the margin outside the well,
-and SHALL NOT rest on the submit position. The Marks key and `CURSOR_SELECT`
-SHALL therefore move the frame between the rows in the same column.
+key and the pencil-mode indicator. In notes mode a shown cursor SHALL be drawn
+round the answer slot rather than on the working row, in the margin outside the
+well, and SHALL NOT rest on the submit position. The Marks key and
+`CURSOR_SELECT` SHALL therefore move a shown frame between the rows in the same
+column; the Marks key SHALL NOT itself show a hidden cursor.
 
 #### Scenario: Notes mode keeps the cursor off the submit position
 
 - **WHEN** notes mode is switched on while the cursor rests on the submit
   position
 - **THEN** the cursor moves to the last slot
+
+#### Scenario: A row submitted in notes mode leaves a slot framed
+
+- **WHEN** every peg is held, notes mode is on, and a row that does not win is
+  submitted, so that the next working row arrives full
+- **THEN** the frame is on the last answer slot, and a color key rules its
+  color out of that slot
 
 ### Requirement: A hint's marks on the answer row sit beside the content
 

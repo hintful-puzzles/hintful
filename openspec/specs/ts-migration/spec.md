@@ -485,8 +485,10 @@ a check.
 
 The guard SHALL sample **enough boards per tier to catch the defect it
 names**, and that sample size SHALL be established by confirming that the
-guard fires on a solver known to be non-monotone, not chosen by judgment. A
-guard that has never been shown to fail is not known to work.
+guard fires on a solver known to be non-monotone, not chosen by judgment. That
+sample SHALL be walked on every push. The per-commit hook MAY walk the first
+board of each tier alone, which still fails a solver that is non-monotone on
+every board.
 
 #### Scenario: A defect shows on most boards of a tier and not all
 
@@ -495,14 +497,20 @@ guard that has never been shown to fail is not known to work.
 - **THEN** the guard's sample per tier is the size at which it was seen to
   fail on that solver
 
+#### Scenario: The first board of a tier is one the defect spares
+
+- **WHEN** a commit makes a solver non-monotone on most boards of a tier, and
+  the first board of that tier is not one of them
+- **THEN** the per-commit hook passes, and the run on the push fails
+
 ### Requirement: A generator that runs out of tries is answered, not thrown
 
 Where a generator exhausts its retry bound, the engine SHALL report it to the
 caller as a sentence a player can be shown, and SHALL leave the board in play,
 and the parameters it was dealt at, as they were. A bound that runs out says
 that no board was found, which is an answer about the parameters and not a
-fault. The sentence SHALL NOT claim that the tier is rare, nor that it is
-absent, since the generator cannot tell them apart.
+fault. The sentence SHALL say that the tier may be rare or may be absent, and
+SHALL NOT assert either, since the generator cannot tell them apart.
 
 #### Scenario: A deal that finds no board keeps the one in play
 

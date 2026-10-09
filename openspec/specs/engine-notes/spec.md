@@ -160,21 +160,6 @@ asserts is that no hand-written copy exists.
 - **AND** its sources never call a shared press arm
 - **THEN** the build fails, naming that game
 
-### Requirement: One note-taking vocabulary across games
-
-A game holding the player's provisional per-cell candidate marks SHALL keep them
-in a typed array named `pencil`, the word the engine uses everywhere else it
-speaks about notes, so that shared code and cross-game guards can read a game's
-notes rather than being told per game where they live. The element type and the
-slot arity SHALL stay the game's own: a candidate bitmask in one slot and a
-candidate cube of `n` contiguous slots per cell are both conforming.
-
-#### Scenario: A game whose notes are a cube
-
-- **WHEN** a game keeps each cell's candidates in `n` contiguous slots of its
-  `pencil` array
-- **THEN** it conforms, as a game keeping one bitmask per cell does
-
 ### Requirement: A field that is not the player's candidate set is outside the vocabulary
 
 Two things are outside the convention, and a guard SHALL NOT convict them. One
@@ -395,15 +380,16 @@ quietly stops handling the key fails rather than joining the exceptions.
 
 ### Requirement: A sticky notes mode is visible on the board
 
-A game with the collection's pencil-mode flag SHALL show the pencil-mode
-indicator in the engine's corner, reserving the room for it, by a border wide
-enough or by a canvas grown to make one, because a sticky mode whose state
-cannot be seen is a mode the player cannot trust.
+Every game that takes notes SHALL show the pencil-mode indicator in the
+engine's corner, reserving the room for it, by a border wide enough or by a
+canvas grown to make one, because a sticky mode whose state cannot be seen is a
+mode the player cannot trust. The population SHALL be the one the Marks key is
+offered by, so a game given the key is held to showing what the key did.
 
 #### Scenario: A latched mode can be read off the board
 
-- **WHEN** a player latches pencil mode in any game with the flag, and no cell
-  is highlighted
+- **WHEN** a player latches pencil mode in any game that takes notes, and no
+  cell is highlighted
 - **THEN** the glyph in the engine's corner shows that the mode is on
 
 ### Requirement: A game reserves the indicator's reach at every tile size
@@ -606,7 +592,7 @@ press that ran them would switch the mode on the way into every right-drag.
 - **THEN** pencil mode is as it was, and the press itself left the highlight
   showing where it was
 
-### Requirement: The pencil-mode indicator is legible against the canvas and never covers the board
+### Requirement: The pencil-mode indicator is legible against the canvas
 
 The pencil-mode indicator's glyph SHALL be sized by `pencilIndicatorBox` as half
 a tile less its insets, clamped between 20 and 48 CSS pixels, so a board of many
@@ -639,3 +625,19 @@ roles, and its stale test SHALL cover that lane.
 
 - **WHEN** code asks for the bit of value 32
 - **THEN** it throws a `RangeError` instead of returning another value's bit
+
+### Requirement: One note-taking vocabulary and one layout across games
+
+A game holding the player's provisional candidate marks SHALL keep them in a
+typed array named `pencil`, the word the engine uses everywhere else it speaks
+about notes, so that shared code and cross-game guards read a game's notes
+without being told per game where they live. Each element SHALL be one
+candidate bitmask: of a cell, or of a region where regions are what the player
+fills. The element type SHALL stay the game's own.
+
+#### Scenario: A game whose notes belong to regions
+
+- **WHEN** a game's player marks candidates on regions and not on cells, as in
+  Map
+- **THEN** its `pencil` array holds one bitmask per region, and it conforms as
+  a game keeping one bitmask per cell does

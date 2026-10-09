@@ -284,12 +284,12 @@ come back round, SHALL bound nothing.
 ### Requirement: A hint says when a wire only leads into open tiles
 
 Where the one turning a step rules out as sealing reaches its group across a
-side not yet known to be wired, and the step cites no loop, its words SHALL
-say that the turning leads only into the striped squares and that its wire
-must stop there however they turn. They SHALL add "without closing a loop"
-when a loop is what keeps one of those tiles from leading on. Any step whose
-sealed group is reached across such a side SHALL rank as harder than one whose
-group the known wires already join.
+side not yet known to be wired, or past a tile only a loop keeps from leading
+on, and the step cites no loop, its words SHALL say that the turning leads
+only into the striped squares, where its wire must stop however they turn,
+adding "without closing a loop" in the second case. Any step whose sealed
+group is reached across such a side SHALL rank as harder than one whose group
+the known wires already join.
 
 #### Scenario: A tile on the way could lead on only round a loop
 

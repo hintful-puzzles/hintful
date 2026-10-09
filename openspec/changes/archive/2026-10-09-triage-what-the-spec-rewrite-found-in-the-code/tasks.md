@@ -66,5 +66,5 @@ Each is reproduced in the running app before it is touched
 
 ## 5. Close
 
-- [ ] 5.1 Committed, pushed and archived; anything put to the owner is asked
+- [x] 5.1 Committed, pushed and archived; anything put to the owner is asked
       with the change archived, unless it blocks.

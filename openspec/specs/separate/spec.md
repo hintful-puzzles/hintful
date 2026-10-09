@@ -28,12 +28,19 @@ bare `{w}` SHALL decode to a square `w × w` grid with `k = w`.
 
 `validateParams` SHALL refuse a `k` that does not divide `w·h`, and an
 unreasonably large `w·h`. Under full validation it SHALL also refuse a `k`
-equal to the whole grid.
+equal to the whole grid, a `k` of 1, and a `k` above 26, the letters of the
+alphabet.
 
 #### Scenario: Invalid params are rejected
 
 - **WHEN** params are fully validated with a `k` that does not divide `w·h`,
   or with `k = w·h`
+- **THEN** the result is a non-null error string
+
+#### Scenario: One letter, or more letters than the alphabet
+
+- **WHEN** a 6×6 board is fully validated with `k = 1`, or a 27×27 board with
+  `k = 27`
 - **THEN** the result is a non-null error string
 
 ### Requirement: Separate descriptions encode the letters grid
@@ -284,12 +291,11 @@ nothing can vouch for the marks on such a board.
 ### Requirement: A hint sentence rests on the player's own marks
 
 Every hint sentence SHALL rest only on letters, walls and regions joined by the
-player's own marks. A step that cites two regions SHALL stripe one and outline
-the other, and its sentence SHALL name both marks, except where `shared-letter`
-names a lone square by its letter: two lone squares SHALL both be outlined, and
-a lone square beside a larger region SHALL be named by its letter in the
-firing's first sentence. An `only-way` firing's first sentence SHALL name a
-lone square by its letter.
+player's own marks. A step citing two regions SHALL stripe one and outline the
+other and name both marks, calling a lone square a square and never a region.
+A `shared-letter` or `only-way` firing's first sentence SHALL instead name a
+lone square by its letter, and two lone squares that share a letter SHALL both
+be outlined.
 
 #### Scenario: Two regions are named by their marks
 
@@ -306,9 +312,11 @@ lone square by its letter.
 
 #### Scenario: A lone square a wall separates keeps its mark
 
-- **WHEN** a `walled-apart` step cites a region and a lone square
-- **THEN** one is striped and the other outlined, and the sentence names both
-  marks
+- **WHEN** a `walled-apart` step cites a lone square and a larger region
+- **THEN** one is striped and the other outlined, either of which may be the
+  lone one, and the sentence calls it a square: "A wall already separates the
+  striped square and the outlined region" where the square is the striped one,
+  and "the striped region and the outlined square" where it is the outlined
 
 ### Requirement: Border-grid games share the hint's notation layer
 

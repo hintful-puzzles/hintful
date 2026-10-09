@@ -1988,7 +1988,9 @@ and a hint to never leading the player into a mistake.
 `HintResult`'s error SHALL be a `HintRefusal`: the union of the literal types
 of the collection's refusal constants, plus a sentence made by `puzzleDeadEnd`
 or `markedDeadEnd`, the named escapes. A game SHALL NOT be able to return a
-sentence it typed.
+sentence of its own wording. The type is of literals, so a string spelling a
+constant's text exactly is that constant to it, and the player reads the same
+sentence.
 
 #### Scenario: Two games refuse for the same reason
 

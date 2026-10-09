@@ -199,17 +199,18 @@ the necessity voice.
 #### Scenario: A forced move is explained by the rule it would break
 
 - **WHEN** a hint is requested on a solvable, mistake-free board
-- **THEN** the forced cell is highlighted, and the explanation names the rule
+- **THEN** the forced cell is ringed, and the explanation names the rule
   (sealed off, dot overcount, or cannot-touch-two) that the opposite color
-  would violate, ringing the endangered tile when it is not the target itself
+  would violate, outlining the endangered tile when it is not the target itself
 
 ### Requirement: A Clusters hint shows its reasoning on the board
 
-The forced cell SHALL be highlighted as the hint target. When the contradiction
-lands on a tile other than the target, that tile SHALL be marked with a ring
-distinct from the live-error frame in both hue and thickness, which the
-narration's "outlined" refers to uniquely, so the reasoning is visible on the
-board and not only in prose. The hint SHALL NOT pre-place the forced color.
+The forced cell SHALL be marked as the hint target, which the narration calls
+ringed. When the contradiction lands on a tile other than the target, that tile
+SHALL carry a second mark, a frame in a hue the live-error frame does not use,
+which the narration's "outlined" refers to uniquely, so the
+reasoning is visible on the board and not only in prose. The hint SHALL NOT
+pre-place the forced color.
 
 #### Scenario: The target stays empty under its hint
 
@@ -220,16 +221,17 @@ board and not only in prose. The hint SHALL NOT pre-place the forced color.
 #### Scenario: The word and the ring go together
 
 - **WHEN** a hint step is displayed
-- **THEN** its sentence says "outlined" exactly when the contradiction lands on
-  a tile other than the target, and that tile carries the ring
+- **THEN** its sentence says "outlined" of a tile exactly when the contradiction
+  lands on a tile other than the target, and that tile carries the second mark
 
 ### Requirement: A lookahead deduction is one step showing its whole forcing chain
 
 A deduction that forces a move only through the solver's one-level lookahead
 SHALL be presented as one step that displays the whole forcing chain statically
 on the board: the hypothesis cell as the hint target, each cell the hypothesis
-would force holding a piece of the color it would be forced to, smaller than
-any placed piece, and the tile where the contradiction lands ringed.
+would force numbered in order and holding a piece of the color it would be
+forced to, smaller than any placed piece, and the tile where the contradiction
+lands marked as in a single-cell step.
 
 #### Scenario: A lookahead deduction shows its whole forcing chain
 
@@ -261,13 +263,21 @@ chain short.
 A hint SHALL be refused when the deduction runs into a contradiction from the
 player's position: a wrong tile that no local rule yet flags. The banner SHALL
 say a placed tile must be wrong, and the hint SHALL NOT deduce onward from a
-doomed position.
+doomed position. On a dealt board a wrong tile always ends in that
+contradiction and never in a stall, so `hint` answers `DEDUCTION_EXHAUSTED`
+only for a description the deduction cannot finish from its givens.
 
 #### Scenario: A hint is refused on a doomed board
 
 - **WHEN** a hint is requested on a board whose placed tiles contradict the
   unique solution without yet breaking a local rule
 - **THEN** no move is hinted and an explanatory banner is shown
+
+#### Scenario: Several wrong tiles, none flagged
+
+- **WHEN** a dealt board holds several tiles that disagree with its solution,
+  none of them breaking a local rule, and a hint is asked for
+- **THEN** the banner says a placed tile must be wrong, as it does for one
 
 ### Requirement: Clusters draws its two colors as the collection's two-state pair
 

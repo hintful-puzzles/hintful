@@ -1012,8 +1012,8 @@ keep their own words — a field that is not a candidate set (Pearl's `marks` ar
 no-line marks on a cell's four edges), and a **solver's** own working candidate
 scratch, which is a different object with a different lifetime. Guarded by
 [`note-vocabulary.test.ts`](../../src/engine/note-vocabulary.test.ts); the
-normative rule is the `engine-notes` spec, "One note-taking vocabulary across
-games". *What the disagreement cost while it lasted*: `mark-all.test.ts` carried
+normative rule is the `engine-notes` spec, "One note-taking vocabulary and one
+layout across games". *What the disagreement cost while it lasted*: `mark-all.test.ts` carried
 a hand-written row per game whose whole job was to say where that game's notes
 were — the last per-game roster in the cross-game guards.
 
