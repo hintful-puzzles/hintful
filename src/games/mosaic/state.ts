@@ -4,8 +4,15 @@
  * of its 3×3 neighborhood, itself included.
  */
 
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
-import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -14,9 +21,11 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetMenu } from "../../engine/game.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import { dimensionParamConfig } from "../../engine/params.ts";
+import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 
@@ -33,7 +42,7 @@ export const STATE_ERROR = 8;
 /** Mask of the two mark bits; also the modulus of the toggle cycle. */
 export const STATE_MARK_MASK = STATE_BLANK | STATE_MARKED;
 
-export const MAX_TILES = 10000;
+const MAX_TILES = 10000;
 const DEFAULT_SIZE = 10;
 const DEFAULT_AGGRESSIVENESS = true;
 
@@ -44,6 +53,10 @@ export interface MosaicParams {
   height: number;
   /** Hide every clue that can be hidden (slower generation, harder board). */
   aggressive: boolean;
+  /** `DIFF_EASY`, a board the one rule finishes, or `DIFF_UNREASONABLE`, one
+   * with a single answer that it does not reach. Generation-time only, as
+   * `aggressive` is. */
+  diff: number;
 }
 
 /** The immutable clue board, shared by reference across every state of
@@ -92,45 +105,127 @@ export type MosaicMistake = Point;
 // --- params -------------------------------------------------------------
 
 export function defaultParams(): MosaicParams {
-  return {
-    width: DEFAULT_SIZE,
-    height: DEFAULT_SIZE,
-    aggressive: DEFAULT_AGGRESSIVENESS,
-  };
+  return board(DEFAULT_SIZE);
 }
+
+/** A square board at Easy. 50×50 aggressive generation is too slow; upstream
+ * turns it off. */
+function board(side: number): MosaicParams {
+  return { width: side, height: side, aggressive: side < 50, diff: DIFF_EASY };
+}
+
+/** Upstream's six sizes. The menu offers each at both tiers. */
+const BOARDS: readonly MosaicParams[] = [3, 5, 10, 15, 25, 50].map(board);
+
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<MosaicParams>[] = [
+  ...dimensionParamConfig<MosaicParams>({
+    fields: { w: "width", h: "height" },
+    doc: `Size of the grid in squares. The grid may hold at most ${MAX_TILES} squares. A grid fewer than 20 squares across is refused past a length that depends on its width, because a long thin puzzle cannot be generated.`,
+    bounds: { min: 3 },
+  }),
+  searchTierItem(
+    "diff",
+    "An Easy puzzle can be finished one number at a time: there is always a number that already has its shaded squares, or that needs every square it has left. An Unreasonable one has a single solution that those two steps stop short of, so somewhere you have to look further: by comparing two numbers whose blocks overlap, or by trying a square and seeing what follows. The Hint button stops where the two steps do.",
+  ),
+  {
+    kw: "aggressive-generation",
+    name: "Aggressive generation",
+    type: "boolean",
+    doc: "Every puzzle hides the clues the game never used while solving it. When on, the game also tries taking away each clue that remains, and keeps it away whenever the puzzle still has its one solution at its difficulty without it, so fewer numbers are shown, which usually makes the puzzle harder.",
+    label: {
+      slot: "tail",
+      // Upstream recommends it off above about 30x30, and its presets follow.
+      words: (p) =>
+        p.aggressive === p.width * p.height < 30 * 30
+          ? null
+          : `${p.aggressive ? "slower" : "faster"} generation`,
+    },
+    get: (p) => p.aggressive,
+    set: (p, v) => {
+      p.aggressive = v;
+    },
+  },
+];
 
 export function presets(): PresetMenu<MosaicParams> {
-  const sizes = [3, 5, 10, 15, 25, 50];
-  return {
-    title: "Size",
-    submenu: sizes.map((n) => ({
-      // 50×50 aggressive generation is too slow; upstream turns it off.
-      params: { width: n, height: n, aggressive: n < 50 },
-    })),
-  };
+  return { title: "Size", ...presetGrid(paramConfig, BOARDS) };
 }
 
-export function encodeParams(p: MosaicParams, full: boolean): string {
-  let s = `${p.width}x${p.height}`;
-  if (full && p.aggressive !== DEFAULT_AGGRESSIVENESS) {
-    s += `h${p.aggressive ? 1 : 0}`;
-  }
-  return s;
+/** `WxH[h<0|1>][d<tier>]`, a bare `W` being square. The aggressiveness and
+ * the tier are generator-only. Upstream writes `h` only where it differs
+ * from the default, and its IDs lack the tier: without one a board is Easy,
+ * the only kind upstream deals. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  num(
+    paramConfig,
+    "h",
+    {
+      get: (p) => (p.aggressive ? 1 : 0),
+      set: (p, value) => {
+        p.aggressive = value !== 0;
+      },
+    },
+    { full: true, omitWhen: (p) => p.aggressive === DEFAULT_AGGRESSIVENESS },
+  ),
+  searchTierSegment(paramConfig),
+]);
+
+/**
+ * The longest board dealt at each shorter side, keyed by the largest shorter
+ * side the limit covers. A board is dealt from a random picture the one rule
+ * finishes with every number showing, and on a long thin board the rule runs
+ * dry somewhere along it: the share of pictures it finishes falls to nothing
+ * well inside {@link MAX_TILES}. A board 20 or more across is dealt at any
+ * length. Upstream has no such bound and draws for ever.
+ *
+ * Measured 2026-10-10, one picture in so many finished, at the bound | past
+ * it: 3×22 770, 4×20 430 | 4×25 2,500, 4×30 20,000; 5×30 910 | 5×50 none in
+ * 20,000; 7×40 410 | 7×60 3,000; 8×50 420 | 8×100 none in 8,000; 10×100
+ * 1,200, 12×100 160 | 10×200 and 12×300 none; 15×200 180 | 15×600 none;
+ * 20×500 83.
+ */
+const MAX_LONG_SIDE = new Map<number, number>([
+  [4, 20],
+  [5, 30],
+  [7, 40],
+  [9, 50],
+  [14, 100],
+  [19, 200],
+]);
+
+/** The longest side dealt on a board `short` squares across. */
+function maxLongSide(short: number): number {
+  for (const [upTo, long] of MAX_LONG_SIDE) if (short <= upTo) return long;
+  return Number.POSITIVE_INFINITY;
 }
 
-export function decodeParams(s: string): MosaicParams {
-  const ret = defaultParams();
-  const dims = parseDimensions(s);
-  ret.width = dims.w;
-  ret.height = dims.h;
-  const i = dims.next;
-  if (s[i] === "h") ret.aggressive = parseLeadingInt(s, i + 1).value !== 0;
-  return ret;
-}
+/**
+ * The largest Unreasonable board dealt with aggressive generation, in
+ * squares. Hiding asks the search about every clue, which takes about five
+ * times as long as an Easy board's: 0.5 s at 25×25, 1.2 s at 30×30 and 2.9 s
+ * at 35×35 (measured 2026-10-10). Without aggressive generation hiding stops
+ * at the first clue that matters and a 100×100 board takes 0.3 s.
+ */
+const MAX_AGGRESSIVE_UNREASONABLE = 900;
 
-export function validateParams(p: MosaicParams, _full: boolean): string | null {
+export function validateParams(p: MosaicParams, full: boolean): string | null {
   if (p.height > MAX_TILES / p.width)
     return `Width times height must be at most ${MAX_TILES}.`;
+  // Generation only: a board that arrives with its description is not
+  // searched for, so it opens at any shape.
+  if (!full) return null;
+  const short = Math.min(p.width, p.height);
+  const long = maxLongSide(short);
+  if (Math.max(p.width, p.height) > long)
+    return `A board ${short} squares across can be at most ${long} long; a longer one cannot be generated.`;
+  if (
+    p.diff === DIFF_UNREASONABLE &&
+    p.aggressive &&
+    p.width * p.height > MAX_AGGRESSIVE_UNREASONABLE
+  )
+    return `With aggressive generation an ${SEARCH_TIER_NAMES[DIFF_UNREASONABLE]} puzzle can have at most ${MAX_AGGRESSIVE_UNREASONABLE} squares; turn aggressive generation off for a larger one.`;
   return null;
 }
 

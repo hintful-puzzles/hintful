@@ -21,6 +21,9 @@
   the menu's lines moved with the menu.
   **Filling: done.** Every line gained `de` (`9x13` is now `9x13de`), and
   the menu gained its three Unreasonable lines.
+  **Mosaic: done.** Its codec is now built from `paramsCodec`. Every line
+  gained `de` after what it had (`50x50h0` is now `50x50h0de`), and the menu
+  gained its six Unreasonable lines.
 
 ## 2. One game to the end: Pattern
 
@@ -139,7 +142,31 @@
     - **For the owner to look at, not blocking:** on a small board the hint
       can place nothing before it stops (two of three 5x5 samples), as on
       ABCD with clues hidden.
-  - [ ] Mosaic, Palisade, Separate, Signpost, Sticks, Net, Range,
+  - [x] **Mosaic** (2026-10-10). Measured with aggressive generation: a
+    deal is 7 ms at 10x10, 0.5 s at 25x25 and 1.2 s at 30x30, about five
+    times an Easy one; a dealt board needs a median of 9 to 29 positions; the
+    rule leaves a median of 58 squares of 100 undecided at 10x10 and 485 of
+    625 at 25x25. Decided, each with its reason in the guide's "What Mosaic,
+    the fifth, added":
+    - The generator hides further clues from an Easy board by the search,
+      within 30 positions. Aggressive generation stays an option beside the
+      tier: without it hiding stops at the first clue that stops the rule.
+    - The menu is upstream's six sizes at both tiers, 50x50 without
+      aggressive generation at both.
+    - Unreasonable with aggressive generation is refused past 900 squares.
+    - **A defect in Easy, found by sweeping the shorter side and fixed
+      here.** A board three to nineteen across is not dealt past a length
+      well inside the 10,000-square bound, and ran the retry cap out.
+      `validateParams` now refuses it with the length its width allows.
+    - The ledger's Mosaic board had no answer at all.
+    - **For the owner to look at, not blocking: most of these boards do not
+      need trial and error.** Comparing two numbers whose blocks overlap,
+      which the solver and the hint do not do, finishes 34 of 40 at 10x10
+      and every board seen without aggressive generation. The help page says
+      to look for it first, and
+      `openspec/changes/give-mosaic-the-deduction-its-unreasonable-boards-lack`
+      is filed to build the rung.
+  - [ ] Palisade, Separate, Signpost, Sticks, Net, Range,
     Rectangles. For each, do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
     finish of the boards the tier deals, and sweep the shorter side when

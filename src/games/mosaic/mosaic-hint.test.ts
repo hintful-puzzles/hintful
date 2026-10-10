@@ -4,6 +4,7 @@
  * careless `vitest -u` cannot erase them.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -16,7 +17,7 @@ import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
 import { newDesc, solveGameActual } from "./solver.ts";
 import { newState, STATE_BLANK, STATE_MARKED } from "./state.ts";
 
-const P = { width: 10, height: 10, aggressive: true };
+const P = { width: 10, height: 10, aggressive: true, diff: DIFF_EASY };
 const desc = newDesc(P, randomNew("mosaic-hint")).desc;
 
 /** The two rules, each pinned on a position whose hint speaks it. */

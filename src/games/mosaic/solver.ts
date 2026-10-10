@@ -9,6 +9,13 @@
  * (`solveGameActual`, board-side, clue numbers only).
  */
 
+import {
+  type Answer,
+  answerCache,
+  type Deduced,
+  DIFF_EASY,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
@@ -94,13 +101,15 @@ export function solveCell(
     return "progress";
   }
   // The unknowns are forced blank once the clue is met, and marked once it
-  // needs all of them; a determined neighborhood short of both is a
-  // contradiction.
+  // needs all of them. A neighborhood with more marked than the clue, or too
+  // few left to reach it, is a contradiction whether or not it is determined:
+  // upstream says so only of a determined one, which is all a board with an
+  // answer asks, and a search has to be told of the other as it happens.
   let mark: number;
   if (full) mark = STATE_MARKED;
   else if (empty || marked === clue) mark = STATE_BLANK;
   else if (clue === total - blank) mark = STATE_MARKED;
-  else if (determined) return "contradiction";
+  else if (marked > clue || clue > total - blank) return "contradiction";
   else return "none";
   sol.solved[pos] = 1;
   if (!determined) sol.needed[pos] = 1;
@@ -217,9 +226,23 @@ export function solveCheck(
  * stalls or contradicts.
  */
 export function solveGameActual(board: MosaicBoard): Uint8Array | null {
+  const cells = new Uint8Array(board.width * board.height);
+  return settle(board, cells) === "solved" ? cells : null;
+}
+
+/**
+ * Run the rule over every cell of `board` until nothing more follows from
+ * `cells`, the marks so far, which it fills in place. `"solved"` is every
+ * cell marked and every clue met.
+ */
+function settle(board: MosaicBoard, cells: Uint8Array): Deduced {
   const { width, height, clues } = board;
   const size = width * height;
-  const sol = newSolution(size);
+  const sol: Solution = {
+    cell: cells,
+    solved: new Uint8Array(size),
+    needed: new Uint8Array(size),
+  };
 
   let solvedCount = 0;
   let madeProgress = true;
@@ -249,7 +272,97 @@ export function solveGameActual(board: MosaicBoard): Uint8Array | null {
       }
     }
   }
-  return solvedCount === size ? sol.cell : null;
+  if (error) return "contradiction";
+  return solvedCount === size ? "solved" : "stuck";
+}
+
+// --- the search for a board's answers ---------------------------------------
+
+/** What a search established about a board's answers; the one answer is each
+ * cell's mark, `STATE_MARKED` or `STATE_BLANK`. */
+export type MosaicAnswer = Answer<Uint8Array>;
+
+/**
+ * The positions a search may try before it gives up, each one a square
+ * assumed shaded or clear and the rule run from it.
+ *
+ * It decides which Unreasonable boards exist: a board that needs more is
+ * thrown away when dealing and refused when pasted. Lowering it refuses boards
+ * already dealt, which are in saved games. A dealt board needs 30 at most,
+ * the generator's own bound, so the rest is room for a pasted one. Measured
+ * 2026-10-10, running it out on a board with half its clues gone takes 0.1 s
+ * at 30×30, 0.2 s at 50×50 and about a second at 100×100.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a board's answers up to two, by trial and error over the rule: where
+ * it stops, take an empty square of the number with the fewest left to decide
+ * and assume it each way.
+ */
+export function searchAnswers(
+  board: MosaicBoard,
+  budget: number = SEARCH_BUDGET,
+): MosaicAnswer {
+  return searchBoard<Uint8Array, Uint8Array>({
+    start: new Uint8Array(board.width * board.height),
+    deduce: (cells) => settle(board, cells),
+    assume: (cells) => assumeSquare(board, cells),
+    solution: (cells) => cells,
+    budget,
+  });
+}
+
+/**
+ * The two positions a stuck one divides into: one empty square, shaded and
+ * then clear. The square is the first empty one in the block of the number
+ * with the fewest empty squares, where either way is likeliest to settle the
+ * rest of the block. With no such number it is the first empty square: one no
+ * number counts, which is free and so gives the board two answers.
+ */
+function assumeSquare(board: MosaicBoard, cells: Uint8Array): Uint8Array[] {
+  const { width, height, clues } = board;
+  let at = cells.indexOf(STATE_UNMARKED);
+  let fewest = Number.POSITIVE_INFINITY;
+  for (let pos = 0; pos < clues.length; pos++) {
+    if (clues[pos] < 0) continue;
+    const x = pos % width;
+    const y = Math.floor(pos / width);
+    const { marked, blank, total } = countAround(width, height, cells, x, y);
+    const open = total - marked - blank;
+    if (open === 0 || open >= fewest) continue;
+    fewest = open;
+    at = firstOpenAround(width, height, cells, x, y);
+  }
+  if (at < 0) return [];
+  return [STATE_MARKED, STATE_BLANK].map((mark) => {
+    const next = cells.slice();
+    next[at] = mark;
+    return next;
+  });
+}
+
+/** The first unmarked cell of the block round (x,y), in reading order. */
+function firstOpenAround(
+  width: number,
+  height: number,
+  cells: Uint8Array,
+  x: number,
+  y: number,
+): number {
+  for (let j = Math.max(0, y - 1); j <= Math.min(height - 1, y + 1); j++)
+    for (let i = Math.max(0, x - 1); i <= Math.min(width - 1, x + 1); i++)
+      if (cells[j * width + i] === STATE_UNMARKED) return j * width + i;
+  return -1;
+}
+
+/** Keyed on a state's board, which every state of a game shares. */
+const answers = answerCache<MosaicBoard, Uint8Array>();
+
+/** What a search of a state's board established about its answers. The
+ * player's marks are not read. */
+export function answerOf(state: { board: MosaicBoard }): MosaicAnswer {
+  return answers(state.board, () => searchAnswers(state.board));
 }
 
 // --- generator --------------------------------------------------------------
@@ -282,10 +395,10 @@ export function hideClues(
   }
 }
 
-/** Upstream `new_game_desc`: random image → clues → regenerate until a
- * usable starting deduction exists and the deduction completes → hide
- * clues → run-length encode. */
-export function newDesc(p: MosaicParams, rng: RandomState): { desc: string } {
+/** An Easy board's clues, `-1` where hidden (upstream `new_game_desc`):
+ * random image → clues → regenerate until a usable starting deduction exists
+ * and the deduction completes → hide clues. */
+function easyClues(p: MosaicParams, rng: RandomState): Int8Array {
   const { width, height, aggressive } = p;
   const size = width * height;
   const image = new Uint8Array(size);
@@ -320,7 +433,72 @@ export function newDesc(p: MosaicParams, rng: RandomState): { desc: string } {
   for (let pos = 0; pos < size; pos++) {
     clues[pos] = cells.shown[pos] ? cells.clue[pos] : -1;
   }
-  return { desc: encodeBoard({ width, height, clues }) };
+  return clues;
+}
+
+/**
+ * The positions the search may try when a clue is hidden from an Unreasonable
+ * board, far under the 2,000 it has by default. Hiding stops only when the
+ * search can no longer prove one answer, so it takes a board up to whatever
+ * the search is allowed, and this is how hard the tier's boards are.
+ *
+ * Measured 2026-10-10 with aggressive generation: a dealt board needs a
+ * median of 9 positions at 5×5, 21 at 10×10 and 29 at 25×25, and the rule
+ * leaves a median of 58 squares of 100 undecided at 10×10 and 485 of 625 at
+ * 25×25. Most of these boards do not need a trial: comparing two numbers
+ * whose blocks overlap, which the rule does not do, finishes 34 of 40 at
+ * 10×10 and 11 of 16 at 15×15. Without aggressive generation a board needs a
+ * median of 5 to 7 positions and that comparison finishes every one seen.
+ */
+const HIDING_BUDGET = 30;
+
+/**
+ * An Unreasonable board's clues: an Easy board's with more hidden, each while
+ * the search still proves one answer within {@link HIDING_BUDGET}, kept once
+ * the rule stops short on what is left. With aggressive generation every
+ * clue is tried. Without it hiding stops at the first clue whose loss stops
+ * the rule, so the board keeps the rest of its numbers.
+ *
+ * It starts from an Easy board and not from every clue, which the search
+ * could strip as well: stripped that way most boards have no number the rule
+ * can start from, and the hint has nothing to say on them (the rule left a
+ * median of 90 squares of 100 undecided at 10×10, against 58 this way).
+ */
+function unreasonableClues(p: MosaicParams, rng: RandomState): Int8Array {
+  const { width, height, aggressive } = p;
+  const size = width * height;
+  // The boards stripped before giving up. Only the smallest are often thrown
+  // away for giving up no clue.
+  const attempt = retryLimit(
+    `mosaic: Unreasonable generation (${width}x${height})`,
+    Math.max(20, Math.ceil(100_000 / size ** 2)),
+  );
+  for (;;) {
+    attempt();
+    const clues = easyClues(p, rng);
+    const board: MosaicBoard = { width, height, clues };
+    const shown: number[] = [];
+    for (let pos = 0; pos < size; pos++) if (clues[pos] >= 0) shown.push(pos);
+    shuffle(shown, rng);
+    let hidden = false;
+    for (const pos of shown) {
+      const clue = clues[pos];
+      clues[pos] = -1;
+      if (searchAnswers(board, HIDING_BUDGET).kind !== "one") {
+        clues[pos] = clue;
+        continue;
+      }
+      hidden = true;
+      if (!aggressive && solveGameActual(board) === null) return clues;
+    }
+    // The rule deduces no more from fewer clues, so asking once is enough.
+    if (hidden && solveGameActual(board) === null) return clues;
+  }
+}
+
+export function newDesc(p: MosaicParams, rng: RandomState): { desc: string } {
+  const clues = p.diff === DIFF_EASY ? easyClues(p, rng) : unreasonableClues(p, rng);
+  return { desc: encodeBoard({ width: p.width, height: p.height, clues }) };
 }
 
 // --- solve command + mistakes -------------------------------------------------
@@ -340,21 +518,13 @@ export function encodeSolution(solCells: Uint8Array): string {
   return out;
 }
 
-/** The board's solution, solved once per board: every state of a game shares
- * its frozen board, and the hint asks for mistakes after every move. */
-const solutions = new WeakMap<MosaicBoard, Uint8Array | null>();
-function solutionOf(board: MosaicBoard): Uint8Array | null {
-  if (!solutions.has(board)) solutions.set(board, solveGameActual(board));
-  return solutions.get(board) ?? null;
-}
-
-/** Every determined cell whose mark contradicts the deduced solution.
- * Generated boards are deduction-solvable hence unique, so the solver's
- * answer is the answer; if deduction stalls (a foreign desc), there is
- * nothing to check against and no mistake is reported. */
+/** Every determined cell whose mark contradicts the board's one answer, which
+ * the search found at either tier. Where it did not prove there is exactly
+ * one, there is nothing to check against and no mistake is reported. */
 export function findMistakes(state: MosaicState): MosaicMistake[] {
-  const solCells = solutionOf(state.board);
-  if (!solCells) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const solCells = answer.solution;
   const { width, cells } = state;
   const mistakes: MosaicMistake[] = [];
   for (let pos = 0; pos < cells.length; pos++) {

@@ -6,10 +6,10 @@
  * result to every cell it passes that held what the pressed one held.
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { cursorDelta, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -36,19 +36,25 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { encodeSolution, findMistakes, newDesc, solveGameActual } from "./solver.ts";
+import {
+  answerOf,
+  encodeSolution,
+  findMistakes,
+  newDesc,
+  solveGameActual,
+} from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
   encodeParams,
   executeMove,
-  MAX_TILES,
   type MosaicMistake,
   type MosaicMove,
   type MosaicParams,
   type MosaicState,
   type MosaicUi,
   newState,
+  paramConfig,
   presets,
   STATE_MARK_MASK,
   status,
@@ -131,31 +137,7 @@ export const mosaicGame: Game<
   decodeParams,
   validateParams,
   transposeParams: transposeDimensions<MosaicParams>({ w: "width", h: "height" }),
-  paramConfig: [
-    ...dimensionParamConfig<MosaicParams>({
-      fields: { w: "width", h: "height" },
-      doc: `Size of the grid in squares. The grid may hold at most ${MAX_TILES} squares.`,
-      bounds: { min: 3 },
-    }),
-    {
-      kw: "aggressive-generation",
-      name: "Aggressive generation",
-      type: "boolean",
-      doc: "Every puzzle hides the clues the game never used while solving it. When on, the game also tries taking away each clue that remains, and keeps it away whenever the puzzle can still be solved without it, so fewer numbers are shown, which usually makes the puzzle harder.",
-      label: {
-        slot: "tail",
-        // Upstream recommends it off above about 30x30, and its presets follow.
-        words: (p) =>
-          p.aggressive === p.width * p.height < 30 * 30
-            ? null
-            : `${p.aggressive ? "slower" : "faster"} generation`,
-      },
-      get: (p) => p.aggressive,
-      set: (p, v) => {
-        p.aggressive = v;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc,
   newState,
@@ -164,14 +146,21 @@ export const mosaicGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(mosaicGame, s),
   status,
 
-  solve(orig, _curr) {
-    const sol = solveGameActual(orig.board);
-    if (!sol) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-    return { ok: true, move: { type: "solve", solution: encodeSolution(sol) } };
-  },
+  solve: (orig, _curr) =>
+    solveFromAnswer(answerOf(orig), (cells) => ({
+      type: "solve",
+      solution: encodeSolution(cells),
+    })),
+  // Easy is what the one rule finishes and the hint, which reads the same
+  // rule off the player's marks, finishes too.
+  difficulty: searchTierContract<MosaicParams, MosaicState>({
+    newState,
+    deductionFinishes: (state) =>
+      solveGameActual(state.board) !== null && hintFinishes(mosaicGame, state),
+    answerOf,
+  }),
 
   findMistakes,
 

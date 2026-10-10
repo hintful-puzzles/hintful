@@ -3,6 +3,7 @@
 // validity + deduction-solvability across sizes/seeds, hideClues
 // minimization, the solve-command bitmap, and findMistakes.
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { mosaicGame } from "./index.ts";
@@ -126,7 +127,10 @@ describe("solveCell / solveCheck / solveGameActual", () => {
 
   it("solveGameActual recovers the image from a parsed desc", () => {
     // The all-black 3×3 board.
-    const state = newState({ width: 3, height: 3, aggressive: true }, "464696464");
+    const state = newState(
+      { width: 3, height: 3, aggressive: true, diff: DIFF_EASY },
+      "464696464",
+    );
     const sol = solveGameActual(state.board);
     expect(sol).not.toBeNull();
     expect(Array.from(sol as Uint8Array)).toEqual(new Array(9).fill(STATE_MARKED));
@@ -134,7 +138,10 @@ describe("solveCell / solveCheck / solveGameActual", () => {
 
   it("solveGameActual returns null when deduction stalls", () => {
     // A lone central clue 5 on 3×3 determines nothing.
-    const state = newState({ width: 3, height: 3, aggressive: true }, "d5d");
+    const state = newState(
+      { width: 3, height: 3, aggressive: true, diff: DIFF_EASY },
+      "d5d",
+    );
     expect(solveGameActual(state.board)).toBeNull();
   });
 });
@@ -159,7 +166,7 @@ describe("generator", () => {
       [10, true, "charlie"],
       [7, false, "delta"],
     ] as const) {
-      const p = { width: n, height: n, aggressive };
+      const p = { width: n, height: n, aggressive, diff: DIFF_EASY };
       const rng = randomNew(seed);
       const { desc } = newDesc(p, rng);
       expect(validateDesc(mosaicGame, p, desc), `desc for ${n}/${seed}`).toBeNull();
@@ -201,7 +208,10 @@ describe("solve command + findMistakes", () => {
 
   it("flags a determined cell that contradicts the solution", () => {
     // All-black board: blanking any cell is a mistake; marking is not.
-    let state = newState({ width: 3, height: 3, aggressive: true }, "464696464");
+    let state = newState(
+      { width: 3, height: 3, aggressive: true, diff: DIFF_EASY },
+      "464696464",
+    );
     expect(findMistakes(state)).toEqual([]);
     state = executeMove(state, { type: "toggle", x: 1, y: 0, double: true }); // blank
     expect(findMistakes(state)).toEqual([{ x: 1, y: 0 }]);
@@ -210,7 +220,10 @@ describe("solve command + findMistakes", () => {
   });
 
   it("reports nothing when deduction cannot determine the board", () => {
-    const state = newState({ width: 3, height: 3, aggressive: true }, "d5d");
+    const state = newState(
+      { width: 3, height: 3, aggressive: true, diff: DIFF_EASY },
+      "d5d",
+    );
     expect(findMistakes(state)).toEqual([]);
   });
 });

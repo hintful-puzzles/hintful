@@ -358,15 +358,21 @@ bump:firstClickY  full=9x9n10Y0  brief=9x9"
 `;
 
 exports[`encoded params are byte-stable > mosaic 1`] = `
-"default  full=10x10
-preset:Size/3x3  full=3x3
-preset:Size/5x5  full=5x5
-preset:Size/15x15  full=15x15
-preset:Size/25x25  full=25x25
-preset:Size/50x50  full=50x50h0  brief=50x50
-bump:width  full=11x10
-bump:height  full=10x11
-flip:aggressive  full=10x10h0  brief=10x10"
+"default  full=10x10de  brief=10x10
+preset:Size/3x3 Easy  full=3x3de  brief=3x3
+preset:Size/3x3 Unreasonable  full=3x3du  brief=3x3
+preset:Size/5x5 Easy  full=5x5de  brief=5x5
+preset:Size/5x5 Unreasonable  full=5x5du  brief=5x5
+preset:Size/10x10 Unreasonable  full=10x10du  brief=10x10
+preset:Size/15x15 Easy  full=15x15de  brief=15x15
+preset:Size/15x15 Unreasonable  full=15x15du  brief=15x15
+preset:Size/25x25 Easy  full=25x25de  brief=25x25
+preset:Size/25x25 Unreasonable  full=25x25du  brief=25x25
+preset:Size/50x50 Easy  full=50x50h0de  brief=50x50
+preset:Size/50x50 Unreasonable  full=50x50h0du  brief=50x50
+bump:width  full=11x10de  brief=11x10
+bump:height  full=10x11de  brief=10x11
+flip:aggressive  full=10x10h0de  brief=10x10"
 `;
 
 exports[`encoded params are byte-stable > net 1`] = `

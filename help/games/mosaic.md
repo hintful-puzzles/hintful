@@ -38,6 +38,15 @@ Every step is one of two ideas:
 * **A number with only as many squares left that are not clear as it
   needs** makes all of those {{pair:0}}.
 
+On an Unreasonable board there comes a point where no number on its own
+settles another square, and the hint says that nothing further follows by
+deduction instead of choosing for you. Look first at two numbers whose blocks
+overlap, which the hint does not do: the difference between them is all in
+the squares only one of them counts, and when it is as large as it can be
+those squares are settled. Failing that, save your position and try a square
+beside a number with few squares left. The hint carries on from whatever you
+mark.
+
 ## Mosaic parameters
 
 {{parameters}}

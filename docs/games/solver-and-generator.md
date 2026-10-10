@@ -613,6 +613,27 @@ What Filling, the fourth, added:
   proves a refusal (no 1x3 or 1x4 board has the tier) and it shows what the
   generator cannot reach where a board exists.
 
+What Mosaic, the fifth, added:
+
+- **Which board the strip starts from is decided by what the hint is left
+  with.** Filling strips a full board by the search. Mosaic stripped that way
+  mostly has no number its rule can start from, and the rule left a median
+  of 90 squares of 100 undecided. It starts from an Easy board, which leaves
+  58. Measure both before copying either.
+- **An option that trades clues for speed stops the strip early at the new
+  tier.** Without aggressive generation Mosaic hides until the first clue
+  whose loss stops the rule, so the board keeps its numbers and a 100x100
+  one still deals in a third of a second. With it, the tier has an area
+  bound of its own and the refusal names the option.
+- **A deduction that waits for a determined position needs its early form.**
+  Mosaic's rule called a block contradictory only once every square of it
+  was decided. The search is right either way and slower; the verdict is
+  seen by giving the search one position.
+- **Sweep the shorter side at Easy even where the bound is an area.**
+  Mosaic's only bound was 10,000 squares, and no board three to nineteen
+  across is dealt past a length inside it (3x40, 8x100 and 12x300 gave none
+  in thousands of pictures). The bound is a table by shorter side.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

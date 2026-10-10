@@ -2,6 +2,7 @@
 // paint semantics, solve bitmap), clue SOLVED/ERROR flagging, completion
 // counting, status / status bar, text format, and input mapping.
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -45,22 +46,40 @@ import {
 // 3×3 all-black image: every clue saturates its clipped neighborhood
 // (4 corner / 6 edge / 9 center), so marking everything black solves it.
 const ALL_BLACK_DESC = "464696464";
-const P3 = { width: 3, height: 3, aggressive: true };
+const P3 = { width: 3, height: 3, aggressive: true, diff: DIFF_EASY };
 
 function freshUi(): MosaicUi {
   return { cursor: newCursor() };
 }
 
 describe("Mosaic params", () => {
-  it("encodes WxH and elides default aggressiveness", () => {
-    expect(encodeParams({ width: 10, height: 8, aggressive: true }, true)).toBe("10x8");
-    expect(encodeParams({ width: 50, height: 50, aggressive: false }, true)).toBe(
-      "50x50h0",
-    );
+  it("encodes WxH, elides default aggressiveness and writes the tier last", () => {
+    expect(
+      encodeParams({ width: 10, height: 8, aggressive: true, diff: DIFF_EASY }, true),
+    ).toBe("10x8de");
+    expect(
+      encodeParams({ width: 50, height: 50, aggressive: false, diff: DIFF_EASY }, true),
+    ).toBe("50x50h0de");
+    expect(
+      encodeParams(
+        { width: 50, height: 50, aggressive: false, diff: DIFF_UNREASONABLE },
+        true,
+      ),
+    ).toBe("50x50h0du");
+    expect(decodeParams("50x50h0du")).toEqual({
+      width: 50,
+      height: 50,
+      aggressive: false,
+      diff: DIFF_UNREASONABLE,
+    });
+    expect(decodeParams("10x8du").aggressive).toBe(true);
     // Short (non-full) encoding never carries the suffix.
-    expect(encodeParams({ width: 50, height: 50, aggressive: false }, false)).toBe(
-      "50x50",
-    );
+    expect(
+      encodeParams(
+        { width: 50, height: 50, aggressive: false, diff: DIFF_EASY },
+        false,
+      ),
+    ).toBe("50x50");
   });
 
   it("drives width/height from the shared Width/Height dialog items", () => {
@@ -74,56 +93,101 @@ describe("Mosaic params", () => {
     if (width?.type !== "string" || height?.type !== "string")
       throw new Error("Mosaic must expose Width and Height as text fields");
 
-    const p = { width: 5, height: 5, aggressive: true };
+    const p = { width: 5, height: 5, aggressive: true, diff: DIFF_EASY };
     width.set(p, "12");
     height.set(p, "9");
-    expect(p).toEqual({ width: 12, height: 9, aggressive: true });
+    expect(p).toEqual({ width: 12, height: 9, aggressive: true, diff: DIFF_EASY });
     expect(width.get(p)).toBe("12");
     expect(height.get(p)).toBe("9");
     // The mapping is load-bearing all the way to the game id.
-    expect(encodeParams(p, true)).toBe("12x9");
+    expect(encodeParams(p, true)).toBe("12x9de");
   });
 
   it("decodes round-trips and square shorthand", () => {
-    expect(decodeParams("10x8")).toEqual({ width: 10, height: 8, aggressive: true });
+    expect(decodeParams("10x8")).toEqual({
+      width: 10,
+      height: 8,
+      aggressive: true,
+      diff: DIFF_EASY,
+    });
     expect(decodeParams("50x50h0")).toEqual({
       width: 50,
       height: 50,
       aggressive: false,
+      diff: DIFF_EASY,
     });
-    expect(decodeParams("7")).toEqual({ width: 7, height: 7, aggressive: true });
+    expect(decodeParams("7")).toEqual({
+      width: 7,
+      height: 7,
+      aggressive: true,
+      diff: DIFF_EASY,
+    });
   });
 
   it("validates size bounds", () => {
     expect(
-      paramsError(mosaicGame, { width: 2, height: 3, aggressive: true }, true),
+      paramsError(
+        mosaicGame,
+        { width: 2, height: 3, aggressive: true, diff: DIFF_EASY },
+        true,
+      ),
     ).toBe("Width must be at least 3.");
     expect(
-      paramsError(mosaicGame, { width: 3, height: 3, aggressive: true }, true),
+      paramsError(
+        mosaicGame,
+        { width: 3, height: 3, aggressive: true, diff: DIFF_EASY },
+        true,
+      ),
     ).toBeNull();
     expect(
-      paramsError(mosaicGame, { width: 101, height: 100, aggressive: true }, true),
+      paramsError(
+        mosaicGame,
+        { width: 101, height: 100, aggressive: true, diff: DIFF_EASY },
+        true,
+      ),
     ).toBeTruthy();
     expect(
-      paramsError(mosaicGame, { width: 100, height: 100, aggressive: true }, true),
+      paramsError(
+        mosaicGame,
+        { width: 100, height: 100, aggressive: true, diff: DIFF_EASY },
+        true,
+      ),
     ).toBeNull();
   });
 
   it("names the generation mode only where it is not the size's default", () => {
     const titles = (presetMenu(mosaicGame).submenu ?? []).map((m) => m.title);
-    expect(titles).toEqual(["3x3", "5x5", "10x10", "15x15", "25x25", "50x50"]);
-    expect(
-      describeParams(mosaicGame, { width: 50, height: 50, aggressive: true }),
-    ).toBe("50x50, slower generation");
-    expect(describeParams(mosaicGame, { width: 5, height: 5, aggressive: false })).toBe(
-      "5x5, faster generation",
+    expect(titles).toEqual(
+      ["3x3", "5x5", "10x10", "15x15", "25x25", "50x50"].flatMap((size) => [
+        `${size} Easy`,
+        `${size} Unreasonable`,
+      ]),
     );
+    expect(
+      describeParams(mosaicGame, {
+        width: 50,
+        height: 50,
+        aggressive: true,
+        diff: DIFF_EASY,
+      }),
+    ).toBe("50x50 Easy, slower generation");
+    expect(
+      describeParams(mosaicGame, {
+        width: 5,
+        height: 5,
+        aggressive: false,
+        diff: DIFF_UNREASONABLE,
+      }),
+    ).toBe("5x5 Unreasonable, faster generation");
   });
 });
 
 describe("Mosaic desc codec", () => {
   it("parses digits and letter runs", () => {
-    const state = newState({ width: 3, height: 3, aggressive: true }, "4b69c4");
+    const state = newState(
+      { width: 3, height: 3, aggressive: true, diff: DIFF_EASY },
+      "4b69c4",
+    );
     // 4, [2 hidden], 6, 9, [3 hidden], 4 — scan order.
     expect(Array.from(state.board.clues)).toEqual([4, -1, -1, 6, 9, -1, -1, -1, 4]);
     expect(cluesLeft(state)).toBe(4);
@@ -138,7 +202,7 @@ describe("Mosaic desc codec", () => {
 
   it("encodes a >26-cell hidden run with a z boundary", () => {
     // 6×5 board, clue at the first cell, 29 hidden cells: z (26) + c (3).
-    const p = { width: 6, height: 5, aggressive: true };
+    const p = { width: 6, height: 5, aggressive: true, diff: DIFF_EASY };
     const desc = "5zc";
     expect(validateDesc(mosaicGame, p, desc)).toBeNull();
     const state = newState(p, desc);

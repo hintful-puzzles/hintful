@@ -4,6 +4,7 @@
 // the completion-flash inversion, the mistake outline, and the cache
 // suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -37,7 +38,7 @@ function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"
 }
 
 const TS = 32;
-const P3 = { width: 3, height: 3, aggressive: true };
+const P3 = { width: 3, height: 3, aggressive: true, diff: DIFF_EASY };
 const ALL_BLACK_DESC = "464696464";
 
 function freshUi(): MosaicUi {
