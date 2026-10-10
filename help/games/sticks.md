@@ -45,6 +45,13 @@ side a block still needs, which the hint calls an *open side*. When
 one number rules out several squares, the hint walks through them one at
 a time as a single step.
 
+On an Unreasonable board there comes a point where no square has a
+direction that breaks a rule at once. The hint then says that nothing
+further follows by deduction instead of choosing for you. Save your
+position and try a line in a square beside a number: if it is wrong, a
+few forced squares later some number has no way left to be met. The hint
+carries on from whatever you decide.
+
 ## Sticks parameters
 
 {{parameters}}

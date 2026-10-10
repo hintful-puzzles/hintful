@@ -11,19 +11,30 @@
  * one `shuffle` of the cell indices for the greedy clue minimization. The
  * solver is deterministic, so the desc is a pure function of the seed.
  */
+
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { placeSymmetricBlacks } from "../../engine/symmetric-blacks.ts";
-import { sticksMakeDsf, sticksSolveGame } from "./solver.ts";
+import { searchAnswers, sticksMakeDsf, sticksSolveGame } from "./solver.ts";
 import { encodeDesc, F_BLOCK, F_HOR, F_VER, type SticksParams } from "./state.ts";
 
 /** Runaway backstop only — upstream loops unbounded, and the fill retry
  * converges quickly in practice (docs/games/testing.md § "Quirks are load-bearing — capped, not cleaned"). */
 const MAX_FILL_ATTEMPTS = 100_000;
 
-export function newSticksDesc(p: SticksParams, rng: RandomState): { desc: string } {
+/** A dealt board: its blocks, in a grid whose white squares may hold lines,
+ * and its clues. */
+interface Dealt {
+  grid: Uint8Array;
+  numbers: Int16Array;
+}
+
+/** Blocks, and a fill of lines with every clue it gives, that the solver's
+ * deduction finishes. Both tiers strip clues from one of these. */
+function clueFill(p: SticksParams, rng: RandomState): Dealt {
   const { w, h } = p;
   const s = w * h;
   const grid = new Uint8Array(s);
@@ -88,16 +99,76 @@ export function newSticksDesc(p: SticksParams, rng: RandomState): { desc: string
     }
   } while (sticksSolveGame(grid, numbers, w, h) !== "complete");
 
-  // Greedy clue minimization: one shuffle, then keep each removal only
-  // while the board still solves to completion.
-  const spaces = Array.from({ length: s }, (_, i) => i);
+  return { grid, numbers };
+}
+
+/** Greedy clue minimization: one shuffle, then each clue gone only while
+ * `keeps` still holds of what is left. */
+function stripClues({ numbers }: Dealt, rng: RandomState, keeps: () => boolean): void {
+  const spaces = Array.from(numbers, (_, i) => i);
   shuffle(spaces, rng);
   for (const i of spaces) {
     const clue = numbers[i];
     if (clue === -1) continue;
     numbers[i] = -1;
-    if (sticksSolveGame(grid, numbers, w, h) !== "complete") numbers[i] = clue;
+    if (!keeps()) numbers[i] = clue;
   }
+}
 
-  return { desc: encodeDesc(grid, numbers, w, h) };
+/**
+ * The positions the search may try when a clue is stripped from an
+ * Unreasonable board, far under the 2,000 it has by default. Stripping stops
+ * only when the search can no longer prove one answer, so it takes a board up
+ * to whatever the search is allowed, and this is how hard the tier's boards
+ * are.
+ *
+ * Measured 2026-10-10: a dealt board needs a median of 3 to 5 positions and
+ * 19 at most, and the hint leaves a median of 9 squares of 20 blank at 5×5,
+ * 12 of 41 at 7×7 and 12 of 80 at 10×10. A budget of 10 deals the same boards
+ * in the same time. Trying a line and following the deduction from it, one
+ * trial at a time, finishes every one of 106. Trying a line and looking for a
+ * square it leaves with no line to hold, with nothing followed, finishes 11
+ * of 40 at 5×5, 13 of 40 at 7×7 and 5 of 26 at 10×10.
+ */
+const STRIP_BUDGET = 30;
+
+/**
+ * An Unreasonable board: a fill stripped by the search where an Easy one is
+ * stripped by the solver, each clue gone while the search still proves one
+ * answer within {@link STRIP_BUDGET}, and kept if the solver then stops
+ * short.
+ *
+ * It is one strip and not an Easy board stripped further. Measured
+ * 2026-10-10, that way took five times as long (7.6 s against 1.5 at 10×10,
+ * 0.5 s against 0.14 at 7×7) and left the hint no more to do.
+ */
+function unreasonableBoard(p: SticksParams, rng: RandomState): Dealt {
+  const { w, h } = p;
+  const attempt = retryLimit(`sticks: Unreasonable generation (${w}x${h})`);
+  for (;;) {
+    attempt();
+    const dealt = clueFill(p, rng);
+    const { grid, numbers } = dealt;
+    stripClues(
+      dealt,
+      rng,
+      () => searchAnswers(grid, numbers, w, h, STRIP_BUDGET).kind === "one",
+    );
+    if (sticksSolveGame(grid, numbers, w, h) !== "complete") return dealt;
+  }
+}
+
+/** An Easy board, upstream's only kind: a fill with every clue gone that the
+ * solver's deduction can do without. */
+function easyBoard(p: SticksParams, rng: RandomState): Dealt {
+  const dealt = clueFill(p, rng);
+  const { grid, numbers } = dealt;
+  stripClues(dealt, rng, () => sticksSolveGame(grid, numbers, p.w, p.h) === "complete");
+  return dealt;
+}
+
+export function newSticksDesc(p: SticksParams, rng: RandomState): { desc: string } {
+  const { grid, numbers } =
+    p.diff === DIFF_EASY ? easyBoard(p, rng) : unreasonableBoard(p, rng);
+  return { desc: encodeDesc(grid, numbers, p.w, p.h) };
 }

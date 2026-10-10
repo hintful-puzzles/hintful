@@ -11,6 +11,7 @@
  * `validateDesc` + `newState` + `encodeDesc` (codec inverse property).
  */
 import { expect } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
@@ -32,7 +33,14 @@ describeDescDifferential<Fixture, SticksParams>({
   title: "sticks differential (frozen C reference)",
   fixtures: data.fixtures,
   label: (f) => `${f.w}x${f.h}b${f.blackpc}s${f.symm} seed=${f.seed}`,
-  params: (f) => ({ w: f.w, h: f.h, blackpc: f.blackpc, symm: f.symm }),
+  // Upstream deals only what is Easy here.
+  params: (f) => ({
+    w: f.w,
+    h: f.h,
+    blackpc: f.blackpc,
+    symm: f.symm,
+    diff: DIFF_EASY,
+  }),
   newDesc: newSticksDesc,
   extra: (f, p) => {
     expect(validateDesc(sticksGame, p, f.desc)).toBeNull();

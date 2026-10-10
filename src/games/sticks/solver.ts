@@ -10,15 +10,20 @@
  * the deduction oracle — it merges adjacent same-orientation line cells
  * into segments with a dsf, then checks each clued segment's length (too
  * long, or provably unable to reach its clue) and each clued black cell's
- * connected-line / free-neighbor counts. Generation gates on this solver
- * (a single implicit guess-free difficulty tier), so its exact deductive
- * power is byte-match surface: the two `x > 1` / `y > 1` reachability
- * quirks below are ported verbatim.
+ * connected-line / free-neighbor counts. Easy generation gates on this
+ * solver, so its exact deductive power is byte-match surface: the two
+ * `x > 1` / `y > 1` reachability quirks below are ported verbatim. The
+ * Unreasonable tier is a search over it, further down.
  *
  * The solver works on bare `(grid, numbers, w, h)` arrays (the caller owns
  * cloning); play-facing wrappers over immutable {@link SticksState} sit at
  * the bottom.
  */
+import {
+  type Answer,
+  answerCache,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -412,16 +417,95 @@ export function sticksSolveGame(
   h: number,
 ): SticksStatus {
   const s = w * h;
-  const scratch = newScratch(s);
   for (let i = 0; i < s; i++) {
     if (!(grid[i] & F_BLOCK)) grid[i] = 0;
   }
+  return deduceFrom(grid, numbers, w, h, newScratch(s));
+}
+
+/** Iterate {@link sticksTry} to a fixpoint from the lines `grid` holds, and
+ * say where that leaves it. */
+function deduceFrom(
+  grid: Uint8Array,
+  numbers: Int16Array,
+  w: number,
+  h: number,
+  scratch: SticksScratch,
+): SticksStatus {
   let ret = sticksValidate(grid, numbers, w, h, scratch);
   while (ret === "unfinished") {
     if (!sticksTry(grid, numbers, w, h, scratch)) break;
     ret = sticksValidate(grid, numbers, w, h, scratch);
   }
   return ret;
+}
+
+// --- the search for a board's answers ---------------------------------------
+
+/** What a search established about a board's answers; the one answer is the
+ * grid with every white square's line. */
+export type SticksAnswer = Answer<Uint8Array>;
+
+/**
+ * The positions a search may try before it gives up, each one a blank square
+ * assumed to hold a line one way and the deduction run from it.
+ *
+ * It decides which Unreasonable boards exist: a board that needs more is
+ * thrown away when dealing and refused when pasted. Lowering it refuses boards
+ * already dealt, which are in saved games.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a board's answers up to two, by trial and error over the solver:
+ * where it stops, take the first blank square and assume its line runs
+ * across, and then up and down. `grid` is read for its blocks only.
+ */
+export function searchAnswers(
+  grid: Uint8Array,
+  numbers: Int16Array,
+  w: number,
+  h: number,
+  budget: number = SEARCH_BUDGET,
+): SticksAnswer {
+  const scratch = newScratch(w * h);
+  return searchBoard<Uint8Array, Uint8Array>({
+    start: grid.map((cell) => cell & F_BLOCK),
+    deduce(position) {
+      const status = deduceFrom(position, numbers, w, h, scratch);
+      if (status === "complete") return "solved";
+      return status === "invalid" ? "contradiction" : "stuck";
+    },
+    assume(position) {
+      const at = position.indexOf(0);
+      if (at < 0) return [];
+      return [F_HOR, F_VER].map((line) => {
+        const assumed = position.slice();
+        assumed[at] = line;
+        return assumed;
+      });
+    },
+    solution: (position) => position,
+    budget,
+  });
+}
+
+/** Keyed on a state's clues, which every state of a game shares. */
+const answers = answerCache<Int16Array, Uint8Array>();
+
+/** What a search of a state's blocks and clues established about their
+ * answers. The player's lines are not read. */
+export function answerOf(state: SticksState): SticksAnswer {
+  return answers(state.numbers, () =>
+    searchAnswers(state.grid, state.numbers, state.w, state.h),
+  );
+}
+
+/** Whether the deduction alone finishes the board from its blocks and
+ * clues. The player's lines are not read. */
+export function solverFinishes(state: SticksState): boolean {
+  const { w, h, numbers } = state;
+  return sticksSolveGame(state.grid.slice(), numbers, w, h) === "complete";
 }
 
 // --- hint deduction (a recording twin of the same one technique) ------------
@@ -591,15 +675,17 @@ export function findLiveErrors(state: SticksState): number[] {
 }
 
 /**
- * Re-solve from the fixed clues and flag every white cell whose placed line
- * contradicts the unique solution (docs/games/solver-and-generator.md § "The solvable-game contract"). A *missing* line is
- * merely incomplete, never a mistake. Returns `[]` when the clues do not
- * deduce a complete board (defensive — generated boards always do).
+ * Flag every white cell whose placed line contradicts the board's one
+ * answer, which the search found at either tier
+ * (docs/games/solver-and-generator.md § "The solvable-game contract"). A
+ * *missing* line is merely incomplete, never a mistake. Returns `[]` where
+ * the search did not prove there is exactly one.
  */
 export function findMistakes(state: SticksState): SticksMistake[] {
-  const { w, h, numbers } = state;
-  const solved = state.grid.slice();
-  if (sticksSolveGame(solved, numbers, w, h) !== "complete") return [];
+  const { w, h } = state;
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const solved = answer.solution;
   const mistakes: SticksMistake[] = [];
   for (let i = 0; i < w * h; i++) {
     const placed = state.grid[i] & (F_HOR | F_VER);

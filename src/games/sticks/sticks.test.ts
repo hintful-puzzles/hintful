@@ -5,6 +5,7 @@
  * lifecycle + save round-trip, and tier-2.5 render scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -64,7 +65,13 @@ import {
 const FIX0 = cReference.fixtures.find((f) => f.w === 4 && f.h === 4);
 if (!FIX0) throw new Error("4x4 fixture missing from sticks-c-reference.json");
 const FIX = FIX0;
-const FIX_PARAMS = { w: FIX.w, h: FIX.h, blackpc: FIX.blackpc, symm: FIX.symm };
+const FIX_PARAMS = {
+  w: FIX.w,
+  h: FIX.h,
+  blackpc: FIX.blackpc,
+  symm: FIX.symm,
+  diff: DIFF_EASY,
+};
 const FIX_ID = `${FIX.w}x${FIX.h}b${FIX.blackpc}s${FIX.symm}:${FIX.desc}`;
 
 /** The fixture board's unique solution grid. */
@@ -131,7 +138,7 @@ describe("sticks desc codec", () => {
     numbers[30] = 5;
     const desc = encodeDesc(grid, numbers, 8, 4);
     expect(desc).toBe("zd5a");
-    const p = { w: 8, h: 4, blackpc: 20, symm: SYMM_NONE };
+    const p = { w: 8, h: 4, blackpc: 20, symm: SYMM_NONE, diff: DIFF_EASY };
     expect(validateDesc(sticksGame, p, desc)).toBeNull();
     const back = newState(p, desc);
     expect(back.numbers[30]).toBe(5);
@@ -146,7 +153,7 @@ describe("sticks desc codec", () => {
     numbers[2] = 3;
     const desc = encodeDesc(grid, numbers, 4, 1);
     expect(desc).toBe("B2_1_3a");
-    const p = { w: 4, h: 1, blackpc: 20, symm: SYMM_NONE };
+    const p = { w: 4, h: 1, blackpc: 20, symm: SYMM_NONE, diff: DIFF_EASY };
     const back = newState(p, desc);
     expect(back.grid[0]).toBe(F_BLOCK);
     expect(Array.from(back.numbers)).toEqual([2, 1, 3, -1]);
@@ -160,7 +167,7 @@ describe("sticks desc codec", () => {
   });
 
   it("validateDesc refuses what encodeDesc never writes", () => {
-    const p = { w: 4, h: 1, blackpc: 20, symm: SYMM_NONE };
+    const p = { w: 4, h: 1, blackpc: 20, symm: SYMM_NONE, diff: DIFF_EASY };
     expect(validateDesc(sticksGame, p, "B2_1_3a")).toBeNull();
     expect(validateDesc(sticksGame, p, "B0c")).toBeNull();
     // A black cell's clue counts at most four lines; a stick is at most as
@@ -182,29 +189,34 @@ describe("sticks desc codec", () => {
 
 describe("sticks params", () => {
   it("encodes and decodes both forms", () => {
-    const p = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2 };
-    expect(encodeParams(p, true)).toBe("7x7b20s2");
+    const p = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY };
+    expect(encodeParams(p, true)).toBe("7x7b20s2de");
     expect(encodeParams(p, false)).toBe("7x7");
+    expect(decodeParams("7x7b20s2de")).toEqual(p);
+    // A string from before the tiers reads as Easy.
     expect(decodeParams("7x7b20s2")).toEqual(p);
+    expect(encodeParams({ ...p, diff: DIFF_UNREASONABLE }, true)).toBe("7x7b20s2du");
     expect(decodeParams("10x10")).toMatchObject({ w: 10, h: 10 });
   });
 
   it("validates bounds in upstream order", () => {
     const error = (p: SticksParams, full = true) => paramsError(sticksGame, p, full);
-    expect(error({ w: 1, h: 5, blackpc: 20, symm: 0 })).toBe(
+    expect(error({ w: 1, h: 5, blackpc: 20, symm: 0, diff: DIFF_EASY })).toBe(
       "Width must be at least 2.",
     );
-    expect(error({ w: 5, h: 5, blackpc: 4, symm: 0 })).toBe(
+    expect(error({ w: 5, h: 5, blackpc: 4, symm: 0, diff: DIFF_EASY })).toBe(
       "%age of blocks must be between 5% and 100%.",
     );
-    expect(error({ w: 5, h: 6, blackpc: 20, symm: 4 })).toBe(
+    expect(error({ w: 5, h: 6, blackpc: 20, symm: 4, diff: DIFF_EASY })).toBe(
       "4-fold symmetry is only available with square grids.",
     );
-    expect(error({ w: 5, h: 5, blackpc: 20, symm: 9 })).toMatch(
+    expect(error({ w: 5, h: 5, blackpc: 20, symm: 9, diff: DIFF_EASY })).toMatch(
       /^Symmetry must be one of/,
     );
     // The short check ignores the generation-only limits.
-    expect(error({ w: 5, h: 6, blackpc: 0, symm: 4 }, false)).toBeNull();
+    expect(
+      error({ w: 5, h: 6, blackpc: 0, symm: 4, diff: DIFF_EASY }, false),
+    ).toBeNull();
   });
 });
 
@@ -313,8 +325,8 @@ describe("sticks solver", () => {
     expect(countSolutions(new Uint8Array(4), new Int16Array(4).fill(-1), 2, 2)).toBe(2);
 
     for (const p of [
-      { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2 },
-      { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2 },
+      { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY },
+      { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY },
     ]) {
       const boards = seedBudget(2, 8);
       for (let s = 0; s < boards; s++) {

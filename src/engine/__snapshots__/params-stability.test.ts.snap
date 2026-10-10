@@ -676,13 +676,16 @@ bump:h  full=6x7de  brief=6x7"
 `;
 
 exports[`encoded params are byte-stable > sticks 1`] = `
-"default  full=7x7b20s2  brief=7x7
-preset:Sticks/5x5  full=5x5b20s2  brief=5x5
-preset:Sticks/10x10  full=10x10b20s2  brief=10x10
-bump:w  full=8x7b20s2  brief=8x7
-bump:h  full=7x8b20s2  brief=7x8
-bump:blackpc  full=7x7b21s2  brief=7x7
-bump:symm  full=7x7b20s3  brief=7x7"
+"default  full=7x7b20s2de  brief=7x7
+preset:Sticks/5x5 Easy  full=5x5b20s2de  brief=5x5
+preset:Sticks/5x5 Unreasonable  full=5x5b20s2du  brief=5x5
+preset:Sticks/7x7 Unreasonable  full=7x7b20s2du  brief=7x7
+preset:Sticks/10x10 Easy  full=10x10b20s2de  brief=10x10
+preset:Sticks/10x10 Unreasonable  full=10x10b20s2du  brief=10x10
+bump:w  full=8x7b20s2de  brief=8x7
+bump:h  full=7x8b20s2de  brief=7x8
+bump:blackpc  full=7x7b21s2de  brief=7x7
+bump:symm  full=7x7b20s3de  brief=7x7"
 `;
 
 exports[`encoded params are byte-stable > subsets 1`] = `

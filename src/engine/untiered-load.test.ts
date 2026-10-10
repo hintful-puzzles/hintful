@@ -52,7 +52,9 @@ function canRunOutOfDeduction(): string[] {
 describe("an untiered game's answer to whether deduction finishes a board", () => {
   it("is given by every one of them", () => {
     expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
-    expect(UNTIERED.length).toBeGreaterThanOrEqual(20);
+    // A floor under what is left once every deductive game has tiers: the
+    // games with nothing to deduce, and Mines.
+    expect(UNTIERED.length).toBeGreaterThanOrEqual(11);
     const silent = UNTIERED.filter(
       ([, game]) => game.finishesByDeduction === undefined,
     );
@@ -81,7 +83,6 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
     net: "5x5:142c49b8aa4de5acd7b749286",
     range: "4x4:c6h3_6b",
     rect: "4x4:2b2_2a2b2b2a2_2",
-    sticks: "5x5b20s2:1aB_1_2bBcB1aB3cB_1a3aB0a1",
   };
 
   it("refuses a board that parses and deduction does not finish", () => {

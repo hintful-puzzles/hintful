@@ -716,6 +716,32 @@ What Signpost, the eighth, added:
   a long line has more squares to lead to: 1x225 takes 6.3 s where 15x15
   takes 0.9. The bound is an area and a longer side.
 
+What Sticks, the ninth, added:
+
+- **Which strip is faster is the game's, so time both.** Signpost strips an
+  Easy board further and Sticks strips the full clues by the search, each
+  because the other way was measured slower in that game: five times slower
+  in Sticks (7.6 s against 1.5 at 10x10), twice in Signpost the other way
+  round. The hint was left about the same either way in both.
+- **A sample refuses nothing.** No 2x3 or 2x4 Sticks board was dealt in
+  120,000 fills, and a refusal was written for both. The test that holds a
+  refusal to running the generator out dealt a 4x2 board at once with another
+  symmetry, and walking every 2x3 board found some with the tier. Only 2x2
+  has none, and only 2x2 is refused. A size the generator seldom reaches
+  gives up in a second, which is an answer; a refusal says no board exists.
+- **Vary every option before calling a size empty.** The sample had one
+  symmetry and one share of blocks, which is one corner of what a size can
+  be dealt as.
+- **A hand-written board is wrong until the counter has seen it.** Three of
+  this change's literal boards were: a row of ABCD in Separate, a 4 beside a
+  1 here whose line could run the other way, a 2x2 board counted as four
+  fills that has eight.
+- **A deduction that is a Check leaves a shallow tier.** Sticks' solver
+  already tries a line and looks. Its Unreasonable boards need a median of
+  three to five positions, and one trial that is followed through finishes
+  every one. A trial that only looks one square further finishes three in
+  ten, which is a rung to weigh and is noted for the owner.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

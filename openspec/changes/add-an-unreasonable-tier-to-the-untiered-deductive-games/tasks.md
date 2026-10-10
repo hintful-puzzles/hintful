@@ -30,6 +30,8 @@
   the menu gained its four Unreasonable lines.
   **Signpost: done.** Every line gained `de` after what it had (`5x5c` is now
   `5x5cde`), and the menu's lines moved with the menu.
+  **Sticks: done.** Every line gained `de` (`7x7b20s2` is now `7x7b20s2de`),
+  and the menu gained its three Unreasonable lines.
 
 ## 2. One game to the end: Pattern
 
@@ -252,7 +254,36 @@
       boards fall to one link and a look, where a 4x4 has too few squares to
       hide more. The two boards with free ends are on the menu at Easy only,
       as Crossing's symmetric ones are.
-  - [ ] Sticks, Net, Range,
+  - [x] **Sticks** (2026-10-10). Measured: a deal is 25 ms at 5x5, 0.15 s at
+    7x7 and 1.5 s at 10x10, about three times an Easy one; a dealt board
+    needs a median of 3 to 5 positions and 19 at most; the hint leaves a
+    median of 9 squares of 20 blank at 5x5 and 12 of 80 at 10x10. Decided,
+    each with its reason in the guide's "What Sticks, the ninth, added":
+    - The generator strips the full clues by the search, within 30
+      positions, where Easy strips them by the solver. Stripping an Easy
+      board further took five times as long.
+    - The menu is the three sizes at both tiers.
+    - Unreasonable is dealt up to 100 squares and 30 on the longer side, and
+      is refused on 2x2 alone, where every board was tried. A 2x3 board can
+      have the tier, and the generator gives up on it in a second more often
+      than not.
+    - The ledger's Sticks board has several answers.
+    - The floor under the untiered games in `untiered-load.test.ts` went red
+      with this game and is re-stated as what is left when the change is
+      done: the games with nothing to deduce, and Mines.
+    - **A defect in Easy, found by measuring and filed, not fixed here.**
+      Sticks has no size bound: 12x12 takes 2.6 s, 13x13 8.5 s, 2x50 13.5 s,
+      and 10x10 with 5% blocks 18 s. The numbers are in
+      `openspec/changes/bound-sticks-to-the-boards-it-deals`.
+    - **For the owner to look at, not blocking:** these boards are shallow.
+      One trial followed through finishes every one of 106, and a trial
+      that only looks for a square left with no line to hold finishes about
+      three in ten (11 of 40 at 5x5, 13 of 40 at 7x7, 5 of 26 at 10x10).
+      That second is a rung the solver could have; no change is filed for
+      it, since it would move the Easy boards and leave most of these.
+      10x10 Unreasonable takes 1.5 s on average and 4 s at worst, the
+      slowest line on this menu.
+  - [ ] Net, Range,
     Rectangles. For each, do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
     finish of the boards the tier deals, and sweep the shorter side when

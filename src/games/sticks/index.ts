@@ -15,6 +15,7 @@
  * (`findMistakes`).
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   type Game,
@@ -25,7 +26,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
@@ -46,7 +47,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   digitKey,
@@ -72,10 +72,11 @@ import {
   type SticksDrawState,
 } from "./render.ts";
 import {
+  answerOf,
   deduceSticksPlan,
   findMistakes,
   type SticksFiring,
-  sticksSolveGame,
+  solverFinishes,
   sticksValidate,
 } from "./solver.ts";
 import {
@@ -355,11 +356,10 @@ function status(s: SticksState): GameStatus {
 }
 
 function solve(orig: SticksState): SolveResult<SticksMove> {
-  const grid = orig.grid.slice();
-  const result = sticksSolveGame(grid, orig.numbers, orig.w, orig.h);
-  if (result === "invalid") return { ok: false, error: NO_SOLUTION };
-  // An unfinished solve still emits the partial deduction (upstream).
-  return { ok: true, move: { kind: "solve", grid: Array.from(grid, bitsLine) } };
+  return solveFromAnswer(answerOf(orig), (grid) => ({
+    kind: "solve",
+    grid: Array.from(grid, bitsLine),
+  }));
 }
 
 // --- hint (a second projection of the one contradiction technique) ----------
@@ -537,8 +537,15 @@ export const sticksGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(sticksGame, s),
   status,
+  // Easy is what the solver's one deduction finishes and the hint, which
+  // makes the same deduction from the player's lines, finishes too.
+  difficulty: searchTierContract<SticksParams, SticksState>({
+    newState,
+    deductionFinishes: (state) =>
+      solverFinishes(state) && hintFinishes(sticksGame, state),
+    answerOf,
+  }),
 
   solve,
   findMistakes,

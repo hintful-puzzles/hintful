@@ -97,6 +97,12 @@ work, but they are likely to change in a future update, and might be removed.
   forced link leads to, so somewhere you have to try a link. The original's
   boards are this app's *Easy* ones.
 
+* **Sticks**: there is a difficulty, *Easy* or *Unreasonable*, which the
+  original's unreleased version of the puzzle does not have. An Unreasonable
+  board has one solution that no forced square leads to, so somewhere you
+  have to try a line. The boards the original makes are this app's *Easy*
+  ones.
+
 Earlier changes to individual puzzles have since been accepted into the
 original collection, so they are no longer differences.
 

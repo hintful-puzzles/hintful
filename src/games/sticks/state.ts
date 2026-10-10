@@ -11,13 +11,22 @@
  * and the cursor is drawn from the `Ui`.
  */
 
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/answer-search.ts";
 import { isDigit } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import {
   SYMM_NONE,
   SYMM_ROT2,
@@ -40,6 +49,10 @@ export interface SticksParams {
   blackpc: number;
   /** One of the shared `SYMM_*` constants (engine/symmetric-blacks.ts). */
   symm: number;
+  /** `DIFF_EASY`, a board the solver's one deduction finishes, or
+   * `DIFF_UNREASONABLE`, one with a single answer that it does not reach.
+   * Generation-time only. */
+  diff: number;
 }
 
 export interface SticksState {
@@ -103,23 +116,25 @@ export interface SticksHint {
 
 // --- params -----------------------------------------------------------------
 
+const board = (side: number): SticksParams => ({
+  w: side,
+  h: side,
+  blackpc: 20,
+  symm: SYMM_ROT2,
+  diff: DIFF_EASY,
+});
+
 // Upstream's two sizes and a smaller one. A larger third was measured and
 // left out: one 13x13 deal took over seven seconds (2026-10-05, loaded).
-const PRESETS: SticksParams[] = [
-  { w: 5, h: 5, blackpc: 20, symm: SYMM_ROT2 },
-  { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2 },
-  { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2 },
-];
+// The menu offers each at both tiers.
+const BOARDS: readonly SticksParams[] = [board(5), board(7), board(10)];
 
 export function defaultParams(): SticksParams {
-  return { ...PRESETS[1] };
+  return board(7);
 }
 
 export function presets(): PresetMenu<SticksParams> {
-  return {
-    title: "Sticks",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
+  return { title: "Sticks", ...presetGrid(paramConfig, BOARDS) };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
@@ -155,6 +170,10 @@ export const paramConfig: ParamConfigItem<SticksParams>[] = [
       p.symm = v;
     },
   },
+  searchTierItem(
+    "diff",
+    "An Easy puzzle can be finished one forced square at a time: there is always a square where a line one way would break a number at once. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a line and see what follows. The Hint button stops where the forced squares do.",
+  ),
 ];
 
 /** `WxH`, then the generator-only black percentage and symmetry. Lenient like
@@ -176,6 +195,9 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
     },
     { full: true },
   ),
+  // Last, in the full form only. Upstream's IDs lack it, and without one a
+  // board is Easy, the only kind upstream deals.
+  searchTierSegment(paramConfig),
 ]);
 
 export function validateParams(p: SticksParams, full: boolean): string | null {
@@ -184,7 +206,32 @@ export function validateParams(p: SticksParams, full: boolean): string | null {
       return "%age of blocks must be between 5% and 100%.";
     if (p.w !== p.h && p.symm === SYMM_ROT4)
       return "4-fold symmetry is only available with square grids.";
+    if (p.diff === DIFF_UNREASONABLE) return unreasonableRefusal(p);
   }
+  return null;
+}
+
+/**
+ * The largest Unreasonable board dealt, in squares and along its longer side.
+ * An Unreasonable board takes about three times as long to deal as an Easy
+ * one, and a long thin board far longer than a square one of its area.
+ *
+ * Measured 2026-10-10 at the default share of blocks, mean time for a board
+ * inside the bound | past it: 10×10 1.5 s, 8×12 1.6 s, 4×25 1.7 s, 2×30
+ * 0.7 s | 11×11 2.2 s, 3×33 2.2 s, 2×40 5.8 s, 2×50 57 s.
+ */
+const MAX_UNREASONABLE_AREA = 100;
+const MAX_UNREASONABLE_SIDE = 30;
+
+function unreasonableRefusal(p: SticksParams): string | null {
+  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const area = p.w * p.h;
+  // Every 2x2 board was tried (`sticks-tier.test.ts`) and the solver finishes
+  // each one that has a single answer. A 2x3 board can have the tier, though
+  // the generator seldom finds one and gives up in about a second.
+  if (area === 4) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
+  if (area > MAX_UNREASONABLE_AREA || Math.max(p.w, p.h) > MAX_UNREASONABLE_SIDE)
+    return `An ${tier} puzzle must have at most ${MAX_UNREASONABLE_AREA} squares and be at most ${MAX_UNREASONABLE_SIDE} long; a larger one takes too long to deal.`;
   return null;
 }
 
@@ -277,7 +324,9 @@ export function encodeDesc(
 }
 
 export function cloneState(s: SticksState): SticksState {
-  return { ...s, grid: s.grid.slice(), numbers: s.numbers.slice() };
+  // The clues are shared, not copied: no move changes one, and they are the
+  // part of a board every state of one game holds in common (`answerOf`).
+  return { ...s, grid: s.grid.slice() };
 }
 
 // --- text format (upstream game_text_format) --------------------------------
