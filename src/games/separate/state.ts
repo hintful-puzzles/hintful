@@ -8,6 +8,13 @@
  * walls on the U/R/D/L edges and bits 4..7 are "no-wall" marks.
  */
 
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   BORDER,
@@ -25,6 +32,7 @@ import {
 } from "../../engine/border-grid.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
@@ -33,6 +41,7 @@ import {
 } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- types ----------------------------------------------------------------
@@ -41,7 +50,14 @@ export interface SeparateParams {
   w: number;
   h: number;
   k: number;
+  /** `DIFF_EASY`, a board the solver's rungs finish, or `DIFF_UNREASONABLE`,
+   * one with a single answer that they do not reach. Generation-time only. */
+  diff: number;
 }
+
+/** What the solver reads of a board besides its letters: the grid and the
+ * region size. A state and a params both are one. */
+export type SeparateShape = Pick<SeparateParams, "w" | "h" | "k">;
 
 export interface SeparateState {
   w: number;
@@ -73,22 +89,27 @@ export interface SeparateMistake {
 
 // --- params ---------------------------------------------------------------
 
-const PRESETS: SeparateParams[] = [
-  { w: 4, h: 4, k: 4 },
-  { w: 5, h: 5, k: 5 },
-  { w: 6, h: 6, k: 4 },
-  { w: 6, h: 6, k: 6 },
+const board = (w: number, h: number, k: number): SeparateParams => ({
+  w,
+  h,
+  k,
+  diff: DIFF_EASY,
+});
+
+/** The menu offers each board at both tiers. */
+const BOARDS: readonly SeparateParams[] = [
+  board(4, 4, 4),
+  board(5, 5, 5),
+  board(6, 6, 4),
+  board(6, 6, 6),
 ];
 
 export function defaultParams(): SeparateParams {
-  return { ...PRESETS[1] };
+  return board(5, 5, 5);
 }
 
 export function presets(): PresetMenu<SeparateParams> {
-  return {
-    title: "Size",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
+  return { title: "Size", ...presetGrid(paramConfig, BOARDS) };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
@@ -102,10 +123,16 @@ export const paramConfig: ParamConfigItem<SeparateParams>[] = [
     bounds: { min: 1 },
     label: { slot: "tail", words: (p) => `${p.k} letters` },
   }),
+  searchTierItem(
+    "diff",
+    "An Easy puzzle can be finished one forced edge at a time: there are always two neighbors that share a letter, or a region with only one square left to take. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try joining two squares and see what follows. The Hint button stops where the forced edges do.",
+  ),
 ];
 
 /** Upstream: `w = h = k = atoi(s)`, then optional `x<h>` and `n<k>` — so the
- * square fallback (no `x`) also seeds the letter count from the width. */
+ * square fallback (no `x`) also seeds the letter count from the width. The
+ * tier comes last, in the full form only, and upstream's IDs lack it: without
+ * one a board is Easy, the only kind upstream deals. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   num(paramConfig, "n", "letters", {
@@ -113,6 +140,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
       p.k = p.w;
     },
   }),
+  searchTierSegment(paramConfig),
 ]);
 
 export function validateParams(p: SeparateParams, full: boolean): string | null {
@@ -124,6 +152,18 @@ export function validateParams(p: SeparateParams, full: boolean): string | null 
   if (k > 26) return "Number of letters must be at most 26.";
   if (k === wh) return "Number of letters must be less than the grid area.";
   if (k === 1) return "Number of letters must be at least two.";
+  if (p.diff !== DIFF_UNREASONABLE) return null;
+  // No board of these has one answer that the solver does not reach
+  // (`separate-tier.test.ts` tries every fill of the small ones). A strip
+  // divides one way. With two letters a region is an A beside a B, and where
+  // such pairs fit one way only, some square has one neighbor left to take,
+  // which is the `only-way` rung. A 3x2 board in threes is too small.
+  const tooSmall = k === 3 && wh === 6;
+  if (w === 1 || h === 1 || k === 2 || tooSmall)
+    return noSuchTier(
+      `${w}x${h} puzzle with ${k} letters`,
+      SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string,
+    );
   return null;
 }
 

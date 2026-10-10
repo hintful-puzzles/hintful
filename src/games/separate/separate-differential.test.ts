@@ -12,6 +12,7 @@
  * trace harness that captured it are gone — see `engine/testing/differential.ts`.
  */
 import { expect } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/separate-c-reference.json" with { type: "json" };
 import { newSeparateDesc } from "./generator.ts";
@@ -31,7 +32,8 @@ describeDescDifferential<Fixture, SeparateParams>({
   title: "separate differential (frozen C reference)",
   fixtures: data.fixtures,
   label: (f) => `${f.w}x${f.h}n${f.k} seed=${f.seed}`,
-  params: (f) => ({ w: f.w, h: f.h, k: f.k }),
+  // Upstream deals only what is Easy here.
+  params: (f) => ({ w: f.w, h: f.h, k: f.k, diff: DIFF_EASY }),
   newDesc: newSeparateDesc,
   // Every C board is uniquely solvable by the ported solver.
   extra: (f, p) => {

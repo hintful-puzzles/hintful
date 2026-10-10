@@ -14,8 +14,9 @@
  * merge marks the edges it crossed "no wall". The generator reads only the
  * first set; the hint reads the second, and both are written by the one ladder.
  *
- * The rungs, easiest first, all on tier 0 (Separate has no difficulty levels,
- * so the ladder is an order and the grade is unused):
+ * The rungs, easiest first, all on tier 0 (the ladder is an order and the
+ * grade is unused: Separate's second tier is a search over all three, at the
+ * foot of this file):
  *
  *  1. **shared-letter** — two adjacent components that already hold a common
  *     letter can never be one region: disconnect them.
@@ -28,10 +29,16 @@
  *  3. **only-way** — a component below the target size `k` with exactly one
  *     legal neighboring *square* to grow into must take it: merge.
  *
- * The generator only keeps a board the solver fully solves, so on a real board
- * running this to a fixpoint yields *the* unique partition.
+ * An Easy board is one the solver fully solves, so on it running this to a
+ * fixpoint yields *the* unique partition.
  */
 
+import {
+  type Answer,
+  answerCache,
+  type Deduced,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
 import {
   BORDER,
   BORDER_D,
@@ -52,7 +59,7 @@ import {
 } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
-import type { SeparateParams } from "./state.ts";
+import type { SeparateShape } from "./state.ts";
 
 /** Solver verdict, mirroring upstream's 0/1/2. */
 export const STUCK = 0;
@@ -126,6 +133,17 @@ export class SolverScratch {
     this.size.fill(1);
     this.disconnect.fill(0);
     this.borders = initBorders(this.w, this.h);
+  }
+
+  /** A copy that shares nothing with this one, for a search to assume on. */
+  clone(): SolverScratch {
+    const copy = new SolverScratch(this.w, this.h, this.k);
+    copy.dsf = this.dsf.clone();
+    copy.size.set(this.size);
+    copy.contents.set(this.contents);
+    copy.disconnect.set(this.disconnect);
+    copy.borders.set(this.borders);
+    return copy;
   }
 
   /** Index each component's letters from the grid and the current dsf. */
@@ -397,7 +415,7 @@ export function solverAttempt(
  * Solve a board from its letters. Returns the deduced partition dsf if fully
  * solved, else `null` (not uniquely deducible by these rules).
  */
-export function solve(p: SeparateParams, letters: Uint8Array): Dsf | null {
+export function solve(p: SeparateShape, letters: Uint8Array): Dsf | null {
   const sc = new SolverScratch(p.w, p.h, p.k);
   sc.init();
   return solverAttempt(sc, letters, null) === SOLVED ? sc.dsf : null;
@@ -409,11 +427,16 @@ export function solve(p: SeparateParams, letters: Uint8Array): Dsf | null {
  * two different components.
  */
 export function solveToBorders(
-  p: SeparateParams,
+  p: SeparateShape,
   letters: Uint8Array,
 ): Uint8Array | null {
   const dsf = solve(p, letters);
-  if (!dsf) return null;
+  return dsf ? wallsOf(p, dsf) : null;
+}
+
+/** A partition's wall bytes: a wall on every edge between two components,
+ * and on the rim. */
+function wallsOf(p: SeparateShape, dsf: Dsf): Uint8Array {
   const { w, h } = p;
   const sol = initBorders(w, h);
   for (let y = 0; y < h; y++) {
@@ -432,6 +455,133 @@ export function solveToBorders(
   return sol;
 }
 
+// --- the search for a board's answers ---------------------------------------
+
+/** What a search established about a board's answers; the one answer is each
+ * square's walls. */
+export type SeparateAnswer = Answer<Uint8Array>;
+
+/**
+ * Where the rungs leave a position.
+ *
+ * The rungs never say "impossible": each walls or joins, or does nothing,
+ * which is all a board with an answer asks of them. Under a wrong assumption
+ * they stop on a position that cannot be finished, and it is always the same
+ * one: a region short of its size with no square left to take. A region past
+ * its size, or holding a letter twice, cannot arise, since `shared-letter`
+ * walls every pair that would make one before anything is joined.
+ */
+function verdictOf(sc: SolverScratch): Deduced {
+  if (allFull(sc)) return "solved";
+  const { w, h, k, wh } = sc;
+  const canGrow = new Uint8Array(wh);
+  for (let i = 0; i < wh; i++) {
+    const root = sc.dsf.canonify(i);
+    if (sc.size[root] === k || canGrow[root]) continue;
+    const x = i % w;
+    const y = (i - x) / w;
+    for (let dir = 0; dir < 4; dir++) {
+      const x2 = x + DX[dir];
+      const y2 = y + DY[dir];
+      if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) continue;
+      const other = sc.dsf.canonify(y2 * w + x2);
+      if (other !== root && !sc.disconnect[other * wh + root]) canGrow[root] = 1;
+    }
+  }
+  for (let i = 0; i < wh; i++) {
+    const root = sc.dsf.canonify(i);
+    if (sc.size[root] < k && !canGrow[root]) return "contradiction";
+  }
+  return "stuck";
+}
+
+/**
+ * The positions a search may try before it gives up, each one a region
+ * assumed to take a neighbor or not and the three rungs run from it.
+ *
+ * It decides which Unreasonable boards exist: a board that needs more is
+ * thrown away when dealing and refused when pasted. Lowering it refuses boards
+ * already dealt, which are in saved games. A dealt board needs 30 at most,
+ * the generator's own bound, so the rest is room for a pasted one: measured
+ * 2026-10-10, a fill drawn at random with one answer needs a median of 85 at
+ * 6×6 with six letters and 197 at most of 30.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a board's answers up to two, by trial and error over the solver:
+ * where it stops, take the region with the fewest squares it could still
+ * grow into and assume it takes the first of them, then that it does not.
+ */
+export function searchAnswers(
+  p: SeparateShape,
+  letters: Uint8Array,
+  budget: number = SEARCH_BUDGET,
+): SeparateAnswer {
+  const start = new SolverScratch(p.w, p.h, p.k);
+  start.init();
+  return searchBoard<SolverScratch, Uint8Array>({
+    start,
+    deduce(position) {
+      solverAttempt(position, letters, null);
+      return verdictOf(position);
+    },
+    assume: assumeNeighbor,
+    solution: (position) => wallsOf(p, position.dsf),
+    budget,
+  });
+}
+
+/**
+ * The two positions a stuck one divides into: one region and one square
+ * beside it that it may still take, joined and then walled apart. The region
+ * is the one with the fewest such squares, where ruling one out is likeliest
+ * to force another.
+ */
+function assumeNeighbor(sc: SolverScratch): SolverScratch[] {
+  const { w, h, k, wh } = sc;
+  const choices = new Int32Array(wh);
+  const first = new Int32Array(wh).fill(-1);
+  for (let i = 0; i < wh; i++) {
+    const root = sc.dsf.canonify(i);
+    if (sc.size[root] === k) continue;
+    const x = i % w;
+    const y = (i - x) / w;
+    for (let dir = 0; dir < 4; dir++) {
+      const x2 = x + DX[dir];
+      const y2 = y + DY[dir];
+      if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) continue;
+      const sq = y2 * w + x2;
+      const other = sc.dsf.canonify(sq);
+      if (other === root || sc.disconnect[other * wh + root]) continue;
+      choices[root]++;
+      if (first[root] < 0) first[root] = sq;
+    }
+  }
+  let at = -1;
+  for (let root = 0; root < wh; root++)
+    if (choices[root] > 0 && (at < 0 || choices[root] < choices[at])) at = root;
+  if (at < 0) return [];
+  const sq = first[at];
+  const joined = sc.clone();
+  joined.openTo(at, sq);
+  joined.connect(at, sq);
+  const apart = sc.clone();
+  apart.disconnectPair(at, sq);
+  return [joined, apart];
+}
+
+/** Keyed on a state's letters, which every state of a game shares. */
+const answers = answerCache<Uint8Array, Uint8Array>();
+
+/** What a search of a state's letters established about their answers. The
+ * player's edges are not read. */
+export function answerOf(
+  state: SeparateShape & { letters: Uint8Array },
+): SeparateAnswer {
+  return answers(state.letters, () => searchAnswers(state, state.letters));
+}
+
 /**
  * The recording projection: a scratch seeded from the player's `borders` (their
  * no-wall marks merged, their walls disconnecting the components either side),
@@ -443,7 +593,7 @@ export function solveToBorders(
  * otherwise), so no merge joins two squares of one letter.
  */
 export function separateRecordingPass(
-  p: SeparateParams,
+  p: SeparateShape,
   letters: Uint8Array,
   borders: Uint8Array,
   budget: StepBudget,

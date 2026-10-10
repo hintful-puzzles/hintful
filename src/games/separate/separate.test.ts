@@ -6,6 +6,7 @@
  * mistakes-overlay frame) driven through a real Midend.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { BORDER, BORDER_D, BORDER_L, BORDER_R } from "../../engine/border-grid.ts";
 import {
   DESC_TOO_LONG,
@@ -32,31 +33,47 @@ import {
   type SeparateParams,
 } from "./state.ts";
 
-const P5: SeparateParams = { w: 5, h: 5, k: 5 };
+const easy = (w: number, h: number, k: number): SeparateParams => ({
+  w,
+  h,
+  k,
+  diff: DIFF_EASY,
+});
+
+const P5 = easy(5, 5, 5);
 
 // --- params ----------------------------------------------------------------
 
 describe("separate params", () => {
   it("round-trips encode/decode", () => {
-    expect(encodeParams({ w: 6, h: 6, k: 4 }, true)).toBe("6x6n4");
-    expect(decodeParams("6x6n4")).toEqual({ w: 6, h: 6, k: 4 });
+    expect(encodeParams(easy(6, 6, 4), true)).toBe("6x6n4de");
+    expect(encodeParams(easy(6, 6, 4), false)).toBe("6x6n4");
+    expect(decodeParams("6x6n4de")).toEqual(easy(6, 6, 4));
+    expect(decodeParams("6x6n4du")).toEqual({
+      ...easy(6, 6, 4),
+      diff: DIFF_UNREASONABLE,
+    });
+  });
+
+  it("reads a string from before the tiers as Easy", () => {
+    expect(decodeParams("6x6n4")).toEqual(easy(6, 6, 4));
   });
 
   it("decodes a bare size to a square grid with k = w", () => {
-    expect(decodeParams("5")).toEqual({ w: 5, h: 5, k: 5 });
+    expect(decodeParams("5")).toEqual(easy(5, 5, 5));
   });
 
   it("rejects invalid params", () => {
     const valid = (p: SeparateParams) => paramsError(separateGame, p, true);
-    expect(valid({ w: 0, h: 5, k: 5 })).toBe("Width must be at least 1.");
-    expect(valid({ w: 5, h: 5, k: 3 })).not.toBeNull(); // 3 ∤ 25
-    expect(valid({ w: 5, h: 5, k: 25 })).not.toBeNull(); // whole grid
-    expect(valid({ w: 5, h: 5, k: 1 })).not.toBeNull();
-    expect(valid({ w: 6, h: 6, k: 4 })).toBeNull();
+    expect(valid(easy(0, 5, 5))).toBe("Width must be at least 1.");
+    expect(valid(easy(5, 5, 3))).not.toBeNull(); // 3 ∤ 25
+    expect(valid(easy(5, 5, 25))).not.toBeNull(); // whole grid
+    expect(valid(easy(5, 5, 1))).not.toBeNull();
+    expect(valid(easy(6, 6, 4))).toBeNull();
   });
 
-  it("labels its params by size and letters", () => {
-    expect(describeParams(separateGame, { w: 6, h: 4, k: 4 })).toBe("6x4, 4 letters");
+  it("labels its params by size, tier and letters", () => {
+    expect(describeParams(separateGame, easy(6, 4, 4))).toBe("6x4 Easy, 4 letters");
   });
 });
 
@@ -109,11 +126,7 @@ describe("separate isSolved", () => {
 // --- solver / generator ----------------------------------------------------
 
 describe("separate solver + generator", () => {
-  for (const p of [
-    { w: 4, h: 4, k: 4 },
-    { w: 5, h: 5, k: 5 },
-    { w: 6, h: 6, k: 4 },
-  ]) {
+  for (const p of [easy(4, 4, 4), easy(5, 5, 5), easy(6, 6, 4)]) {
     it(`generates uniquely-solvable ${p.w}x${p.h}n${p.k} boards`, () => {
       const rng = randomNew(`sep-gen-${p.w}-${p.h}-${p.k}`);
       for (let n = 0; n < 5; n++) {

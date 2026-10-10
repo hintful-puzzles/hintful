@@ -15,9 +15,9 @@ import { randomNew } from "../../engine/random/index.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { SOLVED, SolverScratch, STUCK, solverAttempt } from "./solver.ts";
-import type { SeparateParams } from "./state.ts";
+import type { SeparateShape } from "./state.ts";
 
-const SHAPES: SeparateParams[] = [
+const SHAPES: SeparateShape[] = [
   { w: 4, h: 4, k: 4 },
   { w: 5, h: 5, k: 5 },
   { w: 6, h: 6, k: 4 },
@@ -28,7 +28,7 @@ const SHAPES: SeparateParams[] = [
 const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d"];
 
 interface Board {
-  p: SeparateParams;
+  p: SeparateShape;
   seed: string;
 }
 
@@ -76,7 +76,7 @@ describeLadderCensus<Board>({
   game: "separate",
   rungs: ["shared-letter", "walled-apart", "only-way"],
   unreached: {},
-  // Untiered: every rung is tier 0.
+  // Every rung is tier 0: the second tier is a search, not a rung.
   caps: [0],
   cases,
   solve: (board, _cap, firings) =>

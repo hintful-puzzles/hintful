@@ -156,7 +156,7 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
     "claims a free cell each pass",
     "pops a frontier entry each pass",
   ],
-  "games/separate/generator.ts › newSeparateDesc": [
+  "games/separate/generator.ts › easyBoard": [
     "stuck passes count `retries` down, and progress locks a square",
   ],
   "games/signpost/generator.ts › newGameFill": [

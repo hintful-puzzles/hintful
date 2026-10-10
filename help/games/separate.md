@@ -34,6 +34,14 @@ regions both hold an A" means those two regions, and no others. A single
 square is named by its letter ("these two Ds") or called a square ("the
 striped square and the outlined region"), never a region.
 
+On an Unreasonable board there comes a point where no two neighbors share a
+letter that is not already walled, and no region has only one square left to
+take. The hint then says that nothing further follows by deduction instead of
+choosing for you. Save your position and try joining a small region to one of
+the squares it could still take, starting with a region that has few of them:
+if it is wrong, before long some region is left short with every square around
+it walled off. The hint carries on from whatever you decide.
+
 ## Separate parameters
 
 {{parameters}}

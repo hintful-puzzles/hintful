@@ -10,6 +10,7 @@
  * mark) with a half-grid keyboard cursor.
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   BORDER,
   BORDER_MASK,
@@ -30,12 +31,9 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -56,6 +54,7 @@ import {
   type SeparateDrawState,
 } from "./render.ts";
 import {
+  answerOf,
   type SeparateFiring,
   type SolverScratch,
   separateRecordingPass,
@@ -84,10 +83,6 @@ function newUi(_state: SeparateState): SeparateUi {
   return { cursor: newCursor(1, 1) };
 }
 
-function paramsOf(state: SeparateState): SeparateParams {
-  return { w: state.w, h: state.h, k: state.k };
-}
-
 // --- input -----------------------------------------------------------------
 
 const targetVerbs = borderGridVerbs<
@@ -109,9 +104,13 @@ function interpretMove(
 
 // --- mistakes --------------------------------------------------------------
 
+/** Every edge the player has decided against the board's one answer, which
+ * the search found at either tier. Nothing is flagged where it did not prove
+ * there is exactly one. */
 function findMistakes(state: SeparateState): readonly SeparateMistake[] {
-  const sol = solveToBorders(paramsOf(state), state.letters);
-  if (!sol) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const sol = answer.solution;
   const { w, h, borders } = state;
   const out: SeparateMistake[] = [];
   for (let y = 0; y < h; y++) {
@@ -185,18 +184,14 @@ export type SeparateRung = (typeof SEPARATE_RUNGS)[number];
 
 /**
  * The deduction from the player's own marks to the end, as one journey per
- * firing. Refuses on a board the solver cannot finish from empty, whose marks
- * nothing can vouch for, and when the deduction has nothing left to set.
+ * firing. Refuses only when the deduction has nothing left to set, which on
+ * an Unreasonable board is before the end.
  */
 function hint(
   state: SeparateState,
 ): HintResult<SeparateMove, BorderHint, SeparateRung> {
-  const p = paramsOf(state);
-  if (!solveToBorders(p, state.letters))
-    return { ok: false, error: PUZZLE_NOT_REASONABLE };
-
   const { scratch, next } = separateRecordingPass(
-    p,
+    state,
     state.letters,
     state.borders,
     stepBudget("separate hint"),
@@ -265,15 +260,22 @@ export const separateGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(separateGame, s),
   status,
 
-  solve(orig, _curr) {
-    const sol = solveToBorders(paramsOf(orig), orig.letters);
-    if (!sol) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-    const full = Array.from(sol, (b) => (b & BORDER_MASK) | DISABLED(~b & BORDER_MASK));
-    return { ok: true, move: { type: "solve", borders: full } };
-  },
+  solve: (orig, _curr) =>
+    solveFromAnswer(answerOf(orig), (sol) => ({
+      type: "solve",
+      borders: Array.from(sol, (b) => (b & BORDER_MASK) | DISABLED(~b & BORDER_MASK)),
+    })),
+  // Easy is what the solver's three rungs finish and the hint, which runs the
+  // same rungs from the player's edges, finishes too.
+  difficulty: searchTierContract<SeparateParams, SeparateState>({
+    newState,
+    deductionFinishes: (state) =>
+      solveToBorders(state, state.letters) !== null &&
+      hintFinishes(separateGame, state),
+    answerOf,
+  }),
 
   findMistakes,
   hint,

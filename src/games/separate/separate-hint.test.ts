@@ -11,6 +11,7 @@
  * this is a slice of that corpus sized for the gate.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/border-grid.ts";
 import { type BorderHint, EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
@@ -32,11 +33,18 @@ import {
   type SeparateState,
 } from "./state.ts";
 
+const easy = (w: number, h: number, k: number): SeparateParams => ({
+  w,
+  h,
+  k,
+  diff: DIFF_EASY,
+});
+
 const PRESETS: SeparateParams[] = [
-  { w: 4, h: 4, k: 4 },
-  { w: 5, h: 5, k: 5 },
-  { w: 6, h: 6, k: 4 },
-  { w: 6, h: 6, k: 6 },
+  easy(4, 4, 4),
+  easy(5, 5, 5),
+  easy(6, 6, 4),
+  easy(6, 6, 6),
 ];
 
 const hintOf = (s: SeparateState) => {
@@ -177,7 +185,7 @@ describe("the ledgered arm, reached directly", () => {
     // and walled (1,0)|(2,0), so the L's one square left is the notch (1,1),
     // which it touches on two edges.
     const letters = Uint8Array.from("ABBACDDC", (c) => c.charCodeAt(0) - 65);
-    const p = { w: 4, h: 2, k: 4 };
+    const p = easy(4, 2, 4);
     let st = newState(p, "ABBACDDC");
     const mark = (x: number, y: number, dir: number, wall: boolean): void => {
       const on = (d: number): number => (wall ? BORDER(d) : DISABLED(BORDER(d)));

@@ -654,6 +654,39 @@ What Palisade, the sixth, added:
   `openspec/changes/bound-palisade-to-the-boards-it-deals`; a table read
   off them here would have refused boards that deal.
 
+What Separate, the seventh, added:
+
+- **A board with nothing to strip is swapped.** Separate's board is all
+  letters. Its Unreasonable board is an Easy one with pairs of letters
+  swapped inside a dealt region, each while the search still proves one
+  answer within the budget. A swap inside a region keeps the dealt division
+  an answer, as a strip keeps the dealt clues true.
+- **Stopping at the first step that stops the solver deals a missing rule.**
+  That was tried for the hint's sake: it leaves 27 edges of 60 undecided
+  where the whole pass leaves 44. One join and a look settles a quarter of
+  those boards, against 3 in 100 after the whole pass. Count what a Check
+  finishes at each stopping rule, on 150 boards and not 30: at 30 the two
+  could not be told apart.
+- **Where the solver keeps an invariant, the verdict is one part.**
+  Separate's first rung walls every pair that shares a letter before
+  anything is joined, so a region is never too big and never holds a letter
+  twice. All that is left to call impossible is a region with nowhere to
+  grow, and without it a 6x6 board takes 659 positions for 11.
+- **Look for the proof before the enumeration.** No board in two letters has
+  the tier at any size: its regions are a perfect matching of As to Bs, and a
+  matching that is the only one always has a square with one partner left.
+  The test still tries every fill of the small boards, and the refusal
+  covers the sizes no test could.
+- **Check a board written by hand against the counter.** Four rows of ABCD
+  was to be the board with several answers and the solver finishes it; a
+  second try had one answer too.
+- **Sweep by a rate with a low cap, not by time to failure.** A cell that
+  never deals costs its whole retry cap, minutes at a large size, and a run
+  that reports at its end said nothing in twenty. Counting divisions tried
+  for each board dealt, capped at 300, swept thirty-three shapes in one
+  short run. It found that Separate deals only a handful of sizes at either
+  tier (`openspec/changes/bound-separate-to-the-boards-it-deals`).
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

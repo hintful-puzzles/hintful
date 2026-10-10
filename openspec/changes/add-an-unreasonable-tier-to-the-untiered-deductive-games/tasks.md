@@ -26,6 +26,8 @@
   gained its six Unreasonable lines.
   **Palisade: done.** Every line gained `de` (`5x5n5` is now `5x5n5de`), and
   the menu gained its four Unreasonable lines.
+  **Separate: done.** Every line gained `de` (`5x5n5` is now `5x5n5de`), and
+  the menu gained its four Unreasonable lines.
 
 ## 2. One game to the end: Pattern
 
@@ -188,7 +190,34 @@
       depends on the region size and on how thin the board is, and the
       numbers so far are in
       `openspec/changes/bound-palisade-to-the-boards-it-deals`.
-  - [ ] Separate, Signpost, Sticks, Net, Range,
+  - [x] **Separate** (2026-10-10). Measured: a deal is 4 ms at 4x4, 31 ms
+    at 5x5, 57 ms at 6x6 with four letters and 0.8 s at 6x6 with six, the
+    Easy board's time and little more; a dealt board needs a median of 5 to
+    23 positions; the hint leaves a median of 19 edges of 24 undecided at
+    4x4 and 53 of 60 at 6x6 with six. Decided, each with its reason in the
+    guide's "What Separate, the seventh, added":
+    - The board is all letters, so there is nothing to strip. The generator
+      swaps pairs of letters inside a region of an Easy board, each while
+      the search still proves one answer within 30 positions. One more
+      deduction would not finish these boards: a join and a look settles 45
+      of 450, a one-level trial 446.
+    - The menu is the four boards at both tiers.
+    - Unreasonable has no size bound of its own: it is dealt wherever Easy
+      is. It is refused on a strip, with two letters (proved at any size)
+      and on a 3x2 board with three, where every fill was tried.
+    - The ledger's Separate board has five Cs, and so no answer.
+    - **A defect in Easy, found by measuring and filed, not fixed here.**
+      Separate has no size bound and deals only a handful of sizes: 8x8 with
+      eight letters runs the retry cap out in 12 seconds every time, 10x10
+      never dealt at any letter count, and the 6x6 preset with six letters
+      takes 0.7 s on average and 3 s at worst. The numbers are in
+      `openspec/changes/bound-separate-to-the-boards-it-deals`.
+    - **For the owner to look at, not blocking:** the hint does little on
+      these boards before it stops (7 edges of 60 at 6x6 with six letters).
+      Stopping the swaps at the first one that stops the solver would leave
+      it half the board, and was not taken because one board in four dealt
+      that way falls to a single join and a look.
+  - [ ] Signpost, Sticks, Net, Range,
     Rectangles. For each, do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
     finish of the boards the tier deals, and sweep the shorter side when
