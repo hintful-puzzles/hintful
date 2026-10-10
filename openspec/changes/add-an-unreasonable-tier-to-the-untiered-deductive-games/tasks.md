@@ -62,7 +62,12 @@
   Rectangles. As each joins, `untiered-load.test.ts` loses its ledger line;
   its two floors of ten games (`declared.length`, and the games answering
   `nothingToDeduce`) fall with them and are to be re-stated when the first
-  goes red, from what is left.
+  goes red, from what is left. Two snapshots move with each game and are
+  read before they are re-baselined: `params-stability.test.ts` (each line
+  gains `de`) and `src/capability-surface.test.ts` (`difficulty` for
+  `finishesByDeduction`). Run `src/engine` and the tests at the top of `src/`
+  before the gated commit; Pattern's first commit failed the gate on the
+  second.
 
 ## 4. Close
 
