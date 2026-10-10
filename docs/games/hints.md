@@ -1471,6 +1471,18 @@ draws it. That is why `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
   outlined. The renderer reads `redraw`'s `deadEnd` beside `hint`
   (`stepMarks(hint ?? deadEnd)`); one that reads only `hint` names marks it does
   not paint, which the walk reports.
+- **A proof that nothing finishes from the position is not `hint`'s to give.**
+  Where a game with no mistake check can prove it cheaply (a peg nothing can
+  reach, a barrel stuck off every target, a gem out of reach), that
+  `markedDeadEnd` is the answer of `hasNoSolution`, which `loadDesc` refuses a
+  board for. The midend asks it before `hint` on a Hint press and on a check,
+  so the proof is written once and `hint` opens with its search. A `hint`
+  called directly on such a position still has to answer, and says what its
+  search finds (`NO_SOLUTION_FROM_HERE`). A bare `true` from the hook is a
+  verdict for loading alone and leaves the hint to the game: Flood's limit
+  that can no longer be met is one, and its hint leads home all the same.
+  Solve is not refused there either, since a search game's Solve finishes
+  from the board as dealt (`solveBySearch`).
 
 **Every refusal is a verdict as well as a sentence.** `isDeadEnd` says whether
 its advice is to go back: a contradiction, a game that is over, nothing found

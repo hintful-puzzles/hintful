@@ -37,7 +37,13 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newInertiaDesc } from "./generator.ts";
-import { hint, hintKeepTrack, INERTIA_RUNGS, type InertiaRung } from "./hint.ts";
+import {
+  hasNoSolution,
+  hint,
+  hintKeepTrack,
+  INERTIA_RUNGS,
+  type InertiaRung,
+} from "./hint.ts";
 import {
   animLength,
   BORDER,
@@ -297,6 +303,8 @@ export const inertiaGame: Game<
 
   textFormat,
   statusbarText,
+
+  hasNoSolution,
 
   // A nudge, not Solve: one slide at a time, and the midend does not count it
   // as using the solver.

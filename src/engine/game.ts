@@ -477,8 +477,16 @@ export interface Game<
    * the player presses it, so a search does not belong here: it charges a
    * board it cannot settle its whole budget each time that board opens. A
    * game with `findMistakes` answers through `solve`, which also says whether
-   * the answer is the only one, and `registerGame` refuses one with both. */
-  hasNoSolution?(state: State): boolean;
+   * the answer is the only one, and `registerGame` refuses one with both.
+   *
+   * **A game that can be lost answers for a position played into, too, and
+   * with what proves it**: a `markedDeadEnd`, whose words name the pegs or the
+   * barrel at fault. The midend refuses a hint with it before it asks
+   * {@link hint}, so the proof is stated once and a `hint` is never asked
+   * about a position it holds for. A bare `true` is a verdict on the board as
+   * dealt only, and leaves the hint to the game (Flood's leads home past the
+   * limit). */
+  hasNoSolution?(state: State): boolean | MarkedDeadEnd;
 
   /** Track the pointer over the board when no button is down, for a game
    * that can say something useful about what sits under it — Loopy lights

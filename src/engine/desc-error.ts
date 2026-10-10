@@ -155,7 +155,7 @@ export const DESC_NO_SOLUTION = descError(
 interface Loadable<P, S> {
   newState(p: P, desc: string): S;
   findMistakes?: unknown;
-  hasNoSolution?(state: S): boolean;
+  hasNoSolution?(state: S): boolean | object;
   solve?(orig: S, curr: S): { ok: true } | { ok: false; error: string };
   finishesByDeduction?(state: S): boolean;
   difficulty?: DifficultyContract<P>;

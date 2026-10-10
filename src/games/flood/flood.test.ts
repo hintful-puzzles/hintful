@@ -11,10 +11,12 @@ import {
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { GAME_OVER } from "../../engine/hint-refusal.ts";
+import { Midend } from "../../engine/midend.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT, LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { executeMove, floodGame } from "./index.ts";
 import { completed, solveMoves } from "./solver.ts";
 import {
@@ -23,6 +25,7 @@ import {
   encodeParams,
   type FloodParams,
   type FloodState,
+  hasNoSolution,
   newDesc,
   newState,
   status,
@@ -197,6 +200,62 @@ describe("Flood solve", () => {
     expect(completed(solved.grid)).toBe(true);
     expect(status(solved)).toBe("solved");
     expect(solved.moves).toBeGreaterThan(0);
+  });
+});
+
+describe("Flood's proof that the limit cannot be met", () => {
+  /** The fewest fills that flood `s`, by trying every line of them. */
+  function fewestFills(s: FloodState): number {
+    let level = new Map([[s.grid.join(""), s]]);
+    for (let fills = 0; ; fills++) {
+      const next = new Map<string, FloodState>();
+      for (const at of level.values()) {
+        if (completed(at.grid)) return fills;
+        for (let color = 0; color < at.colors; color++) {
+          if (color === at.grid[0]) continue;
+          const after = executeMove(at, { type: "fill", color });
+          next.set(after.grid.join(""), after);
+        }
+      }
+      level = next;
+    }
+  }
+
+  it("never holds while the fewest fills still fit, and holds one fill short of its own count", () => {
+    const p: FloodParams = { w: 4, h: 4, colors: 4, leniency: 0 };
+    let refused = 0;
+    for (let seed = 0; seed < 30; seed++) {
+      const dealt = gen(p, `no-solution-${seed}`);
+      const fewest = fewestFills(dealt);
+      expect(hasNoSolution({ ...dealt, movelimit: fewest }), `seed ${seed}`).toBe(
+        false,
+      );
+      // The count is a floor on the fewest, so a limit under it is refused,
+      // and a limit under the fewest need not be.
+      const colors = new Set(dealt.grid).size;
+      expect(hasNoSolution({ ...dealt, movelimit: colors - 2 }), `seed ${seed}`).toBe(
+        true,
+      );
+      if (hasNoSolution({ ...dealt, movelimit: fewest - 1 })) refused++;
+    }
+    expect(refused).toBeLessThan(30);
+  });
+
+  it("counts the corner's own color where a square of it lies apart", () => {
+    const p: FloodParams = { w: 3, h: 1, colors: 3, leniency: 0 };
+    // 0 1 0: a fill of 1, then one of 0 again.
+    expect(hasNoSolution(newState(p, "010,1"))).toBe(true);
+    expect(hasNoSolution(newState(p, "010,2"))).toBe(false);
+  });
+
+  it("leaves the hint to the game on a board played past what the limit allows", () => {
+    const m = new Midend(floodGame);
+    expect(m.newGameFromId("3x1c3m0:012,2")).toBeNull();
+    // Two fills flood it, and this one is neither: three are needed now.
+    m.playMoves([{ type: "fill", color: 2 }]);
+    expect(m.solve()).toBe(NO_SOLUTION_FROM_HERE);
+    expect(m.hint()).toBeNull();
+    expect(m.activeHintStep()?.move).toEqual({ type: "fill", color: 1 });
   });
 });
 

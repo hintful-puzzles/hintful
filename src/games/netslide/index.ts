@@ -65,6 +65,7 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
+  hasNoSolution,
   isComplete,
   type NetslideMove,
   type NetslideParams,
@@ -324,6 +325,7 @@ export const netslideGame: Game<
     if (!tiles) return { ok: false, error: SOLUTION_UNKNOWN };
     return { ok: true, move: { type: "solve", tiles: Array.from(tiles) } };
   },
+  hasNoSolution,
 
   hint,
   hintRungs: NETSLIDE_RUNGS,

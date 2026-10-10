@@ -34,7 +34,13 @@ import {
 import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { hint, hintKeepTrack, PEGS_RUNGS, type PegsRung } from "./hint.ts";
+import {
+  hasNoSolution,
+  hint,
+  hintKeepTrack,
+  PEGS_RUNGS,
+  type PegsRung,
+} from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
 import {
   colors,
@@ -310,6 +316,7 @@ export const pegsGame: Game<
   },
 
   solve,
+  hasNoSolution,
 
   hint,
   hintMarks: HINT_MARKS,

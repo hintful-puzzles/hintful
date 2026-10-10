@@ -27,6 +27,7 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import {
+  type MarkedDeadEnd,
   markedDeadEnd,
   NO_MOVE_WORTH_MAKING,
   puzzleDeadEnd,
@@ -277,6 +278,23 @@ function firstLegOf(s: InertiaState, route: readonly number[]): number[] | null 
 
 // --- the plan --------------------------------------------------------
 
+/**
+ * Inertia's one provable verdict, and a much better answer than the route
+ * solver's shrug: a gem the ball can never reach again means the game is lost,
+ * and the move to make is undo. The gems are anonymous, so they are circled.
+ *
+ * A dead ball is not this proof's to name: the board draws it and the status
+ * says lost, so {@link hint} words it.
+ */
+export function hasNoSolution(state: InertiaState): false | MarkedDeadEnd {
+  if (state.dead) return false;
+  const stranded = unreachableGems(state);
+  if (stranded.length === 0) return false;
+  return markedDeadEnd(
+    phrase`The ball can no longer reach ${mark.the("outline", GEM, stranded, "gem")}. Undo to a position where it can.`,
+  );
+}
+
 export function hint(
   state: InertiaState,
 ): HintResult<InertiaMove, unknown, InertiaRung> {
@@ -288,16 +306,6 @@ export function hint(
         "The ball is dead: no move can be played from here. Undo to bring it back.",
       ),
     };
-  }
-
-  // Inertia's one provable verdict, and a much better answer than the route
-  // solver's shrug: a gem the ball can never reach again means the game is lost,
-  // and the move to make is undo. The gems are anonymous, so they are circled.
-  const stranded = unreachableGems(state);
-  if (stranded.length > 0) {
-    return markedDeadEnd(
-      phrase`The ball can no longer reach ${mark.the("outline", GEM, stranded, "gem")}. Undo to a position where it can.`,
-    );
   }
 
   // Not the plan — the *check* that one exists, and the fallback's witness if

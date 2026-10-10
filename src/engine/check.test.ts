@@ -3,6 +3,7 @@
  * hint's verdict, without showing a hint.
  */
 import { describe, expect, it, vi } from "vitest";
+import { DESC_NO_SOLUTION } from "./desc-error.ts";
 import { type FakeMove, type FakeState, fakeGame } from "./fake-game.ts";
 import type { HintResult } from "./game.ts";
 import {
@@ -165,5 +166,58 @@ describe("the check behind Check & save", () => {
     const bare = new Midend({ ...fakeGame, hint: undefined });
     bare.newGameFromId("t3:g3-0");
     expect(bare.check()).toEqual({ kind: "sound", mistakesChecked: false });
+  });
+});
+
+/*
+ * `Game.hasNoSolution` is asked when a board loads, and a game that can be
+ * lost answers it for a position played into as well. The midend takes a
+ * proof that names its cause as the hint's refusal, so the game's `hint` is
+ * not where a dead position is found.
+ */
+describe("a position the game proves nothing finishes from", () => {
+  const SENTENCE = "The outlined square is cut off. Undo.";
+  const cutOff = () =>
+    markedDeadEnd(
+      phrase`${mark.the("outline", CELL, [{ x: 0, y: 0 }], "square").capitalized()} is cut off. Undo.`,
+    );
+
+  function provingGame(proof: (s: FakeState) => boolean | MarkedDeadEnd) {
+    const hint = vi.fn(plan);
+    const m = new Midend({ ...fakeGame, hint, hasNoSolution: proof });
+    expect(m.newGameFromId("t3:g3-0")).toBeNull();
+    return { m, hint };
+  }
+
+  it("is refused with the proof's words on a Hint press, and the hint is not asked", () => {
+    const { m, hint } = provingGame((s) => s.count < 0 && cutOff());
+    expect(m.hint()).toBeNull();
+    expect(hint).toHaveBeenCalledTimes(1);
+    m.playMoves(["dec"]);
+    hint.mockClear();
+    expect(m.hint()).toBe(SENTENCE);
+    expect(m.activeHintStep()).toBeNull();
+    expect(hint).not.toHaveBeenCalled();
+  });
+
+  it("is a dead end to the check, which does not ask the hint either", () => {
+    const { m, hint } = provingGame((s) => s.count < 0 && cutOff());
+    m.playMoves(["dec"]);
+    expect(m.check()).toEqual({ kind: "dead-end", reason: SENTENCE });
+    expect(hint).not.toHaveBeenCalled();
+  });
+
+  it("leaves the hint to the game where the proof is a bare verdict", () => {
+    const { m, hint } = provingGame((s) => s.count < 0);
+    m.playMoves(["dec"]);
+    expect(m.hint()).toBeNull();
+    expect(hint).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the dealt board from loading, with words or without", () => {
+    for (const proof of [() => true, cutOff]) {
+      const m = new Midend({ ...fakeGame, hasNoSolution: proof });
+      expect(m.newGameFromId("t3:g3-0")).toBe(DESC_NO_SOLUTION);
+    }
   });
 });

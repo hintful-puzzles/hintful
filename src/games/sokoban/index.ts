@@ -27,6 +27,7 @@ import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSokobanDesc } from "./generator.ts";
 import {
+  hasNoSolution,
   hint,
   hintKeepTrack,
   pushMove,
@@ -359,6 +360,7 @@ export const sokobanGame: Game<
   },
 
   solve,
+  hasNoSolution,
 
   hint,
   hintMarks: HINT_MARKS,

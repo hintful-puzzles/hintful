@@ -443,7 +443,8 @@ describe("inertia swipe", () => {
 
 describe("inertia deaths tally", () => {
   it("counts a death once, and undo/redo does not re-count it", () => {
-    const { params, desc } = board(["Smbbg", "wwwww"]);
+    // The gem is a slide down from the start, so the board can be finished.
+    const { params, desc } = board(["Smb", "bww", "gww"]);
     const { m, status } = harness();
     expect(m.newGameFromId(`${params.w}x${params.h}:${desc}`)).toBeNull();
 

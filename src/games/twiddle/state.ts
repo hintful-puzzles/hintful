@@ -6,6 +6,7 @@ import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
+import { permParity } from "../../engine/shuffle.ts";
 
 // --- types -----------------------------------------------------------
 
@@ -271,6 +272,53 @@ export function newState(p: TwiddleParams, desc: string): TwiddleState {
     lastY: -1,
     lastR: -1,
   };
+}
+
+/**
+ * Whether no turns put this board in order, by what every turn keeps:
+ *
+ * - **A tile's color on the checkerboard.** A block of odd side turns about a
+ *   square, so each tile stays on its color. One of even side turns about a
+ *   corner, so a tile changes color with every quarter turn it makes, and
+ *   where tiles show their turns the two together keep their parity.
+ * - **The arrangement's parity**, where no two tiles share a number: a quarter
+ *   turn is ⌊n²/4⌋ cycles of four tiles, an even permutation unless `n` is two
+ *   more than a multiple of four.
+ * - **The turns the tiles show, added up modulo four**, with a block of even
+ *   side: it turns a multiple of four tiles at once.
+ *
+ * Each is proved and nothing says they are all there is, so a board that
+ * passes them may still be out of reach.
+ */
+export function hasNoSolution(state: TwiddleState): boolean {
+  const { w, n, orientable, numbers, orient } = state;
+  const wh = numbers.length;
+  const home = Int32Array.from(numbers).sort();
+  const odd = (n & 1) === 1;
+
+  if (odd || orientable) {
+    // How many tiles of each number stand on each color, less how many of the
+    // solved board's do.
+    const tally = new Map<number, number>();
+    const count = (key: number, by: number) =>
+      tally.set(key, (tally.get(key) ?? 0) + by);
+    for (let i = 0; i < wh; i++) {
+      const color = ((i % w) + Math.floor(i / w)) & 1;
+      count(numbers[i] * 2 + ((color + (odd ? 0 : orient[i])) & 1), 1);
+      count(home[i] * 2 + color, -1);
+    }
+    for (const excess of tally.values()) if (excess !== 0) return true;
+  }
+
+  const distinct = home.every((v, i) => v === i + 1);
+  if (distinct && n % 4 !== 2 && permParity(numbers, wh) !== 0) return true;
+
+  if (orientable && !odd) {
+    let turns = 0;
+    for (let i = 0; i < wh; i++) turns += orient[i];
+    if (turns % 4 !== 0) return true;
+  }
+  return false;
 }
 
 export function status(state: TwiddleState): "solved" | "ongoing" {

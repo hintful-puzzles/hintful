@@ -161,6 +161,23 @@ export function newState(p: FloodParams, desc: string): FloodState {
   };
 }
 
+/**
+ * Whether the limit can no longer be met. A square outside the corner's
+ * region joins it only on a fill of its own color, so every color with a
+ * square out there costs a fill, the corner's own color included. That count
+ * is a floor and seldom the true one, so most boards that cannot be finished
+ * pass it.
+ */
+export function hasNoSolution(state: FloodState): boolean {
+  const { w, h, colors } = state;
+  // The corner's region, repainted in a color no square has.
+  const grid = Uint8Array.from(state.grid);
+  fill(w, h, grid, FILLX, FILLY, colors, new Int32Array(w * h));
+  const outside = new Set(grid);
+  outside.delete(colors);
+  return state.moves + outside.size > state.movelimit;
+}
+
 // --- status -----------------------------------------------------------
 
 /** Upstream's `game_status`: completing within the limit wins; reaching the

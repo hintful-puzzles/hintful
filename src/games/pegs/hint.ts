@@ -22,7 +22,7 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { markedDeadEnd } from "../../engine/hint-refusal.ts";
+import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
 import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
@@ -143,17 +143,21 @@ function step(s: PegsState, j: Jump, said: Said, continues = false): Step {
   };
 }
 
-export function hint(state: PegsState): HintResult<PegsMove, unknown, PegsRung> {
-  // Pegs' one verdict a player can see at a glance: a peg nothing can reach,
-  // outlined so they can see which.
+/**
+ * Pegs' one verdict a player can see at a glance: a peg nothing can reach,
+ * outlined so they can see which. With another peg on the board the game can
+ * never end with one, which is what the proof is of.
+ */
+export function hasNoSolution(state: PegsState): false | MarkedDeadEnd {
   const frozen = frozenPegs(state);
-  if (frozen.length > 0) {
-    const many = frozen.length > 1;
-    return markedDeadEnd(
-      phrase`${mark.the("outline", PEG, frozen, "peg").capitalized()} ${many ? "are" : "is"} cut off, so the game can never finish with one peg. Undo until a peg can still land beside ${many ? "each" : "it"}.`,
-    );
-  }
+  if (frozen.length === 0) return false;
+  const many = frozen.length > 1;
+  return markedDeadEnd(
+    phrase`${mark.the("outline", PEG, frozen, "peg").capitalized()} ${many ? "are" : "is"} cut off, so the game can never finish with one peg. Undo until a peg can still land beside ${many ? "each" : "it"}.`,
+  );
+}
 
+export function hint(state: PegsState): HintResult<PegsMove, unknown, PegsRung> {
   const finish = findFinish(state);
   if (finish.kind !== "found") return searchRefusal(finish);
 

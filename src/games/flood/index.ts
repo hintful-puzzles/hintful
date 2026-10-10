@@ -46,6 +46,7 @@ import {
   type FloodParams,
   type FloodState,
   type FloodUi,
+  hasNoSolution,
   MAXCOLORS,
   newDesc,
   newState,
@@ -265,6 +266,8 @@ export const floodGame: Game<
     }
     return { ok: true, move: { type: "solve" as const } };
   },
+  // A bare verdict, so the hint is still asked: it leads home past the limit.
+  hasNoSolution,
 
   hint,
   hintRungs: FLOOD_RUNGS,

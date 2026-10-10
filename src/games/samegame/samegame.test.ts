@@ -13,6 +13,7 @@ import {
   check,
   decodeParams,
   encodeParams,
+  hasNoSolution,
   newDesc,
   newState,
   npoints,
@@ -162,6 +163,19 @@ describe("Same Game gravity + completion", () => {
     });
     // A same-color pair ⇒ a move remains.
     expect(check([1, 1, 2, 3], 2, 2).impossible).toBe(false);
+  });
+
+  it("proves a board with a lone tile of a color can never be cleared", () => {
+    expect(hasNoSolution(state3x3("1,1,1,2,2,2,2,2,3"))).toBe(true);
+    expect(hasNoSolution(state3x3("1,1,1,2,2,2,2,3,3"))).toBe(false);
+    // Two of every color and no move at all: upstream's scattered-colors
+    // generator can deal this, so it is not refused.
+    expect(hasNoSolution(state3x3("1,2,1,2,3,2,3,1,3"))).toBe(false);
+    expect(check([1, 2, 1, 2, 3, 2, 3, 1, 3], 3, 3).impossible).toBe(true);
+    // And a cleared board has no tile left to be alone.
+    expect(hasNoSolution({ ...state3x3("1,1,1,2,2,2,2,3,3"), tiles: [0, 0, 0] })).toBe(
+      false,
+    );
   });
 });
 

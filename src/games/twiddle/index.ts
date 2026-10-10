@@ -44,6 +44,7 @@ import {
   defaultParams,
   doRotate,
   encodeParams,
+  hasNoSolution,
   newDesc,
   newState,
   presets,
@@ -294,6 +295,7 @@ export const twiddleGame: Game<
   },
 
   solve: () => ({ ok: true, move: { type: "solve" } }),
+  hasNoSolution,
 
   textFormat,
   statusbarText,

@@ -272,6 +272,9 @@ export function findFinish(s: PegsState, proofBudget = PROOF_BUDGET): Finish {
     kind: "found",
     line: path.map((k) => board.jumpAt(k)),
   });
+  // The one loss that needs no search, asked before the beams spend theirs.
+  if (pegs.reduce((a, b) => a + b, 0) > 1 && board.frozen(pegs).length > 0)
+    return { kind: "lost" };
   for (const width of [300, 3000]) {
     const path = beam(board, pegs, width);
     if (path) return found(path);

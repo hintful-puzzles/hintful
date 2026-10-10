@@ -8,7 +8,8 @@
  * player has to learn to tell apart:
  *
  * 1. a barrel already stuck for good off every target ends the game, and is
- *    outlined as the reason to undo;
+ *    outlined as the reason to undo (`hasNoSolution`, which the midend asks
+ *    before the hint);
  * 2. a rival push that would leave a barrel stuck for good (in a corner, on a
  *    square no target can be reached from, or jammed) is a reason the player
  *    can see, so it leads;
@@ -44,7 +45,7 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { markedDeadEnd } from "../../engine/hint-refusal.ts";
+import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
 import { phrase, type Sentence } from "../../engine/hint-words.ts";
 import { judgeRivals, type Verdict } from "../../engine/rival-judging.ts";
 import {
@@ -147,30 +148,37 @@ function planAt(
   }
 }
 
+/**
+ * Sokoban's one verdict a player can see at a glance: a barrel stuck for good
+ * off every target, outlined so they can see which. Only where every barrel
+ * is needed (`SokobanBoard.tight`), which is what makes one stuck barrel a
+ * proof that the board cannot be finished.
+ */
+export function hasNoSolution(state: SokobanState): false | MarkedDeadEnd {
+  const board = new SokobanBoard(state);
+  const here = board.positionOf(state);
+  const c = board.stuck(here);
+  if (c < 0) return false;
+  const why = stuckWhy(board, here, c);
+  const it = stuckBarrel(c);
+  if (why === "corner")
+    return markedDeadEnd(
+      phrase`${it.capitalized()} is wedged in a corner it can never leave. Undo until it is out.`,
+    );
+  if (why === "dead")
+    return markedDeadEnd(
+      phrase`No push can bring ${it} to a target. Undo until one can.`,
+    );
+  return markedDeadEnd(
+    phrase`${it.capitalized()} is jammed where it can never move again. Undo until it can.`,
+  );
+}
+
 export function hint(
   state: SokobanState,
 ): HintResult<SokobanMove, unknown, SokobanRung> {
   const board = new SokobanBoard(state);
   const here = board.positionOf(state);
-
-  // Sokoban's one verdict a player can see at a glance: a barrel stuck for
-  // good off every target, outlined so they can see which.
-  for (const c of board.stuckBarrels(here)) {
-    const why = stuckWhy(board, here, c);
-    const it = stuckBarrel(c);
-    if (why === "corner")
-      return markedDeadEnd(
-        phrase`${it.capitalized()} is wedged in a corner it can never leave. Undo until it is out.`,
-      );
-    if (why === "dead")
-      return markedDeadEnd(
-        phrase`No push can bring ${it} to a target. Undo until one can.`,
-      );
-    if (why === "frozen")
-      return markedDeadEnd(
-        phrase`${it.capitalized()} is jammed where it can never move again. Undo until it can.`,
-      );
-  }
 
   const plan = planAt(board, here);
   if (plan.kind !== "plan") return searchRefusal(plan);

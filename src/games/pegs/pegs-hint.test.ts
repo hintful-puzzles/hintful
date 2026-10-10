@@ -7,9 +7,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DESC_NO_SOLUTION } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { isDeadEnd } from "../../engine/hint-refusal.ts";
 import { MOVE, stepMarks } from "../../engine/hint-words.ts";
+import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import {
@@ -23,7 +25,13 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { hint, hintKeepTrack, PEGS_RUNGS, type PegsRung } from "./hint.ts";
+import {
+  hasNoSolution,
+  hint,
+  hintKeepTrack,
+  PEGS_RUNGS,
+  type PegsRung,
+} from "./hint.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import { pegsGame } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
@@ -173,6 +181,12 @@ const LOST = "5x5:POPPPPHPOOPHHHHPPHOOHOOOO";
 const TWO_CUT_OFF = "5x1:PHHHP";
 /** A pair that can still jump, and a peg walled off from it. */
 const ONE_CUT_OFF = "7x1:PPHOHHP";
+/** A board with no peg cut off, and the jump that leaves one so while the
+ * pair on the left can still jump. */
+const CUTS_ONE_OFF = {
+  id: "9x1:PPHOHHHPP",
+  jump: { type: "jump", sx: 8, sy: 0, tx: 6, ty: 0 },
+} as const;
 
 /** The plan at a sentence's pinned position. */
 function planAt(kind: Kind): {
@@ -249,11 +263,11 @@ describe("pegs solver", () => {
 });
 
 describe("pegs hint", () => {
-  it("refuses a board with pegs cut off, and outlines them", () => {
+  it("proves a board with pegs cut off has no solution, and outlines them", () => {
     const outlined = (id: string, text: RegExp): number[] => {
       const s = load(id);
-      const r = hint(s);
-      if (r.ok || !r.words) throw new Error(`${id}: expected a marked refusal`);
+      const r = hasNoSolution(s);
+      if (!r) throw new Error(`${id}: expected a proof`);
       expect(r.error).toMatch(text);
       expect(isDeadEnd(r.error)).toBe(true);
       expect(deadEndBindingDefects(G, s, G.newUi(s), r)).toEqual([]);
@@ -267,13 +281,22 @@ describe("pegs hint", () => {
     ).toEqual([6]);
   });
 
+  it("proves nothing of a board with no peg cut off, lost or not", () => {
+    expect(hasNoSolution(load(LOST))).toBe(false);
+    expect(hasNoSolution(pinned("only").state)).toBe(false);
+  });
+
   it("marks a cut-off peg when the check refuses to save, until the next move", () => {
-    const { midend, recording } = renderScenario({ game: G, id: ONE_CUT_OFF });
+    // The board loads, and the jump leaves its peg where nothing reaches it.
+    const { id, jump } = CUTS_ONE_OFF;
+    expect(G.hasNoSolution?.(load(id))).toBe(false);
+    const { midend, recording } = renderScenario({ game: G, id, moves: [jump] });
     const unmarked = JSON.stringify(recording.ops);
     const verdict = midend.check();
     expect(verdict.kind).toBe("dead-end");
     if (verdict.kind === "dead-end")
       expect(verdict.reason).toMatch(/^The outlined peg/);
+    expect(midend.hint()).toMatch(/^The outlined peg is cut off/);
     const frame = (): string => {
       const rec = new RecordingDrawing(midend.getColorPalette(DEFAULT_BACKGROUND));
       midend.forceRedraw(rec);
@@ -284,8 +307,14 @@ describe("pegs hint", () => {
     // the one that board paints with no check asked.
     const moves: PegsMove[] = [{ type: "jump", sx: 0, sy: 0, tx: 2, ty: 0 }];
     midend.playMoves(moves);
-    const fresh = renderScenario({ game: G, id: ONE_CUT_OFF, moves });
+    const fresh = renderScenario({ game: G, id, moves: [jump, ...moves] });
     expect(frame()).toBe(JSON.stringify(fresh.recording.ops));
+  });
+
+  it("does not open a board with a peg cut off", () => {
+    for (const id of [ONE_CUT_OFF, TWO_CUT_OFF]) {
+      expect(new Midend(G).newGameFromId(id), id).toBe(DESC_NO_SOLUTION);
+    }
   });
 
   it("refuses a lost board with nothing frozen as one no solution leaves", () => {

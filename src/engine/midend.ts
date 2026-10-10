@@ -1162,12 +1162,27 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (!this.game.hint || this.statusOf(this.state) === "solved") return sound;
     this.refreshActiveHint();
     if (this.activeHint) return sound;
-    const result = this.game.hint(this.state, this.aux, this.ui);
+    const result = this.askHint(this.game.hint);
     if (result.ok) return sound;
     if (result.error === SEARCH_OUT_OF_REACH) return { kind: "out-of-reach" };
     if (!isDeadEnd(result.error)) return sound;
     this.showDeadEnd(result);
     return { kind: "dead-end", reason: result.error };
+  }
+
+  /**
+   * The hint's answer for the position on display: the game's proof that
+   * nothing finishes from it, where it has one that names its cause
+   * (`Game.hasNoSolution`), else the game's `hint`. So a game states such a
+   * proof once, for loading and for the hint alike, and its `hint` is asked
+   * only about a position not proved dead.
+   */
+  private askHint(
+    hint: (state: State, aux?: string, ui?: Ui) => HintResult<Move>,
+  ): HintResult<Move> {
+    const proof = this.game.hasNoSolution?.(this.state);
+    if (typeof proof === "object") return proof;
+    return hint(this.state, this.aux, this.ui);
   }
 
   /** Take a refusal as the hint's word on this position: a dead end counts as
@@ -1245,7 +1260,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // highlight, so it is said only once the mistakes are on the overlay.
     if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;
     if (this.findMistakes() > 0) return FIX_MISTAKES_FIRST;
-    const result = this.game.hint(this.state, this.aux, this.ui);
+    const result = this.askHint(this.game.hint);
     if (!result.ok && result.error === DEDUCTION_EXHAUSTED) {
       // The refusal tells the player the tier allows positions that need trial
       // and error, which only an `Unreasonable` tier does. Anywhere else the

@@ -30,8 +30,24 @@ const REFUSED: Record<string, string> = {
   fifteen: "3x3:2,1,3,4,5,6,7,8,0",
   // No press flips anything, and one light is unlit.
   flip: "3x3c:000000000000000000000,800",
+  // Three stripes need two fills, and the limit is one.
+  flood: "3x3c3m0:012012012,1",
+  // The gem is behind walls the ball never gets round.
+  inertia: "3x3:Swgbwwbbb",
+  // Four loose ends, which no arrangement joins into one network.
+  netslide: "2x2:1111",
+  // Two pegs in opposite corners, which never meet.
+  pegs: "5x5random:PHHHHHHHHHHHHHHHHHHHHHHHP",
+  // One tile of color 3, which no removal can take.
+  samegame: "5x5c3s2:3,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2",
   // Two tiles swapped on a board with both sides odd.
   sixteen: "3x3:2,1,3,4,5,6,7,8,9",
+  // A barrel in a corner that is no target.
+  sokoban:
+    "10x12:w11f2bt3wtw2tbs2b2sbw2s3ts4w2bsbtwsw4ts2bs4w2ts4wsbw3bswts2tw3s2wbsbtw3bs3fsfw3tws2tbuw11",
+  // Two tiles swapped, where the one block is the whole board and has an odd
+  // side: each has left its color of the checkerboard.
+  twiddle: "3x3n3:2,1,3,4,5,6,7,8,9",
   // Every pair of five points joined, which cannot be drawn without a crossing.
   untangle: "5:0-1,0-2,0-3,0-4,1-2,1-3,1-4,2-3,2-4,3-4",
 };
@@ -42,23 +58,11 @@ const REFUSED: Record<string, string> = {
  * `hasNoSolution`, and the first test is what says so.
  */
 const LET_THROUGH: Record<string, string> = {
-  // Three stripes need two fills, and the limit is one.
-  flood: "3x3c3m0:012012012,1",
-  // The gem is behind walls the ball never gets round.
-  inertia: "3x3:Swgbwwbbb",
-  // Four loose ends, which no arrangement joins into one network.
-  netslide: "2x2:1111",
-  // Two pegs in opposite corners, which never meet.
-  pegs: "5x5random:PHHHHHHHHHHHHHHHHHHHHHHHP",
-  // A checkerboard: no two tiles of a color touch, so nothing can be removed.
-  samegame: "5x5c3s2:1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1",
-  // A block moved one square, by an edit to a dealt board.
+  // A block moved one square, by an edit to a dealt board. No cheap proof is
+  // known: nothing a slide keeps tells a board that can be finished from one
+  // that cannot, so the one proof is the search of every position, which load
+  // cannot pay.
   slide: "6x7m25:w7md1ad1w2d5d1ad2w2a2d1aw2ad5d1efewa3efew6,4,4,23",
-  // A barrel in a corner that is no target.
-  sokoban:
-    "10x12:w11f2bt3wtw2tbs2b2sbw2s3ts4w2bsbtwsw4ts2bs4w2ts4wsbw3bswts2tw3s2wbsbtw3bs3fsfw3tws2tbuw11",
-  // The one block is the whole board, so only four arrangements are reachable.
-  twiddle: "3x3n3:2,1,3,4,5,6,7,8,9",
 };
 
 /** What loading says of `gameId`, which the game must read as an unfinished

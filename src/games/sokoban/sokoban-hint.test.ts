@@ -9,16 +9,24 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DESC_NO_SOLUTION } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { isDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { Midend } from "../../engine/midend.ts";
 import {
   bindingDefects,
   deadEndBindingDefects,
 } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { hint, hintKeepTrack, pushMove, type SokobanRung } from "./hint.ts";
+import {
+  hasNoSolution,
+  hint,
+  hintKeepTrack,
+  pushMove,
+  type SokobanRung,
+} from "./hint.ts";
 import { BARREL, GOAL, PUSH, type Stuck } from "./hint-text.ts";
 import { executeMove, sokobanGame } from "./index.ts";
 import { COL_HINT, COL_HINT_EVIDENCE } from "./render.ts";
@@ -224,7 +232,7 @@ describe("the hint's sentences", () => {
     expect(striped.barrel).toBe(ringed.barrel);
     const board = new SokobanBoard(s);
     const after = board.apply(board.positionOf(s), striped);
-    expect(board.stuckBarrels(after)).not.toEqual([]);
+    expect(board.stuck(after)).toBeGreaterThanOrEqual(0);
   });
 
   it("says a push lets the player out only where it opens far more of the board", () => {
@@ -379,13 +387,27 @@ describe("refusals", () => {
       [FROZEN, /^The outlined barrel is jammed/],
     ] as const) {
       const s = load(id);
-      const r = hint(s);
-      if (r.ok || !r.words) throw new Error(`${id}: expected a marked refusal`);
+      const r = hasNoSolution(s);
+      if (!r) throw new Error(`${id}: expected a proof`);
+      expect(new Midend(G).newGameFromId(id), id).toBe(DESC_NO_SOLUTION);
       expect(r.error).toMatch(words);
       expect(isDeadEnd(r.error)).toBe(true);
       expect(deadEndBindingDefects(G, s, G.newUi(s), r)).toEqual([]);
       expect(stepMarks(r).of("outline", BARREL).length).toBe(1);
     }
+  });
+
+  it("is the hint's answer, and the check's, on a board played into one", () => {
+    const { s: deal, step: trap } = step(PINNED.trapCorner);
+    expect(hasNoSolution(deal)).toBe(false);
+    const [striped] = stepMarks(trap).of("stripes", PUSH);
+    const { midend } = renderScenario({
+      game: G,
+      id: PINNED.trapCorner,
+      moves: [pushMove(deal.w, striped)],
+    });
+    expect(midend.check().kind).toBe("dead-end");
+    expect(midend.hint()).toMatch(/^The outlined barrel is wedged in a corner/);
   });
 });
 

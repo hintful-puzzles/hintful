@@ -28,6 +28,7 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
+  hasNoSolution,
   isCleared,
   isStuck,
   newDesc,
@@ -235,6 +236,7 @@ export const samegameGame: Game<
     transposeParams:
       "Squares fall down and emptied columns close up to the left, so a board turned on its side would be a different puzzle.",
   },
+  hasNoSolution,
 
   textFormat,
   statusbarText,

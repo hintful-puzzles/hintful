@@ -1978,6 +1978,22 @@ no mistake check pins a board with no solution in
 [`no-solution-load.test.ts`](../../src/engine/no-solution-load.test.ts), which
 holds the list of games that still let one through, each with its board.
 
+**A proof need not be complete, and must be sound.** Flood counts the colors
+outside the corner's region against the limit, Netslide counts arm ends, and
+Twiddle checks three things its turns keep; each passes most boards that
+cannot be finished, and that is fine, because the hook refuses only what it
+proves. Hold it to the moves themselves: list every board a small one reaches
+and see the proof hold for none
+([`twiddle-no-solution.test.ts`](../../src/games/twiddle/twiddle-no-solution.test.ts),
+where 3x2 with a block of 2 reaches a sixth of its arrangements and no
+invariant written down says why). **A search game's quick loss is such a
+proof**: what Pegs, Sokoban and Inertia ask before they search costs under
+2 ms on their largest presets (measured 2026-10-10, over every one-edit
+mutant of five dealt boards each). **A game that can be lost answers with
+what proves it**, a `markedDeadEnd`, and the midend refuses a hint with that
+on a position played into ([hints.md](./hints.md) § "Refusal wording comes
+from one module").
+
 **A hidden answer is no reason to skip the check.** Black Box's balls,
 Mines' mines and Guess's code are hidden, and all three check marks against them
 as every other game checks a digit: a guess with no ball, a known mark on a ball,

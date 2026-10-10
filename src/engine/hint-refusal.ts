@@ -25,6 +25,12 @@
  * about an unfinished board with nothing wrong on it that the game can see, and
  * neither is a refusal a game can give at all.
  *
+ * **Then it asks the game's proof that nothing finishes from here**, where the
+ * game has one that names its cause (`Game.hasNoSolution` answering a
+ * {@link markedDeadEnd}), and refuses with that. The proof is what keeps such
+ * a board from loading, so it is stated once, and a `hint` opens with no
+ * dead-position check of its own.
+ *
  * **What a game may still differ on.** The bar is whether we can say what a game
  * would legitimately want to do differently, and there are five real answers:
  * a game whose board can be *inconsistent without any single cell being
@@ -183,7 +189,8 @@ export interface MarkedDeadEnd {
  * A {@link puzzleDeadEnd} whose words name the elements that cause it (Pegs'
  * cut-off pegs, Inertia's stranded gems), so the board marks them as it marks a
  * step's. A whole `HintResult`, so that the sentence is the words' text and the
- * two cannot disagree.
+ * two cannot disagree. Where the cause is a proof that nothing finishes from
+ * the position, it is the answer of `Game.hasNoSolution` and not of `hint`.
  *
  * Write the words as a `phrase` template at the call: `hint-refusal.test.ts`
  * reads them there, as it reads a {@link puzzleDeadEnd}'s sentence.

@@ -472,6 +472,19 @@ export function isStuck(state: SamegameState): boolean {
   return state.impossible && !isCleared(state);
 }
 
+/**
+ * Whether the board can never be cleared, by a tile that is the only one of
+ * its color: a removal takes two or more of one color, and no tile changes
+ * color. Upstream's two generators both deal at least two of every color, so
+ * this refuses no board either of them writes. A board with no move at all is
+ * not claimed here: upstream's scattered-colors generator can deal one.
+ */
+export function hasNoSolution(state: SamegameState): boolean {
+  const count = new Array<number>(state.ncols + 1).fill(0);
+  for (const c of state.tiles) count[c]++;
+  return count.some((n, c) => c > 0 && n === 1);
+}
+
 /** Upstream `game_status`: solved when cleared; otherwise ongoing. A stuck
  * board is NOT a loss — it is rescuable by Undo, so this never returns
  * `"lost"`. */

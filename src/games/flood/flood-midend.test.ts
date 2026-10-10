@@ -2,7 +2,7 @@
 // a winning fill, a losing fill (exhausting the limit → "lost"), undo /
 // redo, a forced redraw, and a hint.
 import { describe, expect, it } from "vitest";
-import { CURSOR_RIGHT, CURSOR_SELECT } from "../../engine/pointer.ts";
+import { CURSOR_LEFT, CURSOR_RIGHT, CURSOR_SELECT } from "../../engine/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -55,9 +55,14 @@ describe("Flood midend lifecycle", () => {
 
   it("exhausting the limit unsolved reports lost", () => {
     const h = harness();
-    // 3×1 board 0,1,2 with limit 1: a single fill cannot complete it.
-    expect(h.m.newGameFromId("3x1c3m1:012,1")).toBeNull();
-    h.m.processInput(0, 0, CURSOR_RIGHT); // cursor to (1,0), color 1
+    // 3×1 board 0,1,2 with limit 2: color 1 then color 2 floods it, and
+    // color 2 first does not.
+    expect(h.m.newGameFromId("3x1c3m1:012,2")).toBeNull();
+    h.m.processInput(0, 0, CURSOR_RIGHT);
+    h.m.processInput(0, 0, CURSOR_RIGHT); // cursor to (2,0), color 2
+    h.m.processInput(0, 0, CURSOR_SELECT); // fill color 2 → 2,1,2
+    expect(h.status()).toBe("ongoing");
+    h.m.processInput(0, 0, CURSOR_LEFT); // cursor to (1,0), color 1
     h.m.processInput(0, 0, CURSOR_SELECT); // fill color 1 → 1,1,2 (incomplete)
     expect(h.status()).toBe("lost");
     expect(h.statusBar()?.statusBarText).toContain("FAILED!");

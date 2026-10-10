@@ -527,7 +527,8 @@ its answer is hidden, and it writes its own test
 generator's checks off").
 
 **A game with no mistake check declares `hasNoSolution` where it has a cheap
-proof**, and pins a board with no solution either way
+proof**, answering with a `markedDeadEnd` where the game can be lost and the
+proof has a cause to outline, and pins a board with no solution either way
 ([solver & generator](./solver-and-generator.md) § "One answer, even when it
 is hidden").
 

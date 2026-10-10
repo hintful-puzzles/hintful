@@ -52,6 +52,7 @@ import {
   DIRECTIONS,
   decodeParams,
   encodeParams,
+  hasNoSolution,
   isComplete,
   L,
   type NetslideParams,
@@ -196,6 +197,16 @@ describe("netslide desc", () => {
     expect(validateDesc(netslideGame, p, "123")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(netslideGame, p, "12345")).toBe(DESC_TOO_LONG);
     expect(validateDesc(netslideGame, p, "12z4")).toBe(descBadCharacter("z"));
+  });
+
+  it("proves no slides finish a board with too few arms, or a tile with none", () => {
+    const p: NetslideParams = { ...EASY_5x5, w: 2, h: 2 };
+    // Three joins make one network of four tiles, and take six arm ends.
+    expect(hasNoSolution(newState(p, "1111"))).toBe(true);
+    expect(hasNoSolution(newState(p, "1113"))).toBe(true);
+    expect(hasNoSolution(newState(p, "1133"))).toBe(false);
+    // Arms enough, and a tile nothing can join.
+    expect(hasNoSolution(newState(p, "0fff"))).toBe(true);
   });
 });
 

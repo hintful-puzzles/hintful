@@ -461,14 +461,6 @@ export class SokobanBoard {
     return this.frozen(p, c, []) ? "frozen" : null;
   }
 
-  /** Every barrel of `p` off a target that can never reach one, in grid
-   * order. */
-  stuckBarrels(p: Position): number[] {
-    const out: number[] = [];
-    for (let c = 0; c < this.n; c++) if (this.stuckKind(p, c) !== null) out.push(c);
-    return out;
-  }
-
   /** Whether walls (or the board's edge) stand beside `c` on two sides that
    * meet: a corner, which no barrel pushed into can leave. */
   cornered(c: number): boolean {

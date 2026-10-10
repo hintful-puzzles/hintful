@@ -29,6 +29,7 @@ import {
   dirY,
   opposite,
   parseWireDesc,
+  wireCount,
 } from "../../engine/wires.ts";
 
 /* ----------------------------------------------------------------------
@@ -323,6 +324,24 @@ export function computeActive(
     movingRow,
     movingCol,
   );
+}
+
+/**
+ * Whether no slides power every tile, by what the tiles are, which a slide
+ * never changes: a tile with no arm joins nothing, and joining `n` tiles into
+ * one network takes `n - 1` joins, each using up an arm on both of its tiles.
+ * It says nothing of where the arms point, so most boards that cannot be
+ * finished pass it.
+ */
+export function hasNoSolution(s: NetslideState): boolean {
+  const n = s.tiles.length;
+  let arms = 0;
+  for (const tile of s.tiles) {
+    const count = wireCount(tile);
+    if (count === 0 && n > 1) return true;
+    arms += count;
+  }
+  return arms < 2 * (n - 1);
 }
 
 /** Is every tile powered? `tiles` as for {@link computeActive}. */

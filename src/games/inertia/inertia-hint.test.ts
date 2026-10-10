@@ -12,7 +12,7 @@ import { deadEndBindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newInertiaDesc } from "./generator.ts";
-import { hint } from "./hint.ts";
+import { hasNoSolution, hint } from "./hint.ts";
 import { GEM as GEM_MARK } from "./hint-text.ts";
 import { inertiaGame } from "./index.ts";
 import { COL_HINT, COL_HINT_GOAL } from "./render.ts";
@@ -423,16 +423,30 @@ describe("inertia hint is a nudge; only Solve is a commitment", () => {
     // The ball slides into the pocket, and the gem outside it is now beyond any
     // sequence of moves at all — which Inertia can *prove*, so the refusal says
     // what is wrong rather than shrugging that it found no route.
-    const s = play(
-      stateOf(["bbSbsbbb", "bbbwbbww", "mbbbgbbb", "wwwwbwww", "wwwwswww", "wwwwgwww"]),
-      S,
-      E,
-    );
+    const rows = [
+      "bbSbsbbb",
+      "bbbwbbww",
+      "mbbbgbbb",
+      "wwwwbwww",
+      "wwwwswww",
+      "wwwwgwww",
+    ];
+    const s = play(stateOf(rows), S, E);
     expect(s.px).toBe(7);
     expect(s.gems).toBe(1);
 
-    const res = hint(s);
-    if (res.ok || !res.words) throw new Error("expected a marked refusal");
+    // The proof is the midend's to ask, before the hint, and it holds for no
+    // board the ball can still finish.
+    expect(hasNoSolution(stateOf(rows))).toBe(false);
+    const { m } = harness(idOf(rows));
+    m.playMoves([
+      { type: "move", dir: S },
+      { type: "move", dir: E },
+    ]);
+    expect(m.hint()).toMatch(/^The ball can no longer reach the outlined gem\./);
+
+    const res = hasNoSolution(s);
+    if (!res) throw new Error("expected a proof");
     expect(res.error).toBe(
       "The ball can no longer reach the outlined gem. Undo to a position where it can.",
     );
