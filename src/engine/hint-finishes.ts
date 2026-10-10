@@ -49,6 +49,20 @@ export function hintAndSolveFinish<State, Move>(
   if (game.hint === undefined)
     throw new Error(`${game.id}: hintAndSolveFinish needs a hint`);
   if (game.solve?.(state, state).ok === false) return false;
+  return hintFinishes(game, state);
+}
+
+/**
+ * Say whether `game`'s hint, played from `state` a whole plan at a time, ends
+ * on a solved board: the half of {@link hintAndSolveFinish} a game with an
+ * Unreasonable tier asks at the tier beneath it, where its Solve searches and
+ * so answers boards deduction does not finish.
+ */
+export function hintFinishes<State, Move>(
+  game: Deducing<State, Move>,
+  state: State,
+): boolean {
+  if (game.hint === undefined) throw new Error(`${game.id}: hintFinishes needs a hint`);
   let board = state;
   for (let plans = 0; plans < PLAN_LIMIT; plans++) {
     if (game.status(board) === "solved") return true;

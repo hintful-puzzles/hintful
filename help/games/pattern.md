@@ -40,6 +40,11 @@ A few ideas are worth learning by name:
   is already marked: a cell that comes out the same in all of them is
   settled.
 
+On an Unreasonable board there comes a point where no row or column
+settles another cell on its own, and the hint says that nothing further
+follows by deduction instead of choosing for you. Save your position,
+try a cell, and it carries on from whatever you mark.
+
 ## Pattern parameters
 
 {{parameters}}

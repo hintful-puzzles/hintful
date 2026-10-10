@@ -14,6 +14,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type PatternHint, patternGame } from "./index.ts";
 import { deduceHintPlan, solveState } from "./solver.ts";
 import {
+  DIFF_EASY,
   GRID_EMPTY,
   GRID_FULL,
   GRID_UNKNOWN,
@@ -23,7 +24,7 @@ import {
 } from "./state.ts";
 
 const SEEDS = ["ph-a", "ph-b", "ph-c", "ph-d", "ph-e"];
-const P: PatternParams = { w: 10, h: 10 };
+const P: PatternParams = { w: 10, h: 10, diff: DIFF_EASY };
 
 function freshBoard(seed: string): PatternState {
   const { desc } = patternGame.newDesc(P, randomNew(seed));
@@ -35,7 +36,7 @@ function freshBoard(seed: string): PatternState {
  * larger boards. */
 const pinned = describeHintPins({
   game: patternGame,
-  params: [P, { w: 30, h: 30 }],
+  params: [P, { w: 30, h: 30, diff: DIFF_EASY }],
   seeds: 4,
   kinds: {
     severalCells: (step) => (step.highlights as PatternHint).cells.length > 1,
@@ -169,7 +170,7 @@ describe("pattern hint — narration", () => {
     const named = new Set(["overlap", "unreachable", "lineEmpty", "intersection"]);
     for (const w of [10, 20, 30]) {
       for (let i = 0; i < 12; i++) {
-        const P: PatternParams = { w, h: w };
+        const P: PatternParams = { w, h: w, diff: DIFF_EASY };
         const { desc } = patternGame.newDesc(P, randomNew(`named-${w}-${i}`));
         const state = patternGame.newState(P, desc);
         for (const m of deduceHintPlan(state)) {

@@ -2,11 +2,16 @@
  * Pattern line solver, a port of `do_recurse` / `do_row` / `solve_puzzle` in
  * pattern.c. It reasons about one row or column at a time (upstream's
  * documented limitation), so it cannot crack puzzles needing cross-line
- * deductions. The generator publishes only boards this solver fully cracks,
- * so its deductive power must match C exactly for the generator differential
- * to hold, and the recursion stays close to the original. Only the scheduling
- * differs, a dirty-worklist fixpoint: line-solving is monotone, so any
- * schedule reaches the same fixpoint and the same solved/stuck verdict.
+ * deductions. An Easy board is one this solver fully cracks, so its deductive
+ * power decides which Easy boards exist, and the recursion stays close to the
+ * original. Only the scheduling differs, a dirty-worklist fixpoint:
+ * line-solving is monotone, so any schedule reaches the same fixpoint and the
+ * same solved/stuck verdict.
+ *
+ * Beneath it, a search by trial and error over the same line deduction
+ * (`searchAnswers`) counts a board's answers. It is what an Unreasonable
+ * board is dealt by, and what Solve and the mistake check know the answer
+ * from at either tier. The hint never runs it.
  */
 import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -15,6 +20,7 @@ import {
   GRID_FULL,
   GRID_UNKNOWN,
   type GridVal,
+  type PatternCommon,
   type PatternMistake,
   type PatternState,
 } from "./state.ts";
@@ -125,7 +131,8 @@ function doRecurse(
  * Deduce forced cells of one line of `matrix` (start/len/step) against its
  * clue `data`, writing newly-forced `S_BLOCK`/`S_DOT` cells back. Calls
  * `onChange(k)` for each line position `k` it fills. Returns whether it
- * changed anything.
+ * changed anything, or `null` where no placement of the runs fits what the
+ * line already holds.
  */
 function doRow(
   matrix: Uint8Array,
@@ -134,7 +141,7 @@ function doRow(
   step: number,
   data: readonly number[],
   onChange: (pos: number) => void,
-): boolean {
+): boolean | null {
   const rowlen = data.length;
   const known = new Uint8Array(len);
   const deduced = new Uint8Array(len);
@@ -155,11 +162,14 @@ function doRow(
   for (let i = len - 1; i >= 0 && known[i] === S_DOT; i--) freespace--;
 
   if (rowlen === 0) {
+    if (known.includes(S_BLOCK)) return null;
     deduced.fill(S_DOT);
   } else if (rowlen === 1 && data[0] === len) {
+    if (known.includes(S_DOT)) return null;
     deduced.fill(S_BLOCK);
-  } else {
-    doRecurse(
+  } else if (
+    freespace < 0 ||
+    !doRecurse(
       known,
       deduced,
       row,
@@ -172,7 +182,9 @@ function doRow(
       freespace,
       0,
       0,
-    );
+    )
+  ) {
+    return null;
   }
 
   let changed = false;
@@ -201,36 +213,75 @@ function solvePuzzle(
   seedGrid?: Uint8Array,
   immutable?: Uint8Array,
 ): { matrix: Uint8Array; ok: boolean } {
+  const matrix = seededMatrix(w, h, seedGrid, immutable);
+  const lines = allLines(w, h);
+  return { matrix, ok: deduceLines(matrix, w, h, clues, lines) === "solved" };
+}
+
+/** The solver's matrix before any deduction: unknown but for the squares a
+ * picture desc fixes. */
+function seededMatrix(
+  w: number,
+  h: number,
+  seedGrid?: Uint8Array,
+  immutable?: Uint8Array,
+): Uint8Array {
   const matrix = new Uint8Array(w * h); // all S_UNKNOWN
   if (seedGrid && immutable) {
     for (let i = 0; i < w * h; i++) {
       if (immutable[i]) matrix[i] = seedGrid[i] === GRID_FULL ? S_BLOCK : S_UNKNOWN;
     }
   }
+  return matrix;
+}
 
-  const colDirty = new Uint8Array(w).fill(1);
-  const rowDirty = new Uint8Array(h).fill(1);
+/** The lines still to be looked at: one flag a column, one a row. */
+interface DirtyLines {
+  col: Uint8Array;
+  row: Uint8Array;
+}
 
+function allLines(w: number, h: number): DirtyLines {
+  return { col: new Uint8Array(w).fill(1), row: new Uint8Array(h).fill(1) };
+}
+
+/** Where line deduction leaves a board: every square decided, some left that
+ * no single line decides, or a line that nothing fits. */
+type LineVerdict = "solved" | "stuck" | "contradiction";
+
+/** Deduce on `matrix` a line at a time, from the `dirty` lines, until no line
+ * decides anything more. Every line a square changed on is read again before
+ * this returns, so a board it calls solved satisfies every clue. */
+function deduceLines(
+  matrix: Uint8Array,
+  w: number,
+  h: number,
+  clues: readonly (readonly number[])[],
+  dirty: DirtyLines,
+): LineVerdict {
   let any = true;
   while (any) {
     any = false;
     for (let i = 0; i < h; i++) {
-      if (!rowDirty[i]) continue;
-      rowDirty[i] = 0;
-      if (doRow(matrix, i * w, w, 1, clues[w + i], (col) => (colDirty[col] = 1))) {
-        any = true;
-      }
+      if (!dirty.row[i]) continue;
+      dirty.row[i] = 0;
+      const changed = doRow(matrix, i * w, w, 1, clues[w + i], (col) => {
+        dirty.col[col] = 1;
+      });
+      if (changed === null) return "contradiction";
+      if (changed) any = true;
     }
     for (let i = 0; i < w; i++) {
-      if (!colDirty[i]) continue;
-      colDirty[i] = 0;
-      if (doRow(matrix, i, h, w, clues[i], (rowi) => (rowDirty[rowi] = 1))) {
-        any = true;
-      }
+      if (!dirty.col[i]) continue;
+      dirty.col[i] = 0;
+      const changed = doRow(matrix, i, h, w, clues[i], (row) => {
+        dirty.row[row] = 1;
+      });
+      if (changed === null) return "contradiction";
+      if (changed) any = true;
     }
   }
-
-  return { matrix, ok: !matrix.includes(S_UNKNOWN) };
+  return matrix.includes(S_UNKNOWN) ? "stuck" : "solved";
 }
 
 /** Whether the clue set is fully line-solvable from a blank grid (the
@@ -243,27 +294,130 @@ export function isSoluble(
   return solvePuzzle(w, h, clues).ok;
 }
 
-/** The unique solution grid (GRID_* values) for a state, seeding the solver
- * with any immutable clue squares, or `null` when the line solver can't
- * fully crack it. */
-export function solveState(state: PatternState): Uint8Array | null {
-  const { w, h, clues, immutable } = state.common;
-  const { matrix, ok } = solvePuzzle(w, h, clues, state.grid, immutable);
-  if (!ok) return null;
-  const grid = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    grid[i] = matrix[i] === S_BLOCK ? GRID_FULL : GRID_EMPTY;
+/** What a search for a board's answers established: its one answer as
+ * `GRID_*` values, a proof that it has several or none, or neither once the
+ * budget ran out. */
+export type PatternAnswer =
+  | { readonly kind: "one"; readonly grid: Uint8Array }
+  | { readonly kind: "several" }
+  | { readonly kind: "none" }
+  | { readonly kind: "out-of-reach" };
+
+/**
+ * The positions a search may try before it gives up, each one a square
+ * assumed and the lines deduced from it. Counted in positions and not in
+ * time, so that a board is refused or dealt the same on every machine.
+ *
+ * It decides which Unreasonable boards exist: a picture that needs more is
+ * thrown away when dealing and refused when pasted. Of 225 boards dealt at
+ * 30x30 the hardest needed 1,105 and the median 17, and a 30x30 board that
+ * runs the budget out costs about half a second. Lowering it refuses boards
+ * already dealt, which are in saved games.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a board's answers up to two, by trial and error over the line
+ * deduction: where no line decides a square, assume one each way and deduce
+ * on. This is the search an Unreasonable board asks of its player, and it is
+ * what proves such a board has exactly one answer, which the line deduction
+ * cannot: stopping short, it has shown neither a second answer nor none.
+ */
+export function searchAnswers(
+  w: number,
+  h: number,
+  clues: readonly (readonly number[])[],
+  seedGrid?: Uint8Array,
+  immutable?: Uint8Array,
+  budget: number = SEARCH_BUDGET,
+): PatternAnswer {
+  let found: Uint8Array | null = null;
+  let left = budget;
+  // Depth first, the board of each position on the stack with the lines its
+  // last change touched.
+  const stack: { matrix: Uint8Array; dirty: DirtyLines }[] = [
+    { matrix: seededMatrix(w, h, seedGrid, immutable), dirty: allLines(w, h) },
+  ];
+  for (let top = stack.pop(); top !== undefined; top = stack.pop()) {
+    if (left-- <= 0) return { kind: "out-of-reach" };
+    const { matrix, dirty } = top;
+    const verdict = deduceLines(matrix, w, h, clues, dirty);
+    if (verdict === "contradiction") continue;
+    if (verdict === "solved") {
+      if (found !== null) return { kind: "several" };
+      found = matrix;
+      continue;
+    }
+    const at = branchSquare(matrix, w, h);
+    for (const value of [S_DOT, S_BLOCK]) {
+      const next = Uint8Array.from(matrix);
+      next[at] = value;
+      const touched = { col: new Uint8Array(w), row: new Uint8Array(h) };
+      touched.col[at % w] = 1;
+      touched.row[(at / w) | 0] = 1;
+      stack.push({ matrix: next, dirty: touched });
+    }
   }
-  return grid;
+  if (found === null) return { kind: "none" };
+  return {
+    kind: "one",
+    grid: found.map((v) => (v === S_BLOCK ? GRID_FULL : GRID_EMPTY)),
+  };
 }
 
-/** Solution as a `'0'`/`'1'` string for the `solve` move, or `null`. */
-export function solveToString(state: PatternState): string | null {
-  const grid = solveState(state);
-  if (!grid) return null;
-  let out = "";
-  for (let i = 0; i < grid.length; i++) out += grid[i] === GRID_FULL ? "1" : "0";
-  return out;
+/** The undecided square to assume next: the one with the most decided
+ * squares or edges beside it, since its lines are the nearest to deciding
+ * more. */
+function branchSquare(matrix: Uint8Array, w: number, h: number): number {
+  let best = -1;
+  let bestScore = -1;
+  for (let i = 0; i < matrix.length; i++) {
+    if (matrix[i] !== S_UNKNOWN) continue;
+    const x = i % w;
+    const y = (i / w) | 0;
+    let score = 0;
+    if (x === 0 || matrix[i - 1] !== S_UNKNOWN) score++;
+    if (x === w - 1 || matrix[i + 1] !== S_UNKNOWN) score++;
+    if (y === 0 || matrix[i - w] !== S_UNKNOWN) score++;
+    if (y === h - 1 || matrix[i + w] !== S_UNKNOWN) score++;
+    if (score > bestScore) {
+      bestScore = score;
+      best = i;
+    }
+  }
+  return best;
+}
+
+/** Whether the lines alone decide every square of a state's board, from its
+ * clues and any squares a picture desc fixes: what an Easy board is. */
+export function linesDecide(state: PatternState): boolean {
+  const { w, h, clues, immutable } = state.common;
+  return solvePuzzle(w, h, clues, state.grid, immutable).ok;
+}
+
+/** Each board's answers, searched once: every state of a game shares its
+ * `common`, and the mistake check asks after every move. */
+const answers = new WeakMap<PatternCommon, PatternAnswer>();
+
+/** What a search of a state's board established about its answers, from its
+ * clues and any squares a picture desc fixes. The player's marks are not
+ * read. */
+export function answerOf(state: PatternState): PatternAnswer {
+  const { common } = state;
+  let answer = answers.get(common);
+  if (answer === undefined) {
+    const { w, h, clues, immutable } = common;
+    answer = searchAnswers(w, h, clues, state.grid, immutable);
+    answers.set(common, answer);
+  }
+  return answer;
+}
+
+/** The board's one answer as `GRID_*` values, or `null` where the search
+ * found several, none, or ran out. */
+export function solveState(state: PatternState): Uint8Array | null {
+  const answer = answerOf(state);
+  return answer.kind === "one" ? answer.grid : null;
 }
 
 /**
@@ -670,9 +824,9 @@ export function deduceHintPlan(state: PatternState): PatternHintMove[] {
   return plan;
 }
 
-/** Every player-marked cell that contradicts the unique solution. Returns
- * `[]` when the board isn't uniquely line-solvable (nothing to check
- * against) or when there are no contradictions. */
+/** Every player-marked cell that contradicts the board's one answer. Returns
+ * `[]` when no single answer was found (nothing to check against) or when
+ * there are no contradictions. */
 export function findMistakes(state: PatternState): readonly PatternMistake[] {
   const solution = solveState(state);
   if (!solution) return [];

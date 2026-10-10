@@ -1185,8 +1185,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "pattern",
     "members": [
+      "difficulty",
       "findMistakes",
-      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",

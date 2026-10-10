@@ -19,10 +19,12 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
-import { dims, paramsCodec } from "../../engine/params-codec.ts";
+import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell values (upstream #defines) -------------------------------------
@@ -40,9 +42,18 @@ export const clickWhite = (v: number): GridVal => ((v + 1) % 3) as GridVal;
 
 // --- types ---------------------------------------------------------------
 
+/** A board every square of which some row or column decides on its own. */
+export const DIFF_EASY = 0;
+/** A board with one answer that no row or column alone reaches. */
+export const DIFF_UNREASONABLE = 1;
+const DIFF_NAMES = tierNames(2, { search: true });
+const DIFF_CHARS = "eu";
+
 export interface PatternParams {
   w: number;
   h: number;
+  /** `DIFF_EASY` or `DIFF_UNREASONABLE`. */
+  diff: number;
 }
 
 /** The immutable, shared part of a Pattern game (upstream
@@ -114,41 +125,53 @@ export interface PatternMistake {
 
 // --- params --------------------------------------------------------------
 
-const PRESETS: PatternParams[] = [
-  { w: 10, h: 10 },
-  { w: 15, h: 15 },
-  { w: 20, h: 20 },
-  { w: 25, h: 25 },
-  { w: 30, h: 30 },
-];
+const BOARDS: PatternParams[] = [10, 15, 20, 25, 30].map((n) => ({
+  w: n,
+  h: n,
+  diff: DIFF_EASY,
+}));
 
 export function defaultParams(): PatternParams {
-  return { w: 15, h: 15 };
-}
-
-export function presets(): PresetMenu<PatternParams> {
-  return {
-    title: "Pattern",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
+  return { w: 15, h: 15, diff: DIFF_EASY };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
-export const paramConfig: ParamConfigItem<PatternParams>[] =
-  dimensionParamConfig<PatternParams>({
-    doc: "Size of the grid in squares.",
+export const paramConfig: ParamConfigItem<PatternParams>[] = [
+  ...dimensionParamConfig<PatternParams>({
+    doc: "Size of the grid in squares. An Unreasonable puzzle needs a grid at least two squares wide and tall, and four squares one way.",
     bounds: { min: 1 },
-  });
+  }),
+  difficultyItem(DIFF_NAMES, "diff", {
+    doc: "An Easy puzzle can be finished one row or column at a time: there is always a line whose numbers, with what is already marked, decide another square. An Unreasonable one has a single solution that no line on its own reaches, so somewhere you have to try a square and see what follows, and the Hint button stops where the lines do.",
+  }),
+];
 
-/** `WxH`, with upstream's square fallback: a bare `W` is a W×W board. */
+export function presets(): PresetMenu<PatternParams> {
+  return { title: "Pattern", ...presetGrid(paramConfig, BOARDS) };
+}
+
+/** `WxH`, with upstream's square fallback (a bare `W` is a W×W board), then
+ * the difficulty letter, which upstream's IDs lack: without one a board is
+ * Easy, the only kind upstream deals. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
 
-export function validateParams(p: PatternParams, _full: boolean): string | null {
+/** Whether some picture of this size has one answer that needs search. None
+ * does one square wide, where each number across the line says whether its
+ * square is shaded, and none does up to 3x3, where every picture has been
+ * tried (`pattern.test.ts`). */
+function carriesUnreasonable(p: PatternParams): boolean {
+  return Math.min(p.w, p.h) > 1 && Math.max(p.w, p.h) > 3;
+}
+
+export function validateParams(p: PatternParams, full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
     return AREA_TOO_LARGE;
   }
+  if (full && p.diff === DIFF_UNREASONABLE && !carriesUnreasonable(p))
+    return noSuchTier(`${p.w}x${p.h} puzzle`, DIFF_NAMES[p.diff]);
   return null;
 }
 

@@ -1064,7 +1064,11 @@ generator's checks off").
 untiered game whose hint deduces: Solve answers the board and the hint,
 followed a whole plan at a time, ends on a solved one. `nothingToDeduce` is
 the answer of a game that moves, searches or guesses. Write a test of your own
-only where the game has one as true and cheaper.
+only where the game has one as true and cheaper. `hintFinishes(game, state)`
+is the hint's half alone, for the tier beneath Unreasonable in a game whose
+Solve searches
+([solver & generator](./solver-and-generator.md) § "Giving a deductive game an
+Unreasonable tier").
 
 ### `desc-reader.ts` — the cursor a desc parser drives
 

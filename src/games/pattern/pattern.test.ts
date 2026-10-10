@@ -32,6 +32,8 @@ import { COL_CELL, COL_FULL } from "./render.ts";
 import { findMistakes, solveState } from "./solver.ts";
 import {
   computeRuns,
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
   decodeParams,
   encodeClues,
   encodeParams,
@@ -47,6 +49,13 @@ import {
   type PatternState,
   status,
 } from "./state.ts";
+
+const easy = (w: number, h: number): PatternParams => ({ w, h, diff: DIFF_EASY });
+const unreasonable = (w: number, h: number): PatternParams => ({
+  w,
+  h,
+  diff: DIFF_UNREASONABLE,
+});
 
 function genState(
   p: PatternParams,
@@ -71,52 +80,59 @@ function applySolution(state: PatternState, solution: Uint8Array): PatternState 
 
 describe("pattern params", () => {
   it("round-trips and decodes a bare square dimension", () => {
-    expect(encodeParams({ w: 20, h: 15 }, true)).toBe("20x15");
-    expect(decodeParams("20x15")).toEqual({ w: 20, h: 15 });
-    expect(decodeParams("10")).toEqual({ w: 10, h: 10 });
+    expect(encodeParams(easy(20, 15), true)).toBe("20x15de");
+    expect(encodeParams(unreasonable(20, 15), true)).toBe("20x15du");
+    expect(decodeParams("20x15du")).toEqual(unreasonable(20, 15));
+    // The shared form leaves the tier out, and a board is graded as it loads.
+    expect(encodeParams(unreasonable(20, 15), false)).toBe("20x15");
+    expect(decodeParams("10")).toEqual(easy(10, 10));
+  });
+
+  it("reads an ID written before the game had tiers as Easy", () => {
+    expect(decodeParams("20x15")).toEqual(easy(20, 15));
   });
 
   it("rejects invalid params", () => {
-    expect(paramsError(patternGame, { w: 0, h: 5 }, true)).toBe(
+    expect(paramsError(patternGame, easy(0, 5), true)).toBe(
       "Width must be at least 1.",
     );
-    expect(paramsError(patternGame, { w: 5, h: -1 }, true)).toBe(
+    expect(paramsError(patternGame, easy(5, -1), true)).toBe(
       "Height must be at least 1.",
     );
-    expect(paramsError(patternGame, { w: 10, h: 10 }, true)).toBeNull();
+    expect(paramsError(patternGame, easy(10, 10), true)).toBeNull();
   });
 });
 
 describe("pattern desc codec", () => {
   it("round-trips a clue desc through newState/encodeClues", () => {
     const desc = "4/2.2/2/1/2/2/2/1/3.1/4"; // a recorded 5x5 board
-    const st = newState({ w: 5, h: 5 }, desc);
+    const st = newState(easy(5, 5), desc);
     expect(encodeClues(st.common.clues)).toBe(desc);
   });
 
   it("accepts a generated desc and rejects malformed ones", () => {
-    const { desc } = genState({ w: 10, h: 10 }, "pattern-desc-1");
-    expect(validateDesc(patternGame, { w: 10, h: 10 }, desc)).toBeNull();
+    const { desc } = genState(easy(10, 10), "pattern-desc-1");
+    expect(validateDesc(patternGame, easy(10, 10), desc)).toBeNull();
     // Too few line specifications.
-    expect(validateDesc(patternGame, { w: 5, h: 5 }, "1/2/3")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(patternGame, easy(5, 5), "1/2/3")).toBe(DESC_TOO_SHORT);
     // Unrecognized character.
-    expect(validateDesc(patternGame, { w: 2, h: 2 }, "1/2/!/1")).toBe(
+    expect(validateDesc(patternGame, easy(2, 2), "1/2/!/1")).toBe(
       descBadCharacter("!"),
     );
     // A clue longer than its line, and clues that together overfill it.
-    expect(validateDesc(patternGame, { w: 3, h: 3 }, "9/1/1/1/1/1")).toBe(
+    expect(validateDesc(patternGame, easy(3, 3), "9/1/1/1/1/1")).toBe(
       DESC_OUT_OF_RANGE,
     );
-    expect(validateDesc(patternGame, { w: 3, h: 3 }, "2.2/1/1/1/1/1")).toMatch(
+    expect(validateDesc(patternGame, easy(3, 3), "2.2/1/1/1/1/1")).toMatch(
       /a column whose clues/,
     );
-    expect(validateDesc(patternGame, { w: 3, h: 3 }, "1/1/1/1/1/2.2")).toMatch(
+    expect(validateDesc(patternGame, easy(3, 3), "1/1/1/1/1/2.2")).toMatch(
       /a row whose clues/,
     );
   });
 
   it("reads exactly what the encoder writes, and upstream's clue squares", () => {
-    const v = (desc: string) => validateDesc(patternGame, { w: 2, h: 2 }, desc);
+    const v = (desc: string) => validateDesc(patternGame, easy(2, 2), desc);
     expect(v("1/2//1")).toBeNull();
     // A NUL is a character like any other, not the end of a line.
     expect(v("1\0/2//1")).toBe(descBadCharacter("\0"));
@@ -126,7 +142,7 @@ describe("pattern desc codec", () => {
     // Clue squares: `b` skips one square and places a white one at index 1;
     // `c` lands on the end and is the tail.
     expect(v("1/2//1,bc")).toBeNull();
-    expect(newState({ w: 2, h: 2 }, "1/2//1,Bc").common.immutable).toEqual(
+    expect(newState(easy(2, 2), "1/2//1,Bc").common.immutable).toEqual(
       Uint8Array.of(0, 1, 0, 0),
     );
     expect(v("1/2//1,bd")).toBe(DESC_TOO_LONG);
@@ -139,7 +155,7 @@ describe("pattern desc codec", () => {
 describe("pattern solver", () => {
   it("fully cracks every generated board (the uniqueness gate)", () => {
     for (const seed of ["s-a", "s-b", "s-c"]) {
-      const { state } = genState({ w: 10, h: 10 }, seed);
+      const { state } = genState(easy(10, 10), seed);
       const solution = solveState(state);
       expect(solution).not.toBeNull();
       if (!solution) continue;
@@ -157,7 +173,7 @@ describe("pattern solver", () => {
 
 describe("pattern findMistakes", () => {
   it("flags only player cells that contradict the unique solution", () => {
-    const { state } = genState({ w: 10, h: 10 }, "mistake-seed");
+    const { state } = genState(easy(10, 10), "mistake-seed");
     const solution = solveState(state);
     expect(solution).not.toBeNull();
     if (!solution) return;
@@ -185,7 +201,7 @@ describe("pattern findMistakes", () => {
 
 describe("pattern moves and completion", () => {
   it("a fill applies a rectangle and a no-op fill leaves the board", () => {
-    const st = newState({ w: 5, h: 5 }, "4/2.2/2/1/2/2/2/1/3.1/4");
+    const st = newState(easy(5, 5), "4/2.2/2/1/2/2/2/1/3.1/4");
     const filled = executeMove(st, {
       type: "fill",
       value: GRID_FULL,
@@ -206,7 +222,7 @@ describe("pattern moves and completion", () => {
   });
 
   it("completes when fills reproduce the solution", () => {
-    const { state } = genState({ w: 5, h: 5 }, "complete-seed");
+    const { state } = genState(easy(5, 5), "complete-seed");
     const solution = solveState(state);
     expect(solution).not.toBeNull();
     if (!solution) return;
@@ -216,7 +232,7 @@ describe("pattern moves and completion", () => {
   });
 
   it("a solve move solves the board", () => {
-    const { state } = genState({ w: 5, h: 5 }, "solve-seed");
+    const { state } = genState(easy(5, 5), "solve-seed");
     const sol = solveState(state);
     expect(sol).not.toBeNull();
     if (!sol) return;
@@ -228,7 +244,7 @@ describe("pattern moves and completion", () => {
   });
 
   it("cursor select reveals the cursor, then cycles a cell", () => {
-    const st = newState({ w: 5, h: 5 }, "4/2.2/2/1/2/2/2/1/3.1/4");
+    const st = newState(easy(5, 5), "4/2.2/2/1/2/2/2/1/3.1/4");
     const ui = patternGame.newUi(st);
     // First select just reveals the cursor.
     expect(
@@ -254,7 +270,7 @@ describe("pattern moves and completion", () => {
 });
 
 describe("pattern drag-paint skips placed marks", () => {
-  const base = () => newState({ w: 5, h: 5 }, "4/2.2/2/1/2/2/2/1/3.1/4");
+  const base = () => newState(easy(5, 5), "4/2.2/2/1/2/2/2/1/3.1/4");
 
   it("an onlyBlank fill paints blanks but leaves existing marks", () => {
     // Place EMPTY at (0,0), then drag FULL across the top row with onlyBlank.
@@ -408,7 +424,7 @@ describe("pattern keyboard stroke skips placed marks", () => {
   /** The top row's first two squares set to `marks`, the cursor on (0,0), and
    * one arrow right with `mods` held: the move and the board after it. */
   function stroke(marks: [GridVal, GridVal], mods: number) {
-    let st = newState({ w: 5, h: 5 }, "4/2.2/2/1/2/2/2/1/3.1/4");
+    let st = newState(easy(5, 5), "4/2.2/2/1/2/2/2/1/3.1/4");
     marks.forEach((value, x) => {
       st = executeMove(st, { type: "fill", value, x, y: 0, w: 1, h: 1 });
     });

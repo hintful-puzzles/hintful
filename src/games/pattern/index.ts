@@ -7,15 +7,17 @@
  * paints with Ctrl/Shift held.
  */
 
+import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   DEDUCTION_EXHAUSTED,
@@ -44,6 +46,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   interpretTargetVerbs,
@@ -69,16 +72,18 @@ import {
   toCoord,
 } from "./render.ts";
 import {
+  answerOf,
   deduceHintPlan,
   findMistakes,
+  linesDecide,
   PATTERN_RUNGS,
   type PatternHintMove,
   type PatternRung,
-  solveToString,
 } from "./solver.ts";
 import {
   clickBlack,
   clickWhite,
+  DIFF_EASY,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -437,6 +442,47 @@ function hintKeepTrack(
   return verdict;
 }
 
+/** Solve from the search, which knows the answer at either tier, and says
+ * which of the ways a board can lack one it proved. */
+function solve(orig: PatternState): SolveResult<PatternMove> {
+  const answer = answerOf(orig);
+  switch (answer.kind) {
+    case "one":
+      return {
+        ok: true,
+        move: {
+          type: "solve",
+          grid: Array.from(answer.grid, (v) => (v === GRID_FULL ? "1" : "0")).join(""),
+        },
+      };
+    case "several":
+      return { ok: false, error: MULTIPLE_SOLUTIONS };
+    case "none":
+      return { ok: false, error: NO_SOLUTION };
+    case "out-of-reach":
+      return { ok: false, error: PUZZLE_NOT_REASONABLE };
+  }
+}
+
+/**
+ * Pattern's two tiers. Easy is what the lines decide and the hint, which
+ * walks the same lines a step at a time, finishes: the hint is asked as well
+ * because it is what a player is left with where it stops. Unreasonable is a
+ * board the search proves has one answer.
+ */
+const difficulty: DifficultyContract<PatternParams> = {
+  solveAtCap(p, desc, cap) {
+    const state = newState(p, desc);
+    if (cap === DIFF_EASY)
+      return linesDecide(state) && hintFinishes(patternGame, state)
+        ? "solved"
+        : "unsolved";
+    const answer = answerOf(state);
+    if (answer.kind === "one") return "solved";
+    return answer.kind === "none" ? "impossible" : "unsolved";
+  },
+};
+
 export const patternGame: Game<
   PatternParams,
   PatternState,
@@ -464,14 +510,10 @@ export const patternGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(patternGame, s),
   status,
 
-  solve(orig) {
-    const grid = solveToString(orig);
-    if (!grid) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-    return { ok: true, move: { type: "solve", grid } };
-  },
+  solve,
+  difficulty,
 
   hint,
   hintMarks: {

@@ -3,7 +3,8 @@
  * Splatter random values, smooth them with one cellular-automaton averaging
  * pass, threshold at the median to make about half the cells black, then
  * regenerate until the board is non-trivial (no monochrome row or column) and
- * uniquely line-solvable.
+ * of the tier asked for: decided a line at a time, or with one answer that
+ * the lines alone do not reach.
  *
  * Byte-match note: upstream computes the value grid in single-precision
  * `float`, and the median threshold decides each cell with a `>=`, so
@@ -16,9 +17,10 @@
  */
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
-import { isSoluble } from "./solver.ts";
+import { isSoluble, searchAnswers } from "./solver.ts";
 import {
   computeRuns,
+  DIFF_EASY,
   encodeClues,
   GRID_EMPTY,
   GRID_FULL,
@@ -79,11 +81,35 @@ function cluesOf(grid: Uint8Array, w: number, h: number): number[][] {
   return clues;
 }
 
-export function newPatternDesc(p: PatternParams, rng: RandomState): { desc: string } {
-  const { w, h } = p;
-  const grid = new Uint8Array(w * h);
+/**
+ * The squares an Unreasonable deal may draw before it gives up. Its bound is
+ * in squares and not in pictures because the rarest sizes are the smallest: a
+ * 3x4 picture that needs search turns up once in about 100,000 and costs
+ * microseconds, where a 30x30 one turns up once in 12 and costs a
+ * millisecond. This gives a 3x4 about 3,300,000 pictures and a 30x30 about
+ * 44,000, and either runs out in seconds.
+ */
+const UNREASONABLE_SQUARES = 40_000_000;
 
-  for (let tries = 0; tries < MAX_REGENERATE; tries++) {
+/**
+ * Whether a drawn picture's clues make a board of the tier asked for. An Easy
+ * one is decided a line at a time. An Unreasonable one is not, and the search
+ * proves it has the one answer all the same: most pictures the lines do not
+ * decide have several.
+ */
+function meetsTier(diff: number, w: number, h: number, clues: number[][]): boolean {
+  const easy = isSoluble(w, h, clues);
+  if (diff === DIFF_EASY) return easy;
+  return !easy && searchAnswers(w, h, clues).kind === "one";
+}
+
+export function newPatternDesc(p: PatternParams, rng: RandomState): { desc: string } {
+  const { w, h, diff } = p;
+  const grid = new Uint8Array(w * h);
+  const limit =
+    diff === DIFF_EASY ? MAX_REGENERATE : Math.ceil(UNREASONABLE_SQUARES / (w * h));
+
+  for (let tries = 0; tries < limit; tries++) {
     generate(rng, w, h, grid);
 
     // Reject a board with any monochrome row/column (too easy), except on
@@ -106,7 +132,7 @@ export function newPatternDesc(p: PatternParams, rng: RandomState): { desc: stri
     if (!ok) continue;
 
     const clues = cluesOf(grid, w, h);
-    if (isSoluble(w, h, clues)) return { desc: encodeClues(clues) };
+    if (meetsTier(diff, w, h, clues)) return { desc: encodeClues(clues) };
   }
-  throw new RetryLimitExceeded("pattern: generation", MAX_REGENERATE);
+  throw new RetryLimitExceeded("pattern: generation", limit);
 }

@@ -1,9 +1,10 @@
 # add-an-unreasonable-tier-to-the-untiered-deductive-games
 
 **Status: filed 2026-10-10 on the owner's word, by the session that archived
-`refuse-a-board-an-untiered-solver-cannot-finish`. What it says of the code
-was true that day; re-check before relying on it. Nothing here has been
-tried.**
+`refuse-a-board-an-untiered-solver-cannot-finish`. Pattern, the first game,
+has its tier (2026-10-10), and `tasks.md` says where the rest stand. What
+this file says of the code was true on its date; re-check before relying on
+it.**
 
 ## Why
 
@@ -81,6 +82,51 @@ and deductive too; whether they join is task 1.
   takes on each preset, and look at what it deals.
 - **The cost of the uniqueness search** on each game's largest preset, at
   load and at deal.
+
+## Which games join
+
+Decided 2026-10-10 by the session that did Pattern, from the code. Each game
+still gets its own measurement (task 2) before its tier is offered.
+
+- **The nine join**, in the order of task 3.2.
+- **Net, Range and Rectangles join.** Each is what the nine are: no tiers, a
+  mistake check against one answer, and a `finishesByDeduction` that refuses a
+  pasted board its deductions do not finish with the "trial and error"
+  sentence. The owner's reason covers them as it covers the nine. Range's
+  Solve already searches and returns the first answer it meets, so its work is
+  counting to two.
+- **Mines does not.** Its answer is hidden. A board its deductions do not
+  finish is not a puzzle with one answer that trial and error finds: several
+  layouts of mines fit what is showing, and the one that is real is learned
+  only by opening a square that may be a mine. Undo makes that a way to read
+  the answer, not to work it out, and no search proves "exactly one answer"
+  of a position whose point is that there are several. So Mines goes on
+  dealing only boards deduction finishes and refusing a pasted one it does
+  not. That leaves it the one game where a player meets the "trial and error"
+  sentence without having asked for Unreasonable, and only from a pasted ID.
+
+## What Pattern found
+
+Measured 2026-10-10. The guide has what transfers
+(`docs/games/solver-and-generator.md` § "Giving a deductive game an
+Unreasonable tier").
+
+- **The tier is cheap to deal and its boards are real.** A deal takes about
+  10 ms at every preset. The search that proves one answer tries a median of
+  3 positions at 10x10 and 17 at 30x30.
+- **How much the hint does falls with the size.** The lines leave a median of
+  21 squares of 100 undecided at 10x10 and 651 of 900 at 30x30, so on the
+  largest preset the hint does about a quarter of the board and the player
+  the rest by trial. That is what the tier's name says, and it is the thing
+  to look at if the large Unreasonable presets are ever judged too much.
+- **No picture up to 3x3, or one square wide, is Unreasonable**, and those
+  sizes are refused at that tier when dealing.
+- **Past the menu the deal slows**: about a second at 40x40 and tens of
+  seconds at 50x50, where most draws fail and each failure can cost the
+  search's whole budget.
+- **The ledger's Pattern board was not what it said.** `untiered-load.test.ts`
+  held `10x10:/7/1.4/…` as a board that parses and deduction does not finish.
+  Its clues contradict each other, and it is now refused as that.
 
 ## Capabilities
 

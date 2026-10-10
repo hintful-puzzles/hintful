@@ -400,13 +400,18 @@ bump:k  full=5x5n6"
 `;
 
 exports[`encoded params are byte-stable > pattern 1`] = `
-"default  full=15x15
-preset:Pattern/10x10  full=10x10
-preset:Pattern/20x20  full=20x20
-preset:Pattern/25x25  full=25x25
-preset:Pattern/30x30  full=30x30
-bump:w  full=16x15
-bump:h  full=15x16"
+"default  full=15x15de  brief=15x15
+preset:Pattern/10x10 Easy  full=10x10de  brief=10x10
+preset:Pattern/10x10 Unreasonable  full=10x10du  brief=10x10
+preset:Pattern/15x15 Unreasonable  full=15x15du  brief=15x15
+preset:Pattern/20x20 Easy  full=20x20de  brief=20x20
+preset:Pattern/20x20 Unreasonable  full=20x20du  brief=20x20
+preset:Pattern/25x25 Easy  full=25x25de  brief=25x25
+preset:Pattern/25x25 Unreasonable  full=25x25du  brief=25x25
+preset:Pattern/30x30 Easy  full=30x30de  brief=30x30
+preset:Pattern/30x30 Unreasonable  full=30x30du  brief=30x30
+bump:w  full=16x15de  brief=16x15
+bump:h  full=15x16de  brief=15x16"
 `;
 
 exports[`encoded params are byte-stable > pearl 1`] = `

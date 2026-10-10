@@ -82,7 +82,6 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
     mosaic: "3x3:1b45c1",
     net: "5x5:142c49b8aa4de5acd7b749286",
     palisade: "5x5n5:a",
-    pattern: "10x10:/7/1.4/6/7/6/4.1/2.1/1/3/1/2/4/2.6/6.1/2.5.1/6/5/5/4",
     range: "4x4:c6h3_6b",
     rect: "4x4:2b2_2a2b2b2a2_2",
     separate: "4x4n4:CDBABDCAAACCCBBD",

@@ -18,7 +18,7 @@ import { type PatternHint, patternGame } from "./index.ts";
 import { COL_GRID, COL_HINT, COL_HINT_BLACKREF } from "./render.ts";
 import { deduceHintPlan } from "./solver.ts";
 
-const P = { w: 10, h: 10 };
+const P = patternGame.decodeParams("10x10");
 
 /** A position whose hint opens with a step citing a black mark on the board.
  * The hint's steps are the solver's firings in order, so the step a plan opens

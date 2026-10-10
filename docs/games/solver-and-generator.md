@@ -462,6 +462,67 @@ position, the player's own included, and the generator can go on asking the
 solver alone. Reach for it only where the stalled step is the solver's own
 deduction. A rule the hint never had is still a missing rung.
 
+### Giving a deductive game an Unreasonable tier
+
+**A game whose deductions finish every board it deals can deal a second kind:
+a board with one answer that they do not reach** (owner, 2026-10-10, so that a
+player meets "trial and error" only where they asked for it). Pattern was the
+first, and [`pattern/`](../../src/games/pattern/) is the copy to follow. What
+the tier is made of:
+
+- **A search that counts answers to two**, by trial and error over the game's
+  own deduction (`searchAnswers`). Its four verdicts are one answer, several,
+  none, and out of reach once a budget of positions is spent. The deduction
+  alone cannot stand in for it: stopping short, it has shown neither a second
+  answer nor none.
+- **A generator that keeps a board only where the deduction stops short and
+  the search says one.**
+- **The contract**: the lower cap is what the untiered game answered
+  `finishesByDeduction` with, less its Solve (`hintFinishes`, since Solve now
+  searches), and the upper cap is "the search says one". The game drops
+  `finishesByDeduction`.
+- **Solve and the mistake check take the answer from the search**, at either
+  tier, cached on the board's shared part. Solve says `MULTIPLE_SOLUTIONS` or
+  `NO_SOLUTION` where the search proved it, which is what refuses such a board
+  at load.
+- **The hint does not change.** It already ends in `DEDUCTION_EXHAUSTED` where
+  nothing follows, and the midend lets that through on a tier named
+  Unreasonable.
+- **The codec** takes `choice(paramConfig, "d", "difficulty", "eu", { full:
+  true })`, so the tier is always in the full form and never in the shared
+  one, and a string from before the tiers reads as Easy.
+
+What Pattern taught, each a thing to measure before the next game:
+
+- **Ask whether the deduction can say "impossible" at all.** A search finds a
+  wrong assumption only as a contradiction. Pattern's line solver had no such
+  verdict: on a line nothing fits it deduced nothing and reported no change,
+  which is harmless while every board is consistent and fatal under a
+  hypothesis. Give it the verdict first, and plant its absence to see the
+  tests notice.
+- **Count how many stuck boards have one answer.** Most have several. Of the
+  pictures Pattern's lines left undecided, 8 of 206 had one answer at 10x10
+  and 165 of 1,813 at 30x30. The rate sets the retry bound and says whether
+  the tier is worth dealing at a size.
+- **Enumerate the smallest sizes for the refusal.** Where every board of a
+  size can be tried, try them: no Pattern picture up to 3x3 needs search and
+  has one answer, which is a proof and is kept as a test, where a count of
+  tries would have been a sample.
+- **Count against an answer count with no search in it.** The test's counter
+  shares nothing with the deduction or the search, and is what says the two
+  agree a board has one answer.
+- **The search budget decides which boards exist**, since a board that needs
+  more is thrown away when dealing and refused when pasted. Size it from the
+  positions dealt boards need, in positions, and say where it is defined that
+  lowering it refuses boards in saved games.
+- **Time the sizes past the menu.** A draw that fails costs up to the whole
+  budget, and the share of draws that fail grows with the board. Pattern deals
+  in about 10 ms at every preset, a second at 40x40 and tens of seconds at
+  50x50.
+- **Say how much of a board the hint will do.** The lines leave a median of 21
+  squares of 100 undecided on a 10x10 and 651 of 900 on a 30x30. Neither is a
+  defect, and a player choosing the tier at a size is owed the difference.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

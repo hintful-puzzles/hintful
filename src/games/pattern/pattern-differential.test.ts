@@ -12,7 +12,7 @@ import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/pattern-c-reference.json" with { type: "json" };
 import { newPatternDesc } from "./generator.ts";
 import { patternGame } from "./index.ts";
-import type { PatternParams } from "./state.ts";
+import { DIFF_EASY, type PatternParams } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -26,7 +26,8 @@ describeDescDifferential<Fixture, PatternParams>({
   title: "Pattern C-vs-TS differential — desc byte-match (gated)",
   fixtures: data.fixtures,
   label: (f) => `${f.w}x${f.h} seed=${f.seed}`,
-  params: (f) => ({ w: f.w, h: f.h }),
+  // Upstream deals only what is Easy here.
+  params: (f) => ({ w: f.w, h: f.h, diff: DIFF_EASY }),
   newDesc: newPatternDesc,
   // Each C desc must also pass the TS validator.
   extra: (f, p) => {
