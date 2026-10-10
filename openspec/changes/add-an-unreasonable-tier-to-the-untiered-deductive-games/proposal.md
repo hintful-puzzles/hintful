@@ -44,11 +44,29 @@ and deductive too; whether they join is task 1.
 
 - **For the owner, before any code: the params encoding.** A difficulty item
   adds a field to each game's params, which sit inside every shared game ID
-  and every save. The collection's way is to leave the default tier out of
-  the encoding, so every ID a player holds today would still decode, to the
-  tier it was dealt at. That needs checking per game against the byte-stable
-  params guard, and it is the owner's call if any game cannot keep its
-  existing IDs unchanged.
+  and every save. Read in the code 2026-10-10, nothing run:
+  - **No ID or save a player holds stops opening, whichever way it is
+    written.** Eight of the nine build their codec from `paramsCodec`, whose
+    segments leave a field at its default when their letter is absent, and
+    Mosaic's hand-written decoder does the same. So `5x5n5` decodes to the
+    lower tier, provided `defaultParams` names it. Lowercase `d` is free in
+    all nine (ABCD's `D` is a different letter).
+  - **A stored type is re-encoded before anything compares it.** The type
+    menu and the settings read `encodeParams` of what the midend decoded, so
+    an old stored string does not show as Custom.
+  - **This file was wrong that the collection leaves the default tier out.**
+    Every tiered game writes its tier with the `choice` segment, always, as
+    `d` and a letter, in the full params: Seismic's default is `6x6de`. The
+    app shares a board as full params and its desc, so a link shared today
+    carries the tier.
+  - **So the question is only how the new strings are spelled.** (a) Like
+    every other tiered game: `5x5n5de` for today's boards and `5x5n5du` for
+    Unreasonable. Old links open; a link shared from now on is two characters
+    longer, and no longer equal to the ID upstream's app writes for the same
+    board. (b) The lower tier written as nothing and Unreasonable as `du`:
+    every string in use today stays exactly as it is, and these nine become
+    the only tiered games whose tier may be absent. Recommended: (a), one
+    spelling of a tier across the collection.
 - **Which name the lower tier takes.** `tierNames(2, { search: true })` gives
   Easy and Unreasonable. ABCD already has an Easy/Hard switch that hides
   clues, which is a second axis and not a tier, and has to be reconciled.

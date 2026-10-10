@@ -42,5 +42,5 @@
     is left").
 - [x] 4.2 `docs/games/solver-and-generator.md`, § "One answer, even when it is
   hidden", and `docs/games/engine-catalog.md`.
-- [ ] 4.3 Commit, push, archive, and then file what is left as
+- [x] 4.3 Commit, push, archive, and then file what is left as
   `prove-no-solution-cheaply-in-the-games-that-search`.
