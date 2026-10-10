@@ -11,6 +11,7 @@ import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";
 import {
   COL_CORRECT,
@@ -24,7 +25,7 @@ import {
   type PalisadeDrawState,
   redraw,
 } from "./render.ts";
-import { newDesc, solveToBorders } from "./solver.ts";
+import { solveToBorders } from "./solver.ts";
 import {
   decodeParams,
   newState,

@@ -3,9 +3,9 @@
 // game-specific seed frames (the equivalentEdges hint) live in
 // palisade-render-scenario.test.ts; this file pins the driver contract.
 import { describe, expect, it } from "vitest";
+import { newDesc } from "../../games/palisade/generator.ts";
 import { palisadeGame } from "../../games/palisade/index.ts";
 import { COL_GRID, COL_HINT } from "../../games/palisade/render.ts";
-import { newDesc } from "../../games/palisade/solver.ts";
 import { BORDER } from "../border-grid.ts";
 import { randomNew } from "../random/index.ts";
 import { renderPinnedHint, renderScenario } from "./render-scenario.ts";

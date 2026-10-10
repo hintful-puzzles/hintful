@@ -1,17 +1,15 @@
 /**
- * Palisade solver + generator.
+ * Palisade solver.
  *
- * The solver is upstream's six DSF deductions, run to a fixpoint and each
- * annotated with its upstream name; `solver()` returns whether the clue set is
- * fully solved. The generator divides the rectangle (`divvyRectangle`), derives
- * clues, and strips them while the solver still uniquely solves the board.
+ * Upstream's six DSF deductions, run to a fixpoint and each annotated with its
+ * upstream name; `solver()` returns whether the clue set is fully solved. The
+ * search for a board's answers is trial and error over them.
  */
 
 import {
   type Answer,
   answerCache,
   type Deduced,
-  DIFF_EASY,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import {
@@ -23,20 +21,9 @@ import {
   initBorders,
   outOfBounds,
 } from "../../engine/border-grid.ts";
-import { divvyRectangle } from "../../engine/divvy.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import {
-  bitcount,
-  EMPTY,
-  encodeDesc,
-  isSolved,
-  type PalisadeParams,
-  type PalisadeShape,
-} from "./state.ts";
+import { bitcount, EMPTY, isSolved, type PalisadeShape } from "./state.ts";
 
 // --- hint-mode deduction trace --------------------------------------------
 
@@ -622,106 +609,4 @@ const answers = answerCache<Int8Array, Uint8Array>();
  * player's edges are not read. */
 export function answerOf(state: PalisadeShape & { clues: Int8Array }): PalisadeAnswer {
   return answers(state.clues, () => searchAnswers(state, state.clues));
-}
-
-// --- generator ------------------------------------------------------------
-
-/** Divide the grid into regions of `k` and write each cell's clue, the walls
- * round it, into `numbers`. */
-function drawClues(p: PalisadeShape, rng: RandomState, numbers: Int8Array): void {
-  const { w, h, k } = p;
-  const dsf = divvyRectangle(w, h, k, rng);
-  for (let r = 0; r < h; r++) {
-    for (let c = 0; c < w; c++) {
-      const i = r * w + c;
-      numbers[i] = 0;
-      for (let dir = 0; dir < 4; dir++) {
-        const rr = r + DY[dir];
-        const cc = c + DX[dir];
-        if (outOfBounds(cc, rr, w, h) || !dsf.equivalent(i, rr * w + cc)) {
-          numbers[i]++;
-        }
-      }
-    }
-  }
-}
-
-/** Strip clues in a random order, each gone only while `keeps` still holds
- * of what is left. */
-function stripClues(
-  numbers: Int8Array,
-  rng: RandomState,
-  keeps: (numbers: Int8Array) => boolean,
-): void {
-  const shuf: number[] = Array.from(numbers, (_, i) => i);
-  shuffle(shuf, rng);
-  for (const idx of shuf) {
-    const copy = numbers[idx];
-    if (copy === EMPTY) continue;
-    numbers[idx] = EMPTY;
-    if (!keeps(numbers)) numbers[idx] = copy;
-  }
-}
-
-/** An Easy board, upstream's only kind: a division whose full clues the
- * solver solves (it nearly always does), stripped while it still does. */
-function easyClues(p: PalisadeShape, rng: RandomState): Int8Array {
-  const numbers = new Int8Array(p.w * p.h);
-  const rim = initBorders(p.w, p.h);
-  const solves = (left: Int8Array) => solver(p, left, rim.slice());
-  const attempt = retryLimit(`palisade: generation (${p.w}x${p.h} k${p.k})`);
-  do {
-    attempt();
-    drawClues(p, rng, numbers);
-  } while (!solves(numbers));
-  stripClues(numbers, rng, solves);
-  return numbers;
-}
-
-/**
- * The positions the search may try when a clue is stripped from an
- * Unreasonable board, far under the 2,000 it has by default. Stripping stops
- * only when the search can no longer prove one answer, so it takes a board up
- * to whatever the search is allowed, and this is how hard the tier's boards
- * are.
- *
- * Measured 2026-10-10: a dealt board needs a median of 9 positions at 5×5 and
- * 25 to 29 at the larger presets, and the hint leaves a median of 25 edges of
- * 40 undecided at 5×5, 53 of 82 at 6×8 and 155 of 333 at 12×15. No edge on
- * these boards is wrong at a glance: assuming one and looking, with no
- * deduction run, settled none of 90, where assuming one and following the
- * deductions from it, one trial at a time, finished most.
- */
-const HIDING_BUDGET = 30;
-
-/**
- * An Unreasonable board: an Easy board with more clues stripped, each while
- * the search still proves one answer within {@link HIDING_BUDGET}, kept if the
- * solver then stops short. An Easy board is one the solver stops short on
- * with any clue gone, so stripping one is what takes it out of reach.
- *
- * It starts from an Easy board and not from every clue, which the search
- * could strip as well. Measured 2026-10-10, that way took twice as long and
- * left the solver less to do at every preset.
- */
-function unreasonableClues(p: PalisadeShape, rng: RandomState): Int8Array {
-  const rim = initBorders(p.w, p.h);
-  const one = (left: Int8Array) => searchAnswers(p, left, HIDING_BUDGET).kind === "one";
-  // The boards stripped before giving up. Only the smallest are thrown away
-  // for giving up no clue.
-  const attempt = retryLimit(
-    `palisade: Unreasonable generation (${p.w}x${p.h} k${p.k})`,
-    Math.max(20, Math.ceil(100_000 / (p.w * p.h) ** 2)),
-  );
-  for (;;) {
-    attempt();
-    const numbers = easyClues(p, rng);
-    stripClues(numbers, rng, one);
-    if (!solver(p, numbers, rim.slice())) return numbers;
-  }
-}
-
-export function newDesc(p: PalisadeParams, rng: RandomState): { desc: string } {
-  const numbers = p.diff === DIFF_EASY ? easyClues(p, rng) : unreasonableClues(p, rng);
-  return { desc: encodeDesc(numbers, p.w * p.h) };
 }

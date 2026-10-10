@@ -66,12 +66,18 @@ board is large.
 
 ## What Changes
 
-- `validateParams` refuses, when a board is to be dealt, a board Palisade
-  does not deal in a few seconds, with a reason that names what to change:
-  a smaller grid or a larger region.
-- The retry cap on divisions is sized to the rarest board the bound admits,
-  so that running it out is a defect and takes seconds.
-- A pasted board of any size still opens.
+As filed this asked for a bound. The session that took it up drew none
+(`design.md`): a division is thrown away for a second answer in a few of its
+regions, and mending those deals every size.
+
+- The generator throws no division away. Where the solver stalls on one, it
+  divides the regions round the stall again until the solver solves it.
+- `validateParams` refuses no size for the time it takes to deal, and the
+  Unreasonable bound of 180 squares goes.
+- The cap is on the steps of that repair, sized to the most a board was
+  measured to take, so that running it out is a defect.
+- Which board a seed deals changes where its first division was not good.
+  The app hands out boards and not seeds.
 
 ## What to settle first
 
@@ -102,6 +108,6 @@ board is large.
 
 ## Impact
 
-- `src/games/palisade/state.ts` (`validateParams`), `solver.ts` (the retry
-  cap), `palisade-tier.test.ts` and `palisade.test.ts`, `help/games/palisade.md`
-  and `help/differences.md`.
+- `src/games/palisade/generator.ts` (new: the generator, out of `solver.ts`),
+  `state.ts` (`validateParams`), `palisade-tier.test.ts`,
+  `help/differences.md` and `docs/games/solver-and-generator.md`.

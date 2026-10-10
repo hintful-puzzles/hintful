@@ -7,8 +7,8 @@ import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";
-import { newDesc } from "./solver.ts";
 
 function harness() {
   const h = driveMidend(palisadeGame);

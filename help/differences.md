@@ -84,7 +84,10 @@ work, but they are likely to change in a future update, and might be removed.
 * **Palisade**: there is a difficulty, *Easy* or *Unreasonable*, which the
   original does not have. An Unreasonable board has one solution that no
   forced edge leads to, so somewhere you have to try an edge. The original's
-  boards are this app's *Easy* ones.
+  boards are this app's *Easy* ones. A board in a great many small regions, such
+  as 21 by 21 in threes, is dealt in a few seconds: the original draws whole
+  boards until one has a single solution, which at such a size next to none
+  has.
 
 * **Separate**: there is a difficulty, *Easy* or *Unreasonable*, which the
   original's unfinished version of the puzzle does not have. An Unreasonable

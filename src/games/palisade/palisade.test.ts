@@ -24,8 +24,9 @@ import { paramsError } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";
-import { deduceForcedEdges, newDesc, solver, solveToBorders } from "./solver.ts";
+import { deduceForcedEdges, solver, solveToBorders } from "./solver.ts";
 import {
   bitcount,
   decodeParams,

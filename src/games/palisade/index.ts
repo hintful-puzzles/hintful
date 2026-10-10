@@ -39,6 +39,7 @@ import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { interpretTargetVerbs, verbClicks } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import { newDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
 import {
   colors,
@@ -53,7 +54,6 @@ import {
   answerOf,
   deduceForcedEdges,
   type ForcedEdge,
-  newDesc,
   solveToBorders,
 } from "./solver.ts";
 import {

@@ -96,7 +96,14 @@ every pair of squares).
   seconds stays dealt; refusing one is the owner's call.
 - **Whether the generator can be made to reach further**, which is a
   different change: a division chosen for the fill, or a fill chosen for the
-  solver, in place of throwing 1,800 divisions away.
+  solver, in place of throwing 1,800 divisions away. (Added 2026-10-10 by
+  `bound-palisade-to-the-boards-it-deals`: for Palisade it was this change
+  and not a different one. Its divisions come from the same
+  `divvyRectangle`, each was thrown away for a fault in a few neighboring
+  regions, and dividing those again deals every size with no bound drawn:
+  `docs/games/solver-and-generator.md` § "Unlucky, impossible, and
+  load-bearing validation", and `palisade/generator.ts`. Count what
+  Separate's thrown-away divisions are thrown away for before a bound.)
 
 ## Capabilities
 

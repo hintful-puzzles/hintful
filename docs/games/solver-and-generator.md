@@ -654,11 +654,11 @@ What Palisade, the sixth, added:
   boards are dealt. Plant each part out against a list of literal boards,
   since the generator's own boards move with the verdict, and keep one
   board per part with its exact count.
-- **A bound that needs its own sweep is its own change.** Palisade deals no
-  board past a number of regions that depends on the region size and the
-  shape, and had no bound. The numbers this change turned up are in
-  `openspec/changes/bound-palisade-to-the-boards-it-deals`; a table read
-  off them here would have refused boards that deal.
+- **A bound that needs its own sweep is its own change.** Palisade dealt no
+  board past a number of regions that depended on the region size and the
+  shape, and had no bound. A table read off the numbers this change turned up
+  would have refused boards that deal, and the change that took them up drew
+  no bound at all (§ "Unlucky, impossible, and load-bearing validation").
 
 What Separate, the seventh, added:
 
@@ -1526,6 +1526,40 @@ took one to three tracks a board at every size. Two things to take from
 
 It changes which boards are dealt, and that is a thing to measure and say:
 the tracks of a 15x15 went from 83 squares to 100.
+
+**Where what fails a draw is a small part of it, mend the part.** Palisade
+divided the grid at random and kept a division only if the solver solved it
+with every clue showing. One in 18 was kept at 6x6 in threes and none in a
+thousand at 9x9, and a rate that falls with every region added reads as a size
+bound. It was not one: a failed division has a second answer under its own
+clues, in a few neighboring regions that can be cut another way. The generator
+now divides the regions round a wall the solver did not place again, and keeps
+the step if no more walls are left unplaced
+([`palisade/generator.ts`](../../src/games/palisade/generator.ts)). Every size
+deals, 30x30 in threes among them, and no size is refused. What to take:
+
+- **Sort the failures by what the search says of them before blaming the
+  solver.** "One answer, and the deductions stall" asks for a stronger solver
+  or a tier. "Several answers" is the board's own fault, and no solver mends
+  it. Palisade's were all the second kind at threes, three in four at fours
+  and four in ten at tens, and mending the division served both.
+- **A rate that falls as `r^n` in the number of parts is `n` independent
+  small failures.** Mend them one at a time and the cost grows with `n`, where
+  drawing whole boards grows with `r^-n`.
+- **The size of the move is the thing to measure, by give-ups and not by the
+  median.** At 6x6 in threes, dividing two regions again gave up on 94 boards
+  in 100 and three on 7. Four gave up on none of 2,000 there and on 5 of
+  1,000 at 9x9. A move too
+  small cannot leave a stall whose only other cut has the same clues, and a
+  move too wide is hardly ever kept, so the width goes up while a board stalls
+  and comes back down.
+- **Count every pass of a mending loop against its cap, the ones that try
+  nothing included.** A `continue` before the counter is a loop that never
+  ends on a board with no move to make.
+- **Keep the first draw's use of the RNG.** A division good as drawn draws
+  nothing more, so those seeds deal the board they did, and the share of
+  boards that moved is a check on the change: it should be the share whose
+  first draw failed.
 
 ### Bound a generator by its tail, not its median
 

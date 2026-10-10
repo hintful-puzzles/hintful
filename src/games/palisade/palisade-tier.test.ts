@@ -369,16 +369,36 @@ describe("the tier in Palisade's params", () => {
     expect(refusal("3x4n1du")).toBe("No 3x4 puzzle in regions of 1 is Unreasonable.");
   });
 
-  it("bounds an Unreasonable board at the largest preset's area", () => {
+  it("refuses no size for the time it takes to deal", () => {
     const refusal = (id: string) =>
       paramsError(palisadeGame, palisadeGame.decodeParams(id), true);
-    expect(refusal("12x15n10du")).toBeNull();
-    expect(refusal("9x20n6du")).toBeNull();
-    expect(refusal("14x13n7du")).toMatch(/at most 180 for an Unreasonable puzzle/);
-    expect(refusal("14x13n7de")).toBeNull();
-    // A board that arrives with its description is not held to it.
-    expect(
-      paramsError(palisadeGame, sized(15, 20, 10, DIFF_UNREASONABLE), false),
-    ).toBeNull();
+    for (const size of [
+      "12x15n10",
+      "14x13n7",
+      "9x9n3",
+      "12x12n4",
+      "30x30n3",
+      "40x60n20",
+    ])
+      for (const tier of ["de", "du"])
+        expect(refusal(size + tier), size + tier).toBeNull();
+  });
+});
+
+describe("a Palisade board in many small regions", () => {
+  // A division drawn at random has a second answer under its own clues nearly
+  // every time at these sizes, none in a thousand being free of one at 9x9 in
+  // threes, so each board here is one the generator re-divided its way to.
+  describeDealtTiers(palisadeGame, ["9x9n3de", "9x9n3du", "12x12n4de"]);
+
+  // Some stalls cannot be left by dividing a few regions again. Three at a
+  // time gave up on 150 of 2,000 boards of this size, and four to eight on
+  // none.
+  it("deals a hundred 6x6 boards in threes", () => {
+    const p = sized(6, 6, 3, DIFF_EASY);
+    for (let seed = 0; seed < 100; seed++) {
+      const { desc } = palisadeGame.newDesc(p, randomNew(`small-regions-${seed}`));
+      expect(solveToBorders(p, newState(p, desc).clues), desc).not.toBeNull();
+    }
   });
 });

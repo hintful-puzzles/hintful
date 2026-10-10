@@ -1,6 +1,6 @@
 /**
- * Palisade — state, params, desc codec, completion test; the solver and
- * generator are `solver.ts`'s.
+ * Palisade — state, params, desc codec, completion test; the solver is
+ * `solver.ts`'s and the generator `generator.ts`'s.
  *
  * Border encoding is upstream's `borderflag` byte kept verbatim: per cell, low
  * nibble bits 0..3 are walls on the U/R/D/L edges, high nibble bits 4..7 are
@@ -189,21 +189,8 @@ export function validateParams(p: PalisadeParams, full: boolean): string | null 
   // (`palisade-tier.test.ts`), so none of their boards needs a search.
   if (w === 1 || h === 1 || k === 1)
     return noSuchTier(`${w}x${h} puzzle in regions of ${k}`, tier);
-  if (wh > MAX_UNREASONABLE_AREA)
-    return `Width times height must be at most ${MAX_UNREASONABLE_AREA} for an ${tier} puzzle; a larger one takes too long to deal.`;
   return null;
 }
-
-/**
- * The largest Unreasonable board dealt, in squares: the largest preset's. An
- * Unreasonable board is an Easy one stripped further by the search, which
- * takes about three times as long as the Easy board did.
- *
- * Measured 2026-10-10, mean time for a board at the bound | past it: 8×10 in
- * eights 0.2 s, 12×15 in tens 1.3 s, 9×20 in sixes 2.3 s | 15×15 in nines
- * 3 s, 15×20 in tens 5.5 s.
- */
-const MAX_UNREASONABLE_AREA = 180;
 
 // --- borders --------------------------------------------------------------
 
