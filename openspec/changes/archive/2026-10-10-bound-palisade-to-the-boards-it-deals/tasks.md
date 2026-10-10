@@ -35,4 +35,4 @@ regions, and the generator now divides those regions again.
 - [x] 3.2 `help/games/palisade.md` and `help/differences.md`.
 - [x] 3.3 The guide (`docs/games/solver-and-generator.md`), and a note in
   `bound-separate-to-the-boards-it-deals`, whose grid is divided the same way.
-- [ ] 3.4 Commit, push, archive.
+- [x] 3.4 Commit, push, archive.

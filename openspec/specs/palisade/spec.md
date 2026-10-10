@@ -39,6 +39,8 @@ Easy.
 The bounds the params declare SHALL refuse a `w`, an `h` or a `k` below 1.
 `validateParams` SHALL refuse a `k` that does not divide `w·h`. Under full
 validation it SHALL also refuse `k = w·h`, and `k = 2` unless `w` or `h` is 1.
+It SHALL refuse no size for the time its deal takes, at either difficulty: a
+player can stop a deal.
 
 #### Scenario: Invalid params are rejected
 
@@ -50,6 +52,12 @@ validation it SHALL also refuse `k = w·h`, and `k = 2` unless `w` or `h` is 1.
 
 - **WHEN** params `{ w: 5, h: 5, k: 0 }` are validated
 - **THEN** the refusal is "Region size must be at least 1."
+
+#### Scenario: A large board and one in many regions are asked for
+
+- **WHEN** a 14×13 board in sevens, a 30×30 board in threes and a 40×60 board
+  in twenties are checked for dealing at Easy and at Unreasonable
+- **THEN** none is refused
 
 ### Requirement: Palisade descriptions are run-length clue grids
 
@@ -86,7 +94,9 @@ walls set and all interior edges unknown.
 At Easy `newDesc` SHALL emit only a board the deductive solver solves from
 its clues alone, so the board has one division and needs no guess. It SHALL
 strip clues, keeping a clue removed only while the solver still solves the
-board.
+board. It SHALL deal a board at every size `validateParams` admits, at both
+difficulties: a division the solver cannot solve from all of its clues is
+divided again where it stalls, and is not thrown away.
 
 #### Scenario: Generated boards are solvable
 
@@ -94,6 +104,18 @@ board.
   seeds
 - **THEN** the deductive solver solves each board to a valid division (every
   region size `k`, every clue satisfied, no stray walls)
+
+#### Scenario: Boards in many small regions are dealt
+
+- **WHEN** a 9×9 board in threes is dealt at Easy and at Unreasonable, and a
+  12×12 board in fours at Easy
+- **THEN** each is dealt, and the lowest difficulty that solves it is the one
+  asked for
+
+#### Scenario: No board of a size that stalls often is given up on
+
+- **WHEN** a hundred Easy 6×6 boards in threes are dealt
+- **THEN** every one is dealt, and the solver solves it
 
 ### Requirement: Palisade edges are three-valued and shared between cells
 
@@ -501,19 +523,6 @@ divides one way whatever its clues, and the solver finds that way with none.
 - **WHEN** the solver runs on a strip or a board in regions of one that has
   no clue at all
 - **THEN** it finishes it, and the board divides exactly one way
-
-### Requirement: Unreasonable is bounded on its own measurements
-
-`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
-board of more than 180 squares, with a reason naming the difficulty. The same
-size SHALL still be asked for at Easy.
-
-#### Scenario: A size past the bound is refused at Unreasonable only
-
-- **WHEN** a 14×13 board in sevens is checked for dealing at each difficulty
-- **THEN** it is refused at Unreasonable and not at Easy
-- **AND** a 12×15 board in tens and a 9×20 board in sixes are admitted at
-  Unreasonable
 
 ### Requirement: Palisade's menu offers each board at both difficulties
 

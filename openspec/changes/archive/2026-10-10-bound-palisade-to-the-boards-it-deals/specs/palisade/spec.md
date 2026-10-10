@@ -25,14 +25,21 @@ player can stop a deal.
   in twenties are checked for dealing at Easy and at Unreasonable
 - **THEN** none is refused
 
-## ADDED Requirements
+### Requirement: Palisade generates uniquely solvable boards
 
-### Requirement: Palisade deals a board however many regions it has
+At Easy `newDesc` SHALL emit only a board the deductive solver solves from
+its clues alone, so the board has one division and needs no guess. It SHALL
+strip clues, keeping a clue removed only while the solver still solves the
+board. It SHALL deal a board at every size `validateParams` admits, at both
+difficulties: a division the solver cannot solve from all of its clues is
+divided again where it stalls, and is not thrown away.
 
-`newDesc` SHALL deal a board at every size `validateParams` admits, at both
-difficulties. Where the solver cannot solve a division from all of its clues,
-the generator SHALL divide the regions round the stall again until it can,
-and SHALL NOT throw the division away.
+#### Scenario: Generated boards are solvable
+
+- **WHEN** `newDesc` produces an Easy board for each preset across several
+  seeds
+- **THEN** the deductive solver solves each board to a valid division (every
+  region size `k`, every clue satisfied, no stray walls)
 
 #### Scenario: Boards in many small regions are dealt
 
