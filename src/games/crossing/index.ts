@@ -242,7 +242,7 @@ function interpretMove(
     const digit = key === "clear" ? null : key;
     ui.heldNumber = null;
     const i = ui.cursor.y * w + ui.cursor.x;
-    // Suppress no-op moves locally rather than comparing states (docs/games/README.md § "Before you start").
+    // Declined, so the key falls through: nothing here can take it.
     if (walls[i]) return null;
     if (ui.pencilMode && state.grid[i] !== 0) return null; // notes can't touch a filled cell
     if (ui.pencilMode && digit === null && state.pencil[i] === 0) return null;

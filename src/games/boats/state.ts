@@ -328,8 +328,6 @@ export function fillOf(cell: number): BoatsFill {
 
 /**
  * Upstream `boats_validate_move`: would this fill actually change anything?
- * Suppressing a no-op *locally*, rather than by comparing states, is the
- * collection-wide idiom (docs/games/README.md § "Before you start").
  */
 export function fillChangesAnything(
   s: BoatsState,

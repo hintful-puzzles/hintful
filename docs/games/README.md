@@ -244,7 +244,7 @@ live list:
 | Risk | Stance |
 | --- | --- |
 | A board not fully determined until play starts (upstream `midend_supersede_game_desc`) | Solved: implement `supersededDesc` — [`mechanics.md`](./mechanics.md) § "A board decided at first click". |
-| "Did this move change anything?" via state equality | A phantom — no game needs it. Suppress no-op moves *locally* in `interpretMove` (return `null`); never deep-compare state. |
+| "Did this move change anything?" via state equality | The engine's: the midend keeps a move that left the board as it was out of the history. Write no comparison of your own — [`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE". |
 | Editor-only move letters (upstream `#ifdef EDITOR`) | Don't map them; say so in `design.md`. |
 | "Print this puzzle" | No TS printing exists — don't promise it. |
 

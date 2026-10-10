@@ -17,7 +17,13 @@ import {
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_SELECT,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
@@ -365,6 +371,31 @@ describe("moves and solve", () => {
     expect(loaded.solve()).toBeNull();
     expect(h.last("game-state-change")?.status).toBe("solved-with-help");
   });
+});
+
+describe("a vertex picked up with the keyboard and put down where it was", () => {
+  // Vertices are fractions over the preferred tile size, so only another
+  // size reads one at a pixel that is not the vertex itself.
+  for (const side of [320, 500, 777]) {
+    it(`is no step of Undo on a board ${side} pixels across`, () => {
+      const h = driveMidend(untangleGame);
+      const me = h.midend;
+      me.newGameFromId("10#put-down-in-place");
+      me.size({ w: side, h: side });
+      const moves = () => h.last("game-state-change")?.currentMove;
+
+      me.processInput(0, 0, CURSOR_SELECT);
+      me.processInput(0, 0, CURSOR_SELECT);
+      me.processInput(0, 0, CURSOR_SELECT);
+      expect(moves()).toBe(0);
+
+      // Nudged first, the same put-down is a move.
+      me.processInput(0, 0, CURSOR_SELECT);
+      me.processInput(0, 0, CURSOR_DOWN);
+      me.processInput(0, 0, CURSOR_SELECT);
+      expect(moves()).toBe(1);
+    });
+  }
 });
 
 describe("save → moves → load reproduces vertex positions (move-log, no supersede)", () => {

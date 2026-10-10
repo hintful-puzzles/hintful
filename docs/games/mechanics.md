@@ -655,16 +655,33 @@ was one place; every one of those was a copy waiting to drift.
 
 `interpretMove(state, ui, ds, point, button)` translates one input event into a
 `Move`, `null` ("nothing happened"), or `UI_UPDATE` ("UI/cursor changed in
-place; redraw, no history entry"). **Suppress no-op moves locally here — never
-by comparing states.** Every game upstream suppresses no-ops in
-`interpret_move` (out-of-grid, gutter, already-in-that-state); no game in the
-entire C tree ever compared stringified states for undo, and a port that
-reaches for `Object.is`/deep-compare is re-deriving a mechanism that does not
-exist. The shared predicate that decides "would this change anything?" should
-be the same one `executeMove` filters with, so the two cannot drift (see
-[input](./input.md) § "A line-fill drag picks a transformation" for the Boats
-worked example). Input-device traps — touch, stylus, keypad, drag classes —
-are [input](./input.md)'s whole subject; read it before writing this hook.
+place; redraw, no history entry"). Input-device traps — touch, stylus, keypad,
+drag classes — are [input](./input.md)'s whole subject; read it before writing
+this hook.
+
+**Return a move when the input asks for one, and leave "did it change
+anything?" to the engine.** The midend compares the board your move leaves
+with the board before it
+([`same-value.ts`](../../src/engine/same-value.ts)) and keeps a move that
+changed nothing out of the history: no step of Undo, the input answered as a
+UI-only change, your `changedState` still run (`ts-engine`, "A move that
+leaves the board as it was is no step of the history"). So an erase key on an
+empty square, an entry of what the square holds and a drag out and back need
+no test of yours. Upstream had no such thing and every C game suppresses the
+move in `interpret_move`; seven ports had missed a case each, which is why
+the rule moved. A test of your own may stay where it is cheap and already
+there (out of the grid, in the gutter), and is needed where the answer is
+`null` for another reason: a key the game has no use for must fall through to
+the app. What the comparison reads is the whole state, so keep bookkeeping
+that changes on every move (a counter, a last-move marker) out of it unless a
+player can see it: with it, no move of yours is ever "the same board".
+
+**"Nothing happened" means the `Ui` is as it was.** Change the `Ui` and the
+answer is `UI_UPDATE`. The midend repaints a `Ui` it finds changed under a
+`null`, so the frame is right, but the input is not claimed and a key falls
+through to the app's shortcuts.
+[`input-answers.test.ts`](../../src/engine/input-answers.test.ts) sweeps every
+registered game for both, and names the games that still answer `null` there.
 
 **`ds` is non-null and built at the tile size on screen, so read `ds.tileSize`
 directly.** The midend builds the draw state with `newDrawState(state,

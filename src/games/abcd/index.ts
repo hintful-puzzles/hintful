@@ -179,9 +179,8 @@ function interpretMove(
     if (ui.pencilMode && state.grid[ui.cursor.y * w + ui.cursor.x] !== EMPTY)
       return null;
 
-    // Suppress an entry that would change nothing, so it costs no undo step
-    // (upstream left this as a `TODO`), decided locally rather than by
-    // comparing states.
+    // An entry that would change nothing is declined, so the key is not
+    // claimed (upstream left this as a `TODO`).
     if (!ui.pencilMode && noOpEntry(state, ui.cursor.x, ui.cursor.y, letter))
       return null;
 

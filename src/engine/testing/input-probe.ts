@@ -19,19 +19,22 @@ import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
   CURSOR_UP,
+  DELETE,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../pointer.ts";
-import { randomNew } from "../random/index.ts";
+import { randomNew, randomUpto } from "../random/index.ts";
 import { sweepOpen } from "../target-verb.ts";
 import type { Color, ConfigValues, Point, Size } from "../types.ts";
+import { copyUi, restoreUi } from "../ui-snapshot.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./render-scenario.ts";
 
@@ -49,6 +52,13 @@ export interface ProbeBoard {
   readonly ui: () => unknown;
   /** The midend's current move number, as its last notification reported it. */
   readonly moves: () => number;
+  /** How many moves the game has been asked to execute on this board, by
+   * whether the state each returned reads as the one it was given
+   * ({@link board}'s digest). Counted where the midend calls `executeMove`,
+   * so a move the midend then keeps out of the history is counted too. */
+  readonly executions: () => { readonly changed: number; readonly unchanged: number };
+  /** How many times the midend has asked for a repaint. */
+  readonly redraws: () => number;
   /** A digest of the state the midend holds. Two moves spelled differently
    * that leave the same board read the same. */
   readonly board: () => string;
@@ -74,6 +84,8 @@ export interface ProbeBoard {
    * on screen.
    */
   readonly seen: () => string;
+  /** The whole frame of `state` under `ui`, painted on a fresh draw state. */
+  readonly paint: (state: unknown, ui: unknown) => string;
 }
 
 export interface ProbeOptions {
@@ -109,6 +121,23 @@ export function probeBoard(
   // constructors and moves hand them over, so reading them costs no frame.
   let current: unknown = null;
   let liveUi: unknown = null;
+  // A state is immutable once built (docs/games/mechanics.md), so its digest is
+  // too: memoized by identity, a walk that revisits one board hundreds of times
+  // serializes it once. Loopy's state holds its whole cyclic grid, which made
+  // the target-verb guard's walk over it cost ~18 s unmemoized.
+  const stateDigests = new WeakMap<object, string>();
+  const digestOf = (state: unknown) => {
+    if (typeof state !== "object" || state === null) return digest(state);
+    let d = stateDigests.get(state);
+    if (d === undefined) {
+      d = digest(state);
+      stateDigests.set(state, d);
+    }
+    return d;
+  };
+  let changed = 0;
+  let unchanged = 0;
+  let redraws = 0;
   const spy: AnyGame = {
     ...game,
     newState: (...args) => {
@@ -121,6 +150,8 @@ export function probeBoard(
     },
     executeMove: (...args) => {
       current = game.executeMove(...args);
+      if (digestOf(current) === digestOf(args[0])) unchanged++;
+      else changed++;
       return current;
     },
     // Undo, Redo and a restart make no move: this is where they are heard.
@@ -141,7 +172,9 @@ export function probeBoard(
       if (n.type === "game-state-change") moveCount = n.currentMove;
     },
     () => {},
-    () => {},
+    () => {
+      redraws++;
+    },
   );
   if (options.preferences) m.setPreferences(options.preferences);
   const gameId = `${game.encodeParams(params, true)}:${desc}`;
@@ -155,40 +188,20 @@ export function probeBoard(
     if (!painted) throw new Error(`${id} painted no frame`);
     return seen;
   };
-  // A state is immutable once built (docs/games/mechanics.md), so its digest is
-  // too: memoized by identity, a walk that revisits one board hundreds of times
-  // serializes it once. Loopy's state holds its whole cyclic grid, which made
-  // the target-verb guard's walk over it cost ~18 s unmemoized.
-  const stateDigests = new WeakMap<object, string>();
-  const digestOf = (state: unknown) => {
-    if (typeof state !== "object" || state === null) return digest(state);
-    let d = stateDigests.get(state);
-    if (d === undefined) {
-      d = digest(state);
-      stateDigests.set(state, d);
-    }
-    return d;
-  };
   const stateDigest = () => digestOf(current);
   // By digest, not by identity: a board replayed from the deal is built afresh.
   const frames = new Map<string, string>();
   const palette = m.getColorPalette(DEFAULT_BACKGROUND);
+  const paint = (state: unknown, ui: unknown) => {
+    const dr = new RecordingDrawing(palette);
+    game.redraw(dr, game.newDrawState(state, tileSize), null, state, 1, ui, 0, 0);
+    return JSON.stringify(dr.ops);
+  };
   const frameNow = () => {
     const d = stateDigest();
     let frame = frames.get(d);
     if (frame === undefined) {
-      const dr = new RecordingDrawing(palette);
-      game.redraw(
-        dr,
-        game.newDrawState(current, tileSize),
-        null,
-        current,
-        1,
-        game.newUi(current),
-        0,
-        0,
-      );
-      frame = JSON.stringify(dr.ops);
+      frame = paint(current, game.newUi(current));
       frames.set(d, frame);
     }
     return frame;
@@ -201,12 +214,15 @@ export function probeBoard(
     reset,
     ui,
     moves: () => moveCount,
+    executions: () => ({ changed, unchanged }),
+    redraws: () => redraws,
     board: stateDigest,
     where: () => `${digest(liveUi)}|${stateDigest()}`,
     held: () => `${digest(liveUi)}|${fingerprint(m)}`,
     live: () => ({ state: current, ui: liveUi }),
     digestOf,
     seen: frameNow,
+    paint,
   };
 }
 
@@ -744,4 +760,222 @@ export function canceledPresses(game: AnyGame, id: string): CanceledPresses {
   play();
   round("on a board played on");
   return { canceled, moved, left };
+}
+
+/** One input of a script: a key arrives at the origin, as the app sends it. */
+interface ProbeInput {
+  readonly name: string;
+  readonly at: Point;
+  readonly button: number;
+}
+
+/** What a game's answers to a sweep of inputs came to. */
+export interface InputAnswers {
+  /** How many inputs were sent: the sweep's reach. */
+  readonly inputs: number;
+  /** How many moves entered the history. */
+  readonly recorded: number;
+  /** How many moves the game made that left its board as it was. */
+  readonly unchanged: number;
+  /** Each input after which the history grew by a move that left the board
+   * as it was, as the script that reaches it from the deal. */
+  readonly recordedUnchanged: string[];
+  /** Each input that changed the board and added no step to the history. */
+  readonly droppedChanged: string[];
+  /** How many inputs answered "nothing happened" changed the frame. */
+  readonly silent: number;
+  /** Each of those after which the midend asked for no repaint. */
+  readonly unpainted: string[];
+}
+
+/**
+ * **What does each input's answer leave behind?**
+ *
+ * `interpretMove` has three answers, and each promises something this sweep
+ * can read: a move is a step of the history exactly when it changed the
+ * board, and "nothing happened" means the `Ui` is as it was. Every input of
+ * every script is asked both, so a script needs no expectation of its own.
+ *
+ * The scripts are the shapes that have made a move for nothing: a click
+ * repeated, a drag out and back, a drag that lands one and two tiles off (a
+ * jump or a slide makes no move without one), a key pressed again where the
+ * cursor or a click left the selection, each with notes mode on as well as
+ * off, and a random walk over all of them on a board in play.
+ */
+export function inputAnswers(game: AnyGame, id: string): InputAnswers {
+  const b = probeBoard(game, id);
+  const { m, size, tileSize } = b;
+  const out: InputAnswers = {
+    inputs: 0,
+    recorded: 0,
+    unchanged: 0,
+    recordedUnchanged: [],
+    droppedChanged: [],
+    silent: 0,
+    unpainted: [],
+  };
+  let silent = 0;
+  let inputs = 0;
+  let recorded = 0;
+  const sent: string[] = [];
+  // The opening position again, by a restart and the deal's `Ui` put back. A
+  // fresh deal of the same id costs milliseconds in the games that prove their
+  // board at load, and this is asked several hundred times a game.
+  const dealt = copyUi(b.live().ui);
+  const rewind = () => {
+    m.restartGame();
+    restoreUi(b.live().ui, copyUi(dealt));
+    sent.length = 0;
+  };
+  // A `Ui` holds more than is painted (a hidden cursor is parked where a press
+  // fell), so the frame is what convicts, and the `Ui` only says when to paint.
+  const frames = new Map<string, string>();
+  const frame = (state: unknown, ui: unknown, uiDigest: string) => {
+    const k = `${uiDigest}|${b.digestOf(state)}`;
+    let f = frames.get(k);
+    if (f === undefined) {
+      f = b.paint(state, ui);
+      frames.set(k, f);
+    }
+    return f;
+  };
+  const run = (script: readonly ProbeInput[], fresh = true) => {
+    if (fresh) rewind();
+    for (const input of script) {
+      const moves = b.moves();
+      const before = b.executions();
+      const was = b.live();
+      const ui = digest(was.ui);
+      const kept = copyUi(was.ui);
+      const redraws = b.redraws();
+      const consumed = m.processInput(input.at.x, input.at.y, input.button);
+      inputs++;
+      sent.push(input.name);
+      const rose = b.moves() - moves;
+      const changed = b.executions().changed - before.changed;
+      recorded += rose;
+      const how = () => sent.slice(-8).join(", ");
+      if (rose > changed) out.recordedUnchanged.push(how());
+      if (rose < changed) out.droppedChanged.push(how());
+      // An input the game claimed is painted by the midend's own transition.
+      if (consumed) continue;
+      const now = b.live();
+      const uiNow = digest(now.ui);
+      if (uiNow === ui) continue;
+      if (frame(now.state, now.ui, uiNow) === frame(was.state, kept, ui)) continue;
+      silent++;
+      if (b.redraws() === redraws) out.unpainted.push(how());
+    }
+  };
+
+  const origin = { x: 0, y: 0 };
+  const key = (button: number): ProbeInput => ({
+    name: keyName(button),
+    at: origin,
+    button,
+  });
+  const pointer = (what: string, at: Point, button: number): ProbeInput => ({
+    name: `${what} (${at.x},${at.y})`,
+    at,
+    button,
+  });
+  const buttons = [
+    { name: "left", press: LEFT_BUTTON, drag: LEFT_DRAG, release: LEFT_RELEASE },
+    { name: "right", press: RIGHT_BUTTON, drag: RIGHT_DRAG, release: RIGHT_RELEASE },
+  ];
+  type Button = (typeof buttons)[number];
+  const click = (bt: Button, p: Point) => [
+    pointer(`${bt.name} press`, p, bt.press),
+    pointer(`${bt.name} release`, p, bt.release),
+  ];
+  const drag = (bt: Button, p: Point, via: readonly Point[], end: Point) => [
+    pointer(`${bt.name} press`, p, bt.press),
+    ...via.map((q) => pointer(`${bt.name} drag`, q, bt.drag)),
+    pointer(`${bt.name} release`, end, bt.release),
+  ];
+  const inside = (q: Point) => q.x >= 0 && q.y >= 0 && q.x < size.w && q.y < size.h;
+  const off = (p: Point, tiles: number) =>
+    [
+      { x: p.x + tiles * tileSize, y: p.y },
+      { x: p.x, y: p.y + tiles * tileSize },
+      { x: p.x - tiles * tileSize, y: p.y },
+      { x: p.x, y: p.y - tiles * tileSize },
+    ].filter(inside);
+
+  const points = probePoints(size);
+  // A key after a click is pressed at every third point: with a dozen keys
+  // and two modes that round is otherwise most of the sweep.
+  const sparse = points.filter((_, i) => i % 3 === 0);
+  const arrows = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT];
+  const panel = m.requestKeys().map((k) => k.button);
+  const modes = panel.includes(PENCIL_MODE_BUTTON)
+    ? [[], [key(PENCIL_MODE_BUTTON)]]
+    : [[]];
+  const keys = [
+    ...new Set([
+      ...panel.filter((k) => k !== PENCIL_MODE_BUTTON),
+      CURSOR_SELECT,
+      CURSOR_SELECT2,
+      DELETE,
+    ]),
+  ];
+
+  for (const p of points)
+    for (const bt of buttons) {
+      run([...click(bt, p), ...click(bt, p)]);
+      for (const q of off(p, 1)) {
+        run(drag(bt, p, [q, p], p));
+        run(drag(bt, p, [q], q));
+      }
+      for (const q of off(p, 2)) run(drag(bt, p, [q], q));
+    }
+  for (const mode of modes) {
+    for (const k of keys) {
+      for (const prefix of [[], ...arrows.map((a) => [key(a)])])
+        run([...mode, ...prefix, key(k), key(k), key(k)]);
+      for (const p of sparse) run([...mode, ...click(buttons[0], p), key(k), key(k)]);
+    }
+    for (const a of arrows) run([...mode, key(a), key(a)]);
+  }
+  const random = randomNew(`answers-${id}`);
+  const pick = <T>(from: readonly T[]) => from[randomUpto(random, from.length)];
+  for (const mode of modes)
+    for (let walk = 0; walk < WALKS; walk++) {
+      run(mode);
+      for (let step = 0; step < WALK_STEPS; step++) {
+        const kind = randomUpto(random, 10);
+        if (kind < 2) run([key(pick(arrows))], false);
+        else if (kind < 5) run(click(pick(buttons), pick(points)), false);
+        else if (kind < 7) {
+          const p = pick(points);
+          const q = pick([...off(p, 1), ...off(p, 2), p]);
+          run(drag(pick(buttons), p, [q], q), false);
+        } else {
+          const k = pick(keys);
+          run([key(k), key(k)], false);
+        }
+      }
+    }
+  return { ...out, inputs, recorded, silent, unchanged: b.executions().unchanged };
+}
+
+const WALKS = 4;
+const WALK_STEPS = 100;
+
+/** A key as a failure names it. */
+function keyName(button: number): string {
+  const named: Record<number, string> = {
+    [CURSOR_UP]: "Up",
+    [CURSOR_DOWN]: "Down",
+    [CURSOR_LEFT]: "Left",
+    [CURSOR_RIGHT]: "Right",
+    [CURSOR_SELECT]: "Enter",
+    [CURSOR_SELECT2]: "Space",
+    [DELETE]: "Backspace",
+    [PENCIL_MODE_BUTTON]: "Marks",
+  };
+  if (named[button] !== undefined) return named[button];
+  return button > 0x20 && button < 0x7f
+    ? `'${String.fromCharCode(button)}'`
+    : `key 0x${button.toString(16)}`;
 }

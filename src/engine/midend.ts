@@ -64,6 +64,7 @@ import {
   withoutShift,
 } from "./pointer.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
+import { sameValue } from "./same-value.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import { endSweep, sweepContinues, sweepPending } from "./target-verb.ts";
 import type {
@@ -346,6 +347,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * replaces the state or writes the `Ui`: what it holds would then put back
    * a board or a preference that is no longer the one in play. */
   private press: OpenPress<State, Move, Ui> | null = null;
+  /** Whether the pointer gesture in flight has put a move in the history: a
+   * drag's later mark joins only a mark of the same drag that is there. */
+  private gestureRecorded = false;
   private drawState: DrawState | null = null;
   /** Set by `freshDrawState` alone, so `size()` at an unchanged tile size
    * never arms it: the next `redraw` lays the ground first. */
@@ -878,8 +882,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // A press opens its own drag or none: one left open by a release the
     // game never saw ends here.
     const pointer = stripModifiers(button);
-    if (isMouseDown(pointer)) endSweep(this.ui);
+    if (isMouseDown(pointer)) {
+      endSweep(this.ui);
+      this.gestureRecorded = false;
+    }
 
+    const uiBefore = copyUi(this.ui);
     const offer = (b: number) =>
       this.game.interpretMove(this.state, this.ui, drawState, { x, y }, b);
     // A game that reads Shift on a key answers the first offer. One that does
@@ -889,18 +897,17 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const move = shifted === null && bare !== null ? offer(bare) : shifted;
     // Only a drag event carries a drag on; anything else but its press ends it.
     const dragging = isMouseDrag(pointer);
-    const joins = dragging && sweepContinues(this.ui);
+    const joins = dragging && sweepContinues(this.ui) && this.gestureRecorded;
     if (!dragging && !isMouseDown(pointer)) endSweep(this.ui);
-    if (move === null) return false;
+    if (move === null) {
+      // The game's answer stands, so the input is not claimed. A `Ui` it
+      // changed on the way is painted all the same: the frame on screen is
+      // never one the `Ui` has moved on from.
+      if (!sameValue(uiBefore, this.ui)) this.requestRedraw();
+      return false;
+    }
     if (move === UI_UPDATE) {
-      // UI/cursor changed in place: redraw + notify, no history entry,
-      // no animation. A game whose UI change is an alternative display
-      // (Subsets' reference aid) dismisses any displayed hint here, so
-      // the aid isn't silently suppressed by a still-active hint;
-      // `afterTransition` re-emits the status bar without the hint text.
-      if (this.uiUpdateDismisses()) this.clearHint();
-      this.clearAnimation();
-      this.afterTransition();
+      this.uiUpdated();
       return true;
     }
     // Classify the move against the plan with the PRE-move state (the
@@ -912,6 +919,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // the commit. (Upstream's frontend has no plan; this ordering is ours.)
     const prev = this.state;
     const next = this.game.executeMove(prev, move);
+    if (this.leftAsItWas(prev, next)) {
+      this.uiUpdated();
+      if (dragging && sweepPending(this.ui)) this.interpret(x, y, button);
+      return true;
+    }
+    this.gestureRecorded = true;
     const step = this.currentHintStep;
     if (step !== null) {
       const verdict = this.game.hintKeepTrack?.(move, step, prev) ?? "off";
@@ -948,6 +961,33 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // event can pass over several targets: ask again until it has no more.
     this.commitMove(next, move, joins);
     if (dragging && sweepPending(this.ui)) this.interpret(x, y, button);
+    return true;
+  }
+
+  /** The `Ui` changed in place: redraw and notify, with no history entry and
+   * no animation. A game whose change is an alternative display (Subsets'
+   * reference aid) dismisses any displayed hint here, so the aid is not
+   * suppressed by a still-active hint; `afterTransition` re-emits the status
+   * bar without the hint text. */
+  private uiUpdated(): void {
+    if (this.uiUpdateDismisses()) this.clearHint();
+    this.clearAnimation();
+    this.afterTransition();
+  }
+
+  /**
+   * Whether a player's move left the board as it was, in which case it is not
+   * recorded: the history gains no step that Undo would show no change for.
+   * No game writes anything for this, and none can make such a step.
+   *
+   * The game asked for a move, so its `Ui` is settled as after one
+   * (`stateReplaced`): a game ends its own drag or selection there. What is
+   * compared is the whole state, so a move that changes only what the state
+   * keeps unseen is a step still.
+   */
+  private leftAsItWas(prev: State, next: State): boolean {
+    if (!sameValue(prev, next)) return false;
+    this.stateReplaced(prev, next);
     return true;
   }
 
@@ -1416,10 +1456,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         repaint = true;
         return true;
       }
+      const next = this.game.executeMove(this.state, made);
+      // As for the player's own input: no step. A hint whose move changes
+      // nothing therefore never completes, and is thrown below.
+      if (this.leftAsItWas(this.state, next)) {
+        repaint = true;
+        return true;
+      }
       if (completed) fail(`makes a move after completing its step`);
       const verdict = this.game.hintKeepTrack?.(made, step, this.state) ?? "off";
       if (verdict === "off") fail(`makes a move off its step: ${JSON.stringify(made)}`);
-      const next = this.game.executeMove(this.state, made);
       if (verdict === "completed") {
         completed = true;
         this.advanceHintOnAnimationEnd = true;

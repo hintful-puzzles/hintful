@@ -76,6 +76,11 @@ have to remember they exist; you do have to know what they will tell you.
 - [`canceled-press.test.ts`](../../src/engine/canceled-press.test.ts) — a press
   the browser or Escape cancels leaves the board and the `Ui` as they were
   (§ "A canceled press is the engine's").
+- [`input-answers.test.ts`](../../src/engine/input-answers.test.ts) — what each
+  answer of `interpretMove` leaves behind: no move that left the board as it
+  was is a step of Undo and none that changed it is dropped, and a `Ui`
+  changed under "nothing happened" is painted
+  ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE").
 - [`hint-gesture.test.ts`](../../src/engine/hint-gesture.test.ts) — every hint
   step is played through your `interpretMove` by the gesture your
   `hintGesture` gives for it, so a hint can only ask for what the pointer does
@@ -843,9 +848,10 @@ in the line I drag out, becomes `to`". Four `Ui` fields carry it (`dragFrom`,
   water with the left button widens `from` to `'*'` so one sweep flattens a
   mixed line; a filtered drag paints only matching squares, which is what
   makes "turn all my guesses in this row into water" a single gesture.
-- **A no-op is rejected at `interpretMove`, not by comparing states** — the
-  predicate that decides "would this fill change anything?" is the same one
-  `executeMove` filters with, so they cannot drift.
+- **One predicate decides "would this fill change anything?"**
+  (`fillChangesAnything`) — every arm of `interpretMove` asks the same one.
+  Whether a move is a step of Undo is not the game's to decide
+  ([mechanics](./mechanics.md) § "interpretMove and UI_UPDATE").
 
 The far-edge click target is widened by one so the number row/column is a grab
 handle for its line — small, and worth keeping. Because the drag continues off
@@ -1066,10 +1072,8 @@ if (finishTyping && !ret) return UI_UPDATE;
 
 The fix is one conjunct — `isMouseDown(button) || isMouseDrag(button) ||
 isMouseRelease(button) &&` the coordinate test — **not** narrowing the tail. That
-tail is load-bearing (it repaints a moved cursor and a click that clears the UI),
-and comparing UI state before and after to decide whether to repaint is the
-deep-compare trap `mechanics.md` forbids: suppress a no-op *locally*, in the arm that
-knows it is one.
+tail is load-bearing (it repaints a moved cursor and a click that clears the UI):
+decline in the arm that knows the input is not the game's, and nowhere else.
 
 **Why upstream does not have this problem** and you cannot copy its shape here:
 upstream's midend claims `n`/`u`/`r`/`q` *above* the game, so its games never

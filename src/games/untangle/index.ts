@@ -252,7 +252,8 @@ export const untangleGame: Game<
     if (isCursorMove(button)) {
       if (ui.dragPoint < 0) {
         // Select the nearest point in the quadrant of the arrow key.
-        if (ui.cursorPoint < 0) ui.cursorPoint = 0;
+        const shown = ui.cursorPoint >= 0;
+        if (!shown) ui.cursorPoint = 0;
         const cur = s.pts[ui.cursorPoint];
         let best = -1;
         let bestd = 0;
@@ -274,7 +275,8 @@ export const untangleGame: Game<
           ui.cursorPoint = best;
           return UI_UPDATE;
         }
-        return null;
+        // No vertex lies that way: the press still showed a hidden cursor.
+        return shown ? null : UI_UPDATE;
       }
       // Dragging a held point with the arrow keys: nudge by tileSize/2.
       const inc = Math.trunc(tileSize / 2);
@@ -313,7 +315,15 @@ export const untangleGame: Game<
         ui.cursorPoint = ui.dragPoint;
         ui.dragPoint = -1;
         ui.justDragged = true;
-        return placeMove(p, ui.newPoint);
+        // A vertex put down where it was picked up goes back as it was held,
+        // and not rounded to the pixel the pick-up read it at: the board is
+        // then the same board, which the midend makes no step of.
+        const was = s.pts[p];
+        const pickedUp =
+          ui.newPoint.d === tileSize &&
+          ui.newPoint.x === Math.trunc((was.x * tileSize) / was.d) &&
+          ui.newPoint.y === Math.trunc((was.y * tileSize) / was.d);
+        return placeMove(p, pickedUp ? was : ui.newPoint);
       }
       if (ui.cursorPoint < 0) {
         ui.cursorPoint = 0;

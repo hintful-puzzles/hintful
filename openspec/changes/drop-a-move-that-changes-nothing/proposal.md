@@ -51,11 +51,16 @@ walks only cursors of the shared grid shape, so it never asked Untangle.
 This is fixed here because the guard is the same sweep: the one line in
 Untangle, and the question asked of every game.
 
+**As built:** the sweep found seven more games of this kind, so the midend
+repaints a `Ui` changed under that answer, for every game (`design.md`, § "The
+mirror").
+
 ## The decision
 
 The owner, 2026-10-10, offered a guard with a fix in each of the seven games,
-or the midend dropping the move: **the midend drops it.** No game is edited,
-and no game, ported or yet to be, can have the defect again
+or the midend dropping the move: **the midend drops it.** No game is edited
+for it but Untangle, whose put-down moved a vertex by less than a pixel
+(`design.md`, decision 2), and no game, ported or yet to be, can have the defect again
 (`docs/work-management.md` § "New work is the engine's"). This reverses the
 guide's "never by comparing states", whose reason was that upstream never
 compared; that reason does not outweigh seven defects and a rule nothing
