@@ -35,4 +35,4 @@
 - [x] 3.1 The spec delta, and `skip_specs` removed from `.openspec.yaml`.
 - [x] 3.2 `help/games/rect.md` and `help/differences.md` name no size bound
   and need no change. The guide has what this taught.
-- [ ] 3.3 Commit, push, archive.
+- [x] 3.3 Commit, push, archive.

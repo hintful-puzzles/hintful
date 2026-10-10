@@ -3,13 +3,12 @@
 ### Requirement: An Unreasonable Rectangles board has one answer that the hint does not reach
 
 At Unreasonable the generator SHALL put each number on a square of its
-rectangle at random. Where the search finds an answer other than the division
-as dealt, it SHALL move a number whose rectangle differs in that answer to a
-square of its dealt rectangle that the other leaves out, and search again,
-until the dealt division is the only answer or the draw has had its moves. It
-SHALL keep the board only where the solver does not reach a unique placement
-and the hint's steps do not finish the board. Each search SHALL have a budget
-of its own, well under the one a pasted board is searched with.
+rectangle at random and, while the search finds an answer other than the
+division as dealt, move a number whose rectangle differs in it to a square of
+its dealt rectangle that the other leaves out. It SHALL keep the board only
+where the dealt division is then the only answer and neither the solver nor
+the hint's steps finish it. Each search SHALL have a budget well under a
+pasted board's.
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 
