@@ -392,11 +392,10 @@ game SHALL NOT re-declare an engine cursor helper, which is enforced from
 
 `interpretMove` SHALL return `null` for a button it did not act on, and the
 suite SHALL assert that across every registered game by sending button codes
-nothing in the vocabulary can mean. The collection-wide input guards ask their
-questions by that return value, and the view raises `puzzle-key-unhandled`
-exactly when a game declines a key, so a game that answers everything passes
-those guards vacuously and takes the app's bare-letter shortcuts away from its
-own players.
+nothing in the vocabulary can mean. The collection-wide input guards ask
+whether an input was claimed, and the view raises `puzzle-key-unhandled` for a
+key that was not, so a game that answers everything passes those guards
+vacuously and takes the app's bare-letter shortcuts away from its own players.
 
 #### Scenario: A game answering a meaningless code is caught
 
