@@ -16,6 +16,12 @@ first.
   where a game was hardly reached (Pegs, Slide).
 - [ ] 1.3 Record whatever else it finds. A game found here is fixed by 3 and
   not in the game.
+- [ ] 1.4 The mirror question in the same sweep: an input answered "nothing
+  happened" after which the `Ui` or the frame differs. See it find Untangle's
+  first Up arrow on a fresh deal, and record whatever else it finds.
+- [ ] 1.5 Untangle's arrow arm answers `UI_UPDATE` where it shows the cursor.
+  If 1.4 finds the same in other games, stop and ask what the midend could do
+  so that no game has it, before fixing a second game.
 
 ## 2. Settle the design
 

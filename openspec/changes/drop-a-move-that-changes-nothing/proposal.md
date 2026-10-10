@@ -35,6 +35,22 @@ is each game's own code, about twenty-five games' specs each state it for
 themselves, and `docs/games/mechanics.md` § on `interpretMove` tells a porter
 to suppress such a move locally and never by comparing states.
 
+## The mirror of it, in one game
+
+The same sweep can ask the opposite question, and one game is known to fail
+it: an input answered "nothing happened" that did change the `Ui`. In
+Untangle, on any fresh deal, the first Up arrow sets the cursor on vertex 0
+and returns `null` (`src/games/untangle/index.ts`, the arrow arm: it sets
+`ui.cursorPoint` before it knows a vertex lies that way), so no frame is
+painted and the cursor does not appear, even after a second Up. The next
+Enter then picks the vertex up where on a fresh board it would only show the
+cursor, and Down moves the vertex. Seen in Chrome, 2026-10-10. The guard
+behind `engine-input`, "One arrow press reveals the cursor and moves it",
+walks only cursors of the shared grid shape, so it never asked Untangle.
+
+This is fixed here because the guard is the same sweep: the one line in
+Untangle, and the question asked of every game.
+
 ## The decision
 
 The owner, 2026-10-10, offered a guard with a fix in each of the seven games,
@@ -55,6 +71,9 @@ holds.
 - A cross-game guard in the shared input probe asks, of every registered
   game, whether any input made a move that left the board as it was, and
   finds none.
+- The same guard asks whether any input answered "nothing happened" changed
+  the `Ui` or the frame, and Untangle's arrow arm answers `UI_UPDATE` where
+  it shows the cursor.
 - The rule is stated once, in `ts-engine`, and the games' own sentences of it
   are cut or shortened to what is theirs
   (`state-once-what-several-games-each-state` recorded it as not shared, with
