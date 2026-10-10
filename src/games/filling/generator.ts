@@ -159,7 +159,10 @@ function makeBoard(w: number, h: number, rng: RandomState): number[] {
 /** Reduce the full board to a minimal solvable clue set: first try removing
  * whole regions (a good "ghost region" puzzle), then individual clues, each
  * kept only while the solver still solves (upstream `minimize_clue_set`).
- * Its only RNG is one `shuffle(shuf)`. */
+ * Asking the solver is asking the hint as well, which is what a board is held
+ * to at load: the hint's plan falls back on the solver's own run from the
+ * clues, so it finishes exactly the boards the solver does. Its only RNG is
+ * one `shuffle(shuf)`. */
 function minimizeClueSet(
   board: number[],
   w: number,

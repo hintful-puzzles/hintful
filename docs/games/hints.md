@@ -2251,7 +2251,12 @@ instead of dribbling them out one per request. Exemplar: `nextRegionGroup` in
 - **Plan = apply a group, recompute, repeat**, on a working board so every
   step's narration and shaded region reflect the board as it fires. Keep a
   **single-cell fallback** so the plan still *completes the board* (verify
-  with a "every generated board's plan solves it" test).
+  with a "every generated board's plan solves it" test). **Replanning from
+  the board is only as complete as the rules are monotone**, and Filling's
+  candidate elimination is not, so beneath that fallback the plan keeps the
+  solver's run from the clues
+  ([solver-and-generator.md](./solver-and-generator.md) § "No option switches
+  the generator's checks off").
 - **`hintKeepTrack` handles partial completion.** The move must set the hinted
   value into a **subset** of the step's cells (and nothing else) →
   `"completed"` when it fills the last one, else `"onTrack"` with the step
@@ -3154,6 +3159,9 @@ carries both marks, so a third edge game gets them without drawing code.
 gain choices and a board with more correct marks could say less. The cross-game
 resume walk follows only the hint's own moves; `separate-hint.test.ts` also walks
 from random correct partial boards (909 measured, no stall, a slice kept).
+Filling's candidate elimination is the same shape and did stall, from the
+hint's own positions as well as a player's; `filling-hint.test.ts` pins two
+such boards and walks from partial positions of them.
 
 ### Notation and goal are different move sets (Galaxies)
 

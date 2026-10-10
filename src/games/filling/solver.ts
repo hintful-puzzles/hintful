@@ -2,10 +2,11 @@
  * Filling (Fillomino) solver — port of `filling.c`'s `solver` and its four
  * `learn_*` deductions, iterated to fixpoint.
  *
- * Every deduction only fills an *empty* cell with a *forced* value, so the
- * solver is **confluent**: the final filled set is independent of the order
- * the techniques fire, and the solved/stuck verdict the generator's clue
- * minimization depends on is C's because both reach the same fixpoint.
+ * Every deduction only fills an *empty* cell with a *forced* value, so what
+ * the solver fills is always right. How much it fills depends on the order
+ * the techniques fire, because one of them is not monotone
+ * (`learnBitmapDeductions`): the solved/stuck verdict the generator's clue
+ * minimization depends on is C's because the ladder visits in C's order.
  */
 import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
@@ -189,9 +190,14 @@ class FillingSolver {
     return cells;
   }
 
+  /** The region a filled cell is in. */
+  regionOf(cell: number): number[] {
+    return this.regionCells(this.dsf.canonify(cell), this.board[cell]);
+  }
+
   /** Filled orthogonal neighbors of cell `i` — the pinning evidence for a
    * lonely-cell or candidate-elimination hint. */
-  private filledNeighbors(i: number): number[] {
+  filledNeighbors(i: number): number[] {
     const { w, h, board } = this;
     const x = i % w;
     const y = (i / w) | 0;
@@ -384,7 +390,13 @@ class FillingSolver {
 
   /** Per-cell bitmap of still-possible numbers; a cell left with one
    * possibility is forced. The one technique that infers *ghost regions*
-   * (a region with no clued cell). Upstream `learn_bitmap_deductions`. */
+   * (a region with no clued cell). Upstream `learn_bitmap_deductions`.
+   *
+   * Not monotone. A number comes back as a candidate wherever an unfinished
+   * region of it could reach, and reach is measured from each connected piece
+   * by that piece's own size. A square filled away from the rest of its
+   * region is a piece of one, so it reaches further than the region it
+   * belongs to, and a board with more correct squares can force fewer. */
   private learnBitmapDeductions(): boolean {
     const { w, h, board, dsf, sz } = this;
     const bm = new Int32Array(sz);
@@ -509,20 +521,73 @@ export function solveFilling(
   return { solved: s.nempty === 0, board: s.board };
 }
 
-/** Deduce a hint plan from `board` (the player's current marks): an ordered
- * list of forced *groups* that drives the board to its unique solution. Each
- * step prefers the grouped region-growth deduction (a region and all the empty
- * squares it can't complete without); when no region has a forced cell, it
- * falls back to a single cell forced by the lonely / candidate-elimination
- * (or only-one-growth) rules. A correct partial is a superset of the clues,
- * from which the deductions still complete the board. */
+/** One fill of a recorded solver run: the cell, its number, the technique
+ * that forced it and that technique's evidence on the board it ran on. */
+interface RecordedFill {
+  cell: number;
+  value: number;
+  kind: RecorderKind;
+  evidence: number[];
+}
+
+/** Every fill the four-technique solver makes from `board`, in order. */
+function recordFills(board: ArrayLike<number>, w: number, h: number): RecordedFill[] {
+  const fills: RecordedFill[] = [];
+  const s = new FillingSolver(board, w, h, (cell, value, kind, evidence) => {
+    fills.push({ cell, value, kind, evidence });
+  });
+  s.run();
+  return fills;
+}
+
+/** The hint step a recorded fill is when shown on `board`, a correct superset
+ * of the board the fill was recorded on: the region it names and the
+ * neighbors that pin it are read again from `board`. */
+function stepOf(
+  fill: RecordedFill,
+  board: ArrayLike<number>,
+  w: number,
+  h: number,
+): FillingHintMove {
+  const { cell, value, kind } = fill;
+  const reason: FillingHintReason =
+    kind === "lonely"
+      ? { kind: "lonely" }
+      : kind === "bitmap"
+        ? { kind: "bitmap", n: value }
+        : kind === "blocked"
+          ? { kind: "blocked", n: value }
+          : { kind: "growth", n: value, exact: false };
+  const on = new FillingSolver(board, w, h);
+  const area =
+    kind === "lonely" || kind === "bitmap"
+      ? on.filledNeighbors(cell)
+      : on.regionOf(fill.evidence[0]);
+  return { cells: [cell], value, area: area.filter((c) => c !== cell), reason };
+}
+
+/** Deduce a hint plan from `board` (the player's current marks, a correct
+ * superset of `clues`): an ordered list of forced *groups* that drives the
+ * board to its unique solution. Each step prefers the grouped region-growth
+ * deduction (a region and all the empty squares it can't complete without);
+ * when no region has a forced cell, it falls back to a single cell forced by
+ * the lonely / candidate-elimination (or only-one-growth) rules.
+ *
+ * Those rules can stall on a board the clues solve, because candidate
+ * elimination is not monotone (`learnBitmapDeductions`). The plan then takes
+ * the next square the solver fills from the clues alone. Everything that
+ * deduction stood on is still on the board, so it is as true there, and the
+ * solver's run from the clues reaches every square of a board that loaded:
+ * the plan finishes every mistake-free position of one. */
 export function deduceHintPlan(
   board: ArrayLike<number>,
+  clues: ArrayLike<number>,
   w: number,
   h: number,
 ): FillingHintMove[] {
   const plan: FillingHintMove[] = [];
   const working = Int32Array.from(board);
+  let fromClues: RecordedFill[] | null = null;
   const limit = w * h + 5; // each step fills ≥1 cell, so this never trips
   for (let guard = 0; guard < limit; guard++) {
     if (!working.includes(0)) break; // solved
@@ -538,42 +603,14 @@ export function deduceHintPlan(
       for (const c of group.cells) working[c] = group.value;
       continue;
     }
-    const single = firstSolverMove(working, w, h);
-    if (!single) break; // stuck (only on an inconsistent board; hint refuses first)
-    plan.push(single);
-    for (const c of single.cells) working[c] = single.value;
+    let fill = recordFills(working, w, h).at(0);
+    if (fill === undefined) {
+      fromClues ??= recordFills(clues, w, h);
+      fill = fromClues.find((f) => working[f.cell] === 0);
+    }
+    if (fill === undefined) break; // the clues do not finish the board either
+    plan.push(stepOf(fill, working, w, h));
+    working[fill.cell] = fill.value;
   }
   return plan;
-}
-
-/** The first cell the four-technique solver forces from `board`, with the
- * reason that forces it — the fallback for cells no region-growth group
- * covers (lonely / bitmap, plus the rare only-one-growth case the flood-based
- * capacity check misses). Runs the solver to completion but keeps only the
- * first recorded fill. */
-function firstSolverMove(
-  board: ArrayLike<number>,
-  w: number,
-  h: number,
-): FillingHintMove | null {
-  let result: FillingHintMove | null = null;
-  const s = new FillingSolver(board, w, h, (cell, value, kind, evidence) => {
-    if (result) return; // keep only the first fill
-    const reason: FillingHintReason =
-      kind === "lonely"
-        ? { kind: "lonely" }
-        : kind === "bitmap"
-          ? { kind: "bitmap", n: value }
-          : kind === "blocked"
-            ? { kind: "blocked", n: value }
-            : { kind: "growth", n: value, exact: false };
-    result = {
-      cells: [cell],
-      value,
-      area: evidence.filter((c) => c !== cell),
-      reason,
-    };
-  });
-  s.run();
-  return result;
 }

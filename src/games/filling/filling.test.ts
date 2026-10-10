@@ -8,10 +8,12 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_NOT_DEDUCIBLE,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  loadVerdict,
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
@@ -94,6 +96,15 @@ describe("filling desc codec", () => {
 
   it("refuses a 0 clue, which would spell a blank a second way", () => {
     expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1a0")).toBe(DESC_OUT_OF_RANGE);
+  });
+
+  it("refuses a board with every square clued that is not an answer", () => {
+    // Nothing is empty, so the solver has nothing to do and calls it solved;
+    // the board the hint ends on is what says it is not.
+    expect(solveFilling([2, 2, 2], 3, 1).solved).toBe(true);
+    expect(loadVerdict(fillingGame, { w: 3, h: 1 }, "222")).toBe(DESC_NOT_DEDUCIBLE);
+    expect(loadVerdict(fillingGame, { w: 2, h: 1 }, "12")).toBe(DESC_NOT_DEDUCIBLE);
+    expect(loadVerdict(fillingGame, { w: 3, h: 1 }, "122")).toBeNull();
   });
 });
 
@@ -253,8 +264,8 @@ describe("filling render scenario", () => {
   });
 
   it("frames the board as heavily as it borders two regions, and no heavier", () => {
-    const { recording, size } = renderScenario({ game: fillingGame, id: "2x1:12" });
-    // The ink along one row of pixels through both cells: the frame's left
+    const { recording, size } = renderScenario({ game: fillingGame, id: "3x1:122" });
+    // The ink along one row of pixels through the cells: the frame's left
     // side, the border between the two regions, the frame's right side.
     const y = size.h >> 1;
     const row = new Int32Array(size.w).fill(-1);
@@ -273,13 +284,21 @@ describe("filling render scenario", () => {
   });
 
   it("shades a completed region and an overfull region", () => {
-    // 3x1, all clues: "1 2 2" is complete (CORRECT_BG); "2 2 2" is overfull.
+    // 3x1: "1 2 2", all clues, is complete (CORRECT_BG). "2 . ." is answered
+    // by "2 2 1", so a 2 in its last square makes "2 2 2", which is overfull.
     const correct = renderScenario({ game: fillingGame, id: "3x1:122" });
     expect(
       correct.recording.ops.some((o) => o.op === "rect" && o.color === COL_CORRECT),
     ).toBe(true);
 
-    const overfull = renderScenario({ game: fillingGame, id: "3x1:222" });
+    const overfull = renderScenario({
+      game: fillingGame,
+      id: "3x1:2b",
+      moves: [
+        { type: "set", cells: [1], value: 2 },
+        { type: "set", cells: [2], value: 2 },
+      ],
+    });
     expect(
       overfull.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
     ).toBe(true);

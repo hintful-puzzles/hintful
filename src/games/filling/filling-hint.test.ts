@@ -4,15 +4,16 @@
  * See docs/games/hints.md.
  */
 import { describe, expect, it } from "vitest";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type FillingHint, fillingGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
-import { deduceHintPlan, solveFilling } from "./solver.ts";
+import { deduceHintPlan, type FillingHintMove, solveFilling } from "./solver.ts";
 import { decodeParams, executeMove, type FillingState, newState } from "./state.ts";
 
 function fromSeed(params: string, seed: string): FillingState {
@@ -28,7 +29,7 @@ describe("deduceHintPlan", () => {
     // "1a2" = clue 1, empty, clue 2. The 2-region (one cell) can only complete
     // through the middle cell — an exact, single-square growth deduction.
     const st = newState({ w: 3, h: 1 }, "1a2");
-    const plan = deduceHintPlan(st.board, 3, 1);
+    const plan = deduceHintPlan(st.board, st.clues, 3, 1);
     expect(plan.length).toBe(1);
     expect(plan[0].cells).toEqual([1]);
     expect(plan[0].value).toBe(2);
@@ -40,7 +41,7 @@ describe("deduceHintPlan", () => {
     // A 4-region (one clue) in a 4x1 strip can only run rightward: the three
     // empty cells are all forced together → one exact multi-square growth step.
     const st = newState({ w: 4, h: 1 }, "4c");
-    const plan = deduceHintPlan(st.board, 4, 1);
+    const plan = deduceHintPlan(st.board, st.clues, 4, 1);
     expect(plan.length).toBe(1);
     expect([...plan[0].cells].sort((a, b) => a - b)).toEqual([1, 2, 3]);
     expect(plan[0].reason).toEqual({ kind: "growth", n: 4, exact: true });
@@ -50,7 +51,8 @@ describe("deduceHintPlan", () => {
     const kinds = new Set<string>();
     for (let s = 0; s < 24; s++) {
       const st = fromSeed("9x7", `filling-kinds-${s}`);
-      for (const m of deduceHintPlan(st.board, st.w, st.h)) kinds.add(m.reason.kind);
+      for (const m of deduceHintPlan(st.board, st.clues, st.w, st.h))
+        kinds.add(m.reason.kind);
     }
     for (const k of kinds) {
       expect(["growth", "blocked", "lonely", "bitmap"]).toContain(k);
@@ -64,7 +66,7 @@ describe("deduceHintPlan", () => {
     // step may reason non-locally — relaxed. No step shades a target cell.
     for (const seed of SEEDS) {
       const st = fromSeed("9x7", seed);
-      const plan = deduceHintPlan(st.board, st.w, st.h);
+      const plan = deduceHintPlan(st.board, st.clues, st.w, st.h);
       expect(plan.length).toBeGreaterThan(0);
       for (const m of plan) {
         for (const c of m.cells) expect(m.area).not.toContain(c);
@@ -73,6 +75,76 @@ describe("deduceHintPlan", () => {
         }
       }
     }
+  });
+});
+
+/**
+ * Candidate elimination is not monotone, so the rules can stall on a board
+ * with more correct squares than the clues, and the plan then keeps what the
+ * solver deduced from the clues alone. These two dealt boards are ones whose
+ * plan needs that from the opening: the hint places a square of a region away
+ * from the rest of it, and an elimination the clues gave is gone.
+ */
+describe("a board the rules stall on once more of it is filled", () => {
+  const STALLING = [
+    "7x9:a24h8e45552a5255a4d8a2a4d1b544d53a444553b",
+    "9x13:3d6c2b84664d8a6a8838b9a48b9g6a49a77b6b777c3c244d4b473d1a4a8c77a7c4c38c5c52b2",
+  ];
+
+  function fromId(id: string): FillingState {
+    const [params, desc] = id.split(":");
+    return newState(decodeParams(params), desc);
+  }
+
+  /** The board `plan` leaves when played on `board`. */
+  function played(board: ArrayLike<number>, plan: FillingHintMove[]): Int32Array {
+    const out = Int32Array.from(board);
+    for (const m of plan) for (const c of m.cells) out[c] = m.value;
+    return out;
+  }
+
+  for (const id of STALLING) {
+    it(`${id.split(":")[0]}: the plan finishes it, and would not from the board alone`, () => {
+      const st = fromId(id);
+      const { solved, board: answer } = solveFilling(st.clues, st.w, st.h);
+      expect(solved).toBe(true);
+      expect(hintAndSolveFinish(fillingGame, st)).toBe(true);
+
+      const plan = deduceHintPlan(st.board, st.clues, st.w, st.h);
+      expect([...played(st.board, plan)]).toEqual([...answer]);
+      // With no run from the clues to keep, the same plan stops short, so
+      // these boards do reach the kept deduction.
+      const alone = deduceHintPlan(st.board, new Int32Array(st.w * st.h), st.w, st.h);
+      expect(alone.length).toBeLessThan(plan.length);
+      expect(played(st.board, alone)).toContain(0);
+      // The kept step is narrated on the board it is shown on: its evidence
+      // is that board's filled neighbors.
+      const kept = plan[alone.length];
+      expect(kept.reason.kind).toBe("bitmap");
+      const before = played(st.board, plan.slice(0, alone.length));
+      expect(kept.area.length).toBeGreaterThan(0);
+      for (const c of kept.area) expect(before[c]).not.toBe(0);
+    });
+  }
+
+  it("finishes from a player's positions, any share of the answer filled in", () => {
+    let positions = 0;
+    for (const id of STALLING) {
+      const st = fromId(id);
+      const answer = solveFilling(st.clues, st.w, st.h).board;
+      const rng = randomNew(`filling-partial-${id}`);
+      for (let round = 0; round < 40; round++) {
+        const board = Int32Array.from(st.clues);
+        const share = 10 + randomUpto(rng, 80);
+        for (let i = 0; i < board.length; i++) {
+          if (board[i] === 0 && randomUpto(rng, 100) < share) board[i] = answer[i];
+        }
+        const plan = deduceHintPlan(board, st.clues, st.w, st.h);
+        expect([...played(board, plan)]).toEqual([...answer]);
+        positions++;
+      }
+    }
+    expect(positions).toBe(80);
   });
 });
 

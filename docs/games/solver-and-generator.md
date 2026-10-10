@@ -403,9 +403,9 @@ cheaper, as Range does from its three rules.
 **Before a game takes it, deal thousands of boards and ask it of each.** It
 refuses a board the hint cannot finish, so a generator that asks only the
 solver will have dealt boards it refuses, and a player may hold one. Filling
-is the case: its solver finishes one dealt board in about 480 that its hint
-does not, which 762 boards did not show and 6,688 did, so its answer is its
-solver alone until `close-the-solver-hint-gap-in-filling`. Where nothing is deduced (a
+was the case: its solver finished one dealt board in about 480 that its hint
+did not, which 762 boards did not show and 6,688 did, and it took the shared
+test only once its hint kept the solver's run (below). Where nothing is deduced (a
 sliding puzzle, a search, a guessing game), `nothingToDeduce`.
 `untiered-load.test.ts` holds that last answer to the game's code: it is given
 exactly by the games whose hint cannot end in `DEDUCTION_EXHAUSTED`.
@@ -441,6 +441,26 @@ where it stalled, whether it still holds what the solver just dropped: the
 first disagreement is the missing deduction. And a first sample of 1,510 Net
 boards read as a clean zero while one board in about 700 still stalled, which
 only 22,600 showed ([`method.md`](../method.md), on a census that finds zero).
+
+**Where the solver's own rule is what stops firing, the hint keeps the
+solver's run from the clues.** Filling's hint replans from the board at every
+step, and its candidate elimination is not monotone: a square filled away from
+the rest of its region reads as a region of one with a long reach, and brings
+its number back as a candidate where the clues alone had ruled it out. The
+trace is the same one turned round: log every fill the solver makes from the
+clues, and take the first that the solver, restarted from the stalled board,
+no longer makes. No rule was missing, so there was none to add, and the
+technique cannot be made monotone without knowing which region a lone square
+belongs to. So when replanning finds nothing, the plan takes the next fill of
+the run from the clues whose square is still empty
+(`deduceHintPlan` in [`filling/solver.ts`](../../src/games/filling/solver.ts)).
+Every fill before it is on the board, so the board is a correct superset of
+the one it was deduced on and the step is as true there; its evidence is read
+again from the board it is shown on. That is a guarantee and not a census: the
+run from the clues fills every square, so the plan finishes every mistake-free
+position, the player's own included, and the generator can go on asking the
+solver alone. Reach for it only where the stalled step is the solver's own
+deduction. A rule the hint never had is still a missing rung.
 
 ### Check, Tactic, Search
 

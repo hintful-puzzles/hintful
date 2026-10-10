@@ -18,6 +18,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { coord, fromCoord } from "../../engine/geometry.ts";
+import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
 import { drag, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   DEDUCTION_EXHAUSTED,
@@ -257,7 +258,7 @@ function narrate(
 }
 
 function hint(state: FillingState): HintResult<FillingMove, FillingHint, FillingRung> {
-  const plan = deduceHintPlan(state.board, state.w, state.h);
+  const plan = deduceHintPlan(state.board, state.clues, state.w, state.h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const w = state.w;
   const steps: HintStep<FillingMove, FillingHint, FillingRung>[] = plan.map((m) => {
@@ -363,10 +364,7 @@ export const fillingGame: Game<
 
   interpretMove,
   executeMove,
-  // The solver alone, and not the hint as well: about one dealt board in 480
-  // is one the solver finishes from its clues and the hint's replanning does
-  // not, and a board a player holds has to keep opening.
-  finishesByDeduction: (s) => solveFilling(s.clues, s.w, s.h).solved,
+  finishesByDeduction: (s) => hintAndSolveFinish(fillingGame, s),
   status,
 
   solve,
