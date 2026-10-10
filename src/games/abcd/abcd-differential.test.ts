@@ -12,6 +12,7 @@
  * build this repo does not have — see `engine/testing/differential.ts`.
  */
 
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/abcd-c-reference.json" with { type: "json" };
@@ -42,6 +43,8 @@ describeDescDifferential<Fixture, AbcdParams>({
     n: f.n,
     diag: f.diag,
     removenums: f.removenums,
+    // Upstream deals only what is Easy here.
+    diff: DIFF_EASY,
   }),
   newDesc: newAbcdDesc,
   // The generated desc must also pass the port's own validator.

@@ -54,6 +54,13 @@ work, but they are likely to change in a future update, and might be removed.
   reaches on its own, so somewhere you have to try a square. The original's
   boards are this app's *Easy* ones.
 
+* **ABCD**: there is a difficulty, *Easy* or *Unreasonable*, which the
+  original does not have. An Unreasonable board has one solution that the
+  numbers do not lead to step by step, so somewhere you have to try a letter.
+  The original's boards are this app's *Easy* ones, and what it calls *Hard*,
+  a board with some of its numbers hidden, is named *clues hidden* here and
+  can be had at either difficulty.
+
 Earlier changes to individual puzzles have since been accepted into the
 original collection, so they are no longer differences.
 

@@ -1,18 +1,21 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`encoded params are byte-stable > abcd 1`] = `
-"default  full=5x5n4
-preset:ABCD/4x4 Easy, 4 letters  full=4x4n4
-preset:ABCD/4x4 Hard, 4 letters  full=4x4n4R  brief=4x4n4
-preset:ABCD/5x5 Hard, 4 letters  full=5x5n4R  brief=5x5n4
-preset:ABCD/6x6 Easy, 4 letters  full=6x6n4
-preset:ABCD/6x6 Easy, 5 letters, no diagonal  full=6x6n5D
-preset:ABCD/7x7 Easy, 3 letters  full=7x7n3
-preset:ABCD/7x7 Easy, 4 letters  full=7x7n4
-bump:w  full=6x5n4
-bump:h  full=5x6n4
-bump:n  full=5x5n5
-flip:diag  full=5x5n4D"
+"default  full=5x5n4de  brief=5x5n4
+preset:ABCD/4x4 Easy, 4 letters  full=4x4n4de  brief=4x4n4
+preset:ABCD/4x4 Unreasonable, 4 letters  full=4x4n4du  brief=4x4n4
+preset:ABCD/5x5 Unreasonable, 4 letters  full=5x5n4du  brief=5x5n4
+preset:ABCD/6x6 Easy, 4 letters  full=6x6n4de  brief=6x6n4
+preset:ABCD/6x6 Unreasonable, 4 letters  full=6x6n4du  brief=6x6n4
+preset:ABCD/7x7 Easy, 4 letters  full=7x7n4de  brief=7x7n4
+preset:ABCD/7x7 Unreasonable, 4 letters  full=7x7n4du  brief=7x7n4
+preset:ABCD/5x5 Easy, 4 letters, clues hidden  full=5x5n4Rde  brief=5x5n4
+preset:ABCD/6x6 Easy, 5 letters, no diagonal  full=6x6n5Dde  brief=6x6n5D
+preset:ABCD/7x7 Easy, 3 letters  full=7x7n3de  brief=7x7n3
+bump:w  full=6x5n4de  brief=6x5n4
+bump:h  full=5x6n4de  brief=5x6n4
+bump:n  full=5x5n5de  brief=5x5n5
+flip:diag  full=5x5n4Dde  brief=5x5n4D"
 `;
 
 exports[`encoded params are byte-stable > ascent 1`] = `

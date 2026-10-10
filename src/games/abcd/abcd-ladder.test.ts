@@ -15,19 +15,21 @@
  *
  * ABCD is untiered, so there is one cap.
  */
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newAbcdDesc } from "./generator.ts";
 import { newSolverBoard, type SolverBoard, solveBoard } from "./solver.ts";
-import { type AbcdParams, abcdPresets, newState } from "./state.ts";
+import { type AbcdParams, EASY_PRESETS, newState } from "./state.ts";
 
-/** Every preset, plus the diagonal board with its clues hidden and a thin
- * board: hidden clues are what make the runs technique work for its living,
- * and diagonal mode rules out more per placement. */
+/** Every shape on the menu, plus the diagonal board with its clues hidden and
+ * a thin board: hidden clues are what make the runs technique work for its
+ * living, and diagonal mode rules out more per placement. All Easy, since an
+ * Easy board is the one the ladder finishes. */
 const SHAPES: AbcdParams[] = [
-  ...abcdPresets,
-  { w: 6, h: 6, n: 5, diag: true, removenums: true },
-  { w: 3, h: 9, n: 3, diag: false, removenums: true },
+  ...EASY_PRESETS,
+  { w: 6, h: 6, n: 5, diag: true, removenums: true, diff: DIFF_EASY },
+  { w: 3, h: 9, n: 3, diag: false, removenums: true, diff: DIFF_EASY },
 ];
 
 const SEEDS = ["lad-a", "lad-b", "lad-c"];

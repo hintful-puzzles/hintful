@@ -15,6 +15,8 @@
   the full encoding gains `de` and the snapshot's diff shows only that.
   **Pattern: done.** Every recorded line gained `de`, its old string is now
   the shared form, and the only new lines are the Unreasonable presets.
+  **ABCD: done.** Every line gained `de` after what it had (`5x5n4R` is now
+  `5x5n4Rde`), and the menu's lines moved with the menu (task 3.2).
 
 ## 2. One game to the end: Pattern
 
@@ -69,6 +71,25 @@
   `finishesByDeduction`). Run `src/engine` and the tests at the top of `src/`
   before the gated commit; Pattern's first commit failed the gate on the
   second.
+  - [x] **ABCD** (2026-10-10). Measured: a fill is stuck with one answer once
+    in 11 to 27 at the presets, the search tries a median of 3 to 13
+    positions, and the ladder places about 3 letters of 16 (7 of 49) before
+    it stops, so the hint does little until the first trial. Decided, each
+    with its reason in the guide's "What ABCD, the second, added":
+    - "Remove clues" stays an option beside the tier and is labeled "clues
+      hidden"; it was "Hard" against "Easy". The menu is four sizes at both
+      tiers and one board each for hidden clues, the diagonal rule and three
+      letters, so it no longer lists 4x4 with clues hidden.
+    - Hiding clues at Unreasonable asks the search within 30 positions.
+    - Unreasonable has its own size bound, and is refused with every clue
+      showing on a board of up to nine squares (proved) and on one two wide
+      under the diagonal rule (none in 240,000 fills).
+    - For the owner to look at, none of it blocking: whether an Unreasonable
+      board with clues hidden is wanted as hard as 30 positions makes it. The
+      ladder places nothing on most of them, so the hint's first answer is
+      that nothing follows.
+  - [ ] Crossing, Filling, Mosaic, Palisade, Separate, Signpost, Sticks, Net,
+    Range, Rectangles.
 
 ## 4. Close
 

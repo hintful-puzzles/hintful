@@ -8,6 +8,7 @@
  * not repeated here.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -31,17 +32,18 @@ import {
   type AbcdMove,
   type AbcdParams,
   type AbcdState,
-  abcdPresets,
+  EASY_PRESETS,
   letterBit,
 } from "./state.ts";
 
 type Step = HintStep<AbcdMove, AbcdHint, AbcdRung>;
 
-/** Every preset, plus diagonal mode and a thin board. */
+/** Every shape on the menu, plus diagonal mode and a thin board, all Easy:
+ * the boards the hint finishes. */
 const SHAPES: AbcdParams[] = [
-  ...abcdPresets,
-  { w: 6, h: 6, n: 5, diag: true, removenums: true },
-  { w: 3, h: 9, n: 3, diag: false, removenums: true },
+  ...EASY_PRESETS,
+  { w: 6, h: 6, n: 5, diag: true, removenums: true, diff: DIFF_EASY },
+  { w: 3, h: 9, n: 3, diag: false, removenums: true, diff: DIFF_EASY },
 ];
 
 const SEEDS = ["ah-a", "ah-b"];
@@ -95,7 +97,14 @@ const readsCount = (step: Step): boolean =>
  * populated and the diagonal ones implicitly, since `note` and `regionsFull`
  * are spoken only of a cell with no notes. The second line of play opens with
  * a letter written on the bare board, which is what `clean` clears after. */
-const RUNS_PARAMS: AbcdParams = { w: 5, h: 5, n: 4, diag: false, removenums: true };
+const RUNS_PARAMS: AbcdParams = {
+  w: 5,
+  h: 5,
+  n: 4,
+  diag: false,
+  removenums: true,
+  diff: DIFF_EASY,
+};
 const pinned = describeHintPins({
   game: abcdGame,
   params: [RUNS_PARAMS, { ...RUNS_PARAMS, diag: true }],

@@ -75,7 +75,6 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
    * entry per game that does not answer `nothingToDeduce`, held to that set.
    */
   const NOT_FINISHED: Record<string, string> = {
-    abcd: "4x4n4:1,2,2,0,1,1,1,1,2,0,1,1,0,1,1,2,1,1,2,0,0,1,1,2,1,1,1,1,1,1,1,1,",
     crossing: "5x5:3a2b6a1a1a1a4,13,29,69,88,735,973,1388,3993,7832",
     filling: "7x9:a4ga99a447c5a6774a5d55d4b4f83g3284a4a",
     mines: "8x8n10:4,4,u02800402a20040a0",

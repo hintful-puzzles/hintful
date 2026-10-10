@@ -9,6 +9,7 @@
  * flags any entry contradicting the unique solution.
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import { adaptiveMarkAll, candidateHint } from "../../engine/candidate-hint.ts";
 import {
@@ -18,14 +19,12 @@ import {
 } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { markAllNow } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
@@ -47,7 +46,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
 import {
@@ -70,13 +68,12 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { type AbcdMark, abcdObviousMarks, solveAbcd } from "./solver.ts";
+import { type AbcdMark, abcdObviousMarks, answerOf, solveAbcd } from "./solver.ts";
 import {
   type AbcdMove,
   type AbcdParams,
   type AbcdState,
   type AbcdUi,
-  abcdPresets,
   cloneState,
   decodeParams,
   defaultParams,
@@ -87,6 +84,7 @@ import {
   newState,
   newUi,
   paramConfig,
+  presets,
   status,
   textFormat,
   validateParams,
@@ -98,10 +96,6 @@ export type AbcdMistake = Point & { kind: EntryMistakeKind };
 
 const KEY_M = 77;
 const KEY_m = 109;
-
-function presets(): PresetMenu<AbcdParams> {
-  return { title: "ABCD", submenu: abcdPresets.map((p) => ({ params: p })) };
-}
 
 function inGrid(p: AbcdParams, x: number, y: number): boolean {
   return x >= 0 && x < p.w && y >= 0 && y < p.h;
@@ -278,27 +272,33 @@ function changedState(ui: AbcdUi, oldSt: AbcdState | null, newSt: AbcdState): vo
 }
 
 function solve(orig: AbcdState): SolveResult<AbcdMove> {
-  const res = solveAbcd(orig.params, orig.numbers);
-  if (res.status === "contradiction") return { ok: false, error: NO_SOLUTION };
-  // The ladder stopped short, which is not a second answer found.
-  if (res.status === "ambiguous") return { ok: false, error: PUZZLE_NOT_REASONABLE };
   // The move carries letter indices, as the saves that replay it always have.
-  return {
-    ok: true,
-    move: { type: "solve", grid: Array.from(res.grid, (v) => v - 1) },
-  };
+  return solveFromAnswer(answerOf(orig), (grid) => ({
+    type: "solve",
+    grid: Array.from(grid, (v) => v - 1),
+  }));
 }
+
+/** Easy is what the three techniques finish and the hint, which walks the
+ * same techniques from the player's marks, finishes too. */
+const difficulty = searchTierContract<AbcdParams, AbcdState>({
+  newState,
+  deductionFinishes: (state) =>
+    solveAbcd(state.params, state.numbers).status === "solved" &&
+    hintFinishes(abcdGame, state),
+  answerOf,
+});
 
 /** Entries that contradict the unique solution, and empty cells whose notes
  * have crossed out their answer. The notes count because the hint reasons
  * from them (`hint.ts`), which is sound only while each still holds its cell's
  * answer; notes with merely extra letters are ordinary mid-solve state. */
 function findMistakes(state: AbcdState): readonly AbcdMistake[] {
-  const res = solveAbcd(state.params, state.numbers);
-  if (res.status !== "solved") return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
   return entryMistakes(
     {
-      answer: res.grid,
+      answer: answer.solution,
       entry: state.grid,
       notes: state.pencil,
       empty: EMPTY,
@@ -345,10 +345,10 @@ export const abcdGame: Game<
 
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(abcdGame, s),
   status,
 
   solve,
+  difficulty,
   findMistakes,
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   hintRungs: ABCD_RUNGS,

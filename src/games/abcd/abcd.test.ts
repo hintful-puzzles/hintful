@@ -10,8 +10,9 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
-  DESC_NOT_DEDUCIBLE,
+  DESC_NOT_UNIQUE,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -42,7 +43,6 @@ import {
   type AbcdParams,
   type AbcdState,
   type AbcdUi,
-  abcdPresets,
   decodeParams,
   EMPTY,
   encodeParams,
@@ -59,7 +59,8 @@ const P = (
   n: number,
   diag = false,
   removenums = false,
-): AbcdParams => ({ w, h, n, diag, removenums });
+  diff = DIFF_EASY,
+): AbcdParams => ({ w, h, n, diag, removenums, diff });
 
 const refusal = (p: AbcdParams, full: boolean) => paramsError(abcdGame, p, full);
 
@@ -92,10 +93,19 @@ describe("abcd params codec", () => {
     }
   });
 
-  it("omits removenums (R) from the non-full encoding, keeps diag (D)", () => {
+  it("omits removenums (R) and the tier from the non-full encoding, keeps diag (D)", () => {
     const p = P(5, 5, 5, true, true);
-    expect(encodeParams(p, true)).toBe("5x5n5DR");
+    expect(encodeParams(p, true)).toBe("5x5n5DRde");
     expect(encodeParams(p, false)).toBe("5x5n5D");
+    const hard = P(5, 5, 5, true, true, DIFF_UNREASONABLE);
+    expect(encodeParams(hard, true)).toBe("5x5n5DRdu");
+    expect(decodeParams("5x5n5DRdu")).toEqual(hard);
+    expect(encodeParams(hard, false)).toBe("5x5n5D");
+  });
+
+  it("reads an ID written before the game had tiers as Easy", () => {
+    expect(decodeParams("5x5n5DR")).toEqual(P(5, 5, 5, true, true));
+    expect(decodeParams("4x4n4")).toEqual(P(4, 4, 4));
   });
 
   it("defaults height to width and letters to the default when omitted", () => {
@@ -117,12 +127,15 @@ describe("abcd params codec", () => {
     expect(refusal(P(5, 5, 5, true), true)).toBeNull();
   });
 
-  it("labels the clue setting as a kind and diagonal touching only when off", () => {
+  it("labels the tier, hidden clues only when on and diagonal touching only when off", () => {
     expect(describeParams(abcdGame, P(4, 4, 4, false, true))).toBe(
-      "4x4 Hard, 4 letters",
+      "4x4 Easy, 4 letters, clues hidden",
     );
     expect(describeParams(abcdGame, P(6, 6, 5, true))).toBe(
       "6x6 Easy, 5 letters, no diagonal",
+    );
+    expect(describeParams(abcdGame, P(6, 6, 5, true, true, DIFF_UNREASONABLE))).toBe(
+      "6x6 Unreasonable, 5 letters, clues hidden, no diagonal",
     );
   });
 });
@@ -134,8 +147,11 @@ describe("abcd generable-size bound", () => {
   it("accepts every shipped preset", () => {
     // The bound must never bar a board the game itself offers. Tightening it
     // without this test is how a preset silently stops working.
-    for (const p of abcdPresets) {
-      expect(refusal(p, true), `${p.w}x${p.h} n${p.n}`).toBeNull();
+    const menu = abcdGame.presets().submenu ?? [];
+    expect(menu.length).toBeGreaterThanOrEqual(11);
+    for (const { params: p } of menu) {
+      if (!p) throw new Error("ABCD's menu has no submenus");
+      expect(refusal(p, true), encodeParams(p, true)).toBeNull();
     }
   });
 
@@ -193,10 +209,10 @@ describe("abcd generable-size bound", () => {
     expect(refusal(p, false)).toBeNull();
 
     // The bound lets the ID through to the board's own verdict. This board,
-    // hand-built from repeated clues, is one the solver's ladder stops short
-    // on, so the solver refuses it rather than the bound.
+    // hand-built from repeated clues, has many answers, so the search refuses
+    // it rather than the bound.
     const m = new Midend(abcdGame);
-    expect(m.newGameFromId(`10x10n4:${desc}`)).toBe(DESC_NOT_DEDUCIBLE);
+    expect(m.newGameFromId(`10x10n4:${desc}`)).toBe(DESC_NOT_UNIQUE);
   });
 });
 

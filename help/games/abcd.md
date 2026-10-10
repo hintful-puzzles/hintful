@@ -35,6 +35,11 @@ More information: https://www.janko.at/Raetsel/Abc-Kombi/index.htm
 
 Most steps are the plain rules at work: a cell with only one pencil mark left, a letter crossed out beside the same letter, or a row that already holds as many of a letter as its number says. One idea goes further. Since no two of the same letter may touch, a stretch of empty cells can hold at most every other cell's worth: 3 in a stretch of 5, 1 in a stretch of 2. When the stretches of a row that can take a letter hold at most exactly as many as the row still needs, every stretch must be full, and a full stretch of odd length has only one shape: that letter in its first cell, its last, and every other cell between.
 
+On an Unreasonable board there comes a point where none of these settles
+another cell, and the hint says that nothing further follows by deduction
+instead of choosing for you. On some boards that is the very first step.
+Save your position, try a letter, and it carries on from whatever you enter.
+
 ## ABCD parameters
 
 {{parameters}}

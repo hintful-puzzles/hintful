@@ -28,8 +28,18 @@
  * diagonal adjacency). That weaker solver is the difficulty curve it shipped,
  * not a defect to fix, and it still generates valid diag puzzles because
  * {@link placeLetter} rules out diagonal neighbors.
+ *
+ * Beneath the ladder, a search by trial and error over it
+ * ({@link searchAnswers}) counts a clue set's answers. It is what an
+ * Unreasonable board is dealt by, and what Solve and the mistake check know
+ * the answer from at either tier. The hint never runs it.
  */
 
+import {
+  type Answer,
+  answerCache,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
 import {
   type DeductionTechnique,
   type FiringTally,
@@ -379,4 +389,92 @@ export function solveBoard(
 /** Run the deductive solver on `numbers` from a blank board. */
 export function solveAbcd(p: AbcdParams, numbers: Int32Array): AbcdSolveResult {
   return solveBoard(newSolverBoard(p, numbers), numbers);
+}
+
+/** What a search established about a clue set's answers; the one answer is
+ * its grid, letter `i` as `i + 1`. */
+export type AbcdAnswer = Answer<Int8Array>;
+
+/**
+ * The positions a search may try before it gives up, each one a letter
+ * assumed in a cell and the ladder run from it.
+ *
+ * It decides which Unreasonable boards exist: a clue set that needs more is
+ * thrown away when dealing and refused when pasted. Lowering it refuses boards
+ * already dealt, which are in saved games. Measured 2026-10-10: a board dealt
+ * at a preset needs a median of 3 to 13 and the hardest of 1,250 needed 265.
+ * At the largest sizes dealt the median is 130 to 400, the hardest seen
+ * needed 1,884, and up to a third of fills run the budget out, at about a
+ * tenth of a second each.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a clue set's answers up to two, by trial and error over the ladder:
+ * where it stops, take the empty cell with the fewest letters left and assume
+ * each in turn.
+ */
+export function searchAnswers(
+  p: AbcdParams,
+  numbers: Int32Array,
+  budget: number = SEARCH_BUDGET,
+): AbcdAnswer {
+  return searchBoard<SolverBoard, Int8Array>({
+    start: newSolverBoard(p, numbers),
+    deduce(b) {
+      const { status } = solveBoard(b, numbers);
+      if (status !== "ambiguous") return status;
+      // The ladder calls a full grid that leaves a count short ambiguous:
+      // nothing breaks a rule yet. With no cell left, nothing will mend it.
+      return b.grid.includes(EMPTY) ? "stuck" : "contradiction";
+    },
+    assume: assumeLetters,
+    solution: (b) => b.grid,
+    budget,
+  });
+}
+
+/** The boards a stuck one divides into: its empty cell with the fewest
+ * candidates, the first such in reading order, holding each of them. */
+function assumeLetters(b: SolverBoard): SolverBoard[] {
+  const { p, grid, cube } = b;
+  const { w, n } = p;
+  const candidates = (i: number): number[] => {
+    const letters: number[] = [];
+    for (let c = 0; c < n; c++) if (cube[i * n + c]) letters.push(c);
+    return letters;
+  };
+  let fewest: number[] | null = null;
+  let at = -1;
+  for (let i = 0; i < grid.length; i++) {
+    if (grid[i] !== EMPTY) continue;
+    const letters = candidates(i);
+    if (fewest === null || letters.length < fewest.length) {
+      fewest = letters;
+      at = i;
+    }
+  }
+  return (fewest ?? []).map((letter) => {
+    const next: SolverBoard = {
+      p,
+      grid: grid.slice(),
+      cube: cube.slice(),
+      remaining: b.remaining.slice(),
+      contradiction: false,
+    };
+    placeLetter(p, next.grid, next.cube, at % w, (at / w) | 0, letter, next.remaining);
+    return next;
+  });
+}
+
+/** Keyed on a state's clues, which every state of a game shares. */
+const answers = answerCache<Int32Array, Int8Array>();
+
+/** What a search of a state's clue set established about its answers. The
+ * player's letters and marks are not read. */
+export function answerOf(state: {
+  params: AbcdParams;
+  numbers: Int32Array;
+}): AbcdAnswer {
+  return answers(state.numbers, () => searchAnswers(state.params, state.numbers));
 }

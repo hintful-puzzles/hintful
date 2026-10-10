@@ -14,16 +14,25 @@
  */
 
 import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/answer-search.ts";
+import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
+import { noSuchTier, tooRareToDeal } from "../../engine/difficulty.ts";
+import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 
 // --- constants -------------------------------------------------------------
 
@@ -67,23 +76,40 @@ export interface AbcdParams {
   /** Generate an incomplete clue set (harder). Generation-time only — absent
    * from a shared game ID (`encodeParams(_, false)`). */
   removenums: boolean;
+  /** `DIFF_EASY`, a board the three techniques finish, or
+   * `DIFF_UNREASONABLE`, one with a single answer that they do not reach.
+   * Generation-time only, as `removenums` is. */
+  diff: number;
 }
 
-export const abcdPresets: AbcdParams[] = [
-  { w: 4, h: 4, n: 4, diag: false, removenums: false },
-  { w: 4, h: 4, n: 4, diag: false, removenums: true },
-  { w: 5, h: 5, n: 4, diag: false, removenums: false },
-  { w: 5, h: 5, n: 4, diag: false, removenums: true },
-  { w: 6, h: 6, n: 4, diag: false, removenums: false },
-  // The one board on the menu under the rule against diagonal touching, which
-  // needs five letters.
-  { w: 6, h: 6, n: 5, diag: true, removenums: false },
-  { w: 7, h: 7, n: 3, diag: false, removenums: false },
-  { w: 7, h: 7, n: 4, diag: false, removenums: false },
+const board = (w: number, n: number, rules: Partial<AbcdParams> = {}): AbcdParams => ({
+  w,
+  h: w,
+  n,
+  diag: false,
+  removenums: false,
+  diff: DIFF_EASY,
+  ...rules,
+});
+
+/** The sizes the menu offers at both tiers. */
+const BOARDS: AbcdParams[] = [board(4, 4), board(5, 4), board(6, 4), board(7, 4)];
+
+/** One board for each thing that is neither a size nor a tier: clues hidden,
+ * the rule against diagonal touching (which needs five letters, so nothing
+ * but a preset reaches it from the menu), and three letters. */
+const VARIANTS: AbcdParams[] = [
+  board(5, 4, { removenums: true }),
+  board(6, 5, { diag: true }),
+  board(7, 3),
 ];
 
+/** Every shape of board on the menu, at Easy: what a census of the three
+ * techniques or of the hint walks. */
+export const EASY_PRESETS: readonly AbcdParams[] = [...BOARDS, ...VARIANTS];
+
 export function defaultParams(): AbcdParams {
-  return { ...abcdPresets[2] };
+  return board(5, 4);
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
@@ -101,12 +127,16 @@ export const paramConfig: ParamConfigItem<AbcdParams>[] = [
     bounds: { min: 3, max: 9 },
     label: { slot: "tail", words: (p) => `${p.n} letters` },
   }),
+  searchTierItem(
+    "diff",
+    "An Easy puzzle can be finished by the rules alone: there is always a number that settles a letter or rules one out. An Unreasonable one has a single solution that the numbers do not lead to step by step, so somewhere you have to try a letter and see what follows, and the Hint button stops where the rules do.",
+  ),
   {
     kw: "remove-clues",
     name: "Remove clues",
     type: "boolean",
-    doc: "When enabled, the difficulty is increased by hiding certain number clues.",
-    label: { slot: "kind", words: (p) => (p.removenums ? "Hard" : "Easy") },
+    doc: "When enabled, some of the number clues are hidden: as many as can go while the puzzle still has one solution at its difficulty. An Easy puzzle stays one the rules alone finish, with less to read them from.",
+    label: { slot: "tail", words: (p) => (p.removenums ? "clues hidden" : null) },
     get: (p) => p.removenums,
     set: (p, v) => {
       p.removenums = v;
@@ -129,13 +159,23 @@ export const paramConfig: ParamConfigItem<AbcdParams>[] = [
   }),
 ];
 
-/** `WxHn<letters>[D][R]`: a missing height is the width, missing digits are 0,
- * and the clue removal is generator-only. */
+export function presets(): PresetMenu<AbcdParams> {
+  return {
+    title: "ABCD",
+    ...presetGrid(paramConfig, BOARDS, { variants: VARIANTS }),
+  };
+}
+
+/** `WxHn<letters>[D][R][d<tier>]`: a missing height is the width, missing
+ * digits are 0, and the clue removal and the tier are generator-only. The tier
+ * comes last and upstream's IDs lack it: without one a board is Easy, the
+ * only kind upstream deals. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   num(paramConfig, "n", "letters"),
   flag(paramConfig, "D", "allow-diagonal-touching", { means: false }),
   flag(paramConfig, "R", "remove-clues", { full: true }),
+  searchTierSegment(paramConfig),
 ]);
 
 /**
@@ -189,6 +229,63 @@ const MAX_GENERABLE_AREA = new Map<number, number>([
 const THIN_SIDE = 6;
 const MAX_THIN_AREA = 160;
 
+/**
+ * The largest area an Unreasonable board is dealt at in about a second, keyed
+ * as {@link MAX_GENERABLE_AREA} is. Its own table, since what bounds it is
+ * different: a fill that the ladder stops short on is common at every size,
+ * and what grows is the cost of the search that tells its one answer from
+ * several, and the share with several. So it is tighter than the Easy bound
+ * for three and four letters and looser nowhere, and a thin board is no
+ * exception to it: with many letters a thin board is the slower one.
+ *
+ * Measured 2026-10-10, mean time for a board with every clue showing, at the
+ * bound | past it. With clues hidden a deal is quicker, 0.6 s at the most.
+ */
+const MAX_UNREASONABLE_AREA = new Map<number, number>([
+  [3 * 2, 100], // 10x10 1.2 s, 3x33 0.9 s  | 10x11 1.5 s, 3x40 none in 12 s
+  [4 * 2, 64], //  8x8 1.0 s, 3x21 0.7 s    | 8x9 2.4 s, 4x20 4.0 s
+  [5 * 2, 56], //  7x8 0.5 s, 5x11 0.4 s    | 8x8 5.0 s
+  [6 * 2, 56], //  7x8 0.7 s, 4x14 0.7 s    | 8x8 3.8 s, 3x20 6.0 s
+  [7 * 2, 56], //  7x8 0.6 s, 2x28 0.8 s
+  [8 * 2, 56], //  7x8 1.0 s
+  [9 * 2, 56], //  7x8 0.7 s, 4x14 1.0 s    | 8x8 3.8 s
+  [5 * 2 + 1, 81], // 9x9 0.4 s             | 9x10 2.0 s, 10x10 4.0 s
+  [6 * 2 + 1, 72], // 8x9 1.5 s, 8x8 0.2 s  | 9x9 6.0 s
+  [7 * 2 + 1, 64], // 8x8 0.9 s             | 8x9 2.4 s
+  [8 * 2 + 1, 64], // 8x8 0.8 s             | 8x9 12 s
+  [9 * 2 + 1, 64], // 8x8 0.7 s             | 8x9 12 s
+]);
+
+/** A thin board under the rule against diagonal touching was timed as far as
+ * this area, where the slowest took 0.2 s (4x14, seven letters). */
+const MAX_THIN_DIAGONAL_AREA = 56;
+
+/** Why no Unreasonable board of these params is dealt, or `null`. */
+function unreasonableRefusal(p: AbcdParams, area: number): string | null {
+  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const short = Math.min(p.w, p.h);
+  if (!p.removenums) {
+    // Every fill of every board of up to nine squares has been tried, at each
+    // number of letters and under both rules: where the ladder stops short, a
+    // second answer fits (`abcd-tier.test.ts` keeps three and four letters).
+    // Hidden clues are what give such a board one answer the ladder misses.
+    if (area <= 9)
+      return noSuchTier(`${p.w}x${p.h} puzzle with every clue showing`, tier);
+    // None came of 240,000 fills at eight lengths from 15 to 28.
+    if (p.diag && short === 2)
+      return tooRareToDeal(
+        "puzzles two squares wide with no diagonal touching and every clue showing",
+        tier,
+      );
+  }
+  const table = MAX_UNREASONABLE_AREA.get(p.n * 2 + (p.diag ? 1 : 0)) ?? 0;
+  const max =
+    p.diag && short < THIN_SIDE ? Math.min(table, MAX_THIN_DIAGONAL_AREA) : table;
+  return area > max
+    ? `${p.n} letters have no ${tier} ABCD puzzle on a board this big; keep the area to ${max} squares at most, or use fewer letters.`
+    : null;
+}
+
 export function validateParams(p: AbcdParams, full: boolean): string | null {
   // Under 5 letters, diagonal mode can't avoid the no-touch rule in practice.
   if (p.n < 5 && p.diag)
@@ -197,6 +294,7 @@ export function validateParams(p: AbcdParams, full: boolean): string | null {
   // than searched for, so a described board outside the bound still opens.
   if (full) {
     const area = p.w * p.h;
+    if (p.diff === DIFF_UNREASONABLE) return unreasonableRefusal(p, area);
     const thin = Math.min(p.w, p.h) < THIN_SIDE;
     const max = thin
       ? MAX_THIN_AREA

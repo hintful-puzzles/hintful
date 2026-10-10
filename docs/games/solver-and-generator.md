@@ -532,6 +532,35 @@ What Pattern taught, each a thing to measure before the next game:
   squares of 100 undecided on a 10x10 and 651 of 900 on a 30x30. Neither is a
   defect, and a player choosing the tier at a size is owed the difference.
 
+What ABCD, the second, added:
+
+- **A step that strips a board runs it to the search's limit, so it takes a
+  budget of its own.** ABCD hides clues while the board keeps one answer.
+  Asked of the search at its full budget, every board came out at the edge of
+  it: a median of 1,728 positions of 2,000 on a 6x6, where a board with every
+  clue showing needs 9. Hiding now asks within 30. Any generator that removes
+  clues, givens or walls "while still unique" has this shape.
+- **An option the game already had is a second axis, and its label must not
+  borrow the tier's words.** ABCD called its hidden clues "Hard" and their
+  absence "Easy". With a tier named Easy that reads "Easy Easy", so the
+  option's label became "clues hidden" in the tail, said only when on.
+- **Where the option removes information, the smallest boards gain the tier
+  they lacked.** No ABCD board of up to nine squares is Unreasonable with
+  every clue showing, and every such size is with clues hidden. A refusal for
+  a size states which.
+- **The tier wants its own size bound, and the Easy bound's exceptions may
+  reverse.** What limits an Easy deal is how seldom the ladder finishes a
+  fill. What limits an Unreasonable one is the search's cost and the share of
+  stuck boards with several answers. ABCD's thin boards are the quick ones at
+  Easy and the slow ones at Unreasonable with many letters.
+- **Running the retry bound out can be an ordinary answer here.** Between the
+  sizes proved empty and the ones that deal at once are sizes nobody has
+  enumerated. Bound the tries so that giving up takes a second or two, in
+  squares filled where a fill's cost grows with the board, and refuse up
+  front any shape measured to give up slowly.
+- **Read the ledger's board before deleting it.** Like Pattern's, ABCD's
+  board in `untiered-load.test.ts` had no answer at all.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung
