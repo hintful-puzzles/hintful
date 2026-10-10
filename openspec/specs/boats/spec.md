@@ -338,13 +338,13 @@ finished, at the second tier.
 The generator SHALL use the solver to guarantee a unique solution at exactly
 the requested difficulty: it SHALL place a random fleet, derive the border
 clues, optionally hide border numbers while the board stays soluble, and reject
-any board not solvable at exactly the target difficulty. Generation from a
-given seed SHALL be reproducible.
+any board not solvable at exactly the target difficulty.
 
-#### Scenario: Generation is reproducible from a seed
+#### Scenario: A board that needs less than its tier is dealt again
 
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
+- **WHEN** a stripped board solves, and the solver needed only a difficulty
+  below the one asked for
+- **THEN** the board is thrown away and another fleet is placed
 
 ### Requirement: Boats draws its squares on the collection's quiet surface
 

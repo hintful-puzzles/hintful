@@ -90,20 +90,14 @@ Where building a grid from a generated description fails because the patch
 contains no landlocked dots, Loopy SHALL discard that description, generate a
 fresh one, and retry, within a bounded number of attempts. It SHALL NOT raise
 the per-type minimum sizes to avoid the condition, which depends on the random
-draw and not on the size. Retrying SHALL be deterministic, so that a seed
-always produces the same board. Exhausting the bound SHALL raise an error
-rather than return a fallback board.
+draw and not on the size. Exhausting the bound SHALL raise an error rather than
+return a fallback board.
 
 #### Scenario: A degenerate patch yields a playable board rather than an error
 
 - **WHEN** a grid type, size and seed that produce a degenerate patch on the
   first attempt are used to generate a game
 - **THEN** a valid board is produced
-
-#### Scenario: Generation remains reproducible across retries
-
-- **WHEN** the same seed is used twice for a case that requires a retry
-- **THEN** both runs produce the same board
 
 ### Requirement: Loopy is playable from the keyboard alone
 
@@ -794,12 +788,11 @@ bound on patches out SHALL throw `RetryLimitExceeded`, as any generator does.
 
 The redraw of an aperiodic patch SHALL change only which description is drawn.
 The grid a description builds SHALL NOT change, since saved games and shared
-game IDs carry descriptions. The draws SHALL come from the deal's own random
-stream, so that a given seed always produces the same board.
+game IDs carry descriptions.
 
-#### Scenario: A redrawn deal is reproducible
+#### Scenario: A redrawn deal's description builds the grid it was dealt on
 
-- **WHEN** the same seed deals twice at a size where the first patch drawn is
-  far under its size
-- **THEN** both deals produce the same board, and the description dealt builds
-  the same grid when the game is loaded from it
+- **WHEN** a deal draws a patch again, at a size where the first patch drawn
+  is far under its size
+- **THEN** the description dealt builds the same grid when the game is loaded
+  from it

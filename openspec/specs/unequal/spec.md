@@ -155,12 +155,12 @@ stripped.
 
 ### Requirement: Unequal accepts digit, pencil, clue-spent, and solve moves
 
-`interpretMove` SHALL select a cell by mouse (left button = real-entry
-highlight, right button = pencil-mark highlight) or keyboard cursor. With a
-cell highlighted, a digit `1..order` (entered as a digit, or a letter for 11
-and above) SHALL place that number, or toggle the pencil mark in pencil mode,
-and backspace, space, or below order 10 the `0` key, SHALL clear it. Entering a value a cell already
-holds SHALL be a no-op. Immutable (given) cells SHALL reject entry.
+`interpretMove` SHALL select a cell by mouse or keyboard cursor. With a cell
+highlighted, a digit `1..order` (entered as a digit, or a letter for 11 and
+above) SHALL place that number, or toggle the pencil mark in pencil mode, and
+backspace, space, or below order 10 the `0` key, SHALL clear it. Entering a
+value a cell already holds SHALL be a no-op. Immutable (given) cells SHALL
+reject entry.
 
 #### Scenario: Entry into an immutable cell is rejected
 
@@ -177,19 +177,6 @@ struck-through ("spent") state.
 
 - **WHEN** the player clicks a greater-than sign or adjacency bar
 - **THEN** `executeMove` toggles that clue's spent flag
-
-### Requirement: The M key is Unequal's Mark-all
-
-The `M`/`m` key SHALL be the Mark-all press. While some empty cell has no
-pencil marks it SHALL fill every such cell with all candidate pencil marks.
-On a board where every empty cell has notes it SHALL instead be the engine's
-cleanup of the candidates a placed number in the cell's row or column rules
-out.
-
-#### Scenario: The first press fills
-
-- **WHEN** the player presses `M` on a board with no pencil marks
-- **THEN** every empty cell holds every candidate `1..order`
 
 ### Requirement: Unequal renders greater-than signs or adjacency bars between cells
 
@@ -224,18 +211,11 @@ auto-sized grid layout.
 
 ### Requirement: Unequal exposes pencil-mark preferences
 
-The game SHALL offer a "sticky pencil mode" preference (default on: right-click
-toggles a persistent pencil mode), an "auto-pencil" preference (default off:
-when on, placing a number strikes it from the pencil marks of its row and
-column), and a "keep mouse highlight after changing a pencil mark" preference
-(default on). With auto-pencil off, note cleanup SHALL be manual: the player
+The game SHALL offer a "sticky pencil mode" preference, an "auto-pencil"
+preference (when on, placing a number strikes it from the pencil marks of its
+row and column), and a "keep mouse highlight after changing a pencil mark"
+preference. With auto-pencil off, note cleanup SHALL be manual: the player
 removes obvious candidates via the mark-all control or a hint.
-
-#### Scenario: Sticky pencil mode persists across left-clicks
-
-- **WHEN** sticky pencil mode is on and the player right-clicks to enter pencil
-  mode, then left-clicks another empty cell
-- **THEN** the new cell is highlighted for pencil entry (the mode is not reset)
 
 #### Scenario: A placement with auto-pencil off
 
@@ -245,11 +225,11 @@ removes obvious candidates via the mark-all control or a hint.
 
 ### Requirement: Unequal checks for mistakes against the unique solution
 
-`findMistakes` SHALL re-solve the board from its givens and clues, never from
-the player's notes, and return every player-entered cell whose number
-contradicts the unique solution, plus every empty cell whose non-empty pencil
-notes have crossed out its solution value. When the board is not uniquely
-solvable from the givens it SHALL return an empty result.
+`findMistakes` SHALL re-solve the board from its givens and clues and return
+every player-entered cell whose number contradicts the unique solution, plus
+every empty cell whose non-empty pencil notes have crossed out its solution
+value. When the board is not uniquely solvable from the givens it SHALL return
+an empty result.
 
 #### Scenario: A wrong number is flagged, ordinary notes are not
 
@@ -268,9 +248,6 @@ solvable from the givens it SHALL return an empty result.
 
 The game's hint SHALL teach the player the next deduction in pencil-notes
 terms.
-It SHALL work in a sound candidate cube seeded from the placed givens and
-entries only, never from the player's pencil notes: a note can be wrong, and
-that is what `findMistakes` flags.
 
 #### Scenario: An inequality bound is taught as a note strike
 
@@ -349,15 +326,13 @@ speak of being one away from N and SHALL NOT say "N−1 or N+1".
 ### Requirement: A hint's marks ring the struck cell and outline the clue's pair
 
 A clue elimination's step SHALL ring the cell it strikes from and outline the
-two cells its sign or bar sits between, and SHALL show every candidate it rules
-out with a line through it. Equivalent strikes of one firing SHALL share the
-target hint color.
+two cells its sign or bar sits between. Equivalent strikes of one firing SHALL
+share the target hint color.
 
 #### Scenario: A link elimination is drawn
 
 - **WHEN** an Unequal-mode link elimination is the displayed step
-- **THEN** the clue's two cells are outlined, the struck cell is ringed, and the
-  struck candidates are drawn with a line through them
+- **THEN** the clue's two cells are outlined and the struck cell is ringed
 
 ### Requirement: The hint's deduction is capped below recursion
 
@@ -369,36 +344,6 @@ teachable note strike.
 - **WHEN** a hint is asked on a board dealt at Unreasonable
 - **THEN** the recording solver runs no higher than Hard, and no step rests on a
   guess
-
-### Requirement: Every hint step is monotone progress
-
-Every step SHALL be monotone progress, a note added by populate, a note removed
-by a strike, or a cell filled by a placement, never undone by the hint. A
-freshly recomputed hint from any solvable, mistake-free mid-game position SHALL
-therefore make progress and lead to a solved board, and on recompute the plan
-SHALL skip any operation already reflected on the board.
-
-#### Scenario: The hint resumes from a self-played mid-game position
-
-- **WHEN** a hint is requested from a solvable, mistake-free board the player
-  reached by their own notes and placements, in either mode
-- **THEN** the freshly-recomputed hint makes progress and, applied step by step
-  with recompute, leads to a solved board
-
-### Requirement: A kept plan follows the player's own move
-
-`hintKeepTrack` SHALL advance the plan when the player's move matches the
-displayed step's intent: a pencil toggle clearing one of a strike step's marks
-is `onTrack` (the step shrinks in place), or `completed` when it was the last,
-a `pencilStrike` of all the step's marks is `completed`, and a placement of the
-hinted value is `completed`. Any other move SHALL drop the plan (`off`).
-
-#### Scenario: A strike followed one mark at a time
-
-- **WHEN** the player clears one of a two-mark strike step's marks with a
-  pencil toggle
-- **THEN** the verdict is `onTrack` and the step shrinks to the mark left
-- **AND** clearing that one is `completed`
 
 ### Requirement: Unequal provides on-screen key labels
 

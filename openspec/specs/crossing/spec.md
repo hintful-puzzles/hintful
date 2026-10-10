@@ -95,20 +95,15 @@ whose candidates collapse to a single digit, iterating to a fixpoint.
 At Easy the generator SHALL accept a board only when the solver reports it
 valid, so that the board has one solution and deduction alone reaches it, and
 SHALL retry otherwise. On a generated board no 2×2 block SHALL be fully closed
-and the open cells SHALL be connected. Generation from a given seed SHALL be
-reproducible, and an Easy board SHALL be the board upstream's generator deals
-from the same seed, save where it would leave a cell no clue can reach.
+and the open cells SHALL be connected. An Easy board SHALL be the board
+upstream's generator deals from the same seed, save where it would leave a cell
+no clue can reach.
 
 #### Scenario: Every preset produces a uniquely-solvable board
 
 - **WHEN** a new Easy game is generated for any preset or legal size
 - **THEN** a board is produced whose walls and number list admit exactly one
   solution reachable by the deductive solver
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed and parameters are used twice to generate a game
-- **THEN** both runs produce the identical description
 
 ### Requirement: Crossing never generates a cell no clue can reach
 
@@ -155,26 +150,12 @@ of any size remains playable.
 
 Crossing SHALL be played by selecting an open cell and entering a digit, with a
 separate pencil-mark mode for candidate notes. A press on a cell SHALL be the
-engine's note-taking cell's: with the sticky pencil preference off, a left
-click selects for digit entry and a right click for pencil marking, and with it
-on, a left click selects in the current mode and a right click toggles pencil
-mode.
+engine's note-taking cell's.
 
 #### Scenario: A right click is the way into pencil marks
 
 - **WHEN** an empty open cell is right-clicked while digit entry is the mode
 - **THEN** pencil mode is on and the cell is selected for a note
-
-### Requirement: The arrow keys move a cursor and Enter switches the entry mode
-
-The arrow keys SHALL move a keyboard cursor, and Enter SHALL toggle between
-digit and pencil entry.
-
-#### Scenario: Enter switches a selected cell to pencil marks
-
-- **WHEN** the keyboard cursor is on an empty open cell in digit entry and
-  Enter is pressed
-- **THEN** the next digit key toggles a note in that cell and places no digit
 
 ### Requirement: A digit key enters, and Backspace, Space or 0 clears
 

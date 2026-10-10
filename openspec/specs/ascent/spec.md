@@ -264,19 +264,13 @@ player does.
 Outside Edges the generator SHALL remove clue numbers from a full path while
 the graded solver still solves, honoring the symmetry and keep-endpoints
 options; in Edges it SHALL move numbers out to arrow clues, retrying until
-soluble. Its loop SHALL be bounded, and generation from a seed SHALL be
-reproducible.
+soluble. Its loop SHALL be bounded.
 
 #### Scenario: Every preset produces a uniquely soluble board
 
 - **WHEN** a new game is generated for any preset or legal size and mode
 - **THEN** a board is produced whose clues admit exactly one completion under the
   graded solver
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical description
 
 ### Requirement: Ascent grades its difficulty tiers honestly
 

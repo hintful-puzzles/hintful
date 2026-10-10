@@ -286,19 +286,6 @@ pencil marks, and SHALL NOT be told by a shade of the cell's surface.
 - **THEN** the given's cell is the lifted surface and the other the cell
   surface, each with the stroke under its content
 
-### Requirement: Group's hint deduces from the placed entries, never the notes
-
-The hint's plan SHALL be deduced over a sound candidate cube seeded from the
-placed entries only and never from the player's pencil notes: a note can be
-wrong, which is what `findMistakes` flags.
-
-#### Scenario: A wrong note does not steer the deduction
-
-- **WHEN** the solver records its deductions for a hint on a board whose empty
-  cells carry notes
-- **THEN** the deductions recorded are the ones it records for the same placed
-  entries with no notes
-
 ### Requirement: Group's own placements lead the eliminations
 
 The plan SHALL prefer a naked single, placed by a `set` move: an empty cell

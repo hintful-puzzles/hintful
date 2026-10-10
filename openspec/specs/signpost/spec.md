@@ -186,16 +186,16 @@ at either difficulty.
 - **WHEN** `solve()` is invoked on a partially- and wrongly-linked board
 - **THEN** it returns a move reconstructing the correct full `1 … n` chain
 
-### Requirement: Signpost generates solver-gated boards reproducibly
+### Requirement: Signpost generates solver-gated boards
 
-For a given random seed and params, `newDesc` SHALL produce the same desc on
-every run, and at Easy the clues it leaves SHALL be enough for the solver to
-solve the board.
+At Easy the clues `newDesc` leaves SHALL be enough for the solver to solve the
+board.
 
-#### Scenario: Generation is reproducible from a seed
+#### Scenario: A number the solver needs stays given
 
-- **WHEN** `newDesc` runs twice with the same params and seed
-- **THEN** both runs emit the identical Signpost description
+- **WHEN** `newDesc` strips an Easy board, and taking a number out leaves a
+  board the solver does not finish
+- **THEN** that number stays given
 
 ### Requirement: An arrow follows a Signpost drag
 

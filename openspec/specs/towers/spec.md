@@ -94,8 +94,6 @@ as grid givens, for as long as the board stays solvable at that difficulty.
 
 Under the 3D appearance the pointer's hit-testing SHALL follow the towers, so a
 press on a tower protruding from a neighboring cell selects that neighbor.
-From the keyboard, Enter (`CURSOR_SELECT`) while the highlight shows SHALL
-switch the highlight between real entry and pencil marks.
 
 #### Scenario: A press lands on a neighbor's tower
 
@@ -188,12 +186,12 @@ choice of 2D or 3D in that order, defaulting to 3D.
 
 ### Requirement: Towers checks for mistakes against the unique solution
 
-`findMistakes` SHALL re-solve the board from its clues and givens, never from
-the player's pencil notes, and return every marking that contradicts the unique
-solution: a filled cell whose tower differs from it (`kind: "cell"`), and a
-cell whose non-empty candidate set lacks its solution height (`kind: "note"`).
-Both kinds SHALL render as the same red cell overlay. When the board is not
-uniquely solvable from the givens, `findMistakes` SHALL return an empty result.
+`findMistakes` SHALL re-solve the board from its clues and givens and return
+every marking that contradicts the unique solution: a filled cell whose tower
+differs from it (`kind: "cell"`), and a cell whose non-empty candidate set
+lacks its solution height (`kind: "note"`). Both kinds SHALL render as the same
+red cell overlay. When the board is not uniquely solvable from the givens,
+`findMistakes` SHALL return an empty result.
 
 #### Scenario: A wrong tower is flagged
 
@@ -208,12 +206,7 @@ uniquely solvable from the givens, `findMistakes` SHALL return an empty result.
 
 ### Requirement: Towers offers a sticky pencil mode
 
-Towers SHALL offer the sticky pencil preference, on by default. With it on, a
-right-click SHALL toggle a persistent pencil mode and move the highlight to the
-clicked cell, unless that cell can take no pencil mark, and a left-click SHALL
-only move the highlight, preserving the current pencil or real mode. With it off, a
-left-click SHALL revert to real entry and a right-click SHALL be a per-cell
-pencil select. The keyboard path SHALL be the same with sticky mode on or off.
+Towers SHALL offer the sticky pencil preference.
 
 #### Scenario: Sticky mode keeps pencil entry across left-clicks
 
@@ -223,26 +216,18 @@ pencil select. The keyboard path SHALL be the same with sticky mode on or off.
   digit there writes a pencil mark (not a real entry)
 - **AND** the on-screen pencil-mode indicator is shown the whole time
 
-#### Scenario: Sticky mode off, a left-click reverts to real entry
-
-- **WHEN** the sticky pencil preference is off and the player right-clicks a cell
-  to pencil it, then left-clicks another cell
-- **THEN** the left-click reverts to real entry
-
 ### Requirement: Towers provides an explained, pencil-notes-based deduction hint
 
 The hint SHALL teach Towers' candidate-elimination reasoning by setting and
 striking pencil notes. It SHALL be the solver's own narrated deduction script:
-the recording solver runs on a sound candidate cube seeded from the placed grid
-only, never from the player's notes, and its ordered operations are expressed
-against the player's live notes and grid as a sequence of `HintStep`s.
+the recording solver's ordered operations are expressed against the player's
+live notes and grid as a sequence of `HintStep`s.
 
 #### Scenario: The player has edited the notes
 
 - **WHEN** a hint is requested on a mistake-free board whose notes the player
   has edited
-- **THEN** the recording solver is seeded from the placed towers alone
-- **AND** each step is expressed against the notes as they stand
+- **THEN** each step is expressed against the notes as they stand
 
 ### Requirement: A Towers hint step populates, eliminates or places
 
@@ -298,59 +283,25 @@ reasoning, then a necessity-voice conclusion.
 ### Requirement: A Towers hint step marks the clue it reasons from and the cells it acts on
 
 Each step's highlight SHALL mark the driving clue cell or cells and their line
-of sight, so the player can see which clue the hint is about: the clue
-outlined in its slot beside the grid, and the line striped through the clue
-slots at both its ends. It SHALL ring the target cell or cells and cross
-through the struck candidates, with the equivalent strikes of one firing
-sharing the target's mark.
+of sight, so the player can see which clue the hint is about: the clue outlined
+in its slot beside the grid, and the line striped through the clue slots at
+both its ends. It SHALL ring the target cell or cells, with the equivalent
+strikes of one firing sharing the target's mark.
 
 #### Scenario: A clue elimination is marked
 
 - **WHEN** a hint step strikes heights that a clue's line of sight rules out
-- **THEN** the driving clue is outlined, its line of sight is striped, each
-  cell struck from is ringed and each struck candidate is crossed through
-
-### Requirement: Every Towers hint step is progress the hint never undoes
-
-Every step SHALL be monotone progress: a note added by populate, a note removed
-by eliminate, or a cell filled by place, never undone by the hint. A freshly
-recomputed hint from any mistake-free mid-game position of a board whose tier
-needs no search SHALL therefore make progress and lead to a solved board. On
-recompute the script SHALL skip any operation whose effect is already on the
-board and resume at the first that is not.
-
-#### Scenario: The hint resumes from a self-played mid-game position
-
-- **WHEN** a hint is requested from a mistake-free position, of a board whose
-  tier needs no search, that the player reached by their own notes and
-  placements
-- **THEN** the freshly-recomputed hint makes progress (a strike or a placement)
-  and, applied step by step with recompute, leads to a solved board
-
-### Requirement: hintKeepTrack advances the plan when a move matches the step
-
-`hintKeepTrack` SHALL advance the plan when the player's move matches the
-displayed step's intent. A pencil toggle that clears one of a strike step's
-marks SHALL be `onTrack`, the step shrinking in place to the marks left, or
-`completed` when it clears the last; a `pencilStrike` of all the step's marks
-SHALL be `completed`; a placement of the hinted value SHALL be `completed`.
-A move that does not match SHALL drop the plan to recompute (`off`).
-
-#### Scenario: A strike followed one note at a time
-
-- **WHEN** a strike step shows two marks and the player clears one of them
-  with a pencil toggle
-- **THEN** the verdict is `onTrack` and the step's move strikes the other mark
-  alone
+- **THEN** the driving clue is outlined, its line of sight is striped and each
+  cell struck from is ringed
 
 ### Requirement: Towers auto-pencils row/column eliminations on placement
 
-The game SHALL provide an auto-pencil preference, off by default: when it is on
-and the player places a tower height, the game SHALL strike that height from
-the pencil marks of every other cell in the same row and column, and when it is
-off a placement SHALL leave other cells' pencil marks untouched. The decision
-SHALL be fixed at move-creation time, recorded on the move, so that replaying a
-saved game is deterministic regardless of the preference's later value.
+The game SHALL provide an auto-pencil preference: when it is on and the player
+places a tower height, the game SHALL strike that height from the pencil marks
+of every other cell in the same row and column, and when it is off a placement
+SHALL leave other cells' pencil marks untouched. The decision SHALL be fixed at
+move-creation time, recorded on the move, so that replaying a saved game is
+deterministic regardless of the preference's later value.
 
 #### Scenario: Placing a tower clears matching notes in its line
 

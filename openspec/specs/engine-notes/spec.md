@@ -38,6 +38,36 @@ entry puts it away, and what a keystroke that would write nothing returns.
 - **THEN** the highlight is put away and a repaint is reported, with no move
 - **AND** had the keyboard placed the highlight, nothing is reported at all
 
+### Requirement: The button and the sticky preference decide the mode a press selects for
+
+With the sticky pencil preference off, a primary press that commits no move
+SHALL select the pressed cell for a value and turn pencil mode off, and a
+secondary one SHALL select it for pencil marks and turn the mode on. With it
+on, a primary one SHALL select in the mode that is on and change no mode. Such
+a press on the cell the highlight shows on, in the mode it selects for, SHALL
+put the highlight away, unless the game gives the repeat press its own meaning
+(Crossing's change of direction).
+
+#### Scenario: A primary press keeps a latched pencil mode
+
+- **WHEN** a secondary press has switched pencil mode on under the sticky
+  preference, and another empty cell is then pressed with the primary button
+- **THEN** that cell is selected for a pencil mark and pencil mode stays on
+
+#### Scenario: A primary press on a cell selected for pencil marks, sticky off
+
+- **WHEN** the sticky preference is off, a secondary press has selected an empty
+  cell for pencil marks, and the same cell is pressed with the primary button
+- **THEN** the cell is selected for a value and pencil mode is off, and the
+  highlight is not put away
+
+#### Scenario: A second primary press under the sticky preference
+
+- **WHEN** a cell selected by a primary press is pressed again with the primary
+  button under the sticky preference, in either mode, in a game that gives the
+  repeat press no meaning of its own
+- **THEN** the highlight is put away and pencil mode is as it was
+
 ### Requirement: A game in the mechanic keeps its puzzle and its own move
 
 A game SHALL keep everything about its puzzle: its coordinate mapping, its
@@ -86,9 +116,10 @@ value" otherwise.
 
 ### Requirement: The sticky pencil toggle is a mode switch, not a selection
 
-With sticky pencil mode on, a secondary press SHALL switch pencil mode, and on
-a cell that could take no mark it SHALL leave the highlight where it is,
-because the toggle is a mode switch rather than a selection.
+With sticky pencil mode on, a secondary press SHALL switch pencil mode. On a
+cell that can take a mark it SHALL also move the highlight there, and on a cell
+that could take no mark it SHALL leave the highlight where it is, because the
+toggle is a mode switch rather than a selection.
 
 #### Scenario: The sticky toggle does not double as a selection key
 
@@ -96,6 +127,12 @@ because the toggle is a mode switch rather than a selection.
   pencil mode on
 - **THEN** pencil mode toggles
 - **AND** the highlight is exactly where it was, shown or hidden as it was
+
+#### Scenario: The sticky toggle on an empty cell
+
+- **WHEN** with sticky pencil mode on and pencil mode off, a player presses the
+  secondary button on an empty cell the highlight is not on
+- **THEN** pencil mode is on and that cell is selected for pencil marks
 
 ### Requirement: Putting the highlight away never changes pencil mode
 
@@ -107,6 +144,28 @@ player unlatches it, which is what the preference's own wording promises.
 
 - **WHEN** a player has latched pencil mode and enters a mark with the pointer
 - **THEN** pencil mode is still latched
+
+### Requirement: The select key on a showing highlight toggles pencil mode
+
+In a game whose press is its selection, the select key (Enter) pressed while
+the highlight shows SHALL toggle pencil mode, the same with the sticky
+preference on or off, and SHALL hand the highlight to the keyboard. The rule
+SHALL NOT bind a game whose press starts a drag, where the select key belongs
+to the game's own keyboard gesture (Map's pick and drop, Rome's arming of a
+placement).
+
+#### Scenario: The select key after a pointer selection
+
+- **WHEN** the pointer has selected an empty cell, the select key is pressed and
+  a value is then typed
+- **THEN** the value is toggled as a pencil mark and the highlight stays, as a
+  highlight the keyboard placed does
+
+#### Scenario: The select key in a game whose press starts a drag
+
+- **WHEN** the cursor shows on a colored region in Map and the primary select
+  key is pressed
+- **THEN** the color is picked up and pencil mode is as it was
 
 ### Requirement: The mechanic's Ui fields have one spelling and one polarity
 
@@ -122,16 +181,29 @@ without the rest of the mechanic.
 
 ### Requirement: Every member offers the keep-highlight preference, defaulted the same way
 
-Every game in the mechanic SHALL offer the keep-highlight pencil preference,
-defaulted the same way, so one gesture does one thing across the family and the
-player who wants the other still has it. The
-members that offer the sticky pencil preference SHALL default it the same way.
+Every game in the mechanic SHALL offer the keep-highlight pencil preference, on
+by default, so one gesture does one thing across the family and the player who
+wants the other still has it. A member that offers the sticky pencil preference
+SHALL start with it on, and a member that offers auto-pencil SHALL start with
+it off, which leaves cleaning the notes to the Mark-all press and the hint.
 
 #### Scenario: The family answers a preference question once
 
 - **WHEN** a player makes the same mouse-driven pencil mark in any two games of
   the mechanic, having changed no preferences
 - **THEN** the highlight behaves the same way in both
+
+#### Scenario: A first secondary press latches
+
+- **WHEN** a player who has changed no preference presses the secondary button
+  on an empty cell, in a member that offers the sticky preference
+- **THEN** pencil mode is on and stays on through the next primary press
+
+#### Scenario: A placement with no preference changed
+
+- **WHEN** a player who has changed no preference places a value, in a member
+  that offers auto-pencil
+- **THEN** the pencil marks of every other cell are as they were
 
 ### Requirement: An unoffered pencil preference is read from its absence
 
@@ -235,23 +307,30 @@ is true, and on activation it SHALL inject the `M` key via the surface's
 - **THEN** the `M` key is injected via `processKey`, the game fills every empty
   cell with all candidate pencil marks, and the board repaints
 
-### Requirement: Mark-all is adaptive in a game with uniqueness regions
+### Requirement: Mark-all is adaptive in a game with an obvious-candidate rule
 
-For a game whose cells have uniqueness regions (one that supplies a per-game
-region provider), the action SHALL be adaptive. If any empty cell has no pencil
-notes at all, it SHALL fill every note-less empty cell with all candidates.
-Otherwise it SHALL remove the obvious candidates: every penciled value equal to
-a value already placed in one of that cell's uniqueness regions: its row and
-column, plus a sub-block, an X-diagonal and a cage that forbids repeats where
-the game has them.
+For a game with an obvious-candidate rule (a region provider, or a rule of its
+own) the action SHALL be adaptive. While any empty cell has no notes, it SHALL
+fill every such cell with all its candidates and change no other. Otherwise it
+SHALL remove the obvious candidates: with a region provider, every penciled
+value equal to a value placed in one of the cell's uniqueness regions,
+whichever the game has of row, column, sub-block, X-diagonal, and a cage or
+outlined region that forbids repeats.
 
 #### Scenario: A second press on a fully-noted board removes obvious candidates
 
 - **WHEN** every empty cell is already fully noted and the player activates the
-  mark-all control on a game with uniqueness regions
+  mark-all control on a game whose uniqueness regions are its rows and columns
+  (and blocks and diagonals where it has them)
 - **THEN** the action removes exactly the penciled values already placed in
-  each cell's row and column (and block and diagonal where the game has them),
-  leaving every still-possible candidate
+  each cell's regions, leaving every still-possible candidate
+
+#### Scenario: A narrowed cell beside a note-less one
+
+- **WHEN** one empty cell has been narrowed to two notes, another carries none,
+  and the player activates the control
+- **THEN** the cell with no notes takes all its candidates and the narrowed cell
+  keeps its two
 
 ### Requirement: An obvious candidate is judged only against placed values
 
@@ -266,50 +345,65 @@ region.
 - **THEN** the cleanup does NOT remove that candidate (the value is still legal under
   the cage's arithmetic constraint)
 
-### Requirement: The Mark-all cleanup is one pencilStrike, or no move
+### Requirement: The Mark-all cleanup is one move, or none
 
-In a game with uniqueness regions, the cleanup SHALL be emitted as the atomic
-`pencilStrike` move with its marks computed at `interpretMove` time, so replay
-and undo are exact. When there is nothing to fill and nothing to strike, the
-action SHALL produce no move at all, a true no-op that adds no undo entry,
-rather than an empty `pencilStrike`.
+In a game with an obvious-candidate rule, the cleanup SHALL be emitted as one
+move, with the marks it removes computed at `interpretMove` time, so replay and
+undo are exact. A game that builds the press with `adaptiveMarkAll` or
+`adaptiveMarkAllMove` SHALL emit it as its `pencilStrike`. When there is
+nothing to fill and nothing to strike, the action SHALL produce no move at all,
+a true no-op that adds no undo entry, rather than an empty strike.
 
 #### Scenario: Replaying the cleanup
 
 - **WHEN** every empty cell is already noted, the player activates the
-  mark-all control on a game with uniqueness regions, and the move is replayed
-- **THEN** the action emitted one `pencilStrike`, and replaying it reproduces
-  the cleaned board
+  mark-all control on a game with an obvious-candidate rule, and the move is
+  replayed
+- **THEN** the action emitted one move, and replaying it reproduces the cleaned
+  board
 
 ### Requirement: Repeated Mark-all presses converge
 
-The cleanup SHALL be idempotent and a pure function of the placed grid. On a
+The cleanup SHALL be idempotent and a pure function of the placed values. On a
 board whose notes the player has not narrowed, repeated presses SHALL converge
-to and remain at every empty cell noted with all candidates minus the values
-placed in its regions. There SHALL be no fill-then-clean toggle, and a cleaned
-board SHALL NOT silently re-fill. A clean SHALL NOT empty a cell of its last
-note, which keeps idempotency unconditional on a mistaken board.
+to and remain at every empty cell noted with all its candidates minus those the
+game's obvious-candidate rule strikes. There SHALL be no fill-then-clean toggle,
+and a cleaned board SHALL NOT silently re-fill. A clean SHALL NOT empty a cell
+of its last note, which keeps idempotency unconditional on a mistaken board.
 
 #### Scenario: Repeated presses are idempotent (no re-fill, no toggle)
 
-- **WHEN** the player activates the mark-all control a third time, after a fill and a
-  clean, with no board change in between
-- **THEN** the cleaned board is unchanged: the action produces no move (a true no-op,
-  no undo entry) and does not re-fill any cell, and the resulting notes equal `{1..n}`
-  minus the placed values in each cell's regions
+- **WHEN** the player activates the mark-all control a third time, after a fill
+  and a clean, with no board change in between
+- **THEN** the cleaned board is unchanged: the action produces no move (a true
+  no-op, no undo entry) and does not re-fill any cell
+
+#### Scenario: Every note of a cell is ruled out
+
+- **WHEN** a wrong placement leaves every note of an empty cell obvious, and the
+  control is activated
+- **THEN** the cell keeps one note, and the press after that is no move
 
 ### Requirement: A game with no obvious-candidate rule keeps a fill-only Mark-all
 
 A game that supplies neither a region provider nor an obvious-candidate rule of
-its own (Undead, for one) SHALL keep the fill-only behavior, and its press on a
-board with no note-less empty cell SHALL produce no move.
+its own (Undead, for one) SHALL keep the fill-only behavior: its press SHALL
+fill every empty cell that has no notes with all that cell's candidates, SHALL
+leave a cell whose notes the player has narrowed as it is, and on a board with
+no note-less empty cell SHALL produce no move.
 
-#### Scenario: A non-uniqueness game keeps fill-only
+#### Scenario: A narrowed cell beside a note-less one
 
-- **WHEN** the game has no row/column uniqueness model and no cleanup of its
-  own (e.g. Undead)
-- **THEN** the mark-all action only ever fills missing candidates; it performs no
-  obvious-candidate cleanup
+- **WHEN** in a fill-only game one empty cell has been narrowed to two notes,
+  another carries none, and the control is activated
+- **THEN** the cell with no notes takes all its candidates and the narrowed
+  cell keeps its two
+
+#### Scenario: A press on a fully noted board
+
+- **WHEN** every empty cell of a fill-only game carries a note, some of them
+  values already placed beside it, and the control is activated
+- **THEN** no move is made, and no note is removed
 
 ### Requirement: One way into note-taking across the collection
 

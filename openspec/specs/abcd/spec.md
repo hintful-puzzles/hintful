@@ -145,18 +145,12 @@ is what the search starts from.
 
 ### Requirement: ABCD's generator accepts only a uniquely solvable fill
 
-The generator SHALL fill the grid with random letters that respect the
-no-touch rule, count the resulting clues, and at Easy accept the puzzle only
-when the solver reports it uniquely solvable, retrying otherwise. When "remove
-clues" is set, it SHALL then hide clues in a randomized order, keeping each
-removal only while the solver still solves the puzzle. Generation from a seed
-SHALL be reproducible, and an Easy board SHALL be the board upstream's
-generator deals from the same seed.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical description
+The generator SHALL fill the grid with random letters that respect the no-touch
+rule, count the resulting clues, and at Easy accept the puzzle only when the
+solver reports it uniquely solvable, retrying otherwise. When "remove clues" is
+set, it SHALL then hide clues in a randomized order, keeping each removal only
+while the solver still solves the puzzle. An Easy board SHALL be the board
+upstream's generator deals from the same seed.
 
 #### Scenario: A board with clues removed still has one solution
 
@@ -177,21 +171,19 @@ Entering a letter SHALL accept the letter keys and the bare digit keys `1` to
   count is pressed
 - **THEN** that letter is placed in the cell
 
-### Requirement: ABCD's fill-all-marks command fills only cells with no marks
+### Requirement: ABCD's obvious marks are a touching letter and a letter its line has in full
 
-While some empty cell carries no marks, the fill-all-marks command SHALL give
-every such cell every letter and SHALL NOT reset a cell the player has
-narrowed. Otherwise it SHALL strike, as one `pencilStrike`, each mark whose
-letter a touching cell already holds (diagonally too when that is disallowed)
-or whose row or column already holds its clue's count, never a cell's last
-mark, and SHALL produce no move when there is nothing to strike.
+The obvious candidates ABCD's fill-all-marks command strikes SHALL be each mark
+whose letter a touching cell already holds (diagonally too when that is
+disallowed), and each mark whose letter its row or column already holds its
+clue's count of.
 
-#### Scenario: A narrowed cell is left as it is
+#### Scenario: A row that has all of its letter
 
-- **WHEN** one empty cell has been narrowed to two marks, another carries none,
-  and the command is used
-- **THEN** the cell with no marks takes every letter and the narrowed cell
-  keeps its two
+- **WHEN** every empty cell carries marks, a row's clue for `A` is 1, one cell
+  of that row holds `A`, and the command is used
+- **THEN** the `A` mark is struck from every other cell of that row that carries
+  another mark
 
 ### Requirement: An ABCD entry that changes nothing is no move
 
@@ -278,17 +270,17 @@ markedly more generable rather than less.
   allowed but generable without it
 - **THEN** it is refused in the first mode and accepted in the second
 
-### Requirement: The bound admits every preset and is asserted in both directions
+### Requirement: ABCD's bound is asserted in both directions
 
-Every shipped preset SHALL pass validation for generation. The bound on
-generable boards SHALL be asserted in both directions: that it admits
-configurations measured generable as well as refusing those measured
+The bound on generable boards SHALL be asserted in both directions: that it
+admits configurations measured generable as well as refusing those measured
 un-generable.
 
-#### Scenario: A tightened bound cannot bar a preset
+#### Scenario: A tightened bound cannot bar a generable board
 
-- **WHEN** each shipped preset is validated for generation
-- **THEN** none is refused
+- **WHEN** a configuration measured generable is validated for generation
+- **THEN** it is accepted, so a bound drawn tighter than the measurements
+  fails as one drawn looser does
 
 ### Requirement: ABCD offers an explained hint
 

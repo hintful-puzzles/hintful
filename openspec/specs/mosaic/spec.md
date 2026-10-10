@@ -145,10 +145,9 @@ the count of clues left SHALL follow the marks.
 ### Requirement: A Mosaic press toggles a cell and a drag repeats it
 
 A pointer press SHALL toggle the cell it lands on, and a drag on from it SHALL
-be the engine's sweep over the cells holding the mark the pressed cell held:
-a drag from an unmarked cell lays a mark and a drag from a marked cell clears
-marks. A click in the margin SHALL be ignored. Once the board is complete,
-the game SHALL accept only cursor movement.
+be the engine's sweep over the cells holding the mark the pressed cell held: a
+drag from an unmarked cell lays a mark and a drag from a marked cell clears
+marks. Once the board is complete, the game SHALL accept only cursor movement.
 
 #### Scenario: A drag from a marked cell clears marks
 
@@ -256,20 +255,6 @@ the number.
   value
 - **THEN** a disc in the error color is drawn on the piece, and the number
   over the disc
-
-### Requirement: Mosaic names no hue of its own for either mark
-
-The game SHALL name no hue of its own for either mark: its hint sentences, its
-control words and its hint-mark legend SHALL say the engine's words for a
-shaded cell and for a cell known not to be shaded, and its help page SHALL
-name the shaded color by placeholder.
-
-#### Scenario: A hint names the mark by the engine's word
-
-- **WHEN** a hint step concludes that squares must be marked
-- **THEN** its sentence says the engine's word for the shaded color
-- **AND** a step that concludes squares must be blank says the engine's word
-  for a cell known not to be shaded
 
 ### Requirement: Mosaic counts a board's answers by a bounded search
 

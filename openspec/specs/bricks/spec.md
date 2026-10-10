@@ -392,13 +392,13 @@ pieces it overlaps.
 - **WHEN** the cursor or a hint ring is drawn on a cell holding a piece
 - **THEN** the ring does not cover the piece
 
-### Requirement: Bricks names no hue
+### Requirement: Bricks calls its piece shaded and never by its color
 
-The game SHALL name no hue: its hint sentences and its control words SHALL say
-"shaded" for the one state and the collection's word for the other, and its
-help page SHALL name the piece's color by placeholder and say its shape.
+Bricks' hint sentences and control words SHALL say "shaded" for the shaded
+state and SHALL NOT say the piece's color, and its help page SHALL say the
+piece's shape beside the placeholder for its color.
 
-#### Scenario: A control names the ruled-out state by the collection's word
+#### Scenario: A hint rests on a shaded cell
 
-- **WHEN** the controls list describes the key that rules a cell out
-- **THEN** it says the collection's word for a cell that is not shaded
+- **WHEN** a hint step reasons from a cell that is shaded
+- **THEN** its sentence calls it a shaded brick and names no color

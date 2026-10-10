@@ -352,18 +352,6 @@ plain piece, and coexist with the completion flash.
   the further the animation has run
 - **AND** at rest the cell shows the plain piece
 
-### Requirement: A hint-executed placement plays at the hint-step duration
-
-Because the base animation length is non-zero, a hint-executed move SHALL play
-stretched to the uniform hint-step duration, so auto-hint reads as continuous
-placements.
-
-#### Scenario: A hint step's move has an animation to stretch
-
-- **WHEN** a hint step's placement is executed
-- **THEN** `animLength` for it is positive, and the move plays over the
-  hint-step duration
-
 ### Requirement: The named line is hatched under its pieces
 
 The line the sentence names SHALL be hatched `COL_HINT`, under the pieces it

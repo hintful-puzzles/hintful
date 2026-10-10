@@ -244,9 +244,9 @@ export function newCursor(x = 0, y = 0, visible = false): GridCursor {
  * revealing it in the same press, and report whether anything changed.
  *
  * One press both reveals and moves, everywhere, so a keyboard player never
- * spends a keypress on the reveal (`engine-input`, "One keyboard-cursor vocabulary
- * across games"). `wrap` moves toroidally instead of clamping, so an edge press
- * never no-ops.
+ * spends a keypress on the reveal (`engine-input`, "One arrow press reveals the
+ * cursor and moves it"). `wrap` moves toroidally instead of clamping, so an edge
+ * press never no-ops.
  *
  * Returns `false` for a non-cursor button, and for a clamped edge press on an
  * already-visible cursor — the caller's cue to return `null` rather than a

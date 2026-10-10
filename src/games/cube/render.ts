@@ -50,6 +50,9 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_PAINT] = MOVED;
   ret[COL_GRID] = surfaceGrid(defaultBackground);
   ret[COL_CELL] = cellSurface(defaultBackground);
+  // Not CURSOR, though the solid is the figure the player steers: a face
+  // shows whether it carries paint, so a plain face is a surface and the
+  // paint is the only hue on the solid.
   ret[COL_SOLID] = givenSurface(defaultBackground);
   return ret;
 }

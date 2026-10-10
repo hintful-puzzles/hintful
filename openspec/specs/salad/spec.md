@@ -144,13 +144,9 @@ stated difficulty, and a board generated at Normal SHALL NOT be soluble at Easy.
 
 ### Requirement: Salad selects a square and enters a symbol or a marker
 
-Salad SHALL be played by selecting a cell and entering a symbol, an empty marker,
-or a not-empty marker, with pencil marks available for tentative notes. With the
-sticky pencil preference off, a left press SHALL select a cell for ink entry and
-a right press for pencil entry; with it on, a right press SHALL switch pencil
-mode and a left press SHALL select in the mode that is on. The arrow keys SHALL
-move a keyboard cursor and the select key SHALL toggle between ink and pencil
-entry.
+Salad SHALL be played by selecting a cell and entering a symbol, an empty
+marker, or a not-empty marker, with pencil marks available for tentative notes.
+The arrow keys SHALL move a keyboard cursor.
 
 #### Scenario: Entering a symbol places it in the selected cell
 
@@ -292,19 +288,6 @@ non-deductive fallback step.
 - **WHEN** the hint is followed step by step on a board dealt at Normal
 - **THEN** every step carries its reason, and the walk reaches a solved board
   with no step that guesses
-
-### Requirement: Salad's hint plan is recomputable from any position
-
-The hint plan SHALL be recomputable from any mid-game position: a plan computed
-after the player has made some of its moves by hand SHALL neither repeat those
-moves nor stall.
-
-#### Scenario: A hint plan resumes from a partly-followed position
-
-- **WHEN** the player performs some of a plan's moves by hand and a hint is
-  requested again
-- **THEN** the new plan starts from the current board, repeating none of the moves
-  already reflected on it
 
 ### Requirement: Salad's hint strikes a circled square's empty-square mark wherever the circle came from
 

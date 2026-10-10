@@ -227,33 +227,6 @@ no sentence says a cage's other cells are filled while any is open.
 - **WHEN** a killer deduction rests on what a row, column or block leaves its open cells, or on the rest of the cage those cells lie in
 - **THEN** the sentence names the region and the sum it leaves, the step hatches the region, and it outlines the cells the sum is left to
 
-### Requirement: Solo selects a cell by pointer or keyboard
-
-With the sticky pencil preference on, which is how Solo starts, a right press
-SHALL switch pencil mode and a left press SHALL highlight the cell in the mode
-that is on. With it off, a left press SHALL highlight a cell for a real entry
-and a right press an empty cell for a pencil mark. A press on the cell the
-highlight is already on, in the mode it is in, SHALL put the highlight away.
-The cursor keys SHALL move the highlight, and the select key SHALL toggle
-pencil mode while it shows.
-
-#### Scenario: The select key switches the mode
-
-- **WHEN** the highlight shows and the select key is pressed
-- **THEN** pencil mode toggles and the highlight stays where it is
-
-#### Scenario: A left press keeps a latched pencil mode
-
-- **WHEN** a right press has switched pencil mode on under the sticky
-  preference, and another empty cell is then pressed with the left button
-- **THEN** the cell is highlighted for a pencil mark and pencil mode stays on
-
-#### Scenario: A second press on the highlighted cell
-
-- **WHEN** a cell highlighted by a left press is pressed again with the left
-  button under the sticky preference
-- **THEN** the highlight is put away and pencil mode is as it was
-
 ### Requirement: Solo interprets digit, pencil, and mark-all input
 
 A digit key `1..cr` SHALL enter that digit in the highlighted non-given cell
@@ -336,11 +309,11 @@ digit and pencil marks, and SHALL NOT be told by a shade of the cell's surface.
 ### Requirement: Solo flags mistakes against its unique solution
 
 The game SHALL implement `findMistakes`: re-solve from the given cells (and,
-for killer, the cage sums), never from the player's notes, to the unique
-solution, and return every player cell that contradicts it: a filled cell whose
-digit is wrong (`"cell"`), and an empty cell whose non-empty pencil notes have
-crossed out its solution digit (`"note"`). When the board is not uniquely
-solvable from the givens the result SHALL be empty.
+for killer, the cage sums) to the unique solution, and return every player cell
+that contradicts it: a filled cell whose digit is wrong (`"cell"`), and an
+empty cell whose non-empty pencil notes have crossed out its solution digit
+(`"note"`). When the board is not uniquely solvable from the givens the result
+SHALL be empty.
 
 #### Scenario: A wrong digit and a wrong note are flagged
 
@@ -352,11 +325,10 @@ solvable from the givens the result SHALL be empty.
 
 ### Requirement: Solo exposes pencil-mark preferences
 
-The game SHALL expose, via the `prefs` hook, a sticky-pencil-mode preference
-(default on; right-click toggles a persistent pencil mode), an auto-pencil
-preference (**default off**), and a keep-mouse-highlight-after-pencil
-preference (default on). With auto-pencil off, note cleanup is manual: the
-player removes obvious candidates via the mark-all control or a hint.
+The game SHALL expose, via the `prefs` hook, a sticky-pencil-mode preference,
+an auto-pencil preference, and a keep-mouse-highlight-after-pencil preference.
+With auto-pencil off, note cleanup is manual: the player removes obvious
+candidates via the mark-all control or a hint.
 
 #### Scenario: Pencil preferences are exposed with their defaults
 
@@ -382,9 +354,7 @@ so any list is true of some Solo boards and false of others.
 The game SHALL implement `hint(state, aux?, ui?)`, returning a plan of
 `HintStep`s that teaches the player the next deduction in pencil-notes terms.
 The plan SHALL be built by walking a working copy of the board the way a person
-solves it, working in a sound candidate cube **seeded from the placed entries
-(givens and player digits) only, never from the player's pencil notes**, since
-a note can be wrong.
+solves it.
 
 #### Scenario: A region elimination is taught as a note strike
 
@@ -472,8 +442,7 @@ the notes for a step that sets them up.
 When a single step names two or more board-element types at once, each type
 SHALL carry a stable per-game color always paired with a non-color cue: a ring
 round the cell the step acts on, an outline round the cells the reason rests
-on, stripes over the region the sentence names, and a line through a ruled-out
-candidate.
+on, and stripes over the region the sentence names.
 
 #### Scenario: A strike shows its region, its cell and its candidates
 
@@ -493,21 +462,6 @@ hint SHALL report that it cannot deduce the next move.
   (Unreasonable) tier
 - **THEN** the hint reports that it cannot deduce the next move rather than
   narrating a guess
-
-### Requirement: Every hint step is monotone progress
-
-Every step SHALL be monotone progress: a note added, a note removed by a
-strike, or a cell filled by a placement, never undone by the hint. A
-freshly-recomputed hint from any solvable, mistake-free mid-game position SHALL
-therefore make progress and lead to a solved board, and on recompute the plan
-SHALL skip any operation already reflected on the board.
-
-#### Scenario: The hint resumes from a self-played mid-game position
-
-- **WHEN** a hint is requested from a solvable, mistake-free board (standard, X,
-  jigsaw or killer) the player reached by their own notes and placements
-- **THEN** the freshly-recomputed hint makes progress and, applied step by step
-  with recompute, leads to a solved board
 
 ### Requirement: Solo provides on-screen key labels
 

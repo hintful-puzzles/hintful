@@ -323,13 +323,13 @@ declared as whole.
 - **THEN** the culls strike that value from the rest of the cage, and the classifier
   never calls a placement a hidden single in its cage
 
-### Requirement: Latin-family hints distinguish naked and hidden singles
+### Requirement: A candidate hint distinguishes naked and hidden singles
 
-A Latin-square-family game's hint SHALL narrate a forced single placement by the
-deduction that forces it, re-derived from the working board and not from the
-solver's recorded reason. This applies to every game on the shared Latin solver
-and to Solo. The classifier SHALL consider only empty cells as competitors for a
-value. A game SHALL reclassify only a recorded `single` placement: a game's own
+Every game on the candidate walk SHALL narrate a forced single placement by
+the deduction that forces it, which the walk re-derives from the working board
+and hands the game's `singleReason`, and not by the solver's recorded reason.
+The classifier SHALL consider only empty cells as competitors for a value.
+Only a recorded `single` placement SHALL be reclassified: a game's own
 clue-driven or region-driven forced placements keep their own reasons.
 
 #### Scenario: A clue-forced placement keeps its reason
@@ -340,8 +340,8 @@ clue-driven or region-driven forced placements keep their own reasons.
 
 #### Scenario: The naked-single phrasing is never used on a multi-candidate cell
 
-- **WHEN** any Latin-family hint emits a placement step whose narration says "ruled
-  out in this cell"
+- **WHEN** a game on the walk narrates a placement as a naked single, in the
+  shared narrator's "ruled out in this cell" or in words of its own
 - **THEN** the cell's working notes are a single candidate, a true naked single,
   and a hidden single uses its own narration
 
@@ -454,6 +454,19 @@ no game tracks which firing a step belongs to.
 - **THEN** the legs are consecutive steps, the first unflagged and the rest flagged
   `continuesPrevious`, with no other firing's step between them
 
+### Requirement: A candidate plan's step is never undone by a later one
+
+Every step the candidate walk builds SHALL be progress the rest of the plan
+keeps: notes written into a cell that had none, a note struck, or a cell
+filled. No later step SHALL write back a note a step struck, and none SHALL
+empty a cell a step filled.
+
+#### Scenario: The fill-all leaves a narrowed cell alone
+
+- **WHEN** a populate-reading plan strikes a note in a cell the player has
+  noted, and then pencils in the cells that have no notes
+- **THEN** the fill-all step leaves that cell as the strike left it
+
 ### Requirement: The game keeps what carries its meaning
 
 A game on the walk SHALL keep what carries its meaning: its recording solver,
@@ -469,6 +482,21 @@ family has already answered.
   a firing's strikes by cell
 - **THEN** the firing becomes one leg per cell, in the order the cells first
   appear in it
+
+### Requirement: A recording solve reads the placed entries and never the notes
+
+A game on the candidate walk whose plan records (`CandidatePlan.record`) SHALL
+run its recording solver on the working board's placed entries and the
+puzzle's clues alone, and never on the pencil notes, since a note can be
+wrong. The notes the board shows SHALL decide which recorded firings are still
+to make and when each is offered, and never what is recorded.
+
+#### Scenario: Narrowed notes do not change the recording
+
+- **WHEN** a hint is asked for on two boards with the same placed entries, one
+  with no notes and one whose notes the player has narrowed
+- **THEN** the solver records the same firings for both, and the notes decide
+  which of them each plan still has to make
 
 ### Requirement: A placement's bookkeeping is not a firing to teach
 
@@ -490,11 +518,36 @@ The engine SHALL provide generic `keepCandidateHintTrack` and
 `pencilAll`, `pencilStrike`, `pencilAdd`), read through a game's move dialect,
 and over `CandidateHighlights`.
 
+#### Scenario: A move the dialect does not read is off the plan
+
+- **WHEN** a game whose moves carry a cell list passes its dialect, and the
+  player fills several cells with one move
+- **THEN** the dialect reads that move as none of the shared shapes and the
+  verdict is `off`, and a step the helper shrinks has its move rebuilt in the
+  game's own shape
+
+### Requirement: A candidate step is completed by the move that makes it whole
+
+`keepCandidateHintTrack` SHALL answer `completed` to the move that makes the
+displayed step whole: the fill-all on a populate step, a placement of the
+hinted value in the hinted cell, a strike of exactly a strike step's marks, or
+a note-writing of exactly a note step's. A pencil toggle that clears one mark
+of a strike step, or writes one of a note step, SHALL be `onTrack`, the step
+shrinking in place to the marks left, and `completed` on the last. Every other
+move SHALL be `off`.
+
 #### Scenario: A strike followed one note at a time stays on track
 
 - **WHEN** the player clears one of a strike step's marks with a pencil toggle
 - **THEN** the step shrinks to the marks left and stays on track, and clearing
   the last one completes it
+
+#### Scenario: The mark-all control makes the obvious clean
+
+- **WHEN** the displayed step is the obvious-candidate clean and the player
+  presses the mark-all control, whose strike is the same marks
+- **THEN** the verdict is `completed`, and a strike of only some of a step's
+  marks in one move is `off`
 
 ### Requirement: A row/column Latin square answers no question its regions already settle
 

@@ -5253,7 +5253,10 @@ What else carried over, and what did not:
   an area, a starved area) read `RungContext.shown`: the notes, or under the
   implicit reading what a note-less cell's reach leaves it. That is the same
   soundness argument, since a note-less cell's implied candidates always hold its
-  answer. Every other walk game records, because its notes may be wrong.
+  answer. ABCD's plan records nothing either, and its rungs read the same
+  candidates. The other walk games record: their solver is seeded from the
+  placed entries and never from the notes (`engine-candidate-hints`, "A
+  recording solve reads the placed entries and never the notes").
 - **Held to the solver's rungs by a test.** Seismic's three solver rungs are
   sweeps that apply everything they find at once; each finder in `hint.ts` is the
   one-firing form of one of them. `seismic-hint.test.ts` holds the trial finder to

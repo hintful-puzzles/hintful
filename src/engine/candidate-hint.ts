@@ -732,7 +732,7 @@ function populateMove<M>(adapter?: CandidateMoveAdapter<M>): M {
 /** The square-Latin adaptive mark-all: `pencilAll` when any empty cell has zero
  * notes, else strike each cell's {@link obviousCandidateMarks} (row/column
  * duplicates). A thin binding of {@link adaptiveMarkAll} to the bitmask-pencil,
- * uniqueness-region games (Keen/Towers/Solo/Mathrax/Unequal/Undead). */
+ * uniqueness-region games. */
 export function adaptiveMarkAllMove<M>(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,

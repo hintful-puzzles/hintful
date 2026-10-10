@@ -178,8 +178,7 @@ the cursor pencil toggle) it SHALL toggle a pencil note.
 ### Requirement: Undead's Mark-all fills the cells that have no notes
 
 A mark-all action (`M`/`m`) SHALL fill every undecided cell that carries no
-notes with all three candidate notes. It SHALL leave a placed cell, and a cell
-whose notes the player has narrowed, unchanged.
+notes with all three candidate notes.
 
 #### Scenario: Mark-all fills candidate notes
 
@@ -256,8 +255,7 @@ error color. A flagged cell is not recolored: upstream computes that flag and ne
 The game SHALL implement `findMistakes`: re-solving the board to its unique
 solution and returning every placed cell that contradicts it, plus every empty
 cell whose non-empty pencil notes have crossed out its solution monster. The
-solution SHALL be derived from the description clues only, never from the
-player's notes.
+solution SHALL be derived from the description clues only.
 
 #### Scenario: Check & Save flags a wrong placement
 

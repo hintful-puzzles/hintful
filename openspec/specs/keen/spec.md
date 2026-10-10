@@ -149,8 +149,7 @@ values, at Normal by per-square value bitmaps, and at Tricky by the cross-cage
 
 Keen SHALL take its selection from the engine's note-taking cell. Every cell
 SHALL take an entry, since Keen has no givens, and only an empty cell SHALL
-take a pencil mark. The cursor-select key on a showing highlight SHALL toggle
-pencil mode, and the cursor keys SHALL move the highlight.
+take a pencil mark. The cursor keys SHALL move the highlight.
 
 #### Scenario: A right press on a filled cell without sticky mode
 
@@ -172,22 +171,6 @@ mouse highlight.
 - **WHEN** a cell is highlighted and a digit key is pressed
 - **THEN** that digit is placed in the cell, or in pencil mode its pencil mark
   is toggled
-
-### Requirement: Keen's mark-all key fills, then cleans
-
-While any empty cell has no notes, the `M`/`m` key SHALL fill every empty cell
-that has none with all candidate pencil marks. On a board whose every empty
-cell is noted it SHALL strike the candidates already placed in each cell's row
-or column, and SHALL NOT strike a candidate for standing elsewhere in the
-cell's cage.
-
-#### Scenario: Mark-all fills pencil candidates
-
-- **WHEN** the `M` key is pressed on a board with an empty cell that has no
-  notes
-- **THEN** `interpretMove` yields a `pencilAll` move
-- **AND** `executeMove` fills every empty cell that has no notes with all
-  candidate pencil marks, and leaves a cell the player has narrowed as it is
 
 ### Requirement: Auto-pencil strikes a placed digit from its row and column
 
@@ -252,11 +235,10 @@ mistake overlay.
 ### Requirement: Keen flags mistakes against its unique solution
 
 The game SHALL implement `findMistakes`: re-solve from the cage clue structure
-to the unique solution, deriving it from the clues only and never the player's
-notes, and return every player cell that contradicts it: a filled cell whose
-digit is wrong (`"cell"`), and an empty cell whose non-empty pencil notes have
-crossed out its solution digit (`"note"`). When the board is not uniquely
-solvable from the clues the result SHALL be empty.
+to the unique solution and return every player cell that contradicts it: a
+filled cell whose digit is wrong (`"cell"`), and an empty cell whose non-empty
+pencil notes have crossed out its solution digit (`"note"`). When the board is
+not uniquely solvable from the clues the result SHALL be empty.
 
 #### Scenario: A wrong digit and a wrong note are flagged
 
@@ -268,9 +250,8 @@ solvable from the clues the result SHALL be empty.
 
 ### Requirement: Keen exposes pencil-mark preferences
 
-The game SHALL offer a sticky-pencil-mode preference (default on: right-click
-toggles a persistent pencil mode) and an auto-pencil preference (default off,
-so the player cleans notes with the mark-all control or a hint).
+The game SHALL offer a sticky-pencil-mode preference and an auto-pencil
+preference.
 
 #### Scenario: Pencil preferences are exposed with their defaults
 
@@ -281,17 +262,8 @@ so the player cleans notes with the mark-all control or a hint).
 ### Requirement: Keen provides an explained deduction hint
 
 The hint SHALL teach the player the next deduction in pencil-notes terms. Its
-deductions SHALL be recorded on a sound candidate cube seeded from the placed
-entries only, never from the player's pencil notes, since a note can be wrong,
-and SHALL be capped below recursion, because a guess is not a teachable note
-strike.
-
-#### Scenario: A wrong-looking note does not steer the deduction
-
-- **WHEN** a hint is asked for on a mistake-free board whose notes the player
-  has narrowed
-- **THEN** the recording solver is given the placed digits alone and reads no
-  note
+deductions SHALL be capped below recursion, because a guess is not a teachable
+note strike.
 
 #### Scenario: A hint on an Unreasonable board
 
@@ -315,8 +287,7 @@ acted-on hint color.
   arithmetic clue rules a digit out of one of its cells
 - **THEN** the hint returns a step whose `pencilStrike` move clears exactly those
   candidates
-- **AND** the cage's cells are striped, the cell is ringed in the hint color and
-  the struck candidates are shown with a line through them
+- **AND** the cage's cells are striped and the cell is ringed in the hint color
 
 #### Scenario: Two cages could prune at once
 
@@ -341,34 +312,6 @@ of N"), then give the reasoning, then end in a necessity-voice conclusion.
 - **WHEN** every way to fill a `10×` cage places a 1 in its row
 - **THEN** the step's sentence begins "This cage must multiply to 10, and every
   way to fill it places a 1 in its row"
-
-### Requirement: Every Keen hint step is monotone progress
-
-Every step SHALL be monotone progress: a note written, a note removed by a
-strike, or a cell filled by a placement, never undone by the hint. A freshly
-recomputed hint from any solvable, mistake-free mid-game position SHALL
-therefore make progress and lead to a solved board, and on recompute the plan
-SHALL skip any operation already reflected on the board.
-
-#### Scenario: The hint resumes from a self-played mid-game position
-
-- **WHEN** a hint is requested from a solvable, mistake-free board the player
-  reached by their own notes and placements
-- **THEN** the freshly-recomputed hint makes progress and, applied step by step
-  with recompute, leads to a solved board
-
-### Requirement: Keen keeps a hint plan while the player follows it
-
-`hintKeepTrack` SHALL advance the plan when the player's move matches the
-displayed step's intent: a pencil toggle clearing one of a strike step's marks
-is `onTrack`, the step shrinking in place, or `completed` when it clears the
-last, and a move that makes the whole step, a placement of the hinted value
-among them, is `completed`. Any other move SHALL drop the plan (`off`).
-
-#### Scenario: The player clears one of two struck candidates
-
-- **WHEN** a step strikes two candidates and the player toggles one of them off
-- **THEN** the verdict is `onTrack` and the step strikes only the other
 
 ### Requirement: Keen provides on-screen key labels
 

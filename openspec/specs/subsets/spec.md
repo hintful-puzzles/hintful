@@ -383,13 +383,13 @@ generator's known assignment, and SHALL NOT be checked against the other cap.
 The generator SHALL assign every set-value to the grid by a single shuffle,
 derive all arrow clues from the subset relation, then blank cells in a shuffled
 order, keeping a cell blank only while the solver, capped at the requested
-tier, still reaches a complete solution. Generation from a given seed SHALL be
-reproducible.
+tier, still reaches a complete solution.
 
-#### Scenario: Generation is reproducible from a seed
+#### Scenario: A cell the capped solver needs stays given
 
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
+- **WHEN** blanking a cell leaves a board the solver, capped at the requested
+  tier, does not complete
+- **THEN** that cell is given again, and the blanking goes on to the next
 
 ### Requirement: A board above the lowest tier is not solved by the tier below
 
@@ -476,8 +476,8 @@ slot holds nothing. No state SHALL be told by a step of gray.
 
 ### Requirement: The completion flash lifts every slot
 
-On a lit beat of the completion flash every slot SHALL take the lifted
-surface, a step that reads in both schemes, and keep its letter or cross.
+On a lit beat of the completion flash every slot SHALL take the lifted surface
+and keep its letter or cross.
 
 #### Scenario: The flash lifts every slot
 

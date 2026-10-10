@@ -128,17 +128,11 @@ the digits 1 to the grid size and a clear key.
 - **WHEN** the cursor is on a given cell and a different digit is typed
 - **THEN** no move is made
 
-#### Scenario: A left-click in pencil mode
-
-- **WHEN** pencil mode is on under the sticky pencil preference and the player
-  left-clicks an empty cell and types a digit
-- **THEN** the digit is toggled as a pencil mark in that cell
-
 ### Requirement: Mathrax offers the sticky pencil and auto-pencil preferences
 
-Mathrax SHALL offer the collection's sticky pencil preference, defaulting on,
-and its auto-pencil preference. When auto-pencil is on a placement SHALL remove
-its digit from the pencil marks of the rest of its row and column, both on the
+Mathrax SHALL offer the collection's sticky pencil preference and its
+auto-pencil preference. When auto-pencil is on a placement SHALL remove its
+digit from the pencil marks of the rest of its row and column, both on the
 board and in the hint's plan.
 
 #### Scenario: A placement clears its digit from its row and column
@@ -150,11 +144,11 @@ board and in the hint's plan.
 ### Requirement: Mathrax flags mistakes against the unique solution
 
 Mathrax SHALL provide `findMistakes`. It SHALL re-solve from the given digits
-and the clues to the unique solution, never from the player's entries or
-notes, and flag every placed digit that contradicts it and every empty cell
-whose non-empty pencil notes have crossed out its solution value. A cell whose
-notes merely carry extra candidates SHALL NOT be flagged. When the board is
-not uniquely deducible, no cell SHALL be flagged.
+and the clues to the unique solution, and flag every placed digit that
+contradicts it and every empty cell whose non-empty pencil notes have crossed
+out its solution value. A cell whose notes merely carry extra candidates SHALL
+NOT be flagged. When the board is not uniquely deducible, no cell SHALL be
+flagged.
 
 #### Scenario: A wrong placed digit is flagged
 
@@ -213,19 +207,13 @@ guessing and verifying.
 Uniqueness SHALL be required at *every* difficulty, including the
 guess-and-verify `Unreasonable` tier, because a board with no unique answer
 cannot be mistake-checked. The generator SHALL NOT take an ambiguous solver
-verdict as grounds to keep removing. Generation from a given seed SHALL be
-reproducible.
+verdict as grounds to keep removing.
 
 #### Scenario: Even the guess-and-verify tier yields a unique solution
 
 - **WHEN** a board is generated at the `Unreasonable` difficulty
 - **THEN** it has exactly one solution, and it cannot be solved without the
   guess-and-verify step
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
 
 ### Requirement: Mathrax's hint plan is the shared candidate-elimination walk
 
@@ -240,10 +228,9 @@ cells.
 - **WHEN** a hint is requested with no `Ui` on a board with no notes
 - **THEN** no step of the plan is `pencilAll`
 
-### Requirement: The recording solve reads placed digits and stops below the guess-and-verify tier
+### Requirement: The recording solve stops below the guess-and-verify tier
 
-The recording solve SHALL be seeded from the placed digits alone, never from the
-player's notes, and SHALL be capped below the guess-and-verify tier, because a
+The recording solve SHALL be capped below the guess-and-verify tier, because a
 guess is not a teachable note strike.
 
 #### Scenario: A board at the top tier is hinted by deduction alone

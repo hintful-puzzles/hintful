@@ -114,12 +114,12 @@ The generator SHALL place blocks under the chosen symmetry, fill and clue
 the board, and retain a candidate only while the deductive solver deduces it to a
 unique completion; it SHALL then remove clues in a randomized order. At Easy
 it SHALL keep each removal only while the solver still completes the board.
-Generation from a given seed SHALL be reproducible.
 
-#### Scenario: Generation is reproducible from a seed
+#### Scenario: A clue the solver needs is put back
 
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
+- **WHEN** an Easy board is stripped, and taking a clue out leaves a board the
+  solver does not complete
+- **THEN** that clue is put back, and the strip goes on to the next
 
 ### Requirement: Uniqueness is established by a witness independent of the solver
 

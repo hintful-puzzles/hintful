@@ -297,8 +297,7 @@ a wall in ink, an edge ruled out and an edge undecided each in its own color.
 
 ### Requirement: The solved flash lifts every cell
 
-The solved flash SHALL lift every cell to the given's surface on its lit beats,
-a step that reads in both schemes.
+The solved flash SHALL lift every cell to the given's surface on its lit beats.
 
 #### Scenario: The flash lifts the cells
 

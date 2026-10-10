@@ -478,8 +478,7 @@ in motion SHALL be drawn with the same face and border as one at rest.
 ### Requirement: The completion flash lifts the tiles
 
 The completion flash SHALL lift a tile to the collection's lifted surface on
-its lit beats, the surface Net lifts its tiles to, a step that reads in both
-schemes.
+its lit beats, the surface Net lifts its tiles to.
 
 #### Scenario: The flash lifts the tiles
 

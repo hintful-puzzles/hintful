@@ -433,7 +433,7 @@ color.
 
 A completed correct region SHALL fill whole, its clue cells included, with the
 shared finished-region role. The solved flash SHALL lift every cell to the
-given's surface on its lit beats, a step that reads in both schemes.
+given's surface on its lit beats.
 
 #### Scenario: A clue cell in a finished region takes the region's fill
 

@@ -199,15 +199,10 @@ one barrel (Solve's) SHALL be shown at once.
 - **THEN** the player is drawn moving along the walk, then the player and the barrel
   together, and the settled frame leaves nothing of the motion behind
 
-### Requirement: Sokoban generation is deterministic
+### Requirement: Sokoban generates a board by reversing a solution
 
-Sokoban generation SHALL use a reverse-move generator over the shared seeded RNG, so
-that a given seed always produces the same board.
-
-#### Scenario: The same seed reproduces the same board
-
-- **WHEN** the same size and seed are used twice to generate a game
-- **THEN** both runs produce the identical description
+Sokoban generation SHALL use a reverse-move generator, so that every board it
+deals is solvable.
 
 #### Scenario: A new game produces a solvable board
 

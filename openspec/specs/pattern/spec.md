@@ -341,10 +341,10 @@ cell holds.
 ### Requirement: Pattern draws its picture as shaded pieces and crosses on a quiet surface
 
 `redraw` SHALL draw the board as pieces on a quiet surface. A `Full` cell SHALL
-hold the collection's shaded piece, in the shaded color and shape, inset on its
-cell. A cell marked `Empty` SHALL be plain surface holding the ruled-out cross,
-with no fill of its own, and an `Unknown` cell SHALL be plain surface holding
-nothing. The three states SHALL NOT be told apart by a step of gray.
+hold the collection's shaded piece, inset on its cell. A cell marked `Empty`
+SHALL be plain surface holding the ruled-out cross, with no fill of its own,
+and an `Unknown` cell SHALL be plain surface holding nothing. The three states
+SHALL NOT be told apart by a step of gray.
 
 #### Scenario: The three states are a piece, a cross and nothing
 
@@ -365,19 +365,6 @@ line every fifth cell. The clue numbers SHALL stay in the ink color.
 - **WHEN** a 10×10 board is drawn
 - **THEN** the line between the fifth and sixth columns is doubled
 - **AND** the frame at the grid's outer edge is one line thick
-
-### Requirement: Pattern names no hue of its own
-
-The game SHALL name no hue of its own: its hint sentences, its control words
-and its hint-mark legend SHALL say the engine's word for the shaded piece and
-its word for a cell known not to be shaded, and its help page SHALL name the
-shaded color by placeholder.
-
-#### Scenario: A hint names the shaded piece by the engine's word
-
-- **WHEN** a hint step concludes that cells must be `Full`, or must be `Empty`
-- **THEN** its sentence says the engine's word for the shaded piece, or its
-  word for a cell known not to be shaded
 
 ### Requirement: Pattern counts a board's answers by a bounded search
 

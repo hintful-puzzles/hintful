@@ -334,10 +334,9 @@ counts from SHALL have its number drawn in `COL_HINT`.
 
 `redraw` SHALL draw the board as pieces on a quiet surface. A cell the player
 has shaded (the state called black elsewhere) SHALL hold the collection's
-shaded piece, in its color and shape, inset on its cell. A cell marked as not
-shaded (white) SHALL hold the collection's ruled-out cross and take no fill of
-its own, and an undecided cell SHALL be the plain cell surface, so no state is
-told by a step of gray.
+shaded piece, inset on its cell. A cell marked as not shaded (white) SHALL hold
+the collection's ruled-out cross and take no fill of its own, and an undecided
+cell SHALL be the plain cell surface, so no state is told by a step of gray.
 
 #### Scenario: Three states on one surface
 
@@ -373,8 +372,7 @@ piece SHALL keep its own color.
 ### Requirement: The Range completion flash lifts every cell
 
 The completion flash SHALL lift every cell to the given's surface on its lit
-beats, a step that reads in both schemes, and SHALL leave the pieces
-standing.
+beats and SHALL leave the pieces standing.
 
 #### Scenario: A flashing board keeps its pieces
 

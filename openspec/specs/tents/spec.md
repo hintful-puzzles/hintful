@@ -213,18 +213,20 @@ color.
   solution gives it, and `findMistakes` runs
 - **THEN** that link is reported and drawn in the mistake color
 
-### Requirement: Tents generates solver-gated boards reproducibly
+### Requirement: Tents generates solver-gated boards
 
-`newDesc` SHALL generate the same board for the same seed. It SHALL place
-`w*h/5` tents, rounded down, no two of them adjacent even diagonally, and a
-tree beside each in a one-to-one matching; reject any layout with a row or
-column that holds neither a tree nor a tent; and accept only when the solver
-succeeds at the target difficulty and fails to converge one level below.
+`newDesc` SHALL place `w*h/5` tents, rounded down, no two of them adjacent
+even diagonally, and a tree beside each in a one-to-one matching; reject any
+layout with a row or column that holds neither a tree nor a tent; and accept
+only when the solver succeeds at the target difficulty and fails to converge
+one level below.
 
-#### Scenario: Generation is reproducible from a seed
+#### Scenario: A layout with an empty column is thrown away
 
-- **WHEN** `newDesc` runs twice with the same params and seed
-- **THEN** both runs emit the identical Tents description
+- **WHEN** a layout places every tent and tree and leaves one column with
+  neither
+- **THEN** it is thrown away before the solver is asked, and another layout
+  is drawn
 
 ### Requirement: Tents renders trees, tents, clues and the cursor
 

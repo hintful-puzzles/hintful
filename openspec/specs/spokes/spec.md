@@ -244,12 +244,14 @@ performance dial, since lifting it would silently make the middle tier a search.
 
 The generator SHALL use the solver to keep every board uniquely soluble at the
 target difficulty, and every hub of a generated board SHALL carry at least one
-line. Generation from a given seed SHALL be reproducible.
+line.
 
-#### Scenario: Generation is reproducible from a seed
+#### Scenario: A hub's last line is never stripped
 
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
+- **WHEN** the generator comes to strip a line that is the only one left at
+  either of its hubs
+- **THEN** the line stays, whether or not the board would solve uniquely
+  without it
 
 ### Requirement: Spokes marks hubs whose spoke count is met
 

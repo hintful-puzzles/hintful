@@ -35,8 +35,8 @@ board that starts finished and which the generator provably cannot satisfy.
 `validateParams` SHALL reject a board whose cell count exceeds a documented
 bound, because generation runs an exhaustive breadth-first search whose memory
 grows explosively with board area and, past the bound, exhausts the heap rather
-than merely running slowly. The bound SHALL be at least as large as the largest
-shipped preset, and the measurements that set it SHALL be recorded with it.
+than merely running slowly. The measurements that set the bound SHALL be
+recorded with it.
 
 #### Scenario: A board too large to generate is rejected with a reason
 
@@ -184,21 +184,15 @@ and SHALL then report that no solution exists within the limit.
 ### Requirement: Slide's generator keeps every board soluble
 
 The generator SHALL use the solver to keep every board soluble: it SHALL remove
-singleton blocks until the board becomes soluble, then attempt to merge adjacent
-blocks in a randomized order, keeping a merge only while the board stays
-soluble. Generation from a given seed SHALL be reproducible.
+singleton blocks until the board becomes soluble, then attempt to merge
+adjacent blocks in a randomized order, keeping a merge only while the board
+stays soluble.
 
 #### Scenario: Every generated board is soluble
 
 - **WHEN** a new game is generated for any preset or legal size
 - **THEN** a board is produced whose main block can be slid to the target within
   the recorded minimum number of moves
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description and minimum move
-  count
 
 ### Requirement: Slide's board reads by color, not by bevel alone
 

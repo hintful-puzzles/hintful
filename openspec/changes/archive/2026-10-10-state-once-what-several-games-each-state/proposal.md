@@ -2,7 +2,8 @@
 
 **Status: filed 2026-10-09 by the session that archived `regroup-the-specs`,
 on the owner's word that its findings merit a change. What it says of the
-specs was true that day; re-check before relying on it.**
+specs was true that day; re-check before relying on it. Taken up and
+finished on 2026-10-10: `design.md` says how it went and where it ended.**
 
 ## Why
 

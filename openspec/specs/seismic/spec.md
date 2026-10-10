@@ -87,10 +87,9 @@ several seeds, and the bound SHALL NOT be set from medians.
 A preset SHALL NOT be a size whose worst observed run is a long wait: it is
 offered to everyone who opens the Type menu, so a long generation there is a
 wait nobody chose, whereas a Custom size is a wait the player asked for, and a
-slow Custom size within the bound SHALL be accepted. Every preset SHALL pass
-validation and SHALL be no larger than `MAX_CELLS_SEISMIC`, the largest area
-whose worst observed run is short, in either mode, and a test SHALL assert
-this.
+slow Custom size within the bound SHALL be accepted. Every preset SHALL be no
+larger than `MAX_CELLS_SEISMIC`, the largest area whose worst observed run is
+short, in either mode, and a test SHALL assert this.
 
 #### Scenario: A size whose worst case is a long wait is kept out of the menu
 
@@ -134,12 +133,9 @@ accept a description of the two comma-separated parts.
 ### Requirement: Seismic input, note-taking and completion
 
 Seismic SHALL be played by the note-taking cell's rules and SHALL offer a
-sticky pencil mode preference, on by default.
-With it on, a right press SHALL switch pencil mode and a left press SHALL
-select the cell in the mode that is on; with it off, a left press SHALL select
-a cell for number entry and a right press for pencil marks. The cursor keys
-SHALL move the selection. The game SHALL be solved when every cell is filled
-and every region and keep-apart rule is satisfied.
+sticky pencil mode preference. The cursor keys SHALL move the selection. The
+game SHALL be solved when every cell is filled and every region and keep-apart
+rule is satisfied.
 
 #### Scenario: Completing the grid wins
 
@@ -168,9 +164,7 @@ and, in pencil mode, a clear on a cell with no notes.
 ### Requirement: Mark-all fills a note-less cell with its region's candidates
 
 The game SHALL offer a mark-all action that fills every empty cell holding no
-notes with all of its region's candidates. It SHALL NOT reset a cell whose
-notes the player has narrowed, and SHALL make no move when no empty cell lacks
-notes.
+notes with all of its region's candidates.
 
 #### Scenario: Mark-all leaves a narrowed cell alone
 
@@ -235,13 +229,7 @@ candidates.
 
 After the fill the generator SHALL strip clues while the puzzle stays soluble
 at the target difficulty, and SHALL accept a puzzle only when it is soluble at
-that difficulty and not at the difficulty below. Generation from a given seed
-SHALL be reproducible.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
+that difficulty and not at the difficulty below.
 
 #### Scenario: Every preset produces a soluble board
 

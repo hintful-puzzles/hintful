@@ -526,22 +526,13 @@ selection band SHALL stay visible just inside a hint band on the same region.
 Map SHALL declare `canMarkAll` and answer the `M` key with an adaptive
 Mark-all: while some blank region has no dots, the press SHALL dot all four
 colors into every such region and change no other; once none is left, it SHALL
-remove from each blank region the dots of the colors its neighbors show,
-keeping a region's last dot and not emptying it; and a press with nothing to
-do SHALL be no move.
+remove from each blank region the dots of the colors its neighbors show.
 
 #### Scenario: Two presses dot each region with what its neighbors leave
 
 - **WHEN** the player presses Mark-all twice on a fresh board
 - **THEN** every blank region shows as dots exactly the colors no neighbor shows, and
   a third press is no move
-
-#### Scenario: The press never refills a region the player narrowed
-
-- **WHEN** some blank regions carry the player's dots and others carry none, and the
-  player presses Mark-all
-- **THEN** only the regions with no dots gain dots, and every other region's dots are
-  unchanged
 
 ### Requirement: Map offers the player's reading of an undotted region
 

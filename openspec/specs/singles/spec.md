@@ -427,11 +427,10 @@ drawn as the cue that is not a color.
 
 ### Requirement: Singles generates unique, difficulty-graded boards
 
-`newDesc` SHALL deal a board with exactly one solution. It SHALL accept a
-board only when it is solvable at the requested difficulty and *not* solvable
-one difficulty level below (with the sneaky generation-artifact deduction
-enabled), regenerating otherwise. Generation from a given seed SHALL be
-reproducible.
+`newDesc` SHALL deal a board with exactly one solution. It SHALL accept a board
+only when it is solvable at the requested difficulty and *not* solvable one
+difficulty level below (with the sneaky generation-artifact deduction enabled),
+regenerating otherwise.
 
 #### Scenario: Generated boards are uniquely solvable at their difficulty
 
@@ -439,11 +438,6 @@ reproducible.
 - **THEN** the solver solves it at D
 - **AND** (for Normal) the solver fails to solve it at the level below D even
   with the sneaky deduction
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** `newDesc` runs twice with the same params and seed
-- **THEN** both runs emit the identical Singles description
 
 ### Requirement: Normal is refused on a Singles grid under 4 squares both ways
 

@@ -65,7 +65,7 @@ desc that overruns it.
 
 `interpretMove` SHALL cycle a square blank→`\`→`/`→blank on a left-click and
 blank→`/`→`\`→blank on a right-click, the two swapped when the `left-button`
-preference selects `/`-first. A click outside the grid SHALL be ignored.
+preference selects `/`-first.
 
 #### Scenario: Left-click cycles a square
 
@@ -312,19 +312,13 @@ ruled out becomes equivalent.
   side, both ends inside the grid
 - **THEN** neither v-shape is left to the pair and the two become equivalent
 
-### Requirement: Slant generates solver-gated boards reproducibly
+### Requirement: Slant generates solver-gated boards
 
-`newDesc` SHALL generate the same board for the same seed. A generated board
-SHALL have a unique solution that its difficulty's solver finds, and above Easy
-SHALL NOT be solvable one level down. A clue SHALL stay removed only while that
-solver still finds the solution, and above Easy the obvious starting points
-(4s, 0s, border 2s and corner 1s) SHALL be tried for removal before the rest,
-so that few of them survive.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** `newDesc` runs twice with the same params and seed
-- **THEN** both runs emit the identical Slant description
+A generated board SHALL have a unique solution that its difficulty's solver
+finds, and above Easy SHALL NOT be solvable one level down. A clue SHALL stay
+removed only while that solver still finds the solution, and above Easy the
+obvious starting points (4s, 0s, border 2s and corner 1s) SHALL be tried for
+removal before the rest, so that few of them survive.
 
 #### Scenario: A removal the solver cannot bear is undone
 
@@ -388,8 +382,7 @@ in error.
 ### Requirement: The completion flash lifts the squares in three phases
 
 The completion flash SHALL run in three phases, lit on the first and the last.
-On its lit beats it SHALL lift the squares to the given's surface, a step that
-reads in both schemes.
+On its lit beats it SHALL lift the squares to the given's surface.
 
 #### Scenario: The middle phase is unlit
 

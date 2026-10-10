@@ -88,12 +88,12 @@ characters, short descs and over-long descs.
 ### Requirement: Light Up accepts pointer and cursor input
 
 A left-click SHALL toggle a bulb on an open square that carries no mark, and a
-right-click the impossible-mark on an open square that carries no bulb. A
-click on a wall or outside the grid SHALL be a no-op. A left-click on a marked
-square, and a right-click on a bulb, SHALL be rejected without a history
-entry. A right-drag SHALL repeat the right-click on the squares it passes that held
-what the pressed square held, and a left-drag SHALL repeat nothing, because a
-row of bulbs light each other.
+right-click the impossible-mark on an open square that carries no bulb. A click
+on a wall SHALL be a no-op. A left-click on a marked square, and a right-click
+on a bulb, SHALL be rejected without a history entry. A right-drag SHALL repeat
+the right-click on the squares it passes that held what the pressed square
+held, and a left-drag SHALL repeat nothing, because a row of bulbs light each
+other.
 
 #### Scenario: Left-click places and toggles a bulb
 
@@ -371,13 +371,7 @@ The generator SHALL place walls symmetrically per the symmetry mode, SHALL
 number every wall from a correct set of bulbs, and SHALL accept the grid only
 when the solver solves it at the target difficulty. It SHALL then strip
 numbers, keeping each removal only while the puzzle stays good, and SHALL
-reject a board that is then still solvable one difficulty lower. Generation
-from a given seed SHALL be reproducible.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** `newDesc` is run twice for the same preset and seed
-- **THEN** both runs produce the identical description
+reject a board that is then still solvable one difficulty lower.
 
 #### Scenario: A removal that breaks the puzzle is put back
 

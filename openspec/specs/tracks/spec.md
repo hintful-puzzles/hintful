@@ -308,20 +308,14 @@ deduction (`check-neighbors-both-ways`) and the bridge-parity argument
 - **THEN** neither the two-way neighbor deduction nor the bridge-parity
   argument runs
 
-### Requirement: Tracks generates solver-gated boards reproducibly
+### Requirement: Tracks generates solver-gated boards
 
-`newDesc` SHALL generate the same board for the same seed, and SHALL strip
-every clue the board solves at its tier without. It SHALL lay the track by
-construction and not by throwing tracks away: a walk that does not leave the
-board while a row or column holds no track, and that never steps where the
-squares still free no longer reach every such row and column and the bottom
-edge. Every clue of a dealt board SHALL therefore be at least 1, at any size
-the params allow.
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** `newDesc` runs twice with the same params and seed
-- **THEN** both runs emit the identical Tracks description
+`newDesc` SHALL strip every clue the board solves at its tier without. It
+SHALL lay the track by construction and not by throwing tracks away: a walk
+that does not leave the board while a row or column holds no track, and that
+never steps where the squares still free no longer reach every such row and
+column and the bottom edge. Every clue of a dealt board SHALL therefore be at
+least 1, at any size the params allow.
 
 #### Scenario: A long thin board deals
 

@@ -9,7 +9,7 @@
  * engine module reaching for a Lit component). Nothing objected before this.
  *
  * Implemented as an in-repo test rather than a `dependency-cruiser` config
- * (`enforce-module-layering` D-choice): four rules over a fixed directory layout
+ * (`enforce-module-layering` D-choice): a few rules over a fixed directory layout
  * express fine here, they run inside the vitest step the gate already pays for,
  * and this repo already asserts cross-cutting invariants this way — see
  * `asset-integrity.test.ts` and `catalog-registry.test.ts`.
@@ -151,6 +151,23 @@ describe("module layering", () => {
       }
     }
     // Shared behavior belongs in src/engine/, never in a sibling game.
+    expect(offenders).toEqual([]);
+  });
+
+  it("no game imports the midend", () => {
+    // `ts-engine`, "A game depends on the `Game` interface and never on the
+    // midend". A type-only import counts: a game that names the midend's type
+    // is one step from calling it. A game's tests drive a board through the
+    // midend and are outside `modules`.
+    const offenders: string[] = [];
+    for (const [path, text] of modules) {
+      if (!gameOf(path)) continue;
+      for (const { spec } of imports(text)) {
+        if (resolve(path, spec) === "src/engine/midend.ts") {
+          offenders.push(`${path} → ${spec}`);
+        }
+      }
+    }
     expect(offenders).toEqual([]);
   });
 
