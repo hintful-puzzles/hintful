@@ -28,6 +28,8 @@
   the menu gained its four Unreasonable lines.
   **Separate: done.** Every line gained `de` (`5x5n5` is now `5x5n5de`), and
   the menu gained its four Unreasonable lines.
+  **Signpost: done.** Every line gained `de` after what it had (`5x5c` is now
+  `5x5cde`), and the menu's lines moved with the menu.
 
 ## 2. One game to the end: Pattern
 
@@ -217,7 +219,40 @@
       Stopping the swaps at the first one that stops the solver would leave
       it half the board, and was not taken because one board in four dealt
       that way falls to a single join and a look.
-  - [ ] Signpost, Sticks, Net, Range,
+  - [x] **Signpost** (2026-10-10). Measured: a deal is 1 ms at 4x4 and 5x5,
+    3 ms at 6x6, 8 ms at 7x7, 0.26 s at 12x12 and 0.9 s at 15x15, four to
+    five times an Easy one; a dealt board needs a median of 3 positions at
+    4x4, 15 at 6x6 and 25 at 7x7; the hint leaves a median of 7 links of 15
+    unmade at 4x4 and 30 of 48 at 7x7. Decided, each with its reason in the
+    guide's "What Signpost, the eighth, added":
+    - The generator strips further numbers from an Easy board by the search,
+      within 30 positions, never the first or last. One more deduction would
+      not finish these boards past 4x4: a link and a look settles 34 of 150
+      at 4x4, 19 at 5x5 and 7 at 6x6.
+    - The menu is upstream's four sizes at both tiers and its two boards
+      with free ends at Easy.
+    - Unreasonable is dealt up to 225 squares and 30 on the longer side. It
+      is refused on five squares or fewer, on 2x3 and 2x4, and on 3x3 with
+      its ends in the corners, where every board was tried. A 1x6 strip has
+      the tier.
+    - The ledger's Signpost board has several answers.
+    - **A defect in the solver, found by the counter and fixed here.** The
+      numbering read a blank square inside a chain as a given number, which
+      only the solver's several links in a pass can leave. From a position
+      with chains on it the solver then forced links that nothing forces,
+      and 3 to 9 in 100 of the boards the search called unique had two
+      answers. Easy boards were not touched by it: none of 4,000 had a
+      second answer, and the differential's boards are the same.
+    - **A defect in Easy, found by measuring and filed, not fixed here.**
+      Signpost has no size bound. A 20x20 board takes 1.8 s, 22x22 gives up
+      half the time after 3 to 6 s, 25x25 and past it nearly always, and a
+      2x250 board takes 19 s. The numbers are in
+      `openspec/changes/bound-signpost-to-the-boards-it-deals`.
+    - **For the owner to look at, not blocking:** a quarter of the 4x4
+      boards fall to one link and a look, where a 4x4 has too few squares to
+      hide more. The two boards with free ends are on the menu at Easy only,
+      as Crossing's symmetric ones are.
+  - [ ] Sticks, Net, Range,
     Rectangles. For each, do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
     finish of the boards the tier deals, and sweep the shorter side when

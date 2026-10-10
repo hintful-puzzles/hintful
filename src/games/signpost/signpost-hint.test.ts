@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -14,10 +15,10 @@ import type { SignpostMove, SignpostParams, SignpostState } from "./state.ts";
 type Step = HintStep<SignpostMove, SignpostHint, SignpostRung>;
 
 const SIZES: SignpostParams[] = [
-  { w: 4, h: 4, forceCornerStart: true },
-  { w: 5, h: 5, forceCornerStart: false },
-  { w: 6, h: 6, forceCornerStart: true },
-  { w: 7, h: 7, forceCornerStart: false },
+  { w: 4, h: 4, forceCornerStart: true, diff: DIFF_EASY },
+  { w: 5, h: 5, forceCornerStart: false, diff: DIFF_EASY },
+  { w: 6, h: 6, forceCornerStart: true, diff: DIFF_EASY },
+  { w: 7, h: 7, forceCornerStart: false, diff: DIFF_EASY },
 ];
 const SEEDS = ["a", "b", "c", "d"];
 

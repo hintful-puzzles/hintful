@@ -33,6 +33,10 @@ export interface SignpostParams {
   w: number;
   h: number;
   forceCornerStart: boolean;
+  /** `DIFF_EASY`, a board the solver's forced links finish, or
+   * `DIFF_UNREASONABLE`, one with a single answer that they do not reach.
+   * Generation-time only. */
+  diff: number;
 }
 
 export interface SignpostState {
@@ -133,7 +137,9 @@ export function cloneState(s: SignpostState): SignpostState {
     h: s.h,
     n: s.n,
     impossible: s.impossible,
-    dirs: new Int8Array(s.dirs),
+    // Shared, not copied: no move changes an arrow, and it is the part of a
+    // board every state of one game holds in common (`answerOf`).
+    dirs: s.dirs,
     nums: new Int32Array(s.nums),
     flags: new Uint8Array(s.flags),
     next: new Int32Array(s.next),
@@ -352,7 +358,15 @@ function headNumber(s: SignpostState, i: number): HeadMeta {
   let color = c;
   let nn = 1;
   for (let j = s.next[i]; j !== -1; j = s.next[j], nn++) {
-    if (s.nums[j] === 0 && s.next[j] === -1) break;
+    // A blank square has no color to offer, whether it ends the chain (as it
+    // does after one move in play) or sits inside it, which only the solver's
+    // several links in a pass can leave. Upstream reads the second as color
+    // 0, the real numbers, and numbers the chain 0, 1, 2 from its head: the
+    // solver then takes those for given numbers and forces links from them.
+    if (s.nums[j] === 0) {
+      if (s.next[j] === -1) break;
+      continue;
+    }
     const cj = colorOf(s, s.nums[j]);
     if (cj !== c) {
       if (nn < sz - nn) color = cj;

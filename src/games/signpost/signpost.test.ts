@@ -3,6 +3,7 @@
  * generator solvability, solver, findMistakes, and a render smoke.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -28,69 +29,100 @@ import {
 } from "./state.ts";
 
 const PRESETS = [
-  { w: 4, h: 4, forceCornerStart: true },
-  { w: 4, h: 4, forceCornerStart: false },
-  { w: 5, h: 5, forceCornerStart: true },
-  { w: 5, h: 5, forceCornerStart: false },
+  { w: 4, h: 4, forceCornerStart: true, diff: DIFF_EASY },
+  { w: 4, h: 4, forceCornerStart: false, diff: DIFF_EASY },
+  { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY },
+  { w: 5, h: 5, forceCornerStart: false, diff: DIFF_EASY },
 ];
 
 describe("signpost params codec", () => {
   it("round-trips full params (corner start)", () => {
-    const p = { w: 5, h: 5, forceCornerStart: true };
+    const p = { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY };
     const enc = signpostGame.encodeParams(p, true);
-    expect(enc).toBe("5x5c");
+    expect(enc).toBe("5x5cde");
     expect(signpostGame.decodeParams(enc)).toEqual(p);
+    // A string from before the tiers reads as Easy.
+    expect(signpostGame.decodeParams("5x5c")).toEqual(p);
+    expect(signpostGame.encodeParams({ ...p, diff: DIFF_UNREASONABLE }, true)).toBe(
+      "5x5cdu",
+    );
+    expect(signpostGame.encodeParams({ ...p, diff: DIFF_UNREASONABLE }, false)).toBe(
+      "5x5",
+    );
   });
 
   it("round-trips full params (free ends)", () => {
-    const p = { w: 6, h: 4, forceCornerStart: false };
+    const p = { w: 6, h: 4, forceCornerStart: false, diff: DIFF_EASY };
     const enc = signpostGame.encodeParams(p, true);
-    expect(enc).toBe("6x4");
+    expect(enc).toBe("6x4de");
     expect(signpostGame.decodeParams(enc)).toEqual(p);
+    expect(signpostGame.decodeParams("6x4")).toEqual(p);
   });
 
   it("rejects a 1x1 full generation", () => {
     expect(
-      paramsError(signpostGame, { w: 1, h: 1, forceCornerStart: true }, true),
+      paramsError(
+        signpostGame,
+        { w: 1, h: 1, forceCornerStart: true, diff: DIFF_EASY },
+        true,
+      ),
     ).not.toBeNull();
     expect(
-      paramsError(signpostGame, { w: 4, h: 4, forceCornerStart: true }, true),
+      paramsError(
+        signpostGame,
+        { w: 4, h: 4, forceCornerStart: true, diff: DIFF_EASY },
+        true,
+      ),
     ).toBeNull();
     expect(
-      paramsError(signpostGame, { w: 4, h: 0, forceCornerStart: true }, true),
+      paramsError(
+        signpostGame,
+        { w: 4, h: 0, forceCornerStart: true, diff: DIFF_EASY },
+        true,
+      ),
     ).toBe("Height must be at least 1.");
   });
 
   it("labels free ends, and says nothing of corners", () => {
-    expect(describeParams(signpostGame, { w: 6, h: 4, forceCornerStart: false })).toBe(
-      "6x4, free ends",
-    );
-    expect(describeParams(signpostGame, { w: 6, h: 4, forceCornerStart: true })).toBe(
-      "6x4",
-    );
+    expect(
+      describeParams(signpostGame, {
+        w: 6,
+        h: 4,
+        forceCornerStart: false,
+        diff: DIFF_EASY,
+      }),
+    ).toBe("6x4 Easy, free ends");
+    expect(
+      describeParams(signpostGame, {
+        w: 6,
+        h: 4,
+        forceCornerStart: true,
+        diff: DIFF_EASY,
+      }),
+    ).toBe("6x4 Easy");
   });
 });
 
 describe("signpost desc codec", () => {
   it("round-trips a generated desc through unpick + generateDesc", () => {
-    const p = { w: 4, h: 4, forceCornerStart: true };
+    const p = { w: 4, h: 4, forceCornerStart: true, diff: DIFF_EASY };
     const { desc } = newSignpostDesc(p, randomNew("signpost-desc-1"));
     expect(generateDesc(descValue(parseDesc(p, desc)))).toBe(desc);
   });
 
   it("validateDesc rejects an unknown direction char", () => {
-    const p = { w: 2, h: 2, forceCornerStart: false };
+    const p = { w: 2, h: 2, forceCornerStart: false, diff: DIFF_EASY };
     // 4 cells expected; 'z' is not a-h.
     expect(validateDesc(signpostGame, p, "1azaaa")).not.toBeNull();
   });
 
   it("validateDesc rejects a too-short desc", () => {
-    const p = { w: 3, h: 3, forceCornerStart: false };
+    const p = { w: 3, h: 3, forceCornerStart: false, diff: DIFF_EASY };
     expect(validateDesc(signpostGame, p, "1aae")).not.toBeNull();
   });
 
   it("validateDesc refuses a number given twice, or a 0 no generated board writes", () => {
-    const p = { w: 2, h: 2, forceCornerStart: false };
+    const p = { w: 2, h: 2, forceCornerStart: false, diff: DIFF_EASY };
     expect(validateDesc(signpostGame, p, "1ca2a4a")).toBeNull();
     expect(validateDesc(signpostGame, p, "1ca1a4a")).toBe(DESC_REPEATED);
     expect(validateDesc(signpostGame, p, "1ca0a4a")).toBe(DESC_OUT_OF_RANGE);
@@ -114,7 +146,7 @@ describe("signpost generator + solver", () => {
   });
 
   it("solve() recovers the full chain from a dirty mid-game state", () => {
-    const p = { w: 5, h: 5, forceCornerStart: true };
+    const p = { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY };
     const { desc } = newSignpostDesc(p, randomNew("sp-solve-1"));
     const s0 = signpostGame.newState(p, desc);
     const res = signpostGame.solve?.(s0, s0);
@@ -128,7 +160,7 @@ describe("signpost generator + solver", () => {
 
 describe("signpost findMistakes", () => {
   it("flags a link that contradicts the unique solution", () => {
-    const p = { w: 5, h: 5, forceCornerStart: true };
+    const p = { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY };
     const { desc } = newSignpostDesc(p, randomNew("sp-mistake-1"));
     const s0 = signpostGame.newState(p, desc);
 
@@ -163,14 +195,14 @@ describe("signpost findMistakes", () => {
   });
 
   it("reports no mistakes for the freshly-generated (unlinked) board", () => {
-    const p = { w: 5, h: 5, forceCornerStart: true };
+    const p = { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY };
     const { desc } = newSignpostDesc(p, randomNew("sp-clean-1"));
     const s0 = signpostGame.newState(p, desc);
     expect(signpostGame.findMistakes?.(s0)).toEqual([]);
   });
 
   it("marks an immutable-number cell that stays immutable", () => {
-    const p = { w: 4, h: 4, forceCornerStart: true };
+    const p = { w: 4, h: 4, forceCornerStart: true, diff: DIFF_EASY };
     const { desc } = newSignpostDesc(p, randomNew("sp-imm-1"));
     const s0 = signpostGame.newState(p, desc);
     // The '1' anchor is always immutable.
@@ -181,7 +213,7 @@ describe("signpost findMistakes", () => {
 
 describe("signpost render smoke", () => {
   it("redraws the initial frame without throwing", () => {
-    const p = { w: 5, h: 5, forceCornerStart: true };
+    const p = { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY };
     const { desc } = newSignpostDesc(p, randomNew("sp-render-1"));
     const { recording } = renderScenario({ game: signpostGame, id: `5x5c:${desc}` });
     expect(recording.ops.length).toBeGreaterThan(0);

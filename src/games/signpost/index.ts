@@ -5,11 +5,20 @@
  * follows its cell's arrow and the numbers run consecutively.
  */
 
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierContract,
+  searchTierItem,
+  searchTierSegment,
+  solveFromAnswer,
+} from "../../engine/answer-search.ts";
 import { descValue } from "../../engine/desc-error.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { GamePref } from "../../engine/game.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   fromCoord as fromCoordE,
   type Game,
@@ -38,7 +47,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
 import { newSignpostDesc } from "./generator.ts";
 import {
@@ -50,10 +59,9 @@ import {
 } from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import { BORDER, buildPalette, FLASH_SPIN, redrawSignpost } from "./render.ts";
-import { solveState } from "./solver.ts";
+import { answerOf, solverFinishes } from "./solver.ts";
 import {
   checkCompletion,
-  cloneState,
   FLAG_IMMUTABLE,
   parseDesc,
   type SignpostDrawState,
@@ -62,7 +70,6 @@ import {
   type SignpostParams,
   type SignpostState,
   type SignpostUi,
-  stripNums,
   updateNumbers,
 } from "./state.ts";
 
@@ -75,19 +82,24 @@ const fromCoord = (px: number, ts: number): number => fromCoordE(px, ts, BORDER)
 
 // --- presets ---------------------------------------------------------
 
-const SIGNPOST_PRESETS: SignpostParams[] = [
-  { w: 4, h: 4, forceCornerStart: true },
-  { w: 4, h: 4, forceCornerStart: false },
-  { w: 5, h: 5, forceCornerStart: true },
-  { w: 5, h: 5, forceCornerStart: false },
-  { w: 6, h: 6, forceCornerStart: true },
-  { w: 7, h: 7, forceCornerStart: true },
-];
+const board = (side: number, forceCornerStart = true): SignpostParams => ({
+  w: side,
+  h: side,
+  forceCornerStart,
+  diff: DIFF_EASY,
+});
+
+/** Upstream's four sizes, with the ends in the corners. The menu offers each
+ * at both tiers. */
+const BOARDS: readonly SignpostParams[] = [4, 5, 6, 7].map((side) => board(side));
+
+/** Upstream's two boards with free ends, after the grid, at Easy. */
+const VARIANTS: readonly SignpostParams[] = [board(4, false), board(5, false)];
 
 // --- params ----------------------------------------------------------
 
 function defaultParams(): SignpostParams {
-  return { w: 4, h: 4, forceCornerStart: true };
+  return board(4);
 }
 
 function validateParams(p: SignpostParams, full: boolean): string | null {
@@ -95,8 +107,40 @@ function validateParams(p: SignpostParams, full: boolean): string | null {
     return AREA_TOO_LARGE;
   }
   if (full && p.w === 1 && p.h === 1) return "Width and height cannot both be one.";
+  if (!full || p.diff !== DIFF_UNREASONABLE) return null;
+  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const area = p.w * p.h;
+  const shorter = Math.min(p.w, p.h);
+  // Every board of these with its first and last numbers showing was tried
+  // (`signpost-tier.test.ts`), and the solver finishes each one that has a
+  // single answer. A 1x6 strip is the smallest board that has the tier.
+  const tooSmall =
+    area <= 5 ||
+    (shorter === 2 && area <= 8) ||
+    (area === 9 && shorter === 3 && p.forceCornerStart);
+  if (tooSmall) {
+    const ends = area === 9 ? " puzzle with its ends in the corners" : " puzzle";
+    return noSuchTier(`${p.w}x${p.h}${ends}`, tier);
+  }
+  if (area > MAX_UNREASONABLE_AREA || Math.max(p.w, p.h) > MAX_UNREASONABLE_SIDE)
+    return `An ${tier} puzzle must have at most ${MAX_UNREASONABLE_AREA} squares and be at most ${MAX_UNREASONABLE_SIDE} long; a larger one takes too long to deal.`;
   return null;
 }
+
+/**
+ * The largest Unreasonable board dealt, in squares and along its longer side.
+ * An Unreasonable board is an Easy one stripped further by the search, which
+ * takes four to five times as long as the Easy board did, and a long thin
+ * board takes longer than a square one of its area, since a square's arrow
+ * has more squares to lead to.
+ *
+ * Measured 2026-10-10, mean time for a board inside the bound | past it:
+ * 12×12 0.26 s, 15×15 0.9 s, 9×25 1.2 s, 7×30 1.2 s | 16×16 1.3 s, 5×45
+ * 2.1 s, 3×75 2.6 s, 1×225 6.3 s, 20×20 4.9 s. The side is one number where
+ * the time is a curve: a 1×100 strip deals in 0.5 s and is refused too.
+ */
+const MAX_UNREASONABLE_AREA = 225;
+const MAX_UNREASONABLE_SIDE = 30;
 
 const paramConfig: ParamConfigItem<SignpostParams>[] = [
   ...dimensionParamConfig<SignpostParams>({
@@ -114,13 +158,19 @@ const paramConfig: ParamConfigItem<SignpostParams>[] = [
       p.forceCornerStart = v;
     },
   },
+  searchTierItem(
+    "diff",
+    "An Easy puzzle can be finished one forced link at a time: there is always an arrow with only one square it can lead to, or a square only one arrow can lead into. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a link and see what follows. The Hint button stops where the forced links do.",
+  ),
 ];
 
 /** `WxH`, plus a generator-only `c` when the path must start and end in
- * corners. */
+ * corners. The tier comes last, in the full form only, and upstream's IDs
+ * lack it: without one a board is Easy, the only kind upstream deals. */
 const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   flag(paramConfig, "c", "start-and-end-in-corners", { full: true }),
+  searchTierSegment(paramConfig),
 ]);
 
 // --- desc / state ----------------------------------------------------
@@ -248,27 +298,22 @@ function interpretMove(
 
 // --- solve / mistakes ------------------------------------------------
 
-function solve(orig: SignpostState, curr: SignpostState): SolveResult<SignpostMove> {
-  const fromCurr = cloneState(curr);
-  if (solveState(fromCurr) > 0) {
-    return { ok: true, move: { type: "solve", next: Array.from(fromCurr.next) } };
-  }
-  const fromOrig = cloneState(orig);
-  const r = solveState(fromOrig);
-  if (r < 0) return { ok: false, error: NO_SOLUTION };
-  if (r === 0) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  return { ok: true, move: { type: "solve", next: Array.from(fromOrig.next) } };
+function solve(orig: SignpostState, _curr: SignpostState): SolveResult<SignpostMove> {
+  return solveFromAnswer(answerOf(orig), (next) => ({
+    type: "solve",
+    next: Array.from(next),
+  }));
 }
 
-/** Re-solve from the immutable clues; flag every player link that
- * disagrees with the unique solution. */
+/** Every link the player has made that the board's one answer does not,
+ * which the search found at either tier. Nothing is flagged where it did not
+ * prove there is exactly one. */
 function findMistakes(state: SignpostState): readonly SignpostMistake[] {
-  const copy = cloneState(state);
-  stripNums(copy);
-  if (solveState(copy) !== 1) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
   const mistakes: SignpostMistake[] = [];
   for (let i = 0; i < state.n; i++) {
-    if (state.next[i] !== -1 && state.next[i] !== copy.next[i]) {
+    if (state.next[i] !== -1 && state.next[i] !== answer.solution[i]) {
       mistakes.push({ kind: "link", index: i });
     }
   }
@@ -375,7 +420,7 @@ export const signpostGame: Game<
   presets() {
     return {
       title: "Signpost",
-      submenu: SIGNPOST_PRESETS.map((p) => ({ params: p })),
+      ...presetGrid(paramConfig, BOARDS, { variants: VARIANTS }),
     };
   },
   encodeParams,
@@ -391,8 +436,15 @@ export const signpostGame: Game<
 
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(signpostGame, s),
   status,
+  // Easy is what the solver's forced links finish and the hint, which makes
+  // the same links from the player's own, finishes too.
+  difficulty: searchTierContract<SignpostParams, SignpostState>({
+    newState,
+    deductionFinishes: (state) =>
+      solverFinishes(state) && hintFinishes(signpostGame, state),
+    answerOf,
+  }),
 
   solve,
   findMistakes,

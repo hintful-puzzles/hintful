@@ -10,6 +10,7 @@
  * recorded it is gone (see `engine/testing/differential.ts`).
  */
 import { expect } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/signpost-c-reference.json" with { type: "json" };
@@ -30,6 +31,8 @@ const params = (f: Fixture): SignpostParams => ({
   w: f.w,
   h: f.h,
   forceCornerStart: f.forceCornerStart,
+  // Upstream deals only what is Easy here.
+  diff: DIFF_EASY,
 });
 const label = (f: Fixture) =>
   `${f.w}x${f.h}${f.forceCornerStart ? "c" : ""} seed=${f.seed}`;

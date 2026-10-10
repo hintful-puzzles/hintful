@@ -7,6 +7,7 @@
  * assertions survive a careless `-u`).
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSignpostDesc } from "./generator.ts";
@@ -32,7 +33,10 @@ describe("Signpost render scenarios", () => {
   it("opener frame: backgrounds, arrows, numbers, grid frame", () => {
     const { recording, size } = renderScenario({
       game: signpostGame,
-      id: boardId({ w: 5, h: 5, forceCornerStart: true }, "sp-render-open"),
+      id: boardId(
+        { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY },
+        "sp-render-open",
+      ),
     });
 
     // Per-tile background rects.
@@ -52,7 +56,7 @@ describe("Signpost render scenarios", () => {
     ["a free square", false],
     ["a given", true],
   ])("mistake overlay: a wrong link out of %s recolors its number COL_ERROR", (_, given) => {
-    const p: SignpostParams = { w: 5, h: 5, forceCornerStart: true };
+    const p: SignpostParams = { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY };
     // Find a seed + a legal-but-wrong link that the board's own error check
     // leaves alone, so only the overlay can color the number of the square it
     // leaves.

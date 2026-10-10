@@ -43,6 +43,15 @@ These are the ideas the hint teaches, from the plainest up:
   before it, and when every arrow pointing at a square but one is ruled
   out the same way, that one must lead into it.
 
+On an Unreasonable board there comes a point where every arrow still has
+more than one square it could lead to, and every square more than one arrow
+that could lead into it. The hint then says that nothing further follows by
+deduction instead of choosing for you. Save your position and try a link
+from an arrow with only two or three squares left to choose from: if it is
+wrong, before long some square has nothing that can lead into it, or a
+chain cannot fit between two numbers. The hint carries on from whatever
+you decide.
+
 ## Signpost parameters
 
 {{parameters}}

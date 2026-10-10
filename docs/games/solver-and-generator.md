@@ -687,6 +687,35 @@ What Separate, the seventh, added:
   short run. It found that Separate deals only a handful of sizes at either
   tier (`openspec/changes/bound-separate-to-the-boards-it-deals`).
 
+What Signpost, the eighth, added:
+
+- **A solver that is sound from an empty board may not be from a position.**
+  Upstream's solver was only ever run on a board with no link made. Run from
+  a position with chains on it, its numbering took a blank square inside a
+  chain for a given number and forced links from that, and 3 to 9 in 100 of
+  the boards the search called unique had two answers. Nothing in the search
+  could see it: every Easy board still took one position. The counter with no
+  search in it saw it on the first run. Run that agreement test on the
+  tier's own boards before measuring anything, since every number taken
+  before the fix had to be taken again.
+- **Fix the deduction, not the search.** The fault was one branch of the
+  numbering, mended where it was. The Easy boards for every recorded seed
+  are the same, which the differential shows, and no Easy board in 4,000
+  had a second answer before the fix.
+- **A solver with "impossible" already needs no verdict written.** Its three
+  results are the search's three.
+- **Where a move clones every array, share the part no move changes.** The
+  answer is kept per board, keyed on something every state of a game holds
+  by reference. Signpost copied its arrows on each move and had nothing to
+  key on; its states now share them.
+- **A strip can carry the tier.** Lines of one square do in Signpost, since
+  an arrow skips squares: 1x6 is its smallest Unreasonable board, where a
+  2x4 has none. Enumerate the small shapes one by one and refuse what the
+  enumeration says, not a rule about strips carried over from another game.
+- **A thin board can cost more than a square one of its area.** An arrow on
+  a long line has more squares to lead to: 1x225 takes 6.3 s where 15x15
+  takes 0.9. The bound is an area and a longer side.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

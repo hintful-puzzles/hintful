@@ -1,5 +1,7 @@
 /**
- * Signpost generator — faithful port of upstream `new_game_desc`.
+ * Signpost generator — faithful port of upstream `new_game_desc`, which
+ * deals the Easy boards, and the further strip that makes an Unreasonable
+ * one of them.
  *
  * (1) `new_game_fill`: grow a full 1..n path by a random head+tail walk;
  * (2) mark 1 and n immutable; (3) `new_game_strip`: add immutable
@@ -9,10 +11,11 @@
  * and the `cell_adj` enumeration order are ported verbatim.
  */
 
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { solveState } from "./solver.ts";
+import { searchAnswers, solverFinishes, solveState } from "./solver.ts";
 
 import {
   assignStateInto,
@@ -155,6 +158,49 @@ function newGameStrip(s: SignpostState, rng: RandomState): boolean {
   return true;
 }
 
+/**
+ * The positions the search may try when a number is stripped from an
+ * Unreasonable board, far under the 2,000 it has by default. Stripping stops
+ * only when the search can no longer prove one answer, so it takes a board up
+ * to whatever the search is allowed, and this is how hard the tier's boards
+ * are.
+ *
+ * Measured 2026-10-10: a dealt board needs a median of 3 positions at 4×4, 7
+ * at 5×5, 15 at 6×6 and 25 at 7×7, and the hint leaves a median of 7 links of
+ * 15 unmade at 4×4, 22 of 35 at 6×6 and 30 of 48 at 7×7. Making a link and
+ * looking, with no forced link followed, settles 34 of 150 boards at 4×4, 19
+ * at 5×5 and 7 at 6×6. Making one and following the forced links from it,
+ * one trial at a time, finishes 150, 139 and 132.
+ */
+const STRIP_BUDGET = 30;
+
+/**
+ * An Unreasonable board's numbers: an Easy board's with more stripped, each
+ * while the search still proves one answer within {@link STRIP_BUDGET}.
+ * Returns whether the solver then stops short. An Easy board is one the
+ * solver stops short on with any number gone, so stripping one is what takes
+ * it out of reach.
+ *
+ * It starts from an Easy board and not from the first and last numbers
+ * alone, adding numbers until the search proves one answer. Measured
+ * 2026-10-10, that way took twice as long (16 ms against 8 at 7×7) and left
+ * the hint no more to do (24 links of 35 unmade against 22 at 6×6).
+ */
+function unreasonableStrip(s: SignpostState, rng: RandomState): boolean {
+  if (!newGameStrip(s, rng)) return false;
+  const one = () => searchAnswers(s, STRIP_BUDGET).kind === "one";
+  const order = Array.from({ length: s.n }, (_, i) => i);
+  shuffle(order, rng);
+  for (const j of order) {
+    // Never the first and last numbers, which every dealt board shows.
+    if (!(s.flags[j] & FLAG_IMMUTABLE) || s.nums[j] === 1 || s.nums[j] === s.n)
+      continue;
+    s.flags[j] &= ~FLAG_IMMUTABLE;
+    if (!one()) s.flags[j] |= FLAG_IMMUTABLE;
+  }
+  return !solverFinishes(s);
+}
+
 export function newSignpostDesc(p: SignpostParams, rng: RandomState): { desc: string } {
   if (p.w === 1 && p.h === 1) return { desc: "1a" };
 
@@ -188,7 +234,9 @@ export function newSignpostDesc(p: SignpostParams, rng: RandomState): { desc: st
     s.flags[headi] |= FLAG_IMMUTABLE;
     s.flags[taili] |= FLAG_IMMUTABLE;
 
-    if (!newGameStrip(s, rng)) continue; // regenerate
+    const stripped =
+      p.diff === DIFF_EASY ? newGameStrip(s, rng) : unreasonableStrip(s, rng);
+    if (!stripped) continue; // regenerate
     stripNums(s);
     return { desc: generateDesc(s) };
   }

@@ -569,14 +569,18 @@ bump:k  full=5x5n6de  brief=5x5n6"
 `;
 
 exports[`encoded params are byte-stable > signpost 1`] = `
-"default  full=4x4c  brief=4x4
-preset:Signpost/4x4, free ends  full=4x4
-preset:Signpost/5x5  full=5x5c  brief=5x5
-preset:Signpost/5x5, free ends  full=5x5
-preset:Signpost/6x6  full=6x6c  brief=6x6
-preset:Signpost/7x7  full=7x7c  brief=7x7
-bump:w  full=5x4c  brief=5x4
-bump:h  full=4x5c  brief=4x5"
+"default  full=4x4cde  brief=4x4
+preset:Signpost/4x4 Unreasonable  full=4x4cdu  brief=4x4
+preset:Signpost/5x5 Easy  full=5x5cde  brief=5x5
+preset:Signpost/5x5 Unreasonable  full=5x5cdu  brief=5x5
+preset:Signpost/6x6 Easy  full=6x6cde  brief=6x6
+preset:Signpost/6x6 Unreasonable  full=6x6cdu  brief=6x6
+preset:Signpost/7x7 Easy  full=7x7cde  brief=7x7
+preset:Signpost/7x7 Unreasonable  full=7x7cdu  brief=7x7
+preset:Signpost/4x4 Easy, free ends  full=4x4de  brief=4x4
+preset:Signpost/5x5 Easy, free ends  full=5x5de  brief=5x5
+bump:w  full=5x4cde  brief=5x4
+bump:h  full=4x5cde  brief=4x5"
 `;
 
 exports[`encoded params are byte-stable > singles 1`] = `

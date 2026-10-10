@@ -81,7 +81,6 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
     net: "5x5:142c49b8aa4de5acd7b749286",
     range: "4x4:c6h3_6b",
     rect: "4x4:2b2_2a2b2b2a2_2",
-    signpost: "4x4c:1eceeedagdahgbbb16a",
     sticks: "5x5b20s2:1aB_1_2bBcB1aB3cB_1a3aB0a1",
   };
 

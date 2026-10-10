@@ -22,14 +22,10 @@ import {
   narratedStep,
 } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
-import { solveState } from "./solver.ts";
 import {
   checkCompletion,
   cloneState,
@@ -41,7 +37,6 @@ import {
   makeLink,
   type SignpostMove,
   type SignpostState,
-  stripNums,
   updateNumbers,
 } from "./state.ts";
 
@@ -180,21 +175,14 @@ function nextFiring(s: SignpostState): SignpostFiring | null {
   return follows(s) ?? onlyNext(s) ?? onlyBefore(s);
 }
 
-/** Whether the player's own links can be trusted: no link is wrong. */
-function solvable(state: SignpostState): boolean {
-  const copy = cloneState(state);
-  stripNums(copy);
-  return solveState(copy) === 1;
-}
-
 /**
- * The plan from the player's own links to the end, a step per link. Refuses
- * on a board the solver cannot finish from its clues (a board entered by hand).
+ * The plan from the player's own links as far as forced links go, a step per
+ * link. Refuses only when no link is forced, which on an Unreasonable board
+ * is before the end.
  */
 export function signpostHint(
   state: SignpostState,
 ): HintResult<SignpostMove, SignpostHint, SignpostRung> {
-  if (!solvable(state)) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   const board = cloneState(state);
   const { plan } = deduceHintPlan({
     board,
