@@ -38,4 +38,4 @@
   parameters from the params' own words, which say the limits.
 - [x] 3.3 `docs/games/solver-and-generator.md` and
   `docs/games/engine-catalog.md`.
-- [ ] 3.4 Commit, push, archive.
+- [x] 3.4 Commit, push, archive.
