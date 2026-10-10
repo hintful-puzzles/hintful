@@ -9,7 +9,7 @@
 import type { Game } from "./game.ts";
 import { paramsError } from "./params.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
-import { RetryLimitExceeded } from "./retry-limit.ts";
+import { RetryLimitExceeded, retryLimit } from "./retry-limit.ts";
 import type { DealtBoard, EncodedParams } from "./types.ts";
 
 /** A random 128-bit seed string for a fresh game (upstream seeds from system
@@ -21,17 +21,36 @@ export function freshSeed(): string {
 }
 
 /**
+ * The boards in a row that may come dealt already solved before the deal
+ * gives up. Measured 2026-10-10 over 14,450 deals of every game's params
+ * corpus: Rectangles on a base grid of 3x3 dealt one in twelve solved and
+ * Netslide at 3x3 with one move one in 25, and no other game any.
+ */
+const MAX_DEALT_SOLVED = 20;
+
+/**
  * What `game.newDesc` deals at `params`, or `null` where it ran its retry
  * budget out. A run-out is an answer and not a fault: the tier may be rare at
  * this size, or absent where nobody has counted. Any other error propagates.
+ *
+ * A board that is solved as dealt is dealt again, from the same generator's
+ * stream, so no game has to rule one out itself.
  */
-export function generate<Params>(
-  game: { newDesc(p: Params, rng: RandomState): { desc: string; aux?: string } },
+export function generate<Params, State>(
+  game: Pick<
+    Game<Params, State, unknown, unknown, unknown>,
+    "newDesc" | "newState" | "status"
+  >,
   params: Params,
   rng: RandomState,
 ): { desc: string; aux?: string } | null {
+  const attempt = retryLimit("deal: a board that is not solved", MAX_DEALT_SOLVED);
   try {
-    return game.newDesc(params, rng);
+    for (;;) {
+      attempt();
+      const dealt = game.newDesc(params, rng);
+      if (game.status(game.newState(params, dealt.desc)) !== "solved") return dealt;
+    }
   } catch (e) {
     if (e instanceof RetryLimitExceeded) return null;
     throw e;
@@ -48,7 +67,12 @@ export function generate<Params>(
 export function dealBoard<Params>(
   game: Pick<
     Game<Params, unknown, unknown, unknown, unknown>,
-    "decodeParams" | "paramConfig" | "validateParams" | "newDesc"
+    | "decodeParams"
+    | "paramConfig"
+    | "validateParams"
+    | "newDesc"
+    | "newState"
+    | "status"
   >,
   params: EncodedParams,
 ): DealtBoard | null {

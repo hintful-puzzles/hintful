@@ -1147,7 +1147,23 @@ of tries after which the tier drops (`MAXTRIES`), and a tier gate that small
 boards skip (`spaces > 6 &&`). All three hand the player a board under a label
 it does not need.
 
-The followable form:
+**Do not count a game's sizes in order to write a refusal** (owner,
+2026-10-10). A generator that finds no board runs out, and the engine tells
+the player so in a few seconds, in every game, with no line in the game
+("Where no line can be named", below). That is the
+default answer for a size that lacks a tier, and it costs nothing a game. A
+refusal is written only where both hold: the absence has a reason that fits
+in a sentence and is checked in a line (a strip, a board of one region), and
+a player reaches it from the menu's own sizes or one step off them. A census
+of a game's Custom corner, a table of the shapes it found, the tests that pin
+the table and the change that files the cells beside it are per-game work the
+player does not see, and the rules below are for the refusals that clear that
+bar or exist already. Rectangles is the measured case: which stretched boards
+carry Unreasonable turns on which areas can be drawn two ways on that board,
+a 3x3 base carries it stretched to 6x6 and to neither 6x7 nor 5x5, and an
+hour's count ended in no rule and the engine's sentence.
+
+The followable form, for a refusal that clears it:
 
 1. **Refuse only when dealing.** The check sits behind `full`, since boards
    dealt under the old label are in saved games and shared IDs, and a board
@@ -1414,7 +1430,10 @@ says what ends it. So a new generator meets three cases:
 
 - **It deals a whole board again until one is good** ⇒ a guard. "It nearly
   always works" is the case the rule is for, and the reject-a-solved-shuffle
-  loops (Fifteen, Flood, Flip, Twiddle) take one like any other.
+  loops (Fifteen, Flood, Flip, Twiddle) take one like any other. A new
+  generator needs no such loop for a board that comes solved: the engine's
+  deal ([`generate`](../../src/engine/deal.ts)) asks the game for the board's
+  status and deals again, for every game.
 - **It uses something up each pass** (a frontier, a counter, free cells) ⇒ a
   ledger line naming what.
 - **It is rejection sampling for one item** (a free square, an unused color)

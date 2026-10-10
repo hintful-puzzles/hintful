@@ -95,6 +95,41 @@ describe("dealBoard", () => {
     expect(newDesc).toHaveBeenCalledOnce();
   });
 
+  it("deals again where the board comes solved as dealt", () => {
+    // `g0-…` is a board whose target is met before a move.
+    const descs = ["g0-1", "g0-2", "g3-7"];
+    const newDesc = vi.fn(() => ({ desc: descs.shift() as string }));
+    const newState = (_p: { target: number }, desc: string) => ({
+      count: 0,
+      target: Number(desc[1]),
+    });
+    expect(dealBoard({ ...fakeGame, newDesc, newState }, "t3")?.desc).toBe("g3-7");
+    expect(newDesc).toHaveBeenCalledTimes(3);
+  });
+
+  it("deals nothing where every board comes solved as dealt", () => {
+    const newDesc = vi.fn(() => ({ desc: "g0-1" }));
+    const newState = () => ({ count: 0, target: 0 });
+    expect(dealBoard({ ...fakeGame, newDesc, newState }, "t3")).toBeNull();
+  });
+
+  // Each dealt one board in twelve, or in 25, solved before a move.
+  it.each([
+    ["rect", "3x3de"],
+    ["rect", "9x9e2de"],
+    ["netslide", "3x3b1m1"],
+  ])("%s at %s is never dealt solved", (id, params) => {
+    const game = gameOf(id);
+    const decoded = game.decodeParams(params);
+    for (let n = 0; n < 60; n++) {
+      const board = dealBoard(game, params);
+      if (board === null) throw new Error(`${id} dealt no ${params}`);
+      expect(game.status(game.newState(decoded, board.desc)), board.desc).toBe(
+        "ongoing",
+      );
+    }
+  });
+
   it("does not run the generator on params the game refuses to deal", () => {
     // A 6x6 Group at Hard loads by its desc and is refused when dealing, so
     // the type can be left there with nobody waiting for a board.

@@ -5,6 +5,9 @@ tier (`add-an-unreasonable-tier-to-the-untiered-deductive-games`), which
 measured it. What it says of the code was true that day; re-check before
 relying on it.**
 
+**A draft since 2026-10-10, for the owner to pick.** A new deduction is
+optional work in one game. Its plan is `design.md`, which was its `tasks.md`.
+
 ## Why
 
 Mosaic's solver, and its hint, have one rule and apply it to one number at a

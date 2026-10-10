@@ -53,12 +53,11 @@ incident only what a later session acts on: the rule, and the shape to look for.
   anything they asked for by name, and a compatibility break (asked before).
 - **A decision is persisted by a commit, or it did not happen.** Never cite an
   agent-private note to the owner.
-- **What your change turned up is yours to file, unasked.** The same defect in
-  the next game or the shared layer: do it in this session. A bug or a
-  worthwhile opportunity the work found, where you can say what to do: scaffold
-  its change and hand it to a fresh session. The here, later or never ask is
-  for new optional work only (`docs/work-management.md` § "The backlog is
-  being drained").
+- **A bug your change turned up is yours to file, unasked, and first as the
+  engine's.** Ask what the shared layer could do so that no game has it, and
+  file that: the same finding in two games is one engine change, never one a
+  game. An improvement to one game that is not a bug is a draft for the owner
+  to pick (`docs/work-management.md` § "The backlog is being drained").
 - **Bring a question with everything you could find out.** Run the app,
   measure, read the code first. Never report to the owner that you did not
   look at something you could have.

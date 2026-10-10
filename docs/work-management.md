@@ -93,13 +93,27 @@ it.
   shared layer. The session that fixed the first holds everything the second
   needs, and a fresh session would rebuild it. File a change of its own, after
   the first is archived, and do it without asking.
-- **What the work found is filed, unasked, and handed on** (owner,
-  2026-10-09): a bug the change turned up, or an opportunity you judge worth
-  the work, where you can say what to do about it. Scaffold its change with
-  its `tasks.md`, after your own is archived, and hand it to a fresh session.
-  The proposal carries what an informed reader needs: the defect seen in the
-  running app, how it is reached, what the fix would touch. A finding you
-  would not spend a session on is not filed; say that you looked.
+- **A bug the work found is filed, unasked, and handed on** (owner,
+  2026-10-09): one a player can meet, where you can say what to do about it.
+  Scaffold its change with its `tasks.md`, after your own is archived, and
+  hand it to a fresh session. The proposal carries what an informed reader
+  needs: the defect seen in the running app, how it is reached, what the fix
+  would touch. A finding you would not spend a session on is not filed; say
+  that you looked.
+- **Before filing, ask what the engine could do so that no game has the
+  finding** (owner, 2026-10-10), and file that. A finding with the same shape
+  in two games is one change to the shared layer, never a change a game.
+  Twelve games gained a tier in a day, each session measured its own game
+  and filed what it saw, and those changes filed their own: the open changes
+  grew, nearly all of it in one game at a time. A board dealt already solved
+  was found in Rectangles, and the fix was one loop in the engine's deal,
+  which mended Netslide unasked.
+- **An improvement to one game that is not a bug is a draft for the owner to
+  pick**: a new deduction, a faster generator, a refusal for a corner of the
+  Custom dialog. It is filed without `tasks.md` (below), or not at all.
+- **A change that was filed by a change files nothing of its own kind.** If
+  its work finds the same thing again, the finding is the engine's, and the
+  session says so to the owner and does not scaffold a third.
 - **The three-way ask is for new optional work only**: something nobody's
   change found, that the product does not need. The ask says what it is and
   what it costs a player, and offers three answers with a recommendation:

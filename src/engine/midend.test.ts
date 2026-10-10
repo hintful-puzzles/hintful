@@ -279,8 +279,9 @@ describe("Midend completion: the status is the position's, the history is the en
     for (let i = 0; i < 20; i++) h.m.timer(0.1);
     h.m.undo();
     h.m.redo();
-    // Two positions, each asked about once.
-    expect(status).toHaveBeenCalledTimes(2);
+    // Two positions, each asked about once, and the deal's own look at the
+    // board it was handed.
+    expect(status).toHaveBeenCalledTimes(3);
   });
 });
 

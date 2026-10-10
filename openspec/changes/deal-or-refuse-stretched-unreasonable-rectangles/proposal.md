@@ -1,8 +1,10 @@
 # deal-or-refuse-stretched-unreasonable-rectangles
 
-**Status: filed 2026-10-10 by `bound-rect-to-the-boards-it-deals`, which
-measured it. What it says of the code was true that day; re-check before
-relying on it.**
+**Status: done 2026-10-10. Filed that day by
+`bound-rect-to-the-boards-it-deals`, which measured it. Neither of the two
+things under "What Changes" was done: `design.md` has the measurements that
+say why, and the bug the measuring found, which was fixed in the engine. What
+this file says of the code was true on its date.**
 
 ## Why
 
@@ -72,9 +74,10 @@ A pasted board still opens either way.
 
 ### Modified Capabilities
 
-- `rect`: which stretched boards are dealt at Unreasonable.
+- `engine-difficulty`: a board that comes solved is dealt again. `rect` is
+  not changed.
 
 ## Impact
 
-- `src/games/rect/state.ts` (`unreasonableRefusal`), `generator.ts`
-  (`division`, `unreasonableBoard`), `rect-tier.test.ts`.
+- `src/engine/deal.ts` (`generate`) and its tests. Nothing under
+  `src/games/rect/`.

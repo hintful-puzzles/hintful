@@ -2,31 +2,25 @@
 
 ## 1. Measure
 
-- [ ] 1.1 Re-run the sweep in the proposal (Unreasonable, 2 to 6 on the
-  shorter side, up to 14 on the longer, factors 0.5 and 2) with a low cap on
-  draws and a line logged per shape, and add factors of 0.25, 1 and 4. A
-  shape that never deals costs its whole allowance, so cap the draws and read
-  a rate.
-- [ ] 1.2 At 5x5 with 0.5 and 6x9 with 2, count the generator's draws that
-  have one answer the solver and the hint stop short of, numbers placed
-  anywhere. Absent, or rare?
-- [ ] 1.3 Tabulate deals against the base grid's size, its count of
-  rectangles and the rows and columns added, and choose: a refusal by a rule
-  the table bears out, or a deal. Record it in a `design.md`.
+- [x] 1.1 The sweep, with factors of 0.25, 1 and 4 added: 4,000 draws a
+  shape, 400,000 where under four were found (`design.md`, Decision 1).
+- [x] 1.2 Absent, at both shapes: every placement on every division drawn.
+- [x] 1.3 Tabulated against the base grid. No rule is borne out, and no
+  refusal is written.
 
 ## 2. Build
 
-- [ ] 2.1 The base grid's size as one function that `division` and
-  `validateParams` both call.
-- [ ] 2.2 The refusal, with the sentence for absent or for too rare, or the
-  deal.
-- [ ] 2.3 Tests: a shape each side of the rule at two factors; a refused
-  shape still opens pasted.
-- [ ] 2.4 In the running app: the Custom dialog on a 5x5 board at 0.5 and
-  Unreasonable.
+- [x] 2.1 Not done: with no refusal, nothing but `division` reads the base
+  grid's size.
+- [x] 2.2 Neither a refusal nor a deal: the engine's answer stands.
+- [x] 2.3 A board dealt solved is dealt again, in `generate`
+  (`src/engine/deal.ts`), with tests on a fake game, on Rectangles at 3x3 and
+  at 9x9 with a factor of 2, and on Netslide at 3x3 with one move.
+- [x] 2.4 In the running app: Rectangles at 3x3 Easy dealt forty times, none
+  solved; and 5x5 at 0.5 and Unreasonable, for the engine's sentence.
 
 ## 3. Close
 
-- [ ] 3.1 The spec delta, and remove `skip_specs` from `.openspec.yaml`.
-- [ ] 3.2 `help/games/rect.md`, if it names the expansion factor's limits.
-- [ ] 3.3 Commit, push, archive.
+- [x] 3.1 The spec delta, on `engine-difficulty`, and `skip_specs` removed.
+- [x] 3.2 `help/games/rect.md` names no limit of the expansion factor.
+- [x] 3.3 Commit, push, archive.
