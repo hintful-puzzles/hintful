@@ -135,4 +135,41 @@ describe("findLoops", () => {
       expect(r.isBridge(a, b)).toBeNull();
     }
   });
+
+  // Net's shuffle reads a board two squares wide as a torus, where two tiles
+  // side by side can be joined across the middle and round the back. The walk
+  // used to link the second into its own work list and never end.
+  it.each([
+    ["at the start of a path", 0, 1],
+    ["in the middle of one", 1, 2],
+    ["at the end of one", 2, 3],
+  ])("takes two edges between the same pair, %s, as a loop of the two", (_where, a, b) => {
+    const path: [number, number][] = [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+    ];
+    const r = findLoops(4, graph(4, [...path, [a, b]]));
+    expect(r.anyLoop).toBe(true);
+    for (const [u, v] of path) {
+      const doubled = u === a && v === b;
+      expect(r.isLoopEdge(u, v)).toBe(doubled);
+      expect(r.isLoopEdge(v, u)).toBe(doubled);
+      expect(r.isBridge(u, v) === null).toBe(doubled);
+    }
+  });
+
+  it("takes two edges between a pair the walk reaches from elsewhere first", () => {
+    // 0-1, 0-2, and 1-2 twice: the walk comes down 0-2 or 0-1 and meets the
+    // doubled pair below the root. Every edge is on the triangle.
+    const edges: [number, number][] = [
+      [0, 2],
+      [0, 1],
+      [1, 2],
+      [1, 2],
+    ];
+    const r = findLoops(3, graph(3, edges));
+    expect(r.anyLoop).toBe(true);
+    for (const [u, v] of edges) expect(r.isLoopEdge(u, v)).toBe(true);
+  });
 });

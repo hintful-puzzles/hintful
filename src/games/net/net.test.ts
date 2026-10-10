@@ -8,11 +8,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  DESC_NOT_DEDUCIBLE,
-  loadVerdict,
-  validateDesc,
-} from "../../engine/desc-error.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -58,9 +55,11 @@ function generate(p: NetParams, seed: string) {
 describe("params codec", () => {
   const cases = ["5x5", "7x7", "13x11", "5x5w", "9x9b0.5", "11x11wb0.25"];
   for (const s of cases) {
+    // A string from before the tiers reads as Easy, which is always written.
     it(`round-trips ${s}`, () => {
       const p = decodeParams(s);
-      expect(encodeParams(p, true)).toBe(s);
+      expect(encodeParams(p, true)).toBe(`${s}de`);
+      expect(decodeParams(`${s}de`)).toEqual(p);
     });
   }
 
@@ -70,6 +69,7 @@ describe("params codec", () => {
       h: 7,
       wrapping: false,
       barrierProbability: 0,
+      diff: DIFF_EASY,
     });
   });
 
@@ -79,6 +79,7 @@ describe("params codec", () => {
       h: 9,
       wrapping: true,
       barrierProbability: 0.25,
+      diff: DIFF_EASY,
     });
     expect(decodeParams("5a")).toEqual(defaultParams());
   });
@@ -91,7 +92,11 @@ describe("params codec", () => {
       "Width must be at least 1.",
     );
     expect(
-      paramsError(netGame, { w: 2, h: 5, wrapping: true, barrierProbability: 0 }, true),
+      paramsError(
+        netGame,
+        { w: 2, h: 5, wrapping: true, barrierProbability: 0, diff: DIFF_EASY },
+        true,
+      ),
     ).toMatch(/unique solution/);
     // A 1×n grid is allowed (only *both* dims ≤ 1 is rejected).
     expect(paramsError(netGame, { ...defaultParams(), w: 1, h: 5 }, true)).toBeNull();
@@ -104,8 +109,9 @@ describe("params codec", () => {
         h: 9,
         wrapping: true,
         barrierProbability: 0.25,
+        diff: DIFF_EASY,
       }),
-    ).toBe("7x9 wrapping, 25% barriers");
+    ).toBe("7x9 wrapping Easy, 25% barriers");
   });
 });
 
@@ -116,6 +122,7 @@ describe("desc codec + wrapping re-derivation", () => {
       h: 5,
       wrapping: false,
       barrierProbability: 0,
+      diff: DIFF_EASY,
     };
     const { desc, state } = generate(p, "codec-seed");
     expect(validateDesc(netGame, p, desc)).toBeNull();
@@ -131,6 +138,7 @@ describe("desc codec + wrapping re-derivation", () => {
       h: 3,
       wrapping: true,
       barrierProbability: 0,
+      diff: DIFF_EASY,
     };
     const desc = "000v000v0h0h0vh";
     expect(validateDesc(netGame, p, desc)).toBeNull();
@@ -139,29 +147,39 @@ describe("desc codec + wrapping re-derivation", () => {
 });
 
 describe("loading", () => {
-  const P5: NetParams = { w: 5, h: 5, wrapping: false, barrierProbability: 0 };
+  const P5: NetParams = {
+    w: 5,
+    h: 5,
+    wrapping: false,
+    barrierProbability: 0,
+    diff: DIFF_EASY,
+  };
 
-  it("refuses a board the solver cannot settle", () => {
+  it("refuses a board with several answers", () => {
     // A board built as upstream builds one with "Ensure unique solution" off.
-    expect(loadVerdict(netGame, P5, "142c49b8aa4de5acd7b749286")).toBe(
-      DESC_NOT_DEDUCIBLE,
-    );
+    expect(loadVerdict(netGame, P5, "142c49b8aa4de5acd7b749286")).toBe(DESC_NOT_UNIQUE);
   });
 
   it("loads a wrapping board upstream dealt", () => {
     // Upstream's board for the seed "net-trace-4", whose one answer is what
     // loading asks. `net-hint.test.ts` pins that the hint finishes it.
-    const p: NetParams = { w: 5, h: 5, wrapping: true, barrierProbability: 0 };
+    const p: NetParams = {
+      w: 5,
+      h: 5,
+      wrapping: true,
+      barrierProbability: 0,
+      diff: DIFF_EASY,
+    };
     expect(loadVerdict(netGame, p, "19d7aaae8449d5636cad43c44")).toBeNull();
   });
 });
 
 describe("generator", () => {
   const presets: NetParams[] = [
-    { w: 5, h: 5, wrapping: false, barrierProbability: 0 },
-    { w: 7, h: 7, wrapping: false, barrierProbability: 0 },
-    { w: 5, h: 5, wrapping: true, barrierProbability: 0 },
-    { w: 6, h: 4, wrapping: false, barrierProbability: 1 },
+    { w: 5, h: 5, wrapping: false, barrierProbability: 0, diff: DIFF_EASY },
+    { w: 7, h: 7, wrapping: false, barrierProbability: 0, diff: DIFF_EASY },
+    { w: 5, h: 5, wrapping: true, barrierProbability: 0, diff: DIFF_EASY },
+    { w: 6, h: 4, wrapping: false, barrierProbability: 1, diff: DIFF_EASY },
   ];
 
   for (const p of presets) {
@@ -191,6 +209,7 @@ describe("generator", () => {
       h: 7,
       wrapping: false,
       barrierProbability: 0.3,
+      diff: DIFF_EASY,
     };
     const seed = "barrier-superset";
     const low = newState(base, newDesc(base, randomNew(seed)).desc);
@@ -207,6 +226,7 @@ describe("generator", () => {
       h: 6,
       wrapping: false,
       barrierProbability: 0,
+      diff: DIFF_EASY,
     };
     for (let seed = 0; seed < 4; seed++) {
       const { state } = generate(p, `start-${seed}`);
@@ -223,6 +243,7 @@ describe("moves", () => {
     h: 5,
     wrapping: false,
     barrierProbability: 0,
+    diff: DIFF_EASY,
   };
   const base = () => generate(p, "moves-seed").state;
 
@@ -304,13 +325,31 @@ describe("moves", () => {
     expect(Array.from(solved.tiles).every((t) => t & LOCKED)).toBe(true);
   });
 
-  it("solve works without aux by running the internal solver", () => {
+  it("solve works without aux by searching for the answer", () => {
     const { state } = generate(p, "solve-noaux");
     const result = netGame.solve?.(state, state);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = netGame.executeMove(state, result.move);
     expect(isComplete(solved)).toBe(true);
+  });
+
+  // On a board two squares wide the shuffle, which reads the grid as a torus
+  // when it looks for loops, sees two tiles side by side joined twice: across
+  // the middle and round the back. The loop finder never came back from that,
+  // on about one 2x5 deal in thirteen.
+  it("a board two squares wide is dealt", () => {
+    for (const [w, h] of [
+      [2, 5],
+      [5, 2],
+      [2, 9],
+    ] as const) {
+      const two: NetParams = { ...p, w, h };
+      for (let seed = 0; seed < 40; seed++) {
+        const { state } = generate(two, `two-wide-${seed}`);
+        expect(state.tiles.length).toBe(w * h);
+      }
+    }
   });
 
   it("win fires exactly when every non-empty tile is powered", () => {
@@ -338,6 +377,7 @@ describe("moves", () => {
       h: 5,
       wrapping: true,
       barrierProbability: 0,
+      diff: DIFF_EASY,
     };
     const { state } = generate(p2, "ui-seed");
     const ui = newUi(state);

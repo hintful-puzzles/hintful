@@ -131,7 +131,7 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   "games/mines/solver.ts › minesolve": [
     "each pass deduces a square or perturbs, and a perturbation settles the set it was asked about or gives up",
   ],
-  "games/net/generator.ts › generate": [
+  "games/net/generator.ts › network": [
     "a pass that does not reduce the ambiguous sections regenerates, under `attempt`",
   ],
   "games/net/generator.ts › perturb": [

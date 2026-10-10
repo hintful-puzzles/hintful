@@ -42,6 +42,9 @@ export function findLoops(
   const shallowestReachable = new Int32Array(nvertices).fill(nvertices);
   const subtreeSize = new Int32Array(nvertices).fill(1);
   const parent = new Int32Array(nvertices).fill(-1);
+  /** The vertex that reported this one as its neighbor twice running, when
+   * scheduling it: the graph has two edges between them. */
+  const twiceFrom = new Int32Array(nvertices).fill(-1);
   const componentRoot = new Int32Array(nvertices);
   const prev = new Int32Array(nvertices);
   const next = new Int32Array(nvertices);
@@ -69,6 +72,9 @@ export function findLoops(
       } else {
         depth[u] = depth[parent[u]] + 1;
         componentRoot[u] = componentRoot[parent[u]];
+        // Two edges to the parent are a loop of the two, so the one the DFS
+        // came down is no bridge.
+        if (twiceFrom[u] === parent[u]) shallowestReachable[u] = depth[parent[u]];
       }
 
       // Schedule visits to the neighbors, and then back here.
@@ -76,6 +82,14 @@ export function findLoops(
       for (const w of neighbors(u)) {
         if (w === parent[u]) continue;
         if (depth[w] < 0) {
+          if (parent[w] === u) {
+            // A second edge to a neighbor this vertex has just scheduled.
+            // Scheduling it again would link it to itself in the list, and
+            // the walk would never end.
+            twiceFrom[w] = u;
+            anyLoop = true;
+            continue;
+          }
           parent[w] = u;
           // Remove the neighbor from the linked list…
           if (prev[w] >= 0) next[prev[w]] = next[w];

@@ -4,6 +4,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import {
   CURSOR_RIGHT,
@@ -46,6 +47,7 @@ const P: NetParams = {
   h: 5,
   wrapping: false,
   barrierProbability: 0,
+  diff: DIFF_EASY,
 };
 const PW: NetParams = { ...P, wrapping: true };
 

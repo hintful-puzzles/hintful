@@ -21,12 +21,23 @@
  * says whether the grid is inconsistent, still ambiguous, or uniquely solved.
  */
 
+import {
+  type Answer,
+  answerCache,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import { anticlockwise, offset, opposite } from "../../engine/wires.ts";
-import { LOCKED } from "./state.ts";
+import {
+  anticlockwise,
+  computeActive,
+  DIRECTIONS,
+  offset,
+  opposite,
+} from "../../engine/wires.ts";
+import { LOCKED, type NetState } from "./state.ts";
 
 /** Proved to have no solution at all. */
-export const SOLVER_INCONSISTENT = -1;
+const SOLVER_INCONSISTENT = -1;
 /** Consistent, but not narrowed to a single solution. */
 const SOLVER_AMBIGUOUS = 0;
 /** Solved: every tile's orientation is determined. */
@@ -67,28 +78,13 @@ class Todo {
 }
 
 /**
- * Run the solver over `tiles` (mutated: locked tiles gain the `LOCKED` bit,
- * others lose it). `barriers` may be `null` (generator's first pass, no
- * barriers yet). Returns {@link SOLVER_INCONSISTENT}/{@link SOLVER_AMBIGUOUS}/
- * {@link SOLVER_UNIQUE}.
+ * Every way each tile can turn: up to four wire masks a tile, indexed in
+ * fours and padded with 255 from the end. This is what the solver narrows,
+ * and a position of the answer search.
  */
-export function netSolver(
-  w: number,
-  h: number,
-  tiles: Uint8Array,
-  barriers: Uint8Array | null,
-  wrapping: boolean,
-): number {
-  const wh = w * h;
-
-  /*
-   * tilestate stores the possible orientations of each tile — up to four,
-   * indexed in fours, clearing to 255 from the end as things are ruled out.
-   * We also count the grid's area (non-empty tiles); it is w*h for a grid this
-   * generator makes, but the solver stays general.
-   */
+function allTurnings(tiles: Uint8Array): Uint8Array {
+  const wh = tiles.length;
   const tilestate = new Uint8Array(wh * 4);
-  let area = 0;
   for (let i = 0; i < wh; i++) {
     tilestate[i * 4] = tiles[i] & 0xf;
     for (let j = 1; j < 4; j++) {
@@ -101,8 +97,53 @@ export function netSolver(
         tilestate[i * 4 + j] = anticlockwise(tilestate[i * 4 + j - 1]);
       }
     }
-    if (tiles[i] !== 0) area++;
   }
+  return tilestate;
+}
+
+/**
+ * Run the solver over `tiles` (mutated: locked tiles gain the `LOCKED` bit,
+ * others lose it). `barriers` may be `null` (generator's first pass, no
+ * barriers yet). Returns {@link SOLVER_INCONSISTENT}/{@link SOLVER_AMBIGUOUS}/
+ * {@link SOLVER_UNIQUE}.
+ */
+export function netSolver(
+  w: number,
+  h: number,
+  tiles: Uint8Array,
+  barriers: Uint8Array | null,
+  wrapping: boolean,
+): number {
+  const tilestate = allTurnings(tiles);
+  const verdict = narrowTurnings(w, h, tilestate, barriers, wrapping);
+  if (verdict === SOLVER_INCONSISTENT) return verdict;
+  // Mark every fully-determined tile as locked; the grid is unique iff all are.
+  for (let i = 0; i < w * h; i++) {
+    if (tilestate[i * 4 + 1] === 255) tiles[i] = tilestate[i * 4] | LOCKED;
+    else tiles[i] &= ~LOCKED;
+  }
+  return verdict;
+}
+
+/**
+ * The solver's deductions, run in place on `tilestate`: the turnings each
+ * tile has left, which is {@link allTurnings} or fewer where some are ruled
+ * out already. {@link SOLVER_UNIQUE} says only that every tile is down to one
+ * turning.
+ */
+function narrowTurnings(
+  w: number,
+  h: number,
+  tilestate: Uint8Array,
+  barriers: Uint8Array | null,
+  wrapping: boolean,
+): number {
+  const wh = w * h;
+
+  // The grid's area is its non-empty tiles: w*h for a grid this generator
+  // makes, but the solver stays general.
+  let area = 0;
+  for (let i = 0; i < wh; i++) if (tilestate[i * 4] !== 0) area++;
 
   /*
    * edgestate: 0 unknown, 1 open, 2 closed. Five bytes per tile so that
@@ -275,16 +316,125 @@ export function netSolver(
     }
   }
 
-  // Mark every fully-determined tile as locked; the grid is unique iff all are.
-  let unique = SOLVER_UNIQUE;
-  for (let i = 0; i < wh; i++) {
-    if (tilestate[i * 4 + 1] === 255) {
-      tiles[i] = tilestate[i * 4] | LOCKED;
-    } else {
-      tiles[i] &= ~LOCKED;
-      unique = SOLVER_AMBIGUOUS;
-    }
-  }
+  for (let i = 0; i < wh; i++)
+    if (tilestate[i * 4 + 1] !== 255) return SOLVER_AMBIGUOUS;
+  return SOLVER_UNIQUE;
+}
 
-  return unique;
+/* ----------------------------------------------------------------------
+ * The answer: a search over the solver that counts a board's answers to two.
+ */
+
+/** A board's wires and walls: what an answer depends on. A `NetState` is one,
+ * and its locks and the way its tiles happen to be turned are not read. */
+export type NetBoard = Pick<NetState, "w" | "h" | "tiles" | "barriers" | "wrapping">;
+
+/** A board's one answer is each tile's wires as they are turned in it. */
+export type NetAnswer = Answer<Uint8Array>;
+
+/**
+ * Whether `tiles`, each turned one way, are one network with no loop: they
+ * have the wire ends a tree of them has, two a join and one join fewer than
+ * tiles, and the wires light every tile from the first. With no end to spare,
+ * tiles that are all lit meet end to end and close no loop.
+ *
+ * This is the search's "solved", which has to be a grid checked against the
+ * rules and not one merely full. The solver's own verdict is that every tile
+ * is down to one turning, and it joins two tiles wherever a side is wired in
+ * every turning left without asking whether that closes a loop. No grid was
+ * found where the two differ: every one of the 2,195 the solver settled among
+ * all grids of dead ends, corners, straights and Ts up to 3×3 is a network,
+ * and so was every position it settled under a wrong assumption on 360 dealt
+ * boards (2026-10-10).
+ */
+function isOneNetwork(
+  w: number,
+  h: number,
+  tiles: Uint8Array,
+  barriers: Uint8Array,
+): boolean {
+  const first = tiles.findIndex((wires) => wires !== 0);
+  if (first < 0) return true;
+  let wired = 0;
+  let ends = 0;
+  for (const wires of tiles) {
+    if (wires !== 0) wired++;
+    for (const d of DIRECTIONS) if (wires & d) ends++;
+  }
+  if (ends !== 2 * (wired - 1)) return false;
+  const lit = computeActive(w, h, tiles, barriers, first % w, Math.floor(first / w), 1);
+  return tiles.every((wires, i) => wires === 0 || lit[i] !== 0);
+}
+
+/**
+ * The positions the search may try before it gives up, which decides which
+ * Unreasonable boards exist ({@link AnswerSearch.budget}): lowering it
+ * refuses boards in saved games.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a board's answers up to two, by trial and error over the solver:
+ * where it stops, take the first tile with the fewest turnings left and
+ * assume each in turn.
+ */
+export function searchAnswers(
+  board: NetBoard,
+  budget: number = SEARCH_BUDGET,
+): NetAnswer {
+  const { w, h, barriers, wrapping } = board;
+  const wh = w * h;
+  /** Each tile's wires in a position where every tile has one turning. */
+  const settled = (position: Uint8Array): Uint8Array =>
+    Uint8Array.from({ length: wh }, (_, i) => position[i * 4]);
+  return searchBoard<Uint8Array, Uint8Array>({
+    start: allTurnings(board.tiles),
+    deduce(position) {
+      const verdict = narrowTurnings(w, h, position, barriers, wrapping);
+      if (verdict === SOLVER_INCONSISTENT) return "contradiction";
+      if (verdict === SOLVER_AMBIGUOUS) return "stuck";
+      return isOneNetwork(w, h, settled(position), barriers)
+        ? "solved"
+        : "contradiction";
+    },
+    assume(position) {
+      let at = -1;
+      let fewest = 5;
+      for (let i = 0; i < wh; i++) {
+        let left = 1;
+        while (left < 4 && position[i * 4 + left] !== 255) left++;
+        if (left > 1 && left < fewest) {
+          at = i;
+          fewest = left;
+        }
+      }
+      const next: Uint8Array[] = [];
+      for (let k = 0; k < fewest && at >= 0; k++) {
+        const assumed = position.slice();
+        assumed[at * 4] = position[at * 4 + k];
+        assumed.fill(255, at * 4 + 1, at * 4 + 4);
+        next.push(assumed);
+      }
+      return next;
+    },
+    solution: settled,
+    budget,
+  });
+}
+
+/** Keyed on a state's walls, which every state of one game shares. */
+const answers = answerCache<Uint8Array, Uint8Array>();
+
+/** What a search of a state's wires and walls established about their
+ * answers. */
+export function answerOf(state: NetState): NetAnswer {
+  return answers(state.barriers, () => searchAnswers(state));
+}
+
+/** Whether the solver alone settles every tile of the board. */
+export function solverFinishes(board: NetBoard): boolean {
+  const tiles = Uint8Array.from(board.tiles, (t) => t & 0xf);
+  return (
+    netSolver(board.w, board.h, tiles, board.barriers, board.wrapping) === SOLVER_UNIQUE
+  );
 }

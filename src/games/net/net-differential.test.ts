@@ -16,6 +16,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
@@ -42,6 +43,7 @@ const paramsOf = (f: NetFixture): NetParams => ({
   h: f.h,
   wrapping: f.wrapping,
   barrierProbability: f.barrierProbability,
+  diff: DIFF_EASY,
 });
 
 describeDescDifferential<NetFixture, NetParams>({

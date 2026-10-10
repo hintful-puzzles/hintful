@@ -742,6 +742,48 @@ What Sticks, the ninth, added:
   every one. A trial that only looks one square further finishes three in
   ten, which is a rung to weigh and is noted for the owner.
 
+What Net, the tenth, added:
+
+- **A generator that repairs a board toward Easy passes the tier on its
+  way.** Net has nothing to strip and nothing to swap: it draws a network and
+  rewires the part the solver could not settle until it can. Keeping a
+  network as first drawn where it is stuck with one answer, Pattern's way,
+  finds one draw in 50 to 300, since a network the solver stops on nearly
+  always has several answers. Asking the search after each round of rewiring
+  deals in 2 to 50 ms at every menu size. Look for the loop that already
+  moves a board toward one answer before writing a new one.
+- **Sweep with a line logged per cell, and a time limit inside the loop.**
+  The first sweep reported at its end and was killed with nothing to show.
+  The second logged a line a shape and stopped on its seventh: an Easy 2x5
+  deal that never returned. A deal that hangs is found by the sweep only if
+  the sweep says where it is.
+- **A hang in a dealt size is found by sweeping the small ones.** The loop
+  finder never came back from a graph with two edges between one pair, which
+  Net's shuffle hands it on a board two wide: about one 2x5 deal in
+  thirteen, at Easy, since the port, and upstream's C has the same shape.
+  The fix is in `engine/findloop.ts`, where every game that reads a loop
+  shares it.
+- **A claim about the solver in the handover is a thing to test.** The notes
+  for this game said the solver might call a looped grid solved. Of every
+  grid of the four tile kinds up to 3x3, each of the 2,195 it settles is a
+  network. The search still checks, since "solved" has to mean checked, and
+  its comment says no board was found to need it.
+- **Plant out the order as well as the choice.** A line that sorted each
+  tile's turnings, so that the positions a board takes would not depend on
+  how it is turned, changed no test when removed, and rightly: proving one
+  answer visits every branch, so their order cannot move the count. Which
+  tile is assumed does, and the pin sees that.
+- **An option that gives information away bounds the tier.** Net's walls
+  tell the solver what crosses a side. With every wall drawn it settles every
+  board, and past three in ten an Unreasonable deal is slow or gives up. The
+  generator's own retry loop around "the walls settled it" ran 10,000 deals
+  before giving up, five minutes; it now shares one bound with the draws.
+- **The slow shapes need not be the thin ones.** On a wrapping board the
+  ones with an even shorter side are slow: four wide stops dealing past 30
+  long and six wide past 80, where three, five and seven wide deal in
+  milliseconds. A sweep of the shorter side that skipped every other width
+  would have read one of two wrong bounds.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

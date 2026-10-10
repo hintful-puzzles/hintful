@@ -296,7 +296,9 @@ floored, so a press in the margin beside the grid placed an arrow.
 ### `findloop.ts` — loop/bridge finding
 
 Tarjan bridge-finding for live loop-error highlighting. Consumers: Slant,
-Bridges, Dominosa, Tracks, Net.
+Bridges, Dominosa, Tracks, Net. A neighbor reported twice is two edges to
+it, which are a loop of the two: Net's shuffle reads a board as a torus and
+hands it one on a board two squares wide.
 
 ### `n-times-root-k.ts` — exact `round(n · √k)`
 

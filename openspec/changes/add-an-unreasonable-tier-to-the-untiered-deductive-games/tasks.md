@@ -32,6 +32,8 @@
   `5x5cde`), and the menu's lines moved with the menu.
   **Sticks: done.** Every line gained `de` (`7x7b20s2` is now `7x7b20s2de`),
   and the menu gained its three Unreasonable lines.
+  **Net: done.** Every line gained `de` after what it had (`5x5b1` is now
+  `5x5b1de`), and the menu gained its five Unreasonable lines.
 
 ## 2. One game to the end: Pattern
 
@@ -283,35 +285,55 @@
       it, since it would move the Easy boards and leave most of these.
       10x10 Unreasonable takes 1.5 s on average and 4 s at worst, the
       slowest line on this menu.
-  - **Net, read 2026-10-10 and not begun.** What the code says, for the
-    session that takes it; none of it is measured, so re-check each:
-    - `netSolver` (`net/solver.ts`) starts every tile at all its turnings
-      and has no way to be told one is settled. A search position is a grid
-      with some tiles held, so the solver has to keep a held tile as it is, and
-      `assume` wants the turnings a tile has left, which the solver keeps in
-      a local array and does not return.
-    - Its "unique" verdict is every tile narrowed to one turning. Under a
-      wrong assumption that may not be an answer: it joins two tiles when a
-      side is wired in every turning left, with no check that the join
-      closes a loop. Test it before trusting it, and take "solved" from
-      `isComplete`. Every tile powered is a spanning tree with every wire
-      end met, since the tiles hold exactly the ends a tree needs.
-    - Easy is two things today: the solver's verdict and the hint engine's
-      (`finishes` in `net/deduce.ts`), which the generator's last step and
-      `finishesByDeduction` both ask.
-    - There is no clue to strip. Barriers are the only thing a board could
-      lose, and the generator rewires a drawn network until the solver
-      finds it unique (`perturb`). A drawn network kept where the solver
-      stops and the search says one is Pattern's shape; count how often
-      that happens, wrapping and not, before choosing.
-    - The params codec is written by hand (`net/state.ts`) and skips any
-      letter it does not know, which is how upstream's `a` reads today and
-      how a `d` would. `solve` replays a stored answer where it has one, and
-      `net/mistakes.ts` keeps its own per-board cache of the solver's answer,
-      keyed on `barriers`.
-    - A wrapping board two wide or high is refused already, as having no
-      single answer.
-  - [ ] Net, Range,
+  - [x] **Net** (2026-10-10). Measured: a deal is 2 to 50 ms at every menu
+    size, wrapping or not, and 0.45 s at 30x30; a dealt board needs a median
+    of 3 positions and 13 at most; the hint leaves a median of 10 squares
+    unlocked on a board without wrapping at every size, and 20 of 25 at 5x5
+    wrapping, 27 of 49 at 7x7 and 11 of 121 at 11x11. Decided, each with its
+    reason in the guide's "What Net, the tenth, added":
+    - There is nothing to strip or swap. The generator stops upstream's
+      rewiring at the first network the solver cannot settle that the search
+      proves has one answer, within 30 positions. Keeping a network as first
+      drawn was measured first and finds one draw in 50 to 300.
+    - The menu is upstream's five sizes at both tiers and the wrapping 7x7 at
+      Easy.
+    - Unreasonable is dealt up to 900 squares, 80 long when wrapping (30 when
+      four wide) and a barrier probability of 0.3. It is refused on a strip,
+      and without wrapping on 2x2 to 2x6, 3x3 and 3x4, where every network
+      and every set of walls was tried. A deal gives up after two million
+      squares of network, which is one to three seconds.
+    - An answer is a network with no loop. A pasted board whose tiles join up
+      only as a loop is refused as contradictory.
+    - The ledger's Net board has several answers.
+    - What the notes below this said of the code, each re-checked: the solver
+      was split so that the search can hold a tile (`narrowTurnings`); no
+      grid was found where it settles every tile into something that is not
+      a network (2,195 tried, every one up to 3x3); the codec stays written
+      by hand and takes the tier's segment; Solve still replays a dealt
+      board's stored answer; the mistake check's own cache is gone.
+    - **A defect in Easy, found by the sweep and fixed here.** A deal of a
+      board two squares wide never returned about one time in thirteen at
+      2x5: the shared loop finder (`engine/findloop.ts`) linked a neighbor
+      reported twice into its own work list, and Net's shuffle reads the
+      grid as a torus, where two tiles side by side are joined twice. Two
+      edges between a pair are now a loop of the two. Upstream's C has the
+      same shape.
+    - **Two defects in Easy, found by the sweep and filed, not fixed here.**
+      Net has no size bound to speak of: 40x40 takes 4.6 s and 70x70 takes
+      46, most of it the check that the hint finishes the board. And a
+      3x100 wrapping deal took 355 s once in six. The numbers are in
+      `openspec/changes/bound-net-to-the-boards-it-deals`.
+    - **For the owner to look at, not blocking: without wrapping, most of
+      these boards do not need trial and error.** A way of turning a square
+      that leaves the square beside it no way to turn, which the solver and
+      the hint do not look for, finishes 58 of 60 at 5x5 and 39 of 60 at
+      11x13, and 6 of 60 at 5x5 wrapping. The help page says to look for it
+      first, and
+      `openspec/changes/give-net-the-deduction-its-unreasonable-boards-lack`
+      is filed to build the rung. The wrapping board is on the menu at Easy
+      only, as a rule modifier has one line, and it is where this tier is
+      most what it says.
+  - [ ] Range,
     Rectangles. For each, do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
     finish of the boards the tier deals, and sweep the shorter side when

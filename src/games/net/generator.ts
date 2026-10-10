@@ -5,15 +5,17 @@
  * differential asserts the desc byte-for-byte against C for the same seed):
  *
  *   1. Grow the solved grid outward from the center as a spanning tree.
- *   2. If `unique`, run the solver + `perturb` until the grid is uniquely
- *      solvable (regenerating from scratch if perturbation stalls).
+ *   2. Run the solver + `perturb` until the grid is uniquely solvable
+ *      (regenerating from scratch if perturbation stalls). An Unreasonable
+ *      board stops this short, at the first grid the solver cannot settle
+ *      that a search proves has one answer.
  *   3. Collect the barrier candidates (edges the solution leaves unwired) and
  *      save the solved grid as `aux`.
  *   4. Shuffle: rotate every tile a random amount, reshuffle out of any loop,
  *      and require at least one mismatched non-wrapping edge (so the start isn't
  *      accidentally already solved).
  *   5. Choose barrier locations from the candidates.
- *   6. If `unique`, keep the board only if the hint's engine (`deduce.ts`)
+ *   6. At Easy, keep the board only if the hint's engine (`deduce.ts`)
  *      finishes it from the opening position, and otherwise start again with
  *      the RNG where it is. A board the hint cannot finish is one its player
  *      could be left stuck on, and nothing proves the engine keeps up with the
@@ -25,10 +27,12 @@
  * fixed seed extends the previous barrier set rather than replacing it.
  */
 
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle as shuffleArray } from "../../engine/shuffle.ts";
 import {
+  addBorderBarriers,
   anticlockwise,
   clockwise,
   collectBarrierCandidates,
@@ -46,7 +50,7 @@ import {
 } from "../../engine/wires.ts";
 import { finishes } from "./deduce.ts";
 import { computeLoops } from "./loops.ts";
-import { netSolver, SOLVER_UNIQUE } from "./solver.ts";
+import { netSolver, SOLVER_UNIQUE, searchAnswers, solverFinishes } from "./solver.ts";
 import { LOCKED, type NetParams, newState } from "./state.ts";
 
 /**
@@ -63,37 +67,125 @@ import { LOCKED, type NetParams, newState } from "./state.ts";
 const MAX_STALLED_ROUNDS = 100;
 
 export function newDesc(p: NetParams, rs: RandomState): { desc: string; aux: string } {
+  return p.diff === DIFF_EASY ? easyBoard(p, rs) : unreasonableBoard(p, rs);
+}
+
+/** An Easy board, upstream's only kind made stricter: a network rewired
+ * until the solver settles it, and kept if the hint finishes it too. */
+function easyBoard(p: NetParams, rs: RandomState): { desc: string; aux: string } {
   const attempt = retryLimit("net: a board the hint can finish");
   for (;;) {
     attempt();
-    const board = generate(p, rs);
+    const board = shuffled(p, rs, network(p, rs, null).tiles);
     if (finishes(newState(p, board.desc))) return board;
   }
 }
 
-function generate(p: NetParams, rs: RandomState): { desc: string; aux: string } {
+/**
+ * The positions the search may try on a network that is a candidate for an
+ * Unreasonable board, far under the 2,000 a pasted board is allowed. A
+ * network that needs more is rewired like any other the search does not call
+ * unique.
+ *
+ * Measured 2026-10-10 over 40 boards at each menu size, wrapping and not: a
+ * dealt board needs a median of 3 positions and 13 at most, and the same
+ * boards are dealt, in the same time, at 30 as at 2,000.
+ */
+const DEAL_BUDGET = 30;
+
+/**
+ * The squares of network an Unreasonable deal may draw before it gives up:
+ * the retry bound, counted in squares so that giving up takes a second or two
+ * at any size. Between the sizes proved to have no Unreasonable board and the
+ * ones that deal at once are sizes nobody has enumerated, and there running
+ * the bound out is an ordinary answer.
+ *
+ * Measured 2026-10-10: a 5×5 board, the rarest on the menu, takes a mean of
+ * 860 draws of the 80,000 this allows it; a 2×100 board, which was never
+ * dealt, runs 10,000 draws out in 2.1 s.
+ */
+const MAX_UNREASONABLE_SQUARES_DRAWN = 2_000_000;
+
+/**
+ * An Unreasonable board: a network caught on its way to an Easy one, where
+ * the solver still stops short and the search proves the network is the only
+ * answer. Walls can only tell the solver more, so a board that gets any is
+ * asked again once it has them.
+ */
+function unreasonableBoard(
+  p: NetParams,
+  rs: RandomState,
+): { desc: string; aux: string } {
+  // One bound for the whole deal: a board whose walls settle it costs the
+  // draws that found its network.
+  const draws = Math.ceil(MAX_UNREASONABLE_SQUARES_DRAWN / (p.w * p.h));
+  const attempt = retryLimit(unreasonableLabel(p), draws);
+  let drawn = 0;
+  for (;;) {
+    attempt();
+    const found = network(p, rs, draws - drawn);
+    drawn += found.draws;
+    const board = shuffled(p, rs, found.tiles);
+    if (p.barrierProbability === 0 || !solverFinishes(newState(p, board.desc)))
+      return board;
+  }
+}
+
+const unreasonableLabel = (p: NetParams): string =>
+  `net: Unreasonable generation (${p.w}x${p.h})`;
+
+/**
+ * A network with one answer and no walls to go by. Upstream's grid is one
+ * the solver settles: a tree drawn at random, rewired where the solver could
+ * not settle it until it can. With `stuckDraws`, the trees it may draw
+ * before giving up, the rewiring stops at the first network the solver cannot
+ * settle and the search proves has one answer. `draws` is the trees it drew.
+ *
+ * Measured 2026-10-10, that is far likelier than a tree being such a network
+ * as it is first drawn, which one in 50 to 300 is at the menu's sizes: a deal
+ * takes 2 to 50 ms where keeping only such trees takes 0.3 s to 2 s.
+ */
+function network(
+  p: NetParams,
+  rs: RandomState,
+  stuckDraws: number | null,
+): { tiles: Uint8Array; draws: number } {
+  const stuck = stuckDraws !== null;
   const { w, h } = p;
   const wh = w * h;
   const cx = Math.floor(w / 2);
   const cy = Math.floor(h / 2);
   const tiles = new Uint8Array(wh);
-  const barriers = new Uint8Array(wh);
+  // What the search reads the grid's edge from, where the solver is told.
+  const edge = new Uint8Array(wh);
+  if (!p.wrapping) addBorderBarriers(edge, w, h);
+  const board = { w, h, tiles, barriers: edge, wrapping: p.wrapping };
 
   // The outer loop is upstream's `begin_generation` label: the uniqueness gate
   // may give up and restart the whole grid.
-  const attempt = retryLimit("net: generation");
+  const attempt = retryLimit(
+    stuck ? unreasonableLabel(p) : "net: generation",
+    stuckDraws ?? undefined,
+  );
+  let draws = 0;
   beginGeneration: for (;;) {
     attempt();
+    draws++;
 
     tiles.fill(0);
-    barriers.fill(0);
 
     growSpanningTree(tiles, w, h, p.wrapping, cx, cy, rs);
 
     let prevn = -1;
     // The solver marks determined tiles LOCKED; the boundary between locked
     // and unlocked tiles bounds an ambiguous region, which `perturb` rewires.
-    while (netSolver(w, h, tiles, null, p.wrapping) !== SOLVER_UNIQUE) {
+    for (;;) {
+      const settled = netSolver(w, h, tiles, null, p.wrapping) === SOLVER_UNIQUE;
+      if (stuck) {
+        // A network the solver settles is an Easy one: draw another.
+        if (settled) continue beginGeneration;
+        if (searchAnswers(board, DEAL_BUDGET).kind === "one") break;
+      } else if (settled) break;
       let n = 0;
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
@@ -125,8 +217,19 @@ function generate(p: NetParams, rs: RandomState): { desc: string; aux: string } 
     // The solver left LOCKED bits everywhere; clear them.
     for (let i = 0; i < wh; i++) tiles[i] &= ~LOCKED;
 
-    break;
+    return { tiles, draws };
   }
+}
+
+/** The board of a finished network: its tiles turned at random, and walls
+ * drawn across some of the sides it leaves unwired. `tiles` is scrambled. */
+function shuffled(
+  p: NetParams,
+  rs: RandomState,
+  tiles: Uint8Array,
+): { desc: string; aux: string } {
+  const { w, h } = p;
+  const barriers = new Uint8Array(w * h);
 
   // Barrier candidates are the edges the solution leaves unwired (before the
   // shuffle, since that is the grid the barriers must be compatible with).

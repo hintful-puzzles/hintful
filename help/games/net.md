@@ -78,6 +78,16 @@ The ideas it teaches:
 When a square has to turn before it can be locked, the hint turns it and
 then locks it, as one step.
 
+On an Unreasonable board there comes a point where no square is down to
+one way of turning and no side is agreed on by every way left. The hint
+then says that nothing further follows by deduction instead of choosing
+for you. Look first at a square with two ways left, and at the squares
+beside it: often one of the two leaves a neighbor no way to turn at all,
+and on a board without wrapping that settles most of these puzzles. When
+it does not, save your position, lock a square one way and carry on: if it
+was wrong, some square a few steps later has no way left. The hint carries
+on from whatever you lock.
+
 ## Net parameters
 
 {{parameters}}

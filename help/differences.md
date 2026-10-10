@@ -103,6 +103,12 @@ work, but they are likely to change in a future update, and might be removed.
   have to try a line. The boards the original makes are this app's *Easy*
   ones.
 
+* **Net**: there is a difficulty, *Easy* or *Unreasonable*, which the
+  original does not have. An Unreasonable board has one solution that no
+  forced square leads to, so somewhere you have to try a square one way.
+  The boards the original makes with "Ensure unique solution" on are this
+  app's *Easy* ones.
+
 Earlier changes to individual puzzles have since been accepted into the
 original collection, so they are no longer differences.
 

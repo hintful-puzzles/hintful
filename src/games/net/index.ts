@@ -8,6 +8,11 @@
  * input, moves, solve, preferences, and the game object.
  */
 
+import {
+  DIFF_EASY,
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
@@ -39,9 +44,9 @@ import {
   RIGHT_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   beginSweep,
   interpretTargetVerbs,
@@ -86,7 +91,7 @@ import {
   ROTATE_TIME,
   redraw,
 } from "./render.ts";
-import { netSolver, SOLVER_INCONSISTENT, SOLVER_UNIQUE } from "./solver.ts";
+import { answerOf, type NetAnswer, solverFinishes } from "./solver.ts";
 import {
   computeActive,
   decodeParams,
@@ -106,21 +111,29 @@ import {
   newUi,
   type SideNote,
   sideIndex,
+  tierItem,
   validateParams,
 } from "./state.ts";
 
 /* ----------------------------------------------------------------------
- * Presets: upstream's five sizes, and one wrapping board. The other sizes
- * wrap from the Custom dialog.
+ * Presets: upstream's five sizes at both tiers, and one wrapping board. The
+ * other sizes wrap, and wrap at Unreasonable, from the Custom dialog.
  */
-const PRESETS: NetParams[] = [
-  { w: 5, h: 5, wrapping: false, barrierProbability: 0 },
-  { w: 7, h: 7, wrapping: false, barrierProbability: 0 },
-  { w: 9, h: 9, wrapping: false, barrierProbability: 0 },
-  { w: 11, h: 11, wrapping: false, barrierProbability: 0 },
-  { w: 11, h: 13, wrapping: false, barrierProbability: 0 },
-  { w: 7, h: 7, wrapping: true, barrierProbability: 0 },
+const board = (w: number, h: number, wrapping = false): NetParams => ({
+  w,
+  h,
+  wrapping,
+  barrierProbability: 0,
+  diff: DIFF_EASY,
+});
+const BOARDS: readonly NetParams[] = [
+  board(5, 5),
+  board(7, 7),
+  board(9, 9),
+  board(11, 11),
+  board(11, 13),
 ];
+const VARIANTS: readonly NetParams[] = [board(7, 7, true)];
 
 /* ----------------------------------------------------------------------
  * Moves.
@@ -657,26 +670,25 @@ function interpretMove(
  */
 
 function solve(_orig: NetState, curr: NetState, aux?: string): SolveResult<NetMove> {
-  const { w, h } = curr;
-  const n = w * h;
-  const target = new Uint8Array(n);
+  // A board dealt here comes with the network it was drawn as, which is its
+  // one answer at either tier. A pasted board's is searched for.
+  const answer: NetAnswer = aux
+    ? { kind: "one", solution: Uint8Array.from(aux, (c) => Number.parseInt(c, 16)) }
+    : answerOf(curr);
+  return solveFromAnswer(answer, (solution) => ({
+    type: "solve",
+    ops: opsToward(curr, solution),
+  }));
+}
 
-  if (aux) {
-    for (let i = 0; i < n; i++) target[i] = Number.parseInt(aux[i], 16) | LOCKED;
-  } else {
-    // The solver leaves every determined tile at its orientation | LOCKED.
-    target.set(curr.tiles);
-    if (netSolver(w, h, target, curr.barriers, curr.wrapping) === SOLVER_INCONSISTENT) {
-      return { ok: false, error: NO_SOLUTION };
-    }
-  }
-
-  // Build the op list transforming the current grid into the target: unlock,
-  // rotate the shortest way, then lock, per tile that differs.
+/** The ops that turn `curr` into `solution` with every tile locked: unlock,
+ * rotate the shortest way, then lock, per tile that differs. */
+function opsToward(curr: NetState, solution: Uint8Array): NetOp[] {
+  const { w } = curr;
   const ops: NetOp[] = [];
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < solution.length; i++) {
     const from = curr.tiles[i];
-    const to = target[i];
+    const to = solution[i] | LOCKED;
     if (from === to) continue;
     const ft = from & 0xf;
     const tt = to & 0xf;
@@ -687,10 +699,9 @@ function solve(_orig: NetState, curr: NetState, aux?: string): SolveResult<NetMo
     if (tt === anticlockwise(ft)) ops.push({ op: "A", x, y });
     else if (tt === clockwise(ft)) ops.push({ op: "C", x, y });
     else if (tt === opposite(ft)) ops.push({ op: "F", x, y });
-    if (to & LOCKED) ops.push({ op: "L", x, y });
+    ops.push({ op: "L", x, y });
   }
-
-  return { ok: true, move: { type: "solve", ops } };
+  return ops;
 }
 
 /* ----------------------------------------------------------------------
@@ -773,7 +784,7 @@ export const netGame: Game<
   defaultParams,
   presets: () => ({
     title: "Net",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
+    ...presetGrid(netGame.paramConfig ?? [], BOARDS, { variants: VARIANTS }),
   }),
   encodeParams,
   decodeParams,
@@ -817,6 +828,7 @@ export const netGame: Game<
         p.barrierProbability = Math.fround(atof(v));
       },
     },
+    tierItem,
   ],
 
   newDesc,
@@ -836,16 +848,13 @@ export const netGame: Game<
 
   solve,
   findMistakes,
-  // The solver's verdict, and the hint's: a board loads when its hint can
-  // finish it, which is what the generator asks of a board it deals.
-  finishesByDeduction: (s) =>
-    netSolver(
-      s.w,
-      s.h,
-      Uint8Array.from(s.tiles, (t) => t & 0xf),
-      s.barriers,
-      s.wrapping,
-    ) === SOLVER_UNIQUE && finishes(s),
+  // Easy is the solver's verdict, and the hint's: what the generator asks of
+  // an Easy board it deals.
+  difficulty: searchTierContract<NetParams, NetState>({
+    newState,
+    deductionFinishes: (s) => solverFinishes(s) && finishes(s),
+    answerOf,
+  }),
   hint: (s, _aux, ui) => netHint(s, targetVerbs, ui ?? newUi(s)),
   hintRungs: NET_RUNGS,
   hintMarks: {

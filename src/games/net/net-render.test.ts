@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
@@ -40,12 +41,14 @@ const P5: NetParams = {
   h: 5,
   wrapping: false,
   barrierProbability: 0,
+  diff: DIFF_EASY,
 };
 const P5B: NetParams = {
   w: 5,
   h: 5,
   wrapping: false,
   barrierProbability: 1,
+  diff: DIFF_EASY,
 };
 
 describe("net render", () => {

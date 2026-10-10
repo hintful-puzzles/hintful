@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -49,13 +50,19 @@ const plan = (s: NetState) => {
   return r.steps;
 };
 
-const W5: NetParams = { w: 5, h: 5, wrapping: true, barrierProbability: 0 };
+const W5: NetParams = {
+  w: 5,
+  h: 5,
+  wrapping: true,
+  barrierProbability: 0,
+  diff: DIFF_EASY,
+};
 
 /** The steps the tests below read, each pinned on a position whose hint opens
  * with one. */
 const pinned = describeHintPins({
   game: netGame,
-  params: [{ w: 5, h: 5, wrapping: false, barrierProbability: 0 }, W5],
+  params: [{ w: 5, h: 5, wrapping: false, barrierProbability: 0, diff: DIFF_EASY }, W5],
   seeds: 40,
   kinds: {
     turn: (step) => step.highlights?.kind === "turn",
@@ -92,9 +99,12 @@ const pinned = describeHintPins({
 });
 
 describe("the plan", () => {
+  // The Easy boards: an Unreasonable one is where the plan stops short
+  // (`net-tier.test.ts`).
   for (const item of presetMenu(netGame).submenu ?? []) {
+    const p = item.params as NetParams;
+    if (p.diff !== DIFF_EASY) continue;
     it(`${item.title}: finishes the board, every step agreeing with the solution`, () => {
-      const p = item.params as NetParams;
       const { state, solution } = board(p, `net-hint-${item.title}`);
       let s = state;
       for (const step of plan(state)) {
@@ -197,6 +207,7 @@ describe("refusal and marks", () => {
     h: 5,
     wrapping: false,
     barrierProbability: 0,
+    diff: DIFF_EASY,
   };
 
   it("flags a wrong note, so the midend refuses a hint", () => {
