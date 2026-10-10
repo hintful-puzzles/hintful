@@ -248,7 +248,7 @@ export class PuzzleViewInteractive extends PuzzleView {
 
     const consumed = await this.puzzle.processKey(button | mods);
     if (!consumed) {
-      // The game declined the key (`interpretMove` returned null). This is the
+      // The key was not claimed: the game had no use for it. This is the
       // signal the app's bare-letter shortcuts act on, rather than a per-game
       // declaration that a new or changed game could get wrong.
       // `puzzle-screen.ts` listens; see `src/puzzle/shortcuts.ts`.

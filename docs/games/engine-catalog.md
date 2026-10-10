@@ -192,11 +192,12 @@ typed arrays, `Map`, `Set`, and classes whose content is their own fields.
 
 ### `same-value.ts` — whether two values hold the same thing
 
-`sameValue`: the midend's own. It asks it of the board before a move and
-after, to keep a move that changed nothing out of the history, and of the
-`Ui` before an input and after, to repaint one a game changed under "nothing
-happened" ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE").
-A game calls it nowhere. What it owes is a state and a `Ui` the comparison
+`sameValue` and `sameShown`: the midend's own. It asks the first of the board
+before a move and after, to keep a move that changed nothing out of the
+history, and the second of the `Ui` before an input and after, to claim an
+input that changed what it shows under "nothing happened"
+([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE").
+A game calls neither. What it owes is a state and a `Ui` the comparison
 can read, which are the kinds `copyUi` takes; anything else throws by name.
 
 ### `note-taking-cell.ts` — the shared highlight-and-type mechanic

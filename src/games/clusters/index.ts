@@ -228,8 +228,10 @@ function interpretMove(
       const at = { x: drag[0] % w, y: Math.floor(drag[0] / w) };
       return verb.apply(state, at, ui) ?? UI_UPDATE;
     }
-    // The press that started the drag picked its fill.
+    // The press that started the drag picked its fill, and the drag is over:
+    // a later press that lands off the grid then has nothing to end.
     const fill = ui.dragType as ClustersFill;
+    ui.dragType = -1;
     const cells = drag
       .filter((i) => !(grid[i] & F_SINGLE)) // never overwrite a given
       .map((index) => ({ index, fill }));

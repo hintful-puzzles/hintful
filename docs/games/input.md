@@ -78,8 +78,8 @@ have to remember they exist; you do have to know what they will tell you.
   (§ "A canceled press is the engine's").
 - [`input-answers.test.ts`](../../src/engine/input-answers.test.ts) — what each
   answer of `interpretMove` leaves behind: no move that left the board as it
-  was is a step of Undo and none that changed it is dropped, and a `Ui`
-  changed under "nothing happened" is painted
+  was is a step of Undo and none that changed it is dropped, and no input
+  left unclaimed changed the frame
   ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE").
 - [`hint-gesture.test.ts`](../../src/engine/hint-gesture.test.ts) — every hint
   step is played through your `interpretMove` by the gesture your

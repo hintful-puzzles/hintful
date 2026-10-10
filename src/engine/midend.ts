@@ -64,7 +64,7 @@ import {
   withoutShift,
 } from "./pointer.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
-import { sameValue } from "./same-value.ts";
+import { sameShown, sameValue } from "./same-value.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import { endSweep, sweepContinues, sweepPending } from "./target-verb.ts";
 import type {
@@ -941,14 +941,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const dragging = isMouseDrag(pointer);
     const joins = dragging && sweepContinues(this.ui) && this.gestureRecorded;
     if (!dragging && !isMouseDown(pointer)) endSweep(this.ui);
-    if (move === null) {
-      // The game's answer stands, so the input is not claimed. A `Ui` it
-      // changed on the way is painted all the same: the frame on screen is
-      // never one the `Ui` has moved on from.
+    if (move === null && !this.changedWhatShows(uiBefore)) {
+      // Not claimed. A `Ui` changed only in what it keeps unseen is painted
+      // all the same: the frame on screen is never one the `Ui` has moved on
+      // from, whatever a game paints from.
       if (!sameValue(uiBefore, this.ui)) this.requestRedraw();
       return false;
     }
-    if (move === UI_UPDATE) {
+    if (move === null || move === UI_UPDATE) {
       this.uiUpdated();
       return true;
     }
@@ -1004,6 +1004,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.commitMove(next, move, joins);
     if (dragging && sweepPending(this.ui)) this.interpret(x, y, button);
     return true;
+  }
+
+  /**
+   * Whether an input the game answered "nothing happened" to changed what its
+   * `Ui` shows, which makes it a UI-only change whatever the answer: the input
+   * is claimed and the transition announced. No game writes anything for
+   * this, and none can change the frame under an input it leaves unclaimed.
+   */
+  private changedWhatShows(uiBefore: Ui): boolean {
+    return !sameShown(uiBefore, this.ui);
   }
 
   /** The `Ui` changed in place: redraw and notify, with no history entry and
@@ -1492,9 +1502,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
     /** Send one input; `false` when the game declined it. */
     const send = (p: Point, button: number): boolean => {
+      const uiBefore = copyUi(this.ui);
       const made = this.game.interpretMove(this.state, this.ui, ds, p, button);
-      if (made === null) return false;
-      if (made === UI_UPDATE) {
+      if (made === null && !this.changedWhatShows(uiBefore)) return false;
+      if (made === null || made === UI_UPDATE) {
         repaint = true;
         return true;
       }

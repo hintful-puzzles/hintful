@@ -3,15 +3,16 @@
  * and a real `Midend`, so a game is covered the day it is registered.
  *
  * Two rules, and the engine holds both (`Midend.interpret`): a move that
- * leaves the board as it was is no step of the history, and a `Ui` a game
- * changed while answering "nothing happened" is painted all the same. So what
+ * leaves the board as it was is no step of the history, and an input that
+ * changed what the `Ui` shows is claimed whatever the game answered. So what
  * is guarded is that the engine can tell, for every game's state and `Ui`:
- * that it keeps out every such move and no other, and repaints every such
- * frame.
+ * that it keeps out every such move and no other, and that what it reads as
+ * shown is what each game paints, so no frame changes under an input left
+ * unclaimed.
  *
- * The games still make the moves the midend keeps out, which is what the
- * sweep is trusted on: it counts them, and the games it was first seen to
- * convict are pinned.
+ * The games still make the moves the midend keeps out and still give the
+ * answers it overrules, which is what the sweep is trusted on: it counts
+ * both, and the games it was first seen to convict are pinned.
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
@@ -39,11 +40,10 @@ const MAKES_AN_UNCHANGED_MOVE = [
 
 /**
  * Games that answer "nothing happened" to an input that changed the frame,
- * each with the input. The midend paints the frame, so the player sees it;
- * the answer is still wrong, and the input is not claimed. Asserted exact: a
- * game that begins to do it fails here, and is fixed where it answers.
- * `openspec/changes/claim-an-input-that-changed-the-ui` is the change that
- * empties it.
+ * each with the input. The midend claims it for them, and these are the
+ * positives the sweep must find, or it could report no frame left unclaimed
+ * by reaching none: a game that begins to answer for itself comes off the
+ * list, and the list is never left empty.
  */
 const ANSWERS_NOTHING_AND_CHANGES_THE_FRAME: Record<string, string> = {
   clusters: "a drag that hides the cursor",
@@ -89,14 +89,20 @@ describe("what an input's answer leaves behind", () => {
     expect(makes).toEqual(expect.arrayContaining(MAKES_AN_UNCHANGED_MOVE));
   });
 
-  it("no frame a game changed while answering nothing is left unpainted", () => {
+  it("no Ui a game changed while answering nothing is left unpainted", () => {
     expect(named((r) => r.unpainted)).toEqual([]);
   });
 
-  it("names every game that answers nothing and changes the frame", () => {
-    const silent = [...answers].filter(([, r]) => r.silent > 0).map(([id]) => id);
-    expect(silent.sort()).toEqual(
-      Object.keys(ANSWERS_NOTHING_AND_CHANGES_THE_FRAME).sort(),
-    );
+  it("no input that changed the frame is left unclaimed", () => {
+    expect(named((r) => r.silent)).toEqual([]);
+  });
+
+  it("still sees the inputs the midend claims for a game", () => {
+    const claimed = [...answers]
+      .filter(([, r]) => r.claimedForGame > 0)
+      .map(([id]) => id);
+    const positives = Object.keys(ANSWERS_NOTHING_AND_CHANGES_THE_FRAME);
+    expect(positives.length).toBeGreaterThan(0);
+    expect(claimed).toEqual(expect.arrayContaining(positives));
   });
 });

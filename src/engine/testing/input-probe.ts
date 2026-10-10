@@ -59,6 +59,9 @@ export interface ProbeBoard {
   readonly executions: () => { readonly changed: number; readonly unchanged: number };
   /** How many times the midend has asked for a repaint. */
   readonly redraws: () => number;
+  /** How many times the game has answered an input with a move or a UI-only
+   * change, and not that nothing happened. */
+  readonly answers: () => number;
   /** A digest of the state the midend holds. Two moves spelled differently
    * that leave the same board read the same. */
   readonly board: () => string;
@@ -138,8 +141,14 @@ export function probeBoard(
   let changed = 0;
   let unchanged = 0;
   let redraws = 0;
+  let answers = 0;
   const spy: AnyGame = {
     ...game,
+    interpretMove: (...args) => {
+      const answer = game.interpretMove(...args);
+      if (answer !== null) answers++;
+      return answer;
+    },
     newState: (...args) => {
       current = game.newState(...args);
       return current;
@@ -216,6 +225,7 @@ export function probeBoard(
     moves: () => moveCount,
     executions: () => ({ changed, unchanged }),
     redraws: () => redraws,
+    answers: () => answers,
     board: stateDigest,
     where: () => `${digest(liveUi)}|${stateDigest()}`,
     held: () => `${digest(liveUi)}|${fingerprint(m)}`,
@@ -977,9 +987,13 @@ export interface InputAnswers {
   readonly recordedUnchanged: string[];
   /** Each input that changed the board and added no step to the history. */
   readonly droppedChanged: string[];
-  /** How many inputs answered "nothing happened" changed the frame. */
-  readonly silent: number;
-  /** Each of those after which the midend asked for no repaint. */
+  /** How many inputs that changed the frame the game answered "nothing
+   * happened" to, and the midend claimed for it. */
+  readonly claimedForGame: number;
+  /** Each input that changed the frame and was left unclaimed. */
+  readonly silent: string[];
+  /** Each unclaimed input that changed the `Ui`, seen or not, after which
+   * the midend asked for no repaint. */
   readonly unpainted: string[];
 }
 
@@ -988,8 +1002,8 @@ export interface InputAnswers {
  *
  * `interpretMove` has three answers, and each promises something this sweep
  * can read: a move is a step of the history exactly when it changed the
- * board, and "nothing happened" means the `Ui` is as it was. Every input of
- * every script is asked both, so a script needs no expectation of its own.
+ * board, and an input left unclaimed leaves the frame as it was. Every input
+ * of every script is asked both, so a script needs no expectation of its own.
  *
  * The scripts are the shapes that have made a move for nothing: a click
  * repeated, a drag out and back, a drag that lands one and two tiles off (a
@@ -1006,10 +1020,11 @@ export function inputAnswers(game: AnyGame, id: string): InputAnswers {
     unchanged: 0,
     recordedUnchanged: [],
     droppedChanged: [],
-    silent: 0,
+    claimedForGame: 0,
+    silent: [],
     unpainted: [],
   };
-  let silent = 0;
+  let claimedForGame = 0;
   let inputs = 0;
   let recorded = 0;
   const sent: string[] = [];
@@ -1023,7 +1038,7 @@ export function inputAnswers(game: AnyGame, id: string): InputAnswers {
     sent.length = 0;
   };
   // A `Ui` holds more than is painted (a hidden cursor is parked where a press
-  // fell), so the frame is what convicts, and the `Ui` only says when to paint.
+  // fell), so the frame is what convicts, and the `Ui` only says when to look.
   const frames = new Map<string, string>();
   const frame = (state: unknown, ui: unknown, uiDigest: string) => {
     const k = `${uiDigest}|${b.digestOf(state)}`;
@@ -1043,6 +1058,7 @@ export function inputAnswers(game: AnyGame, id: string): InputAnswers {
       const ui = digest(was.ui);
       const kept = copyUi(was.ui);
       const redraws = b.redraws();
+      const answers = b.answers();
       const consumed = m.processInput(input.at.x, input.at.y, input.button);
       inputs++;
       sent.push(input.name);
@@ -1052,14 +1068,19 @@ export function inputAnswers(game: AnyGame, id: string): InputAnswers {
       const how = () => sent.slice(-8).join(", ");
       if (rose > changed) out.recordedUnchanged.push(how());
       if (rose < changed) out.droppedChanged.push(how());
-      // An input the game claimed is painted by the midend's own transition.
-      if (consumed) continue;
+      // A claimed input is painted by the midend's own transition.
+      // So only one the game answered nothing to is looked at.
+      if (consumed && b.answers() > answers) continue;
       const now = b.live();
       const uiNow = digest(now.ui);
       if (uiNow === ui) continue;
-      if (frame(now.state, now.ui, uiNow) === frame(was.state, kept, ui)) continue;
-      silent++;
+      const seen = frame(now.state, now.ui, uiNow) !== frame(was.state, kept, ui);
+      if (consumed) {
+        if (seen) claimedForGame++;
+        continue;
+      }
       if (b.redraws() === redraws) out.unpainted.push(how());
+      if (seen) out.silent.push(how());
     }
   };
 
@@ -1151,7 +1172,13 @@ export function inputAnswers(game: AnyGame, id: string): InputAnswers {
         }
       }
     }
-  return { ...out, inputs, recorded, silent, unchanged: b.executions().unchanged };
+  return {
+    ...out,
+    inputs,
+    recorded,
+    claimedForGame,
+    unchanged: b.executions().unchanged,
+  };
 }
 
 const WALKS = 4;

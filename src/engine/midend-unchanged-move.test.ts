@@ -1,8 +1,8 @@
 /**
- * **A move that leaves the board as it was is no step of the history**, and a
- * `Ui` a game changed without saying so is painted: the two things
- * `Midend.interpret` does with an answer it does not take at its word. The
- * sweep over the real games is `input-answers.test.ts`.
+ * **A move that leaves the board as it was is no step of the history**, and an
+ * input that changed what the `Ui` shows is a UI-only change whatever the game
+ * answered: the two things `Midend.interpret` does with an answer it does not
+ * take at its word. The sweep over the real games is `input-answers.test.ts`.
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
@@ -14,9 +14,10 @@ import {
   fakeGame,
 } from "./fake-game.ts";
 import { UI_UPDATE } from "./game.ts";
-import { click } from "./hint-gesture.ts";
+import { click, drag } from "./hint-gesture.ts";
 import { Midend } from "./midend.ts";
 import {
+  CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_UP,
@@ -44,8 +45,9 @@ function dealt(): Ui {
 
 /** Squares of a row: an odd square's verb counts one, an even square's makes
  * the move that changes nothing. Up makes that move too, after marking the
- * `Ui`; Left marks the `Ui` and answers that nothing happened; Right answers
- * that with the `Ui` untouched. */
+ * `Ui`; Left marks the `Ui` and answers that nothing happened; Down answers
+ * that after moving the cursor, shown or not; Right answers it with the `Ui`
+ * untouched. */
 function game() {
   const verbs: TargetVerbs<FakeState, Ui, FakeDrawState, Point, Move> = {
     geometry: squareGrid({ size: () => ({ w: 20, h: 1 }), border: () => 0 }),
@@ -78,6 +80,10 @@ function game() {
         return null;
       }
       if (button === CURSOR_RIGHT) return null;
+      if (button === CURSOR_DOWN) {
+        ui.cursor.x++;
+        return null;
+      }
       return interpretTargetVerbs(verbs, s, ui, ds, p, button);
     },
     executeMove: (s: FakeState, m: Move) =>
@@ -186,14 +192,32 @@ describe("a move that leaves the board as it was", () => {
 });
 
 describe("an input answered as nothing happened", () => {
-  it("is painted when the game changed the Ui, and is still not claimed", () => {
+  it("is claimed and announced when the game changed what the Ui shows", () => {
     const h = play();
     const painted = h.redraws();
     const notes = h.notes.length;
-    expect(h.m.processInput(0, 0, CURSOR_LEFT)).toBe(false);
+    expect(h.m.processInput(0, 0, CURSOR_LEFT)).toBe(true);
+    expect(h.redraws()).toBeGreaterThan(painted);
+    expect(h.notes.length).toBeGreaterThan(notes);
+    expect(h.state()).toMatchObject({ currentMove: 0, totalMoves: 0 });
+  });
+
+  it("is painted and not claimed when only a hidden part of the Ui moved", () => {
+    const h = play();
+    const painted = h.redraws();
+    const notes = h.notes.length;
+    expect(dealt().cursor.visible).toBe(false);
+    expect(h.m.processInput(0, 0, CURSOR_DOWN)).toBe(false);
+    expect(dealt().cursor.x).toBe(1);
     expect(h.redraws()).toBe(painted + 1);
     // A repaint and nothing more: no transition is announced.
     expect(h.notes.length).toBe(notes);
+  });
+
+  it("is claimed when a part of the Ui that shows moved", () => {
+    const h = play();
+    dealt().cursor.visible = true;
+    expect(h.m.processInput(0, 0, CURSOR_DOWN)).toBe(true);
   });
 
   it("asks for no repaint when the Ui is as it was", () => {
@@ -201,6 +225,28 @@ describe("an input answered as nothing happened", () => {
     const painted = h.redraws();
     expect(h.m.processInput(0, 0, CURSOR_RIGHT)).toBe(false);
     expect(h.redraws()).toBe(painted);
+  });
+
+  it("has its drag played by a hint, as the view tracks a press it claimed", () => {
+    // The press picks up and answers nothing; only a drag that follows counts.
+    const g = {
+      ...game(),
+      interpretMove: (
+        _s: FakeState,
+        ui: Ui,
+        _ds: FakeDrawState,
+        _p: Point,
+        b: number,
+      ) => {
+        if (b === LEFT_BUTTON) ui.held = true;
+        return b === LEFT_DRAG && ui.held ? "inc" : null;
+      },
+      hintGesture: () => [drag({ x: 5, y: 5 }, { x: 15, y: 5 })],
+    };
+    const m = new Midend(g as unknown as typeof fakeGame);
+    m.newGame();
+    expect(m.executeHint()).toBeNull();
+    expect(m.formatAsText()).toBe("count=1");
   });
 
   it("is told from an input the game answered as a change of Ui", () => {

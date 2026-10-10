@@ -676,12 +676,22 @@ the app. What the comparison reads is the whole state, so keep bookkeeping
 that changes on every move (a counter, a last-move marker) out of it unless a
 player can see it: with it, no move of yours is ever "the same board".
 
-**"Nothing happened" means the `Ui` is as it was.** Change the `Ui` and the
-answer is `UI_UPDATE`. The midend repaints a `Ui` it finds changed under a
-`null`, so the frame is right, but the input is not claimed and a key falls
-through to the app's shortcuts.
-[`input-answers.test.ts`](../../src/engine/input-answers.test.ts) sweeps every
-registered game for both, and names the games that still answer `null` there.
+**An input that changed what the `Ui` shows is claimed, whatever you
+answered.** The midend compares the `Ui` before your answer and after, and a
+`null` over a change is a UI-only change all the same: claimed, announced,
+painted (`ts-engine`, "An input that changes what the `Ui` shows is a UI-only
+change"). So a press that hides the cursor and then finds nothing to do, or a
+key that puts down what was held, may return `null`. `UI_UPDATE` is for
+claiming an input that changed nothing shown: a drag over squares that take
+nothing, a key that is yours on a square it does nothing to. Without it such
+a key falls through to the app's shortcuts, and such a press gets no drag.
+
+What counts as shown: everything in the `Ui`, except that a part hidden
+before and after is the same wherever it sits, read off `visible: false`. A
+press parks the hidden cursor on what it pressed, and that is not a change.
+So keep the flag's name, and never paint from a part while its `visible` is
+off. [`input-answers.test.ts`](../../src/engine/input-answers.test.ts) sweeps
+every registered game for an input left unclaimed that changed the frame.
 
 **`ds` is non-null and built at the tile size on screen, so read `ds.tileSize`
 directly.** The midend builds the draw state with `newDrawState(state,

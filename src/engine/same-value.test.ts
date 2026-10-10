@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GridDrag, newDrag } from "./pointer.ts";
-import { sameValue } from "./same-value.ts";
+import { sameShown, sameValue } from "./same-value.ts";
 import { copyUi } from "./ui-snapshot.ts";
 
 /** A state of every kind the games hold, built afresh on each call. */
@@ -107,5 +107,32 @@ describe("whether two values hold the same thing", () => {
     expect(() => sameValue({ d: new Date(1) }, { d: new Date(2) })).toThrow(
       /\[object Date\]/,
     );
+  });
+});
+
+describe("whether two values show the same thing", () => {
+  const ui = (x: number, visible: boolean, held = 0) => ({
+    cursor: { x, y: 0, visible },
+    held,
+    parts: [{ at: x, visible }],
+  });
+
+  it("calls a part hidden in both the same, wherever it sits", () => {
+    expect(sameShown(ui(1, false), ui(2, false))).toBe(true);
+    expect(sameValue(ui(1, false), ui(2, false))).toBe(false);
+  });
+
+  it("sees a part shown, hidden, or moved while it shows", () => {
+    expect(sameShown(ui(1, false), ui(1, true))).toBe(false);
+    expect(sameShown(ui(1, true), ui(1, false))).toBe(false);
+    expect(sameShown(ui(1, true), ui(2, true))).toBe(false);
+  });
+
+  it("sees every other difference, beside a hidden part as anywhere", () => {
+    expect(sameShown(ui(1, false), ui(2, false, 1))).toBe(false);
+    expect(sameShown(board(), board())).toBe(true);
+    const b = board();
+    b.drag.live = true;
+    expect(sameShown(board(), b)).toBe(false);
   });
 });

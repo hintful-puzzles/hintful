@@ -11,10 +11,9 @@
  *   collision is resolved by deriving it from the game rather than from a
  *   roster.
  *
- * **How the derivation works.** `Midend.processInput` returns `false` **exactly
- * when the game's `interpretMove` returned `null`** — that is, when the game
- * declined the key. So the rule is *offer the key to the game first, and act
- * only if it declines*, which needs no list of games, cannot be forgotten by a
+ * **How the derivation works.** `Midend.processInput` returns `false` **when
+ * the game declined the key and showed nothing for it**. So the rule is
+ * *offer the key to the game first, and act only if it declines*, which needs no list of games, cannot be forgotten by a
  * new one, and also covers a game that consumes a letter without ever putting
  * it on the keypad. (Upstream's `midend.c` intercepts `n`/`u`/`r`/`q` before
  * the game runs, which is precisely why its `one_key_shortcuts` preference has
