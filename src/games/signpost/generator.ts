@@ -11,7 +11,7 @@
  * and the `cell_adj` enumeration order are ported verbatim.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
@@ -159,36 +159,23 @@ function newGameStrip(s: SignpostState, rng: RandomState): boolean {
 }
 
 /**
- * The positions the search may try when a number is stripped from an
- * Unreasonable board, far under the 2,000 it has by default. Stripping stops
- * only when the search can no longer prove one answer, so it takes a board up
- * to whatever the search is allowed, and this is how hard the tier's boards
- * are.
- *
- * Measured 2026-10-10: a dealt board needs a median of 3 positions at 4×4, 7
- * at 5×5, 15 at 6×6 and 25 at 7×7, and the hint leaves a median of 7 links of
- * 15 unmade at 4×4, 22 of 35 at 6×6 and 30 of 48 at 7×7. Making a link and
- * looking, with no forced link followed, settles 34 of 150 boards at 4×4, 19
- * at 5×5 and 7 at 6×6. Making one and following the forced links from it,
- * one trial at a time, finishes 150, 139 and 132.
- */
-const STRIP_BUDGET = 30;
-
-/**
- * An Unreasonable board's numbers: an Easy board's with more stripped, each
- * while the search still proves one answer within {@link STRIP_BUDGET}.
- * Returns whether the solver then stops short. An Easy board is one the
- * solver stops short on with any number gone, so stripping one is what takes
- * it out of reach.
+ * Strip an Easy board's numbers further, each gone while `one` still holds.
+ * An Easy board is one the solver stops short on with any number gone, so
+ * stripping one is what takes it out of reach.
  *
  * It starts from an Easy board and not from the first and last numbers
  * alone, adding numbers until the search proves one answer. Measured
  * 2026-10-10, that way took twice as long (16 ms against 8 at 7×7) and left
  * the hint no more to do (24 links of 35 unmade against 22 at 6×6).
+ *
+ * Measured the same day: a dealt board needs a median of 3 positions at 4×4,
+ * 7 at 5×5, 15 at 6×6 and 25 at 7×7, and the hint leaves a median of 7 links
+ * of 15 unmade at 4×4, 22 of 35 at 6×6 and 30 of 48 at 7×7. Making a link and
+ * looking, with no forced link followed, settles 34 of 150 boards at 4×4, 19
+ * at 5×5 and 7 at 6×6. Making one and following the forced links from it,
+ * one trial at a time, finishes 150, 139 and 132.
  */
-function unreasonableStrip(s: SignpostState, rng: RandomState): boolean {
-  if (!newGameStrip(s, rng)) return false;
-  const one = () => searchAnswers(s, STRIP_BUDGET).kind === "one";
+function stripFurther(s: SignpostState, rng: RandomState, one: () => boolean): void {
   const order = Array.from({ length: s.n }, (_, i) => i);
   shuffle(order, rng);
   for (const j of order) {
@@ -198,46 +185,60 @@ function unreasonableStrip(s: SignpostState, rng: RandomState): boolean {
     s.flags[j] &= ~FLAG_IMMUTABLE;
     if (!one()) s.flags[j] |= FLAG_IMMUTABLE;
   }
-  return !solverFinishes(s);
+}
+
+/** Draw an Easy board into `s`, upstream's only kind: a path, and the
+ * numbers the solver needs to follow it. `null` where this path gave none. */
+function easyBoard(
+  p: SignpostParams,
+  s: SignpostState,
+  rng: RandomState,
+): SignpostState | null {
+  blankInto(s);
+
+  // Keep trying head/tail choices until we fill successfully.
+  let headi = 0;
+  let taili = 0;
+  const fill = retryLimit("signpost: newGameFill");
+  do {
+    fill();
+
+    if (p.forceCornerStart) {
+      headi = 0;
+      taili = s.n - 1;
+    } else {
+      const pick = retryLimit("signpost: head/tail selection", MAX_DISTINCT_PICKS);
+      do {
+        pick();
+        headi = randomUpto(rng, s.n);
+        taili = randomUpto(rng, s.n);
+      } while (headi === taili);
+    }
+  } while (!newGameFill(s, rng, headi, taili));
+
+  s.flags[headi] |= FLAG_IMMUTABLE;
+  s.flags[taili] |= FLAG_IMMUTABLE;
+
+  return newGameStrip(s, rng) ? s : null;
 }
 
 export function newSignpostDesc(p: SignpostParams, rng: RandomState): { desc: string } {
   if (p.w === 1 && p.h === 1) return { desc: "1a" };
 
   const s = blankState(p);
-  const attempt = retryLimit("signpost: generation");
-  for (;;) {
-    attempt();
-
-    blankInto(s);
-
-    // Keep trying head/tail choices until we fill successfully.
-    let headi = 0;
-    let taili = 0;
-    const fill = retryLimit("signpost: newGameFill");
-    do {
-      fill();
-
-      if (p.forceCornerStart) {
-        headi = 0;
-        taili = s.n - 1;
-      } else {
-        const pick = retryLimit("signpost: head/tail selection", MAX_DISTINCT_PICKS);
-        do {
-          pick();
-          headi = randomUpto(rng, s.n);
-          taili = randomUpto(rng, s.n);
-        } while (headi === taili);
-      }
-    } while (!newGameFill(s, rng, headi, taili));
-
-    s.flags[headi] |= FLAG_IMMUTABLE;
-    s.flags[taili] |= FLAG_IMMUTABLE;
-
-    const stripped =
-      p.diff === DIFF_EASY ? newGameStrip(s, rng) : unreasonableStrip(s, rng);
-    if (!stripped) continue; // regenerate
-    stripNums(s);
-    return { desc: generateDesc(s) };
+  if (p.diff === DIFF_EASY) {
+    const attempt = retryLimit("signpost: generation");
+    do attempt();
+    while (easyBoard(p, s, rng) === null);
+  } else {
+    dealUnreasonable<SignpostState>({
+      label: "signpost: generation",
+      draw: () => easyBoard(p, s, rng),
+      strip: (board, one) => stripFurther(board, rng, one),
+      deduced: solverFinishes,
+      answer: searchAnswers,
+    });
   }
+  stripNums(s);
+  return { desc: generateDesc(s) };
 }

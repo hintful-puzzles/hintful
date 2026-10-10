@@ -14,7 +14,9 @@
  * - what Solve says of each ({@link solveFromAnswer});
  * - the difficulty contract ({@link searchTierContract});
  * - the two tiers, their params field and its codec segment
- *   ({@link searchTierItem}, {@link searchTierSegment}).
+ *   ({@link searchTierItem}, {@link searchTierSegment});
+ * - the deal of an Unreasonable board ({@link dealUnreasonable}): the loop,
+ *   its bound, and the test that keeps a board.
  *
  * The hint never searches: it ends in `DEDUCTION_EXHAUSTED` where nothing
  * follows, which the midend lets through on a tier named Unreasonable.
@@ -29,6 +31,7 @@ import {
 import type { ParamConfigItem, SolveResult } from "./game.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
 import { choice, type ParamsSegment } from "./params-codec.ts";
+import { retryLimit } from "./retry-limit.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "./solve-failure.ts";
 
 /** A board the game's deductions, and its hint, finish. */
@@ -151,6 +154,76 @@ export function solvedPositions<Position, Solution>(
 }
 
 /**
+ * The positions the search may try on a board that is being made, far under
+ * what a game allows a pasted one. A strip stops only when the search can no
+ * longer prove one answer, so it takes a board up to whatever the search is
+ * allowed: this is how hard a stripped board is, and under a game's whole
+ * budget every board came out at the edge of it (ABCD, 2026-10-10: a median
+ * of 1,728 positions of 2,000 on a 6x6, where a board with every clue showing
+ * needs 9).
+ *
+ * Measured in each game that strips, the same day: at 30 a dealt board needs
+ * a median of 3 to 29 positions, and trying one thing and following the
+ * deduction from it finishes nearly every one. At 10 a number that breaks a
+ * rule the moment it is written settled 24 of 66 Filling boards, which is a
+ * deduction the solver lacks and not a search.
+ */
+export const DEALING_BUDGET = 30;
+
+/** A game's side of {@link dealUnreasonable}: what is about its puzzle. */
+export interface UnreasonableDeal<Board> {
+  /** Names the game and the size where no board is found. */
+  label: string;
+  /**
+   * A candidate: everything of a try that comes before the tier is asked
+   * for, or `null` where this try gave none. A game whose generator mends a
+   * board toward one answer does that here.
+   */
+  draw(): Board | null;
+  /**
+   * Take from `board`, in place, what it shows a player (a clue, a given, the
+   * order of two letters), asking `one` after each thing taken and putting
+   * back what it refuses. `one` is the search within {@link DEALING_BUDGET},
+   * and the board it is handed is one `one` already holds of. Left out, a
+   * candidate is kept or thrown away as drawn.
+   */
+  strip?(board: Board, one: () => boolean): void;
+  /** Whether the game's deduction finishes `board`, by its solver and by
+   * whatever else of its hint could finish one the solver does not. */
+  deduced(board: Board): boolean;
+  /** The game's search of `board`, within `budget` positions or the game's
+   * own where none is given. */
+  answer(board: Board, budget?: number): Answer<unknown>;
+}
+
+/**
+ * Deal an Unreasonable board: draw candidates until one has a single answer
+ * that the game's deduction stops short of. Every try is under the deal's
+ * bound (`retry-limit.ts`), so a size with no such board is answered and not
+ * waited for.
+ *
+ * A candidate with a strip is asked within {@link DEALING_BUDGET} throughout,
+ * the last time as well: the strip leaves a board the search proves within
+ * it, and a strip that did not would be caught here.
+ */
+export function dealUnreasonable<Board>(deal: UnreasonableDeal<Board>): Board {
+  const { strip } = deal;
+  const budget = strip === undefined ? undefined : DEALING_BUDGET;
+  const one = (board: Board) => deal.answer(board, budget).kind === "one";
+  const attempt = retryLimit(deal.label);
+  for (;;) {
+    attempt();
+    const board = deal.draw();
+    if (board === null) continue;
+    if (strip !== undefined) {
+      if (!one(board)) continue;
+      strip(board, () => one(board));
+    }
+    if (!deal.deduced(board) && one(board)) return board;
+  }
+}
+
+/**
  * Each board's answer, searched once: the mistake check asks after every
  * move. `Board` is the part of a state every state of one game shares by
  * reference and no move replaces, so the player's marks are not in the key
@@ -203,7 +276,7 @@ export function searchTierContract<Params, State>(game: {
   deductionFinishes(state: State): boolean;
   answerOf(state: State): Answer<unknown>;
 }): DifficultyContract<Params> {
-  return {
+  const contract: DifficultyContract<Params> = {
     solveAtCap(p, desc, cap) {
       const state = game.newState(p, desc);
       if (cap === DIFF_EASY)
@@ -213,4 +286,17 @@ export function searchTierContract<Params, State>(game: {
       return answer.kind === "none" ? "impossible" : "unsolved";
     },
   };
+  searchTierContracts.add(contract);
+  return contract;
+}
+
+const searchTierContracts = new WeakSet<object>();
+
+/**
+ * Whether `contract` is one {@link searchTierContract} made: the games whose
+ * Unreasonable tier is this module's, apart from a game that names its tiers
+ * the same and grades them by a solver of its own (Bricks, Galaxies).
+ */
+export function isSearchTierContract(contract: object): boolean {
+  return searchTierContracts.has(contract);
 }

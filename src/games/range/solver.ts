@@ -16,6 +16,7 @@ import {
   type Answer,
   answerCache,
   DIFF_EASY,
+  dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
@@ -689,33 +690,22 @@ function stripClues(grid: Int8Array, w: number, h: number, order: number[]): num
 }
 
 /**
- * The positions the search may try when a pair of clues is stripped from an
- * Unreasonable board, far under the 2,000 it has by default. Stripping stops
- * only when the search can no longer prove one answer, so it takes a board up
- * to whatever the search is allowed, and this is how hard the tier's boards
- * are.
- *
- * Measured 2026-10-10 on twelve boards a size: a dealt board needs a median
- * of 9 positions at 6×9 and 17 to 21 at the larger presets, and 29 at most.
- * On 180 dealt boards a square that breaks a rule the moment it is filled, a
- * deduction the rules lack, finishes none, and a square tried and followed
- * through the rules to a broken one finishes every one.
- */
-const STRIP_BUDGET = 30;
-
-/**
  * Strip an Easy board further: each symmetric pair of clues still showing,
- * in the strip's order, gone while the search still proves one answer within
- * {@link STRIP_BUDGET}. Says whether the rules then stop short, which is what
- * makes the board Unreasonable.
+ * in the strip's order, gone while `one` still holds.
  *
  * It is an Easy board stripped further and not one strip by the search.
  * Measured 2026-10-10, that way took longer (0.37 s against 0.22 at 11×16,
  * 0.14 s against 0.09 at 9×13) and left the hint less to do: a median of 124
  * squares of 176 undecided against 90.
+ *
+ * Measured the same day on twelve boards a size: a dealt board needs a median
+ * of 9 positions at 6×9 and 17 to 21 at the larger presets, and 29 at most.
+ * On 180 dealt boards a square that breaks a rule the moment it is filled, a
+ * deduction the rules lack, finishes none, and a square tried and followed
+ * through the rules to a broken one finishes every one.
  */
-function stripFurther(grid: Int8Array, w: number, h: number, order: number[]): boolean {
-  const n = w * h;
+function stripFurther(grid: Int8Array, order: number[], one: () => boolean): void {
+  const n = grid.length;
   for (const i of order) {
     const j = n - 1 - i;
     const clue = grid[i];
@@ -723,11 +713,10 @@ function stripFurther(grid: Int8Array, w: number, h: number, order: number[]): b
     if (clue <= 0 || clueRot <= 0) continue;
     grid[i] = EMPTY;
     grid[j] = EMPTY;
-    if (searchAnswers(grid, w, h, STRIP_BUDGET).kind === "one") continue;
+    if (one()) continue;
     grid[i] = clue;
     grid[j] = clueRot;
   }
-  return !deductionFinishes(grid, w, h);
 }
 
 /** Generate a rotationally-symmetric board with one answer; returns the clue
@@ -737,14 +726,26 @@ export function generateGrid(p: RangeParams, rng: RandomState): Int8Array {
   const { w, h } = p;
   const grid = new Int8Array(w * h);
   const order = Array.from({ length: w * h }, (_, i) => i);
-  const attempt = retryLimit(`range: generation (${w}x${h})`);
-  for (;;) {
-    attempt();
+  /** Draw an Easy board into `grid`, or `null` where these black squares
+   * gave none. */
+  const easyGrid = (): Int8Array | null => {
     shuffle(order, rng);
     chooseBlackSquares(grid, w, h, order);
     computeClues(grid, w, h);
     shuffle(order, rng);
-    if (stripClues(grid, w, h, order) < 0) continue;
-    if (p.diff === DIFF_EASY || stripFurther(grid, w, h, order)) return grid;
-  }
+    return stripClues(grid, w, h, order) < 0 ? null : grid;
+  };
+  const label = `range: generation (${w}x${h})`;
+  if (p.diff !== DIFF_EASY)
+    return dealUnreasonable<Int8Array>({
+      label,
+      draw: easyGrid,
+      strip: (board, one) => stripFurther(board, order, one),
+      deduced: (board) => deductionFinishes(board, w, h),
+      answer: (board, budget) => searchAnswers(board, w, h, budget),
+    });
+  const attempt = retryLimit(label);
+  do attempt();
+  while (easyGrid() === null);
+  return grid;
 }

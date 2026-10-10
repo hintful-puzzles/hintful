@@ -12,7 +12,7 @@
  * solver is deterministic, so the desc is a pure function of the seed.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -112,13 +112,14 @@ function stripClues({ numbers }: Dealt, rng: RandomState, keeps: () => boolean):
 }
 
 /**
- * The positions the search may try when a clue is stripped from an
- * Unreasonable board, far under the 2,000 it has by default. Stripping stops
- * only when the search can no longer prove one answer, so it takes a board up
- * to whatever the search is allowed, and this is how hard the tier's boards
- * are.
+ * An Unreasonable board: a fill stripped by the search where an Easy one is
+ * stripped by the solver.
  *
- * Measured 2026-10-10: a dealt board needs a median of 3 to 5 positions and
+ * It is one strip and not an Easy board stripped further. Measured
+ * 2026-10-10, that way took five times as long (7.6 s against 1.5 at 10×10,
+ * 0.5 s against 0.14 at 7×7) and left the hint no more to do.
+ *
+ * Measured the same day: a dealt board needs a median of 3 to 5 positions and
  * 19 at most, and the hint leaves a median of 9 squares of 20 blank at 5×5,
  * 12 of 41 at 7×7 and 12 of 80 at 10×10. A budget of 10 deals the same boards
  * in the same time. Trying a line and following the deduction from it, one
@@ -126,32 +127,15 @@ function stripClues({ numbers }: Dealt, rng: RandomState, keeps: () => boolean):
  * square it leaves with no line to hold, with nothing followed, finishes 11
  * of 40 at 5×5, 13 of 40 at 7×7 and 5 of 26 at 10×10.
  */
-const STRIP_BUDGET = 30;
-
-/**
- * An Unreasonable board: a fill stripped by the search where an Easy one is
- * stripped by the solver, each clue gone while the search still proves one
- * answer within {@link STRIP_BUDGET}, and kept if the solver then stops
- * short.
- *
- * It is one strip and not an Easy board stripped further. Measured
- * 2026-10-10, that way took five times as long (7.6 s against 1.5 at 10×10,
- * 0.5 s against 0.14 at 7×7) and left the hint no more to do.
- */
 function unreasonableBoard(p: SticksParams, rng: RandomState): Dealt {
   const { w, h } = p;
-  const attempt = retryLimit(`sticks: Unreasonable generation (${w}x${h})`);
-  for (;;) {
-    attempt();
-    const dealt = clueFill(p, rng);
-    const { grid, numbers } = dealt;
-    stripClues(
-      dealt,
-      rng,
-      () => searchAnswers(grid, numbers, w, h, STRIP_BUDGET).kind === "one",
-    );
-    if (sticksSolveGame(grid, numbers, w, h) !== "complete") return dealt;
-  }
+  return dealUnreasonable<Dealt>({
+    label: `sticks: Unreasonable generation (${w}x${h})`,
+    draw: () => clueFill(p, rng),
+    strip: (dealt, one) => stripClues(dealt, rng, one),
+    deduced: ({ grid, numbers }) => sticksSolveGame(grid, numbers, w, h) === "complete",
+    answer: ({ grid, numbers }, budget) => searchAnswers(grid, numbers, w, h, budget),
+  });
 }
 
 /** An Easy board, upstream's only kind: a fill with every clue gone that the

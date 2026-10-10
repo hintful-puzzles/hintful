@@ -14,6 +14,7 @@ import {
   answerCache,
   type Deduced,
   DIFF_EASY,
+  dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
@@ -437,10 +438,16 @@ function easyClues(p: MosaicParams, rng: RandomState): Int8Array {
 }
 
 /**
- * The positions the search may try when a clue is hidden from an Unreasonable
- * board, far under the 2,000 it has by default. Hiding stops only when the
- * search can no longer prove one answer, so it takes a board up to whatever
- * the search is allowed, and this is how hard the tier's boards are.
+ * An Unreasonable board's clues: an Easy board's with more hidden by the
+ * search. With aggressive generation every clue is tried. Without it hiding
+ * stops at the first clue whose loss stops the rule, so the board keeps the
+ * rest of its numbers. Only the smallest boards are often thrown away for
+ * giving up no clue.
+ *
+ * It starts from an Easy board and not from every clue, which the search
+ * could strip as well: stripped that way most boards have no number the rule
+ * can start from, and the hint has nothing to say on them (the rule left a
+ * median of 90 squares of 100 undecided at 10×10, against 58 this way).
  *
  * Measured 2026-10-10 with aggressive generation: a dealt board needs a
  * median of 9 positions at 5×5, 21 at 10×10 and 29 at 25×25, and the rule
@@ -450,46 +457,28 @@ function easyClues(p: MosaicParams, rng: RandomState): Int8Array {
  * 10×10 and 11 of 16 at 15×15. Without aggressive generation a board needs a
  * median of 5 to 7 positions and that comparison finishes every one seen.
  */
-const HIDING_BUDGET = 30;
-
-/**
- * An Unreasonable board's clues: an Easy board's with more hidden, each while
- * the search still proves one answer within {@link HIDING_BUDGET}, kept once
- * the rule stops short on what is left. With aggressive generation every
- * clue is tried. Without it hiding stops at the first clue whose loss stops
- * the rule, so the board keeps the rest of its numbers.
- *
- * It starts from an Easy board and not from every clue, which the search
- * could strip as well: stripped that way most boards have no number the rule
- * can start from, and the hint has nothing to say on them (the rule left a
- * median of 90 squares of 100 undecided at 10×10, against 58 this way).
- */
 function unreasonableClues(p: MosaicParams, rng: RandomState): Int8Array {
   const { width, height, aggressive } = p;
-  const size = width * height;
-  // Only the smallest boards are often thrown away for giving up no clue.
-  const attempt = retryLimit(`mosaic: Unreasonable generation (${width}x${height})`);
-  for (;;) {
-    attempt();
-    const clues = easyClues(p, rng);
-    const board: MosaicBoard = { width, height, clues };
-    const shown: number[] = [];
-    for (let pos = 0; pos < size; pos++) if (clues[pos] >= 0) shown.push(pos);
-    shuffle(shown, rng);
-    let hidden = false;
-    for (const pos of shown) {
-      const clue = clues[pos];
-      clues[pos] = -1;
-      if (searchAnswers(board, HIDING_BUDGET).kind !== "one") {
-        clues[pos] = clue;
-        continue;
+  return dealUnreasonable<MosaicBoard>({
+    label: `mosaic: Unreasonable generation (${width}x${height})`,
+    draw: () => ({ width, height, clues: easyClues(p, rng) }),
+    strip(board, one) {
+      const { clues } = board;
+      const shown: number[] = [];
+      clues.forEach((clue, pos) => {
+        if (clue >= 0) shown.push(pos);
+      });
+      shuffle(shown, rng);
+      for (const pos of shown) {
+        const clue = clues[pos];
+        clues[pos] = -1;
+        if (!one()) clues[pos] = clue;
+        else if (!aggressive && solveGameActual(board) === null) return;
       }
-      hidden = true;
-      if (!aggressive && solveGameActual(board) === null) return clues;
-    }
-    // The rule deduces no more from fewer clues, so asking once is enough.
-    if (hidden && solveGameActual(board) === null) return clues;
-  }
+    },
+    deduced: (board) => solveGameActual(board) !== null,
+    answer: searchAnswers,
+  }).clues;
 }
 
 export function newDesc(p: MosaicParams, rng: RandomState): { desc: string } {

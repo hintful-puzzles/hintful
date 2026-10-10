@@ -4,7 +4,7 @@
  * from those.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { adjacentCells, redivide, regionsBeside } from "../../engine/redivide.ts";
@@ -314,11 +314,9 @@ function easyBoard(p: SeparateShape, rng: RandomState): Dealt {
 }
 
 /**
- * The positions the search may try when two letters are swapped on the way to
- * an Unreasonable board, far under the 2,000 it has by default. Swapping stops
- * only when the search can no longer prove one answer, so it takes a board up
- * to whatever the search is allowed, and this is how hard the tier's boards
- * are.
+ * An Unreasonable board: an Easy board with pairs of letters swapped inside a
+ * region, each while the search still proves one answer. A swap inside a
+ * region leaves the division the board was dealt from an answer.
  *
  * Measured 2026-10-10: a dealt board needs a median of 5 positions at 4×4 and
  * 13 to 23 at the larger presets, and the hint leaves a median of 19 edges of
@@ -326,14 +324,6 @@ function easyBoard(p: SeparateShape, rng: RandomState): Dealt {
  * two squares and looking, with no rung run, settles 30 of 150 boards at 4×4,
  * 10 at 5×5 and 5 at 6×6 in fours, where joining and following the rungs from
  * it, one trial at a time, finishes all but four of the 450.
- */
-const SWAP_BUDGET = 30;
-
-/**
- * An Unreasonable board: an Easy board with pairs of letters swapped inside a
- * region, each while the search still proves one answer within
- * {@link SWAP_BUDGET}, kept if the solver then stops short. A swap inside a
- * region leaves the division the board was dealt from an answer.
  *
  * Every pair is tried, where stopping at the first swap that stops the solver
  * would leave the hint more to do (27 edges of 60 undecided against 44 at
@@ -344,32 +334,34 @@ const SWAP_BUDGET = 30;
  * are past a single trial.
  *
  * It costs what the Easy board did and little more (0.8 s against 0.7 s at
- * 6×6 in sixes), so it is dealt wherever Easy is.
+ * 6×6 in sixes), so it is dealt wherever Easy is. Only the smallest boards
+ * are often thrown away for staying in the solver's reach: sixteen for a
+ * board kept at 3×3, two at 4×4.
  */
 function unreasonableLetters(p: SeparateShape, rng: RandomState): Uint8Array {
   const { w, h, k } = p;
-  // Only the smallest boards are often thrown away for staying in the
-  // solver's reach: sixteen for a board kept at 3×3, two at 4×4.
-  const attempt = retryLimit(`separate: Unreasonable generation (${w}x${h} k${k})`);
-  for (;;) {
-    attempt();
-    const { letters, regions } = easyBoard(p, rng);
-    const pairs: [number, number][] = [];
-    for (const region of regions)
-      for (let a = 0; a < k; a++)
-        for (let b = a + 1; b < k; b++) pairs.push([region[a], region[b]]);
-    shuffle(pairs, rng);
-    for (const [a, b] of pairs) {
-      const was = letters[a];
-      letters[a] = letters[b];
-      letters[b] = was;
-      if (searchAnswers(p, letters, SWAP_BUDGET).kind !== "one") {
-        letters[b] = letters[a];
-        letters[a] = was;
+  return dealUnreasonable<Dealt>({
+    label: `separate: Unreasonable generation (${w}x${h} k${k})`,
+    draw: () => easyBoard(p, rng),
+    strip({ letters, regions }, one) {
+      const pairs: [number, number][] = [];
+      for (const region of regions)
+        for (let a = 0; a < k; a++)
+          for (let b = a + 1; b < k; b++) pairs.push([region[a], region[b]]);
+      shuffle(pairs, rng);
+      for (const [a, b] of pairs) {
+        const was = letters[a];
+        letters[a] = letters[b];
+        letters[b] = was;
+        if (!one()) {
+          letters[b] = letters[a];
+          letters[a] = was;
+        }
       }
-    }
-    if (!solve(p, letters)) return letters;
-  }
+    },
+    deduced: ({ letters }) => solve(p, letters) !== null,
+    answer: ({ letters }, budget) => searchAnswers(p, letters, budget),
+  }).letters;
 }
 
 export function newSeparateDesc(p: SeparateParams, rng: RandomState): { desc: string } {

@@ -22,7 +22,7 @@
  * changes which boards a seed produces.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -205,15 +205,18 @@ function drawPuzzle(p: CrossingParams, rng: RandomState): CrossingPuzzle | null 
   return everyCellInARun(puzzle) ? puzzle : null;
 }
 
-/** One generation attempt — `crossing_generate`. `null` means "retry". */
-function generate(p: CrossingParams, rng: RandomState): CrossingPuzzle | null {
-  const puzzle = drawPuzzle(p, rng);
-  if (!puzzle) return null;
-  // The gate. Easy, upstream's only kind: pure deduction solves the puzzle,
-  // uniquely. Unreasonable: it stops short, and the search proves one answer.
-  const deduced = solveCrossing(puzzle).status === "valid";
-  if (p.diff === DIFF_EASY) return deduced ? puzzle : null;
-  return !deduced && searchAnswers(puzzle).kind === "one" ? puzzle : null;
+const deduced = (puzzle: CrossingPuzzle): boolean =>
+  solveCrossing(puzzle).status === "valid";
+
+/** An Easy board, upstream's only kind (`crossing_generate`): pure deduction
+ * solves the puzzle, uniquely. */
+function easyPuzzle(p: CrossingParams, rng: RandomState): CrossingPuzzle {
+  const attempt = retryLimit("crossing: generation");
+  for (;;) {
+    attempt();
+    const puzzle = drawPuzzle(p, rng);
+    if (puzzle && deduced(puzzle)) return puzzle;
+  }
 }
 
 /**
@@ -222,10 +225,14 @@ function generate(p: CrossingParams, rng: RandomState): CrossingPuzzle | null {
  * about 14,000 draws; the rarest Unreasonable one, 3×60, is one in 4,600.
  */
 export function newCrossingDesc(p: CrossingParams, rng: RandomState): { desc: string } {
-  const attempt = retryLimit("crossing: generation");
-  for (;;) {
-    attempt();
-    const puzzle = generate(p, rng);
-    if (puzzle) return { desc: encodeDesc(p.w, p.h, puzzle.walls, puzzle.numbers) };
-  }
+  const puzzle =
+    p.diff === DIFF_EASY
+      ? easyPuzzle(p, rng)
+      : dealUnreasonable<CrossingPuzzle>({
+          label: "crossing: generation",
+          draw: () => drawPuzzle(p, rng),
+          deduced,
+          answer: searchAnswers,
+        });
+  return { desc: encodeDesc(p.w, p.h, puzzle.walls, puzzle.numbers) };
 }

@@ -7,8 +7,10 @@ import { describe, expect, it } from "vitest";
 import {
   type Answer,
   answerCache,
+  DEALING_BUDGET,
   DIFF_EASY,
   DIFF_UNREASONABLE,
+  dealUnreasonable,
   SEARCH_TIER_NAMES,
   searchAnswers,
   searchTierContract,
@@ -19,6 +21,7 @@ import {
 } from "./answer-search.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
 import { paramsCodec } from "./params-codec.ts";
+import { RetryLimitExceeded, underDealTries } from "./retry-limit.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "./solve-failure.ts";
 
 /** Whether each of 1.. is taken, as far as it is decided. */
@@ -32,10 +35,11 @@ function subsets(
   target: number,
   budget = 1_000,
   tried: Taken[] = [],
+  given: Taken = [],
 ): Answer<number[]> {
   const sum = (taken: Taken) => taken.reduce((s, t, i) => s + (t ? i + 1 : 0), 0);
   return searchAnswers<Taken, number[]>({
-    start: [],
+    start: [...given],
     deduce(taken) {
       tried.push([...taken]);
       const rest = ((n + taken.length + 1) * (n - taken.length)) / 2;
@@ -148,6 +152,124 @@ describe("solveFromAnswer", () => {
       ok: false,
       error: PUZZLE_NOT_REASONABLE,
     });
+  });
+});
+
+describe("dealUnreasonable", () => {
+  /** A board of the toy: the numbers from 1 whose taking it shows. Its
+   * deduction finishes it only where it shows them all. */
+  interface Board {
+    n: number;
+    target: number;
+    given: Taken;
+  }
+  const board = (n: number, target: number, given: Taken = []): Board => ({
+    n,
+    target,
+    given,
+  });
+  /** A board that shows every number of the answer that takes them all. */
+  const full = (n: number): Board =>
+    board(n, (n * (n + 1)) / 2, Array<boolean>(n).fill(true));
+  const toy = {
+    label: "toy: Unreasonable generation",
+    deduced: (b: Board) => b.given.length === b.n,
+    answer: (b: Board, budget = 1_000) => subsets(b.n, b.target, budget, [], b.given),
+  };
+  /** Hide the last number shown while the search still proves one answer. */
+  const hideFromTheEnd = (b: Board, one: () => boolean) => {
+    while (b.given.length > 0) {
+      const last = b.given.pop() as boolean;
+      if (one()) continue;
+      b.given.push(last);
+      return;
+    }
+  };
+  /** Deals `boards` in turn, then throws. */
+  const drawEach = (boards: (Board | null)[]) => {
+    const left = [...boards];
+    return () => {
+      if (left.length === 0) throw new Error("drew past the last board");
+      return left.shift() as Board | null;
+    };
+  };
+
+  it("keeps the first board with one answer that deduction stops short of", () => {
+    const kept = board(4, 10);
+    const draw = drawEach([
+      // 1+2, which deduction finishes; 3 or 1+2; a try that drew nothing.
+      board(4, 3, [true, true, false, false]),
+      board(4, 3),
+      null,
+      kept,
+      board(4, 0),
+    ]);
+    expect(dealUnreasonable({ ...toy, draw })).toBe(kept);
+    // The board after it was not drawn.
+    expect(draw()).toEqual(board(4, 0));
+  });
+
+  it("strips a board within the dealing budget, which is under the game's own", () => {
+    // Showing all but its last k numbers, this board takes 2k+1 positions.
+    const stripped = dealUnreasonable({
+      ...toy,
+      draw: () => full(16),
+      strip: hideFromTheEnd,
+    });
+    const hidden = 16 - stripped.given.length;
+    expect(2 * hidden + 1).toBeLessThanOrEqual(DEALING_BUDGET);
+    expect(2 * (hidden + 1) + 1).toBeGreaterThan(DEALING_BUDGET);
+    // With no strip the same board is asked within the game's budget, and
+    // kept showing nothing.
+    const bare = board(16, 136);
+    expect(toy.answer(bare, DEALING_BUDGET).kind).toBe("out-of-reach");
+    expect(dealUnreasonable({ ...toy, draw: () => bare })).toBe(bare);
+  });
+
+  it("strips only a board the search proves within the dealing budget", () => {
+    const kept = full(4);
+    const strips: Board[] = [];
+    const dealt = dealUnreasonable({
+      ...toy,
+      draw: drawEach([board(16, 136), kept]),
+      strip(b, one) {
+        strips.push(b);
+        hideFromTheEnd(b, one);
+      },
+    });
+    expect(strips).toEqual([kept]);
+    expect(dealt).toBe(kept);
+    expect(dealt.given).toEqual([]);
+  });
+
+  it("throws away a board its strip left with a second answer", () => {
+    const broken = board(4, 3, [true, true, false, false]);
+    const kept = full(4);
+    const dealt = dealUnreasonable({
+      ...toy,
+      draw: drawEach([broken, kept]),
+      strip(b, one) {
+        if (b === broken) b.given = [];
+        else hideFromTheEnd(b, one);
+      },
+    });
+    expect(dealt).toBe(kept);
+  });
+
+  it("runs its bound out where no board has the tier", () => {
+    let draws = 0;
+    const deal = () =>
+      dealUnreasonable({
+        ...toy,
+        draw: () => {
+          draws++;
+          return board(4, 3);
+        },
+      });
+    expect(() => underDealTries(25, deal)).toThrow(
+      new RetryLimitExceeded(toy.label, 25),
+    );
+    expect(draws).toBe(25);
   });
 });
 

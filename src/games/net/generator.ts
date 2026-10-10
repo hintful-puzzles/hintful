@@ -27,7 +27,11 @@
  * fixed seed extends the previous barrier set rather than replacing it.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import {
+  DEALING_BUDGET,
+  DIFF_EASY,
+  dealUnreasonable,
+} from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle as shuffleArray } from "../../engine/shuffle.ts";
@@ -82,22 +86,10 @@ function easyBoard(p: NetParams, rs: RandomState): { desc: string; aux: string }
 }
 
 /**
- * The positions the search may try on a network that is a candidate for an
- * Unreasonable board, far under the 2,000 a pasted board is allowed. A
- * network that needs more is rewired like any other the search does not call
- * unique.
- *
- * Measured 2026-10-10 over 40 boards at each menu size, wrapping and not: a
- * dealt board needs a median of 3 positions and 13 at most, and the same
- * boards are dealt, in the same time, at 30 as at 2,000.
- */
-const DEAL_BUDGET = 30;
-
-/**
  * An Unreasonable board: a network caught on its way to an Easy one, where
  * the solver still stops short and the search proves the network is the only
- * answer. Walls can only tell the solver more, so a board that gets any is
- * asked again once it has them.
+ * answer. Walls can only tell the solver more, so the board is asked again
+ * with them, as every candidate is.
  *
  * Measured 2026-10-10: a 5×5 board, the rarest on the menu, takes a mean of
  * 860 draws of a network, and a 2×100 board was never dealt.
@@ -106,24 +98,32 @@ function unreasonableBoard(
   p: NetParams,
   rs: RandomState,
 ): { desc: string; aux: string } {
-  const attempt = retryLimit(`net: Unreasonable generation (${p.w}x${p.h})`);
-  for (;;) {
-    attempt();
-    const board = shuffled(p, rs, network(p, rs, true));
-    if (p.barrierProbability === 0 || !solverFinishes(newState(p, board.desc)))
-      return board;
-  }
+  const { desc, aux } = dealUnreasonable({
+    label: `net: Unreasonable generation (${p.w}x${p.h})`,
+    draw() {
+      const board = shuffled(p, rs, network(p, rs, true));
+      return { ...board, state: newState(p, board.desc) };
+    },
+    deduced: ({ state }) => solverFinishes(state),
+    answer: ({ state }, budget) => searchAnswers(state, budget),
+  });
+  return { desc, aux };
 }
 
 /**
  * A network with one answer and no walls to go by. Upstream's grid is one
  * the solver settles: a tree drawn at random, rewired where the solver could
  * not settle it until it can. With `stuck`, the rewiring stops at the first
- * network the solver cannot settle and the search proves has one answer.
+ * network the solver cannot settle and the search proves has one answer
+ * within the dealing budget; one that needs more is rewired like any other
+ * the search does not call unique.
  *
  * Measured 2026-10-10, that is far likelier than a tree being such a network
  * as it is first drawn, which one in 50 to 300 is at the menu's sizes: a deal
- * takes 2 to 50 ms where keeping only such trees takes 0.3 s to 2 s.
+ * takes 2 to 50 ms where keeping only such trees takes 0.3 s to 2 s. Over 40
+ * boards at each menu size, wrapping and not, a dealt board needs a median of
+ * 3 positions and 13 at most, and the same boards are dealt, in the same
+ * time, at 30 as at 2,000.
  */
 function network(p: NetParams, rs: RandomState, stuck: boolean): Uint8Array {
   const { w, h } = p;
@@ -156,7 +156,7 @@ function network(p: NetParams, rs: RandomState, stuck: boolean): Uint8Array {
       if (stuck) {
         // A network the solver settles is an Easy one: draw another.
         if (settled) continue beginGeneration;
-        if (searchAnswers(board, DEAL_BUDGET).kind === "one") break;
+        if (searchAnswers(board, DEALING_BUDGET).kind === "one") break;
       } else if (settled) break;
       let n = 0;
       for (let y = 0; y < h; y++) {

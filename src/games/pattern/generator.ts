@@ -15,7 +15,7 @@
  * what shows the match holds on real boards (docs/games/testing.md
  * § "Byte-match: fidelity where there is a right answer").
  */
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { isSoluble, searchAnswers } from "./solver.ts";
@@ -78,51 +78,59 @@ function cluesOf(grid: Uint8Array, w: number, h: number): number[][] {
   return clues;
 }
 
+/** The clues of one drawn picture, or `null` for a picture with a monochrome
+ * row or column (too easy), except on dimensions under 3 (else nothing would
+ * ever generate). */
+function drawClues(w: number, h: number, rng: RandomState): number[][] | null {
+  const grid = new Uint8Array(w * h);
+  generate(rng, w, h, grid);
+  if (w > 2) {
+    for (let i = 0; i < h; i++) {
+      let colors = 0;
+      for (let j = 0; j < w; j++) colors |= grid[i * w + j] === GRID_FULL ? 2 : 1;
+      if (colors !== 3) return null;
+    }
+  }
+  if (h > 2) {
+    for (let j = 0; j < w; j++) {
+      let colors = 0;
+      for (let i = 0; i < h; i++) colors |= grid[i * w + j] === GRID_FULL ? 2 : 1;
+      if (colors !== 3) return null;
+    }
+  }
+  return cluesOf(grid, w, h);
+}
+
+/** An Easy board, upstream's only kind: a picture decided a line at a time. */
+function easyClues(w: number, h: number, rng: RandomState): number[][] {
+  const attempt = retryLimit("pattern: generation");
+  for (;;) {
+    attempt();
+    const clues = drawClues(w, h, rng);
+    if (clues !== null && isSoluble(w, h, clues)) return clues;
+  }
+}
+
 /**
- * Whether a drawn picture's clues make a board of the tier asked for. An Easy
- * one is decided a line at a time. An Unreasonable one is not, and the search
- * proves it has the one answer all the same: most pictures the lines do not
- * decide have several.
+ * An Unreasonable board: a picture the lines do not decide, which the search
+ * proves has the one answer all the same. Most such pictures have several.
  *
- * The rarest Unreasonable sizes are the smallest: a 3x4 picture that needs
- * search turns up once in about 100,000 and costs microseconds, where a
- * 30x30 one turns up once in 12 and costs a millisecond.
+ * The rarest sizes are the smallest: a 3x4 picture that needs search turns up
+ * once in about 100,000 and costs microseconds, where a 30x30 one turns up
+ * once in 12 and costs a millisecond.
  */
-function meetsTier(diff: number, w: number, h: number, clues: number[][]): boolean {
-  const easy = isSoluble(w, h, clues);
-  if (diff === DIFF_EASY) return easy;
-  return !easy && searchAnswers(w, h, clues).kind === "one";
+function unreasonableClues(w: number, h: number, rng: RandomState): number[][] {
+  return dealUnreasonable<number[][]>({
+    label: "pattern: generation",
+    draw: () => drawClues(w, h, rng),
+    deduced: (clues) => isSoluble(w, h, clues),
+    answer: (clues, budget) => searchAnswers(w, h, clues, undefined, undefined, budget),
+  });
 }
 
 export function newPatternDesc(p: PatternParams, rng: RandomState): { desc: string } {
-  const { w, h, diff } = p;
-  const grid = new Uint8Array(w * h);
-  const attempt = retryLimit("pattern: generation");
-
-  for (;;) {
-    attempt();
-    generate(rng, w, h, grid);
-
-    // Reject a board with any monochrome row/column (too easy), except on
-    // dimensions under 3 (else nothing would ever generate).
-    let ok = true;
-    if (w > 2) {
-      for (let i = 0; i < h && ok; i++) {
-        let colors = 0;
-        for (let j = 0; j < w; j++) colors |= grid[i * w + j] === GRID_FULL ? 2 : 1;
-        if (colors !== 3) ok = false;
-      }
-    }
-    if (ok && h > 2) {
-      for (let j = 0; j < w && ok; j++) {
-        let colors = 0;
-        for (let i = 0; i < h; i++) colors |= grid[i * w + j] === GRID_FULL ? 2 : 1;
-        if (colors !== 3) ok = false;
-      }
-    }
-    if (!ok) continue;
-
-    const clues = cluesOf(grid, w, h);
-    if (meetsTier(diff, w, h, clues)) return { desc: encodeClues(clues) };
-  }
+  const { w, h } = p;
+  const clues =
+    p.diff === DIFF_EASY ? easyClues(w, h, rng) : unreasonableClues(w, h, rng);
+  return { desc: encodeClues(clues) };
 }

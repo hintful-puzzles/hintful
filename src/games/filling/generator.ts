@@ -8,7 +8,7 @@
  * Generation uses a plain mutable `number[]` board (negative sentinels appear
  * transiently in `mergeOnes`), distinct from the immutable game state.
  */
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -205,38 +205,25 @@ function minimizeClueSet(
 }
 
 /**
- * The positions the search may try when a clue is hidden from an Unreasonable
- * board, far under the 2,000 it has by default. Hiding stops only when the
- * search can no longer prove one answer, so it takes every board up to
- * whatever the search is allowed, and this is how hard the tier's boards are.
- *
- * Measured 2026-10-10 at the three presets. At 30 a dealt board needs a
- * median of 21 to 29 positions, and of 66 boards a number that breaks the
- * rule as soon as it is written settles 3, where trying a number and
- * following the deductions from it, one trial at a time, settles 63. At 10
- * the first settles 24 of 66, which is a deduction the solver lacks and not
- * a search.
- */
-const HIDING_BUDGET = 30;
-
-/**
- * An Unreasonable board: a full board with clues hidden while the search
- * still proves one answer within {@link HIDING_BUDGET}, kept if the solver
- * then stops short. It nearly always does, since the search goes on hiding
+ * An Unreasonable board: a full board with clues hidden by the search. The
+ * solver nearly always stops short of one, since the search goes on hiding
  * where the solver would have stopped: 198 of 200 at 7×9 and every one seen
- * at the larger presets.
+ * at the larger presets. Only the smallest boards are often thrown away: 1×5
+ * keeps one in fifty.
+ *
+ * Measured 2026-10-10 at the three presets: a dealt board needs a median of
+ * 21 to 29 positions, and of 66 boards a number that breaks the rule as soon
+ * as it is written settles 3, where trying a number and following the
+ * deductions from it, one trial at a time, settles 63.
  */
 function unreasonableClues(w: number, h: number, rng: RandomState): number[] {
-  const one = (left: number[]) =>
-    searchAnswers(left, w, h, HIDING_BUDGET).kind === "one";
-  // Only the smallest boards are often thrown away: 1×5 keeps one in fifty.
-  const attempt = retryLimit(`filling: Unreasonable generation (${w}x${h})`);
-  for (;;) {
-    attempt();
-    const board = makeBoard(w, h, rng);
-    minimizeClueSet(board, w, h, rng, one);
-    if (!solveFilling(board, w, h).solved) return board;
-  }
+  return dealUnreasonable<number[]>({
+    label: `filling: Unreasonable generation (${w}x${h})`,
+    draw: () => makeBoard(w, h, rng),
+    strip: (board, one) => minimizeClueSet(board, w, h, rng, one),
+    deduced: (board) => solveFilling(board, w, h).solved,
+    answer: (board, budget) => searchAnswers(board, w, h, budget),
+  });
 }
 
 /** An Easy board, upstream's only kind: clues hidden while the solver still

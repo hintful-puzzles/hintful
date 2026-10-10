@@ -19,7 +19,11 @@
  * (`y*w + x`), or `-1` (empty) / `-2` (known singleton) during construction.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import {
+  DEALING_BUDGET,
+  DIFF_EASY,
+  dealUnreasonable,
+} from "../../engine/answer-search.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -31,6 +35,7 @@ import {
   type NumberData,
   rectSolver,
   SOLVE_UNIQUE,
+  searchAnswers,
   solverFinishes,
 } from "./solver.ts";
 import { encodeNumbers, type RectParams } from "./state.ts";
@@ -342,17 +347,6 @@ function auxOf(w: number, h: number, grid: Int32Array): string {
 }
 
 /**
- * The positions the search may try on a candidate for an Unreasonable board
- * before the draw is thrown away, far under the 2,000 a pasted board is
- * allowed.
- *
- * Measured 2026-10-10 on twelve boards at each menu size: a dealt board needs
- * a median of 3 positions, 6 at 7×7, and 9 at most. No search ran out in two
- * million made on draws of nineteen shapes from 2×9 to 70×70.
- */
-const DEAL_BUDGET = 30;
-
-/**
  * The numbers an Unreasonable deal may move on one draw before it throws the
  * draw away. Nothing says the moves end: one takes an answer away and may
  * make another.
@@ -391,10 +385,12 @@ function easyBoard(
 }
 
 /**
- * An Unreasonable board: each number on a square of its rectangle at random,
- * with none of the solver's steering, then moved until the division is the
- * only answer, and kept where the solver and the hint both stop short.
- * `null` when this division did not give one.
+ * A candidate for an Unreasonable board: each number on a square of its
+ * rectangle at random, with none of the solver's steering, then moved until
+ * the search proves the division the only answer within the dealing budget.
+ * `null` when this division did not give one. Most boards mended to one
+ * answer are ones the solver settles, and the hint knows placements the
+ * solver does not rule out, so a board is kept where both stop short.
  *
  * Four draws in five have a second answer as their numbers fall. The search
  * hands that answer over, some number's rectangle in it is not the one dealt,
@@ -407,13 +403,16 @@ function easyBoard(
  * It is not an Easy board with its numbers moved. Measured the same day,
  * moving each number about its rectangle while the search still proved one
  * answer took two to four times as long as throwing draws away did.
+ *
+ * Measured the same day on twelve boards at each menu size: a dealt board
+ * needs a median of 3 positions, 6 at 7×7, and 9 at most. No search ran out
+ * in two million made on draws of nineteen shapes from 2×9 to 70×70.
  */
-function unreasonableBoard(
+function mendedNumbers(
   params: RectParams,
   rs: RandomState,
-  grid: Int32Array,
   nd: NumberData[],
-): { desc: string; aux: string } | null {
+): Int32Array | null {
   const { w, h } = params;
   // Each rectangle as dealt, the square its number is on, and the rectangle
   // each square is in.
@@ -436,9 +435,8 @@ function unreasonableBoard(
     numbers[p.y * w + p.x] = area;
   }
 
-  let alone = false;
   for (let moved = 0; moved <= MAX_NUMBERS_MOVED; moved++) {
-    const answers = firstTwoAnswers(w, h, numbers, DEAL_BUDGET);
+    const answers = firstTwoAnswers(w, h, numbers, DEALING_BUDGET);
     if (answers === null) return null;
     // An answer lists its rectangles in the reading order of the numbers.
     const holders: number[] = [];
@@ -451,10 +449,7 @@ function unreasonableBoard(
       )
       .find((astray) => astray.length > 0);
     // The division as dealt is an answer, so with no other it is the only one.
-    if (!strayed) {
-      alone = true;
-      break;
-    }
+    if (!strayed) return numbers;
     const { k, rect } = strayed[randomUpto(rs, strayed.length)];
     const outside = nd[k].points.filter(
       (p) =>
@@ -470,14 +465,7 @@ function unreasonableBoard(
     at[k] = to.y * w + to.x;
     numbers[at[k]] = nd[k].area;
   }
-  if (!alone) return null;
-  // Most boards mended to one answer are ones the solver settles.
-  if (solverFinishes(w, h, numbers)) return null;
-  const desc = encodeNumbers(numbers, w * h);
-  // The hint knows placements the solver does not rule out, and a board it
-  // finishes needs no trial and error.
-  if (rungsFinish(newState(params, desc))) return null;
-  return { desc, aux: auxOf(w, h, grid) };
+  return null;
 }
 
 /**
@@ -490,14 +478,28 @@ export function newDesc(
   params: RectParams,
   rs: RandomState,
 ): { desc: string; aux: string } {
-  const attempt = retryLimit(`rect: generation (${params.w}x${params.h})`);
+  const { w, h } = params;
+  const label = `rect: generation (${w}x${h})`;
+  if (params.diff !== DIFF_EASY) {
+    const { grid, numbers } = dealUnreasonable({
+      label,
+      draw() {
+        const { grid, nd } = division(params, rs);
+        const numbers = mendedNumbers(params, rs, nd);
+        return numbers && { grid, numbers };
+      },
+      deduced: ({ numbers }) =>
+        solverFinishes(w, h, numbers) ||
+        rungsFinish(newState(params, encodeNumbers(numbers, w * h))),
+      answer: ({ numbers }, budget) => searchAnswers(w, h, numbers, budget),
+    });
+    return { desc: encodeNumbers(numbers, w * h), aux: auxOf(w, h, grid) };
+  }
+  const attempt = retryLimit(label);
   for (;;) {
     attempt();
     const { grid, nd } = division(params, rs);
-    const board =
-      params.diff === DIFF_EASY
-        ? easyBoard(params, rs, grid, nd)
-        : unreasonableBoard(params, rs, grid, nd);
+    const board = easyBoard(params, rs, grid, nd);
     if (board) return board;
   }
 }

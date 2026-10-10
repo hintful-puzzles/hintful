@@ -476,7 +476,7 @@ player meets "trial and error" only where they asked for it). Pattern was the
 first, and [`pattern/`](../../src/games/pattern/) is the copy to follow. What
 is the same in every such game is `engine/answer-search.ts`, and the game
 writes three things for it: its deduction with a verdict, what to assume where
-that stops, and a generator. What the tier is made of:
+that stops, and what its deal draws. What the tier is made of:
 
 - **A search that counts answers to two**, by trial and error over the game's
   own deduction (`searchAnswers`). Its four verdicts are one answer, several,
@@ -486,8 +486,28 @@ that stops, and a generator. What the tier is made of:
   contradiction of a position, and `assume`, which divides a stuck one by one
   undecided thing: a square each way in Pattern, a cell's letters in a game
   with more than two.
-- **A generator that keeps a board only where the deduction stops short and
-  the search says one.**
+- **A deal that keeps a board only where the deduction stops short and the
+  search says one** (`dealUnreasonable`). The loop, its bound and that test
+  are the engine's, and the game writes no loop for the tier. It gives the
+  deal four things:
+  - `draw`: a candidate, or `null` where this try gave none. Start from what
+    the Easy generator already makes: a full board, an Easy board, or the
+    same draw Easy filters.
+  - `strip`, where the board shows something a player could do without: take
+    it away a thing at a time (a clue, a given, the order of two letters),
+    asking the `one` the engine hands over after each and putting back what
+    it refuses. The engine asks within `DEALING_BUDGET` and hands the strip
+    only a board that already passes. Left out, a candidate is kept or
+    thrown away as drawn.
+  - `deduced`: whether the solver finishes the board. Add the hint only where
+    it finishes boards the solver does not, as in Rectangles: asking it of
+    every candidate costs a whole replay on each one the solver finishes.
+  - `answer`: the game's `searchAnswers`, with the budget passed through.
+
+  A generator that mends a board toward one answer (Net's rewiring,
+  Rectangles' moved numbers) does it inside `draw`, with `DEALING_BUDGET` for
+  its own searches. Which of the three a game is, is the game's to measure:
+  the notes below say what each of the twelve found.
 - **The contract** (`searchTierContract`): the lower cap is the game's
   deduction finishing the board and its hint finishing it too
   (`hintFinishes`), and the upper cap is "the search says one". The game has
@@ -544,8 +564,9 @@ What ABCD, the second, added:
   budget of its own.** ABCD hides clues while the board keeps one answer.
   Asked of the search at its full budget, every board came out at the edge of
   it: a median of 1,728 positions of 2,000 on a 6x6, where a board with every
-  clue showing needs 9. Hiding now asks within 30. Any generator that removes
-  clues, givens or walls "while still unique" has this shape.
+  clue showing needs 9. Hiding now asks within 30, which every game that
+  strips then chose too and is the engine's `DEALING_BUDGET`. Any generator
+  that removes clues, givens or walls "while still unique" has this shape.
 - **An option the game already had is a second axis, and its label must not
   borrow the tier's words.** ABCD called its hidden clues "Hard" and their
   absence "Easy". With a tier named Easy that reads "Easy Easy", so the
@@ -604,8 +625,9 @@ What Filling, the fourth, added:
 - **The hiding budget is the tier's difficulty, and what a Check finishes
   sets it.** At 10 positions a number that breaks the rule the moment it is
   written settled 24 of 66 dealt boards, which is a deduction the solver
-  lacks. At 30 it settled 3, and a one-level trial settled 63. Take the
-  budget where the boards stop being a missing rule.
+  lacks. At 30 it settled 3, and a one-level trial settled 63. The budget is
+  where the boards stop being a missing rule, so measure that on a new game's
+  boards before trusting the engine's number for it.
 - **A game with no size bound has one nobody measured.** Filling's fill is
   thrown away whole on a clash, and it ran its retry cap out one deal in
   twenty at 20x20 and every time at 25x25, at Easy, since the port. Count

@@ -4,7 +4,7 @@
  * finds the one answer.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { BORDER, DX, DY, initBorders, outOfBounds } from "../../engine/border-grid.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -167,44 +167,31 @@ function easyClues(p: PalisadeShape, rng: RandomState): Int8Array {
 }
 
 /**
- * The positions the search may try when a clue is stripped from an
- * Unreasonable board, far under the 2,000 it has by default. Stripping stops
- * only when the search can no longer prove one answer, so it takes a board up
- * to whatever the search is allowed, and this is how hard the tier's boards
- * are.
- *
- * Measured 2026-10-10: a dealt board needs a median of 9 positions at 5×5 and
- * 25 to 29 at the larger presets, and the hint leaves a median of 25 edges of
- * 40 undecided at 5×5, 53 of 82 at 6×8 and 155 of 333 at 12×15. No edge on
- * these boards is wrong at a glance: assuming one and looking, with no
- * deduction run, settled none of 90, where assuming one and following the
- * deductions from it, one trial at a time, finished most.
- */
-const HIDING_BUDGET = 30;
-
-/**
- * An Unreasonable board: an Easy board with more clues stripped, each while
- * the search still proves one answer within {@link HIDING_BUDGET}, kept if the
- * solver then stops short. An Easy board is one the solver stops short on
- * with any clue gone, so stripping one is what takes it out of reach.
+ * An Unreasonable board: an Easy board with more clues stripped by the
+ * search. An Easy board is one the solver stops short on with any clue gone,
+ * so stripping one is what takes it out of reach, and only the smallest
+ * boards are thrown away for giving up no clue.
  *
  * It starts from an Easy board and not from every clue, which the search
  * could strip as well. Measured 2026-10-10, that way took twice as long and
  * left the solver less to do at every preset.
+ *
+ * Measured the same day: a dealt board needs a median of 9 positions at 5×5
+ * and 25 to 29 at the larger presets, and the hint leaves a median of 25
+ * edges of 40 undecided at 5×5, 53 of 82 at 6×8 and 155 of 333 at 12×15. No
+ * edge on these boards is wrong at a glance: assuming one and looking, with
+ * no deduction run, settled none of 90, where assuming one and following the
+ * deductions from it, one trial at a time, finished most.
  */
 function unreasonableClues(p: PalisadeShape, rng: RandomState): Int8Array {
   const rim = initBorders(p.w, p.h);
-  const one = (left: Int8Array) => searchAnswers(p, left, HIDING_BUDGET).kind === "one";
-  // Only the smallest boards are thrown away for giving up no clue.
-  const attempt = retryLimit(
-    `palisade: Unreasonable generation (${p.w}x${p.h} k${p.k})`,
-  );
-  for (;;) {
-    attempt();
-    const numbers = easyClues(p, rng);
-    stripClues(numbers, rng, one);
-    if (!solver(p, numbers, rim.slice())) return numbers;
-  }
+  return dealUnreasonable<Int8Array>({
+    label: `palisade: Unreasonable generation (${p.w}x${p.h} k${p.k})`,
+    draw: () => easyClues(p, rng),
+    strip: (numbers, one) => stripClues(numbers, rng, one),
+    deduced: (numbers) => solver(p, numbers, rim.slice()),
+    answer: (numbers, budget) => searchAnswers(p, numbers, budget),
+  });
 }
 
 export function newDesc(p: PalisadeParams, rng: RandomState): { desc: string } {

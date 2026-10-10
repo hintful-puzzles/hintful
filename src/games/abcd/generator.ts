@@ -18,7 +18,7 @@
  * player off the ones that never generate.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
@@ -89,40 +89,22 @@ function easyClues(p: AbcdParams, rng: RandomState): Int32Array {
 }
 
 /**
- * The positions the search may try when a clue is hidden from an Unreasonable
- * board, far under the 2,000 it has by default. Hiding stops only when the search
- * can no longer prove one answer, so it runs every board up to whatever the
- * search is allowed: under the full budget a 6x6 came out needing a median of
- * 1,728 positions, where a board with every clue showing needs 9. This holds
- * a board with clues hidden to about what the harder boards without need.
- */
-const HIDING_BUDGET = 30;
-
-/**
  * An Unreasonable board: one answer, which the ladder does not reach.
  *
  * With every clue showing, that is a fill the ladder stops short on and the
  * search proves has one answer. With clues to hide, the fill need only have
- * one answer, since hiding is what stops the ladder: clues go while the
- * search still proves one within {@link HIDING_BUDGET}, and the board is kept
- * if the ladder then stops short, as it does on most.
+ * one answer the search proves as it is dealt, since hiding is what stops the
+ * ladder, as it does on most. That holds a board with clues hidden to about
+ * what the harder boards without need.
  */
 function unreasonableClues(p: AbcdParams, rng: RandomState): Int32Array {
-  const deduced = (numbers: Int32Array) => solveAbcd(p, numbers).status === "solved";
-  const one = (numbers: Int32Array, budget?: number) =>
-    searchAnswers(p, numbers, budget).kind === "one";
-  const attempt = retryLimit(`abcd: Unreasonable generation (${p.w}x${p.h} n${p.n})`);
-  for (;;) {
-    attempt();
-    const numbers = drawClues(p, rng);
-    if (!p.removenums) {
-      if (!deduced(numbers) && one(numbers)) return numbers;
-      continue;
-    }
-    if (!one(numbers, HIDING_BUDGET)) continue;
-    hideClues(numbers, rng, (left) => one(left, HIDING_BUDGET));
-    if (!deduced(numbers)) return numbers;
-  }
+  return dealUnreasonable<Int32Array>({
+    label: `abcd: Unreasonable generation (${p.w}x${p.h} n${p.n})`,
+    draw: () => drawClues(p, rng),
+    strip: p.removenums ? (numbers, one) => hideClues(numbers, rng, one) : undefined,
+    deduced: (numbers) => solveAbcd(p, numbers).status === "solved",
+    answer: (numbers, budget) => searchAnswers(p, numbers, budget),
+  });
 }
 
 export function newAbcdDesc(p: AbcdParams, rng: RandomState): { desc: string } {

@@ -20,8 +20,10 @@
  * form's difficulty choices decide both *whether* a game is tiered and *what
  * its tiers are*, so the enrollment and the list cannot disagree either.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import "../games/index.ts";
+import * as answerSearch from "./answer-search.ts";
+import { DIFF_UNREASONABLE } from "./answer-search.ts";
 import {
   cappedSolveFor,
   type DifficultyContract,
@@ -34,8 +36,9 @@ import {
 import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
 import { paramsError } from "./params.ts";
+import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
-import { dealt } from "./testing/dealt.ts";
+import { dealRare, dealt } from "./testing/dealt.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import {
   itOverWholeSweep,
@@ -417,6 +420,38 @@ for (const { id, game, contract, tiers } of tiered) {
 /** How many boards the tier-binding check actually graded, across every game —
  * the sweep-wide half of the vacuity guard. Accumulated by the per-game test
  * above and asserted below, which runs last because it is registered last. */
+describe("a game with the search's two tiers deals its Unreasonable boards through the engine", () => {
+  // The loop, its bound and the test that keeps a board are
+  // `dealUnreasonable`'s, and a game with a loop of its own has a second copy
+  // of all three. The games are the ones whose contract `searchTierContract`
+  // made, which is narrower than the tiers' names: Bricks and Galaxies name
+  // theirs the same and grade them by a solver of their own.
+  const searchTiered = tiered.filter(({ contract }) =>
+    answerSearch.isSearchTierContract(contract),
+  );
+
+  it("found the games with the two tiers", () => {
+    // A floor and not a count: it fails only where the filter matches nothing.
+    expect(searchTiered.length).toBeGreaterThan(5);
+    for (const { id, tiers } of searchTiered)
+      expect(tiers, id).toEqual(answerSearch.SEARCH_TIER_NAMES);
+  });
+
+  for (const t of searchTiered) {
+    it(`${t.id}: deals an Unreasonable board by dealUnreasonable`, () => {
+      const params = paramsForTier(t, DIFF_UNREASONABLE);
+      expect(params, `${t.id}: no preset is valid at Unreasonable`).not.toBeNull();
+      const deal = vi.spyOn(answerSearch, "dealUnreasonable");
+      try {
+        dealRare(t.game, params, randomNew(`${t.id}: engine deal`));
+        expect(deal).toHaveBeenCalled();
+      } finally {
+        deal.mockRestore();
+      }
+    });
+  }
+});
+
 let boardsThatBound = 0;
 
 /** How many games reloaded a shared board whose short id decodes to a tier

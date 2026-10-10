@@ -1094,8 +1094,13 @@ board, `solveFromAnswer(answer, move)` is Solve, and
 `searchTierContract({ newState, deductionFinishes, answerOf })` is the
 `difficulty` contract. `DIFF_EASY`, `DIFF_UNREASONABLE`, `searchTierItem` and
 `searchTierSegment` are the tiers, their Custom field and their `de`/`du` in
-the params. The deduction, what to assume where it stops, the budget and the
-generator stay the game's. Take the population with
+the params. `dealUnreasonable({ label, draw, strip?, deduced, answer })` deals
+an Unreasonable board: it owns the retry loop, its bound and the test that
+keeps a board, and asks a strip's questions within `DEALING_BUDGET`. A game
+writes no loop for the tier, which a cross-game guard in
+`difficulty-contract.test.ts` holds every game with a `searchTierContract`
+to. The deduction, what to assume where it stops, the search's own budget and
+what a deal draws and strips stay the game's. Take the population with
 `npm run refs -- src/engine/answer-search.ts searchAnswers`. See
 [solver & generator](./solver-and-generator.md) § "Giving a deductive game an
 Unreasonable tier".
