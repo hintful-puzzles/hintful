@@ -1055,20 +1055,18 @@ of the game's difficulty contract solves (`DESC_NO_SINGLE_ANSWER` in a game
 with an Unreasonable tier, `DESC_NOT_DEDUCIBLE` in one without), or that an
 untiered game's `finishesByDeduction` turns away
 (`DESC_NOT_DEDUCIBLE`). A tiered game supplies nothing new; an untiered
-game supplies that one method, and is not registered without it: usually
-`hintAndSolveFinish`, or `nothingToDeduce` where the board is moved or searched
+game supplies that one method, and is not registered without it:
+`nothingToDeduce` where the board is moved or searched, and its own test in
+Mines, the one untiered game that deduces
 ([solver-and-generator.md](./solver-and-generator.md) § "No option switches the
 generator's checks off").
 
-### `hint-finishes.ts` — an untiered game's answer to "does deduction finish it"
+### `hint-finishes.ts` — two answers to "does deduction finish it"
 
-`hintAndSolveFinish(game, state)` is `Game.finishesByDeduction` for an
-untiered game whose hint deduces: Solve answers the board and the hint,
-followed a whole plan at a time, ends on a solved one. `nothingToDeduce` is
-the answer of a game that moves, searches or guesses. Write a test of your own
-only where the game has one as true and cheaper. `hintFinishes(game, state)`
-is the hint's half alone, for the tier beneath Unreasonable in a game whose
-Solve searches
+`nothingToDeduce` is `Game.finishesByDeduction` for an untiered game that
+moves, searches or guesses. `hintFinishes(game, state)` is the hint, followed
+a whole plan at a time, ending on a solved board: what a deductive game asks
+at the tier beneath Unreasonable, beside its solver
 ([solver & generator](./solver-and-generator.md) § "Giving a deductive game an
 Unreasonable tier").
 

@@ -512,11 +512,17 @@ ladder, which declares tier *numbers* and is built inside a solve
 What a tier *means*, and the grading that enforces it, is
 [solver & generator](./solver-and-generator.md) § "A tier means exactly its rung".
 
+**A game that deduces has tiers**, at the least Easy, which its deductions and
+its hint finish, and Unreasonable, a board with one answer that they do not
+reach ([solver & generator](./solver-and-generator.md) § "Giving a deductive
+game an Unreasonable tier"). The tiers are how a pasted board is held to the
+game's solver, and Unreasonable is where a player who asked for it meets "trial
+and error".
+
 **A game with no tiers declares `finishesByDeduction` instead**, and
-`registerGame` throws without it. The tiers are how a pasted board is held to
-the game's solver, so a game without them says for itself whether deduction
-finishes a board: `(s) => hintAndSolveFinish(yourGame, s)` where the hint
-deduces, `nothingToDeduce` where the board is moved, searched or guessed
+`registerGame` throws without it: `nothingToDeduce` where the board is moved,
+searched or guessed. Mines is the one game that deduces and has none, since
+its answer is hidden, and it writes its own test
 ([solver & generator](./solver-and-generator.md) § "No option switches the
 generator's checks off").
 

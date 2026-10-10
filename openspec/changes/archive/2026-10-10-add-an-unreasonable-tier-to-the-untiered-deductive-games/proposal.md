@@ -1,10 +1,10 @@
 # add-an-unreasonable-tier-to-the-untiered-deductive-games
 
-**Status: filed 2026-10-10 on the owner's word, by the session that archived
-`refuse-a-board-an-untiered-solver-cannot-finish`. Pattern, the first game,
-has its tier (2026-10-10), and `tasks.md` says where the rest stand. What
-this file says of the code was true on its date; re-check before relying on
-it.**
+**Status: done 2026-10-10. Filed that day on the owner's word, by the session
+that archived `refuse-a-board-an-untiered-solver-cannot-finish`. All twelve
+games have their tier, and `tasks.md` has what was measured and decided for
+each, with what is left for the owner to look at. What this file says of the
+code was true on its date.**
 
 ## Why
 

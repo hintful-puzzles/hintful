@@ -688,11 +688,10 @@ export interface Game<
    * trial and error.
    *
    * **Every game without difficulty tiers answers**, and `registerGame` refuses
-   * one that does not: its own test where its hint or solver deduces
-   * (`hintAndSolveFinish` unless the game has a cheaper one as true), and
-   * `nothingToDeduce` where the board is worked by moving, searching or
-   * guessing. A tiered game answers through {@link difficulty} and leaves
-   * this out. */
+   * one that does not: `nothingToDeduce` where the board is worked by moving,
+   * searching or guessing, and a test of its own where its hint deduces and
+   * it still has no tiers, which is Mines alone. A deductive game has tiers,
+   * answers through {@link difficulty} and leaves this out. */
   finishesByDeduction?(state: State): boolean;
 
   /** RGB palette (each component 0..1), index 0 is conventionally the

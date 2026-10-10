@@ -391,49 +391,55 @@ game's own solver cannot solve:
   `registerGame` throws for one that leaves it out, since a missing answer
   used to read as yes and Palisade opened a board with no clues on it.
 
-**An untiered game gives one of three answers.** Where its hint can run out of
-deduction, `hintAndSolveFinish` (`engine/hint-finishes.ts`): Solve answers the
-board, and the game's own hint, played from the opening a whole plan at a
-time, ends on a solved one. That is the default because it asks the thing a
-player meets, and it is cheap: under 30 ms on the largest preset of each of
-the eight games that took it, against a deal of up to 1.8 s (measured
-2026-10-10). A game writes its own test only where it has one as true and
-cheaper, as Range does from its three rules.
+**An untiered game gives one of two answers.** Where nothing is deduced (a
+sliding puzzle, a search, a guessing game), `nothingToDeduce`
+(`engine/hint-finishes.ts`). `untiered-load.test.ts` holds that answer to the
+game's code: it is given exactly by the games whose hint cannot end in
+`DEDUCTION_EXHAUSTED`. Where the game deduces and still has no tiers, a test
+of its own, and Mines is the one such game: its answer is hidden, so a board
+its deductions do not finish has several layouts that fit what is showing and
+no search proves it has one. Every other deductive game has tiers, at the
+least Easy and Unreasonable (§ "Giving a deductive game an Unreasonable
+tier").
 
-**Before a game takes it, deal thousands of boards and ask it of each.** It
-refuses a board the hint cannot finish, so a generator that asks only the
-solver will have dealt boards it refuses, and a player may hold one. Filling
-was the case: its solver finished one dealt board in about 480 that its hint
-did not, which 762 boards did not show and 6,688 did, and it took the shared
-test only once its hint kept the solver's run (below). Where nothing is deduced (a
-sliding puzzle, a search, a guessing game), `nothingToDeduce`.
-`untiered-load.test.ts` holds that last answer to the game's code: it is given
-exactly by the games whose hint cannot end in `DEDUCTION_EXHAUSTED`.
+**A deductive game's lowest tier asks the hint as well as the solver**
+(`hintFinishes`, or the game's own walk of its hint engine): the hint, played
+from the opening a whole plan at a time, ends on a solved board. It asks the
+thing a player meets, and it is cheap: under 30 ms on the largest preset of
+each of eight games measured, against a deal of up to 1.8 s (2026-10-10).
+
+**Before a tier asks the hint, deal thousands of boards and ask it of each.**
+It turns away a board the hint cannot finish, so a generator that asks only
+the solver will have dealt boards it turns away, and a player may hold one.
+Filling was the case: its solver finished one dealt board in about 480 that
+its hint did not, which 762 boards did not show and 6,688 did, and it took the
+hint's walk only once its hint kept the solver's run (below).
 
 **The hint's refusals are what that walk reads**, so a hint that meets a board
-it cannot finish returns a refusal and does not throw. Whether the sentence is
-`DEDUCTION_EXHAUSTED` or `PUZZLE_NOT_REASONABLE`, no player reads it: the board
-did not load.
+it cannot finish returns a refusal and does not throw.
 
 Upstream's own generator fails this in one place: its Mathrax Recursive tier
 accepts a board with several answers, and all three such fixtures are refused
 (`upstream-descs.test.ts`).
 
-**What `finishesByDeduction` asks has to include the hint, because a solver
-can be more than the hint knows.** Net's and Rectangles' generators deal only boards their *hint*
-finishes (`finishes`, `rungsFinish`), and a solver can settle a board its hint
-cannot, so a board upstream dealt with its checks on can load here and still
-strand the hint. The fix that needs no break is the doctrine above: one
-deduction engine, so the hint knows what the solver does.
-`close-the-solver-hint-gap-in-net-and-rect` took that route and measured it on
-boards the solver settles (2026-10-04). Net's hint left 150 of 1,510 unfinished
-and now leaves none of 23,100, once its seal rule followed a wire through tiles
-not settled yet. Rectangles' left 20 of 2,260 and now leaves 3, once a line
-recorded a placement that is ruled out; the three need placements ruled out
-that no line can record. For what is left, both games' `finishesByDeduction`
-ask the hint as well as the solver, so such a board is refused at load instead
-of running its hint out mid-game (owner, 2026-10-04). That refuses about one
-Rectangles ID in 750 that upstream's generator writes, and no Net ID found.
+**The lowest tier has to ask the hint, because a solver can be more than the
+hint knows, and a hint more than the solver.** Net's and Rectangles'
+generators deal as Easy only boards their *hint* finishes (`finishes`,
+`rungsFinish`), and a solver can settle a board its hint cannot, so a board
+upstream dealt with its checks on can load here and still stop the hint. The
+fix that needs no break is the doctrine above: one deduction engine, so the
+hint knows what the solver does. `close-the-solver-hint-gap-in-net-and-rect`
+took that route and measured it on boards the solver settles (2026-10-04).
+Net's hint left 150 of 1,510 unfinished and now leaves none of 23,100, once
+its seal rule followed a wire through tiles not settled yet. Rectangles' left
+20 of 2,260 and now leaves 3, once a line recorded a placement that is ruled
+out; the three need placements ruled out that no line can record. That
+recording also took Rectangles' hint past its solver: it finishes boards the
+solver stops on. So Net's Easy is the solver's verdict and the hint's, and
+Rectangles' is the hint's with one answer proved by the search. A board with
+one answer that the hint does not finish opens as Unreasonable in both: about
+one Rectangles ID in 750 that upstream's generator writes, and no Net ID
+found.
 
 **Find the gap by tracing, and size the sample before calling it closed.** Log
 every elimination the solver makes, then ask the hint's engine, at the state
@@ -482,10 +488,10 @@ that stops, and a generator. What the tier is made of:
   with more than two.
 - **A generator that keeps a board only where the deduction stops short and
   the search says one.**
-- **The contract** (`searchTierContract`): the lower cap is what the untiered
-  game answered `finishesByDeduction` with, less its Solve (`hintFinishes`,
-  since Solve now searches), and the upper cap is "the search says one". The
-  game drops `finishesByDeduction`.
+- **The contract** (`searchTierContract`): the lower cap is the game's
+  deduction finishing the board and its hint finishing it too
+  (`hintFinishes`), and the upper cap is "the search says one". The game has
+  no `finishesByDeduction`, which is an untiered game's.
 - **Solve and the mistake check take the answer from the search**, at either
   tier, cached on the board's shared part (`answerCache`). Solve
   (`solveFromAnswer`) says `MULTIPLE_SOLUTIONS` or `NO_SOLUTION` where the

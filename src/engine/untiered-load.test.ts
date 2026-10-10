@@ -14,10 +14,9 @@ import { describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
 import { DESC_NOT_DEDUCIBLE, loadVerdict, validateDesc } from "./desc-error.ts";
 import { fakeGame } from "./fake-game.ts";
-import { hintAndSolveFinish, nothingToDeduce } from "./hint-finishes.ts";
+import { hintFinishes, nothingToDeduce } from "./hint-finishes.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
 import { _resetRegistry, registerGame } from "./registry.ts";
-import { NO_SOLUTION } from "./solve-failure.ts";
 import { stripComments } from "./testing/code-lines.ts";
 import {
   membersNotMentioning,
@@ -66,11 +65,18 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
       ([, game]) => game.finishesByDeduction !== nothingToDeduce,
     ).map(([id]) => id);
     // Both halves have members, or the comparison is between two empty lists.
-    // The deducing half shrinks as its games gain tiers and leave the
-    // untiered ones; Mines, whose answer is hidden, is the one that stays.
     expect(declared.length).toBeGreaterThanOrEqual(1);
     expect(UNTIERED.length - declared.length).toBeGreaterThanOrEqual(10);
     expect(declared).toEqual(canRunOutOfDeduction());
+  });
+
+  // A game that deduces is held to a pasted board by its tiers, and a board
+  // with one answer its deductions do not reach opens as Unreasonable. Mines
+  // is the exception because its answer is hidden: several layouts fit what
+  // is showing, and no search proves such a board has one. A new game that
+  // lands here wants tiers, not a second name in this list.
+  it("is a test of the game's own in Mines alone", () => {
+    expect(canRunOutOfDeduction()).toEqual(["mines"]);
   });
 
   /**
@@ -160,33 +166,27 @@ describe("registering a game", () => {
   });
 });
 
-describe("hintAndSolveFinish", () => {
+describe("hintFinishes", () => {
   const start = { count: 0, target: 3 };
   /** The fake game with a hint that plans one step and stops at `reach`. */
-  const hinting = (reach: number, solves = true): typeof fakeGame => ({
+  const hinting = (reach: number): typeof fakeGame => ({
     ...fakeGame,
     hint: (s) =>
       s.count < reach
         ? { ok: true, steps: [{ move: "inc", rung: "inc", explanation: "" }] }
         : { ok: false, error: PUZZLE_NOT_REASONABLE },
-    solve: () =>
-      solves ? { ok: true, move: "solve" } : { ok: false, error: NO_SOLUTION },
   });
 
   it("follows the hint, a plan at a time, to a solved board", () => {
-    expect(hintAndSolveFinish(hinting(3), start)).toBe(true);
+    expect(hintFinishes(hinting(3), start)).toBe(true);
   });
 
   it("says no where the hint stops short", () => {
-    expect(hintAndSolveFinish(hinting(2), start)).toBe(false);
-  });
-
-  it("says no where Solve refuses, whatever the hint can do", () => {
-    expect(hintAndSolveFinish(hinting(3, false), start)).toBe(false);
+    expect(hintFinishes(hinting(2), start)).toBe(false);
   });
 
   it("throws for a game with no hint to follow", () => {
-    expect(() => hintAndSolveFinish({ ...fakeGame, hint: undefined }, start)).toThrow(
+    expect(() => hintFinishes({ ...fakeGame, hint: undefined }, start)).toThrow(
       /needs a hint/,
     );
   });

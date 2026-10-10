@@ -283,9 +283,9 @@ The engine SHALL provide `findLoops(nvertices, neighbors)` in
 `src/engine/findloop.ts`. It takes a neighbor callback `(vertex: number) => Iterable<number>` over
 an undirected graph and returns `{ anyLoop, isLoopEdge(u, v), isBridge(u, v)
 }`. An edge SHALL be a loop edge exactly when
-it is not a bridge: removing it would not disconnect its component. `isBridge`
-SHALL answer the vertex counts either side of a bridge, `null` for a loop
-edge.
+it is not a bridge. `isBridge` SHALL answer the vertex counts either side of a
+bridge, `null` for a loop edge. A neighbor reported twice is two edges to it,
+which SHALL be a loop of the two.
 
 #### Scenario: A cycle's edges are loop edges
 
@@ -298,6 +298,13 @@ edge.
 - **WHEN** `findLoops` runs over a multi-component tree graph
 - **THEN** `anyLoop` is false and every edge is a bridge with correct
   vertex counts on each side
+
+#### Scenario: Two edges between one pair
+
+- **WHEN** `findLoops` runs over a path one of whose edges is reported twice,
+  at its start, in its middle or at its end
+- **THEN** it ends, `anyLoop` is true, that edge reports `isLoopEdge` true
+  and the others are bridges
 
 ### Requirement: A game that flags a forbidden loop uses the loop finder
 

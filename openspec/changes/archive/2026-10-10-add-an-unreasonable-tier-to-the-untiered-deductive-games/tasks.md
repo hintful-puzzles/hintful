@@ -407,8 +407,15 @@
 
 ## 4. Close
 
-- [ ] 4.1 `docs/games/solver-and-generator.md` and `docs/games/mechanics.md`
+- [x] 4.1 `docs/games/solver-and-generator.md` and `docs/games/mechanics.md`
   on what an untiered game is once these have tiers. The recipe and what
   Pattern taught are in the first already, under "Giving a deductive game an
-  Unreasonable tier".
-- [ ] 4.2 Commit, push, archive.
+  Unreasonable tier". **Done 2026-10-10.** An untiered game is one with
+  nothing to deduce, or Mines. Decided here:
+  - `hintAndSolveFinish` is retired. It was the answer an untiered deductive
+    game gave, and no game gives it: each that did has tiers and asks
+    `hintFinishes` at Easy. Its requirement in `engine-params` is replaced by
+    one for `nothingToDeduce`, one for `hintFinishes`, and "A deductive game
+    has tiers", which `untiered-load.test.ts` holds: the untiered games
+    whose hint can run out of deduction are Mines and no other.
+- [x] 4.2 Commit, push, archive.

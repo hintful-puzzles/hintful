@@ -4,7 +4,7 @@
  * See docs/games/hints.md.
  */
 import { describe, expect, it } from "vitest";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -108,7 +108,7 @@ describe("a board the rules stall on once more of it is filled", () => {
       const st = fromId(id);
       const { solved, board: answer } = solveFilling(st.clues, st.w, st.h);
       expect(solved).toBe(true);
-      expect(hintAndSolveFinish(fillingGame, st)).toBe(true);
+      expect(hintFinishes(fillingGame, st)).toBe(true);
 
       const plan = deduceHintPlan(st.board, st.clues, st.w, st.h);
       expect([...played(st.board, plan)]).toEqual([...answer]);
