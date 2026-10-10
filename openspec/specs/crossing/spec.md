@@ -161,8 +161,7 @@ engine's note-taking cell's.
 
 With a cell selected, a digit key `1` to `9` SHALL place that digit, or in
 pencil mode toggle that note, and Backspace, Space or `0` SHALL clear. The
-on-screen keypad SHALL offer the digits 1 to 9. Walls SHALL NOT be editable,
-and a move that changes nothing SHALL produce no history entry.
+on-screen keypad SHALL offer the digits 1 to 9. Walls SHALL NOT be editable.
 
 #### Scenario: The keypad offers the digits
 
@@ -171,8 +170,7 @@ and a move that changes nothing SHALL produce no history entry.
 
 #### Scenario: A no-op entry makes no move
 
-- **WHEN** the player enters into a cell the digit it already holds, or edits a
-  wall cell
+- **WHEN** the player edits a wall cell
 - **THEN** no move is made and the history is unchanged
 
 ### Requirement: A full run that reads as no clue number is flagged live

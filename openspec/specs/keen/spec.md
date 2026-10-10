@@ -162,9 +162,7 @@ take a pencil mark. The cursor keys SHALL move the highlight.
 
 With a cell highlighted, a digit key `1..w` SHALL enter that digit, or in
 pencil mode toggle that pencil mark, and backspace or space, which is the
-cursor-select2 key, SHALL clear the cell. Entering a digit that equals the
-cell's current contents, with no pencil marks, SHALL be a no-op that hides the
-mouse highlight.
+cursor-select2 key, SHALL clear the cell.
 
 #### Scenario: Placing and penciling digits
 

@@ -142,16 +142,6 @@ modifiers.
 - **THEN** with Ctrl the move draws a line on the edge between the two squares,
   and with Shift it marks that edge with a no-line cross
 
-### Requirement: A Pearl input that changes nothing makes no move
-
-A drag or click that changes nothing SHALL produce no move.
-
-#### Scenario: A no-op drag yields no move
-
-- **WHEN** the player drags or clicks in a way that would change no segment or
-  mark
-- **THEN** `interpretMove` yields no move (returns null or a UI update only)
-
 ### Requirement: Pearl leaves the H key to the app
 
 The game SHALL decline the `H` key, so the app's Next hint shortcut reaches it.

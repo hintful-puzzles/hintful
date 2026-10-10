@@ -185,23 +185,6 @@ clue's count of.
 - **THEN** the `A` mark is struck from every other cell of that row that carries
   another mark
 
-### Requirement: An ABCD entry that changes nothing is no move
-
-An entry that would leave the state exactly as it is SHALL produce no move, and
-so no history entry: re-entering the letter a cell already holds, or clearing a
-cell that is already empty and carries no marks. Clearing an empty cell that
-does carry marks SHALL remain a real move, because it wipes them.
-
-#### Scenario: Re-entering the letter already present costs no undo step
-
-- **WHEN** a cell already holds a letter and that same letter is entered again
-- **THEN** no move is produced and the undo history is unchanged
-
-#### Scenario: Clearing a cell that holds only marks is a real move
-
-- **WHEN** an empty cell carrying pencil marks is cleared
-- **THEN** a move is produced, and undoing it restores the marks
-
 ### Requirement: What ABCD draws
 
 Rendering SHALL draw the letter grid with edge clues and corner letters, SHALL
@@ -522,3 +505,13 @@ player then enters, as it does from any position.
 - **AND** a letter entered wrongly there is reported by the mistake check
 - **AND** with a letter entered as the solution has it wherever the hint
   stops, the hint finishes the board
+
+### Requirement: Clearing an ABCD cell that holds only marks is a move
+
+Clearing an empty cell that carries marks SHALL be a real move, because it
+wipes them.
+
+#### Scenario: Clearing a cell that holds only marks is a real move
+
+- **WHEN** an empty cell carrying pencil marks is cleared
+- **THEN** a move is produced, and undoing it restores the marks

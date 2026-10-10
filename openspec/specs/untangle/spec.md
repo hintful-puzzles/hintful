@@ -94,7 +94,7 @@ the other segment as crossings, and considering only non-adjacent edge pairs.
 `interpretMove` SHALL let the player move one vertex at a time. A pointer
 press near a vertex SHALL begin a drag, motion SHALL preview the vertex
 following the pointer as a `UI_UPDATE` with no history entry, and release SHALL
-commit a move placing that vertex at its position.
+place that vertex at its position.
 
 #### Scenario: A drag moves one vertex and updates crossings
 
@@ -122,7 +122,8 @@ An arrow key SHALL select the nearest vertex in that direction. Space or Tab
 SHALL step the selection through the vertices in turn, backwards with Shift,
 and SHALL do nothing while a vertex is held. Enter SHALL pick the selected
 vertex up, the arrow keys SHALL then nudge it, and Enter again SHALL put it
-down as a move.
+down where the nudges left it. A vertex put down where it was picked up SHALL
+go back exactly as it was, not rounded to a pixel, and Undo gains no step.
 
 #### Scenario: A held vertex is nudged and dropped
 

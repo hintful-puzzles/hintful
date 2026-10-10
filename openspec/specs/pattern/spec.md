@@ -120,9 +120,8 @@ SHALL overwrite the cell, so a deliberate click can change a mark.
 ### Requirement: Pattern accepts drag-fill rectangle and cursor input
 
 A drag SHALL snap to a single row or column, except a drag whose target state
-is `Unknown`, which erases a rectangle. Release SHALL emit a `fill` move
-covering the dragged rectangle only when at least one non-immutable cell in it
-would change, and a UI update otherwise. Immutable cells SHALL never be
+is `Unknown`, which erases a rectangle. A release SHALL change the squares of
+the dragged rectangle through one `fill` move. Immutable cells SHALL never be
 overwritten.
 
 #### Scenario: A drag that changes cells emits a move
@@ -134,8 +133,7 @@ overwritten.
 
 #### Scenario: A no-op drag produces no move
 
-- **WHEN** the player drags over cells that already hold the target state (or are
-  all immutable)
+- **WHEN** the player drags over cells that are all immutable
 - **THEN** no history-affecting move is produced
 
 ### Requirement: A multi-cell paint drag leaves placed marks
@@ -160,9 +158,8 @@ A cursor move with Ctrl held SHALL set the square it leaves and the square it
 reaches to `Full`, with Shift to `Empty` and with both to `Unknown`, through
 the same rectangle `fill` move. A stroke that paints SHALL carry `onlyBlank`,
 as the pointer's paint drag does and upstream's stroke does not; one that
-clears SHALL NOT. A stroke that changes neither square SHALL make no move. The
-cursor-select keys SHALL cycle the cursor's cell: Enter as a left press does,
-Space as a right press does.
+clears SHALL NOT. The cursor-select keys SHALL cycle the cursor's cell: Enter
+as a left press does, Space as a right press does.
 
 #### Scenario: A click and Enter agree
 

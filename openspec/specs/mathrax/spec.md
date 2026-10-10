@@ -114,9 +114,8 @@ that size, or whose grid or clue part stops short of covering the grid.
 Mathrax SHALL be played with the Solo-style control scheme: a cell is selected
 by left-click or cursor, for ink outside pencil mode and for pencil marks in
 it; digit keys enter a value or toggle a pencil mark; and backspace, space or
-zero clear. Immutable given cells SHALL NOT be editable. Entering the value
-already present in a cell SHALL be a no-op. The on-screen keypad SHALL offer
-the digits 1 to the grid size and a clear key.
+zero clear. Immutable given cells SHALL NOT be editable. The on-screen keypad
+SHALL offer the digits 1 to the grid size and a clear key.
 
 #### Scenario: A digit is entered into a selected cell
 

@@ -173,17 +173,6 @@ instead clear the lines in the cells it passes.
 - **THEN** a line of the dragged orientation is placed in the cells the drag
   crosses
 
-### Requirement: A block takes no line, and a no-op is not a move
-
-Blocks SHALL never take a line, and placing a line already in that state SHALL
-be a no-op that does not reach the undo history.
-
-#### Scenario: A key that would change nothing makes no move
-
-- **WHEN** the key that places a vertical line is pressed with the cursor on a
-  cell already holding a vertical line
-- **THEN** no move is made
-
 ### Requirement: Sticks findMistakes flags only lines that contradict the solution
 
 `findMistakes` SHALL take the board's one fill from the search that counts
@@ -476,3 +465,13 @@ deduction has run out. It SHALL go on from the lines the player then places.
 - **AND** a line placed wrongly there is reported by the mistake check
 - **AND** with a line placed as the solution has it wherever the hint stops,
   the hint finishes the board
+
+### Requirement: A Sticks block takes no line
+
+Blocks SHALL never take a line.
+
+#### Scenario: A line key on a block
+
+- **WHEN** the key that places a vertical line is pressed with the cursor on a
+  block
+- **THEN** no move is made

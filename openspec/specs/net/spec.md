@@ -62,22 +62,6 @@ reaches the lock. A locked tile SHALL NOT rotate.
 - **WHEN** notes mode is on and the player taps, or right-clicks, the middle third of a tile
 - **THEN** the tile's lock toggles, and a tap nearer one of its sides notes that side instead
 
-### Requirement: No-op inputs are suppressed locally
-
-An input that changes nothing SHALL produce no move: a click outside the
-grid, a rotating click in the gutter between tiles, and a rotate on a locked
-tile. A turn that undoes the turn before it SHALL still be a move of its own.
-
-#### Scenario: Rotating a locked tile does nothing
-
-- **WHEN** the player left-clicks a tile that is locked
-- **THEN** no move is produced and the board is unchanged
-
-#### Scenario: A tile rotated full circle leaves ordinary undo history
-
-- **WHEN** the player rotates a tile anticlockwise and then clockwise
-- **THEN** the board is back to its original wiring and there are two ordinary undo entries
-
 ### Requirement: Jumble is deterministic on replay
 
 The `j` jumble SHALL rotate every unlocked tile by a random amount, and SHALL
@@ -504,3 +488,19 @@ from the squares the player then locks.
   collection's sentence that deduction has run out
 - **AND** with a square locked as the solution has it wherever the hint stops,
   the hint finishes the board
+
+### Requirement: A Net click off a tile or on a locked tile makes no move, and a turn back is a move
+
+A click outside the grid, a rotating click in the gutter between tiles, and a
+rotate on a locked tile SHALL produce no move. A turn that undoes the turn
+before it SHALL still be a move of its own.
+
+#### Scenario: Rotating a locked tile does nothing
+
+- **WHEN** the player left-clicks a tile that is locked
+- **THEN** no move is produced and the board is unchanged
+
+#### Scenario: A tile rotated full circle leaves ordinary undo history
+
+- **WHEN** the player rotates a tile anticlockwise and then clockwise
+- **THEN** the board is back to its original wiring and there are two ordinary undo entries

@@ -198,23 +198,6 @@ that clue.
 - **THEN** the clue is marked done after the first click and not after the
   second
 
-### Requirement: Undead refuses edits to fixed cells and records no empty move
-
-Fixed cells SHALL reject monster, clear and pencil edits. A move that would not
-change state SHALL return no history entry.
-
-#### Scenario: A given monster cannot be edited
-
-- **WHEN** the player tries to place a monster in, or clear, a fixed (given)
-  monster cell
-- **THEN** both edits are rejected
-
-#### Scenario: Typing what is already there
-
-- **WHEN** the player types the letter of the monster the highlighted cell
-  already holds
-- **THEN** no history entry is made
-
 ### Requirement: Undead is solved when the grid is full and every count holds
 
 The game SHALL be solved when every monster cell is filled and all counts and
@@ -477,3 +460,13 @@ a mirror SHALL stay in ink.
 - **WHEN** the opening frame is drawn
 - **THEN** the line round the grid is one pixel of the surface's grid line, as
   the line between two cells is
+
+### Requirement: Undead refuses edits to fixed cells
+
+Fixed cells SHALL reject monster, clear and pencil edits.
+
+#### Scenario: A given monster cannot be edited
+
+- **WHEN** the player tries to place a monster in, or clear, a fixed (given)
+  monster cell
+- **THEN** both edits are rejected

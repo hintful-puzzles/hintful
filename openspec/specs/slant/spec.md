@@ -79,18 +79,6 @@ preference selects `/`-first.
   square is left-clicked
 - **THEN** the square becomes `/`
 
-### Requirement: The keyboard cursor cycles and sets squares
-
-Arrow keys SHALL move a cursor, revealing it in the same press. Select and
-select2 SHALL cycle the cursor square, one in each direction. The literal keys
-`\` and `/` SHALL set the cursor square directly and Backspace SHALL clear it,
-each returning no move when the square already holds that value.
-
-#### Scenario: A key that changes nothing makes no move
-
-- **WHEN** the cursor is on a square holding `\` and the `\` key is pressed
-- **THEN** no move is returned
-
 ### Requirement: Slant ships findMistakes
 
 `findMistakes(state)` SHALL re-solve the board's clues with the Normal solver
@@ -462,3 +450,14 @@ diagonal in the border-connected vertex component is grounded.
 
 - **WHEN** a vertex clue `1` has two incident diagonals
 - **THEN** that vertex carries the vertex-error flag
+
+### Requirement: Slant's keys cycle the cursor square or set it outright
+
+Arrow keys SHALL move a cursor, revealing it in the same press. Select and
+select2 SHALL cycle the cursor square, one in each direction. The literal keys
+`\` and `/` SHALL set the cursor square directly and Backspace SHALL clear it.
+
+#### Scenario: A literal key replaces the other diagonal
+
+- **WHEN** the cursor is on a square holding `\` and the `/` key is pressed
+- **THEN** the square holds `/`, with no empty state between

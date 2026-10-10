@@ -143,24 +143,6 @@ rule is satisfied.
   satisfied
 - **THEN** the game is reported solved and flashes
 
-### Requirement: A digit is entered only where its region can hold it
-
-A digit SHALL be entered only when it does not exceed the selected cell's
-region size, and SHALL NOT change a fixed clue. A digit or a clear that would
-not change the cell SHALL make no move: the number the cell already holds,
-and, in pencil mode, a clear on a cell with no notes.
-
-#### Scenario: A digit above the region size is rejected
-
-- **WHEN** the player types a digit larger than the selected cell's region size
-- **THEN** the board is unchanged
-
-#### Scenario: Clearing notes a cell has not got leaves no history
-
-- **WHEN** pencil mode is on and a clear key is pressed on an empty cell with no
-  notes
-- **THEN** no move is made and Undo gains nothing
-
 ### Requirement: Mark-all fills a note-less cell with its region's candidates
 
 The game SHALL offer a mark-all action that fills every empty cell holding no
@@ -384,3 +366,13 @@ over each cell's own surface, in colors that read in both schemes.
 - **WHEN** the completion flash is drawn at three successive beats
 - **THEN** the three frames differ, and each shows both the bright and the dim
   beat
+
+### Requirement: A Seismic digit above its region's size, or on a fixed clue, is refused
+
+A digit SHALL be entered only when it does not exceed the selected cell's
+region size, and SHALL NOT change a fixed clue.
+
+#### Scenario: A digit above the region size is rejected
+
+- **WHEN** the player types a digit larger than the selected cell's region size
+- **THEN** the board is unchanged

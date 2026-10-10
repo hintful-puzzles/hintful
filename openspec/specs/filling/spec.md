@@ -109,9 +109,8 @@ SHALL be cleared after every committed move.
 
 A digit key `0`–`9`, Backspace standing for `0`, SHALL set every selected
 non-clue cell to that value, or the cursor's cell when nothing is selected and
-the cursor is shown. It SHALL emit a single move, and only one that changes at
-least one cell. A value above `max(w,h)` SHALL be rejected, the limit on a 2×2
-board being `3` in place of `max(w,h)`.
+the cursor is shown, as a single move. A value above `max(w,h)` SHALL be
+rejected, the limit on a 2×2 board being `3` in place of `max(w,h)`.
 
 #### Scenario: Filling a selection sets every selected cell
 

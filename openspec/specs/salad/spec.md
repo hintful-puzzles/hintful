@@ -163,28 +163,6 @@ A fill-all-candidates action SHALL be available.
 - **THEN** every square that is neither filled nor marked empty is penciled
   with its candidates
 
-### Requirement: A Salad move that would not change the board is a no-op
-
-A move that would not change the board SHALL be a no-op: `interpretMove` SHALL
-make no move of the symbol, the empty marker or the not-empty marker a square
-already holds, of a clear on a square with nothing to clear, or of a penciled
-not-empty marker on a square marked empty. A penciled symbol or empty marker
-toggles its mark, so it is never refused as changing nothing. An empty marker
-on a square whose clue is a ball is refused in either mode, since that square
-is not empty.
-
-#### Scenario: An empty marker on a given cross
-
-- **WHEN** the keyboard cursor is on a given cross and the empty marker's key is
-  pressed
-- **THEN** no move is made
-
-#### Scenario: Re-entering what a square holds leaves no history
-
-- **WHEN** a square holds a symbol and that symbol's key is pressed again, or a
-  blank square with no pencil marks is cleared
-- **THEN** no move is made and Undo gains nothing
-
 ### Requirement: Salad flags mistakes against the unique solution
 
 Salad SHALL flag mistakes on demand: given the board, `findMistakes` SHALL
@@ -397,3 +375,29 @@ border.
 - **WHEN** a blank square is selected for entry, next to a given square
 - **THEN** the selection's wash is drawn on the blank square, and the given
   square keeps the lifted surface
+
+### Requirement: Salad refuses an entry on a given, and a marker its square contradicts
+
+A square the puzzle filled with a symbol or a cross SHALL take no entry. An
+empty marker on a square whose clue is a ball SHALL be refused in either mode,
+since that square is not empty. A penciled not-empty marker on a square marked
+empty SHALL leave the square as it is. A penciled symbol or empty marker SHALL
+toggle its mark.
+
+#### Scenario: An empty marker on a given cross
+
+- **WHEN** the keyboard cursor is on a given cross and the empty marker's key is
+  pressed
+- **THEN** no move is made
+
+#### Scenario: An empty marker on a ball
+
+- **WHEN** the keyboard cursor is on a square whose clue is a ball and the
+  empty marker's key is pressed, with notes mode on or off
+- **THEN** no move is made
+
+#### Scenario: A penciled not-empty marker on a square marked empty
+
+- **WHEN** notes mode is on, the cursor is on a square marked empty, and the
+  not-empty marker's key is pressed
+- **THEN** the square stays marked empty and Undo gains nothing

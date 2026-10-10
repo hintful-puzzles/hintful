@@ -116,8 +116,7 @@ trunk and error leaves.
 along the single nearer row or column, and enact it on release. A left click
 SHALL set a blank square to a tent or clear a non-blank square; a right click
 SHALL set a blank to a non-tent or clear a non-blank; a right-drag SHALL set
-every blank square it covers to a non-tent. Trees SHALL never be modified. A
-gesture producing no change, by pointer or by key, SHALL return no move.
+every blank square it covers to a non-tent. Trees SHALL never be modified.
 
 #### Scenario: A left click toggles a tent
 

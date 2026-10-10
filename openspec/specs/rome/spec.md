@@ -72,32 +72,6 @@ moving a keyboard cursor and placing an arrow or a mark.
 - **WHEN** a non-fixed square is grabbed and a direction is dragged and released
 - **THEN** an arrow in that direction is placed in the square
 
-### Requirement: An input that changes nothing adds no history
-
-A press on a fixed clue, a press outside the grid, a placement that repeats
-the existing arrow, or a clear of a square with nothing to clear SHALL produce
-no state change and no history entry. The line round the grid belongs to the
-square it bounds, and the margin beyond that line is outside the grid, for a
-press and for the release that ends it alike.
-
-#### Scenario: A fixed clue cannot be grabbed
-
-- **WHEN** a square holding a fixed arrow is pressed
-- **THEN** no move is made and the board is unchanged
-
-#### Scenario: A tap in the margin beside the first column
-
-- **WHEN** a press and release land left of the grid's outline, level with a
-  row whose first square is empty
-- **THEN** nothing is grabbed, and no arrow is placed in that square
-
-#### Scenario: Clear where there is nothing to clear
-
-- **WHEN** Clear is pressed on a selected square with no arrow, or in notes
-  mode on one with no marks, or Space is pressed while placement is armed on
-  a square with no arrow
-- **THEN** no move is made and Undo gains nothing
-
 ### Requirement: Rome is complete when every arrow leads to a goal
 
 Completing the board SHALL report the game solved, and a board is complete when every square is filled with arrows
@@ -415,3 +389,21 @@ over each square's own surface, in colors that read in both schemes.
 
 - **WHEN** the completion flash is drawn at two different beats
 - **THEN** the frames differ, and a frame shows both the bright and the dim beat
+
+### Requirement: A Rome press on a fixed clue or outside the grid grabs nothing
+
+A press on a fixed clue or a press outside the grid SHALL produce no state
+change and no history entry. The line round the grid belongs to the square it
+bounds, and the margin beyond that line is outside the grid, for a press and
+for the release that ends it alike.
+
+#### Scenario: A fixed clue cannot be grabbed
+
+- **WHEN** a square holding a fixed arrow is pressed
+- **THEN** no move is made and the board is unchanged
+
+#### Scenario: A tap in the margin beside the first column
+
+- **WHEN** a press and release land left of the grid's outline, level with a
+  row whose first square is empty
+- **THEN** nothing is grabbed, and no arrow is placed in that square

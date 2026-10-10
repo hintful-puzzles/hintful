@@ -60,4 +60,4 @@ first.
 
 ## 5. Close
 
-- [ ] 5.1 Validate, the gate, commit, push, archive.
+- [x] 5.1 Validate, the gate, commit, push, archive.

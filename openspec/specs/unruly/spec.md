@@ -165,8 +165,7 @@ of bounds or an immutable clue cell.
 
 Left-button / select on a non-immutable cell SHALL cycle
 empty → one → zero → empty; right-button / select2 SHALL cycle
-empty → zero → one → empty. An immutable cell SHALL be inert. A click or key
-that would not change the target cell SHALL produce no history move.
+empty → zero → one → empty. An immutable cell SHALL be inert.
 
 #### Scenario: Left and right cycle in opposite directions
 
@@ -191,7 +190,6 @@ Delete SHALL clear the cell.
 
 - **WHEN** the cursor is shown on an empty non-immutable cell and `1` is pressed
 - **THEN** a move places one in that cell
-- **AND** pressing `1` there again produces no move
 
 ### Requirement: Unruly draws pieces on a quiet surface
 

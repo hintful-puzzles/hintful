@@ -111,8 +111,7 @@ clicked button's state, without passing through unknown.
 
 ### Requirement: The grid rim cannot be edited
 
-`executeMove` SHALL reject a move that would toggle a grid-rim wall. An input
-that changes nothing SHALL return `null`, so it leaves no history entry.
+`executeMove` SHALL reject a move that would toggle a grid-rim wall.
 
 #### Scenario: Rim walls cannot be toggled
 

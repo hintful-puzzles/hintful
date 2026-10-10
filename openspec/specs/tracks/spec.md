@@ -158,17 +158,6 @@ toggling no-track.
   select is pressed
 - **THEN** that edge carries a track segment and neither square's mark changes
 
-### Requirement: A Tracks interaction that changes nothing makes no move
-
-Moves that would change nothing, and interactions outside the grid, SHALL
-produce no history move.
-
-#### Scenario: A no-op interaction produces no move
-
-- **WHEN** a right-drag (no-track) covers only cells that already hold track,
-  so no flag can change
-- **THEN** `interpretMove` returns no history move
-
 ### Requirement: Tracks ships findMistakes
 
 `findMistakes(state)` SHALL re-solve the board's clues to the unique solution
@@ -497,3 +486,14 @@ already refuses any clue that finishes the board below the target tier.
 - **WHEN** the bare board of a laid track stalls at the target tier without any
   of that tier's rungs having fired
 - **THEN** the generator lays clues on it and does not ask for a new track
+
+### Requirement: A Tracks press outside the grid, or a no-track drag over track, makes no move
+
+An interaction outside the grid SHALL produce no history move. A right-drag
+SHALL set no no-track mark on a square that holds track.
+
+#### Scenario: A no-track drag over squares that hold track
+
+- **WHEN** a right-drag (no-track) covers only cells that already hold track,
+  so no flag can change
+- **THEN** `interpretMove` returns no history move

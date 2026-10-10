@@ -157,8 +157,7 @@ Clusters SHALL be played by clicking or dragging to paint cells and by a keyboar
 cursor. A left click or drag SHALL cycle a cell toward blue and a right click or
 drag toward red, each also able to clear a cell; a drag SHALL paint every cell it
 passes. The keyboard cursor SHALL place blue, red or blank via dedicated keys.
-Given dot cells SHALL never be overwritten. A move that changes no non-given cell
-SHALL produce no history entry.
+Given dot cells SHALL never be overwritten.
 
 #### Scenario: Dragging paints a run of cells
 
