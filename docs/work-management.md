@@ -136,6 +136,24 @@ it.
 
 Retire this section when the owner says the drain is over.
 
+## New work is the engine's
+
+The owner's decision (2026-10-10): from here on the work is on the engine, for
+consistency across the games and ease of keeping them.
+
+- **A game is edited only by the least that fixes something already wrong in
+  it.** No new deduction, control or refusal for one game is proposed. The
+  three changes that give Crossing, Mosaic and Net the deduction their
+  Unreasonable boards lack were picked that day as the last of the kind.
+- **Where the engine can do a thing, the engine does it, even against an
+  earlier decision.** Seven games each recorded a move that changed nothing,
+  and the guide said a game suppresses such a move itself and the midend never
+  compares boards. The owner chose the midend dropping the move over a guard
+  and seven fixes. Put that choice to the owner with a recommendation; do not
+  settle for the per-game fix because a guide line stands in the way.
+- **A session working in one game says what the engine would have had to
+  offer for the work not to be needed**, and files that.
+
 ## Before archiving
 
 - Re-read every spec delta against the code. A delta written mid-change

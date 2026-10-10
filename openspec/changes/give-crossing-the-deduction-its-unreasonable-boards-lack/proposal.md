@@ -5,8 +5,11 @@ tier (`add-an-unreasonable-tier-to-the-untiered-deductive-games`), which
 measured it. What it says of the code was true that day; re-check before
 relying on it.**
 
-**A draft since 2026-10-10, for the owner to pick.** A new deduction is
-optional work in one game. Its plan is `design.md`, which was its `tasks.md`.
+**Picked by the owner on 2026-10-10**, with the two changes like it (Mosaic
+and Net), as the last per-game work of this kind: `tasks.md` is its plan. The
+owner's condition: the least work in the game that the deduction needs, and
+whatever two of the three would each write goes in the engine
+(`docs/work-management.md` § "New work is the engine's").
 
 ## Why
 
