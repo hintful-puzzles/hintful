@@ -1038,6 +1038,48 @@ and cancels across every game's board, with both buttons, where it pressed and
 after a drag, on the opening board and on one played on, and requires the board
 and the `Ui` to be what they were (`canceledPresses` in the probe module).
 
+## A board change under a gesture is the engine's
+
+**A game writes nothing to end its drag when the board changes under it.**
+Undo, Redo, a restart, a hint's move, Solve or a load can land with a pointer
+still down: the keyboard's Undo with the mouse held, a second finger on the
+Undo button. The midend ends the gesture there (`Midend.stateReplaced`),
+whatever the game holds it in. The `Ui` goes back to the copy taken at the
+press, so no preview is left in the frame; a declared sweep is ended; and the
+drags and the release still to come reach no game. Normative: `engine-input`,
+"A board change from outside the input ends the gesture in flight" and "An
+ended gesture leaves the Ui as before its press".
+
+What differs from a cancel is the history. **The moves the gesture made before
+the change stay**, since the change was made of the board they left, and the
+restored `Ui` is told of them through `changedState` before it is told of the
+change. So a `Ui` write that `interpretMove` ties to a move, and that
+`changedState` cannot rebuild from the two boards (Inertia's death tally, set
+through `justMadeMove`; Black Box's error count, through `newmove`), is put
+back with the rest, as a cancel puts it back.
+
+**A move made by a key is the one board change that does not end the
+gesture.** A press on a keypad game's cell selects it, and the digit typed
+with that finger still down goes into it; ending the gesture would put the
+highlight back where it was before the press. The engine cannot tell that
+press from a drag whose preview the key has just made false, so a key's move
+ends every `GridDrag` and closes the open press, and no more.
+
+**So a `changedState` that clears a pointer drag is needed only for a key's
+move**, and only where the drag is in fields of the game's own and a key can
+move the board while it is held (Sokoban's arrows under a barrel drag, Slide's
+and Pegs' keyboard moves). Do not write one for Undo. What else
+`changedState` is for is in [`mechanics.md`](./mechanics.md) §
+"changedState": a `Ui` that tracks the board, and a gesture armed from the
+keyboard, which is no pointer gesture and sits armed across any number of
+board changes.
+
+[`drag-cancel.test.ts`](../../src/engine/drag-cancel.test.ts) presses every
+game's board with both buttons, held and dragged, changes the board under the
+gesture by an Undo and by a Redo, sends the rest of it, and requires that no
+move follows and that the `Ui` is the one from before the press, told of the
+same boards (`changedUnder` in the probe module).
+
 ## A button you did not act on must not be claimed
 
 **The exact mirror of the section above, and the more expensive of the two.**

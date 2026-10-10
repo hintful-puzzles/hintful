@@ -350,6 +350,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** Whether the pointer gesture in flight has put a move in the history: a
    * drag's later mark joins only a mark of the same drag that is there. */
   private gestureRecorded = false;
+  /** The pointer gesture in flight: open from its press to its release, and
+   * ended before that when the board is replaced from outside the player's
+   * input. The drags and the release of an ended gesture reach no game. */
+  private gesture: "none" | "open" | "ended" = "none";
+  /** Whether an input is being handed to the game. A board replaced meanwhile
+   * is that input's move; any other replacement (Undo, Redo, a restart, a
+   * hint's move, Solve, a load) came from outside a gesture in flight. */
+  private inInput = false;
   private drawState: DrawState | null = null;
   /** Set by `freshDrawState` alone, so `size()` at an unchanged tile size
    * never arms it: the next `redraw` lays the ground first. */
@@ -776,18 +784,36 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /**
    * The state was replaced — reconcile the `Ui` with it.
    *
-   * Two steps, paired here rather than at each of the five callers so they
-   * cannot drift. First the engine's own: **every `GridDrag` the `Ui` carries
-   * is ended**, because a drag names a position on a board that no longer
-   * exists. Membership is derived — the sweep finds a drag by its type, so a
-   * game is protected by *having* one and a new game cannot forget to ask.
+   * Paired here rather than at each caller so the steps cannot drift. First the engine's own. **A replacement from outside the player's
+   * input ends the pointer gesture in flight**, whatever fields a game holds
+   * it in: the `Ui` goes back to the copy taken at the press, so no preview
+   * of the gesture is left, and the rest of its events reach no game
+   * (`processInput`). The moves the gesture made stay, being part of the
+   * board that was replaced, so the copy is first told of them: it is then
+   * the `Ui` of a player who made those moves and no gesture. A board that
+   * starts fresh (`prev === null`) has a new `Ui` and nothing to put back.
+   *
+   * **Every `GridDrag` the `Ui` carries is ended** by any replacement, the
+   * input's own included, because a drag names a position on a board that no
+   * longer exists. Membership is derived — the sweep finds a drag by its
+   * type, so a game is protected by *having* one.
    *
    * Then the game's `changedState`, which runs **after**, so a game that
    * genuinely needs a drag to survive a transition can re-arm it and say why.
-   * The convention ships with its override.
    */
   private stateReplaced(prev: State | null, next: State): void {
+    const press = this.press;
     this.press = null;
+    if (!this.inInput) {
+      if (this.gesture === "open") this.gesture = "ended";
+      if (press !== null && prev !== null) {
+        restoreUi(this.ui, press.ui);
+        const pressedOn = press.history[press.pos];
+        if (pressedOn !== prev) this.game.changedState?.(this.ui, pressedOn, prev);
+      }
+      // A sweep is kept beside the `Ui` and not in it, so it is ended by name.
+      endSweep(this.ui);
+    }
     cancelDrags(this.ui);
     this.game.changedState?.(this.ui, prev, next);
   }
@@ -840,14 +866,29 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         replaced: this.replaced,
         undone: this.undone,
       };
+      this.gesture = "open";
+    } else if (this.gesture === "ended") {
+      // The board was replaced under this gesture: what is left of it was
+      // aimed at a board that is gone.
+      if (isMouseRelease(pointer)) this.gesture = "none";
+      if (isMouseRelease(pointer) || isMouseDrag(pointer)) return false;
     }
     const press = this.press;
-    const consumed = this.interpret(x, y, button);
+    this.inInput = true;
+    let consumed: boolean;
+    try {
+      consumed = this.interpret(x, y, button);
+    } finally {
+      this.inInput = false;
+    }
     // A move replaces the state, which drops the open press. The gesture's
     // own moves are the one replacement its press outlives: a cancel takes
     // them back with the rest.
     if (isMouseDown(pointer) || isMouseDrag(pointer)) this.press = press;
-    else if (isMouseRelease(pointer)) this.press = null;
+    else if (isMouseRelease(pointer)) {
+      this.press = null;
+      this.gesture = "none";
+    }
     return consumed;
   }
 
@@ -855,6 +896,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const press = this.press;
     if (press === null) return false;
     this.press = null;
+    this.gesture = "none";
     if (this.history !== press.history) {
       this.history = press.history;
       this.moveLog = press.moveLog;

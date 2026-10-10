@@ -762,6 +762,201 @@ export function canceledPresses(game: AnyGame, id: string): CanceledPresses {
   return { canceled, moved, left };
 }
 
+/** What became of the gestures a board change landed under. */
+export interface ChangedUnder {
+  /** How many gestures the game claimed and then had the board changed
+   * under: the sweep's power. */
+  readonly gestures: number;
+  /** How many of those had dragged before the change. */
+  readonly dragged: number;
+  /** How many had made a move of their own before the change. */
+  readonly moved: number;
+  /** Each gesture that carried on: its drag or release, arriving after the
+   * change, made a move, changed the board or threw, or its declared sweep
+   * was still open. */
+  readonly carriedOn: string[];
+  /** Each gesture after which the frame was not the one a `Ui` that had never
+   * met the gesture paints of that board: a preview left behind. */
+  readonly painted: string[];
+  /** Each gesture that left the `Ui` other than one that had never met it,
+   * where the frame does not show it. */
+  readonly left: string[];
+}
+
+/**
+ * **Does a gesture carry on after the board changed under it?**
+ *
+ * Every probe point is pressed with each button, as a held press and as a
+ * drag to each neighboring tile. Then the board is changed from outside the
+ * gesture: by an Undo, which takes back a move made before the press or the
+ * gesture's own, or by a Redo of a move undone before the press. Then the
+ * rest of the gesture arrives, a drag a tile further on and the release.
+ *
+ * It asks that nothing after the change made a move, and that the `Ui` is the
+ * one from before the press, told of the same boards: so no preview of the
+ * gesture can be in the frame, whatever fields a game keeps one in. That is
+ * read once when the change lands and once after the release.
+ *
+ * The board is played on between rounds as {@link canceledPresses} plays it,
+ * lightly first, since a board played all over is in several games one that
+ * takes no more presses.
+ */
+export function changedUnder(game: AnyGame, id: string): ChangedUnder {
+  const b = probeBoard(game, id);
+  const { m, size, tileSize } = b;
+  const points = probePoints(size);
+  const inside = (q: Point) => q.x >= 0 && q.y >= 0 && q.x < size.w && q.y < size.h;
+  const neighbors = (p: Point) =>
+    [
+      { x: p.x + tileSize, y: p.y },
+      { x: p.x, y: p.y + tileSize },
+      { x: p.x - tileSize, y: p.y },
+      { x: p.x, y: p.y - tileSize },
+    ].filter(inside);
+  const buttons = [
+    { name: "left", press: LEFT_BUTTON, drag: LEFT_DRAG, release: LEFT_RELEASE },
+    { name: "right", press: RIGHT_BUTTON, drag: RIGHT_DRAG, release: RIGHT_RELEASE },
+  ];
+  type Button = (typeof buttons)[number];
+
+  let gestures = 0;
+  let dragged = 0;
+  let moved = 0;
+  const carriedOn: string[] = [];
+  const painted: string[] = [];
+  const left: string[] = [];
+
+  /** Step the history toward `target` moves, as far as one direction goes: a
+   * drag's moves are crossed together, so a step can pass it. */
+  const stepTo = (target: number) => {
+    const back = b.moves() > target;
+    for (let at = b.moves(); back ? at > target : at < target; at = b.moves()) {
+      if (back) m.undo();
+      else m.redo();
+      if (b.moves() === at) return;
+    }
+  };
+
+  const trial = (
+    label: string,
+    p: Point,
+    button: Button,
+    q: Point | null,
+    change: "an Undo" | "a Redo",
+  ) => {
+    const start = b.moves();
+    if (start === 0) return;
+    if (change === "a Redo") m.undo();
+    const pressedOn = b.live().state;
+    const never = copyUi(b.live().ui);
+    const before = b.moves();
+    if (!m.processInput(p.x, p.y, button.press)) {
+      // Declined: the view sends the release at once and tracks nothing.
+      m.processInput(p.x, p.y, button.release);
+      stepTo(start);
+      return;
+    }
+    if (q !== null) m.processInput(q.x, q.y, button.drag);
+    const madeMoves = b.moves() !== before;
+    const under = b.live().state;
+    const held = b.moves();
+    if (change === "an Undo") m.undo();
+    else m.redo();
+    const now = b.live().state;
+    const changedAt = b.moves();
+    const what = `${label}: ${button.name} press at (${p.x},${p.y})${
+      q === null ? "" : ` dragged to (${q.x},${q.y})`
+    }, then ${change}`;
+    // A press that made a move has dropped what a Redo would have brought back.
+    if (changedAt !== held) {
+      gestures++;
+      if (q !== null) dragged++;
+      if (madeMoves) moved++;
+      // The `Ui` of a player who never made the gesture: told of its moves,
+      // as theirs would have been, and of the change.
+      if (under !== pressedOn) game.changedState?.(never, pressedOn, under);
+      game.changedState?.(never, under, now);
+      // A game may write the step's animation to the `Ui` it is asked with.
+      const dir = change === "an Undo" ? -1 : 1;
+      game.animLength?.(under, now, dir, never);
+      game.flashLength?.(under, now, dir, never);
+      const neverDigest = digest(never);
+      const check = (when: string) => {
+        if (sweepOpen(b.live().ui)) carriedOn.push(`${what}: a sweep was open ${when}`);
+        if (digest(b.live().ui) === neverDigest) return;
+        if (b.paint(b.live().state, b.live().ui) !== b.paint(b.live().state, never))
+          painted.push(`${what}: the frame ${when} shows the gesture`);
+        else
+          left.push(
+            `${what}: the Ui ${when} is ${digest(b.live().ui)}, and one that ` +
+              `never met the gesture is ${neverDigest}`,
+          );
+      };
+      check("at the change");
+      const end = q ?? p;
+      // A move aimed at a board that is gone can be one its game refuses.
+      let threw: string | null = null;
+      try {
+        if (q !== null) {
+          const on = { x: 2 * q.x - p.x, y: 2 * q.y - p.y };
+          const further = inside(on) ? on : p;
+          m.processInput(further.x, further.y, button.drag);
+          m.processInput(q.x, q.y, button.drag);
+        }
+        m.processInput(end.x, end.y, button.release);
+      } catch (e) {
+        threw = e instanceof Error ? e.message : String(e);
+      }
+      if (threw !== null)
+        carriedOn.push(`${what}: the rest of the gesture threw "${threw}"`);
+      else if (b.moves() !== changedAt || b.board() !== b.digestOf(now))
+        carriedOn.push(`${what}: the rest of the gesture made a move`);
+      else check("after the release");
+      // Take a move it made back off, so the next gesture starts from here.
+      stepTo(changedAt);
+    } else m.processInput((q ?? p).x, (q ?? p).y, button.release);
+    stepTo(start);
+  };
+
+  const round = (label: string) => {
+    for (const p of points)
+      for (const button of buttons)
+        for (const q of [null, ...neighbors(p)])
+          for (const change of ["an Undo", "a Redo"] as const)
+            trial(label, p, button, q, change);
+  };
+  // A game that takes its entries from the keypad makes no move by pointer.
+  const typed = m
+    .requestKeys()
+    .map((k) => k.button)
+    .filter((k) => k !== PENCIL_MODE_BUTTON);
+  const arrows = [CURSOR_UP, CURSOR_RIGHT, CURSOR_DOWN, CURSOR_LEFT];
+  /** Clicks and drags of one tile and of two, completed, from every `every`th
+   * probe point, with an arrow key and a typed key after each, so that there
+   * is a move to take back and the next round presses on a board in play.
+   * A jump is a drag of two tiles, and a game played from the keyboard moves
+   * by an arrow or takes its entries from the keypad. */
+  const play = (every: number) => {
+    points.forEach((p, i) => {
+      if (i % every !== 0) return;
+      const button = buttons[i % 3 === 2 ? 1 : 0];
+      const near = neighbors(p)[i % neighbors(p).length] ?? p;
+      const far = { x: 2 * near.x - p.x, y: 2 * near.y - p.y };
+      const to = i % 2 === 0 ? p : i % 4 === 1 || !inside(far) ? near : far;
+      if (m.processInput(p.x, p.y, button.press) && to !== p)
+        m.processInput(to.x, to.y, button.drag);
+      m.processInput(to.x, to.y, button.release);
+      m.processInput(0, 0, arrows[i % arrows.length]);
+      if (typed.length > 0) m.processInput(0, 0, typed[i % typed.length]);
+    });
+  };
+  play(7);
+  round("on a board barely played on");
+  play(1);
+  round("on a board played all over");
+  return { gestures, dragged, moved, carriedOn, painted, left };
+}
+
 /** One input of a script: a key arrives at the origin, as the app sends it. */
 interface ProbeInput {
   readonly name: string;

@@ -420,9 +420,10 @@ export interface Game<
    * handed. It is unsafe when it names **mutable board content**: Pegs' armed
    * keyboard jump remembered a *peg*, checked the direction at fire time and
    * took that peg on trust, so an undo left it aimed at a hole and
-   * `executeMove` rejected the player's keypress. A drag is the same shape with
-   * a shorter window, not a different one — the chrome's Undo is reachable with
-   * the pointer still down. */
+   * `executeMove` rejected the player's keypress. A pointer drag the board is
+   * changed under by an Undo, a hint or Solve is ended by the midend and needs
+   * nothing here; one held in fields of the game's own still meets a move
+   * made by a key. */
   changedState?(ui: Ui, oldState: State | null, newState: State): void;
 
   /** Translate a pointer/key event to a move, `null` for "nothing

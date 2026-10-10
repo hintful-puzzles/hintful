@@ -2,8 +2,10 @@
 
 **Status: filed 2026-10-10 by the session that archived
 `state-once-what-several-games-each-state`, whose review of `engine-input`
-suspected the defect and then ran it. What it says of the code was true that
-day; re-check before relying on it.**
+suspected the defect and then ran it, and built the same day. "Why" is the
+code as it was filed against. The guard found the defect in 32 games, not
+twelve (`design.md` § "The guard"), and one board change does not end a
+gesture: a move the player makes with a key (`design.md`, decision 1).**
 
 ## Why
 

@@ -1,25 +1,31 @@
 /**
- * **A drag does not survive the board changing under it** — swept through the
- * real registry, so a game is covered the day it carries a `GridDrag`.
+ * **A gesture does not survive the board changing under it** — swept through
+ * the real registry, so a game is covered the day it is registered.
  *
- * This is the cross-game half of `name-the-drag`. The engine ends every drag a
- * `Ui` carries when it replaces the state, and membership is **derived**: the
- * midend finds one by its type, never by a declaration a game makes about
- * itself. So the population here is read off the games rather than listed, and
- * a new game with a drag joins by having one.
+ * Two rules of the midend's, each for every game with nothing declared. A
+ * board change from outside the player's input (Undo, Redo, a hint, Solve)
+ * ends the pointer gesture in flight, whatever a game holds it in. And any
+ * state replacement, a key's move included, ends every `GridDrag` a `Ui`
+ * carries: the midend finds one by its type, so a game with a drag joins by
+ * having one.
  *
- * Why it matters concretely: `fix-stale-ui-and-cache-state` fixed Pegs throwing
- * at the player because an armed gesture outlived the undo that invalidated it.
- * The audit in that change found Pegs alone — but only because the other games
- * wrote their drags as loose fields the engine could not see at all.
+ * Why it matters concretely: a release after an Undo made a move in thirty
+ * games, some of them moves no play of that board could reach, and Inertia's
+ * threw. Each had its drag in fields the engine could not see.
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
 import { Midend } from "./midend.ts";
-import { GridDrag, LEFT_BUTTON, LEFT_RELEASE, startDrag } from "./pointer.ts";
+import {
+  GridDrag,
+  LEFT_BUTTON,
+  LEFT_RELEASE,
+  PENCIL_MODE_BUTTON,
+  startDrag,
+} from "./pointer.ts";
 import { builtGames } from "./testing/enrollment.ts";
-import { probeBoard, probePoints } from "./testing/input-probe.ts";
+import { changedUnder, probeBoard, probePoints } from "./testing/input-probe.ts";
 import type { Point } from "./types.ts";
 
 beforeAll(registerAllGames);
@@ -53,6 +59,84 @@ function stageReplacement(m: { solve(): string | null; undo(): void }, id: strin
  * to stay so.
  */
 const NOT_ARMED_BY_A_PRESS: Record<string, string> = {};
+
+describe("a gesture does not survive the board changing under it", () => {
+  // The engine ends the gesture (`Midend.stateReplaced`), whatever a game
+  // holds it in: a `GridDrag`, fields of its own, or a declared sweep. No
+  // game is asked for anything, so the population is every game. A preview
+  // needs no knowledge of where a game paints one: the `Ui` is compared with
+  // one that never met the gesture, and a preview is a difference between them.
+  it("in every game, held and dragged, with both buttons, under an Undo and a Redo", () => {
+    const carriedOn: string[] = [];
+    const painted: string[] = [];
+    const left: string[] = [];
+    const power: string[] = [];
+    const untried: string[] = [];
+    const moved: string[] = [];
+    const name = (to: string[], id: string, found: readonly string[]) => {
+      for (const f of found.slice(0, 2)) to.push(`${id}: ${f}`);
+      if (found.length > 2) to.push(`${id}: and ${found.length - 2} more`);
+    };
+    for (const { id, game } of builtGames()) {
+      const r = changedUnder(game, id);
+      name(carriedOn, id, r.carriedOn);
+      name(painted, id, r.painted);
+      name(left, id, r.left);
+      power.push(`${id} ${r.gestures}`);
+      if (r.dragged === 0) untried.push(id);
+      if (r.moved > 0) moved.push(id);
+    }
+    const said = `gestures the board changed under, per game: ${power.join(", ")}`;
+    expect(carriedOn, said).toEqual([]);
+    expect(painted, said).toEqual([]);
+    expect(left, said).toEqual([]);
+    expect(untried, "no drag had the board changed under it").toEqual([]);
+    // A press that already made its move is a gesture too, and most click
+    // games act on the press: a handful would mean a broken probe.
+    expect(moved.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("a move made by a key with the pointer down is typed where the press pointed", () => {
+    // The one board change that does not end the gesture: a press selects a
+    // cell, and a digit typed with that finger still down goes into it. The
+    // same key after the release is the control, so the two must leave the
+    // same board and the same `Ui`.
+    let exercised = 0;
+    for (const { id, game } of builtGames()) {
+      const b = probeBoard(game, id);
+      const keys = b.m
+        .requestKeys()
+        .map((k) => k.button)
+        .filter((k) => k !== PENCIL_MODE_BUTTON);
+      if (keys.length === 0) continue;
+      const typedAfter = (p: Point, key: number, held: boolean) => {
+        b.reset();
+        const claimed = b.m.processInput(p.x, p.y, LEFT_BUTTON);
+        if (!held) b.m.processInput(p.x, p.y, LEFT_RELEASE);
+        const before = b.moves();
+        b.m.processInput(0, 0, key);
+        const moved = b.moves() > before;
+        const open = held && b.m.cancelPress();
+        if (held) b.m.processInput(p.x, p.y, LEFT_RELEASE);
+        return { claimed, moved, open, where: b.where() };
+      };
+      // The first point at which a key typed after a click makes a move.
+      const at = probePoints(b.size).find((p) => typedAfter(p, keys[0], false).moved);
+      if (at === undefined) continue;
+      const control = typedAfter(at, keys[0], false);
+      const held = typedAfter(at, keys[0], true);
+      // A game that selects on the release (Group, whose press arms a drag)
+      // has nothing selected for the key yet.
+      if (!held.moved) continue;
+      exercised++;
+      expect(held.open, `${id}: the press outlived the key's move`).toBe(false);
+      expect(held.where, `${id}: typed under the press and typed after it`).toBe(
+        control.where,
+      );
+    }
+    expect(exercised).toBeGreaterThanOrEqual(8);
+  });
+});
 
 describe("a drag does not survive a state replacement", () => {
   it("finds a non-trivial population, derived from what the games carry", () => {
@@ -134,29 +218,6 @@ describe("a drag does not survive a state replacement", () => {
     expect(unarmed.sort()).toEqual(Object.keys(NOT_ARMED_BY_A_PRESS).sort());
     expect(exercised).toBeGreaterThan(0);
   });
-
-  // WITHDRAWN: a cross-game guard for the drag *preview*.
-  //
-  // The defect was real and is fixed — after an undo mid-drag, five of the six
-  // went on painting a preview of the canceled gesture until the player let go
-  // (Tents keyed its preview off `dragButton`, Tracks off `painting`, Bridges
-  // off the stored coordinates, Boats off `dragOk`, Rect off `dragged`, none of
-  // which the engine's cancel touches). It was found by playing the game, not
-  // by a test, and each fix was confirmed by planting the old gate back.
-  //
-  // What could not be built is a *collection-wide* version. Driving a press and
-  // a drag at generic probe points and diffing the frame works only when that
-  // particular pair happens to produce a preview, and which regressions it can
-  // then see moves with the board: ten probe points caught Tents' two gates and
-  // Boats; fourteen caught Tents' cell loop, Boats and Rect; exhausting the
-  // pairs over ten caught a third set. A guard whose reach shifts with the
-  // geometry reports coverage it does not have — this session's own recurring
-  // lesson — and closing the gap needs per-game gesture knowledge, which is the
-  // manifest this collection refuses.
-  //
-  // So the preview is guarded per game, where the board and the coordinates are
-  // known and the assertion is deterministic (`tents.test.ts`). The two guards
-  // above stay collection-wide because they need no such knowledge.
 
   it("a game with no Ui at all is not a crash", () => {
     // `newUi` is optional and two games genuinely have nothing to remember, so

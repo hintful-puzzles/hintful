@@ -379,11 +379,16 @@ Exemplar: [`bridges/moves.ts`](../../src/games/bridges/moves.ts)
 ### `changedState` cancels a dangling drag
 
 **A drag preview names a piece on the board, and the board can change while
-the pointer is still down** — an undo from the Bar or the keyboard mid-drag.
-Upstream's `game_redraw` `assert`s the simulated move succeeds, so that
-sequence is a thrown error in a naive port. Cancel the drag in `changedState`
-(a bare `UI_UPDATE` never reaches that hook, so the live gesture is unharmed)
-and make the preview fall back to the plain board rather than throwing.
+the pointer is still down.** For an undo from the Bar or the keyboard, a hint
+or Solve, the engine ends the gesture and puts the `Ui` back, and a game
+writes nothing ([input](./input.md) § "A board change under a gesture is the
+engine's"). A move made by a *key* mid-drag is the case left to the game:
+upstream's `game_redraw` `assert`s the simulated move succeeds, so that
+sequence is a thrown error in a naive port. Where a key can move the board
+under a drag held in fields of the game's own, cancel the drag in
+`changedState` (a bare `UI_UPDATE` never reaches that hook, so the live
+gesture is unharmed) and make the preview fall back to the plain board rather
+than throwing.
 **Tell:** a `redraw` that calls the game's own move helper on `ui` state and
 can't handle "no". Exemplar:
 [`slide/index.ts`](../../src/games/slide/index.ts) (`changedState`).

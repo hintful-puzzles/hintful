@@ -878,11 +878,12 @@ restart is a step of the history, so Undo hands this hook the starting board
 and the board as it was played, in either order, as Solve hands it a board and
 its solution. Derive the `Ui` from `newState` alone; do not diff the pair. The
 engine plays no move animation across a restart, so `animLength` is not asked
-about that pair. **A drag-preview game must cancel a dangling drag
-here**: the board can change under a held pointer (an undo mid-drag), and
-a preview that then simulates its move against the new board throws where
-upstream asserted. See [rendering](./rendering.md) § "Drag previews and blitters" for the
-render half.
+about that pair. **A pointer drag the board changes under is the engine's to
+end**, for an undo, a redo, a hint or Solve
+([input](./input.md) § "A board change under a gesture is the engine's"). What
+is left to this hook is a move a key makes while a drag is held in fields of
+the game's own, and a gesture armed from the keyboard
+([rendering](./rendering.md) § "`changedState` cancels a dangling drag").
 
 **A `Ui` rebuilt from state must ask whether this transition touched what it
 rebuilds.** Guess rebuilt its working row from the holds after every
