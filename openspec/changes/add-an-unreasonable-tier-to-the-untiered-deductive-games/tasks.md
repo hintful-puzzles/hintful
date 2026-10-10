@@ -7,8 +7,9 @@
   nine of the proposal do unless task 2 finds its Unreasonable boards are not
   worth dealing. Say why Mines, Net, Range and Rectangles do or do not.
 - [ ] 1.2 For each game, show that adding the difficulty item leaves every
-  existing params string decoding to the lower tier and encoding unchanged.
-  Where one cannot, stop and ask the owner with the cost stated.
+  existing params string decoding to the lower tier. The owner's answer
+  (proposal, "What to settle first") is that the tier is always written, so
+  the full encoding gains `de` and the snapshot's diff shows only that.
 
 ## 2. One game to the end
 

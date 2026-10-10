@@ -65,8 +65,13 @@ and deductive too; whether they join is task 1.
     longer, and no longer equal to the ID upstream's app writes for the same
     board. (b) The lower tier written as nothing and Unreasonable as `du`:
     every string in use today stays exactly as it is, and these nine become
-    the only tiered games whose tier may be absent. Recommended: (a), one
-    spelling of a tier across the collection.
+    the only tiered games whose tier may be absent.
+  - **Answered by the owner, 2026-10-10: (a), always write it.** Each game
+    takes the `choice` segment with `d`, in the full params, as the other
+    tiered games do. Task 1.2 is then to show that every string in the params
+    corpus still decodes to the lower tier, and to re-baseline
+    `params-stability.test.ts` with the diff read: every changed line gains
+    `de` and nothing else moves.
 - **Which name the lower tier takes.** `tierNames(2, { search: true })` gives
   Easy and Unreasonable. ABCD already has an Easy/Hard switch that hides
   clues, which is a second axis and not a tier, and has to be reconciled.
