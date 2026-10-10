@@ -142,28 +142,6 @@ stated difficulty, and a board generated at Normal SHALL NOT be soluble at Easy.
 - **THEN** the solver finds exactly one solution, and finds it at that tier and
   not at the tier below
 
-### Requirement: Salad's generation retry bound outlasts a legal seed
-
-Each generation loop SHALL carry a retry bound, since Normal boards are rare
-in the Number Ball mode and a deal that never ends is worse than one that
-gives up. The bound of a shape SHALL be several times the mean tries its
-rarest dealt tier takes, so that a deal which runs it out has far more likely
-lost a tier than met a slow seed. A legal seed can still run it out, rarely,
-and the deal then ends as any generator's does, by throwing
-`RetryLimitExceeded`.
-
-#### Scenario: A Normal Number Ball board is dealt
-
-- **WHEN** the Normal preset of the Number Ball mode is dealt
-- **THEN** generation returns a board and does not run its retry bound out
-
-#### Scenario: A shape whose boards are rare has a bound of its own
-
-- **WHEN** a 4x4 Number Ball board, or an ABC End View board small enough to
-  be clued on its border alone, is dealt
-- **THEN** its loop runs under a larger bound than the other shapes', sized to
-  that shape's rarest tier
-
 ### Requirement: Salad selects a square and enters a symbol or a marker
 
 Salad SHALL be played by selecting a cell and entering a symbol, an empty marker,

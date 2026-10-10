@@ -290,22 +290,6 @@ un-generable.
 - **WHEN** each shipped preset is validated for generation
 - **THEN** none is refused
 
-### Requirement: The generator's retry cap is sized to what the bound admits
-
-The Easy generator's retry cap SHALL be sized to what the bound on generable
-boards admits, so that exhausting it signals a defect and not an ordinary
-request. The Unreasonable generator's cap SHALL be counted in squares filled,
-so that a small board is given more fills than a large one, and SHALL leave
-the rarest size its bound admits many times the fills it needs. Exhausting
-that one is not a defect: some small sizes are neither proved empty nor dealt
-at once.
-
-#### Scenario: Exhausting the cap on an admitted board is an error
-
-- **WHEN** the generator spends its whole retry cap on a configuration that
-  validation admits for generation
-- **THEN** it throws `RetryLimitExceeded` and deals no fallback board, and the player is shown the engine's sentence that no board was found
-
 ### Requirement: ABCD offers an explained hint
 
 ABCD SHALL declare a `hint` built on the shared candidate-elimination plan

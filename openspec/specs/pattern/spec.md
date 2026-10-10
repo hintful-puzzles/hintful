@@ -412,8 +412,7 @@ tier.
 
 At Unreasonable the generator SHALL accept a grid only when the per-line
 solver leaves some cell of it undecided and the search proves its clues have
-exactly one answer. Its retry bound SHALL be counted in squares drawn, so that
-a small size whose such boards are rare is given enough grids to find one.
+exactly one answer.
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 

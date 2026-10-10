@@ -128,8 +128,7 @@ the player put there.
 Parameter validation SHALL reject, when validating for generation, any board
 whose area is larger than the generable maximum, giving a reason. A board two,
 three or four squares on its shorter side SHALL be held to a smaller maximum
-of its own, since its long runs give out sooner. The generator's retry cap
-SHALL be sized to the rarest board validation admits. Validation SHALL NOT
+of its own, since its long runs give out sooner. Validation SHALL NOT
 apply a ceiling when a description is already supplied, so an existing puzzle
 of any size remains playable.
 

@@ -437,9 +437,7 @@ No clue set of those sizes has one answer that the solver does not reach.
 
 `validateParams` SHALL refuse, when a board is to be dealt at either
 difficulty, a board of more than 300 squares, with a reason naming that
-maximum. The retry cap on filling a board with regions SHALL be sized to the
-rarest board the bound admits. A description that is supplied SHALL NOT be
-held to the bound.
+maximum. A description that is supplied SHALL NOT be held to the bound.
 
 #### Scenario: A board past the bound is refused with a reason
 

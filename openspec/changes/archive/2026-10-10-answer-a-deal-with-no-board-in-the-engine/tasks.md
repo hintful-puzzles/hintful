@@ -36,4 +36,4 @@ game goes in its own `design.md`, or to the owner.
   carry a tier" and § "Every retry loop is bounded" around the engine's
   bound, and have a fresh-context reader follow it for a made-up game.
 - [x] 3.2 The spec delta, and remove `skip_specs` from `.openspec.yaml`.
-- [ ] 3.3 Commit, push, archive.
+- [x] 3.3 Commit, push, archive.
