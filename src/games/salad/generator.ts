@@ -44,39 +44,6 @@ import {
   symbolChar,
 } from "./state.ts";
 
-/**
- * Runaway backstop for both generation loops, raised above the house default.
- *
- * The tier gate (`tooEasy`) makes these rejection-sampling loops, and Normal
- * boards are genuinely rare in the Number Ball mode: measured over 25 runs per
- * preset, `numbers 5x5 n3` costs a **median of 486 candidates and a worst of
- * 4,419** (`letters` modes cost 2–85). The house default of 10,000 is only ~2x
- * that worst case, so it would eventually fire on a perfectly legal seed — and
- * exhaustion throws, in a player's face. This is `retry-limit.ts`'s own "wrong
- * for a rare-but-legal seed" case; the bound stays, but far enough out that
- * reaching it means a tier has become unreachable rather than merely thin.
- */
-const MAX_ATTEMPTS = 50_000;
-
-/**
- * The bound for a Letters board clued on its border alone, where a try that
- * fails is forty microseconds: most squares have more than one solution from
- * their border, and are thrown away at the first solve. A 7x7 of two letters
- * at Easy is found once in 42,000, so {@link MAX_ATTEMPTS} gave up on one deal
- * in three with the board two seconds away.
- */
-const MAX_BORDER_ONLY_ATTEMPTS = 250_000;
-
-/**
- * The bound for a 4x4 Number Ball board, twenty times the mean of its rarest
- * cell: with three numbers at Normal a board is found once in some 48,000
- * tries, a fifth of a millisecond each, so a deal is ten seconds in the mean.
- * Tries to a board are geometric, so a bound of five times the mean gives up
- * on one deal in 150 with its board still to find, and this one on none: a
- * deal that runs it out has lost the tier.
- */
-const MAX_SMALL_NUMBERS_ATTEMPTS = 1_000_000;
-
 function blankBoard(p: SaladParams): SaladBoard {
   const o2 = p.order * p.order;
   return {
@@ -138,16 +105,18 @@ function stripClues(
   }
 }
 
-/** Upstream `salad_new_numbers_desc`. */
+/**
+ * Upstream `salad_new_numbers_desc`, with the tier gate (`tooEasy`), under
+ * which a Normal board is rare: over 25 runs a preset, a 5x5 of three numbers
+ * cost a median of 486 candidates and 4,419 at worst, and a 4x4 of three is
+ * found once in some 48,000 tries, a fifth of a millisecond each.
+ */
 function newNumbersDesc(p: SaladParams, rs: RandomState): string {
   const o = p.order;
   const o2 = o * o;
   const nums = p.nums;
   const diff = p.diff;
-  const attempt = retryLimit(
-    "salad: Number Ball generation",
-    o === 4 ? MAX_SMALL_NUMBERS_ATTEMPTS : MAX_ATTEMPTS,
-  );
+  const attempt = retryLimit("salad: Number Ball generation");
 
   for (;;) {
     attempt();
@@ -190,7 +159,11 @@ function newNumbersDesc(p: SaladParams, rs: RandomState): string {
   }
 }
 
-/** Upstream `salad_new_letters_desc`. */
+/**
+ * Upstream `salad_new_letters_desc`. Most squares clued on the border alone
+ * have more than one solution and are thrown away at the first solve: a 7x7
+ * of two letters at Easy is found once in 42,000 tries.
+ */
 function newLettersDesc(p: SaladParams, rs: RandomState): string {
   const o = p.order;
   const o2 = o * o;
@@ -198,10 +171,7 @@ function newLettersDesc(p: SaladParams, rs: RandomState): string {
   const diff = p.diff;
   // Quality check: with a small grid, force the puzzle to be border-clues-only.
   const nogrid = o < LETTERS_GRID_CLUES_FROM;
-  const attempt = retryLimit(
-    "salad: ABC End View generation",
-    nogrid ? MAX_BORDER_ONLY_ATTEMPTS : MAX_ATTEMPTS,
-  );
+  const attempt = retryLimit("salad: ABC End View generation");
 
   for (;;) {
     attempt();

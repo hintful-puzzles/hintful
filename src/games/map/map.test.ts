@@ -37,7 +37,7 @@ import {
 } from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { newMapDesc, retryBudget } from "./generator.ts";
+import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { BE, TE } from "./map-data.ts";
 import {
@@ -171,11 +171,8 @@ describe("map params codec", () => {
     expect(error(defaultParams())).toBeNull();
   });
 
-  // One cell of each family `tierRefusal` calls absent. A run-out at these
-  // sizes is hundreds of thousands of maps, so two budgets and not five.
-  describeAbsentTiers(mapGame, ["4x4n7dn", "2x6n9dn", "3x3n9dn", "4x4n8dh"], {
-    budgets: 2,
-  });
+  // One cell of each family `tierRefusal` calls absent.
+  describeAbsentTiers(mapGame, ["4x4n7dn", "2x6n9dn", "3x3n9dn", "4x4n8dh"]);
 
   const refusal = (id: string): string | null =>
     paramsError(mapGame, decodeParams(id), true);
@@ -199,14 +196,8 @@ describe("map params codec", () => {
   describe("few regions, where a tier is found seldom", () => {
     const SELDOM = ["5x5n8dn", "6x6n9dh", "6x6n10du", "15x20n10dh"];
 
-    it("is dealt from five squares wide, with nine times the work budget", () => {
+    it("is dealt from five squares wide", () => {
       for (const id of SELDOM) expect(refusal(id)).toBeNull();
-      const budget = (id: string): number => retryBudget(decodeParams(id));
-      expect(budget("6x6n8de")).toBe(277_777);
-      expect(budget("6x6n8dn")).toBe(2_500_000);
-      expect(budget("6x6n10dn")).toBe(222_222);
-      expect(budget("6x6n10dh")).toBe(2_000_000);
-      expect(budget("6x6n11dh")).toBe(budget("6x6n11dn"));
     });
 
     // One to ten seconds a board on average.

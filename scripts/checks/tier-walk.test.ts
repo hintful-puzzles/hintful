@@ -14,8 +14,9 @@
  * - **below**: a board dealt under a tier it does not need, which is the defect
  *   this exists to find;
  * - **above**: the generator's acceptance is wider than the contract's cap;
- * - **gave up**: the generator threw, so the tier is absent at that size or
- *   too rare for its retry bound, and `validateParams` should say which;
+ * - **gave up**: the generator found no board in the house count of tries,
+ *   so the tier is absent at that size or rarer than that, which the app's
+ *   deadline may still deal;
  * - **refused**, with the sentence a player is shown.
  *
  * **The sizes are a sample, and the report says which.** Every numeric field

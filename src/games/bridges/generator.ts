@@ -8,7 +8,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { MAX_REGENERATE, retryLimit } from "../../engine/retry-limit.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
   type BridgesParams,
@@ -22,7 +22,6 @@ import {
 } from "./state.ts";
 
 const MAX_NEWISLAND_TRIES = 50;
-const ISLAND_BUDGET = 6_000_000;
 
 export function newBridgesDesc(
   p: BridgesParams,
@@ -30,14 +29,11 @@ export function newBridgesDesc(
 ): { desc: string; aux?: string } {
   const target = islandTarget(p);
 
-  // `generate:` — full restart on any rejection. The budget is islands placed
-  // and not boards built: a board of few islands takes microseconds and
-  // rarely needs its tier (a 10x10 of 5 islands at Tricky is found once in
-  // about 100,000), where a large one takes longer and is found at once.
-  const attempt = retryLimit(
-    `bridges: generation (${p.w}x${p.h})`,
-    Math.max(MAX_REGENERATE, Math.floor(ISLAND_BUDGET / target)),
-  );
+  // `generate:` — full restart on any rejection. A board of few islands takes
+  // microseconds and rarely needs its tier (a 10x10 of 5 islands at Tricky is
+  // found once in about 100,000), where a large one takes longer and is found
+  // at once.
+  const attempt = retryLimit(`bridges: generation (${p.w}x${p.h})`);
   while (true) {
     attempt();
 

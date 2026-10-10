@@ -15,7 +15,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import {
   type DeductiveResult,
   EASY_MAX_ARC_PASSES,
@@ -74,10 +74,6 @@ function gradeMatchesTier(grade: DeductiveResult, diff: number): boolean {
       return false;
   }
 }
-
-/** Backstop against a regression turning the regenerate loop into a hang;
- * generation converges quickly. */
-const MAX_REGENERATE = 5000;
 
 interface CountResult {
   none: number;
@@ -160,7 +156,9 @@ export function newUndeadDesc(
   const stride = w + 2;
   const diff = diffToLevel(params.diff);
 
-  for (let attempt = 0; attempt < MAX_REGENERATE; attempt++) {
+  const attempt = retryLimit(`undead: generation (${params.w}x${params.h})`);
+  for (;;) {
+    attempt();
     const common = newCommon(params);
     const { grid, xinfo } = common;
 
@@ -255,10 +253,6 @@ export function newUndeadDesc(
 
     return { desc: encodeDesc(common), aux };
   }
-  throw new RetryLimitExceeded(
-    `undead: generation (${params.w}x${params.h})`,
-    MAX_REGENERATE,
-  );
 }
 
 /** Encode the accepted board to a desc (totals + run-length grid + sightings). */

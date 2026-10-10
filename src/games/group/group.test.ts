@@ -18,7 +18,6 @@ import {
   MOD_SHFT,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { MAX_REGENERATE } from "../../engine/retry-limit.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -43,7 +42,6 @@ import {
   newState,
   newUi,
   PRESETS,
-  retryBudget,
 } from "./state.ts";
 
 const P = (w: number, diff: number, id: boolean): GroupParams => ({ w, diff, id });
@@ -172,22 +170,8 @@ describe("a size with no board at a tier", () => {
   describeAbsentTiers(groupGame, labels(absent));
 });
 
-describe("a tier found seldom, with the budget to find it", () => {
+describe("a tier found seldom", () => {
   const SELDOM = [P(6, DIFF_HARD, true), P(8, DIFF_EXTREME, true)];
-
-  it("is dealt, and only it is given more tries than the house bound", () => {
-    for (const p of SELDOM) expect(paramsError(groupGame, p, true)).toBeNull();
-    const raised: string[] = [];
-    for (let w = 3; w <= 12; w++) {
-      for (const id of [true, false]) {
-        for (let diff = 0; diff < DIFF_NAMES.length; diff++) {
-          const p = P(w, diff, id);
-          if (retryBudget(p) !== MAX_REGENERATE) raised.push(encodeParams(p, true));
-        }
-      }
-    }
-    expect(raised).toEqual(SELDOM.map((p) => encodeParams(p, true)));
-  });
 
   // Ten seconds a board on average, so the slow tier's: from these seeds the
   // 6x6 came in a fifth of a second and the 8x8 in thirteen (2026-10-06, six

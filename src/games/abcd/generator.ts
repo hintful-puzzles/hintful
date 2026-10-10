@@ -32,18 +32,6 @@ import {
   verClue,
 } from "./state.ts";
 
-/**
- * ABCD's larger boards legitimately need far more attempts than the house
- * default. Sized against what `validateParams`' `MAX_GENERABLE_AREA` admits:
- * the slowest admitted configuration measured is 8×9 n5 at 1 acceptance in
- * 30,788, so 250,000 attempts leaves it a ~0.03% chance of exhausting the
- * budget, and every other admitted configuration is far safer. A firing here is
- * therefore a defect, as `retryLimit` assumes, not a board a player
- * legitimately asked for: the size bound, not this cap, keeps a player off an
- * ungenerable board.
- */
-const ABCD_MAX_ATTEMPTS = 250_000;
-
 /** The clue counts of one random fill, in reading order. `placeLetter` (no
  * `remaining`) keeps the partial grid no-touch-legal, so every cell always has
  * a candidate and the fill never dead-ends. */
@@ -90,10 +78,7 @@ function hideClues(
  * with clues then hidden while it still does. */
 function easyClues(p: AbcdParams, rng: RandomState): Int32Array {
   const deduced = (numbers: Int32Array) => solveAbcd(p, numbers).status === "solved";
-  const attempt = retryLimit(
-    `abcd: generation (${p.w}x${p.h} n${p.n})`,
-    ABCD_MAX_ATTEMPTS,
-  );
+  const attempt = retryLimit(`abcd: generation (${p.w}x${p.h} n${p.n})`);
   let numbers: Int32Array;
   do {
     attempt();
@@ -102,19 +87,6 @@ function easyClues(p: AbcdParams, rng: RandomState): Int32Array {
   if (p.removenums) hideClues(numbers, rng, deduced);
   return numbers;
 }
-
-/**
- * The squares an Unreasonable deal may fill before it gives up, so a larger
- * board is given fewer fills: a fill of a small board costs microseconds and
- * of a large one milliseconds. The rarest size `validateParams` admits is
- * 7x8 with eight letters, one fill in about 600, which this gives 10,700.
- *
- * Running out is not a defect here as it is at Easy. Between the sizes proved
- * to have no such board and the ones that deal at once are small ones nobody
- * has enumerated at every letter count (3x6 with three letters has none), and
- * a player who asks for one waits a second or two and is told none was found.
- */
-const UNREASONABLE_SQUARES = 600_000;
 
 /**
  * The positions the search may try when a clue is hidden from an Unreasonable
@@ -139,10 +111,7 @@ function unreasonableClues(p: AbcdParams, rng: RandomState): Int32Array {
   const deduced = (numbers: Int32Array) => solveAbcd(p, numbers).status === "solved";
   const one = (numbers: Int32Array, budget?: number) =>
     searchAnswers(p, numbers, budget).kind === "one";
-  const attempt = retryLimit(
-    `abcd: Unreasonable generation (${p.w}x${p.h} n${p.n})`,
-    Math.ceil(UNREASONABLE_SQUARES / (p.w * p.h)),
-  );
+  const attempt = retryLimit(`abcd: Unreasonable generation (${p.w}x${p.h} n${p.n})`);
   for (;;) {
     attempt();
     const numbers = drawClues(p, rng);

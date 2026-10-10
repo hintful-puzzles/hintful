@@ -94,9 +94,11 @@ measured for an hour and found no rule to refuse by
 
 ### Modified Capabilities
 
-- `engine-difficulty`: the requirements from "A generator that runs out of
-  tries is answered, not thrown" to "Every generate-until-success loop is
-  bounded by the shared retry limit", and "A rare tier is dealt by retrying".
+- `engine-difficulty`: the deal's deadline, the count a direct call keeps, and
+  what a count on a retry loop means; the requirements on a rare tier, on a
+  run-out's answer and on the shared retry limit.
+- `abcd`, `salad`, `crossing`, `filling`, `pattern`: each loses the
+  requirement, or the sentence, that sized its generator's retry cap.
 
 ## Impact
 

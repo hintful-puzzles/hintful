@@ -71,19 +71,14 @@ describe("bridges params codec", () => {
     expect(paramsError(bridgesGame, BRIDGES_PRESETS[0], true)).toBeNull();
   });
 
-  // One cell of each family `sparseRefusal` names. A run-out here is a
-  // million boards and more, so two budgets and not five.
-  describeAbsentTiers(
-    bridgesGame,
-    [
-      "3x3i30e10m2d1",
-      "4x4i30e10m2d2",
-      "5x5i20e10m2Ld2",
-      "5x5i20e10m1d1",
-      "7x7i30e100m1d1",
-    ],
-    { budgets: 2 },
-  );
+  // One cell of each family `sparseRefusal` names.
+  describeAbsentTiers(bridgesGame, [
+    "3x3i30e10m2d1",
+    "4x4i30e10m2d2",
+    "5x5i20e10m2Ld2",
+    "5x5i20e10m1d1",
+    "7x7i30e100m1d1",
+  ]);
 
   it("names the islands a refused board would have", () => {
     const refusal = (id: string): string | null =>
@@ -98,7 +93,7 @@ describe("bridges params codec", () => {
   });
 
   // Rare and quick: found once in tens of thousands of boards, each of which
-  // takes microseconds, so the retry budget has to be that long.
+  // takes microseconds.
   describeDealtTiers(bridgesGame, ["9x9i5e10m4d1", "10x10i5e10m2d2", "4x4i30e10m2d1"]);
 
   // The generator grades the state it grew, whose islands are in the order

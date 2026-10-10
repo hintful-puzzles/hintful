@@ -521,12 +521,13 @@ run out of deduction, so reach for it rather than comparing names yourself.
 none of whose boards needs the tier asked for. Use it rather than wording a
 refusal of your own; [`solver-and-generator.md`](./solver-and-generator.md)
 § "A size that cannot carry a tier" has when, and what the claim owes.
-`tooRareToDeal(what, tier)` is the sentence for a tier too rare to size a
-retry bound to; one that only takes seconds is dealt, with a bound of its own.
+`tooRareToDeal(what, tier)` is the sentence for a tier whose first board is a
+longer wait than a player would sit through; one that only takes seconds is
+dealt, with nothing written for it.
 `dealGaveUp(tier)` is their counterpart for what
 nobody counted: the sentence
-the midend returns when a generator runs its retry bound out. A game never
-calls it.
+the midend returns when a generator found no board before the deal's deadline.
+A game never calls it.
 
 [`deal.ts`](../../src/engine/deal.ts) is dealing apart from playing:
 `generate` runs a game's `newDesc` and answers `null` for a run-out, and

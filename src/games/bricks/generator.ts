@@ -30,10 +30,6 @@ import {
 
 const MINIMUM_SHADED = 0.4;
 
-/** Runaway backstop only — upstream loops unbounded; the min-shaded /
- * min-difficulty retries converge quickly (docs/games/testing.md § "Quirks are load-bearing — capped, not cleaned"). */
-const MAX_ATTEMPTS = 100_000;
-
 /** Fill the playable cells bottom-up with shade/unshade under the gravity +
  * no-three-run constraints (upstream `bricks_fill_grid`). The `randomUpto`
  * draw is conditional — it fires only when neither the run limit nor gravity
@@ -122,7 +118,7 @@ export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string 
 
   // `paramsError` refuses this combination, so reaching it means a caller
   // bypassed it. Fail immediately rather than let the gate below reject every
-  // candidate for ~100,000 attempts — a synchronous generator that cannot
+  // candidate until the retry bound: a synchronous generator that cannot
   // succeed owns its thread outright (see `engine/retry-limit.ts`).
   if (p.diff > MAX_GENERABLE_DIFF) {
     throw new Error(
@@ -130,7 +126,7 @@ export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string 
     );
   }
 
-  const attempt = retryLimit("bricks: generation attempts", MAX_ATTEMPTS);
+  const attempt = retryLimit("bricks: generation attempts");
   for (;;) {
     attempt();
     applyBounds(w, h, grid);

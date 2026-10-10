@@ -9,7 +9,7 @@
 import type { Game } from "./game.ts";
 import { paramsError } from "./params.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
-import { RetryLimitExceeded, retryLimit } from "./retry-limit.ts";
+import { RetryLimitExceeded, retryLimit, underDealDeadline } from "./retry-limit.ts";
 import type { DealtBoard, EncodedParams } from "./types.ts";
 
 /** A random 128-bit seed string for a fresh game (upstream seeds from system
@@ -29,9 +29,21 @@ export function freshSeed(): string {
 const MAX_DEALT_SOLVED = 20;
 
 /**
- * What `game.newDesc` deals at `params`, or `null` where it ran its retry
- * budget out. A run-out is an answer and not a fault: the tier may be rare at
- * this size, or absent where nobody has counted. Any other error propagates.
+ * How long a deal looks for a board before it answers that it found none, in
+ * every game and at every size. `openspec/specs/engine-difficulty/spec.md`,
+ * "A deal is bounded by one deadline, the same in every game", says what the
+ * length is weighed against.
+ */
+const DEAL_DEADLINE_MS = 120_000;
+
+/**
+ * What `game.newDesc` deals at `params`, or `null` where it found no board
+ * within `deadlineMs` or ran a count of its own out. That is an answer and not
+ * a fault: the tier may be rare at this size, or absent where nobody has
+ * counted. Any other error propagates.
+ *
+ * The deadline is armed here and nowhere else, so a generator called directly
+ * is bounded by its counts alone (`retry-limit.ts`).
  *
  * A board that is solved as dealt is dealt again, from the same generator's
  * stream, so no game has to rule one out itself.
@@ -43,14 +55,17 @@ export function generate<Params, State>(
   >,
   params: Params,
   rng: RandomState,
+  deadlineMs: number = DEAL_DEADLINE_MS,
 ): { desc: string; aux?: string } | null {
   const attempt = retryLimit("deal: a board that is not solved", MAX_DEALT_SOLVED);
   try {
-    for (;;) {
-      attempt();
-      const dealt = game.newDesc(params, rng);
-      if (game.status(game.newState(params, dealt.desc)) !== "solved") return dealt;
-    }
+    return underDealDeadline(deadlineMs, () => {
+      for (;;) {
+        attempt();
+        const dealt = game.newDesc(params, rng);
+        if (game.status(game.newState(params, dealt.desc)) !== "solved") return dealt;
+      }
+    });
   } catch (e) {
     if (e instanceof RetryLimitExceeded) return null;
     throw e;

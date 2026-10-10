@@ -14,7 +14,7 @@
  */
 
 import type { RandomState } from "../../engine/random/index.ts";
-import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { findGemCandidates } from "./solver.ts";
 import {
@@ -36,11 +36,6 @@ import {
  * square then becomes a `STOP` with the ball standing on it. */
 const START = -1;
 
-/** Backstop against spinning forever: the threshold relaxes every `PATIENCE`
- * rejections, so this is unreachable in practice
- * (docs/games/testing.md § "Quirks are load-bearing — capped, not cleaned"). */
-const MAX_ATTEMPTS = 100_000;
-
 /** How many rejections before we accept a less evenly-spread board. */
 const PATIENCE = 50;
 
@@ -54,7 +49,9 @@ export function newInertiaDesc(p: InertiaParams, rng: RandomState): { desc: stri
   let maxDistance = 2;
   let rejections = 0;
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  const attempt = retryLimit(`inertia: generation (${w}x${h})`);
+  for (;;) {
+    attempt();
     // Fill with the piece types in roughly equal proportion — but leave the
     // gems out, because we don't yet know where they may legally go.
     const cells: (Cell | typeof START)[] = [
@@ -98,8 +95,6 @@ export function newInertiaDesc(p: InertiaParams, rng: RandomState): { desc: stri
 
     return { desc: encodeBoard(board, startSquare) };
   }
-
-  throw new RetryLimitExceeded(`inertia: generation (${w}x${h})`, MAX_ATTEMPTS);
 }
 
 /** The furthest any square is from the nearest gem candidate, counting a

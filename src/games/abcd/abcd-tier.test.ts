@@ -254,9 +254,7 @@ describe("an Unreasonable ABCD board", () => {
     expect(stuck).toBeGreaterThan(1000);
   });
 
-  describeAbsentTiers(abcdGame, ["3x3n3du", "2x4n4du", "2x2n9du", "2x15n5Ddu"], {
-    budgets: 1,
-  });
+  describeAbsentTiers(abcdGame, ["3x3n3du", "2x4n4du", "2x2n9du", "2x15n5Ddu"]);
   // Hidden clues give the smallest boards, and the two-wide ones under the
   // rule against diagonal touching, the tier they lack with every clue
   // showing; and the smallest sizes found to carry it with them all.

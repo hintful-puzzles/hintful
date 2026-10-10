@@ -48,13 +48,6 @@ import {
 import { adjustShips, collectRuns } from "./validate.ts";
 
 /**
- * Upstream relaxed the puzzle after a thousand rejected boards: it showed the
- * numbers it was asked to hide, then stepped the tier down, and dealt the
- * result under the name asked for. This deals what was asked or throws.
- */
-const MAX_GENERATE_ATTEMPTS = 10_000;
-
-/**
  * Upstream `boats_generate_fleet`: place every boat, largest first, into a
  * randomly chosen run that can still take it. With no random state it places
  * each boat in the first possible run at the first possible position — that is
@@ -175,7 +168,10 @@ export function newBoatsDesc(p: BoatsParams, rng: RandomState): { desc: string }
   const solution = new Int8Array(w * h);
 
   const { diff, strip } = p;
-  const guard = retryLimit("boats: generation", MAX_GENERATE_ATTEMPTS);
+  // Upstream relaxed the puzzle after a thousand rejected boards: it showed the
+  // numbers it was asked to hide, then stepped the tier down, and dealt the
+  // result under the name asked for. This deals what was asked or throws.
+  const guard = retryLimit("boats: generation");
 
   for (;;) {
     guard();

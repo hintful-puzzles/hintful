@@ -30,11 +30,6 @@ import {
   type MinesState,
 } from "./state.ts";
 
-/** Solve/perturb rounds allowed within one layout attempt. Each round perturbs
- * and re-solves, and only a solve (0) or an unsolvable verdict (-1) ends it, so
- * a layout that does neither would spin for ever. */
-const MAX_SOLVE_ROUNDS = 10_000;
-
 /** Mutable generation context (upstream `struct minectx`, mines.c:1364). The
  * `grid` here is the *real* mine bitmap; `opened` tracks squares the solver has
  * opened, for the livelock guard. */
@@ -379,7 +374,7 @@ export function minegen(
     // falling, but compares against a `prevret` it never assigns, so that
     // never fires; honoring it would move the give-up point and diverge the
     // byte-match desc. Hence a guard of its own.
-    const round = retryLimit("mines: solve/perturb", MAX_SOLVE_ROUNDS);
+    const round = retryLimit("mines: solve/perturb");
     while (true) {
       round();
 

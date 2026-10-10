@@ -18,7 +18,7 @@ import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { GROUP_DATA, GROUPS } from "./groupdata.ts";
 import { solveGroup } from "./solver.ts";
-import { encodeGrid, type GroupParams, retryBudget, toChar } from "./state.ts";
+import { encodeGrid, type GroupParams, toChar } from "./state.ts";
 
 /** Shuffle `arr[start..]` in place, with C's `shuffle(arr + start, …)` draw
  * order. */
@@ -43,10 +43,7 @@ export function newGameDesc(
   const queue = new Int32Array(a); // BFS queue of element numbers
   const perm = new Uint8Array(w); // element permutation
 
-  const attempt = retryLimit(
-    `group: generation (${w}d${diff}${p.id ? "" : "i"})`,
-    retryBudget(p),
-  );
+  const attempt = retryLimit(`group: generation (${w}d${diff}${p.id ? "" : "i"})`);
 
   while (true) {
     attempt();

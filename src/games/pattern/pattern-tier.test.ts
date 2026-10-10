@@ -17,6 +17,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { dealRare } from "../../engine/testing/dealt.ts";
 import { patternGame } from "./index.ts";
 import { findMistakes, linesDecide, searchAnswers, solveState } from "./solver.ts";
 import {
@@ -185,7 +186,8 @@ describe("an Unreasonable Pattern board", () => {
   ])("%ix%i is dealt with one answer that the lines do not reach", (w, h) => {
     const p = sized(w, h, DIFF_UNREASONABLE);
     for (let seed = 0; seed < 4; seed++) {
-      const { desc } = patternGame.newDesc(
+      const { desc } = dealRare(
+        patternGame,
         p,
         randomNew(`unreasonable-${w}x${h}-${seed}`),
       );
@@ -226,7 +228,7 @@ describe("an Unreasonable Pattern board", () => {
     expect(stuck).toBe(154);
   });
 
-  describeAbsentTiers(patternGame, ["3x3du", "2x3du", "1x5du"], { budgets: 1 });
+  describeAbsentTiers(patternGame, ["3x3du", "2x3du", "1x5du"]);
   describeDealtTiers(patternGame, ["2x4du", "3x4du"]);
 });
 

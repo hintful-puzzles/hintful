@@ -76,7 +76,7 @@ function easyBoard(p: NetParams, rs: RandomState): { desc: string; aux: string }
   const attempt = retryLimit("net: a board the hint can finish");
   for (;;) {
     attempt();
-    const board = shuffled(p, rs, network(p, rs, null).tiles);
+    const board = shuffled(p, rs, network(p, rs, false));
     if (finishes(newState(p, board.desc))) return board;
   }
 }
@@ -94,63 +94,38 @@ function easyBoard(p: NetParams, rs: RandomState): { desc: string; aux: string }
 const DEAL_BUDGET = 30;
 
 /**
- * The squares of network an Unreasonable deal may draw before it gives up:
- * the retry bound, counted in squares so that giving up takes a second or two
- * at any size. Between the sizes proved to have no Unreasonable board and the
- * ones that deal at once are sizes nobody has enumerated, and there running
- * the bound out is an ordinary answer.
- *
- * Measured 2026-10-10: a 5×5 board, the rarest on the menu, takes a mean of
- * 860 draws of the 80,000 this allows it; a 2×100 board, which was never
- * dealt, runs 10,000 draws out in 2.1 s.
- */
-const MAX_UNREASONABLE_SQUARES_DRAWN = 2_000_000;
-
-/**
  * An Unreasonable board: a network caught on its way to an Easy one, where
  * the solver still stops short and the search proves the network is the only
  * answer. Walls can only tell the solver more, so a board that gets any is
  * asked again once it has them.
+ *
+ * Measured 2026-10-10: a 5×5 board, the rarest on the menu, takes a mean of
+ * 860 draws of a network, and a 2×100 board was never dealt.
  */
 function unreasonableBoard(
   p: NetParams,
   rs: RandomState,
 ): { desc: string; aux: string } {
-  // One bound for the whole deal: a board whose walls settle it costs the
-  // draws that found its network.
-  const draws = Math.ceil(MAX_UNREASONABLE_SQUARES_DRAWN / (p.w * p.h));
-  const attempt = retryLimit(unreasonableLabel(p), draws);
-  let drawn = 0;
+  const attempt = retryLimit(`net: Unreasonable generation (${p.w}x${p.h})`);
   for (;;) {
     attempt();
-    const found = network(p, rs, draws - drawn);
-    drawn += found.draws;
-    const board = shuffled(p, rs, found.tiles);
+    const board = shuffled(p, rs, network(p, rs, true));
     if (p.barrierProbability === 0 || !solverFinishes(newState(p, board.desc)))
       return board;
   }
 }
 
-const unreasonableLabel = (p: NetParams): string =>
-  `net: Unreasonable generation (${p.w}x${p.h})`;
-
 /**
  * A network with one answer and no walls to go by. Upstream's grid is one
  * the solver settles: a tree drawn at random, rewired where the solver could
- * not settle it until it can. With `stuckDraws`, the trees it may draw
- * before giving up, the rewiring stops at the first network the solver cannot
- * settle and the search proves has one answer. `draws` is the trees it drew.
+ * not settle it until it can. With `stuck`, the rewiring stops at the first
+ * network the solver cannot settle and the search proves has one answer.
  *
  * Measured 2026-10-10, that is far likelier than a tree being such a network
  * as it is first drawn, which one in 50 to 300 is at the menu's sizes: a deal
  * takes 2 to 50 ms where keeping only such trees takes 0.3 s to 2 s.
  */
-function network(
-  p: NetParams,
-  rs: RandomState,
-  stuckDraws: number | null,
-): { tiles: Uint8Array; draws: number } {
-  const stuck = stuckDraws !== null;
+function network(p: NetParams, rs: RandomState, stuck: boolean): Uint8Array {
   const { w, h } = p;
   const wh = w * h;
   const cx = Math.floor(w / 2);
@@ -164,13 +139,10 @@ function network(
   // The outer loop is upstream's `begin_generation` label: the uniqueness gate
   // may give up and restart the whole grid.
   const attempt = retryLimit(
-    stuck ? unreasonableLabel(p) : "net: generation",
-    stuckDraws ?? undefined,
+    stuck ? "net: a network the solver cannot settle" : "net: generation",
   );
-  let draws = 0;
   beginGeneration: for (;;) {
     attempt();
-    draws++;
 
     tiles.fill(0);
 
@@ -217,7 +189,7 @@ function network(
     // The solver left LOCKED bits everywhere; clear them.
     for (let i = 0; i < wh; i++) tiles[i] &= ~LOCKED;
 
-    return { tiles, draws };
+    return tiles;
   }
 }
 

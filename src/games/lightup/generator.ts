@@ -142,22 +142,12 @@ function stripUnusedNums(state: LightupState): void {
 
 const MAX_GRIDGEN_TRIES = 20;
 
-/** Rounds of the blackpc ramp (each already ≤ MAX_GRIDGEN_TRIES attempts, so
- * ≈20k grids in total), which is some sixty climbs of the ramp from 20%. */
-const MAX_RAMP_ROUNDS = 1000;
-
-/**
- * The rounds a small board gets, in rounds times squares. A 3x3 turned half
- * round at Normal is found once in 600 rounds or so, and a round on it is
- * under a millisecond, so 1,000 gave up on one deal in five. A board of more
- * than 40 squares keeps the 1,000.
- */
-const WORK_BUDGET = 40_000;
-
 /**
  * Generate a puzzle: the most complex grid honoring a unique solution
  * and the difficulty floor/ceiling, ramping the black-square percentage
- * when a layout keeps failing (upstream `new_game_desc`).
+ * when a layout keeps failing (upstream `new_game_desc`). The rarest board
+ * measured, a 3x3 turned half round at Normal, is found once in 600 rounds
+ * of the ramp or so.
  */
 export function newLightupDesc(
   paramsIn: LightupParams,
@@ -171,10 +161,7 @@ export function newLightupDesc(
   const numindices = Array.from({ length: params.w * params.h }, (_, i) => i);
   shuffle(numindices, rs);
 
-  const round = retryLimit(
-    "lightup: generation (blackpc ramp)",
-    Math.max(MAX_RAMP_ROUNDS, Math.floor(WORK_BUDGET / (params.w * params.h))),
-  );
+  const round = retryLimit("lightup: generation (blackpc ramp)");
   for (;;) {
     round();
 

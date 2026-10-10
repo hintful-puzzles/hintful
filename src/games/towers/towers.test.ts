@@ -24,9 +24,8 @@ import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { newTowersDesc } from "./generator.ts";
 import { towersGame } from "./index.ts";
 
-// A 3x3 above Normal. The generator's retry bound is a thousand tries, so
-// fifty of them make the 50,000 the other games' five do.
-describeAbsentTiers(towersGame, ["3dx", "3du"], { budgets: 50 });
+// A 3x3 above Normal.
+describeAbsentTiers(towersGame, ["3dx", "3du"]);
 
 import {
   COL_ERROR,

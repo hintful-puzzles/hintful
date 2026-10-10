@@ -7,7 +7,7 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import type { Point } from "../../engine/types.ts";
 import { layoutsUpTo2, OutOfReach } from "./hint.ts";
 import {
@@ -74,9 +74,6 @@ function buildDesc(p: BlackboxParams, rng: RandomState, tries = 30): string | nu
   return encodeBalls(p, balls);
 }
 
-/** The most times one deal starts its board again. */
-const MAX_BUILDS = 1_000;
-
 /**
  * Deal a board with one answer, built a ball at a time ({@link buildDesc}).
  * Scattering the balls at once and keeping a board only when it came out with
@@ -85,12 +82,12 @@ const MAX_BUILDS = 1_000;
  * balls on 8×8 it found none (design.md § "Dealing a board with one answer").
  */
 export function newDesc(p: BlackboxParams, rng: RandomState): { desc: string } {
-  for (let tries = 0; tries < MAX_BUILDS; tries++) {
+  const attempt = retryLimit(
+    `blackbox: a board with one answer (w${p.w}h${p.h}m${p.minballs}M${p.maxballs})`,
+  );
+  for (;;) {
+    attempt();
     const desc = buildDesc(p, rng);
     if (desc !== null) return { desc };
   }
-  throw new RetryLimitExceeded(
-    `blackbox: a board with one answer (w${p.w}h${p.h}m${p.minballs}M${p.maxballs})`,
-    MAX_BUILDS,
-  );
 }

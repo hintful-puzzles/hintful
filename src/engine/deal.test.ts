@@ -5,12 +5,13 @@
  * goes.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import "../games/index.ts";
-import { dealBoard } from "./deal.ts";
+import { dealBoard, generate } from "./deal.ts";
 import { fakeGame } from "./fake-game.ts";
+import { randomNew, randomUpto } from "./random/index.ts";
 import { getTsGame } from "./registry.ts";
-import { RetryLimitExceeded } from "./retry-limit.ts";
+import { MAX_REGENERATE, RetryLimitExceeded, retryLimit } from "./retry-limit.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import type { DealtBoard, Size } from "./types.ts";
 
@@ -93,6 +94,74 @@ describe("dealBoard", () => {
     });
     expect(dealBoard({ ...fakeGame, newDesc }, "t3")).toBeNull();
     expect(newDesc).toHaveBeenCalledOnce();
+  });
+
+  describe("bounded by the deal's deadline", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    /** fakeGame, dealing the board of the first draw in `oneIn` to come up
+     * zero, or none at all where `oneIn` is `null`. */
+    function rare(oneIn: number | null): typeof fakeGame {
+      return {
+        ...fakeGame,
+        newDesc: (p, rng) => {
+          const attempt = retryLimit("fake: generation");
+          for (let tries = 1; ; tries++) {
+            attempt();
+            const draw = randomUpto(rng, oneIn ?? 2);
+            if (oneIn !== null && draw === 0) return { desc: `g${p.target}-${tries}` };
+          }
+        },
+      };
+    }
+
+    /** A clock that moves a millisecond each time it is read. */
+    function tickingClock(): void {
+      let ms = 0;
+      vi.spyOn(performance, "now").mockImplementation(() => ms++);
+    }
+
+    it("answers a deal that never finds a board, at the deadline", () => {
+      tickingClock();
+      const game = rare(null);
+      const newDesc = vi.fn(game.newDesc);
+      expect(
+        generate({ ...game, newDesc }, { target: 3 }, randomNew("s"), 500),
+      ).toBeNull();
+      expect(newDesc).toHaveBeenCalledOnce();
+    });
+
+    it("bounds the same generator by its count where no deal armed one", () => {
+      tickingClock();
+      expect(() => rare(null).newDesc({ target: 3 }, randomNew("s"))).toThrow(
+        `fake: generation: gave up after ${MAX_REGENERATE} attempts`,
+      );
+    });
+
+    it("deals the board the seed gives, however long the deadline", () => {
+      const game = rare(50);
+      const direct = game.newDesc({ target: 3 }, randomNew("s"));
+      tickingClock();
+      for (const deadlineMs of [1_000, 100_000])
+        expect(generate(game, { target: 3 }, randomNew("s"), deadlineMs)).toEqual(
+          direct,
+        );
+    });
+
+    it("finds a board rarer than the count allows, and never another in its place", () => {
+      const game = rare(4 * MAX_REGENERATE);
+      const seed = "rare";
+      expect(() => game.newDesc({ target: 3 }, randomNew(seed))).toThrow(
+        RetryLimitExceeded,
+      );
+      tickingClock();
+      const found = generate(game, { target: 3 }, randomNew(seed), 10_000_000);
+      if (found === null) throw new Error("the deal found no board");
+      // The try it was found at is past where the count gave up.
+      expect(Number(found.desc.split("-")[1])).toBeGreaterThan(MAX_REGENERATE);
+      // A deadline short of that try deals nothing, and not an earlier board.
+      expect(generate(game, { target: 3 }, randomNew(seed), MAX_REGENERATE)).toBeNull();
+    });
   });
 
   it("deals again where the board comes solved as dealt", () => {

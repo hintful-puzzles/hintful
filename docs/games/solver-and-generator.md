@@ -517,8 +517,8 @@ What Pattern taught, each a thing to measure before the next game:
   tests notice.
 - **Count how many stuck boards have one answer.** Most have several. Of the
   pictures Pattern's lines left undecided, 8 of 206 had one answer at 10x10
-  and 165 of 1,813 at 30x30. The rate sets the retry bound and says whether
-  the tier is worth dealing at a size.
+  and 165 of 1,813 at 30x30. The rate says whether the tier is worth dealing
+  at a size.
 - **Enumerate the smallest sizes for the refusal.** Where every board of a
   size can be tried, try them: no Pattern picture up to 3x3 needs search and
   has one answer, which is a proof and is kept as a test, where a count of
@@ -559,11 +559,10 @@ What ABCD, the second, added:
   fill. What limits an Unreasonable one is the search's cost and the share of
   stuck boards with several answers. ABCD's thin boards are the quick ones at
   Easy and the slow ones at Unreasonable with many letters.
-- **Running the retry bound out can be an ordinary answer here.** Between the
-  sizes proved empty and the ones that deal at once are sizes nobody has
-  enumerated. Bound the tries so that giving up takes a second or two, in
-  squares filled where a fill's cost grows with the board, and refuse up
-  front any shape measured to give up slowly.
+- **Finding no board can be an ordinary answer here.** Between the sizes
+  proved empty and the ones that deal at once are sizes nobody has
+  enumerated, and there the deal's deadline answers
+  (§ "Every retry loop is bounded"). The generator states no bound for it.
 - **Read the ledger's board before deleting it.** Like Pattern's, ABCD's
   board in `untiered-load.test.ts` had no answer at all.
 
@@ -849,8 +848,7 @@ What Rectangles, the twelfth, added:
   where `presetGrid` asks for it.
 - **A rare small board wants more draws, not a refusal.** A 3x5 board has
   the tier once in 6,500 draws and a 4x4 has it and was not dealt in 10,000.
-  The retry bound is in squares for a small board and the usual count for a
-  large one.
+  The deal's deadline gives it them, since it counts no draws.
 
 ### Check, Tactic, Search
 
@@ -1147,10 +1145,11 @@ of tries after which the tier drops (`MAXTRIES`), and a tier gate that small
 boards skip (`spaces > 6 &&`). All three hand the player a board under a label
 it does not need.
 
-**Do not count a game's sizes in order to write a refusal** (owner,
-2026-10-10). A generator that finds no board runs out, and the engine tells
-the player so in a few seconds, in every game, with no line in the game
-("Where no line can be named", below). That is the
+**Do not count a game's sizes in order to write a refusal, and do not size a
+bound to one** (owner, 2026-10-10). A generator that finds no board is ended
+by the deal's deadline, and the engine tells the player so after the same
+wait in every game, with no line in the game ("Where no line can be named",
+below; § "Every retry loop is bounded" for the deadline). That is the
 default answer for a size that lacks a tier, and it costs nothing a game. A
 refusal is written only where both hold: the absence has a reason that fits
 in a sentence and is checked in a line (a strip, a board of one region), and
@@ -1184,8 +1183,11 @@ The followable form, for a refusal that clears it:
    what goes red when a downgrade comes back, and it was seen red with Map's
    fifty-try drop planted.
 
-**A refusal is a claim of absence, so measure it by running the generator
-with nothing to stop it, and count the tries.** Group is why. Upstream's table
+**A refusal is a claim of absence, so where one is written it rests on a
+count: run the generator with the count raised (`underDealTries`), and count
+the tries.** This and the paragraphs after it are for a refusal that clears
+the bar above, or exists already; they are not a reason to go counting. Group
+is why. Upstream's table
 named sixteen cells from 3x3 to 8x8. Run out, eleven had no board in up to a
 million tries; two dealt a board at once (a 4x4 and a 5x5 hiding the identity,
 at Tricky); three were rare; and a 5x5 at Hard, which the table lacked, had
@@ -1196,29 +1198,33 @@ times in five, and a test that ran it once passed. The count that found it was
 power of whatever keeps it true: `e^(-tries/n)` is the chance of missing a
 tier found once in `n`.
 
-**Rare is not absent: deal it where a bound can be sized to it, and give it a
-different sentence where not.** The spec has a rare tier dealt by retrying.
-Where the retry is quick that needs nothing: Unequal's rarest cell takes 119
-tries and a hundredth of a second. Where it is ten seconds a board, deal it
-too, and size the bound to the measured rate: the app deals the next board
-ahead in a second worker and keeps it
+**Rare is not absent: it is dealt, with nothing written for it, and given a
+different sentence only where a refusal already says so.** The spec has a rare
+tier dealt under the deadline, and the deadline counts no tries, so a rare cell
+needs no line in its game however many tries a board takes: Unequal's rarest
+takes 119 and a hundredth of a second, Group's 6x6 at Tricky showing its
+identity 48,000 and ten seconds. What decides is seconds a board. A cell found
+once in `m` seconds runs the deadline out with chance `e^(-120/m)`,
+and the app deals the next board ahead in a second worker and keeps it
 ([`deal-ahead.ts`](../../src/puzzle/deal-ahead.ts)), so the wait is the first
-board's only. Group's `retryBudget` is the shape: five times the mean tries at
-each of its two such cells, which a deal runs out once in 150, where the house
-bound would run out four times in five. Keep such a type off the preset menu.
-Refuse only where a count found no board to size a bound to, or the first wait
-is longer than a player would sit through once, and then with
-`tooRareToDeal`: *"Hard 6x6 puzzles that show their identity are too rare to
-deal."* Never `noSuchTier` for one of these: the board may exist.
+board's only. Keep a type that takes more than a second or two off the preset
+menu, and write nothing else for it.
 
-**The line is half a minute a board on average.** Under it a cell is dealt:
-Keen with multiplication alone at 4 to 20 seconds, Map's maps of 8 to 10
-regions at 1 to 18, Salad's 6x6 and 7x7 Numbers boards of two symbols at about
-20. Over it the cell is refused and the wait is written beside the refusal:
-Keen's 9x9 at 50 seconds, Spokes two squares wide at 25 seconds to four
-minutes, Light Up's turned 4x4 at a minute and more. Pin a dealt one with
-`describeDealtTiers(game, cells, { seldom: true })`, which deals one board a
-cell in the slow tier.
+**The rare cells refused before the deadline keep their refusals, and a new
+game writes none.** Where a game refuses a cell that has boards, the sentence
+is `tooRareToDeal`: *"Hard 6x6 puzzles that show their identity are too rare
+to deal."* Never `noSuchTier` for one of these: the board may exist. Those
+were drawn at half a minute a board on average. Under it a cell was dealt:
+Keen with multiplication alone at 4 to 26 seconds, Map's maps of 8 to 10
+regions at 1 to 18, Salad's 6x6 and 7x7 Numbers boards of two symbols at
+about 15. Over it the cell was refused and the wait written beside the
+refusal: Keen's 9x9 at 50 seconds, Spokes two squares wide at 25 seconds to
+four minutes, Light Up's turned 4x4 at a minute and more. A cell of a new
+game that takes that long is left to the deadline, like one with no board:
+it is dealt when a board turns up within the two minutes, and the player is
+told when none does. A rare cell
+may be pinned with `describeDealtTiers(game, cells, { seldom: true })`, which
+deals one board a cell in the slow tier; none is owed.
 
 **Time the cells beside a refusal, not only the refused ones.** A refusal
 written from a count of tries stops where the counting stopped, and the cells
@@ -1239,15 +1245,15 @@ generator and its refusal both call, and the sentence is *"No puzzle of 4
 islands is Tricky."* Map's follow the number of regions. A refusal written
 against width and height there would have been a table with no end.
 
-**Size the retry bound in work, not in tries.** A try on a sparse board is
-microseconds, so a bound of 10,000 tries gives up in a twentieth of a second
-on a tier that is half a second away: a 10x10 Bridges of five islands at
-Tricky is found once in about 100,000. Bridges budgets islands placed
-(`ISLAND_BUDGET / islandTarget`) and Map squares times regions
-(`WORK_BUDGET / (wh * n)`), which keeps a run-out near ten seconds at every
-size and lets a small board try hundreds of thousands of times. **Time the
-run-out at the costliest corner before trusting the unit**: Map's first
-budget counted squares alone, and a 3x30 of 75 regions ran for two minutes.
+**Why the bound is a deadline and not a count a game sizes.** A try on a
+sparse board is microseconds, so 10,000 tries give up in a twentieth of a
+second on a tier that is half a second away: a 10x10 Bridges of five islands
+at Tricky is found once in about 100,000. Each game answered that with a
+budget in its own unit of work, sized from a measurement of its own, and the
+budgets disagreed about the one thing a player meets, which is the wait:
+measured 2026-10-10 at sizes with no board, giving up took 0.05 seconds in
+Filling, 18 in Bridges, and six minutes in Salad. The deadline
+is that wait, stated once.
 
 **A tier is a rung a board needs, not a height it reaches, so count every
 tier at a size.** A 3x3 Ascent on the Rectangle grid has Tricky and Hard
@@ -1257,19 +1263,19 @@ holds across a choice field: Ascent's four grids lose different cells, and
 Light Up's 3x3 loses a tier to each symmetry, because its center square is
 its own mirror image.
 
-**Count tries only where tries are alike.** Lifting the retry bound and
-counting boards over tries measures a rate when every try draws from the same
+**Count tries only where tries are alike.** Raising the count
+(`underDealTries`) and counting boards over tries measures a rate when every try draws from the same
 population. Light Up's generator adds black squares each time twenty tries
 fail, so its tries are not alike: a deal found its 4x4 Unreasonable in the
-first climb or, as it was written, sat at 90% black for the rest of its bound
-and found nothing. With the bound lifted that read as "absent"; dealt under
-its real bound it was one deal in ten. Where a generator changes what it
-tries, count deals under the real bound first, and ask what the later tries
-are still able to find. There the fix was neither a refusal nor a budget: the
-ramp starts over at the top.
+first climb or, as it was written, sat at 90% black for the rest of the deal
+and found nothing. Counted over many tries that read as "absent"; counted by
+deals it was one deal in ten. Where a generator changes what it tries, count
+deals first, and ask what the later tries are still able to find. There the
+fix was neither a refusal nor more tries: the ramp starts over at the top.
 
-**Where a board is drawn in stages, count each stage apart and budget the
-later one short.** Loopy on an aperiodic tiling draws a patch and then boards
+**Where a board is drawn in stages, count each stage apart and give the
+later one a short count.** This is the count a generator does state
+(§ "Every retry loop is bounded"). Loopy on an aperiodic tiling draws a patch and then boards
 on it, and the tier follows the patch's shape: three rhombs around a point
 carry Easy, Tricky and Hard and never Normal. "None in 500,000 boards" there
 was none in fifty patches, and one size up it was a patch in twenty that
@@ -1285,8 +1291,8 @@ shapes fail: it was four of them, across two tilings.
 **Where no line can be named, the generator runs out and the engine says
 so.** Boats takes a fleet as a list, and which fleets lack a tier has no line
 through it: one boat never has one, two single boats on a 3x3 do not, two on
-an 8x8 do. A generator that exhausts its `retryLimit` is caught by the midend
-(`Midend.deal`), which keeps the board in play and returns
+an 8x8 do. A generator that finds no board before the deadline is answered by
+the midend (`Midend.deal`), which keeps the board in play and returns
 [`dealGaveUp`](../../src/engine/difficulty.ts)'s sentence for the app to
 show; it says the tier may be rare or absent, since a run-out cannot tell. So
 refuse what you have counted and can name, and let the rest run out. Never
@@ -1311,10 +1317,11 @@ leaves out. It is a report, minutes long, and not a gate:
     TIER_WALK_GAMES=group,unequal npx vitest run \
       -c scripts/checks/diff.vitest.config.mts tier-walk
 
-A cell it lists as **below** is this section's defect. One that **gave up** is
-a tier absent or too rare for the retry bound: refuse it where it can be
-counted and named, size the bound to it where it is rare and quick, and
-otherwise the player is told no board was found. A cell it does not list was dealt at its tier three times, which
+A cell it lists as **below** is this section's defect. One that **gave up**
+found no board in the house count of tries, since the walk calls the generator
+directly: the tier is absent there, or rarer than that count, and the app's
+deadline deals a rare one. Nothing is owed for it but the refusal that clears
+this section's bar. A cell it does not list was dealt at its tier three times, which
 convicts nothing and clears little: raise `TIER_WALK_SEEDS` for a cell that
 matters.
 
@@ -1420,6 +1427,36 @@ into it and let an outer `retryLimit` bound the recovery (Net's `shuffle`
 reshuffles on a stalled tie rather than throwing). Read the module header —
 it also explains why the bound is a guard call, not a `for…of` iterator.
 
+**Give the guard a label and no number.** The bound is the engine's, and it
+is two bounds. When the app deals, [`generate`](../../src/engine/deal.ts) arms
+a deadline, `DEAL_DEADLINE_MS`, and a guard given no count gives up when it
+passes, however many tries that was: so a size with no board is answered
+after the same wait in every game, and a board found once in 100,000 tries is
+dealt where a try is cheap. Called directly, by a test or a census, the same
+guard counts `MAX_REGENERATE` tries and reads no clock, so its answer does not
+depend on how busy the machine is. A generator therefore states no budget for
+its deal, and nothing about a game is measured to size one. Neither bound can
+choose a board: both throw, and a seed that ends with a board ends with the
+same one under either.
+
+**Pass a count only where the number is the algorithm's.** There are two
+kinds. A stage that hands over when it is spent: Loopy draws another patch
+once `PATCH_BOARDS` boards on this one have failed, by catching the run-out,
+so the count is what moves the deal on. And a maximum the board itself sets:
+Boats seeds at most `w * h + 1` clues. Such a guard counts under a deadline as
+well. A number that says how rare a board is, or how long giving up should
+take, is a budget: leave it out. The test for which you have: would the
+generator deal a different board, or none where it deals one, if the number
+were ten times as large? For a budget, never.
+
+**A test that deals a rare board asks for the tries, in one place.**
+[`dealRare`](../../src/engine/testing/dealt.ts) is `newDesc` with the count
+raised for that call, and `describeDealtTiers` and the boards the cross-game
+sweeps share (`dealt`) deal through it, so a cell whose board is past the
+house count is pinned with no number in the game. A test of your own that
+runs out at 10,000 tries on a board the app deals calls `dealRare`. A test
+never arms a deadline to find a board.
+
 **The gate holds you to it, in its fast pass.**
 [`retry-bound.test.ts`](../../src/engine/retry-bound.test.ts) reads every
 loop under `src/games/` and `src/engine/` whose header does not count
@@ -1438,9 +1475,10 @@ says what ends it. So a new generator meets three cases:
   ledger line naming what.
 - **It is rejection sampling for one item** (a free square, an unused color)
   ⇒ a ledger line saying what keeps an acceptable draw on offer, usually a
-  `validateParams` bound. Do *not* reach for a default-budget guard here: a
-  board with one free square in 1,600 refuses 10,000 draws running about
-  once in 500 deals, and the guard would throw on a legal board.
+  `validateParams` bound. Do *not* reach for a guard with no count here:
+  called directly it gives up at 10,000 draws, a board with one free square
+  in 1,600 refuses that many running about once in 500 deals, and the guard
+  would throw on a legal board.
 
 The guard is the scan's own vocabulary: it looks for a call to a variable
 initialized from `retryLimit`, in the loop's own body, so a hand-rolled
@@ -1479,11 +1517,11 @@ unlucky seed" — check, because the two failure modes need opposite fixes:
   succeeds about half the time — an `amin` bump would also have forbidden
   the sizes that work).
 
-Size the retry budget from the **worst measured success rate of a generable
-configuration** (Loopy's patch draw succeeds one time in 48 at its rarest, so
-400 draws miss one deal in 4,000), never
-from a house default: a generous bound is right for a runaway guard but
-turns an impossible configuration into a ten-second hang before its error.
+The retry itself takes no number: the deal's deadline bounds it
+(§ "Every retry loop is bounded"). Only a stage that hands over when it is
+spent has a count, and that one is sized from the **worst measured success
+rate of a generable configuration**: Loopy's patch draw succeeds one time in
+48 at its rarest, so 400 draws miss one deal in 4,000.
 
 **A board cut at random can come out far under its size, and that is a third
 case: draw again, and keep the largest where nothing is large enough.** A
@@ -1514,8 +1552,7 @@ with board size (1/22 at 16 cells, 1/200,000 at 49, zero in 200,000 attempts
 at 56+). A size cap alone would forbid shipped presets; retry-only leaves a
 10×10 spinning for minutes. So it takes both: `MAX_CELLS` in
 `validateParams` for the range that provably cannot generate, and a retry
-budget sized from the measured worst *legitimate* case — which then also
-frees the budget to be generous, since nothing hopeless reaches it. **Sweep
+under the engine's bound for the rest. **Sweep
 a grid of shapes, not a single dimension**: the ceiling tracked *cell
 count*, which neither a `w` bound nor an `h` bound would have expressed.
 Exemplar: [`seismic/state.ts`](../../src/games/seismic/state.ts)
@@ -1531,7 +1568,7 @@ tracks of a 200x8. Lifting the bound showed nothing else failing: clue-laying
 took one to three tracks a board at every size. Two things to take from
 [`tracks/generator.ts`](../../src/games/tracks/generator.ts):
 
-- **Ask what each try is thrown away for before sizing a budget to the rate.**
+- **Ask what each try is thrown away for before accepting the rate.**
   Count the tries each filter turns away, by size. A rate that falls with size
   while the stage after it holds steady is a property the draw could have had
   from the start. Here the walk may not leave while a line is bare and never
@@ -1641,11 +1678,13 @@ raised, repeat the sizes near it across several seeds first. Two corollaries:
   you draw the line, and note which way it fails.
 - **A retry loop's tail is set by its per-attempt success rate.** Attempts are
   independent, so the count is geometric: with success rate `p`, the chance of
-  exhausting a cap of `n` is about `e^(−np)`. Count attempts and successes over
-  a few hundred deals at every preset and compute that, rather than waiting for
-  a failing seed. Tracks' 15x15 Hard measured `p ≈ 1/3,500` against the
-  `MAX_REGENERATE` cap of 10,000. That predicts 5.7% of deals failing, and
-  7 of 100 and 11 of 200 were observed. Every other preset measured below `10^−15`.
+  exhausting `n` tries is about `e^(−np)`. In the app `n` is what the deadline
+  has time for, and called directly it is `MAX_REGENERATE`, which is where a
+  test meets it. Count attempts and successes over a few hundred deals at
+  every preset and compute both, rather than waiting for a failing seed.
+  Tracks' 15x15 Hard measured `p ≈ 1/3,500` when 10,000 tries were all a deal
+  had. That predicts 5.7% of deals failing, and 7 of 100 and 11 of 200 were
+  observed. Every other preset measured below `10^−15`.
 
 **The instrument past the menu is the deal walk**, `npm run deal-walk`
 ([`scripts/deal-walk.ts`](../../scripts/deal-walk.ts)): every game, each

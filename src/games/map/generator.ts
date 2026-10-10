@@ -9,12 +9,12 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { MAX_REGENERATE, retryLimit } from "../../engine/retry-limit.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { gengraph, graphVertexStart } from "./graph.ts";
 import { encodeMapDesc } from "./map-data.ts";
 import { mapSolver, SOLVER_UNIQUE } from "./solver.ts";
-import { fewRegionsTierIsSeldom, type MapParams } from "./state.ts";
+import type { MapParams } from "./state.ts";
 
 const FOUR = 4;
 const FIVE = 5;
@@ -273,25 +273,15 @@ function fourcolor(
 
 // --- main ------------------------------------------------------------
 
-const WORK_BUDGET = 80_000_000;
-
 /**
- * The budget where few regions make the tier seldom found
- * (`fewRegionsTierIsSeldom`): five times the most work a board took on
- * average, which a deal runs out once in 150 (`e^-5`), after a minute and a
- * half. Measured 2026-10-06 in squares times regions times maps built: 9 to
- * 144 million from 5x5 to 15x20, the most at a 15x20 of 8 regions at Normal.
- * A 30x25 of 9 regions at Tricky took 358 million over two boards, and runs
- * this out about one deal in eight.
+ * What a try costs tracks squares times regions: a small map of few regions
+ * takes microseconds, and at some sizes a tier is found once in tens of
+ * thousands. Where few regions make the tier seldom found
+ * (`fewRegionsTierIsSeldom`) a board took, measured 2026-10-06 in squares
+ * times regions times maps built, 9 to 144 million from 5x5 to 15x20, the
+ * most at a 15x20 of 8 regions at Normal, and 358 million over two boards at
+ * a 30x25 of 9 regions at Tricky.
  */
-const FEW_REGIONS_WORK_BUDGET = 720_000_000;
-
-/** How many maps the generator builds before it gives up. */
-export function retryBudget(p: MapParams): number {
-  const work = fewRegionsTierIsSeldom(p) ? FEW_REGIONS_WORK_BUDGET : WORK_BUDGET;
-  return Math.max(MAX_REGENERATE, Math.floor(work / (p.w * p.h * p.n)));
-}
-
 export function newMapDesc(
   p: MapParams,
   rs: RandomState,
@@ -304,11 +294,7 @@ export function newMapDesc(
   const coloring2 = new Int32Array(n);
   const cfreq = new Int32Array(FOUR);
 
-  // The budget is work and not maps built: a small map of few regions takes
-  // microseconds, and at some sizes a tier is found once in tens of
-  // thousands. Squares times regions tracks what a try costs: budgeted by
-  // squares alone, a 3x30 of 75 regions ran for two minutes before giving up.
-  const attempt = retryLimit("map: generation", retryBudget(p));
+  const attempt = retryLimit("map: generation");
   for (;;) {
     attempt();
 

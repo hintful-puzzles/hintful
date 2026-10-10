@@ -471,11 +471,8 @@ describe("an Unreasonable Net board", () => {
     expect(found).not.toBe("");
   });
 
-  // One budget each: the walks above are what prove these, and a budget here
-  // is two million squares of network.
-  describeAbsentTiers(netGame, ["1x7du", "1x5wdu", "2x2du", "3x3du", "4x3du"], {
-    budgets: 1,
-  });
+  // The walks above are what prove these.
+  describeAbsentTiers(netGame, ["1x7du", "1x5wdu", "2x2du", "3x3du", "4x3du"]);
 });
 
 describe("a pasted Net board", () => {

@@ -324,11 +324,10 @@ describe("an Unreasonable Range board", () => {
     expect(needingSearch(2, 3).found).toBeGreaterThan(0);
   });
 
-  // The generator ran its retry bound out on a 3x3 board every time it was
-  // asked, 300,000 draws in all. The walk says what that is and is not: 3x3
-  // boards with the tier exist, so the size is not refused as having none,
-  // and none of them has symmetric numbers, so the generator cannot deal one
-  // and gives up in about a second.
+  // The generator found no 3x3 board in 300,000 draws. The walk says what
+  // that is and is not: 3x3 boards with the tier exist, so the size is not
+  // refused as having none, and none of them has symmetric numbers, so the
+  // generator cannot deal one.
   it("a 3x3 board can too, though never with symmetric numbers", () => {
     expect(needingSearch(3, 3)).toEqual({ found: 176, symmetric: 0, finished: 4253 });
   });

@@ -106,8 +106,7 @@ export interface SaladParams {
 
 // Each shape at Easy, and at Normal where its tier gate deals quickly: forty
 // deals each took at most 0.2 s on a loaded machine. 7x7 and up reached 1.7 s
-// or more, and every other Number Ball shape seconds (`generator.ts`,
-// `MAX_ATTEMPTS`).
+// or more, and every other Number Ball shape seconds.
 export const PRESETS: readonly SaladParams[] = [
   { order: 4, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
   { order: 5, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },

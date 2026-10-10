@@ -291,8 +291,7 @@ function placedLetters(
 }
 
 /**
- * The divisions tried before the generator gives up, sized to the rarest
- * board it is asked for.
+ * An Easy board, upstream's only kind: one the solver's rungs finish.
  *
  * Measured 2026-10-10, the divisions a board took. Up to five letters: one,
  * and four at most, at every size to 20x20. Six and seven: a median of 1 to
@@ -300,14 +299,10 @@ function placedLetters(
  * times the letters squared, which the sizes dealt keep to 10,000: a median
  * of 5 at 12x12 in eights and 35 at most, 32 and 176 at 10x10 in tens, 181
  * and 197 at 6x10 in twelves, 298 and 419 at 4x6 in twelves, and 379 for the
- * one board of 7x11 in elevens that was waited for. A size that takes a
- * median of 400 runs this out once in a thousand boards.
+ * one board of 7x11 in elevens that was waited for.
  */
-const DIVISIONS = 4_000;
-
-/** An Easy board, upstream's only kind: one the solver's rungs finish. */
 function easyBoard(p: SeparateShape, rng: RandomState): Dealt {
-  const attempt = retryLimit(`separate: generation (${p.w}x${p.h} k${p.k})`, DIVISIONS);
+  const attempt = retryLimit(`separate: generation (${p.w}x${p.h} k${p.k})`);
   for (;;) {
     attempt();
     const division = ringlessDivision(p, rng);
@@ -353,13 +348,9 @@ const SWAP_BUDGET = 30;
  */
 function unreasonableLetters(p: SeparateShape, rng: RandomState): Uint8Array {
   const { w, h, k } = p;
-  // The Easy boards swapped before giving up. Only the smallest are often
-  // thrown away for staying in the solver's reach: sixteen for a board kept
-  // at 3×3, two at 4×4.
-  const attempt = retryLimit(
-    `separate: Unreasonable generation (${w}x${h} k${k})`,
-    Math.max(20, Math.ceil(100_000 / (w * h) ** 2)),
-  );
+  // Only the smallest boards are often thrown away for staying in the
+  // solver's reach: sixteen for a board kept at 3×3, two at 4×4.
+  const attempt = retryLimit(`separate: Unreasonable generation (${w}x${h} k${k})`);
   for (;;) {
     attempt();
     const { letters, regions } = easyBoard(p, rng);

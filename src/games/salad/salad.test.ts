@@ -289,10 +289,8 @@ describe("salad solver", () => {
 });
 
 // Two symbols at Normal: Letters clued on the border alone, and the two
-// smallest Numbers boards. One run of the generator's bound is the search.
-describeAbsentTiers(saladGame, ["3n2Ldx", "6n2Ldx", "3n2Bdx", "4n2Bdx"], {
-  budgets: 1,
-});
+// smallest Numbers boards.
+describeAbsentTiers(saladGame, ["3n2Ldx", "6n2Ldx", "3n2Bdx", "4n2Bdx"]);
 
 // The first Letters size that may clue its grid, and the Easy cell rare
 // enough to have set the border-only bound.

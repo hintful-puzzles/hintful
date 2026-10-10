@@ -103,17 +103,14 @@ function px(cell: number): number {
 
 // The boards too small for a tier: a 2x2, fewer than nine squares at
 // Unreasonable, and the 3x3 under a symmetry.
-describeAbsentTiers(
-  lightupGame,
-  [
-    ...["2x2b20s0d1", "2x2b20s2d2", "2x3b20s0d2", "2x4b20s0d2", "4x2b20s2d2"],
-    ...["3x3b20s1d2", "3x3b20s2d2", "3x3b20s4d2", "3x3b20s3d1", "3x3b20s4d1"],
-    "4x4b20s3d2",
-  ],
-  { budgets: 2 },
-);
+describeAbsentTiers(lightupGame, [
+  ...["2x2b20s0d1", "2x2b20s2d2", "2x3b20s0d2", "2x4b20s0d2", "4x2b20s2d2"],
+  ...["3x3b20s1d2", "3x3b20s2d2", "3x3b20s4d2", "3x3b20s3d1", "3x3b20s4d1"],
+  "4x4b20s3d2",
+]);
 
-// The cells beside them, and the rare one the round budget is sized to.
+// The cells beside them, and the rarest one dealt: a 3x3 turned half round
+// at Normal.
 describeDealtTiers(lightupGame, [
   ...["2x3b20s0d1", "3x3b20s0d2", "2x5b20s0d2", "3x3b20s1d1"],
   ...["3x3b20s2d1", "4x4b20s2d2", "5x5b20s4d2"],

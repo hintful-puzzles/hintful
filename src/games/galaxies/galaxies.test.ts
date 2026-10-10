@@ -91,11 +91,9 @@ describe("Galaxies generator integration", () => {
   });
 });
 
-// One run of the generator's budget is 27,000 regenerations at this size.
-describeAbsentTiers(galaxiesGame, ["3x3du"], { budgets: 1 });
+describeAbsentTiers(galaxiesGame, ["3x3du"]);
 
-// The small boards beside it, where Unreasonable is rare enough to have set
-// the retry budget.
+// The small boards beside it, where Unreasonable is rare.
 describeDealtTiers(galaxiesGame, ["3x4du", "4x4du", "5x5du"], { deals: 6 });
 
 describe("Galaxies game flow", () => {

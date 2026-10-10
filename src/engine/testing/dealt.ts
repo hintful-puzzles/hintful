@@ -19,18 +19,40 @@
  * names a board every other guard also walked.
  *
  * A deal that throws is kept and thrown again, because an ungenerable board
- * can be the dearest of all: the generator runs out its whole retry bound.
+ * can be the dearest of all: the generator makes every try it is allowed.
  *
  * Reads only the game it is handed, never the registry.
  *
  * Dev/test-only; never imported by production code.
  */
 import { type RandomState, randomNew } from "../random/index.ts";
-import { RetryLimitExceeded } from "../retry-limit.ts";
+import { RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
 
 interface Dealing<Params> {
   encodeParams(p: Params, full: boolean): string;
   newDesc(p: Params, rng: RandomState): { desc: string; aux?: string };
+}
+
+/**
+ * The tries a deal that is known to end may make. The app finds a rare board
+ * because its deadline counts no tries (`retry-limit.ts`), and a generator
+ * called directly gives up at the house count, which a board found once in
+ * 100,000 tries (Bridges, five islands on a 10x10 at Tricky) is far past. It
+ * is a bound all the same, so that a cell which loses its tier fails and does
+ * not spin.
+ */
+const RARE_BOARD_TRIES = 5_000_000;
+
+/**
+ * `game.newDesc`, for a test that deals a board it knows to be rare: one the
+ * house count of tries gives up on and the app deals.
+ */
+export function dealRare<Params, Board extends { desc: string }>(
+  game: { newDesc(p: Params, rng: RandomState): Board },
+  params: Params,
+  rng: RandomState,
+): Board {
+  return underDealTries(RARE_BOARD_TRIES, () => game.newDesc(params, rng));
 }
 
 type Deal = { board: { desc: string; aux?: string } } | { thrown: unknown };
@@ -56,7 +78,9 @@ export function dealt<Params>(
   let deal = ofGame.get(key);
   if (deal === undefined) {
     try {
-      deal = { board: game.newDesc(params, randomNew(`dealt-${key}`)) };
+      // As a rare board is dealt: a sweep is handed the types the app deals,
+      // and the app's deal counts no tries.
+      deal = { board: dealRare(game, params, randomNew(`dealt-${key}`)) };
     } catch (thrown) {
       deal = { thrown };
     }

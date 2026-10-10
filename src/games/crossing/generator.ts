@@ -217,18 +217,12 @@ function generate(p: CrossingParams, rng: RandomState): CrossingPuzzle | null {
 }
 
 /**
- * The draws a deal may make, far over the house default: most draws of a
- * large board die on two runs reading the same number. Sized against what
- * `validateParams` admits. The rarest board it does is an Easy 7×32, accepted
- * once in about 14,000 draws, which this leaves one chance in a thousand of
- * running out. The rarest
- * Unreasonable board, 3×60, is one in 4,600. A draw of the largest board
- * costs 0.4 ms, so giving up takes under a minute.
+ * Most draws of a large board die on two runs reading the same number. The
+ * rarest board `validateParams` admits is an Easy 7×32, accepted once in
+ * about 14,000 draws; the rarest Unreasonable one, 3×60, is one in 4,600.
  */
-const CROSSING_MAX_ATTEMPTS = 100_000;
-
 export function newCrossingDesc(p: CrossingParams, rng: RandomState): { desc: string } {
-  const attempt = retryLimit("crossing: generation", CROSSING_MAX_ATTEMPTS);
+  const attempt = retryLimit("crossing: generation");
   for (;;) {
     attempt();
     const puzzle = generate(p, rng);

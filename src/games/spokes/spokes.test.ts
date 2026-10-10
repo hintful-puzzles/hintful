@@ -307,7 +307,7 @@ describe("spokes solver", () => {
 });
 
 // The boards of 8 squares or fewer at Unreasonable.
-describeAbsentTiers(spokesGame, ["2x2dh", "2x3dh", "3x2dh", "2x4dh"], { budgets: 1 });
+describeAbsentTiers(spokesGame, ["2x2dh", "2x3dh", "3x2dh", "2x4dh"]);
 
 describe("spokes two wide at Unreasonable, where a board is a minute away", () => {
   const refusal = (id: string): string | null =>

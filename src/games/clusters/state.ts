@@ -145,8 +145,8 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  *
  * Normal demands a board the single-cell rule cannot finish, and a small grid has
  * nowhere to hide a deduction that deep. Measured by running the real gate over
- * every shape from 1×2 to 6×9, ten seeds each, with each seed free to spend the
- * generator's whole 10,000-attempt budget: **every** shape of twelve squares or
+ * every shape from 1×2 to 6×9, ten seeds each, with each seed given 10,000
+ * attempts: **every** shape of twelve squares or
  * more bound the tier on all ten seeds, and **no** shape below it bound on any —
  * 2×5 and 3×3 never, 2×6 and 3×4 always.
  *
@@ -157,7 +157,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  *
  * Refusing is the collection's rule for a tier with no boards: silently handing
  * back an Easy board is the same defect as a tier that does not bind, and an
- * honest gate with nothing to find would spin until its retry budget ran out.
+ * honest gate with nothing to find would spin until its retry guard gave up.
  */
 const MIN_TRICKY_AREA = 12;
 

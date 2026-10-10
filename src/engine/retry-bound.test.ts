@@ -477,7 +477,10 @@ describe("an open loop that draws randomness", () => {
       giveUps.filter((g) => !g.answered).map((g) => g.where),
       "a bound that runs out throws RetryLimitExceeded, for the midend to answer",
     ).toEqual([]);
-    expect(giveUps.length).toBeGreaterThanOrEqual(4);
+    // Few are left: a loop that counts for itself does not read the deal's
+    // deadline, so a deal-again loop takes the guard. The synthetic cases
+    // below are what show the scan still sees the shape.
+    expect(giveUps.length).toBeGreaterThanOrEqual(1);
   });
 
   it("calls a retryLimit guard, or the ledger says what bounds it", () => {

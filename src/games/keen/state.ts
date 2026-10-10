@@ -109,9 +109,7 @@ export function validateParams(p: KeenParams, full: boolean): string | null {
     return noSuchTier("3x3 puzzle", DIFF_NAMES[level]);
   // Measured 2026-10-06 with multiplication alone: a 9x9 above Tricky is
   // found once in 67,000 to 84,000 tries, which was 50 seconds a board over
-  // two boards a tier. Every other size is under half a minute and is dealt,
-  // with a bound of its own where it takes seconds (`generator.ts`,
-  // `retryBudget`).
+  // two boards a tier. Every other size is under half a minute and is dealt.
   const rare = level > DIFF_HARD && p.w === 9;
   if (full && p.multiplicationOnly && rare)
     return tooRareToDeal(

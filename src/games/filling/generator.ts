@@ -104,25 +104,21 @@ function mergeOnes(board: number[], w: number, h: number): void {
   } while (change);
 }
 
-/**
- * The draws a fill may make, over the house default: a draw is thrown away
- * whole at the first pair of equal neighbors it cannot merge, which grows
- * more likely with every square. Sized against what `validateParams` admits.
- * Its rarest board is 1×300, filled once in about 1,300 draws, and the rarest
- * that is not a strip is 15×20, once in 500. Running out takes seven seconds.
- */
-const FILL_MAX_DRAWS = 30_000;
-
 /** Build a random valid board: a shuffled DSF region partition with
  * conflicting equal-size neighbors merged, then size-1 absorption. The
- * returned `number[]` holds each cell's region size (the full solution). */
+ * returned `number[]` holds each cell's region size (the full solution).
+ *
+ * A draw is thrown away whole at the first pair of equal neighbors it cannot
+ * merge, which grows more likely with every square: the rarest board
+ * `validateParams` admits is 1×300, filled once in about 1,300 draws, and the
+ * rarest that is not a strip is 15×20, once in 500. */
 function makeBoard(w: number, h: number, rng: RandomState): number[] {
   const sz = w * h;
   const maxsize = largestNumber(w, h);
   const board = Array.from({ length: sz }, (_, i) => i); // shuffled cell indices
   const dsf = new Dsf(sz);
 
-  const attempt = retryLimit("filling: makeBoard", FILL_MAX_DRAWS);
+  const attempt = retryLimit("filling: makeBoard");
   retry: while (true) {
     attempt();
 
@@ -233,13 +229,8 @@ const HIDING_BUDGET = 30;
 function unreasonableClues(w: number, h: number, rng: RandomState): number[] {
   const one = (left: number[]) =>
     searchAnswers(left, w, h, HIDING_BUDGET).kind === "one";
-  // The boards stripped before giving up. Only the smallest are often thrown
-  // away: 1×5 keeps one in fifty, and has 1,000 tries. A large board costs
-  // most of a second and has twenty.
-  const attempt = retryLimit(
-    `filling: Unreasonable generation (${w}x${h})`,
-    Math.max(20, Math.ceil(25_000 / (w * h) ** 2)),
-  );
+  // Only the smallest boards are often thrown away: 1×5 keeps one in fifty.
+  const attempt = retryLimit(`filling: Unreasonable generation (${w}x${h})`);
   for (;;) {
     attempt();
     const board = makeBoard(w, h, rng);

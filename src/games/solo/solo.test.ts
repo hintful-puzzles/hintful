@@ -26,19 +26,14 @@ import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import cReference from "./__fixtures__/solo-c-reference.json" with { type: "json" };
 import { soloGame } from "./index.ts";
 
-// The three smallest grids above Easy. The generator's retry bound is 50,000
-// tries, so one run of it is the search.
-describeAbsentTiers(
-  soloGame,
-  [
-    ...["2j", "3j", "2x2"].flatMap((size) => [..."biaeu"].map((d) => `${size}d${d}`)),
-    // A 4 Jigsaw above Tricky, with the diagonals and without.
-    ...["4jda", "4jde", "4jdu", "4jxda", "4jxdu"],
-    // A 2 Jigsaw with Killer cages, which has no board even at Easy.
-    "2jka",
-  ],
-  { budgets: 1 },
-);
+// The three smallest grids above Easy.
+describeAbsentTiers(soloGame, [
+  ...["2j", "3j", "2x2"].flatMap((size) => [..."biaeu"].map((d) => `${size}d${d}`)),
+  // A 4 Jigsaw above Tricky, with the diagonals and without.
+  ...["4jda", "4jde", "4jdu", "4jxda", "4jxdu"],
+  // A 2 Jigsaw with Killer cages, which has no board even at Easy.
+  "2jka",
+]);
 
 // The tier under those, and the grid beside them.
 describeDealtTiers(soloGame, ["4jdi", "5jda", "5jdu", "3jka", "2x2ka"]);

@@ -402,7 +402,7 @@ export function newSoloDesc(
   let kblocks: BlockStructure | null = null;
   let aux = "";
 
-  const attempt = retryLimit("solo: generation", 50_000);
+  const attempt = retryLimit("solo: generation");
   while (true) {
     attempt();
 

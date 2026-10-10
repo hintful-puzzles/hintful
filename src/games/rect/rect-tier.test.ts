@@ -339,9 +339,7 @@ describe("an Unreasonable Rectangles board", () => {
   });
 
   // 2x9 has the tier, on 32 of its boards, and the generator draws none.
-  describeAbsentTiers(rectGame, ["1x9du", "2x8du", "3x3du", "4x3du", "2x9du"], {
-    budgets: 1,
-  });
+  describeAbsentTiers(rectGame, ["1x9du", "2x8du", "3x3du", "4x3du", "2x9du"]);
 });
 
 describe("a pasted Rectangles board", () => {

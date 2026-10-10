@@ -85,21 +85,6 @@ const WORSE_ONE_IN = 8;
 const WORSE_BY = 3;
 
 /**
- * The steps a board may take before the generator gives up, each a
- * re-division tried. Running it out is a defect, and not a size too hard to
- * deal: the steps a board takes grow with its regions and no faster.
- *
- * Measured 2026-10-10, the most steps any board took | this limit: 6x6 in
- * threes 174 of 8,000 boards | 1,100; 9x9 in threes 536 of 4,000 | 1,850;
- * 12x12 in threes 419 of 100 | 2,900; 30x30 in threes 1,769 of 2 | 15,500.
- * At 9x9 one board in a thousand took more than 430, and one in a hundred
- * more than 316. Larger regions take fewer: 10x15 in fives 68 of 40.
- */
-function stepLimit(p: PalisadeShape): number {
-  return 500 + 50 * Math.floor((p.w * p.h) / p.k);
-}
-
-/**
  * The clues of a division that the solver solves with every clue showing.
  *
  * A division drawn at random seldom is one. Most have a second answer under
@@ -110,12 +95,18 @@ function stepLimit(p: PalisadeShape): number {
  * the step is kept if it leaves no more walls unplaced than before.
  *
  * A division the solver solves as drawn draws nothing more.
+ *
+ * The steps a board takes, each a re-division tried, grow with its regions
+ * and no faster. Measured 2026-10-10, the most any board took: 6x6 in threes
+ * 174 of 8,000 boards; 9x9 in threes 536 of 4,000; 12x12 in threes 419 of
+ * 100; 30x30 in threes 1,769 of 2. Larger regions take fewer: 10x15 in fives
+ * 68 of 40.
  */
 function solvableClues(p: PalisadeShape, rng: RandomState): Int8Array {
   let regions = divide(p, rng);
   let clues = cluesOf(p, regions);
   let unplaced = unplacedWalls(p, regions, clues);
-  const step = retryLimit(`palisade: generation (${p.w}x${p.h} k${p.k})`, stepLimit(p));
+  const step = retryLimit(`palisade: generation (${p.w}x${p.h} k${p.k})`);
   let fewest = unplaced.length;
   let stalled = 0;
   while (unplaced.length > 0) {
@@ -204,11 +195,9 @@ const HIDING_BUDGET = 30;
 function unreasonableClues(p: PalisadeShape, rng: RandomState): Int8Array {
   const rim = initBorders(p.w, p.h);
   const one = (left: Int8Array) => searchAnswers(p, left, HIDING_BUDGET).kind === "one";
-  // The boards stripped before giving up. Only the smallest are thrown away
-  // for giving up no clue.
+  // Only the smallest boards are thrown away for giving up no clue.
   const attempt = retryLimit(
     `palisade: Unreasonable generation (${p.w}x${p.h} k${p.k})`,
-    Math.max(20, Math.ceil(100_000 / (p.w * p.h) ** 2)),
   );
   for (;;) {
     attempt();

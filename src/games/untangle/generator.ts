@@ -36,12 +36,6 @@ import {
 
 const MAXDEGREE = 4;
 
-/** A generated graph large enough to be a puzzle always admits a crossing
- * layout, so the re-roll below ends with probability 1 — but "probably" is not
- * a bound (see engine/retry-limit.ts), and a tangle is cheap to test, so allow
- * a lot of draws before concluding something is structurally wrong. */
-const MAX_TANGLE_SHUFFLES = 1_000_000;
-
 /** Does any non-adjacent edge pair cross, under the vertex permutation
  * `perm` applied to the circle layout `circle`? (Phase B's stop test,
  * and the "never start solved" guarantee.) */
@@ -156,7 +150,9 @@ export function newUntangleDesc(
   // --- Phase B: lay on a circle, re-roll until tangled --------------
   const circle = makeCircle(n, w);
   const perm: number[] = Array.from({ length: n }, (_, i) => i);
-  const attempt = retryLimit("untangle: tangle the layout", MAX_TANGLE_SHUFFLES);
+  // A generated graph large enough to be a puzzle always admits a crossing
+  // layout, so the re-roll ends with probability 1.
+  const attempt = retryLimit("untangle: tangle the layout");
   do {
     attempt();
     shuffle(perm, rng);

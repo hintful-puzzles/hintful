@@ -29,7 +29,7 @@ export function newTowersDesc(
   const soln = new Uint8Array(a);
   const soln2 = new Uint8Array(a);
 
-  const attempt = retryLimit(`towers: generation (${w}d${p.diff})`, 1000);
+  const attempt = retryLimit(`towers: generation (${w}d${p.diff})`);
   while (true) {
     attempt();
 

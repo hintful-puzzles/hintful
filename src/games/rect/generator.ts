@@ -22,7 +22,7 @@
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
-import { MAX_REGENERATE, retryLimit } from "../../engine/retry-limit.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import type { Point, Rect } from "../../engine/types.ts";
 import { rungsFinish } from "./hint.ts";
 import { newState } from "./moves.ts";
@@ -363,18 +363,6 @@ const DEAL_BUDGET = 30;
  */
 const MAX_NUMBERS_MOVED = 200;
 
-/**
- * The squares an Unreasonable deal of a small board may draw before it gives
- * up, where that is more than the usual number of draws: a small board with
- * the tier is rare, and a draw of it is cheap.
- *
- * Measured 2026-10-10, mean draws for a board over ten deals: 10,500 at 4×4
- * of the 500,000 this allows, 7,400 of 333,000 at 2×12, 6,100 at 3×5, 2,800
- * of 100,000 at 2×40. A board of 4×5 or more that is not a strip takes 100
- * to 400 at every size tried, up to 70×70, and keeps the usual bound.
- */
-const MAX_UNREASONABLE_SQUARES_DRAWN = 8_000_000;
-
 /** An Easy board, upstream's only kind made stricter: its numbers placed by
  * the solver so that it settles every rectangle, and kept if the hint
  * finishes it too. `null` when this division did not give one. */
@@ -492,17 +480,17 @@ function unreasonableBoard(
   return { desc, aux: auxOf(w, h, grid) };
 }
 
+/**
+ * A small Unreasonable board is rare, and a draw of it is cheap. Measured
+ * 2026-10-10, mean draws for a board over ten deals: 10,500 at 4×4, 7,400 at
+ * 2×12, 6,100 at 3×5, 2,800 at 2×40. A board of 4×5 or more that is not a
+ * strip takes 100 to 400 at every size tried, up to 70×70.
+ */
 export function newDesc(
   params: RectParams,
   rs: RandomState,
 ): { desc: string; aux: string } {
-  const area = params.w * params.h;
-  const attempt = retryLimit(
-    `rect: generation (${params.w}x${params.h})`,
-    params.diff === DIFF_EASY
-      ? MAX_REGENERATE
-      : Math.max(MAX_REGENERATE, Math.ceil(MAX_UNREASONABLE_SQUARES_DRAWN / area)),
-  );
+  const attempt = retryLimit(`rect: generation (${params.w}x${params.h})`);
   for (;;) {
     attempt();
     const { grid, nd } = division(params, rs);

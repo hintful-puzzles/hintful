@@ -80,7 +80,7 @@ function removeClues(state: LoopyState, rng: RandomState, diff: number): void {
 }
 
 /**
- * How an aperiodic tiling's deal is budgeted: this many patches, and this many
+ * The stages of an aperiodic tiling's deal: this many patches, and this many
  * boards on each before another is drawn.
  *
  * **Whether a small patch can carry a tier is a property of its shape, and a
@@ -95,11 +95,10 @@ function removeClues(state: LoopyState, rng: RandomState, diff: number): void {
  * **A patch that can carry the tier says so early.** Over some 80,000 of them,
  * from 3x3 to the 10x10 presets and on all four tilings, the most boards one
  * needed was 489 (the kite/dart ring of five, at Normal, whose median is 63),
- * and half needed under ten. So a patch gets 500, a twentieth of the house
- * bound, and the deal twenty times the patches: the run-out is the 100,000
- * boards it would be at ten patches of the house bound, and the rarest size
- * counted that has the tier at all (3x6 at Normal, one patch in 28) runs out
- * about one deal in 1,500. A patch cut off early costs only the next draw.
+ * and half needed under ten. So a patch gets 500 boards and a deal 200
+ * patches: the run-out is 100,000 boards, and the rarest size counted that
+ * has the tier at all (3x6 at Normal, one patch in 28) runs out about one
+ * deal in 1,500. A patch cut off early costs only the next draw.
  */
 const PATCHES = 200;
 const PATCH_BOARDS = 500;
@@ -138,7 +137,6 @@ export function newDesc(p: LoopyParams, rng: RandomState): { desc: string } {
   // a fresh draw produce a different grid to try.
   const gridVaries = (APERIODIC_GRID_TYPES as readonly GridType[]).includes(type);
   const patch = retryLimit("loopy: unfavorable grid patch", gridVaries ? PATCHES : 1);
-  const boards = gridVaries ? PATCH_BOARDS : MAX_REGENERATE;
 
   for (;;) {
     patch();
@@ -159,7 +157,7 @@ export function newDesc(p: LoopyParams, rng: RandomState): { desc: string } {
     };
 
     try {
-      generateOnGrid(state, p, rng, boards);
+      generateOnGrid(state, p, rng, gridVaries);
     } catch (e) {
       // An unfavorable patch, not unfavorable params: try another one.
       if (e instanceof RetryLimitExceeded && gridVaries) continue;
@@ -179,15 +177,23 @@ function generateOnGrid(
   state: LoopyState,
   p: LoopyParams,
   rng: RandomState,
-  boards: number,
+  handsBack: boolean,
 ): void {
-  const board = retryLimit("loopy: board generation", boards);
+  const board = retryLimit(
+    "loopy: board generation",
+    handsBack ? PATCH_BOARDS : undefined,
+  );
   for (;;) {
     board();
 
     // A fully-clued board is always solvable in principle, but not necessarily
     // *uniquely* at this difficulty — so keep drawing loops until one is.
-    const clue = retryLimit("loopy: full-clue generation");
+    // Counted where the patch is: one whose clues never come out unique is
+    // handed back for another.
+    const clue = retryLimit(
+      "loopy: full-clue generation",
+      handsBack ? MAX_REGENERATE : undefined,
+    );
     do {
       clue();
       addFullClues(state, rng);

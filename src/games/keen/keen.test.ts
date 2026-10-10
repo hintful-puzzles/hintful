@@ -31,16 +31,14 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
-import { newKeenDesc, retryBudget } from "./generator.ts";
+import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
 
-// A 3x3 above Normal, with every operation and with multiplication alone. One
-// run of the generator's budget is 550,000 tries at this size.
-describeAbsentTiers(keenGame, ["3dh", "3dx", "3du", "3dhm", "3dxm", "3dum"], {
-  budgets: 1,
-});
+// A 3x3 above Normal, with every operation and with multiplication alone.
+describeAbsentTiers(keenGame, ["3dh", "3dx", "3du", "3dhm", "3dxm", "3dum"]);
 
-// The rarest cells the budget is sized to reach.
+// Rare cells beside them: a 3x3 Normal, a 4x4 Hard and a 6x6 Unreasonable
+// with multiplication alone.
 describeDealtTiers(keenGame, ["3dnm", "4dxm", "6dum"]);
 
 describe("multiplication alone, where a tier is too rare to deal", () => {
@@ -65,22 +63,6 @@ describe("multiplication alone, where a tier is too rare to deal", () => {
 
 describe("multiplication alone, where a tier is found seldom", () => {
   const SELDOM = ["5dxm", "5dum", "7dxm", "7dum", "8dxm", "8dum", "9dhm"];
-  const house = (w: number): number => Math.floor(15_000_000 / w ** 3);
-
-  it("is dealt, and only it is given more tries than the work budget", () => {
-    const raised: string[] = [];
-    for (let w = 3; w <= 9; w++) {
-      for (const tier of "enhxu") {
-        for (const m of ["", "m"]) {
-          const id = `${w}d${tier}${m}`;
-          if (retryBudget(keenGame.decodeParams(id)) !== house(w)) raised.push(id);
-        }
-      }
-    }
-    expect(raised).toEqual(SELDOM);
-    for (const id of SELDOM)
-      expect(paramsError(keenGame, keenGame.decodeParams(id), true)).toBeNull();
-  });
 
   // Four to twenty seconds a board on average.
   describeDealtTiers(keenGame, SELDOM, { seldom: true });

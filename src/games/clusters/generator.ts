@@ -171,22 +171,6 @@ function clustersGenerate(
 }
 
 /**
- * Attempts before the generator gives up — the house default (`MAX_REGENERATE`).
- * A synchronous generator that cannot succeed owns its thread outright; see
- * `engine/retry-limit.ts`. Without the Normal gate every rejection leaves
- * deduced cells behind, so the loop could not spin for ever; the gate's
- * too-easy rejection removes that accident.
- *
- * The bound is not decorative and is not near any legal configuration. The tiers
- * that `validateParams` allows converge in well under a second of attempts at
- * every offered size (10×10 Normal, the slowest: 1.4 s median, 10.9 s worst over
- * 50 seeds), while a board too small to admit a Normal puzzle spends the whole
- * budget and reports failure in 0.4 s at 2×2 and 1.7 s at 3×3 — which is how the
- * size floor in `state.ts` was measured.
- */
-const MAX_ATTEMPTS = 10_000;
-
-/**
  * Generate a board at `p.diff`. Normal is gated on "and not solvable one rung
  * down": upstream solved at the deeper rung whatever the tier and accepted any
  * board it completed, and measured, 50–64% of those boards (by size) fell to
@@ -195,7 +179,7 @@ const MAX_ATTEMPTS = 10_000;
 export function newClustersDesc(p: ClustersParams, rng: RandomState): { desc: string } {
   const { w, h } = p;
   const grid = new Uint8Array(w * h);
-  const attempt = retryLimit("clusters: generation attempts", MAX_ATTEMPTS);
+  const attempt = retryLimit("clusters: generation attempts");
   let attempts = 0;
   let force = false;
   while (clustersGenerate(grid, w, h, rng, force, p.diff) !== COMPLETE) {

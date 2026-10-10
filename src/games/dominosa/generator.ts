@@ -295,7 +295,7 @@ export function newDominosaDesc(
   const sc = new DominosaSolver(p);
   const as = new AllocScratch(p);
 
-  const attempt = retryLimit("dominosa: generation", 200_000);
+  const attempt = retryLimit("dominosa: generation");
   for (;;) {
     attempt();
 

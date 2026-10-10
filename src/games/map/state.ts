@@ -158,10 +158,10 @@ function tierRefusal(p: MapParams): string | null {
  * the generator's bound lifted, 2 to 51 boards a cell: a board takes one to
  * three seconds at 5x6 and 6x6, up to fifteen at 5x5, and ten to eighteen at
  * 15x20. The worst was a 30x25 of 9 regions at Tricky, at 45 seconds over two
- * boards. The generator gives these a budget of their own, and they are dealt
- * because the app keeps the next board ready (`src/puzzle/deal-ahead.ts`).
+ * boards. They are dealt because the app keeps the next board ready
+ * (`src/puzzle/deal-ahead.ts`).
  */
-export function fewRegionsTierIsSeldom(p: MapParams): boolean {
+function fewRegionsTierIsSeldom(p: MapParams): boolean {
   return p.n === 8 ? p.diff === DIFF_NORMAL : p.n <= 10 && p.diff >= DIFF_HARD;
 }
 

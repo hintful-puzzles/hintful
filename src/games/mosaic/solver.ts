@@ -467,12 +467,8 @@ const HIDING_BUDGET = 30;
 function unreasonableClues(p: MosaicParams, rng: RandomState): Int8Array {
   const { width, height, aggressive } = p;
   const size = width * height;
-  // The boards stripped before giving up. Only the smallest are often thrown
-  // away for giving up no clue.
-  const attempt = retryLimit(
-    `mosaic: Unreasonable generation (${width}x${height})`,
-    Math.max(20, Math.ceil(100_000 / size ** 2)),
-  );
+  // Only the smallest boards are often thrown away for giving up no clue.
+  const attempt = retryLimit(`mosaic: Unreasonable generation (${width}x${height})`);
   for (;;) {
     attempt();
     const clues = easyClues(p, rng);

@@ -326,7 +326,7 @@ export function tooRareToDeal(what: string, tier: string): string {
 }
 
 /**
- * What a player is told when a generator ran its retry budget out. It cannot
+ * What a player is told when a deal found no board (`generate`). It cannot
  * know whether the tier is rare at this size or absent, so it says both.
  * `tier` is `null` for a game without tiers.
  */

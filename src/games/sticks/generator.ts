@@ -21,10 +21,6 @@ import { placeSymmetricBlacks } from "../../engine/symmetric-blacks.ts";
 import { searchAnswers, sticksMakeDsf, sticksSolveGame } from "./solver.ts";
 import { encodeDesc, F_BLOCK, F_HOR, F_VER, type SticksParams } from "./state.ts";
 
-/** Runaway backstop only — upstream loops unbounded, and the fill retry
- * converges quickly in practice (docs/games/testing.md § "Quirks are load-bearing — capped, not cleaned"). */
-const MAX_FILL_ATTEMPTS = 100_000;
-
 /** A dealt board: its blocks, in a grid whose white squares may hold lines,
  * and its clues. */
 interface Dealt {
@@ -58,7 +54,7 @@ function clueFill(p: SticksParams, rng: RandomState): Dealt {
 
   // Fill + clue, retried until the solver deduces the board to completion
   // (which also leaves `grid` holding the unique solution's lines).
-  const attempt = retryLimit("sticks: fill attempts", MAX_FILL_ATTEMPTS);
+  const attempt = retryLimit("sticks: fill attempts");
   do {
     attempt();
 

@@ -53,19 +53,6 @@ import {
   type SeismicParams,
 } from "./state.ts";
 
-/**
- * The runaway guard on the generator's retry loop
- * (docs/games/testing.md § "Quirks are load-bearing — capped, not cleaned").
- *
- * The partition cannot fail and the fill essentially never backtracks, so an
- * attempt is discarded only by the grading stage — a Normal request that came
- * out solvable at Easy. Measured, that costs a handful of attempts at every
- * preset and never more than low hundreds; ten thousand leaves three orders of
- * magnitude of headroom while still turning a regression into a labeled error in
- * seconds rather than a hung worker.
- */
-const MAX_ATTEMPTS = 10_000;
-
 // --- the constructive generator (stages 1–2, replacing upstream's) ----------
 
 /**
@@ -243,7 +230,7 @@ function growRegions(board: SeismicBoard, rng: RandomState): void {
  * 1.05 nodes per cell across every preset. The budget is therefore enormous
  * relative to the work: it is a runaway guard for a pathological partition, not
  * a tuning knob. Exhausting it costs one re-partition, which is cheap and
- * bounded by the caller's own {@link MAX_ATTEMPTS}.
+ * bounded by the caller's own retry guard.
  */
 const FILL_NODE_BUDGET = 200_000;
 
@@ -383,9 +370,15 @@ function genPuzzle(board: SeismicBoard, rng: RandomState, diff: number): boolean
   return genDiff(board, diff);
 }
 
+/**
+ * The partition cannot fail and the fill essentially never backtracks, so an
+ * attempt is discarded only by the grading stage: a Normal request that came
+ * out solvable at Easy. Measured, that costs a handful of attempts at every
+ * preset and never more than low hundreds.
+ */
 export function newSeismicDesc(p: SeismicParams, rng: RandomState): { desc: string } {
   const board = blankBoard(p.w, p.h, p.mode);
-  const attempt = retryLimit(`seismic: ${p.w}x${p.h} generation`, MAX_ATTEMPTS);
+  const attempt = retryLimit(`seismic: ${p.w}x${p.h} generation`);
 
   for (;;) {
     attempt();
