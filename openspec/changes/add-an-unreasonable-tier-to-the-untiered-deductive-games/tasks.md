@@ -34,6 +34,8 @@
   and the menu gained its three Unreasonable lines.
   **Net: done.** Every line gained `de` after what it had (`5x5b1` is now
   `5x5b1de`), and the menu gained its five Unreasonable lines.
+  **Range: done.** Every line gained `de` (`6x9` is now `6x9de`), and the
+  menu gained its four Unreasonable lines.
 
 ## 2. One game to the end: Pattern
 
@@ -333,8 +335,37 @@
       is filed to build the rung. The wrapping board is on the menu at Easy
       only, as a rule modifier has one line, and it is where this tier is
       most what it says.
-  - [ ] Range,
-    Rectangles. For each, do what Crossing's measurement did (the guide,
+  - [x] **Range** (2026-10-10). Measured: a deal is 16 ms at 6x9, 70 ms at
+    8x12, 90 ms at 9x13 and 0.2 s at 11x16, four times an Easy one; a dealt
+    board needs a median of 9 positions at 6x9 and 17 to 21 at the larger
+    presets, and 29 at most; the hint leaves a median of 36 squares of 54
+    undecided at 6x9 and 90 of 176 at 11x16. Decided, each with its reason
+    in the guide's "What Range, the eleventh, added":
+    - The generator strips further symmetric pairs of clues from an Easy
+      board by the search, within 30 positions. One strip by the search was
+      timed and is slower. One more deduction would not finish these boards:
+      a square that breaks a rule the moment it is filled settles none of
+      180, and a trial followed through the rules settles every one.
+    - The search's "impossible" is the game's own live error check, asked of
+      a board with squares still undecided. No verdict was written.
+    - The menu is upstream's four sizes at both tiers.
+    - Unreasonable is dealt up to 300 squares. It is refused on a strip
+      alone, which has a proof. A 3x3 board is not refused: 176 of its sets
+      of clues have the tier and none of those is symmetric, so the
+      generator gives up on it in a second and a pasted one opens.
+    - A state's clues are kept beside its grid and shared between its
+      clones, so that the answer has something to be kept by.
+    - The ledger's Range board has three answers.
+    - **Defects in Easy, found by the sweep and filed, not fixed here.**
+      Range's only bound is that width and height come to 128 at most. A
+      64x64 board, which that admits, fails with "Maximum call stack size
+      exceeded" in the connectedness rule, 40x40 takes 24 s and 30x30 takes
+      5. The numbers are in
+      `openspec/changes/bound-range-to-the-boards-it-deals`.
+    - **For the owner to look at, not blocking:** these boards are one trial
+      deep, as Sticks' are: every one of 180 falls to a square tried and
+      followed through.
+  - [ ] Rectangles. Do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
     finish of the boards the tier deals, and sweep the shorter side when
     setting a size bound.

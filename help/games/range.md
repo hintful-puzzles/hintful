@@ -51,6 +51,14 @@ The ideas it teaches:
 * **Clear stays connected.** A cell that would cut some of the clear
   cells around it off from the rest, if it were shaded, must stay clear.
 
+On an Unreasonable board there comes a point where none of these settles
+a cell. The hint then says that nothing further follows by deduction
+instead of choosing for you. Save your position and try a cell beside a
+number that is close to its count, {{pair:0}} or with a cross: if it is
+wrong, a few forced cells later some number can no longer see enough, or
+sees too much, and shows in red. The hint carries on from whatever you
+decide.
+
 ## Range parameters
 
 {{parameters}}

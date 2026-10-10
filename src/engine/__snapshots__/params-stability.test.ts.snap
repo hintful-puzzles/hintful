@@ -467,12 +467,16 @@ bump:h  full=7x8cross  brief=7x8"
 `;
 
 exports[`encoded params are byte-stable > range 1`] = `
-"default  full=6x9
-preset:Range/8x12  full=8x12
-preset:Range/9x13  full=9x13
-preset:Range/11x16  full=11x16
-bump:w  full=7x9
-bump:h  full=6x10"
+"default  full=6x9de  brief=6x9
+preset:Range/6x9 Unreasonable  full=6x9du  brief=6x9
+preset:Range/8x12 Easy  full=8x12de  brief=8x12
+preset:Range/8x12 Unreasonable  full=8x12du  brief=8x12
+preset:Range/9x13 Easy  full=9x13de  brief=9x13
+preset:Range/9x13 Unreasonable  full=9x13du  brief=9x13
+preset:Range/11x16 Easy  full=11x16de  brief=11x16
+preset:Range/11x16 Unreasonable  full=11x16du  brief=11x16
+bump:w  full=7x9de  brief=7x9
+bump:h  full=6x10de  brief=6x10"
 `;
 
 exports[`encoded params are byte-stable > rect 1`] = `

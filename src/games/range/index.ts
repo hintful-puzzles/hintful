@@ -11,6 +11,7 @@
  * contradict the unique solution.
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { rejectMove } from "../../engine/assert-never.ts";
 import {
   type Game,
@@ -33,7 +34,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
@@ -53,12 +53,12 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  answerOf,
   DC,
   DR,
   deduceHintPlan,
   deductionFinishes,
   findErrors,
-  fullSolve,
   generateGrid,
   type HintReason,
 } from "./solver.ts";
@@ -177,31 +177,23 @@ function status(s: RangeState): GameStatus {
   return findErrors(s.grid, s.w, s.h) ? "ongoing" : "solved";
 }
 
-/** Strip the player's marks, leaving the initial clue grid. */
-function clueGrid(state: RangeState): Int8Array {
-  const g = state.grid.slice();
-  for (let i = 0; i < g.length; i++) {
-    if (g[i] <= 0) g[i] = EMPTY;
-  }
-  return g;
-}
-
 function solve(orig: RangeState, _curr: RangeState): SolveResult<RangeMove> {
-  const solution = fullSolve(clueGrid(orig), orig.w, orig.h);
-  if (!solution) return { ok: false, error: NO_SOLUTION };
-  const sets: RangeMove["sets"] = [];
-  for (let r = 0; r < orig.h; r++) {
-    for (let c = 0; c < orig.w; c++) {
-      const v = solution[idx(r, c, orig.w)];
-      if (v <= 0) sets.push({ r, c, value: gridValueToCell(v) });
+  return solveFromAnswer(answerOf(orig), (solution) => {
+    const sets: RangeMove["sets"] = [];
+    for (let r = 0; r < orig.h; r++) {
+      for (let c = 0; c < orig.w; c++) {
+        const v = solution[idx(r, c, orig.w)];
+        if (v <= 0) sets.push({ r, c, value: gridValueToCell(v) });
+      }
     }
-  }
-  return { ok: true, move: { solve: true, sets } };
+    return { solve: true, sets };
+  });
 }
 
 function findMistakes(state: RangeState): readonly RangeMistake[] {
-  const solution = fullSolve(clueGrid(state), state.w, state.h);
-  if (!solution) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const solution = answer.solution;
   const out: RangeMistake[] = [];
   for (let r = 0; r < state.h; r++) {
     for (let c = 0; c < state.w; c++) {
@@ -438,9 +430,13 @@ export const rangeGame: Game<
   status,
 
   solve,
-  // `solve` searches and returns the first answer it meets, so it cannot say a
-  // board has two. The generator's test can: deduction decides every cell.
-  finishesByDeduction: (s) => deductionFinishes(clueGrid(s), s.w, s.h),
+  // Easy is what the generator's test passes: the three rules decide every
+  // cell, and they are the hint's rules.
+  difficulty: searchTierContract<RangeParams, RangeState>({
+    newState,
+    deductionFinishes: (s) => deductionFinishes(s.clues, s.w, s.h),
+    answerOf,
+  }),
   hint,
   hintRungs: RANGE_RUNGS,
   hintMarks: {

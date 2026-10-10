@@ -784,6 +784,36 @@ What Net, the tenth, added:
   milliseconds. A sweep of the shorter side that skipped every other width
   would have read one of two wrong bounds.
 
+What Range, the eleventh, added:
+
+- **The game's live error check may be the search's "impossible".** Range's
+  three rules only fill squares and never say a position is wrong. Its
+  checker, which reddens a number that can no longer see its count while
+  the player works, already says it of a board with squares still
+  undecided. The search calls that a contradiction, and no verdict was
+  written.
+- **Pin the early verdict on a board that waits for it.** Planting it out,
+  so that a position is judged only once full, changed no test: the board
+  the position pin was taken on takes nine positions either way. Forty dealt
+  boards a size were counted both ways to find one that differs (three
+  positions against five on a 4x4, 13 against 231 on a 9x13), and that 4x4
+  is the pin.
+- **A generator that cannot reach a board is not a size without one.** The
+  generator ran its bound out on 3x3 every time. Walking every set of clues
+  found 176 boards of it with the tier, none with the symmetric clues the
+  generator keeps. The size is not refused, a pasted one opens, and a deal
+  gives up in a second. Count what the walk finds by the generator's own
+  constraint as well as in all.
+- **A strip can have a proof where the walk only has lengths.** A shaded
+  square anywhere but an end of a strip cuts it in two, so every number
+  sees the same run, and the rules settle every strip with one answer. That
+  refuses a strip of any length, where the walk covers three.
+- **Where the strip keeps a symmetry, strip further by the same pairs.**
+  Range hides its clues in pairs turned half way round, and an Unreasonable
+  board keeps that by hiding further pairs. Hiding from the full board by
+  the search was slower here and left the hint less (124 squares of 176
+  undecided against 90), the other way round from Sticks.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

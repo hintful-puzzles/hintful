@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  DESC_NOT_DEDUCIBLE,
-  loadVerdict,
-  validateDesc,
-} from "../../engine/desc-error.ts";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/pointer.ts";
@@ -33,30 +30,40 @@ function cellPoint(r: number, c: number): Point {
 }
 
 function makeState(w: number, h: number, grid: number[]): RangeState {
-  return { w, h, grid: Int8Array.from(grid) };
+  return {
+    w,
+    h,
+    grid: Int8Array.from(grid),
+    clues: Int8Array.from(grid, (v) => (v > 0 ? v : 0)),
+  };
 }
 
 const ds = { tileSize: TS } as never;
 
 describe("params", () => {
   it("round-trips presets and the bare-width form", () => {
-    expect(encodeParams({ w: 13, h: 9 }, true)).toBe("13x9");
-    expect(decodeParams("13x9")).toEqual({ w: 13, h: 9 });
-    expect(decodeParams("12")).toEqual({ w: 12, h: 12 });
+    expect(encodeParams({ w: 13, h: 9, diff: DIFF_EASY }, true)).toBe("13x9de");
+    expect(encodeParams({ w: 13, h: 9, diff: DIFF_EASY }, false)).toBe("13x9");
+    // A string from before the tiers reads as Easy.
+    expect(decodeParams("13x9")).toEqual({ w: 13, h: 9, diff: DIFF_EASY });
+    expect(decodeParams("13x9de")).toEqual({ w: 13, h: 9, diff: DIFF_EASY });
+    expect(decodeParams("12")).toEqual({ w: 12, h: 12, diff: DIFF_EASY });
   });
 
   it("rejects degenerate and non-positive sizes when full", () => {
     const error = (p: RangeParams, full: boolean) => paramsError(rangeGame, p, full);
-    expect(error({ w: 2, h: 2 }, true)).not.toBeNull();
-    expect(error({ w: 1, h: 2 }, true)).not.toBeNull();
-    expect(error({ w: 0, h: 5 }, true)).toBe("Width must be at least 1.");
+    expect(error({ w: 2, h: 2, diff: DIFF_EASY }, true)).not.toBeNull();
+    expect(error({ w: 1, h: 2, diff: DIFF_EASY }, true)).not.toBeNull();
+    expect(error({ w: 0, h: 5, diff: DIFF_EASY }, true)).toBe(
+      "Width must be at least 1.",
+    );
     // 2x2 is allowed when not generating a full puzzle.
-    expect(error({ w: 2, h: 2 }, false)).toBeNull();
-    expect(error({ w: 9, h: 6 }, true)).toBeNull();
+    expect(error({ w: 2, h: 2, diff: DIFF_EASY }, false)).toBeNull();
+    expect(error({ w: 9, h: 6, diff: DIFF_EASY }, true)).toBeNull();
   });
 
   it("titles a preset by its size alone", () => {
-    expect(presetMenu(rangeGame).submenu?.[0]?.title).toBe("6x9");
+    expect(presetMenu(rangeGame).submenu?.[0]?.title).toBe("6x9 Easy");
   });
 });
 
@@ -65,7 +72,7 @@ describe("desc codec", () => {
     // 3x3 with clues 2 (top-left) and 5 (center), rest blank.
     const grid = [2, 0, 0, 0, 5, 0, 0, 0, 0];
     const desc = encodeDesc(9, Int8Array.from(grid));
-    const p = { w: 3, h: 3 };
+    const p = { w: 3, h: 3, diff: DIFF_EASY };
     expect(validateDesc(rangeGame, p, desc)).toBeNull();
     const st = newState(p, desc);
     expect(Array.from(st.grid)).toEqual(grid);
@@ -73,7 +80,7 @@ describe("desc codec", () => {
   });
 
   it("rejects malformed or wrong-length descs", () => {
-    const p = { w: 3, h: 3 };
+    const p = { w: 3, h: 3, diff: DIFF_EASY };
     expect(validateDesc(rangeGame, p, "i")).toBeNull(); // 9 blanks exactly
     expect(validateDesc(rangeGame, p, "h")).not.toBeNull(); // 8 cells — too few
     expect(validateDesc(rangeGame, p, "j")).not.toBeNull(); // 10 cells — too many
@@ -81,12 +88,12 @@ describe("desc codec", () => {
     expect(validateDesc(rangeGame, p, "99i")).not.toBeNull(); // clue > w+h-1 (=5)
   });
 
-  it("loads only a board its deductions finish", () => {
-    const p = { w: 4, h: 4 };
+  it("loads only a board with one answer", () => {
+    const p = { w: 4, h: 4, diff: DIFF_EASY };
     // Three answers: the squares at (2,1) and (2,2) can each be shaded or
     // neither, and Check would call a mark that fits another answer a mistake.
     expect(validateDesc(rangeGame, p, "c6h3_6b")).toBeNull();
-    expect(loadVerdict(rangeGame, p, "c6h3_6b")).toBe(DESC_NOT_DEDUCIBLE);
+    expect(loadVerdict(rangeGame, p, "c6h3_6b")).toBe(DESC_NOT_UNIQUE);
     // Every board the generator deals passed the same test.
     for (let seed = 0; seed < 20; seed++) {
       const { desc } = rangeGame.newDesc(p, randomNew(`range-load-${seed}`));
@@ -95,7 +102,7 @@ describe("desc codec", () => {
   });
 
   it("refuses what encodeDesc never writes", () => {
-    const p = { w: 3, h: 3 };
+    const p = { w: 3, h: 3, diff: DIFF_EASY };
     expect(validateDesc(rangeGame, p, "2c5d")).toBeNull();
     // Text after the grid, including after a comma.
     expect(validateDesc(rangeGame, p, "2c5d,x")).toMatch(/too long/);

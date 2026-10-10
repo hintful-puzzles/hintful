@@ -6,7 +6,7 @@ import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { rangeGame } from "./index.ts";
-import { fullSolve } from "./solver.ts";
+import { answerOf } from "./solver.ts";
 import { BLACK, decodeParams, idx, newState, type RangeMove, WHITE } from "./state.ts";
 
 function harness() {
@@ -28,8 +28,9 @@ describe("midend integration", () => {
   it("reaches a plain solved state by playing the solution's moves", () => {
     const params = decodeParams("9x6");
     const { desc } = rangeGame.newDesc(params, randomNew("range-mid-play"));
-    const solution = fullSolve(newState(params, desc).grid, params.w, params.h);
-    if (!solution) throw new Error("expected solvable");
+    const answer = answerOf(newState(params, desc));
+    if (answer.kind !== "one") throw new Error("expected solvable");
+    const solution = answer.solution;
 
     const { m, status } = harness();
     expect(m.newGameFromId(`9x6:${desc}`)).toBeNull();
@@ -77,8 +78,9 @@ describe("midend integration", () => {
   it("reports mistakes against the solution and clears when corrected", () => {
     const params = decodeParams("9x6");
     const { desc } = rangeGame.newDesc(params, randomNew("range-mid-mistake"));
-    const solution = fullSolve(newState(params, desc).grid, params.w, params.h);
-    if (!solution) throw new Error("expected solvable");
+    const answer = answerOf(newState(params, desc));
+    if (answer.kind !== "one") throw new Error("expected solvable");
+    const solution = answer.solution;
 
     const { m } = harness();
     expect(m.newGameFromId(`9x6:${desc}`)).toBeNull();

@@ -4,13 +4,20 @@
  *
  * The deductive solver applies three sound rules to a fixpoint: run-length
  * "not too big", black-adjacency, and white-connectedness via biconnected-
- * component cut vertices. Upstream also has a recursion rule; here `fullSolve`
- * (deduction plus DPLL guessing, every completed grid checked by `findErrors`)
- * serves the Solve command and `findMistakes`, while generation uses only the
- * three deductive rules — a board is kept only if uniquely solvable without any
+ * component cut vertices. Upstream also has a recursion rule; here
+ * `searchAnswers` (the three rules, and trial and error where they stop, every
+ * position checked by `findErrors`) counts a board's answers to two. It serves
+ * the Solve command and `findMistakes`, and deals the Unreasonable tier. An
+ * Easy board is kept only if uniquely solvable by the three rules without any
  * guessing, exactly as upstream.
  */
 
+import {
+  type Answer,
+  answerCache,
+  DIFF_EASY,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -23,6 +30,7 @@ import {
   idx,
   outOfBounds,
   type RangeParams,
+  type RangeState,
   WHITE,
 } from "./state.ts";
 
@@ -448,33 +456,66 @@ export function deductionFinishes(grid: Int8Array, w: number, h: number): boolea
   return !dup.includes(EMPTY) && !findErrors(dup, w, h);
 }
 
-// --- full solve (Solve command + findMistakes) -----------------------------
+// --- the answer (Solve command + findMistakes + the Unreasonable tier) -----
 
-/** Solve a clue grid completely, returning a grid with every non-clue
- * cell BLACK or WHITE, or `null` if no consistent completion exists.
- * Deduction with DPLL guessing; every completed grid is validated by
- * `findErrors`, so the result is the true (unique) solution. */
-export function fullSolve(initial: Int8Array, w: number, h: number): Int8Array | null {
-  const clues = findClues(initial, w, h);
-  return solveRec(initial.slice(), w, h, clues);
-}
+/** A board's one answer: its grid with every non-clue cell BLACK or WHITE. */
+export type RangeAnswer = Answer<Int8Array>;
 
-function solveRec(
-  grid: Int8Array,
+/**
+ * The positions the search may try before it gives up, which decides which
+ * Unreasonable boards exist ({@link AnswerSearch.budget}): lowering it
+ * refuses boards in saved games.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a clue grid's answers up to two, by trial and error over the three
+ * rules: where they stop, take the first undecided cell and assume it
+ * shaded, and then clear.
+ *
+ * The rules only ever fill a cell, so a position that no answer fits is
+ * found by the checker: a clue that cannot see its count however the
+ * undecided cells go, or already sees too many, two shaded cells side by
+ * side, or clear cells cut off from the rest.
+ */
+export function searchAnswers(
+  clueGrid: Int8Array,
   w: number,
   h: number,
-  clues: Cell[],
-): Int8Array | null {
-  applyRules(grid, w, h, clues);
-  const cell = grid.indexOf(EMPTY);
-  if (cell < 0) return findErrors(grid, w, h) ? null : grid;
-  for (const value of [BLACK, WHITE]) {
-    const next = grid.slice();
-    next[cell] = value;
-    const res = solveRec(next, w, h, clues);
-    if (res) return res;
-  }
-  return null;
+  budget: number = SEARCH_BUDGET,
+): RangeAnswer {
+  const clues = findClues(clueGrid, w, h);
+  const wrong: boolean[] = new Array(w * h);
+  return searchBoard<Int8Array, Int8Array>({
+    start: clueGrid.slice(),
+    deduce(position) {
+      applyRules(position, w, h, clues);
+      wrong.fill(false);
+      findErrors(position, w, h, wrong);
+      if (wrong.includes(true)) return "contradiction";
+      return position.includes(EMPTY) ? "stuck" : "solved";
+    },
+    assume(position) {
+      const cell = position.indexOf(EMPTY);
+      if (cell < 0) return [];
+      return [BLACK, WHITE].map((value) => {
+        const assumed = position.slice();
+        assumed[cell] = value;
+        return assumed;
+      });
+    },
+    solution: (position) => position,
+    budget,
+  });
+}
+
+/** Keyed on a state's clues, which every state of one game shares. */
+const answers = answerCache<Int8Array, Int8Array>();
+
+/** What a search of a state's clues established about their answers. The
+ * player's marks are not read. */
+export function answerOf(state: RangeState): RangeAnswer {
+  return answers(state.clues, () => searchAnswers(state.clues, state.w, state.h));
 }
 
 // --- generation ------------------------------------------------------------
@@ -628,8 +669,51 @@ function stripClues(grid: Int8Array, w: number, h: number, order: number[]): num
   return cluesRemoved;
 }
 
-/** Generate a uniquely-solvable, rotationally-symmetric board; returns
- * the clue grid (clue cells > 0, every other cell EMPTY). */
+/**
+ * The positions the search may try when a pair of clues is stripped from an
+ * Unreasonable board, far under the 2,000 it has by default. Stripping stops
+ * only when the search can no longer prove one answer, so it takes a board up
+ * to whatever the search is allowed, and this is how hard the tier's boards
+ * are.
+ *
+ * Measured 2026-10-10 on twelve boards a size: a dealt board needs a median
+ * of 9 positions at 6×9 and 17 to 21 at the larger presets, and 29 at most.
+ * On 180 dealt boards a square that breaks a rule the moment it is filled, a
+ * deduction the rules lack, finishes none, and a square tried and followed
+ * through the rules to a broken one finishes every one.
+ */
+const STRIP_BUDGET = 30;
+
+/**
+ * Strip an Easy board further: each symmetric pair of clues still showing,
+ * in the strip's order, gone while the search still proves one answer within
+ * {@link STRIP_BUDGET}. Says whether the rules then stop short, which is what
+ * makes the board Unreasonable.
+ *
+ * It is an Easy board stripped further and not one strip by the search.
+ * Measured 2026-10-10, that way took longer (0.37 s against 0.22 at 11×16,
+ * 0.14 s against 0.09 at 9×13) and left the hint less to do: a median of 124
+ * squares of 176 undecided against 90.
+ */
+function stripFurther(grid: Int8Array, w: number, h: number, order: number[]): boolean {
+  const n = w * h;
+  for (const i of order) {
+    const j = n - 1 - i;
+    const clue = grid[i];
+    const clueRot = grid[j];
+    if (clue <= 0 || clueRot <= 0) continue;
+    grid[i] = EMPTY;
+    grid[j] = EMPTY;
+    if (searchAnswers(grid, w, h, STRIP_BUDGET).kind === "one") continue;
+    grid[i] = clue;
+    grid[j] = clueRot;
+  }
+  return !deductionFinishes(grid, w, h);
+}
+
+/** Generate a rotationally-symmetric board with one answer; returns the clue
+ * grid (clue cells > 0, every other cell EMPTY). At Easy the three rules
+ * finish it, which is upstream's board, and at Unreasonable they do not. */
 export function generateGrid(p: RangeParams, rng: RandomState): Int8Array {
   const { w, h } = p;
   const grid = new Int8Array(w * h);
@@ -641,6 +725,7 @@ export function generateGrid(p: RangeParams, rng: RandomState): Int8Array {
     chooseBlackSquares(grid, w, h, order);
     computeClues(grid, w, h);
     shuffle(order, rng);
-    if (stripClues(grid, w, h, order) >= 0) return grid;
+    if (stripClues(grid, w, h, order) < 0) continue;
+    if (p.diff === DIFF_EASY || stripFurther(grid, w, h, order)) return grid;
   }
 }

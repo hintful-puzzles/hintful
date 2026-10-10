@@ -1,19 +1,20 @@
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   applyRules,
   findClues,
   findErrors,
-  fullSolve,
   generateGrid,
+  searchAnswers,
 } from "./solver.ts";
 import { BLACK, EMPTY, idx, type RangeParams, WHITE } from "./state.ts";
 
 const PRESETS: RangeParams[] = [
-  { w: 9, h: 6 },
-  { w: 12, h: 8 },
-  { w: 13, h: 9 },
-  { w: 16, h: 11 },
+  { w: 9, h: 6, diff: DIFF_EASY },
+  { w: 12, h: 8, diff: DIFF_EASY },
+  { w: 13, h: 9, diff: DIFF_EASY },
+  { w: 16, h: 11, diff: DIFF_EASY },
 ];
 
 describe("deductive rules", () => {
@@ -49,10 +50,10 @@ describe("deductive rules", () => {
   });
 });
 
-describe("fullSolve", () => {
-  it("returns null for a contradictory board", () => {
+describe("searchAnswers", () => {
+  it("finds no answer for a contradictory board", () => {
     // 1x2 with clue 3 — impossible (at most 2 cells visible).
-    expect(fullSolve(Int8Array.from([3, EMPTY]), 2, 1)).toBeNull();
+    expect(searchAnswers(Int8Array.from([3, EMPTY]), 2, 1).kind).toBe("none");
   });
 });
 
@@ -82,10 +83,10 @@ describe("generator", () => {
         // At least one black square in the solution.
         expect(Array.from(dup).filter((v) => v === BLACK).length).toBeGreaterThan(0);
 
-        // The full (recursive) solver agrees with the deductive solution.
-        const sol = fullSolve(grid, p.w, p.h);
-        expect(sol).not.toBeNull();
-        expect(Array.from(sol as Int8Array)).toEqual(Array.from(dup));
+        // The search agrees with the deductive solution, in one position.
+        const answer = searchAnswers(grid, p.w, p.h, 1);
+        if (answer.kind !== "one") throw new Error(`search says ${answer.kind}`);
+        expect(Array.from(answer.solution)).toEqual(Array.from(dup));
       }
     }
   });

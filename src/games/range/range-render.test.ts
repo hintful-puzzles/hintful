@@ -51,7 +51,12 @@ function renderState(
 const noCursor: RangeUi = { cursor: newCursor() };
 
 function makeState(w: number, h: number, grid: number[]): RangeState {
-  return { w, h, grid: Int8Array.from(grid) };
+  return {
+    w,
+    h,
+    grid: Int8Array.from(grid),
+    clues: Int8Array.from(grid, (v) => (v > 0 ? v : 0)),
+  };
 }
 
 describe("hint color legend", () => {
