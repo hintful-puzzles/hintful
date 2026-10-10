@@ -13,6 +13,7 @@
  * recorded it is gone (see `engine/testing/differential.ts`).
  */
 import { expect } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/filling-c-reference.json" with { type: "json" };
 import { newFillingDesc } from "./generator.ts";
@@ -31,7 +32,8 @@ describeDescDifferential<Fixture, FillingParams>({
   title: "filling differential (frozen C reference)",
   fixtures: data.fixtures,
   label: (f) => `${f.w}x${f.h} seed=${f.seed}`,
-  params: (f) => ({ w: f.w, h: f.h }),
+  // Upstream deals one kind of board, which is Easy here.
+  params: (f) => ({ w: f.w, h: f.h, diff: DIFF_EASY }),
   newDesc: newFillingDesc,
   extra: (f, p) => {
     // The TS solver uniquely solves the C board to a valid full solution.

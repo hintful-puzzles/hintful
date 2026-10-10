@@ -66,6 +66,13 @@ work, but they are likely to change in a future update, and might be removed.
   on its own leads to, so somewhere you have to look across the whole list or
   try a digit. The original's boards are this app's *Easy* ones.
 
+* **Filling**: there is a difficulty, *Easy* or *Unreasonable*, which the
+  original does not have. An Unreasonable board has one solution that no
+  forced square leads to, so somewhere you have to try a number. The
+  original's boards are this app's *Easy* ones. A board of more than 300
+  squares is not dealt: the original goes on trying to build one and, past
+  about 25 by 25, never finishes.
+
 Earlier changes to individual puzzles have since been accepted into the
 original collection, so they are no longer differences.
 

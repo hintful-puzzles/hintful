@@ -8,6 +8,13 @@
  * player-filled. Region sizes never exceed 9 (the generator caps them).
  */
 
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import {
@@ -19,11 +26,13 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
@@ -38,6 +47,10 @@ export const DY = [0, 0, -1, 1] as const;
 export interface FillingParams {
   w: number;
   h: number;
+  /** `DIFF_EASY`, a board the solver's deductions finish, or
+   * `DIFF_UNREASONABLE`, one with a single answer that they do not reach.
+   * Generation-time only. */
+  diff: number;
 }
 
 export interface FillingState {
@@ -64,37 +77,87 @@ export interface FillingUi {
 
 // --- params --------------------------------------------------------------
 
-const PRESETS: FillingParams[] = [
-  { w: 7, h: 9 },
-  { w: 9, h: 13 },
-  { w: 13, h: 17 },
-];
+const board = (w: number, h: number): FillingParams => ({ w, h, diff: DIFF_EASY });
+
+/** Upstream's three sizes. The menu offers each at both tiers. */
+const BOARDS: readonly FillingParams[] = [board(7, 9), board(9, 13), board(13, 17)];
 
 export function defaultParams(): FillingParams {
-  return { ...PRESETS[1] };
-}
-
-export function presets(): PresetMenu<FillingParams> {
-  return { title: "Size", submenu: PRESETS.map((p) => ({ params: { ...p } })) };
+  return board(9, 13);
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
-export const paramConfig: ParamConfigItem<FillingParams>[] =
-  dimensionParamConfig<FillingParams>({
-    doc: "Size of the grid in squares.",
+export const paramConfig: ParamConfigItem<FillingParams>[] = [
+  ...dimensionParamConfig<FillingParams>({
+    doc: "Size of the grid in squares. A board of more than 300 squares is refused, because filling one with regions that obey the rule stops succeeding as the grid grows.",
     bounds: { min: 1 },
-  });
+  }),
+  searchTierItem(
+    "diff",
+    "An Easy puzzle can be finished one forced square at a time: some region can only grow one way, or some square has one number left. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a number in a square and see what follows. The Hint button stops where the forced squares do.",
+  ),
+];
 
-/** `WxH`, with upstream's square fallback: a bare `W` is a W×W board. */
+export function presets(): PresetMenu<FillingParams> {
+  return { title: "Size", ...presetGrid(paramConfig, BOARDS) };
+}
+
+/** `WxH[d<tier>]`, with upstream's square fallback: a bare `W` is a W×W
+ * board. Upstream's IDs lack the tier: without one a board is Easy, the only
+ * kind upstream deals. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
+  searchTierSegment(paramConfig),
 ]);
 
-export function validateParams(p: FillingParams, _full: boolean): string | null {
+/**
+ * The largest board dealt, in squares, at either tier. The generator fills a
+ * board with regions by a draw it throws away whole when two equal regions
+ * end up side by side with no merge left, and the share of draws that
+ * survive falls steeply with the area. Upstream has no bound and draws for
+ * ever.
+ *
+ * Measured 2026-10-10, draws for one fill: 15×15 48, 17×17 290, 15×20 500 |
+ * 18×18 890, 20×20 2,800, and at 25×25 none in 200,000. Thin boards are
+ * kinder (2×150 23, 5×60 89, 9×33 207) except a strip, 1×300, at 1,300. An
+ * Easy board of 300 squares takes a third of a second and an Unreasonable
+ * one a little over a second.
+ */
+const MAX_AREA = 300;
+
+/**
+ * The lengths of a board one square wide that has no Unreasonable puzzle:
+ * every clue set of each has been tried, and wherever one has a single answer
+ * the solver finishes it (`filling-tier.test.ts`). Every other board has the
+ * tier. Lengths two and five do, and so does 2×2.
+ */
+const noUnreasonableStrip = (length: number): boolean =>
+  length === 1 || length === 3 || length === 4;
+
+export function validateParams(p: FillingParams, full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
     return AREA_TOO_LARGE;
   }
+  // Generation only: a board that arrives with its description is graded as
+  // it loads, whatever its size and whatever tier its ID names.
+  if (!full) return null;
+  if (p.w * p.h > MAX_AREA)
+    return `Width times height must be at most ${MAX_AREA}; larger boards cannot be generated.`;
+  if (
+    p.diff === DIFF_UNREASONABLE &&
+    Math.min(p.w, p.h) === 1 &&
+    noUnreasonableStrip(Math.max(p.w, p.h))
+  )
+    return noSuchTier(`${p.w}x${p.h} puzzle`, SEARCH_TIER_NAMES[DIFF_UNREASONABLE]);
   return null;
+}
+
+/** The largest number a board of this size holds: its longer side, nine at
+ * most since a square takes one digit, and three on the boards too small to
+ * have a longer side of three (upstream's case is 2×2, which needs a region of
+ * three). No region is dealt larger, and no answer is looked for with one. */
+export function largestNumber(w: number, h: number): number {
+  return Math.min(Math.max(w, h, 3), 9);
 }
 
 // --- desc codec ----------------------------------------------------------

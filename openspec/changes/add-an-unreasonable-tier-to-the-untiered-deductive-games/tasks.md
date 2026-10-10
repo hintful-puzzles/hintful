@@ -19,6 +19,8 @@
   `5x5n4Rde`), and the menu's lines moved with the menu (task 3.2).
   **Crossing: done.** Every line gained `de` (`9x9S` is now `9x9Sde`), and
   the menu's lines moved with the menu.
+  **Filling: done.** Every line gained `de` (`9x13` is now `9x13de`), and
+  the menu gained its three Unreasonable lines.
 
 ## 2. One game to the end: Pattern
 
@@ -116,7 +118,28 @@
       `openspec/changes/give-crossing-the-deduction-its-unreasonable-boards-lack`
       is filed to build the rung, after which Unreasonable keeps only the
       boards that need a trial.
-  - [ ] Filling, Mosaic, Palisade, Separate, Signpost, Sticks, Net, Range,
+  - [x] **Filling** (2026-10-10). Measured: a deal is 35 ms at 7x9, 0.17 s
+    at 9x13 and 0.65 s at 13x17, about five times an Easy one; a dealt board
+    needs a median of 21 to 29 positions of the 30 it is stripped to; the
+    hint leaves a median of 14 squares of 63 empty at 7x9 and 35 of 221 at
+    13x17. Decided, each with its reason in the guide's "What Filling, the
+    fourth, added":
+    - The generator hides clues by the search where Easy hides them by the
+      solver, within 30 positions. One more deduction would not finish these
+      boards: a number that breaks the rule as written settles 3 of 66, and
+      a one-level trial 63. No change is filed for a rung.
+    - The menu is upstream's three sizes at both tiers.
+    - Unreasonable has no size bound of its own. It is refused only on a
+      strip of one, three or four squares, where every clue set was tried.
+    - **A defect in Easy, found by measuring and fixed here.** Filling had no
+      size bound, and filling a board with regions ran its retry cap out one
+      deal in twenty at 20x20 and every time at 25x25. A board of more than
+      300 squares is now refused at either tier, and the cap is 30,000.
+    - The ledger's Filling board has several answers, and is refused as that.
+    - **For the owner to look at, not blocking:** on a small board the hint
+      can place nothing before it stops (two of three 5x5 samples), as on
+      ABCD with clues hidden.
+  - [ ] Mosaic, Palisade, Separate, Signpost, Sticks, Net, Range,
     Rectangles. For each, do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
     finish of the boards the tier deals, and sweep the shorter side when

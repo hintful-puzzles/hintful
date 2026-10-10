@@ -28,7 +28,7 @@ describe("deduceHintPlan", () => {
   it("groups a region's forced completion into one step", () => {
     // "1a2" = clue 1, empty, clue 2. The 2-region (one cell) can only complete
     // through the middle cell — an exact, single-square growth deduction.
-    const st = newState({ w: 3, h: 1 }, "1a2");
+    const st = newState(decodeParams("3x1"), "1a2");
     const plan = deduceHintPlan(st.board, st.clues, 3, 1);
     expect(plan.length).toBe(1);
     expect(plan[0].cells).toEqual([1]);
@@ -40,7 +40,7 @@ describe("deduceHintPlan", () => {
   it("can force several squares of one region in a single step", () => {
     // A 4-region (one clue) in a 4x1 strip can only run rightward: the three
     // empty cells are all forced together → one exact multi-square growth step.
-    const st = newState({ w: 4, h: 1 }, "4c");
+    const st = newState(decodeParams("4x1"), "4c");
     const plan = deduceHintPlan(st.board, st.clues, 4, 1);
     expect(plan.length).toBe(1);
     expect([...plan[0].cells].sort((a, b) => a - b)).toEqual([1, 2, 3]);
@@ -232,7 +232,7 @@ describe("hintKeepTrack", () => {
   it("stays on track and shrinks the step on a partial fill of a group", () => {
     // The 4x1 "4c" board forces three squares in one step; filling one of them
     // keeps the step on track with the other two still to go.
-    const st = newState({ w: 4, h: 1 }, "4c");
+    const st = newState(decodeParams("4x1"), "4c");
     const res = fillingGame.hint?.(st);
     if (!res?.ok) throw new Error("expected a plan");
     const step = res.steps[0];

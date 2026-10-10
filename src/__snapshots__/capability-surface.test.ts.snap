@@ -447,8 +447,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "filling",
     "members": [
       "changedState",
+      "difficulty",
       "findMistakes",
-      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",

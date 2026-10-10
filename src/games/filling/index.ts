@@ -8,6 +8,7 @@
  * non-clue cell.
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   type Game,
   type HintResult,
@@ -18,12 +19,9 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { coord, fromCoord } from "../../engine/geometry.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { drag, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
@@ -56,6 +54,7 @@ import {
   redrawFilling,
 } from "./render.ts";
 import {
+  answerOf,
   deduceHintPlan,
   FILLING_RUNGS,
   type FillingHintReason,
@@ -187,18 +186,30 @@ function interpretMove(
 }
 
 function solve(orig: FillingState): SolveResult<FillingMove> {
-  const { w, h, clues } = orig;
-  const { solved, board } = solveFilling(clues, w, h);
-  if (!solved) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  return { ok: true, move: { type: "solve", board: board.join("") } };
+  return solveFromAnswer(answerOf(orig), (board) => ({
+    type: "solve",
+    board: board.join(""),
+  }));
 }
 
-/** Re-solve from the immutable clues and flag every player-filled cell whose
- * number contradicts the unique solution (the Check & Save divergence). */
+/** Easy is what the solver's four deductions finish and the hint, which
+ * groups the same deductions from the player's numbers, finishes too. */
+const difficulty = searchTierContract<FillingParams, FillingState>({
+  newState,
+  deductionFinishes: (state) =>
+    solveFilling(state.clues, state.w, state.h).solved &&
+    hintFinishes(fillingGame, state),
+  answerOf,
+});
+
+/** Flag every player-filled cell whose number contradicts the board's one
+ * answer, which the search over the immutable clues found (the Check & Save
+ * divergence). Nothing is flagged where it did not prove there is one. */
 function findMistakes(state: FillingState): readonly Point[] {
   const { w, h, board, clues } = state;
-  const { solved, board: solution } = solveFilling(clues, w, h);
-  if (!solved) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const solution = answer.solution;
   const out: Point[] = [];
   for (let i = 0; i < w * h; i++) {
     if (clues[i] === 0 && board[i] !== 0 && board[i] !== solution[i]) {
@@ -364,10 +375,10 @@ export const fillingGame: Game<
 
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(fillingGame, s),
   status,
 
   solve,
+  difficulty,
   hint,
   hintMarks: {
     roles: {

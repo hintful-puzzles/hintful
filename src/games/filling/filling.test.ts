@@ -7,8 +7,9 @@
  * docs/games/testing.md § "The test tiers".
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
-  DESC_NOT_DEDUCIBLE,
+  DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -37,11 +38,9 @@ import {
   newState,
 } from "./state.ts";
 
-const PRESETS: FillingParams[] = [
-  { w: 9, h: 7 },
-  { w: 13, h: 9 },
-  { w: 17, h: 13 },
-];
+const size = (w: number, h: number): FillingParams => ({ w, h, diff: DIFF_EASY });
+
+const PRESETS: FillingParams[] = [size(9, 7), size(13, 9), size(17, 13)];
 
 /** Every region's size equals its number, and nothing is empty. */
 function isFullSolution(board: ArrayLike<number>, w: number, h: number): boolean {
@@ -54,57 +53,62 @@ function isFullSolution(board: ArrayLike<number>, w: number, h: number): boolean
 
 describe("filling params", () => {
   it("round-trips encode/decode", () => {
-    expect(encodeParams({ w: 13, h: 9 }, false)).toBe("13x9");
-    expect(decodeParams("13x9")).toEqual({ w: 13, h: 9 });
+    expect(encodeParams(size(13, 9), false)).toBe("13x9");
+    expect(decodeParams("13x9")).toEqual(size(13, 9));
+  });
+
+  it("writes the tier in the full form, and reads a string without one as Easy", () => {
+    expect(encodeParams(size(13, 9), true)).toBe("13x9de");
+    expect(encodeParams({ w: 13, h: 9, diff: DIFF_UNREASONABLE }, true)).toBe("13x9du");
+    expect(decodeParams("13x9du")).toEqual({ w: 13, h: 9, diff: DIFF_UNREASONABLE });
+    expect(decodeParams("13x9de")).toEqual(size(13, 9));
   });
 
   it("decodes a bare dimension as a square", () => {
-    expect(decodeParams("9")).toEqual({ w: 9, h: 9 });
+    expect(decodeParams("9")).toEqual(size(9, 9));
   });
 
   it("rejects degenerate params", () => {
-    expect(paramsError(fillingGame, { w: 0, h: 5 }, true)).toBe(
+    expect(paramsError(fillingGame, size(0, 5), true)).toBe(
       "Width must be at least 1.",
     );
-    expect(paramsError(fillingGame, { w: 5, h: 0 }, true)).toBe(
+    expect(paramsError(fillingGame, size(5, 0), true)).toBe(
       "Height must be at least 1.",
     );
-    expect(paramsError(fillingGame, { w: 9, h: 7 }, true)).toBeNull();
+    expect(paramsError(fillingGame, size(9, 7), true)).toBeNull();
   });
 });
 
 describe("filling desc codec", () => {
   it("decodes a run-length desc to clues + an editable board", () => {
     // 3x1 board: clue 1, empty, clue 2  →  "1a2"
-    const st = newState({ w: 3, h: 1 }, "1a2");
+    const st = newState(size(3, 1), "1a2");
     expect([...st.clues]).toEqual([1, 0, 2]);
     expect([...st.board]).toEqual([1, 0, 2]);
   });
 
   it("rejects a desc whose area does not fill the grid", () => {
-    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "11")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1111")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1a2")).toBeNull();
+    expect(validateDesc(fillingGame, size(3, 1), "11")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(fillingGame, size(3, 1), "1111")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(fillingGame, size(3, 1), "1a2")).toBeNull();
   });
 
   it("rejects invalid characters and clues too large for the board", () => {
-    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1@2")).toBe(
-      descBadCharacter("@"),
-    );
-    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "14a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(fillingGame, size(3, 1), "1@2")).toBe(descBadCharacter("@"));
+    expect(validateDesc(fillingGame, size(3, 1), "14a")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("refuses a 0 clue, which would spell a blank a second way", () => {
-    expect(validateDesc(fillingGame, { w: 3, h: 1 }, "1a0")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(fillingGame, size(3, 1), "1a0")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("refuses a board with every square clued that is not an answer", () => {
     // Nothing is empty, so the solver has nothing to do and calls it solved;
-    // the board the hint ends on is what says it is not.
+    // the search, which checks a full board against the rule, says it is not.
     expect(solveFilling([2, 2, 2], 3, 1).solved).toBe(true);
-    expect(loadVerdict(fillingGame, { w: 3, h: 1 }, "222")).toBe(DESC_NOT_DEDUCIBLE);
-    expect(loadVerdict(fillingGame, { w: 2, h: 1 }, "12")).toBe(DESC_NOT_DEDUCIBLE);
-    expect(loadVerdict(fillingGame, { w: 3, h: 1 }, "122")).toBeNull();
+    expect(loadVerdict(fillingGame, size(3, 1), "222")).toBe(DESC_CONTRADICTORY);
+    expect(loadVerdict(fillingGame, size(2, 1), "12")).toBe(DESC_CONTRADICTORY);
+    expect(loadVerdict(fillingGame, size(3, 1), "122")).toBeNull();
   });
 });
 
@@ -128,7 +132,7 @@ describe("filling generator + solver", () => {
 
   it("the solver fills a hand-made deducible board", () => {
     // A 1 forced in the corner, the rest a 2-domino.
-    const st = newState({ w: 3, h: 1 }, "1a2");
+    const st = newState(size(3, 1), "1a2");
     const { solved, board } = solveFilling(st.clues, 3, 1);
     expect(solved).toBe(true);
     expect([...board]).toEqual([1, 2, 2]);
@@ -143,7 +147,7 @@ describe("filling completion", () => {
   });
 
   it("marks the state solved when the last cell completes it", () => {
-    const st = newState({ w: 3, h: 1 }, "1a2");
+    const st = newState(size(3, 1), "1a2");
     const done = executeMove(st, { type: "set", cells: [1], value: 2 });
     expect(fillingGame.status(st)).toBe("ongoing");
     expect(fillingGame.status(done)).toBe("solved");
@@ -153,7 +157,7 @@ describe("filling completion", () => {
 
 describe("filling moves + selection", () => {
   it("fills every selected cell with one digit", () => {
-    const st = newState({ w: 3, h: 1 }, "aaa"); // all empty
+    const st = newState(size(3, 1), "aaa"); // all empty
     const ui = fillingGame.newUi(st);
     const ds = fillingGame.newDrawState(st, fillingGame.preferredTileSize ?? 32);
     // Select cells 1 and 2 with left-click + drag.
@@ -167,7 +171,7 @@ describe("filling moves + selection", () => {
   });
 
   it("rejects a digit larger than the grid permits", () => {
-    const st = newState({ w: 3, h: 1 }, "aaa");
+    const st = newState(size(3, 1), "aaa");
     const ui = fillingGame.newUi(st);
     ui.sel = new Set([0]);
     // max(w,h) = 3, so '4' is rejected.
@@ -184,7 +188,7 @@ describe("filling moves + selection", () => {
 
 describe("filling findMistakes", () => {
   function generated(): { st: FillingState; p: FillingParams } {
-    const p = { w: 9, h: 7 };
+    const p = size(9, 7);
     const { desc } = newFillingDesc(p, randomNew("filling-mistake-seed"));
     return { st: newState(p, desc), p };
   }

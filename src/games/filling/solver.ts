@@ -8,11 +8,17 @@
  * (`learnBitmapDeductions`): the solved/stuck verdict the generator's clue
  * minimization depends on is C's because the ladder visits in C's order.
  */
+import {
+  type Answer,
+  answerCache,
+  type Deduced,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
 import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { DX, DY } from "./state.ts";
+import { DX, DY, largestNumber } from "./state.ts";
 
 /** Why a *set* of cells is forced — drives the hint's narration. A single
  * deduction usually forces several squares at once, so a hint step carries a
@@ -398,11 +404,31 @@ class FillingSolver {
    * region is a piece of one, so it reaches further than the region it
    * belongs to, and a board with more correct squares can force fewer. */
   private learnBitmapDeductions(): boolean {
+    const { board, sz } = this;
+    const bm = this.candidates();
+    let learn = false;
+
+    // A cell with a single possible number is forced.
+    for (let i = 0; i < sz; i++) {
+      const mask = bm[i];
+      if (board[i] !== 0 || !mask || mask & (mask - 1)) continue;
+      const n = 31 - Math.clz32(mask); // the one set bit
+      const neighbors = this.filledNeighbors(i);
+      this.fillCell(i, n);
+      this.rec?.(i, n, "bitmap", neighbors);
+      learn = true;
+    }
+
+    return learn;
+  }
+
+  /** Each cell's still-possible numbers, as bits 1..9: zero in a filled cell,
+   * and zero in an empty one that nothing fits. */
+  candidates(): Int32Array {
     const { w, h, board, dsf, sz } = this;
     const bm = new Int32Array(sz);
     const bmdsf = new Dsf(sz);
     const minsize = new Int32Array(sz);
-    let learn = false;
     const ALL = valuesOneTo(9);
 
     for (let i = 0; i < sz; i++) bm[i] = ALL;
@@ -464,18 +490,34 @@ class FillingSolver {
       for (let i = 0; i < sz; i++) if (minsize[i] <= n) bm[i] |= 1 << n;
     }
 
-    // A cell with a single possible number is forced.
-    for (let i = 0; i < sz; i++) {
-      const mask = bm[i];
-      if (board[i] !== 0 || !mask || mask & (mask - 1)) continue;
-      const n = 31 - Math.clz32(mask); // the one set bit
-      const neighbors = this.filledNeighbors(i);
-      this.fillCell(i, n);
-      this.rec?.(i, n, "bitmap", neighbors);
-      learn = true;
-    }
+    return bm;
+  }
 
-    return learn;
+  /**
+   * Where the board stands once {@link run} has stopped. `"solved"` is every
+   * region exactly its number's size, not a board merely full.
+   *
+   * The deductions never say "impossible": each fills a square or does
+   * nothing, which is all a board with an answer asks of them. Under a wrong
+   * assumption they stop on a board that cannot be finished, or fill one
+   * wrongly, and this is what says so: a region past its size, or a region
+   * walled in short of it. An empty square that no number of `allowed` fits
+   * is left as stuck with nothing `open` in it: the search takes that square
+   * first and it divides into no positions.
+   */
+  verdict(allowed: number): { deduced: Deduced; open: Int32Array } {
+    const { board, dsf, sz } = this;
+    const open = this.candidates();
+    for (let i = 0; i < sz; i++) {
+      if (board[i] === 0) {
+        open[i] &= allowed;
+      } else if (i === dsf.canonify(i)) {
+        const short = board[i] - dsf.size(i);
+        if (short < 0 || (short > 0 && !this.checkCapacity(i, -1)))
+          return { deduced: "contradiction", open };
+      }
+    }
+    return { deduced: this.nempty === 0 ? "solved" : "stuck", open };
   }
 
   run(): void {
@@ -519,6 +561,95 @@ export function solveFilling(
   const s = new FillingSolver(orig, w, h);
   s.run();
   return { solved: s.nempty === 0, board: s.board };
+}
+
+// --- the search for a board's answers ---------------------------------------
+
+/** What a search established about a clue set's answers; the one answer is
+ * the full grid. */
+export type FillingAnswer = Answer<Int32Array>;
+
+/** A board partly filled, and each empty square's numbers once the
+ * deductions have run on it. */
+interface Position {
+  board: Int32Array;
+  open: Int32Array | null;
+}
+
+/**
+ * The positions a search may try before it gives up, each one a number
+ * assumed in a square and the four deductions run from it.
+ *
+ * It decides which Unreasonable boards exist: a clue set that needs more is
+ * thrown away when dealing and refused when pasted. Lowering it refuses boards
+ * already dealt, which are in saved games. A dealt board needs 30 at most,
+ * the generator's own bound, so the rest is room for a pasted one. Measured
+ * 2026-10-10, running it out on a board with half its clues gone takes 0.1 s
+ * at 7×9, 0.3 s at 13×17 and 1.9 s at 20×20.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a clue set's answers up to two, by trial and error over the solver:
+ * where it stops, take the empty square with the fewest numbers left and
+ * assume each in turn.
+ */
+export function searchAnswers(
+  clues: ArrayLike<number>,
+  w: number,
+  h: number,
+  budget: number = SEARCH_BUDGET,
+): FillingAnswer {
+  const allowed = valuesOneTo(largestNumber(w, h));
+  return searchBoard<Position, Int32Array>({
+    start: { board: Int32Array.from(clues), open: null },
+    deduce(position) {
+      const solver = new FillingSolver(position.board, w, h);
+      solver.run();
+      const { deduced, open } = solver.verdict(allowed);
+      position.board = solver.board;
+      position.open = open;
+      return deduced;
+    },
+    assume: assumeNumbers,
+    solution: (position) => position.board,
+    budget,
+  });
+}
+
+/** The positions a stuck one divides into: its empty square with the fewest
+ * numbers left, the first such in reading order, holding each of them. */
+function assumeNumbers({ board, open }: Position): Position[] {
+  if (open === null) throw new Error("filling: assuming before deducing");
+  let fewest: number[] | null = null;
+  let at = -1;
+  for (let i = 0; i < board.length; i++) {
+    if (board[i] !== 0) continue;
+    const numbers: number[] = [];
+    for (let n = 1; n <= 9; n++) if (open[i] & (1 << n)) numbers.push(n);
+    if (fewest === null || numbers.length < fewest.length) {
+      fewest = numbers;
+      at = i;
+    }
+  }
+  return (fewest ?? []).map((n) => {
+    const assumed = board.slice();
+    assumed[at] = n;
+    return { board: assumed, open: null };
+  });
+}
+
+/** Keyed on a state's clues, which every state of a game shares. */
+const answers = answerCache<Uint8Array, Int32Array>();
+
+/** What a search of a state's clues established about their answers. The
+ * player's numbers are not read. */
+export function answerOf(state: {
+  clues: Uint8Array;
+  w: number;
+  h: number;
+}): FillingAnswer {
+  return answers(state.clues, () => searchAnswers(state.clues, state.w, state.h));
 }
 
 /** One fill of a recorded solver run: the cell, its number, the technique

@@ -167,11 +167,14 @@ bump:h  full=4x5"
 `;
 
 exports[`encoded params are byte-stable > filling 1`] = `
-"default  full=9x13
-preset:Size/7x9  full=7x9
-preset:Size/13x17  full=13x17
-bump:w  full=10x13
-bump:h  full=9x14"
+"default  full=9x13de  brief=9x13
+preset:Size/7x9 Easy  full=7x9de  brief=7x9
+preset:Size/7x9 Unreasonable  full=7x9du  brief=7x9
+preset:Size/9x13 Unreasonable  full=9x13du  brief=9x13
+preset:Size/13x17 Easy  full=13x17de  brief=13x17
+preset:Size/13x17 Unreasonable  full=13x17du  brief=13x17
+bump:w  full=10x13de  brief=10x13
+bump:h  full=9x14de  brief=9x14"
 `;
 
 exports[`encoded params are byte-stable > flip 1`] = `

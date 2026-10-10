@@ -64,7 +64,9 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
       ([, game]) => game.finishesByDeduction !== nothingToDeduce,
     ).map(([id]) => id);
     // Both halves have members, or the comparison is between two empty lists.
-    expect(declared.length).toBeGreaterThanOrEqual(10);
+    // The deducing half shrinks as its games gain tiers and leave the
+    // untiered ones; Mines, whose answer is hidden, is the one that stays.
+    expect(declared.length).toBeGreaterThanOrEqual(1);
     expect(UNTIERED.length - declared.length).toBeGreaterThanOrEqual(10);
     expect(declared).toEqual(canRunOutOfDeduction());
   });
@@ -75,7 +77,6 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
    * entry per game that does not answer `nothingToDeduce`, held to that set.
    */
   const NOT_FINISHED: Record<string, string> = {
-    filling: "7x9:a4ga99a447c5a6774a5d55d4b4f83g3284a4a",
     mines: "8x8n10:4,4,u02800402a20040a0",
     mosaic: "3x3:1b45c1",
     net: "5x5:142c49b8aa4de5acd7b749286",

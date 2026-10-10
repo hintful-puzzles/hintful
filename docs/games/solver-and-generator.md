@@ -588,6 +588,31 @@ What Crossing, the third, added:
   and it divides into no positions. Give the solver the verdict anyway, and
   test the verdict on the solver, since no test of the search can see it.
 
+What Filling, the fourth, added:
+
+- **A generator that strips clues is one strip with two questions.** Filling
+  hides clues from a full board while something still holds: the solver
+  solves at Easy, the search proves one answer within the hiding budget at
+  Unreasonable. Stripping an Easy board further was tried first and is worse:
+  it threw away half its boards at 7x9 and could not reach the 2x2 with a
+  lone 1, which the Easy strip never leaves standing.
+- **The hiding budget is the tier's difficulty, and what a Check finishes
+  sets it.** At 10 positions a number that breaks the rule the moment it is
+  written settled 24 of 66 dealt boards, which is a deduction the solver
+  lacks. At 30 it settled 3, and a one-level trial settled 63. Take the
+  budget where the boards stop being a missing rule.
+- **A game with no size bound has one nobody measured.** Filling's fill is
+  thrown away whole on a clash, and it ran its retry cap out one deal in
+  twenty at 20x20 and every time at 25x25, at Easy, since the port. Count
+  draws by area and by shape before trusting "any size".
+- **Plant out each arm of the new verdict.** One of Filling's three, an
+  empty square no number fits, changed no test when removed: `assume`
+  already divides it into nothing. Where only the search reads the verdict,
+  delete such an arm.
+- **Enumerate clue sets, not dealt boards, for the smallest sizes.** It
+  proves a refusal (no 1x3 or 1x4 board has the tier) and it shows what the
+  generator cannot reach where a board exists.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

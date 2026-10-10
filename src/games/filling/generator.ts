@@ -2,23 +2,26 @@
  * Filling (Fillomino) generator — byte-faithful port of `filling.c`'s
  * `make_board` + `minimize_clue_set`: the same `shuffle` and `randomUpto`
  * draws in the same order, so a desc reproduces C's for the same seed (the
- * differential checks it).
+ * differential checks it). That is an Easy board. An Unreasonable one hides
+ * clues by the search in `solver.ts` where upstream hides them by the solver.
  *
  * Generation uses a plain mutable `number[]` board (negative sentinels appear
  * transiently in `mergeOnes`), distinct from the immutable game state.
  */
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { solveFilling } from "./solver.ts";
-import { DX, DY, encodeDesc, type FillingParams, makeRegionDsf } from "./state.ts";
-
-function maxRegionSize(w: number, h: number): number {
-  // The `max(...,3)` is the documented w=h=2 special case (a 2×2 board needs
-  // a size-3 region).
-  return Math.min(Math.max(w, h, 3), 9);
-}
+import { searchAnswers, solveFilling } from "./solver.ts";
+import {
+  DX,
+  DY,
+  encodeDesc,
+  type FillingParams,
+  largestNumber,
+  makeRegionDsf,
+} from "./state.ts";
 
 /** Flood the region of value `n` from `i`, marking cells `-1`; return false
  * as soon as a cell of value `m` is touched (upstream `mark_region`). */
@@ -65,7 +68,7 @@ function regionSize(board: number[], w: number, h: number, i: number): number {
  * merged region to its new size (upstream `merge_ones`). */
 function mergeOnes(board: number[], w: number, h: number): void {
   const sz = w * h;
-  const maxsize = maxRegionSize(w, h);
+  const maxsize = largestNumber(w, h);
   let change: boolean;
   do {
     change = false;
@@ -101,16 +104,25 @@ function mergeOnes(board: number[], w: number, h: number): void {
   } while (change);
 }
 
+/**
+ * The draws a fill may make, over the house default: a draw is thrown away
+ * whole at the first pair of equal neighbors it cannot merge, which grows
+ * more likely with every square. Sized against what `validateParams` admits.
+ * Its rarest board is 1×300, filled once in about 1,300 draws, and the rarest
+ * that is not a strip is 15×20, once in 500. Running out takes seven seconds.
+ */
+const FILL_MAX_DRAWS = 30_000;
+
 /** Build a random valid board: a shuffled DSF region partition with
  * conflicting equal-size neighbors merged, then size-1 absorption. The
  * returned `number[]` holds each cell's region size (the full solution). */
 function makeBoard(w: number, h: number, rng: RandomState): number[] {
   const sz = w * h;
-  const maxsize = maxRegionSize(w, h);
+  const maxsize = largestNumber(w, h);
   const board = Array.from({ length: sz }, (_, i) => i); // shuffled cell indices
   const dsf = new Dsf(sz);
 
-  const attempt = retryLimit("filling: makeBoard");
+  const attempt = retryLimit("filling: makeBoard", FILL_MAX_DRAWS);
   retry: while (true) {
     attempt();
 
@@ -156,18 +168,17 @@ function makeBoard(w: number, h: number, rng: RandomState): number[] {
   return board;
 }
 
-/** Reduce the full board to a minimal solvable clue set: first try removing
- * whole regions (a good "ghost region" puzzle), then individual clues, each
- * kept only while the solver still solves (upstream `minimize_clue_set`).
- * Asking the solver is asking the hint as well, which is what a board is held
- * to at load: the hint's plan falls back on the solver's own run from the
- * clues, so it finishes exactly the boards the solver does. Its only RNG is
- * one `shuffle(shuf)`. */
+/** Reduce the full board to a minimal clue set: first try removing whole
+ * regions (a good "ghost region" puzzle), then individual clues, each gone
+ * only while `keeps` still holds of what is left (upstream
+ * `minimize_clue_set`, whose test is that the solver still solves). Its only
+ * RNG is one `shuffle(shuf)`. */
 function minimizeClueSet(
   board: number[],
   w: number,
   h: number,
   rng: RandomState,
+  keeps: (board: number[]) => boolean,
 ): void {
   const sz = w * h;
   const shuf = Array.from({ length: sz }, (_, i) => i);
@@ -184,21 +195,72 @@ function minimizeClueSet(
     for (let k = 0; k < sz; k++) if (dsf.canonify(k) === root) cells.push(k);
     const val = board[root];
     for (const c of cells) board[c] = 0;
-    if (!solveFilling(board, w, h).solved) {
+    if (!keeps(board)) {
       for (const c of cells) board[c] = val;
     }
   }
 
   for (let i = 0; i < sz; i++) {
     const tmp = board[shuf[i]];
+    if (tmp === 0) continue; // gone with its region
     board[shuf[i]] = 0;
-    if (!solveFilling(board, w, h).solved) board[shuf[i]] = tmp;
+    if (!keeps(board)) board[shuf[i]] = tmp;
   }
+}
+
+/**
+ * The positions the search may try when a clue is hidden from an Unreasonable
+ * board, far under the 2,000 it has by default. Hiding stops only when the
+ * search can no longer prove one answer, so it takes every board up to
+ * whatever the search is allowed, and this is how hard the tier's boards are.
+ *
+ * Measured 2026-10-10 at the three presets. At 30 a dealt board needs a
+ * median of 21 to 29 positions, and of 66 boards a number that breaks the
+ * rule as soon as it is written settles 3, where trying a number and
+ * following the deductions from it, one trial at a time, settles 63. At 10
+ * the first settles 24 of 66, which is a deduction the solver lacks and not
+ * a search.
+ */
+const HIDING_BUDGET = 30;
+
+/**
+ * An Unreasonable board: a full board with clues hidden while the search
+ * still proves one answer within {@link HIDING_BUDGET}, kept if the solver
+ * then stops short. It nearly always does, since the search goes on hiding
+ * where the solver would have stopped: 198 of 200 at 7×9 and every one seen
+ * at the larger presets.
+ */
+function unreasonableClues(w: number, h: number, rng: RandomState): number[] {
+  const one = (left: number[]) =>
+    searchAnswers(left, w, h, HIDING_BUDGET).kind === "one";
+  // The boards stripped before giving up. Only the smallest are often thrown
+  // away: 1×5 keeps one in fifty, and has 1,000 tries. A large board costs
+  // most of a second and has twenty.
+  const attempt = retryLimit(
+    `filling: Unreasonable generation (${w}x${h})`,
+    Math.max(20, Math.ceil(25_000 / (w * h) ** 2)),
+  );
+  for (;;) {
+    attempt();
+    const board = makeBoard(w, h, rng);
+    minimizeClueSet(board, w, h, rng, one);
+    if (!solveFilling(board, w, h).solved) return board;
+  }
+}
+
+/** An Easy board, upstream's only kind: clues hidden while the solver still
+ * solves. Asking the solver is asking the hint as well, which is what an
+ * Easy board is held to at load: the hint's plan falls back on the solver's
+ * own run from the clues, so it finishes exactly the boards the solver does. */
+function easyClues(w: number, h: number, rng: RandomState): number[] {
+  const board = makeBoard(w, h, rng);
+  minimizeClueSet(board, w, h, rng, (left) => solveFilling(left, w, h).solved);
+  return board;
 }
 
 export function newFillingDesc(p: FillingParams, rng: RandomState): { desc: string } {
   const { w, h } = p;
-  const board = makeBoard(w, h, rng);
-  minimizeClueSet(board, w, h, rng);
-  return { desc: encodeDesc(board, w * h) };
+  const clues =
+    p.diff === DIFF_EASY ? easyClues(w, h, rng) : unreasonableClues(w, h, rng);
+  return { desc: encodeDesc(clues, w * h) };
 }

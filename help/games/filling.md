@@ -28,6 +28,14 @@ A few ideas are worth learning by name:
 * **A lonely square.** A square that no neighboring region can grow to include can only be a 1.
 * **Nothing else fits.** When every other number in a square would break the rule, by touching an equal number or by leaving some region short of its size, the one that is left must go there.
 
+On an Unreasonable board there comes a point where none of these settles
+another square, and the hint says that nothing further follows by deduction
+instead of choosing for you. On a small board that can be the very first
+thing it says. Save your position and try a number in a square that has few
+it could take, beside a region that still has to grow: if it is wrong, a
+region nearby is soon too big or shut in too small. The hint carries on from
+whatever you enter.
+
 ## Filling parameters
 
 {{parameters}}
