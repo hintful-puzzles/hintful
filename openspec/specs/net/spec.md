@@ -397,10 +397,9 @@ answer.
 
 At Unreasonable the generator SHALL stop the perturbing of the wiring at the
 first network the solver cannot settle that the search proves has one answer,
-within a budget of its own well under the search's, and SHALL draw another
-network where the solver settles one. It SHALL keep a board with walls only
-when the solver still stops short with the walls drawn. It SHALL give up once
-it has drawn two million squares of network.
+within the engine's dealing budget, and SHALL draw another network where the
+solver settles one. The board SHALL be kept only when the solver still stops
+short of it as dealt, with its walls drawn.
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 

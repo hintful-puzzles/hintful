@@ -38,4 +38,4 @@ game goes in its own `design.md`, or to the owner.
 - [x] 3.1 `docs/games/solver-and-generator.md` § "Giving a deductive game an
   Unreasonable tier": what a game writes for the tier, as it now is.
 - [x] 3.2 The spec delta, and remove `skip_specs` from `.openspec.yaml`.
-- [ ] 3.3 Commit, push, archive.
+- [x] 3.3 Commit, push, archive.
