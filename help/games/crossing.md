@@ -50,6 +50,13 @@ A few ideas are worth learning by name:
 * **Every fitting number agrees.** If every number that still fits a run has the same digit in one of its squares, that square is that digit.
 * **Crossing runs.** The across number allows some digits in a square and the down number allows others; when they share just one, that is the square's digit.
 
+On an Unreasonable board there comes a point where none of these settles
+another square, and the hint says that nothing further follows by deduction
+instead of choosing for you. Look first for a number that only one run can
+still take, which the hint does not do. Failing that, save your position and
+try a digit in a square with few left. The hint carries on from whatever you
+enter.
+
 ## Crossing parameters
 
 {{parameters}}

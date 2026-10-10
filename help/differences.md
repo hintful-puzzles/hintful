@@ -61,6 +61,11 @@ work, but they are likely to change in a future update, and might be removed.
   a board with some of its numbers hidden, is named *clues hidden* here and
   can be had at either difficulty.
 
+* **Crossing**: there is a difficulty, *Easy* or *Unreasonable*, which the
+  original does not have. An Unreasonable board has one solution that no run
+  on its own leads to, so somewhere you have to look across the whole list or
+  try a digit. The original's boards are this app's *Easy* ones.
+
 Earlier changes to individual puzzles have since been accepted into the
 original collection, so they are no longer differences.
 

@@ -310,8 +310,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
+      "difficulty",
       "findMistakes",
-      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",

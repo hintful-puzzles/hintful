@@ -115,17 +115,21 @@ bump:h  full=7x8de  brief=7x8"
 `;
 
 exports[`encoded params are byte-stable > crossing 1`] = `
-"default  full=5x5
-preset:Crossing/7x7  full=7x7
-preset:Crossing/9x9  full=9x9
-preset:Crossing/11x11  full=11x11
-preset:Crossing/13x13  full=13x13
-preset:Crossing/9x9 symmetric  full=9x9S  brief=9x9
-preset:Crossing/13x13 symmetric  full=13x13S  brief=13x13
-preset:Crossing/15x15 symmetric  full=15x15S  brief=15x15
-bump:w  full=6x5
-bump:h  full=5x6
-flip:sym  full=5x5S  brief=5x5"
+"default  full=5x5de  brief=5x5
+preset:Crossing/5x5 Unreasonable  full=5x5du  brief=5x5
+preset:Crossing/7x7 Easy  full=7x7de  brief=7x7
+preset:Crossing/7x7 Unreasonable  full=7x7du  brief=7x7
+preset:Crossing/9x9 Easy  full=9x9de  brief=9x9
+preset:Crossing/9x9 Unreasonable  full=9x9du  brief=9x9
+preset:Crossing/11x11 Easy  full=11x11de  brief=11x11
+preset:Crossing/11x11 Unreasonable  full=11x11du  brief=11x11
+preset:Crossing/13x13 Easy  full=13x13de  brief=13x13
+preset:Crossing/13x13 Unreasonable  full=13x13du  brief=13x13
+preset:Crossing/9x9 symmetric Easy  full=9x9Sde  brief=9x9
+preset:Crossing/15x15 symmetric Easy  full=15x15Sde  brief=15x15
+bump:w  full=6x5de  brief=6x5
+bump:h  full=5x6de  brief=5x6
+flip:sym  full=5x5Sde  brief=5x5"
 `;
 
 exports[`encoded params are byte-stable > cube 1`] = `

@@ -561,6 +561,33 @@ What ABCD, the second, added:
 - **Read the ledger's board before deleting it.** Like Pattern's, ABCD's
   board in `untiered-load.test.ts` had no answer at all.
 
+What Crossing, the third, added:
+
+- **Ask what one more deduction would finish of the boards the tier deals.**
+  Crossing's search needs a median of three positions: one square of two
+  digits, tried each way. A search that shallow is a rule the solver lacks.
+  A second implementation with one rule added (a number that still fits only
+  one run goes there) finished 247 of 300 such boards at 5x5 and 208 of 248 at
+  11x11. The tier is still dealt, the help says what to look for before
+  trying a digit, and the rung is its own change. Run the second
+  implementation without the rule first: it has to finish exactly the boards
+  the solver does, or the count is of the instrument.
+- **The tier is rarer than Easy by a steady factor, so it takes the Easy
+  bound's shape and a smaller number.** An Unreasonable Crossing board is
+  about five times rarer than an Easy one at every shape measured, since a
+  draw has to survive the same rejections first.
+- **Measuring the new bound re-measures the old one, on shapes the old one
+  never tried.** Crossing's Easy bound was an area, taken from near-square
+  boards. Thin boards inside it never dealt (2x60, 3x75, 4x56), and its
+  rarest admitted board was accepted once in 14,000 draws against a retry cap
+  of 10,000. Sweep the shorter side as well as the area, and size the retry
+  cap from the rarest board the bound admits.
+- **A dead position may already be handled by `assume`.** Crossing's solver
+  could not say "impossible" of a square with no digit left, and the search
+  was right without it: that square is the one with the fewest candidates,
+  and it divides into no positions. Give the solver the verdict anyway, and
+  test the verdict on the solver, since no test of the search can see it.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

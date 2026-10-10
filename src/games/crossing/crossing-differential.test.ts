@@ -17,6 +17,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
@@ -36,7 +37,13 @@ interface Fixture {
 const data = cReference as { fixtures: Fixture[] };
 
 const label = (f: Fixture) => `${f.w}x${f.h}${f.sym ? "S" : ""} seed=${f.seed}`;
-const params = (f: Fixture): CrossingParams => ({ w: f.w, h: f.h, sym: f.sym });
+const params = (f: Fixture): CrossingParams => ({
+  w: f.w,
+  h: f.h,
+  sym: f.sym,
+  // Upstream deals only what is Easy here.
+  diff: DIFF_EASY,
+});
 
 /** Does the board have an open cell that lies in no run? */
 function hasIsolatedCell(f: Fixture): boolean {

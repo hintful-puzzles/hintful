@@ -14,6 +14,7 @@
  * where half of every Crossing premise lives.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
@@ -51,7 +52,7 @@ import {
   type CrossingParams,
   type CrossingState,
   type CrossingUi,
-  crossingPresets,
+  EASY_PRESETS,
   newState,
   numberAvailableTo,
   placedRuns,
@@ -97,7 +98,7 @@ function walk(
 
 describe("crossing hint — soundness", () => {
   it("every square a plan forces agrees with the unique solution", () => {
-    for (const p of crossingPresets) {
+    for (const p of EASY_PRESETS) {
       const state = board(p, `hint-sound-${p.w}x${p.h}${p.sym ? "s" : ""}`);
       const answer = solveCrossing(state.puzzle);
       expect(answer.status).toBe("valid");
@@ -128,7 +129,7 @@ describe("crossing hint — soundness", () => {
   });
 
   it("a plan solves every preset when followed one recomputed step at a time", () => {
-    for (const p of crossingPresets) {
+    for (const p of EASY_PRESETS) {
       const state = board(p, `hint-walk-${p.w}x${p.h}${p.sym ? "s" : ""}`);
       const steps = walk(state, () => {});
       expect(steps).toBeGreaterThan(0);
@@ -138,7 +139,7 @@ describe("crossing hint — soundness", () => {
   it("resumes from a board the player has partly filled themselves", () => {
     // Seed the board with a few *correct* entries made out of plan order, then
     // require the hint to carry on from there.
-    const p = crossingPresets[2];
+    const p = EASY_PRESETS[2];
     const state = board(p, "hint-resume-9");
     const answer = solveCrossing(state.puzzle);
     const grid = state.grid.slice();
@@ -163,7 +164,7 @@ const opensBecause =
  * forced, found as the firing the plan opens with there. */
 const pinned = describeHintPins({
   game: crossingGame,
-  params: [crossingPresets[0], crossingPresets[2], crossingPresets[4]],
+  params: [EASY_PRESETS[0], EASY_PRESETS[2], EASY_PRESETS[4]],
   kinds: {
     becauseLength: opensBecause("length"),
     becauseDigits: opensBecause("digits"),
@@ -287,7 +288,7 @@ describe("crossing hint — techniques and narration", () => {
 // a wall row, and two 4-digit numbers that could go in either. Nothing can be
 // deduced — which is exactly the position that reaches the rule-out rung, and
 // the "no further move" refusal.
-const AMBIGUOUS: CrossingParams = { w: 4, h: 3, sym: false };
+const AMBIGUOUS: CrossingParams = { w: 4, h: 3, sym: false, diff: DIFF_EASY };
 const AMBIGUOUS_DESC = "4d4,1234,5678";
 
 describe("crossing hint — ruling a candidate out", () => {
@@ -357,11 +358,11 @@ describe("crossing hint — ruling a candidate out", () => {
 // the first at its opening move, the second for a chain of notes that writes
 // two squares of one run.
 const NEEDS_NOTES = {
-  params: { w: 5, h: 5, sym: false },
+  params: { w: 5, h: 5, sym: false, diff: DIFF_EASY },
   desc: "3a1a1a4a1a1a6a1,11,22,33,73,84,112,361,576,764,811,838",
 } as const;
 const NOTE_JOURNEY = {
-  params: { w: 13, h: 13, sym: true },
+  params: { w: 13, h: 13, sym: true, diff: DIFF_EASY },
   desc:
     "1a1a4b8b4a2a1a4b1a2a1b1a2a3a3a2a1b1a2a3a3a2a3a3a3a2a3a3a2a1b1a2a3a3a2a1b1a2a1b4a1a2a4b8b4a1a1," +
     "14,16,27,39,78,85,89,98,164,195,293,315,351,357,368,489,536,552,611,781,821,831,873,925," +
@@ -430,7 +431,7 @@ describe("crossing hint — every premise is on the board", () => {
 
   it("holds on every step of every preset and of the boards that need notes", () => {
     const boards = [
-      ...crossingPresets.map((p) =>
+      ...EASY_PRESETS.map((p) =>
         board(p, `hint-sound-${p.w}x${p.h}${p.sym ? "s" : ""}`),
       ),
       newState(NEEDS_NOTES.params, NEEDS_NOTES.desc),
@@ -542,7 +543,7 @@ describe("crossing hint — every premise is on the board", () => {
 
 describe("crossing hint — refusals", () => {
   it("counts a solved board as finished, so the midend refuses it", () => {
-    const state = board(crossingPresets[0], "hint-refuse-solved");
+    const state = board(EASY_PRESETS[0], "hint-refuse-solved");
     const answer = solveCrossing(state.puzzle);
     const solved = crossingGame.executeMove(state, {
       kind: "solve",
@@ -552,7 +553,7 @@ describe("crossing hint — refusals", () => {
   });
 
   it("flags a wrong entry, so the midend refuses it", () => {
-    const state = board(crossingPresets[0], "hint-refuse-wrong");
+    const state = board(EASY_PRESETS[0], "hint-refuse-wrong");
     const answer = solveCrossing(state.puzzle);
     const i = state.puzzle.walls.findIndex((wall) => !wall);
     const wrong = crossingGame.executeMove(state, {
@@ -568,7 +569,7 @@ describe("crossing hint — refusals", () => {
     // The scenario the spec calls out: a pencil note is a first-class marking,
     // so a note excluding the solution's digit is a mistake, not a position to
     // deduce from.
-    const state = board(crossingPresets[0], "hint-refuse-note");
+    const state = board(EASY_PRESETS[0], "hint-refuse-note");
     const answer = solveCrossing(state.puzzle);
     const i = state.puzzle.walls.findIndex((wall) => !wall);
     const x = i % state.puzzle.w;
@@ -599,7 +600,7 @@ describe("crossing hint — following the plan", () => {
   };
 
   it("counts a clue-list placement of the hinted number as completing the step", () => {
-    const state = board(crossingPresets[0], "hint-track-place");
+    const state = board(EASY_PRESETS[0], "hint-track-place");
     const step = firstStep(state);
     if (step.move.kind !== "place") throw new Error("expected a whole-run step");
     expect(crossingGame.hintKeepTrack?.(step.move, step, state)).toBe("completed");
@@ -608,7 +609,7 @@ describe("crossing hint — following the plan", () => {
   it("counts typing the number in digit by digit as following it", () => {
     // Auto-advance makes this the natural way to enter a run, so it must not
     // read as going off-plan.
-    const state = board(crossingPresets[0], "hint-track-place");
+    const state = board(EASY_PRESETS[0], "hint-track-place");
     const step = firstStep(state);
     if (step.move.kind !== "place") throw new Error("expected a whole-run step");
     const cells = state.puzzle.runs[step.move.run].cells;
@@ -630,7 +631,7 @@ describe("crossing hint — following the plan", () => {
   });
 
   it("drops the plan on a digit the step did not ask for", () => {
-    const state = board(crossingPresets[0], "hint-track-place");
+    const state = board(EASY_PRESETS[0], "hint-track-place");
     const step = firstStep(state);
     if (step.move.kind !== "place") throw new Error("expected a whole-run step");
     const cells = state.puzzle.runs[step.move.run].cells;
@@ -650,7 +651,7 @@ describe("crossing hint — following the plan", () => {
   });
 
   it("resolves a whole-run step once the run is full, and shrinks it before that", () => {
-    const state = board(crossingPresets[0], "hint-track-place");
+    const state = board(EASY_PRESETS[0], "hint-track-place");
     const step = firstStep(state);
     if (step.move.kind !== "place") throw new Error("expected a whole-run step");
     expect(crossingGame.refreshHintStep?.(step, state)).toBe(step);
@@ -697,7 +698,7 @@ describe("crossing hint — the frame", () => {
   const scenario = (seed: string) =>
     renderScenario({
       game: crossingGame,
-      id: `${crossingGame.encodeParams(crossingPresets[0], true)}#${seed}`,
+      id: `${crossingGame.encodeParams(EASY_PRESETS[0], true)}#${seed}`,
       showHint: true,
     });
 
@@ -737,7 +738,7 @@ describe("crossing hint — the frame", () => {
     expect(hint?.highlights?.numbers.length ?? 0).toBeGreaterThan(0);
 
     // The panel sits below the grid; a hint patch must land there.
-    const gridBottom = (crossingPresets[0].h + 0.5) * PREFERRED_TILE_SIZE;
+    const gridBottom = (EASY_PRESETS[0].h + 0.5) * PREFERRED_TILE_SIZE;
     const inPanel = res.recording.ops.filter(
       (o) => o.op === "rect" && o.y >= gridBottom,
     );
@@ -753,7 +754,7 @@ describe("crossing hint — the frame", () => {
     // Crossing's pale blue "this is an across run" wash and the collection's
     // hint blue are near-identical, so the hint takes green and owns the
     // board's coloring for as long as it is up.
-    const params = crossingPresets[0];
+    const params = EASY_PRESETS[0];
     const state = board(params, "hint-wash");
     const res = crossingGame.hint?.(state);
     if (!res?.ok) throw new Error("hint refused");
@@ -801,7 +802,7 @@ describe("crossing hint — the frame", () => {
   /** A midend on a fresh board with its first hint displayed. */
   const hinted = (seed: string): { midend: CrossingMidend; step: Step } => {
     const midend = new Midend(crossingGame);
-    const id = `${crossingGame.encodeParams(crossingPresets[0], true)}#${seed}`;
+    const id = `${crossingGame.encodeParams(EASY_PRESETS[0], true)}#${seed}`;
     expect(midend.newGameFromId(id)).toBeNull();
     expect(midend.hint()).toBeNull();
     const step = midend.activeHintStep() as Step | undefined;
@@ -817,7 +818,7 @@ describe("crossing hint — the frame", () => {
     // change is a `UI_UPDATE`, which `hintKeepTrack` never sees;
     // `uiUpdateClearsHint` is what dismisses it (Subsets' precedent).
     const { midend, step } = hinted("hint-dismiss");
-    const params = crossingPresets[0];
+    const params = EASY_PRESETS[0];
     const puzzle = board(params, "hint-dismiss").puzzle;
     const inHint = new Set(
       [...(step.highlights?.hatch ?? []), ...(step.highlights?.targets ?? [])].map(
@@ -837,7 +838,7 @@ describe("crossing hint — the frame", () => {
     // Clicking into the squares the hint is about must not delete the
     // explanation of what to type there.
     const { midend, step } = hinted("hint-dismiss");
-    const params = crossingPresets[0];
+    const params = EASY_PRESETS[0];
     const inside = step.highlights?.hatch[0];
     expect(inside).toBeDefined();
     if (!inside) return;
@@ -851,7 +852,7 @@ describe("crossing hint — the frame", () => {
     // about to type. The mark is a *ring*, so the background is still the
     // selection's and both cues show at once — the ring saying which square the
     // deduction is about, the fill saying which square the keystroke goes to.
-    const params = crossingPresets[0];
+    const params = EASY_PRESETS[0];
     const palette = crossingGame.colors(DEFAULT_BACKGROUND);
 
     /** Click `cell` on a board whose hint is (or is not) displayed, and report
@@ -913,7 +914,7 @@ describe("crossing hint — the frame", () => {
 
 // A 4x3 board walled down to exactly two runs, both 3 long, crossing at (1,1):
 // an across run at y=1 (x=0..2) and a down run at x=1 (y=0..2).
-const CROSS: CrossingParams = { w: 4, h: 3, sym: false };
+const CROSS: CrossingParams = { w: 4, h: 3, sym: false, diff: DIFF_EASY };
 const CROSS_DESC = "a1b3b1b,421,265";
 
 describe("crossing clue placement — which run a clue goes in", () => {

@@ -22,11 +22,12 @@
  * changes which boards a seed produces.
  */
 
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { solveCrossing } from "./solver.ts";
+import { searchAnswers, solveCrossing } from "./solver.ts";
 import {
   type CrossingNumber,
   type CrossingParams,
@@ -189,8 +190,9 @@ function everyCellInARun(puzzle: CrossingPuzzle): boolean {
   return true;
 }
 
-/** One generation attempt — `crossing_generate`. `null` means "retry". */
-function generate(p: CrossingParams, rng: RandomState): CrossingPuzzle | null {
+/** Walls, a fill, and the puzzle the fill reads as: everything of an attempt
+ * that draws randomness. `null` means "retry". */
+function drawPuzzle(p: CrossingParams, rng: RandomState): CrossingPuzzle | null {
   const { w, h } = p;
   const walls = genWalls(w, h, p.sym, rng);
   const grid = genGrid(w, h, rng);
@@ -200,13 +202,33 @@ function generate(p: CrossingParams, rng: RandomState): CrossingPuzzle | null {
 
   const puzzle = makePuzzle(w, h, walls, numbers);
   // Fork: no cell of a finished board may be left blank and unreachable.
-  if (!everyCellInARun(puzzle)) return null;
-  // The gate: the puzzle must be solvable by pure deduction, uniquely.
-  return solveCrossing(puzzle).status === "valid" ? puzzle : null;
+  return everyCellInARun(puzzle) ? puzzle : null;
 }
 
+/** One generation attempt — `crossing_generate`. `null` means "retry". */
+function generate(p: CrossingParams, rng: RandomState): CrossingPuzzle | null {
+  const puzzle = drawPuzzle(p, rng);
+  if (!puzzle) return null;
+  // The gate. Easy, upstream's only kind: pure deduction solves the puzzle,
+  // uniquely. Unreasonable: it stops short, and the search proves one answer.
+  const deduced = solveCrossing(puzzle).status === "valid";
+  if (p.diff === DIFF_EASY) return deduced ? puzzle : null;
+  return !deduced && searchAnswers(puzzle).kind === "one" ? puzzle : null;
+}
+
+/**
+ * The draws a deal may make, far over the house default: most draws of a
+ * large board die on two runs reading the same number. Sized against what
+ * `validateParams` admits. The rarest board it does is an Easy 7×32, accepted
+ * once in about 14,000 draws, which this leaves one chance in a thousand of
+ * running out. The rarest
+ * Unreasonable board, 3×60, is one in 4,600. A draw of the largest board
+ * costs 0.4 ms, so giving up takes under a minute.
+ */
+const CROSSING_MAX_ATTEMPTS = 100_000;
+
 export function newCrossingDesc(p: CrossingParams, rng: RandomState): { desc: string } {
-  const attempt = retryLimit("crossing: generation");
+  const attempt = retryLimit("crossing: generation", CROSSING_MAX_ATTEMPTS);
   for (;;) {
     attempt();
     const puzzle = generate(p, rng);

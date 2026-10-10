@@ -17,6 +17,8 @@
   the shared form, and the only new lines are the Unreasonable presets.
   **ABCD: done.** Every line gained `de` after what it had (`5x5n4R` is now
   `5x5n4Rde`), and the menu's lines moved with the menu (task 3.2).
+  **Crossing: done.** Every line gained `de` (`9x9S` is now `9x9Sde`), and
+  the menu's lines moved with the menu.
 
 ## 2. One game to the end: Pattern
 
@@ -88,8 +90,37 @@
       board with clues hidden is wanted as hard as 30 positions makes it. The
       ladder places nothing on most of them, so the hint's first answer is
       that nothing follows.
-  - [ ] Crossing, Filling, Mosaic, Palisade, Separate, Signpost, Sticks, Net,
-    Range, Rectangles.
+  - [x] **Crossing** (2026-10-10). Measured: a draw is stuck with one answer
+    once in 40 to 60 up to 9x9, in 270 at 11x11 and in 1,250 at 13x13 (0.35 s
+    a deal); the search tries a median of 3 positions and 129 at most; the
+    hint leaves a median of a quarter of a 5x5's squares empty and a
+    twentieth of a 13x13's. Decided:
+    - The menu is five sizes at both tiers and two symmetric boards, 9x9 and
+      15x15, at Easy. It no longer lists 13x13 symmetric, which Custom still
+      deals: a section holds twelve lines.
+    - Unreasonable is dealt up to 182 squares, where a deal takes half a
+      second to a second. No small size lacks the tier: 4x2 has it.
+    - **Two defects in the Easy bound, found by measuring the new one and
+      fixed here.** A board two squares across is now dealt up to 80 squares,
+      and one three or four across up to 180, where the bound was 225 for
+      all: 2x60, 3x75 and 4x56 never dealt a board, and 2x50 and 4x50 took
+      five seconds when they did. And the retry cap is 100,000 draws, not
+      10,000: an Easy 15x15 is accepted once in 3,200 draws and a 7x32 once
+      in 14,000, so the deal threw about one time in twenty-five at 15x15
+      and every other time at 7x32.
+    - **For the owner to look at, not blocking: most of these boards do not
+      need trial and error.** One deduction the solver and the hint lack, a
+      number that still fits only one run, finishes about six in seven of
+      them. The help page tells the player to look for it before trying a
+      digit, and
+      `openspec/changes/give-crossing-the-deduction-its-unreasonable-boards-lack`
+      is filed to build the rung, after which Unreasonable keeps only the
+      boards that need a trial.
+  - [ ] Filling, Mosaic, Palisade, Separate, Signpost, Sticks, Net, Range,
+    Rectangles. For each, do what Crossing's measurement did (the guide,
+    "What Crossing, the third, added"): count what one more deduction would
+    finish of the boards the tier deals, and sweep the shorter side when
+    setting a size bound.
 
 ## 4. Close
 

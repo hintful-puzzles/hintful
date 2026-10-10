@@ -10,6 +10,7 @@
  * Save additionally flags any entry (or note) contradicting the unique answer.
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   type CandidateMoveAdapter,
@@ -23,14 +24,12 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
-  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { CELL } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import {
@@ -79,7 +78,12 @@ import {
   redraw,
   tileOrigin,
 } from "./render.ts";
-import { type CrossingMistake, findMistakes, solveCrossing } from "./solver.ts";
+import {
+  answerOf,
+  type CrossingMistake,
+  findMistakes,
+  solveCrossing,
+} from "./solver.ts";
 import {
   atCrossing,
   type CrossingDirection,
@@ -89,7 +93,6 @@ import {
   type CrossingState,
   type CrossingUi,
   cloneState,
-  crossingPresets,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -98,19 +101,13 @@ import {
   nextInRun,
   paramConfig,
   placedRuns,
+  presets,
   runForNumber,
   snapDirection,
   status,
   textFormat,
   validateParams,
 } from "./state.ts";
-
-function presets(): PresetMenu<CrossingParams> {
-  return {
-    title: "Crossing",
-    submenu: crossingPresets.map((p) => ({ params: { ...p } })),
-  };
-}
 
 /** The digit a key enters, `"clear"` for a key that clears, or `null` for a key
  * that is neither. Upstream binds `1`–`9`, Backspace, `0` and the secondary
@@ -357,12 +354,22 @@ function changedState(
 }
 
 function solve(orig: CrossingState): SolveResult<CrossingMove> {
-  const result = solveCrossing(orig.puzzle);
   // Upstream fills whatever it deduced and leaves the rest blank; reporting the
   // failure is both more honest and the collection's convention.
-  if (result.status !== "valid") return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  return { ok: true, move: { kind: "solve", grid: Array.from(result.grid) } };
+  return solveFromAnswer(answerOf(orig), (grid) => ({
+    kind: "solve",
+    grid: Array.from(grid),
+  }));
 }
+
+/** Easy is what the solver's two deductions finish and the hint, which walks
+ * the same deductions from the player's marks, finishes too. */
+const difficulty = searchTierContract<CrossingParams, CrossingState>({
+  newState,
+  deductionFinishes: (state) =>
+    solveCrossing(state.puzzle).status === "valid" && hintFinishes(crossingGame, state),
+  answerOf,
+});
 
 // --- hint -------------------------------------------------------------------
 
@@ -717,10 +724,10 @@ export const crossingGame: Game<
 
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(crossingGame, s),
   status,
 
   solve,
+  difficulty,
   findMistakes,
   hint,
   hintRungs: CROSSING_RUNGS,

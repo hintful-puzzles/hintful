@@ -8,6 +8,7 @@
  * format, and tier-2.5 render scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
@@ -68,8 +69,8 @@ import {
   type CrossingUi,
   cloneState,
   collectRuns,
-  crossingPresets,
   decodeParams,
+  EASY_PRESETS,
   encodeDesc,
   encodeParams,
   makePuzzle,
@@ -81,7 +82,7 @@ import {
   validateBoard,
 } from "./state.ts";
 
-const P5 = { w: 5, h: 5, sym: false };
+const P5 = { w: 5, h: 5, sym: false, diff: DIFF_EASY };
 const check = (p: CrossingParams, full: boolean) => paramsError(crossingGame, p, full);
 const FIX = cReference.fixtures[0]; // 5x5, seed crossing-5x5-1
 const FIX_ID = `5x5:${FIX.desc}`;
@@ -143,46 +144,60 @@ function harness() {
 // ---------------------------------------------------------------------------
 
 describe("crossing params", () => {
-  it("encode/decode round-trips, with S only on a full encode", () => {
-    expect(encodeParams(P5, true)).toBe("5x5");
-    expect(encodeParams({ w: 7, h: 4, sym: true }, true)).toBe("7x4S");
-    expect(encodeParams({ w: 7, h: 4, sym: true }, false)).toBe("7x4");
-    expect(decodeParams("7x4S")).toEqual({ w: 7, h: 4, sym: true });
+  it("encode/decode round-trips, with S and the tier only on a full encode", () => {
+    expect(encodeParams(P5, true)).toBe("5x5de");
+    expect(encodeParams(P5, false)).toBe("5x5");
+    const wide = { w: 7, h: 4, sym: true, diff: DIFF_UNREASONABLE };
+    expect(encodeParams(wide, true)).toBe("7x4Sdu");
+    expect(encodeParams(wide, false)).toBe("7x4");
+    expect(decodeParams("7x4Sdu")).toEqual(wide);
+  });
+
+  it("reads an ID written before the game had tiers as Easy", () => {
+    expect(decodeParams("7x4S")).toEqual({ w: 7, h: 4, sym: true, diff: DIFF_EASY });
+    expect(decodeParams("5x5")).toEqual(P5);
   });
 
   it("decodes a bare width as a square board", () => {
-    expect(decodeParams("6")).toEqual({ w: 6, h: 6, sym: false });
-    expect(decodeParams("6S")).toEqual({ w: 6, h: 6, sym: true });
+    expect(decodeParams("6")).toEqual({ w: 6, h: 6, sym: false, diff: DIFF_EASY });
+    expect(decodeParams("6S")).toEqual({ w: 6, h: 6, sym: true, diff: DIFF_EASY });
   });
 
   it("requires both dimensions >= 2 and at least one >= 4", () => {
     expect(check(P5, true)).toBeNull();
-    expect(check({ w: 4, h: 2, sym: false }, true)).toBeNull();
-    expect(check({ w: 2, h: 4, sym: false }, true)).toBeNull();
-    expect(check({ w: 3, h: 3, sym: false }, true)).toBe(
+    expect(check({ w: 4, h: 2, sym: false, diff: DIFF_EASY }, true)).toBeNull();
+    expect(check({ w: 2, h: 4, sym: false, diff: DIFF_EASY }, true)).toBeNull();
+    expect(check({ w: 3, h: 3, sym: false, diff: DIFF_EASY }, true)).toBe(
       "Width or height must be at least 4.",
     );
-    expect(check({ w: 1, h: 9, sym: false }, true)).toBe("Width must be at least 2.");
-    expect(check({ w: 9, h: 1, sym: false }, true)).toBe("Height must be at least 2.");
+    expect(check({ w: 1, h: 9, sym: false, diff: DIFF_EASY }, true)).toBe(
+      "Width must be at least 2.",
+    );
+    expect(check({ w: 9, h: 1, sym: false, diff: DIFF_EASY }, true)).toBe(
+      "Height must be at least 2.",
+    );
   });
 
-  it("labels symmetric walls after the size", () => {
-    expect(describeParams(crossingGame, { w: 9, h: 9, sym: true })).toBe(
-      "9x9 symmetric",
+  it("labels symmetric walls after the size, then the tier", () => {
+    expect(
+      describeParams(crossingGame, { w: 9, h: 9, sym: true, diff: DIFF_EASY }),
+    ).toBe("9x9 symmetric Easy");
+    expect(describeParams(crossingGame, P5)).toBe("5x5 Easy");
+    expect(describeParams(crossingGame, { ...P5, diff: DIFF_UNREASONABLE })).toBe(
+      "5x5 Unreasonable",
     );
-    expect(describeParams(crossingGame, P5)).toBe("5x5");
   });
 
   it("rejects a board too large to generate, but only when generating", () => {
     // Measured ceiling: every shape up to 225 squares generated 3/3, everything
     // from 240 up failed at least once, and 280+ never generated. Upstream has
     // no bound at all and simply retries for ever there.
-    expect(check({ w: 15, h: 15, sym: false }, true)).toBeNull();
-    expect(check({ w: 16, h: 16, sym: false }, true)).toBe(
+    expect(check({ w: 15, h: 15, sym: false, diff: DIFF_EASY }, true)).toBeNull();
+    expect(check({ w: 16, h: 16, sym: false, diff: DIFF_EASY }, true)).toBe(
       "Width times height must be at most 225; larger boards cannot be generated.",
     );
     // A description that already exists stays playable at any size.
-    expect(check({ w: 16, h: 16, sym: false }, false)).toBeNull();
+    expect(check({ w: 16, h: 16, sym: false, diff: DIFF_EASY }, false)).toBeNull();
   });
 });
 
@@ -257,7 +272,7 @@ describe("crossing desc codec", () => {
   });
 
   it("splits a wall run longer than `z` into letters the parser reads back", () => {
-    const params = { w: 30, h: 1, sym: false };
+    const params = { w: 30, h: 1, sym: false, diff: DIFF_EASY };
     const walls = new Uint8Array(30);
     walls.fill(1, 0, 27);
     const desc = encodeDesc(30, 1, walls, [[1, 2, 3]]);
@@ -265,7 +280,7 @@ describe("crossing desc codec", () => {
     expect(validateDesc(crossingGame, params, desc)).toBeNull();
     expect(newState(params, desc).puzzle.walls).toEqual(walls);
     // 52 walls is exactly two letters, with nothing left over.
-    const wide = { w: 54, h: 1, sym: false };
+    const wide = { w: 54, h: 1, sym: false, diff: DIFF_EASY };
     const wideWalls = new Uint8Array(54);
     wideWalls.fill(1, 0, 52);
     expect(encodeDesc(54, 1, wideWalls, [[1, 2]])).toBe("zz2,12");
@@ -337,12 +352,12 @@ describe("crossing generator", () => {
 
   it.each([
     // Every shipped preset, so a new one cannot be added without being checked.
-    ...crossingPresets.map((p): [string, CrossingParams] => [
+    ...EASY_PRESETS.map((p): [string, CrossingParams] => [
       `${p.w}x${p.h}${p.sym ? " symmetric" : ""}`,
       { ...p },
     ]),
-    ["4x2", { w: 4, h: 2, sym: false }],
-    ["8x5", { w: 8, h: 5, sym: false }],
+    ["4x2", { w: 4, h: 2, sym: false, diff: DIFF_EASY }],
+    ["8x5", { w: 8, h: 5, sym: false, diff: DIFF_EASY }],
   ] as [
     string,
     CrossingParams,
@@ -362,9 +377,9 @@ describe("crossing generator", () => {
     // inspects runs, a player can type any digit into it and still win.
     for (const [label, params] of [
       ["5x5", P5],
-      ["7x7", { w: 7, h: 7, sym: false }],
-      ["9x9", { w: 9, h: 9, sym: false }],
-      ["9x9 symmetric", { w: 9, h: 9, sym: true }],
+      ["7x7", { w: 7, h: 7, sym: false, diff: DIFF_EASY }],
+      ["9x9", { w: 9, h: 9, sym: false, diff: DIFF_EASY }],
+      ["9x9 symmetric", { w: 9, h: 9, sym: true, diff: DIFF_EASY }],
     ] as const) {
       for (let s = 0; s < 12; s++) {
         const { desc } = newCrossingDesc(params, randomNew(`iso-${label}-${s}`));
@@ -380,7 +395,7 @@ describe("crossing generator", () => {
   });
 
   it("grows symmetric walls 180°-rotationally", () => {
-    const params = { w: 6, h: 4, sym: true };
+    const params = { w: 6, h: 4, sym: true, diff: DIFF_EASY };
     const { desc } = newCrossingDesc(params, randomNew("sym-shape"));
     const { walls } = newState(params, desc).puzzle;
     const size = 24;
