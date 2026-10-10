@@ -81,6 +81,11 @@ work, but they are likely to change in a future update, and might be removed.
   at 3 or 4 across, 100 at 10 across): the original goes on trying to build
   one and never finishes.
 
+* **Palisade**: there is a difficulty, *Easy* or *Unreasonable*, which the
+  original does not have. An Unreasonable board has one solution that no
+  forced edge leads to, so somewhere you have to try an edge. The original's
+  boards are this app's *Easy* ones.
+
 Earlier changes to individual puzzles have since been accepted into the
 original collection, so they are no longer differences.
 

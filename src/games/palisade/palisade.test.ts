@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   BORDER,
   BORDER_MASK,
@@ -38,41 +39,56 @@ import {
 } from "./state.ts";
 
 const PRESETS: PalisadeParams[] = [
-  { w: 5, h: 5, k: 5 },
-  { w: 6, h: 8, k: 6 },
-  { w: 8, h: 10, k: 8 },
-  { w: 12, h: 15, k: 10 },
+  { w: 5, h: 5, k: 5, diff: DIFF_EASY },
+  { w: 6, h: 8, k: 6, diff: DIFF_EASY },
+  { w: 8, h: 10, k: 8, diff: DIFF_EASY },
+  { w: 12, h: 15, k: 10, diff: DIFF_EASY },
 ];
 
 describe("palisade params", () => {
   it("encodes and round-trips", () => {
-    expect(encodeParams({ w: 8, h: 6, k: 6 }, true)).toBe("8x6n6");
-    expect(decodeParams("8x6n6")).toEqual({ w: 8, h: 6, k: 6 });
+    expect(encodeParams({ w: 8, h: 6, k: 6, diff: DIFF_EASY }, false)).toBe("8x6n6");
+    expect(encodeParams({ w: 8, h: 6, k: 6, diff: DIFF_EASY }, true)).toBe("8x6n6de");
+    expect(encodeParams({ w: 8, h: 6, k: 6, diff: DIFF_UNREASONABLE }, true)).toBe(
+      "8x6n6du",
+    );
+    // A string from before the tiers reads as Easy.
+    expect(decodeParams("8x6n6")).toEqual({ w: 8, h: 6, k: 6, diff: DIFF_EASY });
+    expect(decodeParams("8x6n6du")).toEqual({
+      w: 8,
+      h: 6,
+      k: 6,
+      diff: DIFF_UNREASONABLE,
+    });
   });
 
   it("decodes a bare size leniently", () => {
-    expect(decodeParams("5")).toEqual({ w: 5, h: 5, k: 5 });
-    expect(decodeParams("7x7")).toEqual({ w: 7, h: 7, k: 7 });
+    expect(decodeParams("5")).toEqual({ w: 5, h: 5, k: 5, diff: DIFF_EASY });
+    expect(decodeParams("7x7")).toEqual({ w: 7, h: 7, k: 7, diff: DIFF_EASY });
   });
 
   it("validates the region-size constraints", () => {
     const error = (p: PalisadeParams) => paramsError(palisadeGame, p, true);
-    expect(error({ w: 5, h: 5, k: 5 })).toBeNull();
-    expect(error({ w: 5, h: 5, k: 0 })).toBe("Region size must be at least 1.");
-    expect(error({ w: 5, h: 5, k: 7 })).not.toBeNull(); // 7 ∤ 25
-    expect(error({ w: 5, h: 5, k: 25 })).not.toBeNull(); // k = wh
-    expect(error({ w: 4, h: 4, k: 2 })).not.toBeNull(); // k=2 corridor
-    expect(error({ w: 1, h: 4, k: 2 })).toBeNull(); // k=2 allowed on a strip
+    expect(error({ w: 5, h: 5, k: 5, diff: DIFF_EASY })).toBeNull();
+    expect(error({ w: 5, h: 5, k: 0, diff: DIFF_EASY })).toBe(
+      "Region size must be at least 1.",
+    );
+    expect(error({ w: 5, h: 5, k: 7, diff: DIFF_EASY })).not.toBeNull(); // 7 ∤ 25
+    expect(error({ w: 5, h: 5, k: 25, diff: DIFF_EASY })).not.toBeNull(); // k = wh
+    expect(error({ w: 4, h: 4, k: 2, diff: DIFF_EASY })).not.toBeNull(); // k=2 corridor
+    expect(error({ w: 1, h: 4, k: 2, diff: DIFF_EASY })).toBeNull(); // k=2 allowed on a strip
   });
 
-  it("titles its presets by size and region size", () => {
-    expect(presetMenu(palisadeGame).submenu?.[1]?.title).toBe("6x8, regions of size 6");
+  it("titles its presets by size, tier and region size", () => {
+    const titles = presetMenu(palisadeGame).submenu?.map((m) => m.title);
+    expect(titles?.[2]).toBe("6x8 Easy, regions of size 6");
+    expect(titles?.[3]).toBe("6x8 Unreasonable, regions of size 6");
   });
 });
 
 describe("palisade desc codec", () => {
   it("round-trips a clue grid", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const { desc } = newDesc(p, randomNew("palisade-desc"));
     expect(validateDesc(palisadeGame, p, desc)).toBeNull();
     const state = newState(p, desc);
@@ -80,7 +96,7 @@ describe("palisade desc codec", () => {
   });
 
   it("rejects malformed descs", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     expect(validateDesc(palisadeGame, p, "5")).toBe(DESC_OUT_OF_RANGE); // clue > 4
     expect(validateDesc(palisadeGame, p, "?")).toBe(descBadCharacter("?"));
     expect(validateDesc(palisadeGame, p, "z".repeat(2))).toBe(DESC_TOO_LONG); // 52 > 25 squares
@@ -104,7 +120,7 @@ describe("palisade solver + generator", () => {
   });
 
   it("the solver fills the rim into a valid division", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const { desc } = newDesc(p, randomNew("palisade-solve"));
     const clues = newState(p, desc).clues;
     const borders = initBorders(p.w, p.h);
@@ -120,7 +136,7 @@ describe("palisade solver + generator", () => {
 
 describe("palisade moves", () => {
   it("toggles a wall on both shared sides", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const { desc } = newDesc(p, randomNew("palisade-move"));
     const s0 = newState(p, desc);
     // Right edge of cell (1,1): flag BORDER_R on (1,1), BORDER_L on (2,1).
@@ -137,7 +153,7 @@ describe("palisade moves", () => {
   });
 
   it("rejects toggling a grid-rim wall", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const s0 = newState(p, newDesc(p, randomNew("palisade-rim")).desc);
     expect(() =>
       palisadeGame.executeMove(s0, {
@@ -148,7 +164,7 @@ describe("palisade moves", () => {
   });
 
   it("a solve move completes the board", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const s0 = newState(p, newDesc(p, randomNew("palisade-solvemove")).desc);
     const res = palisadeGame.solve?.(s0, s0);
     expect(res?.ok).toBe(true);
@@ -161,7 +177,7 @@ describe("palisade moves", () => {
 
 describe("palisade findMistakes", () => {
   it("flags a wall the solution lacks and stays clean on the solution", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const s0 = newState(p, newDesc(p, randomNew("palisade-mistake")).desc);
     const sol = solveToBorders(p, s0.clues);
     expect(sol).not.toBeNull();
@@ -191,7 +207,7 @@ describe("palisade findMistakes", () => {
   });
 
   it("flags a no-wall mark contradicting the solution", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const s0 = newState(p, newDesc(p, randomNew("palisade-mark")).desc);
     const sol = solveToBorders(p, s0.clues);
     // A generated board that stops solving, or a solution with no interior wall,
@@ -223,7 +239,7 @@ describe("palisade findMistakes", () => {
 // its duration and a status that is the board's.
 describe("palisade completion", () => {
   it("has a win flash", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const s0 = newState(p, newDesc(p, randomNew("palisade-flash")).desc);
     expect(palisadeGame.solvedFlash?.(s0, { cursor: newCursor(1, 1) })).toBeGreaterThan(
       0,
@@ -231,7 +247,7 @@ describe("palisade completion", () => {
   });
 
   it("breaking a solved board reverts it to unsolved", () => {
-    const p = { w: 5, h: 5, k: 5 };
+    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const s0 = newState(p, newDesc(p, randomNew("palisade-unstick")).desc);
     const sol = solveToBorders(p, s0.clues);
     if (!sol) throw new Error("the generated board did not solve");
@@ -260,7 +276,7 @@ describe("palisade completion", () => {
 });
 
 describe("palisade hint", () => {
-  const P = { w: 5, h: 5, k: 5 };
+  const P = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
   const hlOf = (step: HintStep<PalisadeMove>): PalisadeHint =>
     step.highlights as PalisadeHint;
   /** What a step's words mark: the edges it rings beyond its own, the region
@@ -287,7 +303,7 @@ describe("palisade hint", () => {
    * opens with one. */
   const pinned = describeHintPins({
     game: palisadeGame,
-    params: [P, { w: 8, h: 6, k: 6 }],
+    params: [P, { w: 8, h: 6, k: 6, diff: DIFF_EASY }],
     kinds: {
       // A first leg with a continuation after it.
       journey: (_step, _state, steps) => steps[1]?.continuesPrevious === true,
@@ -467,9 +483,11 @@ describe("palisade hint", () => {
 });
 
 describe("palisade misc", () => {
-  it("exposes the four presets", () => {
+  it("exposes the four presets, each at both tiers", () => {
     const menu = palisadeGame.presets();
-    expect(menu.submenu?.map((m) => m.params)).toEqual(PRESETS);
+    expect(menu.submenu?.map((m) => m.params)).toEqual(
+      PRESETS.flatMap((p) => [p, { ...p, diff: DIFF_UNREASONABLE }]),
+    );
   });
 
   it("BORDER_MASK is the low nibble", () => {

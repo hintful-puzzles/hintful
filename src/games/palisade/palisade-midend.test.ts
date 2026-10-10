@@ -20,7 +20,7 @@ function harness() {
 const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>
   a.length === b.length && a.every((v, i) => v === b[i]);
 
-const P = { w: 5, h: 5, k: 5 };
+const P = palisadeGame.decodeParams("5x5n5");
 const ID = `5x5n5:${newDesc(P, randomNew("palisade-midend")).desc}`;
 
 // A click near the right edge of cell (1,1) at the preferred tile size

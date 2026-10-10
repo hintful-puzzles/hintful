@@ -11,7 +11,7 @@ import { randomNew } from "../random/index.ts";
 import { renderPinnedHint, renderScenario } from "./render-scenario.ts";
 import { toSvg } from "./svg-drawing.ts";
 
-const P = { w: 5, h: 5, k: 5 };
+const P = palisadeGame.decodeParams("5x5n5");
 const ID = `5x5n5:${newDesc(P, randomNew("render-scenario")).desc}`;
 
 // A guaranteed-valid interior edge edit: toggle the wall between cells

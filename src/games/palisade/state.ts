@@ -8,6 +8,13 @@
  * shared between the two cells it separates, so every edit records both sides.
  */
 
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import type { BorderHint } from "../../engine/border-grid-hint.ts";
 import { digitValue } from "../../engine/decimal.ts";
@@ -19,6 +26,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
@@ -27,6 +35,7 @@ import {
 } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
@@ -65,7 +74,15 @@ export interface PalisadeParams {
   w: number;
   h: number;
   k: number;
+  /** `DIFF_EASY`, a board the solver's deductions finish, or
+   * `DIFF_UNREASONABLE`, one with a single answer that they do not reach.
+   * Generation-time only. */
+  diff: number;
 }
+
+/** What the solver reads of a board besides its clues: the grid and the
+ * region size. A state and a params both are one. */
+export type PalisadeShape = Pick<PalisadeParams, "w" | "h" | "k">;
 
 export interface PalisadeState {
   w: number;
@@ -102,22 +119,23 @@ export type PalisadeHint = BorderHint;
 
 // --- params ---------------------------------------------------------------
 
-const PRESETS: PalisadeParams[] = [
-  { w: 5, h: 5, k: 5 },
-  { w: 6, h: 8, k: 6 },
-  { w: 8, h: 10, k: 8 },
-  { w: 12, h: 15, k: 10 },
+const board = (w: number, h: number, k: number): PalisadeParams => ({
+  w,
+  h,
+  k,
+  diff: DIFF_EASY,
+});
+
+/** Upstream's four boards. The menu offers each at both tiers. */
+const BOARDS: readonly PalisadeParams[] = [
+  board(5, 5, 5),
+  board(6, 8, 6),
+  board(8, 10, 8),
+  board(12, 15, 10),
 ];
 
 export function defaultParams(): PalisadeParams {
-  return { ...PRESETS[0] };
-}
-
-export function presets(): PresetMenu<PalisadeParams> {
-  return {
-    title: "Size",
-    submenu: PRESETS.map((p) => ({ params: { ...p } })),
-  };
+  return board(5, 5, 5);
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
@@ -131,10 +149,20 @@ export const paramConfig: ParamConfigItem<PalisadeParams>[] = [
     bounds: { min: 1 },
     label: { slot: "tail", words: (p) => `regions of size ${p.k}` },
   }),
+  searchTierItem(
+    "diff",
+    "An Easy puzzle can be finished one forced edge at a time: there is always a number, a region or a corner that settles an edge by itself. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try an edge and see what follows. The Hint button stops where the forced edges do.",
+  ),
 ];
 
+export function presets(): PresetMenu<PalisadeParams> {
+  return { title: "Size", ...presetGrid(paramConfig, BOARDS) };
+}
+
 /** Upstream: `w = h = k = atoi(s)`, then optional `x<h>` and `n<k>` — so the
- * square fallback (no `x`) also seeds the region size from the width. */
+ * square fallback (no `x`) also seeds the region size from the width. The
+ * tier comes last, in the full form only, and upstream's IDs lack it: without
+ * one a board is Easy, the only kind upstream deals. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   num(paramConfig, "n", "region-size", {
@@ -142,6 +170,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
       p.k = p.w;
     },
   }),
+  searchTierSegment(paramConfig),
 ]);
 
 export function validateParams(p: PalisadeParams, full: boolean): string | null {
@@ -153,8 +182,28 @@ export function validateParams(p: PalisadeParams, full: boolean): string | null 
   if (k === wh) return "Region size must be less than the grid area.";
   if (k === 2 && w !== 1 && h !== 1)
     return "Region size can't be two unless width or height is one.";
+  if (p.diff !== DIFF_UNREASONABLE) return null;
+  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  // A strip, and a board in regions of one, divide one way whatever the
+  // clues, and the solver finds that way with no clue at all
+  // (`palisade-tier.test.ts`), so none of their boards needs a search.
+  if (w === 1 || h === 1 || k === 1)
+    return noSuchTier(`${w}x${h} puzzle in regions of ${k}`, tier);
+  if (wh > MAX_UNREASONABLE_AREA)
+    return `Width times height must be at most ${MAX_UNREASONABLE_AREA} for an ${tier} puzzle; a larger one takes too long to deal.`;
   return null;
 }
+
+/**
+ * The largest Unreasonable board dealt, in squares: the largest preset's. An
+ * Unreasonable board is an Easy one stripped further by the search, which
+ * takes about three times as long as the Easy board did.
+ *
+ * Measured 2026-10-10, mean time for a board at the bound | past it: 8×10 in
+ * eights 0.2 s, 12×15 in tens 1.3 s, 9×20 in sixes 2.3 s | 15×15 in nines
+ * 3 s, 15×20 in tens 5.5 s.
+ */
+const MAX_UNREASONABLE_AREA = 180;
 
 // --- borders --------------------------------------------------------------
 

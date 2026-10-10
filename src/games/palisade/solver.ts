@@ -8,6 +8,13 @@
  */
 
 import {
+  type Answer,
+  answerCache,
+  type Deduced,
+  DIFF_EASY,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
+import {
   BORDER,
   buildDsf,
   DX,
@@ -22,7 +29,14 @@ import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { bitcount, EMPTY, encodeDesc, isSolved, type PalisadeParams } from "./state.ts";
+import {
+  bitcount,
+  EMPTY,
+  encodeDesc,
+  isSolved,
+  type PalisadeParams,
+  type PalisadeShape,
+} from "./state.ts";
 
 // --- hint-mode deduction trace --------------------------------------------
 
@@ -72,7 +86,7 @@ class SolverCtx {
   private currentGroup = -1;
 
   constructor(
-    p: PalisadeParams,
+    p: PalisadeShape,
     clues: Int8Array,
     borders: Uint8Array,
     dsf = new Dsf(p.w * p.h),
@@ -413,7 +427,7 @@ function runToFixpoint(ctx: SolverCtx, tick?: () => void): void {
  * rim). Returns whether the clue set is fully solved.
  */
 export function solver(
-  p: PalisadeParams,
+  p: PalisadeShape,
   clues: Int8Array,
   borders: Uint8Array,
 ): boolean {
@@ -423,7 +437,7 @@ export function solver(
 
 /** Solve a clue set from the bare rim; returns the solution walls, or
  * null if the clue set is not (uniquely) solver-solvable. */
-export function solveToBorders(p: PalisadeParams, clues: Int8Array): Uint8Array | null {
+export function solveToBorders(p: PalisadeShape, clues: Int8Array): Uint8Array | null {
   const borders = initBorders(p.w, p.h);
   return solver(p, clues, borders) ? borders : null;
 }
@@ -437,7 +451,7 @@ export function solveToBorders(p: PalisadeParams, clues: Int8Array): Uint8Array 
  * record the shared edge between them).
  */
 export function deduceForcedEdges(
-  p: PalisadeParams,
+  p: PalisadeShape,
   clues: Int8Array,
   playerBorders: Uint8Array,
 ): ForcedEdge[] {
@@ -464,45 +478,250 @@ export function deduceForcedEdges(
   return out;
 }
 
+// --- the search for a board's answers ---------------------------------------
+
+/** What a search established about a clue set's answers; the one answer is
+ * each cell's walls. */
+export type PalisadeAnswer = Answer<Uint8Array>;
+
+/** The edges decided so far: the walls, and the cells known to be joined. An
+ * edge is undecided while it has no wall and its two cells are not joined. */
+interface Position {
+  borders: Uint8Array;
+  dsf: Dsf;
+}
+
+/**
+ * Where the deductions leave a position. `"solved"` is every edge decided
+ * and the walls a division into regions of `k` that meets every clue.
+ *
+ * The deductions never say "impossible": each decides an edge or does
+ * nothing, which is all a board with an answer asks of them. Under a wrong
+ * assumption they stop on a position that cannot be finished, and this is
+ * what says so: a region past its size, a wall inside a region, a clue with
+ * too many walls or too few edges left to make them, or a region short of
+ * its size with no undecided edge to grow through.
+ */
+function verdictOf(ctx: SolverCtx): Deduced {
+  const { w, h, k, clues, borders, dsf } = ctx;
+  const wh = w * h;
+  // The walls can be a whole division while squares of one region are still
+  // to be joined: nothing is left to decide then, since a further wall would
+  // cut a region short.
+  if (isSolved(w, h, k, clues, borders)) return "solved";
+  const canGrow = new Uint8Array(wh);
+  let open = false;
+  for (let i = 0; i < wh; i++) {
+    if (dsf.size(i) > k) return "contradiction";
+    let undecided = 0;
+    for (let dir = 0; dir < 4; dir++) {
+      if (ctx.disconnectedDir(i, dir)) {
+        if (ctx.connectedDir(i, dir)) return "contradiction";
+      } else if (!ctx.connectedDir(i, dir)) undecided++;
+    }
+    if (undecided > 0) {
+      open = true;
+      canGrow[dsf.canonify(i)] = 1;
+    }
+    if (clues[i] === EMPTY) continue;
+    const walls = bitcount(borders[i]);
+    if (walls > clues[i] || walls + undecided < clues[i]) return "contradiction";
+  }
+  if (!open) return "contradiction";
+  for (let i = 0; i < wh; i++)
+    if (dsf.size(i) < k && !canGrow[dsf.canonify(i)]) return "contradiction";
+  return "stuck";
+}
+
+/**
+ * The positions a search may try before it gives up, each one an edge
+ * assumed a wall or not and the six deductions run from it.
+ *
+ * It decides which Unreasonable boards exist: a clue set that needs more is
+ * thrown away when dealing and refused when pasted. Lowering it refuses boards
+ * already dealt, which are in saved games. A dealt board needs 30 at most,
+ * the generator's own bound, so the rest is room for a pasted one. Measured
+ * 2026-10-10, running it out on a board with half its clues gone takes half
+ * a second at 12×15 and a second at 15×20.
+ */
+const SEARCH_BUDGET = 2_000;
+
+/**
+ * Count a clue set's answers up to two, by trial and error over the solver:
+ * where it stops, take an undecided edge of the clue with the fewest left
+ * and assume it each way.
+ */
+export function searchAnswers(
+  p: PalisadeShape,
+  clues: Int8Array,
+  budget: number = SEARCH_BUDGET,
+): PalisadeAnswer {
+  return searchBoard<Position, Uint8Array>({
+    start: { borders: initBorders(p.w, p.h), dsf: new Dsf(p.w * p.h) },
+    deduce(position) {
+      const ctx = new SolverCtx(p, clues, position.borders, position.dsf);
+      runToFixpoint(ctx);
+      return verdictOf(ctx);
+    },
+    assume: (position) => assumeEdge(p, clues, position),
+    solution: (position) => position.borders,
+    budget,
+  });
+}
+
+/**
+ * The two positions a stuck one divides into: one undecided edge, a wall and
+ * then not. The edge is the first undecided one of the clue with the fewest
+ * undecided edges, where either way is likeliest to settle the clue. With no
+ * such clue it is the first undecided edge on the board.
+ */
+function assumeEdge(
+  p: PalisadeShape,
+  clues: Int8Array,
+  position: Position,
+): Position[] {
+  const ctx = new SolverCtx(p, clues, position.borders, position.dsf);
+  const wh = p.w * p.h;
+  let at = -1;
+  let atDir = -1;
+  let fewest = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < wh; i++) {
+    let undecided = 0;
+    let first = -1;
+    for (let dir = 0; dir < 4; dir++) {
+      if (!ctx.maybe(i, dir)) continue;
+      undecided++;
+      if (first < 0) first = dir;
+    }
+    if (undecided === 0) continue;
+    // A cell without a clue is taken only until a clue's edge is found.
+    const rank = clues[i] === EMPTY ? 8 : undecided;
+    if (rank >= fewest) continue;
+    fewest = rank;
+    at = i;
+    atDir = first;
+  }
+  if (at < 0) return [];
+  const walled: Position = {
+    borders: position.borders.slice(),
+    dsf: position.dsf.clone(),
+  };
+  new SolverCtx(p, clues, walled.borders, walled.dsf).disconnect(at, atDir);
+  const joined: Position = {
+    borders: position.borders.slice(),
+    dsf: position.dsf.clone(),
+  };
+  joined.dsf.merge(at, ctx.neighbor(at, atDir));
+  return [walled, joined];
+}
+
+/** Keyed on a state's clues, which every state of a game shares. */
+const answers = answerCache<Int8Array, Uint8Array>();
+
+/** What a search of a state's clues established about their answers. The
+ * player's edges are not read. */
+export function answerOf(state: PalisadeShape & { clues: Int8Array }): PalisadeAnswer {
+  return answers(state.clues, () => searchAnswers(state, state.clues));
+}
+
 // --- generator ------------------------------------------------------------
 
-/** Generate a uniquely solvable clue grid; returns its run-length desc. */
-export function newDesc(p: PalisadeParams, rng: RandomState): { desc: string } {
+/** Divide the grid into regions of `k` and write each cell's clue, the walls
+ * round it, into `numbers`. */
+function drawClues(p: PalisadeShape, rng: RandomState, numbers: Int8Array): void {
   const { w, h, k } = p;
-  const wh = w * h;
-  const numbers = new Int8Array(wh);
-  const rim = initBorders(w, h);
-
-  // Divide into k-ominoes, derive clues + the solution walls, retry
-  // until the full-clue board is solver-solvable (it nearly always is).
-  const attempt = retryLimit(`palisade: generation (${w}x${h} k${k})`);
-  do {
-    attempt();
-    const dsf = divvyRectangle(w, h, k, rng);
-    for (let r = 0; r < h; r++) {
-      for (let c = 0; c < w; c++) {
-        const i = r * w + c;
-        numbers[i] = 0;
-        for (let dir = 0; dir < 4; dir++) {
-          const rr = r + DY[dir];
-          const cc = c + DX[dir];
-          if (outOfBounds(cc, rr, w, h) || !dsf.equivalent(i, rr * w + cc)) {
-            numbers[i]++;
-          }
+  const dsf = divvyRectangle(w, h, k, rng);
+  for (let r = 0; r < h; r++) {
+    for (let c = 0; c < w; c++) {
+      const i = r * w + c;
+      numbers[i] = 0;
+      for (let dir = 0; dir < 4; dir++) {
+        const rr = r + DY[dir];
+        const cc = c + DX[dir];
+        if (outOfBounds(cc, rr, w, h) || !dsf.equivalent(i, rr * w + cc)) {
+          numbers[i]++;
         }
       }
     }
-  } while (!solver(p, numbers, rim.slice()));
+  }
+}
 
-  // Strip clues in a random order, keeping each removed only while the
-  // board stays uniquely solvable.
-  const shuf: number[] = Array.from({ length: wh }, (_, i) => i);
+/** Strip clues in a random order, each gone only while `keeps` still holds
+ * of what is left. */
+function stripClues(
+  numbers: Int8Array,
+  rng: RandomState,
+  keeps: (numbers: Int8Array) => boolean,
+): void {
+  const shuf: number[] = Array.from(numbers, (_, i) => i);
   shuffle(shuf, rng);
   for (const idx of shuf) {
     const copy = numbers[idx];
+    if (copy === EMPTY) continue;
     numbers[idx] = EMPTY;
-    if (!solver(p, numbers, rim.slice())) numbers[idx] = copy;
+    if (!keeps(numbers)) numbers[idx] = copy;
   }
+}
 
-  return { desc: encodeDesc(numbers, wh) };
+/** An Easy board, upstream's only kind: a division whose full clues the
+ * solver solves (it nearly always does), stripped while it still does. */
+function easyClues(p: PalisadeShape, rng: RandomState): Int8Array {
+  const numbers = new Int8Array(p.w * p.h);
+  const rim = initBorders(p.w, p.h);
+  const solves = (left: Int8Array) => solver(p, left, rim.slice());
+  const attempt = retryLimit(`palisade: generation (${p.w}x${p.h} k${p.k})`);
+  do {
+    attempt();
+    drawClues(p, rng, numbers);
+  } while (!solves(numbers));
+  stripClues(numbers, rng, solves);
+  return numbers;
+}
+
+/**
+ * The positions the search may try when a clue is stripped from an
+ * Unreasonable board, far under the 2,000 it has by default. Stripping stops
+ * only when the search can no longer prove one answer, so it takes a board up
+ * to whatever the search is allowed, and this is how hard the tier's boards
+ * are.
+ *
+ * Measured 2026-10-10: a dealt board needs a median of 9 positions at 5×5 and
+ * 25 to 29 at the larger presets, and the hint leaves a median of 25 edges of
+ * 40 undecided at 5×5, 53 of 82 at 6×8 and 155 of 333 at 12×15. No edge on
+ * these boards is wrong at a glance: assuming one and looking, with no
+ * deduction run, settled none of 90, where assuming one and following the
+ * deductions from it, one trial at a time, finished most.
+ */
+const HIDING_BUDGET = 30;
+
+/**
+ * An Unreasonable board: an Easy board with more clues stripped, each while
+ * the search still proves one answer within {@link HIDING_BUDGET}, kept if the
+ * solver then stops short. An Easy board is one the solver stops short on
+ * with any clue gone, so stripping one is what takes it out of reach.
+ *
+ * It starts from an Easy board and not from every clue, which the search
+ * could strip as well. Measured 2026-10-10, that way took twice as long and
+ * left the solver less to do at every preset.
+ */
+function unreasonableClues(p: PalisadeShape, rng: RandomState): Int8Array {
+  const rim = initBorders(p.w, p.h);
+  const one = (left: Int8Array) => searchAnswers(p, left, HIDING_BUDGET).kind === "one";
+  // The boards stripped before giving up. Only the smallest are thrown away
+  // for giving up no clue.
+  const attempt = retryLimit(
+    `palisade: Unreasonable generation (${p.w}x${p.h} k${p.k})`,
+    Math.max(20, Math.ceil(100_000 / (p.w * p.h) ** 2)),
+  );
+  for (;;) {
+    attempt();
+    const numbers = easyClues(p, rng);
+    stripClues(numbers, rng, one);
+    if (!solver(p, numbers, rim.slice())) return numbers;
+  }
+}
+
+export function newDesc(p: PalisadeParams, rng: RandomState): { desc: string } {
+  const numbers = p.diff === DIFF_EASY ? easyClues(p, rng) : unreasonableClues(p, rng);
+  return { desc: encodeDesc(numbers, p.w * p.h) };
 }

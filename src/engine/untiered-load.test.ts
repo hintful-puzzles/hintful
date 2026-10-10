@@ -79,7 +79,6 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
   const NOT_FINISHED: Record<string, string> = {
     mines: "8x8n10:4,4,u02800402a20040a0",
     net: "5x5:142c49b8aa4de5acd7b749286",
-    palisade: "5x5n5:a",
     range: "4x4:c6h3_6b",
     rect: "4x4:2b2_2a2b2b2a2_2",
     separate: "4x4n4:CDBABDCAAACCCBBD",

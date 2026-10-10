@@ -406,13 +406,17 @@ bump:movetarget  full=3x3b1m1  brief=3x3m1"
 `;
 
 exports[`encoded params are byte-stable > palisade 1`] = `
-"default  full=5x5n5
-preset:Size/6x8, regions of size 6  full=6x8n6
-preset:Size/8x10, regions of size 8  full=8x10n8
-preset:Size/12x15, regions of size 10  full=12x15n10
-bump:w  full=6x5n5
-bump:h  full=5x6n5
-bump:k  full=5x5n6"
+"default  full=5x5n5de  brief=5x5n5
+preset:Size/5x5 Unreasonable, regions of size 5  full=5x5n5du  brief=5x5n5
+preset:Size/6x8 Easy, regions of size 6  full=6x8n6de  brief=6x8n6
+preset:Size/6x8 Unreasonable, regions of size 6  full=6x8n6du  brief=6x8n6
+preset:Size/8x10 Easy, regions of size 8  full=8x10n8de  brief=8x10n8
+preset:Size/8x10 Unreasonable, regions of size 8  full=8x10n8du  brief=8x10n8
+preset:Size/12x15 Easy, regions of size 10  full=12x15n10de  brief=12x15n10
+preset:Size/12x15 Unreasonable, regions of size 10  full=12x15n10du  brief=12x15n10
+bump:w  full=6x5n5de  brief=6x5n5
+bump:h  full=5x6n5de  brief=5x6n5
+bump:k  full=5x5n6de  brief=5x5n6"
 `;
 
 exports[`encoded params are byte-stable > pattern 1`] = `

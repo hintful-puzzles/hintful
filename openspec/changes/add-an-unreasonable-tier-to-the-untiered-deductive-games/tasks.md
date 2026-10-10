@@ -24,6 +24,8 @@
   **Mosaic: done.** Its codec is now built from `paramsCodec`. Every line
   gained `de` after what it had (`50x50h0` is now `50x50h0de`), and the menu
   gained its six Unreasonable lines.
+  **Palisade: done.** Every line gained `de` (`5x5n5` is now `5x5n5de`), and
+  the menu gained its four Unreasonable lines.
 
 ## 2. One game to the end: Pattern
 
@@ -166,7 +168,27 @@
       to look for it first, and
       `openspec/changes/give-mosaic-the-deduction-its-unreasonable-boards-lack`
       is filed to build the rung.
-  - [ ] Palisade, Separate, Signpost, Sticks, Net, Range,
+  - [x] **Palisade** (2026-10-10). Measured: a deal is 8 ms at 5x5, 50 ms at
+    6x8, 0.2 s at 8x10 and 1.3 s at 12x15, about three times an Easy one; a
+    dealt board needs a median of 9 to 29 positions; the hint leaves a median
+    of 25 edges of 40 undecided at 5x5 and 155 of 333 at 12x15. Decided, each
+    with its reason in the guide's "What Palisade, the sixth, added":
+    - The generator strips further clues from an Easy board by the search,
+      within 30 positions. One more deduction would not finish these boards:
+      no edge on 90 of them is wrong at a glance.
+    - The menu is upstream's four boards at both tiers.
+    - Unreasonable is dealt up to 180 squares, the largest preset's, and is
+      refused on a strip and in regions of one, where the solver finishes
+      every board with no clue.
+    - The ledger's Palisade board has no clue, and so several answers.
+    - **A defect in Easy, found by measuring and filed, not fixed here.**
+      Palisade has no size bound, and no division of a board with many small
+      regions is one the solver solves: 9x9 in threes and 12x12 in fours run
+      the retry cap out after about 30 seconds, at either tier. The bound
+      depends on the region size and on how thin the board is, and the
+      numbers so far are in
+      `openspec/changes/bound-palisade-to-the-boards-it-deals`.
+  - [ ] Separate, Signpost, Sticks, Net, Range,
     Rectangles. For each, do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
     finish of the boards the tier deals, and sweep the shorter side when

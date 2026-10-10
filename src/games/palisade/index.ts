@@ -8,6 +8,7 @@
  * no-wall mark), and there is a half-grid keyboard cursor.
  */
 
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   BORDER,
   BORDER_MASK,
@@ -29,11 +30,8 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
-import { hintAndSolveFinish } from "../../engine/hint-finishes.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -52,6 +50,7 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  answerOf,
   deduceForcedEdges,
   type ForcedEdge,
   newDesc,
@@ -80,10 +79,6 @@ function newUi(_state: PalisadeState): PalisadeUi {
   return { cursor: newCursor(1, 1) };
 }
 
-function paramsOf(state: PalisadeState): PalisadeParams {
-  return { w: state.w, h: state.h, k: state.k };
-}
-
 // --- input -----------------------------------------------------------------
 
 const targetVerbs = borderGridVerbs<
@@ -105,9 +100,13 @@ function interpretMove(
 
 // --- mistakes --------------------------------------------------------------
 
+/** Every edge the player has decided against the board's one answer, which
+ * the search found at either tier. Nothing is flagged where it did not prove
+ * there is exactly one. */
 function findMistakes(state: PalisadeState): readonly PalisadeMistake[] {
-  const sol = solveToBorders(paramsOf(state), state.clues);
-  if (!sol) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const sol = answer.solution;
   const { w, h, borders } = state;
   const out: PalisadeMistake[] = [];
   for (let y = 0; y < h; y++) {
@@ -200,7 +199,7 @@ type PalisadeRung = (typeof PALISADE_RUNGS)[number];
 function hint(
   state: PalisadeState,
 ): HintResult<PalisadeMove, PalisadeHint, PalisadeRung> {
-  const forced = deduceForcedEdges(paramsOf(state), state.clues, state.borders);
+  const forced = deduceForcedEdges(state, state.clues, state.borders);
   if (forced.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
   // Split the flat, discovery-ordered list into contiguous runs of one
@@ -271,15 +270,21 @@ export const palisadeGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
-  finishesByDeduction: (s) => hintAndSolveFinish(palisadeGame, s),
   status,
 
-  solve(orig, _curr) {
-    const sol = solveToBorders(paramsOf(orig), orig.clues);
-    if (!sol) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-    const full = Array.from(sol, (b) => (b & BORDER_MASK) | DISABLED(~b & BORDER_MASK));
-    return { ok: true, move: { type: "solve", borders: full } };
-  },
+  solve: (orig, _curr) =>
+    solveFromAnswer(answerOf(orig), (sol) => ({
+      type: "solve",
+      borders: Array.from(sol, (b) => (b & BORDER_MASK) | DISABLED(~b & BORDER_MASK)),
+    })),
+  // Easy is what the solver's six deductions finish and the hint, which runs
+  // the same deductions from the player's edges, finishes too.
+  difficulty: searchTierContract<PalisadeParams, PalisadeState>({
+    newState,
+    deductionFinishes: (state) =>
+      solveToBorders(state, state.clues) !== null && hintFinishes(palisadeGame, state),
+    answerOf,
+  }),
 
   findMistakes,
   hint,

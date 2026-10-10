@@ -634,6 +634,26 @@ What Mosaic, the fifth, added:
   across is dealt past a length inside it (3x40, 8x100 and 12x300 gave none
   in thousands of pictures). The bound is a table by shorter side.
 
+What Palisade, the sixth, added:
+
+- **Ask the deduction's own "solved" before asking what is open.** Palisade's
+  solver calls a board solved once the walls are a whole division, with
+  squares of one region still to be joined. A verdict that looked for
+  undecided edges first called those boards stuck, and an Easy board took
+  five positions where it takes one. Count the positions an Easy board
+  takes: it is one, or the verdict disagrees with the solver.
+- **Pin each part of the verdict by a position count on a fixed board.** A
+  part that only prunes changes no answer, so no test of answers sees it.
+  It changes how many positions a board takes, and that decides which
+  boards are dealt. Plant each part out against a list of literal boards,
+  since the generator's own boards move with the verdict, and keep one
+  board per part with its exact count.
+- **A bound that needs its own sweep is its own change.** Palisade deals no
+  board past a number of regions that depends on the region size and the
+  shape, and had no bound. The numbers this change turned up are in
+  `openspec/changes/bound-palisade-to-the-boards-it-deals`; a table read
+  off them here would have refused boards that deal.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung

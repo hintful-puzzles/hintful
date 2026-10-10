@@ -26,6 +26,7 @@ import {
 } from "./render.ts";
 import { newDesc, solveToBorders } from "./solver.ts";
 import {
+  decodeParams,
   newState,
   type PalisadeHint,
   type PalisadeMove,
@@ -41,7 +42,7 @@ function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"
 }
 
 const TS = 48;
-const P = { w: 5, h: 5, k: 5 };
+const P = decodeParams("5x5n5");
 
 function freshUi(): PalisadeUi {
   return { cursor: newCursor(1, 1) };

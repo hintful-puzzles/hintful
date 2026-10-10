@@ -57,6 +57,13 @@ These are the ideas the hint teaches, from the plainest up:
   neither can be a wall; and if leaving both open would leave it short,
   both must be walls.
 
+On an Unreasonable board there comes a point where none of these settles
+another edge, and the hint says that nothing further follows by deduction
+instead of choosing for you. Save your position and try an edge beside a
+number that has few edges left to decide, as a wall or as no wall: if it is
+wrong, before long a number has too many walls or a region cannot reach its
+size. The hint carries on from whatever you decide.
+
 ## Palisade parameters
 
 {{parameters}}

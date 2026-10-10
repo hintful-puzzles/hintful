@@ -30,10 +30,7 @@ const isEquivalentEdgesFrame = (step?: HintStep<unknown>): boolean =>
 /** A position whose hint opens with an `equivalentEdges` deduction. */
 const pinned = describeHintKindPins({
   game: palisadeGame,
-  params: [
-    { w: 5, h: 5, k: 5 },
-    { w: 8, h: 6, k: 6 },
-  ],
+  params: [palisadeGame.decodeParams("5x5n5"), palisadeGame.decodeParams("8x6n6")],
   kinds: { equivalentEdges: (step) => step.rung === "equivalentEdges" },
   pins: {
     /** Held on 56 of 1307 positions walked. */
