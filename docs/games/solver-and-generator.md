@@ -690,8 +690,9 @@ What Separate, the seventh, added:
   never deals costs its whole retry cap, minutes at a large size, and a run
   that reports at its end said nothing in twenty. Counting divisions tried
   for each board dealt, capped at 300, swept thirty-three shapes in one
-  short run. It found that Separate deals only a handful of sizes at either
-  tier (`openspec/changes/bound-separate-to-the-boards-it-deals`).
+  short run. It found that Separate dealt only a handful of sizes at either
+  tier, which was the generator's doing and is mended (§ "Unlucky,
+  impossible, and load-bearing validation").
 
 What Signpost, the eighth, added:
 
@@ -1560,6 +1561,44 @@ deals, 30x30 in threes among them, and no size is refused. What to take:
   nothing more, so those seeds deal the board they did, and the share of
   boards that moved is a check on the change: it should be the share whose
   first draw failed.
+
+**Where a draw is filled at random for a solver to pass, place the fill.**
+Separate filled a division with letters at random, kept the letters a
+deduction had read and filled the rest again. One division in 200 was
+finished at 6x6 in fours and none in 400 at 8x8, and the proposal was a
+size bound. The generator now swaps two letters where the solver stops, so that
+an edge it left open is walled
+([`separate/generator.ts`](../../src/games/separate/generator.ts)), and
+20x20 in twos deals in under a second. What to take:
+
+- **Look at where a failed try stopped, and not only at how many fail.** A
+  division thrown away had four letters in five fixed and next to nothing
+  joined: the fill had been spent on deductions that led nowhere. That is a
+  search with no way back, and neither bad luck nor a size.
+- **Run a failed draw again before blaming it.** The same divisions filled
+  ten more times finished as often as fresh ones, so the division was not
+  what failed and drawing another did nothing.
+- **Read the solver for what it can never finish, and build the draw without
+  it.** Separate's only join is of a component to the one square it can grow
+  into, so a region with a ring of squares is never finished, whatever its
+  letters. A random division has one in most regions of six or more. That
+  part of the draw was a rate, and is now a property.
+- **A change that undoes no deduction costs no solve.** A deduction depends
+  only on the letters it read. Swapping two it has not read lets the solver
+  go on from where it was, and only a swap of read letters pays for a solve
+  from nothing. The free move alone has no way back and the dear one alone
+  is slow; together they deal what neither does.
+- **When the search starts over, its cap is the line between a wait and a
+  failure.** Every large size dealt given two minutes, so there was no wall
+  to find. The divisions a board took said which kind of slow it was: ten at
+  20x21 in sixes, whose minute goes on solving a large board, and a thousand
+  at 10x12 in tens, whose minute goes on boards thrown away. The first is a
+  wait and is dealt. The second is refused, past the unit the count follows
+  (squares times letters squared), with the cap sized to the rarest size
+  under it.
+- **Try the neighbor's mend, and say when it does not carry.** Palisade's
+  re-division at a stall was tried here and bought nothing: its failure is a
+  fault in a few regions, and a stalled fill is not.
 
 ### Bound a generator by its tail, not its median
 

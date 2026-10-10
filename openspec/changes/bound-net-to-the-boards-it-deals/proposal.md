@@ -76,6 +76,12 @@ wrapping, 30 long when wrapping and four wide, and a barrier probability of
   its median"): a player can stop a deal. Refuse only a deal that throws,
   gives up, or hands over a board other than the one asked for, and fix a
   throw where it is thrown. A slow deal is made cheaper or left.
+  (Added 2026-10-10 by `bound-separate-to-the-boards-it-deals`: where a deal
+  starts over, count the tries a board takes before reading its time, and
+  look at where a failed try stopped. Few tries on a large board is a wait.
+  Hundreds thrown away is first a sign that the draw can be chosen and not
+  hoped for, as Separate's letters were, and only past that a refusal: the
+  same guide, § "Unlucky, impossible, and load-bearing validation".)
 - **Where a 3x100 wrapping deal spends 355 seconds.** Put a time limit and a
   count in `shuffle` and in `finishes` and deal 3x100 wrapping until one is
   slow. If it is the shuffle, the bound on its rounds is the defect and the

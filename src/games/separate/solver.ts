@@ -62,7 +62,7 @@ import type { StepBudget } from "../../engine/step-budget.ts";
 import type { SeparateShape } from "./state.ts";
 
 /** Solver verdict, mirroring upstream's 0/1/2. */
-export const STUCK = 0;
+const STUCK = 0;
 const PROGRESS = 1;
 export const SOLVED = 2;
 
@@ -99,7 +99,8 @@ export type SeparateFiring =
       edges: SeparateEdge[];
     };
 
-/** The solver's working state, reused by the generator across letter fills. */
+/** The solver's working state, which the generator keeps across changes of
+ * letters no deduction has read. */
 export class SolverScratch {
   readonly w: number;
   readonly h: number;
@@ -389,8 +390,8 @@ function allFull(sc: SolverScratch): boolean {
 
 /**
  * One full solve attempt over `letters` on the given scratch (which must have
- * been `init()`ed; the generator keeps it across refills of the letters it has
- * not locked). `genLock`, when supplied, records which grid squares' letters a
+ * been `init()`ed; the generator keeps it while it changes only letters that
+ * `genLock` does not mark). `genLock`, when supplied, records which grid squares' letters a
  * deduction has depended on. Returns STUCK / PROGRESS / SOLVED, mutating the
  * scratch to the deduced partition. `firings` is the ladder census's channel
  * (`separate-ladder.test.ts`).

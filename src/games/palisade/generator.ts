@@ -8,25 +8,13 @@ import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { BORDER, DX, DY, initBorders, outOfBounds } from "../../engine/border-grid.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { adjacentCells, redivide, regionsBeside } from "../../engine/redivide.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { searchAnswers, solver } from "./solver.ts";
 import { EMPTY, encodeDesc, type PalisadeParams, type PalisadeShape } from "./state.ts";
 
 // --- a division the solver solves -------------------------------------------
-
-/** The cells across each edge of `i` that is not on the rim. */
-function adjacent(p: PalisadeShape, i: number): number[] {
-  const out: number[] = [];
-  const x = i % p.w;
-  const y = Math.floor(i / p.w);
-  for (let dir = 0; dir < 4; dir++) {
-    const xx = x + DX[dir];
-    const yy = y + DY[dir];
-    if (!outOfBounds(xx, yy, p.w, p.h)) out.push(yy * p.w + xx);
-  }
-  return out;
-}
 
 /** A division of the grid into regions of `k`: each cell's region, as a label
  * that says only which cells share one. */
@@ -38,7 +26,7 @@ function divide(p: PalisadeShape, rng: RandomState): Int32Array {
 /** Each cell's clue under a division: the walls round it. */
 function cluesOf(p: PalisadeShape, regions: Int32Array): Int8Array {
   return Int8Array.from(regions, (region, i) => {
-    const within = adjacent(p, i).filter((j) => regions[j] === region).length;
+    const within = adjacentCells(p, i).filter((j) => regions[j] === region).length;
     return 4 - within;
   });
 }
@@ -69,88 +57,6 @@ function unplacedWalls(
     }
   }
   return walls;
-}
-
-/** Whether `cells` are one connected piece. */
-function connected(p: PalisadeShape, cells: number[]): boolean {
-  const left = new Set(cells);
-  const stack = [cells[0]];
-  left.delete(cells[0]);
-  for (let i = stack.pop(); i !== undefined; i = stack.pop()) {
-    for (const j of adjacent(p, i)) if (left.delete(j)) stack.push(j);
-  }
-  return left.size === 0;
-}
-
-/** The tries at one piece before a re-division is given up. Most pieces
- * grown at random leave the rest in two parts. */
-const PEEL_TRIES = 20;
-
-/**
- * A connected piece of `k` cells of `pool`, grown at random from a random
- * cell, whose removal leaves the rest connected. Null if no try gave one.
- * `pool` is connected and holds more than `k` cells, so a piece short of `k`
- * always has a cell of the pool beside it.
- */
-function peel(p: PalisadeShape, pool: number[], rng: RandomState): number[] | null {
-  for (let tries = 0; tries < PEEL_TRIES; tries++) {
-    const piece = new Set([pool[randomUpto(rng, pool.length)]]);
-    for (let size = 1; size < p.k; size++) {
-      // A cell beside two of the piece is listed twice, and so likelier.
-      const beside = [...piece]
-        .flatMap((i) => adjacent(p, i))
-        .filter((j) => pool.includes(j) && !piece.has(j));
-      piece.add(beside[randomUpto(rng, beside.length)]);
-    }
-    if (
-      connected(
-        p,
-        pool.filter((i) => !piece.has(i)),
-      )
-    )
-      return [...piece];
-  }
-  return null;
-}
-
-/**
- * Divide the cells of the regions `ids`, which are connected, among them
- * again at random. False if it could not, with `regions` left part-written.
- */
-function redivide(
-  p: PalisadeShape,
-  regions: Int32Array,
-  ids: readonly number[],
-  rng: RandomState,
-): boolean {
-  let pool: number[] = [];
-  regions.forEach((region, i) => {
-    if (ids.includes(region)) pool.push(i);
-  });
-  // The last region is what the others leave.
-  for (const id of ids.slice(0, -1)) {
-    const piece = peel(p, pool, rng);
-    if (piece === null) return false;
-    for (const i of piece) regions[i] = id;
-    pool = pool.filter((i) => !piece.includes(i));
-  }
-  for (const i of pool) regions[i] = ids[ids.length - 1];
-  return true;
-}
-
-/** The regions with a cell beside one of `ids`, those apart. */
-function regionsBeside(
-  p: PalisadeShape,
-  regions: Int32Array,
-  ids: readonly number[],
-): number[] {
-  const beside = new Set<number>();
-  regions.forEach((region, i) => {
-    if (!ids.includes(region)) return;
-    for (const j of adjacent(p, i))
-      if (!ids.includes(regions[j])) beside.add(regions[j]);
-  });
-  return [...beside];
 }
 
 /**

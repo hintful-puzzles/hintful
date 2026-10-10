@@ -1,23 +1,17 @@
 /**
- * Gated C-vs-TS differential for Separate.
+ * The boards upstream's C dealt, against the ported solver.
  *
- * The generator runs over the bit-identical `random.ts`, so `newDesc`
- * reproduces the C desc byte-for-byte for a given seed (docs/games/testing.md §
- * "Byte-match: fidelity where there is a right answer"). It is *solver-gated*:
- * it keeps a board only when the solver fully solves it, so byte-match also
- * demands the TS solver reach C's exact verdict. The follow-on assertion
- * re-solves each C board to confirm it.
+ * Upstream kept a board only when its solver solved it, so the ported solver
+ * solving every one says it reaches upstream's verdict on them. The generator
+ * is not upstream's (it places letters for the solver where upstream filled
+ * at random), so no seed is asked to deal its board again.
  *
  * The fixture is **frozen and cannot be regenerated**: the C build and the
  * trace harness that captured it are gone — see `engine/testing/differential.ts`.
  */
-import { expect } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { describeDescDifferential } from "../../engine/testing/differential.ts";
+import { describe, expect, it } from "vitest";
 import cReference from "./__fixtures__/separate-c-reference.json" with { type: "json" };
-import { newSeparateDesc } from "./generator.ts";
 import { solve } from "./solver.ts";
-import { newState, type SeparateParams } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -28,16 +22,12 @@ interface Fixture {
 }
 const data = cReference as { fixtures: Fixture[] };
 
-describeDescDifferential<Fixture, SeparateParams>({
-  title: "separate differential (frozen C reference)",
-  fixtures: data.fixtures,
-  label: (f) => `${f.w}x${f.h}n${f.k} seed=${f.seed}`,
-  // Upstream deals only what is Easy here.
-  params: (f) => ({ w: f.w, h: f.h, k: f.k, diff: DIFF_EASY }),
-  newDesc: newSeparateDesc,
-  // Every C board is uniquely solvable by the ported solver.
-  extra: (f, p) => {
-    const state = newState(p, f.desc);
-    expect(solve(p, state.letters)).not.toBeNull();
-  },
+describe("separate's solver on upstream's boards (frozen C reference)", () => {
+  it.each(
+    data.fixtures.map((f) => [`${f.w}x${f.h}n${f.k} seed=${f.seed}`, f] as const),
+  )("solves %s", (_label, f) => {
+    const letters = Uint8Array.from(f.desc, (c) => c.charCodeAt(0) - 65);
+    expect(letters).toHaveLength(f.w * f.h);
+    expect(solve(f, letters)).not.toBeNull();
+  });
 });

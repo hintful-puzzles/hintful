@@ -235,6 +235,8 @@ describe("an Unreasonable Separate board", () => {
 
   // The smallest boards that carry the tier.
   describeDealtTiers(separateGame, ["4x2n4du", "3x3n3du", "6x2n3du"]);
+  // Sizes the generator did not reach while it filled a division at random.
+  describeDealtTiers(separateGame, ["9x9n3du", "8x8n4du", "8x8n8du"], { deals: 2 });
   // The largest preset.
   describeDealtTiers(separateGame, ["6x6n6du"], { seldom: true });
 

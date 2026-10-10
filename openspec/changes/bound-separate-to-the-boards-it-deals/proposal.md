@@ -68,12 +68,23 @@ every pair of squares).
 
 ## What Changes
 
-- `validateParams` refuses, when a board is to be dealt, a board Separate
-  does not deal in a few seconds, with a reason that names what to change:
-  a smaller grid or fewer letters.
-- The retry cap on divisions is sized to the rarest board the bound admits,
-  so that running it out is a defect and takes seconds.
+As built, which is not what was filed: `design.md` has the measurements. The
+sizes the tables above call never dealt are dealt, and the refusal sits far
+past them.
+
+- The generator no longer fills a division at random. It mends a division
+  until no region holds a ring, which the solver can never finish, and places
+  the letters for the solver: where it stops, two letters are swapped inside
+  a region so that an open edge is walled.
+- `validateParams` refuses, when a board is to be dealt, the sizes that
+  generator gives up on more often than it deals: from eight letters a grid
+  whose squares times letters squared pass 10,000, more than thirteen letters
+  off a strip, and two narrow shapes. The reason names what to change: fewer
+  letters or a smaller grid. Up to seven letters no size is refused.
+- The retry cap on divisions is sized to the rarest board that admits.
 - A pasted board of any size still opens.
+- Palisade's re-division of a few regions moves to `engine/redivide.ts`, for
+  both games.
 
 ## What to settle first
 
@@ -113,6 +124,12 @@ every pair of squares).
 
 ## Impact
 
-- `src/games/separate/state.ts` (`validateParams`), `generator.ts` (the retry
-  cap), `separate-tier.test.ts` and `separate.test.ts`,
-  `help/games/separate.md` and `help/differences.md`.
+- `src/games/separate/generator.ts` (rewritten), `state.ts`
+  (`validateParams`), and its tests: the frozen C boards become a check on
+  the solver alone, and the ladder census runs on dealt boards.
+- `src/engine/redivide.ts` (new) and `src/games/palisade/generator.ts`, which
+  deals the boards it did.
+- `help/differences.md`, `docs/games/solver-and-generator.md` and
+  `docs/games/engine-catalog.md`.
+- Every Separate board moves: no seed deals the board it did. The app hands
+  out boards and not seeds.

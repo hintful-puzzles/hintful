@@ -378,6 +378,16 @@ bounded").
 connected ominoes. RNG-faithful; byte-match critical. Consumers: Solo
 (jigsaw), Palisade, Separate.
 
+### `redivide.ts` — divide a few regions of a partition again
+
+`redivide` takes some neighboring regions of an equal-omino partition and
+divides their cells among them again at random, and `regionsBeside` names
+the neighbors to widen it by. For a generator that mends a division where it
+fails and does not draw a whole new one
+([solver-and-generator.md](solver-and-generator.md) § "Unlucky, impossible,
+and load-bearing validation"). Its `ringless` flag grows each piece as a
+tree. Consumers: `npm run refs -- src/engine/redivide.ts redivide`.
+
 ### `laydomino.ts` — random domino tiling
 
 `dominoLayout(w, h, rs)` (upstream `laydomino.c`): a random 2×1 tiling.

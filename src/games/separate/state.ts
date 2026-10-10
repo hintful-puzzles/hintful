@@ -119,7 +119,7 @@ export const paramConfig: ParamConfigItem<SeparateParams>[] = [
     bounds: { min: 1 },
   }),
   numberItem<SeparateParams>("letters", "Letters", "k", {
-    doc: "How many different letters the grid uses, which is also how many squares each region holds. It must divide the number of squares in the grid exactly, and a new puzzle needs from 2 to 26 of them, fewer than the number of squares.",
+    doc: "How many different letters the grid uses, which is also how many squares each region holds. It must divide the number of squares in the grid exactly, and a new puzzle needs at least 2 of them, fewer than the number of squares. A grid one square wide takes up to 26. Any other takes up to 13, and from 8 letters up only a small grid: a puzzle with many letters on a large grid is too rare to deal.",
     bounds: { min: 1 },
     label: { slot: "tail", words: (p) => `${p.k} letters` },
   }),
@@ -143,6 +143,50 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   searchTierSegment(paramConfig),
 ]);
 
+/** The most letters a board wider and taller than one square is dealt in. */
+const MOST_LETTERS = 13;
+
+/** From this many letters, a board is dealt only up to {@link MOST_WORK}. */
+const CROWDED_FROM = 8;
+
+/** The most squares times letters squared of a board in {@link CROWDED_FROM}
+ * letters or more. */
+const MOST_WORK = 10_000;
+
+/**
+ * Whether the generator gives up on a board more often than it deals one.
+ *
+ * It tries one division of the grid after another, and with many letters next
+ * to none can be given letters the solver gets through: a long border between
+ * the same two regions needs a different shared letter at every step. Measured
+ * 2026-10-10, the divisions tried for a board dealt follow the squares times
+ * the letters squared. Under 10,000 the median was 5 at 9x9 in nines, 35 at
+ * 12x12 in eights and 5x12 in twelves, and 176 at most at 10x10 in tens; past
+ * it 969 at 10x12 in tens and 1,000 at 8x9 in twelves, and none was dealt in
+ * 100 seconds at 12x12 in twelves or 20x20 in eights. Up to seven letters a
+ * board takes few divisions at any size (10 at 20x21 in sixes), so a large
+ * one is a wait and not a failure, and is dealt.
+ *
+ * Past thirteen letters only a strip was dealt (nine sizes from 4x7 in
+ * fourteens to 4x13 in twenty-sixes, 20 seconds each, and one board among
+ * them). Two narrow shapes fail short of that. A board three wide in two
+ * regions of nine or more leaves the solver a corner to start from and
+ * nothing after: none in 5,682 divisions at 3x6 in nines, none in 709 at 3x8
+ * in twelves. And two rows seldom divide into thirteens with no region
+ * going round on itself, which the solver cannot finish: one board in 40
+ * seconds at 2x13, none at 2x26, where 2x12 in twelves takes ten.
+ *
+ * A strip divides one way and is dealt at any length.
+ */
+function seldomDealt(w: number, h: number, k: number): boolean {
+  const narrow = Math.min(w, h);
+  if (narrow === 1) return false;
+  if (k > MOST_LETTERS) return true;
+  if (k >= CROWDED_FROM && w * h * k * k > MOST_WORK) return true;
+  if (narrow === 2) return k === MOST_LETTERS;
+  return narrow === 3 && k >= 9 && w * h === 2 * k;
+}
+
 export function validateParams(p: SeparateParams, full: boolean): string | null {
   const { w, h, k } = p;
   if (w > 0x7fffffff / h) return AREA_TOO_LARGE;
@@ -152,6 +196,8 @@ export function validateParams(p: SeparateParams, full: boolean): string | null 
   if (k > 26) return "Number of letters must be at most 26.";
   if (k === wh) return "Number of letters must be less than the grid area.";
   if (k === 1) return "Number of letters must be at least two.";
+  if (seldomDealt(w, h, k))
+    return `A ${w}x${h} puzzle with ${k} letters is too rare to deal; use fewer letters or a smaller grid.`;
   if (p.diff !== DIFF_UNREASONABLE) return null;
   // No board of these has one answer that the solver does not reach
   // (`separate-tier.test.ts` tries every fill of the small ones). A strip

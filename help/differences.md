@@ -93,7 +93,13 @@ work, but they are likely to change in a future update, and might be removed.
   original's unfinished version of the puzzle does not have. An Unreasonable
   board has one solution that no forced edge leads to, so somewhere you have
   to try joining two squares. The boards the original makes are this app's
-  *Easy* ones.
+  *Easy* ones. Far more sizes are dealt: the original fills the grid with
+  letters at random until a board happens to be solvable, which next to none
+  is once the grid or the number of letters grows, where this app places the
+  letters so that it is. A 20 by 20 board with two letters takes a second, and an 8
+  by 8 with eight a moment. A board with many letters on a large grid is
+  still refused, with a reason: at most 13 letters, and from 8 letters only a
+  small grid, such as 10 by 10 with ten.
 
 * **Signpost**: there is a difficulty, *Easy* or *Unreasonable*, which the
   original does not have. An Unreasonable board has one solution that no
