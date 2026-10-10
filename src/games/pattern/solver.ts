@@ -13,6 +13,12 @@
  * board is dealt by, and what Solve and the mistake check know the answer
  * from at either tier. The hint never runs it.
  */
+import {
+  type Answer,
+  answerCache,
+  type Deduced,
+  searchAnswers as searchBoard,
+} from "../../engine/answer-search.ts";
 import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
@@ -245,20 +251,18 @@ function allLines(w: number, h: number): DirtyLines {
   return { col: new Uint8Array(w).fill(1), row: new Uint8Array(h).fill(1) };
 }
 
-/** Where line deduction leaves a board: every square decided, some left that
- * no single line decides, or a line that nothing fits. */
-type LineVerdict = "solved" | "stuck" | "contradiction";
-
 /** Deduce on `matrix` a line at a time, from the `dirty` lines, until no line
- * decides anything more. Every line a square changed on is read again before
- * this returns, so a board it calls solved satisfies every clue. */
+ * decides anything more: every square is decided, or some are left that no
+ * single line decides, or a line has nothing that fits it. Every line a square
+ * changed on is read again before this returns, so a board it calls solved
+ * satisfies every clue. */
 function deduceLines(
   matrix: Uint8Array,
   w: number,
   h: number,
   clues: readonly (readonly number[])[],
   dirty: DirtyLines,
-): LineVerdict {
+): Deduced {
   let any = true;
   while (any) {
     any = false;
@@ -294,19 +298,13 @@ export function isSoluble(
   return solvePuzzle(w, h, clues).ok;
 }
 
-/** What a search for a board's answers established: its one answer as
- * `GRID_*` values, a proof that it has several or none, or neither once the
- * budget ran out. */
-export type PatternAnswer =
-  | { readonly kind: "one"; readonly grid: Uint8Array }
-  | { readonly kind: "several" }
-  | { readonly kind: "none" }
-  | { readonly kind: "out-of-reach" };
+/** What a search established about a board's answers; the one answer is its
+ * squares as `GRID_*` values. */
+export type PatternAnswer = Answer<Uint8Array>;
 
 /**
  * The positions a search may try before it gives up, each one a square
- * assumed and the lines deduced from it. Counted in positions and not in
- * time, so that a board is refused or dealt the same on every machine.
+ * assumed and the lines deduced from it.
  *
  * It decides which Unreasonable boards exist: a picture that needs more is
  * thrown away when dealing and refused when pasted. Of 225 boards dealt at
@@ -318,10 +316,8 @@ const SEARCH_BUDGET = 2_000;
 
 /**
  * Count a board's answers up to two, by trial and error over the line
- * deduction: where no line decides a square, assume one each way and deduce
- * on. This is the search an Unreasonable board asks of its player, and it is
- * what proves such a board has exactly one answer, which the line deduction
- * cannot: stopping short, it has shown neither a second answer nor none.
+ * deduction: where no line decides a square, assume it shaded, then clear,
+ * and deduce on from the two lines through it.
  */
 export function searchAnswers(
   w: number,
@@ -331,38 +327,25 @@ export function searchAnswers(
   immutable?: Uint8Array,
   budget: number = SEARCH_BUDGET,
 ): PatternAnswer {
-  let found: Uint8Array | null = null;
-  let left = budget;
-  // Depth first, the board of each position on the stack with the lines its
-  // last change touched.
-  const stack: { matrix: Uint8Array; dirty: DirtyLines }[] = [
-    { matrix: seededMatrix(w, h, seedGrid, immutable), dirty: allLines(w, h) },
-  ];
-  for (let top = stack.pop(); top !== undefined; top = stack.pop()) {
-    if (left-- <= 0) return { kind: "out-of-reach" };
-    const { matrix, dirty } = top;
-    const verdict = deduceLines(matrix, w, h, clues, dirty);
-    if (verdict === "contradiction") continue;
-    if (verdict === "solved") {
-      if (found !== null) return { kind: "several" };
-      found = matrix;
-      continue;
-    }
-    const at = branchSquare(matrix, w, h);
-    for (const value of [S_DOT, S_BLOCK]) {
-      const next = Uint8Array.from(matrix);
-      next[at] = value;
-      const touched = { col: new Uint8Array(w), row: new Uint8Array(h) };
-      touched.col[at % w] = 1;
-      touched.row[(at / w) | 0] = 1;
-      stack.push({ matrix: next, dirty: touched });
-    }
-  }
-  if (found === null) return { kind: "none" };
-  return {
-    kind: "one",
-    grid: found.map((v) => (v === S_BLOCK ? GRID_FULL : GRID_EMPTY)),
-  };
+  // A position is a board with the lines its last change touched.
+  return searchBoard<{ matrix: Uint8Array; dirty: DirtyLines }, Uint8Array>({
+    start: { matrix: seededMatrix(w, h, seedGrid, immutable), dirty: allLines(w, h) },
+    deduce: ({ matrix, dirty }) => deduceLines(matrix, w, h, clues, dirty),
+    assume({ matrix }) {
+      const at = branchSquare(matrix, w, h);
+      return [S_BLOCK, S_DOT].map((value) => {
+        const next = Uint8Array.from(matrix);
+        next[at] = value;
+        const touched = { col: new Uint8Array(w), row: new Uint8Array(h) };
+        touched.col[at % w] = 1;
+        touched.row[(at / w) | 0] = 1;
+        return { matrix: next, dirty: touched };
+      });
+    },
+    solution: ({ matrix }) =>
+      matrix.map((v) => (v === S_BLOCK ? GRID_FULL : GRID_EMPTY)),
+    budget,
+  });
 }
 
 /** The undecided square to assume next: the one with the most decided
@@ -395,29 +378,22 @@ export function linesDecide(state: PatternState): boolean {
   return solvePuzzle(w, h, clues, state.grid, immutable).ok;
 }
 
-/** Each board's answers, searched once: every state of a game shares its
- * `common`, and the mistake check asks after every move. */
-const answers = new WeakMap<PatternCommon, PatternAnswer>();
+/** Keyed on `common`, which every state of a game shares. */
+const answers = answerCache<PatternCommon, Uint8Array>();
 
 /** What a search of a state's board established about its answers, from its
  * clues and any squares a picture desc fixes. The player's marks are not
  * read. */
 export function answerOf(state: PatternState): PatternAnswer {
-  const { common } = state;
-  let answer = answers.get(common);
-  if (answer === undefined) {
-    const { w, h, clues, immutable } = common;
-    answer = searchAnswers(w, h, clues, state.grid, immutable);
-    answers.set(common, answer);
-  }
-  return answer;
+  const { w, h, clues, immutable } = state.common;
+  return answers(state.common, () => searchAnswers(w, h, clues, state.grid, immutable));
 }
 
 /** The board's one answer as `GRID_*` values, or `null` where the search
  * found several, none, or ran out. */
 export function solveState(state: PatternState): Uint8Array | null {
   const answer = answerOf(state);
-  return answer.kind === "one" ? answer.grid : null;
+  return answer.kind === "one" ? answer.solution : null;
 }
 
 /**

@@ -7,12 +7,13 @@
  * The fixture is frozen and cannot be regenerated; see
  * `engine/testing/differential.ts`.
  */
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/pattern-c-reference.json" with { type: "json" };
 import { newPatternDesc } from "./generator.ts";
 import { patternGame } from "./index.ts";
-import { DIFF_EASY, type PatternParams } from "./state.ts";
+import type { PatternParams } from "./state.ts";
 
 interface Fixture {
   seed: string;

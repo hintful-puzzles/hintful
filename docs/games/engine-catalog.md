@@ -1070,6 +1070,23 @@ Solve searches
 ([solver & generator](./solver-and-generator.md) § "Giving a deductive game an
 Unreasonable tier").
 
+### `answer-search.ts` — a deductive game's Unreasonable tier
+
+What is the same in every deductive game with the two tiers Easy and
+Unreasonable. `searchAnswers({ start, deduce, assume, solution, budget })`
+counts a board's answers to two by trial and error over the game's own
+deduction, and returns an `Answer`: one (with it), several, none, or out of
+reach once the budget of positions is spent. `answerCache()` keeps it per
+board, `solveFromAnswer(answer, move)` is Solve, and
+`searchTierContract({ newState, deductionFinishes, answerOf })` is the
+`difficulty` contract. `DIFF_EASY`, `DIFF_UNREASONABLE`, `searchTierItem` and
+`searchTierSegment` are the tiers, their Custom field and their `de`/`du` in
+the params. The deduction, what to assume where it stops, the budget and the
+generator stay the game's. Take the population with
+`npm run refs -- src/engine/answer-search.ts searchAnswers`. See
+[solver & generator](./solver-and-generator.md) § "Giving a deductive game an
+Unreasonable tier".
+
 ### `desc-reader.ts` — the cursor a desc parser drives
 
 `readDesc(desc, (r) => …)` runs a parser and returns its `DescParse`. The

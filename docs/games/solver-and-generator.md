@@ -468,29 +468,38 @@ deduction. A rule the hint never had is still a missing rung.
 a board with one answer that they do not reach** (owner, 2026-10-10, so that a
 player meets "trial and error" only where they asked for it). Pattern was the
 first, and [`pattern/`](../../src/games/pattern/) is the copy to follow. What
-the tier is made of:
+is the same in every such game is `engine/answer-search.ts`, and the game
+writes three things for it: its deduction with a verdict, what to assume where
+that stops, and a generator. What the tier is made of:
 
 - **A search that counts answers to two**, by trial and error over the game's
   own deduction (`searchAnswers`). Its four verdicts are one answer, several,
   none, and out of reach once a budget of positions is spent. The deduction
   alone cannot stand in for it: stopping short, it has shown neither a second
-  answer nor none.
+  answer nor none. The game gives it `deduce`, which says solved, stuck or
+  contradiction of a position, and `assume`, which divides a stuck one by one
+  undecided thing: a square each way in Pattern, a cell's letters in a game
+  with more than two.
 - **A generator that keeps a board only where the deduction stops short and
   the search says one.**
-- **The contract**: the lower cap is what the untiered game answered
-  `finishesByDeduction` with, less its Solve (`hintFinishes`, since Solve now
-  searches), and the upper cap is "the search says one". The game drops
-  `finishesByDeduction`.
+- **The contract** (`searchTierContract`): the lower cap is what the untiered
+  game answered `finishesByDeduction` with, less its Solve (`hintFinishes`,
+  since Solve now searches), and the upper cap is "the search says one". The
+  game drops `finishesByDeduction`.
 - **Solve and the mistake check take the answer from the search**, at either
-  tier, cached on the board's shared part. Solve says `MULTIPLE_SOLUTIONS` or
-  `NO_SOLUTION` where the search proved it, which is what refuses such a board
-  at load.
+  tier, cached on the board's shared part (`answerCache`). Solve
+  (`solveFromAnswer`) says `MULTIPLE_SOLUTIONS` or `NO_SOLUTION` where the
+  search proved it, which is what refuses such a board at load.
 - **The hint does not change.** It already ends in `DEDUCTION_EXHAUSTED` where
   nothing follows, and the midend lets that through on a tier named
   Unreasonable.
-- **The codec** takes `choice(paramConfig, "d", "difficulty", "eu", { full:
-  true })`, so the tier is always in the full form and never in the shared
-  one, and a string from before the tiers reads as Easy.
+- **The params** take `searchTierItem` and the codec `searchTierSegment`, so
+  the tier is always in the full form and never in the shared one, and a
+  string from before the tiers reads as Easy.
+- **The order `assume` gives its positions in is part of the budget.** A
+  position is counted when it is tried, so trying the likelier assumption
+  first is what keeps a board inside the budget, and changing the order
+  changes which boards a pasted ID is refused for.
 
 What Pattern taught, each a thing to measure before the next game:
 

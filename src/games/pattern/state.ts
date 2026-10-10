@@ -10,6 +10,13 @@
  * `grid` clones per move.
  */
 
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import { isDigit } from "../../engine/decimal.ts";
 import {
@@ -19,10 +26,10 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier, tierNames } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
+import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { presetGrid } from "../../engine/preset-grid.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -42,17 +49,12 @@ export const clickWhite = (v: number): GridVal => ((v + 1) % 3) as GridVal;
 
 // --- types ---------------------------------------------------------------
 
-/** A board every square of which some row or column decides on its own. */
-export const DIFF_EASY = 0;
-/** A board with one answer that no row or column alone reaches. */
-export const DIFF_UNREASONABLE = 1;
-const DIFF_NAMES = tierNames(2, { search: true });
-const DIFF_CHARS = "eu";
-
 export interface PatternParams {
   w: number;
   h: number;
-  /** `DIFF_EASY` or `DIFF_UNREASONABLE`. */
+  /** `DIFF_EASY`, a board every square of which some row or column decides
+   * on its own, or `DIFF_UNREASONABLE`, one with a single answer that no row
+   * or column alone reaches. */
   diff: number;
 }
 
@@ -141,9 +143,10 @@ export const paramConfig: ParamConfigItem<PatternParams>[] = [
     doc: "Size of the grid in squares. An Unreasonable puzzle needs a grid at least two squares wide and tall, and four squares one way.",
     bounds: { min: 1 },
   }),
-  difficultyItem(DIFF_NAMES, "diff", {
-    doc: "An Easy puzzle can be finished one row or column at a time: there is always a line whose numbers, with what is already marked, decide another square. An Unreasonable one has a single solution that no line on its own reaches, so somewhere you have to try a square and see what follows, and the Hint button stops where the lines do.",
-  }),
+  searchTierItem(
+    "diff",
+    "An Easy puzzle can be finished one row or column at a time: there is always a line whose numbers, with what is already marked, decide another square. An Unreasonable one has a single solution that no line on its own reaches, so somewhere you have to try a square and see what follows, and the Hint button stops where the lines do.",
+  ),
 ];
 
 export function presets(): PresetMenu<PatternParams> {
@@ -155,7 +158,7 @@ export function presets(): PresetMenu<PatternParams> {
  * Easy, the only kind upstream deals. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
+  searchTierSegment(paramConfig),
 ]);
 
 /** Whether some picture of this size has one answer that needs search. None
@@ -171,7 +174,7 @@ export function validateParams(p: PatternParams, full: boolean): string | null {
     return AREA_TOO_LARGE;
   }
   if (full && p.diff === DIFF_UNREASONABLE && !carriesUnreasonable(p))
-    return noSuchTier(`${p.w}x${p.h} puzzle`, DIFF_NAMES[p.diff]);
+    return noSuchTier(`${p.w}x${p.h} puzzle`, SEARCH_TIER_NAMES[p.diff]);
   return null;
 }
 

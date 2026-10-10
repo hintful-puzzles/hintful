@@ -4,6 +4,7 @@
  * Tier 2.5 — a render scenario through a real Midend with a snapshot.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -32,8 +33,6 @@ import { COL_CELL, COL_FULL } from "./render.ts";
 import { findMistakes, solveState } from "./solver.ts";
 import {
   computeRuns,
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
   decodeParams,
   encodeClues,
   encodeParams,

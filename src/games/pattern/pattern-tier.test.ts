@@ -8,6 +8,7 @@
  * that a board has one answer.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { DESC_CONTRADICTORY, DESC_NOT_UNIQUE } from "../../engine/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
@@ -20,8 +21,6 @@ import { patternGame } from "./index.ts";
 import { findMistakes, linesDecide, searchAnswers, solveState } from "./solver.ts";
 import {
   computeRuns,
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
   encodeClues,
   executeMove,
   GRID_EMPTY,

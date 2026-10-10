@@ -7,7 +7,7 @@
  * paints with Ctrl/Shift held.
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   type Game,
   type HintResult,
@@ -19,10 +19,7 @@ import {
 } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -46,7 +43,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   interpretTargetVerbs,
@@ -83,7 +79,6 @@ import {
 import {
   clickBlack,
   clickWhite,
-  DIFF_EASY,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -442,46 +437,20 @@ function hintKeepTrack(
   return verdict;
 }
 
-/** Solve from the search, which knows the answer at either tier, and says
- * which of the ways a board can lack one it proved. */
 function solve(orig: PatternState): SolveResult<PatternMove> {
-  const answer = answerOf(orig);
-  switch (answer.kind) {
-    case "one":
-      return {
-        ok: true,
-        move: {
-          type: "solve",
-          grid: Array.from(answer.grid, (v) => (v === GRID_FULL ? "1" : "0")).join(""),
-        },
-      };
-    case "several":
-      return { ok: false, error: MULTIPLE_SOLUTIONS };
-    case "none":
-      return { ok: false, error: NO_SOLUTION };
-    case "out-of-reach":
-      return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  }
+  return solveFromAnswer(answerOf(orig), (grid) => ({
+    type: "solve",
+    grid: Array.from(grid, (v) => (v === GRID_FULL ? "1" : "0")).join(""),
+  }));
 }
 
-/**
- * Pattern's two tiers. Easy is what the lines decide and the hint, which
- * walks the same lines a step at a time, finishes: the hint is asked as well
- * because it is what a player is left with where it stops. Unreasonable is a
- * board the search proves has one answer.
- */
-const difficulty: DifficultyContract<PatternParams> = {
-  solveAtCap(p, desc, cap) {
-    const state = newState(p, desc);
-    if (cap === DIFF_EASY)
-      return linesDecide(state) && hintFinishes(patternGame, state)
-        ? "solved"
-        : "unsolved";
-    const answer = answerOf(state);
-    if (answer.kind === "one") return "solved";
-    return answer.kind === "none" ? "impossible" : "unsolved";
-  },
-};
+/** Easy is what the lines decide and the hint, which walks the same lines a
+ * step at a time, finishes. */
+const difficulty = searchTierContract<PatternParams, PatternState>({
+  newState,
+  deductionFinishes: (state) => linesDecide(state) && hintFinishes(patternGame, state),
+  answerOf,
+});
 
 export const patternGame: Game<
   PatternParams,

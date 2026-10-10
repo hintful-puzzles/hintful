@@ -7,6 +7,7 @@
  * color-legend roles are disjoint, and refusal and keep-track behave.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
@@ -14,7 +15,6 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type PatternHint, patternGame } from "./index.ts";
 import { deduceHintPlan, solveState } from "./solver.ts";
 import {
-  DIFF_EASY,
   GRID_EMPTY,
   GRID_FULL,
   GRID_UNKNOWN,

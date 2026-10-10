@@ -42,21 +42,22 @@
 
 ## 3. The rest
 
-- [ ] 3.1 Say what transferred from the first game and what the engine should
-  own, and move it there before the second game. What Pattern wrote that is
-  not about nonograms, read 2026-10-10:
-  - the four verdicts of an answer search (`PatternAnswer`), which every
-    game's search will return;
-  - Solve from those verdicts (`solve` in `pattern/index.ts`): the move for
-    one answer, `MULTIPLE_SOLUTIONS`, `NO_SOLUTION`, `PUZZLE_NOT_REASONABLE`;
+- [x] 3.1 Say what transferred from the first game and what the engine should
+  own, and move it there before the second game. **Done 2026-10-10:**
+  `src/engine/answer-search.ts` has what Pattern wrote that is not about
+  nonograms, and Pattern is on it:
+  - the four verdicts of an answer search (`Answer`);
+  - Solve from those verdicts (`solveFromAnswer`);
   - the contract from "deduction and the hint finish it" and "the search says
-    one" (`difficulty` in `pattern/index.ts`);
-  - the per-board cache of the answer (`answerOf`);
-  - the two tier constants, their names and the `eu` letters.
-  The depth-first loop itself (`searchAnswers`) is twenty lines around the
-  game's own deduction and its own choice of what to assume. Whether it is
-  one shape is a question for the second game, whose cells take more than two
-  values (ABCD) or whose assumption is an edge (Palisade).
+    one" (`searchTierContract`);
+  - the per-board cache of the answer (`answerCache`);
+  - the two tier constants, their names, their Custom field and the `eu`
+    letters (`searchTierItem`, `searchTierSegment`);
+  - the depth-first loop (`searchAnswers`). It is one shape: a position is
+    whatever the game's deduction works on, and the game says how a stuck one
+    divides, so a cell of more than two values or an edge is the game's
+    `assume` and nothing in the loop. Pattern's count of positions is
+    unchanged, since it tries shaded before clear as before.
 - [ ] 3.2 Each remaining game, as task 2, one commit a game: ABCD, Crossing,
   Filling, Mosaic, Palisade, Separate, Signpost, Sticks, then Net, Range and
   Rectangles. As each joins, `untiered-load.test.ts` loses its ledger line;
