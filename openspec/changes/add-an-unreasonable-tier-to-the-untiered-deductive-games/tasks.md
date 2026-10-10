@@ -283,6 +283,34 @@
       it, since it would move the Easy boards and leave most of these.
       10x10 Unreasonable takes 1.5 s on average and 4 s at worst, the
       slowest line on this menu.
+  - **Net, read 2026-10-10 and not begun.** What the code says, for the
+    session that takes it; none of it is measured, so re-check each:
+    - `netSolver` (`net/solver.ts`) starts every tile at all its turnings
+      and has no way to be told one is settled. A search position is a grid
+      with some tiles held, so the solver has to keep a held tile as it is, and
+      `assume` wants the turnings a tile has left, which the solver keeps in
+      a local array and does not return.
+    - Its "unique" verdict is every tile narrowed to one turning. Under a
+      wrong assumption that may not be an answer: it joins two tiles when a
+      side is wired in every turning left, with no check that the join
+      closes a loop. Test it before trusting it, and take "solved" from
+      `isComplete`. Every tile powered is a spanning tree with every wire
+      end met, since the tiles hold exactly the ends a tree needs.
+    - Easy is two things today: the solver's verdict and the hint engine's
+      (`finishes` in `net/deduce.ts`), which the generator's last step and
+      `finishesByDeduction` both ask.
+    - There is no clue to strip. Barriers are the only thing a board could
+      lose, and the generator rewires a drawn network until the solver
+      finds it unique (`perturb`). A drawn network kept where the solver
+      stops and the search says one is Pattern's shape; count how often
+      that happens, wrapping and not, before choosing.
+    - The params codec is written by hand (`net/state.ts`) and skips any
+      letter it does not know, which is how upstream's `a` reads today and
+      how a `d` would. `solve` replays a stored answer where it has one, and
+      `net/mistakes.ts` keeps its own per-board cache of the solver's answer,
+      keyed on `barriers`.
+    - A wrapping board two wide or high is refused already, as having no
+      single answer.
   - [ ] Net, Range,
     Rectangles. For each, do what Crossing's measurement did (the guide,
     "What Crossing, the third, added"): count what one more deduction would
