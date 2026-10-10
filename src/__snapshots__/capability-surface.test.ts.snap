@@ -1327,8 +1327,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "rect",
     "members": [
+      "difficulty",
       "findMistakes",
-      "finishesByDeduction",
       "hint",
       "hintGesture",
       "hintKeepTrack",

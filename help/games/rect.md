@@ -50,6 +50,14 @@ are the ideas the hint teaches, from the plainest up:
   are in different rectangles, so the edge must be a line. Drawing it
   keeps what you worked out: a fit that crosses a line no longer counts.
 
+On an Unreasonable board there comes a point where none of these settles
+a rectangle or a line. The hint then says that nothing further follows by
+deduction instead of choosing for you. Save your position and try one of
+the fits of a number that has only two or three left: if it is wrong, a
+few forced rectangles later some number has no fit left, or a square has
+no rectangle that can cover it. The hint carries on from whatever you
+draw.
+
 ## Rectangles parameters
 
 {{parameters}}

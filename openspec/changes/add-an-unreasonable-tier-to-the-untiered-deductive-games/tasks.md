@@ -9,7 +9,7 @@
   **Decided 2026-10-10** (the reasons are in the proposal, "Which games
   join"): Net, Range and Rectangles join, each after its own task-2
   measurement. Mines does not.
-- [ ] 1.2 For each game, show that adding the difficulty item leaves every
+- [x] 1.2 For each game, show that adding the difficulty item leaves every
   existing params string decoding to the lower tier. The owner's answer
   (proposal, "What to settle first") is that the tier is always written, so
   the full encoding gains `de` and the snapshot's diff shows only that.
@@ -36,6 +36,8 @@
   `5x5b1de`), and the menu gained its five Unreasonable lines.
   **Range: done.** Every line gained `de` (`6x9` is now `6x9de`), and the
   menu gained its four Unreasonable lines.
+  **Rectangles: done.** Every line gained `de` after what it had (`7x7e1`
+  is now `7x7e1de`), and the menu gained its five Unreasonable lines.
 
 ## 2. One game to the end: Pattern
 
@@ -79,7 +81,7 @@
     divides, so a cell of more than two values or an edge is the game's
     `assume` and nothing in the loop. Pattern's count of positions is
     unchanged, since it tries shaded before clear as before.
-- [ ] 3.2 Each remaining game, as task 2, one commit a game: ABCD, Crossing,
+- [x] 3.2 Each remaining game, as task 2, one commit a game: ABCD, Crossing,
   Filling, Mosaic, Palisade, Separate, Signpost, Sticks, then Net, Range and
   Rectangles. As each joins, `untiered-load.test.ts` loses its ledger line;
   its two floors of ten games (`declared.length`, and the games answering
@@ -365,10 +367,43 @@
     - **For the owner to look at, not blocking:** these boards are one trial
       deep, as Sticks' are: every one of 180 falls to a square tried and
       followed through.
-  - [ ] Rectangles. Do what Crossing's measurement did (the guide,
-    "What Crossing, the third, added"): count what one more deduction would
-    finish of the boards the tier deals, and sweep the shorter side when
-    setting a size bound.
+  - [x] **Rectangles** (2026-10-10). Measured: a deal is 17 ms at 7x7 and
+    9x9, 80 ms at 11x11, 0.15 s at 13x13, 0.3 s at 15x15 and 0.65 s at 19x19,
+    against 2 to 20 ms for an Easy one; a dealt board needs a median of 3
+    positions, 6 at 7x7, and 9 at most; the hint leaves a median of 38
+    squares of 49 outside a finished rectangle at 7x7 and 30 of 225 at
+    15x15. Decided, each with its reason in the guide's "What Rectangles,
+    the twelfth, added":
+    - The generator drops each number on a square of its rectangle at
+      random, with none of the solver's steering, and keeps a board the
+      solver and the hint both stop on that the search proves has one answer
+      within 30 positions. Moving an Easy board's numbers was timed and is
+      two to four times slower. One more deduction would not finish these
+      boards: a rectangle that leaves another number none settles 0 of 180,
+      and a trial followed through the solver settles every one.
+    - **Easy is a board the hint finishes**, with one answer, whether or not
+      the solver reaches it: the hint knows more than the solver here. A
+      board the solver finishes and the hint does not, which was refused
+      (about one ID in 750 that upstream writes), now opens as Unreasonable,
+      and one only the hint finishes, which was refused too, opens as Easy.
+    - The search reads that the solver's deductions broke off, which
+      upstream's verdict forgets.
+    - The menu is five sizes at both tiers and 17x17 and 19x19 at Easy,
+      twelve lines.
+    - Unreasonable is dealt up to 400 squares. It is refused on a strip, on
+      2x2 to 2x8, on 3x3 and on 3x4, where every division and every place
+      for its numbers was tried. A 4x4 board has the tier and is seldom
+      dealt.
+    - The ledger's Rectangles board has several answers.
+    - **A defect in Easy, found by the sweep and filed, not fixed here.**
+      Rectangles' bound is a million squares, and a 70x70 board takes 4.4 s
+      and a 100x100 one 28. The numbers are in
+      `openspec/changes/bound-rect-to-the-boards-it-deals`.
+    - **For the owner to look at, not blocking:** 17x17 and 19x19 are on the
+      menu at Easy alone, to keep it to twelve lines; Custom deals both at
+      Unreasonable. A small board with a large expansion factor (7x7 at 1
+      and past it, 11x11 at 4) has few rectangles and gives up at
+      Unreasonable in a fifth of a second.
 
 ## 4. Close
 

@@ -3,6 +3,7 @@
  * deals only boards the rungs finish, keep-track, and the frame a step paints.
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -26,6 +27,7 @@ const params = (w: number, h: number, expandfactor = 0): RectParams => ({
   w,
   h,
   expandfactor,
+  diff: DIFF_EASY,
 });
 const P7 = params(7, 7);
 
@@ -173,10 +175,10 @@ describe("rect hint plan", () => {
   });
 
   it("the gate turns away a board the rungs cannot finish", () => {
-    // A board the solver settles (`rect.test.ts` pins that loading refuses
-    // it) by ruling
-    // fits out over several rounds, none of which leaves an edge no fit
-    // crosses, so no line can record them and the generator deals again.
+    // A board the solver settles (`rect.test.ts` pins that it opens as
+    // Unreasonable) by ruling fits out over several rounds, none of which
+    // leaves an edge no fit crosses, so no line can record them and the
+    // generator, dealing an Easy board, deals again.
     const p = params(9, 9);
     expect(rungsFinish(newState(p, "c4c5b9c12b2h2k12e2f2_3c12a8l3d5d"))).toBe(false);
     expect(rungsFinish(newState(P7, "2j8_4b2b4a4d3b6j6b6b2b2"))).toBe(true);

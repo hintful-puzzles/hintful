@@ -6,6 +6,7 @@
  * re-baselines; the targeted assertions survive a careless `-u`).
  */
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
@@ -14,7 +15,7 @@ import { newState } from "./moves.ts";
 import { COL_CORRECT, COL_MISTAKE } from "./render.ts";
 import type { RectMove, RectParams } from "./state.ts";
 
-const P: RectParams = { w: 7, h: 7, expandfactor: 0 };
+const P: RectParams = { w: 7, h: 7, expandfactor: 0, diff: DIFF_EASY };
 const ID = `${rectGame.encodeParams(P, true)}#rect-scenario`;
 
 describe("rect render scenarios", () => {

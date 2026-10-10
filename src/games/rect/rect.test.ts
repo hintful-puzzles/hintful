@@ -4,11 +4,9 @@
  * completion, `findMistakes`, and the mistake render overlay.
  */
 import { describe, expect, it } from "vitest";
-import {
-  DESC_NOT_DEDUCIBLE,
-  loadVerdict,
-  validateDesc,
-} from "../../engine/desc-error.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
+import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -40,6 +38,7 @@ const P = (over: Partial<RectParams> = {}): RectParams => ({
   w: 7,
   h: 7,
   expandfactor: 0,
+  diff: DIFF_EASY,
   ...over,
 });
 
@@ -78,9 +77,21 @@ describe("rect params codec", () => {
   });
 
   it("encodes the expected strings", () => {
-    expect(encodeParams(P({ w: 9, h: 7 }), true)).toBe("9x7");
-    expect(encodeParams(P(), true)).toBe("7x7");
+    expect(encodeParams(P({ w: 9, h: 7 }), true)).toBe("9x7de");
+    expect(encodeParams(P(), true)).toBe("7x7de");
+    expect(encodeParams(P({ expandfactor: 0.5 }), true)).toBe("7x7e0.5de");
+    expect(encodeParams(P({ expandfactor: 0.5, diff: DIFF_UNREASONABLE }), true)).toBe(
+      "7x7e0.5du",
+    );
     expect(encodeParams(P({ expandfactor: 0.5 }), false)).toBe("7x7"); // non-full drops suffixes
+  });
+
+  it("reads a string from before the tiers as Easy, and the tier after it", () => {
+    expect(decodeParams("9x7")).toEqual(P({ w: 9, h: 7 }));
+    expect(decodeParams("9x7du")).toEqual(P({ w: 9, h: 7, diff: DIFF_UNREASONABLE }));
+    expect(decodeParams("10x10e0.5adu")).toEqual(
+      P({ w: 10, h: 10, expandfactor: Math.fround(0.5), diff: DIFF_UNREASONABLE }),
+    );
   });
 
   it("reads past upstream's `a`, which asks for a board with no promised answer", () => {
@@ -100,9 +111,9 @@ describe("rect params codec", () => {
 
   it("labels a custom grid with its expansion", () => {
     expect(describeParams(rectGame, P({ w: 9, h: 7, expandfactor: 0.5 }))).toBe(
-      "9x7, 50% expansion",
+      "9x7 Easy, 50% expansion",
     );
-    expect(presetMenu(rectGame).submenu?.[0]?.title).toBe("7x7");
+    expect(presetMenu(rectGame).submenu?.[0]?.title).toBe("7x7 Easy");
   });
 });
 
@@ -410,25 +421,27 @@ describe("rect findMistakes", () => {
 });
 
 describe("rect loading", () => {
-  it("refuses a board the solver cannot finish", () => {
+  const tierOf = (p: RectParams, desc: string) => {
+    const me = new Midend(rectGame);
+    return me.newGameFromId(`${encodeParams(p, false)}:${desc}`) ?? me.getParams();
+  };
+
+  it("refuses a board with several answers", () => {
     // A board upstream dealt with "Ensure unique solution" off, and one built
     // here the same way.
     expect(loadVerdict(rectGame, P(), "c2f2a6a8e5c2b3_4c6d3d2b4a2a")).toBe(
-      DESC_NOT_DEDUCIBLE,
+      DESC_NOT_UNIQUE,
     );
     expect(loadVerdict(rectGame, P({ w: 4, h: 4 }), "2b2_2a2b2b2a2_2")).toBe(
-      DESC_NOT_DEDUCIBLE,
+      DESC_NOT_UNIQUE,
     );
   });
 
-  it("refuses a board the solver finishes and the hint's rungs do not", () => {
-    // `rect-hint.test.ts` pins it as one the generator's gate turns away. A
-    // board that loaded and then ran its hint out would have no tier to
-    // excuse the refusal.
-    const p = P({ w: 9, h: 9 });
-    expect(loadVerdict(rectGame, p, "c4c5b9c12b2h2k12e2f2_3c12a8l3d5d")).toBe(
-      DESC_NOT_DEDUCIBLE,
-    );
+  it("opens a board the solver finishes and the hint's rungs do not as Unreasonable", () => {
+    // `rect-hint.test.ts` pins it as one the generator's Easy gate turns
+    // away. It has one answer, and its hint stops short of it, which is what
+    // a player of it meets and what the tier's name is for.
+    expect(tierOf(P({ w: 9, h: 9 }), "c4c5b9c12b2h2k12e2f2_3c12a8l3d5d")).toBe("9x9du");
   });
 
   it("loads upstream's 10x10 board, which the hint finishes through a line", () => {
@@ -436,14 +449,14 @@ describe("rect loading", () => {
     expect(loadVerdict(rectGame, p, "a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c")).toBeNull();
   });
 
-  it("refuses a board only the hint's rungs finish", () => {
+  it("opens a board only the hint's rungs finish as Easy", () => {
     // The rungs look one fit ahead (`starve`), which the solver does not, so
-    // they finish this board and the solver stalls on it. The answer
-    // `findMistakes` compares against is the solver's, so there is none here.
-    expect(loadVerdict(rectGame, P(), "b4c2b3a2_2a2b3c4a4b3_6b6h4e2a2a")).toBe(
-      DESC_NOT_DEDUCIBLE,
-    );
-    expect(rungsFinish(newState(P(), "b4c2b3a2_2a2b3c4a4b3_6b6h4e2a2a"))).toBe(true);
+    // they finish this board and the solver stalls on it. A board the hint
+    // finishes needs no trial and error, and the answer the mistake check
+    // goes by is the search's, which has one here.
+    const desc = "b4c2b3a2_2a2b3c4a4b3_6b6h4e2a2a";
+    expect(rungsFinish(newState(P(), desc))).toBe(true);
+    expect(tierOf(P(), desc)).toBe("7x7de");
   });
 });
 

@@ -12,10 +12,17 @@
  * transient drag preview, but those never live in state.
  */
 
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  SEARCH_TIER_NAMES,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/answer-search.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetMenu } from "../../engine/game.ts";
+import { noSuchTier } from "../../engine/difficulty.ts";
 import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 
@@ -26,6 +33,10 @@ export interface RectParams {
    * stretched. Default 0 (all presets). A byte-match float hazard, so encoded
    * `%g` and decoded `atof`. */
   expandfactor: number;
+  /** `DIFF_EASY`, a board the solver and the hint finish, or
+   * `DIFF_UNREASONABLE`, one with a single answer that they do not reach.
+   * Generation-time only. */
+  diff: number;
 }
 
 /** A player action; upstream's move strings `R x,y,w,h` / `E x,y,w,h` /
@@ -94,25 +105,34 @@ export interface RectMistake {
  * Params.
  */
 
+const board = (side: number): RectParams => ({
+  w: side,
+  h: side,
+  expandfactor: 0,
+  diff: DIFF_EASY,
+});
+
 export function defaultParams(): RectParams {
-  return { w: 7, h: 7, expandfactor: 0 };
+  return board(7);
 }
 
-const PRESET_SIZES = [7, 9, 11, 13, 15, 17, 19];
+/** Upstream's seven sizes. */
+export const BOARDS: readonly RectParams[] = [7, 9, 11, 13, 15, 17, 19].map(board);
 
-export function presets(): PresetMenu<RectParams> {
-  return {
-    title: "Rectangles",
-    submenu: PRESET_SIZES.map((n) => ({
-      params: { w: n, h: n, expandfactor: 0 },
-    })),
-  };
-}
+/** The Custom dialog's difficulty field, which the codec writes as well. */
+export const tierItem = searchTierItem<RectParams>(
+  "diff",
+  "An Easy puzzle can be finished one forced rectangle or line at a time: there is always a number with one rectangle left, or a line every rectangle left agrees on. An Unreasonable one has a single solution that those steps stop short of, so somewhere you have to try a rectangle and see what follows. The Hint button stops where the forced steps do.",
+);
+
+// Last, in the full form only. Upstream's IDs lack it, and without one a
+// board is Easy, the only kind upstream deals with its checks on.
+const tierSegment = searchTierSegment([tierItem]);
 
 export function encodeParams(p: RectParams, full: boolean): string {
   let s = `${p.w}x${p.h}`;
   if (full && p.expandfactor) s += `e${formatG(p.expandfactor)}`;
-  return s;
+  return s + tierSegment.encode(p, full);
 }
 
 export function decodeParams(s: string): RectParams {
@@ -134,12 +154,40 @@ export function decodeParams(s: string): RectParams {
   }
   // Upstream's trailing `a` asks for a board with no promised single answer.
   // Every board dealt here has one, so the letter is read past.
+  if (s[i] === "a") i++;
+  tierSegment.decode(s, i, p);
   return p;
 }
 
-export function validateParams(p: RectParams, _full: boolean): string | null {
+export function validateParams(p: RectParams, full: boolean): string | null {
   if (p.w > 1_000_000 / p.h) return AREA_TOO_LARGE;
   if (p.w * p.h < 2) return "Grid area must be greater than one.";
+  if (full && p.diff === DIFF_UNREASONABLE) return unreasonableRefusal(p);
+  return null;
+}
+
+/**
+ * The largest Unreasonable board dealt, in squares. A board with the tier is
+ * found once in hundreds of draws, and rarer as the board grows.
+ *
+ * Measured 2026-10-10, mean and worst time for a board inside the bound |
+ * past it: 15×15 0.3 s and 1.0 s, 19×19 0.65 s and 3.8 s, 8×40 0.7 s and
+ * 1.5 s | 21×21 2.5 s and 5.0 s, 25×25 over 4 s, 30×30 5.9 s and 7.1 s.
+ */
+const MAX_UNREASONABLE_AREA = 400;
+
+function unreasonableRefusal(p: RectParams): string | null {
+  const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
+  const short = Math.min(p.w, p.h);
+  const long = Math.max(p.w, p.h);
+  // On a strip the first number's rectangle starts at the end and is as long
+  // as its number, and so on along it: the solver settles every one. On the
+  // rest every division and every place for its numbers was tried
+  // (`rect-tier.test.ts`), and the hint finishes each board with one answer.
+  const none = short === 1 || (short === 2 && long <= 8) || (short === 3 && long <= 4);
+  if (none) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
+  if (p.w * p.h > MAX_UNREASONABLE_AREA)
+    return `An ${tier} puzzle must have at most ${MAX_UNREASONABLE_AREA} squares; a larger one takes too long to deal.`;
   return null;
 }
 

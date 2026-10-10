@@ -23,6 +23,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import reference from "./__fixtures__/rect-c-reference.json" with { type: "json" };
@@ -45,6 +46,7 @@ const paramsOf = (f: RectFixture): RectParams => ({
   w: f.w,
   h: f.h,
   expandfactor: f.expandfactor,
+  diff: DIFF_EASY,
 });
 
 describe("rect differential (vs C reference)", () => {

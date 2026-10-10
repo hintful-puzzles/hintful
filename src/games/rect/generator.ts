@@ -19,13 +19,20 @@
  * (`y*w + x`), or `-1` (empty) / `-2` (known singleton) during construction.
  */
 
+import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
+import { MAX_REGENERATE, retryLimit } from "../../engine/retry-limit.ts";
 import type { Point, Rect } from "../../engine/types.ts";
 import { rungsFinish } from "./hint.ts";
 import { newState } from "./moves.ts";
-import { type NumberData, rectSolver, SOLVE_UNIQUE } from "./solver.ts";
+import {
+  type NumberData,
+  rectSolver,
+  SOLVE_UNIQUE,
+  searchAnswers,
+  solverFinishes,
+} from "./solver.ts";
 import { encodeNumbers, type RectParams } from "./state.ts";
 
 /**
@@ -123,17 +130,19 @@ function findRect(w: number, h: number, grid: Int32Array, x: number, y: number):
   return { x: tx, y: ty, w: rw, h: rh };
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: generate-and-check with uniqueness enforcement and rectangle merging.
-export function newDesc(
+/**
+ * A division of the grid into rectangles, and each rectangle as the solver
+ * takes it before its number is placed: every square of it a candidate.
+ * Steps 1 to 3 of the file comment, and the start of 4.
+ */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: rectangle placement, merging and stretching, transliterated.
+function division(
   params: RectParams,
   rs: RandomState,
-): { desc: string; aux: string } {
+): { grid: Int32Array; nd: NumberData[] } {
   const { expandfactor } = params;
   let { w: pw, h: ph } = params;
-
-  const attempt = retryLimit(`rect: generation (${pw}x${ph})`);
-  for (;;) {
-    attempt();
+  {
     // Base-grid dimensions. C computes `(float)size / (1.0F + expandfactor)` in
     // single precision then casts to int, so round through `Math.fround`.
     const denom = Math.fround(1 + expandfactor);
@@ -312,29 +321,123 @@ export function newDesc(
       }
     }
 
-    // give up and go round again
-    if (rectSolver(pw, ph, nd, null, null, rs) !== SOLVE_UNIQUE) continue;
+    return { grid, nd };
+  }
+}
 
-    const numbers = new Int32Array(pw * ph);
-    for (const { area, npoints, points } of nd) {
-      const p = points[randomUpto(rs, npoints)];
-      numbers[p.y * pw + p.x] = area;
-    }
+/** The solution's edges as Solve replays them: vedge for x≥1 row-major, then
+ * hedge for y≥1. */
+function auxOf(w: number, h: number, grid: Int32Array): string {
+  let aux = "S";
+  for (let y = 0; y < h; y++)
+    for (let x = 1; x < w; x++)
+      aux += grid[y * w + x] !== grid[y * w + (x - 1)] ? "1" : "0";
+  for (let y = 1; y < h; y++)
+    for (let x = 0; x < w; x++)
+      aux += grid[y * w + x] !== grid[(y - 1) * w + x] ? "1" : "0";
+  return aux;
+}
 
-    // aux: the solution edges (vedge for x≥1 row-major, then hedge for y≥1).
-    let aux = "S";
-    for (let y = 0; y < ph; y++)
-      for (let x = 1; x < pw; x++)
-        aux += grid[y * pw + x] !== grid[y * pw + (x - 1)] ? "1" : "0";
-    for (let y = 1; y < ph; y++)
-      for (let x = 0; x < pw; x++)
-        aux += grid[y * pw + x] !== grid[(y - 1) * pw + x] ? "1" : "0";
+/**
+ * The positions the search may try on a candidate for an Unreasonable board
+ * before the draw is thrown away, far under the 2,000 a pasted board is
+ * allowed.
+ *
+ * Measured 2026-10-10 on twelve boards at each menu size: a dealt board needs
+ * a median of 3 positions, 6 at 7×7, and 9 at most.
+ */
+const DEAL_BUDGET = 30;
 
-    const desc = encodeNumbers(numbers, pw * ph);
-    // A board the hint could not finish would leave a player it had helped
-    // stranded with a refusal that blames the board's difficulty, which this
-    // game has no tier to excuse. Deal again.
-    if (!rungsFinish(newState(params, desc))) continue;
-    return { desc, aux };
+/**
+ * The squares an Unreasonable deal of a small board may draw before it gives
+ * up, where that is more than the usual number of draws: a small board with
+ * the tier is rare, and a draw of it is cheap.
+ *
+ * Measured 2026-10-10: a 3×5 board takes a mean of 6,500 draws of the 133,000
+ * this allows it, and a 2×40 board 3,000. A menu board takes 150 to 920 and
+ * keeps the usual bound. A 4×4 board has the tier (320 of its 294,904 boards
+ * with no 1 on them) and none was dealt in 10,000 draws.
+ */
+const MAX_UNREASONABLE_SQUARES_DRAWN = 2_000_000;
+
+/** An Easy board, upstream's only kind made stricter: its numbers placed by
+ * the solver so that it settles every rectangle, and kept if the hint
+ * finishes it too. `null` when this division did not give one. */
+function easyBoard(
+  params: RectParams,
+  rs: RandomState,
+  grid: Int32Array,
+  nd: NumberData[],
+): { desc: string; aux: string } | null {
+  const { w, h } = params;
+  // give up and go round again
+  if (rectSolver(w, h, nd, null, null, rs) !== SOLVE_UNIQUE) return null;
+
+  const numbers = new Int32Array(w * h);
+  for (const { area, npoints, points } of nd) {
+    const p = points[randomUpto(rs, npoints)];
+    numbers[p.y * w + p.x] = area;
+  }
+
+  const desc = encodeNumbers(numbers, w * h);
+  // A board the hint could not finish would leave a player it had helped
+  // stranded with a refusal that blames the board's difficulty, which Easy
+  // does not excuse. Deal again.
+  if (!rungsFinish(newState(params, desc))) return null;
+  return { desc, aux: auxOf(w, h, grid) };
+}
+
+/**
+ * An Unreasonable board: each number on a square of its rectangle at random,
+ * with none of the solver's steering, kept where the solver and the hint both
+ * stop short and the search proves the division is the only answer. `null`
+ * when this division did not give one.
+ *
+ * It is not an Easy board with its numbers moved. Measured 2026-10-10, moving
+ * each number about its rectangle while the search still proved one answer
+ * took two to four times as long (0.7 s against 0.2 at 13×13, 3.3 s against
+ * 1.4 at 19×19) for boards as deep.
+ */
+function unreasonableBoard(
+  params: RectParams,
+  rs: RandomState,
+  grid: Int32Array,
+  nd: NumberData[],
+): { desc: string; aux: string } | null {
+  const { w, h } = params;
+  const numbers = new Int32Array(w * h);
+  for (const { area, npoints, points } of nd) {
+    const p = points[randomUpto(rs, npoints)];
+    numbers[p.y * w + p.x] = area;
+  }
+  // Cheapest first: most draws are ones the solver settles.
+  if (solverFinishes(w, h, numbers)) return null;
+  if (searchAnswers(w, h, numbers, DEAL_BUDGET).kind !== "one") return null;
+  const desc = encodeNumbers(numbers, w * h);
+  // The hint knows placements the solver does not rule out, and a board it
+  // finishes needs no trial and error.
+  if (rungsFinish(newState(params, desc))) return null;
+  return { desc, aux: auxOf(w, h, grid) };
+}
+
+export function newDesc(
+  params: RectParams,
+  rs: RandomState,
+): { desc: string; aux: string } {
+  const area = params.w * params.h;
+  const attempt = retryLimit(
+    `rect: generation (${params.w}x${params.h})`,
+    params.diff === DIFF_EASY
+      ? MAX_REGENERATE
+      : Math.max(MAX_REGENERATE, Math.ceil(MAX_UNREASONABLE_SQUARES_DRAWN / area)),
+  );
+  for (;;) {
+    attempt();
+    const { grid, nd } = division(params, rs);
+    const board =
+      params.diff === DIFF_EASY
+        ? easyBoard(params, rs, grid, nd)
+        : unreasonableBoard(params, rs, grid, nd);
+    if (board) return board;
   }
 }

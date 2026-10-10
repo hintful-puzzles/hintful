@@ -480,16 +480,21 @@ bump:h  full=6x10de  brief=6x10"
 `;
 
 exports[`encoded params are byte-stable > rect 1`] = `
-"default  full=7x7
-preset:Rectangles/9x9  full=9x9
-preset:Rectangles/11x11  full=11x11
-preset:Rectangles/13x13  full=13x13
-preset:Rectangles/15x15  full=15x15
-preset:Rectangles/17x17  full=17x17
-preset:Rectangles/19x19  full=19x19
-bump:w  full=8x7
-bump:h  full=7x8
-bump:expandfactor  full=7x7e1  brief=7x7"
+"default  full=7x7de  brief=7x7
+preset:Rectangles/7x7 Unreasonable  full=7x7du  brief=7x7
+preset:Rectangles/9x9 Easy  full=9x9de  brief=9x9
+preset:Rectangles/9x9 Unreasonable  full=9x9du  brief=9x9
+preset:Rectangles/11x11 Easy  full=11x11de  brief=11x11
+preset:Rectangles/11x11 Unreasonable  full=11x11du  brief=11x11
+preset:Rectangles/13x13 Easy  full=13x13de  brief=13x13
+preset:Rectangles/13x13 Unreasonable  full=13x13du  brief=13x13
+preset:Rectangles/15x15 Easy  full=15x15de  brief=15x15
+preset:Rectangles/15x15 Unreasonable  full=15x15du  brief=15x15
+preset:Rectangles/17x17 Easy  full=17x17de  brief=17x17
+preset:Rectangles/19x19 Easy  full=19x19de  brief=19x19
+bump:w  full=8x7de  brief=8x7
+bump:h  full=7x8de  brief=7x8
+bump:expandfactor  full=7x7e1de  brief=7x7"
 `;
 
 exports[`encoded params are byte-stable > rome 1`] = `

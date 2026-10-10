@@ -144,8 +144,8 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
     "rejection sampling over slides: only undoing or over-repeating the last one is refused",
   ],
   "games/pegs/generator.ts › genMoves": ["each pass adds a peg to a finite board"],
-  "games/rect/generator.ts › newDesc": ["covers a square each pass"],
-  "games/rect/solver.ts › rectSolver": [
+  "games/rect/generator.ts › division": ["covers a square each pass"],
+  "games/rect/solver.ts › narrowPlacements": [
     "a deduction fixpoint: each pass that goes round again rules a placement out",
   ],
   "games/samegame/state.ts › genGrid": [

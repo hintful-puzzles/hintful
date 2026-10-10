@@ -9,6 +9,11 @@
  * is ported exactly. A drag or click that changes nothing produces no move.
  */
 
+import {
+  DIFF_EASY,
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
@@ -38,6 +43,7 @@ import {
   startDrag,
   stripModifiers,
 } from "../../engine/pointer.ts";
+import { presetGrid } from "../../engine/preset-grid.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
@@ -68,18 +74,19 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { type NumberData, rectSolver, SOLVE_UNIQUE } from "./solver.ts";
+import { answerOf } from "./solver.ts";
 import {
+  BOARDS,
   decodeParams,
   defaultParams,
   encodeParams,
-  presets,
   type RectDrawState,
   type RectMistake,
   type RectMove,
   type RectParams,
   type RectState,
   type RectUi,
+  tierItem,
   validateParams,
 } from "./state.ts";
 
@@ -333,44 +340,30 @@ function auxToMove(w: number, h: number, aux: string): RectMove {
   };
 }
 
-/** Run the solver from the fixed numbers. The edges of every rectangle it
- * pins down are written, even when the verdict is not unique. */
-function solveFromNumbers({ w, h, grid }: RectState) {
-  const nd: NumberData[] = [];
-  for (let i = 0; i < w * h; i++) {
-    if (grid[i])
-      nd.push({
-        area: grid[i],
-        npoints: 1,
-        points: [{ x: i % w, y: Math.floor(i / w) }],
-      });
-  }
-  const hedge = new Uint8Array(w * h);
-  const vedge = new Uint8Array(w * h);
-  const verdict = rectSolver(w, h, nd, hedge, vedge, null);
-  return { hedge, vedge, verdict };
-}
-
 function solve(orig: RectState, _curr: RectState, aux?: string): SolveResult<RectMove> {
   const { w, h } = orig;
+  // A board dealt here comes with the division it was drawn as, which is its
+  // one answer at either tier. A pasted board's is searched for.
   if (aux) return { ok: true, move: auxToMove(w, h, aux) };
 
-  const { hedge, vedge } = solveFromNumbers(orig);
-  let vbits = "";
-  for (let y = 0; y < h; y++)
-    for (let x = 1; x < w; x++) vbits += vedge[y * w + x] ? "1" : "0";
-  let hbits = "";
-  for (let y = 1; y < h; y++)
-    for (let x = 0; x < w; x++) hbits += hedge[y * w + x] ? "1" : "0";
-  return { ok: true, move: { type: "solve", vedge: vbits, hedge: hbits } };
+  return solveFromAnswer(answerOf(orig), ({ hedge, vedge }) => {
+    let vbits = "";
+    for (let y = 0; y < h; y++)
+      for (let x = 1; x < w; x++) vbits += vedge[y * w + x] ? "1" : "0";
+    let hbits = "";
+    for (let y = 1; y < h; y++)
+      for (let x = 0; x < w; x++) hbits += hedge[y * w + x] ? "1" : "0";
+    return { type: "solve", vedge: vbits, hedge: hbits };
+  });
 }
 
-/** Boards are uniquely solvable: re-solve from the numbers and flag every edge
- * the player has drawn that the unique solution does not contain. */
+/** Flag every edge the player has drawn that the board's one answer, found by
+ * the search at either tier, does not contain. */
 function findMistakes(state: RectState): readonly RectMistake[] {
   const { w, h } = state;
-  const { hedge, vedge, verdict } = solveFromNumbers(state);
-  if (verdict !== SOLVE_UNIQUE) return [];
+  const answer = answerOf(state);
+  if (answer.kind !== "one") return [];
+  const { hedge, vedge } = answer.solution;
 
   const out: RectMistake[] = [];
   for (let y = 1; y < h; y++)
@@ -403,7 +396,16 @@ export const rectGame: Game<
   id: "rect",
 
   defaultParams,
-  presets,
+  presets: () => ({
+    title: "Rectangles",
+    // Seven sizes at two tiers is two lines more than a section of the menu
+    // holds, so the two largest are offered at Easy alone. They are the slow
+    // ones at Unreasonable: the worst 19x19 deal of twelve took 3.8 s
+    // (2026-10-10). Custom deals both.
+    ...presetGrid(rectGame.paramConfig ?? [], BOARDS, {
+      tiers: (board) => (board.w > 15 ? [DIFF_EASY, DIFF_EASY] : null),
+    }),
+  }),
   encodeParams,
   decodeParams,
   validateParams,
@@ -429,6 +431,7 @@ export const rectGame: Game<
         p.expandfactor = Math.fround(atof(v));
       },
     },
+    tierItem,
   ],
 
   newDesc,
@@ -441,11 +444,15 @@ export const rectGame: Game<
 
   solve,
   findMistakes,
-  // The solver's verdict, which is the answer `findMistakes` compares against,
-  // and the hint's: a board loads when its hint can finish it, which is what
-  // the generator asks of a board it deals.
-  finishesByDeduction: (s) =>
-    solveFromNumbers(s).verdict === SOLVE_UNIQUE && rungsFinish(s),
+  // Easy is a board the hint finishes. The hint rules out placements the
+  // solver does not, so it finishes boards the solver stops on, and such a
+  // board needs no trial and error. It is asked for its one answer as well:
+  // the rungs are trusted to explain a board, not to prove it has one.
+  difficulty: searchTierContract<RectParams, RectState>({
+    newState,
+    deductionFinishes: (s) => rungsFinish(s) && answerOf(s).kind === "one",
+    answerOf,
+  }),
 
   hint: rectHint,
   hintMarks: {

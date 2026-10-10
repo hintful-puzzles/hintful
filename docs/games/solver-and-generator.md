@@ -814,6 +814,37 @@ What Range, the eleventh, added:
   the search was slower here and left the hint less (124 squares of 176
   undecided against 90), the other way round from Sticks.
 
+What Rectangles, the twelfth, added:
+
+- **Ask which of the solver and the hint knows more, and grade by the
+  hint.** Rectangles' hint rules placements out that its solver does not,
+  since it was taught to in order to close the gap the other way. Dealing
+  boards "the solver stops on", the hint finished two to eight in ten of
+  them. A board the hint finishes needs no trial and error whatever the
+  solver says of it, so Easy is "the hint finishes it and it has one
+  answer", and an Unreasonable deal is one the hint does not finish. A board
+  the solver finishes and the hint does not opens as Unreasonable, where it
+  was refused.
+- **A solver's verdict may forget what its loop found.** Upstream's
+  recomputes its answer from how many placements each number has left, after
+  a loop that breaks off on meeting a square no rectangle can cover. From
+  the opening that is harmless. Under an assumption it calls a position
+  with no answer ambiguous or solved. The search reads the break itself, and
+  planting that out fails the count's agreement at once.
+- **Where the generator steers its clues, the tier is the same draw
+  unsteered.** Rectangles' solver chooses where each number sits so that it
+  can finish. Dropping each number on a square of its rectangle at random
+  and keeping the stuck boards with one answer deals in 17 ms at 7x7 and
+  0.65 s at 19x19. Moving the numbers of an Easy board, Separate's way, was
+  two to four times slower.
+- **A menu has a length.** Seven sizes at two tiers is two lines more than
+  a section holds. The two largest are on it at Easy alone, with the reason
+  where `presetGrid` asks for it.
+- **A rare small board wants more draws, not a refusal.** A 3x5 board has
+  the tier once in 6,500 draws and a 4x4 has it and was not dealt in 10,000.
+  The retry bound is in squares for a small board and the usual count for a
+  large one.
+
 ### Check, Tactic, Search
 
 **The line** (owner, 2026-08-12, `audit-guessing-tier-names` design D9): a rung
