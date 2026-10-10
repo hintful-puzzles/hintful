@@ -38,4 +38,4 @@ requirements on a canceled press and on a drag.
 
 ## 5. Close
 
-- [ ] 5.1 Remove `skip_specs`, validate, the gate, commit, push, archive.
+- [x] 5.1 Remove `skip_specs`, validate, the gate, commit, push, archive.
