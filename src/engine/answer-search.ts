@@ -114,24 +114,40 @@ export interface AnswerSearch<Position, Solution> {
 export function searchAnswers<Position, Solution>(
   search: AnswerSearch<Position, Solution>,
 ): Answer<Solution> {
-  let found: Position | null = null;
+  const found = solvedPositions(search, 2);
+  if (found === null) return { kind: "out-of-reach" };
+  if (found.length === 0) return { kind: "none" };
+  if (found.length > 1) return { kind: "several" };
+  return { kind: "one", solution: search.solution(found[0] as Position) };
+}
+
+/**
+ * The solved positions the search of {@link searchAnswers} comes to, the first
+ * `limit` of them, or null where the budget ran out before it had them. A
+ * generator that knows one answer, the one it dealt, asks for two: the other
+ * is where its board has to change to have one.
+ */
+export function solvedPositions<Position, Solution>(
+  search: AnswerSearch<Position, Solution>,
+  limit: number,
+): Position[] | null {
+  const found: Position[] = [];
   let left = search.budget;
   // Depth first: the positions still to try, the next one last.
   const stack: Position[] = [search.start];
   for (let top = stack.pop(); top !== undefined; top = stack.pop()) {
-    if (left-- <= 0) return { kind: "out-of-reach" };
+    if (left-- <= 0) return null;
     const verdict = search.deduce(top);
     if (verdict === "contradiction") continue;
     if (verdict === "solved") {
-      if (found !== null) return { kind: "several" };
-      found = top;
+      found.push(top);
+      if (found.length === limit) return found;
       continue;
     }
     const next = search.assume(top);
     for (let i = next.length - 1; i >= 0; i--) stack.push(next[i] as Position);
   }
-  if (found === null) return { kind: "none" };
-  return { kind: "one", solution: search.solution(found) };
+  return found;
 }
 
 /**

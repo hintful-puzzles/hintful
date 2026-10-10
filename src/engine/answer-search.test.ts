@@ -14,6 +14,7 @@ import {
   searchTierContract,
   searchTierItem,
   searchTierSegment,
+  solvedPositions,
   solveFromAnswer,
 } from "./answer-search.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
@@ -76,6 +77,38 @@ describe("searchAnswers", () => {
       expect(subsets(4, 10, budget).kind, `budget ${budget}`).toBe(
         budget === 9 ? "one" : "out-of-reach",
       );
+  });
+
+  it("hands over the solved positions it came to, as many as were asked for", () => {
+    // 1+4, 2+3: the two subsets of 1..4 that come to five, in search order.
+    const fives = (limit: number, budget = 1_000) =>
+      solvedPositions<Taken, number[]>(
+        {
+          start: [],
+          deduce(taken) {
+            const sum = taken.reduce((s, t, i) => s + (t ? i + 1 : 0), 0);
+            if (sum > 5) return "contradiction";
+            if (taken.length < 4) return "stuck";
+            return sum === 5 ? "solved" : "contradiction";
+          },
+          assume: (taken) => [
+            [...taken, true],
+            [...taken, false],
+          ],
+          solution: () => [],
+          budget,
+        },
+        limit,
+      );
+    const [first, second] = [
+      [true, false, false, true],
+      [false, true, true, false],
+    ];
+    expect(fives(1)).toEqual([first]);
+    expect(fives(2)).toEqual([first, second]);
+    // Asked for more than there are, it searches to the end.
+    expect(fives(3)).toEqual([first, second]);
+    expect(fives(2, 3)).toBeNull();
   });
 
   it("tries a position's assumptions in the order given, depth first", () => {

@@ -22,8 +22,10 @@
 
 import {
   type Answer,
+  type AnswerSearch,
   answerCache,
   searchAnswers as searchBoard,
+  solvedPositions,
 } from "../../engine/answer-search.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
@@ -53,6 +55,7 @@ function removeRectPlacement(
   h: number,
   rectpositions: RectPositions[],
   overlaps: Int32Array,
+  reaching: Int32Array,
   rectnum: number,
   placement: number,
 ): void {
@@ -62,7 +65,7 @@ function removeRectPlacement(
     for (let xx = 0; xx < r.w; xx++) {
       const x = xx + r.x;
       const idx = (rectnum * h + y) * w + x;
-      if (overlaps[idx] > 0) overlaps[idx]--;
+      if (overlaps[idx] > 0 && --overlaps[idx] === 0) reaching[y * w + x]--;
     }
   }
   const n = rectpositions[rectnum].n;
@@ -156,9 +159,37 @@ export function searchAnswers(
   grid: ArrayLike<number>,
   budget: number = SEARCH_BUDGET,
 ): RectAnswer {
+  const search = boardSearch(w, h, grid, budget);
+  return search ? searchBoard(search) : { kind: "none" };
+}
+
+/**
+ * The first two answers that search comes to, or the one or none there are,
+ * each as the rectangle of every number in reading order. Null where the
+ * budget ran out first.
+ */
+export function firstTwoAnswers(
+  w: number,
+  h: number,
+  grid: ArrayLike<number>,
+  budget: number,
+): Rect[][] | null {
+  const search = boardSearch(w, h, grid, budget);
+  if (!search) return [];
+  const found = solvedPositions(search, 2);
+  return found?.map((position) => position.map(({ rects }) => rects[0])) ?? null;
+}
+
+/** The search of a board's numbers, or null where they do not come to the
+ * grid's area, which rectangles that divide it have between them. */
+function boardSearch(
+  w: number,
+  h: number,
+  grid: ArrayLike<number>,
+  budget: number,
+): AnswerSearch<RectPositions[], RectSolution> | null {
   const numbers = fixedNumbers(w, grid);
-  // Rectangles that divide the grid have its area between them.
-  if (numbers.reduce((sum, n) => sum + n.area, 0) !== w * h) return { kind: "none" };
+  if (numbers.reduce((sum, n) => sum + n.area, 0) !== w * h) return null;
   const covered = new Uint8Array(w * h);
   /** Whether the one placement each rectangle has left overlaps no other.
    * With the grid's area between them, they then cover it. This is what
@@ -177,7 +208,7 @@ export function searchAnswers(
     }
     return true;
   };
-  return searchBoard<RectPositions[], RectSolution>({
+  return {
     start: allPlacements(w, h, numbers),
     deduce(position) {
       // The verdict is upstream's, which the last rectangle decides and which
@@ -211,7 +242,7 @@ export function searchAnswers(
       return { hedge, vedge };
     },
     budget,
-  });
+  };
 }
 
 /** Keyed on a state's numbers, which every state of one game shares. */
@@ -291,6 +322,41 @@ function allPlacements(w: number, h: number, numbers: NumberData[]): RectPositio
   return rectpositions;
 }
 
+/** A placement of one rectangle that lies over a square another's number
+ * might be on. */
+interface ForeignSquare {
+  rect: number;
+  placement: number;
+  number: number;
+}
+
+/**
+ * Count (when `pick` is undefined) or select the `pick`-th of the
+ * {@link ForeignSquare}s, a placement at a time in reading order. The winnowing
+ * draws one of them each time the deductions stall, hundreds of times a
+ * board, so they are counted and not listed.
+ */
+function foreignSquares(
+  w: number,
+  rectpositions: RectPositions[],
+  rectbyplace: Int32Array,
+  pick?: number,
+): number | ForeignSquare {
+  let index = 0;
+  for (let i = 0; i < rectpositions.length; i++)
+    for (let j = 0; j < rectpositions[i].n; j++) {
+      const r = rectpositions[i].rects[j];
+      for (let y = r.y; y < r.y + r.h; y++)
+        for (let x = r.x; x < r.x + r.w; x++) {
+          const number = rectbyplace[y * w + x];
+          if (number < 0 || number === i) continue;
+          if (index === pick) return { rect: i, placement: j, number };
+          index++;
+        }
+    }
+  return index;
+}
+
 /**
  * The solver's deductions, run in place on `rectpositions`: the placements
  * each rectangle has left, which is {@link allPlacements} or fewer where some
@@ -311,12 +377,18 @@ function narrowPlacements(
 
   // Overlap counts: overlaps[(rect*h + y)*w + x].
   const overlaps = new Int32Array(nrects * w * h);
+  // How many rectangles have a placement over each square not yet known,
+  // which the square-focused elimination would otherwise count afresh for
+  // every square on every pass.
+  const reaching = new Int32Array(w * h);
   for (let i = 0; i < nrects; i++) {
     for (let j = 0; j < rectpositions[i].n; j++) {
       const r = rectpositions[i].rects[j];
       for (let yy = 0; yy < r.h; yy++)
-        for (let xx = 0; xx < r.w; xx++)
-          overlaps[(i * h + (yy + r.y)) * w + (xx + r.x)]++;
+        for (let xx = 0; xx < r.w; xx++) {
+          const sq = (yy + r.y) * w + (xx + r.x);
+          if (overlaps[i * w * h + sq]++ === 0) reaching[sq]++;
+        }
     }
   }
 
@@ -330,7 +402,11 @@ function narrowPlacements(
     }
   }
 
+  // How many of each number's positions a placement lies over, kept at zero
+  // between placements by clearing the entries `touched` lists: clearing and
+  // reading every number's for every placement was most of a large deal.
   const workspace = new Int32Array(nrects);
+  const touched = new Int32Array(nrects);
 
   // Deduction loop. An inconsistency found mid-loop only breaks out: the
   // finalization below recomputes the verdict from the surviving placement
@@ -384,28 +460,34 @@ function narrowPlacements(
       for (let j = 0; j < rectpositions[i].n; j++) {
         const r = rectpositions[i].rects[j];
         let del = false;
-        for (let k = 0; k < nrects; k++) workspace[k] = 0;
+        let ntouched = 0;
 
         for (let yy = 0; yy < r.h; yy++) {
           const y = yy + r.y;
           for (let xx = 0; xx < r.w; xx++) {
             const x = xx + r.x;
             if (overlaps[(i * h + y) * w + x] === -1) del = true;
-            if (rectbyplace[y * w + x] !== -1) workspace[rectbyplace[y * w + x]]++;
+            const k = rectbyplace[y * w + x];
+            if (k !== -1 && workspace[k]++ === 0) touched[ntouched++] = k;
           }
         }
 
+        // A number always has a position left, so only one this placement
+        // lies over can have them all inside it.
         if (!del) {
-          for (let k = 0; k < nrects; k++)
+          for (let t = 0; t < ntouched; t++) {
+            const k = touched[t];
             if (k !== i && workspace[k] === numbers[k].npoints) {
               del = true;
               break;
             }
+          }
           if (!del && workspace[i] === 0) del = true;
         }
+        for (let t = 0; t < ntouched; t++) workspace[touched[t]] = 0;
 
         if (del) {
-          removeRectPlacement(w, h, rectpositions, overlaps, i, j);
+          removeRectPlacement(w, h, rectpositions, overlaps, reaching, i, j);
           j--;
           doneSomething = true;
         }
@@ -417,18 +499,13 @@ function narrowPlacements(
       for (let x = 0; x < w; x++) {
         // Known squares are <0 everywhere, so check rect 0's plane only.
         if (overlaps[y * w + x] < 0) continue;
-        let n = 0;
-        let index = -1;
-        for (let i = 0; i < nrects; i++)
-          if (overlaps[(i * h + y) * w + x] > 0) {
-            n++;
-            index = i;
-          }
-        if (n === 1) {
+        if (reaching[y * w + x] === 1) {
+          let index = 0;
+          while (overlaps[(index * h + y) * w + x] <= 0) index++;
           for (let j = 0; j < rectpositions[index].n; j++) {
             const r = rectpositions[index].rects[j];
             if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) continue;
-            removeRectPlacement(w, h, rectpositions, overlaps, index, j);
+            removeRectPlacement(w, h, rectpositions, overlaps, reaching, index, j);
             j--;
             doneSomething = true;
           }
@@ -440,28 +517,11 @@ function narrowPlacements(
 
     // Winnow number placements (generation only; deterministic solve stops).
     if (rs) {
-      const rpns: Array<{ rect: number; placement: number; number: number }> = [];
-      for (let i = 0; i < nrects; i++) {
-        for (let j = 0; j < rectpositions[i].n; j++) {
-          const r = rectpositions[i].rects[j];
-          for (let yy = 0; yy < r.h; yy++) {
-            const y = yy + r.y;
-            for (let xx = 0; xx < r.w; xx++) {
-              const x = xx + r.x;
-              if (rectbyplace[y * w + x] >= 0 && rectbyplace[y * w + x] !== i) {
-                rpns.push({ rect: i, placement: j, number: rectbyplace[y * w + x] });
-              }
-            }
-          }
-        }
-      }
-
-      if (rpns.length > 0) {
-        const index = randomUpto(rs, rpns.length);
-        const rpn = rpns[index];
-        const i = rpn.rect;
-        const j = rpn.placement;
-        const k = rpn.number;
+      const count = foreignSquares(w, rectpositions, rectbyplace) as number;
+      if (count > 0) {
+        const pick = randomUpto(rs, count);
+        const found = foreignSquares(w, rectpositions, rectbyplace, pick);
+        const { rect: i, placement: j, number: k } = found as ForeignSquare;
         const r = rectpositions[i].rects[j];
         for (let m = 0; m < numbers[k].npoints; m++) {
           const x = numbers[k].points[m].x;

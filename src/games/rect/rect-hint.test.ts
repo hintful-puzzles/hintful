@@ -3,7 +3,7 @@
  * deals only boards the rungs finish, keep-track, and the frame a step paints.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -108,6 +108,27 @@ describe("rect hint rungs", () => {
       expect(f?.kind).toBe(rung);
       if (f) expect(moveOf(f)).toEqual(steps[index].move);
     });
+
+  it("a plan's every step is the firing its board gives when read afresh", () => {
+    // A plan reads each clue's fits once and takes away the ones each step's
+    // lines cross. `nextFiring` on a board alone reads them all again.
+    const rungs = new Set<string>();
+    for (const diff of [DIFF_EASY, DIFF_UNREASONABLE])
+      for (let seed = 0; seed < 6; seed++) {
+        const p = { ...params(9, 9, seed % 2), diff };
+        let s = newState(p, newDesc(p, randomNew(`afresh-${seed}`)).desc);
+        const plan = rectHint(s);
+        // An Unreasonable board can be one the rungs have nothing to say of.
+        for (const step of plan.ok ? plan.steps : []) {
+          const f = nextFiring(s);
+          expect(f && moveOf(f)).toEqual(step.move);
+          if (step.rung) rungs.add(step.rung);
+          s = executeMove(s, step.move);
+        }
+        expect(isSolved(s) || nextFiring(s) === null).toBe(true);
+      }
+    expect([...rungs].sort()).toEqual([...RECT_RUNGS].sort());
+  });
 
   it("a line says which of its two reasons rules the crossing out", () => {
     expect(pinned("lineTakes").step.explanation).toMatch(

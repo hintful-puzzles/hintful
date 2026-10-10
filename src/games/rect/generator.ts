@@ -27,10 +27,10 @@ import type { Point, Rect } from "../../engine/types.ts";
 import { rungsFinish } from "./hint.ts";
 import { newState } from "./moves.ts";
 import {
+  firstTwoAnswers,
   type NumberData,
   rectSolver,
   SOLVE_UNIQUE,
-  searchAnswers,
   solverFinishes,
 } from "./solver.ts";
 import { encodeNumbers, type RectParams } from "./state.ts";
@@ -146,10 +146,10 @@ function division(
     // Base-grid dimensions. C computes `(float)size / (1.0F + expandfactor)` in
     // single precision then casts to int, so round through `Math.fround`.
     const denom = Math.fround(1 + expandfactor);
-    let p2w = Math.trunc(Math.fround(pw / denom));
-    if (p2w < 2 && pw >= 2) p2w = 2;
-    let p2h = Math.trunc(Math.fround(ph / denom));
-    if (p2h < 2 && ph >= 2) p2h = 2;
+    // Two squares a side at least, or the one a strip has: upstream leaves a
+    // strip's at none when there is an expansion factor, and never returns.
+    let p2w = Math.max(Math.trunc(Math.fround(pw / denom)), Math.min(pw, 2));
+    let p2h = Math.max(Math.trunc(Math.fround(ph / denom)), Math.min(ph, 2));
 
     let grid = new Int32Array(p2w * p2h).fill(-1);
     const scratch = new Int32Array(2 * p2w);
@@ -325,6 +325,9 @@ function division(
   }
 }
 
+const sameRect = (a: Rect, b: Rect): boolean =>
+  a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
+
 /** The solution's edges as Solve replays them: vedge for x≥1 row-major, then
  * hedge for y≥1. */
 function auxOf(w: number, h: number, grid: Int32Array): string {
@@ -344,21 +347,33 @@ function auxOf(w: number, h: number, grid: Int32Array): string {
  * allowed.
  *
  * Measured 2026-10-10 on twelve boards at each menu size: a dealt board needs
- * a median of 3 positions, 6 at 7×7, and 9 at most.
+ * a median of 3 positions, 6 at 7×7, and 9 at most. No search ran out in two
+ * million made on draws of nineteen shapes from 2×9 to 70×70.
  */
 const DEAL_BUDGET = 30;
+
+/**
+ * The numbers an Unreasonable deal may move on one draw before it throws the
+ * draw away. Nothing says the moves end: one takes an answer away and may
+ * make another.
+ *
+ * Measured 2026-10-10 over those two million searches: a draw took 59 moves
+ * at most on 2×12, 43 on every other shape that is dealt, and 124 on 2×11,
+ * which is not.
+ */
+const MAX_NUMBERS_MOVED = 200;
 
 /**
  * The squares an Unreasonable deal of a small board may draw before it gives
  * up, where that is more than the usual number of draws: a small board with
  * the tier is rare, and a draw of it is cheap.
  *
- * Measured 2026-10-10: a 3×5 board takes a mean of 6,500 draws of the 133,000
- * this allows it, and a 2×40 board 3,000. A menu board takes 150 to 920 and
- * keeps the usual bound. A 4×4 board has the tier (320 of its 294,904 boards
- * with no 1 on them) and none was dealt in 10,000 draws.
+ * Measured 2026-10-10, mean draws for a board over ten deals: 10,500 at 4×4
+ * of the 500,000 this allows, 7,400 of 333,000 at 2×12, 6,100 at 3×5, 2,800
+ * of 100,000 at 2×40. A board of 4×5 or more that is not a strip takes 100
+ * to 400 at every size tried, up to 70×70, and keeps the usual bound.
  */
-const MAX_UNREASONABLE_SQUARES_DRAWN = 2_000_000;
+const MAX_UNREASONABLE_SQUARES_DRAWN = 8_000_000;
 
 /** An Easy board, upstream's only kind made stricter: its numbers placed by
  * the solver so that it settles every rectangle, and kept if the hint
@@ -389,14 +404,21 @@ function easyBoard(
 
 /**
  * An Unreasonable board: each number on a square of its rectangle at random,
- * with none of the solver's steering, kept where the solver and the hint both
- * stop short and the search proves the division is the only answer. `null`
- * when this division did not give one.
+ * with none of the solver's steering, then moved until the division is the
+ * only answer, and kept where the solver and the hint both stop short.
+ * `null` when this division did not give one.
  *
- * It is not an Easy board with its numbers moved. Measured 2026-10-10, moving
- * each number about its rectangle while the search still proved one answer
- * took two to four times as long (0.7 s against 0.2 at 13×13, 3.3 s against
- * 1.4 at 19×19) for boards as deep.
+ * Four draws in five have a second answer as their numbers fall. The search
+ * hands that answer over, some number's rectangle in it is not the one dealt,
+ * and the number moves to a square of its own rectangle that the other leaves
+ * out: the dealt division is still an answer and that one is not. Measured
+ * 2026-10-10, a board then takes 100 to 400 draws at every size, where
+ * throwing such a draw away took 1,000 at 15×15, 1,400 at 19×19 and 4,000 at
+ * 30×30, past what a deal is allowed.
+ *
+ * It is not an Easy board with its numbers moved. Measured the same day,
+ * moving each number about its rectangle while the search still proved one
+ * answer took two to four times as long as throwing draws away did.
  */
 function unreasonableBoard(
   params: RectParams,
@@ -405,14 +427,64 @@ function unreasonableBoard(
   nd: NumberData[],
 ): { desc: string; aux: string } | null {
   const { w, h } = params;
+  // Each rectangle as dealt, the square its number is on, and the rectangle
+  // each square is in.
+  const dealt: Rect[] = [];
+  const at: number[] = [];
+  const within = new Int32Array(w * h);
   const numbers = new Int32Array(w * h);
   for (const { area, npoints, points } of nd) {
+    const first = points[0];
+    const last = points[npoints - 1];
+    for (const p of points) within[p.y * w + p.x] = dealt.length;
+    dealt.push({
+      x: first.x,
+      y: first.y,
+      w: last.x - first.x + 1,
+      h: last.y - first.y + 1,
+    });
     const p = points[randomUpto(rs, npoints)];
+    at.push(p.y * w + p.x);
     numbers[p.y * w + p.x] = area;
   }
-  // Cheapest first: most draws are ones the solver settles.
+
+  let alone = false;
+  for (let moved = 0; moved <= MAX_NUMBERS_MOVED; moved++) {
+    const answers = firstTwoAnswers(w, h, numbers, DEAL_BUDGET);
+    if (answers === null) return null;
+    // An answer lists its rectangles in the reading order of the numbers.
+    const holders: number[] = [];
+    for (let i = 0; i < w * h; i++) if (numbers[i]) holders.push(within[i]);
+    const strayed = answers
+      .map((answer) =>
+        answer.flatMap((rect, i) =>
+          sameRect(rect, dealt[holders[i]]) ? [] : [{ k: holders[i], rect }],
+        ),
+      )
+      .find((astray) => astray.length > 0);
+    // The division as dealt is an answer, so with no other it is the only one.
+    if (!strayed) {
+      alone = true;
+      break;
+    }
+    const { k, rect } = strayed[randomUpto(rs, strayed.length)];
+    const outside = nd[k].points.filter(
+      (p) =>
+        !(
+          p.x >= rect.x &&
+          p.x < rect.x + rect.w &&
+          p.y >= rect.y &&
+          p.y < rect.y + rect.h
+        ),
+    );
+    const to = outside[randomUpto(rs, outside.length)];
+    numbers[at[k]] = 0;
+    at[k] = to.y * w + to.x;
+    numbers[at[k]] = nd[k].area;
+  }
+  if (!alone) return null;
+  // Most boards mended to one answer are ones the solver settles.
   if (solverFinishes(w, h, numbers)) return null;
-  if (searchAnswers(w, h, numbers, DEAL_BUDGET).kind !== "one") return null;
   const desc = encodeNumbers(numbers, w * h);
   // The hint knows placements the solver does not rule out, and a board it
   // finishes needs no trial and error.

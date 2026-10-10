@@ -22,7 +22,7 @@ import {
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
+import { noSuchTier, tooRareToDeal } from "../../engine/difficulty.ts";
 import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 
@@ -166,16 +166,6 @@ export function validateParams(p: RectParams, full: boolean): string | null {
   return null;
 }
 
-/**
- * The largest Unreasonable board dealt, in squares. A board with the tier is
- * found once in hundreds of draws, and rarer as the board grows.
- *
- * Measured 2026-10-10, mean and worst time for a board inside the bound |
- * past it: 15×15 0.3 s and 1.0 s, 19×19 0.65 s and 3.8 s, 8×40 0.7 s and
- * 1.5 s | 21×21 2.5 s and 5.0 s, 25×25 over 4 s, 30×30 5.9 s and 7.1 s.
- */
-const MAX_UNREASONABLE_AREA = 400;
-
 function unreasonableRefusal(p: RectParams): string | null {
   const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
   const short = Math.min(p.w, p.h);
@@ -186,8 +176,12 @@ function unreasonableRefusal(p: RectParams): string | null {
   // (`rect-tier.test.ts`), and the hint finishes each board with one answer.
   const none = short === 1 || (short === 2 && long <= 8) || (short === 3 && long <= 4);
   if (none) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
-  if (p.w * p.h > MAX_UNREASONABLE_AREA)
-    return `An ${tier} puzzle must have at most ${MAX_UNREASONABLE_AREA} squares; a larger one takes too long to deal.`;
+  // Every board two wide found with the tier has a rectangle of four squares
+  // or more, and the generator draws none of more than a sixth of the board:
+  // under 24 squares a 4 is left to a single square merged into a 3. Measured 2026-10-10: 32 of the 1,396,400
+  // boards of 2×9 with no 1 on them have the tier, and none came in 400,000
+  // draws there or at 2×10; one came in 78,000 at 2×11 and in 7,400 at 2×12.
+  if (short === 2 && long <= 11) return tooRareToDeal(`${p.w}x${p.h} puzzles`, tier);
   return null;
 }
 

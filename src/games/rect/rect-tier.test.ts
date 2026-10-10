@@ -248,8 +248,11 @@ describe("an Unreasonable Rectangles board", () => {
 
   // The smallest boards the generator deals at the tier, and a thin one.
   describeDealtTiers(rectGame, ["4x5du", "5x5du", "3x10du"]);
-  // The largest board on the menu at the tier, and the largest dealt at it.
-  describeDealtTiers(rectGame, ["15x15du", "19x19du"], { seldom: true });
+  // The largest board on the menu at the tier, one past the menu, and the
+  // two that take the most draws: the shortest strip dealt, and 4x4.
+  describeDealtTiers(rectGame, ["15x15du", "19x19du", "30x30du", "2x12du", "4x4du"], {
+    seldom: true,
+  });
 
   /**
    * Every board of a shape: each division of it into rectangles, with each
@@ -335,7 +338,10 @@ describe("an Unreasonable Rectangles board", () => {
     expect(needingSearch(3, 5).found).toBe(48);
   });
 
-  describeAbsentTiers(rectGame, ["1x9du", "2x8du", "3x3du", "4x3du"], { budgets: 1 });
+  // 2x9 has the tier, on 32 of its boards, and the generator draws none.
+  describeAbsentTiers(rectGame, ["1x9du", "2x8du", "3x3du", "4x3du", "2x9du"], {
+    budgets: 1,
+  });
 });
 
 describe("a pasted Rectangles board", () => {
@@ -439,11 +445,14 @@ describe("the tier in Rectangles' params", () => {
   const refusal = (id: string) =>
     paramsError(rectGame, rectGame.decodeParams(id), true);
 
-  it("is refused only where no board has it", () => {
+  it("is refused only where no board has it, or the generator draws none", () => {
     expect(refusal("7x7du")).toBeNull();
     expect(refusal("4x4du")).toBeNull();
     expect(refusal("3x5du")).toBeNull();
-    expect(refusal("2x9du")).toBeNull();
+    expect(refusal("2x12du")).toBeNull();
+    expect(refusal("2x9du")).toBe("Unreasonable 2x9 puzzles are too rare to deal.");
+    expect(refusal("11x2du")).toBe("Unreasonable 11x2 puzzles are too rare to deal.");
+    expect(refusal("2x11de")).toBeNull();
     expect(refusal("2x8de")).toBeNull();
     expect(refusal("2x8du")).toBe("No 2x8 puzzle is Unreasonable.");
     expect(refusal("4x3du")).toBe("No 4x3 puzzle is Unreasonable.");
@@ -451,14 +460,15 @@ describe("the tier in Rectangles' params", () => {
     expect(refusal("1x30du")).toBe("No 1x30 puzzle is Unreasonable.");
   });
 
-  it("bounds an Unreasonable board by its area", () => {
-    expect(refusal("19x19du")).toBeNull();
-    expect(refusal("20x20du")).toBeNull();
+  it("is not refused for a board's size", () => {
+    expect(refusal("21x21du")).toBeNull();
     expect(refusal("8x50du")).toBeNull();
-    expect(refusal("21x21du")).toMatch(/at most 400 squares/);
-    expect(refusal("21x21de")).toBeNull();
-    // A board that arrives with its description is not held to it.
-    expect(paramsError(rectGame, sized(30, 30, DIFF_UNREASONABLE), false)).toBeNull();
+    expect(refusal("100x100du")).toBeNull();
+    expect(refusal("100x100de")).toBeNull();
+  });
+
+  it("is not asked of a board that arrives with its description", () => {
+    expect(paramsError(rectGame, sized(2, 9, DIFF_UNREASONABLE), false)).toBeNull();
   });
 
   it("offers the two largest sizes on the menu at Easy alone", () => {

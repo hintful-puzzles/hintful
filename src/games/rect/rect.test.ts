@@ -21,6 +21,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { itSlow } from "../../engine/testing/slow.ts";
 import { newDesc } from "./generator.ts";
 import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
@@ -393,6 +394,41 @@ describe("rect completion + solve", () => {
     const solved = rectGame.solve?.(st, st, undefined);
     expect(solved?.ok).toBe(true);
     if (solved?.ok) expect(status(executeMove(st, solved.move))).toBe("solved");
+  });
+
+  it.each([
+    { edge: "v", x: 1, y: 1 },
+    { edge: "h", x: 1, y: 1 },
+  ] as const)("a line inside a rectangle ($edge) leaves it unfinished", (line) => {
+    // One 4 on a 2x2 board: solved as it stands, and the line reaches
+    // neither the row nor the column the rectangle is measured along.
+    const st = newState(P({ w: 2, h: 2 }), "4c");
+    expect(status(st)).toBe("solved");
+    expect(status(executeMove(st, { type: "edge", ...line }))).toBe("ongoing");
+  });
+});
+
+describe("rect deals past the menu", () => {
+  it.each([
+    0.5, 2,
+  ])("a strip is dealt with an expansion factor of %d", (expandfactor) => {
+    // Upstream stretches it from a grid no squares wide, and does not return.
+    for (const [w, h] of [
+      [1, 7],
+      [9, 1],
+    ]) {
+      const p = P({ w, h, expandfactor });
+      const { desc } = newDesc(p, randomNew(`strip-${w}x${h}`));
+      expect(rungsFinish(newState(p, desc)), desc).toBe(true);
+    }
+  });
+
+  itSlow("a 60x60 board is dealt, and opens when pasted", () => {
+    const p = P({ w: 60, h: 60 });
+    const { desc } = newDesc(p, randomNew("sixty"));
+    const me = new Midend(rectGame);
+    expect(me.newGameFromId(`60x60:${desc}`)).toBeNull();
+    expect(me.getParams()).toBe("60x60de");
   });
 });
 

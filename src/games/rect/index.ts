@@ -399,9 +399,7 @@ export const rectGame: Game<
   presets: () => ({
     title: "Rectangles",
     // Seven sizes at two tiers is two lines more than a section of the menu
-    // holds, so the two largest are offered at Easy alone. They are the slow
-    // ones at Unreasonable: the worst 19x19 deal of twelve took 3.8 s
-    // (2026-10-10). Custom deals both.
+    // holds, so the two largest are offered at Easy alone. Custom deals both.
     ...presetGrid(rectGame.paramConfig ?? [], BOARDS, {
       tiers: (board) => (board.w > 15 ? [DIFF_EASY, DIFF_EASY] : null),
     }),

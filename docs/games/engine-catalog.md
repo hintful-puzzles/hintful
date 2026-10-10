@@ -1086,7 +1086,9 @@ What is the same in every deductive game with the two tiers Easy and
 Unreasonable. `searchAnswers({ start, deduce, assume, solution, budget })`
 counts a board's answers to two by trial and error over the game's own
 deduction, and returns an `Answer`: one (with it), several, none, or out of
-reach once the budget of positions is spent. `answerCache()` keeps it per
+reach once the budget of positions is spent. `solvedPositions(search, limit)`
+is the same search handing over the answers it came to, for a generator that
+mends its board where a second one is. `answerCache()` keeps it per
 board, `solveFromAnswer(answer, move)` is Solve, and
 `searchTierContract({ newState, deductionFinishes, answerOf })` is the
 `difficulty` contract. `DIFF_EASY`, `DIFF_UNREASONABLE`, `searchTierItem` and

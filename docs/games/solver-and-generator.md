@@ -1686,6 +1686,21 @@ of times is read as a bound
   squares of a symmetric pair, and at the second ran the solver on a pair
   already gone, a run that could not pass. Passing over it moved no board and
   made an Easy deal 2.4 times as fast.
+- **Where draws are thrown away for a second answer, the search has it in
+  hand.** Rectangles' Unreasonable deal threw four draws in five away for
+  having several answers, and took 4,000 draws for a 30x30 board against a cap
+  of 10,000. A second answer differs from the dealt one somewhere, and there
+  a clue can move so that the dealt answer stands and the other does not:
+  `solvedPositions` hands the answers over. A board then took a few hundred
+  draws at every size ([`rect/generator.ts`](../../src/games/rect/generator.ts)).
+- **A check that replays the hint rereads the board at every step unless it
+  is told not to.** Rectangles' was half of a large deal: every step read
+  every clue's every shape again, though a step only draws lines and so only
+  takes fits away. Carry what a step can only shrink, and pin it with a test
+  that each step of a plan is the step its board gives when read afresh.
+- **Sweep the fields beside the size.** Rectangles' expansion factor held a
+  deal that never returned (a board one wide) and a block of small shapes
+  that give up at Unreasonable, none of which a sweep of sizes meets.
 
 The preset menu is held to more than this: a preset is a wait sprung on
 whoever opens the menu. A generator that never ends is still a defect at any

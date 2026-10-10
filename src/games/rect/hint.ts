@@ -130,6 +130,46 @@ function fitsOf(s: RectState, clue: number): Rect[] {
   return shapesAround(s, clue).filter((r) => judge(s, clue, r) === "fits");
 }
 
+/** Each clue's fits, the clues in reading order. */
+type Fits = ReadonlyMap<number, readonly Rect[]>;
+
+function readFits(s: RectState): Fits {
+  const fits = new Map<number, Rect[]>();
+  for (let clue = 0; clue < s.grid.length; clue++)
+    if (s.grid[clue]) fits.set(clue, fitsOf(s, clue));
+  return fits;
+}
+
+/**
+ * The fits left on `t`, the board `f` made of the one `fits` were read from.
+ * A firing only draws lines, so it only takes fits away, and only ones over a
+ * square beside a line it drew. Reading every shape again at every step was
+ * most of the time a large board took to deal.
+ */
+function fitsAfter(fits: Fits, t: RectState, f: RectFiring): Fits {
+  const beside: Rect =
+    f.kind === "line" ? { x: f.edge.x, y: f.edge.y, w: 1, h: 1 } : f.rect;
+  const left = new Map<number, readonly Rect[]>();
+  for (const [clue, rects] of fits)
+    left.set(
+      clue,
+      rects.filter((r) => !(overlap(r, beside) && crossesLine(t, r))),
+    );
+  return left;
+}
+
+/** For each square, the clues with a fit over it, in reading order. */
+function reachersOf(s: RectState, fits: Fits): number[][] {
+  const reachers: number[][] = Array.from({ length: s.w * s.h }, () => []);
+  for (const [clue, rects] of fits)
+    for (const r of rects)
+      for (const i of cellsOf(r, s.w)) {
+        const who = reachers[i];
+        if (who[who.length - 1] !== clue) who.push(clue);
+      }
+  return reachers;
+}
+
 /** Are all four sides of `r` drawn? (Its inside is clear, since it fits.) */
 function isDrawn(s: RectState, r: Rect): boolean {
   const { w, h } = s;
@@ -144,16 +184,19 @@ function isDrawn(s: RectState, r: Rect): boolean {
   return true;
 }
 
-/** The next firing on `s`, cheapest rung first, or null. */
-export function nextFiring(s: RectState): RectFiring | null {
-  const { w, h, grid } = s;
-  const clues = [...grid.keys()].filter((i) => grid[i]);
-  const fits = new Map(clues.map((c) => [c, fitsOf(s, c)]));
-  const fitsFor = (c: number): Rect[] => fits.get(c) ?? [];
+/**
+ * The next firing on `s`, cheapest rung first, or null. `fits` is what
+ * {@link fitsAfter} kept of an earlier board's, where the caller has them.
+ */
+export function nextFiring(s: RectState, fits: Fits = readFits(s)): RectFiring | null {
+  const { w, h } = s;
+  const clues = [...fits.keys()];
+  const fitsFor = (c: number): readonly Rect[] => fits.get(c) ?? [];
   const open = clues.filter((c) => {
     const f = fitsFor(c);
     return !(f.length === 1 && isDrawn(s, f[0]));
   });
+  const isOpen = new Set(open);
 
   for (const clue of open) {
     const f = fitsFor(clue);
@@ -177,26 +220,32 @@ export function nextFiring(s: RectState): RectFiring | null {
     };
   }
 
+  const reachers = reachersOf(s, fits);
   for (let i = 0; i < w * h; i++) {
-    const who = clues.filter((c) => fitsFor(c).some((r) => covers(r, i, w)));
-    if (who.length !== 1 || !open.includes(who[0])) continue;
+    const who = reachers[i];
+    if (who.length !== 1 || !isOpen.has(who[0])) continue;
     const through = fitsFor(who[0]).filter((r) => covers(r, i, w));
     if (through.length === 1 && i !== who[0])
       return { kind: "reach", clue: who[0], rect: through[0], square: i };
   }
 
-  for (const other of clues) {
-    const fo = fitsFor(other);
-    const core = cellsOf({ x: 0, y: 0, w, h }, w).filter(
-      (i) => i !== other && fo.every((r) => covers(r, i, w)),
-    );
-    if (core.length === 0) continue;
+  // The squares each clue covers wherever it goes, its own among them.
+  const sure = new Map<number, Rect>();
+  for (const clue of clues) {
+    const core = common(fitsFor(clue));
+    if (core) sure.set(clue, core);
+  }
+
+  for (const [other, core] of sure) {
+    if (core.w * core.h === 1) continue;
     for (const clue of open) {
       if (clue === other) continue;
       const f = fitsFor(clue);
-      const left = f.filter((r) => !core.some((i) => covers(r, i, w)));
+      // No fit takes in another clue, so one that overlaps `core` takes a
+      // square of it other than the clue's own.
+      const left = f.filter((r) => !overlap(r, core));
       if (left.length !== 1 || left.length === f.length) continue;
-      const used = core.filter((i) => f.some((r) => covers(r, i, w)));
+      const used = cellsOf(core, w).filter((i) => f.some((r) => covers(r, i, w)));
       return { kind: "overlap", clue, rect: left[0], other, core: used };
     }
   }
@@ -214,7 +263,7 @@ export function nextFiring(s: RectState): RectFiring | null {
         }
       for (let i = 0; i < w * h; i++) {
         if (covers(r, i, w)) continue;
-        const reached = clues.some(
+        const reached = reachers[i].some(
           (j) =>
             j !== clue && fitsFor(j).some((q) => covers(q, i, w) && !overlap(q, r)),
         );
@@ -240,33 +289,33 @@ export function nextFiring(s: RectState): RectFiring | null {
   // every fit across it is out, and the line is how the player keeps that. An
   // edge no fit crosses is left alone: a line there would cut no fit, so no
   // later step could tell it had been drawn.
-  const all = clues.flatMap((clue) => fitsFor(clue).map((rect) => ({ clue, rect })));
-  const sure = new Map(clues.map((c) => [c, common(fitsFor(c))]));
-  const sole = cellsOf({ x: 0, y: 0, w, h }, w).map((i) => {
-    const who = clues.filter((c) => fitsFor(c).some((r) => covers(r, i, w)));
-    return who.length === 1 ? who[0] : -1;
+  const sole = new Map<number, number[]>();
+  reachers.forEach((who, i) => {
+    if (who.length !== 1) return;
+    const squares = sole.get(who[0]);
+    if (squares) squares.push(i);
+    else sole.set(who[0], [i]);
   });
+  const owners = [...sure];
   const crossing = (a: number, b: number): Crossing[] | null => {
     const by = new Map<number, Crossing>();
-    for (const { clue, rect } of all) {
-      if (!covers(rect, a, w) || !covers(rect, b, w)) continue;
-      const c = by.get(clue) ?? { clue, takes: [], owners: [], misses: [] };
-      by.set(clue, c);
-      const owner = clues.find((o) => {
-        const core = sure.get(o);
-        return o !== clue && core && overlap(core, rect);
-      });
-      if (owner !== undefined) {
-        const core = sure.get(owner) as Rect;
-        for (const i of cellsOf(core, w))
-          if (covers(rect, i, w) && !c.takes.includes(i)) c.takes.push(i);
-        if (!c.owners.includes(owner)) c.owners.push(owner);
-        continue;
+    for (const clue of reachers[b])
+      for (const rect of fitsFor(clue)) {
+        if (!covers(rect, a, w) || !covers(rect, b, w)) continue;
+        const c = by.get(clue) ?? { clue, takes: [], owners: [], misses: [] };
+        by.set(clue, c);
+        const owned = owners.find(([o, core]) => o !== clue && overlap(core, rect));
+        if (owned) {
+          const [owner, core] = owned;
+          for (const i of cellsOf(core, w))
+            if (covers(rect, i, w) && !c.takes.includes(i)) c.takes.push(i);
+          if (!c.owners.includes(owner)) c.owners.push(owner);
+          continue;
+        }
+        const missed = sole.get(clue)?.find((i) => !covers(rect, i, w));
+        if (missed === undefined) return null;
+        if (!c.misses.includes(missed)) c.misses.push(missed);
       }
-      const missed = sole.findIndex((who, i) => who === clue && !covers(rect, i, w));
-      if (missed < 0) return null;
-      if (!c.misses.includes(missed)) c.misses.push(missed);
-    }
     return [...by.values()];
   };
   for (let y = 0; y < h; y++)
@@ -298,9 +347,14 @@ function common(fits: readonly Rect[]): Rect | null {
  * do, so the hint never runs out on a board it dealt. */
 export function rungsFinish(s: RectState): boolean {
   let t = s;
-  for (let f = nextFiring(t); f && !isSolved(t); f = nextFiring(t))
+  let fits = readFits(t);
+  while (!isSolved(t)) {
+    const f = nextFiring(t, fits);
+    if (!f) return false;
     t = executeMove(t, moveOf(f));
-  return isSolved(t);
+    fits = fitsAfter(fits, t, f);
+  }
+  return true;
 }
 
 /** The move a firing makes. */
@@ -323,16 +377,17 @@ function stepOf(s: RectState, f: RectFiring): HintStep<RectMove, RectHint, RectR
  * Stops where the rungs run out.
  */
 export function rectHint(state: RectState): HintResult<RectMove, RectHint, RectRung> {
-  const board = { s: state };
+  const board = { s: state, fits: readFits(state) };
   const steps: HintStep<RectMove, RectHint, RectRung>[] = [];
   deduceHintPlan({
     board,
     status: (b) => isSolved(b.s),
     incomplete: false,
-    next: (b) => nextFiring(b.s),
+    next: (b) => nextFiring(b.s, b.fits),
     apply: (b, f) => {
       steps.push(stepOf(b.s, f));
       b.s = executeMove(b.s, moveOf(f));
+      b.fits = fitsAfter(b.fits, b.s, f);
     },
     budget: stepBudget("rect hint"),
   });

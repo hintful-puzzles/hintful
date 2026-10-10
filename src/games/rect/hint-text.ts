@@ -127,14 +127,16 @@ export const say = {
         const why: Narration[] = [];
         if (f.starved.length > 0)
           why.push(
-            phrase`leave ${mark.the("outline", CELL, f.starved.map(at), "clue")} no room`,
+            phrase`${mark.the("outline", CELL, f.starved.map(at), "clue")} no room`,
           );
         if (f.stranded.length > 0)
           why.push(
-            phrase`leave ${mark.the("outline", CELL, f.stranded.map(at), "square")} out of every rectangle`,
+            phrase`${mark.the("outline", CELL, f.stranded.map(at), "square")} uncovered`,
           );
+        // Both reasons in one sentence have to fit the length a step is held
+        // to (`hint-quality.test.ts`), so each is a few words.
         return so({
-          look: phrase`Anywhere else, the ${n} would ${joinOr(why)}`,
+          look: phrase`Elsewhere the ${n} leaves ${joinOr(why)}`,
           move: phrase`it must take ${rect}`,
         });
       }

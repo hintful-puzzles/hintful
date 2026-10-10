@@ -18,6 +18,35 @@ export const vrange = (w: number, h: number, x: number, y: number) =>
   x >= 1 && x < w && y >= 0 && y < h;
 
 /**
+ * Whether the `rw × rh` box at `(x, y)` has every side drawn and no line
+ * inside. It stops at the first edge that is wrong: on a board with few lines
+ * a box runs to the far sides, and reading all of it for each of its squares
+ * made a move on a large board cost the square of its area.
+ */
+function isOutlined(
+  w: number,
+  h: number,
+  hedge: Uint8Array,
+  vedge: Uint8Array,
+  x: number,
+  y: number,
+  rw: number,
+  rh: number,
+): boolean {
+  for (let xx = x; xx < x + rw; xx++)
+    for (let yy = y; yy <= y + rh; yy++) {
+      const e = !hrange(w, h, xx, yy) || hedge[yy * w + xx] !== 0;
+      if (e !== (yy === y || yy === y + rh)) return false;
+    }
+  for (let yy = y; yy < y + rh; yy++)
+    for (let xx = x; xx <= x + rw; xx++) {
+      const e = !vrange(w, h, xx, yy) || vedge[yy * w + xx] !== 0;
+      if (e !== (xx === x || xx === x + rw)) return false;
+    }
+  return true;
+}
+
+/**
  * Recompute the per-cell correctness overlay (upstream `get_correct`). A cell
  * is correct (1) iff it belongs to a valid rectangle — every boundary edge
  * present, no interior edge, and exactly one contained number equal to the
@@ -42,24 +71,7 @@ function getCorrect(
       let rh = 1;
       while (y + rh < h && !hedge[(y + rh) * w + x]) rh++;
 
-      let valid = true;
-      // Check the horizontal edges.
-      for (let xx = x; xx < x + rw; xx++) {
-        for (let yy = y; yy <= y + rh; yy++) {
-          const e = !hrange(w, h, xx, yy) || hedge[yy * w + xx] !== 0;
-          const ec = yy === y || yy === y + rh;
-          if (e !== ec) valid = false;
-        }
-      }
-      // Check the vertical edges.
-      for (let yy = y; yy < y + rh; yy++) {
-        for (let xx = x; xx <= x + rw; xx++) {
-          const e = !vrange(w, h, xx, yy) || vedge[yy * w + xx] !== 0;
-          const ec = xx === x || xx === x + rw;
-          if (e !== ec) valid = false;
-        }
-      }
-
+      let valid = isOutlined(w, h, hedge, vedge, x, y, rw, rh);
       if (!valid) {
         ret[y * w + x] = 0;
         continue;
