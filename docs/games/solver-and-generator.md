@@ -1387,6 +1387,23 @@ switches the generator's checks off"). The generator's half is the game's:
 deal only boards the same count calls unique, and hold it with a test against an
 answer count that has no search in it.
 
+**A game with no mistake check says what it can prove through
+`hasNoSolution`, and its `solve` is never asked at load.** Several answers are
+no fault there (Untangle has many), but a board with none is one nobody can
+finish, and `loadDesc` refuses it with `DESC_NO_SOLUTION`. The hook is a
+proof that costs the same on any board: a parity (Fifteen, Sixteen), a rank
+(Flip), a planarity test (Untangle), a count (Cube). **`solve` is the wrong
+thing to ask, because it answers more than the question**: load runs on every
+pasted ID and every opened save, and a solver that searches charges a board
+it cannot settle its whole budget each time (Pegs and Sokoban took seconds,
+Netslide's rebuilding of an answer did not finish a fixture sweep in ten
+minutes, and Flip's shortest answer doubles with every free square after the
+elimination has already said whether there is one). So look for the invariant
+the moves keep, and split "is there an answer" from "which". A new game with
+no mistake check pins a board with no solution in
+[`no-solution-load.test.ts`](../../src/engine/no-solution-load.test.ts), which
+holds the list of games that still let one through, each with its board.
+
 **A hidden answer is no reason to skip the check.** Black Box's balls,
 Mines' mines and Guess's code are hidden, and all three check marks against them
 as every other game checks a digit: a guess with no ball, a known mark on a ball,

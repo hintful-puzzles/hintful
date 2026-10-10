@@ -146,6 +146,19 @@ describe("registering a game", () => {
     expect(refusal({ ...fakeGame, finishesByDeduction: nothingToDeduce })).toBeNull();
   });
 
+  it("refuses a game that says a board has no solution in two ways", () => {
+    const proving = {
+      ...fakeGame,
+      finishesByDeduction: nothingToDeduce,
+      hasNoSolution: () => false,
+    };
+    expect(fakeGame.findMistakes).toBeUndefined();
+    expect(refusal(proving)).toBeNull();
+    expect(refusal({ ...proving, findMistakes: () => [] })).toMatch(
+      /leaves hasNoSolution out/,
+    );
+  });
+
   it("refuses a tiered game that answers a second time", () => {
     const tiered = { ...fakeGame, difficulty: { solveAtCap: () => "solved" as const } };
     expect(refusal({ ...tiered, finishesByDeduction: undefined })).toBeNull();

@@ -46,6 +46,7 @@ import {
   type FifteenParams,
   type FifteenState,
   type FifteenUi,
+  hasNoSolution,
   newDesc,
   newState,
   paramConfig,
@@ -286,6 +287,7 @@ export const fifteenGame: Game<
   interpretMove,
   executeMove,
   finishesByDeduction: nothingToDeduce,
+  hasNoSolution,
   status,
   notApplicable: {
     findMistakes:

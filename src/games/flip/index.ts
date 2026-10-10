@@ -43,7 +43,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { shortestAnswer } from "./solver.ts";
+import { hasAnswer, shortestAnswer } from "./solver.ts";
 import {
   encodeBitmap,
   type FlipMove,
@@ -263,6 +263,7 @@ export const flipGame: Game<
   executeMove,
 
   finishesByDeduction: nothingToDeduce,
+  hasNoSolution: (s) => !hasAnswer(s),
   /** Every square is lit. */
   status(s) {
     return s.grid.every((v) => v === 0) ? "solved" : "ongoing";

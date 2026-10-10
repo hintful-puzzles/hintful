@@ -1014,7 +1014,7 @@ wrapper is `clueChar`.
 
 A parse fails with a `DescError`, a branded string only this module makes:
 `DESC_TOO_SHORT`, `DESC_TOO_LONG`, `DESC_OUT_OF_RANGE`, `DESC_REPEATED`,
-`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `DESC_NOT_UNIQUE`, `DESC_NOT_DEDUCIBLE`, `DESC_NO_SINGLE_ANSWER`, `descBadCharacter(ch)` (pass the
+`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `DESC_NOT_UNIQUE`, `DESC_NOT_DEDUCIBLE`, `DESC_NO_SINGLE_ANSWER`, `DESC_NO_SOLUTION`, `descBadCharacter(ch)` (pass the
 character when the parser has it), and `descNeedsOne(noun, found)` for a board
 that must have exactly one of something (a starting square, a main piece). A helper on the desc path returns
 `DescError | null` too, so the brand reaches the message where it is written.
@@ -1040,7 +1040,9 @@ thrown after `descValue` is a bug, not a refusal, and propagates.
 **The verdict also asks how many answers the board has**, for a game with
 `findMistakes`: `loadDesc` calls the game's `solve` on the board it built, and
 refuses one the solver proves has several (`DESC_NOT_UNIQUE`) or none
-(`DESC_CONTRADICTORY`). A game supplies
+(`DESC_CONTRADICTORY`). A game without `findMistakes` is not asked for
+its `solve`; it is refused where its `hasNoSolution(state)` holds
+(`DESC_NO_SOLUTION`), a proof cheap on every board. A checked game supplies
 nothing for this beyond a `solve` that says `MULTIPLE_SOLUTIONS` or
 `NO_SOLUTION` only when it has proved it
 ([solver-and-generator.md](./solver-and-generator.md) § "One answer, even when it

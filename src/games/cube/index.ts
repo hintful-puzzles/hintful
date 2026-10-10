@@ -299,6 +299,14 @@ function allFacesPainted(state: CubeState): boolean {
   return state.faceColors.every((c) => c);
 }
 
+/** A roll moves paint between a square and a face and never makes or loses
+ * any, so a board is finished only by exactly a solid's worth of paint. */
+function hasNoSolution(state: CubeState): boolean {
+  const paint = (cells: ArrayLike<number>) =>
+    Array.from(cells).reduce((n, c) => n + (c ? 1 : 0), 0);
+  return paint(state.blue) + paint(state.faceColors) !== state.faceColors.length;
+}
+
 function status(state: CubeState): GameStatus {
   return allFacesPainted(state) ? "solved" : "ongoing";
 }
@@ -350,6 +358,7 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   interpretMove,
   executeMove,
   finishesByDeduction: nothingToDeduce,
+  hasNoSolution,
   status,
   notApplicable: {
     findMistakes:

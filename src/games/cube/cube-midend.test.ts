@@ -18,9 +18,10 @@ describe("Cube midend lifecycle", () => {
   let h: ReturnType<typeof harness>;
   beforeEach(() => {
     h = harness();
-    // 3x3 cube grid, no blue squares, start in the center (index 4) where
-    // every orthogonal roll is legal.
-    expect(h.m.newGameFromId("c3x3:000,4")).toBeNull();
+    // 3x3 cube grid, the top and bottom rows blue (six squares for six
+    // faces), start in the center (index 4) where every orthogonal roll is
+    // legal.
+    expect(h.m.newGameFromId("c3x3:E38,4")).toBeNull();
   });
 
   it("paints the board on a forced redraw", () => {

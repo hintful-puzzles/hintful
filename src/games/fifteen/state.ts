@@ -82,6 +82,13 @@ export function parityP(w: number, h: number, gap: number): number {
   return ((gx - (w - 1)) ^ (gy - (h - 1)) ^ (w * h + 1)) & 1;
 }
 
+/** Whether no slides can put this board in order. A slide changes the
+ * permutation's parity and the gap's chessboard color together, so half of
+ * all arrangements are out of reach, and which half never changes in play. */
+export function hasNoSolution(s: FifteenState): boolean {
+  return permParity(s.tiles, s.n) !== parityP(s.w, s.h, s.gapPos);
+}
+
 // --- desc / state -----------------------------------------------------
 
 /** The tiles in reading order, `0` the gap, comma-separated. */

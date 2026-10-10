@@ -28,9 +28,66 @@ export interface FlipAnswer {
  * of them. Their order is unchanged either way, so the rest of the chosen
  * answer is chosen again.
  */
-export function shortestAnswer(
-  s: Pick<FlipState, "w" | "h" | "matrix" | "grid">,
-): FlipAnswer | null {
+export function shortestAnswer(s: Board): FlipAnswer | null {
+  const reduced = eliminate(s);
+  if (reduced === null) return null;
+  const { eq, stride, rowsDone, free } = reduced;
+  const wh = s.w * s.h;
+
+  // Every answer, the free squares as a binary counter.
+  const answer = new Uint8Array(wh);
+  let best = new Uint8Array(wh);
+  let bestLen = wh + 1;
+  for (;;) {
+    for (let r = rowsDone - 1; r >= 0; r--) {
+      let lead = 0;
+      while (lead < wh && !eq[r * stride + lead]) lead++;
+      let v = eq[r * stride + wh];
+      for (let k = lead + 1; k < wh; k++) {
+        if (eq[r * stride + k]) v ^= answer[k];
+      }
+      answer[lead] = v;
+    }
+    let len = 0;
+    for (let i = 0; i < wh; i++) if (answer[i]) len++;
+    // Strictly fewer: the first answer of a size is the one kept.
+    if (len < bestLen) {
+      bestLen = len;
+      best = answer.slice();
+    }
+    let i = 0;
+    for (; i < free.length; i++) {
+      answer[free[i]] = answer[free[i]] ? 0 : 1;
+      if (answer[free[i]]) break;
+    }
+    if (i === free.length) break;
+  }
+
+  return { presses: best, only: free.length === 0 };
+}
+
+/** Whether some set of presses lights the board: the elimination alone, which
+ * costs the same whatever the board, where choosing the shortest answer
+ * doubles with every free square. */
+export function hasAnswer(s: Board): boolean {
+  return eliminate(s) !== null;
+}
+
+type Board = Pick<FlipState, "w" | "h" | "matrix" | "grid">;
+
+/** The system in echelon form. */
+interface Reduced {
+  /** One row an equation: `stride - 1` coefficients, then the value. */
+  readonly eq: Uint8Array;
+  readonly stride: number;
+  /** How many leading rows hold a pivot. */
+  readonly rowsDone: number;
+  /** The squares no pivot fixes, which an answer may press or not. */
+  readonly free: readonly number[];
+}
+
+/** Gaussian elimination over GF(2); `null` when the system has no solution. */
+function eliminate(s: Board): Reduced | null {
   const wh = s.w * s.h;
   // equations[i] : wh coefficients + 1 value, over GF(2).
   const stride = wh + 1;
@@ -72,35 +129,5 @@ export function shortestAnswer(
     colsDone = i + 1;
     if (rowsDone >= wh) break;
   }
-
-  // Every answer, the free squares as a binary counter.
-  const answer = new Uint8Array(wh);
-  let best = new Uint8Array(wh);
-  let bestLen = wh + 1;
-  for (;;) {
-    for (let r = rowsDone - 1; r >= 0; r--) {
-      let lead = 0;
-      while (lead < wh && !eq[r * stride + lead]) lead++;
-      let v = eq[r * stride + wh];
-      for (let k = lead + 1; k < wh; k++) {
-        if (eq[r * stride + k]) v ^= answer[k];
-      }
-      answer[lead] = v;
-    }
-    let len = 0;
-    for (let i = 0; i < wh; i++) if (answer[i]) len++;
-    // Strictly fewer: the first answer of a size is the one kept.
-    if (len < bestLen) {
-      bestLen = len;
-      best = answer.slice();
-    }
-    let i = 0;
-    for (; i < free.length; i++) {
-      answer[free[i]] = answer[free[i]] ? 0 : 1;
-      if (answer[free[i]]) break;
-    }
-    if (i === free.length) break;
-  }
-
-  return { presses: best, only: free.length === 0 };
+  return { eq, stride, rowsDone, free };
 }

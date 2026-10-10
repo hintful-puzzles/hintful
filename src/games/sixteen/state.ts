@@ -155,6 +155,14 @@ export function isCompleted(state: SixteenState): boolean {
   return true;
 }
 
+/** Whether no slides can put this board in order: proved only where both
+ * sides are odd. A slide cycles an odd number of tiles there, which is an even
+ * permutation, so an odd arrangement stays odd. With an even side some slide
+ * is odd, and nothing is claimed. */
+export function hasNoSolution(state: SixteenState): boolean {
+  return (state.w & state.h & 1) === 1 && permParity(state.tiles, state.n) !== 0;
+}
+
 export function status(state: SixteenState): "solved" | "ongoing" {
   return isCompleted(state) ? "solved" : "ongoing";
 }

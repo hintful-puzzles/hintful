@@ -142,11 +142,20 @@ export const DESC_NO_SINGLE_ANSWER = descError(
   "This game ID's puzzle has no single solution that can be found, and only puzzles with exactly one can be played here.",
 );
 
+/** The puzzle cannot be finished by any moves, in a game with no clues to
+ * contradict each other: lights no presses put out, tiles no slides put in
+ * order ({@link loadDesc}). */
+export const DESC_NO_SOLUTION = descError(
+  "This game ID's puzzle has no solution, so it can't be played here.",
+);
+
 /** What {@link loadDesc} reads off a game: how to build a board, and, for the
- * answer's verdict, its mistake check, its solver and its tiers. */
+ * answer's verdict, its mistake check, its solver, its proof that a board has
+ * no solution and its tiers. */
 interface Loadable<P, S> {
   newState(p: P, desc: string): S;
   findMistakes?: unknown;
+  hasNoSolution?(state: S): boolean;
   solve?(orig: S, curr: S): { ok: true } | { ok: false; error: string };
   finishesByDeduction?(state: S): boolean;
   difficulty?: DifficultyContract<P>;
@@ -181,6 +190,11 @@ export function readBoard<P, S>(
  * a mark that fits the other one a mistake. So where the game's own `solve`
  * proves a board has several answers or none, the board does not load, whoever
  * wrote it.
+ *
+ * **A board with no answer does not load in a game with no mistake check
+ * either**, where the game has a cheap proof of it (`Game.hasNoSolution`),
+ * since nobody can finish it. Its `solve` is not asked: nothing needs its one
+ * answer, and a solver that searches would be paid for on every open.
  *
  * **A board loads only if the game's own solver solves it.** That is the test
  * every generator deals by: some cap of a tiered game's solver solves the
@@ -219,6 +233,7 @@ function solverVerdict<P, S>(
 }
 
 function answerVerdict<P, S>(game: Loadable<P, S>, state: S): DescError | null {
+  if (game.hasNoSolution?.(state)) return DESC_NO_SOLUTION;
   if (game.findMistakes === undefined || game.solve === undefined) return null;
   const solved = game.solve(state, state);
   if (solved.ok) return null;

@@ -56,6 +56,7 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
+  hasNoSolution,
   newDesc,
   newState,
   paramConfig,
@@ -717,6 +718,7 @@ export const sixteenGame: Game<
   interpretMove,
   executeMove,
   finishesByDeduction: nothingToDeduce,
+  hasNoSolution,
   status,
   notApplicable: {
     findMistakes:

@@ -333,7 +333,7 @@ often it asked for a repaint. Ask it through
 
 ```ts
 const h = driveMidend(cubeGame); // or observeMidend(aMidendYouHold)
-h.midend.newGameFromId("c3x3:000,4");
+h.midend.newGameFromId("c3x3:E38,4");
 expect(h.last("status-bar-change")?.statusBarText).toContain("Moves: 0");
 ```
 

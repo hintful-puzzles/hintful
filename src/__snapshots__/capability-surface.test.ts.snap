@@ -355,6 +355,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "finishesByDeduction",
       "flashLength",
+      "hasNoSolution",
       "ignoresSecondaryButton",
       "notApplicable",
       "paramConfig",
@@ -413,6 +414,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "finishesByDeduction",
+      "hasNoSolution",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -478,6 +480,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "finishesByDeduction",
+      "hasNoSolution",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -1648,6 +1651,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "finishesByDeduction",
+      "hasNoSolution",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -2238,6 +2242,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "changedState",
       "finishesByDeduction",
+      "hasNoSolution",
       "hint",
       "hintGesture",
       "hintKeepTrack",

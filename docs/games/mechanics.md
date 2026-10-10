@@ -520,6 +520,11 @@ deduces, `nothingToDeduce` where the board is moved, searched or guessed
 ([solver & generator](./solver-and-generator.md) § "No option switches the
 generator's checks off").
 
+**A game with no mistake check declares `hasNoSolution` where it has a cheap
+proof**, and pins a board with no solution either way
+([solver & generator](./solver-and-generator.md) § "One answer, even when it
+is hidden").
+
 ## Descriptions and state
 
 `newDesc(p, rng)` generates a board (see

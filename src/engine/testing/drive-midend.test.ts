@@ -14,7 +14,7 @@ describe("driveMidend", () => {
 
   it("last(type) is the newest notification of that type, typed by it", () => {
     const h = driveMidend(cubeGame);
-    expect(h.midend.newGameFromId("c3x3:000,4")).toBeNull();
+    expect(h.midend.newGameFromId("c3x3:E38,4")).toBeNull();
     const before = h.last("status-bar-change");
     expectTypeOf(before).toEqualTypeOf<Notification<"status-bar-change"> | null>();
     expect(before?.statusBarText).toContain("Moves: 0");
@@ -27,7 +27,7 @@ describe("driveMidend", () => {
 
   it("clearing notes forgets what came before", () => {
     const h = driveMidend(cubeGame);
-    h.midend.newGameFromId("c3x3:000,4");
+    h.midend.newGameFromId("c3x3:E38,4");
     h.notes.length = 0;
     expect(h.last("game-id-change")).toBeNull();
   });
@@ -36,7 +36,7 @@ describe("driveMidend", () => {
     const m = new Midend(cubeGame);
     const first = observeMidend(m);
     const second = observeMidend(m);
-    m.newGameFromId("c3x3:000,4");
+    m.newGameFromId("c3x3:E38,4");
     expect(first.notes).toEqual([]);
     expect(second.last("game-id-change")).not.toBeNull();
   });
@@ -44,7 +44,7 @@ describe("driveMidend", () => {
   it("timerActive reports the midend's last request for the clock", () => {
     const h = driveMidend(cubeGame);
     expect(h.timerActive()).toBe(false);
-    h.midend.newGameFromId("c3x3:000,4");
+    h.midend.newGameFromId("c3x3:E38,4");
     // Cube animates its roll.
     h.midend.processInput(0, 0, CURSOR_RIGHT);
     expect(h.timerActive()).toBe(true);

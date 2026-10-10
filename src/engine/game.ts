@@ -467,6 +467,19 @@ export interface Game<
    * on one that does not, so a game that cannot finish from `curr` refuses. */
   solve?(orig: State, curr: State, aux?: string): SolveResult<Move>;
 
+  /** Whether this board is proved to have no solution: no moves from it reach
+   * a solved one. `loadDesc` refuses a board that is, so nobody is handed one
+   * that cannot be finished.
+   *
+   * **For a game with no mistake check, and only a proof that is cheap on
+   * every board**: a parity, a rank, a planarity test. It is asked of every
+   * pasted ID and every opened save, where {@link solve} is asked only when
+   * the player presses it, so a search does not belong here: it charges a
+   * board it cannot settle its whole budget each time that board opens. A
+   * game with `findMistakes` answers through `solve`, which also says whether
+   * the answer is the only one, and `registerGame` refuses one with both. */
+  hasNoSolution?(state: State): boolean;
+
   /** Track the pointer over the board when no button is down, for a game
    * that can say something useful about what sits under it — Loopy lights
    * the whole run of lines the hovered edge belongs to, so "are these two

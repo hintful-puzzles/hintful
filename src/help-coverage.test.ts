@@ -523,6 +523,10 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   statusbarText: { kind: "upstream", why: "the status line" },
 
   // --- no player-visible surface of their own ---
+  hasNoSolution: {
+    kind: "internal",
+    why: "refuses a game ID nobody could finish, in a sentence shown where it was opened",
+  },
   supersededDesc: { kind: "internal", why: "how a save rebuilds a board that moved" },
   changedState: { kind: "internal", why: "a game's own bookkeeping across a move" },
   hintKeepTrack: { kind: "internal", why: "how a plan survives the player's own move" },

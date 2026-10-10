@@ -374,6 +374,9 @@ export const untangleGame: Game<
   },
 
   finishesByDeduction: nothingToDeduce,
+  // The layout comes from a planarity test and is kept for the hint and
+  // Solve, which need it next.
+  hasNoSolution: (s) => solvedLayout(s.n, s.w, s.edges) === null,
   status: (s) => (s.crosses.includes(true) ? "ongoing" : "solved"),
   notApplicable: {
     findMistakes:

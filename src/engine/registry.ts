@@ -38,6 +38,12 @@ export function registerGame<P, S, M, U, D>(game: Game<P, S, M, U, D>): void {
         : `${game.id}: a game without difficulty tiers says whether deduction finishes a board (finishesByDeduction), with nothingToDeduce where it deduces nothing`,
     );
   }
+  // One way to say a board has no answer: a second could disagree with the first.
+  if (game.hasNoSolution !== undefined && game.findMistakes !== undefined) {
+    throw new Error(
+      `${game.id}: a game with a mistake check says a board has no solution through solve, so it leaves hasNoSolution out`,
+    );
+  }
   factories.set(game.id, () => new Midend(game));
   games.set(game.id, game);
 }

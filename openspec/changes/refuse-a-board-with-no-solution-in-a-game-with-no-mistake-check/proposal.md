@@ -29,8 +29,12 @@ It is reached only through a hand-written game ID or a save holding one.
 
 ## What Changes
 
-- A board whose game's `solve` proves it has no solution is refused at load
-  with `DESC_CONTRADICTORY`, whether or not the game checks mistakes.
+- A board whose game's `solve` proves it has no solution is refused at load,
+  whether or not the game checks mistakes. (As built: the game says so through a
+  hook of its own, `hasNoSolution`, and `solve` is not asked, since it costs
+  seconds on some boards. The sentence is `DESC_NO_SOLUTION`, these games
+  having no clues to contradict. `design.md` has what the proposal did not
+  know: thirteen games and not three.)
 - The population is derived first: every registered game with a `solve` and
   no `findMistakes`, and what its `solve` can say of the opening position.
 
