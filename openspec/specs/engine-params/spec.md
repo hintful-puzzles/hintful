@@ -1129,8 +1129,14 @@ of a game without `findMistakes` when a board loads.
 
 #### Scenario: A game whose only proof is a search
 
-- **WHEN** a Pegs game ID with two pegs that can never meet is opened
+- **WHEN** a Slide game ID with a block moved so that no slides finish it is
+  opened
 - **THEN** it loads, and its solver is not run
+
+#### Scenario: A search game's quick loss
+
+- **WHEN** a Pegs game ID with two pegs that can never meet is opened
+- **THEN** it is refused with `DESC_NO_SOLUTION`, and its search is not run
 
 ### Requirement: A game with no mistake check is held to a board with no solution
 
@@ -1184,3 +1190,23 @@ games SHALL otherwise be those that answer `nothingToDeduce`.
 - **WHEN** the registered games without a difficulty contract are listed, and
   those that do not answer `nothingToDeduce` are taken from them
 - **THEN** Mines is the one game left
+
+### Requirement: A proof that names its cause refuses the hint
+
+`hasNoSolution` SHALL answer for any position of the game, and MAY answer with
+a marked dead end naming what proves it. Where it does, the midend SHALL
+refuse a hint and a check with that dead end and SHALL NOT ask the game's
+`hint`. A bare yes SHALL leave the hint to the game.
+
+#### Scenario: A peg jumped out of reach
+
+- **WHEN** a Pegs player jumps a peg to where no jump can ever involve it, and
+  asks for a hint
+- **THEN** the hint says the outlined peg is cut off, the peg is outlined, and
+  the game's `hint` was not called
+
+#### Scenario: A proof with nothing to outline
+
+- **WHEN** a Flood player has made a fill after which the limit cannot be met,
+  and asks for a hint
+- **THEN** the game's `hint` is asked, and names a fill

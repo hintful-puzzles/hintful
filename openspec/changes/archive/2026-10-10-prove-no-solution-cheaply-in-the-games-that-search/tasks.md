@@ -39,4 +39,4 @@
 - [x] 4.1 The spec delta, and remove `skip_specs` from `.openspec.yaml`.
 - [x] 4.2 `docs/games/solver-and-generator.md`, § "One answer, even when it is
   hidden", and `docs/games/hints.md` if the engine took the refusals.
-- [ ] 4.3 Commit, push, archive.
+- [x] 4.3 Commit, push, archive.
