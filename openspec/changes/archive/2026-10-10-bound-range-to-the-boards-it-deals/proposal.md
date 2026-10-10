@@ -5,6 +5,12 @@ tier (`add-an-unreasonable-tier-to-the-untiered-deductive-games`), which
 measured it. What it says of the code was true that day; re-check before
 relying on it.**
 
+**Done 2026-10-10, and not as filed: no bound was drawn.** A Custom size is
+not refused for its wait, so the crash below was fixed where it was thrown,
+the strip was made cheaper, and the Unreasonable bound was taken away.
+`design.md` has the reasons and the measurements; "What Changes" below is
+what was asked for, and the spec delta is what was done.
+
 ## Why
 
 Range's only size bound is upstream's guard on its cell encoding: width plus

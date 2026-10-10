@@ -254,8 +254,12 @@ const NOT_VISITED = -1;
 
 /** A square whose painting black would disconnect the white region (a
  * cut vertex of the white graph) must be white. DFS lowpoint
- * articulation-point detection, port of `solver_reasoning_connectedness`
- * / `dfs_biconnect_visit`. */
+ * articulation-point detection, as upstream's
+ * `solver_reasoning_connectedness` / `dfs_biconnect_visit`.
+ *
+ * The walk keeps its own stack. It goes as deep as the clear squares are
+ * many, and a call a square overflows the engine's stack on a board of a few
+ * thousand. */
 function ruleConnectedness(
   grid: Int8Array,
   w: number,
@@ -263,55 +267,66 @@ function ruleConnectedness(
   rec?: Recorder,
 ): number {
   const n = w * h;
-  const parent = new Int32Array(n).fill(NOT_VISITED);
-  const depth = new Int32Array(n);
-  let made = 0;
-
   let start = 0;
   while (start < n && grid[start] === BLACK) start++;
   if (start >= n) return 0; // no white cells at all
-  parent[start] = start;
 
-  const visit = (r: number, c: number): number => {
-    const ci = idx(r, c, w);
-    const mydepth = depth[ci];
-    let low = mydepth;
-    let nchildren = 0;
+  let made = 0;
+  const cutVertex = (cell: number): void => {
+    const r = Math.floor(cell / w);
+    const c = cell % w;
+    if (makeMove(grid, w, h, r, c, WHITE)) {
+      made++;
+      rec?.(r, c, WHITE, { kind: "connect" });
+    }
+  };
 
-    for (let j = 0; j < 4; j++) {
-      const rr = r + DR[j];
-      const cc = c + DC[j];
+  const depth = new Int32Array(n).fill(NOT_VISITED);
+  const low = new Int32Array(n);
+  // The direction each square tries next, and the path from `start` to the
+  // square being visited: `path[d]` is at depth `d`, and its parent is the
+  // entry before it.
+  const tried = new Uint8Array(n);
+  const path = new Int32Array(n);
+  let top = 0;
+  let startChildren = 0;
+  path[0] = start;
+  depth[start] = 0;
+
+  while (top >= 0) {
+    const ci = path[top];
+    if (tried[ci] < 4) {
+      const j = tried[ci]++;
+      const rr = Math.floor(ci / w) + DR[j];
+      const cc = (ci % w) + DC[j];
       if (outOfBounds(rr, cc, w, h)) continue;
       const cell = idx(rr, cc, w);
       if (grid[cell] === BLACK) continue;
 
-      if (parent[cell] === NOT_VISITED) {
-        parent[cell] = ci;
-        depth[cell] = mydepth + 1;
-        const childLow = visit(rr, cc);
-        if (childLow >= mydepth && mydepth > 0) {
-          if (makeMove(grid, w, h, r, c, WHITE)) {
-            made++;
-            rec?.(r, c, WHITE, { kind: "connect" });
-          }
-        }
-        low = Math.min(low, childLow);
-        nchildren++;
-      } else if (cell !== parent[ci]) {
-        low = Math.min(low, depth[cell]);
+      if (depth[cell] === NOT_VISITED) {
+        top++;
+        path[top] = cell;
+        depth[cell] = top;
+        low[cell] = top;
+      } else if (top > 0 && cell !== path[top - 1]) {
+        low[ci] = Math.min(low[ci], depth[cell]);
       }
+      continue;
     }
 
-    if (mydepth === 0 && nchildren >= 2) {
-      if (makeMove(grid, w, h, r, c, WHITE)) {
-        made++;
-        rec?.(r, c, WHITE, { kind: "connect" });
-      }
-    }
-    return low;
-  };
+    // Every direction tried: back to the parent, which is a cut vertex when
+    // nothing under this square reaches above it.
+    top--;
+    if (top < 0) break;
+    const parent = path[top];
+    if (top === 0) startChildren++;
+    else if (low[ci] >= top) cutVertex(parent);
+    low[parent] = Math.min(low[parent], low[ci]);
+  }
 
-  visit(Math.floor(start / w), start % w);
+  // The start has nothing above it to reach: it is a cut vertex when the
+  // walk left it twice.
+  if (startChildren >= 2) cutVertex(start);
   return made;
 }
 
@@ -656,6 +671,10 @@ function stripClues(grid: Int8Array, w: number, h: number, order: number[]): num
     const j = rotate(i);
     const clue = grid[i];
     const clueRot = grid[j];
+    // `order` holds both squares of a pair, so a pair that went is met again
+    // from its other square. Upstream runs the solver on it there, and that
+    // run cannot pass: it is asked for two squares more than are undecided.
+    if (clue === EMPTY) continue;
     grid[i] = EMPTY;
     grid[j] = EMPTY;
     const delta = i === j ? 1 : 2;

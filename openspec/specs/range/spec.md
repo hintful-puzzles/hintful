@@ -50,12 +50,20 @@ difficulty letter SHALL decode as Easy.
 
 `validateParams` SHALL refuse a `w + h` above 128, which overflows the cell
 encoding, and, when `full`, a grid with both dimensions at most 2 (1×1, 1×2,
-2×1 and 2×2), which admits no good puzzle.
+2×1 and 2×2), which admits no good puzzle. It SHALL refuse no size for the
+time its deal takes, at either difficulty: a player can stop a deal.
 
 #### Scenario: Invalid params are rejected
 
 - **WHEN** `validateParams` is called with full generation on a 2×2 grid
 - **THEN** it returns a non-null error string
+
+#### Scenario: The largest boards are asked for at both difficulties
+
+- **WHEN** a 64×64, a 2×126 and an 18×18 board are checked for dealing at
+  Easy and at Unreasonable
+- **THEN** none is refused
+- **AND** a 64×65 board is refused for its width plus height
 
 ### Requirement: Range descriptions are run-length clue grids
 
@@ -94,6 +102,21 @@ cut vertex of the white graph) is white.
 
 - **WHEN** the solver runs on a grid with a black cell beside an empty cell
 - **THEN** that empty cell is set white
+
+### Requirement: Range's rules run on every board the encoding allows
+
+The deductive solver SHALL finish on a board of any size the encoding allows,
+dealt or pasted, however long a path its white squares form.
+
+#### Scenario: A strip of the greatest length
+
+- **WHEN** the solver runs on a 127×1 grid with no clue and nothing decided
+- **THEN** every cell but the two ends is set white
+
+#### Scenario: The largest board with nothing shaded
+
+- **WHEN** the solver runs on a 64×64 grid with no clue and nothing decided
+- **THEN** it returns having set no cell
 
 ### Requirement: Range's Solve searches where deduction stalls
 
@@ -483,19 +506,6 @@ symmetric clues, so the generator gives up on it.
 - **THEN** none of them has exactly one answer
 - **AND** the same walk over a 2×3 board finds some that do, and over a 3×3
   board 176, none with symmetric clues
-
-### Requirement: Unreasonable Range is bounded on its own measurements
-
-`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
-board of more than 300 squares, with a reason naming the difficulty. The same
-size SHALL still be asked for at Easy.
-
-#### Scenario: A size past the bound is refused at Unreasonable only
-
-- **WHEN** an 18×18 board and a 3×125 board are checked for dealing at each
-  difficulty
-- **THEN** each is refused at Unreasonable and not at Easy
-- **AND** a 15×20, a 5×60 and a 2×126 board are admitted at Unreasonable
 
 ### Requirement: Range's menu offers each size at both difficulties
 

@@ -48,6 +48,24 @@ describe("deductive rules", () => {
     expect(grid[idx(0, 1, 3)]).toBe(WHITE);
     expect(grid[idx(0, 2, 3)]).toBe(WHITE);
   });
+
+  it("keeps every square between the ends of a strip clear (connectedness)", () => {
+    // Shading any square but an end cuts the strip in two. This is the
+    // longest board the encoding allows.
+    const grid = new Int8Array(127);
+    expect(applyRules(grid, 127, 1, [])).toBe(125);
+    expect(grid[0]).toBe(EMPTY);
+    expect(grid[1]).toBe(WHITE);
+    expect(grid[125]).toBe(WHITE);
+    expect(grid[126]).toBe(EMPTY);
+  });
+
+  it("walks the largest board with nothing shaded", () => {
+    // The walk through an open 64x64 board runs up and down its columns and
+    // is 4,096 squares deep at its end.
+    const grid = new Int8Array(64 * 64);
+    expect(applyRules(grid, 64, 64, [])).toBe(0);
+  });
 });
 
 describe("searchAnswers", () => {

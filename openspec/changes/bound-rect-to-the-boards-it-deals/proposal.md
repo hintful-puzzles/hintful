@@ -45,6 +45,13 @@ average and 3.8 s at worst.
 
 ## What to settle first
 
+- **Whether there is anything to refuse** (added 2026-10-10 by
+  `bound-range-to-the-boards-it-deals`, which was filed on this premise and
+  drew no bound). A Custom size is not refused for its wait
+  (`docs/games/solver-and-generator.md` § "Bound a generator by its tail, not
+  its median"): a player can stop a deal. Refuse only a deal that throws,
+  gives up, or hands over a board other than the one asked for, and fix a
+  throw where it is thrown. A slow deal is made cheaper or left.
 - **Where the time goes at 70x70**: time the layout, the solver and
   `rungsFinish` apart on twenty deals.
 - **Whether a pasted 70x70 board opens in reasonable time.** Loading grades

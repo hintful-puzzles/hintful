@@ -133,6 +133,17 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 // signed char max — the upstream `puzzle_size` overflow guard for `w + h`.
 const SCHAR_MAX = 127;
 
+/**
+ * No size is refused for the time its deal takes: a player can stop a deal,
+ * and every size the encoding allows is dealt, at both tiers. The time goes
+ * by the area whatever the shape, and an Unreasonable board takes about four
+ * times as long as an Easy one.
+ *
+ * Measured 2026-10-10, mean time for an Easy deal: 11×16 0.03 s, 20×20
+ * 0.26 s, 25×25 0.7 s, 30×30 2 s, 10×118 3.9 s, 40×40 10 s, 64×64 164 s.
+ * For an Unreasonable one: 15×20 0.8 s, 18×18 1 s, 3×125 1 s, 20×20 2 s,
+ * 8×60 2.6 s, 25×25 5.3 s, 30×30 9.3 s, each board with one answer.
+ */
 export function validateParams(p: RangeParams, full: boolean): string | null {
   const { w, h } = p;
   if (w > SCHAR_MAX - (h - 1))
@@ -141,17 +152,6 @@ export function validateParams(p: RangeParams, full: boolean): string | null {
   if (full && p.diff === DIFF_UNREASONABLE) return unreasonableRefusal(p);
   return null;
 }
-
-/**
- * The largest Unreasonable board dealt, in squares. An Unreasonable board
- * takes three to four times as long to deal as an Easy one, and the time
- * goes by the area whatever the shape.
- *
- * Measured 2026-10-10, mean time for a board inside the bound | past it:
- * 11×16 0.2 s, 15×15 0.55 s, 2×126 0.5 s, 5×60 0.9 s | 18×18 1.3 s, 3×125
- * 1.6 s, 20×20 1.8 s, 8×60 4.3 s, 25×25 4.8 s.
- */
-const MAX_UNREASONABLE_AREA = 300;
 
 function unreasonableRefusal(p: RangeParams): string | null {
   const tier = SEARCH_TIER_NAMES[DIFF_UNREASONABLE] as string;
@@ -163,8 +163,6 @@ function unreasonableRefusal(p: RangeParams): string | null {
   // (`range-tier.test.ts`), so a pasted one opens and a deal gives up in
   // about a second.
   if (Math.min(p.w, p.h) === 1) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
-  if (p.w * p.h > MAX_UNREASONABLE_AREA)
-    return `An ${tier} puzzle must have at most ${MAX_UNREASONABLE_AREA} squares; a larger one takes too long to deal.`;
   return null;
 }
 

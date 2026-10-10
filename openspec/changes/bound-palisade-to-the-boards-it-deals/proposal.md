@@ -75,6 +75,13 @@ board is large.
 
 ## What to settle first
 
+- **Whether there is anything to refuse** (added 2026-10-10 by
+  `bound-range-to-the-boards-it-deals`, which was filed on this premise and
+  drew no bound). A Custom size is not refused for its wait
+  (`docs/games/solver-and-generator.md` § "Bound a generator by its tail, not
+  its median"): a player can stop a deal. Refuse only a deal that throws,
+  gives up, or hands over a board other than the one asked for, and fix a
+  throw where it is thrown. A slow deal is made cheaper or left.
 - **The shape of the bound.** It depends on the region size, the number of
   regions and how thin the board is. Sweep the shorter side at each region
   size from 3 to 12 before choosing between a table by region size and a

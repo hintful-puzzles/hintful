@@ -1597,6 +1597,23 @@ A size bound in `validateParams` is for what a wait does not fix:
   at the end is not what was searched for (Sokoban past 1,200 squares deals
   the level its hint cannot open).
 
+A tier's own bound is held to the same rule: "a larger one takes too long to
+deal" is a wait, and Range's Unreasonable bound went when every deal past it
+was measured to return the board asked for. Two things to do before a table
+of times is read as a bound
+([`range/solver.ts`](../../src/games/range/solver.ts)):
+
+- **A deal that throws is a defect in the code that throws.** Range's
+  connectedness walk made a call a square and overflowed the stack on a 64x64
+  board, dealt or pasted. A bound would have sat under a stack whose depth
+  differs by engine; the walk keeps its own. Record a few hundred boards and
+  their hint plans first, since the order a rule fires in decides which board
+  a seed deals.
+- **Ask what each solver run in a strip is asked.** Range's strip met both
+  squares of a symmetric pair, and at the second ran the solver on a pair
+  already gone, a run that could not pass. Passing over it moved no board and
+  made an Easy deal 2.4 times as fast.
+
 The preset menu is held to more than this: a preset is a wait sprung on
 whoever opens the menu. A generator that never ends is still a defect at any
 size, since a player who stops it has learned nothing about whether to ask

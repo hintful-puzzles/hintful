@@ -446,14 +446,13 @@ describe("the tier in Range's params", () => {
     expect(refusal("40x1du")).toBe("No 40x1 puzzle is Unreasonable.");
   });
 
-  it("bounds an Unreasonable board by its area", () => {
-    expect(refusal("15x20du")).toBeNull();
-    expect(refusal("5x60du")).toBeNull();
-    expect(refusal("2x126du")).toBeNull();
-    expect(refusal("18x18du")).toMatch(/at most 300 squares/);
-    expect(refusal("3x125du")).toMatch(/at most 300 squares/);
-    expect(refusal("18x18de")).toBeNull();
-    // A board that arrives with its description is not held to it.
-    expect(paramsError(rangeGame, sized(18, 18, DIFF_UNREASONABLE), false)).toBeNull();
+  it("is refused at no size for the time a deal takes", () => {
+    // The largest boards the encoding allows, square and thin, and two that
+    // an area bound once refused at Unreasonable.
+    for (const size of ["64x64", "2x126", "126x2", "18x18", "3x125"]) {
+      expect(refusal(`${size}de`), size).toBeNull();
+      expect(refusal(`${size}du`), size).toBeNull();
+    }
+    expect(refusal("64x65de")).toBe("Width plus height must be at most 128.");
   });
 });
