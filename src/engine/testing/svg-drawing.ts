@@ -43,7 +43,7 @@ function opToSvg(op: DrawOp): string {
     case "circle":
       return `<circle cx="${op.cx}" cy="${op.cy}" r="${op.r}" fill="${paint(op.fill, op.fillRgb)}" stroke="${paint(op.outline, op.outlineRgb)}"/>`;
     case "text":
-      return `<text x="${op.x}" y="${op.y}" fill="${op.rgb}" font-size="${op.size}" text-anchor="${anchor(op.align)}" font-family="${op.fontType === "fixed" ? "monospace" : "sans-serif"}">${escapeText(op.text)}</text>`;
+      return `<text x="${op.x}" y="${op.y}" fill="${op.rgb}" font-size="${op.size}" text-anchor="${anchor(op.align)}"${op.baseline === "mathematical" ? ' dominant-baseline="central"' : ""} font-family="${op.fontType === "fixed" ? "monospace" : "sans-serif"}">${escapeText(op.text)}</text>`;
     case "hatch": {
       // The one op clipped here, since its bands overhang the rect by design.
       const id = `hatch-${op.x}-${op.y}-${op.w}-${op.h}`;

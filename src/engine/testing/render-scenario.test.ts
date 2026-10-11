@@ -114,5 +114,7 @@ describe("renderScenario", () => {
     expect(svg).toContain("</svg>");
     expect(svg).toContain("<rect");
     expect(svg).toContain(`width="${size.w}"`);
+    // A clue is centered on its point, as the canvas centers it.
+    expect(svg).toContain('dominant-baseline="central"');
   });
 });
