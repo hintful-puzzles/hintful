@@ -22,6 +22,7 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { dlineEnds } from "./dlines.ts";
 import {
   deduceLoopyPlan,
@@ -1094,7 +1095,7 @@ describe("Loopy mistakes", () => {
     const ui = loopyGame.newUi(state);
     ui.drawFaintLines = false;
     const ds = loopyGame.newDrawState(state, PREFERRED_TILE_SIZE);
-    loopyGame.redraw(dr, ds, null, state, 0, ui, 0, 0, undefined, mistakes);
+    loopyGame.redraw(dr, ds, null, state, 0, ui, 0, NO_FLASH, undefined, mistakes);
     const red = dr.ops.filter((o) => o.op === "line" && o.color === COL_MISTAKE);
     // A cross: two strokes, and the edge's own faint line is not drawn at all.
     expect(red).toHaveLength(2);

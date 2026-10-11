@@ -34,17 +34,10 @@ import {
   CURSOR_UP,
 } from "../../engine/pointer.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepRanks } from "../../engine/win-wave.ts";
 import { REGION } from "./hint-text.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
-import {
-  FLASH_ALL_TO_WHITE,
-  FLASH_EACH_TO_WHITE,
-  type MapMistake,
-  type MapMove,
-  type MapParams,
-  type MapState,
-  type MapUi,
-} from "./state.ts";
+import type { MapMistake, MapMove, MapParams, MapState, MapUi } from "./state.ts";
 
 // --- palette ---------------------------------------------------------
 
@@ -344,13 +337,6 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   body: COL_BACKGROUND,
   ink: COL_GRID,
 };
-
-// --- flash -----------------------------------------------------------
-
-/** Upstream `flash_length`. */
-export function flashLengthFromUi(ui: MapUi): number {
-  return ui.flashType === FLASH_EACH_TO_WHITE ? 0.5 : 0.3;
-}
 
 // --- drawing ---------------------------------------------------------
 
@@ -862,7 +848,7 @@ export function redraw(
   _dir: number,
   ui: MapUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<MapMove>,
   mistakes?: readonly MapMistake[],
 ): void {
@@ -888,13 +874,15 @@ export function redraw(
     ds.started = true;
   }
 
-  // Flash phase.
-  let flash = -1;
-  if (flashTime) {
-    const len = flashLengthFromUi(ui);
-    if (ui.flashType === FLASH_EACH_TO_WHITE)
-      flash = Math.floor((flashTime * FOUR) / len);
-    else flash = 1 + Math.floor((flashTime * (FOUR - 1)) / len);
+  // The win flash sweeps the regions, each lit whole: a region's position is
+  // its rank among them along the diagonal, by the point its number is drawn
+  // at.
+  const lit = new Uint8Array(n);
+  if (flash.winning) {
+    const ranks = sweepRanks(
+      Array.from({ length: n }, (_, r) => ({ x: map.regionx[r], y: map.regiony[r] })),
+    );
+    for (let r = 0; r < n; r++) if (flash.win(ranks[r])) lit[r] = 1;
   }
 
   const mistakeSet = new Set<number>();
@@ -916,7 +904,8 @@ export function redraw(
   // The selected region, hidden while the completion flash plays, and in notes
   // mode the cell that carries the corner triangle: the region's first in
   // reading order.
-  const selected = ui.cursor.visible && flash < 0 ? regionFromUiCursor(map, ui) : -1;
+  const selected =
+    ui.cursor.visible && !flash.winning ? regionFromUiCursor(map, ui) : -1;
   let notesCell = -1;
   if (selected >= 0 && ui.pencilMode) {
     for (let i = 0; i < wh && notesCell < 0; i++)
@@ -933,20 +922,9 @@ export function redraw(
       if (tv < 0) tv = FOUR;
       if (bv < 0) bv = FOUR;
 
-      if (flash >= 0) {
-        if (ui.flashType === FLASH_EACH_TO_WHITE) {
-          if (tv === flash) tv = FOUR;
-          if (bv === flash) bv = FOUR;
-        } else if (ui.flashType === FLASH_ALL_TO_WHITE) {
-          if (flash % 2) {
-            tv = FOUR;
-            bv = FOUR;
-          }
-        } else {
-          if (tv !== FOUR) tv = (tv + flash) % FOUR;
-          if (bv !== FOUR) bv = (bv + flash) % FOUR;
-        }
-      }
+      // A lit region is drawn blank.
+      if (lit[tRegion]) tv = FOUR;
+      if (lit[bRegion]) bv = FOUR;
 
       let v = tv * FIVE + bv;
 

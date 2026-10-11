@@ -38,6 +38,7 @@ describeAbsentTiers(soloGame, [
 // The tier under those, and the grid beside them.
 describeDealtTiers(soloGame, ["4jdi", "5jda", "5jdu", "3jka", "2x2ka"]);
 
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import {
   COL_KILLER,
   COL_XDIAGONALS,
@@ -302,7 +303,7 @@ describe("solo render (initial frame)", () => {
     };
     const frame = (ds: SoloDrawState, h?: typeof hint) => {
       const rec = new RecordingDrawing(palette);
-      soloGame.redraw(rec, ds, null, state, 0, ui, 0, 0, h);
+      soloGame.redraw(rec, ds, null, state, 0, ui, 0, NO_FLASH, h);
       return rec.ops;
     };
 

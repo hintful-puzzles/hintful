@@ -10,6 +10,8 @@ import { newCursor } from "../../engine/pointer.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { CLUE, say } from "./hint-text.ts";
 import { type RangeHint, rangeGame } from "./index.ts";
 import {
@@ -44,7 +46,7 @@ function renderState(
 ): RecordingDrawing {
   const rec = new RecordingDrawing(palette);
   const ds = newDrawState(state, 32);
-  redraw(rec, ds, null, state, 1, ui, 0, 0, undefined, mistakes);
+  redraw(rec, ds, null, state, 1, ui, 0, NO_FLASH, undefined, mistakes);
   return rec;
 }
 
@@ -82,7 +84,7 @@ describe("hint color legend", () => {
     };
     const rec = new RecordingDrawing(palette);
     const ds = newDrawState(state, 32);
-    redraw(rec, ds, null, state, 1, noCursor, 0, 0, step);
+    redraw(rec, ds, null, state, 1, noCursor, 0, NO_FLASH, step);
     // The cited black square rings COL_HINT_SHADEDREF (an outline — `line` ops,
     // not a body fill).
     expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_SHADEDREF)).toBe(
@@ -150,13 +152,34 @@ describe("pieces on a quiet surface", () => {
     expect(surfaces(rec)).toEqual([COL_CELL, COL_GIVEN, COL_CELL]);
   });
 
-  it("lifts every cell on a lit beat of the solved flash", () => {
-    const state = makeState(3, 1, [BLACK, WHITE, EMPTY]);
-    const rec = new RecordingDrawing(palette);
-    // A fifth of the way in is the first lit beat.
-    redraw(rec, newDrawState(state, 32), null, state, 1, noCursor, 0, 0.2);
-    expect(surfaces(rec)).toEqual([COL_GIVEN, COL_GIVEN, COL_GIVEN]);
-    expect(rec.ops.filter((o) => o.op === "polygon")).toHaveLength(1);
+  it("sweeps the win flash from the bottom left to the top right", () => {
+    // A clue in the middle, whose cell is lifted already and so drops to the
+    // plain surface when lit, where every other cell lifts.
+    const state = makeState(3, 3, [
+      BLACK,
+      WHITE,
+      EMPTY,
+      EMPTY,
+      3,
+      EMPTY,
+      EMPTY,
+      BLACK,
+      EMPTY,
+    ]);
+    const paint = (flash: Flash) => {
+      const rec = new RecordingDrawing(palette);
+      redraw(rec, newDrawState(state, 32), null, state, 1, noCursor, 0, flash);
+      return rec;
+    };
+    // The cells on the lifted surface, each as its index.
+    const run = winFlashRun(paint, (rec) => {
+      // A lit cell keeps its piece.
+      expect(rec.ops.filter((o) => o.op === "polygon")).toHaveLength(2);
+      return surfaces(rec).flatMap((color, i) =>
+        (color === COL_GIVEN) !== (i === 4) ? [i] : [],
+      );
+    });
+    expectWinFlashTravels(run, 9, (i) => sweepStep(i % 3, Math.floor(i / 3)));
   });
 
   it("keeps a shaded piece its color under an error, and frames the cell", () => {

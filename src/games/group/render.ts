@@ -50,6 +50,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { GroupMove } from "./state.ts";
 import {
   checkErrors,
@@ -140,8 +141,6 @@ const DF_HIGHLIGHT_SHIFT = 9;
 const DF_IMMUTABLE = 0x0100;
 const DF_LEGEND = 0x0080;
 const DF_DIGIT_MASK = 0x001f;
-
-export const FLASH_TIME = 0.4;
 
 // --- geometry (BORDER = TILESIZE/2, LEGEND = TILESIZE) -----------------------
 
@@ -456,7 +455,7 @@ export function redraw(
   _dir: number,
   ui: GroupUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<GroupMove, GroupHint>,
   mistakes?: readonly Point[],
 ): void {
@@ -524,9 +523,6 @@ export function redraw(
   });
 
   // Cells.
-  const flashOn =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
-
   for (let y = 0; y < w; y++) {
     const sy = ds.sequence[y];
     for (let x = 0; x < w; x++) {
@@ -540,8 +536,10 @@ export function redraw(
       if (state.immutable[sy * w + sx]) tile |= DF_IMMUTABLE;
 
       let highlight: CellHighlight = cellHighlight(ui, sx, sy);
+      // The win flash sweeps the table as drawn, whatever order its elements
+      // are dragged into.
       if (
-        flashOn ||
+        flash.win(sweepStep(x, y)) ||
         (ui.drag === 5 && ui.dragnum === sy) ||
         (ui.drag === 6 && ui.dragnum === sx)
       ) {
@@ -605,8 +603,4 @@ export function redraw(
   // Group takes pencil marks like the rest of the Latin family, so it says so
   // the same way: the collection's glyph, where the engine puts it.
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(w, ts), PENCIL_STYLE);
-}
-
-export function solvedFlash(): number {
-  return FLASH_TIME;
 }

@@ -23,9 +23,11 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { unequalGame } from "./index.ts";
-import { computeSize, coord, PREFERRED_TILE_SIZE } from "./render.ts";
+import { COL_FLASH, computeSize, coord, PREFERRED_TILE_SIZE } from "./render.ts";
 import { DIFF_IMPOSSIBLE, solveUnequal } from "./solver.ts";
 import {
   checkComplete,
@@ -420,7 +422,7 @@ describe("unequal render", () => {
     const at = (y: number) => ({ ...newUi(st), cursor: { x: 2, y, visible: true } });
     const frame = (ds: ReturnType<typeof unequalGame.newDrawState>, y: number) => {
       const dr = new RecordingDrawing(palette);
-      unequalGame.redraw(dr, ds, null, st, 1, at(y), 0, 0);
+      unequalGame.redraw(dr, ds, null, st, 1, at(y), 0, NO_FLASH);
       return dr.ops;
     };
 
@@ -460,5 +462,38 @@ describe("on-screen keys (requestKeys)", () => {
       ..."0123456789a".split("").map((c) => ({ button: c.charCodeAt(0), label: c })),
       { button: 8, label: "Clear" },
     ]);
+  });
+});
+
+describe("unequal: the win flash sweeps the cells", () => {
+  const TS = PREFERRED_TILE_SIZE;
+  const start = gen(4, "unequal", "easy", "win-flash").st;
+  const answer = unequalGame.solve?.(start, start);
+  if (!answer?.ok) throw new Error("the board does not solve");
+  const state = unequalGame.executeMove(start, answer.move);
+  const cells = state.order * state.order;
+
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(unequalGame.colors(DEFAULT_BACKGROUND));
+    const ds = unequalGame.newDrawState(state, TS);
+    unequalGame.redraw(dr, ds, null, state, 1, newUi(state), 0, flash);
+    return dr.ops;
+  };
+  /** The cells a frame fills with the flash color, as the `x,y` drawn at. */
+  const lit = (ops: ReturnType<typeof paint>): string[] =>
+    ops.flatMap((op) =>
+      op.op === "rect" && op.color === COL_FLASH ? [`${op.x},${op.y}`] : [],
+    );
+  const step = (key: string): number => {
+    const [x, y] = key.split(",").map(Number);
+    return x - y;
+  };
+
+  it("is a solved board", () => {
+    expect(unequalGame.status(state)).toBe("solved");
+  });
+
+  it("travels every cell, from the bottom left to the top right", () => {
+    expectWinFlashTravels(winFlashRun(paint, lit), cells, step);
   });
 });

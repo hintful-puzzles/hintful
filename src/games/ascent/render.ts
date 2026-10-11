@@ -29,6 +29,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Rect } from "../../engine/types.ts";
+import type { Flash } from "../../engine/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-text.ts";
 import {
@@ -118,8 +119,6 @@ const HINT_HATCH = 4;
  * and of a number drawn in the middle. */
 const HINT_MARK_SCALE = 0.84;
 
-export const FLASH_FRAME = 0.03;
-export const FLASH_SIZE = 4;
 const ERROR_MARGIN = 0.1;
 
 export interface AscentDrawState {
@@ -512,7 +511,7 @@ export function redrawAscent(
   _dir: number,
   ui: AscentUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<AscentMove, AscentHighlights>,
   mistakes?: readonly AscentMistake[],
 ): void {
@@ -522,8 +521,6 @@ export function redrawAscent(
   const positions = ui.positions;
   const movement = movementForMode(state.mode);
   const margin = tileSize * ERROR_MARGIN;
-
-  const flash = flashTime > 0 ? Math.trunc(flashTime / FLASH_FRAME) : -2;
 
   const mistakeSet = new Uint8Array(w * h);
   if (mistakes) for (const m of mistakes) mistakeSet[m.cell] = 1;
@@ -700,10 +697,11 @@ export function redrawAscent(
 
     if (sn === NUMBER_BOUND) continue;
 
+    // The win flash runs the number path: a square's position is its number.
     const color =
       sn === NUMBER_WALL
         ? COL_BORDER
-        : flash >= sn && flash <= sn + FLASH_SIZE
+        : sn >= 0 && flash.win(sn)
           ? COL_LOWLIGHT
           : ui.dragColumn === i % w || ui.dragRow === Math.trunc(i / w)
             ? COL_TARGET

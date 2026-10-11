@@ -1,13 +1,15 @@
 /**
- * The win flash: a highlight a few squares long that runs the finished track
- * from the entrance to the exit.
+ * The win flash: the engine's highlight, run along the finished track from
+ * the entrance to the exit.
  */
 
 import { describe, expect, it } from "vitest";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { tracksGame } from "./index.ts";
-import { COL_FLASH, flashLength, PREFERRED_TILE_SIZE } from "./render.ts";
+import { COL_FLASH, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   blankBoard,
   D,
@@ -16,8 +18,10 @@ import {
   newState,
   R,
   sESet,
+  stateToBoard,
   type TracksParams,
   type TracksState,
+  trackOrder,
 } from "./state.ts";
 
 const P: TracksParams = { w: 6, h: 6, diff: 0, singleOnes: true };
@@ -30,20 +34,42 @@ function solved(): TracksState {
   return tracksGame.executeMove(start, answer.move);
 }
 
-/** The squares drawn in the flash's color `time` seconds in, as their tiles'
- * clip rectangles, in the order drawn. */
-function lit(state: TracksState, time: number): string[] {
-  const dr = new RecordingDrawing(tracksGame.colors(DEFAULT_BACKGROUND));
-  const ds = tracksGame.newDrawState(state, PREFERRED_TILE_SIZE);
-  tracksGame.redraw(dr, ds, null, state, 1, tracksGame.newUi(state), 0, time);
-  const squares = new Set<string>();
-  let clip = "";
-  for (const op of dr.ops) {
-    if (op.op === "clip") clip = `${op.x},${op.y}`;
-    else if ("color" in op && op.color === COL_FLASH) squares.add(clip);
-  }
-  return [...squares];
+/** A win flash on `state`, each lit square as its index, row by row: the
+ * squares whose tile draws something in the flash's color. */
+function flashOn(state: TracksState, frames: number) {
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(tracksGame.colors(DEFAULT_BACKGROUND));
+    const ds = tracksGame.newDrawState(state, PREFERRED_TILE_SIZE);
+    tracksGame.redraw(dr, ds, null, state, 1, tracksGame.newUi(state), 0, flash);
+    return dr;
+  };
+  // A tile clips to itself, so the clips' corners are the grid's lines.
+  const clips = opsOfKind(paint(NO_FLASH).ops, "clip");
+  const xs = [...new Set(clips.map((c) => c.x))].sort((a, b) => a - b);
+  const ys = [...new Set(clips.map((c) => c.y))].sort((a, b) => a - b);
+  expect([xs.length, ys.length]).toEqual([state.w, state.h]);
+  const index = (x: number, y: number) => ys.indexOf(y) * state.w + xs.indexOf(x);
+  return winFlashRun(
+    paint,
+    (dr) => {
+      const squares = new Set<number>();
+      let square = -1;
+      for (const op of dr.ops) {
+        if (op.op === "clip") square = index(op.x, op.y);
+        else if ("color" in op && op.color === COL_FLASH) squares.add(square);
+      }
+      return [...squares];
+    },
+    frames,
+  );
 }
+
+/** A square's place along the track from the entrance: what the game hands
+ * the flash. */
+const along = (state: TracksState) => {
+  const order = trackOrder(stateToBoard(state));
+  return (square: number) => order[square];
+};
 
 /** A solved `n`-square board whose track is every square: along the top row,
  * down a square, back along the next, and out through the bottom of the first
@@ -78,52 +104,34 @@ function serpentine(n: number): TracksState {
 
 describe("Tracks: the win flash on a track of several hundred squares", () => {
   const state = serpentine(18);
-  const total = flashLength(state);
 
   it("is a solved board", () => {
     expect(tracksGame.status(state)).toBe("solved");
   });
 
-  it("lights every square in turn, a few at a time", () => {
-    const frames = Array.from({ length: 400 }, (_, i) =>
-      lit(state, (total * (i + 1)) / 401),
-    );
-    for (const frame of frames) expect(frame.length).toBeLessThanOrEqual(3);
-    expect(new Set(frames.flat()).size).toBe(18 * 18);
-    expect(lit(state, total)).toEqual([]);
+  it("lights every square in turn, a part of the track at a time", () => {
+    const run = flashOn(state, 400);
+    expectWinFlashTravels(run, 18 * 18, along(state));
+    for (const frame of run.frames) expect(frame.length).toBeLessThan((18 * 18) / 4);
   });
 });
 
 describe("Tracks: the win flash runs the track from A to B", () => {
   const state = solved();
-  const total = flashLength(state);
   const track = 2 + 3 + 3 + 2 + 3 + 3; // the column clues' sum
-  // Thirty frames across the flash, none on its first or last instant.
-  const frames = Array.from({ length: 30 }, (_, i) =>
-    lit(state, (total * (i + 1)) / 31),
-  );
+  const run = flashOn(state, 30);
+
+  it("runs every square of the track once, in order, and no square off it", () => {
+    expectWinFlashTravels(run, track, along(state));
+  });
 
   it("lights a few squares at a time, never the whole track", () => {
-    for (const frame of frames) expect(frame.length).toBeLessThanOrEqual(3);
-    expect(frames.some((frame) => frame.length === 3)).toBe(true);
+    for (const frame of run.frames) expect(frame.length).toBeLessThanOrEqual(4);
+    expect(run.frames.some((frame) => frame.length >= 3)).toBe(true);
   });
 
-  it("reaches every square of the track, each for one stretch of frames", () => {
-    const all = new Set(frames.flat());
-    expect(all.size).toBe(track);
-    for (const square of all) {
-      const on = frames.map((frame) => frame.includes(square));
-      // Lit once and never again: the highlight passes and does not return.
-      expect(on.lastIndexOf(true) - on.indexOf(true) + 1).toBe(
-        on.filter(Boolean).length,
-      );
-    }
-  });
-
-  it("starts at the entrance on the left edge, and is over by the end", () => {
-    // The entrance is in column 0: the leftmost tile's clip.
-    const xs = frames.flat().map((clip) => Number(clip.split(",")[0]));
-    expect(Number(frames[0][0].split(",")[0])).toBe(Math.min(...xs));
-    expect(lit(state, total)).toEqual([]);
+  it("starts at the entrance on the left edge", () => {
+    for (const square of run.frames[0]) expect(along(state)(square)).toBeLessThan(4);
+    expect(run.frames[0].some((square) => square % P.w === 0)).toBe(true);
   });
 });

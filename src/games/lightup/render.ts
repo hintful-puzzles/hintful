@@ -4,8 +4,8 @@
  * the collection's quiet surface. A wall is a solid block (`wallFill`) with its clue
  * (red when provably wrong); an open square is the cell surface, washed yellow
  * when lit; a bulb is a white disc (red when lit by another bulb); the
- * impossible-mark is the ruled-out cross; and the completion flash blinks the
- * lit squares to the lifted surface.
+ * impossible-mark is the ruled-out cross; and the completion flash lifts the
+ * lit squares it is on to the lifted surface.
  */
 
 import { BLACK, WHITE, YELLOW_WASH } from "../../engine/color/colors.ts";
@@ -30,6 +30,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { LightupHint, LightupMistake } from "./index.ts";
 import {
   F_BLACK,
@@ -44,7 +45,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.3;
 
 // --- palette -------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (pi
 /** The player's "no light here" cross. */
 export const COL_RULED_OUT = 11;
 export const COL_CELL = 12; // the surface of an open square no bulb lights
-/** What a lit square blinks to in the completion flash: a lifted surface,
+/** What a lit square turns under the completion flash: a lifted surface,
  * which is a step off the yellow in both schemes. */
 export const COL_FLASH = 13;
 /** The line round a bulb. */
@@ -158,14 +158,13 @@ function tileFlags(
   ui: LightupUi,
   x: number,
   y: number,
-  flashing: boolean,
+  flash: Flash,
 ): number {
   const i = idx(x, y, state.w);
   const flags = state.flags[i];
   const lights = state.lights[i];
   let ret = 0;
 
-  if (flashing) ret |= DF_FLASH;
   if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y) ret |= DF_CURSOR;
 
   if (flags & F_BLACK) {
@@ -175,6 +174,8 @@ function tileFlags(
       ret |= DF_NUMBERED;
     }
   } else {
+    // Only an open square: a wall never lights.
+    if (flash.win(sweepStep(x, y))) ret |= DF_FLASH;
     if (lights > 0) ret |= DF_LIT;
     if (flags & F_LIGHT) {
       ret |= DF_LIGHT;
@@ -316,7 +317,7 @@ export function redraw(
   _dir: number,
   ui: LightupUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<LightupMove, LightupHint>,
   mistakes?: readonly LightupMistake[],
 ): void {
@@ -348,8 +349,6 @@ export function redraw(
     add([c], bit);
   }
 
-  const flashing = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_TIME) !== 1;
-
   if (!ds.started) {
     // One line wide, like the grid: its top and left lie under the first
     // row's and column's own lines, its right and bottom close the last.
@@ -364,7 +363,7 @@ export function redraw(
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const i = idx(x, y, w);
-      let df = tileFlags(state, ui, x, y, flashing);
+      let df = tileFlags(state, ui, x, y, flash);
       if (wrong?.has(i)) df |= DF_WRONG;
       if (ui.drawBlobsWhenLit) df |= DF_BLOBS_PREF;
       df |= hintBits.get(i) ?? 0;

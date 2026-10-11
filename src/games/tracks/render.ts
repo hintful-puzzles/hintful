@@ -40,6 +40,7 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import type { Flash } from "../../engine/win-wave.ts";
 import { pieceOfOp } from "./hint.ts";
 import { LINE, PIECE, type Piece } from "./hint-text.ts";
 import { copyAndApplyDrag } from "./moves.ts";
@@ -70,32 +71,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 33;
-
-/** The win flash: a highlight a few squares long that runs the track from
- * the entrance to the exit, at one pace wherever that takes a second or more
- * ({@link flashLength}). */
-const FLASH_SQUARES = 3;
-const FLASH_SECONDS_A_SQUARE = 0.07;
-
-/** How many squares the track covers: the column clues' sum. */
-function trackLength(state: TracksState): number {
-  let n = 0;
-  for (let x = 0; x < state.w; x++) n += state.numbers.numbers[x];
-  return n;
-}
-
-/** How far the highlight's head travels, in squares: from the entrance to a
- * highlight's length past the exit. */
-function flashRun(state: TracksState): number {
-  return trackLength(state) - 1 + FLASH_SQUARES;
-}
-
-/** How long the win flash runs on `state`: the time the highlight takes to
- * run the whole track and off its end, never under a second: on a track too
- * short to fill one, the highlight slows to take the whole second. */
-export function flashLength(state: TracksState): number {
-  return Math.max(1, flashRun(state) * FLASH_SECONDS_A_SQUARE);
-}
 
 // --- palette --------------------------------------------------------------
 export const COL_BACKGROUND = 0;
@@ -774,7 +749,7 @@ export function redraw(
   _dir: number,
   ui: TracksUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<TracksMove>,
   mistakes?: readonly Point[],
 ): void {
@@ -834,23 +809,15 @@ export function redraw(
 
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
-  // The win flash's head, in squares along the track. It starts at the
-  // entrance and ends a highlight's length past the exit, so the last square
-  // goes dark too.
-  const along = flashTime > 0 ? trackOrder(board) : null;
-  const flashHead = (flashTime / flashLength(state)) * flashRun(state);
+  // The win flash runs the track: a square's position is its place along it
+  // from the entrance, and a square off the track is never asked about.
+  const along = flash.winning ? trackOrder(board) : null;
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const i = y * w + x;
-      let flashing = 0;
-      if (
-        along !== null &&
-        along[i] >= 0 &&
-        along[i] <= flashHead &&
-        along[i] > flashHead - FLASH_SQUARES
-      )
-        flashing = DS_FLASH;
+      const flashing =
+        along !== null && along[i] >= 0 && flash.win(along[i]) ? DS_FLASH : 0;
       const f = s2dFlags(board, x, y, ui) | flashing;
       const fD = dragBoard ? s2dFlags(dragBoard, x, y, ui) : f;
       const hf = hintMarks[i];

@@ -24,12 +24,15 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import type { MagnetsHighlights } from "./hint.ts";
 import { CLUE, LINE, SQUARE } from "./hint-text.ts";
 import { magnetsGame } from "./index.ts";
 import {
   COL_CURSOR,
   COL_DONE,
+  COL_HIGHLIGHT,
   COL_HINT,
   COL_HINT_CELL,
   COL_MISTAKE,
@@ -226,12 +229,55 @@ describe("magnets render scenarios", () => {
     );
   });
 
+  it("the win flash sweeps the dominoes from the bottom left to the top right", () => {
+    const { state: start, aux } = board(P, "mrs-0");
+    const res = magnetsGame.solve?.(start, start, aux);
+    if (!res?.ok) throw new Error("the fixture does not solve");
+    const state = magnetsGame.executeMove(start, res.move);
+    expect(magnetsGame.status(state)).toBe("solved");
+    const ts = PREFERRED_TILE_SIZE;
+    /** The squares framed in the flash color, as their indices. */
+    const run = winFlashRun(
+      (flash: Flash) => {
+        const dr = new RecordingDrawing(colors(DEFAULT_BACKGROUND));
+        const ui = { cursor: { x: 0, y: 0, visible: false } };
+        redraw(dr, newDrawState(state, ts), state, ui, flash);
+        return dr;
+      },
+      (dr) => {
+        const squares = new Set<number>();
+        for (const o of dr.ops) {
+          if (o.op !== "rect" || o.color !== COL_HIGHLIGHT) continue;
+          squares.add((Math.floor(o.y / ts) - 1) * state.w + Math.floor(o.x / ts) - 1);
+        }
+        return [...squares];
+      },
+    );
+    const { dominoes } = state.common;
+    // A square's position is the middle of its domino.
+    expectWinFlashTravels(run, state.wh, (i) => {
+      const other = dominoes[i];
+      return sweepStep(
+        ((i % state.w) + (other % state.w)) / 2,
+        (Math.floor(i / state.w) + Math.floor(other / state.w)) / 2,
+      );
+    });
+    // A domino is lit whole or not at all.
+    for (const frame of run.frames)
+      for (const i of frame) expect(frame).toContain(dominoes[i]);
+    // It sets off with the bottom-left domino alone.
+    const bottomLeft = (state.h - 1) * state.w;
+    expect([...run.frames[0]].sort()).toEqual(
+      [bottomLeft, dominoes[bottomLeft]].sort(),
+    );
+  });
+
   it("a square repainting alone paints nothing into its partner's box", () => {
     const { state } = board(P, "mrs-0");
     const ts = PREFERRED_TILE_SIZE;
     const ds = newDrawState(state, ts);
     const ui = { cursor: { x: 0, y: 0, visible: false } };
-    redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, state, ui, 0);
+    redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, state, ui, NO_FLASH);
     const leaders = [
       horizontalDomino(state),
       state.common.dominoes.findIndex((o, i) => o === i + state.w),
@@ -241,12 +287,12 @@ describe("magnets render scenarios", () => {
       const x = i % state.w;
       const y = Math.floor(i / state.w);
       ui.cursor = { x, y, visible: false };
-      redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, state, ui, 0);
+      redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, state, ui, NO_FLASH);
       // The cursor arriving repaints this square and not its partner, so
       // whatever the square paints past its own box stays on the canvas.
       ui.cursor = { x, y, visible: true };
       const dr = new RecordingDrawing(colors(DEFAULT_BACKGROUND));
-      redraw(dr, ds, state, ui, 0);
+      redraw(dr, ds, state, ui, NO_FLASH);
       const box = {
         x0: (x + 1) * ts,
         y0: (y + 1) * ts,

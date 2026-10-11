@@ -27,6 +27,7 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { PIECE, SPAN } from "./hint-text.ts";
 import { dragReleaseOps, executeMove } from "./moves.ts";
@@ -49,7 +50,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 24;
-export const FLASH_TIME = 0.5;
 
 /** Web build defines NARROW_BORDERS: BORDER = TILE/8 + 1 (bridges.c line 93). */
 export function border(tileSize: number): number {
@@ -891,7 +891,7 @@ export function redrawBridges(
   _prev: BridgesState | null,
   s: BridgesState,
   ui: BridgesUi,
-  flashTime: number,
+  flash: Flash,
   mistakes: readonly BridgesMistake[] = [],
   hint?: HintStep<BridgesMove, BridgesHighlights>,
 ): void {
@@ -899,12 +899,6 @@ export function redrawBridges(
   const b = border(ts);
   const w = s.w;
   const h = s.h;
-
-  let flash = false;
-  if (flashTime) {
-    const f = Math.trunc((flashTime * 5) / FLASH_TIME);
-    if (f === 1 || f === 3) flash = true;
-  }
 
   let dragSrc: { x: number; y: number } | null = null;
   let dragDst: { x: number; y: number } | null = null;
@@ -936,7 +930,7 @@ export function redrawBridges(
         const is = s.islandAt(x, y);
         if (!is) continue;
         let idata = 0;
-        if (flash) idata |= DI_COL_FLASH;
+        if (flash.win(sweepStep(x, y))) idata |= DI_COL_FLASH;
         else if (
           dragSrc &&
           ((is.x === dragSrc.x && is.y === dragSrc.y) ||
@@ -1003,14 +997,17 @@ export function redrawBridges(
                 : 0;
 
         const wrong = mistakeMask?.[c];
-        hdata |= flash
+        // The win flash lights a bridge square by square as it crosses, and a
+        // square with no bridge has nothing to light.
+        const lit = (dv & (G_LINEH | G_LINEV)) !== 0 && flash.win(sweepStep(x, y));
+        hdata |= lit
           ? DL_COL_FLASH
           : v & G_WARN || wrong
             ? DL_COL_WARNING
             : selh
               ? DL_COL_SELECTED
               : DL_COL_NORMAL;
-        vdata |= flash
+        vdata |= lit
           ? DL_COL_FLASH
           : v & G_WARN || wrong
             ? DL_COL_WARNING

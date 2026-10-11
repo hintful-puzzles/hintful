@@ -42,6 +42,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { BricksHint } from "./index.ts";
 import { bricksValidate } from "./solver.ts";
 import {
@@ -52,7 +53,6 @@ import {
   type BricksUi,
   COL_MASK,
   F_BOUND,
-  F_EMPTY,
   F_SHADE,
   F_UNSHADE,
   FE_CURSOR,
@@ -66,8 +66,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
-const FLASH_FRAME = 0.12;
-export const FLASH_TIME = FLASH_FRAME * 5;
 
 // --- palette ----------------------------------------------------------------
 
@@ -204,6 +202,9 @@ function drawErrGravity(dr: GameDrawing, ts: number, x: number, y: number): void
 // bits (num/bound/color + FE_* error/cursor flags all fit under 0x2000).
 const HINT_TARGET = 1 << 13; // the forced cell — painted COL_HINT
 const HINT_EVID = 1 << 14; // a deduction-evidence cell — inset COL_HINT_CELL ring
+/** The win flash is on this cell, which swaps its surface: a cell lifts, and
+ * a clue's lifted cell drops to the plain one. */
+const LIT = 1 << 15;
 
 // --- one tile ---------------------------------------------------------------
 
@@ -224,10 +225,16 @@ function drawTile(
   // A cell the answer contradicts is drawn in the error color itself: it need
   // break no rule, so no bar or diamond is there to point at it.
   const wrong = (n & FE_WRONG) !== 0;
+  const lit = (n & LIT) !== 0;
   if (color === F_UNSHADE) {
-    drawClearSquare(dr, inner, COL_CLEAR, wrong ? COL_ERROR : COL_CLEAR_MARK);
+    drawClearSquare(
+      dr,
+      inner,
+      lit ? COL_GIVEN : COL_CLEAR,
+      wrong ? COL_ERROR : COL_CLEAR_MARK,
+    );
   } else {
-    dr.drawRect(inner, color ? COL_EMPTY : COL_GIVEN);
+    dr.drawRect(inner, (color !== 0) !== lit ? COL_EMPTY : COL_GIVEN);
     if (color === F_SHADE)
       drawPiece(dr, inner, SHADED_SHAPE, wrong ? COL_ERROR : COL_SHADE);
   }
@@ -322,7 +329,7 @@ export function redraw(
   _dir: number,
   ui: BricksUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<BricksMove, BricksHint>,
   mistakes?: readonly BricksMistake[],
 ): void {
@@ -335,8 +342,6 @@ export function redraw(
   const hintTargets = new Set(marks.of("ring", CELL).map(indexOf));
   const hintEvid = new Set(marks.of("outline", CELL).map(indexOf));
 
-  const flash = flashTime > 0 && ((flashTime / FLASH_FRAME) | 0) & 1;
-
   // Apply the in-flight drag preview to a working grid.
   const hasDrag = ui.drag.length > 0 && ui.dragType !== 0;
   const shown = hasDrag ? grid.slice() : grid;
@@ -347,16 +352,14 @@ export function redraw(
   }
 
   // Error flags to display: from the drag preview (live), or the Check & Save
-  // overlay — never on a plain committed frame (upstream), and never mid-flash.
+  // overlay — never on a plain committed frame (upstream).
   let errorFlags: Uint16Array | null = null;
-  if (!flash) {
-    if (hasDrag) {
-      errorFlags = new Uint16Array(s);
-      bricksValidate(shown, w, h, false, errorFlags);
-    } else if (mistakes && mistakes.length > 0) {
-      errorFlags = new Uint16Array(s);
-      for (const m of mistakes) errorFlags[m.index] |= m.flags;
-    }
+  if (hasDrag) {
+    errorFlags = new Uint16Array(s);
+    bricksValidate(shown, w, h, false, errorFlags);
+  } else if (mistakes && mistakes.length > 0) {
+    errorFlags = new Uint16Array(s);
+    for (const m of mistakes) errorFlags[m.index] |= m.flags;
   }
 
   for (let i = 0; i < s; i++) {
@@ -365,7 +368,10 @@ export function redraw(
     const x = i % w;
     const y = (i / w) | 0;
     let n = shown[i];
-    if (flash && (n & COL_MASK) === F_SHADE) n = F_EMPTY;
+    // The win flash sweeps the cells as drawn: a row sits half a cell right
+    // of the one above, so a cell's place is its pixel origin's.
+    const { x: tx, y: ty } = tileOrigin(x, y, h, ts);
+    if (flash.win(sweepStep(tx, ty))) n |= LIT;
     if (errorFlags) n |= errorFlags[i];
     if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) n |= FE_CURSOR;
     if (hintTargets.has(i)) n |= HINT_TARGET;
@@ -383,7 +389,6 @@ export function redraw(
     // square with no neighbor beside it owns the ground there as well, where a
     // diamond on the board's side edge lands (`bricks.test.ts`, "takes an edge
     // diamond away whole, ground included").
-    const { x: tx, y: ty } = tileOrigin(x, y, h, ts);
     let clipX = tx;
     let clipW = ts + 1;
     if (x === 0 || shown[i - 1] & F_BOUND) {

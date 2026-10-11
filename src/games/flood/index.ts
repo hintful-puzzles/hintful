@@ -33,7 +33,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  VICTORY_FLASH_FRAME,
 } from "./render.ts";
 import { completed, fill, solveMoves } from "./solver.ts";
 import {
@@ -176,8 +175,7 @@ function hintKeepTrack(
 
 // --- flash ------------------------------------------------------------
 
-/** The defeat blink, on the move that runs out of moves. A win's rainbow is
- * {@link solvedFlash}, played when the engine says the board became solved. */
+/** The defeat blink, on the move that runs out of moves. */
 function flashLength(
   oldState: FloodState,
   newState: FloodState,
@@ -188,11 +186,6 @@ function flashLength(
   return status(oldState) === "ongoing" && status(newState) === "lost"
     ? DEFEAT_FLASH_FRAME * 3
     : 0;
-}
-
-/** The victory rainbow sweeps the board, so it lasts longer on a bigger one. */
-function solvedFlash(s: FloodState, _ui: FloodUi): number {
-  return VICTORY_FLASH_FRAME * (s.w + s.h + s.colors - 2);
 }
 
 // --- Game object ------------------------------------------------------
@@ -299,7 +292,6 @@ export const floodGame: Game<
 
   animLength: () => 0,
   flashLength,
-  solvedFlash,
 };
 
 registerGame(floodGame);

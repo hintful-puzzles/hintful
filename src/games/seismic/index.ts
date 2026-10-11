@@ -62,7 +62,6 @@ import {
 import {
   colors,
   computeSize,
-  FLASH_TIME,
   fromCoord,
   newDrawState,
   origin,
@@ -357,7 +356,6 @@ export const seismicGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(seismicGame);

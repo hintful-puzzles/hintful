@@ -46,7 +46,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   type RangeDrawState,
@@ -474,7 +473,6 @@ export const rangeGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(rangeGame);

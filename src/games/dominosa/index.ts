@@ -49,7 +49,6 @@ import {
   colors,
   computeSize,
   type DominosaDrawState,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -731,7 +730,6 @@ export const dominosaGame: Game<
   redraw,
 
   changedState,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(dominosaGame);

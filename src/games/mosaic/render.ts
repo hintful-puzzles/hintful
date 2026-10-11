@@ -1,8 +1,8 @@
 /**
  * Mosaic rendering (upstream's `draw_cell` / `game_redraw`): a
  * (width+1)×(height+1) per-cell diffed loop, whose extra margin row and
- * column draw the closing grid lines and cursor edges. The completion
- * flash inverts marked/blank in its first and last thirds.
+ * column draw the closing grid lines and cursor edges. The win flash lifts
+ * the surface of each cell its highlight is on.
  *
  * The board is pieces on a quiet surface (`engine/piece.ts`): a marked cell
  * holds the shaded piece, a blank one is the clear square, and a cell's number
@@ -17,6 +17,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -34,6 +35,7 @@ import {
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./hint-marks.ts";
 import {
@@ -49,7 +51,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.5;
 
 // --- palette ---------------------------------------------------------------
 
@@ -74,6 +75,8 @@ export const COL_ERROR_TEXT = 10;
 export const COL_CURSOR = 11;
 export const COL_HINT = 12;
 export const COL_HINT_EVIDENCE = 13;
+/** The surface of a cell the win flash's highlight is on, whatever it holds. */
+export const COL_LIT = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -94,6 +97,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  out[COL_LIT] = givenSurface(defaultBackground);
   return out;
 }
 
@@ -119,6 +123,7 @@ const DRAWFLAG_CURSOR_UL = 0x800;
 const DRAWFLAG_MARGIN_R = 0x1000;
 const DRAWFLAG_MARGIN_D = 0x2000;
 const DRAWFLAG_MISTAKE = 0x4000;
+const DRAWFLAG_LIT = 0x8000;
 /** A hint mark's sides (`MarkOutlines.packed`) sit above every flag, so the
  * cache repaints a square whose mark moved. */
 const HINT_SIDES_SHIFT = 16;
@@ -181,11 +186,18 @@ function drawCell(
     const box = { x: startX, y: startY, w: ts - 1, h: ts - 1 };
     const shaded = (cell & STATE_MARKED) !== 0;
     const clear = !shaded && (cell & STATE_BLANK) !== 0;
+    const lit = (cell & DRAWFLAG_LIT) !== 0;
     if (clear) {
       // No cross where the cell has a number, which takes the middle.
-      drawClearSquare(dr, box, COL_CLEAR, COL_CLEAR_MARK, clueVal >= 0 ? null : box);
+      drawClearSquare(
+        dr,
+        box,
+        lit ? COL_LIT : COL_CLEAR,
+        COL_CLEAR_MARK,
+        clueVal >= 0 ? null : box,
+      );
     } else {
-      dr.drawRect(box, COL_CELL);
+      dr.drawRect(box, lit ? COL_LIT : COL_CELL);
       if (shaded) drawPiece(dr, box, SHADED_SHAPE, COL_SHADED);
     }
 
@@ -265,7 +277,7 @@ export function redraw(
   _dir: number,
   ui: MosaicUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<MosaicMove, MosaicHint>,
   mistakes?: readonly MosaicMistake[],
 ): void {
@@ -283,10 +295,6 @@ export function redraw(
     blocks.reduce((sides, block) => sides | block.packed(x, y), rings.packed(x, y));
   const named = new Set(marks.of("outline", BLOCK).map((c) => c.y * width + c.x));
 
-  // The flash inverts marked/blank during its first and last thirds.
-  const flashing =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime > (2 * FLASH_TIME) / 3);
-
   const mistakeSet = new Set(mistakes?.map((m) => m.y * width + m.x));
 
   for (let y = 0; y <= height; y++) {
@@ -295,7 +303,7 @@ export function redraw(
       let cell = inBounds ? cells[y * width + x] : 0;
       if (x === width) cell |= DRAWFLAG_MARGIN_R;
       if (y === height) cell |= DRAWFLAG_MARGIN_D;
-      if (flashing) cell ^= STATE_BLANK | STATE_MARKED;
+      if (inBounds && flash.win(sweepStep(x, y))) cell |= DRAWFLAG_LIT;
       if (ui.cursor.visible) {
         if (ui.cursor.x === x && ui.cursor.y === y) cell |= DRAWFLAG_CURSOR;
         if (ui.cursor.x === x - 1 && ui.cursor.y === y) cell |= DRAWFLAG_CURSOR_L;

@@ -41,7 +41,6 @@ import {
   borderFor,
   colors,
   computeSize,
-  flashLength,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -462,7 +461,6 @@ export const blackboxGame: Game<
   newDrawState,
   redraw,
   animLength,
-  flashLength,
 };
 
 registerGame(blackboxGame);

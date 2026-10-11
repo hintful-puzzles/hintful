@@ -55,6 +55,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   checkErrors,
   cluePos,
@@ -64,7 +65,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
-export const FLASH_TIME = 0.4;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
@@ -446,7 +446,7 @@ export function redraw(
   _dir: number,
   ui: TowersUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<TowersMove, TowersHint>,
   mistakes?: readonly { x: number; y: number }[],
 ): void {
@@ -473,14 +473,15 @@ export function redraw(
     ds.tiles[(y + 1) * W + (x + 1)] = tile;
   }
   // main grid
-  const flash =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
+
   for (let y = 0; y < w; y++) {
     for (let x = 0; x < w; x++) {
       let tile = DF_PLAYAREA;
       if (state.grid[y * w + x]) tile |= state.grid[y * w + x];
       else tile |= state.pencil[y * w + x] << DF_PENCIL_SHIFT;
-      tile |= (flash ? HIGHLIGHT_ENTRY : cellHighlight(ui, x, y)) << DF_HIGHLIGHT_SHIFT;
+      tile |=
+        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_ENTRY : cellHighlight(ui, x, y)) <<
+        DF_HIGHLIGHT_SHIFT;
       if (state.immutable[y * w + x]) tile |= DF_IMMUTABLE;
       if (ds.errtmp[(y + 1) * W + (x + 1)]) tile |= DF_ERROR;
       ds.tiles[(y + 1) * W + (x + 1)] = tile;

@@ -65,7 +65,7 @@ export function borderGridSize(w: number, h: number, ts: number): Size {
 export const BORDER_ERROR = (border: number): number => border << 8;
 /** The game's own clue on this cell contradicts the board. */
 export const F_CLUE_ERROR = 1 << 12;
-/** The win flash is on this frame. */
+/** The win flash's highlight is on this cell. */
 export const F_FLASH = 1 << 13;
 /**
  * Which of the nine half-grid positions in this tile the cursor is on, if any.

@@ -80,7 +80,6 @@ import {
   COL_0,
   colors,
   computeSize,
-  flashLengthFromUi,
   fromCoord,
   type MapDrawState,
   newDrawState,
@@ -480,13 +479,6 @@ function hint(
   return { ok: true, steps };
 }
 
-// --- flash -----------------------------------------------------------
-
-/** The win flash runs as long as the player's chosen flash style takes. */
-function solvedFlash(_s: MapState, ui: MapUi): number {
-  return flashLengthFromUi(ui);
-}
-
 // --- register --------------------------------------------------------
 
 /** Map's difficulty contract (`engine/difficulty.ts`). The coloring `mapSolver`
@@ -565,16 +557,6 @@ export const mapGame: Game<
 
   prefs: [
     {
-      kw: "flash-type",
-      name: "Victory flash effect",
-      type: "choices",
-      choices: ["Cyclic", "Each to white", "All to white"],
-      get: (ui) => ui.flashType,
-      set: (ui, v) => {
-        ui.flashType = v;
-      },
-    },
-    {
       kw: "show-numbers",
       name: "Number regions",
       type: "boolean",
@@ -603,8 +585,6 @@ export const mapGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  solvedFlash,
 };
 
 registerGame(mapGame);

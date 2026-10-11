@@ -69,7 +69,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redrawBridges,
@@ -587,7 +586,7 @@ export const bridgesGame: Game<
     _dir,
     ui,
     _animTime,
-    flashTime,
+    flash,
     hintStep?: HintStep<BridgesMove>,
     mistakes?: readonly BridgesMistake[],
   ): void {
@@ -597,13 +596,12 @@ export const bridgesGame: Game<
       prev,
       s,
       ui,
-      flashTime,
+      flash,
       mistakes,
       hintStep as HintStep<BridgesMove, BridgesHighlights> | undefined,
     );
   },
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(bridgesGame);

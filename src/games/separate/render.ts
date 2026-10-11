@@ -45,6 +45,7 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type {
   SeparateMistake,
   SeparateMove,
@@ -54,7 +55,6 @@ import type {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
-export const FLASH_TIME = 0.7;
 
 const A = "A".charCodeAt(0);
 
@@ -76,7 +76,7 @@ export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
   out[COL_CELL] = cellSurface(background);
-  // The solved flash lifts every cell, a step that reads in both schemes.
+  // The win's highlight lifts a cell, a step that reads in both schemes.
   out[COL_FLASH] = givenSurface(background);
   out[COL_GRID] = INK;
   out[COL_ERROR] = ERROR;
@@ -130,14 +130,13 @@ export function redraw(
   _dir: number,
   ui: SeparateUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SeparateMove, BorderHint>,
   mistakes?: readonly SeparateMistake[],
 ): void {
   const ts = ds.tileSize;
   const { w, h, k, letters, borders } = state;
   const wh = w * h;
-  const flash = Math.floor((flashTime * 5) / FLASH_TIME) % 2;
 
   if (!ds.started) {
     drawBorderGridBackground(dr, ts, w, h, PALETTE);
@@ -184,7 +183,7 @@ export function redraw(
       const i = r * w + c;
       let flags = borders[i] | mistakeMask[i] | hintMask[i];
 
-      if (flash) flags |= F_FLASH;
+      if (flash.win(sweepStep(c, r))) flags |= F_FLASH;
 
       const root = blackDsf.canonify(i);
       const counts = regionCounts.get(root);

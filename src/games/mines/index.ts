@@ -364,7 +364,6 @@ export const minesGame: Game<
       hy: -1,
       hradius: 0,
       validradius: 0,
-      flashIsDeath: false,
       deaths: 0,
       cursor: newCursor(),
     };
@@ -578,17 +577,8 @@ export const minesGame: Game<
   },
 
   /** The death flash: a death is not a status, so the engine cannot see it. */
-  flashLength(a: MinesState, b: MinesState, dir: number, ui: MinesUi): number {
-    if (dir > 0 && !a.dead && b.dead) {
-      ui.flashIsDeath = true;
-      return 3 * FLASH_FRAME;
-    }
-    return 0;
-  },
-
-  solvedFlash(_s: MinesState, ui: MinesUi): number {
-    ui.flashIsDeath = false;
-    return 2 * FLASH_FRAME;
+  flashLength(a: MinesState, b: MinesState, dir: number): number {
+    return dir > 0 && !a.dead && b.dead ? 3 * FLASH_FRAME : 0;
   },
 
   colors(defaultBackground: Color): Color[] {

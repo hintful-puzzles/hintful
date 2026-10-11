@@ -9,6 +9,8 @@
 import { describe, expect, it } from "vitest";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { blackboxGame } from "./index.ts";
 import {
   type BlackboxDrawState,
@@ -17,6 +19,7 @@ import {
   COL_CELL,
   COL_KNOWN,
   COL_SETTLED,
+  COL_WIN,
   redraw,
 } from "./render.ts";
 import {
@@ -73,7 +76,7 @@ describe("Black Box redraw", () => {
     const s = makeState(5, 5, [[0, 0]]);
     const ds = freshDs(s);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, s, 1, freshUi(s), 0, 0);
+    redraw(dr, ds, null, s, 1, freshUi(s), 0, NO_FLASH);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
     // Nothing is settled yet: no square is marked, fired or revealed.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_SETTLED)).toBe(false);
@@ -85,7 +88,7 @@ describe("Black Box redraw", () => {
     s = blackboxGame.executeMove(s, { type: "toggleLock", x: 1, y: 1 });
     s = blackboxGame.executeMove(s, { type: "toggleLock", x: 3, y: 3 });
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(s), null, s, 1, freshUi(s), 0, 0);
+    redraw(dr, freshDs(s), null, s, 1, freshUi(s), 0, NO_FLASH);
     const lifted = ops.filter((o) => o.op === "rect" && o.color === COL_SETTLED);
     expect(lifted.length).toBe(2);
     // One disc, the ball's, and the two strokes of one cross.
@@ -101,7 +104,7 @@ describe("Black Box redraw", () => {
     s = blackboxGame.executeMove(s, { type: "fire", rangeno: top });
     const ds = freshDs(s);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, s, 1, freshUi(s), 0, 0);
+    redraw(dr, ds, null, s, 1, freshUi(s), 0, NO_FLASH);
     // The matched entry/exit cells show the laser number "1".
     expect(ops.some((o) => o.op === "text" && o.text === "1")).toBe(true);
   });
@@ -116,7 +119,7 @@ describe("Black Box redraw", () => {
     const s0 = makeState(5, 5, balls);
     const ds0 = freshDs(s0);
     const r0 = recordingDrawing();
-    redraw(r0.dr, ds0, null, s0, 1, freshUi(s0), 0, 0);
+    redraw(r0.dr, ds0, null, s0, 1, freshUi(s0), 0, NO_FLASH);
     expect(r0.ops.some((o) => o.op === "circle" && o.fill === COL_BUTTON)).toBe(false);
 
     // Mark the right number of guesses → button appears.
@@ -125,7 +128,47 @@ describe("Black Box redraw", () => {
       s1 = blackboxGame.executeMove(s1, { type: "toggleBall", x: x + 1, y: y + 1 });
     const ds1 = freshDs(s1);
     const r1 = recordingDrawing();
-    redraw(r1.dr, ds1, null, s1, 1, freshUi(s1), 0, 0);
+    redraw(r1.dr, ds1, null, s1, 1, freshUi(s1), 0, NO_FLASH);
     expect(r1.ops.some((o) => o.op === "circle" && o.fill === COL_BUTTON)).toBe(true);
+  });
+
+  it("sweeps the win flash over the squares of a revealed box, from the bottom left", () => {
+    const balls: Array<[number, number]> = [
+      [0, 0],
+      [1, 1],
+      [2, 2],
+    ];
+    let s = makeState(5, 5, balls);
+    for (const [x, y] of balls)
+      s = blackboxGame.executeMove(s, { type: "toggleBall", x: x + 1, y: y + 1 });
+    s = blackboxGame.executeMove(s, { type: "reveal" });
+    expect(blackboxGame.status(s)).toBe("solved");
+
+    // The squares filled in the flash's color, as their faces' origins, and
+    // the balls drawn.
+    const paint = (flash: Flash) => {
+      const { dr, ops } = recordingDrawing();
+      redraw(dr, freshDs(s), null, s, 1, freshUi(s), 0, flash);
+      return ops;
+    };
+    const squares = (ops: ReturnType<typeof paint>): string[] =>
+      ops.flatMap((o) =>
+        o.op === "rect" && o.color === COL_WIN ? [`${o.x},${o.y}`] : [],
+      );
+    const discs = (ops: ReturnType<typeof paint>): number =>
+      ops.filter((o) => o.op === "circle" && o.fill === COL_BALL).length;
+    const settled = paint(NO_FLASH);
+    expect(squares(settled)).toEqual([]);
+    const run = winFlashRun(paint, (ops) => {
+      // A ball stays drawn on a lit square.
+      expect(discs(ops)).toBe(discs(settled));
+      return squares(ops);
+    });
+    // A square's place in the sweep is its x less its y.
+    expectWinFlashTravels(
+      run,
+      5 * 5,
+      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
+    );
   });
 });

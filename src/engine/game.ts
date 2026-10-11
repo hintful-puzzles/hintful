@@ -35,6 +35,7 @@ import type {
   ReferenceModel,
   Size,
 } from "./types.ts";
+import type { Flash } from "./win-wave.ts";
 
 /** Returned by `interpretMove` when input changed UI/cursor state in
  * place but produced no history move (upstream's `MOVE_UI_UPDATE`).
@@ -744,19 +745,16 @@ export interface Game<
     dir: number,
     ui: Ui,
     animTime: number,
-    flashTime: number,
+    flash: Flash,
     hint?: HintStep<Move, Highlights>,
     mistakes?: readonly Mistake[],
     deadEnd?: MarkedDeadEnd,
   ): void;
   animLength?(a: State, b: State, dir: number, ui: Ui): number;
-  /** How long this game's win flash runs on the solved board `s`. When it
-   * plays is the engine's: on a forward move, other than the Solve command,
-   * that leaves the board solved when it was not. */
-  solvedFlash?(s: State, ui: Ui): number;
   /** A flash for an outcome the status does not show (a Mines death, a Same
-   * Game board with no move left), or one the engine's rule does not cover.
-   * Asked first on every transition; a nonzero answer replaces `solvedFlash`. */
+   * Game board with no move left), read in `redraw` as `flash.time`. Asked on
+   * every transition, and a nonzero answer replaces the win flash. That one is
+   * the engine's and has no hook: a game lights what `flash.win` says. */
   flashLength?(a: State, b: State, dir: number, ui: Ui): number;
   /** A board nobody can play on that `status` still calls "ongoing", because
    * the player is expected to undo out of it (a Mines death). The solve timer

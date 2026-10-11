@@ -392,3 +392,34 @@ export function computeActive(
 
   return active;
 }
+
+/**
+ * Each tile's distance from the source at `(cx, cy)`, in tiles along the wires
+ * that reach it, and -1 for a tile they do not reach. A wire reaches as
+ * {@link computeActive} powers: joined from both sides, through the wrap, and
+ * never through a barrier.
+ */
+export function wireDistance(
+  w: number,
+  h: number,
+  tiles: Uint8Array,
+  barriers: Uint8Array,
+  cx: number,
+  cy: number,
+): Int32Array {
+  const dist = new Int32Array(w * h).fill(-1);
+  dist[cy * w + cx] = 0;
+  const queue = [cy * w + cx];
+  for (let head = 0; head < queue.length; head++) {
+    const cur = queue[head];
+    for (const d of DIRECTIONS) {
+      if (!(tiles[cur] & d) || barriers[cur] & d) continue;
+      const o = offset(cur % w, Math.floor(cur / w), d, w, h);
+      const next = o.y * w + o.x;
+      if (!(tiles[next] & opposite(d)) || dist[next] >= 0) continue;
+      dist[next] = dist[cur] + 1;
+      queue.push(next);
+    }
+  }
+  return dist;
+}

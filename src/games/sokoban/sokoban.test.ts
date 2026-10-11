@@ -35,11 +35,14 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newSokobanDesc } from "./generator.ts";
 import { executeMove, sokobanGame } from "./index.ts";
 import {
   COL_AIM,
   COL_BARREL,
+  COL_FLASH,
   COL_FLOOR,
   COL_PLAYER,
   COL_WALL,
@@ -663,5 +666,42 @@ describe("Sokoban render", () => {
           : [],
     );
     expect(fills).toEqual([1, COL_FLOOR, COL_BARREL]);
+  });
+});
+
+describe("Sokoban: the win flash", () => {
+  // Every diagonal has a floor square, so the highlight is always on one.
+  const state = stateFromRows(["wsss", "ssbs", "usws"]);
+  const ui = sokobanGame.newUi(state);
+  const palette = sokobanGame.colors(DEFAULT_BACKGROUND);
+  const walls = 2;
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(palette);
+    sokobanGame.redraw(
+      dr,
+      sokobanGame.newDrawState(state, 32),
+      null,
+      state,
+      1,
+      ui,
+      0,
+      flash,
+    );
+    return dr;
+  };
+  /** Where each square painted in the flash color is drawn, as `x,y`. */
+  const run = winFlashRun(paint, (dr) =>
+    dr.ops.flatMap((o) =>
+      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+    ),
+  );
+  /** The sweep's diagonal through a square drawn at `at`. */
+  const diagonal = (at: string): number => {
+    const [x, y] = at.split(",").map(Number);
+    return sweepStep(x, y);
+  };
+
+  it("lights the floor of every square but a wall's, from the bottom left to the top right", () => {
+    expectWinFlashTravels(run, state.w * state.h - walls, diagonal);
   });
 });

@@ -73,7 +73,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_TIME,
   fromCoord,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -813,7 +812,6 @@ export const soloGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(soloGame);

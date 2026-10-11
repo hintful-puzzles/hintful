@@ -42,6 +42,7 @@ import {
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { RectHint } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
 import { gridDrawRect, hrange, vrange } from "./moves.ts";
@@ -56,7 +57,6 @@ import type {
 
 export const PREFERRED_TILE_SIZE = 24;
 export const BORDER = 1;
-export const FLASH_TIME = 0.13;
 
 // --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0;
@@ -305,7 +305,7 @@ export function redraw(
   _dir: number,
   ui: RectUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<RectMove, RectHint>,
   mistakes?: readonly RectMistake[],
 ): void {
@@ -400,7 +400,10 @@ export function redraw(
       if (x + 1 < w) c |= corners[y * w + (x + 1)] << 10;
       if (y + 1 < h) c |= corners[(y + 1) * w + x] << 12;
       if (x + 1 < w && y + 1 < h) c |= corners[(y + 1) * w + (x + 1)] << 14;
-      if (state.correct[y * w + x] && !flashTime) c |= F_CORRECT;
+      // The win flash's highlight takes a cell's finished fill away, down to
+      // the surface under it.
+      const lit = flash.win(sweepStep(x, y));
+      if (state.correct[y * w + x] && !lit) c |= F_CORRECT;
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) c |= F_CURSOR;
 
       let mistake = 0;

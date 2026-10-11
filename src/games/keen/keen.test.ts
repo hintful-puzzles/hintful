@@ -67,8 +67,12 @@ describe("multiplication alone, where a tier is found seldom", () => {
   describeDealtTiers(keenGame, SELDOM, { seldom: true });
 });
 
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import {
+  border,
   COL_ERROR,
+  COL_HIGHLIGHT,
   COL_PENCIL_BODY,
   type KeenDrawState,
   type KeenHint,
@@ -315,7 +319,7 @@ describe("keen moves", () => {
     expect(checked).toBe(3);
   });
 
-  it("completes and flashes when the last correct digit lands (not on Solve)", () => {
+  it("completes when the last correct digit lands", () => {
     const st = newState(P4, D4);
     const sol = solutionGrid(st);
     let cur = st;
@@ -337,7 +341,6 @@ describe("keen moves", () => {
     });
     expect(keenGame.status(before)).toBe("ongoing");
     expect(keenGame.status(cur)).toBe("solved");
-    expect(keenGame.solvedFlash?.(cur, newUi(st))).toBeGreaterThan(0);
   });
 
   it("Solve completes the board, and breaking it un-solves it", () => {
@@ -441,6 +444,36 @@ describe("keen render", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
+  it("the win flash sweeps the cells from the bottom left to the top right", () => {
+    const start = newState(P4, D4);
+    const r = keenGame.solve?.(start, start);
+    if (!r?.ok) throw new Error("the fixture does not solve");
+    const st = keenGame.executeMove(start, r.move);
+    const ts = keenGame.preferredTileSize ?? 48;
+    /** The cells washed with the highlight, as `column,row`. A cage's edge
+     * moves a cell's fill by the edge's width, so by the cell it falls in. */
+    const cell = (v: number) => Math.floor((v - border(ts)) / ts);
+    const run = winFlashRun(
+      (flash: Flash) => {
+        const dr = new RecordingDrawing(keenGame.colors(DEFAULT_BACKGROUND));
+        redraw(dr, newDrawState(st, ts), null, st, 1, newUi(st), 0, flash);
+        return dr;
+      },
+      (dr) =>
+        dr.ops.flatMap((o) =>
+          o.op === "rect" && o.color === COL_HIGHLIGHT
+            ? [`${cell(o.x)},${cell(o.y)}`]
+            : [],
+        ),
+    );
+    expectWinFlashTravels(run, 16, (key) => {
+      const [x, y] = key.split(",").map(Number);
+      return sweepStep(x, y);
+    });
+    expect(run.frames[0]).toEqual(["0,3"]);
+    expect(run.frames.at(-1)).toEqual(["3,0"]);
+  });
+
   it("shows the pencil-mode indicator glyph when sticky pencil is on", () => {
     const palette = keenGame.colors(DEFAULT_BACKGROUND);
     const ts = keenGame.preferredTileSize ?? 48;
@@ -450,7 +483,7 @@ describe("keen render", () => {
       ui.pencilMode = pencilMode;
       const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, st, 1, ui, 0, 0);
+      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
       return dr;
     };
     const glyph = (r: RecordingDrawing) =>
@@ -500,7 +533,7 @@ describe("keen render", () => {
     };
     const frame = (ds: KeenDrawState, h?: typeof hint) => {
       const rec = new RecordingDrawing(palette);
-      redraw(rec, ds, null, st, 0, ui, 0, 0, h);
+      redraw(rec, ds, null, st, 0, ui, 0, NO_FLASH, h);
       return rec.ops;
     };
 

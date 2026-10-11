@@ -59,7 +59,6 @@ import { type Marked, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
-  FLASH_TIME,
   fromCoord,
   newDrawState,
   type PatternDrawState,
@@ -503,8 +502,6 @@ export const patternGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(patternGame);

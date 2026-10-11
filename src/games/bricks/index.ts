@@ -66,7 +66,6 @@ import {
   type BricksDrawState,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   offsets,
   PREFERRED_TILE_SIZE,
@@ -562,7 +561,6 @@ export const bricksGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(bricksGame);

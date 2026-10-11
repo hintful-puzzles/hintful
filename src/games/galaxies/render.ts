@@ -12,6 +12,7 @@ import {
   type HintStep,
 } from "../../engine/index.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { GalaxiesHint } from "./hint.ts";
 import { DOT, WALL } from "./hint-marks.ts";
 import type { GalaxiesMistake, GalaxiesMove, GalaxiesUi } from "./index.ts";
@@ -678,7 +679,7 @@ export function redraw(
   _dir: number,
   ui: GalaxiesUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<GalaxiesMove, GalaxiesHint>,
   mistakes?: readonly GalaxiesMistake[],
 ): void {
@@ -694,7 +695,6 @@ export function redraw(
   packHint(ds, w, h, hint);
   const border = borderFor(tile);
   const edgeThickness = Math.max(tile >> 4, 2);
-  const flashing = flashTime > 0 && ((flashTime / 0.15) | 0) % 2 === 0;
 
   // First-draw: the outer border.
   if (!ds.started) {
@@ -787,7 +787,10 @@ export function redraw(
       // Region color.
       const ti = idx(s, gx, gy);
       const sFlags = s.flags[ti];
-      if (cols?.[cacheI] && !flashing) {
+      // A cell the win flash is on drops its region's fill to the plain
+      // surface. The lifted surface is a white region's own fill, so lifting
+      // the cell would show nothing on a board of white dots.
+      if (cols?.[cacheI] && !flash.win(sweepStep(x, y))) {
         flags |= cols[cacheI] === 2 ? DRAW_BLACK : DRAW_WHITE;
       }
 

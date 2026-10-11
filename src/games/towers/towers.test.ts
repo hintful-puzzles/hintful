@@ -3,7 +3,7 @@
  *
  * Tier 1 — pure logic: params/desc codecs, the clue geometry, generator
  * quality (seeded; solvable, unique, correctly graded), move transitions,
- * completion + flash, findMistakes, and Solve through a real Midend (the aux
+ * completion, findMistakes, and Solve through a real Midend (the aux
  * path). Tier 2.5 — render scenarios: a 3D initial frame, the 2D appearance,
  * and a mistake overlay, each with targeted op assertions plus a snapshot.
  */
@@ -27,8 +27,11 @@ import { towersGame } from "./index.ts";
 // A 3x3 above Normal.
 describeAbsentTiers(towersGame, ["3dx", "3du"]);
 
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
   COL_ERROR,
+  COL_HIGHLIGHT,
   COL_PENCIL_BODY,
   coord,
   newDrawState,
@@ -199,7 +202,7 @@ describe("towers desc parsing", () => {
 // --- tier 1: moves + completion --------------------------------------------
 
 describe("towers moves", () => {
-  it("entering the full solution completes the board and flashes", () => {
+  it("entering the full solution completes the board", () => {
     const { st } = gen(5, "easy", "moves-complete");
     const sol = solutionGrid(st);
     const empties: number[] = [];
@@ -227,7 +230,6 @@ describe("towers moves", () => {
       pencil: false,
     });
     expect(towersGame.status(cur)).toBe("solved");
-    expect(towersGame.solvedFlash?.(cur, newUi(cur))).toBeGreaterThan(0);
   });
 
   it("pencil marks toggle and pencilAll fills empties", () => {
@@ -508,7 +510,7 @@ describe("towers render", () => {
       ui.cursor.visible = pencilMode;
       const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, st, 1, ui, 0, 0);
+      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
       return dr;
     };
     // The indicator's pencil body is the only COL_PENCIL_BODY-filled polygon
@@ -538,7 +540,7 @@ describe("towers render", () => {
       ui.threeD = threeD;
       const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, st, 1, ui, 0, 0);
+      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
       return dr;
     };
 
@@ -650,7 +652,7 @@ describe("towers render", () => {
       const dr = new RecordingDrawing(palette);
       const lit = on && kind === "hatch" ? hint : undefined;
       const wrong = on && kind === "mistake" ? [{ x: 0, y: 1 }] : undefined;
-      redraw(dr, ds, null, st, 1, ui, 0, 0, lit, wrong);
+      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH, lit, wrong);
       return dr.ops;
     };
 
@@ -678,5 +680,41 @@ describe("on-screen keys (requestKeys)", () => {
       { button: 8, label: "Clear" },
     ]);
     expect(keysFor(4)?.length).toBe(5);
+  });
+});
+
+describe("towers: the win flash sweeps the squares", () => {
+  const TS = 48;
+  const start = gen(5, "easy", "win-flash").st;
+  const answer = towersGame.solve?.(start, start);
+  if (!answer?.ok) throw new Error("the board does not solve");
+  const state = towersGame.executeMove(start, answer.move);
+  const squares = state.w * state.w;
+  // Flat, so a square is drawn where its grid position is.
+  const ui = { ...newUi(state), threeD: false };
+
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(towersGame.colors(DEFAULT_BACKGROUND));
+    redraw(dr, newDrawState(state, TS), null, state, 1, ui, 0, flash);
+    return dr.ops;
+  };
+  /** The squares a frame washes, as the `x,y` drawn at. */
+  const lit = (ops: ReturnType<typeof paint>): string[] => {
+    const keys = ops.flatMap((op) =>
+      op.op === "rect" && op.color === COL_HIGHLIGHT ? [`${op.x},${op.y}`] : [],
+    );
+    return [...new Set(keys)];
+  };
+  const step = (key: string): number => {
+    const [x, y] = key.split(",").map(Number);
+    return x - y;
+  };
+
+  it("is a solved board", () => {
+    expect(towersGame.status(state)).toBe("solved");
+  });
+
+  it("travels every square, from the bottom left to the top right", () => {
+    expectWinFlashTravels(winFlashRun(paint, lit), squares, step);
   });
 });

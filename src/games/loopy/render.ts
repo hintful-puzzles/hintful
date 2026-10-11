@@ -47,6 +47,7 @@ import {
   pencilIndicatorReach,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, loopSteps, walkLoop } from "../../engine/win-wave.ts";
 import type { LoopyCursor } from "./cursor.ts";
 import { CORNER, DOT, EDGE, FACE, PAIR } from "./hint-text.ts";
 import type { LoopyMove, LoopyNoteDrag } from "./index.ts";
@@ -64,7 +65,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.5;
 
 // --- palette (index-for-index with the loopy.c color enum) ----------------
 export const COL_BACKGROUND = 0;
@@ -249,6 +249,28 @@ const PHASES = [
   COL_HIGHLIGHT,
   COL_MISTAKE,
 ] as const;
+
+/** Each edge's step around the finished loop, from the edge nearest the
+ * bottom-left corner and clockwise, and -1 for an edge off it. */
+function loopOrder(s: LoopyState): Int32Array {
+  const g = s.grid;
+  const loop: number[] = [];
+  for (let i = 0; i < g.numEdges; i++) if (s.lines[i] === LINE_YES) loop.push(i);
+  const walk = walkLoop(
+    loop.map((i) => [g.edges[i].dot1.index, g.edges[i].dot2.index] as const),
+  ).links.map((k) => loop[k]);
+  const steps = loopSteps(
+    walk.map((i) => {
+      const { dot1, dot2 } = g.edges[i];
+      return { x: (dot1.x + dot2.x) / 2, y: (dot1.y + dot2.y) / 2 };
+    }),
+  );
+  const around = new Int32Array(g.numEdges).fill(-1);
+  walk.forEach((i, n) => {
+    around[i] = steps[n];
+  });
+  return around;
+}
 
 /** The color edge `i` draws in: an error highlight overrides its line state, and
  * so does a line the mistake check says the loop does not run along. */
@@ -524,7 +546,7 @@ export function redraw(
   _dir: number,
   ui: LoopyRenderUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<LoopyMove>,
   mistakes?: readonly LoopyMistake[],
 ): void {
@@ -554,13 +576,13 @@ export function redraw(
     ds.clueSatisfied[i] = yes === n && no === sides - n ? 1 : 0;
   }
 
-  // The completion flash is three visible segments over FLASH_TIME.
-  const flashing =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
+  // The win flash runs the loop: an edge's position is its step around it.
+  const around = flash.winning ? loopOrder(s) : null;
 
   // Bucket the edges by color once, rather than upstream's scan-per-phase.
   const buckets = new Map<number, number[]>(PHASES.map((c) => [c, []]));
   for (let i = 0; i < g.numEdges; i++) {
+    const flashing = around !== null && around[i] >= 0 && flash.win(around[i]);
     buckets.get(lineColor(s, i, flashing, mistaken))?.push(i);
   }
 

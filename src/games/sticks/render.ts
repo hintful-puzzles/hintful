@@ -4,8 +4,8 @@
  * collection's wall over its whole tile, so a run of them is one mass. On top go a
  * center bar in the piece's color for a placed line, the clue number as text (white on a
  * block, ink on an open cell, red when its constraint is currently violated),
- * and the cursor's frame under the keyboard cursor. The in-flight drag previews its accreted cells; on a fresh win the
- * lines blink off on alternate 0.1 s flash frames. `findMistakes` cells get
+ * and the cursor's frame under the keyboard cursor. The in-flight drag previews its accreted cells; the win flash
+ * lifts each open cell's surface as it passes. `findMistakes` cells get
  * an inset red frame via an `OverlaySidecar` (docs/games/rendering.md § "Overlay sidecars" — the overlay is
  * part of the diff key so Check & Save repaints an otherwise-unchanged
  * frame).
@@ -21,6 +21,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -34,6 +35,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { findLiveErrors } from "./solver.ts";
 import {
   F_BLOCK,
@@ -48,8 +50,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
-const FLASH_FRAME = 0.1;
-export const FLASH_TIME = FLASH_FRAME * 5;
 
 // --- palette ----------------------------------------------------------------
 
@@ -68,12 +68,15 @@ export const COL_CELL = 9; // the surface of a white cell
 export const COL_TEXT = 10; // a clue's number on an open cell
 /** A violated clue's digit on a block, on its badge. */
 export const COL_ERROR_TEXT = 11;
+/** The surface of an open cell the win flash is on: the lifted surface. */
+export const COL_LIT = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_LIT] = givenSurface(defaultBackground);
   out[COL_TEXT] = INK;
   // A placed stick is a bar filling a fifth of its cell — a piece, not a glyph,
   // so the piece's color rather than the entry green a digit takes.
@@ -134,6 +137,8 @@ interface TileVisual {
   clue: number;
   error: boolean;
   cursor: boolean;
+  /** The win flash is on this square. */
+  lit: boolean;
   mistake: boolean;
   /** The hint's forced orientation for this square (`F_HOR`/`F_VER`/0). */
   hintLine: number;
@@ -148,7 +153,7 @@ function drawTile(
   y: number,
   v: TileVisual,
 ): void {
-  const { tile, clue, error, cursor, mistake, hintLine, evidence } = v;
+  const { tile, clue, error, cursor, lit, mistake, hintLine, evidence } = v;
   const b = border(ts);
   const px = x * ts + b;
   const py = y * ts + b;
@@ -163,7 +168,9 @@ function drawTile(
   // a fill pale enough to leave the clue digit legible is too faint to read as a
   // mark (`hint-mark.ts`). A white evidence square is not empty either: it
   // carries the clue the deduction counts with, and often a line.
-  if (!black) dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, COL_CELL);
+  if (!black) {
+    dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, lit ? COL_LIT : COL_CELL);
+  }
 
   const bar = (bits: number, color: number): void => {
     const off = Math.floor((ts * 2) / 5);
@@ -245,7 +252,7 @@ export function redraw(
   _dir: number,
   ui: SticksUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SticksMove, SticksHint>,
   mistakes?: readonly SticksMistake[],
 ): void {
@@ -259,8 +266,6 @@ export function redraw(
     drawRectOutline(dr, b - 1, b - 1, w * ts + 1, h * ts + 1, COL_GRID);
     ds.started = true;
   }
-
-  const flash = flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) % 2 === 0;
 
   // Live clue violations, recomputed pure from the committed grid (upstream
   // stores the equivalent F_ERROR bits in the state; same verdicts).
@@ -292,7 +297,8 @@ export function redraw(
       const preview = !(tile & F_BLOCK) ? dragMap?.get(i) : undefined;
       if (preview !== undefined) tile = preview;
 
-      if (flash) tile &= ~(F_HOR | F_VER);
+      // A block is a wall, and the flash runs over the cells that hold lines.
+      const lit = !(tile & F_BLOCK) && flash.win(sweepStep(x, y));
       const cursor = ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y;
       // A previewed (uncommitted) cell suppresses its error highlight — the
       // committed grid is what the error check ran on.
@@ -304,7 +310,7 @@ export function redraw(
         (tile & 0x7) |
         (error ? F_ERR : 0) |
         (cursor ? F_CUR : 0) |
-        (flash ? F_FLASH : 0) |
+        (lit ? F_FLASH : 0) |
         (hintLine & F_HOR ? F_HINT_HOR : 0) |
         (hintLine & F_VER ? F_HINT_VER : 0) |
         (evidence ? F_HINT_EVID : 0);
@@ -314,6 +320,7 @@ export function redraw(
           clue: numbers[i],
           error,
           cursor,
+          lit,
           mistake: ds.mistakes.packed[i] !== 0,
           hintLine,
           evidence,

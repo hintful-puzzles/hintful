@@ -24,6 +24,7 @@
 import type { HintStep } from "../game.ts";
 import type { MarkedDeadEnd } from "../hint-refusal.ts";
 import type { Narration } from "../hint-words.ts";
+import { NO_FLASH } from "../win-wave.ts";
 import type { AnyGame } from "./enrollment.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./render-scenario.ts";
@@ -84,7 +85,7 @@ function defects<W extends Narration>(
     const rec = new RecordingDrawing(palette);
     const ds = game.newDrawState(state, tileSize);
     const { hint, deadEnd } = w ? shown(w) : {};
-    game.redraw(rec, ds, null, state, 1, ui, 0, 0, hint, undefined, deadEnd);
+    game.redraw(rec, ds, null, state, 1, ui, 0, NO_FLASH, hint, undefined, deadEnd);
     return JSON.stringify(rec.ops);
   };
 

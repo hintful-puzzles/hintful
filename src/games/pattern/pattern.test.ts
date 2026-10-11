@@ -26,10 +26,16 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newPatternDesc } from "./generator.ts";
 import { patternGame } from "./index.ts";
-import { COL_CELL, COL_FULL } from "./render.ts";
+import { COL_CELL, COL_CLEAR, COL_FULL, COL_LIT, fromCoord } from "./render.ts";
 import { findMistakes, solveState } from "./solver.ts";
 import {
   computeRuns,
@@ -490,5 +496,41 @@ describe("pattern render", () => {
     // Clue numbers are drawn as text.
     expect(ops.some((o) => o.op === "text")).toBe(true);
     expect(ops).toMatchSnapshot();
+  });
+
+  it("sweeps the win flash from the bottom left to the top right", () => {
+    const { state } = genState(easy(5, 5), "complete-seed");
+    const solution = solveState(state);
+    if (!solution) throw new Error("the board has no solution");
+    const solved = applySolution(state, solution);
+    const full = solved.grid.filter((v) => v === GRID_FULL).length;
+    const palette = patternGame.colors(DEFAULT_BACKGROUND);
+    const paint = (flash: Flash) => {
+      const dr = new RecordingDrawing(palette);
+      const ds = preferredDrawState(patternGame, solved);
+      patternGame.redraw(dr, ds, null, solved, 1, patternGame.newUi(solved), 0, flash);
+      return dr.ops;
+    };
+    // The cells drawn on the lifted surface, each as its index.
+    const run = winFlashRun(paint, (ops) => {
+      const ts = patternGame.preferredTileSize ?? 0;
+      const cells: number[] = [];
+      let clear = 0;
+      for (const o of ops) {
+        if (o.op !== "rect") continue;
+        if (o.color === COL_CLEAR) clear++;
+        if (o.color === COL_LIT)
+          cells.push(fromCoord(ts, 5, o.y) * 5 + fromCoord(ts, 5, o.x));
+      }
+      // A lit cell keeps what it holds: only the surface under it changes,
+      // an empty cell's own surface included.
+      expect(ops.filter((o) => o.op === "polygon" && o.fill === COL_FULL).length).toBe(
+        full,
+      );
+      const litEmpty = cells.filter((i) => solved.grid[i] === GRID_EMPTY).length;
+      expect(clear).toBe(25 - full - litEmpty);
+      return cells;
+    });
+    expectWinFlashTravels(run, 25, (i) => sweepStep(i % 5, Math.floor(i / 5)));
   });
 });

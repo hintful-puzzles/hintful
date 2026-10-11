@@ -38,6 +38,7 @@ import {
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { MagnetsHighlights } from "./hint.ts";
 import { CLUE, LINE, SQUARE } from "./hint-text.ts";
 import {
@@ -60,7 +61,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.7;
 
 // --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0;
@@ -446,15 +446,13 @@ export function redraw(
   ds: MagnetsDrawState,
   state: MagnetsState,
   ui: MagnetsUi,
-  flashTime: number,
+  flash: Flash,
   mistakes?: readonly MagnetsMistake[],
   hint?: HintStep<unknown, MagnetsHighlights>,
 ): void {
   const ts = ds.tileSize;
   const { w, h, grid, flags, common } = state;
   const { dominoes, colcount, rowcount } = common;
-
-  const flash = Math.floor((flashTime * 5) / FLASH_TIME) % 2 !== 0;
 
   if (!ds.started) {
     // Corner +/− symbols.
@@ -508,7 +506,11 @@ export function redraw(
       if (flags[idx] & GS_ERROR) c |= DS_ERROR;
       if (flags[idx] & GS_SET) c |= DS_SET;
       if (x === cx && y === cy) c |= DS_CURSOR;
-      if (flash) c |= DS_FLASH;
+      // A domino lights as one piece, at the middle of its two squares. A
+      // square with no partner draws no tile to light.
+      const other = dominoes[idx];
+      const mid = sweepStep((x + (other % w)) / 2, (y + Math.floor(other / w)) / 2);
+      if (other !== idx && flash.win(mid)) c |= DS_FLASH;
       if (flags[idx] & GS_NOTPOSITIVE) c |= DS_NOTPOS;
       if (flags[idx] & GS_NOTNEGATIVE) c |= DS_NOTNEG;
       if (flags[idx] & GS_NOTNEUTRAL) c |= DS_NOTNEU;

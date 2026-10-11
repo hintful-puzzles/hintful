@@ -38,6 +38,7 @@ describeAbsentTiers(tracksGame, ["4x4dt", "4x4dh"]);
 // The size beside it, which deals both.
 describeDealtTiers(tracksGame, ["4x5dt", "4x5dh"], { deals: 8 });
 
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { executeMove, uiCanFlipSquare } from "./moves.ts";
 import {
   COL_ERROR,
@@ -338,7 +339,7 @@ describe("tracks render", () => {
     );
     const ds = newDrawState(solved, tracksGame.preferredTileSize ?? 33);
     const dr = new RecordingDrawing(tracksGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, ds, null, solved, 1, tracksGame.newUi(solved), 0, 0);
+    redraw(dr, ds, null, solved, 1, tracksGame.newUi(solved), 0, NO_FLASH);
     expect(dr.ops.some((o) => o.op === "text")).toBe(true);
     expect(dr.ops.some((o) => o.op === "line")).toBe(true);
   });
@@ -363,10 +364,10 @@ describe("tracks render", () => {
     const palette = tracksGame.colors(DEFAULT_BACKGROUND);
 
     // Warm the drawstate without the overlay, then repaint with it.
-    redraw(new RecordingDrawing(palette), ds, null, bad, 1, ui, 0, 0);
+    redraw(new RecordingDrawing(palette), ds, null, bad, 1, ui, 0, NO_FLASH);
     const mistakes = tracksGame.findMistakes?.(bad) ?? [];
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, bad, 1, ui, 0, 0, undefined, mistakes);
+    redraw(dr, ds, null, bad, 1, ui, 0, NO_FLASH, undefined, mistakes);
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 });

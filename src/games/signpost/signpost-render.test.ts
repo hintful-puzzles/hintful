@@ -9,9 +9,21 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import {
+  expectWinFlashTravels,
+  winFlashAt,
+  winFlashRun,
+} from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { signpostGame } from "./index.ts";
+import { BORDER, COL_GIVEN } from "./render.ts";
 import { solveState } from "./solver.ts";
 import {
   cloneState,
@@ -107,5 +119,46 @@ describe("Signpost render scenarios", () => {
     expect(errorTexts(shown.recording.ops)).toBeGreaterThan(
       errorTexts(hidden.recording.ops),
     );
+  });
+});
+
+describe("Signpost win flash", () => {
+  const p: SignpostParams = { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY };
+  const { desc } = newSignpostDesc(p, randomNew("sp-render-flash"));
+  const state = cloneState(signpostGame.newState(p, desc));
+  if (solveState(state) !== 1) throw new Error("the fixture does not solve");
+
+  /** Each square's surface, by cell, in a frame drawn from nothing. */
+  function surfaces(flash: Flash): number[] {
+    const dr = new RecordingDrawing(signpostGame.colors(DEFAULT_BACKGROUND));
+    const ds = preferredDrawState(signpostGame, state);
+    signpostGame.redraw(dr, ds, null, state, 1, signpostGame.newUi(state), 0, flash);
+    const ts = ds.tileSize;
+    const out: number[] = new Array(state.n).fill(-1);
+    for (const o of opsOfKind(dr.ops, "rect")) {
+      if (o.w !== ts || o.h !== ts) continue;
+      const i = ((o.y - BORDER) / ts) * state.w + (o.x - BORDER) / ts;
+      if (out[i] < 0) out[i] = o.color;
+    }
+    return out;
+  }
+  const settled = surfaces(NO_FLASH);
+  /** The cells whose surface a frame has swapped. */
+  const swapped = (frame: number[]): number[] =>
+    frame.flatMap((color, i) => (color === settled[i] ? [] : [i]));
+
+  it("lights the squares in the order of their numbers", () => {
+    const run = winFlashRun(surfaces, swapped, 60);
+    expectWinFlashTravels(run, state.n, (i) => state.nums[i]);
+  });
+
+  it("a lit square swaps surfaces: a given drops, any other lifts", () => {
+    const frame = surfaces(winFlashAt(WIN_FLASH_S / 2, surfaces));
+    expect(swapped(frame).length).toBeGreaterThan(0);
+    for (let i = 0; i < state.n; i++) {
+      const given = (state.flags[i] & FLAG_IMMUTABLE) !== 0;
+      expect(settled[i] === COL_GIVEN).toBe(given);
+      if (swapped(frame).includes(i)) expect(frame[i] === COL_GIVEN).toBe(!given);
+    }
   });
 });

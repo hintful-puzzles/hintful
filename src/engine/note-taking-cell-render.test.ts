@@ -38,6 +38,7 @@ import {
   rgbLabel,
 } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import { NO_FLASH } from "./win-wave.ts";
 
 beforeAll(registerAllGames);
 
@@ -71,7 +72,7 @@ function framesAt(g: BuiltGame, at: { x: number; y: number }): Frames {
   const ui = game.newUi(state) as NoteTakingFields;
   const paint = (): DrawOp[] => {
     const rec = new RecordingDrawing(palette);
-    game.redraw(rec, ds, null, state, 1, ui, 0, 0);
+    game.redraw(rec, ds, null, state, 1, ui, 0, NO_FLASH);
     return rec.ops;
   };
 

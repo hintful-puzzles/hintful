@@ -19,6 +19,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { MinesHint } from "./hint.ts";
 import {
   around,
@@ -74,11 +75,8 @@ export interface MinesDrawState {
   tileSize: number;
   started: boolean;
   /** Per-tile cache of the last-drawn value `v` with the tile's hint marks
-   * packed above it ({@link packTile}; -1 = never drawn). */
+   * and its flash fill packed above it ({@link packTile}; -1 = never drawn). */
   grid: Int32Array;
-  /** The fill the last frame's flash gave every square ({@link NO_WASH} for
-   * none; -2 = never drawn). */
-  wash: number;
   /** Last-drawn cursor cell (-1,-1 = none), for the cursor-moved repaint. */
   curX: number;
   curY: number;
@@ -91,7 +89,6 @@ export function newDrawState(s: MinesState, tileSize: number): MinesDrawState {
     tileSize,
     started: false,
     grid: new Int32Array(s.w * s.h).fill(-1),
-    wash: -2,
     curX: -1,
     curY: -1,
   };
@@ -107,8 +104,11 @@ export function computeSize(
 
 // --- one tile ------------------------------------------------------------
 
-/** No flash is filling the squares this frame. */
+/** No flash is filling the square this frame. */
 const NO_WASH = -1;
+/** The win flash's highlight is on the square: no color, a swap of the two
+ * surfaces, so a square shows it whichever one it rests on. */
+const WIN_WASH = NCOLORS;
 
 /** The square's surface, inside the grid line along its top and left. */
 const face = (ts: number, x: number, y: number) => ({
@@ -145,9 +145,9 @@ const MARK_STRIPES = 4;
 const MARK_MISTAKE = 8;
 
 /** The draw cache's key: the tile's value `v` (which reaches 66, and -24 when
- * pressed) with its hint marks above it. */
-function packTile(v: number, marks: number): number {
-  return (v + 128) | (marks << 8);
+ * pressed) with its hint marks above it, and its flash fill above those. */
+function packTile(v: number, marks: number, wash: number): number {
+  return (v + 128) | (marks << 8) | ((wash - NO_WASH) << 12);
 }
 
 /** Stripes across the tile's face, under its glyph. */
@@ -183,7 +183,7 @@ function drawTile(
   x: number,
   y: number,
   v: number,
-  /** The flash's fill for every square this frame, or {@link NO_WASH}. */
+  /** The flash's fill for this square this frame, or {@link NO_WASH}. */
   wash: number,
   cursor: boolean,
   marks: number,
@@ -195,7 +195,16 @@ function drawTile(
   // closes the other two sides.
   dr.drawRect({ x, y, w: ts, h: ts }, COL_GRID);
   const fill = (surface: number): void =>
-    dr.drawRect(face(ts, x, y), wash === NO_WASH ? surface : wash);
+    dr.drawRect(
+      face(ts, x, y),
+      wash === NO_WASH
+        ? surface
+        : wash !== WIN_WASH
+          ? wash
+          : surface === COL_COVERED
+            ? COL_OPEN
+            : COL_COVERED,
+    );
 
   if (v < 0) {
     const coords: number[] = [];
@@ -306,7 +315,7 @@ export function redraw(
   _dir: number,
   ui: MinesUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<MinesMove, MinesHint>,
   mistakes?: readonly Point[],
 ): void {
@@ -323,11 +332,8 @@ export function redraw(
   const stripes = keys("stripes");
   const wrong = new Set((mistakes ?? []).map((p) => `${p.x},${p.y}`));
 
-  // On a flash's lit beats every square takes one fill: the error color for
-  // a death, and the lifted surface for a win, a step that reads in both
-  // schemes.
-  const lit = flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) % 2 === 0;
-  const wash = lit ? (ui.flashIsDeath ? COL_BANG : COL_COVERED) : NO_WASH;
+  // On a death flash's lit beats every square takes the error color.
+  const dead = flash.time > 0 && Math.floor(flash.time / FLASH_FRAME) % 2 === 0;
 
   if (!ds.started) {
     // The frame, no heavier than a grid line: each square draws the line along
@@ -368,8 +374,9 @@ export function redraw(
         (outline.has(key) ? MARK_OUTLINE : 0) |
         (stripes.has(key) ? MARK_STRIPES : 0) |
         (wrong.has(key) ? MARK_MISTAKE : 0);
-      const packed = packTile(v, marks);
-      if (ds.grid[y * ds.w + x] !== packed || wash !== ds.wash || cc) {
+      const wash = dead ? COL_BANG : flash.win(sweepStep(x, y)) ? WIN_WASH : NO_WASH;
+      const packed = packTile(v, marks, wash);
+      if (ds.grid[y * ds.w + x] !== packed || cc) {
         drawTile(
           dr,
           ts,
@@ -384,7 +391,6 @@ export function redraw(
       }
     }
   }
-  ds.wash = wash;
   ds.curX = cursorX;
   ds.curY = cursorY;
 }

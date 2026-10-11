@@ -63,7 +63,6 @@ import { type Marked, type Spoke, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -610,7 +609,6 @@ export const spokesGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(spokesGame);

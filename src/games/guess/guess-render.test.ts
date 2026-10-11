@@ -9,14 +9,18 @@ import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { guessGame } from "./index.ts";
 import {
   COL_1,
   COL_CORRECTPLACE,
   COL_CURSOR,
   COL_HOLD,
+  COL_LIT,
   COL_WRONG,
   type GuessDrawState,
+  pegOff,
   redraw,
 } from "./render.ts";
 import { defaultParams, type GuessUi, newDesc, newState } from "./state.ts";
@@ -58,7 +62,7 @@ describe("Guess redraw", () => {
     const ds = freshDs();
     const ui = freshUi(s1);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, s0, s1, 1, ui, 0, 0);
+    redraw(dr, ds, s0, s1, 1, ui, 0, NO_FLASH);
     expect(ops.some((o) => o.op === "circle" && o.fill === COL_CORRECTPLACE)).toBe(
       true,
     );
@@ -70,7 +74,7 @@ describe("Guess redraw", () => {
     const ui = freshUi(s);
     ui.holds[0] = true;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, s, 1, ui, 0, 0);
+    redraw(dr, ds, null, s, 1, ui, 0, NO_FLASH);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HOLD && o.h === 2)).toBe(
       true,
     );
@@ -87,13 +91,59 @@ describe("Guess redraw", () => {
     const count = (s: typeof s0) => {
       const ds = freshDs();
       const { dr, ops } = recordingDrawing();
-      redraw(dr, ds, null, s, 1, freshUi(s), 0, 0);
+      redraw(dr, ds, null, s, 1, freshUi(s), 0, NO_FLASH);
       return opsOfKind(ops, "rect").filter(
         (o) => o.color === COL_1 + 3 && o.y >= ds.solny,
       ).length;
     };
     expect(count(s0)).toBe(params.npegs);
     expect(count(marked)).toBe(params.npegs - 1);
+  });
+
+  it("the win flash sweeps the whole board, the answer and the empty holes too", () => {
+    const { desc } = newDesc(params, randomNew("render-win-flash"));
+    const s0 = newState(params, desc);
+    const wrong = s0.solution.slice();
+    wrong[0] = (wrong[0] % params.ncolors) + 1;
+    const holds = [false, false, false, false];
+    const s1 = guessGame.executeMove(s0, { type: "guess", pegs: wrong, holds });
+    const won = guessGame.executeMove(s1, {
+      type: "guess",
+      pegs: s0.solution.slice(),
+      holds,
+    });
+    expect(guessGame.status(won)).toBe("solved");
+    const ds = freshDs();
+    /** The pegs and holes whose box is lifted, as `column,row`, the answer the
+     * row under the last guess. */
+    const run = winFlashRun(
+      (flash: Flash) => {
+        const { dr } = recordingDrawing();
+        redraw(dr, freshDs(), null, won, 1, freshUi(won), 0, flash);
+        return dr;
+      },
+      (dr) =>
+        opsOfKind(dr.ops, "rect").flatMap((o) =>
+          o.color === COL_LIT
+            ? [
+                `${Math.round((o.x - ds.guessx) / pegOff(ds))},${Math.min(
+                  params.nguesses,
+                  Math.round((o.y - ds.guessy) / pegOff(ds)),
+                )}`,
+              ]
+            : [],
+        ),
+    );
+    // Every row of guesses, played or not, and the answer under them. A row
+    // won early is a board away from the answer, and the holes between carry
+    // the highlight, so something is lit at every instant.
+    expectWinFlashTravels(run, (params.nguesses + 1) * params.npegs, (key) => {
+      const [x, y] = key.split(",").map(Number);
+      return sweepStep(x, y);
+    });
+    // From the answer's first peg to the end of the first guess.
+    expect(run.frames[0]).toEqual([`0,${params.nguesses}`]);
+    expect(run.frames.at(-1)).toEqual([`${params.npegs - 1},0`]);
   });
 
   it("reveals the solution row only once the game is over", () => {
@@ -103,7 +153,7 @@ describe("Guess redraw", () => {
     // Unsolved: no peg circles in the solution row (y >= solny).
     const dsA = freshDs();
     const { dr: drA, ops: opsA } = recordingDrawing();
-    redraw(drA, dsA, null, s0, 1, freshUi(s0), 0, 0);
+    redraw(drA, dsA, null, s0, 1, freshUi(s0), 0, NO_FLASH);
     /** A peg is a circle in one of the ten peg colors, wherever it is drawn. The
      * answer row paints every color there too, as square blocks, and a block
      * must never read as a revealed peg. */
@@ -124,7 +174,7 @@ describe("Guess redraw", () => {
     });
     const dsB = freshDs();
     const { dr: drB, ops: opsB } = recordingDrawing();
-    redraw(drB, dsB, s0, won, 1, freshUi(won), 0, 0);
+    redraw(drB, dsB, s0, won, 1, freshUi(won), 0, NO_FLASH);
     expect(pegsBelow(opsB, dsB.solny)).toBe(true);
   });
 });
@@ -162,7 +212,7 @@ describe("Guess's check", () => {
     const ui = freshUi(wrong);
     const paint = (mistakes?: readonly { pos: number }[]) => {
       const rec = new RecordingDrawing(PALETTE);
-      redraw(rec, ds, null, wrong, 1, ui, 0, 0, undefined, mistakes);
+      redraw(rec, ds, null, wrong, 1, ui, 0, NO_FLASH, undefined, mistakes);
       return rec.ops;
     };
     paint();
@@ -181,7 +231,7 @@ describe("Guess's check", () => {
     ui.pencilMode = true;
     ui.cursor = { ...ui.cursor, x: 0, visible: true };
     const rec = new RecordingDrawing(PALETTE);
-    redraw(rec, freshDs(), null, wrong, 1, ui, 0, 0, undefined, [{ pos: 0 }]);
+    redraw(rec, freshDs(), null, wrong, 1, ui, 0, NO_FLASH, undefined, [{ pos: 0 }]);
     const last = (color: number) =>
       rec.ops.findLastIndex((o) => o.op === "rect" && o.color === color);
     expect(last(COL_CURSOR)).toBeGreaterThanOrEqual(0);

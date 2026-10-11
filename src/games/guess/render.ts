@@ -17,6 +17,7 @@ import { BLACK, PINK_WASH, TEAL_WASH, TEN, WHITE } from "../../engine/color/colo
 import {
   cellSurface,
   ERROR,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -34,6 +35,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { COLOR, ROW, SLOT } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTCOLOR,
@@ -69,14 +71,17 @@ export const COL_WRONG = 21;
 /** The rim of an empty hole, which with {@link COL_EMPTY} inside it is a cell
  * of the collection's quiet surface, drawn round. */
 export const COL_HOLE_RIM = 22;
-export const NCOLORS = 23;
+/** The box of a peg or a hole the win flash is on: the lifted surface. */
+export const COL_LIT = 23;
+export const NCOLORS = 24;
 
 // --- peg overlay flags (upstream PEG_*) -------------------------------
 
 const PEG_CURSOR = 0x1000;
 const PEG_HOLD = 0x2000;
 const PEG_LABELED = 0x4000;
-const PEG_FLAGS = PEG_CURSOR | PEG_HOLD | PEG_LABELED;
+const PEG_LIT = 0x8000;
+const PEG_FLAGS = PEG_CURSOR | PEG_HOLD | PEG_LABELED | PEG_LIT;
 
 // --- size constants ---------------------------------------------------
 
@@ -460,7 +465,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_FRAME] = INK;
   // Not `CURSOR`: the cursor rings pegs of all ten hues, green among them.
   ret[COL_CURSOR] = INK;
-  // Guess has no solved flash; upstream's `COL_FLASH` slot lights the feedback
+  // The win flash is `COL_LIT`; upstream's `COL_FLASH` slot lights the feedback
   // holes of a row that is ready to mark. It and the held-peg slot are washes,
   // not pegs (so not `HELD`, whose green is one of the ten): they sit *behind*
   // a peg and must not be mistaken for one.
@@ -474,6 +479,7 @@ export function colors(defaultBackground: Color): Color[] {
   // quiet surface inside its thin line and the pegs are the color on the board.
   ret[COL_EMPTY] = cellSurface(board);
   ret[COL_HOLE_RIM] = surfaceGrid(board);
+  ret[COL_LIT] = givenSurface(board);
   ret[COL_WELL] = guessAnswerWell(defaultBackground);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
@@ -503,21 +509,25 @@ function drawPeg(
   labeled: boolean,
   col: number,
   hatched = false,
+  lit = false,
 ): void {
   const ts = ds.tileSize;
   const cg = cgap(ds);
   const box = rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2);
-  dr.drawRect(box, COL_BACKGROUND);
+  // Lit, the whole box lifts and an empty hole with it: a peg fills all of
+  // its box but the corners, and its color is the board's information.
+  dr.drawRect(box, lit ? COL_LIT : COL_BACKGROUND);
   if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
+  const fill = col ? COL_EMPTY + col : lit ? COL_LIT : COL_EMPTY;
   if (ds.pegrad > 0) {
     dr.drawCircle(
       pt(cx + ds.pegrad, cy + ds.pegrad),
       ds.pegrad,
-      COL_EMPTY + col,
+      fill,
       col ? COL_FRAME : COL_HOLE_RIM,
     );
   } else {
-    dr.drawRect(rect(cx, cy, ts, ts), COL_EMPTY + col);
+    dr.drawRect(rect(cx, cy, ts, ts), fill);
   }
   if (labeled && col) {
     dr.drawText(
@@ -549,6 +559,7 @@ function guessRedraw(
   force: boolean,
   labeled: boolean,
   hatched = false,
+  flash: Flash = NO_FLASH,
 ): void {
   let dest: PegRow;
   let rowx: number;
@@ -574,8 +585,22 @@ function guessRedraw(
     if (i === curCol) scol |= PEG_CURSOR;
     if (holds?.[i]) scol |= PEG_HOLD;
     if (labeled) scol |= PEG_LABELED;
+    // The win flash sweeps the whole board, the answer as the row under the
+    // last guess. An empty hole lights too: a quick win leaves the winning
+    // row and the answer a board apart, with nothing between them to carry
+    // the highlight across.
+    if (flash.win(sweepStep(i, guess === -1 ? ds.nguesses : guess))) scol |= PEG_LIT;
     if (dest.pegs[i] !== scol || force) {
-      drawPeg(dr, ds, rowx + pegOff(ds) * i, rowy, labeled, scol & ~PEG_FLAGS, hatched);
+      drawPeg(
+        dr,
+        ds,
+        rowx + pegOff(ds) * i,
+        rowy,
+        labeled,
+        scol & ~PEG_FLAGS,
+        hatched,
+        (scol & PEG_LIT) !== 0,
+      );
       if (scol & PEG_CURSOR) drawCursor(dr, ds, rowx + pegOff(ds) * i, rowy);
       if (scol & PEG_HOLD) {
         dr.drawRect(
@@ -701,7 +726,7 @@ export function redraw(
   _dir: number,
   ui: GuessUi,
   _animTime: number,
-  _flashTime: number,
+  flash: Flash,
   hint?: HintStep<GuessMove>,
   mistakes?: readonly GuessMistake[],
 ): void {
@@ -737,7 +762,18 @@ export function redraw(
   for (let i = s.params.nguesses - 1; i >= 0; i--) {
     if (i < s.nextGo || solved) {
       const hatched = hatchedRow.has(i);
-      guessRedraw(dr, ds, i, s.guesses[i], null, -1, forceRows, ui.showLabels, hatched);
+      guessRedraw(
+        dr,
+        ds,
+        i,
+        s.guesses[i],
+        null,
+        -1,
+        forceRows,
+        ui.showLabels,
+        hatched,
+        flash,
+      );
       hintRedraw(
         dr,
         ds,
@@ -803,6 +839,8 @@ export function redraw(
       -1,
       ds.solved === 0,
       ui.showLabels,
+      false,
+      flash,
     );
   }
   repaintPencilIndicator(

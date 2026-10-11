@@ -54,7 +54,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  solvedFlash,
 } from "./render.ts";
 import { solveRoute } from "./solver.ts";
 import {
@@ -267,7 +266,6 @@ export const inertiaGame: Game<
     justMadeMove: false,
     justDied: false,
     animLength: 0,
-    flashType: 0,
     aiming: false,
     aimDir: -1,
   }),
@@ -334,7 +332,6 @@ export const inertiaGame: Game<
   redraw,
   animLength,
   flashLength,
-  solvedFlash,
   // A death is not a loss (the player undoes and plays on), yet nobody is
   // playing a dead ball, so the timer holds on it.
   timerHolds: (s: InertiaState): boolean => s.dead,

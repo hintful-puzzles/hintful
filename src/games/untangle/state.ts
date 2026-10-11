@@ -112,9 +112,8 @@ export interface UntangleUi {
 export interface UntangleDrawState {
   started: boolean;
   tileSize: number;
-  /** Last background color drawn (for the "did anything change?"
-   * early-out). */
-  bg: number;
+  /** Whether the win flash was on each vertex as last drawn (length n). */
+  lit: boolean[];
   /** Last drag / cursor vertex drawn. */
   dragPoint: number;
   cursorPoint: number;

@@ -27,9 +27,11 @@ import {
 } from "../../engine/testing/absent-tiers.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
-import { COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";
+import { border, COL_HIGHLIGHT, COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
   BRIDGES_PRESETS,
@@ -39,6 +41,7 @@ import {
   decodeParams,
   encodeGame,
   encodeParams,
+  G_ISLAND,
   G_LINEH,
   G_LINEV,
   G_MARK,
@@ -565,7 +568,7 @@ describe("bridges auto-mark aid", () => {
       const ds = newDrawState(s1, 24);
       const ui = { ...bridgesGame.newUi(s1), autoMark };
       const rec = new RecordingDrawing(palette);
-      bridgesGame.redraw?.(rec, ds, null, s1, 0, ui, 0, 0);
+      bridgesGame.redraw?.(rec, ds, null, s1, 0, ui, 0, NO_FLASH);
       return rec.ops.filter((o) => o.op === "circle" && o.fill === COL_MARK).length;
     };
 
@@ -581,7 +584,7 @@ describe("bridges auto-mark aid", () => {
       0,
       bridgesGame.newUi(s0),
       0,
-      0,
+      NO_FLASH,
     );
     const faces = (fill: number) =>
       fresh.ops.filter((o) => o.op === "circle" && o.fill === fill).length;
@@ -601,6 +604,57 @@ describe("bridges render smoke (tier 2.5)", () => {
     expect(recording.ops.some((o) => o.op === "rect")).toBe(true);
     expect(recording.ops.some((o) => o.op === "circle")).toBe(true);
     expect(recording.ops.some((o) => o.op === "text")).toBe(true);
+  });
+
+  it("sweeps the win flash over the islands and bridges from the bottom left", () => {
+    const p = BRIDGES_PRESETS[0];
+    const { desc } = newBridgesDesc(p, randomNew("bridges-flash"));
+    const state = bridgesGame.newState(p, desc);
+    const res = bridgesGame.solve?.(state, state);
+    if (!res?.ok) throw new Error("the board does not solve");
+    const solved = bridgesGame.executeMove(state, res.move);
+    const palette = bridgesGame.colors([0.9, 0.9, 0.9]);
+    const paint = (flash: Flash) => {
+      const rec = new RecordingDrawing(palette);
+      const ds = newDrawState(solved, 24);
+      bridgesGame.redraw(rec, ds, null, solved, 1, bridgesGame.newUi(solved), 0, flash);
+      return rec.ops;
+    };
+    // The squares drawn in the flash's color, by index: an island by its rim,
+    // wherever its circle is drawn from, and a square of a bridge by the bars
+    // its own tile draws.
+    const cell = (px: number) => Math.floor((px - border(24)) / 24);
+    const isIsland = (i: number) =>
+      (solved.gridAt(i % p.w, Math.floor(i / p.w)) & G_ISLAND) !== 0;
+    const lit = (ops: ReturnType<typeof paint>): number[] => {
+      const squares = new Set<number>();
+      let tile = -1;
+      for (const o of ops) {
+        if (o.op === "clip")
+          tile = o.w === 24 && o.h === 24 ? cell(o.y) * p.w + cell(o.x) : -1;
+        else if (o.op === "circle" && o.fill === COL_HIGHLIGHT)
+          squares.add(cell(o.cy) * p.w + cell(o.cx));
+        else if (
+          o.op === "rect" &&
+          o.color === COL_HIGHLIGHT &&
+          tile >= 0 &&
+          !isIsland(tile)
+        )
+          squares.add(tile);
+      }
+      return [...squares];
+    };
+    expect(lit(paint(NO_FLASH))).toEqual([]);
+    // Every island and every square a bridge crosses, and no empty square.
+    let elements = 0;
+    for (let i = 0; i < p.w * p.h; i++)
+      if (solved.gridAt(i % p.w, Math.floor(i / p.w)) & (G_ISLAND | G_LINEH | G_LINEV))
+        elements++;
+    const run = winFlashRun(paint, lit);
+    expect(run.frames.flat().some(isIsland)).toBe(true);
+    expect(run.frames.flat().some((i) => !isIsland(i))).toBe(true);
+    // A square's place in the sweep is its x less its y.
+    expectWinFlashTravels(run, elements, (i) => (i % p.w) - Math.floor(i / p.w));
   });
 });
 

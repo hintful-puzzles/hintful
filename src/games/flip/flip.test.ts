@@ -12,10 +12,13 @@ import { randomNew } from "../../engine/random/index.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { PuzzleButton } from "../../engine/types.ts";
+import { NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { type FlipParams, type FlipState, flipGame } from "./index.ts";
+import { border, COL_FLASH } from "./render.ts";
 
 function recordingDrawing() {
   const dr = new RecordingDrawing(flipGame.colors(DEFAULT_BACKGROUND));
@@ -308,7 +311,7 @@ describe("Flip redraw", () => {
     const ds = flipGame.newDrawState(s, flipGame.preferredTileSize ?? 32);
 
     const a = recordingDrawing();
-    flipGame.redraw(a.dr, ds, null, s, 1, ui, 0, 0);
+    flipGame.redraw(a.dr, ds, null, s, 1, ui, 0, NO_FLASH);
     // (w+1)+(h+1) = 8 grid lines, all COL_GRID, drawn once.
     const gridLines = a.ops.filter((o) => o.op === "line" && o.color === COL_GRID);
     expect(gridLines.length).toBe(8);
@@ -318,7 +321,7 @@ describe("Flip redraw", () => {
     // unchanged ⇒ no new tile/grid ops (the cache that keeps animation
     // from repainting the whole board every frame).
     const b = recordingDrawing();
-    flipGame.redraw(b.dr, ds, null, s, 1, ui, 0, 0);
+    flipGame.redraw(b.dr, ds, null, s, 1, ui, 0, NO_FLASH);
     expect(b.ops.filter((o) => o.op === "line").length).toBe(0);
     expect(b.ops.filter((o) => o.op === "rect").length).toBe(0);
   });
@@ -390,84 +393,101 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
   });
 });
 
-describe("Flip flash-overlay isolation (regression: wave through every cell)", () => {
-  // `Midend.timer` must not advance flashTime while flashLength is 0: Flip's
-  // redraw shows the win flash for any positive flashTime, which would sweep
-  // a wave through every cell on every animated move. Like upstream's
-  // midend.c, the timer resets flashTime when the flash ends or was never armed.
-  it("flashTime stays 0 throughout a non-solving move's animation", () => {
-    const params: FlipParams = { w: 3, h: 3, matrixType: "crosses" };
-    const { desc } = flipGame.newDesc(params, randomNew("flip-flash-iso"));
-    const me = new Midend(flipGame);
-    expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
+describe("Flip win flash", () => {
+  const params: FlipParams = { w: 4, h: 3, matrixType: "crosses" };
+  const TILE = flipGame.preferredTileSize ?? 32;
+  /** The squares a frame's ops put on the lifted surface, by cell. */
+  const lifted = (ops: RecordingDrawing["ops"]): number[] =>
+    opsOfKind(ops, "rect")
+      .filter((o) => o.color === COL_FLASH)
+      .map(
+        (o) =>
+          Math.floor((o.y - border(TILE)) / TILE) * params.w +
+          Math.floor((o.x - border(TILE)) / TILE),
+      );
 
-    // Click (0,0), which must not solve this seed's board (so flashLength
-    // stays 0); if a changed seed ever makes it solve, pick another seed.
-    const tile = flipGame.preferredTileSize ?? 32;
-    const border = tile >> 1;
-    expect(me.processInput(border + 1, border + 1, 0x0200)).toBe(true);
-    const state = me as unknown as { history: FlipState[]; pos: number };
-    expect(flipGame.status(state.history[state.pos])).toBe("ongoing");
-
-    // Drive the animation timer through its whole 0.25s; flashTime and
-    // flashLength must stay 0 on every tick.
-    const internals = me as unknown as {
-      flashTime: number;
-      flashLength: number;
-    };
-    for (let t = 0; t < 20; t++) {
-      me.timer(0.02);
-      expect(internals.flashTime).toBe(0);
-      expect(internals.flashLength).toBe(0);
-    }
+  it("sweeps the squares from the bottom left to the top right", () => {
+    const start = flipGame.newState(
+      params,
+      flipGame.newDesc(params, randomNew("f")).desc,
+    );
+    const answer = solveFlip(start, start);
+    if (!answer.ok) throw new Error("the fixture does not solve");
+    const s = flipGame.executeMove(start, answer.move);
+    expect(flipGame.status(s)).toBe("solved");
+    const ui = flipGame.newUi(s);
+    const run = winFlashRun(
+      (flash) => {
+        const { dr, ops } = recordingDrawing();
+        flipGame.redraw(dr, preferredDrawState(flipGame, s), null, s, 1, ui, 0, flash);
+        return ops;
+      },
+      lifted,
+      40,
+    );
+    expectWinFlashTravels(run, params.w * params.h, (i) =>
+      sweepStep(i % params.w, Math.floor(i / params.w)),
+    );
+    expect(run.frames[0]).toEqual([(params.h - 1) * params.w]);
   });
 
-  it("flashTime accumulates only for a solving move", () => {
-    // The complement of the test above: the click that solves the board
-    // does arm the win flash.
-    const params: FlipParams = { w: 3, h: 3, matrixType: "crosses" };
-    const { desc } = flipGame.newDesc(params, randomNew("flip-flash-solve"));
+  /** A midend on a dealt board, the squares the solution presses, and a
+   * press of one of them. */
+  function dealtBoard(seed: string) {
+    const { desc } = flipGame.newDesc(params, randomNew(seed));
     const me = new Midend(flipGame);
-    expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
-
-    // Use the solver to find the moves, then play each in turn.
+    expect(
+      me.newGameFromId(`${flipGame.encodeParams(params, false)}:${desc}`),
+    ).toBeNull();
     const initial = flipGame.newState(params, desc);
     const result = solveFlip(initial, initial);
-    expect(result.ok).toBe(true);
-    if (!result.ok || result.move.kind !== "solution") return;
-    const tile = flipGame.preferredTileSize ?? 32;
-    const border = tile >> 1;
-    const cells: Array<{ x: number; y: number }> = [];
+    if (!result.ok || result.move.kind !== "solution")
+      throw new Error("the fixture does not solve");
+    const cells: number[] = [];
     result.move.mask.forEach((bit, idx) => {
-      if (bit) cells.push({ x: idx % params.w, y: (idx / params.w) | 0 });
+      if (bit) cells.push(idx);
     });
-    expect(cells.length).toBeGreaterThan(0);
-
-    const internals = me as unknown as {
-      flashLength: number;
-      history: FlipState[];
-      pos: number;
-    };
-    // Play all but the last hinted cell; flashLength stays 0
-    // because each move leaves a light on.
-    for (let i = 0; i < cells.length - 1; i++) {
+    const press = (cell: number) =>
       me.processInput(
-        cells[i].x * tile + border + 1,
-        cells[i].y * tile + border + 1,
-        0x0200,
+        (cell % params.w) * TILE + border(TILE) + 1,
+        Math.floor(cell / params.w) * TILE + border(TILE) + 1,
+        PuzzleButton.LEFT_BUTTON,
       );
-      // Drain the timer between clicks so the next setupAnimation
-      // starts from a settled state.
-      for (let t = 0; t < 20; t++) me.timer(0.02);
-      expect(flipGame.status(internals.history[internals.pos])).toBe("ongoing");
-      expect(internals.flashLength).toBe(0);
-    }
+    /** Run the clock for `seconds`, and say which squares were lifted in
+     * any frame of it. */
+    const play = (seconds: number): number[] => {
+      const seen: number[] = [];
+      for (let t = 0; t < seconds; t += 0.02) {
+        me.timer(0.02);
+        const { dr, ops } = recordingDrawing();
+        me.redraw(dr);
+        seen.push(...lifted(ops));
+      }
+      return seen;
+    };
+    return { me, cells, press, play };
+  }
 
-    // Final click solves the puzzle ⇒ flashLength must be positive.
-    const last = cells[cells.length - 1];
-    me.processInput(last.x * tile + border + 1, last.y * tile + border + 1, 0x0200);
-    expect(flipGame.status(internals.history[internals.pos])).toBe("solved");
-    expect(internals.flashLength).toBeGreaterThan(0);
+  // A flash drawn on any animated move would sweep the board on every press.
+  it("is not drawn through a move that does not solve the board", () => {
+    const { cells, press, play } = dealtBoard("flip-flash-iso");
+    expect(cells.length).toBeGreaterThan(1);
+    expect(press(cells[0])).toBe(true);
+    expect(play(1)).toEqual([]);
+  });
+
+  it("is drawn after the move that solves it, from the bottom-left square", () => {
+    const { cells, press, play } = dealtBoard("flip-flash-solve");
+    for (const cell of cells.slice(0, -1)) {
+      press(cell);
+      expect(play(0.5)).toEqual([]);
+    }
+    press(cells[cells.length - 1]);
+    const seen = play(3);
+    expect(seen[0]).toBe((params.h - 1) * params.w);
+    expect(new Set(seen).size).toBe(params.w * params.h);
+    // Over, and the board is back on its own surface.
+    expect(play(0.5)).toEqual([]);
   });
 });
 

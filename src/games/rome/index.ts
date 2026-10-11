@@ -87,7 +87,6 @@ import {
   BORDER,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   origin,
   PREFERRED_TILE_SIZE,
@@ -750,7 +749,6 @@ export const romeGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(romeGame);

@@ -12,6 +12,7 @@ import { BLACK, TWO, WHITE } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   surfaceGrid,
@@ -23,14 +24,16 @@ import { drawMarkSides, type MarkBand, MarkOutlines } from "../../engine/hint-ma
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Rect, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { FlipMove, FlipParams, FlipState, FlipUi } from "./state.ts";
 
 export interface FlipDrawState {
   started: boolean;
   tileSize: number;
   /** Per-cell render cache: the bits `drawTile` last drew (the grid's, plus 4
-   * for the cursor, the hint marks' sides from {@link MARK_SHIFT} up, and
-   * {@link STRIPED}); -1 = never drawn, {@link ANIMATING} mid-flip. */
+   * for the cursor, the hint marks' sides from {@link MARK_SHIFT} up,
+   * {@link STRIPED} and {@link FLASHING}); -1 = never drawn,
+   * {@link ANIMATING} mid-flip. */
   tiles: Int32Array;
 }
 
@@ -41,6 +44,8 @@ const ANIMATING = 255;
 const MARK_SHIFT = 8;
 /** A square the hint's words stripe, above the byte of mark sides. */
 const STRIPED = 1 << 16;
+/** A square the win flash's highlight is on. */
+const FLASHING = 1 << 17;
 
 // Color palette indices.
 const COL_BACKGROUND = 0;
@@ -55,7 +60,9 @@ export const COL_HINT_CELL = 7; // the unlit squares the press is for: outlined
 const COL_LIT_DIAG = 8;
 /** The surface of a square, which the piece sits inset on. */
 const COL_SURFACE = 9;
-const NCOLORS = 10;
+/** The surface of a square under the win flash's highlight: lifted. */
+export const COL_FLASH = 10;
+const NCOLORS = 11;
 
 /** Which member of the two-state pair a square holds: the first while it is
  * still to be lit, the second once it is. */
@@ -63,7 +70,6 @@ const pairIndex = (unlit: boolean): 0 | 1 => (unlit ? 0 : 1);
 
 export const PREFERRED_TILE_SIZE = 48;
 export const ANIM_TIME = 0.25;
-export const FLASH_FRAME = 0.07;
 
 /** The board's pixel origin: half a tile on every side. `interpretMove` reads it
  * too, so input and drawing cannot disagree. */
@@ -84,6 +90,7 @@ export function colors(defaultBackground: Color): Color[] {
   const ret: Color[] = new Array(NCOLORS);
   ret[COL_BACKGROUND] = bg;
   ret[COL_SURFACE] = cellSurface(bg);
+  ret[COL_FLASH] = givenSurface(bg);
   ret[COL_GRID] = surfaceGrid(bg);
   ret[COL_UNLIT] = TWO[pairIndex(true)];
   ret[COL_LIT] = TWO[pairIndex(false)];
@@ -114,7 +121,7 @@ export function redraw(
   _dir: number,
   ui: FlipUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<FlipMove>,
 ): void {
   const { w, h } = s;
@@ -142,7 +149,6 @@ export function redraw(
     ds.started = true;
   }
 
-  const flashFrame = flashTime ? Math.floor(flashTime / FLASH_FRAME) : -1;
   const progress = animTime / ANIM_TIME;
   // A light that changed since `prev` is mid-flip, keyed 255 so it redraws every
   // frame; with animTime 0 the final state is drawn and `prev` is irrelevant.
@@ -156,23 +162,18 @@ export function redraw(
     const x = i % w;
     const y = (i / w) | 0;
     let v = s.grid[i];
-    if (flashFrame >= 0) {
-      const fx = (((w + 1) / 2) | 0) - Math.min(x + 1, w - x);
-      const fy = (((h + 1) / 2) | 0) - Math.min(y + 1, h - y);
-      const fd = Math.max(fx, fy);
-      if (fd === flashFrame) v |= 1;
-      else if (fd === flashFrame - 1) v &= ~1;
-    }
+    const flashing = flash.win(sweepStep(x, y));
     if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) v |= 4;
 
     const flipping = animating && prev !== null && s.grid[i] !== prev.grid[i];
     const stripes = striped.has(i);
     const drawn =
       (stripes ? STRIPED : 0) |
+      (flashing ? FLASHING : 0) |
       (marks.packed(x, y) << MARK_SHIFT) |
       (flipping ? ANIMATING : v);
     if (flipping || ds.tiles[i] !== drawn) {
-      drawTile(dr, ds, s, x, y, v, flipping, progress, marks, stripes);
+      drawTile(dr, ds, s, x, y, v, flipping, progress, marks, stripes, flashing);
       ds.tiles[i] = drawn;
     }
   }
@@ -189,6 +190,7 @@ function drawTile(
   progress: number,
   marks: MarkOutlines,
   stripes: boolean,
+  flashing: boolean,
 ): void {
   const { w, h } = s;
   const wh = w * h;
@@ -199,7 +201,7 @@ function drawTile(
   const unlit = (v & 1) !== 0;
 
   dr.clip(inner);
-  dr.drawRect(inner, COL_SURFACE);
+  dr.drawRect(inner, flashing ? COL_FLASH : COL_SURFACE);
 
   // Under the piece: the bands mark the square, and the piece is what it holds.
   if (stripes) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));

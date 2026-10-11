@@ -67,6 +67,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   checkKillerCageSum,
   onDiag0,
@@ -77,7 +78,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
-export const FLASH_TIME = 0.4;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
@@ -575,7 +575,7 @@ export function redraw(
   _dir: number,
   ui: SoloUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SoloMove, SoloHint>,
   mistakes?: readonly { x: number; y: number }[],
 ): void {
@@ -655,15 +655,13 @@ export function redraw(
     if (x >= 0 && x < cr && y >= 0 && y < cr) ds.tiles[y * cr + x] = -1;
   });
 
-  const flash =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
-
   for (let y = 0; y < cr; y++) {
     for (let x = 0; x < cr; x++) {
       const cell = y * cr + x;
       const d = state.grid[cell];
       let hl: number =
-        cellHighlight(ui, x, y) || (flash ? HIGHLIGHT_ENTRY : HIGHLIGHT_NONE);
+        cellHighlight(ui, x, y) ||
+        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_ENTRY : HIGHLIGHT_NONE);
 
       if (d) {
         if (

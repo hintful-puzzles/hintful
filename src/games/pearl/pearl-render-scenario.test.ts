@@ -10,32 +10,44 @@ import { describe, expect, it } from "vitest";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
+  paintsWith,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import type { Flash } from "../../engine/win-wave.ts";
 import type { PearlHint } from "./hint.ts";
 import { SQUARE } from "./hint-text.ts";
 import { pearlGame } from "./index.ts";
 import {
   COL_BLACK,
+  COL_FLASH,
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
   COL_LINE,
   COL_MISTAKE,
   COL_WHITE,
+  fromCoord,
+  metrics,
+  PREFERRED_TILE_SIZE,
 } from "./render.ts";
 import { pearlSolve } from "./solver.ts";
 import {
   CORNER,
+  D,
   DIFF_COUNT,
   L,
   newState,
   type PearlMove,
   type PearlParams,
   R,
+  U,
 } from "./state.ts";
 
 const P: PearlParams = { w: 6, h: 6, difficulty: 0 };
@@ -173,5 +185,60 @@ describe("Pearl render scenarios", () => {
       true,
     );
     expect(recording.ops).toMatchSnapshot();
+  });
+});
+
+describe("pearl win flash", () => {
+  const start = newState(P, DESC);
+  const answer = pearlGame.solve?.(start, start);
+  if (!answer?.ok) throw new Error("the fixture does not solve");
+  const state = pearlGame.executeMove(start, answer.move);
+  const { w } = state;
+  const m = metrics(PREFERRED_TILE_SIZE);
+
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(pearlGame.colors(DEFAULT_BACKGROUND));
+    const ds = pearlGame.newDrawState(state, PREFERRED_TILE_SIZE);
+    pearlGame.redraw(dr, ds, null, state, 1, pearlGame.newUi(state), 0, flash);
+    return dr;
+  };
+  /** The squares a frame draws in the flash's color, by cell. */
+  const lit = (dr: RecordingDrawing): number[] => {
+    const cells = new Set<number>();
+    let clip = -1;
+    for (const op of dr.ops) {
+      if (op.op === "clip") clip = fromCoord(op.y, m) * w + fromCoord(op.x, m);
+      else if (paintsWith(op, COL_FLASH)) cells.add(clip);
+    }
+    return [...cells];
+  };
+
+  it("runs the loop from its bottom-left square, clockwise", () => {
+    const loop = [...state.lines.keys()].filter((i) => state.lines[i] !== 0);
+    // The loop as the test walks it: from the square furthest down and left,
+    // up first (clockwise as drawn), then along the line.
+    const diagonal = (i: number) => (i % w) - Math.trunc(i / w);
+    const corner = loop.reduce((a, b) =>
+      diagonal(b) < diagonal(a) || (diagonal(b) === diagonal(a) && b > a) ? b : a,
+    );
+    const step = new Map([[corner, 0]]);
+    for (let at = corner - w, from = corner; at !== corner; ) {
+      step.set(at, step.size);
+      const next = [
+        [R, 1],
+        [L, -1],
+        [D, w],
+        [U, -w],
+      ]
+        .filter(([dir]) => state.lines[at] & dir)
+        .map(([, by]) => at + by)
+        .find((to) => to !== from);
+      if (next === undefined) throw new Error("the loop is open");
+      from = at;
+      at = next;
+    }
+    expect(step.size).toBe(loop.length);
+    const run = winFlashRun(paint, lit, 80);
+    expectWinFlashTravels(run, loop.length, (i) => step.get(i) ?? -1);
   });
 });

@@ -45,7 +45,6 @@ import { HINT_MARKS } from "./hint-text.ts";
 import {
   colors,
   computeSize,
-  FLASH_FRAME,
   fromCoordWithTileSize,
   newDrawState,
   type PegsDrawState,
@@ -341,7 +340,6 @@ export const pegsGame: Game<
   computeSize,
   newDrawState,
   redraw,
-  solvedFlash: () => 2 * FLASH_FRAME,
 };
 
 registerGame(pegsGame);

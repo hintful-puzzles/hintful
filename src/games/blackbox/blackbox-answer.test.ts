@@ -11,6 +11,7 @@ import { MULTIPLE_SOLUTIONS } from "../../engine/solve-failure.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import type { Point } from "../../engine/types.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { answerCount } from "./answer.ts";
 import { blackboxGame as game } from "./index.ts";
 import { COL_WRONG } from "./render.ts";
@@ -155,7 +156,7 @@ describe("Black Box's check", () => {
     const ds = game.newDrawState(s, 32);
     const paint = (mistakes?: readonly Point[]) => {
       const rec = new RecordingDrawing(palette);
-      game.redraw(rec, ds, null, s, 0, ui, 0, 0, undefined, mistakes);
+      game.redraw(rec, ds, null, s, 0, ui, 0, NO_FLASH, undefined, mistakes);
       return rec.ops;
     };
     // The corner button repaints every frame; the box's squares only on change.

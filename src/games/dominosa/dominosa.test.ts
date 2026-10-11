@@ -19,14 +19,17 @@ import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { dominosaGame } from "./index.ts";
 
 // A set up to 1 above Easy and a set up to 2 above Normal.
 describeAbsentTiers(dominosaGame, ["1db", "1dh", "1de", "2dh", "2de"]);
 
-import { COL_DOMINOCLASH, COL_REFERENCE } from "./render.ts";
+import { COL_DOMINOCLASH, COL_DOMINOTEXT, COL_REFERENCE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
   DCOUNT,
@@ -454,5 +457,49 @@ describe("dominosa render", () => {
       (o) => o.op === "rect" && o.color === COL_DOMINOCLASH,
     );
     expect(clash).toBe(true);
+  });
+
+  it("sweeps the win flash over the dominoes from the bottom left, a domino at a time", () => {
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
+    const { desc } = newDominosaDesc(p, randomNew("flash"));
+    const state = newState(p, desc);
+    const r = dominosaGame.solve?.(state, state);
+    if (!r?.ok) throw new Error("solve failed");
+    const solved = dominosaGame.executeMove(state, r.move);
+    const { w, h, grid } = solved;
+    const palette = dominosaGame.colors([0.9, 0.9, 0.9]);
+    // The squares whose domino is drawn in its number's color, by index: a
+    // tile is drawn under its own clip, in row order on a fresh draw state.
+    const paint = (flash: Flash): number[] => {
+      const dr = new RecordingDrawing(palette);
+      const ds = preferredDrawState(dominosaGame, solved);
+      dominosaGame.redraw(
+        dr,
+        ds,
+        null,
+        solved,
+        1,
+        dominosaGame.newUi(solved),
+        0,
+        flash,
+      );
+      const lit = new Set<number>();
+      let tile = -1;
+      for (const op of dr.ops) {
+        if (op.op === "clip") tile++;
+        else if (op.op === "rect" && op.color === COL_DOMINOTEXT) lit.add(tile);
+      }
+      expect(tile).toBe(w * h - 1);
+      return [...lit];
+    };
+    expect(paint(NO_FLASH)).toEqual([]);
+    const run = winFlashRun(paint, (squares) => squares);
+    // Both halves of a domino light on the same frames.
+    for (const squares of run.frames)
+      for (const i of squares) expect(squares).toContain(grid[i]);
+    // A domino's place in the sweep is its center's: x less y.
+    const step = (i: number): number =>
+      ((i % w) + (grid[i] % w) - Math.floor(i / w) - Math.floor(grid[i] / w)) / 2;
+    expectWinFlashTravels(run, w * h, step);
   });
 });

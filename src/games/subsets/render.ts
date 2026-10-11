@@ -12,8 +12,8 @@
  * count (red = duplicated, grayed back = placed once, ink = unplaced), and a
  * set ruled out of the cell in focus struck through in the player's ink. All
  * error verdicts are live (recomputed from the committed state each frame,
- * as upstream). On a fresh win every slot lifts on alternate 0.12 s flash
- * frames; there is no move animation.
+ * as upstream). The win flash swaps the plain and the lifted surface under
+ * every slot of each cell it passes; there is no move animation.
  *
  * Divergence from the C: the keyboard cursor's corner marks are drawn
  * through the per-cell diff (the cursor slot is part of the cache key)
@@ -49,6 +49,7 @@ import {
 } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
 import {
@@ -66,8 +67,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 36;
-const FLASH_FRAME = 0.12;
-export const FLASH_TIME = FLASH_FRAME * 5;
 
 // --- palette ----------------------------------------------------------------
 
@@ -76,7 +75,7 @@ export const COL_OUTERBG = 0; // the board around and between the cell blocks
 export const COL_CELL = 1;
 export const COL_GRID = 2; // the line between two slots of a cell
 /** The lifted slot surface of a cell whose set the puzzle gave, and of every
- * slot on a lit beat of the completion flash. */
+ * slot of any other cell the win flash is on. */
 export const COL_GIVEN = 3;
 /** A tally entry placed once, and the idle inspect badge's ring. */
 export const COL_DONE = 4;
@@ -214,7 +213,7 @@ export function redraw(
   _dir: number,
   ui: SubsetsUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SubsetsMove>,
   mistakes?: readonly SubsetsMistake[],
 ): void {
@@ -227,9 +226,8 @@ export function redraw(
   const diameter = Math.floor(ts * 0.7) | 1;
   const radius = Math.floor(diameter / 2);
 
-  const flash = flashTime > 0 && (Math.floor(flashTime / FLASH_FRAME) & 1) === 1;
   // The grid cursor hides while the keyboard is in the tally band below.
-  const cshow = ui.cursor.visible && ui.tallyCursor === null && flashTime <= 0;
+  const cshow = ui.cursor.visible && ui.tallyCursor === null && !flash.winning;
   const firstDraw = !ds.started;
 
   // Live error verdicts and the tally, recomputed pure from the committed
@@ -306,7 +304,7 @@ export function redraw(
         : TALLY_STRUCK;
     }
   }
-  if (ui.tallyCursor !== null && ui.cursor.visible && flashTime <= 0)
+  if (ui.tallyCursor !== null && ui.cursor.visible && !flash.winning)
     ds.tallyLook[ui.tallyCursor] |= TALLY_CURSOR;
 
   if (firstDraw) {
@@ -334,10 +332,11 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       const slot = i === curCell ? curSlot : -1;
+      const lit = flash.win(sweepStep(x, y));
       const packed =
         (state.known[i] & abits) |
         ((state.mask[i] & abits) << n) |
-        (flash ? 1 << (2 * n) : 0) |
+        (lit ? 1 << (2 * n) : 0) |
         ((slot + 1) << (2 * n + 1));
       if (
         !firstDraw &&
@@ -368,8 +367,10 @@ export function redraw(
           const box = { x: tx, y: ty, w: ts - 1, h: ts - 1 };
 
           // The surface says who decided the cell and never what a slot
-          // holds: a letter, the cross, or nothing yet.
-          dr.drawRect(box, flash || state.immutable[i] & bit ? COL_GIVEN : COL_CELL);
+          // holds: a letter, the cross, or nothing yet. The win flash swaps
+          // the two surfaces, so a given cell shows the highlight as well.
+          const given = (state.immutable[i] & bit) !== 0;
+          dr.drawRect(box, given !== lit ? COL_GIVEN : COL_CELL);
           // The cell the hint's sentence names, under its letters.
           ds.hint.drawHatch(
             dr,

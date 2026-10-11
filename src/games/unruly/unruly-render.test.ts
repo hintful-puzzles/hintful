@@ -1,13 +1,19 @@
 // Tier-2 render-ops: drive Unruly's `redraw` against a recording
 // `GameDrawing` double — a piece per state, the 3-in-a-row error bars, the
 // count badge, the lifted cell under a given, the cursor outline, the
-// completion flash, and the cache suppressing unchanged tiles.
+// win flash across the cells, and the cache suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import {
+  expectWinFlashTravels,
+  winFlashAt,
+  winFlashRun,
+} from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { type Cell, ONE, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import { unrulyGame } from "./index.ts";
@@ -92,7 +98,7 @@ describe("Unruly redraw", () => {
     const state = blank();
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
+    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
     // 36 empty tile bodies.
     expect(bodies(ops).filter((o) => o.color === COL_EMPTY).length).toBe(36);
     // The outer grid edge frame was drawn on first draw.
@@ -105,7 +111,7 @@ describe("Unruly redraw", () => {
     state = place(state, 2, 2, ZERO);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
+    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
     expect(squares(ops)).toHaveLength(1);
     expect(discs(ops)).toHaveLength(1);
     // The piece carries the state, so no cell is filled in a piece's color.
@@ -119,7 +125,7 @@ describe("Unruly redraw", () => {
     state = place(state, 2, 0, ONE);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
+    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
     // The error rectangle helper emits 4 strips per affected tile.
     expect(
       ops.filter((o) => o.op === "rect" && o.color === COL_ERROR).length,
@@ -135,7 +141,7 @@ describe("Unruly redraw", () => {
     state = place(state, 5, 0, ONE);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
+    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
     // A badge: the `!` in the error's text color, on a disc of the error color.
     const marks = opsOfKind(ops, "text").filter((o) => o.text === "!");
     expect(marks).toHaveLength(4);
@@ -149,7 +155,7 @@ describe("Unruly redraw", () => {
     const state = place(withClue(ONE), 3, 3, ONE);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0);
+    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
     expect(squares(ops)).toHaveLength(2);
     expect(bodies(ops).filter((o) => o.color === COL_GIVEN)).toHaveLength(1);
   });
@@ -162,25 +168,10 @@ describe("Unruly redraw", () => {
     ui.cursor.x = 2;
     ui.cursor.y = 3;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, ui, 0, 0);
+    redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
     expect(
       ops.filter((o) => "color" in o && o.color === COL_CURSOR).length,
     ).toBeGreaterThanOrEqual(4);
-  });
-
-  it("lifts every cell on the flash's lit frames and none on the frame between", () => {
-    let state = blank();
-    state = place(state, 1, 1, ONE);
-    state = place(state, 2, 2, ZERO);
-    // flashTime / 0.12 floors to 0, 1, 2: lit, unlit, lit.
-    const surfaces = (flashTime: number) => {
-      const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, flashTime);
-      return new Set(bodies(ops).map((o) => o.color));
-    };
-    expect(surfaces(0.05)).toEqual(new Set([COL_GIVEN]));
-    expect(surfaces(0.15)).toEqual(new Set([COL_EMPTY]));
-    expect(surfaces(0.3)).toEqual(new Set([COL_GIVEN]));
   });
 
   it("outlines mistake cells in the error color", () => {
@@ -190,7 +181,7 @@ describe("Unruly redraw", () => {
     state = place(state, 2, 2, ZERO);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0, undefined, [{ x: 2, y: 2 }]);
+    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH, undefined, [{ x: 2, y: 2 }]);
     const errorRects = ops.filter((o) => o.op === "rect" && o.color === COL_ERROR);
     expect(errorRects.length).toBe(4);
   });
@@ -204,7 +195,7 @@ describe("Unruly redraw", () => {
       animTime: number,
     ): number[] => {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(state), prev, state, 1, freshUi(), animTime, 0);
+      redraw(dr, freshDs(state), prev, state, 1, freshUi(), animTime, NO_FLASH);
       return squares(ops);
     };
     const [settled] = widthAt(null, filled, 0);
@@ -240,7 +231,7 @@ describe("Unruly redraw", () => {
       highlights: { target },
     };
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, 0, hint);
+    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH, hint);
     // Target cell: a COL_HINT **ring**, and no COL_HINT body. A fill in a game
     // whose move is "put one of two pieces here" reads as a third piece
     // already placed, so the cell keeps its own surface under the mark.
@@ -269,15 +260,76 @@ describe("Unruly redraw", () => {
     const state = blank();
     const ds = freshDs(state);
     const first = recordingDrawing();
-    redraw(first.dr, ds, null, state, 1, freshUi(), 0, 0);
+    redraw(first.dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
     expect(first.ops.length).toBeGreaterThan(0);
     const second = recordingDrawing();
-    redraw(second.dr, ds, null, state, 1, freshUi(), 0, 0);
+    redraw(second.dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
     expect(second.ops.length).toBe(0);
     // One placed cell redraws only its own tile body.
     const moved = place(state, 0, 0, ONE);
     const third = recordingDrawing();
-    redraw(third.dr, ds, null, moved, 1, freshUi(), 0, 0);
+    redraw(third.dr, ds, null, moved, 1, freshUi(), 0, NO_FLASH);
     expect(bodies(third.ops).length).toBe(1);
+  });
+});
+
+describe("Unruly: the win flash sweeps the cells", () => {
+  // A board with no given, so a lifted surface is the flash's alone. Rows
+  // alternate between one pattern and its inverse.
+  const row = [1, 1, 0, 0, 1, 0];
+  let state = blank();
+  for (let y = 0; y < P.h2; y++) {
+    for (let x = 0; x < P.w2; x++) {
+      state = place(state, x, y, row[x] === y % 2 ? ZERO : ONE);
+    }
+  }
+  const cells = P.w2 * P.h2;
+
+  const paint = (flash: Flash, ds = freshDs(state)) => {
+    const { dr, ops } = recordingDrawing();
+    redraw(dr, ds, null, state, 1, freshUi(), 0, flash);
+    return ops;
+  };
+  /** The cells a frame draws on the lifted surface, as the `x,y` drawn at. */
+  const lit = (ops: ReturnType<typeof paint>): string[] =>
+    bodies(ops).flatMap((op) => (op.color === COL_GIVEN ? [`${op.x},${op.y}`] : []));
+  const step = (key: string): number => {
+    const [x, y] = key.split(",").map(Number);
+    return x - y;
+  };
+
+  it("is a solved board", () => {
+    expect(unrulyGame.status(state)).toBe("solved");
+  });
+
+  it("travels every cell, from the bottom left to the top right", () => {
+    expectWinFlashTravels(winFlashRun(paint, lit), cells, step);
+  });
+
+  it("drops a given to the plain surface while the flash is on it", () => {
+    // The same board with its top-left cell a given, which rests lifted.
+    const given = withClue(state.grid[0] as Cell);
+    const surfaceAt = (ops: RecordingDrawing["ops"]) =>
+      bodies(ops).reduce((top, op) => (op.x + op.y < top.x + top.y ? op : top)).color;
+    const paintGiven = (flash: Flash) => {
+      const { dr, ops } = recordingDrawing();
+      redraw(dr, freshDs(given), null, given, 1, freshUi(), 0, flash);
+      return ops;
+    };
+    expect(surfaceAt(paintGiven(NO_FLASH))).toBe(COL_GIVEN);
+    const surfaces = winFlashRun(paintGiven, (ops) => [surfaceAt(ops)]).frames.flat();
+    expect(new Set(surfaces)).toEqual(new Set([COL_GIVEN, COL_EMPTY]));
+  });
+
+  it("lowers a cell to its own surface when the flash leaves it", () => {
+    const ds = freshDs(state);
+    paint(
+      winFlashAt(WIN_FLASH_S / 2, (flash) => paint(flash)),
+      ds,
+    );
+    const after = bodies(paint(NO_FLASH, ds));
+    expect(after.length).toBeGreaterThan(0);
+    expect(after.length).toBeLessThan(cells);
+    expect(new Set(after.map((op) => op.color))).toEqual(new Set([COL_EMPTY]));
   });
 });

@@ -513,6 +513,10 @@ export class Puzzle {
     await this.workerPuzzle.setTimerPaused(paused);
   }
 
+  public async setReducedMotion(reduced: boolean): Promise<void> {
+    await this.workerPuzzle.setReducedMotion(reduced);
+  }
+
   public get generatingGame(): boolean {
     return this._generatingGame.get();
   }

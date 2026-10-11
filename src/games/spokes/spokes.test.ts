@@ -44,10 +44,13 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Point } from "../../engine/types.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { spokesGame } from "./index.ts";
 import {
+  COL_DONE,
   COL_ERROR,
   COL_HOLDING,
   COL_HUB,
@@ -495,7 +498,7 @@ describe("spokes input", () => {
 // --- moves, completion and solve --------------------------------------------
 
 describe("spokes completion and solve (through a real Midend)", () => {
-  it("Solve completes the board as solved-with-help and arms no flash", () => {
+  it("Solve completes the board as solved-with-help and animates nothing", () => {
     const { m, status } = harness();
     expect(m.newGameFromId(FIX_ID)).toBeNull();
     expect(m.solve()).toBeNull();
@@ -503,7 +506,7 @@ describe("spokes completion and solve (through a real Midend)", () => {
     expect(m.currentAnimationMs()).toBe(0);
   });
 
-  it("drawing the solution by hand completes the board and flashes", () => {
+  it("drawing the solution by hand completes the board", () => {
     const state = newState(FIX, FIX_DESC);
     const moves: SpokesMove[] = solutionSpokes(state, SPOKE_LINE).map(
       ({ index, dir }) => ({ kind: "set", index, dir, state: SPOKE_LINE }),
@@ -512,7 +515,6 @@ describe("spokes completion and solve (through a real Midend)", () => {
     let cur = state;
     for (const move of moves) cur = spokesGame.executeMove(cur, move);
     expect(spokesGame.status(cur)).toBe("solved");
-    expect(spokesGame.solvedFlash?.(cur, newUi())).toBeGreaterThan(0);
   });
 
   it("round-trips a save with progress on it", () => {
@@ -659,7 +661,7 @@ describe("spokes rendering", () => {
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
     const ds = newDrawState(state, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, state, 1, ui, 0, 0);
+    redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
 
     expect(
       dr.ops.filter((o) => o.op === "circle" && o.outline === COL_HOLDING).length,
@@ -675,7 +677,7 @@ describe("spokes rendering", () => {
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
     const ds = newDrawState(state, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, state, 1, ui, 0, 0);
+    redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
 
     // Four corner brackets, two segments each.
     expect(
@@ -717,7 +719,7 @@ describe("spokes rendering", () => {
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
     const ds = newDrawState(lit, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, lit, 1, ui, 0, 0);
+    redraw(dr, ds, null, lit, 1, ui, 0, NO_FLASH);
 
     expect(dr.ops.some((o) => o.op === "circle" && o.fill === COL_SATISFIED)).toBe(
       false,
@@ -726,5 +728,42 @@ describe("spokes rendering", () => {
 
   it("computes a bordered-free board size", () => {
     expect(spokesGame.computeSize(FIX, 30)).toEqual({ w: 120, h: 120 });
+  });
+});
+
+describe("spokes: the win flash sweeps the hubs", () => {
+  const start = newState(FIX, FIX_DESC);
+  const state = solutionSpokes(start, SPOKE_LINE).reduce(
+    (s, { index, dir }) =>
+      spokesGame.executeMove(s, { kind: "set", index, dir, state: SPOKE_LINE }),
+    start,
+  );
+  const hubs = FIX.w * FIX.h;
+
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(spokesGame.colors(DEFAULT_BACKGROUND));
+    redraw(dr, newDrawState(state, TS), null, state, 1, newUi(), 0, flash);
+    return dr.ops;
+  };
+  /** The hubs a frame rims in the flash color, as grid `x,y`. */
+  const lit = (ops: ReturnType<typeof paint>): string[] => {
+    const keys = ops.flatMap((op) =>
+      op.op === "circle" && op.outline === COL_DONE
+        ? [`${Math.floor(op.cx / TS)},${Math.floor(op.cy / TS)}`]
+        : [],
+    );
+    return [...new Set(keys)];
+  };
+  const step = (key: string): number => {
+    const [x, y] = key.split(",").map(Number);
+    return x - y;
+  };
+
+  it("is a solved board", () => {
+    expect(spokesGame.status(state)).toBe("solved");
+  });
+
+  it("travels every hub, from the bottom left to the top right", () => {
+    expectWinFlashTravels(winFlashRun(paint, lit), hubs, step);
   });
 });

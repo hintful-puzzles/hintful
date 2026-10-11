@@ -183,10 +183,6 @@ export interface MapMove {
 
 // --- ui --------------------------------------------------------------
 
-const FLASH_CYCLIC = 0;
-export const FLASH_EACH_TO_WHITE = 1;
-export const FLASH_ALL_TO_WHITE = 2;
-
 /** Persisted drag/cursor UI + preferences (upstream `game_ui`). */
 export interface MapUi {
   /** -2 = no drag; -1 = dragging a blank; >=0 = dragging that color. */
@@ -221,8 +217,6 @@ export interface MapUi {
   pencilSticky: boolean;
   /** Keep a tapped region's highlight through a pencil mark. */
   pencilKeepHighlight: boolean;
-  /** 0 = cyclic, 1 = each-to-white, 2 = all-to-white. */
-  flashType: number;
   showNumbers: boolean;
   largeStipples: boolean;
 }
@@ -246,7 +240,6 @@ export function newUi(_state: MapState): MapUi {
     candidateReading: "implicit",
     pencilSticky: true,
     pencilKeepHighlight: true,
-    flashType: FLASH_CYCLIC,
     showNumbers: false,
     largeStipples: false,
   };

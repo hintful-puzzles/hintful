@@ -7,9 +7,11 @@ import type { HintStep } from "../../engine/game.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { NO_FLASH, ownFlash } from "../../engine/win-wave.ts";
 import { say } from "./hint-text.ts";
 import { floodGame } from "./index.ts";
-import { type FloodDrawState, redraw } from "./render.ts";
+import { COL_LIT, type FloodDrawState, redraw } from "./render.ts";
 import { type FloodMove, type FloodState, newState } from "./state.ts";
 
 const PALETTE = floodGame.colors(DEFAULT_BACKGROUND);
@@ -34,7 +36,7 @@ describe("Flood redraw", () => {
     const state = newState({ w: 2, h: 2, colors: 3, leniency: 0 }, "0112,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, UI, 0, 0);
+    redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
 
     expect(ops.some((o) => o.op === "polygon")).toBe(false);
     // The frame (COL_GRID = palette index 12): the field and a separator
@@ -49,7 +51,7 @@ describe("Flood redraw", () => {
     const state = newState({ w: 2, h: 1, colors: 3, leniency: 0 }, "01,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, UI, 0, 0);
+    redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
     // A thin (w = sepWidth = 1) rect in the grid's color appears.
     expect(ops.some((o) => o.op === "rect" && o.color === 12 && o.w === 1)).toBe(true);
   });
@@ -60,7 +62,7 @@ describe("Flood redraw", () => {
     const state = newState({ w: 2, h: 1, colors: 3, leniency: 0 }, "01,9");
     const ds = floodGame.newDrawState(state, small) as FloodDrawState;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, UI, 0, 0);
+    redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
     expect(ops[0]).toMatchObject({ op: "rect", color: 12, w: 2 * small + 2 });
     expect(
       ops.some((o) => o.op === "rect" && o.color === 12 && o.w === 1 && o.h === small),
@@ -71,7 +73,7 @@ describe("Flood redraw", () => {
     const state = newState({ w: 2, h: 2, colors: 3, leniency: 0 }, "0112,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, { cursor: newCursor(0, 0, true) }, 0, 0);
+    redraw(dr, ds, null, state, 1, { cursor: newCursor(0, 0, true) }, 0, NO_FLASH);
     // The cursor outline is four lines in the mark color (COL_MARK = 1).
     expect(ops.filter((o) => o.op === "line" && o.color === 1).length).toBe(4);
   });
@@ -87,30 +89,39 @@ describe("Flood redraw", () => {
       explanation: words.text,
       words,
     };
-    redraw(dr, ds, null, state, 1, UI, 0, 0, hint);
+    redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH, hint);
     // The shared recorder keeps a circle's fill AND outline separately, where
     // the local double kept one number called `color` — so this now says which.
     expect(ops.some((o) => o.op === "circle" && o.fill === 1)).toBe(true);
   });
 
-  it("superimposes the victory rainbow when a completed board flashes", () => {
-    // A solved single-color board; the rainbow recolors cells near the
-    // corner, so multiple distinct play colors are drawn.
+  it("spreads the win flash from the top-left corner, lifting the tiles it is on", () => {
+    const W = 5;
     const base = newState(
-      { w: 5, h: 5, colors: 6, leniency: 0 },
-      `${"0".repeat(25)},9`,
+      { w: W, h: 4, colors: 6, leniency: 0 },
+      `${"0".repeat(W * 4)},9`,
     );
     // A one-color desc decodes to `colors: 1`; a real win keeps the colors
-    // the board started with, and those are what the rainbow cycles through.
+    // the board started with.
     const state: FloodState = { ...base, colors: 6, moves: 3 };
-    const ds = freshDs(state);
-    const { dr, ops } = recordingDrawing();
-    // 0.12 / VICTORY_FLASH_FRAME (0.03) floors to frame 3, so cells within
-    // Manhattan distance 3 of the corner take colors 0..3.
-    redraw(dr, ds, null, state, 1, UI, 0, 0.12);
-    // Whole-tile rects only: a separator strip along a tile's edge is TS wide.
-    const tiles = opsOfKind(ops, "rect").filter((o) => o.w === TS && o.h === TS);
-    expect(new Set(tiles.map((o) => o.color)).size).toBeGreaterThan(1);
+    expect(floodGame.status(state)).toBe("solved");
+    const run = winFlashRun(
+      (flash) => {
+        const { dr, ops } = recordingDrawing();
+        redraw(dr, freshDs(state), null, state, 1, UI, 0, flash);
+        return ops;
+      },
+      // Whole-tile rects only: a separator strip along a tile's edge is TS
+      // wide. The tiles on the lifted surface, by cell.
+      (ops) =>
+        opsOfKind(ops, "rect")
+          .filter((o) => o.w === TS && o.h === TS && o.color === COL_LIT)
+          .map((o) => Math.floor(o.y / TS - 0.5) * W + Math.floor(o.x / TS - 0.5)),
+      40,
+    );
+    // A tile's distance from the corner the fill starts in.
+    expectWinFlashTravels(run, W * 4, (i) => (i % W) + Math.floor(i / W));
+    expect(run.frames[0]).toEqual([0]);
   });
 
   it("blinks the board to the mark color on a defeat flash", () => {
@@ -119,9 +130,9 @@ describe("Flood redraw", () => {
     const state: FloodState = { ...base, moves: 1 };
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    // flashTime / DEFEAT_FLASH_FRAME(0.1) = 0 (≠ 1) → BADFLASH → every
+    // 0.05 / DEFEAT_FLASH_FRAME(0.1) = 0 (≠ 1) → BADFLASH → every
     // tile painted in the mark color at full size.
-    redraw(dr, ds, null, state, 1, UI, 0, 0.05);
+    redraw(dr, ds, null, state, 1, UI, 0, ownFlash(0.05));
     const tiles = opsOfKind(ops, "rect").filter((o) => o.w === TS && o.h === TS);
     expect(tiles).toHaveLength(9);
     expect(tiles.every((o) => o.color === 1)).toBe(true);

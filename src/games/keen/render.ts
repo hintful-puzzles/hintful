@@ -53,6 +53,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   C_ADD,
   C_DIV,
@@ -69,7 +70,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
-export const FLASH_TIME = 0.4;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
@@ -453,7 +453,7 @@ export function redraw(
   _dir: number,
   ui: KeenUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<KeenMove, KeenHint>,
   mistakes?: readonly { x: number; y: number }[],
 ): void {
@@ -502,14 +502,13 @@ export function redraw(
     if (x >= 0 && x < w && y >= 0 && y < w) ds.tiles[y * w + x] = -1;
   });
 
-  const flash =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
-
   for (let y = 0; y < w; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       let tile = state.grid[i] || state.pencil[i] << DF_PENCIL_SHIFT;
-      tile |= (flash ? HIGHLIGHT_ENTRY : cellHighlight(ui, x, y)) << DF_HIGHLIGHT_SHIFT;
+      tile |=
+        (flash.win(sweepStep(x, y)) ? HIGHLIGHT_ENTRY : cellHighlight(ui, x, y)) <<
+        DF_HIGHLIGHT_SHIFT;
       if (ds.errors[i] & ERR_LATIN) tile |= DF_ERR_LATIN;
       if (ds.errors[i] & ERR_CLUE) tile |= DF_ERR_CLUE;
 

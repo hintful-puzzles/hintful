@@ -16,11 +16,16 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  type DrawOp,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import type { Flash } from "../../engine/win-wave.ts";
 import { newUntangleDesc } from "./generator.ts";
 import { deduceUntangleHintPlan } from "./hint.ts";
 import { CROSSING, SPOT, VERTEX } from "./hint-text.ts";
@@ -28,6 +33,7 @@ import { untangleGame } from "./index.ts";
 import {
   COL_CROSSEDLINE,
   COL_DRAGPOINT,
+  COL_FLASH,
   COL_HINT,
   COL_LINE,
   COL_OUTLINE,
@@ -208,5 +214,55 @@ describe("Untangle render scenarios", () => {
       false,
     );
     expect(after.ops.some((o) => o.op === "line" && o.color === COL_LINE)).toBe(true);
+  });
+});
+
+describe("Untangle: the win flash sweeps the points", () => {
+  const n = 10;
+  const ts = untangleGame.preferredTileSize ?? 32;
+  const { desc } = newUntangleDesc({ n }, randomNew("untangle-win-flash"));
+  const start = untangleGame.newState({ n }, desc);
+  const answer = untangleGame.solve?.(start, start);
+  if (!answer?.ok) throw new Error("the board does not solve");
+  const state = untangleGame.executeMove(start, answer.move);
+
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(untangleGame.colors(DEFAULT_BACKGROUND));
+    const ds = untangleGame.newDrawState(state, ts);
+    untangleGame.redraw(dr, ds, null, state, 1, untangleGame.newUi(state), 0, flash);
+    return dr.ops;
+  };
+  /** The points a frame draws in the flash color, as the `x,y` drawn at. */
+  const points = (ops: readonly DrawOp[]): string[] =>
+    ops.flatMap((op) =>
+      op.op === "circle" && op.fill === COL_FLASH ? [`${op.cx},${op.cy}`] : [],
+    );
+
+  const step = (key: string): number => {
+    const [x, y] = key.split(",").map(Number);
+    return x - y;
+  };
+
+  it("is a solved board", () => {
+    expect(untangleGame.status(state)).toBe("solved");
+  });
+
+  it("travels every point, from the bottom left to the top right", () => {
+    expectWinFlashTravels(winFlashRun(paint, points), n, step);
+  });
+
+  it("lights a line with the first of its ends the highlight reaches", () => {
+    let seen = 0;
+    for (const ops of winFlashRun(paint, (frame) => frame).frames) {
+      const on = new Set(points(ops));
+      for (const op of ops) {
+        if (op.op !== "line" || op.color !== COL_FLASH) continue;
+        seen++;
+        const a = `${op.x1},${op.y1}`;
+        const b = `${op.x2},${op.y2}`;
+        expect(on.has(step(a) <= step(b) ? a : b)).toBe(true);
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
   });
 });

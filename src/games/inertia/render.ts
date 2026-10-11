@@ -30,6 +30,7 @@ import { coord as coordE } from "../../engine/geometry.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { ARROW, GEM as GEM_MARK } from "./hint-text.ts";
 import {
   BLANK,
@@ -349,7 +350,7 @@ export function redraw(
   dir: number,
   ui: InertiaUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<InertiaMove>,
   _mistakes?: readonly unknown[],
   deadEnd?: MarkedDeadEnd,
@@ -359,11 +360,9 @@ export function redraw(
   const marks = stepMarks(hint ?? deadEnd);
   const goals = new Set(marks.of("outline", GEM_MARK));
 
-  // The flash blinks over its length: on for the first and third of three
-  // phases, off for the middle one.
-  const flashing =
-    flashTime > 0 && Math.floor((flashTime * 3) / FLASH_LENGTH) % 2 === 0;
-  const flashType = flashing ? ui.flashType : 0;
+  // The death flash blinks over its length: on for the first and third of
+  // three phases, off for the middle one.
+  const dying = flash.time > 0 && Math.floor((flash.time * 3) / FLASH_LENGTH) % 2 === 0;
 
   // Erase the ball, restoring whatever tile it was sitting on.
   if (ds.playerBgSaved && ds.playerBackground) {
@@ -419,7 +418,10 @@ export function redraw(
 
       if (v === GEM && goals.has(y * w + x)) v |= HINT_GOAL;
 
-      v |= flashType;
+      if (dying) v |= FLASH_DEAD;
+      // The win lights the squares the ball can be on: a wall's block covers
+      // its tile.
+      else if (s.board.at(x, y) !== WALL && flash.win(sweepStep(x, y))) v |= FLASH_WIN;
 
       if (ds.grid[y * w + x] !== v) {
         const wall = s.board.at(x, y) === WALL;
@@ -477,21 +479,6 @@ export function animLength(
 }
 
 /** The death flash: a death is not a status, so the engine cannot see it. */
-export function flashLength(
-  a: InertiaState,
-  b: InertiaState,
-  _dir: number,
-  ui: InertiaUi,
-): number {
-  if (!a.dead && b.dead) {
-    ui.flashType = FLASH_DEAD;
-    return FLASH_LENGTH;
-  }
-  return 0;
-}
-
-/** The win flash, played when the engine says the last gem was collected. */
-export function solvedFlash(_s: InertiaState, ui: InertiaUi): number {
-  ui.flashType = FLASH_WIN;
-  return FLASH_LENGTH;
+export function flashLength(a: InertiaState, b: InertiaState): number {
+  return !a.dead && b.dead ? FLASH_LENGTH : 0;
 }

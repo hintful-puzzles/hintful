@@ -27,6 +27,7 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newCrossingDesc } from "./generator.ts";
 import {
   applyCrossingFiring,
@@ -812,7 +813,7 @@ describe("crossing hint — the frame", () => {
     const washes = (step?: Step): number => {
       const ds = crossingGame.newDrawState(state, PREFERRED_TILE_SIZE);
       const dr = new RecordingDrawing(crossingGame.colors(DEFAULT_BACKGROUND));
-      crossingGame.redraw(dr, ds, null, state, 1, ui, 0, 0, step);
+      crossingGame.redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH, step);
       return dr.ops.filter(
         (o) => o.op === "rect" && (o.color === COL_ACROSS || o.color === COL_DOWN),
       ).length;

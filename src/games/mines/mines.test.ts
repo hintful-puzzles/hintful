@@ -23,10 +23,12 @@ import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Point } from "../../engine/types.ts";
+import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave.ts";
 import { firstOpen, minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
-import { borderFor, COL_BANG, COL_COVERED, COL_OPEN } from "./render.ts";
+import { borderFor, COL_BANG, COL_COVERED, COL_OPEN, FLASH_FRAME } from "./render.ts";
 import { minesolve } from "./solver.ts";
 import {
   COVERED,
@@ -761,7 +763,7 @@ describe("mines render", () => {
 
     const paint = (state: MinesState) => {
       const rec = new RecordingDrawing(palette);
-      minesGame.redraw?.(rec, ds, null, state, 0, ui, 0, 0);
+      minesGame.redraw?.(rec, ds, null, state, 0, ui, 0, NO_FLASH);
       return rec;
     };
 
@@ -780,6 +782,68 @@ describe("mines render", () => {
     ui.hy = -1;
     const released = paint(s);
     expect(released.ops.length).toBeGreaterThan(0);
+  });
+
+  /** A 3x3 board with its one mine at (0, 0), every square covered. */
+  const tiny = (): MinesState => {
+    const s = minesGame.newState(decodeParams("3x3n1"), "u800");
+    return { ...s, mines: s.orphan, orphan: null, seed: null };
+  };
+  /** The squares `flash` repaints on a board already drawn, with the fill of
+   * each one's face. */
+  const flashed = (state: MinesState, flash: Flash): Map<string, number> => {
+    const ds = minesGame.newDrawState(state, 20);
+    const ui = minesGame.newUi(state);
+    const palette = minesGame.colors(BG);
+    minesGame.redraw(
+      new RecordingDrawing(palette),
+      ds,
+      null,
+      state,
+      1,
+      ui,
+      0,
+      NO_FLASH,
+    );
+    const rec = new RecordingDrawing(palette);
+    minesGame.redraw(rec, ds, null, state, 1, ui, 0, flash);
+    const faces = new Map<string, number>();
+    let cell = "";
+    for (const op of rec.ops) {
+      if (op.op === "clip")
+        cell = `${(op.x - borderFor(20)) / 20},${(op.y - borderFor(20)) / 20}`;
+      // The grid line is the tile's whole square; the face is a pixel smaller.
+      else if (op.op === "rect" && op.w === 19) faces.set(cell, op.color);
+    }
+    return faces;
+  };
+
+  it("sweeps the win flash from the bottom left to the top right", () => {
+    const solved = minesGame.executeMove(tiny(), { type: "solve" });
+    const run = winFlashRun(
+      (flash) => flashed(solved, flash),
+      (faces) => {
+        // A lit square swaps surfaces: the flagged mine at the top left
+        // drops to the opened one, and every opened square lifts.
+        for (const [cell, fill] of faces)
+          expect(fill).toBe(cell === "0,0" ? COL_OPEN : COL_COVERED);
+        return [...faces.keys()];
+      },
+    );
+    expectWinFlashTravels(run, 9, (cell) => {
+      const [x, y] = cell.split(",").map(Number);
+      return sweepStep(x, y);
+    });
+  });
+
+  it("fills every square in the error color on a death flash's lit beat", () => {
+    const dead = minesGame.executeMove(tiny(), openMove(0, 0));
+    expect(dead.dead).toBe(true);
+    const lit = flashed(dead, ownFlash(FLASH_FRAME / 2));
+    expect(lit.size).toBe(9);
+    for (const fill of lit.values()) expect(fill).toBe(COL_BANG);
+    // An unlit beat is the settled board, the trodden mine still red.
+    expect(flashed(dead, ownFlash(FLASH_FRAME * 1.5)).size).toBe(0);
   });
 });
 
@@ -819,7 +883,7 @@ describe("mines mistakes", () => {
     const ds = minesGame.newDrawState(wrong, 20);
     const paint = (mistakes?: readonly Point[]) => {
       const rec = new RecordingDrawing(palette);
-      minesGame.redraw(rec, ds, null, wrong, 0, ui, 0, 0, undefined, mistakes);
+      minesGame.redraw(rec, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, mistakes);
       return rec.ops;
     };
     paint();

@@ -69,7 +69,6 @@ import {
   BORDER,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -475,8 +474,6 @@ export const rectGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(rectGame);

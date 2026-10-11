@@ -55,7 +55,6 @@ import {
   BORDER,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   paletteScheme,
@@ -360,7 +359,6 @@ export const slideGame: Game<
   // `game_anim_length` is 0, and the live feedback is the block following the
   // pointer.
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(slideGame);

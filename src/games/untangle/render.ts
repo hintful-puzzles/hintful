@@ -5,12 +5,18 @@
  * change which edges cross), so it is a **full-frame** repaint with a
  * single early-out: recompute every vertex's pixel position, and if nothing
  * the frame depends on has changed, skip drawing entirely (the cheap guard
- * against spinning during the completion flash). No per-tile cache.
+ * against repainting a frame that is already on the canvas). No per-tile
+ * cache.
+ *
+ * The win flash runs over the points in the order a diagonal sweep meets them
+ * where they are drawn: a lit point is the flash color, and so is a line while
+ * the first of its ends is lit.
  */
 
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { type Flash, sweepRanks } from "../../engine/win-wave.ts";
 import { CROSSING, SPOT, VERTEX } from "./hint-text.ts";
 import {
   CIRCLE_RADIUS,
@@ -37,8 +43,6 @@ export const COL_NEIGHBOR = 8;
 export const COL_FLASH = 9;
 export const COL_HINT = 10;
 
-export const FLASH_TIME = 0.3;
-
 /** Radius (px) of the ring round a crossing a hint step removes — just wider
  * than a point, so a ring is never mistaken for one. */
 const CROSSING_RING = CIRCLE_RADIUS + 3;
@@ -60,21 +64,16 @@ export function redrawUntangle(
   s: UntangleState,
   ui: UntangleUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<UntangleMove>,
 ): void {
   const n = s.n;
   const ts = ds.tileSize;
 
-  // Background color: steady, or blinking to the flash during completion.
-  let bg = COL_BACKGROUND;
-  if (flashTime > 0) {
-    bg =
-      Math.trunc((flashTime * 4) / FLASH_TIME) % 2 === 0 ? COL_FLASH : COL_BACKGROUND;
-  }
-
-  // Recompute every vertex's pixel position, noting whether any moved.
+  // Recompute every vertex's pixel position, noting whether any moved, and
+  // whether the win flash reached or left one.
   let pointsMoved = false;
+  let litChanged = false;
   const animLen = ui.animLength;
   for (let i = 0; i < n; i++) {
     let p = s.pts[i];
@@ -85,6 +84,15 @@ export function redrawUntangle(
     if (ds.x[i] !== x || ds.y[i] !== y) pointsMoved = true;
     ds.x[i] = x;
     ds.y[i] = y;
+  }
+  // The points sit on no grid, so a point's position is its rank in the sweep.
+  const rank = flash.winning
+    ? sweepRanks(ds.x.map((x, i) => ({ x, y: ds.y[i] })))
+    : new Array<number>(n).fill(0);
+  for (let i = 0; i < n; i++) {
+    const lit = flash.winning && flash.win(rank[i]);
+    if (ds.lit[i] !== lit) litChanged = true;
+    ds.lit[i] = lit;
   }
 
   // The step's marks. The ringed point its move places is the one the line
@@ -103,7 +111,7 @@ export function redrawUntangle(
   // Early-out: nothing visible changed.
   if (
     ds.started &&
-    ds.bg === bg &&
+    !litChanged &&
     ds.dragPoint === ui.dragPoint &&
     ds.cursorPoint === ui.cursorPoint &&
     ds.hintVertex === hintVertex &&
@@ -115,7 +123,6 @@ export function redrawUntangle(
   }
   ds.dragPoint = ui.dragPoint;
   ds.cursorPoint = ui.cursorPoint;
-  ds.bg = bg;
   ds.hintVertex = hintVertex;
   ds.hintTx = hintTx;
   ds.hintTy = hintTy;
@@ -123,7 +130,7 @@ export function redrawUntangle(
 
   // Full-frame: fill the background every repaint.
   const size = s.w * ts;
-  dr.drawRect({ x: 0, y: 0, w: size, h: size }, bg);
+  dr.drawRect({ x: 0, y: 0, w: size, h: size }, COL_BACKGROUND);
 
   // Frame the playable area so the drop zone is unambiguous (the gray
   // beyond it — e.g. layout padding — is dead space). Drags clamp a
@@ -142,8 +149,13 @@ export function redrawUntangle(
   const crossSource = prev ?? s;
   for (let i = 0; i < s.edges.length; i++) {
     const e = s.edges[i];
-    const color =
-      ui.showCrossedEdges && crossSource.crosses[i] ? COL_CROSSEDLINE : COL_LINE;
+    // The end the highlight reaches first is the one the line lights with.
+    const first = rank[e.a] <= rank[e.b] ? e.a : e.b;
+    const color = ds.lit[first]
+      ? COL_FLASH
+      : ui.showCrossedEdges && crossSource.crosses[i]
+        ? COL_CROSSEDLINE
+        : COL_LINE;
     dr.drawLine(
       { x: ds.x[e.a], y: ds.y[e.a] },
       { x: ds.x[e.b], y: ds.y[e.b] },
@@ -153,11 +165,18 @@ export function redrawUntangle(
   }
 
   // Vertices, in a fixed z-order so the drag/cursor point sits on top.
-  const drawOrder = [COL_POINT, COL_NEIGHBOR, COL_CURSORPOINT, COL_DRAGPOINT];
+  const drawOrder = [
+    COL_POINT,
+    COL_NEIGHBOR,
+    COL_CURSORPOINT,
+    COL_DRAGPOINT,
+    COL_FLASH,
+  ];
   for (const thisColor of drawOrder) {
     for (let i = 0; i < n; i++) {
       let c: number;
-      if (ui.dragPoint === i) c = COL_DRAGPOINT;
+      if (ds.lit[i]) c = COL_FLASH;
+      else if (ui.dragPoint === i) c = COL_DRAGPOINT;
       else if (ui.cursorPoint === i) c = COL_CURSORPOINT;
       else if (ui.dragPoint >= 0 && s.edgeSet.has(packEdge(ui.dragPoint, i, n)))
         c = COL_NEIGHBOR;
@@ -166,7 +185,12 @@ export function redrawUntangle(
 
       if (ui.vertexNumbers) {
         // Blank the blob area, then draw the index number in `c`.
-        dr.drawCircle({ x: ds.x[i], y: ds.y[i] }, DRAG_THRESHOLD, bg, bg);
+        dr.drawCircle(
+          { x: ds.x[i], y: ds.y[i] },
+          DRAG_THRESHOLD,
+          COL_BACKGROUND,
+          COL_BACKGROUND,
+        );
         dr.drawText(
           { x: ds.x[i], y: ds.y[i] },
           glyphFont(Math.trunc((DRAG_THRESHOLD * 3) / 2)),

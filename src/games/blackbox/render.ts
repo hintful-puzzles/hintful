@@ -1,7 +1,8 @@
 /**
  * Black Box — palette, geometry, and the imperative `redraw`, over a
  * per-tile cache (`ds.grid` mirrors each tile's displayed value, cursor and
- * flash flags included).
+ * flash flags included). A reveal is the win, and the win flash sweeps the
+ * squares of the box.
  *
  * Pieces on a quiet surface (`engine/piece.ts`): a square of the box is the
  * cell surface and a guessed ball is a disc on it. What is settled is lifted:
@@ -13,6 +14,7 @@ import { GREEN, RED, TWO } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   ERROR,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -30,6 +32,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { BUTTON, LASER } from "./hint-text.ts";
 import {
   BALL_GUESS,
@@ -67,7 +70,10 @@ export const COL_BUTTON = 9;
 const COL_CURSOR = 10;
 export const COL_HINT = 11;
 export const COL_HINT_EVIDENCE = 12;
-const NCOLORS = 13;
+/** A square of the box the win flash is on. Not the lifted surface, which
+ * every square of a revealed box already has. */
+export const COL_WIN = 13;
+const NCOLORS = 14;
 
 /** A ball is the pair's disc, in a color no mark drawn round it has spent. */
 const PAIR_DISC = 1;
@@ -80,9 +86,10 @@ const HINT_OUTLINE = 1 << 18;
  * midend refuses a hint while the check finds anything, so its frame never
  * shares a square with a hint's mark. */
 const MISTAKE = 1 << 19;
+/** A square of the box the win flash is on, in the same word. */
+const LIT = 1 << 20;
 
 export const PREFERRED_TILE_SIZE = 32;
-const FLASH_FRAME = 0.2;
 const CUR_ANIM = 0.2;
 
 // --- draw state -------------------------------------------------------
@@ -95,7 +102,6 @@ export interface BlackboxDrawState {
   grid: Int32Array;
   started: boolean;
   reveal: boolean;
-  isflash: boolean;
   flashLaserno: number;
 }
 
@@ -108,7 +114,6 @@ export function newDrawState(s: BlackboxState, tileSize: number): BlackboxDrawSt
     grid: new Int32Array((s.w + 2) * (s.h + 2)),
     started: false,
     reveal: false,
-    isflash: false,
     flashLaserno: LASER_EMPTY,
   };
 }
@@ -149,6 +154,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_FLASHTEXT] = GREEN;
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
+  ret[COL_WIN] = FLASH;
   return ret;
 }
 
@@ -244,13 +250,12 @@ function drawArenaTile(
   ax: number,
   ay: number,
   force: boolean,
-  isflash: boolean,
-  hint: number,
+  marks: number,
 ): void {
   const ts = ds.tileSize;
   const gx = ax + 1;
   const gy = ay + 1;
-  let gsTile = gs.grid[gridIdx(gs.w, gx, gy)] | hint;
+  let gsTile = gs.grid[gridIdx(gs.w, gx, gy)] | marks;
   const dsTile = ds.grid[gridIdx(ds.w, gx, gy)];
   const dx = todraw(ds, gx);
   const dy = todraw(ds, gy);
@@ -261,13 +266,18 @@ function drawArenaTile(
   if (gsTile !== dsTile || gs.reveal !== ds.reveal || force) {
     const known = (gsTile & BALL_LOCK) !== 0;
     dr.clip(rect(dx, dy, ts + 1, ts + 1));
-    drawSurface(dr, ds, dx, dy, gs.reveal || known ? COL_SETTLED : COL_CELL);
+    drawSurface(
+      dr,
+      ds,
+      dx,
+      dy,
+      gsTile & LIT ? COL_WIN : gs.reveal || known ? COL_SETTLED : COL_CELL,
+    );
 
     // A reveal shows guesses that are the real balls, so only guesses are
-    // drawn, and they blink out on the flash's beats.
+    // drawn.
     if (gsTile & BALL_GUESS) {
-      if (!(gs.reveal && isflash))
-        drawPiece(dr, face(ds, dx, dy), TWO_SHAPES[PAIR_DISC], COL_BALL);
+      drawPiece(dr, face(ds, dx, dy), TWO_SHAPES[PAIR_DISC], COL_BALL);
     } else if (known && !gs.reveal) drawRuledOutCross(dr, face(ds, dx, dy), COL_KNOWN);
 
     if (gsTile & FLAG_CURSOR) drawCursor(dr, ds, dx, dy);
@@ -372,12 +382,11 @@ export function redraw(
   _dir: number,
   ui: BlackboxUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<unknown> | null,
   mistakes?: readonly Point[],
 ): void {
   const ts = ds.tileSize;
-  let isflash = false;
   let force = false;
   const marked = hintFlags(state, hint);
   for (const m of mistakes ?? []) {
@@ -387,21 +396,16 @@ export function redraw(
   const flagsAt = (x: number, y: number): number =>
     marked.get(gridIdx(state.w, x, y)) ?? 0;
 
-  if (flashTime > 0) {
-    const frame = Math.floor(flashTime / FLASH_FRAME);
-    isflash = frame % 2 === 0;
-  }
-
   if (!ds.started) {
     force = true;
     ds.started = true;
   }
 
-  if (isflash !== ds.isflash) force = true;
-
   for (let x = 0; x < state.w; x++)
-    for (let y = 0; y < state.h; y++)
-      drawArenaTile(dr, state, ds, ui, x, y, force, isflash, flagsAt(x + 1, y + 1));
+    for (let y = 0; y < state.h; y++) {
+      const lit = flash.win(sweepStep(x, y)) ? LIT : 0;
+      drawArenaTile(dr, state, ds, ui, x, y, force, flagsAt(x + 1, y + 1) | lit);
+    }
 
   // Which laser to highlight this frame.
   ds.flashLaserno = LASER_EMPTY;
@@ -445,7 +449,6 @@ export function redraw(
   dr.drawUpdate(rect(b0, b0, ts, ts));
 
   ds.reveal = state.reveal;
-  ds.isflash = isflash;
 }
 
 // --- timing -----------------------------------------------------------
@@ -457,13 +460,4 @@ export function animLength(
   ui: BlackboxUi,
 ): number {
   return ui.flashLaser === 2 ? CUR_ANIM : 0;
-}
-
-export function flashLength(
-  oldState: BlackboxState,
-  newState: BlackboxState,
-  _dir: number,
-  _ui: BlackboxUi,
-): number {
-  return !oldState.reveal && newState.reveal ? 4 * FLASH_FRAME : 0;
 }

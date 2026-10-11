@@ -25,7 +25,10 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  type DrawOp,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
@@ -34,7 +37,18 @@ import { tentsGame } from "./index.ts";
 // A 4x4 above Easy.
 describeAbsentTiers(tentsGame, ["4x4dt"]);
 
-import { COL_MISTAKE, computeSize, dragXform, newDrawState, redraw } from "./render.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
+import {
+  COL_LIT,
+  COL_MISTAKE,
+  COL_TENT,
+  COL_TREELEAF,
+  computeSize,
+  dragXform,
+  newDrawState,
+  redraw,
+} from "./render.ts";
 import { tentsSolve } from "./solver.ts";
 import {
   BLANK,
@@ -364,7 +378,7 @@ describe("tents input (drag model)", () => {
 
     const frame = () => {
       const dr = new RecordingDrawing(tentsGame.colors(DEFAULT_BACKGROUND));
-      tentsGame.redraw(dr, newDrawState(state, TS), null, state, 1, ui, 0, 0);
+      tentsGame.redraw(dr, newDrawState(state, TS), null, state, 1, ui, 0, NO_FLASH);
       return JSON.stringify(dr.ops);
     };
 
@@ -519,9 +533,9 @@ describe("tents render (tier 2)", () => {
 
     // Paint the tent tile without the overlay, then again WITH it (no tile-
     // value change) — the overlay must still appear on the second paint.
-    redraw(rec, ds, null, wrong, 1, ui, 0, 0, undefined, undefined);
+    redraw(rec, ds, null, wrong, 1, ui, 0, NO_FLASH, undefined, undefined);
     rec.ops.length = 0;
-    redraw(rec, ds, null, wrong, 1, ui, 0, 0, undefined, mistakes);
+    redraw(rec, ds, null, wrong, 1, ui, 0, NO_FLASH, undefined, mistakes);
 
     expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
   });
@@ -531,5 +545,58 @@ describe("tents render (tier 2)", () => {
       w: 1 + (32 + 2) + 32 * 8,
       h: 1 + (32 + 2) + 32 * 8,
     });
+  });
+});
+
+describe("tents: the win flash sweeps the squares", () => {
+  const TS = 32;
+  const p = { w: 8, h: 8, diff: DIFF_EASY };
+  const start = genBoard(p, "win-flash").state;
+  const answer = tentsGame.solve?.(start, start);
+  if (!answer?.ok) throw new Error("the board does not solve");
+  const state = tentsGame.executeMove(start, answer.move);
+  const squares = p.w * p.h;
+
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(tentsGame.colors(DEFAULT_BACKGROUND));
+    redraw(
+      dr,
+      newDrawState(state, TS),
+      null,
+      state,
+      1,
+      tentsGame.newUi(state),
+      0,
+      flash,
+    );
+    return dr.ops;
+  };
+  /** The squares a frame draws on the lifted surface, as the `x,y` drawn at. */
+  const lit = (ops: ReturnType<typeof paint>): string[] =>
+    ops.flatMap((op) =>
+      op.op === "rect" && op.color === COL_LIT ? [`${op.x},${op.y}`] : [],
+    );
+  const step = (key: string): number => {
+    const [x, y] = key.split(",").map(Number);
+    return x - y;
+  };
+
+  it("is a solved board", () => {
+    expect(tentsGame.status(state)).toBe("solved");
+  });
+
+  it("travels every square, from the bottom left to the top right", () => {
+    expectWinFlashTravels(winFlashRun(paint, lit), squares, step);
+  });
+
+  it("keeps the trees and the tents on the lit squares", () => {
+    const pieces = (ops: readonly DrawOp[]) =>
+      ops.filter((o) => "fill" in o && (o.fill === COL_TREELEAF || o.fill === COL_TENT))
+        .length;
+    const settled = pieces(paint(NO_FLASH));
+    expect(settled).toBeGreaterThan(0);
+    for (const ops of winFlashRun(paint, (frame) => frame, 5).frames) {
+      expect(pieces(ops)).toBe(settled);
+    }
   });
 });

@@ -49,6 +49,8 @@ import { boatsGame } from "./index.ts";
 
 const refusal = (p: BoatsParams, full: boolean) => paramsError(boatsGame, p, full);
 
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
   type BoatsDrawState,
   COL_COLLISION_ERROR,
@@ -58,7 +60,6 @@ import {
   COL_SHIP_ERROR,
   COL_WATER,
   computeSize,
-  FLASH_TIME,
   fleetLayout,
   fleetRows,
   PREFERRED_TILE_SIZE,
@@ -867,7 +868,7 @@ describe("boats rendering", () => {
       1,
       boatsGame.newUi(state),
       0,
-      0,
+      NO_FLASH,
     );
 
     // The diamond is a polygon filled COL_COLLISION_ERROR outlined COL_INK,
@@ -880,9 +881,7 @@ describe("boats rendering", () => {
     );
   });
 
-  it("hides the boats on the flashing half of the completion flash", () => {
-    // Complete a board by hand (the Solve command does not flash), then step
-    // the clock into the flash.
+  it("lifts the squares in a sweep from the bottom left during the win flash", () => {
     const p = presetParams(0);
     const { desc } = newBoatsDesc(p, randomNew("boats-flash-1"));
     const state = newState(p, desc);
@@ -890,9 +889,6 @@ describe("boats rendering", () => {
     expect(solved.ok).toBe(true);
     if (!solved.ok) return;
 
-    // Skip the given squares: a fill move on one is a no-op, and if such a
-    // no-op were the *last* move the board would never make a
-    // not-completed → completed transition and the flash would never arm.
     const moves: BoatsMove[] = [];
     for (let y = 0; y < p.h; y++)
       for (let x = 0; x < p.w; x++) {
@@ -909,37 +905,44 @@ describe("boats rendering", () => {
         });
       }
 
-    const midend = new Midend(boatsGame);
-    midend.newGameFromId(`${encodeParams(p, true)}:${desc}`);
-    // Play one move at a time and stop the moment the board completes. Boats
-    // is won when every *boat* is placed — the remaining water need not be
-    // filled in — so playing the whole list would finish the puzzle partway
-    // through and leave the last transition a non-completing one, with no
-    // flash armed.
-    for (const move of moves) {
-      midend.playMoves([move]);
-      if (boatsGame.status(stateOf(midend)) === "solved") break;
-    }
-    expect(boatsGame.status(stateOf(midend))).toBe("solved");
+    const won = moves.reduce((s, m) => boatsGame.executeMove(s, m), state);
+    expect(boatsGame.status(won)).toBe("solved");
 
-    // Walk the flash in half-frame steps and count the boats drawn on each.
-    // The guarantee that matters is that it *alternates* — upstream draws no
-    // boat on the "off" half — not which half comes first, so assert both
-    // phases occur rather than pinning one to a timestamp (docs/games/testing.md
-    // § "Seed-deterministic, never clock-gated").
+    // The squares on the lifted surface, as their origins, and the boats drawn.
     const palette = boatsGame.colors([1, 1, 1]);
-    const counts: number[] = [];
-    for (let i = 0; i < 12; i++) {
-      midend.timer(FLASH_TIME / 10);
+    const paint = (flash: Flash) => {
       const rec = new RecordingDrawing(palette);
-      midend.forceRedraw(rec);
-      counts.push(
-        rec.ops.filter((o) => o.op === "circle" && o.fill === COL_SHIP).length,
+      const ds = preferredDrawState(boatsGame, won);
+      boatsGame.redraw(rec, ds, null, won, 1, boatsGame.newUi(won), 0, flash);
+      return rec.ops;
+    };
+    const lifted = (ops: ReturnType<typeof paint>): string[] =>
+      ops.flatMap((o) =>
+        o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
       );
-    }
-
-    expect(counts.some((n) => n === 0)).toBe(true);
-    expect(counts.some((n) => n > 0)).toBe(true);
+    const boats = (ops: ReturnType<typeof paint>): number =>
+      ops.filter((o) => o.op === "circle" && o.fill === COL_SHIP).length;
+    // A segment the puzzle gave rests on the lifted surface. The flash swaps
+    // a square's surface, so a lit square is one that has it where a settled
+    // frame has not, or a given's that has lost it.
+    const settled = paint(NO_FLASH);
+    const given = new Set(lifted(settled));
+    expect(given.size).toBeGreaterThan(0);
+    const run = winFlashRun(paint, (ops) => {
+      // The pieces are drawn on a lit square as on any other frame.
+      expect(boats(ops)).toBe(boats(settled));
+      const now = lifted(ops);
+      return [
+        ...now.filter((c) => !given.has(c)),
+        ...[...given].filter((c) => !now.includes(c)),
+      ];
+    });
+    // A square's place in the sweep is its x less its y.
+    expectWinFlashTravels(
+      run,
+      p.w * p.h,
+      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
+    );
   });
   it("highlights a mistake on a board that was already drawn", () => {
     // The paint-twice test (docs/games/rendering.md § "Prove the overlay
@@ -1011,7 +1014,7 @@ describe("boats fleet display layout", () => {
       1,
       boatsGame.newUi(state),
       0,
-      0,
+      NO_FLASH,
     );
     let right = 0;
     for (const op of rec.ops) {

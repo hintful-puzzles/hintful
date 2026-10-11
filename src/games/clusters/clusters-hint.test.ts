@@ -28,6 +28,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { type ClustersHintHighlights, clustersGame } from "./index.ts";
 import { COL_0, COL_1, COL_HINT, COL_HINT_CELL, COL_HINT_DANGER } from "./render.ts";
 import {
@@ -476,7 +477,7 @@ describe("hint rendering (tier 2.5)", () => {
         0,
         clustersGame.newUi(state),
         0,
-        0,
+        NO_FLASH,
         hint,
       );
       return rec.ops;

@@ -64,7 +64,7 @@ import {
   type UntangleRung,
   untangleKeepTrack,
 } from "./hint.ts";
-import { COL_BACKGROUND, FLASH_TIME, redrawUntangle } from "./render.ts";
+import { COL_BACKGROUND, redrawUntangle } from "./render.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
   buildEdges,
@@ -441,7 +441,6 @@ export const untangleGame: Game<
     ui.animLength = len;
     return len;
   },
-  solvedFlash: () => FLASH_TIME,
 
   // --- preferences ---------------------------------------------------
   prefs: [
@@ -481,8 +480,8 @@ export const untangleGame: Game<
   colors: (defaultBackground: Color): Color[] => {
     const { background, lowlight } = mkhighlight(defaultBackground);
     // Index-for-index with the upstream COL_* enum (untangle.c:57) up to the
-    // flash, whose two colors (a gray and a white the board alternated
-    // between) fold into one: the board blinks between itself and the flash.
+    // flash, whose two colors (a gray and a white) fold into one: the color
+    // of a point and a line the win flash is on.
     return [
       lowlight, // 0 COL_SYSBACKGROUND (dead space, darker)
       background, // 1 COL_BACKGROUND (play area)
@@ -509,7 +508,7 @@ export const untangleGame: Game<
   newDrawState: (s, tileSize): UntangleDrawState => ({
     started: false,
     tileSize,
-    bg: -1,
+    lit: new Array<boolean>(s.n).fill(false),
     dragPoint: -1,
     cursorPoint: -1,
     hintVertex: -1,
@@ -518,8 +517,8 @@ export const untangleGame: Game<
     x: new Array<number>(s.n).fill(-1),
     y: new Array<number>(s.n).fill(-1),
   }),
-  redraw: (dr, ds, prev, s, _dir, ui, animTime, flashTime, hint) => {
-    redrawUntangle(dr, ds, prev, s, ui, animTime, flashTime, hint);
+  redraw: (dr, ds, prev, s, _dir, ui, animTime, flash, hint) => {
+    redrawUntangle(dr, ds, prev, s, ui, animTime, flash, hint);
   },
 };
 

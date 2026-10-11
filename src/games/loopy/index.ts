@@ -112,7 +112,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_TIME,
   type LoopyDrawState,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -909,7 +908,6 @@ export const loopyGame: Game<
   computeSize,
   newDrawState,
   redraw,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(loopyGame);

@@ -19,6 +19,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { groupGame } from "./index.ts";
 import { COL_DIAGONAL, COL_GRID, COL_HINT, COL_HINT_CELL } from "./render.ts";
 import type { GroupMove } from "./state.ts";
@@ -146,7 +147,17 @@ describe("group hint marks on a warm canvas", () => {
     hint: ReturnType<typeof hintOver>,
   ) => {
     const rec = new RecordingDrawing(palette);
-    groupGame.redraw(rec, ds, null, state, 0, groupGame.newUi(state), 0, 0, hint);
+    groupGame.redraw(
+      rec,
+      ds,
+      null,
+      state,
+      0,
+      groupGame.newUi(state),
+      0,
+      NO_FLASH,
+      hint,
+    );
     raster.apply(rec.ops);
   };
   /** Paint `frames` in order on one draw state, and the last on a fresh one. */

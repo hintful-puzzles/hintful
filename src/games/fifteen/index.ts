@@ -30,7 +30,6 @@ import {
   colors,
   computeSize,
   type FifteenDrawState,
-  FLASH_FRAME,
   fromCoord,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -320,7 +319,6 @@ export const fifteenGame: Game<
   redraw,
 
   animLength: () => ANIM_TIME,
-  solvedFlash: () => 2 * FLASH_FRAME,
 };
 
 registerGame(fifteenGame);

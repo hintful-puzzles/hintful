@@ -1,9 +1,10 @@
 import { BLACK, TEN, TEN_NAMES } from "../../engine/color/colors.ts";
-import { surfaceGrid } from "../../engine/color/palette.ts";
+import { givenSurface, surfaceGrid } from "../../engine/color/palette.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import type { Flash } from "../../engine/win-wave.ts";
 import { completed, fill } from "./solver.ts";
 import {
   FILLX,
@@ -12,7 +13,6 @@ import {
   type FloodParams,
   type FloodState,
   type FloodUi,
-  status,
 } from "./state.ts";
 
 // --- tile-size-derived metrics ----------------------------------------
@@ -26,7 +26,6 @@ const cursorInset = (ts: number) => Math.floor(ts / 8);
 const border = (ts: number) => Math.floor(ts / 2);
 const coord = (n: number, ts: number) => n * ts + border(ts);
 
-export const VICTORY_FLASH_FRAME = 0.03;
 export const DEFEAT_FLASH_FRAME = 0.1;
 
 // --- color palette indices -------------------------------------------
@@ -37,6 +36,8 @@ const COL_MARK = 1;
 const COL_1 = 2; // COL_1..COL_10 are 2..11
 /** The line between two regions, and the frame round the field. */
 const COL_GRID = 12;
+/** A tile under the win flash's highlight: the lifted surface. */
+export const COL_LIT = 13;
 
 /**
  * The ten tiles, as the hint says them: *"Fill with orange"*. Re-exported from
@@ -54,6 +55,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_MARK] = BLACK;
   for (let i = 0; i < 10; i++) out[COL_1 + i] = TEN[i];
   out[COL_GRID] = surfaceGrid(defaultBackground);
+  out[COL_LIT] = givenSurface(defaultBackground);
   return out;
 }
 
@@ -75,7 +77,8 @@ const CORNER_DR = 0x080;
 const CURSOR = 0x100;
 const BADFLASH = 0x200;
 const SOLNNEXT = 0x400;
-const COLOR_SHIFT = 11;
+const LIT = 0x800;
+const COLOR_SHIFT = 12;
 
 export interface FloodDrawState {
   started: boolean;
@@ -103,7 +106,8 @@ function drawTile(
   const ty = coord(y, ts);
   const sep = sepWidth(ts);
 
-  const color = tile & BADFLASH ? COL_MARK : (tile >> COLOR_SHIFT) + COL_1;
+  const color =
+    tile & BADFLASH ? COL_MARK : tile & LIT ? COL_LIT : (tile >> COLOR_SHIFT) + COL_1;
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, color);
 
   if (sep > 0) {
@@ -192,7 +196,7 @@ export function redraw(
   _dir: number,
   ui: FloodUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   activeHint?: HintStep<FloodMove>,
 ): void {
   const ts = ds.tileSize;
@@ -203,15 +207,8 @@ export function redraw(
     ds.started = true;
   }
 
-  // Flash type follows the terminal status: a won board flashes the victory
-  // rainbow, a lost board the defeat blink.
-  let flashframe = -1;
-  let victory = false;
-  if (flashTime > 0) {
-    victory = status(state) === "solved";
-    const frame = victory ? VICTORY_FLASH_FRAME : DEFEAT_FLASH_FRAME;
-    flashframe = Math.floor(flashTime / frame);
-  }
+  // The defeat blink: the board in the mark color, but for its second frame.
+  const blink = flash.time > 0 && Math.floor(flash.time / DEFEAT_FLASH_FRAME) !== 1;
 
   // Build the display grid (a mutable copy we may overlay onto).
   const grid = Uint8Array.from(state.grid);
@@ -224,16 +221,6 @@ export function redraw(
     hintColor = next.color;
     for (const p of stepMarks(activeHint).of("ring", CELL))
       grid[p.y * w + p.x] = ncolors;
-  }
-
-  // Victory rainbow: superimpose the radiating color wave.
-  if (flashframe >= 0 && victory) {
-    for (let x = 0; x < w; x++) {
-      for (let y = 0; y < h; y++) {
-        const flashpos = flashframe - (Math.abs(x - FILLX) + Math.abs(y - FILLY));
-        if (flashpos >= 0 && flashpos < ncolors) grid[y * w + x] = flashpos;
-      }
-    }
   }
 
   for (let x = 0; x < w; x++) {
@@ -253,7 +240,11 @@ export function redraw(
       if (x === w - 1 || y === h - 1 || grid[pos + w + 1] !== grid[pos])
         tile |= CORNER_DR;
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) tile |= CURSOR;
-      if (flashframe >= 0 && !victory && flashframe !== 1) tile |= BADFLASH;
+      if (blink) tile |= BADFLASH;
+      // The win flash spreads from the corner the fill starts in. A won board
+      // is one region, so a tile's distance through it is the count of
+      // squares across and down.
+      if (flash.win(Math.abs(x - FILLX) + Math.abs(y - FILLY))) tile |= LIT;
 
       if (ds.grid[pos] !== tile) {
         drawTile(dr, ts, x, y, tile);

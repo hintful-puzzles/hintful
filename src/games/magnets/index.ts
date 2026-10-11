@@ -30,7 +30,6 @@ import {
 import {
   colors,
   computeSize,
-  FLASH_TIME,
   type MagnetsDrawState,
   newDrawState,
   origin,
@@ -315,18 +314,16 @@ export const magnetsGame: Game<
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,
-  redraw: (dr, ds, _prev, s, _dir, ui, _animTime, flashTime, hintStep, mistakes) =>
+  redraw: (dr, ds, _prev, s, _dir, ui, _animTime, flash, hintStep, mistakes) =>
     redraw(
       dr,
       ds,
       s,
       ui,
-      flashTime,
+      flash,
       mistakes,
       hintStep as HintStep<MagnetsMove, MagnetsHighlights> | undefined,
     ),
-
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(magnetsGame);

@@ -37,6 +37,7 @@ import {
 } from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { BE, TE } from "./map-data.ts";
@@ -519,7 +520,7 @@ describe("map mistake overlay repaints on an already-drawn board", () => {
     // Frame 1: no overlay — warm the cache.
     const dr1 = new RecordingDrawing(mapGame.colors([0.9, 0.9, 0.9]));
     dr1.startDraw();
-    redraw(dr1, ds, null, state, 0, ui, 0, 0, undefined, []);
+    redraw(dr1, ds, null, state, 0, ui, 0, NO_FLASH, undefined, []);
     dr1.endDraw();
 
     // Frame 2: same drawstate, now with the mistake overlay.
@@ -527,7 +528,7 @@ describe("map mistake overlay repaints on an already-drawn board", () => {
     expect(mistakes.length).toBeGreaterThan(0);
     const dr2 = new RecordingDrawing(mapGame.colors([0.9, 0.9, 0.9]));
     dr2.startDraw();
-    redraw(dr2, ds, state, state, 0, ui, 0, 0, undefined, mistakes);
+    redraw(dr2, ds, state, state, 0, ui, 0, NO_FLASH, undefined, mistakes);
     dr2.endDraw();
 
     expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
@@ -751,7 +752,18 @@ describe("map tap selection", () => {
       ui.dragColor = 0;
       const dr = new RecordingDrawing(mapGame.colors([0.9, 0.9, 0.9]));
       dr.startDraw();
-      redraw(dr, newDrawState(state, TS), null, state, 0, ui, 0, 0, undefined, []);
+      redraw(
+        dr,
+        newDrawState(state, TS),
+        null,
+        state,
+        0,
+        ui,
+        0,
+        NO_FLASH,
+        undefined,
+        [],
+      );
       dr.endDraw();
       const ring = dr.ops.find((o) => o.op === "circle" && o.r === Math.floor(TS / 2));
       expect(ring, "the carried blob was not drawn").toBeDefined();
@@ -807,7 +819,7 @@ describe("the selected region's picture", () => {
     const ui = { ...newUi(state), ...over };
     placeCursorAtCoords(ui, TS, at.x, at.y);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, newDrawState(state, TS), null, state, 0, ui, 0, 0, undefined, []);
+    redraw(dr, newDrawState(state, TS), null, state, 0, ui, 0, NO_FLASH, undefined, []);
     return bandOps(dr);
   }
   function bandOps(dr: RecordingDrawing) {

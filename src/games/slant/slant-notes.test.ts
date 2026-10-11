@@ -21,6 +21,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE } from "./hint-marks.ts";
@@ -451,7 +452,7 @@ describe("slant marks render", () => {
       1,
       ui,
       0,
-      0,
+      NO_FLASH,
       hint as never,
       mistakes as never,
     );
@@ -505,9 +506,9 @@ describe("slant marks render", () => {
   it("marks are keyed per tile, so a new mark repaints the squares beside it", () => {
     const ds = slantGame.newDrawState(s, TS);
     const dr = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
-    slantGame.redraw(dr, ds, null, s, 1, ui, 0, 0);
+    slantGame.redraw(dr, ds, null, s, 1, ui, 0, NO_FLASH);
     const dr2 = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
-    slantGame.redraw(dr2, ds, s, executeMove(s, mark), 1, ui, 0, 0);
+    slantGame.redraw(dr2, ds, s, executeMove(s, mark), 1, ui, 0, NO_FLASH);
     expect(barsAcross(dr2.ops, COL_PENCIL)).toHaveLength(4);
   });
 

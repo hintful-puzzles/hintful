@@ -17,6 +17,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { say } from "./hint-text.ts";
 import { BRICKS_RUNGS, type BricksHint, bricksGame } from "./index.ts";
@@ -446,7 +447,17 @@ describe("bricks hint — rendering (tier 2.5)", () => {
       hint?: typeof step,
     ) => {
       const rec = new RecordingDrawing(palette);
-      bricksGame.redraw(rec, ds, null, state, 0, bricksGame.newUi(state), 0, 0, hint);
+      bricksGame.redraw(
+        rec,
+        ds,
+        null,
+        state,
+        0,
+        bricksGame.newUi(state),
+        0,
+        NO_FLASH,
+        hint,
+      );
       return rec.ops;
     };
 

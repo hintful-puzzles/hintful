@@ -28,6 +28,7 @@ import {
   cellSurface,
   ERROR,
   ERROR_TEXT,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   INK,
@@ -47,6 +48,7 @@ import {
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { LINK, NUMBER } from "./hint-marks.ts";
 import {
   BLANK,
@@ -74,7 +76,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.3;
 
 // --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0;
@@ -99,12 +100,15 @@ export const COL_INK = 13;
 /** A link between a tent and its tree: the ink of the clues, the color of the
  * player's own notation. */
 export const COL_LINK = COL_INK;
+/** The surface of a square the win flash is on: the lifted surface. */
+export const COL_LIT = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
   out[COL_BACKGROUND] = defaultBackground;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
+  out[COL_LIT] = givenSurface(defaultBackground);
   out[COL_INK] = INK;
   out[COL_GRASS] = GREEN_WASH;
   out[COL_TREETRUNK] = BROWN;
@@ -418,7 +422,7 @@ function drawTile(
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-    v === BLANK ? COL_CELL : COL_GRASS,
+    packed & FLASH_BIT ? COL_LIT : v === BLANK ? COL_CELL : COL_GRASS,
   );
   // The line the hint's sentence names, under the content so it stays whole.
   if (hintWord & HINT_LINE_BIT) {
@@ -531,7 +535,7 @@ export function redraw(
   _dir: number,
   ui: TentsUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<TentsMove>,
   mistakes?: readonly TentsMistake[],
 ): void {
@@ -558,8 +562,6 @@ export function redraw(
     }
     ds.started = true;
   }
-
-  const flashing = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_TIME) !== 1;
 
   // Errors: transform only the drag's start cell (upstream — instant single-
   // click feedback without right-drag flicker).
@@ -622,15 +624,14 @@ export function redraw(
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      let v = ui.drag.live ? dragXform(ui, state, x, y) : grid[i];
-      if (flashing && (v === TREE || v === TENT)) v = NONTENT;
+      const v = ui.drag.live ? dragXform(ui, state, x, y) : grid[i];
       let packed = v | errors.cell[i];
       const isCur = x === cx && y === cy;
       if (isCur) packed |= CURSOR_BIT;
       if (isCur && ui.linkArmed) packed |= ARMED_BIT;
-      if (flashing) packed |= FLASH_BIT;
+      if (flash.win(sweepStep(x, y))) packed |= FLASH_BIT;
       if (mistakeSet.has(i)) packed |= MISTAKE_BIT;
-      if (!flashing) packed |= links[i] << LINK_SHIFT;
+      packed |= links[i] << LINK_SHIFT;
       if (badLinkSet.has(i)) packed |= LINK_MISTAKE_BIT;
       let hintWord = outlines.packed(x, y) | (hintLinks[i] << HINT_LINK_SHIFT);
       if (onLine(x, y)) hintWord |= HINT_LINE_BIT;

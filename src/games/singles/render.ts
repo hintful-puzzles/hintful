@@ -31,6 +31,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SinglesHint } from "./index.ts";
 import {
   F_BLACK,
@@ -42,7 +43,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.7;
 
 // --- palette ---------------------------------------------------------------
 
@@ -50,7 +50,8 @@ export const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 /** The surface of a cell, which is all an undecided cell is. */
 export const COL_EMPTY = 2;
-/** The surface under every cell that holds no piece while the board flashes. */
+/** The surface under a cell that holds no piece while the win's highlight is
+ * on it. */
 export const COL_FLASH = 3;
 /** The number of a cell that holds no piece. */
 export const COL_TEXT = 4;
@@ -182,7 +183,7 @@ function tileRedraw(
   dr.drawRect({ x, y, w: ts, h: ts }, COL_GRID);
   const inner = { x, y, w: ts - 1, h: ts - 1 };
   const c = { x: x + inner.w / 2, y: y + inner.h / 2 };
-  dr.drawRect(inner, !shaded && f & DS_FLASH ? COL_FLASH : COL_EMPTY);
+  dr.drawRect(inner, f & DS_FLASH ? COL_FLASH : COL_EMPTY);
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
   if (f & DS_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
@@ -265,7 +266,7 @@ export function redraw(
   _dir: number,
   ui: SinglesUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SinglesMove, SinglesHint>,
   mistakes?: readonly Point[],
 ): void {
@@ -294,19 +295,16 @@ export function redraw(
     dr.drawUpdate({ x: o, y: o, w: ts * w + 1, h: ts * h + 1 });
   }
 
-  const flash = flashTime > 0 && Math.floor((flashTime * 5) / FLASH_TIME) % 2 === 1;
-
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const i = y * w + x;
       let f = 0;
 
-      if (flash) f |= DS_FLASH;
       if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y) f |= DS_CURSOR;
       if (state.flags[i] & F_BLACK) {
         f |= DS_BLACK;
         if (ui.showBlackNums) f |= DS_BLACK_NUM;
-      }
+      } else if (flash.win(sweepStep(x, y))) f |= DS_FLASH;
       if (state.flags[i] & F_CIRCLE) f |= DS_CIRCLE;
       if (state.flags[i] & F_ERROR) f |= DS_ERROR;
       if (mistakeSet.has(i)) f |= DS_MISTAKE;

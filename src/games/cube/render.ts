@@ -18,6 +18,7 @@ import {
 } from "../../engine/color/palette.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { type Bbox, enumGridSquares, findBbox } from "./grid.ts";
 import { SOLIDS, transformPoly } from "./solids.ts";
 import type { CubeParams, CubeState, KeyPair } from "./state.ts";
@@ -30,8 +31,8 @@ export const COL_BORDER = 1; // the solid's edges
 export const COL_PAINT = 2; // a painted square, and a face that has picked one up
 export const COL_GRID = 3; // the line between two squares of the arena
 export const COL_CELL = 4; // a plain square
-/** A plain face of the solid, lifted: the one thing on the board that stands
- * above it. */
+/** A plain face of the solid, lifted: the one thing on a settled board that
+ * stands above it. The win flash lifts a square of the arena to it too. */
 export const COL_SOLID = 5;
 
 export interface CubeDrawState {
@@ -86,7 +87,7 @@ export function redraw(
   dir: number,
   _ui: unknown,
   animTime: number,
-  _flashTime: number,
+  flash: Flash,
 ): void {
   const gs = ds.tileSize;
   const bb = ds.bbox;
@@ -132,13 +133,24 @@ export function redraw(
   for (let i = 0; i < grid.length; i++) {
     const sq = grid[i];
     const coords: Point[] = [];
+    let cx = 0;
+    let cy = 0;
     for (let j = 0; j < sq.npoints; j++) {
+      cx += sq.points[2 * j] / sq.npoints;
+      cy += sq.points[2 * j + 1] / sq.npoints;
       coords.push({
         x: Math.trunc(sq.points[2 * j] * gs) + ds.ox,
         y: Math.trunc(sq.points[2 * j + 1] * gs) + ds.oy,
       });
     }
-    dr.drawPolygon(coords, st.blue[i] ? COL_PAINT : COL_CELL, COL_GRID);
+    // The win flash sweeps the arena, lifting each square as it passes: a
+    // square's place is its center's, whatever shape the grid gives it.
+    const lit = flash.win(sweepStep(cx, cy));
+    dr.drawPolygon(
+      coords,
+      st.blue[i] ? COL_PAINT : lit ? COL_SOLID : COL_CELL,
+      COL_GRID,
+    );
   }
 
   // Compute and draw the polyhedron.

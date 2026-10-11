@@ -9,6 +9,8 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { TILE } from "./hint-text.ts";
 import { executeMove, fifteenGame } from "./index.ts";
 import { type FifteenState, newState } from "./state.ts";
@@ -35,6 +37,12 @@ function solved(w: number, h: number): FifteenState {
   return newState({ w, h }, vals.join(","));
 }
 
+/** The sweep's position of an element keyed `x,y`. */
+const sweepOf = (key: string): number => {
+  const [x, y] = key.split(",").map(Number);
+  return sweepStep(x, y);
+};
+
 function freshDs(state: FifteenState) {
   const ds = newDrawState(state, TS);
   return ds;
@@ -46,7 +54,7 @@ describe("Fifteen rendering", () => {
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
 
-    redraw(dr, ds, null, state, 0, UI, 0, 0);
+    redraw(dr, ds, null, state, 0, UI, 0, NO_FLASH);
 
     // The two recessed-border bevels are drawn (highlight=2, lowlight=3)
     // before any tiles.
@@ -64,11 +72,11 @@ describe("Fifteen rendering", () => {
     const state = executeMove(prev, { type: "move", x: 2, y: 3 }); // tile 15 → (3,3)
     const ds = freshDs(state);
     // Settle the cache with a static draw of the new state first…
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, 0);
+    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH);
 
     // …then redraw mid-animation from prev → state at half the anim time.
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, prev, state, 1, UI, 0.13 / 2, 0);
+    redraw(dr, ds, prev, state, 1, UI, 0.13 / 2, NO_FLASH);
 
     // Tile "15" is drawn at an x between its old column (2) and home
     // column (3): its settled center is coord(3)+ts/2 = 192; mid-slide it
@@ -79,16 +87,28 @@ describe("Fifteen rendering", () => {
     expect(moving?.x).toBeGreaterThan(120); // right of column 2's left edge
   });
 
-  it("flashes the background on a genuine completion frame", () => {
+  it("the win flash sweeps the tiles from the bottom left to the top right", () => {
     const state = solved(4, 4);
-    const ds = freshDs(state);
-    // Prime the cache.
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, 0);
-    const { dr, ops } = recordingDrawing();
-    // flashTime within the first frame → COL_HIGHLIGHT (2) background.
-    redraw(dr, ds, null, state, 0, UI, 0, 0.05);
-    // The gap cell is repainted with the flash background color.
-    expect(ops.some((o) => o.op === "rect" && o.color === 2)).toBe(true);
+    /** The tiles whose face, inside its bevel, is the well's surface (6), as
+     * `column,row`. The gap is the same color and a whole cell wide. */
+    const cell = (v: number) => Math.floor((v - TS / 2) / TS);
+    const run = winFlashRun(
+      (flash: Flash) => {
+        const { dr } = recordingDrawing();
+        redraw(dr, freshDs(state), null, state, 1, UI, 0, flash);
+        return dr;
+      },
+      (dr) =>
+        dr.ops.flatMap((op) =>
+          op.op === "rect" && op.color === 6 && op.w !== TS
+            ? [`${cell(op.x)},${cell(op.y)}`]
+            : [],
+        ),
+    );
+    // Every tile, and never the gap in the bottom right corner.
+    expectWinFlashTravels(run, 15, sweepOf);
+    expect(run.frames[0]).toEqual(["0,3"]);
+    expect(run.frames.flat()).not.toContain("3,3");
   });
 });
 
@@ -132,12 +152,12 @@ describe("the hint mark while the hinted slide animates", () => {
 
     const ds = freshDs(state);
     // Warm the cache with the still pre-move frame, hint displayed.
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, 0, step);
+    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH, step);
 
     // Halfway through the slide into the gap.
     const anim = fifteenGame.animLength?.(state, after, 1, UI) ?? 0;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, state, after, 1, UI, anim / 2, 0, step);
+    redraw(dr, ds, state, after, 1, UI, anim / 2, NO_FLASH, step);
 
     // The hint fill is drawTile's center rect, inset by the shared bevel
     // width, drawn at the tile's interpolated position — half a cell from its

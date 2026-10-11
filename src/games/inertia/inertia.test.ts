@@ -23,11 +23,14 @@ import {
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { inertiaGame } from "./index.ts";
 import {
   COL_AIM,
   COL_DEAD_PLAYER,
+  COL_FLASH,
   COL_GEM,
   COL_HINT,
   COL_MINE,
@@ -650,6 +653,48 @@ describe("inertia rendering", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
+  /** The squares whose floor is `color`, as the pixel each starts at. By its
+   * size: a stop's ring is cut with narrower bands of the same color. */
+  const floors = (s: InertiaState, flash: Flash, color: number): string[] => {
+    const dr = new RecordingDrawing(inertiaGame.colors([1, 1, 1]));
+    const ds = inertiaGame.newDrawState(s, 32);
+    inertiaGame.redraw(dr, ds, null, s, 1, inertiaGame.newUi(s), 0, flash);
+    return dr.ops.flatMap((o) =>
+      o.op === "rect" && o.color === color && o.w === 31 && o.h === 31
+        ? [`${o.x},${o.y}`]
+        : [],
+    );
+  };
+
+  it("the win flash sweeps the squares from the bottom left to the top right", () => {
+    const { params, desc } = board(["Sbbg", "bwbw", "bbbb", "gbbb"]);
+    const s0 = newState(params, desc);
+    const result = inertiaGame.solve?.(s0, s0);
+    if (!result?.ok) throw new Error("the fixture does not solve");
+    const won = inertiaGame.executeMove(s0, result.move);
+    expect(inertiaGame.status(won)).toBe("solved");
+    const run = winFlashRun(
+      (flash: Flash) => floors(won, flash, COL_FLASH),
+      (lit) => lit,
+    );
+    // Every square but the two walls, whose blocks cover their tiles.
+    expectWinFlashTravels(run, 14, (key) => {
+      const [x, y] = key.split(",").map(Number);
+      return sweepStep(x, y);
+    });
+  });
+
+  it("death blinks the whole board red, and a win paints none of it", () => {
+    const { params, desc } = board(["Sm", "bg"]);
+    const dead = play(newState(params, desc), E);
+    expect(dead.dead).toBe(true);
+    // On for the first and third of its three phases, off for the middle one.
+    expect(floors(dead, ownFlash(0.05), COL_DEAD_PLAYER).length).toBe(4);
+    expect(floors(dead, ownFlash(0.15), COL_DEAD_PLAYER)).toEqual([]);
+    expect(floors(dead, ownFlash(0.25), COL_DEAD_PLAYER).length).toBe(4);
+    expect(floors(dead, ownFlash(0.05), COL_FLASH)).toEqual([]);
+  });
+
   it("draws the aim arrow, in its own color, while a swipe is held", () => {
     // Tier 2 (a recording drawing straight into `redraw`): the aim arrow lives
     // on the Ui, and `renderScenario` deliberately replays moves rather than
@@ -663,7 +708,7 @@ describe("inertia rendering", () => {
     if (!redraw) throw new Error("expected a redraw");
     const paint = (u: InertiaUi) => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, s, 0, u, 0, 0);
+      redraw(dr, ds, null, s, 0, u, 0, NO_FLASH);
       return dr.ops;
     };
     const arrows = (ops: DrawOp[], color: number) =>

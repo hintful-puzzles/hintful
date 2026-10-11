@@ -22,11 +22,13 @@ import {
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { netslideGame } from "../netslide/index.ts";
 import { COL_LOWLIGHT } from "../netslide/render.ts";
 import { say } from "./hint-text.ts";
 import { executeMove, sixteenGame } from "./index.ts";
-import { COL_ARROW, type SixteenHintHighlights } from "./render.ts";
+import { COL_ARROW, COL_BACKGROUND, type SixteenHintHighlights } from "./render.ts";
 import {
   decodeParams,
   defaultParams,
@@ -1048,7 +1050,7 @@ describe("Sixteen hint rendering", () => {
     const ds = sixteenGame.newDrawState(s, 32);
 
     const { dr, ops } = recordingDrawing();
-    sixteenGame.redraw?.(dr, ds, null, s, 1, ui, 0, 0, result.steps[0]);
+    sixteenGame.redraw?.(dr, ds, null, s, 1, ui, 0, NO_FLASH, result.steps[0]);
 
     // The tile fill and target border (rects) and the arrow (polygon) all paint
     // in COL_HINT, which is color index 4.
@@ -1096,7 +1098,7 @@ describe("Sixteen hint rendering", () => {
       h?: typeof hint,
     ) => {
       const { dr, ops } = recordingDrawing();
-      sixteenGame.redraw(dr, ds, null, s, 1, ui, 0, 0, h);
+      sixteenGame.redraw(dr, ds, null, s, 1, ui, 0, NO_FLASH, h);
       return ops;
     };
 
@@ -1151,7 +1153,7 @@ describe("Sixteen hint track and direction fixes", () => {
     );
 
     const { dr: dr1 } = recordingDrawing();
-    sixteenGame.redraw?.(dr1, ds1, null, s1, 1, ui1, 0, 0, activeHint1);
+    sixteenGame.redraw?.(dr1, ds1, null, s1, 1, ui1, 0, NO_FLASH, activeHint1);
     // Since curCol (0) < targetCol (2), it should point right (ds1.hintArrowX = 3)
     const ds1Typed = ds1 as unknown as {
       hintArrowX: number | null;
@@ -1179,7 +1181,7 @@ describe("Sixteen hint track and direction fixes", () => {
     );
 
     const { dr: dr2 } = recordingDrawing();
-    sixteenGame.redraw?.(dr2, ds2, null, s2, 1, ui2, 0, 0, activeHint2);
+    sixteenGame.redraw?.(dr2, ds2, null, s2, 1, ui2, 0, NO_FLASH, activeHint2);
     // Since curCol (2) > targetCol (0), it should point left (ds2.hintArrowX = -1)
     const ds2Typed = ds2 as unknown as {
       hintArrowX: number | null;
@@ -1315,12 +1317,22 @@ describe("the hint marks while the hinted slide animates", () => {
 
     // Paint the still pre-move frame first, so the cache is warm exactly
     // as in the app when the hinted slide begins.
-    sixteenGame.redraw?.(recordingDrawing().dr, ds, null, state, 1, ui, 0, 0, step);
+    sixteenGame.redraw?.(
+      recordingDrawing().dr,
+      ds,
+      null,
+      state,
+      1,
+      ui,
+      0,
+      NO_FLASH,
+      step,
+    );
 
     // Halfway through the slide.
     const anim = sixteenGame.animLength?.(state, after, 1, ui) ?? 0;
     const { dr, ops } = recordingDrawing();
-    sixteenGame.redraw?.(dr, ds, state, after, 1, ui, anim / 2, 0, step);
+    sixteenGame.redraw?.(dr, ds, state, after, 1, ui, anim / 2, NO_FLASH, step);
     return { state, after, m, hl, from, ops };
   }
 
@@ -1360,5 +1372,43 @@ describe("the hint marks while the hinted slide animates", () => {
       x: px(hl.targetPos % w),
       y: px(Math.floor(hl.targetPos / w)),
     });
+  });
+});
+
+describe("Sixteen: the win flash", () => {
+  const state = solvedState(4, 4);
+  const ui = sixteenGame.newUi(state);
+  const palette = sixteenGame.colors(DEFAULT_BACKGROUND);
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(palette);
+    sixteenGame.redraw(
+      dr,
+      sixteenGame.newDrawState(state, 32),
+      null,
+      state,
+      1,
+      ui,
+      0,
+      flash,
+    );
+    return dr;
+  };
+  /** Where each tile whose face is the board's color, inside its bevel, is
+   * drawn, as `x,y`. */
+  const run = winFlashRun(paint, (dr) =>
+    dr.ops.flatMap((o) =>
+      o.op === "rect" && o.color === COL_BACKGROUND && o.w === o.h && o.w < 32
+        ? [`${o.x},${o.y}`]
+        : [],
+    ),
+  );
+  /** The sweep's diagonal through a square drawn at `at`. */
+  const diagonal = (at: string): number => {
+    const [x, y] = at.split(",").map(Number);
+    return sweepStep(x, y);
+  };
+
+  it("drops the face of every tile to the board in turn, from the bottom left to the top right", () => {
+    expectWinFlashTravels(run, state.n, diagonal);
   });
 });

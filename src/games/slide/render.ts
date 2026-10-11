@@ -14,7 +14,8 @@
  *  - the target area is tinted green wherever the main block would land;
  *  - the exit gate is outlined, so it reads that nothing but the main block may
  *    cross it;
- *  - completing the puzzle plays a three-interval flash.
+ *  - the win's highlight brightens each block whole, and the floor a square
+ *    at a time.
  *
  * ## The palette
  *
@@ -55,6 +56,7 @@ import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { coord as gridCoord } from "../../engine/geometry.ts";
 import type { Color, PaletteScheme, Point, Rect, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { movePiece } from "./moves.ts";
 import {
   cursorPos,
@@ -185,9 +187,6 @@ export const PREFERRED_TILE_SIZE = 32;
  * exactly `w*TILESIZE` by `h*TILESIZE` with no border at all. */
 export const BORDER = 0;
 
-export const FLASH_INTERVAL = 0.1;
-export const FLASH_TIME = 3 * FLASH_INTERVAL;
-
 const borderWidth = (ts: number): number => 1 + Math.floor(ts / 20);
 const highlightWidth = (ts: number): number => 1 + Math.floor(ts / 16);
 
@@ -201,17 +200,17 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
  * The keyboard cursor is on this square. It takes bit 0, which upstream spent
  * on a write-only `BG_NORMAL`.
  *
- * Bits 0–30 are now all in use (bit 31 is the `Int32Array`'s sign), so the next
- * overlay has to widen the diff key rather than find a spare flag. Widening is
- * cheap — it is a repaint cache, not a wire format — but must be deliberate,
- * because an overlay that does not fit in the word silently fails to repaint
+ * Bit 3 is the one spare flag (bit 31 is the `Int32Array`'s sign), so the
+ * overlay after the next has to widen the diff key. Widening is cheap — it is
+ * a repaint cache, not a wire format — but must be deliberate, because an
+ * overlay that does not fit in the word silently fails to repaint
  * (docs/games/rendering.md § "A packed diff key runs out of bits, and dead flags are where the next one comes from").
  */
 const FG_CURSOR = 0x00000001;
 const BG_TARGET = 0x00000002;
 const BG_FORCEFIELD = 0x00000004;
-const FLASH_LOW = 0x00000008;
-const FLASH_HIGH = 0x00000010;
+/** The win's highlight is on this square's block, or on its floor. */
+const LIT = 0x00000010;
 const FG_WALL = 0x00000020;
 const FG_MAIN = 0x00000040;
 const FG_NORMAL = 0x00000080;
@@ -576,11 +575,11 @@ function drawTile(
   const ty = gridCoord(gy, ts, BORDER);
 
   // Background: the floor, or the target area's green.
+  // A lit square's body, floor or block, is its material's highlight shade.
   let cc = val & BG_TARGET ? COL_TARGET : COL_BACKGROUND;
   let ch = cc + 1;
   let cl = cc + 2;
-  if (val & FLASH_LOW) cc = cl;
-  else if (val & FLASH_HIGH) cc = ch;
+  if (val & LIT) cc = ch;
 
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, cc);
   if (val & BG_FORCEFIELD) drawGate(dr, ts, tx, ty, val);
@@ -590,8 +589,6 @@ function drawTile(
     cc = COL_WALL;
     ch = cc + 1;
     cl = cc + 2;
-    if (val & FLASH_LOW) cc = cl;
-    else if (val & FLASH_HIGH) cc = ch;
 
     drawWallpart(dr, ts, tx, ty, (val >> FG_MAINPIECESH) & PIECE_MASK, cl, cc, ch);
   } else if (val & (FG_MAIN | FG_NORMAL)) {
@@ -599,9 +596,7 @@ function drawTile(
     else cc = val & FG_MAIN ? COL_MAIN : COL_BLOCK;
     ch = cc + 1;
     cl = cc + 2;
-
-    if (val & FLASH_LOW) cc = cl;
-    else if (val & FLASH_HIGH) cc = ch;
+    if (val & LIT) cc = ch;
 
     drawPiecepart(dr, ts, tx, ty, (val >> FG_MAINPIECESH) & PIECE_MASK, cl, cc, ch);
   }
@@ -664,7 +659,7 @@ export function redraw(
   _dir: number,
   ui: SlideUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
 ): void {
   const { w, h } = state;
   const wh = w * h;
@@ -712,9 +707,24 @@ export function redraw(
   const mainpos = dsf.canonify(mainanchor);
   const grabpos = ui.grabCurrpos > 0 ? dsf.canonify(ui.grabCurrpos) : -1;
   const cursor = ui.cursor.visible ? cursorPos(ui, w) : -1;
-  let flash = 0;
-  if (flashTime > 0)
-    flash = Math.floor(flashTime / FLASH_INTERVAL) & 1 ? FLASH_LOW : FLASH_HIGH;
+
+  // The win's highlight takes a block whole, when it reaches the block's
+  // middle, and the floor a square at a time. It leaves the wall alone.
+  const litBlocks = new Set<number>();
+  if (flash.winning) {
+    const middles = new Map<number, { x: number; y: number; n: number }>();
+    for (let i = 0; i < wh; i++) {
+      if (board[i] === EMPTY || board[i] === WALL) continue;
+      const canon = dsf.canonify(i);
+      const m = middles.get(canon) ?? { x: 0, y: 0, n: 0 };
+      m.x += i % w;
+      m.y += Math.floor(i / w);
+      m.n++;
+      middles.set(canon, m);
+    }
+    for (const [canon, m] of middles)
+      if (flash.win(sweepStep(m.x / m.n, m.y / m.n))) litBlocks.add(canon);
+  }
 
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -739,14 +749,15 @@ export function redraw(
         if (y === h - 1 || !state.forcefield[i + w]) val |= GATE_BBORDER;
       }
 
-      val |= flash;
-
-      if (board[i] !== EMPTY) {
+      if (board[i] === EMPTY) {
+        if (flash.win(sweepStep(x, y))) val |= LIT;
+      } else {
         const canon = dsf.canonify(i);
 
         if (board[i] === WALL) val |= FG_WALL;
         else if (canon === mainpos) val |= FG_MAIN;
         else val |= FG_NORMAL;
+        if (litBlocks.has(canon)) val |= LIT;
         if (canon === grabpos) val |= FG_GRABBED;
 
         val |= findPiecepart(w, h, dsf, x, y) << FG_MAINPIECESH;

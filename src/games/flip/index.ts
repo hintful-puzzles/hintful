@@ -37,7 +37,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_FRAME,
   type FlipDrawState,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -344,10 +343,6 @@ export const flipGame: Game<
 
   animLength() {
     return ANIM_TIME;
-  },
-
-  solvedFlash(s) {
-    return FLASH_FRAME * (Math.max(((s.w + 1) / 2) | 0, ((s.h + 1) / 2) | 0) + 1);
   },
 };
 

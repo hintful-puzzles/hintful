@@ -46,6 +46,7 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   bitcount,
   EMPTY,
@@ -58,13 +59,12 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
-export const FLASH_TIME = 0.7;
 
 // --- palette --------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-/** The lifted surface under a clue, and under every cell on the solved
- * flash's lit beats. */
+/** The lifted surface under a clue, and under a cell the win flash's
+ * highlight is on. */
 export const COL_GIVEN = 1;
 export const COL_GRID = 2; // == COL_CLUE == COL_LINE_YES
 export const COL_LINE_MAYBE = 3;
@@ -136,14 +136,13 @@ export function redraw(
   _dir: number,
   ui: PalisadeUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<PalisadeMove, PalisadeHint>,
   mistakes?: readonly PalisadeMistake[],
 ): void {
   const ts = ds.tileSize;
   const { w, h, k, clues, borders } = state;
   const wh = w * h;
-  const flash = Math.floor((flashTime * 5) / FLASH_TIME) % 2;
 
   const hintMask = hintTileBits(w, h, stepMarks(hint));
 
@@ -181,7 +180,7 @@ export function redraw(
 
       if (validRoot.get(blackDsf.canonify(i))) flags |= F_CORRECT;
       if (clue !== EMPTY) flags |= F_GIVEN;
-      if (flash) flags |= F_FLASH;
+      if (flash.win(sweepStep(c, r))) flags |= F_FLASH;
 
       const on = bitcount(borders[i]);
       const off = bitcount((borders[i] >> 4) & BORDER_MASK);

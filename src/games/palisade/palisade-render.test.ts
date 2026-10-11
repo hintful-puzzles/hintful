@@ -11,12 +11,15 @@ import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";
 import {
   COL_CORRECT,
   COL_CURSOR,
   COL_ERROR,
+  COL_GIVEN,
   COL_GRID,
   COL_HINT,
   COL_HINT_CELL,
@@ -61,7 +64,7 @@ describe("Palisade redraw", () => {
   it("draws clue text and unknown edges in line-maybe on first draw", () => {
     const state = makeState();
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, 0);
+    redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH);
 
     // Some clue digit was rendered.
     expect(ops.some((o) => o.op === "text" && /^[0-4]$/.test(o.text ?? ""))).toBe(true);
@@ -83,7 +86,7 @@ describe("Palisade redraw", () => {
     s.borders[i - 1] |= BORDER(1);
 
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(s), null, s, 0, freshUi(), 0, 0);
+    redraw(dr, freshDs(s), null, s, 0, freshUi(), 0, NO_FLASH);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 
@@ -93,7 +96,7 @@ describe("Palisade redraw", () => {
     // Untouched board: one big undivided region ⇒ no correct shade.
     {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, 0);
+      redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH);
       expect(ops.some((o) => o.op === "rect" && o.color === COL_CORRECT)).toBe(false);
     }
 
@@ -104,14 +107,43 @@ describe("Palisade redraw", () => {
     if (!sol) return;
     const solved = { ...state, borders: sol.slice() };
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(solved), null, solved, 0, freshUi(), 0, 0);
+    redraw(dr, freshDs(solved), null, solved, 0, freshUi(), 0, NO_FLASH);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_CORRECT)).toBe(true);
+  });
+
+  it("sweeps the win flash from the bottom left to the top right", () => {
+    const state = makeState();
+    const sol = solveToBorders(P, state.clues);
+    if (!sol) throw new Error("the board has no solution");
+    const solved = { ...state, borders: sol.slice() };
+    const paint = (flash: Flash) => {
+      const { dr, ops } = recordingDrawing();
+      redraw(dr, freshDs(solved), null, solved, 1, freshUi(), 0, flash);
+      return ops;
+    };
+    // The cells on the lifted surface, each as its index. Every region of a
+    // solved board is finished, so no clue's cell is on it for its own sake.
+    const run = winFlashRun(paint, (ops) => {
+      const clips = opsOfKind(ops, "clip");
+      const left = Math.min(...clips.map((o) => o.x));
+      const top = Math.min(...clips.map((o) => o.y));
+      const cells: number[] = [];
+      let cell = -1;
+      for (const o of ops) {
+        if (o.op === "clip") cell = ((o.y - top) / TS) * P.w + (o.x - left) / TS;
+        else if (o.op === "rect" && o.color === COL_GIVEN) cells.push(cell);
+      }
+      return cells;
+    });
+    expectWinFlashTravels(run, P.w * P.h, (i) =>
+      sweepStep(i % P.w, Math.floor(i / P.w)),
+    );
   });
 
   it("reddens a findMistakes overlay edge", () => {
     const state = makeState();
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, 0, undefined, [
+    redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH, undefined, [
       { x: 1, y: 1, dir: 1 },
     ]);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
@@ -148,7 +180,7 @@ describe("Palisade redraw", () => {
       0,
       freshUi(),
       0,
-      0,
+      NO_FLASH,
       stepRinging([own, { x: 1, y: 1, dir: 2 }]),
     );
     // The action edge AND its sibling both paint COL_HINT (they share a
@@ -166,7 +198,7 @@ describe("Palisade redraw", () => {
       0,
       freshUi(),
       0,
-      0,
+      NO_FLASH,
       stepRinging([own]),
     );
     expect(hintRects(alone.ops)).toBeGreaterThan(0);
@@ -175,7 +207,7 @@ describe("Palisade redraw", () => {
 
     // With no hint, none of the hint colors appear.
     const { dr: dr2, ops: ops2 } = recordingDrawing();
-    redraw(dr2, freshDs(state), null, state, 0, freshUi(), 0, 0);
+    redraw(dr2, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH);
     expect(
       ops2.some(
         (o) => "color" in o && (o.color === COL_HINT || o.color === COL_HINT_CELL),
@@ -190,7 +222,7 @@ describe("Palisade redraw", () => {
     ui.cursor.x = 1;
     ui.cursor.y = 2; // a left-border position
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 0, ui, 0, 0);
+    redraw(dr, freshDs(state), null, state, 0, ui, 0, NO_FLASH);
     expect(ops.some((o) => o.op === "line" && o.color === COL_CURSOR)).toBe(true);
   });
 });

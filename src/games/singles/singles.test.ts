@@ -21,14 +21,20 @@ import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { newSinglesDesc } from "./generator.ts";
 import { type SinglesMistake, singlesGame } from "./index.ts";
 
 // Under 4 squares both ways, at Normal.
 describeAbsentTiers(singlesGame, ["2x2dk", "2x3dk", "3x2dk", "3x3dk"]);
 
-import { COL_ERROR, COL_GRID } from "./render.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { COL_ERROR, COL_FLASH, COL_GRID } from "./render.ts";
 import { solveSpecific } from "./solver.ts";
 import {
   cloneState,
@@ -210,5 +216,42 @@ describe("singles render", () => {
     });
     expect(mistakeCount).toBeGreaterThan(0);
     expect(recording.ops.some((o) => "color" in o && o.color === COL_ERROR)).toBe(true);
+  });
+});
+
+describe("singles: the win flash", () => {
+  // Any numbers serve: one blackened cell in the middle, off both corners.
+  const state = makeState(3, 3, Int8Array.from([1, 2, 3, 2, 3, 1, 3, 1, 2]));
+  state.flags[4] |= F_BLACK;
+  const ui = singlesGame.newUi(state);
+  const palette = singlesGame.colors(DEFAULT_BACKGROUND);
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(palette);
+    singlesGame.redraw(
+      dr,
+      singlesGame.newDrawState(state, 32),
+      null,
+      state,
+      1,
+      ui,
+      0,
+      flash,
+    );
+    return dr;
+  };
+  /** Where each square painted in the flash color is drawn, as `x,y`. */
+  const run = winFlashRun(paint, (dr) =>
+    dr.ops.flatMap((o) =>
+      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+    ),
+  );
+  /** The sweep's diagonal through a square drawn at `at`. */
+  const diagonal = (at: string): number => {
+    const [x, y] = at.split(",").map(Number);
+    return sweepStep(x, y);
+  };
+
+  it("lifts every cell that holds no piece, and never the blackened one, from the bottom left to the top right", () => {
+    expectWinFlashTravels(run, state.n - 1, diagonal);
   });
 });

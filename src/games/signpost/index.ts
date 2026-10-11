@@ -16,7 +16,6 @@ import {
 } from "../../engine/answer-search.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
-import type { GamePref } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
@@ -58,7 +57,7 @@ import {
   signpostKeepTrack,
 } from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
-import { BORDER, buildPalette, FLASH_SPIN, redrawSignpost } from "./render.ts";
+import { BORDER, buildPalette, redrawSignpost } from "./render.ts";
 import { answerOf, solverFinishes } from "./solver.ts";
 import {
   checkCompletion,
@@ -193,7 +192,6 @@ function newUi(_state: SignpostState): SignpostUi {
     sy: 0,
     dx: 0,
     dy: 0,
-    gearMode: false,
   };
 }
 
@@ -359,21 +357,6 @@ function textFormat(s: SignpostState): string {
   return ret;
 }
 
-// --- preferences -----------------------------------------------------
-
-const prefs: GamePref<SignpostUi>[] = [
-  {
-    kw: "flash-type",
-    name: "Victory rotation effect",
-    type: "choices",
-    choices: ["Unidirectional", "Meshing gears"],
-    get: (ui) => (ui.gearMode ? 1 : 0),
-    set: (ui, v) => {
-      ui.gearMode = v === 1;
-    },
-  },
-];
-
 // --- rendering plumbing ----------------------------------------------
 
 function colors(defaultBackground: Color): Color[] {
@@ -394,7 +377,6 @@ function newDrawState(s: SignpostState, tileSize: number): SignpostDrawState {
     cache: new Int32Array(s.n).fill(-1),
     nums: new Int32Array(s.n).fill(-1),
     dirp: new Int32Array(s.n).fill(-2),
-    angleOffset: 0,
     dragging: false,
     dragBackground: null,
     dragX: 0,
@@ -471,14 +453,11 @@ export const signpostGame: Game<
 
   textFormat,
 
-  prefs,
-
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,
   redraw: redrawSignpost,
-  solvedFlash: () => FLASH_SPIN,
   animLength: () => 0,
 };
 

@@ -8,6 +8,7 @@ import {
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SamegameState, SamegameUi } from "./state.ts";
 
 // --- tile-size metrics ------------------------------------------------
@@ -31,6 +32,7 @@ const TILE_JOINDOWN = 0x0400;
 const TILE_JOINDIAG = 0x0800;
 const TILE_HASSEL = 0x1000;
 const TILE_IMPOSSIBLE = 0x2000;
+const TILE_LIT = 0x4000;
 
 // --- color palette indices -------------------------------------------
 
@@ -43,8 +45,8 @@ const COL_INK = 10;
 const COL_SEL = 11;
 /** The field: an emptied cell, and the gap between two tiles. */
 const COL_CELL = 12;
-/** The field on the lit beats of the flash. */
-const COL_FLASH = 13;
+/** The field where a flash lights it. */
+export const COL_FLASH = 13;
 /** The frame round the field. */
 const COL_GRID = 14;
 /** The cursor on a tile. */
@@ -81,8 +83,9 @@ export interface SamegameDrawState {
   tileSize: number;
   tileinner: number;
   tilegap: number;
-  /** Last-drawn background color index (flash drives this globally). */
-  bgcolor: number;
+  /** The color the margin was last drawn in, which the stuck board's flash
+   * changes. */
+  margin: number;
   /** Per-cell cache of the last-drawn packed tile value; `-1` forces a
    * redraw (the no-BigInt Int32Array cache pattern). */
   grid: Int32Array;
@@ -96,7 +99,7 @@ export function newDrawState(
     tileSize,
     tileinner: tileSize - gap(tileSize),
     tilegap: gap(tileSize),
-    bgcolor: -1,
+    margin: -1,
     grid: new Int32Array(state.w * state.h).fill(-1),
   };
 }
@@ -188,7 +191,7 @@ function tileRedraw(
 /**
  * The field's margin and the frame round it: the tiles stand one gap in from
  * a frame one pixel wide, so the edge of the field is spaced as two tiles are.
- * The margin is field, and flashes with it.
+ * The margin is field, and a stuck board's flash lights it with the cells.
  */
 function drawFrame(
   dr: GameDrawing,
@@ -215,16 +218,17 @@ export function redraw(
   _dir: number,
   ui: SamegameUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
 ): void {
   const ts = ds.tileSize;
   const { w, h } = state;
 
-  // The field lifts on the flash's even beats and rests on its odd ones.
-  const lit = flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) % 2 === 0;
-  const bgcolor = lit ? COL_FLASH : COL_CELL;
-  const bgChanged = ds.bgcolor !== bgcolor;
-  if (bgChanged) drawFrame(dr, w, h, ts, bgcolor);
+  // A stuck board's flash lifts the whole field on its even beats and rests it
+  // on its odd ones. A win's highlight crosses the cells and leaves the margin.
+  const stuckLit = flash.time > 0 && Math.floor(flash.time / FLASH_FRAME) % 2 === 0;
+  const margin = stuckLit ? COL_FLASH : COL_CELL;
+  const marginChanged = ds.margin !== margin;
+  if (marginChanged) drawFrame(dr, w, h, ts, margin);
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
@@ -253,12 +257,15 @@ export function redraw(
         !state.impossible
       )
         tile |= TILE_HASSEL;
+      if (stuckLit || flash.win(sweepStep(x, y))) tile |= TILE_LIT;
 
-      if (ds.grid[i] !== tile || bgChanged) {
+      // The margin's repaint covers the field, so every tile follows it.
+      if (ds.grid[i] !== tile || marginChanged) {
+        const bgcolor = tile & TILE_LIT ? COL_FLASH : COL_CELL;
         tileRedraw(dr, ds, x, y, dright, dbelow, tile, bgcolor);
         ds.grid[i] = tile;
       }
     }
   }
-  ds.bgcolor = bgcolor;
+  ds.margin = margin;
 }

@@ -93,7 +93,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  solvedFlash,
 } from "./render.ts";
 import {
   type HintOp,
@@ -828,7 +827,6 @@ export const groupGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash,
 };
 
 registerGame(groupGame);

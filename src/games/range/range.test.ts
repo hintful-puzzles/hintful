@@ -168,7 +168,6 @@ describe("executeMove", () => {
     expect(rangeGame.status(st)).toBe("solved");
     const after = rangeGame.executeMove(st, { sets: [{ r: 0, c: 0, value: "white" }] });
     expect(rangeGame.status(after)).toBe("solved");
-    expect(rangeGame.solvedFlash?.(after, { cursor: newCursor() })).toBeGreaterThan(0);
     // Blacking an end hides the clue's run: no longer solved.
     const broken = rangeGame.executeMove(after, {
       sets: [{ r: 0, c: 2, value: "black" }],

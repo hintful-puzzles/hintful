@@ -80,7 +80,6 @@ import { say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
-  FLASH_TIME,
   fromCoord,
   type MathraxDrawState,
   type MathraxHint,
@@ -647,7 +646,6 @@ export const mathraxGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(mathraxGame);

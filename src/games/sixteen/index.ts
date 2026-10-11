@@ -43,7 +43,6 @@ import {
   cellCenter,
   colors,
   computeSize,
-  FLASH_FRAME,
   fromCoord,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -797,7 +796,6 @@ export const sixteenGame: Game<
     }
     return ANIM_TIME;
   },
-  solvedFlash: () => 2 * FLASH_FRAME,
 };
 
 registerGame(sixteenGame);

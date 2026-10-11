@@ -7,11 +7,11 @@
  * and a `w × h` block of cells: each holds an entered letter (red on an
  * adjacency violation, else the guess color) or, when empty, its pencil marks.
  * Under diagonal mode each interior corner carries a small cross as the
- * no-diagonal-touch cue. A solved board runs a diagonal-stripe flash. The
+ * no-diagonal-touch cue. A solved board's win flash lifts its cells. The
  * geometry is upstream's `NARROW_BORDERS` arm, which has no border.
  *
  * A cell's pixels depend only on its own letter, pencil marks and a small flag
- * set (cursor, pencil cursor, adjacency error, flash phase), so a per-tile
+ * set (cursor, pencil cursor, adjacency error, the win flash), so a per-tile
  * `Int32Array` cache suffices, with the Check & Save overlay in a sidecar so a
  * mistaken but unchanged cell still repaints (docs/games/rendering.md § "The
  * tile cache and the diff key").
@@ -23,6 +23,7 @@ import {
   cellSurface,
   ERROR,
   GRID_MID,
+  givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
   highlightWash,
@@ -58,6 +59,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { AbcdHint } from "./hint.ts";
 import { CLUE } from "./hint-text.ts";
 import {
@@ -72,8 +74,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 36;
-export const FLASH_TIME = 0.7;
-const FLASH_FRAME = 0.1;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
@@ -85,27 +85,27 @@ export const COL_TEXT = 4;
 export const COL_GUESS = 5;
 export const COL_ERROR = 6;
 export const COL_PENCIL = 7;
-export const COL_HIGHLIGHT = 8;
-export const COL_LOWLIGHT = 9;
+/** A cell the win flash is on: the lifted surface. */
+export const COL_FLASH = 8;
+/** The line between two cells, and the frame. The diagonal-mode corner crosses
+ * are a rule and stay `COL_GRID`. */
+export const COL_LINE = 9;
 // Fork addition, appended past the upstream enum: the yellow body of the shared
 // pencil-mode indicator glyph.
 export const COL_PENCIL_BODY = 10;
 /** The highlight's wash, in both its full-cell and its corner form. Upstream
- * used `COL_HIGHLIGHT`, mkhighlight's near-white, which the dark-mode pass
- * inverts to near-black; that one stays the completion flash's light stripe. */
+ * used mkhighlight's near-white, which the dark-mode pass inverts to
+ * near-black. */
 export const COL_CURSOR = 11;
 /** The hint's action color: its target rings, hatch and the clue it reads. */
 export const COL_HINT = 12;
 /** The hint's evidence color: the outline of the squares a reason rests on. */
 export const COL_HINT_CELL = 13;
 export const COL_CELL = 14; // the surface of a cell the player fills
-/** The line between two cells, and the frame. The diagonal-mode corner crosses
- * are a rule and stay `COL_GRID`. */
-export const COL_LINE = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const outer = defaultBackground;
-  const { background: inner, highlight, lowlight } = mkhighlight(defaultBackground);
+  const { background: inner } = mkhighlight(defaultBackground);
   const out: Color[] = [];
   out[COL_OUTERBG] = outer;
   out[COL_INNERBG] = inner;
@@ -115,8 +115,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GUESS] = playerEntryColor(inner);
   out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(inner);
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_FLASH] = givenSurface(outer);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   // A fill under the letter and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
@@ -156,8 +155,8 @@ export function computeSize(p: { w: number; h: number; n: number }, ts: number):
 const K_LETTER = 0; // bits 0-3: letter + 1 (0 = empty)
 const K_HIGHLIGHT = 4; // bits 4-5: the cell's `CellHighlight`
 const DF_ERR = 1 << 6; // this letter breaks an adjacency rule
-const K_FLASH = 7; // bits 7-8: flash phase + 1 (0 = not flashing)
-const K_PENCIL = 9; // bits 9+: the n-bit pencil-mark mask
+const DF_FLASH = 1 << 7; // the win flash is on this cell
+const K_PENCIL = 8; // bits 8+: the n-bit pencil-mark mask
 
 export interface AbcdDrawState {
   started: boolean;
@@ -355,29 +354,24 @@ function drawTile(
   x: number,
   y: number,
   fs: number,
-  flash: number,
   wrong: boolean,
 ): void {
   const ts = ds.tileSize;
   const { w, n, diag } = state.params;
   const tx = innerCoord(x, ts, n);
   const ty = innerCoord(y, ts, n);
-  const flashing = flash >= 0;
+  const lit = (fs & DF_FLASH) !== 0;
   const i = y * w + x;
   const letter = state.grid[i];
   const box = cellBox(x, y, ts, n);
 
-  // Background: a diagonal stripe while flashing, else the cell's highlight.
+  // Background: lifted while the win flash is on the cell, else its highlight.
   drawCellBackground(
     dr,
     box,
-    flashing ? HIGHLIGHT_NONE : (((fs >> K_HIGHLIGHT) & 3) as CellHighlight),
+    lit ? HIGHLIGHT_NONE : (((fs >> K_HIGHLIGHT) & 3) as CellHighlight),
     COL_CURSOR,
-    flashing && (x + y) % 3 === flash
-      ? COL_HIGHLIGHT
-      : flashing && (x + y + 2) % 3 === flash
-        ? COL_LOWLIGHT
-        : COL_CELL,
+    lit ? COL_FLASH : COL_CELL,
   );
   ds.hint.drawHatch(dr, i, box, COL_HINT, ts);
 
@@ -488,7 +482,7 @@ export function redraw(
   _dir: number,
   ui: AbcdUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<AbcdMove, AbcdHint>,
   mistakes?: readonly Point[],
 ): void {
@@ -500,7 +494,6 @@ export function redraw(
     ds.started = true;
   }
 
-  const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   const index = (x: number, y: number): number => y * w + x;
   ds.wrong.packCells(mistakes ?? null, index);
   const marks = stepMarks(hint);
@@ -552,14 +545,14 @@ export function redraw(
       let fs = 0;
       fs |= cellHighlight(ui, x, y) << K_HIGHLIGHT;
       if (adjErr[i]) fs |= DF_ERR;
+      if (flash.win(sweepStep(x, y))) fs |= DF_FLASH;
 
       const letter = state.grid[i];
       const pencilMask = letter === EMPTY ? state.pencil[i] : 0;
-      const tile =
-        (letter << K_LETTER) | fs | ((flash + 1) << K_FLASH) | (pencilMask << K_PENCIL);
+      const tile = (letter << K_LETTER) | fs | (pencilMask << K_PENCIL);
 
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
-        drawTile(dr, ds, state, x, y, fs, flash, ds.wrong.at(i));
+        drawTile(dr, ds, state, x, y, fs, ds.wrong.at(i));
         ds.tiles[i] = tile;
         ds.wrong.commit(i);
         ds.hint.commit(i);

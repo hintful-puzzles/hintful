@@ -39,7 +39,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   PLACE_ANIM_TIME,
   PREFERRED_TILE_SIZE,
@@ -348,7 +347,6 @@ export const unrulyGame: Game<
   redraw,
 
   animLength,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(unrulyGame);

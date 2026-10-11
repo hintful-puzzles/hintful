@@ -395,7 +395,7 @@ export function repaintDifferential(
     ...game,
     // The midend's own drawing is a sink: the warm frame is recorded here.
     redraw: (_dr, ds, prev, s, dir, ui, anim, flash, hint, mistakes, deadEnd) => {
-      moving = anim > 0 || flash > 0;
+      moving = anim > 0 || flash.time > 0 || flash.winning;
       if (moving) reached.animated++;
       if (hint) reached.hinted++;
       if (mistakes && mistakes.length > 0) reached.mistaken++;

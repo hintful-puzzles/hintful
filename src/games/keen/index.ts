@@ -77,7 +77,6 @@ import {
   colors,
   computeSize,
   coord,
-  FLASH_TIME,
   fromCoord,
   type KeenDrawState,
   type KeenHint,
@@ -507,7 +506,6 @@ export const keenGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(keenGame);

@@ -65,7 +65,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -569,7 +568,6 @@ export const sticksGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(sticksGame);

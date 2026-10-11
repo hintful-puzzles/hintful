@@ -29,6 +29,7 @@ import {
   type DrawOp,
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newAscentDesc } from "./generator.ts";
 import { ascentGame } from "./index.ts";
 import { COL_PATH, COL_TARGET } from "./render.ts";
@@ -375,7 +376,7 @@ describe("ascent edge-drag guide line", () => {
     set(ui);
     const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
     const rec = new RecordingDrawing(ascentGame.colors([0.83, 0.83, 0.83]));
-    ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, 0);
+    ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, NO_FLASH);
     return rec.ops.filter(
       (o): o is Extract<DrawOp, { op: "rect" }> =>
         o.op === "rect" && o.color === COL_TARGET,
@@ -451,7 +452,7 @@ describe("ascent typed-number line preview", () => {
       }
       const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
       const rec = new RecordingDrawing(ascentGame.colors([0.83, 0.83, 0.83]));
-      ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, 0);
+      ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, NO_FLASH);
       return rec.ops.filter((o) => o.op === "line" && o.color === COL_PATH).length;
     };
 

@@ -192,8 +192,7 @@ function statusbarText(state: SamegameState, ui: SamegameUi): string {
 
 // --- flash ------------------------------------------------------------
 
-/** A board that gets stuck flashes as a win does, though the status does not
- * show it; the win's own flash is {@link samegameGame.solvedFlash}. */
+/** A board that gets stuck flashes, though the status does not show it. */
 function flashLength(
   oldState: SamegameState,
   newState: SamegameState,
@@ -249,7 +248,6 @@ export const samegameGame: Game<
 
   animLength: () => 0,
   flashLength,
-  solvedFlash: () => 2 * FLASH_FRAME,
   // A stuck board is not a loss (the player undoes and plays on), yet nobody
   // is playing it, so the timer holds on it.
   timerHolds: isStuck,

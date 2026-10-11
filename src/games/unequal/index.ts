@@ -87,7 +87,6 @@ import {
   colors,
   computeSize,
   coord,
-  FLASH_TIME,
   fromCoord,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -670,7 +669,6 @@ export const unequalGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(unequalGame);

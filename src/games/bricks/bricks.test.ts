@@ -41,11 +41,20 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { repaintDifferential } from "../../engine/testing/repaint-differential.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Point } from "../../engine/types.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { newBricksDesc } from "./generator.ts";
 import { bricksGame } from "./index.ts";
-import { COL_CLEAR, COL_CLEAR_MARK, COL_ERROR, offsets } from "./render.ts";
+import {
+  COL_CLEAR,
+  COL_CLEAR_MARK,
+  COL_ERROR,
+  COL_GIVEN,
+  offsets,
+  PREFERRED_TILE_SIZE,
+} from "./render.ts";
 import { bricksValidate, findMistakes, solveGame } from "./solver.ts";
 import {
   applyBounds,
@@ -380,7 +389,7 @@ describe("bricks completion and solve (through a real Midend)", () => {
     expect(text).not.toContain("."); // no cell left empty
   });
 
-  it("manually filling the solution completes the board, which has a flash", () => {
+  it("manually filling the solution completes the board, and the win flash sweeps it", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
     const grid = st.grid.slice();
     solveGame(grid, st.w, st.h, 2, true, true);
@@ -392,7 +401,32 @@ describe("bricks completion and solve (through a real Midend)", () => {
     const done = bricksGame.executeMove(st, { kind: "paint", cells });
     expect(bricksGame.status(st)).toBe("ongoing");
     expect(bricksGame.status(done)).toBe("solved");
-    expect(bricksGame.solvedFlash?.(done, bricksGame.newUi(st))).toBeGreaterThan(0);
+
+    // The cells on the lifted surface, as their origins. The flash swaps a
+    // cell's surface, so a lit cell is one that has it where a settled frame
+    // has not, or a clue's that has lost it.
+    const palette = bricksGame.colors([0.9, 0.9, 0.9]);
+    const paint = (flash: Flash): string[] => {
+      const dr = new RecordingDrawing(palette);
+      const ds = bricksGame.newDrawState(done, PREFERRED_TILE_SIZE);
+      bricksGame.redraw(dr, ds, null, done, 1, bricksGame.newUi(done), 0, flash);
+      return dr.ops.flatMap((o) =>
+        o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
+      );
+    };
+    const clues = new Set(paint(NO_FLASH));
+    const run = winFlashRun(paint, (lifted) => [
+      ...lifted.filter((c) => !clues.has(c)),
+      ...[...clues].filter((c) => !lifted.includes(c)),
+    ]);
+    // A cell's place in the sweep is its drawn origin's, x less y: the rows
+    // are sheared, so it is not the grid's.
+    expect(clues.size).toBeGreaterThan(0);
+    expectWinFlashTravels(
+      run,
+      cells.length + clues.size,
+      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
+    );
   });
 
   it("saveGame -> loadGame restores an equivalent game", () => {

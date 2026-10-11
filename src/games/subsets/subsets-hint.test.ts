@@ -18,6 +18,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { subsetsGame } from "./index.ts";
@@ -698,7 +699,7 @@ describe("reference-aid rendering (tier 2.5)", () => {
       highlightCell: null,
       tallyCursor: null,
     };
-    redraw(rec, ds, null, state, 0, ui, 0, 0, undefined, undefined);
+    redraw(rec, ds, null, state, 0, ui, 0, NO_FLASH, undefined, undefined);
     expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(
       true,
     );

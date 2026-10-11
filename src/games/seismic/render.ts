@@ -66,6 +66,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SeismicHint } from "./hint.ts";
 import {
   FM_ERRORMASK,
@@ -77,8 +78,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 40;
-export const FLASH_TIME = 0.7;
-const FLASH_FRAME = 0.1;
 
 /** Width of a region wall, in pixels. */
 const GRIDEXTRA = 1;
@@ -109,10 +108,9 @@ export const COL_PENCIL_BODY = 9;
  * from. Both are drawn on a cell's edge rather than behind its notes. */
 export const COL_HINT = 10;
 export const COL_HINT_CELL = 11;
-/** The highlight's wash, in both its full-cell and its corner form, and the
- * completion wave's dim beat. */
+/** The highlight's wash, in both its full-cell and its corner form. */
 export const COL_CURSOR = 12;
-/** The completion wave's bright beat. */
+/** A cell the win's highlight is on. */
 export const COL_FLASH = 13;
 
 export function colors(background: Color): Color[] {
@@ -399,7 +397,7 @@ export function redraw(
   _dir: number,
   ui: SeismicUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SeismicMove, SeismicHint>,
   mistakes?: readonly { x: number; y: number }[],
 ): void {
@@ -421,10 +419,6 @@ export function redraw(
     ds.started = true;
   }
 
-  // The completion flash runs a three-phase diagonal wave; the cursor is hidden
-  // while it plays.
-  const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
-
   const index = (x: number, y: number): number => y * w + x;
   ds.wrong.packCells(mistakes ?? null, index);
   ds.hint.pack(stepMarks(hint), index, (m) => valueBit(m.n));
@@ -432,23 +426,16 @@ export function redraw(
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      const highlight = flash === -1 ? cellHighlight(ui, x, y) : HIGHLIGHT_NONE;
-      // The wave's three beats: the cell's own surface, a dim one, a bright one.
-      const beat = flash === -1 ? 0 : (x + y + 3 - flash) % 3;
-      const color =
-        beat === 2
-          ? COL_CURSOR
-          : beat === 1
-            ? COL_FLASH
-            : state.flags[i] & FM_FIXED
-              ? COL_GIVEN
-              : COL_CELL;
+      // The cursor is hidden while the win flash plays.
+      const highlight = flash.winning ? HIGHLIGHT_NONE : cellHighlight(ui, x, y);
+      const lit = flash.win(sweepStep(x, y));
+      const color = lit ? COL_FLASH : state.flags[i] & FM_FIXED ? COL_GIVEN : COL_CELL;
 
       const tile =
         state.grid[i] |
         (state.pencil[i] << 4) |
         (state.flags[i] << 13) |
-        (beat << 16) |
+        (lit ? 1 << 16 : 0) |
         (highlight << 18);
 
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {

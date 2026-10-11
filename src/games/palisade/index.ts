@@ -44,7 +44,6 @@ import { say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   type PalisadeDrawState,
   PREFERRED_TILE_SIZE,
@@ -316,7 +315,6 @@ export const palisadeGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(palisadeGame);

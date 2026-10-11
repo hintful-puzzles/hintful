@@ -45,8 +45,6 @@ import {
   ascentColors,
   ascentComputeSize,
   cellCenter,
-  FLASH_FRAME,
-  FLASH_SIZE,
   newAscentDrawState,
   redrawAscent,
 } from "./render.ts";
@@ -572,13 +570,6 @@ function textFormat(state: AscentState): string | null {
   return out;
 }
 
-// --- flash ---------------------------------------------------------
-
-/** The flash sweeps every cell, so it runs as long as the board is big. */
-function solvedFlash(s: AscentState): number {
-  return FLASH_FRAME * (s.w * s.h + FLASH_SIZE);
-}
-
 // --- Game object ---------------------------------------------------
 
 export const ascentGame: Game<
@@ -642,7 +633,6 @@ export const ascentGame: Game<
   computeSize: (p, tileSize) => ascentComputeSize(p.w, p.h, p.mode, tileSize),
   newDrawState: newAscentDrawState,
   redraw: redrawAscent,
-  solvedFlash,
 };
 
 registerGame(ascentGame);

@@ -51,6 +51,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   CELL_MIRROR_L,
   COUNT_STYLE_PLACED_TOTAL,
@@ -81,7 +82,6 @@ export interface UndeadHint {
 }
 
 export const PREFERRED_TILE_SIZE = 64;
-export const FLASH_TIME = 0.7;
 
 const f = Math.floor;
 const idiv = (a: number, b: number): number => Math.trunc(a / b);
@@ -170,7 +170,10 @@ export interface UndeadDrawState {
   countPlaced: Int32Array;
   cursor: GridCursor;
   pencilMode: boolean;
-  hflash: boolean;
+  /** Whether the win flash was on each cell and edge clue as last drawn,
+   * indexed as the grid is, and on each of the three counts. */
+  lit: Uint8Array;
+  countLit: Uint8Array;
   ascii: boolean;
   countStyle: number;
   countFontsize: number;
@@ -206,7 +209,8 @@ export function newDrawState(state: UndeadState, tileSize: number): UndeadDrawSt
     countPlaced: new Int32Array(3),
     cursor: newCursor(),
     pencilMode: false,
-    hflash: false,
+    lit: new Uint8Array(common.wh),
+    countLit: new Uint8Array(3),
     ascii: false,
     countStyle: COUNT_STYLE_TOTAL,
     countFontsize: 0,
@@ -720,7 +724,7 @@ export function redraw(
   _dir: number,
   ui: UndeadUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<UndeadMove, UndeadHint>,
   mistakes?: readonly { x: number; y: number }[],
 ): void {
@@ -730,7 +734,15 @@ export function redraw(
   const h = ds.h;
   const stride = common.w + 2;
   const b = border(ts);
-  const hflash = Math.trunc((flashTime * 5) / FLASH_TIME) % 2 !== 0;
+  // Whether the win flash is on the cell or edge clue at grid `(x, y)`, and
+  // whether that differs from the frame last drawn.
+  const light = (x: number, y: number): { lit: boolean; changed: boolean } => {
+    const xy = x + y * stride;
+    const lit = flash.win(sweepStep(x, y));
+    const changed = (ds.lit[xy] !== 0) !== lit;
+    ds.lit[xy] = lit ? 1 : 0;
+    return { lit, changed };
+  };
 
   if (!ds.started) {
     // The backing the cells leave showing as the grid: one pixel between two
@@ -761,8 +773,15 @@ export function redraw(
   if (changedCountStyle || !ds.started) calculateCountLayout(ds);
 
   for (let i = 0; i < 3; i++) {
+    // A count sits in the row above the top clues, at its own column.
+    const column = (countX(ds, i) + ds.countW / 2 - b) / ts - 0.5;
+    const hflash = flash.win(sweepStep(column, -1));
     let stale =
-      !ds.started || ds.hflash !== hflash || changedAscii || changedCountStyle;
+      !ds.started ||
+      (ds.countLit[i] !== 0) !== hflash ||
+      changedAscii ||
+      changedCountStyle;
+    ds.countLit[i] = hflash ? 1 : 0;
     if (ds.countErrors[i] !== state.countErrors[i]) {
       stale = true;
       ds.countErrors[i] = state.countErrors[i];
@@ -775,10 +794,9 @@ export function redraw(
   }
 
   // The edge clues.
-  const isClueStale = (index: number): boolean => {
-    let ret = false;
+  const isClueStale = (index: number, litChanged: boolean): boolean => {
+    let ret = litChanged;
     if (!ds.started) ret = true;
-    if (ds.hflash !== hflash) ret = true;
     if (ds.hintErrors[index] !== state.hintErrors[index]) {
       ds.hintErrors[index] = state.hintErrors[index];
       ret = true;
@@ -789,16 +807,17 @@ export function redraw(
     }
     return ret;
   };
-  const clueColor = (index: number): number => {
+  const clueColor = (index: number, lit: boolean): number => {
     if (state.hintErrors[index]) return COL_ERROR;
-    if (hflash) return COL_FLASH;
+    if (lit) return COL_FLASH;
     if (state.hintsDone[index]) return COL_DONE;
     return COL_TEXT;
   };
   const drawClueAt = (index: number, clue: number): void => {
-    if (!isClueStale(index)) return;
     const g = range2grid(index, common.w, common.h);
-    drawClue(dr, ds, g.x, g.y, clueColor(index), clue);
+    const { lit, changed } = light(g.x, g.y);
+    if (!isClueStale(index, changed)) return;
+    drawClue(dr, ds, g.x, g.y, clueColor(index, lit), clue);
   };
   for (const path of common.paths) {
     drawClueAt(path.gridStart, path.sightingsStart);
@@ -837,8 +856,8 @@ export function redraw(
       const xi = common.xinfo[xy];
       const c = common.grid[xy];
 
-      let stale =
-        !ds.started || ds.hflash !== hflash || changedAscii || underErased[xy] === 1;
+      const { lit: hflash, changed } = light(x, y);
+      let stale = !ds.started || changed || changedAscii || underErased[xy] === 1;
       if (
         hchanged &&
         ((x === ui.cursor.x && y === ui.cursor.y) ||
@@ -915,6 +934,5 @@ export function redraw(
   ds.cursor.y = ui.cursor.y;
   ds.cursor.visible = ui.cursor.visible;
   ds.pencilMode = ui.pencilMode;
-  ds.hflash = hflash;
   ds.started = true;
 }

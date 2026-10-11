@@ -83,7 +83,6 @@ import {
   boardMargin,
   colors,
   computeSize,
-  FLASH_FRAME,
   lineThick,
   type NetDrawState,
   newDrawState,
@@ -889,9 +888,6 @@ export const netGame: Game<
   redraw,
 
   animLength: (a, b, dir) => ((dir === -1 ? a : b).lastRotateDir ? ROTATE_TIME : 0),
-
-  // The flash sweeps the board, so it lasts as long as the board is wide.
-  solvedFlash: (s) => FLASH_FRAME * (Math.max(s.w, s.h) + 4),
 };
 
 registerGame(netGame);

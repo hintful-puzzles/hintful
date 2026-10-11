@@ -72,6 +72,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { RomeHint } from "./hint.ts";
 import type { RomeMistake } from "./index.ts";
 import {
@@ -118,9 +119,6 @@ export function origin(ts: number): number {
   return pencilIndicatorReach(ts) + BORDER;
 }
 
-const FLASH_FRAME = 0.1;
-export const FLASH_TIME = 0.7;
-
 /** Arrow head half-width, as a fraction of the arrow's half-length. */
 const SIDE_SIZE = 0.6;
 
@@ -149,7 +147,7 @@ export const COL_HINT_CELL = 13;
 export const COL_CURSOR = 14;
 /** The thin line between two squares of one region. */
 export const COL_GRID = 15;
-/** The completion wave's bright beat; its dim one is the selection's wash. */
+/** The fill of a square the win flash's highlight is on. */
 export const COL_FLASH = 16;
 
 export function colors(background: Color): Color[] {
@@ -199,7 +197,8 @@ const HB_MISTAKE = 1;
 export interface RomeDrawState {
   started: boolean;
   tileSize: number;
-  /** Packed `(effective cell, effective marks, flash phase)` per square. */
+  /** Packed `(effective cell, effective marks, lit by the win flash)` per
+   * square. */
   cache: Int32Array;
   mistakes: OverlaySidecar;
   /** Hint overlay (fork addition): bit 0 = the square acted on, bit 1 =
@@ -340,7 +339,7 @@ export function redraw(
   _dir: number,
   ui: RomeUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<RomeMove, RomeHint>,
   mistakes?: readonly RomeMistake[],
 ): void {
@@ -348,14 +347,9 @@ export function redraw(
   const ox = origin(ts);
   const { w, h, grid, pencil, regions } = state;
 
-  // The win animation hides the displayed highlight while leaving `ui.cursor`
+  // The win flash hides the displayed highlight while leaving `ui.cursor`
   // alone, as upstream does through a local copy.
-  let flash = -1;
-  let cursorShown = ui.cursor.visible;
-  if (flashTime > 0) {
-    flash = Math.floor(flashTime / FLASH_FRAME) % 3;
-    cursorShown = false;
-  }
+  const cursorShown = ui.cursor.visible && !flash.winning;
 
   if (!ds.started) {
     // The grid: every square's own rect is inset into this, so what survives
@@ -405,12 +399,13 @@ export function redraw(
       if (highlight !== HIGHLIGHT_NONE && ui.kmode === KEYMODE_PENCIL)
         highlight = HIGHLIGHT_NOTES;
       const armed = highlight !== HIGHLIGHT_NONE && ui.kmode !== KEYMODE_MOVE;
+      const lit = flash.win(sweepStep(x, y));
 
       const key =
         (c & 0x7fff) |
         (((p >> 2) & 0xf) << 15) |
         ((p & FD_ENTRY ? 1 : 0) << 19) |
-        ((flash + 1) << 20) |
+        ((lit ? 1 : 0) << 20) |
         (highlight << 22) |
         ((armed ? 1 : 0) << 24);
       if (ds.cache[i1] === key && !ds.mistakes.stale(i1) && !ds.hint.stale(i1))
@@ -427,24 +422,15 @@ export function redraw(
 
       // A given is told by the square under it.
       const surface = grid[i1] & FM_FIXED ? COL_GIVEN : COL_CELL;
-      let color: number;
-      if (flash === -1) {
-        color =
-          ui.sloops && grid[i1] & FE_LOOP
-            ? COL_ERRORBG
-            : ui.sgoals && grid[i1] & FD_TOGOAL
-              ? COL_GOALBG
-              : grid[i1] & FE_BOUNDS
-                ? COL_ERRORBG
-                : surface;
-      } else {
-        color =
-          (x + y) % 3 === flash
-            ? surface
-            : (x + y + 1) % 3 === flash
-              ? COL_CURSOR
-              : COL_FLASH;
-      }
+      const color = lit
+        ? COL_FLASH
+        : ui.sloops && grid[i1] & FE_LOOP
+          ? COL_ERRORBG
+          : ui.sgoals && grid[i1] & FD_TOGOAL
+            ? COL_GOALBG
+            : grid[i1] & FE_BOUNDS
+              ? COL_ERRORBG
+              : surface;
 
       // Inset each side that meets a different region, leaving the outline.
       if (x === 0 || !regions.equivalent(i1, i1 - 1)) {

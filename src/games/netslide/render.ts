@@ -23,6 +23,8 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Flash } from "../../engine/win-wave.ts";
+import { wireDistance } from "../../engine/wires.ts";
 import type { NetslideHint } from "./hint.ts";
 import { SQUARE, TILE } from "./hint-text.ts";
 import {
@@ -50,7 +52,6 @@ import {
 
 export const PREFERRED_TILE_SIZE = 48;
 export const ANIM_TIME = 0.13;
-export const FLASH_FRAME = 0.07;
 
 const TILE_BORDER = 1;
 
@@ -61,8 +62,8 @@ export function border(tileSize: number): number {
 
 // --- palette ---------------------------------------------------------------
 export const COL_BACKGROUND = 0; // the board around the grid, where the arrows are
-/** A tile's face on the lit beats of the completion flash: the lifted
- * surface, as Net lifts its tiles. */
+/** A tile's face under the win flash's highlight: the lifted surface, as Net
+ * lifts its tiles. */
 export const COL_FLASHING = 1;
 export const COL_BORDER = 2; // the line between two tiles, and the frame
 export const COL_WIRE = 3;
@@ -627,7 +628,7 @@ export function redraw(
   _dir: number,
   ui: NetslideUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<NetslideMove, NetslideHint>,
 ): void {
   const ts = ds.tileSize;
@@ -704,7 +705,11 @@ export function redraw(
     yshift = state.lastMoveCol === -1 ? 0 : progress;
   }
 
-  const frame = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) : -1;
+  // The win flash spreads from the source: a tile's position is its distance
+  // along the wires, and a tile they do not reach is never asked about.
+  const reach = flash.winning
+    ? wireDistance(state.w, state.h, state.tiles, state.barriers, state.cx, state.cy)
+    : null;
 
   // Which cell of *this* board holds the tile the hint is placing. The midend
   // advances the plan when an animation *ends*, so while the hinted slide plays
@@ -744,15 +749,7 @@ export function redraw(
         c |= plan && i === plan.destination && plan.belongs ? HINT_HOME : HINT_LANDING;
       if (hintLine.has(i)) c |= HINT_LINE;
 
-      // The completion flash ripples outward: a tile at Chebyshev distance
-      // `dist` from the center flashes on and off over frames dist … dist+3.
-      if (frame >= 0) {
-        const dist = Math.max(Math.abs(x - state.cx), Math.abs(y - state.cy));
-        if (frame >= dist && frame < dist + 4) {
-          const on = (frame - dist) & 1 ? FLASHING : 0;
-          c = (c & ~FLASHING) | on;
-        }
-      }
+      if (reach !== null && reach[i] >= 0 && flash.win(reach[i])) c |= FLASHING;
 
       // A tile on the line that last moved is repainted every frame: while the
       // animation runs, where it is drawn does not follow from its value.

@@ -35,7 +35,9 @@ import {
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { encodeRegionWalls } from "../../engine/wall-runs.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/seismic-c-reference.json" with { type: "json" };
 import { maxGeneratedRegionSize, maxRegionSize, newSeismicDesc } from "./generator.ts";
 import { seismicGame } from "./index.ts";
@@ -51,6 +53,7 @@ import {
   COL_NUM_GUESS,
   COL_NUM_PENCIL,
   COL_PENCIL_BODY,
+  fromCoord,
   newDrawState,
   origin,
   redraw,
@@ -839,7 +842,7 @@ describe("seismic moves", () => {
     expect(seismicGame.status(solved)).toBe("solved");
   });
 
-  it("flashes when the player finishes it themselves", () => {
+  it("is solved when the player finishes it themselves", () => {
     const state = stateOf(SMALL);
     const soln = solutionOf(SMALL);
     let cur = state;
@@ -854,7 +857,6 @@ describe("seismic moves", () => {
       });
     }
     expect(seismicGame.status(cur)).toBe("solved");
-    expect(seismicGame.solvedFlash?.(cur, newUi(state))).toBeGreaterThan(0);
   });
 
   it("renders the board as text with the region walls drawn", () => {
@@ -1112,7 +1114,7 @@ describe("seismic rendering", () => {
     // load through the midend.
     const marked = seismicGame.executeMove(state, move as SeismicMove);
     const dr = new RecordingDrawing(seismicGame.colors([1, 1, 1]));
-    redraw(dr, newDrawState(marked, TILE), null, marked, 1, newUi(marked), 0, 0);
+    redraw(dr, newDrawState(marked, TILE), null, marked, 1, newUi(marked), 0, NO_FLASH);
     const penciled = dr.ops.filter(
       (o) => o.op === "text" && o.color === COL_NUM_PENCIL,
     );
@@ -1130,7 +1132,7 @@ describe("seismic rendering", () => {
 
     const paint = () => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, ui, 0, 0);
+      redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
       return dr.ops;
     };
     const glyph = (ops: readonly DrawOp[]) =>
@@ -1174,31 +1176,25 @@ describe("seismic rendering", () => {
     expect(r.recording.ops).toMatchSnapshot();
   });
 
-  it("plays the three-phase completion flash", () => {
-    // Tier 2: the flash is a function of the clock, so drive `redraw` at three
-    // points in it rather than trying to catch a frame mid-animation.
+  it("sweeps the win flash over every cell, from the bottom left", () => {
     const state = stateOf(SMALL);
     const palette = seismicGame.colors([1, 1, 1]);
-    const phase = (flashTime: number) => {
-      const ds = newDrawState(state, TILE);
+    const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, newUi(state), 0, flashTime);
-      return dr.ops
-        .filter((o) => o.op === "rect")
-        .map((o) => (o as Extract<DrawOp, { op: "rect" }>).color)
-        .join(",");
+      redraw(dr, newDrawState(state, TILE), null, state, 1, newUi(state), 0, flash);
+      return dr;
     };
-
-    // Each phase paints a different diagonal of the board in each shade, so the
-    // three frames must differ — a static shift would render them identical.
-    const frames = [phase(0.05), phase(0.15), phase(0.25)];
-    expect(new Set(frames).size).toBe(3);
-    // All three background shades appear while the flash plays.
-    const ds = newDrawState(state, TILE);
-    const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, state, 1, newUi(state), 0, 0.05);
-    const colors = new Set(dr.ops.filter((o) => o.op === "rect").map((o) => o.color));
-    expect(colors.has(COL_FLASH)).toBe(true);
-    expect(colors.has(COL_CURSOR)).toBe(true);
+    /** The cells painted in the flash color, givens among them, as `x,y`. */
+    const run = winFlashRun(paint, (dr) =>
+      dr.ops.flatMap((o) =>
+        o.op === "rect" && o.color === COL_FLASH
+          ? [`${fromCoord(o.x, TILE)},${fromCoord(o.y, TILE)}`]
+          : [],
+      ),
+    );
+    expectWinFlashTravels(run, SMALL.w * SMALL.h, (at) => {
+      const [x, y] = at.split(",").map(Number);
+      return sweepStep(x, y);
+    });
   });
 });

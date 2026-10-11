@@ -19,6 +19,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, PaletteScheme, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { SQUARE, TILE } from "./hint-text.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";
 
@@ -26,11 +27,10 @@ import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./stat
 
 export const PREFERRED_TILE_SIZE = 48;
 export const ANIM_TIME = 0.4;
-export const FLASH_FRAME = 0.13;
 
 // --- color indices ---------------------------------------------------
 
-const COL_BACKGROUND = 0;
+export const COL_BACKGROUND = 0;
 const COL_TEXT = 1;
 const COL_HIGHLIGHT = 2;
 const COL_LOWLIGHT = 3;
@@ -85,8 +85,9 @@ export interface SixteenDrawState {
   started: boolean;
   w: number;
   h: number;
-  bgcolor: number;
   tiles: Int32Array;
+  /** Whether each cell's tile was last drawn lit by the win flash. */
+  lit: Uint8Array;
   tileSize: number;
   curX: number;
   curY: number;
@@ -106,8 +107,8 @@ export function newDrawState(state: SixteenState, tileSize: number): SixteenDraw
     started: false,
     w: state.w,
     h: state.h,
-    bgcolor: COL_TILE,
     tiles: new Int32Array(state.n).fill(-1),
+    lit: new Uint8Array(state.n),
     tileSize,
     curX: -1,
     curY: -1,
@@ -146,17 +147,11 @@ export function redraw(
   dir: number,
   ui: SixteenUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   activeHint?: HintStep<SixteenMove, SixteenHintHighlights>,
 ): void {
   const ts = ds.tileSize;
   const hw = raisedBevelWidth(ts);
-
-  let bgcolor = COL_TILE;
-  if (flashTime > 0) {
-    const frame = Math.floor(flashTime / FLASH_FRAME);
-    bgcolor = frame % 2 ? COL_LOWLIGHT : COL_HIGHLIGHT;
-  }
 
   if (!ds.started) {
     drawRecessedBorder(dr, state, ts, hw);
@@ -286,6 +281,11 @@ export function redraw(
     else t = state.tiles[i];
 
     const t0 = t;
+    const lit = flash.win(sweepStep(i % state.w, Math.floor(i / state.w))) ? 1 : 0;
+    // A lit tile's face drops to the board inside its bevel. A tile is the
+    // lifted surface already, and neither bevel color stands off it in both
+    // schemes.
+    const bgcolor = lit ? COL_BACKGROUND : COL_TILE;
 
     const isDraggedNow = !!(
       ui.dragging &&
@@ -310,7 +310,7 @@ export function redraw(
     if (
       isDraggedNow ||
       wasDraggedPrev ||
-      ds.bgcolor !== bgcolor ||
+      ds.lit[i] !== lit ||
       ds.tiles[i] !== t ||
       ds.tiles[i] === -1 ||
       t === -1 ||
@@ -417,6 +417,7 @@ export function redraw(
       }
     }
     ds.tiles[i] = t0;
+    ds.lit[i] = lit;
   }
 
   ds.curX = curX;
@@ -434,7 +435,6 @@ export function redraw(
     drawHintBorder(dr, ts, state, hintUltimate, false);
   }
   dr.unclip();
-  ds.bgcolor = bgcolor;
 }
 
 function tileCursor(i: number, state: SixteenState, cx: number, cy: number): boolean {

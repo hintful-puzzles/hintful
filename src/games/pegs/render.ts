@@ -31,6 +31,7 @@ import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { MOVE, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import {
   GRID_HOLE,
@@ -58,8 +59,8 @@ const GRID_HINT_OUTLINE = 80;
 const COL_BACKGROUND = 0; // the board around the cells
 const COL_GRID = 1; // the line between two cells, and round the board
 const COL_CELL = 2; // the surface of a cell
-/** The surface of every cell on the lit beats of the completion flash. */
-const COL_LIT = 3;
+/** The surface of a cell the win flash's highlight is on. */
+export const COL_LIT = 3;
 const COL_HOLE = 4; // the ring that marks an empty hole
 const COL_PEG = 5;
 const COL_CURSOR = 6;
@@ -72,10 +73,6 @@ export const COL_HINT_EVIDENCE = 9;
  * drawn round it has spent. */
 const PAIR_DISC = 1;
 
-// --- flash timing ----------------------------------------------------
-
-export const FLASH_FRAME = 0.13;
-
 export interface PegsDrawState {
   tileSize: number;
   dragBackground: unknown; // blitter handle
@@ -83,10 +80,10 @@ export interface PegsDrawState {
   dragX: number;
   dragY: number;
   /** Per-tile cache of what each square last showed: its value with the
-   * cursor and hint flags, then the hint jumps drawn across it. */
+   * cursor and hint flags, whether the win flash lit it, then the hint jumps
+   * drawn across it. */
   tiles: string[];
   started: boolean;
-  bgColor: number;
 }
 // --- coordinate helpers ----------------------------------------------
 
@@ -148,7 +145,6 @@ export function newDrawState(s: PegsState, tileSize: number): PegsDrawState {
     dragY: 0,
     tiles: new Array<string>(s.w * s.h).fill(""),
     started: false,
-    bgColor: -1,
   };
 }
 
@@ -259,7 +255,7 @@ export function redraw(
   _dir: number,
   ui: PegsUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<PegsMove>,
   _mistakes?: readonly unknown[],
   deadEnd?: MarkedDeadEnd,
@@ -292,11 +288,6 @@ export function redraw(
   const arrowsAt = new Map<number, Marked[]>();
   for (const j of marks.of("outline", JUMP))
     for (const i of across(j)) arrowsAt.set(i, [...(arrowsAt.get(i) ?? []), j]);
-
-  // The completion flash lifts every cell on its lit beats, a step that reads
-  // in both schemes.
-  const lit = flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) % 2 === 0;
-  const bgColor = lit ? COL_LIT : COL_CELL;
 
   // Erase the sprite currently being dragged, if any.
   if (ds.dragging) {
@@ -336,9 +327,12 @@ export function redraw(
       if (v === GRID_OBST) continue;
       const i = y * w + x;
       const arrows = arrowsAt.get(i) ?? [];
-      const key = `${v}${striped.has(i) ? "s" : ""}:${arrows.map(JUMP.key).join(",")}`;
-      if (bgColor !== ds.bgColor || key !== ds.tiles[i]) {
-        drawTile(dr, ds, coord(x, ts), coord(y, ts), v, bgColor, {
+      // The win flash lifts the cell its highlight is on, a step that reads in
+      // both schemes.
+      const lit = flash.win(sweepStep(x, y));
+      const key = `${v}${striped.has(i) ? "s" : ""}${lit ? "l" : ""}:${arrows.map(JUMP.key).join(",")}`;
+      if (key !== ds.tiles[i]) {
+        drawTile(dr, ds, coord(x, ts), coord(y, ts), v, lit ? COL_LIT : COL_CELL, {
           striped: striped.has(i),
           arrows: arrows.map((j) => [center(j.from), center(j.to)] as const),
         });
@@ -359,6 +353,4 @@ export function redraw(
     dr.blitterSave(ds.dragBackground, { x: ds.dragX, y: ds.dragY });
     drawTile(dr, ds, ds.dragX, ds.dragY, GRID_PEG, -1);
   }
-
-  ds.bgColor = bgColor;
 }

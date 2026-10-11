@@ -1,7 +1,7 @@
 /**
  * Range rendering: a per-cell diffed loop over pieces on a quiet surface
  * (`engine/piece.ts`). A cell is a grid-outlined surface, lifted under a clue
- * and, on the lit beats of the completion flash, under every cell; a shaded
+ * (the win flash's highlight swaps the two surfaces); a shaded
  * cell holds the shaded piece, a cell marked clear holds the ruled-out cross,
  * and a clue holds its number. The keyboard cursor is corner brackets, out at
  * the cell's corners. Rule violations are
@@ -35,6 +35,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { CLUE } from "./hint-text.ts";
 import type { RangeHint } from "./index.ts";
 import { findErrors } from "./solver.ts";
@@ -50,14 +51,14 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.7;
 
 // --- palette ---------------------------------------------------------------
 
 export const COL_BACKGROUND = 0; // the board around the grid
 export const COL_GRID = 1; // the line between two cells, and the frame
 export const COL_CELL = 2; // the surface of a cell the puzzle left open
-/** The surface under a clue, and under every cell while the board flashes. */
+/** The surface under a clue, and under any other cell the win flash's
+ * highlight is on. */
 export const COL_GIVEN = 3;
 export const COL_SHADED = 4; // the piece in a shaded cell
 export const COL_RULED_OUT = 5; // the cross in a cell marked clear
@@ -162,12 +163,12 @@ function drawCell(
   const box = { x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 };
 
   // The surface says who put the cell's content there and never what state it
-  // is in: lifted under a clue, plain everywhere else. The solved flash lifts
-  // every cell, which reads in both schemes where a paper fill would sink into
-  // a dark board. The cursor is corner brackets and no hint role is a
+  // is in: lifted under a clue, plain everywhere else. The win flash's
+  // highlight swaps the two, so a clue's cell shows it too, in a step that
+  // reads in both schemes. The cursor is corner brackets and no hint role is a
   // fill: a Range premise area runs along a clue's arms and takes in the clue
   // cell itself, whose digit the deduction counts.
-  const surface = flash || value > 0 ? COL_GIVEN : COL_CELL;
+  const surface = value > 0 !== flash ? COL_GIVEN : COL_CELL;
 
   drawRectOutline(dr, x, y, ts + 1, ts + 1, COL_GRID);
   dr.drawRect(box, surface);
@@ -219,16 +220,12 @@ export function redraw(
   _dir: number,
   ui: RangeUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<RangeMove, RangeHint>,
   mistakes?: readonly Cell[],
 ): void {
   const ts = ds.tileSize;
   const { w, h, grid } = state;
-
-  // Whole-board flash pulse: lift every cell on alternate
-  // beats of the flash.
-  const flash = flashTime > 0 && Math.floor((flashTime * 5) / FLASH_TIME) % 2 === 1;
 
   const errors: boolean[] = new Array(w * h).fill(false);
   findErrors(grid, w, h, errors);
@@ -263,10 +260,12 @@ export function redraw(
       const clueRef = hintClue.has(i);
       const hatched = hintHatch.has(i);
 
+      const lit = flash.win(sweepStep(c, r));
+
       let packed = (value + 2) | HINT_FLAG[hintKind];
       if (error) packed |= F_ERROR;
       if (cursor) packed |= F_CURSOR;
-      if (flash) packed |= F_FLASH;
+      if (lit) packed |= F_FLASH;
       if (mistake) packed |= F_MISTAKE;
       if (clueRef) packed |= F_HINT_CLUE;
       if (hatched) packed |= F_HINT_HATCH;
@@ -280,7 +279,7 @@ export function redraw(
           value,
           error || mistake,
           cursor,
-          flash,
+          lit,
           hintKind,
           clueRef,
           hatched,

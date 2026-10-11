@@ -132,6 +132,8 @@ export interface PuzzleEngineSurface extends BoardSurface {
   loadGame(data: Uint8Array<ArrayBuffer>): string | null;
   /** Hold the solve timer while the page is hidden; see `EngineCore`. */
   setTimerPaused(paused: boolean): void;
+  /** Whether the player's system asks for reduced motion; see `EngineCore`. */
+  setReducedMotion(reduced: boolean): void;
 
   attachCanvas(canvas: OffscreenCanvas, fontInfo: FontInfo): void;
   deleteDrawing(): void;

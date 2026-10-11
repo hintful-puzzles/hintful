@@ -1011,13 +1011,12 @@ describe("slide capabilities", () => {
     expect(slideGame.requestKeys).toBeUndefined();
   });
 
-  it("does not animate a slide, but flashes on completion", () => {
+  it("does not animate a slide", () => {
     const ongoing = fixtureState();
     let done = executeMove(ongoing, { kind: "move", from: idx(3, 1), to: idx(4, 1) });
     done = executeMove(done, { kind: "move", from: idx(1, 1), to: idx(2, 1) });
     expect(slideGame.status(done)).toBe("solved");
     const ui = newUi(ongoing);
     expect(slideGame.animLength?.(ongoing, done, 1, ui)).toBe(0);
-    expect(slideGame.solvedFlash?.(done, ui)).toBeGreaterThan(0);
   });
 });

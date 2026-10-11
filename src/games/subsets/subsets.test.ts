@@ -35,6 +35,12 @@ import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
+import {
+  expectWinFlashTravels,
+  winFlashAt,
+  winFlashRun,
+} from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "json" };
 import { generateCandidate, newSubsetsDesc } from "./generator.ts";
 import { subsetsGame } from "./index.ts";
@@ -55,6 +61,7 @@ import {
 } from "./solver.ts";
 import {
   ALL_BITS,
+  CELL_WIDTH,
   cloneState,
   DIFF_EASY,
   DIFF_NAMES,
@@ -452,7 +459,7 @@ describe("subsets input", () => {
 });
 
 describe("subsets executeMove and completion", () => {
-  it("completing the board solves it, and the win has a flash", () => {
+  it("completing the board solves it", () => {
     const moves = solutionMoves();
     const last = moves.pop();
     if (!last) throw new Error("fixture has no blank cells");
@@ -461,7 +468,6 @@ describe("subsets executeMove and completion", () => {
     expect(subsetsGame.status(state)).toBe("ongoing");
     const done = subsetsGame.executeMove(state, last);
     expect(subsetsGame.status(done)).toBe("solved");
-    expect(subsetsGame.solvedFlash?.(done, newUi())).toBeGreaterThan(0);
   });
 
   it("a solved board the player breaks is no longer solved", () => {
@@ -691,23 +697,63 @@ describe("subsets rendering (tier 2.5)", () => {
     expect(result.recording.ops).toMatchSnapshot();
   });
 
-  it("completion flash: every slot lifts on a flash beat", () => {
-    // Drive redraw directly at a mid-flash time (tier 2, recording double —
-    // renderScenario captures settled frames, never a mid-flash one).
+  describe("the win flash sweeps the cells", () => {
+    const TS = 36;
     const solution = fixtureSolution();
-    const ds = newDrawState(solution, 36);
-    const ui = newUi();
-    const dr = new RecordingDrawing(subsetsGame.colors([1, 1, 1]));
-    // Flash-on beat: floor(0.15 / 0.12) = 1 -> odd -> every slot is lifted.
-    redraw(dr, ds, null, solution, 1, ui, 0, 0.15);
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_GIVEN)).toBe(true);
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(false);
-    // A flash-off beat shows the player's own surface again (same drawstate —
-    // the flash bit is in the diff key, so the repaint actually happens).
-    const dr2 = new RecordingDrawing(subsetsGame.colors([1, 1, 1]));
-    redraw(dr2, ds, null, solution, 1, ui, 0, 0.05);
-    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
-    expect(dr.ops).toMatchSnapshot();
+    const paint = (flash: Flash, ds = newDrawState(solution, TS)) => {
+      const dr = new RecordingDrawing(subsetsGame.colors([1, 1, 1]));
+      redraw(dr, ds, null, solution, 1, newUi(), 0, flash);
+      return dr.ops;
+    };
+    /** The slots of a frame on the given surface, as the `x,y` drawn at. */
+    const slots = (ops: ReturnType<typeof paint>, color: number): string[] =>
+      ops.flatMap((op) =>
+        op.op === "rect" && op.color === color && op.w === TS - 1 && op.h === TS - 1
+          ? [`${op.x},${op.y}`]
+          : [],
+      );
+    // A settled frame: the player's slots plain, the puzzle's lifted.
+    const plain = new Set(slots(paint(NO_FLASH), COL_CELL));
+    const given = new Set(slots(paint(NO_FLASH), COL_GIVEN));
+    /** The slots a frame draws on the other surface: a plain one lifted, a
+     * lifted one plain. */
+    const lit = (ops: ReturnType<typeof paint>): string[] => [
+      ...slots(ops, COL_GIVEN).filter((key) => plain.has(key)),
+      ...slots(ops, COL_CELL).filter((key) => given.has(key)),
+    ];
+    const run = winFlashRun(paint, lit);
+    const step = (key: string): number => {
+      const [x, y] = key.split(",").map(Number);
+      return x - y;
+    };
+
+    it("travels every slot, from the bottom left to the top right", () => {
+      expect(plain.size).toBeGreaterThan(0);
+      expect(given.size).toBeGreaterThan(0);
+      expect(plain.size + given.size).toBe(PARAMS.w * PARAMS.h * PARAMS.n);
+      expectWinFlashTravels(run, plain.size + given.size, step);
+    });
+
+    it("swaps a cell's slots together, and back when the flash leaves", () => {
+      // Every slot of one cell is lit in the same frames: the element is the cell.
+      const cellOf = (key: string): string =>
+        key
+          .split(",")
+          .map((v) => Math.floor(Number(v) / TS / (CELL_WIDTH + 1)))
+          .join(",");
+      for (const frame of run.frames) {
+        const cells = new Set(frame.map(cellOf));
+        const whole = [...plain, ...given].filter((key) => cells.has(cellOf(key)));
+        expect([...frame].sort()).toEqual(whole.sort());
+      }
+      // The same draw state, settled: the lit cells are drawn plain again.
+      const ds = newDrawState(solution, TS);
+      paint(
+        winFlashAt(WIN_FLASH_S / 2, (flash) => paint(flash)),
+        ds,
+      );
+      expect(slots(paint(NO_FLASH, ds), COL_CELL).length).toBeGreaterThan(0);
+    });
   });
 
   // A cell's frame crosses the grid lines between its slots, which the slot
@@ -718,7 +764,7 @@ describe("subsets rendering (tier 2.5)", () => {
     const size = subsetsGame.computeSize(PARAMS, 36);
     const frame = (ds: ReturnType<typeof newDrawState>, ui: SubsetsUi) => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, ui, 0, 0);
+      redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
       return dr.ops;
     };
     const focused = { ...newUi(), highlightCell: 0 };

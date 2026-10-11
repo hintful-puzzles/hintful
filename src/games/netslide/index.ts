@@ -52,7 +52,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_FRAME,
   type NetslideDrawState,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -358,13 +357,6 @@ export const netslideGame: Game<
   redraw,
 
   animLength: () => ANIM_TIME,
-
-  solvedFlash: (b) => {
-    // The flash ripples outward from the center, so it must run long enough to
-    // reach the furthest corner and then finish that tile's four frames.
-    const reach = Math.max(b.cx + 1, b.cy + 1, b.w - b.cx, b.h - b.cy);
-    return FLASH_FRAME * (reach + 4);
-  },
 };
 
 registerGame(netslideGame);

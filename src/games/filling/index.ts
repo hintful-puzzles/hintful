@@ -48,7 +48,6 @@ import {
   colors,
   computeSize,
   type FillingDrawState,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redrawFilling,
@@ -408,8 +407,6 @@ export const fillingGame: Game<
   computeSize: (p: FillingParams, ts: number): Size => computeSize(p.w, p.h, ts),
   newDrawState,
   redraw: redrawFilling,
-
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(fillingGame);

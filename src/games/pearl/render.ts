@@ -33,6 +33,7 @@ import { fromCoord as cellAt } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, loopSteps, walkLoop } from "../../engine/win-wave.ts";
 import type { PearlHint } from "./hint.ts";
 import { EDGE, SQUARE } from "./hint-text.ts";
 import { interpretUiDrag } from "./moves.ts";
@@ -55,7 +56,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 31;
-export const FLASH_TIME = 0.5;
 
 // --- palette (index-for-index with the pearl.c color enum) ---------------
 export const COL_BACKGROUND = 0;
@@ -342,6 +342,24 @@ function drawSquare(
   dr.drawUpdate({ x: ox, y: oy, w: m.tile, h: m.tile });
 }
 
+/** Each square's step around the finished loop, from the square nearest the
+ * bottom-left corner and clockwise, and -1 for a square off it. */
+function loopOrder(state: PearlState): Int32Array {
+  const { w, h } = state;
+  const links: [number, number][] = [];
+  for (let i = 0; i < w * h; i++) {
+    if (state.lines[i] & R) links.push([i, i + 1]);
+    if (state.lines[i] & D) links.push([i, i + w]);
+  }
+  const walk = walkLoop(links).nodes;
+  const steps = loopSteps(walk.map((i) => ({ x: i % w, y: (i / w) | 0 })));
+  const around = new Int32Array(w * h).fill(-1);
+  walk.forEach((i, n) => {
+    around[i] = steps[n];
+  });
+  return around;
+}
+
 export function redraw(
   dr: GameDrawing,
   ds: PearlDrawState,
@@ -350,7 +368,7 @@ export function redraw(
   _dir: number,
   ui: PearlUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<PearlMove, PearlHint>,
   mistakes?: readonly { x: number; y: number; dir: number; cross: boolean }[],
 ): void {
@@ -379,12 +397,8 @@ export function redraw(
     force = true;
   }
 
-  let flashing = 0;
-  if (
-    flashTime > 0 &&
-    (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3)
-  )
-    flashing = DS_FLASH;
+  // The win flash runs the loop: a square's position is its step around it.
+  const around = flash.winning ? loopOrder(state) : null;
 
   // In-progress drag preview.
   const draglines = new Uint8Array(w * h);
@@ -416,7 +430,7 @@ export function redraw(
       f |= wrong[i] << DS_XSHIFT;
       f |= wrongCross[i] << DS_WSHIFT;
       if (state.errors[i] & ERROR_CLUE) f |= DS_ERROR_CLUE;
-      f |= flashing;
+      if (around !== null && around[i] >= 0 && flash.win(around[i])) f |= DS_FLASH;
       if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y) f |= DS_CURSOR;
 
       if (f !== ds.lflags[i] || hintWords[i] !== ds.hint[i] || force) {

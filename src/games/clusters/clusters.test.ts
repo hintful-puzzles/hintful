@@ -29,10 +29,12 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Point } from "../../engine/types.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newClustersDesc } from "./generator.ts";
 import { clustersGame } from "./index.ts";
-import { COL_ERROR, COL_WRONG } from "./render.ts";
+import { COL_ERROR, COL_GIVEN, COL_WRONG, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   COMPLETE,
   clustersStatus,
@@ -348,7 +350,7 @@ describe("interpretMove", () => {
 });
 
 describe("executeMove + completion", () => {
-  it("is solved from the last correct fill, and has a flash", () => {
+  it("is solved from the last correct fill, and the win flash sweeps the board", () => {
     // 2x2, no givens: fill all red → COMPLETE.
     let st = makeState(2, 2, [0, 0, 0, 0]);
     const paint = (i: number, fill: ClustersFill): ClustersMove => ({
@@ -359,7 +361,43 @@ describe("executeMove + completion", () => {
     expect(clustersGame.status(st)).toBe("ongoing");
     st = clustersGame.executeMove(st, paint(3, F_COLOR_0));
     expect(clustersGame.status(st)).toBe("solved");
-    expect(clustersGame.solvedFlash?.(st, newUi())).toBeGreaterThan(0);
+
+    // A solved board with givens: each row is one color, and its two ends
+    // touch one cell of it, which is what a given does.
+    const R = F_COLOR_0;
+    const B = F_COLOR_1;
+    const won = makeState(3, 2, [
+      R | F_SINGLE,
+      R,
+      R | F_SINGLE,
+      B | F_SINGLE,
+      B,
+      B | F_SINGLE,
+    ]);
+    expect(clustersGame.status(won)).toBe("solved");
+    // The cells on the lifted surface, as their origins. The flash swaps a
+    // cell's surface, so a lit cell is one that has it where a settled frame
+    // has not, or a given's that has lost it.
+    const palette = clustersGame.colors([0.9, 0.9, 0.9]);
+    const frame = (flash: Flash): string[] => {
+      const dr = new RecordingDrawing(palette);
+      const ds = clustersGame.newDrawState(won, PREFERRED_TILE_SIZE);
+      clustersGame.redraw(dr, ds, null, won, 1, newUi(), 0, flash);
+      return dr.ops.flatMap((o) =>
+        o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
+      );
+    };
+    const givens = new Set(frame(NO_FLASH));
+    expect(givens.size).toBe(4);
+    // A cell's place in the sweep is its x less its y.
+    expectWinFlashTravels(
+      winFlashRun(frame, (cells) => [
+        ...cells.filter((c) => !givens.has(c)),
+        ...[...givens].filter((c) => !cells.includes(c)),
+      ]),
+      6,
+      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
+    );
   });
 });
 

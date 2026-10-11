@@ -67,7 +67,7 @@ export interface SignpostState {
  * the one the unique solution makes). */
 export type SignpostMistake = { kind: "link"; index: number };
 
-/** Persisted UI: keyboard cursor + drag tracking + the flash preference. */
+/** Persisted UI: keyboard cursor + drag tracking. */
 export interface SignpostUi {
   cursor: GridCursor;
   dragging: boolean;
@@ -78,8 +78,6 @@ export interface SignpostUi {
   /** Pixel coords of the current drag position. */
   dx: number;
   dy: number;
-  /** Preference: meshing-gears victory rotation (else unidirectional). */
-  gearMode: boolean;
 }
 
 export type SignpostMove =
@@ -102,7 +100,6 @@ export interface SignpostDrawState {
   nums: Int32Array;
   /** Last-drawn inbound-arrow direction per cell (-1 = none). */
   dirp: Int32Array;
-  angleOffset: number;
   dragging: boolean;
   dragBackground: unknown;
   dragX: number;

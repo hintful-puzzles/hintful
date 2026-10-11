@@ -23,9 +23,18 @@ import {
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
-import { colors, coord, newDrawState, PREFERRED_TILE_SIZE, redraw } from "./render.ts";
+import {
+  COL_HIGHLIGHT,
+  colors,
+  coord,
+  newDrawState,
+  PREFERRED_TILE_SIZE,
+  redraw,
+} from "./render.ts";
 import { solveGroup } from "./solver.ts";
 import {
   cloneState,
@@ -63,11 +72,9 @@ function newUiAt(s: GroupState, pos: number) {
  * ever dropped): if one goes missing, this fails immediately and says which.
  * None of the three reads `this`, so calling them unbound is safe.
  */
-const { solve, solvedFlash, findMistakes, difficulty } = groupGame;
-if (!solve || !solvedFlash || !findMistakes || !difficulty) {
-  throw new Error(
-    "group: expected the solve / solvedFlash / findMistakes / difficulty hooks",
-  );
+const { solve, findMistakes, difficulty } = groupGame;
+if (!solve || !findMistakes || !difficulty) {
+  throw new Error("group: expected the solve / findMistakes / difficulty hooks");
 }
 
 /** A completed grid is a valid group table iff Latin + associative. */
@@ -250,7 +257,7 @@ describe("moves and completion", () => {
     expect(groupGame.status(done)).toBe("solved");
   });
 
-  it("placing the last cell solves the board, which has a flash", () => {
+  it("placing the last cell solves the board", () => {
     const p = P(6, DIFF_NORMAL, true);
     const { state, aux } = freshGame(p);
     const res = solve(state, state, aux);
@@ -267,7 +274,6 @@ describe("moves and completion", () => {
       cells: [{ x: last % p.w, y: Math.floor(last / p.w) }],
     });
     expect(groupGame.status(after)).toBe("solved");
-    expect(solvedFlash(after, newUi(state))).toBeGreaterThan(0);
   });
 
   it("a multifill set writes every listed cell", () => {
@@ -399,10 +405,37 @@ describe("rendering smoke", () => {
 
     const ds = newDrawState(state, 48);
     const dr = new RecordingDrawing(pal);
-    redraw(dr, ds, null, state, 0, newUi(state), 0, 0);
+    redraw(dr, ds, null, state, 0, newUi(state), 0, NO_FLASH);
     expect(
       dr.ops.filter((o) => o.op !== "clip" && o.op !== "unclip").length,
     ).toBeGreaterThan(0);
+  });
+
+  it("the win flash sweeps the table from the bottom left to the top right", () => {
+    const p = P(6, DIFF_NORMAL, true);
+    const { desc, aux } = newGameDesc(p, randomNew("win-flash"));
+    const start = newState(p, desc);
+    const res = solve(start, start, aux);
+    if (!res.ok) throw new Error("the fixture does not solve");
+    const state = groupGame.executeMove(start, res.move);
+    /** The cells washed with the highlight, as the pixel each starts at. */
+    const run = winFlashRun(
+      (flash: Flash) => {
+        const dr = new RecordingDrawing(colors([0.9, 0.9, 0.9]));
+        const ds = newDrawState(state, PREFERRED_TILE_SIZE);
+        redraw(dr, ds, null, state, 1, newUi(state), 0, flash);
+        return dr;
+      },
+      (dr) =>
+        dr.ops.flatMap((o) =>
+          o.op === "rect" && o.color === COL_HIGHLIGHT ? [`${o.x},${o.y}`] : [],
+        ),
+    );
+    // Every cell of the table, and nothing of the legend round it.
+    expectWinFlashTravels(run, p.w * p.w, (key) => {
+      const [x, y] = key.split(",").map(Number);
+      return sweepStep(x, y);
+    });
   });
 });
 

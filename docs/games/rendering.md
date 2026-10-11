@@ -696,9 +696,8 @@ line op that does not exist. Exemplar:
 Byte-parity rules were about the generator/solver/codec; on the drawing path,
 deliberate visual improvements are the point of the fork. Crossing's C
 declared `bool flash` and assigned a nine-phase frame index to it, collapsing
-its completion animation to a static color shift — the fix is one type, and
-a tier-2.5 test that two flash phases paint differently pins it (a snapshot
-alone won't tell you the animation is *moving*). Seismic widens the tell to
+its completion animation to a static color shift — the fix is one type (and a
+snapshot alone won't tell you an animation is *moving*). Seismic widens the tell to
 plain data: its C assigned a 9-bit pencil mask to a `char`, so a penciled 9
 was truncated away and never drawn. **Tell:** a frame counter, phase index or
 animation step stored in a `bool`/`char`; any bitmask copied into a narrower
@@ -711,51 +710,90 @@ input is reachable in play. Exemplar:
 
 ## Animation and flash
 
-**The contract:** `animLength(a, b, dir, ui)` and the flash hooks return
-durations; the midend runs the timer and calls `redraw` with
-`animTime`/`flashTime`; the game interpolates. A non-animated transition
-paints once; animation frames — including the first — are driven by the
-timer (`engine-drawing` § "The midend repaints on every transition, rebuilds the
+**The contract:** `animLength(a, b, dir, ui)` and `flashLength` return
+durations; the midend runs the timer and calls `redraw` with `animTime` and a
+`Flash`; the game interpolates. A non-animated transition paints once;
+animation frames — including the first — are driven by the timer
+(`engine-drawing` § "The midend repaints on every transition, rebuilds the
 draw state for a new tile size, and lays the ground under a fresh one").
 
-**When the win flash plays is the engine's; how long is the game's.** The
-midend flashes on a forward move, other than the Solve command, that leaves the
-board's status solved when it was not (`ts-engine` § "The engine derives a
-board's history from its position"). The game supplies only the duration:
+**The win flash is the engine's, and a game only says where its elements
+are.** It is one highlight that travels the board, the same length on every
+board of every game (`ts-engine` § "The win flash is one traveling highlight
+in every game"). When it plays, how long it lasts, how much is lit at once and
+what a player who asked for reduced motion sees are all in
+[`engine/win-wave.ts`](../../src/engine/win-wave.ts) and the midend. A game
+has no hook for any of it. In the loop where `redraw` builds an element's
+flags, it asks:
 
 ```ts
-solvedFlash: () => FLASH_TIME,
+if (flash.win(sweepStep(x, y))) flags |= DS_FLASH;
 ```
 
-A duration that sweeps the board (Ascent, Net, Netslide, Flood, Flip) computes
-it from the solved state `solvedFlash` is handed; one that is a preference
-(Map) reads the `Ui`. Durations differ because each game's redraw paces its own
-flash frames, which is a fact about that game's look.
+and paints the element lit when the answer is true. The number it passes is
+the element's **position**, in steps, and which number it passes is the route:
+
+| The board holds | Position | Exemplar |
+| --- | --- | --- |
+| a path | the element's step from the start | Tracks (`trackOrder`), Ascent, Signpost |
+| a loop | `loopSteps` of its elements in route order: from the bottom-left corner, clockwise | Loopy (`loopOrder`), Pearl |
+| a network fed from a source | breadth-first distance from the source | Net, Netslide, Flood |
+| none of these | `sweepStep(x, y)` of its center: a diagonal, bottom left to top right | Solo, and nearly every game |
+| none of these, and no grid | `sweepRanks(centers)`: the same diagonal, by rank, so scattered elements leave no dark stretch | Untangle's points, Map's regions |
+
+Four rules, each of which a game can break without a type error:
+
+- **Ask for every element that can light, on every frame, and for no other.**
+  The engine learns the route's two ends from the positions it was asked
+  about in the frame before, so a square off the path (Tracks' `-1`) is never
+  passed in, and the asking happens before the tile cache's comparison, not
+  inside a branch the cache can skip.
+- **Ask once per element per frame.** A redraw that paints in two passes asks
+  before them and reads the answer in both: the cross-game guard lights
+  elements one question at a time, and a second question about a tile is, to
+  it, another tile.
+- **The answer is part of the tile's diff key**, like any other flag.
+- **Work the route out only while `flash.winning`.** A loop walk or a
+  breadth-first search on every ordinary frame is waste.
+
+`engine/win-flash.test.ts` paints every game's solved board through a flash
+and fails a game that lights nothing, lights the whole board at once, is
+still lit at the end, or asks about an element that looks the same lit as
+not. A game's own test pins its route: `winFlashRun` paints the flash and
+`expectWinFlashTravels` asserts it lit every element once, in the order of
+the positions the game hands over (`engine/testing/win-flash.ts`; exemplar
+`tracks-flash.test.ts`).
+
+**What "lit" looks like is the game's**, from the shared palette: a cell
+lifted to the given's surface, a line in `FLASH`
+(`engine-colors` § "A solved flash drawn as a color takes a shared color").
+**Every element asked about must look different lit.** A given that already
+rests on the lifted surface drops to the plain one when lit, so a lit cell
+swaps its surface whichever it wears (Net, Signpost).
 
 **What is suppressed is the Solve *command*, not a cheated *board*.** A player
 who uses Solve, unmakes part of it and then finishes by hand has won, and gets
 the celebration; the record that the solver was used is the midend's, in the
-status bar and "solved with help". That rule came from Palisade, which had it
-right first. And because the status is the board's *now*, a solved board the
-player breaks and solves again flashes again; undoing a break does not.
+status bar and "solved with help". And because the status is the board's
+*now*, a solved board the player breaks and solves again flashes again;
+undoing a break does not.
 
-**`flashLength(a, b, dir, ui)` is for a flash the status does not show**: a
-death (Inertia, Mines), a board with no move left (Same Game), a loss (Flood)
-or a reveal that flashes on Solve too (Black Box). The midend asks it first on
-every transition and a nonzero answer replaces the win flash, so it returns 0
-for a win. Where the redraw picks the flash's kind from a `Ui` field that
-`flashLength` sets, a win must still select the win kind.
+**`flashLength(a, b, dir, ui)` is for a flash that is not a win**: a death
+(Inertia, Mines), a board with no move left (Same Game) or a loss (Flood).
+The midend asks it on every
+transition and a nonzero answer replaces the win flash, so it returns 0 for a
+win. The game reads it in `redraw` as `flash.time`, seconds in. The two never
+run together: `flash.time` is 0 through a win, and `flash.win` is false
+through a flash of the game's own, so a redraw needs no field in its `Ui` to
+tell which it is drawing.
 
-Dominosa's flash used to clear its hovered-pair highlight as a side effect;
-that belongs to `changedState` on the transition into solved, which is where a
-game reacts to a status change (ABCD, Light Up, Magnets, Signpost and Singles
-hide their cursor there).
+**The highlight sets off when the winning move has come to rest.** The midend
+holds the win's clock at zero until the move's own animation ends, so a game
+that slides or spins a tile writes no guard for it.
 
-**Flash isolation is a midend concern the games inherited the hard way**:
-Flip's solve celebration once fired on every animated move because the midend
-accumulated `flashTime` unconditionally. If a flash overlay appears where it
-shouldn't, suspect the *armed/settled* state machine before the game's
-condition — and keep a flash-overlay-isolation test (Flip has one).
+A game that reacts to becoming solved in some other way (ABCD, Light Up,
+Magnets, Signpost and Singles hide their cursor) does it in `changedState` on
+the transition into solved, never as a side effect of drawing the flash.
 
 ## Sizing
 
@@ -821,9 +859,9 @@ decision:
   done"** is `clueDoneColor` for retired *text* and `REGION_DONE` for
   a completed *fill* — five games once encoded it five ways, from `INK` (Loopy,
   which made the distinction invisible) to a bespoke `bg × 0.85`. **The solved
-  flash** is `FLASH` wherever a board flashes to a fill or line color; a bevel
-  wave, a state swap or a color cycle is an animation, not a color, and keeps
-  its own mechanism.
+  flash** lights an element with the lifted surface (a cell) or `FLASH` (a
+  line); which elements are lit, and when, is the engine's
+  (§ "Animation and flash").
 - [`engine/color/colors.ts`](../../src/engine/color/colors.ts) — **the
   palette itself**: twelve names, most at three intensities (base, `_WASH`,
   `_BOLD`), plus the distinguishability sets (`TEN`, `TEN_NAMES`,

@@ -63,7 +63,6 @@ import {
   centeredCoord,
   colors,
   computeSize,
-  flashLength,
   metrics,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -639,8 +638,6 @@ export const tracksGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  solvedFlash: (state) => flashLength(state),
 };
 
 registerGame(tracksGame);

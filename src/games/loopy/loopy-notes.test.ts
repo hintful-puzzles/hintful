@@ -34,6 +34,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { dlineEnds, dlineIndexFromDot, dlineIndexFromFace } from "./dlines.ts";
 import { newDesc } from "./generator.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
@@ -388,7 +389,7 @@ describe("notes on the board", () => {
     const palette = loopyGame.colors(DEFAULT_BACKGROUND);
     const draw = (ui: LoopyUi, mistakes = loopyGame.findMistakes?.(state) ?? []) => {
       const dr = new RecordingDrawing(palette);
-      loopyGame.redraw(dr, b.ds, null, state, 0, ui, 0, 0, undefined, mistakes);
+      loopyGame.redraw(dr, b.ds, null, state, 0, ui, 0, NO_FLASH, undefined, mistakes);
       return dr.ops;
     };
 

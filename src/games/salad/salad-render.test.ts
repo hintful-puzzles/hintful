@@ -18,14 +18,16 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import type { SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";
 import {
   COL_BACKGROUND,
   COL_BORDERCLUE,
   COL_CURSOR,
+  COL_FLASH,
   COL_G_HOLE,
-  COL_HIGHLIGHT,
   COL_HINT,
   COL_HINT_CELL,
   COL_I_BALLBG,
@@ -33,7 +35,6 @@ import {
   COL_MISTAKE,
   COL_PENCIL,
   COL_PENCIL_BODY,
-  FLASH_TIME,
   newDrawState,
   redraw,
 } from "./render.ts";
@@ -329,15 +330,15 @@ describe("salad hint frames", () => {
 // --- tier 2: frames that depend on Ui state --------------------------------
 
 /** Paint one frame straight against the game's `redraw`, so the `Ui` (cursor,
- * pencil mode) and the flash clock can be set explicitly. */
+ * pencil mode) and the flash can be set explicitly. */
 function paint(
   state: ReturnType<typeof newState>,
   ui: ReturnType<typeof newUi>,
-  flashTime = 0,
+  flash: Flash = NO_FLASH,
 ): RecordingDrawing {
   const ds = newDrawState(state, saladGame.preferredTileSize ?? 32);
   const rec = new RecordingDrawing(saladGame.colors(DEFAULT_BACKGROUND));
-  redraw(rec, ds, null, state, 0, ui, 0, flashTime);
+  redraw(rec, ds, null, state, 0, ui, 0, flash);
   return rec;
 }
 
@@ -370,19 +371,23 @@ describe("salad Ui-driven frames", () => {
     ).toBe(true);
   });
 
-  it("plays the completion flash as a moving three-phase wave", () => {
-    const s = newState(LETTERS_P, LETTERS_DESC);
+  it.each([
+    ["letters", LETTERS_P, LETTERS_DESC],
+    ["numbers", NUMBERS_P, NUMBERS_DESC],
+  ])("sweeps the win flash over every square of a %s board, from the bottom left", (_mode, p, desc) => {
+    const s = newState(p, desc);
     const ui = newUi(s);
-    // Two phases of the same flash must paint *differently* — a snapshot alone
-    // cannot tell you an animation is moving (docs/games/rendering.md § "The tile cache and the diff key").
-    const phaseA = paint(s, ui, FLASH_TIME);
-    const phaseB = paint(s, ui, FLASH_TIME - 0.1);
-    const wave = (r: RecordingDrawing) =>
-      r.ops
-        .filter((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)
-        .map((o) => (o.op === "rect" ? `${o.x},${o.y}` : ""))
-        .join(" ");
-    expect(wave(phaseA)).not.toBe("");
-    expect(wave(phaseA)).not.toBe(wave(phaseB));
+    /** Where each square painted in the flash color is drawn, as `x,y`. */
+    const run = winFlashRun(
+      (flash) => paint(s, ui, flash),
+      (rec) =>
+        rec.ops.flatMap((o) =>
+          o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+        ),
+    );
+    expectWinFlashTravels(run, p.order * p.order, (at) => {
+      const [x, y] = at.split(",").map(Number);
+      return sweepStep(x, y);
+    });
   });
 });

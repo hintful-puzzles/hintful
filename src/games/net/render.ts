@@ -37,6 +37,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Flash } from "../../engine/win-wave.ts";
 import {
   anticlockwise,
   clockwise,
@@ -49,6 +50,7 @@ import {
   opposite,
   R,
   U,
+  wireDistance,
 } from "../../engine/wires.ts";
 import type { NetHint } from "./hint.ts";
 import { SIDE } from "./hint-text.ts";
@@ -67,11 +69,10 @@ import {
 
 export const PREFERRED_TILE_SIZE = 32;
 export const ROTATE_TIME = 0.13;
-export const FLASH_FRAME = 0.07;
 
 export const COL_BACKGROUND = 0; // the board around the grid
 /** The surface under a locked tile, lifted: the player has fixed it, as the
- * puzzle fixes a given. The completion flash lifts each tile in turn. */
+ * puzzle fixes a given. The win flash swaps a lit tile's surface with it. */
 export const COL_LOCKED = 1;
 export const COL_BORDER = 2; // the line between two tiles, and the frame
 export const COL_WIRE = 3;
@@ -561,7 +562,7 @@ export function redraw(
   dir: number,
   ui: NetUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<NetMove, NetHint>,
   mistakes?: readonly NetMistake[],
 ): void {
@@ -607,9 +608,12 @@ export function redraw(
     state = prev;
   }
 
-  const frame = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) : 0;
-
   const { w, h, barriers } = state;
+  // The win flash spreads from the source: a tile's position is its distance
+  // along the wires, and a tile they do not reach is never asked about.
+  const reach = flash.winning
+    ? wireDistance(w, h, state.tiles, barriers, ui.cx, ui.cy)
+    : null;
   const active = computeActive(state, ui.cx, ui.cy);
   const loops = computeLoops(w, h, state.tiles, barriers, ui.unlockedLoops);
 
@@ -702,18 +706,10 @@ export function redraw(
 
       if (t & LOCKED) td[here] |= TILE_LOCKED;
 
-      // Completion flash: a Chebyshev ripple from the source that toggles the
-      // lifted surface frame by frame.
-      {
-        const rcx = (ui.cx + w - ui.orgX) % w;
-        const rcy = (ui.cy + h - ui.orgY) % h;
-        const xdist = dx < rcx ? rcx - dx : dx - rcx;
-        const ydist = dy < rcy ? rcy - dy : dy - rcy;
-        const dist = Math.max(xdist, ydist);
-        if (frame >= dist && frame < dist + 4 && (frame - dist) & 1) {
-          td[here] ^= TILE_LOCKED;
-        }
-      }
+      // A lit tile swaps surfaces, so the highlight shows on a locked tile,
+      // lifted already, as on any other.
+      if (reach !== null && reach[gi] >= 0 && flash.win(reach[gi]))
+        td[here] ^= TILE_LOCKED;
     }
   }
 

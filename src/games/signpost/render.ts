@@ -1,7 +1,7 @@
 /**
  * Signpost renderer — imperative per-tile draw with a packed-word cache,
- * a blitter-backed drag sprite, and the spin win-flash (upstream
- * `game_redraw` / `tile_redraw` / `game_colours`).
+ * a blitter-backed drag sprite, and the win flash along the number path
+ * (upstream `game_redraw` / `tile_redraw` / `game_colours`).
  *
  * A square with no chain is the quiet cell surface, a square whose number the
  * puzzle fixed is the lifted surface of a given, and every other square takes
@@ -34,6 +34,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point } from "../../engine/types.ts";
+import type { Flash } from "../../engine/win-wave.ts";
 import type { SignpostHint } from "./hint.ts";
 import { ARROW } from "./hint-marks.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
@@ -55,7 +56,7 @@ const COL_BACKGROUND = 0;
 /** The surface of a square that is in no chain yet. */
 const COL_CELL = 1;
 /** The lifted surface of a square whose number the puzzle fixed. */
-const COL_GIVEN = 2;
+export const COL_GIVEN = 2;
 const COL_GRID = 3;
 const COL_CURSOR = 4;
 const COL_ERROR = 5;
@@ -79,8 +80,6 @@ export const COL_HINT_CELL = COL_HINT + 1;
  * `computeSize` read the same number the painter does — one function, both
  * callers ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
 export const BORDER = 1;
-/** Win-flash duration, shared with `solvedFlash` for the same reason. */
-export const FLASH_SPIN = 0.7;
 const TWO_PI = 2 * Math.PI;
 
 // --- per-tile flags ---------------------------------------------------
@@ -104,6 +103,8 @@ const F_HINT_OUTLINE = 0x400;
  * `F_ERROR`, which a given's number never shows: a clash of numbers is not
  * the given's fault, and a wrong link out of it is the player's. */
 const F_MISTAKE = 0x800;
+/** The win flash's highlight is on this square. */
+const F_FLASH = 0x1000;
 
 // --- palette ----------------------------------------------------------
 
@@ -184,11 +185,10 @@ function drawStar(
   rad: number,
   npoints: number,
   color: number,
-  angleOffset: number,
 ): void {
   const coords: Point[] = [];
   for (let n = 0; n < npoints * 2; n++) {
-    const a = (TWO_PI * n) / (npoints * 2) + angleOffset;
+    const a = (TWO_PI * n) / (npoints * 2);
     const r = n % 2 ? rad / 2 : rad;
     coords.push({
       x: cx + Math.round(r * Math.sin(a)),
@@ -241,7 +241,6 @@ function tileRedraw(
   dir: number,
   num: number,
   f: number,
-  angleOffset: number,
 ): void {
   const ts = ds.tileSize;
   const n = ds.n;
@@ -279,13 +278,12 @@ function tileRedraw(
 
   // The square's surface. A given keeps its lift while a drag dims the rest,
   // since who put the number there does not change with the player's focus.
+  // The win flash swaps the two surfaces, so its highlight shows on a given,
+  // lifted already, as on any other square.
+  const lifted = !empty && !(f & F_IMMUTABLE) !== !(f & F_FLASH);
   dr.drawRect(
     { x: tx, y: ty, w: ts, h: ts },
-    empty || !(f & (F_IMMUTABLE | F_DIM))
-      ? setcol
-      : f & F_IMMUTABLE
-        ? COL_GIVEN
-        : dimbg(setcol),
+    lifted ? COL_GIVEN : f & F_DIM && !empty ? dimbg(setcol) : setcol,
   );
   // The grid line this square shares with its upper and left neighbors; the
   // frame closes the first row and column.
@@ -300,9 +298,9 @@ function tileRedraw(
   const acx = tx + Math.floor(ts / 2) + asz;
   const acy = ty + Math.floor(ts / 2) + asz;
   if (num === n && f & F_IMMUTABLE) {
-    drawStar(dr, acx, acy, asz, 5, arrowcol, angleOffset);
+    drawStar(dr, acx, acy, asz, 5, arrowcol);
   } else {
-    drawArrow(dr, acx, acy, asz, (TWO_PI * dir) / 8 + angleOffset, arrowcol);
+    drawArrow(dr, acx, acy, asz, (TWO_PI * dir) / 8, arrowcol);
   }
   if (f & F_CUR) drawRectCorners(dr, acx, acy, asz + 1, COL_CURSOR);
 
@@ -402,20 +400,12 @@ export function redrawSignpost(
   _dir: number,
   ui: SignpostUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SignpostMove, SignpostHint>,
   mistakes?: readonly SignpostMistake[],
 ): void {
   const ts = ds.tileSize;
   const w = state.w;
-
-  let force = false;
-  let angleOffset = 0;
-  if (flashTime > 0) angleOffset = TWO_PI * (flashTime / FLASH_SPIN);
-  if (angleOffset !== ds.angleOffset) {
-    ds.angleOffset = angleOffset;
-    force = true;
-  }
 
   // Erase the drag sprite drawn last frame.
   if (ds.dragging) {
@@ -486,6 +476,8 @@ export function redrawSignpost(
       }
       if (mistakeSet?.has(i)) f |= F_MISTAKE;
       if (renderState.flags[i] & FLAG_IMMUTABLE) f |= F_IMMUTABLE;
+      // The win flash runs the number path: a square's position is its number.
+      if (renderState.nums[i] > 0 && flash.win(renderState.nums[i])) f |= F_FLASH;
       f |= hintFlags.get(i) ?? 0;
       if (renderState.next[i] !== -1) f |= F_ARROW_POINT;
       if (renderState.prev[i] !== -1) {
@@ -502,10 +494,8 @@ export function redrawSignpost(
         renderState.nums[i] !== ds.nums[i] ||
         f !== ds.cache[i] ||
         dirp !== ds.dirp[i] ||
-        force ||
         !ds.started
       ) {
-        const sign = ui.gearMode ? 1 - 2 * ((x ^ y) & 1) : 1;
         tileRedraw(
           dr,
           ds,
@@ -514,7 +504,6 @@ export function redrawSignpost(
           state.dirs[i],
           renderState.nums[i],
           f,
-          sign * angleOffset,
         );
         ds.nums[i] = renderState.nums[i];
         ds.cache[i] = f;

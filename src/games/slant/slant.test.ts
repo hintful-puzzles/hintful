@@ -30,11 +30,13 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Point } from "../../engine/types.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc, slantGenerate } from "./generator.ts";
 import { slantGame } from "./index.ts";
-import { border, COL_ERROR, COL_GROUNDED } from "./render.ts";
+import { border, COL_ERROR, COL_GIVEN, COL_GROUNDED } from "./render.ts";
 import { SOLVE_UNIQUE, SolverScratch, slantSolve } from "./solver.ts";
 import {
   computeErrors,
@@ -305,7 +307,7 @@ describe("slant solve + findMistakes", () => {
     expect(slantGame.findMistakes?.(s)).toEqual([]);
   });
 
-  it("flashes on a genuine player win", () => {
+  it("is solved on a genuine player win", () => {
     const s = newState(p, FIXTURE.desc);
     const moves: SlantMove[] = [];
     for (let i = 0; i < p.w * p.h; i++) {
@@ -315,7 +317,6 @@ describe("slant solve + findMistakes", () => {
     const done = executeMove(prev, moves[moves.length - 1]);
     expect(slantGame.status(prev)).toBe("ongoing");
     expect(slantGame.status(done)).toBe("solved");
-    expect(slantGame.solvedFlash?.(done, ui())).toBeGreaterThan(0);
   });
 });
 
@@ -400,9 +401,9 @@ describe("slant rendering", () => {
     const dr = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
     const ds = slantGame.newDrawState(s, 32);
     const u = ui();
-    slantGame.redraw?.(dr, ds, null, s, 1, u, 0, 0, undefined, undefined);
+    slantGame.redraw?.(dr, ds, null, s, 1, u, 0, NO_FLASH, undefined, undefined);
     dr.ops.length = 0;
-    slantGame.redraw?.(dr, ds, null, s, 1, u, 0, 0, undefined, [{ x: 0, y: 0 }]);
+    slantGame.redraw?.(dr, ds, null, s, 1, u, 0, NO_FLASH, undefined, [{ x: 0, y: 0 }]);
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 
@@ -415,11 +416,46 @@ describe("slant rendering", () => {
     for (const fade of [false, true]) {
       const dr = new RecordingDrawing(palette);
       const ds = slantGame.newDrawState(s, 32);
-      slantGame.redraw?.(dr, ds, null, s, 1, ui({ fadeGrounded: fade }), 0, 0);
+      slantGame.redraw?.(dr, ds, null, s, 1, ui({ fadeGrounded: fade }), 0, NO_FLASH);
       const groundedLines = dr.ops.filter(
         (o) => o.op === "line" && o.color === COL_GROUNDED,
       );
       expect(groundedLines.length > 0).toBe(fade);
     }
+  });
+});
+
+describe("slant: the win flash", () => {
+  const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
+  const state = newState(p, FIXTURE.desc);
+  const palette = slantGame.colors(DEFAULT_BACKGROUND);
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(palette);
+    slantGame.redraw(
+      dr,
+      slantGame.newDrawState(state, 32),
+      null,
+      state,
+      1,
+      ui(),
+      0,
+      flash,
+    );
+    return dr;
+  };
+  /** Where each square painted in the flash color is drawn, as `x,y`. */
+  const run = winFlashRun(paint, (dr) =>
+    dr.ops.flatMap((o) =>
+      o.op === "rect" && o.color === COL_GIVEN ? [`${o.x},${o.y}`] : [],
+    ),
+  );
+  /** The sweep's diagonal through a square drawn at `at`. */
+  const diagonal = (at: string): number => {
+    const [x, y] = at.split(",").map(Number);
+    return sweepStep(x, y);
+  };
+
+  it("lifts every square in turn, and nothing off the grid, from the bottom left to the top right", () => {
+    expectWinFlashTravels(run, p.w * p.h, diagonal);
   });
 });

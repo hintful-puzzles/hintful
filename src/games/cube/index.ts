@@ -370,7 +370,6 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   redraw,
 
   animLength: () => ROLLTIME,
-  flashLength: () => 0,
 };
 
 registerGame(cubeGame);

@@ -18,9 +18,16 @@ import {
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { undeadGame } from "./index.ts";
+import { border, COL_FLASH, countBlockAt, newDrawState, redraw } from "./render.ts";
 import {
   findUndeadSolution,
   isUniquelySolvable,
@@ -228,10 +235,10 @@ describe("undead executeMove", () => {
   });
 });
 
-// --- live flash ------------------------------------------------------------
+// --- completion ------------------------------------------------------------
 
-describe("undead flash", () => {
-  it("the last correct placement solves the board, and the win has a flash", () => {
+describe("undead completion", () => {
+  it("the last correct placement solves the board", () => {
     const { state, aux } = gen(4, 4, "normal", "flash");
     const placements = auxToGuess(aux);
     let s = state;
@@ -245,7 +252,6 @@ describe("undead flash", () => {
       monster: placements[placements.length - 1],
     });
     expect(undeadGame.status(after)).toBe("solved");
-    expect(undeadGame.solvedFlash?.(after, newUi(state))).toBeGreaterThan(0);
   });
 });
 
@@ -325,5 +331,63 @@ describe("on-screen keys (requestKeys)", () => {
       { button: "Z".charCodeAt(0), label: "Zombie" },
       { button: 8, label: "Clear" },
     ]);
+  });
+});
+
+describe("undead: the win flash sweeps the cells, the clues and the counts", () => {
+  const TS = 48;
+  const { state: start, aux } = gen(4, 4, "normal", "win-flash");
+  const state = auxToGuess(aux).reduce(
+    (s, monster, cell) => undeadGame.executeMove(s, { type: "set", cell, monster }),
+    start,
+  );
+  const { w, h } = state.common;
+  // Every cell, a clue at each end of every row and column, and three counts.
+  const elements = w * h + 2 * (w + h) + 3;
+  // Letters for monsters, so each element is one piece of text or one line.
+  const ui = { ...newUi(state), ascii: true };
+
+  const paint = (flash: Flash, ds = newDrawState(state, TS)) => {
+    const dr = new RecordingDrawing(undeadGame.colors(DEFAULT_BACKGROUND));
+    redraw(dr, ds, null, state, 1, ui, 0, flash);
+    return dr.ops;
+  };
+  // A draw state that has laid the counts out, to tell which one a pixel is in.
+  const laid = newDrawState(state, TS);
+  paint(NO_FLASH, laid);
+  // Each count's column in the grid's own units: the middle of its block.
+  const countColumn = [0, 1, 2].map((c) => {
+    const xs = Array.from({ length: (w + 4) * TS }, (_, px) => px).filter(
+      (px) => countBlockAt(laid, px, border(TS)) === c,
+    );
+    return ((xs[0] + xs[xs.length - 1] + 1) / 2 - border(TS)) / TS - 0.5;
+  });
+  /** What a frame inks in the flash color, as grid `x,y`: the clue ring is row
+   * and column 0 and one past the board, and a count is in row -1. */
+  const lit = (ops: ReturnType<typeof paint>): string[] => {
+    const at = (px: number, py: number): string => {
+      const count = countBlockAt(laid, px, py);
+      if (count >= 0) return `${countColumn[count]},-1`;
+      return `${Math.floor((px - border(TS)) / TS)},${Math.floor((py - border(TS)) / TS) - 1}`;
+    };
+    const keys = ops.flatMap((op) => {
+      if (op.op === "text" && op.color === COL_FLASH) return [at(op.x, op.y)];
+      if (op.op === "line" && op.color === COL_FLASH)
+        return [at((op.x1 + op.x2) / 2, (op.y1 + op.y2) / 2)];
+      return [];
+    });
+    return [...new Set(keys)];
+  };
+  const step = (key: string): number => {
+    const [x, y] = key.split(",").map(Number);
+    return x - y;
+  };
+
+  it("is a solved board", () => {
+    expect(undeadGame.status(state)).toBe("solved");
+  });
+
+  it("travels every cell, edge clue and count, from the bottom left to the top right", () => {
+    expectWinFlashTravels(winFlashRun(paint, lit), elements, step);
   });
 });

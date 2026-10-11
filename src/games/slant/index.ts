@@ -59,7 +59,6 @@ import {
   border,
   colors,
   computeSize,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -453,8 +452,6 @@ export const slantGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(slantGame);

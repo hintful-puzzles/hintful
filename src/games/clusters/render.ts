@@ -6,8 +6,8 @@
  * for a rule violation, and a green frame under the keyboard cursor. Rule
  * violations are recomputed every frame from the current grid and shown live
  * (upstream behavior); the in-flight paint drag previews its cells in the
- * drag color. On a fresh win the whole board flashes by swapping both
- * colors on alternate beats.
+ * drag color. The win flash swaps the surface of the cell it is on: a cell
+ * lifts, and a given's lifted cell drops to the plain one.
  *
  * The geometry is upstream's `NARROW_BORDERS` build, the one its web frontend
  * used: `BORDER = tileSize / 10` — a thin grid margin, not the desktop
@@ -33,6 +33,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { ClustersHintHighlights, ClustersMistake } from "./index.ts";
 import { findErrors } from "./solver.ts";
 import {
@@ -48,8 +49,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-const FLASH_FRAME = 0.1;
-export const FLASH_TIME = FLASH_FRAME * 3;
 
 // --- palette ---------------------------------------------------------------
 
@@ -121,6 +120,7 @@ export function computeSize(p: ClustersParams, ts: number): Size {
 const F_ERR = 1 << 8;
 const F_CUR = 1 << 9;
 const F_WRONG = 1 << 10;
+const F_LIT = 1 << 11; // the win flash is on this cell
 
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
 // the diff key (docs/games/rendering.md § "Overlay sidecars").
@@ -194,6 +194,7 @@ function drawTile(
   tile: number,
   error: boolean,
   wrong: boolean,
+  lit: boolean,
   cursor: boolean,
   hintBits: number,
   hintOrder: number,
@@ -218,7 +219,10 @@ function drawTile(
       grown,
     );
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
-  dr.drawRect(surface, wrong ? COL_WRONG : tile & F_SINGLE ? COL_GIVEN : COL_CELL);
+  dr.drawRect(
+    surface,
+    wrong ? COL_WRONG : lit !== ((tile & F_SINGLE) !== 0) ? COL_GIVEN : COL_CELL,
+  );
   if (tile & COLMASK) piece(tile, 1);
 
   // The small piece of the color a what-if cell would be forced to — a
@@ -290,7 +294,7 @@ export function redraw(
   _dir: number,
   ui: ClustersUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<ClustersMove>,
   mistakes?: readonly ClustersMistake[],
 ): void {
@@ -304,8 +308,6 @@ export function redraw(
     dr.drawRect({ x: b - 1, y: b - 1, w: w * ts + 1, h: h * ts + 1 }, COL_GRID);
     ds.started = true;
   }
-
-  const flash = flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) % 2 === 0;
 
   // Live rule violations, recomputed from the committed grid every frame
   // (pure — never mutates the state's grid).
@@ -355,20 +357,20 @@ export function redraw(
       // In-flight paint drag previews non-given cells in the drag color.
       if (dragSet?.has(i) && !(tile & F_SINGLE)) tile = ui.dragType;
 
-      if (flash) tile ^= COLMASK; // swap both colors on the flash beat
-
       // A dragged (uncommitted) cell shows no error outline — its color is a
       // preview, not the committed state the error check ran on.
       const error = !(dragSet?.has(i) && !(grid[i] & F_SINGLE)) && errors.has(i);
       const cursor = ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y;
 
-      const wrong = !flash && wrongTiles.has(i);
+      const wrong = wrongTiles.has(i);
+      const lit = flash.win(sweepStep(x, y));
 
       const packed =
         (tile & 0x7) |
         (error ? F_ERR : 0) |
         (cursor ? F_CUR : 0) |
-        (wrong ? F_WRONG : 0);
+        (wrong ? F_WRONG : 0) |
+        (lit ? F_LIT : 0);
       if (ds.cache[i] !== packed || ds.hint.stale(i)) {
         drawTile(
           dr,
@@ -378,6 +380,7 @@ export function redraw(
           tile,
           error,
           wrong,
+          lit,
           cursor,
           ds.hint.packed[i],
           ds.hint.order[i],

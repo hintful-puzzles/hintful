@@ -13,6 +13,12 @@ import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  expectWinFlashTravels,
+  winFlashAt,
+  winFlashRun,
+} from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newRomeDesc } from "./generator.ts";
 import { romeGame } from "./index.ts";
 import {
@@ -76,11 +82,11 @@ function newUi(): RomeUi {
 function frame(
   state: RomeState,
   ui: RomeUi,
-  flashTime = 0,
+  flash: Flash = NO_FLASH,
 ): { dr: RecordingDrawing; ds: RomeDrawState } {
   const ds = newDrawState(state, TS);
   const dr = new RecordingDrawing(PALETTE);
-  redraw(dr, ds, null, state, 1, ui, 0, flashTime);
+  redraw(dr, ds, null, state, 1, ui, 0, flash);
   return { dr, ds };
 }
 
@@ -139,12 +145,12 @@ describe("region outlines", () => {
     const ds = newDrawState(state, TS);
 
     const first = new RecordingDrawing(PALETTE);
-    redraw(first, ds, null, state, 1, newUi(), 0, 0);
+    redraw(first, ds, null, state, 1, newUi(), 0, NO_FLASH);
     expect(first.ops.some((o) => o.op === "rect" && o.color === COL_BORDER)).toBe(true);
 
     // A second redraw of an unchanged board repaints nothing at all.
     const second = new RecordingDrawing(PALETTE);
-    redraw(second, ds, null, state, 1, newUi(), 0, 0);
+    redraw(second, ds, null, state, 1, newUi(), 0, NO_FLASH);
     expect(second.ops).toHaveLength(0);
   });
 });
@@ -333,22 +339,22 @@ describe("cursor and drag", () => {
 // --- completion flash -------------------------------------------------------
 
 describe("completion flash", () => {
-  it("cycles three phases, so consecutive frames differ", () => {
+  /** The win flash `time` seconds in, on `state` as `ui` shows it. */
+  const winAt = (state: RomeState, ui: RomeUi, time: number): Flash =>
+    winFlashAt(time, (flash) => frame(state, ui, flash));
+
+  it("sweeps the squares from the bottom left to the top right", () => {
     const state = board(3, 3, `${ALL_WALLS_3},i`);
-    // Phase index is `floor(flashTime / 0.1) % 3`, so 0.65 and 0.55 are
-    // different beats — a snapshot alone would not show the animation moving.
-    const phase = (flashTime: number): string =>
-      JSON.stringify(
-        frame(state, newUi(), flashTime).dr.ops.filter((o) => o.op === "rect"),
-      );
-    expect(phase(0.65)).not.toBe(phase(0.55));
-    const flashing = frame(state, newUi(), 0.65).dr;
-    expect(flashing.ops.some((o) => o.op === "rect" && o.color === COL_FLASH)).toBe(
-      true,
+    const cell = (px: number) => Math.floor((px - origin(TS)) / TS);
+    // The squares filled in the flash color, each as its index.
+    const run = winFlashRun(
+      (flash) => frame(state, newUi(), flash).dr,
+      (dr) =>
+        dr.ops.flatMap((o) =>
+          o.op === "rect" && o.color === COL_FLASH ? [cell(o.y) * 3 + cell(o.x)] : [],
+        ),
     );
-    expect(flashing.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(
-      true,
-    );
+    expectWinFlashTravels(run, 9, (i) => sweepStep(i % 3, Math.floor(i / 3)));
   });
 
   it("hides the keyboard cursor while the board celebrates", () => {
@@ -358,7 +364,10 @@ describe("completion flash", () => {
       cursor: newCursor(1, 1, true),
       kmode: KEYMODE_PENCIL,
     };
-    expect(frame(state, ui, 0.65).dr.ops.some((o) => o.op === "text")).toBe(false);
+    expect(frame(state, ui).dr.ops.some((o) => o.op === "text")).toBe(true);
+    expect(
+      frame(state, ui, winAt(state, ui, 0.65)).dr.ops.some((o) => o.op === "text"),
+    ).toBe(false);
   });
 });
 

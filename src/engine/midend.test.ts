@@ -41,6 +41,7 @@ import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import type { ChangeNotification, Color, Point } from "./types.ts";
+import { WIN_FLASH_S } from "./win-wave.ts";
 
 function recordingDrawing() {
   const dr = new RecordingDrawing(fakeGame.colors(DEFAULT_BACKGROUND));
@@ -203,12 +204,12 @@ describe("Midend completion: the status is the position's, the history is the en
   /** The fake game with a win flash, and the tick switched to animation only,
    * so `timerActive` says whether a flash was armed. */
   function flashing() {
-    const h = harness({ ...fakeGame, solvedFlash: () => 0.5 });
+    const h = harness(fakeGame);
     h.m.newGame();
     h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
     const flashed = (): boolean => {
       const armed = h.timerActive();
-      h.m.timer(1); // let any flash run out
+      h.m.timer(WIN_FLASH_S); // let any flash run out
       return armed;
     };
     return { h, flashed };
@@ -256,6 +257,83 @@ describe("Midend completion: the status is the position's, the history is the en
     inc(h);
     expect(h.state()?.status).toBe("solved-with-help");
     expect(flashed()).toBe(true);
+  });
+
+  /** A fake game that notes what each frame's flash said of five positions,
+   * won by three presses, with a fresh frame painted per tick. */
+  function watching(extra: Partial<typeof fakeGame> = {}) {
+    const frames: { lit: boolean[]; time: number }[] = [];
+    const h = harness({
+      ...fakeGame,
+      ...extra,
+      redraw: (_dr, _ds, _prev, _s, _dir, _ui, _animTime, flash) => {
+        frames.push({
+          lit: [0, 1, 2, 3, 4].map((p) => flash.win(p)),
+          time: flash.time,
+        });
+      },
+    });
+    h.m.newGame();
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
+    const { dr } = recordingDrawing();
+    /** Tick `seconds` and paint; what that frame was told. */
+    const frame = (seconds: number) => {
+      h.m.timer(seconds);
+      h.m.redraw(dr);
+      return frames[frames.length - 1];
+    };
+    const win = () => {
+      for (let i = 0; i < 3; i++) inc(h);
+      h.m.redraw(dr); // the frame that measures the route
+    };
+    return { h, frame, win };
+  }
+
+  it("runs a highlight along the positions the game asked about, then settles", () => {
+    const { h, frame, win } = watching();
+    win();
+    expect(frame(0.01).lit).toEqual([true, false, false, false, false]);
+    expect(frame(WIN_FLASH_S / 2).lit[0]).toBe(false);
+    expect(frame(0).lit).toContain(true);
+    expect(frame(0).time).toBe(0);
+    expect(h.timerActive()).toBe(true);
+    expect(frame(WIN_FLASH_S / 2).lit).not.toContain(true);
+    expect(h.timerActive()).toBe(false);
+  });
+
+  it("holds the highlight until the winning move's own animation has ended", () => {
+    const { frame, win } = watching({ animLength: () => 1 });
+    win();
+    expect(frame(0.9).lit).not.toContain(true);
+    // The first frame after it measures the route, and the next one lights.
+    expect(frame(0.15).lit).not.toContain(true);
+    expect(frame(0.05).lit).toEqual([true, false, false, false, false]);
+  });
+
+  it("lights every position at once under reduced motion", () => {
+    const { h, frame, win } = watching();
+    h.m.setReducedMotion(true);
+    win();
+    expect(frame(0.01).lit).not.toContain(false);
+    expect(frame(WIN_FLASH_S).lit).not.toContain(true);
+  });
+
+  it("gives way to a flash of the game's own", () => {
+    const { frame, win } = watching({ flashLength: () => 0.5 });
+    win();
+    const told = frame(0.2);
+    expect(told.time).toBeCloseTo(0.2);
+    expect(told.lit).not.toContain(true);
+  });
+
+  it("ends a win flash that the game asked nothing of", () => {
+    const h = harness({ ...fakeGame, redraw: () => {} });
+    h.m.newGame();
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
+    for (let i = 0; i < 3; i++) inc(h);
+    h.m.redraw(recordingDrawing().dr);
+    h.m.timer(0.01);
+    expect(h.timerActive()).toBe(false);
   });
 
   it("opens the status bar with the completion words, read off the board now", () => {
@@ -817,6 +895,7 @@ describe("Midend timer", () => {
     h.m.newGame();
     for (let i = 0; i < 3; i++) inc(h);
     expect(h.state()?.status).toBe("solved");
+    h.m.timer(WIN_FLASH_S); // the win flash keeps the tick, and no longer
     expect(h.timerActive()).toBe(false);
     h.m.timer(30);
     expect(readout(h)?.seconds).toBe(0);
@@ -1759,7 +1838,8 @@ describe("Midend executeHint plays the stored plan", () => {
     expect(c.hintCalls()).toBe(1);
     expect(h.m.formatAsText()).toBe("count=3");
     expect(h.state()?.status).toBe("solved");
-    // Plan exhausted + board solved ⇒ cleared.
+    // Plan exhausted + board solved ⇒ cleared, with the win flash still to run.
+    expect(h.timerActive()).toBe(true);
     expect(explanation()).toBeUndefined();
   });
 

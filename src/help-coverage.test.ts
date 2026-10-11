@@ -595,7 +595,6 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   paletteScheme: { kind: "internal", why: "how the palette adapts to a scheme" },
   animLength: { kind: "internal", why: "animation timing" },
   flashLength: { kind: "internal", why: "animation timing" },
-  solvedFlash: { kind: "internal", why: "animation timing" },
   timerHolds: { kind: "internal", why: "when the solve timer waits" },
   serializeMove: { kind: "internal", why: "save format" },
   deserializeMove: { kind: "internal", why: "save format" },

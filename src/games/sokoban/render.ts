@@ -32,6 +32,7 @@ import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece } from "../../engine/piece.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { BARREL, GOAL, PUSH } from "./hint-text.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
@@ -54,7 +55,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_LENGTH = 0.3;
 
 // --- palette ------------------------------------------------------------
 
@@ -68,7 +68,7 @@ const COL_TEXT = 6;
 const COL_GRID = 7;
 const COL_OUTLINE = 8;
 export const COL_WALL = 9;
-const COL_FLASH = 10;
+export const COL_FLASH = 10;
 export const COL_HINT = 11;
 export const COL_HINT_EVIDENCE = 12;
 /** A drag's aimed push, as Inertia's aimed slide. */
@@ -294,7 +294,7 @@ export function redraw(
   dir: number,
   ui: SokobanUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SokobanMove, unknown>,
   _mistakes?: readonly unknown[],
   deadEnd?: MarkedDeadEnd,
@@ -309,9 +309,6 @@ export function redraw(
       dr.drawLine({ x: x * ts, y: 0 }, { x: x * ts, y: h * ts }, COL_GRID, 1);
     ds.started = true;
   }
-
-  // Flash the background in the first and last thirds of the flash.
-  const flash = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_LENGTH) % 2 === 0;
 
   const marks = stepMarks(hint ?? deadEnd);
   const into = (p: Push) => p.barrel + DIRS[p.dir].dy * w + DIRS[p.dir].dx;
@@ -402,9 +399,11 @@ export function redraw(
               ghost: i === ghostAt,
             }
           : NO_MARKS;
+      // The win's highlight is on the floor, which a wall covers.
+      const lit = v !== WALL && flash.win(sweepStep(x, y));
       const key = [
         v,
-        flash ? "f" : "",
+        lit ? "f" : "",
         tile.ringed ? "r" : "",
         tile.outlined ? "o" : "",
         tile.striped ? "s" : "",
@@ -416,7 +415,7 @@ export function redraw(
         const left = v === WALL && x > 0 && isWall(i - 1);
         const up = v === WALL && y > 0 && isWall(i - w);
         const join = { left, up, corner: left && up && isWall(i - w - 1) };
-        drawTile(dr, ds, x, y, v, flash, tile, here, join);
+        drawTile(dr, ds, x, y, v, lit, tile, here, join);
         ds.tiles[i] = key;
       }
     }

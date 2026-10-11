@@ -13,17 +13,14 @@
  *
  * Upstream repaints the entire canvas every frame — its own TODO list asks for
  * "optimize drawing routines". Here each cell's pixels depend only on its own
- * digit, notes, error/cursor flags and the flash phase, so a per-tile
+ * digit, notes, error/cursor flags and the win flash, so a per-tile
  * `Int32Array` cache suffices (docs/games/rendering.md § "The tile cache and the diff key"), with the Check-&-Save mistake
  * overlay in an `OverlaySidecar` so a mistaken-but-otherwise-unchanged cell
  * still repaints. The number panel repaints only when some clue's color or hint
  * mark changes.
  *
- * Two deliberate display divergences: the completion flash sweeps a diagonal
- * bright/dim wave (upstream declares its frame counter `bool`, so its
- * "flash" is a single static color shift — clearly not the intent of
- * `FLASH_TIME = 9 × FLASH_FRAME`), and the sticky pencil mode adds the
- * collection's mode-indicator glyph, in the margin corner the engine picks.
+ * The sticky pencil mode adds the collection's mode-indicator glyph, in the
+ * margin corner the engine picks.
  */
 
 import { valueBit } from "../../engine/candidate-bits.ts";
@@ -82,6 +79,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { LISTED } from "./hint-text.ts";
 import type { CrossingMistake } from "./solver.ts";
 import {
@@ -97,8 +95,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 40;
-const FLASH_FRAME = 0.08;
-export const FLASH_TIME = FLASH_FRAME * 9;
 
 // --- palette ----------------------------------------------------------------
 
@@ -107,7 +103,7 @@ export const COL_OUTERBG = 0; // the board around the grid, and the clue list's
 export const COL_DONE = 1;
 /** The surface of an empty square. */
 export const COL_CELL = 2;
-/** The completion wave's bright beat, and the cursor's corners on a wall. */
+/** A square the win flash is on, and the cursor's corners on a wall. */
 export const COL_FLASH = 3;
 export const COL_GRID = 4; // the line between two squares, and the frame
 export const COL_ERROR = 5;
@@ -271,7 +267,7 @@ const K_DIGIT = 0; // bits 0-3: the entered digit (0 = empty)
 const K_ERR = 4; // bits 4-7: the FE_* flags
 const K_HIGHLIGHT = 8; // bits 8-9: the square's `CellHighlight`
 const DF_KEYCUR = 1 << 10; // the keyboard cursor on a wall (corner brackets)
-const K_FLASH = 11; // bits 11-12: flash phase + 1 (0 = not flashing)
+const DF_FLASH = 1 << 11; // the win flash is on this square
 const DF_ACROSS = 1 << 13; // marked as part of a horizontal run in play
 const DF_DOWN = 1 << 14; // marked as part of a vertical run in play
 const K_MARKS = 15; // bits 15-23: the nine pencil-mark bits
@@ -475,7 +471,6 @@ function drawCell(
   y: number,
   errFlags: number,
   flags: number,
-  flash: number,
   wrong: boolean,
   struck: number,
 ): void {
@@ -521,19 +516,12 @@ function drawCell(
     // saturated color — a leftover from a scrapped drag-and-drop design that
     // its author asked to have removed.
     //
-    // The completion flash sweeps a diagonal bright/dim wave across the board
-    // (the shape ABCD uses) in place of upstream's color cycle. A selected
-    // square takes its highlight, as an empty square does.
-    const mid =
-      flash < 0
-        ? highlightFill(highlight, COL_SELECTED, surface)
-        : (x + y) % 3 === flash
-          ? COL_FLASH
-          : (x + y + 2) % 3 === flash
-            ? COL_SELECTED
-            : COL_PLACED;
-    if (flash < 0) drawCellBackground(dr, body, highlight, COL_SELECTED, surface);
-    else dr.drawRect(body, mid);
+    // The win flash fills the square it is on. A selected square takes its
+    // highlight, as an empty square does.
+    const lit = (flags & DF_FLASH) !== 0;
+    const mid = lit ? COL_FLASH : highlightFill(highlight, COL_SELECTED, surface);
+    if (lit) dr.drawRect(body, mid);
+    else drawCellBackground(dr, body, highlight, COL_SELECTED, surface);
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
     dr.drawText(
       { x: tileCenter(x, ts), y: tileCenter(y, ts) },
@@ -800,7 +788,7 @@ export function redraw(
   _dir: number,
   ui: CrossingUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<CrossingMove, CrossingHint>,
   mistakes?: readonly CrossingMistake[],
 ): void {
@@ -808,9 +796,8 @@ export function redraw(
   const puzzle = state.puzzle;
   const { w, h, walls, numbers, runs } = puzzle;
 
-  const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   // Upstream hides the selection while the win flash runs.
-  const cursorShown = ui.cursor.visible && flashTime === 0;
+  const cursorShown = ui.cursor.visible && !flash.winning;
 
   // Live errors: which runs read as no listed number, spread over their cells.
   const { done, runErrs } = validateBoard(puzzle, state.grid);
@@ -919,12 +906,10 @@ export function redraw(
       if (ghost[i]) flags |= ghost[i] << K_GHOST;
       if (acrossWash[i]) flags |= DF_ACROSS;
       else if (downWash[i]) flags |= DF_DOWN;
+      // The win flash sweeps the squares holding digits; a wall has none.
+      if (state.grid[i] && flash.win(sweepStep(x, y))) flags |= DF_FLASH;
 
-      const tile =
-        (state.grid[i] << K_DIGIT) |
-        (errFlags[i] << K_ERR) |
-        flags |
-        ((flash + 1) << K_FLASH);
+      const tile = (state.grid[i] << K_DIGIT) | (errFlags[i] << K_ERR) | flags;
 
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
         drawCell(
@@ -936,7 +921,6 @@ export function redraw(
           y,
           errFlags[i],
           flags,
-          flash,
           ds.wrong.at(i),
           ds.hint.struck[i],
         );

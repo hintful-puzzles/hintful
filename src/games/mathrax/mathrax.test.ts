@@ -33,10 +33,18 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
 import { mathraxCandidateClue, newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
-import { COL_ERROR, computeSize, origin, PREFERRED_TILE_SIZE } from "./render.ts";
+import {
+  COL_ERROR,
+  COL_FLASH,
+  computeSize,
+  origin,
+  PREFERRED_TILE_SIZE,
+} from "./render.ts";
 import { mathraxSolve, SOLVE_STUCK, SOLVE_UNIQUE } from "./solver.ts";
 import {
   bitOf,
@@ -688,13 +696,29 @@ describe("mathrax moves", () => {
     m.playMoves(moves);
     expect(status()).toBe("solved");
 
-    // A player-completed board celebrates: the game supplies a win flash.
+    // A player-completed board celebrates: the win flash sweeps its cells
+    // from the bottom left to the top right.
     const solved = moves.reduce(
       (s, mv) => mathraxGame.executeMove(s, mv),
       newState(FIX_PARAMS, FIX.desc),
     );
     expect(mathraxGame.status(solved)).toBe("solved");
-    expect(mathraxGame.solvedFlash?.(solved, newUi(solved))).toBeGreaterThan(0);
+    const palette = mathraxGame.colors(DEFAULT_BACKGROUND);
+    const paint = (flash: Flash) => {
+      const dr = new RecordingDrawing(palette);
+      const ds = preferredDrawState(mathraxGame, solved);
+      mathraxGame.redraw(dr, ds, null, solved, 1, newUi(solved), 0, flash);
+      return dr;
+    };
+    // The cells filled in the flash color, each as its index.
+    const run = winFlashRun(paint, (dr) =>
+      dr.ops.flatMap((op) =>
+        op.op === "rect" && op.color === COL_FLASH
+          ? [((op.y - origin(TS)) / TS) * o + (op.x - origin(TS)) / TS]
+          : [],
+      ),
+    );
+    expectWinFlashTravels(run, o * o, (i) => sweepStep(i % o, Math.floor(i / o)));
   });
 
   it("Solve fills the board and reports solved-with-help", () => {

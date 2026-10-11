@@ -22,6 +22,7 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { rungsFinish } from "./hint.ts";
 import { rectGame } from "./index.ts";
@@ -503,7 +504,7 @@ describe("rect render", () => {
     const st = newState(p, desc);
     const ds = newDrawState(st, TILE);
     const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, ds, null, st, 1, rectGame.newUi(st), 0, 0);
+    redraw(dr, ds, null, st, 1, rectGame.newUi(st), 0, NO_FLASH);
     expect(dr.ops.some((o) => o.op === "rect")).toBe(true);
     expect(dr.ops.some((o) => o.op === "text")).toBe(true);
   });
@@ -514,16 +515,16 @@ describe("rect render", () => {
     const ui = rectGame.newUi(st);
     const palette = rectGame.colors(DEFAULT_BACKGROUND);
     // Warm the drawstate without the overlay, then repaint with it.
-    redraw(new RecordingDrawing(palette), ds, null, st, 1, ui, 0, 0);
+    redraw(new RecordingDrawing(palette), ds, null, st, 1, ui, 0, NO_FLASH);
     const mistakes = rectGame.findMistakes?.(st) ?? [];
     expect(mistakes.length).toBeGreaterThan(0);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, st, 1, ui, 0, 0, undefined, mistakes);
+    redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH, undefined, mistakes);
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
 
     // A third frame without the overlay clears the red.
     const dr2 = new RecordingDrawing(palette);
-    redraw(dr2, ds, null, st, 1, ui, 0, 0);
+    redraw(dr2, ds, null, st, 1, ui, 0, NO_FLASH);
     expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(false);
   });
 

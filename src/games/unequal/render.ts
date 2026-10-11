@@ -51,6 +51,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { UnequalMove } from "./state.ts";
 import {
   checkComplete,
@@ -73,7 +74,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.4;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
@@ -196,7 +196,8 @@ export interface UnequalDrawState {
   errFlags: Int32Array;
   cursor: GridCursor;
   pencilMode: boolean;
-  hflash: boolean;
+  /** `order²`: whether the win flash was on the cell as last drawn. */
+  lit: Uint8Array;
   /** Whether the pencil-mode indicator was on last frame (fork addition). */
   pencilModeShown: boolean | null;
   /** The hint target's ring and the evidence region's outline (fork additions),
@@ -219,7 +220,7 @@ export function newDrawState(state: UnequalState, tileSize: number): UnequalDraw
     errFlags: new Int32Array(o * o),
     cursor: newCursor(),
     pencilMode: false,
-    hflash: false,
+    lit: new Uint8Array(o * o),
     pencilModeShown: null,
     marks: new HintMarks(),
   };
@@ -571,7 +572,7 @@ export function redraw(
   _dir: number,
   ui: UnequalUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<UnequalMove, UnequalHint>,
   mistakes?: readonly Point[],
 ): void {
@@ -581,9 +582,6 @@ export function redraw(
   if (!ds.started) {
     ds.marks.reset(); // the midend's ground just erased every gap
   }
-
-  const hflash =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
 
   checkComplete(state, ds.errFlags);
 
@@ -633,7 +631,8 @@ export function redraw(
         (state.immutable[i] ? DF_IMMUTABLE : 0);
       const pencil = num === 0 ? state.pencil[i] : 0;
 
-      let stale = !ds.started || hflash !== ds.hflash || underErased[i] === 1;
+      const hflash = flash.win(sweepStep(x, y));
+      let stale = !ds.started || hflash !== (ds.lit[i] !== 0) || underErased[i] === 1;
       if (
         hchanged &&
         ((x === ui.cursor.x && y === ui.cursor.y) ||
@@ -669,6 +668,7 @@ export function redraw(
         );
         ds.nums[i] = num;
         ds.flags[i] = flags;
+        ds.lit[i] = hflash ? 1 : 0;
         ds.hint.commit(i);
         ds.wrong.commit(i);
         for (let n = 0; n < o; n++) ds.hints[i * o + n] = (pencil >> (n + 1)) & 1;
@@ -687,6 +687,5 @@ export function redraw(
   ds.cursor.y = ui.cursor.y;
   ds.cursor.visible = ui.cursor.visible;
   ds.pencilMode = ui.pencilMode;
-  ds.hflash = hflash;
   ds.started = true;
 }

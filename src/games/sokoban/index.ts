@@ -39,7 +39,6 @@ import { motionFor, motionLength } from "./motion.ts";
 import {
   colors,
   computeSize,
-  FLASH_LENGTH,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -391,7 +390,6 @@ export const sokobanGame: Game<
     const m = motionFor(a, b, dir);
     return m ? motionLength(m) : 0;
   },
-  solvedFlash: () => FLASH_LENGTH,
 };
 
 registerGame(sokobanGame);

@@ -61,6 +61,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
   clueLabel,
   F_IMMUTABLE,
@@ -75,8 +76,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 40;
-export const FLASH_TIME = 0.7;
-const FLASH_FRAME = 0.1;
 
 /** Upstream's `NARROW_BORDERS` arm, which the web build compiled: a one-pixel
  * border, not half a tile (docs/games/rendering.md § "Sizing"). */
@@ -431,7 +430,7 @@ export function redraw(
   _dir: number,
   ui: MathraxUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<MathraxMove, MathraxHint>,
   mistakes?: readonly Point[],
 ): void {
@@ -448,7 +447,6 @@ export function redraw(
     ds.started = true;
   }
 
-  const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   const index = (x: number, y: number): number => y * o + x;
   ds.wrong.packCells(mistakes ?? null, index);
   ds.hint.pack(stepMarks(hint), index, (m) => valueBit(m.n));
@@ -458,8 +456,8 @@ export function redraw(
       const i = y * o + x;
       let fs = state.flags[i];
 
-      if (flashTime > 0 && (x + y) % 3 === flash) fs |= FD_FLASH;
-      if (flashTime === 0) fs |= cellHighlight(ui, x, y) << FD_HIGHLIGHT_SHIFT;
+      if (flash.win(sweepStep(x, y))) fs |= FD_FLASH;
+      if (!flash.winning) fs |= cellHighlight(ui, x, y) << FD_HIGHLIGHT_SHIFT;
 
       const tile = state.grid[i] | (state.pencil[i] << 4) | (fs << 14);
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {

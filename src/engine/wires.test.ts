@@ -42,6 +42,7 @@ import {
   rot,
   U,
   wireCount,
+  wireDistance,
   type Xyd,
   xydCmp,
 } from "./wires.ts";
@@ -429,5 +430,39 @@ describe("computeActive", () => {
     const tiles = Uint8Array.from([L, 0, R]);
     const active = computeActive(3, 1, tiles, new Uint8Array(3), 0, 0, ACTIVE);
     expect([...active]).toEqual([ACTIVE, 0, ACTIVE]);
+  });
+});
+
+describe("wireDistance", () => {
+  it("counts tiles along the wires, not across the grid", () => {
+    // A 2x2 board wired as a U: (0,0) down to (0,1), right to (1,1), up to
+    // (1,0). The tile beside the source is three wires away.
+    const tiles = Uint8Array.from([D, D, U | R, L | U]);
+    const barriers = new Uint8Array(4);
+    addBorderBarriers(barriers, 2, 2);
+    const dist = wireDistance(2, 2, tiles, barriers, 0, 0);
+    expect([...dist]).toEqual([0, 3, 1, 2]);
+  });
+
+  it("goes round a wrapping edge", () => {
+    // (0,0) wired left meets (3,0) wired right across the seam, and the
+    // tiles between are reached from there.
+    const tiles = Uint8Array.from([L, R, R | L, R | L]);
+    const dist = wireDistance(4, 1, tiles, new Uint8Array(4), 0, 0);
+    expect([...dist]).toEqual([0, 3, 2, 1]);
+  });
+
+  it("stops at a barrier, and leaves a tile no wire reaches at -1", () => {
+    // Wired end to end, with a barrier between the second and third tiles.
+    const tiles = Uint8Array.from([R, R | L, R | L, L]);
+    const barriers = new Uint8Array(4);
+    barriers[1] = R;
+    barriers[2] = L;
+    expect([...wireDistance(4, 1, tiles, barriers, 0, 0)]).toEqual([0, 1, -1, -1]);
+    // And a neighbor wired to nothing.
+    const open = Uint8Array.from([R, 0, L, 0]);
+    expect([...wireDistance(4, 1, open, new Uint8Array(4), 0, 0)]).toEqual([
+      0, -1, -1, -1,
+    ]);
   });
 });

@@ -18,10 +18,16 @@ import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { separateGame } from "./index.ts";
-import { COL_CORRECT, COL_ERROR } from "./render.ts";
+import { COL_CORRECT, COL_ERROR, COL_FLASH } from "./render.ts";
 import { solve, solveToBorders } from "./solver.ts";
 import {
   decodeParams,
@@ -317,5 +323,40 @@ describe("separate render scenarios", () => {
     expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(
       true,
     );
+  });
+});
+
+describe("separate: the win flash", () => {
+  const state = newState(P5, newSeparateDesc(P5, randomNew("sep-flash")).desc);
+  const ui = separateGame.newUi(state);
+  const palette = separateGame.colors(DEFAULT_BACKGROUND);
+  const paint = (flash: Flash) => {
+    const dr = new RecordingDrawing(palette);
+    separateGame.redraw(
+      dr,
+      separateGame.newDrawState(state, 48),
+      null,
+      state,
+      1,
+      ui,
+      0,
+      flash,
+    );
+    return dr;
+  };
+  /** Where each square painted in the flash color is drawn, as `x,y`. */
+  const run = winFlashRun(paint, (dr) =>
+    dr.ops.flatMap((o) =>
+      o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+    ),
+  );
+  /** The sweep's diagonal through a square drawn at `at`. */
+  const diagonal = (at: string): number => {
+    const [x, y] = at.split(",").map(Number);
+    return sweepStep(x, y);
+  };
+
+  it("lifts every cell in turn, from the bottom left to the top right", () => {
+    expectWinFlashTravels(run, P5.w * P5.h, diagonal);
   });
 });

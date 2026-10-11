@@ -96,8 +96,6 @@ export interface MinesUi {
   hradius: number;
   /** Radius that a release will actually act on (0 = single square). */
   validradius: number;
-  /** Whether the pending flash is a death (vs a win) — set by `flashLength`. */
-  flashIsDeath: boolean;
   /** Death counter; survives undo and a save. */
   deaths: number;
   cursor: GridCursor;

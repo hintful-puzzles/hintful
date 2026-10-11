@@ -49,6 +49,7 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
   override async connectedCallback() {
     super.connectedCallback();
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
+    this.reducedMotion.addEventListener("change", this.handleReducedMotionChange);
     if (!this._puzzle) {
       await this._loadPuzzle();
     }
@@ -57,6 +58,7 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
   override async disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+    this.reducedMotion.removeEventListener("change", this.handleReducedMotionChange);
     await this._unloadPuzzle();
   }
 
@@ -64,6 +66,13 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
    * while the page is hidden. */
   private handleVisibilityChange = async () => {
     await this._puzzle?.setTimerPaused(document.visibilityState === "hidden");
+  };
+
+  /** A board's canvas is no stylesheet's to still, so the engine is told. */
+  private reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  private handleReducedMotionChange = async () => {
+    await this._puzzle?.setReducedMotion(this.reducedMotion.matches);
   };
 
   protected override render() {
@@ -116,6 +125,7 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
     }
     this._puzzle = await Puzzle.create(this.puzzleId);
     await this.handleVisibilityChange();
+    await this.handleReducedMotionChange();
 
     // Notify puzzle-loaded. Listeners can preventDefault() to disable further setup.
     const event = this.dispatchPuzzleEvent("puzzle-loaded");

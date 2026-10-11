@@ -5,6 +5,8 @@
 import { describe, expect, it } from "vitest";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { gridArea } from "./grid.ts";
 import { cubeGame, executeMove } from "./index.ts";
 import {
@@ -45,7 +47,7 @@ describe("Cube rendering", () => {
     const { state, ds } = freshCube();
     const { dr, ops } = recordingDrawing();
 
-    redraw(dr, ds, null, state, 0, {}, 0, 0);
+    redraw(dr, ds, null, state, 0, {}, 0, NO_FLASH);
 
     // A background rect at the origin.
     expect(
@@ -84,7 +86,7 @@ describe("Cube rendering", () => {
   it("draws fewer faces than the solid has (back-face culling)", () => {
     const { state, ds } = freshCube();
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 0, {}, 0, 0);
+    redraw(dr, ds, null, state, 0, {}, 0, NO_FLASH);
 
     const polys = opsOfKind(ops, "polygon");
     const facePolys = polys.length - state.grid.length;
@@ -99,9 +101,41 @@ describe("Cube rendering", () => {
     const { dr, ops } = recordingDrawing();
 
     // Mid-roll: prev = old state, animTime between 0 and ROLLTIME.
-    redraw(dr, ds, state, rolled, 0, {}, 0.06, 0);
+    redraw(dr, ds, state, rolled, 0, {}, 0.06, NO_FLASH);
 
     const polys = opsOfKind(ops, "polygon");
     expect(polys.length).toBeGreaterThan(state.grid.length);
+  });
+
+  it.each([
+    ["square", SolidType.Cube, 4, 4],
+    ["triangular", SolidType.Tetrahedron, 2, 2],
+  ] as const)("sweeps the win flash over a %s arena from the bottom left", (_name, solid, d1, d2) => {
+    // No square painted, as on a won board, where the solid holds the paint.
+    const p: CubeParams = { solid, d1, d2 };
+    const area = gridArea(p.d1, p.d2, SOLIDS[p.solid].order);
+    const state = newState(p, `${"0".repeat(Math.floor((area + 3) / 4))},0`);
+    // The squares of the arena on the lifted surface, by index.
+    const paint = (flash: Flash): number[] => {
+      const { dr, ops } = recordingDrawing();
+      const ds = newDrawState(state, cubeGame.preferredTileSize ?? 48);
+      redraw(dr, ds, null, state, 1, {}, 0, flash);
+      return opsOfKind(ops, "polygon")
+        .slice(0, state.grid.length)
+        .flatMap((o, i) => (o.fill === COL_SOLID ? [i] : []));
+    };
+    expect(paint(NO_FLASH)).toEqual([]);
+    // A square's place in the sweep: its center's x less its y.
+    const step = (i: number): number => {
+      const { points, npoints } = state.grid[i];
+      let at = 0;
+      for (let j = 0; j < npoints; j++) at += points[2 * j] - points[2 * j + 1];
+      return at / npoints;
+    };
+    expectWinFlashTravels(
+      winFlashRun(paint, (squares) => squares),
+      state.grid.length,
+      step,
+    );
   });
 });

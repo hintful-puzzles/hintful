@@ -3,7 +3,7 @@
  * pattern.c. The board is pieces on a quiet surface (`engine/piece.ts`): a
  * full cell holds the shaded piece, a cell known to be empty is the clear
  * square, and an undecided cell is plain surface. A per-cell cache
- * keyed on the displayed value (drag- and flash-adjusted) plus overlay bits,
+ * keyed on the displayed value (drag-adjusted) plus overlay bits,
  * and a per-line cache of the clue color, which turns red when a completed
  * line contradicts its clue (`check_errors`).
  */
@@ -14,6 +14,7 @@ import {
   CURSOR,
   cellSurface,
   ERROR,
+  givenSurface,
   HINT_ACTION,
   HINT_BLACKREF,
   HINT_WHITEREF,
@@ -29,6 +30,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
 import type { PatternHint } from "./index.ts";
 import { lineHasError } from "./solver.ts";
@@ -44,7 +46,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 24;
-export const FLASH_TIME = 0.13;
 
 // --- palette -------------------------------------------------------------
 export const COL_BACKGROUND = 0;
@@ -67,6 +68,8 @@ export const COL_HINT_BLACKREF = 10;
 export const COL_HINT_WHITEREF = 11;
 /** The faint cross on a cell known to be empty. */
 export const COL_CLEAR_MARK = 12;
+/** The surface of a cell the win flash's highlight is on, whatever it holds. */
+export const COL_LIT = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -85,6 +88,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_BLACKREF] = HINT_BLACKREF;
   out[COL_HINT_WHITEREF] = HINT_WHITEREF;
+  out[COL_LIT] = givenSurface(defaultBackground);
   return out;
 }
 
@@ -147,6 +151,7 @@ const K_HINT_TARGET = 1 << 4; // a forced cell (COL_HINT highlight)
 const K_HINT_LINE = 1 << 5; // a cell of the reasoned line (hatched)
 const K_HINT_BLACKREF = 1 << 6; // a cited full cell (COL_HINT_BLACKREF outline)
 const K_HINT_WHITEREF = 1 << 7; // a cited empty cell (COL_HINT_WHITEREF outline)
+const K_LIT = 1 << 8; // the win flash's highlight is on the cell
 
 function gridSquare(
   dr: GameDrawing,
@@ -157,6 +162,7 @@ function gridSquare(
   cur: boolean,
   mistake: boolean,
   hintBits: number,
+  lit: boolean,
 ): void {
   const ts = ds.tileSize;
   const { w, h } = ds;
@@ -189,8 +195,8 @@ function gridSquare(
   // cell keeps its own content (the premise) and gets an outline below,
   // beside the piece.
   if (val === GRID_EMPTY)
-    drawClearSquare(dr, surface, COL_CLEAR, COL_CLEAR_MARK, content);
-  else dr.drawRect(surface, COL_CELL);
+    drawClearSquare(dr, surface, lit ? COL_LIT : COL_CLEAR, COL_CLEAR_MARK, content);
+  else dr.drawRect(surface, lit ? COL_LIT : COL_CELL);
   if (hintBits & K_HINT_LINE) dr.drawHatch(surface, COL_HINT, hatchPeriod(ts));
   if (val === GRID_FULL) drawPiece(dr, content, SHADED_SHAPE, COL_FULL);
 
@@ -324,7 +330,7 @@ export function redraw(
   _dir: number,
   ui: PatternUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<PatternMove, PatternHint>,
   mistakes?: readonly PatternMistake[],
 ): void {
@@ -376,10 +382,6 @@ export function redraw(
   const cx = ui.cursor.visible ? ui.cursor.x : -1;
   const cy = ui.cursor.visible ? ui.cursor.y : -1;
 
-  // Swap full and empty cells twice during the completion flash (upstream).
-  const flashing =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
-
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
@@ -397,8 +399,7 @@ export function redraw(
       } else {
         val = grid[i];
       }
-      if (flashing && val !== GRID_UNKNOWN) val ^= 1; // FULL <-> EMPTY
-
+      const lit = flash.win(sweepStep(x, y));
       const cur = x === cx && y === cy;
       const mistake = mistakeSet?.has(i) ?? false;
       let hintBits = 0;
@@ -406,10 +407,15 @@ export function redraw(
       else if (hintRefs.has(i))
         hintBits = grid[i] === GRID_FULL ? K_HINT_BLACKREF : K_HINT_WHITEREF;
       if (inReasonedLine(x, y)) hintBits |= K_HINT_LINE;
-      const key = val | (cur ? K_CURSOR : 0) | (mistake ? K_MISTAKE : 0) | hintBits;
+      const key =
+        val |
+        (cur ? K_CURSOR : 0) |
+        (mistake ? K_MISTAKE : 0) |
+        hintBits |
+        (lit ? K_LIT : 0);
       if (ds.visible[i] !== key) {
         ds.visible[i] = key;
-        gridSquare(dr, ds, y, x, val, cur, mistake, hintBits);
+        gridSquare(dr, ds, y, x, val, cur, mistake, hintBits, lit);
       }
     }
   }

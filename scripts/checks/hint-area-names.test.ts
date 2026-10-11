@@ -36,6 +36,7 @@ import {
   RecordingDrawing,
 } from "../../src/engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../src/engine/testing/render-scenario.ts";
+import { NO_FLASH } from "../../src/engine/win-wave.ts";
 
 const OUT = "metrics/hint-area-names.md";
 
@@ -126,7 +127,7 @@ it("reports every reference that names one thing and paints an area", () => {
         const frame = (step: HintStep<unknown>, words: Sentence): string[] => {
           const rec = new RecordingDrawing(palette);
           const ds = game.newDrawState(state, tile);
-          game.redraw(rec, ds, null, state, 1, ui, 0, 0, { ...step, words });
+          game.redraw(rec, ds, null, state, 1, ui, 0, NO_FLASH, { ...step, words });
           return rec.ops.map((o) => JSON.stringify(o));
         };
         let walked = 0;

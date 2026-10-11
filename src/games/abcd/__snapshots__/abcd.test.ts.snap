@@ -948,7 +948,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -982,7 +982,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1016,7 +1016,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1050,7 +1050,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1084,7 +1084,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1118,7 +1118,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1152,7 +1152,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1186,7 +1186,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1220,7 +1220,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1254,7 +1254,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1288,7 +1288,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1322,7 +1322,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1356,7 +1356,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1390,7 +1390,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1424,7 +1424,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1458,7 +1458,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1492,7 +1492,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1526,7 +1526,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1560,7 +1560,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1594,7 +1594,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1628,7 +1628,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1662,7 +1662,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1696,7 +1696,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1730,7 +1730,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1764,7 +1764,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
-    "outline": 15,
+    "outline": 9,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [

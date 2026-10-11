@@ -24,7 +24,6 @@ import { type MosaicHint, mosaicHint, mosaicKeepTrack } from "./hint.ts";
 import {
   colors,
   computeSize,
-  FLASH_TIME,
   type MosaicDrawState,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -197,7 +196,6 @@ export const mosaicGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(mosaicGame);

@@ -27,12 +27,14 @@ import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newAbcdDesc } from "./generator.ts";
 import { abcdGame } from "./index.ts";
 import {
   COL_CURSOR,
   COL_ERROR,
-  COL_HIGHLIGHT,
+  COL_FLASH,
   COL_PENCIL_BODY,
   newDrawState,
   redraw,
@@ -590,7 +592,7 @@ describe("abcd render", () => {
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
     const ds = newDrawState(withMark, abcdGame.preferredTileSize ?? 36);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, withMark, 1, ui, 0, 0);
+    redraw(dr, ds, null, withMark, 1, ui, 0, NO_FLASH);
     // The highlighted cursor cell fills its background with the wash.
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(true);
     // The pencil mark 'A' is drawn as text.
@@ -606,7 +608,7 @@ describe("abcd render", () => {
       ui.cursor.visible = pencilMode;
       const ds = newDrawState(st, abcdGame.preferredTileSize ?? 36);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, st, 1, ui, 0, 0);
+      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
       return dr;
     };
     const glyph = (r: RecordingDrawing) =>
@@ -623,7 +625,7 @@ describe("abcd render", () => {
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
     const ds = newDrawState(s, abcdGame.preferredTileSize ?? 36);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, s, 1, newUi(s), 0, 0);
+    redraw(dr, ds, null, s, 1, newUi(s), 0, NO_FLASH);
     expect(dr.ops.some((o) => o.op === "text" && o.color === COL_ERROR)).toBe(true);
   });
 
@@ -642,14 +644,25 @@ describe("abcd render", () => {
           letter: sol[y * w + x] - 1,
         });
     expect(abcdGame.status(s)).toBe("solved");
-    const flash = abcdGame.solvedFlash?.(s, newUi(s)) ?? 0;
-    expect(flash).toBeGreaterThan(0);
-    // A flashing frame paints highlight/lowlight stripe backgrounds.
+    // The lifted cells, as their origins: a cell's place in the sweep is its
+    // x less its y.
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
-    const ds = newDrawState(s, abcdGame.preferredTileSize ?? 36);
-    const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, s, 1, newUi(s), 0, flash);
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(true);
+    const paint = (flash: Flash) => {
+      const dr = new RecordingDrawing(palette);
+      const ds = newDrawState(s, abcdGame.preferredTileSize ?? 36);
+      redraw(dr, ds, null, s, 1, newUi(s), 0, flash);
+      return dr;
+    };
+    const run = winFlashRun(paint, (dr) =>
+      dr.ops.flatMap((o) =>
+        o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+      ),
+    );
+    expectWinFlashTravels(
+      run,
+      w * h,
+      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
+    );
   });
 
   it("Check & Save highlights a mistake even when the cell was already drawn", () => {

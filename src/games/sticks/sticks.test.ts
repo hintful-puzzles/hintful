@@ -33,11 +33,24 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
+import {
+  expectWinFlashTravels,
+  winFlashAt,
+  winFlashRun,
+} from "../../engine/testing/win-flash.ts";
 import type { Point } from "../../engine/types.ts";
+import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";
-import { COL_ERROR, COL_LINE, newDrawState, redraw } from "./render.ts";
+import {
+  COL_CELL,
+  COL_ERROR,
+  COL_LINE,
+  COL_LIT,
+  newDrawState,
+  redraw,
+} from "./render.ts";
 import {
   findLiveErrors,
   findMistakes,
@@ -479,7 +492,7 @@ describe("sticks input", () => {
 });
 
 describe("sticks completion and solve (through a real Midend)", () => {
-  it("completing the board via executeMove sets completed and flashes", () => {
+  it("completing the board via executeMove sets completed", () => {
     const solution = fixtureSolution();
     let state = newState(FIX_PARAMS, FIX.desc);
     const changes = [];
@@ -496,7 +509,6 @@ describe("sticks completion and solve (through a real Midend)", () => {
     expect(sticksGame.status(state)).toBe("ongoing");
     const done = sticksGame.executeMove(state, { kind: "set", changes: [last] });
     expect(sticksGame.status(done)).toBe("solved");
-    expect(sticksGame.solvedFlash?.(done, newUi())).toBeGreaterThan(0);
   });
 
   it("Solve through the midend completes the board (solved-with-help)", () => {
@@ -605,22 +617,45 @@ describe("sticks rendering (tier 2.5)", () => {
       result.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
     ).toBe(true);
   });
+});
 
-  it("blinks lines off on a flash beat", () => {
-    // Drive redraw directly at a mid-flash time (tier 2, recording double).
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const solution = fixtureSolution();
-    for (let i = 0; i < solution.length; i++) state.grid[i] = solution[i];
-    const ds = newDrawState(state, 48);
-    const ui = newUi();
+describe("sticks: the win flash sweeps the open cells", () => {
+  const TS = 48;
+  const state = newState(FIX_PARAMS, FIX.desc);
+  state.grid.set(fixtureSolution());
+  const open = [...state.grid].filter((tile) => !(tile & F_BLOCK)).length;
+
+  const paint = (flash: Flash, ds = newDrawState(state, TS)) => {
     const dr = new RecordingDrawing(sticksGame.colors([1, 1, 1]));
-    // Flash-on beat: floor(0.05 / 0.1) = 0 -> even -> lines hidden.
-    redraw(dr, ds, null, state, 1, ui, 0, 0.05);
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_LINE)).toBe(false);
-    // A later beat shows them again (same drawstate — the flash bit is in
-    // the diff key, so the repaint actually happens).
-    const dr2 = new RecordingDrawing(sticksGame.colors([1, 1, 1]));
-    redraw(dr2, ds, null, state, 1, ui, 0, 0.15);
-    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_LINE)).toBe(true);
+    redraw(dr, ds, null, state, 1, newUi(), 0, flash);
+    return dr.ops;
+  };
+  /** The cells a frame draws on the lifted surface, as the `x,y` drawn at. */
+  const lit = (ops: ReturnType<typeof paint>): string[] =>
+    ops.flatMap((op) =>
+      op.op === "rect" && op.color === COL_LIT ? [`${op.x},${op.y}`] : [],
+    );
+  const step = (key: string): number => {
+    const [x, y] = key.split(",").map(Number);
+    return x - y;
+  };
+
+  it("travels every open cell and no block, from the bottom left to the top right", () => {
+    expectWinFlashTravels(winFlashRun(paint, lit), open, step);
+  });
+
+  it("keeps a lit cell's line, and repaints the cell when the flash leaves it", () => {
+    const ds = newDrawState(state, TS);
+    const during = paint(
+      winFlashAt(WIN_FLASH_S / 2, (flash) => paint(flash)),
+      ds,
+    );
+    const bars = (ops: typeof during) =>
+      ops.filter((o) => o.op === "rect" && o.color === COL_LINE).length;
+    expect(bars(during)).toBe(open);
+    // The same draw state, settled: the cells that were lit are drawn again.
+    const after = paint(NO_FLASH, ds);
+    expect(after.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
+    expect(after.some((o) => o.op === "rect" && o.color === COL_LIT)).toBe(false);
   });
 });

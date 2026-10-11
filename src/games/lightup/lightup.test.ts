@@ -37,6 +37,8 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
 import { newLightupDesc, puzzleIsGood } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";
@@ -44,6 +46,7 @@ import {
   COL_BULB_RIM,
   COL_ERROR,
   COL_ERROR_TEXT,
+  COL_FLASH,
   COL_LIGHT,
   COL_LIT,
   COL_RULED_OUT,
@@ -54,6 +57,7 @@ import {
   decodeParams,
   encodeDesc,
   encodeParams,
+  F_BLACK,
   F_IMPOSSIBLE,
   F_LIGHT,
   idx,
@@ -268,13 +272,12 @@ describe("lightup board mechanics", () => {
     expect(lightupGame.status(s)).toBe("solved");
   });
 
-  it("has a win flash, and a broken win is not solved", () => {
+  it("a broken win is not solved", () => {
     const p = { ...EASY_PARAMS, w: 2, h: 2 };
     const empty = newState(p, "d");
     const mid = lightupGame.executeMove(empty, light(0, 0));
     const won = lightupGame.executeMove(mid, light(1, 1));
-    const u = lightupGame.newUi(empty);
-    expect(lightupGame.solvedFlash?.(won, u)).toBeGreaterThan(0);
+    expect(lightupGame.status(won)).toBe("solved");
     const broken = lightupGame.executeMove(won, light(1, 1));
     expect(lightupGame.status(broken)).toBe("ongoing");
   });
@@ -543,6 +546,34 @@ describe("lightup rendering", () => {
       ops.some((o) => o.op === "text" && o.color === COL_LIGHT && o.text === "3"),
     ).toBe(true);
     expect(result.recording.ops).toMatchSnapshot();
+  });
+
+  it("the win flash sweeps the open squares from the bottom left to the top right", () => {
+    const orig = newState(EASY_PARAMS, EASY.desc);
+    const res = lightupGame.solve?.(orig, orig);
+    if (!res?.ok) throw new Error("the fixture does not solve");
+    const won = lightupGame.executeMove(orig, res.move);
+    expect(lightupGame.status(won)).toBe("solved");
+    /** The squares lifted off the yellow, as the pixel each starts at. */
+    const run = winFlashRun(
+      (flash: Flash) => {
+        const dr = new RecordingDrawing(lightupGame.colors(DEFAULT_BACKGROUND));
+        const ds = preferredDrawState(lightupGame, won);
+        lightupGame.redraw(dr, ds, null, won, 1, lightupGame.newUi(won), 0, flash);
+        return dr;
+      },
+      (dr) =>
+        dr.ops.flatMap((o) =>
+          o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
+        ),
+    );
+    // Every open square, and no wall.
+    const open = won.flags.filter((f) => !(f & F_BLACK)).length;
+    expect(open).toBeLessThan(won.flags.length);
+    expectWinFlashTravels(run, open, (key) => {
+      const [x, y] = key.split(",").map(Number);
+      return sweepStep(x, y);
+    });
   });
 
   it("a bulb draws as a circle and lights its corridor yellow", () => {

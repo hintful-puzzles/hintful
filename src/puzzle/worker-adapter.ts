@@ -220,6 +220,10 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     this.engine.setTimerPaused(paused);
   }
 
+  setReducedMotion(reduced: boolean): void {
+    this.engine.setReducedMotion(reduced);
+  }
+
   // --- drawing ----------------------------------------------------
 
   attachCanvas(canvas: OffscreenCanvas, fontInfo: FontInfo): void {

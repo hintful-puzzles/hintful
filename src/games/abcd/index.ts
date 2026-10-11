@@ -60,7 +60,6 @@ import {
   type AbcdDrawState,
   colors,
   computeSize,
-  FLASH_TIME,
   fromCoord,
   innerCoord,
   newDrawState,
@@ -385,7 +384,6 @@ export const abcdGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(abcdGame);

@@ -69,7 +69,6 @@ import {
   type CrossingHint,
   colors,
   computeSize,
-  FLASH_TIME,
   fromCoord,
   layoutNumbers,
   newDrawState,
@@ -822,7 +821,6 @@ export const crossingGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(crossingGame);

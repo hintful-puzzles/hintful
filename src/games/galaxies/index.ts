@@ -133,8 +133,6 @@ import {
   tilesFromEdge,
 } from "./state.ts";
 
-const FLASH_TIME = 0.15;
-
 // --- types -----------------------------------------------------------
 
 export interface GalaxiesParams {
@@ -1304,7 +1302,6 @@ export const galaxiesGame: Game<
   animLength() {
     return 0;
   },
-  solvedFlash: () => 3 * FLASH_TIME,
 };
 
 registerGame(galaxiesGame);

@@ -1,7 +1,7 @@
 /**
  * Twiddle rendering: beveled numbered tiles, the block rotation animation with
  * each tile's bevel edges recolored through the turn, the cursor region
- * outline, and the completion flash. Port of upstream `game_redraw` /
+ * outline, and the win flash on a tile's face. Port of upstream `game_redraw` /
  * `draw_tile` / `rotate` / `highlight_colour`.
  */
 
@@ -14,13 +14,14 @@ import { drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { TwiddleState, TwiddleUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------
 
 export const PREFERRED_TILE_SIZE = 48;
 export const ANIM_PER_BLKSIZE_UNIT = 0.13;
-export const FLASH_FRAME = 0.13;
+
 const HIGHLIGHT_WIDTH_DIV = 20;
 
 // --- color indices ---------------------------------------------------
@@ -75,9 +76,9 @@ export function animLength(n: number): number {
 
 export interface TwiddleDrawState {
   started: boolean;
-  bgcolor: number;
-  /** Per-cell cache of the packed `number*4 + orient`; `-1` forces a
-   * redraw (unknown, or inside the animating block). */
+  /** Per-cell cache of the packed `number*4 + orient` and, above them,
+   * whether the win flash is on the tile; `-1` forces a redraw (unknown, or
+   * inside the animating block). */
   cache: Int32Array;
   tileSize: number;
   /** Cached cursor top-left in rotation-origin space; `< 0` when hidden. */
@@ -88,7 +89,6 @@ export interface TwiddleDrawState {
 export function newDrawState(state: TwiddleState, tileSize: number): TwiddleDrawState {
   return {
     started: false,
-    bgcolor: COL_TILE,
     cache: new Int32Array(state.w * state.h).fill(-1),
     tileSize,
     curX: -state.n,
@@ -147,7 +147,7 @@ function drawTile(
   py: number,
   num: number,
   orient: number,
-  flashColor: number,
+  face: number,
   rot: Rotation | null,
   cedges: number,
 ): void {
@@ -195,11 +195,11 @@ function drawTile(
         rotate(px + ts - 1 - hw, py + ts - 1 - hw, rot),
         rotate(px + ts - 1 - hw, py + hw, rot),
       ],
-      flashColor,
-      flashColor,
+      face,
+      face,
     );
   } else {
-    dr.drawRect({ x: px + hw, y: py + hw, w: ts - 2 * hw, h: ts - 2 * hw }, flashColor);
+    dr.drawRect({ x: px + hw, y: py + hw, w: ts - 2 * hw, h: ts - 2 * hw }, face);
   }
 
   // Orientation triangle.
@@ -265,7 +265,7 @@ export function redraw(
   dir: number,
   ui: TwiddleUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
 ): void {
   const ts = ds.tileSize;
   const { w, h, n } = state;
@@ -274,12 +274,6 @@ export function redraw(
   const cx = ui.cursor.visible ? ui.cursor.x : -n;
   const cy = ui.cursor.visible ? ui.cursor.y : -n;
   const cmoved = cx !== ds.curX || cy !== ds.curY;
-
-  let bgcolor = COL_TILE;
-  if (flashTime > 0) {
-    const frame = Math.floor(flashTime / FLASH_FRAME);
-    bgcolor = frame % 2 ? COL_LOWLIGHT : COL_HIGHLIGHT;
-  }
 
   if (!ds.started) {
     drawRecessedBorder(
@@ -340,7 +334,13 @@ export function redraw(
     // -1 ("always redraw") for cells inside the animating block.
     const inBlock =
       rot !== null && tx >= lastx && tx < lastx + n && ty >= lasty && ty < lasty + n;
-    const t = inBlock ? -1 : state.numbers[i] * 4 + state.orient[i];
+    // A lit tile's face drops to the well's surface inside its bevel: the
+    // face is the lifted surface already, and neither bevel color stands off
+    // it in both schemes.
+    const lit = flash.win(sweepStep(tx, ty));
+    const t = inBlock
+      ? -1
+      : ((state.numbers[i] * 4 + state.orient[i]) << 1) | (lit ? 1 : 0);
 
     let cc = false;
     if (cmoved) {
@@ -354,7 +354,7 @@ export function redraw(
         cc = true;
     }
 
-    if (ds.bgcolor !== bgcolor || ds.cache[i] !== t || t === -1 || cc) {
+    if (ds.cache[i] !== t || t === -1 || cc) {
       const x = coord(tx, ts);
       const y = coord(ty, ts);
       let cedges = 0;
@@ -372,9 +372,9 @@ export function redraw(
         y,
         state.numbers[i],
         state.orient[i],
-        bgcolor,
+        lit ? COL_WELL : COL_TILE,
         // A tile outside the turning block draws unrotated, even mid-turn
-        // (a completion flash can repaint it while a new move animates).
+        // (the win flash can repaint it while a new move animates).
         inBlock ? rot : null,
         cedges,
       );
@@ -382,7 +382,6 @@ export function redraw(
     }
   }
 
-  ds.bgcolor = bgcolor;
   ds.curX = cx;
   ds.curY = cy;
 }

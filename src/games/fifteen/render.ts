@@ -23,6 +23,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, PaletteScheme, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { TILE } from "./hint-text.ts";
 import type { FifteenMove, FifteenParams, FifteenState, FifteenUi } from "./state.ts";
 
@@ -30,7 +31,6 @@ import type { FifteenMove, FifteenParams, FifteenState, FifteenUi } from "./stat
 
 export const PREFERRED_TILE_SIZE = 48;
 export const ANIM_TIME = 0.13;
-export const FLASH_FRAME = 0.13;
 
 // --- color indices ---------------------------------------------------
 
@@ -71,7 +71,8 @@ export function cellCenter(pos: number, ts: number): number {
 
 export interface FifteenDrawState {
   started: boolean;
-  bgcolor: number;
+  /** Per cell: whether the win flash's highlight was on the tile last drawn. */
+  lit: Uint8Array;
   /** Per-cell cache of the last-drawn tile value; `-1` forces a redraw
    * (unknown, or animating). */
   tiles: Int32Array;
@@ -83,7 +84,7 @@ export interface FifteenDrawState {
 export function newDrawState(state: FifteenState, tileSize: number): FifteenDrawState {
   return {
     started: false,
-    bgcolor: COL_TILE,
+    lit: new Uint8Array(state.n),
     tiles: new Int32Array(state.n).fill(-1),
     tileSize,
     hintTile: null,
@@ -166,18 +167,12 @@ export function redraw(
   _dir: number,
   _ui: FifteenUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   activeHint?: HintStep<FifteenMove>,
 ): void {
   const ts = ds.tileSize;
   const { w, h, n } = state;
   const hw = raisedBevelWidth(ts);
-
-  let bgcolor = COL_TILE;
-  if (flashTime > 0) {
-    const frame = Math.floor(flashTime / FLASH_FRAME);
-    bgcolor = frame % 2 ? COL_LOWLIGHT : COL_HIGHLIGHT;
-  }
 
   if (!ds.started) {
     drawPlayfieldBorder(dr, w, h, ts, hw);
@@ -185,6 +180,12 @@ export function redraw(
   }
 
   const hintTile = stepMarks(activeHint).of("ring", TILE)[0] ?? null;
+
+  // Which tiles the win flash is on, asked once a tile before the two passes
+  // below. The gap is no tile, and never lights.
+  const lights = state.tiles.map((t, i) =>
+    t !== 0 && flash.win(sweepStep(i % w, Math.floor(i / w))) ? 1 : 0,
+  );
 
   // Two passes so a whole sliding line animates cleanly: pass 0 blanks
   // the cells vacated by moving tiles, pass 1 draws the moving tiles
@@ -195,9 +196,10 @@ export function redraw(
       // (-1 = "always redraw"); otherwise it shows its settled value.
       let t = prev && prev.tiles[i] !== state.tiles[i] ? -1 : state.tiles[i];
       const t0 = t;
+      const lit = lights[i];
 
       if (
-        ds.bgcolor !== bgcolor ||
+        ds.lit[i] !== lit ||
         ds.hintTile !== hintTile ||
         ds.tiles[i] !== t ||
         ds.tiles[i] === -1
@@ -234,13 +236,16 @@ export function redraw(
           y = coord(Math.floor(i / w), ts);
         }
 
-        const cellBg = t !== 0 && t === hintTile ? COL_HINT : bgcolor;
-        drawTile(dr, ts, x, y, t, cellBg);
+        // A lit tile's face drops to the well's surface inside its bevel. A
+        // tile is the lifted surface already, and neither bevel color stands
+        // off it in both schemes.
+        const face = lit ? COL_WELL : COL_TILE;
+        drawTile(dr, ts, x, y, t, t !== 0 && t === hintTile ? COL_HINT : face);
       }
+      ds.lit[i] = lit;
       ds.tiles[i] = t0;
     }
   }
 
-  ds.bgcolor = bgcolor;
   ds.hintTile = hintTile;
 }

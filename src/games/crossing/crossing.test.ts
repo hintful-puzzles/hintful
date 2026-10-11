@@ -34,6 +34,8 @@ import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { colorToOKLCH } from "../../engine/testing/oklch.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";
 import { crossingGame } from "./index.ts";
@@ -60,6 +62,7 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
+  tileOrigin,
 } from "./render.ts";
 import { findMistakes, solveCrossing } from "./solver.ts";
 import {
@@ -851,7 +854,7 @@ describe("crossing number-list placement", () => {
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     const ds = newDrawState(st, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, st, 1, ui, 0, 0);
+    redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
     return dr;
   }
 
@@ -892,7 +895,7 @@ describe("crossing number-list placement", () => {
     const ds = newDrawState(state, TS);
     const paint = (ui: CrossingUi): RecordingDrawing => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, ui, 0, 0);
+      redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
       return dr;
     };
     const heldOps = (dr: RecordingDrawing): number =>
@@ -1203,21 +1206,20 @@ describe("crossing moves and completion", () => {
     ).toThrow();
   });
 
-  it("filling the board completes the game and flashes", () => {
+  it("filling the board completes the game", () => {
     const { m, status } = harness();
     expect(m.newGameFromId(FIX_ID)).toBeNull();
     const moves = solutionMoves();
     m.playMoves(moves);
     expect(status()).toBe("solved");
 
-    // …it is the last move that solves it, and the game has a flash for it.
+    // …it is the last move that solves it.
     const penultimate = moves
       .slice(0, -1)
       .reduce((s2, mv) => crossingGame.executeMove(s2, mv), newState(P5, FIX.desc));
     const final = crossingGame.executeMove(penultimate, moves[moves.length - 1]);
     expect(crossingGame.status(penultimate)).toBe("ongoing");
     expect(crossingGame.status(final)).toBe("solved");
-    expect(crossingGame.solvedFlash?.(final, newUi()) ?? 0).toBeGreaterThan(0);
   });
 
   it("Solve completes the game with help", () => {
@@ -1401,17 +1403,17 @@ describe("crossing rendering", () => {
 
     // Frame 1 warms the cache with no overlay…
     const first = new RecordingDrawing(palette);
-    redraw(first, ds, null, dirty, 1, ui, 0, 0);
+    redraw(first, ds, null, dirty, 1, ui, 0, NO_FLASH);
     expect(errLines(first)).toBe(0);
 
     // …frame 2 adds the overlay on an otherwise unchanged board…
     const second = new RecordingDrawing(palette);
-    redraw(second, ds, dirty, dirty, 1, ui, 0, 0, undefined, mistakes);
+    redraw(second, ds, dirty, dirty, 1, ui, 0, NO_FLASH, undefined, mistakes);
     expect(errLines(second)).toBeGreaterThan(0);
 
     // …and frame 3 clears it again.
     const third = new RecordingDrawing(palette);
-    redraw(third, ds, dirty, dirty, 1, ui, 0, 0, undefined, []);
+    redraw(third, ds, dirty, dirty, 1, ui, 0, NO_FLASH, undefined, []);
     expect(errLines(third)).toBe(0);
   });
 
@@ -1422,7 +1424,7 @@ describe("crossing rendering", () => {
     const paint = (ui: CrossingUi): RecordingDrawing => {
       const ds = newDrawState(state, TS);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, ui, 0, 0);
+      redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
       return dr;
     };
 
@@ -1481,42 +1483,42 @@ describe("crossing rendering", () => {
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     const ds = newDrawState(noted, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, noted, 1, newUi(), 0, 0);
+    redraw(dr, ds, null, noted, 1, newUi(), 0, NO_FLASH);
     expect(dr.ops.some((o) => o.op === "text" && o.text === "4")).toBe(true);
   });
 
-  it("sweeps a bright and a dim beat across the board during the completion flash", () => {
+  it("sweeps the win flash across the squares holding digits, from the bottom left", () => {
     const solved = solutionMoves().reduce(
       (s2, mv) => crossingGame.executeMove(s2, mv),
       newState(P5, FIX.desc),
     );
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
-    const frameColors = (flashTime: number): number[] => {
+    // The squares filled in the flash's color, as their bodies' origins.
+    const paint = (flash: Flash): string[] => {
       const ds = newDrawState(solved, TS);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, solved, 1, newUi(), 0, flashTime);
-      return [
-        ...new Set(dr.ops.flatMap((o) => (o.op === "rect" ? [o.color] : []))),
-      ].sort((a, b) => a - b);
-    };
-    // A settled board paints no tile in the flash colors; two different flash
-    // phases paint *different* cells with them, so the wave is really moving.
-    const settled = frameColors(0);
-    expect(settled).not.toContain(COL_FLASH);
-    const early = frameColors(0.7);
-    const late = frameColors(0.3);
-    expect(early).toContain(COL_FLASH);
-    expect(late).toContain(COL_FLASH);
-
-    const litCells = (flashTime: number): string[] => {
-      const ds = newDrawState(solved, TS);
-      const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, solved, 1, newUi(), 0, flashTime);
+      redraw(dr, ds, null, solved, 1, newUi(), 0, flash);
       return dr.ops.flatMap((o) =>
         o.op === "rect" && o.color === COL_FLASH ? [`${o.x},${o.y}`] : [],
       );
     };
-    expect(litCells(0.7)).not.toEqual(litCells(0.3));
+    // A settled board paints no square in the flash color.
+    expect(paint(NO_FLASH)).toEqual([]);
+    const run = winFlashRun(paint, (cells) => cells);
+    // Every square holding a digit is lit at some frame and no wall is.
+    const { w, walls } = solved.puzzle;
+    const open = [...walls].flatMap((wall, i) =>
+      wall
+        ? []
+        : [`${tileOrigin(i % w, TS) + 1},${tileOrigin(Math.floor(i / w), TS) + 1}`],
+    );
+    expect([...new Set(run.frames.flat())].sort()).toEqual([...open].sort());
+    // A square's place in the sweep is its x less its y.
+    expectWinFlashTravels(
+      run,
+      open.length,
+      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
+    );
   });
 
   it("paints entered digits on one neutral tile, not nine colors", () => {
@@ -1530,7 +1532,7 @@ describe("crossing rendering", () => {
 
     const ds = newDrawState(withDigits, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, withDigits, 1, newUi(), 0, 0);
+    redraw(dr, ds, null, withDigits, 1, newUi(), 0, NO_FLASH);
 
     // Every digit is drawn in the same (grid) color…
     const digitColors = dr.ops.flatMap((o) =>

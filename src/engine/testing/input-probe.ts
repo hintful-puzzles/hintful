@@ -37,6 +37,7 @@ import { type RandomState, randomNew, randomUpto } from "../random/index.ts";
 import { sweepOpen } from "../target-verb.ts";
 import type { Color, ConfigValues, Point, Size } from "../types.ts";
 import { copyUi, restoreUi } from "../ui-snapshot.ts";
+import { NO_FLASH } from "../win-wave.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./render-scenario.ts";
 
@@ -205,7 +206,16 @@ export function probeBoard(
   const palette = m.getColorPalette(DEFAULT_BACKGROUND);
   const paint = (state: unknown, ui: unknown) => {
     const dr = new RecordingDrawing(palette);
-    game.redraw(dr, game.newDrawState(state, tileSize), null, state, 1, ui, 0, 0);
+    game.redraw(
+      dr,
+      game.newDrawState(state, tileSize),
+      null,
+      state,
+      1,
+      ui,
+      0,
+      NO_FLASH,
+    );
     return JSON.stringify(dr.ops);
   };
   const frameNow = () => {

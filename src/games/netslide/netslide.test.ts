@@ -33,15 +33,17 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import type { Flash } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { netslideGame } from "./index.ts";
 import {
+  border,
   COL_BARRIER,
   COL_BORDER,
   COL_FLASHING,
   COL_POWERED,
   COL_WIRE,
-  FLASH_FRAME,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
 import {
@@ -643,51 +645,59 @@ describe("netslide rendering", () => {
     expect(tileOrigins(settled).has(b + 5 * ts)).toBe(false);
   });
 
-  it("judges the board solved from its tiles, and flashes for long enough to sweep it", () => {
+  it("judges the board solved from its tiles", () => {
     const { desc, aux } = newDesc(EASY_5x5, randomNew("flash"));
     const s = newState(EASY_5x5, desc);
-    const ui = newUi(s);
     expect(netslideGame.status(s)).toBe("ongoing");
 
     const won = { ...s, tiles: hexGrid(aux), moveCount: 9 };
     expect(netslideGame.status(won)).toBe("solved");
-    expect(netslideGame.solvedFlash?.(won, ui)).toBeGreaterThan(0);
   });
 
-  it("paints the flash outward from the center, a ring at a time", () => {
-    // Reach a genuinely-won board *by playing*: scramble the solution with one
-    // slide, then play its reverse. (A Solve move is deliberately not
-    // celebrated, so it could never drive this frame.)
+  it("spreads the win flash from the source along the wires", () => {
     const { desc, aux } = newDesc(EASY_5x5, randomNew("flash-frame"));
-    const solution = { ...newState(EASY_5x5, desc), tiles: hexGrid(aux) };
-    const scrambled = netslideGame.executeMove(solution, {
-      type: "slide",
-      axis: "row",
-      index: 0,
-      dir: +1,
-    });
-    const won = netslideGame.executeMove(scrambled, {
-      type: "slide",
-      axis: "row",
-      index: 0,
-      dir: -1,
-    });
+    const won = { ...newState(EASY_5x5, desc), tiles: hexGrid(aux) };
     expect(netslideGame.status(won)).toBe("solved");
+    const { w, h } = won;
+    const b = border(PREFERRED_TILE_SIZE);
 
-    const flashingTilesAt = (flashTime: number) => {
+    const paint = (flash: Flash) => {
       const ds = netslideGame.newDrawState(won, PREFERRED_TILE_SIZE);
       const rec = new RecordingDrawing(netslideGame.colors([1, 1, 1]));
-      netslideGame.redraw?.(rec, ds, null, won, 1, newUi(won), 0, flashTime);
-      return rec.ops.filter((o) => o.op === "rect" && o.color === COL_FLASHING).length;
+      netslideGame.redraw(rec, ds, null, won, 1, newUi(won), 0, flash);
+      return rec;
     };
+    /** The tiles a frame draws on the lifted surface, by cell. */
+    const lit = (rec: RecordingDrawing): number[] =>
+      rec.ops
+        .flatMap((o) => (o.op === "rect" && o.color === COL_FLASHING ? [o] : []))
+        .map(
+          (o) =>
+            Math.floor((o.y - b) / PREFERRED_TILE_SIZE) * w +
+            Math.floor((o.x - b) / PREFERRED_TILE_SIZE),
+        );
+    /** Whether a wire runs from tile `a` into a neighbor in `among`. */
+    const wired = (a: number, among: ReadonlySet<number>): boolean =>
+      DIRECTIONS.some((d) => {
+        if (!(won.tiles[a] & d) || won.barriers[a] & d) return false;
+        const o = offset(a % w, Math.floor(a / w), d, w, h);
+        const next = o.y * w + o.x;
+        return among.has(next) && (won.tiles[next] & opposite(d)) !== 0;
+      });
 
-    // Each tile blinks off-on-off-on over the four frames starting at its
-    // Chebyshev distance from the center, so the celebration reads as a ripple
-    // spreading outward. On this 5×5 that means: frame 0 nothing lit yet, frame
-    // 1 the center tile alone, frame 2 the ring of 8 around it (the center is
-    // back in its off phase).
-    expect(flashingTilesAt(FLASH_FRAME * 0.5)).toBe(0);
-    expect(flashingTilesAt(FLASH_FRAME * 1.5)).toBe(1);
-    expect(flashingTilesAt(FLASH_FRAME * 2.5)).toBe(8);
+    const source = won.cy * w + won.cx;
+    // Each tile's distance from the source, a ring of wired tiles at a time.
+    const distance = new Map([[source, 0]]);
+    for (let d = 1; distance.size < w * h; d++) {
+      const reached = new Set(distance.keys());
+      const ring = [...won.tiles.keys()].filter(
+        (i) => !reached.has(i) && wired(i, reached),
+      );
+      expect(ring.length).toBeGreaterThan(0);
+      for (const i of ring) distance.set(i, d);
+    }
+    const run = winFlashRun(paint, lit, 120);
+    expectWinFlashTravels(run, w * h, (i) => distance.get(i) ?? -1);
+    expect(run.frames[0]).toEqual([source]);
   });
 });

@@ -33,7 +33,6 @@ import {
   COL_LOWLIGHT,
   COL_LOWLIGHT_GENTLE,
   computeSize,
-  FLASH_FRAME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -314,7 +313,6 @@ export const twiddleGame: Game<
   redraw,
 
   animLength: (_a, b) => animLength(b.n),
-  solvedFlash: () => 2 * FLASH_FRAME,
 };
 
 registerGame(twiddleGame);

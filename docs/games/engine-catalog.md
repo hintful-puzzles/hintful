@@ -425,6 +425,8 @@ to porting the incremental `tdq` machinery and far simpler — Pearl does this.
 
 Direction algebra, hex wire desc codec with `v`/`h` barriers, the
 spanning-tree grower, barrier placement, and the `computeActive` power flood.
+`wireDistance` is each tile's distance from the source along the wires: the
+position both games hand the win flash, which spreads from the source.
 **Wire bits `0x0F` only — each game owns the high bits** (`0x10` collides:
 Netslide `FLASHING`, Net `LOCKED`; the header's "0x10 trap"). Extracted from
 Netslide when Net became the second consumer.
@@ -1379,8 +1381,16 @@ from the board's status now and its own record that the solver was used. An
 outcome that is not completion ("DEAD!", "FAILED!") is the game's own phrase.
 `completion-status.test.ts` fails any game string that says the words.
 
-The win flash has no helper any more: its trigger is the midend's and a game
-supplies `solvedFlash` (`rendering.md` § "Animation and flash").
+### `win-wave.ts` — the win flash
+
+The whole win flash but for what a lit element looks like: `Flash` (what
+`redraw` is handed), the wave the midend runs, and the positions a game asks
+it about. `sweepStep(x, y)` is the diagonal every game without a route of its
+own takes, and `sweepRanks(centers)` the same for a board with no grid;
+`loopSteps(points)` numbers a closed route from its bottom-left
+corner, clockwise; `walkLoop(links)` puts a loop's links in route order first,
+for a game that holds its loop as unordered edges. `rendering.md` § "Animation
+and flash" has the rules and the table of routes.
 
 ### `pencil-indicator.ts` — the pencil-mode indicator
 

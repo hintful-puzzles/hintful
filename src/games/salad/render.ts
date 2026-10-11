@@ -4,7 +4,7 @@
  * The board is `(order + 2)²` tiles: a genuine one-tile margin all round that
  * holds the ABC End View border clues (`FROMCOORD(x) = x/TILE_SIZE − 1`), with
  * the `order × order` play area inside it. Each play tile draws, in order, its
- * background (or a flash phase), the cursor / pencil-mode highlight, the cell
+ * background (or the win's highlight), the cursor / pencil-mode highlight, the cell
  * border, a **ball** (two concentric circles) or a **cross**, and then either
  * the entered symbol or the solo.c-style grid of pencil marks.
  *
@@ -16,11 +16,12 @@
  */
 
 import { valueBit } from "../../engine/candidate-bits.ts";
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
+import { mkhighlightBackground } from "../../engine/color/color-mkhighlight.ts";
 import { GREEN_WASH } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   ERROR,
+  FLASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -56,6 +57,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SaladHint } from "./hint.ts";
 import { CLUE } from "./hint-text.ts";
 import type { SaladMistake } from "./solver.ts";
@@ -72,14 +74,13 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 40;
-export const FLASH_TIME = 0.7;
-const FLASH_FRAME = 0.1;
 
-// --- palette (index-for-index with the upstream COL_* enum) ----------------
+// --- palette ---------------------------------------------------------------
 
 export const COL_BACKGROUND = 0;
-export const COL_HIGHLIGHT = 1;
-export const COL_LOWLIGHT = 2;
+/** A square the win's highlight is on. */
+export const COL_FLASH = 1;
+export const COL_GIVEN = 2; // the lifted surface of a square the puzzle filled
 export const COL_BORDER = 3;
 export const COL_BORDERCLUE = 4;
 export const COL_PENCIL = 5;
@@ -109,14 +110,12 @@ export const COL_HINT_CELL = 20;
  * lowlight, a tint of the board. */
 export const COL_CURSOR = 21;
 export const COL_CELL = 22; // the surface of a square the player fills
-export const COL_GIVEN = 23; // the lifted surface of a square the puzzle filled
 
 export function colors(defaultBackground: Color): Color[] {
-  const { background, highlight, lowlight } = mkhighlight(defaultBackground);
+  const background = mkhighlightBackground(defaultBackground);
   const out: Color[] = [];
   out[COL_BACKGROUND] = background;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_FLASH] = FLASH;
   out[COL_BORDER] = surfaceGrid(background);
   out[COL_BORDERCLUE] = INK;
   out[COL_PENCIL] = pencilColor(background);
@@ -355,7 +354,6 @@ function drawBall(
   x: number,
   y: number,
   flags: number,
-  flash: number,
 ): void {
   const i = x + y * s.order;
   if (s.mode === GAMEMODE_LETTERS && s.grid[i] !== 0) return;
@@ -365,14 +363,7 @@ function drawBall(
 
   let bg: number;
   if (s.mode !== GAMEMODE_LETTERS) {
-    bg =
-      (x + y) % 3 === flash
-        ? COL_BACKGROUND
-        : (x + y + 1) % 3 === flash
-          ? COL_LOWLIGHT
-          : s.gridclues[i]
-            ? COL_I_BALLBG
-            : COL_G_BALLBG;
+    bg = s.gridclues[i] ? COL_I_BALLBG : COL_G_BALLBG;
   } else {
     // Letters mode draws the ball "transparent" over whatever is behind it.
     bg = highlightFill(highlightOf(flags), COL_CURSOR, surfaceOf(s, i));
@@ -527,7 +518,7 @@ export function redraw(
   _dir: number,
   ui: SaladUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SaladMove, SaladHint>,
   mistakes?: readonly SaladMistake[],
 ): void {
@@ -535,14 +526,8 @@ export function redraw(
   const o = s.order;
   const thick = ts <= 21 ? 1 : 2.5;
 
-  let flash = -1;
-  let cursorShown = ui.cursor.visible;
-  if (flashTime > 0) {
-    flash = Math.floor(flashTime / FLASH_FRAME) % 3;
-    cursorShown = false;
-  }
-
-  setDrawFlags(ds, ui, s, cursorShown);
+  // The cursor is hidden while the win flash plays.
+  setDrawFlags(ds, ui, s, ui.cursor.visible && !flash.winning);
   const flags = ds.gridfs;
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * o + x);
 
@@ -568,12 +553,13 @@ export function redraw(
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {
       const i = y * o + x;
-      // Packed key: flags (5) | symbol (4) | marks (nums+1 ≤ 10) | flash (2).
+      const lit = flash.win(sweepStep(x, y));
+      // Packed key: flags (5) | symbol (4) | marks (nums+1 ≤ 10) | lit (1).
       // Every overlay is in here or in a sidecar (docs/games/rendering.md
       // § "Overlay sidecars"), so nothing can change on screen without the cell
       // missing the cache.
       const key =
-        flags[i] | (s.grid[i] << 5) | (s.pencil[i] << 9) | ((flash + 1) << 19);
+        flags[i] | (s.grid[i] << 5) | (s.pencil[i] << 9) | (lit ? 1 << 19 : 0);
       if (ds.drawn[i] === key && !ds.wrong.stale(i) && !ds.hint.stale(i)) continue;
       ds.drawn[i] = key;
 
@@ -582,23 +568,17 @@ export function redraw(
       const struck = ds.hint.struck[i];
       const ghost = (ds.hint.packed[i] & HINT_GHOST_MASK) >> HINT_GHOST_SHIFT;
 
-      // Background, or the three-phase completion wave (letters mode paints the
-      // whole cell; numbers mode waves the ball backgrounds instead). Neither
+      // Background, or the win's highlight where it is on this square. Neither
       // hint mark appears here: the acted-on square is ringed and the evidence
       // area outlined, both on the square's own border in the pass below, so a
       // hinted square keeps its highlight, its ghost entry and its struck notes —
       // the hint deliberately stays while the player types into it.
-      const lettersFlash = s.mode === GAMEMODE_LETTERS && flash >= 0;
       drawCellBackground(
         dr,
         { x: tx, y: ty, w: ts, h: ts },
         highlightOf(flags[i]),
         COL_CURSOR,
-        !lettersFlash || (x + y) % 3 === flash
-          ? surfaceOf(s, i)
-          : (x + y + 1) % 3 === flash
-            ? COL_LOWLIGHT
-            : COL_HIGHLIGHT,
+        lit ? COL_FLASH : surfaceOf(s, i),
       );
       ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
 
@@ -613,7 +593,7 @@ export function redraw(
         COL_BORDER,
       );
 
-      if (flags[i] & FD_CIRCLE) drawBall(dr, ts, s, x, y, flags[i], flash);
+      if (flags[i] & FD_CIRCLE) drawBall(dr, ts, s, x, y, flags[i]);
       else if (flags[i] & FD_CROSS) drawCross(dr, ts, s, x, y, flags[i], thick);
 
       if (s.grid[i] === 0 && s.holes[i] !== CROSS) {

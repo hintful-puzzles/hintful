@@ -110,8 +110,6 @@ export interface InertiaUi {
   /** Duration of the move being animated, so `redraw` can turn `animTime`
    * into a fraction of the slide. */
   animLength: number;
-  /** Which flash (death or win) is playing, as the render flag bits. */
-  flashType: number;
   /** The player is holding the ball, aiming a swipe. */
   aiming: boolean;
   /** The direction the swipe is currently aimed at (0..7), or -1 for "no

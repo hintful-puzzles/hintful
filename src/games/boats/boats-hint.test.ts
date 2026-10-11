@@ -30,6 +30,7 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newBoatsDesc } from "./generator.ts";
 import {
   applyBoatsFiring,
@@ -712,7 +713,7 @@ describe("boats hint — rendering", () => {
       0,
       boatsGame.newUi(state),
       0,
-      0,
+      NO_FLASH,
       step,
     );
     const hatches = opsOfKind(recording.ops, "hatch");

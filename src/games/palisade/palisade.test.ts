@@ -21,7 +21,6 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newDesc } from "./generator.ts";
@@ -237,16 +236,8 @@ describe("palisade findMistakes", () => {
 });
 
 // When the flash plays is the engine's (`midend.test.ts`); Palisade supplies
-// its duration and a status that is the board's.
+// a status that is the board's.
 describe("palisade completion", () => {
-  it("has a win flash", () => {
-    const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
-    const s0 = newState(p, newDesc(p, randomNew("palisade-flash")).desc);
-    expect(palisadeGame.solvedFlash?.(s0, { cursor: newCursor(1, 1) })).toBeGreaterThan(
-      0,
-    );
-  });
-
   it("breaking a solved board reverts it to unsolved", () => {
     const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const s0 = newState(p, newDesc(p, randomNew("palisade-unstick")).desc);

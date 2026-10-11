@@ -67,7 +67,6 @@ import {
   colors,
   computeSize,
   countBlockAt,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -996,7 +995,6 @@ export const undeadGame: Game<
   redraw,
 
   animLength: () => 0,
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(undeadGame);

@@ -42,6 +42,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
 import {
@@ -55,7 +56,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.3;
 
 // --- palette --------------------------------------------------------------
 export const COL_BACKGROUND = 0;
@@ -71,7 +71,7 @@ export const COL_HINT_CELL = 8; // evidence area, outlined
 export const COL_HINT_REF = 9; // a cited filled anchor (a doubled ring)
 export const COL_PENCIL = 10; // the player's same-slant marks
 export const COL_PENCIL_BODY = 11; // the notes-mode indicator's pencil
-/** The lifted disc under a clue, and every square on the solved flash. */
+/** The lifted disc under a clue, and a square the win's highlight is on. */
 export const COL_GIVEN = 12;
 
 export function colors(defaultBackground: Color): Color[] {
@@ -488,7 +488,7 @@ export function redraw(
   _dir: number,
   ui: SlantUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SlantMove, SlantHint>,
   mistakes?: readonly SlantMistake[],
 ): void {
@@ -502,14 +502,12 @@ export function redraw(
   const marks = ds.todrawSideKeys;
   marks.fill(0);
 
-  // The upstream 3-phase flash: on for the first and last thirds.
-  const flashing = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_TIME) !== 1;
-
   // Work out where all the slashes are — a slash in one square affects the
   // drawing of its neighbors (corner dots), hence the two-phase build.
   for (let y = -1; y <= h; y++) {
     for (let x = -1; x <= w; x++) {
-      todraw[ti(x, y)] = x >= 0 && x < w && y >= 0 && y < h && flashing ? FLASH : 0;
+      const square = x >= 0 && x < w && y >= 0 && y < h;
+      todraw[ti(x, y)] = square && flash.win(sweepStep(x, y)) ? FLASH : 0;
     }
   }
 

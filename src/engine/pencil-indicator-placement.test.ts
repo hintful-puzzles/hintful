@@ -31,6 +31,7 @@ import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { inSweep } from "./testing/slow.ts";
 import type { Size } from "./types.ts";
+import { NO_FLASH } from "./win-wave.ts";
 
 beforeAll(registerAllGames);
 
@@ -87,7 +88,7 @@ function frameWith(
   ui.pencilMode = on;
   if (ui.cursor) ui.cursor.visible = false;
   const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
-  game.redraw(dr, game.newDrawState(state, ts), null, state, 1, ui, 0, 0);
+  game.redraw(dr, game.newDrawState(state, ts), null, state, 1, ui, 0, NO_FLASH);
   return dr.ops;
 }
 

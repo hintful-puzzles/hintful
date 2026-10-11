@@ -38,6 +38,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { HUB, SPOKE } from "./hint-text.ts";
 import type { SpokesHint } from "./index.ts";
 import { SpokesScratch, spokesFindIsolated, spokesSolverRecount } from "./solver.ts";
@@ -58,9 +59,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 72;
-
-export const FLASH_FRAME = 0.12;
-export const FLASH_TIME = FLASH_FRAME * 5;
 
 /** Half-width of the box around a grid corner that the diagonal pass owns.
  * A cell repaint leaves squares of this size in its four corners alone. */
@@ -263,7 +261,7 @@ export function redraw(
   _dir: number,
   ui: SpokesUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<SpokesMove, SpokesHint>,
   mistakes?: readonly SpokesMistake[],
 ): void {
@@ -278,8 +276,7 @@ export function redraw(
     ds.cursorSaved = false;
   }
 
-  const flash = flashTime > 0 && (Math.floor(flashTime / FLASH_FRAME) & 1) === 1;
-  const cshow = ui.cursor.visible && flashTime <= 0;
+  const cshow = ui.cursor.visible && !flash.winning;
   const cx = ((ui.cursor.x + 1) / 3) | 0;
   const cy = ((ui.cursor.y + 1) / 3) | 0;
   const cdx = ((ui.cursor.x + 1) % 3) - 1;
@@ -356,7 +353,7 @@ export function redraw(
 
       const fill =
         ui.markSatisfied && lines === state.numbers[i] ? COL_SATISFIED : COL_HUB;
-      const border = flash
+      const border = flash.win(sweepStep(x, y))
         ? COL_DONE
         : i === ui.dragStart || i === ui.dragEnd
           ? COL_HOLDING

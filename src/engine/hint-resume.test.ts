@@ -35,6 +35,7 @@ import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
+import { NO_FLASH } from "./win-wave.ts";
 
 /** Walk a fresh board to solved, recomputing the hint after every move.
  * Returns the move count, or throws with a diagnostic if a hint gives up or
@@ -339,7 +340,7 @@ describe("a kept hint plan never contains a step that does nothing", () => {
 function frameOf(game: AnyGame, state: unknown, step?: HintStep<unknown>): string {
   const rec = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
   const ds = preferredDrawState(game, state);
-  game.redraw(rec, ds, null, state, 1, game.newUi(state), 0, 0, step);
+  game.redraw(rec, ds, null, state, 1, game.newUi(state), 0, NO_FLASH, step);
   return JSON.stringify(rec.ops);
 }
 

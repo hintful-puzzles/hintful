@@ -5,7 +5,7 @@
  * Slide has no interpolated animation, so *all* of its movement feedback is in
  * the frame: the dragged block following the pointer lit up, the target area
  * tinted, the Solve route's next block highlighted with a shadow where it should
- * land, and the completion flash. Each of those gets a targeted assertion plus a
+ * land, and the win flash. Each of those gets a targeted assertion plus a
  * snapshot — the assertions are the real guarantee, the snapshot catches drift.
  *
  * The drag and Solve frames are captured on a **warm** draw state (a frame has
@@ -27,7 +27,9 @@ import {
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Color } from "../../engine/types.ts";
+import { type Flash, NO_FLASH, sweepStep, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { slideGame } from "./index.ts";
 import {
   COL_BACKGROUND,
@@ -35,9 +37,9 @@ import {
   COL_CURSOR,
   COL_GRABBED,
   COL_HIGHLIGHT,
-  COL_LOWLIGHT,
   COL_MAIN,
   COL_MAIN_GRABBED,
+  COL_MAIN_HIGHLIGHT,
   COL_TARGET,
   COL_WALL,
   COL_WALL_HIGHLIGHT,
@@ -452,44 +454,96 @@ describe("slide exit gate", () => {
   });
 });
 
-// --- the completion flash ----------------------------------------------
+// --- the win flash -----------------------------------------------------
 
-describe("slide completion flash", () => {
-  /** Finish the board, then advance the clock into the flash by `t` seconds. */
+describe("slide win flash", () => {
+  /** Finish the board, and return what is repainted `t` seconds into the
+   * flash: the tiles the highlight is on, the frame before having had none. */
   function flashAt(t: number): readonly DrawOp[] {
     const me = newBoard();
     me.playMoves([NUDGE, WIN]);
+    capture(me);
     me.timer(t);
     return capture(me);
   }
+  /** The squares repainted `t` seconds in, as `x,y`. */
+  const lit = (t: number): string[] =>
+    flashAt(t)
+      .filter((o): o is RectOp => o.op === "rect" && o.w === TS && o.h === TS)
+      .map((o) => `${o.x / TS},${o.y / TS}`);
+  const frames = Array.from({ length: 40 }, (_, i) =>
+    lit((WIN_FLASH_S * (i + 1)) / 41),
+  );
+  // The won board: the key block one square right, `A` nudged to (4,1).
+  const main = ["2,1", "3,1", "2,2", "3,2"];
 
-  it("recolors the floor while flashing, and moves between phases", () => {
-    // FLASH_INTERVAL is 0.1s and the flash alternates high/low each interval,
-    // so 0.05s and 0.15s are different phases. Asserting *two* phases is what
-    // proves the animation is moving; a snapshot alone would not.
-    const early = flashAt(0.05);
-    const late = flashAt(0.15);
+  it("starts on the floor at the bottom left, in the floor's highlight shade", () => {
+    expect(frames[0]).toEqual(["1,3"]);
+    const floor = rectsInTile(flashAt(WIN_FLASH_S / 41), 1, 3).find((o) => o.w === TS);
+    expect(floor?.color).toBe(COL_HIGHLIGHT);
+  });
 
-    // A plain floor square is painted with the flash color, not the
-    // background, and with the opposite one half an interval later.
-    const earlyFloor = rectsInTile(early, 1, 3).find((o) => o.w === TS);
-    const lateFloor = rectsInTile(late, 1, 3).find((o) => o.w === TS);
-    expect(earlyFloor?.color).not.toBe(COL_BACKGROUND);
-    expect(lateFloor?.color).not.toBe(COL_BACKGROUND);
-    expect(earlyFloor?.color).not.toBe(lateFloor?.color);
-    expect([COL_HIGHLIGHT, COL_LOWLIGHT]).toContain(earlyFloor?.color);
-    expect([COL_HIGHLIGHT, COL_LOWLIGHT]).toContain(lateFloor?.color);
+  it("travels the floor squares and the blocks in the sweep's order, never the wall", () => {
+    const won = [NUDGE, WIN].reduce(
+      slideGame.executeMove,
+      slideGame.newState({ w: W, h: H, maxmoves: -1 }, ID.split(":")[1]),
+    );
+    const ui = slideGame.newUi(won);
+    // The squares the flash repaints over a settled frame: the lit ones.
+    const paint = (flash: Flash) => {
+      const ds = slideGame.newDrawState(won, TS);
+      slideGame.redraw(
+        new RecordingDrawing(PALETTE),
+        ds,
+        null,
+        won,
+        1,
+        ui,
+        0,
+        NO_FLASH,
+      );
+      const rec = new RecordingDrawing(PALETTE);
+      slideGame.redraw(rec, ds, null, won, 1, ui, 0, flash);
+      return rec.ops;
+    };
+    /** An element: a floor square or `A` as `x,y`, the key block as one. */
+    const run = winFlashRun(paint, (ops) => [
+      ...new Set(
+        ops
+          .filter((o): o is RectOp => o.op === "rect" && o.w === TS && o.h === TS)
+          .map((o) => `${o.x / TS},${o.y / TS}`)
+          .map((sq) => (main.includes(sq) ? "main" : sq)),
+      ),
+    ]);
+    const elements = (W - 2) * (H - 2) - main.length + 1;
+    expectWinFlashTravels(run, elements, (el) => {
+      // The key block lights at its middle.
+      if (el === "main") return sweepStep(2.5, 1.5);
+      const [x, y] = el.split(",").map(Number);
+      expect(x > 0 && x < W - 1 && y > 0 && y < H - 1).toBe(true);
+      return sweepStep(x, y);
+    });
+    expect(lit(WIN_FLASH_S)).toEqual([]);
+  });
+
+  it("lights a block whole, in its own highlight shade", () => {
+    for (const f of frames)
+      expect(main.filter((sq) => f.includes(sq)).length % 4).toBe(0);
+    const t = (WIN_FLASH_S * (frames.findIndex((f) => f.includes(main[0])) + 1)) / 41;
+    const ops = flashAt(t);
+    expect(pieceFillColor(ops, 2, 1)).toBe(COL_MAIN_HIGHLIGHT);
   });
 
   it("returns to the ordinary palette once the flash has run out", () => {
     const me = newBoard();
     me.playMoves([NUDGE, WIN]);
-    me.timer(60); // far past FLASH_TIME
+    me.timer(60);
     const ops = capture(me);
     expect(rectsInTile(ops, 1, 3).find((o) => o.w === TS)?.color).toBe(COL_BACKGROUND);
   });
 
   it("matches its snapshot", () => {
-    expect(flashAt(0.05)).toMatchSnapshot();
+    // The highlight on the key block.
+    expect(flashAt(1.15)).toMatchSnapshot();
   });
 });

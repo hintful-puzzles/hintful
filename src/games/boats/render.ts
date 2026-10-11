@@ -54,6 +54,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { BoatsHint } from "./index.ts";
 import type { BoatsMistake } from "./solver.ts";
 import {
@@ -87,9 +88,6 @@ import {
 } from "./validate.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-
-const FLASH_FRAME = 0.12;
-export const FLASH_TIME = FLASH_FRAME * 5;
 
 // --- palette ---------------------------------------------------------------
 
@@ -264,7 +262,7 @@ export interface BoatsDrawState {
   h: number;
   fleet: number;
   /** Per-tile last-drawn contents (−1 = never drawn): the segment shape in bits
-   * 0–3, the live error/cursor flags in bits 4–7, the flash phase in bit 8, and
+   * 0–3, the live error/cursor flags in bits 4–7, the win flash in bit 8, and
    * the displayed hint step's role for this square in bits 9–11. */
   tiles: Int32Array;
   /** Last-drawn `STATUS_*` for each of the `w + h` border numbers. */
@@ -464,8 +462,8 @@ const HINT_LINE = 1 << 12; // a square of the line the sentence names (hatched)
 const BORDER_HATCHED = 0x100;
 
 /** Pack a cell's drawn appearance into the per-tile cache word. */
-function tileKey(ship: number, flags: number, flash: boolean, hint: number): number {
-  return ship | (flags << 4) | ((flash ? 1 : 0) << 8) | hint;
+function tileKey(ship: number, flags: number, lit: boolean, hint: number): number {
+  return ship | (flags << 4) | ((lit ? 1 : 0) << 8) | hint;
 }
 
 /** The per-cell hint bits for the displayed step. */
@@ -522,7 +520,7 @@ export function redraw(
   _dir: number,
   ui: BoatsUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<BoatsMove, BoatsHint>,
   mistakes?: readonly BoatsMistake[],
 ): void {
@@ -530,7 +528,6 @@ export function redraw(
   const p = state.params;
   const { w, h } = p;
   const full = !ds.started;
-  const flash = flashTime > 0 ? ((flashTime / FLASH_FRAME) | 0) % 2 === 1 : false;
 
   // The validation family writes its verdicts into caller-supplied arrays and
   // takes a mutable `BoatsBoard`, so give it a scratch copy rather than the
@@ -552,7 +549,7 @@ export function redraw(
   // The hint's hatched line runs on through its number (column slots first,
   // then rows, as `borderClues` counts them), so the slot's hatch is part of
   // its key beside the validation status.
-  const line = flashTime === 0 ? stepMarks(hint).of("stripes", CELL) : [];
+  const line = flash.winning ? [] : stepMarks(hint).of("stripes", CELL);
   const hatchedSlot =
     line.length === 0
       ? -1
@@ -603,7 +600,7 @@ export function redraw(
   }
 
   const drag = dragBounds(ui);
-  const hints = flashTime === 0 ? hintBits(hint ?? null, w, h) : null;
+  const hints = flash.winning ? null : hintBits(hint ?? null, w, h);
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
@@ -611,12 +608,7 @@ export function redraw(
       const tx = BORDER + x * ts;
       const ty = BORDER + y * ts;
 
-      if (
-        flashTime === 0 &&
-        ui.cursor.visible &&
-        ui.cursor.x === x &&
-        ui.cursor.y === y
-      )
+      if (!flash.winning && ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)
         cellFlags[i] |= FD_CURSOR;
       else cellFlags[i] &= ~FD_CURSOR;
 
@@ -639,25 +631,36 @@ export function redraw(
       }
 
       const hintBit = hints ? hints[i] : 0;
-      const key = tileKey(ship, cellFlags[i], flash, hintBit);
+      const lit = flash.win(sweepStep(x, y));
+      const key = tileKey(ship, cellFlags[i], lit, hintBit);
       if (ds.tiles[i] === key && !ds.wrong.stale(i)) continue;
       ds.tiles[i] = key;
 
       dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
       // A segment the puzzle gave is told by the lifted cell under it; given
-      // water keeps its blue and is told by its waves.
-      const surface =
-        ship === EMPTY ? COL_CELL : isShip(state.gridClues[i]) ? COL_GIVEN : COL_WATER;
+      // water keeps its blue and is told by its waves. The win flash swaps the
+      // surface of the square it is on: a square lifts, and a given segment's
+      // lifted square drops to the plain one.
+      const lifted = isShip(state.gridClues[i]);
+      const surface = lit
+        ? lifted
+          ? COL_CELL
+          : COL_GIVEN
+        : ship === EMPTY
+          ? COL_CELL
+          : lifted
+            ? COL_GIVEN
+            : COL_WATER;
       dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, surface);
       if (hintBit & HINT_LINE)
         dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
       drawRectOutline(dr, tx, ty, ts + 1, ts + 1, COL_GRID);
 
-      if (!flash && isShip(ship)) {
+      if (isShip(ship)) {
         const color =
           cellFlags[i] & FE_MISMATCH || ds.wrong.at(i) ? COL_SHIP_ERROR : COL_SHIP;
         drawSegment(dr, tx, ty, ts + 1, ship, color);
-      } else if (!flash && state.gridClues[i] === WATER) {
+      } else if (state.gridClues[i] === WATER) {
         // A *given* water square is marked with waves; player water is the
         // plain blue fill.
         drawWaves(dr, tx, ty, ts, COL_INK);

@@ -88,6 +88,7 @@ import type {
   TimerReadout,
 } from "./types.ts";
 import { copyUi, restoreUi } from "./ui-snapshot.ts";
+import { NO_FLASH, ownFlash, WinWave } from "./win-wave.ts";
 
 /** Wall-clock duration (seconds) of a hint-executed move's slow-motion
  * animation, whatever the game's own move-animation time. Keep it equal to
@@ -282,6 +283,9 @@ export interface EngineCore {
   /** Hold the solve timer while the player cannot be playing (the page is
    * hidden); animation still ticks. */
   setTimerPaused(paused: boolean): void;
+  /** Whether the player's system asks for reduced motion, which makes the win
+   * flash a still one. */
+  setReducedMotion(reduced: boolean): void;
   redraw(dr: GameDrawing): void;
   /** Drop the drawstate and redraw. The worker adapter calls this when the
    * palette is installed or replaced: that does not clear the canvas, but it
@@ -423,7 +427,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   // Animation/flash state, mirroring midend.c. While a move is
   // animating, `animPrev` is the state being animated *from*; the game
-  // is drawn with (animPrev, state, animTime, flashTime). Outside
+  // is drawn with (animPrev, state, animTime, the flash). Outside
   // animation all are zero/null and the game draws its final state.
   private animPrev: State | null = null;
   private animTime = 0;
@@ -434,8 +438,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   // scaled time (`animScale`), so it needs no awareness of the stretch.
   private animScale = 1;
   private pendingHintAnim = false;
+  // A flash of the game's own (`flashLength`): a death, a loss, a reveal.
   private flashTime = 0;
   private flashLength = 0;
+  // The win's highlight, while it travels. Never alongside a flash of the
+  // game's own.
+  private wave: WinWave | null = null;
+  private reducedMotion = false;
   private animDir = 1;
 
   constructor(private readonly game: Game<Params, State, Move, Ui, DrawState>) {
@@ -1605,29 +1614,29 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // animTime=0 frame and race the rAF loop one frame later
     // (visible flicker). The timer drives every animation frame,
     // including the first — exactly as midend.c's frontend timer does.
-    if (!this.animating) {
-      // Settled instantly: run the same hint bookkeeping the timer's
-      // settle path runs (advance an executed step, drop the plan on
-      // a solved board), then paint.
-      this.settleHint();
-      this.requestRedraw();
-    }
+    // A move that does not animate has landed: run the hint bookkeeping the
+    // timer runs when an animated one comes to rest (advance an executed
+    // step, drop the plan on a solved board). A flash still to play does not
+    // hold it: a step that solved the board is not shown through the win.
+    if (this.moveAtRest) this.settleHint();
+    if (!this.animating) this.requestRedraw();
     this.syncTimer();
   }
 
   // --- animation (mirrors midend.c) --------------------------------
 
   /** Arm animation/flash for a state transition. The game decides the
-   * durations via `animLength`, `flashLength` and `solvedFlash`; absent ⇒ 0
-   * ⇒ no animation (the transition just paints its final state). */
+   * durations of its move and of a flash of its own, via `animLength` and
+   * `flashLength`; absent ⇒ 0 ⇒ no animation (the transition just paints its
+   * final state). A win's flash is the engine's, the same in every game. */
   private setupAnimation(prev: State, next: State, dir: number): void {
     this.animDir = dir;
     const a = this.game.animLength?.(prev, next, dir, this.ui) ?? 0;
-    const f =
-      this.game.flashLength?.(prev, next, dir, this.ui) ||
-      (this.becameSolved(prev, next, dir)
-        ? (this.game.solvedFlash?.(next, this.ui) ?? 0)
-        : 0);
+    const f = this.game.flashLength?.(prev, next, dir, this.ui) ?? 0;
+    this.wave =
+      f === 0 && this.becameSolved(prev, next, dir)
+        ? new WinWave(this.reducedMotion)
+        : null;
     // A hint move stretches the game's base animation to the uniform
     // `HINT_ANIM_S`; `animScale` (= stretched / base) is what `redraw`
     // divides `animTime` by so the game, which only knows its own base
@@ -1656,11 +1665,26 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.animScale = 1;
     this.flashTime = 0;
     this.flashLength = 0;
+    this.wave = null;
     this.animDir = 1;
   }
 
+  /** Whether the last move's own animation is over (or it had none), which a
+   * flash after it does not change. */
+  private get moveAtRest(): boolean {
+    return this.animTime >= this.animLength;
+  }
+
   private get animating(): boolean {
-    return this.animTime < this.animLength || this.flashTime < this.flashLength;
+    return (
+      this.animTime < this.animLength ||
+      this.flashTime < this.flashLength ||
+      this.wave !== null
+    );
+  }
+
+  setReducedMotion(reduced: boolean): void {
+    this.reducedMotion = reduced;
   }
 
   private requestRedraw(): void {
@@ -2261,17 +2285,22 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         this.flashTime = 0;
         this.flashLength = 0;
       }
+      if (this.wave !== null) {
+        this.wave.seek(Math.max(0, this.animTime - this.animLength));
+        if (this.wave.done) this.wave = null;
+      }
       if (this.animLength > 0 && this.animTime >= this.animLength) {
         // Move animation finished; flash (if any) continues without
         // the from-state, exactly as midend.c drops oldstate.
         this.animPrev = null;
       }
+      // The move has landed, whatever flash is still to play.
+      if (this.moveAtRest) this.settleHint();
       if (this.animating) {
         this.requestRedraw();
       } else {
-        // Both animation and flash done: settle and paint once clean.
+        // Both animation and flash done: paint once clean.
         this.clearAnimation();
-        this.settleHint();
         this.requestRedraw();
         this.syncTimer();
       }
@@ -2294,6 +2323,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       dr.drawRect({ x: 0, y: 0, w, h }, 0);
       dr.drawUpdate({ x: 0, y: 0, w, h });
     }
+    // The win's highlight is not shown its board until the move that won has
+    // come to rest: it would cross a tile that is still sliding.
+    const wave = this.moveAtRest ? this.wave : null;
     this.game.redraw(
       dr,
       this.drawState,
@@ -2305,11 +2337,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // has a stretched `animLength`, and dividing by the same factor
       // keeps the game's `animTime / its-anim-length` progress correct.
       this.animTime / this.animScale,
-      this.flashTime,
+      wave ?? (this.flashTime > 0 ? ownFlash(this.flashTime) : NO_FLASH),
       this.displayedHintStep ?? undefined,
       this.activeMistakes ?? undefined,
       this.activeDeadEnd ?? undefined,
     );
+    wave?.endFrame();
     dr.endDraw();
   }
 

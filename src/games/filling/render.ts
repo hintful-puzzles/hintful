@@ -31,6 +31,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { FillingHint } from "./index.ts";
 import {
   DX,
@@ -42,7 +43,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.4;
 
 // --- palette --------------------------------------------------------------
 export const COL_BACKGROUND = 0; // the board around the grid
@@ -104,6 +104,7 @@ const FF_MISTAKE = 0x20000; // fork's Check & Save overlay (no upstream analog)
 const HINT_TARGET = 0x40000; // a cell the displayed hint points at
 const HINT_AREA = 0x80000; // one of the hint's evidence cells
 const HINT_LINE = 0x100000; // in the region the sentence names (hatched)
+const FLASH_BG = 0x200000; // the win flash's highlight is on the cell
 
 // --- geometry (upstream BORDER = TILE_SIZE/2, BORDER_WIDTH = max(TS/32,1)) -
 export const border = (ts: number) => Math.floor(ts / 2);
@@ -182,16 +183,20 @@ function drawSquare(
   // paints over the digits it is reasoning about. `HINT_TARGET`/`HINT_AREA`
   // stay in the cache word regardless — they are what makes a cell repaint when
   // the mark leaves it, which is also what erases the mark.
+  // A cell the win flash is on lifts to the surface under a clue, whichever
+  // surface is its own.
   const bg =
-    flags & HIGH_BG
-      ? COL_HIGHLIGHT
-      : flags & ERROR_BG
-        ? COL_ERROR
-        : flags & CORRECT_BG
-          ? COL_CORRECT
-          : flags & USER_COL
-            ? COL_CELL
-            : COL_GIVEN;
+    flags & FLASH_BG
+      ? COL_GIVEN
+      : flags & HIGH_BG
+        ? COL_HIGHLIGHT
+        : flags & ERROR_BG
+          ? COL_ERROR
+          : flags & CORRECT_BG
+            ? COL_CORRECT
+            : flags & USER_COL
+              ? COL_CELL
+              : COL_GIVEN;
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, bg);
   if (flags & HINT_LINE)
     dr.drawHatch({ x: px, y: py, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
@@ -267,7 +272,7 @@ export function redrawFilling(
   _dir: number,
   ui: FillingUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<FillingMove, FillingHint>,
   mistakes?: readonly Point[],
 ): void {
@@ -294,9 +299,6 @@ export function redrawFilling(
     );
     ds.started = true;
   }
-
-  const flashy =
-    flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
 
   const dsf = makeRegionDsf(board, w, h);
   const mistakeSet =
@@ -357,8 +359,8 @@ export function redrawFilling(
       const v = board[i];
       let flags = 0;
 
-      if (flashy) {
-        // background flags cleared
+      if (flash.win(sweepStep(x, y))) {
+        flags |= FLASH_BG;
       } else if (ui.sel?.has(i)) {
         flags |= HIGH_BG;
       } else if (v) {

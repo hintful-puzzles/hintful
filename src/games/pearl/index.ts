@@ -58,7 +58,6 @@ import {
   centeredCoord,
   colors,
   computeSize,
-  FLASH_TIME,
   fromCoord,
   GUI_MASYU,
   metrics,
@@ -511,8 +510,6 @@ export const pearlGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(pearlGame);

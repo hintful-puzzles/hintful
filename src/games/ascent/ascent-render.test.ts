@@ -11,11 +11,19 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
-import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
+  type DrawOp,
+  opsOfKind,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import type { AscentRung } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-text.ts";
 import { ascentGame } from "./index.ts";
@@ -338,5 +346,37 @@ describe("ascent hint frames", () => {
     expect(marks.area.length).toBeGreaterThanOrEqual(2);
     expect(marks.hatch.length).toBeGreaterThan(0);
     expect(recording.ops).toMatchSnapshot();
+  });
+});
+
+describe("ascent win flash", () => {
+  const params = ascentGame.decodeParams("5x5mRdn");
+  const start = ascentGame.newState(params, "25c6a1_3_8_7_22_16a11e12b18_14a");
+  const answer = ascentGame.solve?.(start, start);
+  if (!answer?.ok) throw new Error("the fixture does not solve");
+  const state = ascentGame.executeMove(start, answer.move);
+
+  it("lights the squares in the order of their numbers", () => {
+    expect(ascentGame.status(state)).toBe("solved");
+    const paint = (flash: Flash) => {
+      const dr = new RecordingDrawing(ascentGame.colors(DEFAULT_BACKGROUND));
+      const ds = preferredDrawState(ascentGame, state);
+      ascentGame.redraw(dr, ds, null, state, 1, ascentGame.newUi(state), 0, flash);
+      return opsOfKind(dr.ops, "rect");
+    };
+    // A square's fill is the one rect it draws a tile across.
+    const fills = paint(NO_FLASH).filter((o) => o.w === o.h && o.w > 8);
+    const xs = [...new Set(fills.map((o) => o.x))].sort((a, b) => a - b);
+    const ys = [...new Set(fills.map((o) => o.y))].sort((a, b) => a - b);
+    expect([xs.length, ys.length]).toEqual([state.w, state.h]);
+    const run = winFlashRun(
+      paint,
+      (rects) =>
+        rects
+          .filter((o) => o.color === COL_LOWLIGHT)
+          .map((o) => ys.indexOf(o.y) * state.w + xs.indexOf(o.x)),
+      60,
+    );
+    expectWinFlashTravels(run, state.w * state.h, (i) => state.grid[i]);
   });
 });

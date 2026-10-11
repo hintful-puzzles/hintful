@@ -15,6 +15,7 @@ import {
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
 import { executeMove } from "./moves.ts";
@@ -174,7 +175,7 @@ describe("pearl input + executeMove", () => {
     ).toThrow();
   });
 
-  it("completes when the full loop is laid, and flashes (not after Solve)", () => {
+  it("completes when the full loop is laid", () => {
     const state = generate(EASY_6, "complete");
     const sol = solutionLines(state);
     // Lay every solution segment via replace ops.
@@ -188,7 +189,6 @@ describe("pearl input + executeMove", () => {
       });
     const done = executeMove(state, { ops });
     expect(pearlGame.status(done)).toBe("solved");
-    expect(pearlGame.solvedFlash?.(done, pearlGame.newUi(state))).toBeGreaterThan(0);
   });
 
   it("Solve fills in the unique solution", () => {
@@ -308,18 +308,18 @@ describe("pearl mistake overlay is in the diff key (paint-twice)", () => {
 
     // Frame 1: warm the cache with NO mistakes (draws the laid segment).
     const dr1 = new RecordingDrawing(palette);
-    redraw(dr1, ds, null, wrong, 0, ui, 0, 0, undefined, []);
+    redraw(dr1, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, []);
     expect(dr1.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(false);
 
     // Frame 2: same drawstate, WITH mistakes — the overlay must still paint
     // even though the cell's tile value is otherwise unchanged.
     const dr2 = new RecordingDrawing(palette);
-    redraw(dr2, ds, null, wrong, 0, ui, 0, 0, undefined, mistakes);
+    redraw(dr2, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, mistakes);
     expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
 
     // Frame 3: clearing the overlay erases it (repaints without COL_MISTAKE).
     const dr3 = new RecordingDrawing(palette);
-    redraw(dr3, ds, null, wrong, 0, ui, 0, 0, undefined, []);
+    redraw(dr3, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, []);
     const cellRepainted = dr3.ops.some((o) => o.op === "rect");
     expect(cellRepainted).toBe(true);
     expect(dr3.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(false);

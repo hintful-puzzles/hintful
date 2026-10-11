@@ -273,12 +273,11 @@ describe("Twiddle moves", () => {
     expect(solved.moveCount).toBe(s.moveCount + 1);
   });
 
-  it("flashes on a genuine completion", () => {
+  it("a rotation that completes the board leaves it solved", () => {
     const p = params();
     const s0 = stateFromNumbers(p, [2, 5, 3, 1, 4, 6, 7, 8, 9]);
     const s1 = twiddleGame.executeMove(s0, { type: "rotate", x: 0, y: 0, dir: -1 });
     expect(twiddleGame.status(s1)).toBe("solved");
-    expect(twiddleGame.solvedFlash?.(s1, twiddleGame.newUi(s0))).toBeGreaterThan(0);
   });
 });
 

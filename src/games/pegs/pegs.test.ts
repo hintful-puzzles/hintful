@@ -8,7 +8,12 @@ import {
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { type PegsMove, type PegsParams, pegsGame } from "./index.ts";
+import { COL_LIT } from "./render.ts";
 
 const G = pegsGame;
 
@@ -246,6 +251,44 @@ describe("Pegs computeSize", () => {
     const p = { w: 7, h: 7, type: 0 };
     // Seven 33px tiles and a half-tile border on each side.
     expect(G.computeSize(p, 33)).toEqual({ w: 263, h: 263 });
+  });
+});
+
+describe("Pegs win flash", () => {
+  it("sweeps the playable cells from the bottom left to the top right", () => {
+    // One peg left, and a corner off the board at the top left and the
+    // bottom right.
+    const state = G.executeMove(G.newState({ w: 3, h: 3, type: 0 }, "OHHPPHHHO"), {
+      type: "jump",
+      sx: 0,
+      sy: 1,
+      tx: 2,
+      ty: 1,
+    });
+    expect(G.status(state)).toBe("solved");
+    const TS = 32;
+    const paint = (flash: Flash) => {
+      const dr = new RecordingDrawing(G.colors(DEFAULT_BACKGROUND));
+      const ds = G.newDrawState(state, TS);
+      G.redraw(dr, ds, null, state, 1, G.newUi(state), 0, flash);
+      return dr.ops;
+    };
+    // The cells drawn on the lifted surface, each as its index.
+    const run = winFlashRun(paint, (ops) => {
+      const clips = opsOfKind(ops, "clip");
+      const left = Math.min(...clips.map((o) => o.x));
+      const top = Math.min(...clips.map((o) => o.y));
+      // The cells off the board are never drawn.
+      expect(clips.length).toBe(7);
+      const cells: number[] = [];
+      let cell = -1;
+      for (const o of ops) {
+        if (o.op === "clip") cell = ((o.y - top) / TS) * 3 + (o.x - left) / TS;
+        else if (o.op === "rect" && o.color === COL_LIT) cells.push(cell);
+      }
+      return cells;
+    });
+    expectWinFlashTravels(run, 7, (i) => sweepStep(i % 3, Math.floor(i / 3)));
   });
 });
 

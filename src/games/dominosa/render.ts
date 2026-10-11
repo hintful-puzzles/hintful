@@ -31,6 +31,7 @@ import {
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { SPOT } from "./hint-text.ts";
 import type { DominosaHint } from "./index.ts";
 import {
@@ -49,7 +50,6 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-export const FLASH_TIME = 0.13;
 
 // --- palette (mirrors the dominosa.c color enum index-for-index) ----------
 export const COL_BACKGROUND = 0;
@@ -352,7 +352,7 @@ export function redraw(
   _dir: number,
   ui: DominosaUi,
   _animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<DominosaMove, DominosaHint>,
   mistakes?: readonly DominosaMistake[],
 ): void {
@@ -431,7 +431,14 @@ export function redraw(
       if (n1 === ui.highlight1) c |= DF_HIGHLIGHT_1;
       if (n1 === ui.highlight2) c |= DF_HIGHLIGHT_2;
 
-      if (flashTime !== 0) c |= DF_FLASH;
+      // The win flash lights a domino whole: both halves ask about the
+      // domino's center, which is the mean of the two squares'.
+      if (grid[i] !== i) {
+        const j = grid[i];
+        const mx = (x + (j % w)) / 2;
+        const my = (y + ((j / w) | 0)) / 2;
+        if (flash.win(sweepStep(mx, my))) c |= DF_FLASH;
+      }
 
       if (ui.cursor.visible) {
         const curx = ui.cursor.x - (2 * x - 1);

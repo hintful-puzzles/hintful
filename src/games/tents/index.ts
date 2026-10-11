@@ -63,7 +63,6 @@ import {
   dirTo,
   dragLink,
   dragXform,
-  FLASH_TIME,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -501,8 +500,6 @@ export const tentsGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(tentsGame);

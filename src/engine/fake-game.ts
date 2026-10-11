@@ -124,8 +124,11 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
     redrawCalls: 0,
     instance: nextInstance++,
   }),
-  // Paints nothing, so every op a midend test records is the engine's own.
-  redraw: (_dr, ds) => {
+  // Paints nothing, so every op a midend test records is the engine's own. It
+  // has one element to light, as every game has some: a win flash that is
+  // asked about nothing ends at its first frame.
+  redraw: (_dr, ds, _prev, _s, _dir, _ui, _animTime, flash) => {
     ds.redrawCalls += 1;
+    flash.win(0);
   },
 };

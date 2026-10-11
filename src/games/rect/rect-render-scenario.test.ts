@@ -8,11 +8,18 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { rectGame } from "./index.ts";
 import { newState } from "./moves.ts";
-import { COL_CORRECT, COL_MISTAKE } from "./render.ts";
+import { BORDER, COL_CORRECT, COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
 import type { RectMove, RectParams } from "./state.ts";
 
 const P: RectParams = { w: 7, h: 7, expandfactor: 0, diff: DIFF_EASY };
@@ -43,6 +50,32 @@ describe("rect render scenarios", () => {
     // Every cell is correct → gray COL_CORRECT fill appears; flash is 0 here.
     expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_CORRECT)).toBe(
       true,
+    );
+  });
+
+  it("win flash: the finished fill leaves each cell in turn, bottom left to top right", () => {
+    const { desc } = newDesc(P, randomNew("rect-scenario"));
+    const st = newState(P, desc);
+    const solveMove = rectGame.solve?.(st, st, undefined);
+    if (!solveMove?.ok) throw new Error("unsolvable");
+    const solved = rectGame.executeMove(st, solveMove.move);
+    const TS = PREFERRED_TILE_SIZE;
+    const paint = (flash: Flash) => {
+      const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
+      const ds = preferredDrawState(rectGame, solved);
+      rectGame.redraw(dr, ds, null, solved, 1, rectGame.newUi(solved), 0, flash);
+      return dr.ops;
+    };
+    // The cells whose surface is not the finished fill, each as its index.
+    const run = winFlashRun(paint, (ops) =>
+      ops.flatMap((o) =>
+        o.op === "rect" && o.w === TS - 1 && o.h === TS - 1 && o.color !== COL_CORRECT
+          ? [((o.y - 1 - BORDER) / TS) * P.w + (o.x - 1 - BORDER) / TS]
+          : [],
+      ),
+    );
+    expectWinFlashTravels(run, P.w * P.h, (i) =>
+      sweepStep(i % P.w, Math.floor(i / P.w)),
     );
   });
 

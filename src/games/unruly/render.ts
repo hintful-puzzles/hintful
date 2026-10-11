@@ -1,8 +1,8 @@
 /**
  * Unruly rendering. A per-tile cache keyed on a packed flag word (upstream's
  * `tile` int); error overlays (3-in-a-row bars, the count `!`, unique-match
- * bars) recomputed each frame from the validators; a completion flash that
- * lifts every cell.
+ * bars) recomputed each frame from the validators; the win flash, which
+ * swaps the plain and the lifted surface under each cell it passes.
  *
  * The board is pieces on a quiet surface (`engine/piece.ts`): the two states
  * are the collection's two-state pair, a given sits on a lifted cell, and
@@ -26,6 +26,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import {
@@ -47,8 +48,7 @@ import type {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
-const FLASH_FRAME = 0.12;
-export const FLASH_TIME = FLASH_FRAME * 3;
+
 /** Base duration (s) of a single-cell placement animation; the midend
  * stretches it to the uniform hint-step duration for auto-hint. */
 export const PLACE_ANIM_TIME = 0.13;
@@ -58,7 +58,7 @@ export const COL_BACKGROUND = 0;
 export const COL_GRID = 1;
 /** The surface of a cell, which is all an undecided cell is. */
 export const COL_EMPTY = 2;
-/** The surface under a given, and under every cell while the board flashes. */
+/** The surface under a given, and under any other cell the win flash is on. */
 export const COL_GIVEN = 3;
 export const COL_0 = 4;
 export const COL_1 = 5;
@@ -174,10 +174,12 @@ function drawTile(
   // Grid edge first, so the cell can overwrite it.
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
 
-  // The cell's surface, lifted under a given and on the flash's lit frames.
+  // The cell's surface, lifted under a given. The win flash swaps the two
+  // surfaces, so a given, lifted already, shows the highlight as well.
   const inner = { x: px, y: py, w: ts - 1, h: ts - 1 };
   const value: Cell = tile & FF_ZERO ? ZERO : tile & FF_ONE ? ONE : EMPTY;
-  const lifted = (value !== EMPTY && tile & FF_IMMUTABLE) || tile & FF_FLASH;
+  const given = value !== EMPTY && (tile & FF_IMMUTABLE) !== 0;
+  const lifted = given !== ((tile & FF_FLASH) !== 0);
   dr.drawRect(inner, lifted ? COL_GIVEN : COL_EMPTY);
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
@@ -310,7 +312,7 @@ export function redraw(
   _dir: number,
   ui: UnrulyUi,
   animTime: number,
-  flashTime: number,
+  flash: Flash,
   hint?: HintStep<UnrulyMove, UnrulyHint>,
   mistakes?: readonly UnrulyMistake[],
 ): void {
@@ -348,10 +350,6 @@ export function redraw(
     ds.started = true;
   }
 
-  // Lit, unlit, lit.
-  const flash =
-    flashTime > 0 && Math.floor(flashTime / FLASH_FRAME) !== 1 ? FF_FLASH : 0;
-
   // Recompute error overlays each frame (live error display, like upstream).
   const gridfs = new Int32Array(s);
   validateRows(state, gridfs);
@@ -369,7 +367,7 @@ export function redraw(
         tile |= FF_ZERO;
         if (rowfs[h2 + y] || rowfs[2 * h2 + w2 + x]) tile |= FE_COUNT;
       }
-      tile |= flash;
+      if (flash.win(sweepStep(x, y))) tile |= FF_FLASH;
       if (immutable[i]) tile |= FF_IMMUTABLE;
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)
         tile |= FF_CURSOR;

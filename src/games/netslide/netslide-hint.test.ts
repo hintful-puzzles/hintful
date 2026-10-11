@@ -12,6 +12,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { type NetslideHint, parseAux } from "./hint.ts";
 import { netslideGame } from "./index.ts";
 import { ANIM_TIME, COL_HINT, colors, newDrawState, redraw } from "./render.ts";
@@ -583,7 +584,7 @@ describe("netslide hint rendering", () => {
     const palette = colors([1, 1, 1]);
 
     const first = new RecordingDrawing(palette);
-    redraw(first, ds, null, state, 0, ui, 0, 0);
+    redraw(first, ds, null, state, 0, ui, 0, NO_FLASH);
     expect(first.ops.some((op) => "color" in op && op.color === COL_HINT)).toBe(false);
 
     const res = hintOf(state, aux);
@@ -599,7 +600,7 @@ describe("netslide hint rendering", () => {
       0,
       ui,
       0,
-      0,
+      NO_FLASH,
       res.steps[0] as HintStep<NetslideMove, NetslideHint>,
     );
 
@@ -701,12 +702,22 @@ describe("the hint marks while the hinted slide animates", () => {
 
     // Paint the pre-move frame first, so the draw state's cache is warm exactly as
     // it is in the app when the slide begins.
-    redraw(new RecordingDrawing(palette), ds, null, state, 0, newUi(state), 0, 0, step);
+    redraw(
+      new RecordingDrawing(palette),
+      ds,
+      null,
+      state,
+      0,
+      newUi(state),
+      0,
+      NO_FLASH,
+      step,
+    );
 
     // Halfway through the slide: the line is drawn half a tile back along its
     // direction of travel.
     const rec = new RecordingDrawing(palette);
-    redraw(rec, ds, state, after, 0, newUi(after), ANIM_TIME / 2, 0, step);
+    redraw(rec, ds, state, after, 0, newUi(after), ANIM_TIME / 2, NO_FLASH, step);
     return { state, after, slide, marks, rec };
   }
 

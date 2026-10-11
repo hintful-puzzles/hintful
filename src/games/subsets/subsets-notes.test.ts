@@ -23,6 +23,7 @@ import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
+import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { TALLY_SET } from "./hint-marks.ts";
 import { subsetsGame } from "./index.ts";
@@ -183,7 +184,7 @@ describe("the reference aid repaints on a warm draw state", () => {
     const ui = subsetsGame.newUi(s);
     const frame = () => {
       const rec = new RecordingDrawing(subsetsGame.colors(DEFAULT_BACKGROUND));
-      subsetsGame.redraw(rec, ds, null, s, 0, ui, 0, 0);
+      subsetsGame.redraw(rec, ds, null, s, 0, ui, 0, NO_FLASH);
       return rec.ops.filter((o) => o.op === "circle" && o.fill === COL_HINT_SPOT);
     };
     ui.highlightSet = set;
@@ -247,7 +248,7 @@ describe("subsets rule-out mistakes", () => {
         0,
         ui,
         0,
-        0,
+        NO_FLASH,
         undefined,
         findMistakes(board),
       );
