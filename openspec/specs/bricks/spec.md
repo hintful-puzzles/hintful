@@ -113,17 +113,6 @@ diagonal step to follow the hexagonal grid.
 - **THEN** one of the two steps keeps its column in the stored grid and the other
   changes it
 
-### Requirement: Bricks reports rule violations through findMistakes
-
-Because Bricks is uniquely solvable and every rule violation is localized, it SHALL
-provide a `findMistakes` hook that reports the offending cells, so that Check & Save
-hard-blocks while a mistake is present.
-
-#### Scenario: A mistake blocks Check & Save
-
-- **WHEN** the grid contains a rule violation and the player invokes Check & Save
-- **THEN** `findMistakes` reports the offending cells and the save is blocked
-
 ### Requirement: Bricks marks a rule violation on the board
 
 A rule violation SHALL be marked on the board: a bar over three shaded cells in
@@ -245,20 +234,6 @@ SHALL claim that a chain of forced consequences was followed.
 - **WHEN** the single-cell rung is run over a board filled in any order that
   agrees with its solution
 - **THEN** every forced cell is given one of the named rules, and nothing throws
-
-### Requirement: A Bricks hint is refused on a board that contradicts its solution without breaking a rule
-
-A hint SHALL be refused, with an explanatory banner, when the player's placed
-cells contradict the unique solution without yet breaking a local rule, which
-`findMistakes` does not report. The banner SHALL say a placed cell must be
-wrong, and the hint SHALL NOT deduce onward from a doomed position.
-
-#### Scenario: A hint is refused on a wrong-but-legal board
-
-- **WHEN** a hint is requested on a board whose placed cells contradict the
-  unique solution without yet breaking a local rule
-- **THEN** no move is hinted and an explanatory banner is shown, which states
-  that a placed cell must be wrong
 
 ### Requirement: The undeclared Bricks tier still loads and is never dealt
 
@@ -476,3 +451,27 @@ where it did not.
   pressed with the arrow that points off the board
 - **THEN** the game declines the key, and the board and the cursor are as
   they were
+
+### Requirement: Bricks' findMistakes reports a broken rule and a cell the answer contradicts
+
+`findMistakes` SHALL report every cell the rule pass flags and, on a board the
+solver finishes from its clues, every cell shaded or ruled out against that
+answer. A brick or a cross the answer contradicts SHALL be drawn in the error
+color when the check hands `redraw` its mistakes, beside the rule marks.
+
+#### Scenario: A mistake blocks Check & Save
+
+- **WHEN** the grid contains a rule violation and the player invokes Check & Save
+- **THEN** `findMistakes` reports the offending cells and the save is blocked
+
+#### Scenario: A wrong cross that breaks no rule
+
+- **WHEN** a cell the answer shades is ruled out, no rule is broken by it, and
+  Check & Save is pressed
+- **THEN** one mistake is reported, the cross is drawn in the error color on a
+  board already drawn, and the board is not saved
+
+#### Scenario: The right color in the same cell
+
+- **WHEN** that cell is shaded as the answer has it
+- **THEN** `findMistakes` reports nothing

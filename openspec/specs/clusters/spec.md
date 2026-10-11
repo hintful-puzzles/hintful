@@ -15,15 +15,14 @@ two colors are drawn.
 Every cell of a finished board SHALL hold one of two colors. A tile given as a
 dot SHALL touch exactly one orthogonally adjacent tile of its own color, and
 every other tile SHALL touch at least two. The board SHALL be solved when every
-cell is filled and no rule is broken. `findMistakes` SHALL report the cells
-that break a rule as the board stands, which is the same at every tier, so
-that Check & Save refuses while one stands.
+cell is filled and no rule is broken. A cell that breaks a rule as the board
+stands SHALL be framed in the error color as the player plays.
 
 #### Scenario: A rule-breaking cell is reported as a mistake
 
 - **WHEN** the board contains a cell that violates a cluster rule and mistakes
   are checked
-- **THEN** that cell is reported, and Check & Save declines to save
+- **THEN** a mistake is reported, and Check & Save declines to save
 
 #### Scenario: Completing the grid wins
 
@@ -261,12 +260,11 @@ chain short.
 
 ### Requirement: A Clusters hint is refused where it cannot deduce
 
-A hint SHALL be refused when the deduction runs into a contradiction from the
-player's position: a wrong tile that no local rule yet flags. The banner SHALL
-say a placed tile must be wrong, and the hint SHALL NOT deduce onward from a
-doomed position. On a dealt board a wrong tile always ends in that
-contradiction and never in a stall, so `hint` answers `DEDUCTION_EXHAUSTED`
-only for a description the deduction cannot finish from its givens.
+A hint SHALL be refused, and SHALL NOT deduce onward, when the deduction runs
+into a contradiction from the player's position. `findMistakes` names a wrong
+tile wherever the solver finishes the board from its givens, so that refusal
+is reached only on a description the solver cannot finish, as is
+`DEDUCTION_EXHAUSTED`.
 
 #### Scenario: A hint is refused on a doomed board
 
@@ -278,7 +276,8 @@ only for a description the deduction cannot finish from its givens.
 
 - **WHEN** a dealt board holds several tiles that disagree with its solution,
   none of them breaking a local rule, and a hint is asked for
-- **THEN** the banner says a placed tile must be wrong, as it does for one
+- **THEN** the banner asks for the highlighted mistakes to be fixed, and each
+  of those tiles is highlighted
 
 ### Requirement: Clusters draws its two colors as the collection's two-state pair
 
@@ -367,3 +366,23 @@ and SHALL paint on that same press, from where it was parked.
   given dot
 - **THEN** the square left is red, the dot is unchanged, and the cursor is on
   the dot
+
+### Requirement: Clusters' findMistakes reports each tile the answer contradicts
+
+On a board the solver finishes from its givens, `findMistakes` SHALL report
+every tile the player placed in the color that answer does not give it, whether
+or not it breaks a rule, and nothing else. On any other board it SHALL report
+the cells that break a rule. The surface under a reported tile SHALL be drawn
+in the error wash when the check hands `redraw` its mistakes.
+
+#### Scenario: A wrong tile that breaks no rule
+
+- **WHEN** one tile is placed in the color the answer does not give it, no rule
+  is broken, and Check & Save is pressed
+- **THEN** one mistake is reported, that tile's surface is repainted in the
+  error wash on a board already drawn, and the board is not saved
+
+#### Scenario: The next move puts the wash away
+
+- **WHEN** a move is made after the check
+- **THEN** the tile's surface is drawn as any other cell's

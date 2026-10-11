@@ -143,14 +143,22 @@ Because a generated board is uniquely solvable, the game SHALL implement
 `findMistakes`: it SHALL solve the board again from its island clues and
 return every span whose player marks that solution contradicts: a bridge where
 the solution has none, a count exceeding the solution's, or a limit below the
-solution's count, the cross included. A board that is not uniquely solvable
-SHALL yield no mistakes.
+solution's count, the cross included. It SHALL also return every island marked
+complete short of its count. A board that is not uniquely solvable SHALL yield
+no mistakes.
 
 #### Scenario: A wrong bridge is flagged
 
 - **WHEN** the player places a bridge the unique solution does not contain,
   without yet over-committing an island
 - **THEN** `findMistakes` includes that bridge and Check & Save refuses to save
+
+#### Scenario: An island marked complete too soon
+
+- **WHEN** an island is marked complete while it has fewer bridges than its
+  count
+- **THEN** `findMistakes` returns that island, and the same mark on the island
+  once its bridges are all drawn returns nothing
 
 ### Requirement: Every Bridges mark is in the tile diff key
 
@@ -190,28 +198,6 @@ the live-error red, on the rim and count.
 - **THEN** that island is drawn with the completed face, while the same state
   drawn with the preference off shows no completed face, and in neither case
   is the island marked completed (its bridges stay editable)
-
-### Requirement: Bridges explains the next deduction
-
-`hint(state)` SHALL return the forced deductions from the player's own marks as
-an ordered plan, each step narrating why its moves are forced from premises the
-sentence itself states. Where the deduction contradicts itself on a board
-`findMistakes` finds nothing wrong with, it SHALL refuse with the collection's
-unlocalized-contradiction wording.
-
-#### Scenario: A hint explains an island with exactly enough room left
-
-- **WHEN** an island's remaining count equals the bridges it can still take and a
-  hint is requested
-- **THEN** the step's narration states that count, its move draws exactly that
-  many bridges, and the island it names is the one the hint recolors
-
-#### Scenario: A hint says so honestly when the annotation is what is wrong
-
-- **WHEN** an island is marked complete before it is, so `findMistakes` reports
-  nothing and the deduction still contradicts itself
-- **THEN** the hint refuses with the collection's unlocalized-contradiction
-  wording, which asks the player to undo rather than promising a highlight
 
 ### Requirement: A Bridges hint's ladder is capped at the board's own difficulty
 
@@ -715,3 +701,18 @@ two, "N% islands" where that is not 30, and "N% expansion" where that is not
 
 - **WHEN** `10x10i30e10m2Ld1` is labeled
 - **THEN** the label is "10x10 Normal, no loops"
+
+### Requirement: Bridges explains each forced deduction
+
+`hint(state)` SHALL return the forced deductions from the player's own marks as
+an ordered plan, each step narrating why its moves are forced from premises the
+sentence itself states. Where the deduction contradicts itself on a board
+`findMistakes` finds nothing wrong with, it SHALL refuse with the collection's
+unlocalized-contradiction wording.
+
+#### Scenario: A hint explains an island with exactly enough room left
+
+- **WHEN** an island's remaining count equals the bridges it can still take and a
+  hint is requested
+- **THEN** the step's narration states that count, its move draws exactly that
+  many bridges, and the island it names is the one the hint recolors
