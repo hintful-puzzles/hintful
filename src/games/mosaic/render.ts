@@ -254,10 +254,14 @@ export function redraw(
   const { width, height, board, cells } = state;
 
   const marks = stepMarks(hint);
-  const evidence = marks
+  // Each number's block is outlined whole, so two that overlap read as two
+  // squares and not as the one area they cover between them.
+  const blocks = marks
     .of("outline", BLOCK)
-    .flatMap((clue) => blockOf(clue, width, height));
-  const outlines = new MarkOutlines(marks.of("ring", CELL), evidence, {});
+    .map((clue) => new MarkOutlines([], blockOf(clue, width, height), {}));
+  const rings = new MarkOutlines(marks.of("ring", CELL), [], {});
+  const hintSides = (x: number, y: number): number =>
+    blocks.reduce((sides, block) => sides | block.packed(x, y), rings.packed(x, y));
 
   // The flash inverts marked/blank during its first and last thirds.
   const flashing =
@@ -279,7 +283,7 @@ export function redraw(
         if (ui.cursor.x === x - 1 && ui.cursor.y === y - 1) cell |= DRAWFLAG_CURSOR_UL;
       }
       if (inBounds && mistakeSet.has(y * width + x)) cell |= DRAWFLAG_MISTAKE;
-      if (inBounds) cell |= outlines.packed(x, y) << HINT_SIDES_SHIFT;
+      if (inBounds) cell |= hintSides(x, y) << HINT_SIDES_SHIFT;
 
       const clueVal = inBounds ? board.clues[y * width + x] : -1;
 

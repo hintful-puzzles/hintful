@@ -28,8 +28,26 @@ export interface Marked {
   cells: readonly Point[];
 }
 
+/** A step that compares two numbers: the first, with `cells`, and the `other`;
+ * the shaded squares the first still needs, and by how many that is more than
+ * the other needs. */
+export interface Compared extends Marked {
+  other: { clue: Point; n: number };
+  need: number;
+  by: number;
+}
+
 const thisNumber = (m: Marked): Narration =>
   mark.this("outline", BLOCK, [m.clue], String(m.n));
+/** The second number of a pair. A value names it apart from the first, and
+ * where the two are the same number it is "the other". */
+const otherNumber = (m: Compared): Narration =>
+  m.other.n === m.n
+    ? mark.as("outline", BLOCK, [m.other.clue], `the other ${m.n}`)
+    : mark.this("outline", BLOCK, [m.other.clue], String(m.other.n));
+/** The second number said again, in plain words. */
+const otherAgain = (m: Compared): string =>
+  m.other.n === m.n ? "the other" : `the ${m.other.n}`;
 const theseSquares = (m: Marked): Narration =>
   mark.this("ring", CELL, m.cells, ["square", "squares"]);
 const shadeds = (n: number): string =>
@@ -56,4 +74,26 @@ export const say = {
           : phrase`${thisNumber(m)} needs ${shadeds(m.n)}, and only ${m.n} of its squares are not ${UNSHADED_NAME}`,
       move: phrase`${theseSquares(m)} must be ${SHADED_NAME}`,
     }),
+
+  /** The number needs `by` more shaded squares than the other, and only `by`
+   * of its empty squares are not the other's too, so each of them is shaded. */
+  needsMore: (m: Compared): Sentence => {
+    const fresh = m.need === m.n && m.need - m.by === m.other.n;
+    return so({
+      look: phrase`${thisNumber(m)} ${fresh ? "" : "still "}needs ${m.by} more ${shadeds(m.by).slice(2)} than ${otherNumber(m)}, and only ${m.by} of its empty squares ${m.by === 1 ? "is" : "are"} outside ${otherAgain(m)}'s block`,
+      move: phrase`${theseSquares(m)} must be ${SHADED_NAME}`,
+    });
+  },
+
+  /** The two numbers need the same number of shaded squares, and every empty
+   * square of the first is the other's too, so the other gets all of its own
+   * from those and the rest of its block is clear. */
+  sameNeed: (m: Compared): Sentence => {
+    const fresh = m.need === m.n && m.need === m.other.n;
+    return so({
+      look: phrase`${thisNumber(m)}'s empty squares are all in ${otherNumber(m)}'s block, and both ${fresh ? "" : "still "}need ${shadeds(m.need)}`,
+      follows: phrase`${otherAgain(m)} gets its ${m.need} there`,
+      move: phrase`${theseSquares(m)} must be ${UNSHADED_NAME}`,
+    });
+  },
 };

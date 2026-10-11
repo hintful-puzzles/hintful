@@ -31,21 +31,32 @@ grid.
 
 {{hint-marks}}
 
-Every step is one of two ideas:
+Most steps come from one number alone:
 
 * **A number that has all its {{pair:0}} squares** makes the rest of its
   block clear.
 * **A number with only as many squares left that are not clear as it
   needs** makes all of those {{pair:0}}.
 
-On an Unreasonable board there comes a point where no number on its own
-settles another square, and the hint says that nothing further follows by
-deduction instead of choosing for you. Look first at two numbers whose blocks
-overlap, which the hint does not do: the difference between them is all in
-the squares only one of them counts, and when it is as large as it can be
-those squares are settled. Failing that, save your position and try a square
-beside a number with few squares left. The hint carries on from whatever you
-mark.
+Where no number settles a square alone, the hint compares two numbers
+whose blocks overlap. Both count the squares the blocks share, so the two
+differ only by the squares one of them counts and the other does not:
+
+* **A number that needs more {{pair:0}} squares than another, by as many
+  as it has empty squares outside the other's block**, makes all of
+  those {{pair:0}}. A 6 beside a 3, with three of its empty squares
+  outside the 3's block, is the plainest case.
+* **Two numbers that need the same number of {{pair:0}} squares, where
+  every empty square of the first is in the second's block too**, make
+  the second's other squares clear: the second gets all it needs from
+  the squares they share.
+
+An Easy puzzle as the game deals it is finished one number at a time,
+and never needs a comparison. On an Unreasonable board there comes a
+point where comparing numbers settles no square either, and the hint
+says that nothing further follows by deduction instead of choosing for
+you. Save your position and try a square beside a number with few
+squares left. The hint carries on from whatever you mark.
 
 ## Mosaic parameters
 

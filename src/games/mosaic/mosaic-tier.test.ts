@@ -1,5 +1,5 @@
 /**
- * Mosaic's two tiers: Easy, which the one rule finishes, and Unreasonable, a
+ * Mosaic's two tiers: Easy, which the deduction finishes, and Unreasonable, a
  * board with one answer that it does not reach.
  *
  * The answer counts here come from {@link countAnswers}, which shades or
@@ -86,8 +86,11 @@ const sized = (
 const boardOf = (w: number, h: number, desc: string): MosaicBoard =>
   newState(sized(w, h, DIFF_EASY), desc).board;
 
-/** A 5x5 board with one answer, on which the rule stops after three numbers. */
-const NEEDS_SEARCH = "0b4c4b4a6a3d3a2c";
+/** A 5x5 board with one answer, on which the deduction stops after four
+ * steps, two of them a comparison. */
+const NEEDS_SEARCH = "a32b2b32a5b3b36b2b4";
+/** A 5x5 board no number alone finishes and two compared do. */
+const NEEDS_COMPARING = "0b4c4b4a6a3d3a2c";
 /** A 3x3 board the rule finishes: every square shaded. */
 const RULE_FINISHES = "464696464";
 /** A lone 5 in the middle of a 3x3 board, which fits many ways. */
@@ -128,13 +131,15 @@ describe("mosaic's search for a board's answers", () => {
   });
 
   // With one position to spend the search can only say "none" of a board the
-  // rule calls impossible as it runs, so each of these is the rule's own
-  // verdict. In both the middle number's block still has empty squares when
-  // it goes wrong, which upstream's rule waits to be full before noticing.
+  // deduction calls impossible as it runs, so each of these is the
+  // deduction's own verdict. In the first two the middle number's block still
+  // has empty squares when it goes wrong, which upstream's rule waits to be
+  // full before noticing. In the third neither number is wrong alone.
   it.each([
     ["more shaded than its number", "4c3d"],
     ["too few squares left for its number", "0c6d"],
-  ] as const)("is told by the rule of a block with %s", (_what, desc) => {
+    ["fewer squares outside another's than it needs beyond it", "14g"],
+  ] as const)("is told by the deduction of a block with %s", (_what, desc) => {
     expect(answers(3, 3, desc, 1)).toBe("none");
     expect(countAnswers(boardOf(3, 3, desc))).toBe(0);
   });
@@ -197,7 +202,7 @@ describe("an Unreasonable Mosaic board", () => {
     sized(4, 6, DIFF_UNREASONABLE),
     sized(5, 5, DIFF_UNREASONABLE, false),
     sized(6, 5, DIFF_UNREASONABLE, false),
-  ])("%o is dealt with one answer that the rule does not reach", (p) => {
+  ])("%o is dealt with one answer that the deduction does not reach", (p) => {
     for (let seed = 0; seed < 4; seed++) {
       const { desc } = mosaicGame.newDesc(p, randomNew(`unreasonable-${seed}`));
       const state = newState(p, desc);
@@ -211,7 +216,7 @@ describe("an Unreasonable Mosaic board", () => {
   });
 
   it("keeps most of its numbers where generation is not aggressive", () => {
-    // Hiding stops at the first clue whose loss stops the rule.
+    // Hiding stops at the first clue whose loss stops the deduction.
     const shown = (aggressive: boolean): number => {
       const p = sized(10, 10, DIFF_UNREASONABLE, aggressive);
       const { desc } = mosaicGame.newDesc(p, randomNew("kept"));
@@ -290,6 +295,12 @@ describe("a pasted Mosaic board", () => {
     expect(load(`3x3de:${RULE_FINISHES}`)).toBe("3x3de");
   });
 
+  it("that two numbers compared finish opens as Easy, and keeps a tier it was saved at", () => {
+    expect(load(`5x5:${NEEDS_COMPARING}`)).toBe("5x5de");
+    // Dealt as Unreasonable before the deduction compared numbers.
+    expect(load(`5x5du:${NEEDS_COMPARING}`)).toBe("5x5du");
+  });
+
   it("with several answers, or none, is refused", () => {
     expect(load(`3x3:${MANY_ANSWERS}`)).toBe(DESC_NOT_UNIQUE);
     expect(load(`3x3du:${MANY_ANSWERS}`)).toBe(DESC_NOT_UNIQUE);
@@ -301,7 +312,7 @@ describe("a pasted Mosaic board", () => {
 });
 
 describe("the hint on an Unreasonable Mosaic board", () => {
-  it("stops where the rule does, and goes on from a square tried rightly", () => {
+  it("stops where the deduction does, and goes on from a square tried rightly", () => {
     const p = sized(5, 5, DIFF_UNREASONABLE);
     const me = new Midend(mosaicGame);
     expect(me.newGameFromId(`5x5du:${NEEDS_SEARCH}`)).toBeNull();

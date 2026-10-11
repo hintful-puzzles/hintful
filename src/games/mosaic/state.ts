@@ -53,9 +53,9 @@ export interface MosaicParams {
   height: number;
   /** Hide every clue that can be hidden (slower generation, harder board). */
   aggressive: boolean;
-  /** `DIFF_EASY`, a board the one rule finishes, or `DIFF_UNREASONABLE`, one
-   * with a single answer that it does not reach. Generation-time only, as
-   * `aggressive` is. */
+  /** `DIFF_EASY`, a board one number at a time finishes, or
+   * `DIFF_UNREASONABLE`, one with a single answer that the deduction
+   * (`deduce.ts`) does not reach. Generation-time only, as `aggressive` is. */
   diff: number;
 }
 
@@ -126,7 +126,7 @@ export const paramConfig: ParamConfigItem<MosaicParams>[] = [
   }),
   searchTierItem(
     "diff",
-    "An Easy puzzle can be finished one number at a time: there is always a number that already has its shaded squares, or that needs every square it has left. An Unreasonable one has a single solution that those two steps stop short of, so somewhere you have to look further: by comparing two numbers whose blocks overlap, or by trying a square and seeing what follows. The Hint button stops where the two steps do.",
+    "An Easy puzzle can be finished one number at a time: there is always a number that already has its shaded squares, or that needs every square it has left. An Unreasonable one has a single solution that neither those two steps nor comparing two numbers whose blocks overlap will reach, so somewhere you have to try a square and see what follows. The Hint button stops where the comparing does.",
   ),
   {
     kw: "aggressive-generation",
@@ -203,10 +203,10 @@ function maxLongSide(short: number): number {
 
 /**
  * The largest Unreasonable board dealt with aggressive generation, in
- * squares. Hiding asks the search about every clue, which takes about five
- * times as long as an Easy board's: 0.5 s at 25×25, 1.2 s at 30×30 and 2.9 s
- * at 35×35 (measured 2026-10-10). Without aggressive generation hiding stops
- * at the first clue that matters and a 100×100 board takes 0.3 s.
+ * squares. Hiding asks the search about every clue: 0.65 s at 25×25, 1.4 s at
+ * 30×30 and 2.5 s at 35×35 (measured 2026-10-11). Without aggressive
+ * generation hiding stops at the first clue that matters, and a 50×50 board
+ * takes 0.7 s and a 100×100 one 1 to 3 s.
  */
 const MAX_AGGRESSIVE_UNREASONABLE = 900;
 

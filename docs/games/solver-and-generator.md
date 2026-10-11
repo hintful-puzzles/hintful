@@ -661,14 +661,37 @@ What Mosaic, the fifth, added:
 
 - **Which board the strip starts from is decided by what the hint is left
   with.** Filling strips a full board by the search. Mosaic stripped that way
-  mostly has no number its rule can start from, and the rule left a median
-  of 90 squares of 100 undecided. It starts from an Easy board, which leaves
-  58. Measure both before copying either.
+  mostly has no number its deduction can start from, which leaves a median
+  of 62 squares of 100 undecided. It starts from an Easy board, which leaves
+  41. Measure both before copying either.
+- **And what the strip starts from decides which boards it can reach.** No
+  Easy Mosaic board strips to an Unreasonable 3x3, where an enumeration of
+  every clue set found 346. One try in eight starts from every clue, which
+  is what the smallest boards are dealt from and seldom what a 10x10 is.
+  Where a deal finds nothing at a small size, enumerate before calling the
+  tier absent.
 - **An option that trades clues for speed stops the strip early at the new
   tier.** Without aggressive generation Mosaic hides until the first clue
-  whose loss stops the rule, so the board keeps its numbers and a 100x100
-  one still deals in a third of a second. With it, the tier has an area
-  bound of its own and the refusal names the option.
+  whose loss stops the deduction, so the board keeps its numbers. With it,
+  the tier has an area bound of its own and the refusal names the option.
+- **Where a generator strips to its solver's limit, a new deduction grades
+  and does not deal.** Mosaic's Unreasonable boards mostly needed one
+  comparison of two numbers
+  (`give-mosaic-the-deduction-its-unreasonable-boards-lack`). Crossing dealt
+  what its new rule finishes as Easy, and it was 3 to 15 boards in 100.
+  Mosaic hides every clue the solver can spare, so with the comparison in the
+  Easy deal 98 boards in 100 needed it. Easy is dealt by upstream's rule as
+  before and graded by the whole deduction, and the boards between are not
+  dealt. Count the share before widening a tier.
+- **A stronger deduction makes the early stop rarer, so time the largest
+  board again.** The first clue whose loss stops both ideas is far down the
+  list: 100x100 went from a third of a second to ten. Hiding a run of clues
+  at once, and going through a run singly only where the deduction stops
+  without it, deals the same board in one to three.
+- **A search's position is one square on from a stop, so the deduction can
+  start there.** Each position was deduced from scratch. Asking only the
+  numbers that count the assumed square took an aggressive 25x25 deal from
+  1.8 s to 0.65.
 - **A deduction that waits for a determined position needs its early form.**
   Mosaic's rule called a block contradictory only once every square of it
   was decided. The search is right either way and slower; the verdict is

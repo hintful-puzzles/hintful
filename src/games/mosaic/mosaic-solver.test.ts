@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { deduce, type Firing } from "./deduce.ts";
 import { mosaicGame } from "./index.ts";
 import {
   encodeSolution,
@@ -143,6 +144,58 @@ describe("solveCell / solveCheck / solveGameActual", () => {
       "d5d",
     );
     expect(solveGameActual(state.board)).toBeNull();
+  });
+});
+
+describe("the comparison of two numbers", () => {
+  const boardOf = (side: number, desc: string) =>
+    newState({ width: side, height: side, aggressive: true, diff: DIFF_EASY }, desc)
+      .board;
+  const deduced = (side: number, desc: string) => {
+    const fired: Firing[] = [];
+    const verdict = deduce(boardOf(side, desc), new Uint8Array(side * side), (f) =>
+      fired.push(f),
+    );
+    return { verdict, fired };
+  };
+
+  it("shades the squares a number has outside another's block when it needs that many more", () => {
+    // A corner 1 and the 3 beside it. Neither decides anything alone: the 3
+    // has six squares and the 1 four.
+    expect(deduced(3, "13g")).toEqual({
+      verdict: "stuck",
+      fired: [{ rung: "needsMore", clue: 1, other: 0, need: 3, by: 2, cells: [2, 5] }],
+    });
+  });
+
+  it("clears a number's other squares when one inside its block needs as many", () => {
+    // A corner 2 and the 2 beside it, whose block holds the corner's.
+    expect(deduced(3, "22g")).toEqual({
+      verdict: "stuck",
+      fired: [{ rung: "sameNeed", clue: 0, other: 1, need: 2, by: 0, cells: [2, 5] }],
+    });
+  });
+
+  it("finishes a board that upstream's rule, one number at a time, does not", () => {
+    const board = boardOf(5, "0b4c4b4a6a3d3a2c");
+    const size = board.clues.length;
+    const alone: GenCells = {
+      clue: board.clues,
+      shown: Uint8Array.from(board.clues, (c) => (c >= 0 ? 1 : 0)),
+      full: new Uint8Array(size),
+      empty: new Uint8Array(size),
+    };
+    expect(solveCheck(5, 5, alone, null).solved).toBe(false);
+    expect(solveGameActual(board)).not.toBeNull();
+    const rungs = deduced(5, "0b4c4b4a6a3d3a2c").fired.map((f) => f.rung);
+    expect(rungs).toContain("needsMore");
+    expect(rungs).toContain("sameNeed");
+  });
+
+  it("is asked only where no number decides anything alone", () => {
+    // Every square shaded: each number needs all it has.
+    const rungs = deduced(3, "464696464").fired.map((f) => f.rung);
+    expect(new Set(rungs)).toEqual(new Set(["needsAll"]));
   });
 });
 

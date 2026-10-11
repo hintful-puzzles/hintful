@@ -3,16 +3,17 @@
  * `solve_cell`, `solve_check`, `solve_game_actual`, `hide_clues`,
  * `new_game_desc`).
  *
- * One deduction rule, three drivers: generation feasibility
- * (`solveCheck`, desc-side, knows full/empty), clue minimization
- * (`hideClues`), and the Solve command / mistake check
- * (`solveGameActual`, board-side, clue numbers only).
+ * Upstream's one rule (`solveCell`) deals an Easy board as upstream does:
+ * generation feasibility (`solveCheck`, desc-side, knows full/empty) and clue
+ * minimization (`hideClues`). A board in play is read by the whole deduction
+ * (`deduce.ts`), which also compares two numbers: the board-side solve, the
+ * search for a board's answers, and so Solve, the mistake check and the
+ * Unreasonable deal.
  */
 
 import {
   type Answer,
   answerCache,
-  type Deduced,
   DIFF_EASY,
   dealUnreasonable,
   searchAnswers as searchBoard,
@@ -20,6 +21,7 @@ import {
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
+import { deduce } from "./deduce.ts";
 import {
   countAround,
   encodeBoard,
@@ -221,60 +223,13 @@ export function solveCheck(
 }
 
 /**
- * Board-side solve (upstream `solve_game_actual`): only the clue
- * numbers are known (no full/empty shortcuts), every cell is visited
- * each round. Returns the solution cells, or `null` when deduction
- * stalls or contradicts.
+ * Board-side solve (upstream `solve_game_actual`, with the comparison of two
+ * numbers upstream lacks): only the clue numbers are known. Returns the
+ * solution cells, or `null` when deduction stalls or contradicts.
  */
 export function solveGameActual(board: MosaicBoard): Uint8Array | null {
   const cells = new Uint8Array(board.width * board.height);
-  return settle(board, cells) === "solved" ? cells : null;
-}
-
-/**
- * Run the rule over every cell of `board` until nothing more follows from
- * `cells`, the marks so far, which it fills in place. `"solved"` is every
- * cell marked and every clue met.
- */
-function settle(board: MosaicBoard, cells: Uint8Array): Deduced {
-  const { width, height, clues } = board;
-  const size = width * height;
-  const sol: Solution = {
-    cell: cells,
-    solved: new Uint8Array(size),
-    needed: new Uint8Array(size),
-  };
-
-  let solvedCount = 0;
-  let madeProgress = true;
-  let error = false;
-  while (solvedCount < size && madeProgress && !error) {
-    madeProgress = false;
-    for (let y = 0; y < height && !error; y++) {
-      for (let x = 0; x < width; x++) {
-        const res = solveCell(
-          width,
-          height,
-          clues[y * width + x],
-          false,
-          false,
-          sol,
-          x,
-          y,
-        );
-        if (res === "contradiction") {
-          error = true;
-          break;
-        }
-        if (res === "progress") {
-          madeProgress = true;
-          solvedCount++;
-        }
-      }
-    }
-  }
-  if (error) return "contradiction";
-  return solvedCount === size ? "solved" : "stuck";
+  return deduce(board, cells) === "solved" ? cells : null;
 }
 
 // --- the search for a board's answers ---------------------------------------
@@ -285,31 +240,38 @@ export type MosaicAnswer = Answer<Uint8Array>;
 
 /**
  * The positions a search may try before it gives up, each one a square
- * assumed shaded or clear and the rule run from it.
+ * assumed shaded or clear and the deduction run from it.
  *
  * It decides which Unreasonable boards exist: a board that needs more is
  * thrown away when dealing and refused when pasted. Lowering it refuses boards
  * already dealt, which are in saved games. A dealt board needs 30 at most,
  * the generator's own bound, so the rest is room for a pasted one. Measured
- * 2026-10-10, running it out on a board with half its clues gone takes 0.1 s
- * at 30×30, 0.2 s at 50×50 and about a second at 100×100.
+ * 2026-10-11, running it out on a board with half its clues gone takes 0.06 s
+ * at 30×30, 0.08 s at 50×50 and 0.2 s at 100×100.
  */
 const SEARCH_BUDGET = 2_000;
 
+/** A position of the search: each square's mark, and the square assumed since
+ * the deduction last stopped on them, which is all it has to start from. */
+interface Position {
+  cells: Uint8Array;
+  tried: number | null;
+}
+
 /**
- * Count a board's answers up to two, by trial and error over the rule: where
- * it stops, take an empty square of the number with the fewest left to decide
- * and assume it each way.
+ * Count a board's answers up to two, by trial and error over the deduction:
+ * where it stops, take an empty square of the number with the fewest left to
+ * decide and assume it each way.
  */
 export function searchAnswers(
   board: MosaicBoard,
   budget: number = SEARCH_BUDGET,
 ): MosaicAnswer {
-  return searchBoard<Uint8Array, Uint8Array>({
-    start: new Uint8Array(board.width * board.height),
-    deduce: (cells) => settle(board, cells),
-    assume: (cells) => assumeSquare(board, cells),
-    solution: (cells) => cells,
+  return searchBoard<Position, Uint8Array>({
+    start: { cells: new Uint8Array(board.width * board.height), tried: null },
+    deduce: ({ cells, tried }) => deduce(board, cells, null, tried),
+    assume: ({ cells }) => assumeSquare(board, cells),
+    solution: ({ cells }) => cells,
     budget,
   });
 }
@@ -321,7 +283,7 @@ export function searchAnswers(
  * rest of the block. With no such number it is the first empty square: one no
  * number counts, which is free and so gives the board two answers.
  */
-function assumeSquare(board: MosaicBoard, cells: Uint8Array): Uint8Array[] {
+function assumeSquare(board: MosaicBoard, cells: Uint8Array): Position[] {
   const { width, height, clues } = board;
   let at = cells.indexOf(STATE_UNMARKED);
   let fewest = Number.POSITIVE_INFINITY;
@@ -339,7 +301,7 @@ function assumeSquare(board: MosaicBoard, cells: Uint8Array): Uint8Array[] {
   return [STATE_MARKED, STATE_BLANK].map((mark) => {
     const next = cells.slice();
     next[at] = mark;
-    return next;
+    return { cells: next, tried: at };
   });
 }
 
@@ -438,30 +400,63 @@ function easyClues(p: MosaicParams, rng: RandomState): Int8Array {
 }
 
 /**
+ * The clues hidden at once where generation is not aggressive, before the
+ * deduction is asked. A run that stops it is gone through again a clue at a
+ * time, so a long run pays for itself only while most runs pass. Measured
+ * 2026-10-11 at 100×100: a board took 10 s a clue at a time, 5 s in runs of
+ * 16 and 1 to 3 s in runs of 6, and 0.7 s at 50×50.
+ */
+const HIDING_RUN = 6;
+
+/** Which try of an Unreasonable deal starts from every clue and not from an
+ * Easy board: see {@link unreasonableClues}. */
+const EVERY_CLUE_DRAW = 8;
+
+/** A random picture's clues, every one showing. */
+function everyClue(p: MosaicParams, rng: RandomState): Int8Array {
+  const { width, height } = p;
+  const size = width * height;
+  const image = new Uint8Array(size);
+  for (let i = 0; i < size; i++) image[i] = randomBits(rng, 1);
+  return Int8Array.from(
+    { length: size },
+    (_, pos) =>
+      populateCell(width, height, image, pos % width, Math.floor(pos / width)).clue,
+  );
+}
+
+/**
  * An Unreasonable board's clues: an Easy board's with more hidden by the
- * search. With aggressive generation every clue is tried. Without it hiding
- * stops at the first clue whose loss stops the rule, so the board keeps the
- * rest of its numbers. Only the smallest boards are often thrown away for
- * giving up no clue.
+ * search, kept where the deduction stops short. With aggressive generation
+ * every clue is tried. Without it hiding stops at the first clue whose loss
+ * stops the deduction, so the board keeps the rest of its numbers.
  *
  * It starts from an Easy board and not from every clue, which the search
- * could strip as well: stripped that way most boards have no number the rule
- * can start from, and the hint has nothing to say on them (the rule left a
- * median of 90 squares of 100 undecided at 10×10, against 58 this way).
+ * could strip as well: stripped that way a 10×10 board is left with a median
+ * of 62 squares of 100 the deduction does not decide, against 41 this way.
+ * But no Easy board strips to an Unreasonable 3×3 or 4×3 (none in five
+ * million tries), and 346 of the 105,052 3×3 boards with an answer are one.
+ * So one try in {@link EVERY_CLUE_DRAW} starts from every clue: that is what
+ * the smallest boards are dealt from, and at 10×10 the median left undecided
+ * is what it was without it.
  *
- * Measured 2026-10-10 with aggressive generation: a dealt board needs a
- * median of 9 positions at 5×5, 21 at 10×10 and 29 at 25×25, and the rule
- * leaves a median of 58 squares of 100 undecided at 10×10 and 485 of 625 at
- * 25×25. Most of these boards do not need a trial: comparing two numbers
- * whose blocks overlap, which the rule does not do, finishes 34 of 40 at
- * 10×10 and 11 of 16 at 15×15. Without aggressive generation a board needs a
- * median of 5 to 7 positions and that comparison finishes every one seen.
+ * Measured 2026-10-11, the squares the deduction leaves undecided on a dealt
+ * board, median: 9 of 9 at 3×3, 19 of 25 at 5×5, 41 of 100 at 10×10, 72 of
+ * 225 at 15×15; without aggressive generation 41 of 100 and 38 of 625. On 30
+ * of 40 boards at 3×3 and 16 of 60 at 5×5 it decides nothing at all, and on
+ * none of 60 at 10×10. A 10×10 board has a median of 5 steps that compare two
+ * numbers before it stops.
  */
 function unreasonableClues(p: MosaicParams, rng: RandomState): Int8Array {
   const { width, height, aggressive } = p;
+  let draws = 0;
   return dealUnreasonable<MosaicBoard>({
     label: `mosaic: Unreasonable generation (${width}x${height})`,
-    draw: () => ({ width, height, clues: easyClues(p, rng) }),
+    draw: () => ({
+      width,
+      height,
+      clues: ++draws % EVERY_CLUE_DRAW === 0 ? everyClue(p, rng) : easyClues(p, rng),
+    }),
     strip(board, one) {
       const { clues } = board;
       const shown: number[] = [];
@@ -469,11 +464,33 @@ function unreasonableClues(p: MosaicParams, rng: RandomState): Int8Array {
         if (clue >= 0) shown.push(pos);
       });
       shuffle(shown, rng);
-      for (const pos of shown) {
-        const clue = clues[pos];
-        clues[pos] = -1;
-        if (!one()) clues[pos] = clue;
-        else if (!aggressive && solveGameActual(board) === null) return;
+      if (aggressive) {
+        for (const pos of shown) {
+          const clue = clues[pos];
+          clues[pos] = -1;
+          if (!one()) clues[pos] = clue;
+        }
+        return;
+      }
+      // A board the deduction finishes has one answer, so the search is asked
+      // only of the clue whose loss stops it. A run is hidden at once and
+      // gone through a clue at a time only where the deduction stops without
+      // it, which leaves the board a clue at a time would.
+      const finishes = (): boolean => solveGameActual(board) !== null;
+      for (let from = 0; from < shown.length; from += HIDING_RUN) {
+        const run = shown.slice(from, from + HIDING_RUN);
+        const were = run.map((pos) => clues[pos] as number);
+        for (const pos of run) clues[pos] = -1;
+        if (finishes()) continue;
+        run.forEach((pos, k) => {
+          clues[pos] = were[k] as number;
+        });
+        for (const [k, pos] of run.entries()) {
+          clues[pos] = -1;
+          if (finishes()) continue;
+          if (one()) return;
+          clues[pos] = were[k] as number;
+        }
       }
     },
     deduced: (board) => solveGameActual(board) !== null,

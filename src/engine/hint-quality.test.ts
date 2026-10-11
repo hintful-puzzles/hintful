@@ -178,6 +178,14 @@ const LONG_NARRATIONS: {
       "conclusion rests on a case split, and that is three clauses.",
   },
   {
+    games: ["mosaic"],
+    rungs: ["needsMore", "sameNeed"],
+    why:
+      "A comparison of two numbers is three facts and none is on the board: " +
+      "which two, how their needs differ, and where the squares only one of " +
+      "them counts lie. The sentences run to about 140 characters.",
+  },
+  {
     games: ["solo"],
     rungs: ["cageMinMax", "cageSums"],
     why:

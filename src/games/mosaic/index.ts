@@ -8,7 +8,6 @@
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { cursorDelta, newCursor, stripModifiers } from "../../engine/pointer.ts";
@@ -20,13 +19,8 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import {
-  MOSAIC_RUNGS,
-  type MosaicHint,
-  type MosaicRung,
-  mosaicHint,
-  mosaicKeepTrack,
-} from "./hint.ts";
+import { MOSAIC_RUNGS, type MosaicRung } from "./deduce.ts";
+import { type MosaicHint, mosaicHint, mosaicKeepTrack } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -153,12 +147,11 @@ export const mosaicGame: Game<
       type: "solve",
       solution: encodeSolution(cells),
     })),
-  // Easy is what the one rule finishes and the hint, which reads the same
-  // rule off the player's marks, finishes too.
+  // Easy is what the deduction finishes. The hint is the same deduction read
+  // off the player's marks (`deduce.ts`), so it is not asked as well.
   difficulty: searchTierContract<MosaicParams, MosaicState>({
     newState,
-    deductionFinishes: (state) =>
-      solveGameActual(state.board) !== null && hintFinishes(mosaicGame, state),
+    deductionFinishes: (state) => solveGameActual(state.board) !== null,
     answerOf,
   }),
 
@@ -185,7 +178,7 @@ export const mosaicGame: Game<
     roles: {
       ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
       outline:
-        "the number the step reasons from and its block: the number's own square and the eight around it.",
+        "each number the step reasons from and its block: the number's own square and the eight around it.",
     },
   },
 

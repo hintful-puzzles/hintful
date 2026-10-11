@@ -1,10 +1,8 @@
 /**
- * Mosaic's hint: the game's one deduction rule, read off the player's own
- * marks. A number whose block already holds its shaded squares makes the rest
- * of the block clear; a number whose block has only as many squares left that
- * are not clear as it needs makes those shaded. Generation keeps a board only
- * when these two alone solve it (`solver.ts`'s `solveCell`), so a board whose
- * marks are all correct always has a next step.
+ * Mosaic's hint: the game's deduction (`deduce.ts`), read off the player's own
+ * marks and said a step at a time. An Easy board as dealt always has a next
+ * step from one number alone; on any other board the hint goes on to compare
+ * two numbers, and stops where that decides nothing either.
  */
 
 import {
@@ -16,16 +14,15 @@ import {
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
+import { deduce, type Firing, type MosaicRung, markOf } from "./deduce.ts";
 import { blockOf } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
 import {
   executeMove,
   type MosaicMove,
   type MosaicState,
-  STATE_BLANK,
   STATE_MARK_MASK,
-  STATE_MARKED,
-  STATE_UNMARKED,
 } from "./state.ts";
 
 /** What a step decides: `cells` (indices into a grid `w` wide), all `mark`. */
@@ -35,87 +32,47 @@ export interface MosaicHint {
   w: number;
 }
 
-/** The game's two rules: a number that has its shaded squares, and a number
- * that needs every square it has left. */
-export const MOSAIC_RUNGS = ["met", "needsAll"] as const;
-export type MosaicRung = (typeof MOSAIC_RUNGS)[number];
-
 type Step = HintStep<MosaicMove, MosaicHint, MosaicRung>;
 
-/** What the number at index `i` decides of its block's empty squares on
- * `grid` (each square's color, as `STATE_*`), and why; `null` when it decides
- * nothing yet. */
-function firingAt(
-  state: MosaicState,
-  grid: Uint8Array,
-  i: number,
-): { hint: MosaicHint; rung: MosaicRung; words: Sentence } | null {
+/** A firing's sentence. */
+function wordsOf(state: MosaicState, f: Firing): Sentence {
   const { width: w, height: h, board } = state;
-  const n = board.clues[i];
-  if (n < 0) return null;
-  const cx = i % w;
-  const cy = Math.floor(i / w);
-  // Counted in place: the plan asks every number at least once per hint.
-  let black = 0;
-  let white = 0;
-  let size = 0;
-  for (let y = Math.max(0, cy - 1); y <= Math.min(h - 1, cy + 1); y++)
-    for (let x = Math.max(0, cx - 1); x <= Math.min(w - 1, cx + 1); x++) {
-      size++;
-      const m = grid[y * w + x];
-      if (m === STATE_MARKED) black++;
-      else if (m === STATE_BLANK) white++;
-    }
-  if (black + white === size) return null;
-  const mark = black === n ? STATE_BLANK : size - white === n ? STATE_MARKED : null;
-  if (mark === null) return null;
-  const clue = { x: cx, y: cy };
-  const open = blockOf(clue, w, h).filter(
-    (p) => grid[p.y * w + p.x] === STATE_UNMARKED,
-  );
-  const marked = { clue, n, cells: open };
-  const hint = { cells: open.map((p) => p.y * w + p.x), mark, w };
-  return mark === STATE_BLANK
-    ? { hint, rung: "met", words: say.met(marked) }
-    : { hint, rung: "needsAll", words: say.needsAll(marked, size) };
+  const at = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
+  const numbered = (i: number) => ({ clue: at(i), n: board.clues[i] as number });
+  const cells = f.cells.map(at);
+  if (!("other" in f)) {
+    const alone = { ...numbered(f.clue), cells };
+    return f.rung === "met"
+      ? say.met(alone)
+      : say.needsAll(alone, blockOf(alone.clue, w, h).length);
+  }
+  const pair = {
+    ...numbered(f.clue),
+    other: numbered(f.other),
+    need: f.need,
+    by: f.by,
+    cells,
+  };
+  return f.rung === "needsMore" ? say.needsMore(pair) : say.sameNeed(pair);
 }
 
 export function mosaicHint(
   state: MosaicState,
 ): HintResult<MosaicMove, MosaicHint, MosaicRung> {
-  // The whole plan, on a copy of the board's colors: the numbers in reading
-  // order, and after each firing the numbers whose blocks it filled, since
-  // only those can newly decide anything.
-  const { width: w, height: h } = state;
+  // The whole plan, on a copy of the board's colors.
   const grid = state.cells.map((v) => v & STATE_MARK_MASK);
-  const queue = Array.from({ length: w * h }, (_, i) => i);
-  const queued = new Uint8Array(w * h).fill(1);
   const steps: Step[] = [];
-  for (let q = 0; q < queue.length; q++) {
-    const i = queue[q];
-    queued[i] = 0;
-    const f = firingAt(state, grid, i);
-    if (f === null) continue;
-    const { cells, mark } = f.hint;
+  deduce(state.board, grid, (f) => {
+    const mark = markOf(f.rung);
     steps.push(
       narratedStep({
-        move: { type: "fill", cells, mark },
+        move: { type: "fill", cells: f.cells, mark },
         rung: f.rung,
-        words: f.words,
-        highlights: f.hint,
+        words: wordsOf(state, f),
+        highlights: { cells: f.cells, mark, w: state.width },
       }),
     );
-    for (const c of cells) {
-      grid[c] = mark;
-      for (const p of blockOf({ x: c % w, y: Math.floor(c / w) }, w, h)) {
-        const j = p.y * w + p.x;
-        if (!queued[j]) {
-          queued[j] = 1;
-          queue.push(j);
-        }
-      }
-    }
-  }
+  });
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps };
 }
@@ -131,17 +88,17 @@ export function mosaicKeepTrack(
   const t = step.highlights;
   if (!t || m.type === "solve") return "off";
   const after = executeMove(state, m).cells;
-  const markOf = (cells: Uint8Array, i: number) => cells[i] & STATE_MARK_MASK;
+  const markAt = (cells: Uint8Array, i: number) => cells[i] & STATE_MARK_MASK;
   const { verdict, left } = trackTargets({
     targets: t.cells,
     changes: changedCells(
       state.cells.length,
-      (i) => markOf(state.cells, i),
-      (i) => markOf(after, i),
+      (i) => markAt(state.cells, i),
+      (i) => markAt(after, i),
     ),
     key: (c) => c,
     want: () => t.mark,
-    holds: (c) => markOf(after, c) === t.mark,
+    holds: (c) => markAt(after, c) === t.mark,
   });
   if (verdict === "onTrack") {
     const kept = new Set(left.map((c) => `${c % t.w},${Math.floor(c / t.w)}`));
