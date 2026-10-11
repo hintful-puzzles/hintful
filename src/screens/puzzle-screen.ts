@@ -1052,7 +1052,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         } else {
           void showAlert({
             label: `Ignoring invalid type in URL`,
-            message: `type=${params}: ${error}`,
+            message: error,
+            detail: `type=${params}`,
             type: "warning",
           });
         }
@@ -1094,7 +1095,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       } else {
         void showAlert({
           label: `Ignoring invalid id in URL`,
-          message: `id=${this.gameId}: ${error}`,
+          message: error,
+          detail: `id=${this.gameId}`,
           type: "warning",
         });
       }

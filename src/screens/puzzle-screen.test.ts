@@ -668,6 +668,12 @@ describe("which board a puzzle page opens with", () => {
   it("still alerts for a bad game id in the URL, which the player did ask for", async () => {
     const puzzle = makeLoadPuzzle({ rejectId: () => "no such board" });
     await load(puzzle, { gameId: "5x5n4:typo" });
-    expect(showAlert).toHaveBeenCalled();
+    // The reason is the message and the ID is the detail after it: an ID can
+    // be longer than the dialog is tall, and the reason is what the player
+    // can act on.
+    expect(showAlert.mock.calls[0]?.[0]).toMatchObject({
+      message: "no such board",
+      detail: "id=5x5n4:typo",
+    });
   });
 });

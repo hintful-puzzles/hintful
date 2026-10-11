@@ -10,6 +10,10 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 export interface AlertOptions {
   label?: string;
   message?: string;
+  /** What the message is about, where that is a string the app was handed
+   * and the player may not be able to read: a game ID, a type. It is drawn
+   * after the message, so the words come first at any length. */
+  detail?: string;
   type?: "info" | "success" | "warning" | "error";
   icon?: string;
   lightDismiss?: boolean;
@@ -29,6 +33,9 @@ class AlertDialog extends LitElement {
 
   @property({ type: String })
   message: string = "";
+
+  @property({ type: String })
+  detail: string = "";
 
   @property({ type: String, reflect: true })
   type: Required<AlertOptions>["type"] = "error";
@@ -64,7 +71,8 @@ class AlertDialog extends LitElement {
       <wa-dialog ?light-dismiss=${this.lightDismiss} @wa-after-hide=${this.handleDialogHide}>
         <wa-icon slot="label" name=${this.icon || this.type}></wa-icon>
         ${this.label ? html`<div slot="label">${this.label}</div>` : nothing}
-        ${this.message ? html`<div>${this.message}</div>` : nothing}
+        ${this.message ? html`<div class="message">${this.message}</div>` : nothing}
+        ${this.detail ? html`<div class="detail">${this.detail}</div>` : nothing}
       </wa-dialog>
     `;
   }
@@ -96,6 +104,20 @@ class AlertDialog extends LitElement {
       }
       wa-icon[slot="label"] {
         margin-block-start: 0.125em;
+      }
+
+      /* A caller's text can hold a string with no space in it that is longer
+         than the dialog is wide: a game ID, a file name. */
+      .message,
+      .detail {
+        overflow-wrap: anywhere;
+      }
+      .detail {
+        color: var(--wa-color-text-quiet);
+        font-size: var(--wa-font-size-s);
+      }
+      .message + .detail {
+        margin-block-start: var(--wa-space-s);
       }
 
       :host([type="error"]) {
