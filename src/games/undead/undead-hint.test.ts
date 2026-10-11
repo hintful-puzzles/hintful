@@ -25,6 +25,7 @@ import { COL_HINT, COL_HINT_CELL, type UndeadHint } from "./render.ts";
 import { recordUndeadDeductions } from "./solver.ts";
 import {
   MON_GHOST,
+  MON_NONE,
   MON_VAMPIRE,
   MON_ZOMBIE,
   newState,
@@ -177,6 +178,44 @@ describe("undead hint plan", () => {
     }
     expect(solvedByPlan).toBe(0);
     expect(hinted).toBeGreaterThan(0);
+  });
+
+  it("places by a count only where the board's own marks show the count", () => {
+    // "Cells that can still hold a ghost" are the player's to count: an empty
+    // cell holds what its pencil marks list, and anything while it has none.
+    let judged = 0;
+    const totalOf = (s: UndeadState, m: number): number =>
+      m === MON_GHOST
+        ? s.common.numGhosts
+        : m === MON_VAMPIRE
+          ? s.common.numVampires
+          : s.common.numZombies;
+    for (const p of [
+      { w: 4, h: 4, diff: "easy" },
+      { w: 4, h: 4, diff: "normal" },
+      { w: 5, h: 5, diff: "normal" },
+    ] as UndeadParams[]) {
+      for (let i = 0; i < 12; i++) {
+        let s = gen(p, `counted-${p.diff}-${i}`);
+        fullPlan(s).forEach((step, n) => {
+          if (step.rung === "onlyCells" && step.move.type === "set") {
+            judged++;
+            const m = step.move.monster;
+            let placed = 0;
+            let open = 0;
+            for (let c = 0; c < s.guess.length; c++) {
+              if (s.guess[c] === m) placed++;
+              else if (s.guess[c] === MON_NONE && (s.pencil[c] || MON_NONE) & m) open++;
+            }
+            expect(open, `${p.w}x${p.h} ${p.diff} #${i} step ${n}`).toBe(
+              totalOf(s, m) - placed,
+            );
+          }
+          s = undeadGame.executeMove(s, step.move);
+        });
+      }
+    }
+    expect(judged).toBeGreaterThan(10);
   });
 
   it("surfaces a naked single before any elimination, and populates before the first strike", () => {

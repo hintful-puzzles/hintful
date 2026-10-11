@@ -4,6 +4,7 @@ exports[`palisade hint > palisade: pinned hint positions > says, at each pin 1`]
 {
   "cluesVersusRegionSize": "Two 3s each keep just one side open, and it has to be the one they share, so their region would be exactly 2 cells. Regions here hold 5, so the edge between them must be a wall.",
   "equivalentEdges": "Both edges border the same region, so they share a fate: both walls or both open. Walling both would exceed clue 1, so neither can be a wall.",
+  "join": "This region has 1 of its 5 cells and only one region left to grow into, so these edges can't be walls.",
   "journey": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
   "noDanglingEdges": "A wall can't stop in mid-air at this corner, so this edge must be a wall.",
   "noWall": "Clue 0 allows no walls, so none of its remaining edges can be walls.",

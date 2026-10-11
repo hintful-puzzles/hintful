@@ -309,29 +309,38 @@ describe("palisade hint", () => {
       // A first leg with a continuation after it.
       journey: (_step, _state, steps) => steps[1]?.continuesPrevious === true,
       noWall: (step) => hlOf(step).kind === "nowall",
+      // A region whose several undecided edges all lead into one other.
+      join: (step, _state, steps) =>
+        step.rung === "notTooSmall" && steps[1]?.continuesPrevious === true,
     },
     pins: {
-      /** Held on 286 of 1307 positions walked. */
+      /** Held on 306 of 1311 positions walked. */
       journey: "5x5n5:g0g2b2b2b2",
-      /** Held on 654 of 1307 positions walked. */
+      /** Held on 667 of 1311 positions walked. */
       noWall: "5x5n5:g0g2b2b2b2",
-      /** Held on 15 of 1307 positions walked. */
+      /** Held on 22 of 1311 positions walked. */
+      join: {
+        id: "5x5n5de:j12a1a3f232",
+        moves:
+          '[{"type":"edges","edits":[{"x":0,"y":2,"flag":16},{"x":0,"y":1,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":2,"flag":32},{"x":1,"y":2,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":2,"flag":64},{"x":0,"y":3,"flag":16}]},{"type":"edges","edits":[{"x":0,"y":3,"flag":2},{"x":1,"y":3,"flag":8}]},{"type":"edges","edits":[{"x":0,"y":3,"flag":4},{"x":0,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":4,"y":4,"flag":16},{"x":4,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":4,"y":4,"flag":128},{"x":3,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":1},{"x":3,"y":3,"flag":4}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":8},{"x":2,"y":4,"flag":2}]},{"type":"edges","edits":[{"x":2,"y":4,"flag":16},{"x":2,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":2,"y":4,"flag":128},{"x":1,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]},{"type":"edges","edits":[{"x":1,"y":3,"flag":1},{"x":1,"y":2,"flag":4}]}]',
+      },
+      /** Held on 14 of 1311 positions walked. */
       cluesVersusRegionSize: "5x5n5:a2a1a2b2e1e33",
-      /** Held on 1129 of 1307 positions walked. */
+      /** Held on 1124 of 1311 positions walked. */
       numberExhausted: "5x5n5:g0g2b2b2b2",
-      /** Held on 1289 of 1307 positions walked. */
+      /** Held on 1294 of 1311 positions walked. */
       notTooBig: {
         id: "5x5n5:a2c1e232c22d2",
         moves:
           '[{"type":"edges","edits":[{"x":0,"y":1,"flag":16},{"x":0,"y":0,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":32},{"x":1,"y":1,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":64},{"x":0,"y":2,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":64},{"x":1,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":2},{"x":2,"y":0,"flag":8}]}]',
       },
-      /** Held on 1292 of 1307 positions walked. */
+      /** Held on 1305 of 1311 positions walked. */
       notTooSmall: {
         id: "5x5n5:23m2a33b1a3",
         moves:
           '[{"type":"edges","edits":[{"x":2,"y":3,"flag":2},{"x":3,"y":3,"flag":8}]},{"type":"edges","edits":[{"x":3,"y":3,"flag":4},{"x":3,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":32},{"x":1,"y":0,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":64},{"x":0,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":2},{"x":2,"y":0,"flag":8}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":4},{"x":1,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":16},{"x":1,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":32},{"x":2,"y":4,"flag":128}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":128},{"x":0,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":1,"y":1,"flag":8},{"x":0,"y":1,"flag":2}]}]',
       },
-      /** Held on 1174 of 1307 positions walked. */
+      /** Held on 1159 of 1311 positions walked. */
       noDanglingEdges: {
         id: "5x5n5:b31c2a3b3d1c2",
         moves:
@@ -355,6 +364,45 @@ describe("palisade hint", () => {
     let s = s0;
     for (const step of r.steps) s = palisadeGame.executeMove(s, step.move);
     expect(palisadeGame.status(s)).toBe("solved");
+  });
+
+  it("speaks of no region the board's own no-wall marks do not make", () => {
+    // The solver joins regions in its own bookkeeping; the player's regions
+    // are the squares their no-wall marks join. A step that stripes or
+    // outlines a region is read against the second.
+    let judged = 0;
+    const off: string[] = [];
+    for (const p of PRESETS.slice(0, 3)) {
+      for (const seed of ["a", "b", "c", "d"]) {
+        const { desc } = newDesc(p, randomNew(`palisade-hint-regions-${seed}`));
+        let s = newState(p, desc);
+        const r = palisadeGame.hint?.(s);
+        if (!r?.ok) throw new Error(`no hint on ${desc}`);
+        r.steps.forEach((step, n) => {
+          const regions = step.continuesPrevious
+            ? null
+            : step.rung === "notTooSmall" || step.rung === "equivalentEdges"
+              ? { cells: stepMarks(step).of("stripes", CELL), count: 1 }
+              : step.rung === "notTooBig"
+                ? { cells: stepMarks(step).of("outline", CELL), count: 2 }
+                : null;
+          if (regions) {
+            judged++;
+            const dsf = buildDsf(s.w, s.h, s.borders, false);
+            const roots = new Set(
+              regions.cells.map((c) => dsf.canonify(c.y * s.w + c.x)),
+            );
+            let size = 0;
+            for (const root of roots) size += dsf.size(root);
+            if (roots.size !== regions.count || size !== regions.cells.length)
+              off.push(`${desc} step ${n}: ${step.explanation}`);
+          }
+          s = palisadeGame.executeMove(s, step.move);
+        });
+      }
+    }
+    expect(judged).toBeGreaterThan(100);
+    expect(off).toEqual([]);
   });
 
   it("records de-duplicated interior edges (rim-seeded)", () => {
@@ -403,6 +451,31 @@ describe("palisade hint", () => {
     // rings and pointing back at the evidence the first leg named.
     expect(steps[firstCont].explanation).toMatch(
       /^…and (this edge|these edges) .*, for /,
+    );
+  });
+
+  it("marks every edge of a join the region rule makes", () => {
+    const { state, step, steps } = pinned("join");
+    const legs = 1 + steps.slice(1).findIndex((s) => !s.continuesPrevious);
+    // The striped region's undecided edges, each named once from inside it.
+    const inside = new Set(
+      stepMarks(step)
+        .of("stripes", CELL)
+        .map((c) => c.y * state.w + c.x),
+    );
+    let undecided = 0;
+    for (const i of inside) {
+      for (let dir = 0; dir < 4; dir++) {
+        const j = i + DY[dir] * state.w + DX[dir];
+        const b = state.borders[i];
+        if (!inside.has(j) && !(b & BORDER(dir)) && !(b & DISABLED(BORDER(dir))))
+          undecided++;
+      }
+    }
+    expect(legs).toBe(undecided);
+    expect(marksOf(step).siblings).toBe(legs - 1);
+    expect(step.explanation).toMatch(
+      /only one region left to grow into, so these edges can't be walls\.$/,
     );
   });
 

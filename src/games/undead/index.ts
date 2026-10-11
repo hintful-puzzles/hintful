@@ -95,6 +95,7 @@ import {
   MON_NONE,
   MON_VAMPIRE,
   MON_ZOMBIE,
+  MONSTERS,
   newState,
   newUi,
   PRESETS,
@@ -538,11 +539,32 @@ function nakedSingle(
   return null;
 }
 
-/** The next recorded forced placement (counting's "only these cells" dual) whose
- * cell is still empty — needs no notes, so it is placed before the populate. */
-function nextPlaceOp(ops: HintOp[], wGuess: Uint8Array): HintOp | null {
-  for (const op of ops) {
-    if (op.kind === "place" && wGuess[op.cell] === MON_NONE) return op;
+/** A placement by a monster's count (counting's "only these cells" dual), read
+ * off the board: the empty cells that can still hold the monster number
+ * exactly those left to place, so the first of them holds one. A cell can hold
+ * what its notes list, and anything while it has none, which is what the
+ * player counts; the recorder's own candidates run ahead of the board, by
+ * every strike no step has shown yet. Sound on a mistake-free board, where no
+ * cell's notes leave out its monster. */
+function countedPlacement(
+  common: UndeadCommon,
+  wGuess: Uint8Array,
+  wPen: Uint8Array,
+): { cell: number; monster: number; nCells: number } | null {
+  const totals = [common.numGhosts, common.numVampires, common.numZombies];
+  for (let t = 0; t < MONSTERS.length; t++) {
+    const monster = MONSTERS[t];
+    let left = totals[t];
+    let first = -1;
+    let open = 0;
+    for (let i = 0; i < wGuess.length; i++) {
+      if (wGuess[i] === monster) left--;
+      else if (wGuess[i] === MON_NONE && (wPen[i] || MON_NONE) & monster) {
+        if (first < 0) first = i;
+        open++;
+      }
+    }
+    if (open > 0 && open === left) return { cell: first, monster, nCells: totals[t] };
   }
   return null;
 }
@@ -638,13 +660,13 @@ function emitFiring(
 }
 
 /** Build the deductive hint plan by walking a working copy of the board the way
- * a person solves it: a naked single first, else a forced placement, else the
- * next elimination firing (populating notes lazily, only when an elimination
- * first needs something to cross out). The working candidate state is re-derived
+ * a person solves it: a naked single first, else a placement by a count, else
+ * the next elimination firing (populating notes lazily, only when an
+ * elimination first needs something to cross out). The strikes are re-derived
  * from the **placed grid only** (`recordUndeadDeductions`), never the player's
  * notes; the notes decide which already-valid elimination to surface and what
- * is done. There is no solution walk: where the deductions run out, the plan
- * ends. */
+ * is done, and both placements are read off them. There is no solution walk:
+ * where the deductions run out, the plan ends. */
 function buildSteps(
   state: UndeadState,
 ): HintStep<UndeadMove, UndeadHint, UndeadRung>[] {
@@ -707,10 +729,11 @@ function buildSteps(
       continue;
     }
 
-    // 2. A forced placement (counting's "only these cells" dual) — needs no notes.
-    const forced = nextPlaceOp(ops, wGuess);
-    if (forced) {
-      place(forced.cell, forced.monster, forced.reason);
+    // 2. A placement by a count the board's own marks show.
+    const counted = countedPlacement(common, wGuess, wPen);
+    if (counted) {
+      const { cell, monster, nCells } = counted;
+      place(cell, monster, { kind: "onlyCells", monster, nCells });
       continue;
     }
 

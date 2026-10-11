@@ -33,8 +33,6 @@ you to fix the highlighted mistakes first.
 
 These are the ideas the hint teaches, from the plainest up:
 
-* **Consecutive numbers.** When a number's arrow points at the square
-  holding the next number, the two must be linked.
 * **Only one square can come next.** Of the squares an arrow points at,
   every one but one may be ruled out: it already follows another square,
   it is in the arrow's own chain (linking them would close a loop), or it
@@ -42,6 +40,9 @@ These are the ideas the hint teaches, from the plainest up:
 * **Only one arrow can lead in.** Every square but the first needs a square
   before it, and when every arrow pointing at a square but one is ruled
   out the same way, that one must lead into it.
+
+When a number's arrow points at the square holding the next number, the
+board links the two itself, so the hint never asks you for that link.
 
 On an Unreasonable board there comes a point where every arrow still has
 more than one square it could lead to, and every square more than one arrow

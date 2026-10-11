@@ -4106,12 +4106,13 @@ tier, or a game with no difficulty contract at all — a refusal fails the walk.
 Permission is derived from the tier the game already declares; there is no
 roster.
 
-**Enrollment is one line, and it covers every cross-game guard at once.** The
-guards all iterate the shared list in
-[`testing/hint-games.ts`](../../src/engine/testing/hint-games.ts) — add the
-new game there **as part of the change** and it is covered by
-`hint-resume.test.ts` (resume, purity, no-op-free plans, Latin naked-single
-honesty), [`hint-overlay.test.ts`](../../src/engine/hint-overlay.test.ts)
+**Enrollment is no line at all, and it covers every cross-game guard at
+once.** The guards all iterate the list
+[`testing/hint-games.ts`](../../src/engine/testing/hint-games.ts) derives from
+the registry, so a game that declares a `hint` is covered by
+`hint-resume.test.ts` (resume, purity, plans whose every step changes the
+state and the frame, Latin naked-single honesty),
+[`hint-overlay.test.ts`](../../src/engine/hint-overlay.test.ts)
 (the overlay reaches the render cache — the paint-twice class), and
 [`hint-quality.test.ts`](../../src/engine/hint-quality.test.ts) (voice,
 length, show-something). A per-game "plan solves from empty" test is *not* a
@@ -4164,6 +4165,51 @@ needs one.** Cross-game coverage: `hint-resume.test.ts` asserts no plan step
 is ever a no-op when reached (the intrinsic form);
 `towers-stale-hint.test.ts` drives the real `Midend` through an auto-pencil
 flip (the side-effect form).
+
+### A plan's copy is the board, no further on and no further back
+
+A planner works on a copy of the board, and every way the copy differs from
+the board the player will have at that step is a sentence that is false when
+it is read. Three games shipped one, found by walking dealt boards and reading
+each step against the board as played
+(`hold-a-hint-step-to-the-board-the-player-sees`):
+
+- **Behind the board: the copy lacks what a move does by itself.** Signpost's
+  `executeMove` links every number to the next where the arrow points at it;
+  its plan applied only the step's own link, so it planned a step for each
+  link the board had already made. Apply to the copy what `executeMove`
+  applies, side effects included.
+- **Ahead of the board: the copy holds a fact no step put there.** Palisade's
+  solver joined two regions in its own bookkeeping where one could only grow
+  into the other, and later sentences counted the join. Undead's planner took
+  a placement from a recorder whose candidates had every strike already made.
+  The fix is § "A solver's silent bookkeeping is the player's work
+  (Separate)" each time: the fact becomes a step (Palisade's join marks every
+  edge between the two regions open), or the planner reads it off the
+  player's marks and waits until they show it (Undead's count).
+
+**The walk holds the first, for every game**: "a kept hint plan's every step
+changes what the board draws" in `hint-resume.test.ts`. The sibling block
+above it compares states, and a state holds more than is drawn; Signpost's
+step changed a chain count and nothing a player sees. **What a player sees is
+the frame with no hint on it, or with the step on it**: a mark shown only for
+the square in focus (Subsets' ruled-out set, struck through in the tally)
+changes no plain frame, and the step that makes it brings its square into
+focus. A step is convicted only when both frames stand still.
+
+**No walk holds the second from outside, and each game holds its own.**
+Whether a premise is on the board is in what the words mean: "this region",
+"can still hold". A hint asked afresh from the same board runs the same
+private bookkeeping and agrees with the kept plan, and comparing a kept step
+with the first step of a fresh hint fails for honest reasons in most games (a
+journey's later leg, a sweep's order). The candidate walk has the premise
+audit (§ "A premise names everything its deduction reads"); a game off that
+walk writes the property down for its own nouns, as
+`palisade.test.ts` ("speaks of no region the board's own no-wall marks do not
+make") and `undead-hint.test.ts` ("places by a count only where the board's
+own marks show the count") do, and sees it fail before the fix. The
+structural form is a plan loop that advances its copy with the game's own
+`executeMove` on the step's own move, which no planner here does yet.
 
 ## Verifying a hint in-process
 
@@ -4987,7 +5033,10 @@ specific:
   can still hold a type as remain ⇒ each is forced) come straight from the
   global count equality. Surface them **honestly** as their own narrated
   steps — folding a total into a sightline narration would state a premise
-  that doesn't discriminate the move.
+  that doesn't discriminate the move. The planner reads `onlyCells` off the
+  player's notes, never off the recorder, whose candidates are ahead of the
+  board by every strike not yet shown (§ "A plan's copy is the board, no
+  further on and no further back").
 - **The plan is deductive-only — no solution-walk.** The strengthened ladder
   solves every shipped tier guess-free, so `buildSteps` always has a real
   deduction ([`solver-and-generator.md`](./solver-and-generator.md)

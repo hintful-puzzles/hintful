@@ -22,6 +22,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { permitsSearch } from "./difficulty.ts";
+import type { HintStep } from "./game.ts";
 import { DEDUCTION_EXHAUSTED, SEARCH_OUT_OF_REACH } from "./hint-refusal.ts";
 import { dealt } from "./testing/dealt.ts";
 import {
@@ -30,6 +31,9 @@ import {
   HINT_GAMES,
   SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
+import { preferredDrawState } from "./testing/preferred-draw-state.ts";
+import { RecordingDrawing } from "./testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
 /** Walk a fresh board to solved, recomputing the hint after every move.
@@ -331,6 +335,60 @@ describe("a kept hint plan never contains a step that does nothing", () => {
   }
 });
 
+/** What the board draws for `state`: with `step` on display, or with no hint. */
+function frameOf(game: AnyGame, state: unknown, step?: HintStep<unknown>): string {
+  const rec = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
+  const ds = preferredDrawState(game, state);
+  game.redraw(rec, ds, null, state, 1, game.newUi(state), 0, 0, step);
+  return JSON.stringify(rec.ops);
+}
+
+describe("a kept hint plan's every step changes what the board draws", () => {
+  // The block above asks whether a step changes the state, and a state holds
+  // more than the player is shown: a step can change a count the game keeps
+  // and nothing it draws, and following it then adds an Undo step that
+  // appears to do nothing. This one asks the player's question, of the frame.
+  //
+  // **What a player sees is the board with no hint on it, or with the step on
+  // it.** A mark the game shows only for the square in focus (a set Subsets
+  // has ruled out of a cell, struck through in the tally while that cell is
+  // looked at) changes no plain frame, and the step that makes it puts its
+  // square in focus, so a step is convicted only when both frames stand still.
+  for (const [name, game] of HINT_GAMES) {
+    it(`${name}: every plan step changes the frame when reached`, () => {
+      let judged = 0;
+      for (const { title, params } of gatePresets(name, game)) {
+        for (const seed of BREADTH_SEEDS) {
+          const at = `${name}/${title}/${seed}`;
+          const { desc, aux } = dealt(game, params);
+          let state = game.newState(params, desc);
+          const res = game.hint?.(state, aux);
+          if (!res?.ok) continue; // a refusal has no steps to check
+          let plain = frameOf(game, state);
+          res.steps.forEach((step, i) => {
+            const after = game.executeMove(state, step.move);
+            const plainAfter = frameOf(game, after);
+            judged++;
+            if (plainAfter === plain) {
+              expect(
+                frameOf(game, after, step) !== frameOf(game, state, step),
+                `${at}: plan step ${i} changes nothing the board draws: "${step.explanation}"`,
+              ).toBe(true);
+            }
+            state = after;
+            plain = plainAfter;
+          });
+        }
+      }
+      framesJudged += judged;
+    });
+  }
+});
+
+/** How many steps the frame sweep judged, across every hinting game: its
+ * vacuity guard, asserted in "the resume walk" below. */
+let framesJudged = 0;
+
 describe("requesting a hint never mutates the board", () => {
   // A hint computes and *displays* a plan; it must leave the state untouched —
   // the player applies a step by following it (or pressing Hint a second time).
@@ -485,5 +543,11 @@ describe("the resume walk", () => {
     // with 41 walks of slack under the true count, so it is not a ratchet a
     // legitimate change has to bump.
     expect(walkedCases).toBeGreaterThan(100);
+  });
+
+  itOverWholeSweep("judged enough frames to mean something", () => {
+    // About 19,000 steps at the hook's slice (measured 2026-10-11). The floor
+    // sits far above one small board a game and far below that.
+    expect(framesJudged).toBeGreaterThan(5000);
   });
 });

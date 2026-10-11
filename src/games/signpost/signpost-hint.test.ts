@@ -28,8 +28,6 @@ function arm(step: Step): string {
   const h = step.highlights;
   if (!h) return "none";
   switch (step.rung) {
-    case "follows":
-      return "follows";
     case "onlyNext":
       return h.line.length > 0 ? "onlyNext" : "onlyNextAlone";
     case "onlyBefore":
@@ -72,7 +70,6 @@ describe("signpost hint from the player's own positions", () => {
   it("walked every arm the hint speaks", () => {
     // Registered last, so every board above has been walked.
     for (const a of [
-      "follows",
       "onlyNext",
       "onlyNextAlone",
       "onlyBeforeRivals",
@@ -86,7 +83,7 @@ describe("signpost hint keep-track", () => {
   it("completes on the step's own link and goes off on any other", () => {
     const step = {
       move: { type: "link", fromX: 0, fromY: 0, toX: 1, toY: 0 },
-      rung: "follows",
+      rung: "onlyNext",
       explanation: "",
       highlights: {
         arrow: { x: 0, y: 0 },
@@ -111,8 +108,6 @@ const pinned = describeHintPins({
   pins: {
     /** Held on 134 of 246 positions walked. */
     onlyNextOfSeveral: "5x5:degffe1egegb4eccacbbagca25aah",
-    /** Held on 206 of 246 positions walked. */
-    follows: "5x5:cgdffd1bhb18gccfdeddab25aabbhg",
     /** Held on 246 of 246 positions walked. */
     onlyNext: "5x5:degffe1egegb4eccacbbagca25aah",
     /** Held on 168 of 246 positions walked. */

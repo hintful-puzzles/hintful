@@ -46,10 +46,12 @@ is exactly what the hint is reasoning about.
 {{hint-marks}}
 
 One of the things it looks for is the same thing the drag rings show
-you: when only one dot could possibly own a square — every other dot
-would need the square opposite it to be off the board or on top of
-another dot — that square is settled, and dragging from it will ring
-exactly one dot.
+you: when only one dot could possibly own a square, because no galaxy
+around any other dot can stretch to it, that square is settled, and
+dragging from it will ring exactly one dot. Another dot is ruled out
+when the square opposite it would be off the board or on top of a dot,
+when other dots cut the square off from it, or when either square
+already lies in a finished galaxy.
 
 Once two neighboring squares are settled on different dots, the hint
 asks for the line between them, and it is those lines, not the arrows,

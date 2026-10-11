@@ -2,11 +2,13 @@
  * Signpost's explained hint: the solver's one rule (`solver.ts`), taken one
  * forced link at a time and told with the reason each rival is ruled out.
  *
- * Three rungs, plainest first:
+ * Two rungs, plainest first:
  *
- * - **follows**: square `k`'s arrow points at square `k + 1`, so they link;
  * - **only next**: of the squares an arrow points at, one alone can come next;
  * - **only before**: of the arrows pointing at a square, one alone can lead in.
+ *
+ * A number whose arrow points at the next number is no rung: the board links
+ * the two itself after every move, and the plan's copy does as the board does.
  *
  * A rival is ruled out for one of a few reasons, and the sentence names the
  * reasons the rivals of *this* firing have rather than a reason per square: a
@@ -44,7 +46,7 @@ import {
 export type Rival = "taken" | "chain" | "number";
 
 /** The rungs a step can be: the firings' kinds, in the order they are tried. */
-export const SIGNPOST_RUNGS = ["follows", "onlyNext", "onlyBefore"] as const;
+export const SIGNPOST_RUNGS = ["onlyNext", "onlyBefore"] as const;
 export type SignpostRung = (typeof SIGNPOST_RUNGS)[number];
 
 /** One forced link, from `from`'s arrow into `to`, and what it rests on. */
@@ -58,8 +60,6 @@ export interface SignpostFiring {
   others: number[];
   /** Why the rivals are ruled out: each reason at least one of them has. */
   why: Rival[];
-  /** The numbers of `from` and `to` (`follows`). */
-  k: number;
 }
 
 /** What a step shows: the arrow it links from, the square it links to, the
@@ -105,20 +105,6 @@ function reasons(rivals: readonly Rival[]): Rival[] {
   return (["taken", "chain", "number"] as const).filter((r) => rivals.includes(r));
 }
 
-function follows(s: SignpostState): SignpostFiring | null {
-  for (let k = 1; k < s.n; k++) {
-    const from = s.numsi[k];
-    const to = s.numsi[k + 1];
-    if (from === -1 || to === -1 || s.next[from] !== -1) continue;
-    const { w } = s;
-    if (!isPointing(s, from % w, Math.floor(from / w), to % w, Math.floor(to / w)))
-      continue;
-    if (rival(s, from, to) !== null) continue;
-    return { kind: "follows", from, to, line: [], others: [], why: [], k };
-  }
-  return null;
-}
-
 function onlyNext(s: SignpostState): SignpostFiring | null {
   for (let from = 0; from < s.n; from++) {
     if (s.next[from] !== -1 || s.nums[from] === s.n) continue;
@@ -131,7 +117,7 @@ function onlyNext(s: SignpostState): SignpostFiring | null {
         return r ? [r] : [];
       }),
     );
-    return { kind: "onlyNext", from, to: open[0], line, others: [], why, k: 0 };
+    return { kind: "onlyNext", from, to: open[0], line, others: [], why };
   }
   return null;
 }
@@ -163,7 +149,6 @@ function onlyBefore(s: SignpostState): SignpostFiring | null {
       line: [],
       others,
       why: reasons(rivals),
-      k: 0,
     };
   }
   return null;
@@ -172,7 +157,7 @@ function onlyBefore(s: SignpostState): SignpostFiring | null {
 /** The next forced link on `s`, plainest rung first, or `null`. */
 function nextFiring(s: SignpostState): SignpostFiring | null {
   updateNumbers(s);
-  return follows(s) ?? onlyNext(s) ?? onlyBefore(s);
+  return onlyNext(s) ?? onlyBefore(s);
 }
 
 /**
@@ -189,9 +174,13 @@ export function signpostHint(
     status: (b) => checkCompletion(b, false),
     incomplete: false,
     next: nextFiring,
+    // As `executeMove` leaves the board: the link, the numbers it settles, and
+    // the links between consecutive numbers the board then makes itself. A
+    // copy without those plans a step for a link the player already has.
     apply: (b, f) => {
       makeLink(b, f.from, f.to);
       updateNumbers(b);
+      checkCompletion(b, true);
     },
     budget: stepBudget("signpost hint"),
   });

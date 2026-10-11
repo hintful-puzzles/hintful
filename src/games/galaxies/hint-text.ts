@@ -127,9 +127,12 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
 
     // The claim *is* this rung's own condition, so it is checkable by the player
     // with the gesture they already have: drag from the cell and count the rings.
+    // It names no one way a dot fails: a dot is dropped when the cell's mirror
+    // is off the board or on a dot, when the cell is past its reach, or when
+    // either lies in a finished galaxy.
     case "soleOwner":
       return so({
-        look: phrase`Any other dot mirrors ${thisCell(p)} off the board or onto a dot`,
+        look: phrase`No galaxy around another dot can stretch to ${thisCell(p)}`,
         move: phrase`${itAnd(p)} must belong to ${ringedDot(p, `the ringed ${dot(said.black)}`)}`,
       });
 

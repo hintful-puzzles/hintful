@@ -51,11 +51,6 @@ export const say = {
   firing: (f: SignpostFiring, h: SignpostHint): Sentence => {
     const arrow = mark.this("ring", ARROW, [h.arrow], "arrow");
     switch (f.kind) {
-      case "follows":
-        return so({
-          look: phrase`${mark.as("ring", CELL, [h.target], `The ${f.k + 1}`)} must come right after the ${f.k}, and ${mark.as("ring", ARROW, [h.arrow], `the ${f.k}'s arrow`)} points at it`,
-          move: phrase`the two must be linked`,
-        });
       case "onlyNext": {
         if (h.line.length === 0)
           return so({

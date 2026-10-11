@@ -40,7 +40,8 @@ These are the ideas the hint teaches, from the plainest up:
 * **Regions are all one size.** An edge whose opening would join two
   regions into more squares than a region holds must be a wall. A region
   still short of its size, with just one edge left to grow through, must
-  grow through it.
+  grow through it; when several edges are left and they all lead into the
+  same other region, the two must join, so none of those edges is a wall.
 * **A wall can't stop in mid-air.** Where a wall arrives at a corner and
   only one other edge there could carry it on, that edge must be a wall.
 * **Two clues side by side.** If the edge between two neighboring clues

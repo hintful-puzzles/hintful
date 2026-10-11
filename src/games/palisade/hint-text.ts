@@ -129,20 +129,27 @@ export const say = {
   },
 
   /** The region `cells`, of `size` cells (unknown when the rule carried none),
-   * short of `k`, with one way left to grow. */
+   * short of `k`, with one region left to grow into: through one edge, or
+   * through any of several (`multi`), none of which can then be a wall. */
   notTooSmall: (
     cells: readonly Point[],
     size: number | null,
     k: number,
     edges: Edges,
+    multi: boolean,
   ): Sentence => {
     const region = mark.this("stripes", whole(CELL), cells, "region");
+    const way = multi
+      ? "only one region left to grow into"
+      : "just one way left to grow";
     return so({
       look:
         size === null
-          ? phrase`${region} is short of its ${k} cells and has just one way left to grow`
-          : phrase`${region} has ${size} of its ${k} cells and just one way left to grow`,
-      move: phrase`${thisEdge(edges)} can't be a wall`,
+          ? phrase`${region} is short of its ${k} cells and has ${way}`
+          : phrase`${region} has ${size} of its ${k} cells and ${way}`,
+      move: multi
+        ? phrase`${theseEdges(edges, "these edges")} can't be walls`
+        : phrase`${thisEdge(edges)} can't be a wall`,
     });
   },
 

@@ -260,11 +260,6 @@ function notTooSmall(ctx: SolverCtx): boolean {
   const { w, h, k } = ctx;
   const wh = w * h;
   const outs = new Int32Array(wh).fill(-1); // -1 none, -2 several
-  // The undecided growth edge(s) toward `outs[ci]`: count + the last one,
-  // so a region with a single way out can record that forced no-wall.
-  const outCount = new Int32Array(wh);
-  const outCell = new Int32Array(wh).fill(-1);
-  const outDir = new Int32Array(wh).fill(-1);
   let changed = false;
 
   for (let i = 0; i < wh; i++) {
@@ -273,14 +268,8 @@ function notTooSmall(ctx: SolverCtx): boolean {
     for (let dir = 0; dir < 4; dir++) {
       if (!ctx.maybe(i, dir)) continue;
       const cj = ctx.dsf.canonify(ctx.neighbor(i, dir));
-      if (outs[ci] === -1) {
-        outs[ci] = cj;
-        outCount[ci] = 1;
-        outCell[ci] = i;
-        outDir[ci] = dir;
-      } else if (outs[ci] === cj) {
-        outCount[ci]++;
-      } else outs[ci] = -2;
+      if (outs[ci] === -1) outs[ci] = cj;
+      else if (outs[ci] !== cj) outs[ci] = -2;
     }
   }
 
@@ -288,10 +277,19 @@ function notTooSmall(ctx: SolverCtx): boolean {
     const j = outs[i];
     if (i !== ctx.dsf.canonify(i)) continue;
     if (j < 0) continue;
-    // A single undecided exit means that exact edge is forced no-wall.
-    if (outCount[i] === 1) {
-      const region = ctx.record ? ctx.regionCells(i) : undefined;
-      ctx.recordEdge(outCell[i], outDir[i], "nowall", region);
+    // The join is the player's to mark: every undecided edge of the region
+    // leads into the one it must join, so each is forced open, as one firing.
+    // Read at this point of the sweep, where an earlier join may have grown
+    // the region or made this one already.
+    if (ctx.record) {
+      const region = ctx.regionCells(i);
+      ctx.firing(() => {
+        for (const cell of region) {
+          for (let dir = 0; dir < 4; dir++) {
+            if (ctx.maybe(cell, dir)) ctx.recordEdge(cell, dir, "nowall", region);
+          }
+        }
+      });
     }
     ctx.connect(i, j);
     changed = true;

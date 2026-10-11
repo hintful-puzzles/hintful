@@ -163,7 +163,7 @@ function explain(
     case "notTooBig":
       return say.notTooBig(cells, fe.cells?.length ?? null, k, left);
     case "notTooSmall":
-      return say.notTooSmall(cells, fe.cells?.length ?? null, k, left);
+      return say.notTooSmall(cells, fe.cells?.length ?? null, k, left, multi);
     case "noDanglingEdges":
       return say.noDanglingEdges(cells, left);
     case "equivalentEdges":
