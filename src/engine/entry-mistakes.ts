@@ -1,6 +1,6 @@
 /**
  * Check & Save's per-cell verdict for a game whose player writes one value per
- * cell or pencils a set of candidates there: a placed value that differs from
+ * cell, and may pencil a set of candidates there: a placed value that differs from
  * the solution is wrong, and so is a blank cell whose marks have crossed out
  * the solution's value (docs/games/mechanics.md § "Pencil marks: the full
  * note-taking UX"). Marks carrying extra candidates beside the answer are
@@ -21,8 +21,9 @@ export interface EntryBoard {
   answer: ArrayLike<number>;
   /** The player's placed value per cell, `empty` where there is none. */
   entry: ArrayLike<number>;
-  /** The player's pencil mask per cell, in `enc`'s bits. */
-  notes: ArrayLike<number>;
+  /** The player's pencil mask per cell, in `enc`'s bits. Left out by a game
+   * with no pencil marks, which has only the `"cell"` verdict. */
+  notes?: ArrayLike<number>;
   /** How `entry` spells a blank cell. Default `0`; Map's colors start at 0. */
   empty?: number;
   /** How a value maps to its note bit. Default `1 << value`. */
@@ -36,7 +37,7 @@ export function entryMistake(board: EntryBoard, i: number): EntryMistakeKind | n
   const answer = board.answer[i];
   const entry = board.entry[i];
   if (entry !== (board.empty ?? 0)) return entry === answer ? null : "cell";
-  const notes = board.notes[i];
+  const notes = board.notes?.[i] ?? 0;
   return notes !== 0 && !(notes & noteBitOf(board.enc)(answer)) ? "note" : null;
 }
 

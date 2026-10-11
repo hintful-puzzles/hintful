@@ -14,6 +14,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type HintResult,
@@ -103,8 +104,8 @@ import {
   validateParams,
 } from "./state.ts";
 
-/** A cell that breaks a rule in the current state — identical to what the
- * board draws live in red. */
+/** A tile the player placed in the color the answer does not give it. It need
+ * break no rule, so it is not what the board frames live in red. */
 export interface ClustersMistake {
   index: number;
 }
@@ -312,7 +313,23 @@ function solve(orig: ClustersState): SolveResult<ClustersMove> {
 }
 
 function findMistakes(state: ClustersState): readonly ClustersMistake[] {
-  return findErrors(state.grid, state.w, state.h).map((index) => ({ index }));
+  const { grid, w, h } = state;
+  const at = (index: number): ClustersMistake => ({ index });
+  // The answer is the solve from the givens alone: only a given carries
+  // `F_SINGLE`.
+  const answer = grid.map((tile) => (tile & F_SINGLE ? tile : 0));
+  // A board the solver cannot finish has no answer to compare with, and a
+  // broken rule is then all there is to report.
+  if (solveGame(answer, w, h, 1) !== COMPLETE) return findErrors(grid, w, h).map(at);
+  const color = (tiles: Uint8Array): Uint8Array => tiles.map((tile) => tile & COLMASK);
+  return entryMistakes(
+    {
+      answer: color(answer),
+      entry: color(grid),
+      fixed: (i) => (grid[i] & F_SINGLE) !== 0,
+    },
+    at,
+  );
 }
 
 // --- hint ------------------------------------------------------------------
@@ -363,15 +380,13 @@ function buildHighlights(d: ClustersDeduction, w: number): ClustersHintHighlight
 function hint(
   state: ClustersState,
 ): HintResult<ClustersMove, ClustersHintHighlights, ClustersRung> {
-  // A board `findMistakes` passes can still be inconsistent without any one cell
-  // being provably wrong, and that is answered with `CONTRADICTION_UNLOCALIZED`
-  // below.
   const plan = deduceHintPlan(state.grid, state.w, state.h);
   // COMPLETE certifies the position (the error rules are monotone, so a wrong
   // tile can never extend to a zero-error grid). INVALID means some tile
-  // already placed must be wrong, and hinting would lead deeper in. A wrong
-  // tile on a dealt board always ends there (see `ClustersHintPlan`), so the
-  // stall below is a board the deduction cannot finish even from its givens.
+  // already placed must be wrong, and hinting would lead deeper in.
+  // `findMistakes` names that tile wherever the solver finishes the board from
+  // its givens, so this is reached only on a board it cannot, where there is
+  // no answer to say which tile it is. The stall below is such a board too.
   if (plan.verdict === INVALID) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
   if (plan.verdict !== COMPLETE || plan.deductions.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };

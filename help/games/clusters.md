@@ -25,7 +25,7 @@ On Normal boards one color can lead further before it fails. The hint then suppo
 
 The rules a step shows breaking are the ones the puzzle states: a dot touches exactly one square of its own color, and every other square touches at least two. A square whose neighbors are all the other color, or that can only ever match one of them, can't be that color.
 
-If a square you colored breaks a rule, the hint asks you to fix the highlighted mistakes first. If your squares break no rule yet but cannot all be right, it says they contradict each other, and asks you to undo or clear the ones you are unsure of.
+If a square you colored is the wrong color, the hint asks you to fix the highlighted mistakes first, and the square's background turns red, as it does for **Check & save**, whether or not it breaks a rule yet. The red frame is a different mark: it is drawn as you play, round a square or dot whose rule is broken, and that one may itself be right.
 
 ## Clusters parameters
 

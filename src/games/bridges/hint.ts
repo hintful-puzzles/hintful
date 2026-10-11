@@ -241,11 +241,10 @@ export function bridgesHint(
     planCap: PLAN_CAP,
   });
 
-  // The board is sound as far as `findMistakes` can tell — it re-solves from
-  // the clues and compares every span — and the deduction still contradicts
-  // itself, so what is wrong is an annotation it cannot see: an island marked
-  // complete before it is. That is not a span to highlight, which is exactly
-  // what this refusal is for.
+  // `findMistakes` re-solves from the clues and compares every span and every
+  // island's mark, so the deduction contradicts itself here only on a board
+  // that solve cannot finish, where there is no answer to say which entry is
+  // wrong.
   if (pass.impossible()) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 

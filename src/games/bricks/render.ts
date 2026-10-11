@@ -16,9 +16,10 @@
  * piece is the square one.
  *
  * Rule-violation marks (three-in-a-row bars, gravity diamonds, over-count red
- * clues) display the validity pass `findMistakes` exposes. As upstream, they
- * show live only while a drag is in flight; a committed board carries none
- * until Check & Save passes the `mistakes` overlay.
+ * clues) display the validity pass. As upstream, they show live only while a
+ * drag is in flight; a committed board carries none until Check & Save passes
+ * the `mistakes` overlay, which also turns red each brick or cross the answer
+ * contradicts.
  */
 
 import {
@@ -59,6 +60,7 @@ import {
   FE_LINE_RIGHT,
   FE_TOPLEFT,
   FE_TOPRIGHT,
+  FE_WRONG,
   NUM_MASK,
 } from "./state.ts";
 
@@ -195,9 +197,9 @@ function drawErrGravity(dr: GameDrawing, ts: number, x: number, y: number): void
 }
 
 // Hint-overlay bits packed into the render cache word, above the cell's own
-// bits (num/bound/color + FE_* error/cursor flags all fit under 0x1000).
-const HINT_TARGET = 1 << 12; // the forced cell — painted COL_HINT
-const HINT_EVID = 1 << 13; // a deduction-evidence cell — inset COL_HINT_CELL ring
+// bits (num/bound/color + FE_* error/cursor flags all fit under 0x2000).
+const HINT_TARGET = 1 << 13; // the forced cell — painted COL_HINT
+const HINT_EVID = 1 << 14; // a deduction-evidence cell — inset COL_HINT_CELL ring
 
 // --- one tile ---------------------------------------------------------------
 
@@ -216,8 +218,13 @@ function drawTile(
   // A cell with no play color is a clue, which the puzzle gave.
   const inner = { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 };
   dr.drawRect(inner, color ? COL_EMPTY : COL_GIVEN);
-  if (color === F_SHADE) drawPiece(dr, inner, SHADED_SHAPE, COL_SHADE);
-  else if (color === F_UNSHADE) drawRuledOutCross(dr, inner, COL_RULED_OUT);
+  // A cell the answer contradicts is drawn in the error color itself: it need
+  // break no rule, so no bar or diamond is there to point at it.
+  const wrong = (n & FE_WRONG) !== 0;
+  if (color === F_SHADE)
+    drawPiece(dr, inner, SHADED_SHAPE, wrong ? COL_ERROR : COL_SHADE);
+  else if (color === F_UNSHADE)
+    drawRuledOutCross(dr, inner, wrong ? COL_ERROR : COL_RULED_OUT);
 
   // Square border.
   dr.drawPolygon(

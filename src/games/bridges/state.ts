@@ -337,13 +337,11 @@ export interface BridgesUi {
   autoMark: boolean;
 }
 
-/** A wrongly-placed bridge from findMistakes, by its two island endpoints. */
-export interface BridgesMistake {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-}
+/** What findMistakes reports: a span the answer contradicts, by its two island
+ * endpoints, or the island at `x`, `y`, marked complete short of its count. */
+export type BridgesMistake =
+  | { x1: number; y1: number; x2: number; y2: number }
+  | { x: number; y: number };
 
 /**
  * The Bridges board. Mutable during generation/solving; treated as immutable by

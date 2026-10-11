@@ -17,7 +17,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { TWO_NAMES } from "../../engine/color/colors.ts";
-import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { CELL, mark, phrase, stepMarks, unshaped } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -38,6 +37,7 @@ import {
   COMPLETE,
   clustersStatus,
   deduceHintPlan,
+  findErrors,
 } from "./solver.ts";
 import {
   type ClustersFill,
@@ -288,20 +288,18 @@ describe("hint", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("refuses honestly on a wrong-but-locally-clean board", () => {
+  it("names the tile on a wrong-but-locally-clean board", () => {
     // Painting a *chain* firing's refuted color breaks no local rule (the
-    // contradiction needs the lookahead), so findMistakes stays empty — but
-    // the plan runs into the contradiction and the hint must say so, not
-    // deduce onward from a doomed position.
+    // contradiction needs the lookahead), so only the answer can say which
+    // tile is wrong, and the midend then never asks the hint about the board.
     const hit = findDeduction("chain");
     const grid = hit.grid.slice();
     grid[hit.d.index] = hit.d.refuted;
     const wrong: ClustersState = { ...hit.state, grid };
-    expect(clustersGame.findMistakes?.(wrong)).toHaveLength(0);
-    const res = clustersGame.hint?.(wrong);
-    expect(res?.ok).toBe(false);
-    if (res?.ok !== false) return;
-    expect(res.error).toBe(CONTRADICTION_UNLOCALIZED);
+    expect(findErrors(grid, wrong.w, wrong.h)).toEqual([]);
+    expect(clustersGame.findMistakes?.(wrong).map((m) => m.index)).toEqual([
+      hit.d.index,
+    ]);
   });
 });
 

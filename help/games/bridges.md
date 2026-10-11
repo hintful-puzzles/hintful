@@ -48,9 +48,9 @@ leave an island short of its count.
 Every hint is a deduction you could have made from what is on the board, so it
 never guesses. It is refused while a bridge you have drawn contradicts the
 solution; the offending bridges light up instead, exactly as they do for
-**Check & save**. Marking an island completed before it really is can also stop
-the hint, because that locks bridges the island still needs — undo the mark and
-ask again.
+**Check & save**. An island marked completed before it really is counts as a
+mistake too, because the mark locks bridges the island still needs: the island
+lights up, and taking the mark off clears it.
 
 ## Bridges parameters
 

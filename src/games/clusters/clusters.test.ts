@@ -24,11 +24,15 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
 import { clustersGame } from "./index.ts";
-import { COL_ERROR } from "./render.ts";
+import { COL_ERROR, COL_WRONG } from "./render.ts";
 import {
   COMPLETE,
   clustersStatus,
@@ -54,6 +58,7 @@ import {
   F_COLOR_1,
   F_SINGLE,
   newState,
+  opposite,
   textFormat,
 } from "./state.ts";
 
@@ -417,17 +422,64 @@ describe("midend integration", () => {
     expect(playH.status()).toBe("solved");
   });
 
-  it("findMistakes flags a rule violation and clears when corrected", () => {
+  it("findMistakes counts each tile the answer contradicts, rule broken or not", () => {
     const { desc, target, moves } = violation();
     const { m } = harness();
     expect(m.newGameFromId(`7x7:${desc}`)).toBeNull();
     expect(m.findMistakes()).toBe(0);
     m.playMoves(moves);
     expect(m.findMistakes()).toBeGreaterThan(0);
+    for (let n = moves.length; n > 0; n--) m.undo();
 
-    // Repaint the target to match its neighbors → the violation clears.
-    m.playMoves([{ kind: "paint", cells: [{ index: target, fill: F_COLOR_1 }] }]);
+    // One tile alone, each way: it breaks no rule, and one way is wrong.
+    const params = decodeParams("7x7");
+    const answer = newState(params, desc).grid.slice();
+    expect(solveGame(answer, params.w, params.h, 1)).toBe(COMPLETE);
+    const right = (answer[target] & COLMASK) as ClustersFill;
+    const paint = (fill: ClustersFill): ClustersMove => ({
+      kind: "paint",
+      cells: [{ index: target, fill }],
+    });
+    m.playMoves([paint(opposite(right))]);
+    expect(m.check()).toEqual({ kind: "mistakes", count: 1 });
+    // A second wrong tile, far from the first, is counted beside it.
+    const far = answer.findLastIndex((tile) => !(tile & F_SINGLE));
+    const farWrong = opposite((answer[far] & COLMASK) as ClustersFill);
+    m.playMoves([{ kind: "paint", cells: [{ index: far, fill: farWrong }] }]);
+    expect(m.check()).toEqual({ kind: "mistakes", count: 2 });
+    m.undo();
+    m.playMoves([paint(right)]);
     expect(m.findMistakes()).toBe(0);
+  });
+
+  it("Check & Save path: a wrong tile's surface repaints on a board already drawn", () => {
+    const { desc, target } = violation();
+    const params = decodeParams("7x7");
+    const answer = newState(params, desc).grid.slice();
+    solveGame(answer, params.w, params.h, 1);
+    const wrong = opposite((answer[target] & COLMASK) as ClustersFill);
+    const { midend } = renderScenario({
+      game: clustersGame,
+      id: `7x7:${desc}`,
+      moves: [{ kind: "paint", cells: [{ index: target, fill: wrong }] }],
+    });
+    const frame = () => {
+      const recording = new RecordingDrawing(
+        midend.getColorPalette(DEFAULT_BACKGROUND),
+      );
+      midend.redraw(recording);
+      return recording.ops;
+    };
+    // Nothing is left to paint, and no rule is broken, so nothing is red.
+    expect(frame()).toEqual([]);
+    midend.check();
+    const washed = frame().filter((o) => o.op === "rect" && o.color === COL_WRONG);
+    expect(washed).toHaveLength(1);
+    // The next move puts the overlay away, and the surface goes back.
+    midend.playMoves([{ kind: "paint", cells: [{ index: target, fill: wrong }] }]);
+    const after = frame();
+    expect(after.length).toBeGreaterThan(0);
+    expect(after.filter((o) => o.op === "rect" && o.color === COL_WRONG)).toEqual([]);
   });
 
   it("Check & Save path: the mistake overlay is actually painted", () => {

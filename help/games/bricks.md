@@ -31,7 +31,7 @@ A *shaded brick*, in the hint's words, is a cell holding a {{pair:0}} square. Wh
 
 Each step is one of the rules at work on a single cell: shading it would make three in a row, leave it with nothing shaded beneath it to rest on, or give a number too many shaded neighbors; or clearing it would leave a shaded brick above with nothing to rest on, or leave a number unable to reach its count.
 
-If a cell is wrong in a way that breaks a rule, the hint asks you to fix the highlighted mistakes first. If your marks break no rule but still cannot all be right, it says they contradict each other, and asks you to undo or clear the ones you are unsure of. On an Unreasonable board it may stop and say that nothing further follows by deduction.
+If a brick or a cross is wrong, the hint asks you to fix the highlighted mistakes first, and the wrong one turns red, as it does for **Check & save**, whether or not it breaks a rule yet. A broken rule is marked as well: a bar over three in a row, a diamond under a brick with nothing to rest on, a number in red. On an Unreasonable board it may stop and say that nothing further follows by deduction.
 
 ## Bricks parameters
 

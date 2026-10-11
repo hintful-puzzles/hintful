@@ -42,6 +42,8 @@ export const FE_TOPRIGHT = 0x100;
 export const FE_LINE_LEFT = 0x200;
 export const FE_LINE_RIGHT = 0x400;
 export const FE_CURSOR = 0x800;
+/** Not upstream's: a cell shaded or ruled out against the answer. */
+export const FE_WRONG = 0x1000;
 
 /** The six hexagonal neighbors of a cell, as (dx, dy) steps (upstream
  * `bricks_steps`). The clue counts are defined over them. */
@@ -109,7 +111,7 @@ export interface BricksUi {
   drag: number[];
 }
 
-/** A cell currently violating a rule, with its localized error flags
+/** A cell that breaks a rule or contradicts the answer, with its error flags
  * (`FE_*`) — returned by findMistakes and reused by the render overlay. */
 export interface BricksMistake {
   index: number;

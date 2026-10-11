@@ -118,6 +118,46 @@ for (const [id, game] of REGISTERED_GAMES) {
   whether theirs is the same shortfall the sweep could not reach (Bridges
   made no wrong entry) or a board with truly no cell to name.
 
+## What was found and decided (2026-10-11)
+
+- **The sweep's counts held**: Bricks 102 / 31 / 71, Clusters 97 / 9 / 88,
+  Subsets 37 of 37, and both games refused in the running app with no cell
+  marked.
+- **The comparison is the engine's already.** Bricks and Clusters hold one
+  value a cell, which is what `entryMistakes` compares for twelve games; its
+  `notes` array became optional and both games call it. Subsets is not that
+  shape (a set of letters a cell, each marked or crossed out), and a helper
+  for it alone would be a second description of one game's board, so its loop
+  stays its own.
+- **The marks, chosen by running the app in both schemes.** Bricks draws a
+  wrong brick or cross in the error color and keeps its bars and diamonds.
+  Clusters' piece color is the entry, so a wrong tile gets the error wash
+  under it; the red frame stays the live mark for a broken rule, which often
+  sits on a dot or a right tile beside the wrong one.
+- **Bridges had the shortfall, and the sweep cannot see it.** An island marked
+  complete short of its count was drawn red as played and passed
+  `findMistakes`, so the check said the entries contradict each other. The
+  mark is now the mistake. It leaves a solved board solved, so replaying it on
+  the answer proves nothing: its own test holds it, and the guard says so.
+- **Loopy's is a board with no cell to name.** Its `findMistakes` compares
+  lines, corner notes and pairs with the answer, and the hint's contradiction
+  is reached only where no unique answer was proved.
+- **Clusters, Bridges and Subsets keep the refusal** for a board their solver
+  cannot finish, where no answer says which entry is wrong. Bricks' hint no
+  longer says it.
+- **The guard** (`src/engine/wrong-entry-check.test.ts`) adds drags and cursor
+  keys to the sweep's clicks, which reaches every game but Guess, whose only
+  claim is a rule-out that leaves a solved board solved. 180 gestures a game,
+  about 5 s: each of the three defects, put back, failed by its second
+  gesture, and the count is set by Ascent and Boats, whose first wrong entries
+  came at gestures 105 and 120.
+- **A different bug turned up, filed apart.** Dropping the "wrong entry"
+  filter, so that every position one gesture deep is asked whether the hint
+  finishes, found Range: on `6x9de:4j5a9b7b11a7j12a11b9b6a4j7`, marking the
+  cell in row 5, column 5 white, which the answer agrees with, leaves a board
+  the hint plays 15 steps on and then runs out, and the midend throws at the
+  sixteenth. No other game of the 43 had one in 300 gestures.
+
 ## What Changes
 
 - Bricks' and Clusters' `findMistakes` return an entry the answer

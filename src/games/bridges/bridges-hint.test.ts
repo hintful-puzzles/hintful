@@ -11,7 +11,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
@@ -672,19 +671,22 @@ describe("refusing", () => {
     expect(verdict).toBe("onTrack");
   });
 
-  it("refuses an annotation `findMistakes` cannot see, and says so honestly", () => {
-    // Marking an island complete before it is locks bridges it still needs. No
-    // entry is wrong, so there is nothing to highlight and `FIX_MISTAKES_FIRST`
-    // would promise a highlight that never comes.
+  it("names an island marked complete short of its count as the mistake", () => {
+    // The mark locks bridges the island still needs, so the deduction
+    // contradicts itself from there. The mark is the entry that is wrong, and
+    // the midend never asks the hint about a board with one.
     const first = start.islands[0];
-    const marked = bridgesGame.executeMove(start, {
-      ops: [{ op: "M", x: first.x, y: first.y }],
-    });
-    expect(bridgesGame.findMistakes?.(marked).length).toBe(0);
-    expect(bridgesGame.hint?.(marked, undefined, ui)).toEqual({
-      ok: false,
-      error: CONTRADICTION_UNLOCALIZED,
-    });
+    const mark: BridgesMove = { ops: [{ op: "M", x: first.x, y: first.y }] };
+    const marked = bridgesGame.executeMove(start, mark);
+    expect(bridgesGame.findMistakes?.(marked)).toEqual([{ x: first.x, y: first.y }]);
+
+    // The same mark on the island once its bridges are all there is true.
+    const solution = bridgesGame.solve?.(start, start);
+    if (!solution?.ok) throw new Error("the board did not solve");
+    const solved = bridgesGame.executeMove(start, solution.move);
+    expect(bridgesGame.findMistakes?.(bridgesGame.executeMove(solved, mark))).toEqual(
+      [],
+    );
   });
 });
 

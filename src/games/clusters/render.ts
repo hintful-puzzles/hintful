@@ -19,6 +19,7 @@ import {
   CURSOR,
   cellSurface,
   ERROR,
+  ERROR_WASH,
   givenSurface,
   HINT_ACTION,
   HINT_EVIDENCE,
@@ -32,7 +33,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import type { ClustersHintHighlights } from "./index.ts";
+import type { ClustersHintHighlights, ClustersMistake } from "./index.ts";
 import { findErrors } from "./solver.ts";
 import {
   type ClustersMove,
@@ -75,6 +76,8 @@ export const COL_HINT_DANGER = 10;
 export const COL_CELL = 11;
 /** The surface under a given. */
 export const COL_GIVEN = 12;
+/** The surface under a tile Check & Save found wrong. */
+export const COL_WRONG = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -90,6 +93,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_0_DOT] = BLACK;
   out[COL_1_DOT] = WHITE;
   out[COL_ERROR] = ERROR;
+  out[COL_WRONG] = ERROR_WASH;
   out[COL_CURSOR] = CURSOR;
   out[COL_HINT] = HINT_ACTION;
   // The chain is outlined rather than washed, so it takes the mark form of the
@@ -116,6 +120,7 @@ export function computeSize(p: ClustersParams, ts: number): Size {
 // Cache flags above the effective-tile byte (0..6: color bits + F_SINGLE).
 const F_ERR = 1 << 8;
 const F_CUR = 1 << 9;
+const F_WRONG = 1 << 10;
 
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
 // the diff key (docs/games/rendering.md § "Overlay sidecars").
@@ -188,6 +193,7 @@ function drawTile(
   y: number,
   tile: number,
   error: boolean,
+  wrong: boolean,
   cursor: boolean,
   hintBits: number,
   hintOrder: number,
@@ -212,7 +218,7 @@ function drawTile(
       grown,
     );
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
-  dr.drawRect(surface, tile & F_SINGLE ? COL_GIVEN : COL_CELL);
+  dr.drawRect(surface, wrong ? COL_WRONG : tile & F_SINGLE ? COL_GIVEN : COL_CELL);
   if (tile & COLMASK) piece(tile, 1);
 
   // The small piece of the color a what-if cell would be forced to — a
@@ -286,6 +292,7 @@ export function redraw(
   _animTime: number,
   flashTime: number,
   hint?: HintStep<ClustersMove>,
+  mistakes?: readonly ClustersMistake[],
 ): void {
   const ts = ds.tileSize;
   const { w, h, grid } = state;
@@ -303,6 +310,8 @@ export function redraw(
   // Live rule violations, recomputed from the committed grid every frame
   // (pure — never mutates the state's grid).
   const errors = new Set(findErrors(grid, w, h));
+  // Check & Save's wrong tiles, which need break no rule.
+  const wrongTiles = new Set(mistakes?.map((m) => m.index));
 
   const dragSet = ui.dragType !== -1 && ui.drag.length > 0 ? new Set(ui.drag) : null;
 
@@ -353,7 +362,13 @@ export function redraw(
       const error = !(dragSet?.has(i) && !(grid[i] & F_SINGLE)) && errors.has(i);
       const cursor = ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y;
 
-      const packed = (tile & 0x7) | (error ? F_ERR : 0) | (cursor ? F_CUR : 0);
+      const wrong = !flash && wrongTiles.has(i);
+
+      const packed =
+        (tile & 0x7) |
+        (error ? F_ERR : 0) |
+        (cursor ? F_CUR : 0) |
+        (wrong ? F_WRONG : 0);
       if (ds.cache[i] !== packed || ds.hint.stale(i)) {
         drawTile(
           dr,
@@ -362,6 +377,7 @@ export function redraw(
           y,
           tile,
           error,
+          wrong,
           cursor,
           ds.hint.packed[i],
           ds.hint.order[i],

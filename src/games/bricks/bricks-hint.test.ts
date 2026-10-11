@@ -7,7 +7,6 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -41,6 +40,7 @@ import {
   F_EMPTY,
   F_SHADE,
   F_UNSHADE,
+  FE_WRONG,
   newState,
 } from "./state.ts";
 
@@ -343,7 +343,7 @@ describe("bricks hint — refusals", () => {
     expect(findMistakes({ ...st, grid: g }).length).toBeGreaterThan(0);
   });
 
-  it("refuses a wrong-but-legal mark (contradicts the solution, no rule broken)", () => {
+  it("names a wrong-but-legal mark (contradicts the solution, no rule broken)", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
     const sol = st.grid.slice();
     solveGame(sol, st.w, st.h, DIFF_TRICKY, true, true);
@@ -354,7 +354,7 @@ describe("bricks hint — refusals", () => {
       if ((st.grid[i] & COL_MASK) !== F_EMPTY) continue;
       const g = st.grid.slice();
       g[i] = F_UNSHADE;
-      if (findMistakes({ ...st, grid: g }).length === 0) {
+      if (bricksValidate(g, st.w, st.h, false) !== "invalid") {
         cell = i;
         break;
       }
@@ -362,23 +362,21 @@ describe("bricks hint — refusals", () => {
     expect(cell).toBeGreaterThanOrEqual(0);
     const g = st.grid.slice();
     g[cell] = F_UNSHADE;
-    const r = bricksGame.hint?.({ ...st, grid: g });
-    expect(r?.ok).toBe(false);
-    // The *unlocalized* refusal, not the "fix the highlighted mistakes" one:
-    // Bricks' `findMistakes` is a rule validator and cannot see this mark, so
-    // a message promising a highlight would promise one that never appears.
-    if (r?.ok === false) expect(r.error).toBe(CONTRADICTION_UNLOCALIZED);
+    // The rule pass sees nothing here, so only the answer can name the cell.
+    expect(findMistakes({ ...st, grid: g })).toEqual([
+      { index: cell, flags: FE_WRONG },
+    ]);
+    // The right color in the same cell is no mistake.
+    g[cell] = F_SHADE;
+    expect(findMistakes({ ...st, grid: g })).toEqual([]);
 
-    // And Check & save refuses to save it, which `findMistakes` alone did not.
+    // So Check & save counts it, and has a cell to light up.
     const { midend } = renderScenario({
       game: bricksGame,
       id: `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`,
       moves: [{ kind: "paint", cells: [{ index: cell, to: "unshade" }] }],
     });
-    expect(midend.check()).toEqual({
-      kind: "dead-end",
-      reason: CONTRADICTION_UNLOCALIZED,
-    });
+    expect(midend.check()).toEqual({ kind: "mistakes", count: 1 });
   });
 });
 

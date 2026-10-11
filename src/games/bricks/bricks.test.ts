@@ -35,7 +35,11 @@ import {
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { repaintDifferential } from "../../engine/testing/repaint-differential.ts";
 import type { Point } from "../../engine/types.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
@@ -575,6 +579,39 @@ describe("bricks rendering (tier 2.5)", () => {
     expect(
       result.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
     ).toBe(true);
+  });
+
+  it("draws a brick and a cross the answer contradicts in the error color, on a board already drawn", () => {
+    const st = newState(FIX_PARAMS, FIX.desc);
+    const sol = st.grid.slice();
+    solveGame(sol, st.w, st.h, DIFF_TRICKY, true, true);
+    // The first undecided cell, entered each way: one way is right.
+    const cell = st.grid.findIndex((c) => (c & COL_MASK) === F_EMPTY);
+    const shaded = (sol[cell] & COL_MASK) === F_SHADE;
+    const errorOps = (to: "shade" | "unshade"): string[] => {
+      const { midend } = renderScenario({
+        game: bricksGame,
+        id: FIX_ID,
+        moves: [{ kind: "paint", cells: [{ index: cell, to }] }],
+      });
+      // The board is on screen with nothing red, then the check runs, so the
+      // overlay has to repaint a cell whose own value did not change.
+      const settled = new RecordingDrawing(midend.getColorPalette(DEFAULT_BACKGROUND));
+      midend.redraw(settled);
+      expect(settled.ops).toEqual([]);
+      midend.check();
+      const checked = new RecordingDrawing(midend.getColorPalette(DEFAULT_BACKGROUND));
+      midend.redraw(checked);
+      return checked.ops
+        .filter((o) => "color" in o && o.color === COL_ERROR)
+        .map((o) => o.op);
+    };
+    expect(errorOps(shaded ? "shade" : "unshade")).toEqual([]);
+    // A cross is two strokes, and a brick is whatever the shared piece draws.
+    // A clue the entry starves or overfills may turn red beside it.
+    const marks = errorOps(shaded ? "unshade" : "shade");
+    if (shaded) expect(marks.filter((op) => op === "line")).toHaveLength(2);
+    else expect(marks.filter((op) => op !== "text").length).toBeGreaterThan(0);
   });
 
   // A gravity diamond on the board's left edge lands a quarter on the ground

@@ -34,6 +34,7 @@
  * (`MAX_GENERABLE_DIFF`) but stays here as "try as hard as you can" for hints
  * and Solve, where the extra depth costs nothing.
  */
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   BRICKS_STEPS,
@@ -43,6 +44,7 @@ import {
   COL_MASK,
   colorBits,
   DIFF_NORMAL,
+  DIFF_TRICKY,
   F_BOUND,
   F_EMPTY,
   F_SHADE,
@@ -52,6 +54,7 @@ import {
   FE_LINE_RIGHT,
   FE_TOPLEFT,
   FE_TOPRIGHT,
+  FE_WRONG,
   NUM_MASK,
 } from "./state.ts";
 
@@ -289,15 +292,31 @@ export function solveGame(
 // --- play-facing helpers ----------------------------------------------------
 
 /**
- * The cells currently violating a rule, with their localized flags. Bricks'
- * violations are intrinsic to the current grid, so this runs the validity pass
- * rather than re-solving. Check & Save hard-blocks on a non-empty result and
- * the render overlay reuses the flags.
+ * The cells Check & Save refuses on, with the flags the render overlay draws:
+ * every cell the validity pass finds breaking a rule, and every cell shaded or
+ * ruled out against the answer (`FE_WRONG`), which need break none. A board
+ * the solver cannot finish from its clues has no answer to compare with and
+ * reports its broken rules alone.
  */
 export function findMistakes(state: BricksState): BricksMistake[] {
   const { grid, w, h } = state;
   const errors = new Uint16Array(w * h);
   bricksValidate(grid, w, h, false, errors);
+  const answer = grid.slice();
+  if (solveGame(answer, w, h, DIFF_TRICKY, true, true) === "complete") {
+    const color = (cells: Uint16Array): Uint16Array => cells.map((c) => c & COL_MASK);
+    const wrong = entryMistakes(
+      {
+        answer: color(answer),
+        entry: color(grid),
+        empty: F_EMPTY,
+        // A clue, and the padding beside the board, have no play color.
+        fixed: (i) => (grid[i] & COL_MASK) === 0,
+      },
+      (index) => ({ index }),
+    );
+    for (const { index } of wrong) errors[index] |= FE_WRONG;
+  }
   const out: BricksMistake[] = [];
   for (let i = 0; i < errors.length; i++) {
     if (errors[i] !== 0) out.push({ index: i, flags: errors[i] });

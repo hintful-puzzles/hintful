@@ -474,13 +474,16 @@ function solve(orig: BridgesState, curr: BridgesState): SolveResult<BridgesMove>
  * player has limited it below the solution's count: an "at most" mark under
  * the bridges it needs, or a cross over a span that needs any. The cross is
  * the bottom of the same scale, so the two are one rule, and both are a span
- * the board can light up.
+ * the board can light up. An island is wrong when it is marked complete short
+ * of its count: the mark locks its bridges, and the answer gives it more.
  */
 function findMistakes(state: BridgesState): readonly BridgesMistake[] {
   const solved = state.workingCopy();
   if (solveFromScratch(solved, 10) === 0) return [];
   const out: BridgesMistake[] = [];
   for (const is of state.islands) {
+    if (state.gridAt(is.x, is.y) & G_MARK && state.islandCountbridges(is) < is.count)
+      out.push({ x: is.x, y: is.y });
     for (const pt of is.points) {
       if (pt.dx === -1 || pt.dy === -1) continue; // span once (right/down)
       if (pt.off === 0) continue;

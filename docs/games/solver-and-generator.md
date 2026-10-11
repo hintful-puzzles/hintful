@@ -2143,11 +2143,27 @@ each other" by a hint that compared the board with the answer and kept the
 cell to itself. Check & Save is an answer check in every game (owner,
 2026-10-02), so a game that holds the answer adds the comparison beside its
 rule pass, with a mark for an entry that is wrong and breaks nothing.
-Exemplar: [`subsets/solver.ts`](../../src/games/subsets/solver.ts)
-`findMistakes`, whose `letter` mistake is that comparison and whose `cell`
-and `edge` mistakes are the rule pass. **The shape to look for** is a hint
+Exemplars: [`bricks/solver.ts`](../../src/games/bricks/solver.ts)
+`findMistakes`, which keeps the rule pass's flags and adds one for a cell the
+answer contradicts, and [`subsets/solver.ts`](../../src/games/subsets/solver.ts),
+whose `letter` mistake is that comparison and whose `cell` and `edge` mistakes
+are the rule pass. **Where the player enters one value a cell, the comparison
+is `entryMistakes`** (§ "Marks are checked like entries"), with no `notes` for
+a game that has none. **A mark is an entry too**: Bridges' island marked
+complete short of its count locks bridges the answer needs, so it is the
+mistake, and the island is what lights up. **The shape to look for** is a hint
 that opens by re-solving and answers `CONTRADICTION_UNLOCALIZED`: what it
 found there belongs in `findMistakes`.
+[`wrong-entry-check.test.ts`](../../src/engine/wrong-entry-check.test.ts)
+looks for it in every game by entering things blind and asking whether Check
+& Save can name what the answer contradicts.
+
+**Give the answer's mark a look of its own where the live marks are still
+drawn.** A live mark sits on what breaks the rule, which is often a clue or a
+right entry beside the wrong one, so a player who sees both has to tell which
+to take back. Bricks turns the wrong brick or cross red and keeps its bars and
+diamonds; Clusters, whose piece color is the entry, puts the error wash under
+the wrong tile and keeps its frame for the broken rule.
 
 ## The Latin family
 

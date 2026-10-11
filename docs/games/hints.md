@@ -1449,11 +1449,13 @@ draws it. That is why `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
 
 **What a game still answers for itself is about the puzzle:**
 
-- **A board `findMistakes` passes that is still doomed.** Bricks, Bridges,
-  Clusters and Loopy check further and say `CONTRADICTION_UNLOCALIZED`
-  when the board is inconsistent with no entry provably wrong. Where the game
-  holds the answer this is a shortfall of its `findMistakes`, never a design:
-  the player is told something is wrong and not what
+- **A board `findMistakes` passes that is still doomed.** A deduction that
+  runs into a contradiction says `CONTRADICTION_UNLOCALIZED`, and on a board
+  with an answer it never gets to: `findMistakes` compares every entry with
+  the answer first. So the refusal is for a board the game's own solver cannot
+  finish, where no answer says which entry is wrong. A dealt board that
+  reaches it has a shortfall in its `findMistakes`, never a design: the player
+  is told something is wrong and not what
   ([solver-and-generator.md](./solver-and-generator.md) § "Self-validating
   games run their rule checker").
 - **A lost board.** The midend does not refuse on `"lost"`, because a lost board
@@ -1551,16 +1553,13 @@ A deductive game emitting it fails, and so does a searching game emitting
 anything else. It was keyed on calling the slide planner until Pegs, and that
 had already missed Guess, whose enumeration says it too.
 
-**Whether your hint needs a second wrong-board check is decided by your own
-`findMistakes`, so read it rather than copying a neighbor.** A game whose
-`findMistakes` re-solves the clues and compares already catches a
-wrong-but-legal entry, so the midend never hands its hint a doomed board. A
-*rule validator* does not, and its `hint` must make that check itself before
-deducing onward, answering with `CONTRADICTION_UNLOCALIZED`, which asks the
-player to undo rather than pointing at a highlight that never comes. Every game
-that needs the second check has one, verified by reading all of them, not by
-grepping for a name, which got the answer wrong twice (see [`method.md`](../method.md), "A scan
-that keys on a name").
+**A hint makes no wrong-board check of its own.** A game's `findMistakes`
+re-solves the clues and compares, so it catches a wrong-but-legal entry and the
+midend never hands the hint a doomed board. A hint that opens by comparing the
+board with the answer is a second copy of that check which keeps the cell to
+itself: move what it found into `findMistakes`.
+[`wrong-entry-check.test.ts`](../../src/engine/wrong-entry-check.test.ts) holds
+every game to it, and its header says what it cannot see.
 
 ## Refusal couples to the mistake overlay
 

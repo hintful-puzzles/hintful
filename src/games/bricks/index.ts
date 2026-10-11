@@ -27,7 +27,6 @@ import {
 import { fromCoord } from "../../engine/geometry.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
-  CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -424,23 +423,13 @@ export const BRICKS_RUNGS = [
 export type BricksRung = (typeof BRICKS_RUNGS)[number];
 
 function hint(state: BricksState): HintResult<BricksMove, BricksHint, BricksRung> {
-  // `findMistakes` is a rule validator, blind to a mark that is wrong but breaks
-  // no rule, so a board it passes can still be doomed. The re-solve below
-  // answers that case with `CONTRADICTION_UNLOCALIZED`, which asks the player to
-  // undo rather than promising a highlight that will never appear.
   const { w, h, grid } = state;
 
-  // Check the marks against the unique solution rather than deduce onward from
-  // a doomed position.
-  const sol = grid.slice();
-  if (solveGame(sol, w, h, DIFF_TRICKY, true, true) !== "complete") {
+  // The plan deduces onward from the player's marks, which `findMistakes` has
+  // compared with the answer wherever there is one. A board the solver cannot
+  // finish from its clues has none, and no plan to trust.
+  if (solveGame(grid.slice(), w, h, DIFF_TRICKY, true, true) !== "complete") {
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  }
-  for (let i = 0; i < w * h; i++) {
-    const pc = grid[i] & COL_MASK;
-    if ((pc === F_SHADE || pc === F_UNSHADE) && pc !== (sol[i] & COL_MASK)) {
-      return { ok: false, error: CONTRADICTION_UNLOCALIZED };
-    }
   }
 
   const plan = deduceBricksPlan(grid, w, h);

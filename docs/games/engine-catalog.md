@@ -685,8 +685,9 @@ unmarked cell".
 `entryMistakes(board, at)` is the whole `findMistakes` loop of a game whose
 player places one value per cell or pencils candidates there: a wrong entry is
 a `cell` mistake, and a blank cell whose non-empty marks leave out its answer is
-a `note` mistake. The game supplies the solved answer, its entry and note
-arrays, the note bits as its `NoteEncoding` already declares them, a blank
+a `note` mistake. The game supplies the solved answer, its entry array and,
+where it has pencil marks, its note array (Bricks and Clusters have none and
+leave it out), the note bits as its `NoteEncoding` already declares them, a blank
 cell's spelling (`empty`, for Map's 0-based colors), the cells it cannot change
 (`fixed`), and `at`, which places a cell in its own mistake shape (`gridCell(w)`
 for a row-major grid). A game with further marks of its own checks those in its

@@ -33,7 +33,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../pointer.ts";
-import { randomNew, randomUpto } from "../random/index.ts";
+import { type RandomState, randomNew, randomUpto } from "../random/index.ts";
 import { sweepOpen } from "../target-verb.ts";
 import type { Color, ConfigValues, Point, Size } from "../types.ts";
 import { copyUi, restoreUi } from "../ui-snapshot.ts";
@@ -459,6 +459,61 @@ export function probePoints(size: Size): Point[] {
   for (let x = 2; x < size.w; x += step)
     for (let y = 2; y < size.h; y += step) pts.push({ x, y });
   return pts;
+}
+
+/** The ways {@link randomGesture} plays one. */
+export const GESTURE_KINDS = ["click", "drag", "keys"] as const;
+export type GestureKind = (typeof GESTURE_KINDS)[number];
+
+/**
+ * **One thing a player might do, chosen blind**: a click at a random point, a
+ * drag between two, or a walk of the cursor ending on a select key, with either
+ * button and half the time a digit or letter after it. It reads nothing of the
+ * game, so what it reaches is what a game's input reaches from anywhere: a
+ * click enters a cell where one click does, a drag draws a bridge or a path, and
+ * the keys reach the games that want a cursor first. Half the drags run along a
+ * row or a column, because most games that drag take no other kind, and half
+ * the walks select twice, for a game that picks a thing up and puts it down.
+ */
+export function randomGesture(
+  m: AnyMidend,
+  size: Size,
+  rs: RandomState,
+  kind: GestureKind,
+): void {
+  const point = (): Point => ({ x: randomUpto(rs, size.w), y: randomUpto(rs, size.h) });
+  const right = randomUpto(rs, 3) === 0;
+  const select = right ? CURSOR_SELECT2 : CURSOR_SELECT;
+  const walk = (steps: number): void => {
+    const arrows = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT];
+    for (let k = 0; k < steps; k++) m.processInput(0, 0, arrows[randomUpto(rs, 4)]);
+  };
+  if (kind === "click") {
+    const p = point();
+    m.processInput(p.x, p.y, right ? RIGHT_BUTTON : LEFT_BUTTON);
+    m.processInput(p.x, p.y, right ? RIGHT_RELEASE : LEFT_RELEASE);
+  } else if (kind === "drag") {
+    const from = point();
+    const to = point();
+    if (randomUpto(rs, 2) === 0) {
+      if (randomUpto(rs, 2) === 0) to.x = from.x;
+      else to.y = from.y;
+    }
+    m.processInput(from.x, from.y, right ? RIGHT_BUTTON : LEFT_BUTTON);
+    m.processInput(to.x, to.y, right ? RIGHT_DRAG : LEFT_DRAG);
+    m.processInput(to.x, to.y, right ? RIGHT_RELEASE : LEFT_RELEASE);
+  } else {
+    walk(randomUpto(rs, 8));
+    m.processInput(0, 0, select);
+    if (randomUpto(rs, 2) === 0) {
+      walk(1 + randomUpto(rs, 3));
+      m.processInput(0, 0, select);
+    }
+  }
+  if (randomUpto(rs, 2) === 0) {
+    const keys = "123456789abcd";
+    m.processInput(0, 0, keys.charCodeAt(randomUpto(rs, keys.length)));
+  }
 }
 
 /**

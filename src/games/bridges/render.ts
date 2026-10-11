@@ -755,8 +755,8 @@ function drawEdgeTile(
 
 /**
  * Build the mistake mask: a per-cell bit set for every line-square on a wrong
- * bridge span, plus the two endpoint island cells, so they can be recolored
- * red. Returns a `Uint8Array` (1 = mistake) sized w*h, or null when there are
+ * bridge span, plus the two endpoint island cells, and for every island marked
+ * complete too soon, so they can be recolored red. Returns a `Uint8Array` (1 = mistake) sized w*h, or null when there are
  * no mistakes.
  */
 function buildMistakeMask(
@@ -766,6 +766,10 @@ function buildMistakeMask(
   if (mistakes.length === 0) return null;
   const mask = new Uint8Array(st.w * st.h);
   for (const m of mistakes) {
+    if ("x" in m) {
+      mask[st.idx(m.x, m.y)] = 1;
+      continue;
+    }
     mask[st.idx(m.x1, m.y1)] = 1;
     mask[st.idx(m.x2, m.y2)] = 1;
     const dx = Math.sign(m.x2 - m.x1);
