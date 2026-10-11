@@ -35,4 +35,4 @@
 - [x] 3.1 The spec delta, and remove `skip_specs` from `.openspec.yaml`.
 - [x] 3.2 `docs/games/solver-and-generator.md`: what § "Giving a deductive
   game an Unreasonable tier" says of Mosaic, once it is no longer true.
-- [ ] 3.3 Commit, push, archive.
+- [x] 3.3 Commit, push, archive.
