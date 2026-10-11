@@ -19,6 +19,7 @@ import {
   MOD_MASK,
   MOD_NUM_KEYPAD,
   MOD_SHFT,
+  numpadDirection,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -113,6 +114,38 @@ describe("gridCursorMove", () => {
 
   it("returns null for a non-cursor button", () => {
     expect(gridCursorMove(LEFT_BUTTON, 1, 1, 4, 4)).toBeNull();
+  });
+});
+
+describe("numpadDirection", () => {
+  const pad = (digit: number) => MOD_NUM_KEYPAD | ("0".charCodeAt(0) + digit);
+
+  it("reads the pad's eight outer digits as the directions they sit in", () => {
+    const steps = [7, 8, 9, 4, 6, 1, 2, 3].map((d) => numpadDirection(pad(d)));
+    expect(steps).toEqual([
+      { dx: -1, dy: -1 },
+      { dx: 0, dy: -1 },
+      { dx: 1, dy: -1 },
+      { dx: -1, dy: 0 },
+      { dx: 1, dy: 0 },
+      { dx: -1, dy: 1 },
+      { dx: 0, dy: 1 },
+      { dx: 1, dy: 1 },
+    ]);
+  });
+
+  it("agrees with the arrows on the four they share", () => {
+    expect(numpadDirection(pad(8))).toEqual(cursorDelta(CURSOR_UP));
+    expect(numpadDirection(pad(2))).toEqual(cursorDelta(CURSOR_DOWN));
+    expect(numpadDirection(pad(4))).toEqual(cursorDelta(CURSOR_LEFT));
+    expect(numpadDirection(pad(6))).toEqual(cursorDelta(CURSOR_RIGHT));
+  });
+
+  it("is null for the pad's 5 and 0, a top-row digit and an arrow", () => {
+    expect(numpadDirection(pad(5))).toBeNull();
+    expect(numpadDirection(pad(0))).toBeNull();
+    expect(numpadDirection("7".charCodeAt(0))).toBeNull();
+    expect(numpadDirection(CURSOR_UP)).toBeNull();
   });
 });
 

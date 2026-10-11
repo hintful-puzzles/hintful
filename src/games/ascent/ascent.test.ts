@@ -7,6 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
+import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -15,6 +16,7 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MOD_NUM_KEYPAD,
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -536,6 +538,51 @@ describe("ascent cursor provenance", () => {
     expect(ui.cursor.visible).toBe(true);
     expect(mouseCursor(ui)).toBe(true);
     expect(keyboardCursor(ui)).toBe(false);
+  });
+});
+
+describe("ascent's number pad as a direction pad", () => {
+  const pad = (digit: number) => MOD_NUM_KEYPAD | ("0".charCodeAt(0) + digit);
+
+  it("moves on a diagonal and types nothing", () => {
+    const { state, ui, ds } = scratch();
+    ui.moveWithNumpad = true;
+    const idle = { cell: ui.typingCell, number: ui.typingNumber };
+    // From the top-left corner: down-right, up-right, down-left, up-left.
+    // Each lands on an empty square but the last, where a digit would begin
+    // a number.
+    const stops = [
+      [3, 1, 1],
+      [9, 2, 0],
+      [1, 1, 1],
+      [7, 0, 0],
+    ];
+    for (const [digit, x, y] of stops) {
+      const answer = ascentGame.interpretMove(
+        state,
+        ui,
+        ds,
+        { x: 0, y: 0 },
+        pad(digit),
+      );
+      expect(answer, `the pad's ${digit}`).toBe(UI_UPDATE);
+      expect({ x: ui.cursor.x, y: ui.cursor.y }, `the pad's ${digit}`).toEqual({
+        x,
+        y,
+      });
+      expect({ cell: ui.typingCell, number: ui.typingNumber }).toEqual(idle);
+    }
+  });
+
+  it("types the digit when the pad enters numbers", () => {
+    const { state, ui, ds } = scratch();
+    ascentGame.interpretMove(state, ui, ds, { x: 0, y: 0 }, CURSOR_RIGHT);
+    ascentGame.interpretMove(state, ui, ds, { x: 0, y: 0 }, pad(9));
+    expect({ x: ui.cursor.x, y: ui.cursor.y }).toEqual({ x: 1, y: 0 });
+    expect({ cell: ui.typingCell, number: ui.typingNumber }).toEqual({
+      cell: 1,
+      number: 9,
+    });
   });
 });
 

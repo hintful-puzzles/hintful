@@ -113,7 +113,12 @@ function interpretMove(
   const ty = fromCoord(p.y, ts, border(ts));
 
   if (button === LEFT_BUTTON || button === LEFT_DRAG) {
-    if (button === LEFT_BUTTON) ui.sel = null;
+    if (button === LEFT_BUTTON) {
+      // A press starts a selection of its own, so it ends the keyboard's
+      // drag with the one it replaces.
+      ui.sel = null;
+      ui.keydragging = false;
+    }
     if (tx >= 0 && tx < w && ty >= 0 && ty < h) selectCell(ui, state, tx, ty);
     ui.cursor.visible = false;
     return UI_UPDATE;

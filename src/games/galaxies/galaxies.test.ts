@@ -40,6 +40,7 @@ import {
   blankGame,
   checkComplete,
   cloneState,
+  F_DOT,
   F_EDGE_SET,
   F_TILE_ASSOC,
   type GalaxiesState,
@@ -972,6 +973,30 @@ describe("Galaxies association gestures (left button, and cell→dot)", () => {
       ops: [{ kind: "assoc", x: 1, y: 3, ax: 3, ay: 3 }],
       solving: false,
     });
+  });
+
+  it("the keyboard picks up a dot wherever it sits: in a square, on an edge, on a corner", () => {
+    const s = galaxiesGame.newState(
+      galaxiesGame.decodeParams("7x7dn"),
+      "kebizmfzgbfvfu",
+    );
+    const ds = preferredDrawState(galaxiesGame, s);
+    const kinds = new Set<string>();
+    for (let y = 1; y < s.sy - 1; y++)
+      for (let x = 1; x < s.sx - 1; x++) {
+        if (!(s.flags[idx(s, x, y)] & F_DOT)) continue;
+        kinds.add(`${x & 1}${y & 1}`);
+        for (const select of [CURSOR_SELECT, PuzzleButton.CURSOR_SELECT2]) {
+          const ui = galaxiesGame.newUi(s);
+          Object.assign(ui.cursor, { x, y, visible: true });
+          const answer = galaxiesGame.interpretMove(s, ui, ds, { x: 0, y: 0 }, select);
+          expect(answer, `the dot at (${x},${y})`).toBe(UI_UPDATE);
+          expect(ui.dragging, `the dot at (${x},${y})`).toBe(true);
+          expect([ui.dotx, ui.doty]).toEqual([x, y]);
+        }
+      }
+    // A square is odd both ways, a corner even both ways, an edge one of each.
+    expect([...kinds].sort()).toEqual(["00", "01", "10", "11"]);
   });
 });
 

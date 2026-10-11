@@ -14,6 +14,7 @@ import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
+  cursorDelta,
   gridCursorMove,
   isCursorMove,
   LEFT_BUTTON,
@@ -141,27 +142,21 @@ function interpretMove(
       )
         return null;
 
-      const key = rawButton | pad;
+      // The key says which way the line slides. Where the cursor would go
+      // cannot: in the last column it has nowhere to go right, and round the
+      // edge is to its left.
+      const step = cursorDelta(rawButton);
+      if (!step) return null;
       const at = { x: ui.cursor.x, y: ui.cursor.y };
-      const clamped = gridCursorMove(key, at.x, at.y, state.w, state.h) ?? at;
-      const wrapped = gridCursorMove(key, at.x, at.y, state.w, state.h, true) ?? at;
-
-      let move: SixteenMove;
-      if (clamped.x !== wrapped.x) {
-        const delta = clamped.x > at.x ? 1 : -1;
-        move = { type: "slide", axis: "row", index: at.y, delta };
-      } else if (clamped.y !== wrapped.y) {
-        const delta = clamped.y > at.y ? 1 : -1;
-        move = { type: "slide", axis: "column", index: at.x, delta };
-      } else if (clamped.x === at.x) {
-        move = { type: "slide", axis: "column", index: at.x, delta: clamped.y - at.y };
-      } else {
-        move = { type: "slide", axis: "row", index: at.y, delta: clamped.x - at.x };
-      }
+      const move: SixteenMove =
+        step.dx !== 0
+          ? { type: "slide", axis: "row", index: at.y, delta: step.dx }
+          : { type: "slide", axis: "column", index: at.x, delta: step.dy };
 
       if (control || (!shift && ui.curMode === CursorMode.LockTile)) {
-        ui.cursor.x = wrapped.x;
-        ui.cursor.y = wrapped.y;
+        const wrapped = gridCursorMove(rawButton, at.x, at.y, state.w, state.h, true);
+        ui.cursor.x = wrapped?.x ?? at.x;
+        ui.cursor.y = wrapped?.y ?? at.y;
       }
 
       return move;

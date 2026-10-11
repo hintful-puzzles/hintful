@@ -318,6 +318,22 @@ describe("Escape delivery", () => {
     expect(keys).toEqual([]);
   });
 
+  it("marks a number-pad digit, and sends the pad's other keys as the keys they name", async () => {
+    const { view, keys } = makeKeyView();
+    const NUMPAD = 3;
+    for (const key of ["7", "ArrowUp", "Enter"])
+      await view.handleKeyEvent(
+        new KeyboardEvent("keydown", { key, location: NUMPAD }),
+      );
+    await view.handleKeyEvent(new KeyboardEvent("keydown", { key: "7" }));
+    expect(keys).toEqual([
+      PuzzleButton.MOD_NUM_KEYPAD | 0x37,
+      PuzzleButton.CURSOR_UP,
+      PuzzleButton.CURSOR_SELECT,
+      0x37,
+    ]);
+  });
+
   it("keeps claiming Escape at the document level", () => {
     // The bubbled path only forwards keys `wantsKeyEvent` claims, so the fix
     // above reaches a puzzle that is not focused only if this stays true.

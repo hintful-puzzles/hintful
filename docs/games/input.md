@@ -81,6 +81,14 @@ have to remember they exist; you do have to know what they will tell you.
   was is a step of Undo and none that changed it is dropped, and no input
   left unclaimed changed the frame
   ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE").
+- [`modifier-arrow.test.ts`](../../src/engine/modifier-arrow.test.ts) — Shift
+  or Ctrl with an arrow and with its opposite, pressed from every position the
+  arrows reach, never change the board alike. It cannot read which way a game
+  acted, since what a modified arrow does is each game's own, so it holds the
+  one thing all of them owe; **take the direction from the key
+  (`cursorDelta`), never from where the clamped cursor ended up**, which is
+  right everywhere but the far edge. It sees a board, so a game whose cursor
+  travels with the move (Sixteen under Ctrl) tests that itself.
 - [`hint-gesture.test.ts`](../../src/engine/hint-gesture.test.ts) — every hint
   step is played through your `interpretMove` by the gesture your
   `hintGesture` gives for it, so a hint can only ask for what the pointer does
@@ -128,6 +136,12 @@ when Num Lock is on**: with it off, numpad 7 is `event.key === "Home"`, which
 longer than one character. And a laptop keyboard may have no numpad at all. So
 the keypad is a *convenience route*, never the only one.
 
+**The bit rides a digit and nothing else.** With Num Lock off the pad's 8 is
+`ArrowUp` from location 3, and its Enter is `Enter`: both arrive as the plain
+`CURSOR_UP` and `CURSOR_SELECT`. When they carried the bit, every game that
+compares `button === CURSOR_UP` without stripping it (Ascent under "Move
+cursor", Bricks, Cube) was deaf to the pad's own arrows.
+
 It bit hardest where it was the only one: Inertia's four diagonal moves are
 keypad-or-mouse upstream, so a keyboard-only player literally could not make
 them. Accept the bare digits as well as the modified ones (`stripModifiers`,
@@ -174,8 +188,11 @@ sixteen in Bridges, one more typed digit in Ascent — so each is written beside
 the call, in the game's own words. A command bound to a digit is the same call
 (`digit === 1` places Undead's ghost). The one thing to resolve *before* asking
 is a numpad digit that means something else — Ascent, Bricks, Cube and Twiddle
-use the keypad as a direction pad, and each consumes `MOD_NUM_KEYPAD | '7'`
-first. Guarded by the code-keyed scan in
+use the keypad as a direction pad. **Take the direction from
+`numpadDirection(button)`, all eight at once**: Ascent turned 8, 2, 4 and 6
+into arrows itself and left the diagonals as digits, so each moved the cursor
+and then typed. Whatever the helper answers for is no digit; `digitOf` is
+asked only when it answers `null`. Guarded by the code-keyed scan in
 [`decimal.test.ts`](../../src/engine/decimal.test.ts), which reads any operand
 anywhere in a game source, not only against the button: a `48`, a `0x39`, a
 `- 48`, a numeric `case` or a `c >= "0"` all fail it, whatever the value is

@@ -53,3 +53,9 @@ Galaxies' and Filling's are each a branch of the game's own.
 
 A player's keys behave differently in five games, each as its help page
 already says.
+
+Found while doing it, 2026-10-11: with Num Lock off the number pad's arrows
+arrived marked as number-pad keys, and Ascent under "Move cursor", Bricks and
+Cube compare an arrow without looking past the mark, so none of them heard
+those arrows. The frontend now marks a digit alone. Cube takes its
+directions from the same helper as the other two.

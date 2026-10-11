@@ -14,12 +14,9 @@ import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import {
-  CURSOR_DOWN,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
   CURSOR_SELECT,
   CURSOR_SELECT2,
-  CURSOR_UP,
+  cursorDelta,
   digitOf,
   type GridCursor,
   hideCursor,
@@ -32,9 +29,11 @@ import {
   LEFT_RELEASE,
   MOD_NUM_KEYPAD,
   newCursor,
+  numpadDirection,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
+  shearedHexStep,
 } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
 import type { AscentDrawState } from "./render.ts";
@@ -675,10 +674,6 @@ function mouseClick(
 }
 
 /** Translate a pointer/key event to a move (upstream `interpret_move`). */
-// The branching is the input model: six button codes arbitrated against a drag
-// arm, a keyboard cursor and a pencil mode, each arm ending in a different
-// move. Splitting it moves the arbitration into names without removing a branch.
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: see above
 export function interpretAscentMove(
   state: AscentState,
   ui: AscentUi,
@@ -749,50 +744,20 @@ export function interpretAscentMove(
     finishTyping = true;
   }
 
-  /* Numpad → cursor movement, or strip the numpad modifier. */
-  if (ui.moveWithNumpad) {
-    if (button === (MOD_NUM_KEYPAD | 0x38)) button = CURSOR_UP; // '8'
-    if (button === (MOD_NUM_KEYPAD | 0x32)) button = CURSOR_DOWN; // '2'
-    if (button === (MOD_NUM_KEYPAD | 0x34)) button = CURSOR_LEFT; // '4'
-    if (button === (MOD_NUM_KEYPAD | 0x36)) button = CURSOR_RIGHT; // '6'
-  } else {
-    button &= ~MOD_NUM_KEYPAD;
-  }
+  /* The number pad moves the cursor, or its digits are the top row's. A digit
+   * that is a direction is no digit below: the pad's 5 and 0 still type. */
+  const padStep = ui.moveWithNumpad ? numpadDirection(button) : null;
+  button &= ~MOD_NUM_KEYPAD;
+  const squareStep = padStep ?? cursorDelta(button);
+  const step =
+    squareStep && isHexagonal(state.mode)
+      ? shearedHexStep(squareStep, ui.cursor.y, h)
+      : squareStep;
 
-  if (isHexagonal(state.mode)) {
-    if (button === CURSOR_UP && ui.cursor.y > 0 && (ui.cursor.y & 1) === 0)
-      button = MOD_NUM_KEYPAD | 0x39; // '9'
-    else if (button === CURSOR_DOWN && ui.cursor.y < h - 1 && ui.cursor.y & 1)
-      button = MOD_NUM_KEYPAD | 0x31; // '1'
-    else if (button === (MOD_NUM_KEYPAD | 0x37))
-      button = CURSOR_UP; // '7'
-    else if (button === (MOD_NUM_KEYPAD | 0x33)) button = CURSOR_DOWN; // '3'
-  }
-
-  let dirx = 0;
-  let diry = 0;
-  if (button === CURSOR_UP) diry = -1;
-  else if (button === CURSOR_DOWN) diry = 1;
-  else if (button === CURSOR_LEFT) dirx = -1;
-  else if (button === CURSOR_RIGHT) dirx = 1;
-  else if (button === (MOD_NUM_KEYPAD | 0x37)) {
-    dirx = -1;
-    diry = -1;
-  } else if (button === (MOD_NUM_KEYPAD | 0x31)) {
-    dirx = -1;
-    diry = 1;
-  } else if (button === (MOD_NUM_KEYPAD | 0x39)) {
-    dirx = 1;
-    diry = -1;
-  } else if (button === (MOD_NUM_KEYPAD | 0x33)) {
-    dirx = 1;
-    diry = 1;
-  }
-
-  if (dirx || diry) {
+  if (step) {
     revealCursor(ui, true);
-    ui.cursor.x += dirx;
-    ui.cursor.y += diry;
+    ui.cursor.x += step.dx;
+    ui.cursor.y += step.dy;
     ui.cursor.x = Math.max(0, Math.min(ui.cursor.x, w - 1));
     ui.cursor.y = Math.max(0, Math.min(ui.cursor.y, h - 1));
 
@@ -837,7 +802,7 @@ export function interpretAscentMove(
   if (isCursorSelect(button)) finishTyping = true;
 
   /* Typing a number */
-  const digit = digitOf(button);
+  const digit = padStep ? null : digitOf(button);
   if (digit !== null && ui.cursor.visible) {
     const i = ui.cursor.y * w + ui.cursor.x;
     if (state.immutable[i]) return null;

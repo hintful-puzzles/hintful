@@ -365,6 +365,17 @@ describe("cube input", () => {
         dir: "U",
       },
     );
+    const pad = (digit: string) =>
+      interpretMove(
+        state,
+        ui,
+        ds,
+        { x: 0, y: 0 },
+        MOD_NUM_KEYPAD | digit.charCodeAt(0),
+      );
+    expect([pad("4"), pad("2")]).toEqual([{ dir: "L" }, { dir: "D" }]);
+    // A square grid has no diagonal roll, and the pad's middle names none.
+    expect(["7", "9", "1", "3", "5"].map(pad)).toEqual([null, null, null, null, null]);
   });
 
   it("rolls toward a left-click's bearing from the square center", () => {

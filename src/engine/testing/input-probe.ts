@@ -26,6 +26,8 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MOD_CTRL,
+  MOD_SHFT,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_DRAG,
@@ -1181,11 +1183,101 @@ export function inputAnswers(game: AnyGame, id: string): InputAnswers {
   };
 }
 
+/** What a game's answers to Shift and Ctrl with an arrow came to. */
+export interface ModifierArrows {
+  /** How many cursor positions the plain arrows reached: the sweep's reach,
+   * which stops at {@link CURSOR_CAP}. */
+  readonly positions: number;
+  /** How many pairs of a modified arrow and its opposite were pressed. */
+  readonly pairs: number;
+  /** How many of those pairs had a press that changed the board. A game with
+   * any is one that takes a modified arrow, whatever it does with it. */
+  readonly acted: number;
+  /** Each pair whose two presses changed the board and left the same board
+   * and the same `Ui`, as the script that reaches it from the deal. */
+  readonly alike: string[];
+}
+
+/**
+ * **Does the key decide which way a modified arrow acts?**
+ *
+ * Shift or Ctrl with an arrow is a gesture in the games that take it: it
+ * slides a line, paints as the cursor passes, drags a fill. What each does is
+ * its own, so no direction is read off a board here. What every one of them
+ * owes is that an arrow and its opposite, pressed from one place, do not do
+ * the same thing. A game that works the direction out from where the cursor
+ * ended up fails that where the cursor has nowhere to go: at the board's far
+ * edge, where Sixteen slid a row left for Right and for Left alike.
+ *
+ * So each pair is pressed from every position the plain arrows walk the
+ * cursor to, the edges and corners among them. Only a pair that *changed the
+ * board* is held to it: the first modified arrow shows a hidden cursor
+ * whichever arrow it is, and that is a rule of its own (`engine-input`, "One
+ * arrow press reveals the cursor and moves it").
+ */
+export function modifierArrows(game: AnyGame, id: string): ModifierArrows {
+  const b = probeBoard(game, id);
+  const { m } = b;
+  const arrows = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT];
+  const dealt = b.board();
+  // A position is a `Ui` over the dealt board, put back between presses.
+  const at = (ui: unknown) => {
+    if (b.board() !== dealt) m.restartGame();
+    restoreUi(b.live().ui, copyUi(ui));
+  };
+  const positions = [{ ui: copyUi(b.live().ui), path: [] as number[] }];
+  const met = new Set([digest(b.live().ui)]);
+  for (let i = 0; i < positions.length; i++)
+    for (const a of arrows) {
+      at(positions[i].ui);
+      m.processInput(0, 0, a);
+      // An arrow that moves the board (a sliding puzzle) leads to no position.
+      if (b.board() !== dealt) continue;
+      const d = digest(b.live().ui);
+      if (met.has(d) || positions.length >= CURSOR_CAP) continue;
+      met.add(d);
+      positions.push({ ui: copyUi(b.live().ui), path: [...positions[i].path, a] });
+    }
+
+  const alike: string[] = [];
+  let pairs = 0;
+  let acted = 0;
+  const press = (i: number, button: number) => {
+    at(positions[i].ui);
+    m.processInput(0, 0, button);
+    return { board: b.board(), where: b.where() };
+  };
+  const modifiers = [MOD_SHFT, MOD_CTRL, MOD_SHFT | MOD_CTRL];
+  for (let i = 0; i < positions.length; i++)
+    for (const mod of modifiers)
+      for (const [k, back] of [
+        [0, 1],
+        [2, 3],
+      ]) {
+        const one = press(i, mod | arrows[k]);
+        const other = press(i, mod | arrows[back]);
+        pairs++;
+        if (one.board === dealt && other.board === dealt) continue;
+        acted++;
+        if (one.where !== other.where) continue;
+        const keys = [...positions[i].path, mod | arrows[k]].map(keyName);
+        alike.push(
+          `${keys.join(", ")}, and the same for ${keyName(mod | arrows[back])}`,
+        );
+      }
+  return { positions: positions.length, pairs, acted, alike };
+}
+
 const WALKS = 4;
 const WALK_STEPS = 100;
 
 /** A key as a failure names it. */
 function keyName(button: number): string {
+  const held = [
+    button & MOD_CTRL ? "Ctrl+" : "",
+    button & MOD_SHFT ? "Shift+" : "",
+  ].join("");
+  if (held !== "") return held + keyName(button & ~(MOD_CTRL | MOD_SHFT));
   const named: Record<number, string> = {
     [CURSOR_UP]: "Up",
     [CURSOR_DOWN]: "Down",

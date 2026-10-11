@@ -1,6 +1,7 @@
 import { css, html } from "lit";
 import { customElement, eventOptions, property } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
+import { digitOf } from "../../engine/pointer.ts";
 import { type Point, PuzzleButton } from "../../engine/types.ts";
 import { audioClick } from "../../utils/audio.ts";
 import {
@@ -239,9 +240,14 @@ export class PuzzleViewInteractive extends PuzzleView {
     if (hasCtrlKey(event)) {
       mods |= PuzzleButton.MOD_CTRL;
     }
+    // The bit says a digit came from the number pad, which some games read as
+    // a direction. With Num Lock off the pad sends arrows, and its Enter is
+    // Enter: those are the keys they name, and a game comparing a button
+    // against `CURSOR_UP` must find one.
     if (
       event instanceof KeyboardEvent &&
-      event.location === 3 /* DOM_KEY_LOCATION_NUMPAD */
+      event.location === 3 /* DOM_KEY_LOCATION_NUMPAD */ &&
+      digitOf(button) !== null
     ) {
       mods |= PuzzleButton.MOD_NUM_KEYPAD;
     }

@@ -19,7 +19,12 @@ import {
 } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
+import {
+  CURSOR_RIGHT,
+  CURSOR_SELECT,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -168,6 +173,26 @@ describe("filling moves + selection", () => {
     expect(ui.sel && [...ui.sel].sort()).toEqual([1, 2]);
     const move = fillingGame.interpretMove(st, ui, ds, { x: 0, y: 0 }, 0x32 /* '2' */);
     expect(move).toEqual({ type: "set", cells: [1, 2], value: 2 });
+  });
+
+  it("a press ends a keyboard drag", () => {
+    const st = newState(size(3, 1), "aaa");
+    const ui = fillingGame.newUi(st);
+    const ds = preferredDrawState(fillingGame, st);
+    const ts = ds.tileSize;
+    const key = (button: number) =>
+      fillingGame.interpretMove(st, ui, ds, { x: 0, y: 0 }, button);
+    // Show the cursor, then begin a drag on the first square.
+    key(CURSOR_SELECT);
+    key(CURSOR_SELECT);
+    expect(ui.sel && [...ui.sel]).toEqual([0]);
+    // A click on the last square selects it alone. The arrow after it moves
+    // the cursor and selects nothing: nothing on screen says a drag is on.
+    const last = { x: Math.floor(ts / 2) + 2 * ts + Math.floor(ts / 2), y: ts };
+    fillingGame.interpretMove(st, ui, ds, last, LEFT_BUTTON);
+    key(CURSOR_RIGHT);
+    expect(ui.cursor).toMatchObject({ x: 1, y: 0, visible: true });
+    expect(ui.sel && [...ui.sel]).toEqual([2]);
   });
 
   it("rejects a digit larger than the grid permits", () => {

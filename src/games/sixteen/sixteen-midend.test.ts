@@ -4,9 +4,12 @@ import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_SELECT,
+  CURSOR_UP,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MOD_CTRL,
+  MOD_SHFT,
 } from "../../engine/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { sixteenGame } from "./index.ts";
@@ -89,9 +92,58 @@ describe("Sixteen midend integration — keyboard input", () => {
     const after = h.state()?.currentMove ?? 0;
     expect(after).toBeGreaterThan(before);
   });
+
+  // Top row 4 1 3, first column 4 2 5. The last column and row are where the
+  // cursor has nowhere further to go, so only the key says which way.
+  const at = (keys: number[]) => {
+    const h = harness();
+    h.m.newGameFromId("3x3:4,1,3,2,8,6,5,7,9");
+    for (const k of keys) h.m.processInput(0, 0, k);
+    return (h.m.formatAsText() ?? "")
+      .trim()
+      .split("\n")
+      .map((line) => line.trim().split(/\s+/).map(Number));
+  };
+
+  describe.each([
+    ["Shift", MOD_SHFT],
+    ["Ctrl", MOD_CTRL],
+  ])("%s with an arrow from the last column or row", (_name, mod) => {
+    it("Right from the last column slides the row right", () => {
+      expect(at([CURSOR_RIGHT, CURSOR_RIGHT, mod | CURSOR_RIGHT])[0]).toEqual([
+        3, 4, 1,
+      ]);
+    });
+
+    it("Left from the first column slides the row left", () => {
+      expect(at([CURSOR_SELECT, mod | CURSOR_LEFT])[0]).toEqual([1, 3, 4]);
+    });
+
+    it("Down from the last row slides the column down", () => {
+      const column = at([CURSOR_DOWN, CURSOR_DOWN, mod | CURSOR_DOWN]).map((r) => r[0]);
+      expect(column).toEqual([5, 4, 2]);
+    });
+
+    it("Up from the first row slides the column up", () => {
+      const column = at([CURSOR_SELECT, mod | CURSOR_UP]).map((r) => r[0]);
+      expect(column).toEqual([2, 5, 4]);
+    });
+  });
+
+  it("Ctrl carries the cursor round the edge with its tile", () => {
+    // The cursor starts on the 3, in the last column. Were it left there, the
+    // Down would carry the 1 into the second row and not the 3.
+    const rows = at([
+      CURSOR_RIGHT,
+      CURSOR_RIGHT,
+      MOD_CTRL | CURSOR_RIGHT,
+      MOD_CTRL | CURSOR_DOWN,
+    ]);
+    expect(rows[1]).toEqual([3, 8, 6]);
+  });
 });
 
-// --- undo -------------------------------------------------------------
+// --- undo-------------------------------------------------------------
 
 describe("Sixteen midend integration — undo", () => {
   it("undo reverses a move", () => {

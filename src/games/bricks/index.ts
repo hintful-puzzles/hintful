@@ -34,10 +34,7 @@ import {
 import type { Sentence } from "../../engine/hint-words.ts";
 import { UNSHADED_NAME } from "../../engine/piece.ts";
 import {
-  CURSOR_DOWN,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_UP,
+  cursorDelta,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
@@ -46,7 +43,9 @@ import {
   MOD_NUM_KEYPAD,
   MOD_SHFT,
   newCursor,
+  numpadDirection,
   RIGHT_BUTTON,
+  shearedHexStep,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
@@ -109,9 +108,6 @@ import {
   validateParams,
 } from "./state.ts";
 
-// Numpad-flagged keys (the web frontend sets MOD_NUM_KEYPAD for the numpad).
-const NK = (ch: number): number => MOD_NUM_KEYPAD | ch;
-
 function newUi(state: BricksState): BricksUi {
   // Cursor starts on the first non-bound cell (upstream new_ui).
   const s = state.w * state.h;
@@ -157,24 +153,8 @@ function hexStep(
   h: number,
   key: number,
 ): { dx: number; dy: number } | null {
-  let button = key;
-  if (button === NK(56)) button = CURSOR_UP;
-  else if (button === NK(50)) button = CURSOR_DOWN;
-  else if (button === NK(52)) button = CURSOR_LEFT;
-  else if (button === NK(54)) button = CURSOR_RIGHT;
-
-  if (button === CURSOR_UP && cursorY > 0 && (cursorY & 1) === 0) button = NK(57);
-  else if (button === CURSOR_DOWN && cursorY < h - 1 && cursorY & 1) button = NK(49);
-  else if (button === NK(55)) button = CURSOR_UP;
-  else if (button === NK(51)) button = CURSOR_DOWN;
-
-  if (button === CURSOR_UP) return { dx: 0, dy: -1 };
-  if (button === CURSOR_DOWN) return { dx: 0, dy: 1 };
-  if (button === CURSOR_LEFT) return { dx: -1, dy: 0 };
-  if (button === CURSOR_RIGHT) return { dx: 1, dy: 0 };
-  if (button === NK(49)) return { dx: -1, dy: 1 };
-  if (button === NK(57)) return { dx: 1, dy: -1 };
-  return null;
+  const step = numpadDirection(key) ?? cursorDelta(key);
+  return step && shearedHexStep(step, cursorY, h);
 }
 
 /** Move the cursor by `step`, clamped into the hexagon, and show it; `true`
@@ -300,8 +280,11 @@ function interpretMove(
       const i2 = ui.cursor.y * w + ui.cursor.x;
       const bits = colorBits(to);
       const cells: { index: number; to: CellColor }[] = [];
-      for (const index of i1 === i2 ? [i1] : [i1, i2])
-        if ((grid[index] & COL_MASK) !== bits) cells.push({ index, to });
+      // A numbered cell holds no color and takes none, so it is not named.
+      for (const index of i1 === i2 ? [i1] : [i1, i2]) {
+        const old = grid[index] & COL_MASK;
+        if (old && old !== bits) cells.push({ index, to });
+      }
       if (cells.length > 0) return { kind: "paint", cells };
     }
     return changed ? UI_UPDATE : null;

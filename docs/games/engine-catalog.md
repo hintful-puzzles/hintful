@@ -895,6 +895,14 @@ the **meaning of `0`** are the game's own and stay beside the call: Seismic
 caps at the region size and clears on `0`, Guess reads `0` as the tenth color,
 Bridges as sixteen, Ascent as one more typed digit.
 
+`numpadDirection(button)` is the step a number-pad digit names where the pad
+is a direction pad, all eight together, and `null` for its 5 and 0. Take it
+*before* `digitOf`, which looks through the keypad bit: a game that resolved
+four of the eight itself had its diagonals move the cursor and type as well.
+`shearedHexStep(step, y, h)` turns a square-grid step into the one a hexagonal
+board held as a sheared grid makes of it (Up and Down zigzag); Ascent's
+hexagons and Bricks share it.
+
 **The keyboard cursor lives here too, and every game holds one.** `GridCursor`
 (`x`, `y`, `visible`) under `ui.cursor`, built by `newCursor(x?, y?, visible?)`
 and driven by `moveCursor(cursor, button, w, h, wrap?)` — reveal *and* move in

@@ -15,7 +15,18 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_UP,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  MOD_CTRL,
+  MOD_NUM_KEYPAD,
+  MOD_SHFT,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,
@@ -278,6 +289,86 @@ describe("bricks input", () => {
     // A '1' on an already-shaded cell is a no-op.
     const shaded = bricksGame.executeMove(state, move as BricksMove);
     expect(press(shaded, ui, 49, 0, 0)).toBeNull();
+  });
+
+  const playable = (state: BricksState, x: number, y: number) =>
+    x >= 0 &&
+    x < state.w &&
+    y >= 0 &&
+    y < state.h &&
+    (state.grid[y * state.w + x] & F_BOUND) === 0;
+
+  it("the number pad steps to each of a cell's six neighbors", () => {
+    const state = newState(FIX_PARAMS, FIX.desc);
+    const pad = (digit: number) => MOD_NUM_KEYPAD | ("0".charCodeAt(0) + digit);
+    // Up and down have two neighbors each to choose from, and take the one
+    // that keeps the zigzag in its column: which one turns on the row.
+    const steps = (odd: boolean): [number, number, number][] => [
+      [8, odd ? 0 : 1, -1],
+      [2, odd ? -1 : 0, 1],
+      [4, -1, 0],
+      [6, 1, 0],
+      [7, 0, -1],
+      [9, 1, -1],
+      [1, -1, 1],
+      [3, 0, 1],
+    ];
+    const rows = new Set<number>();
+    for (let y = 1; y < state.h - 1; y++)
+      for (let x = 0; x < state.w; x++) {
+        if (rows.has(y & 1)) continue;
+        const moves = steps((y & 1) === 1);
+        if (!moves.every(([, dx, dy]) => playable(state, x + dx, y + dy))) continue;
+        rows.add(y & 1);
+        for (const [digit, dx, dy] of moves) {
+          const ui = bricksGame.newUi(state);
+          Object.assign(ui.cursor, { x, y, visible: true });
+          expect(press(state, ui, pad(digit), 0, 0), `the pad's ${digit}`).toBe(
+            UI_UPDATE,
+          );
+          expect({ x: ui.cursor.x, y: ui.cursor.y }, `the pad's ${digit}`).toEqual({
+            x: x + dx,
+            y: y + dy,
+          });
+        }
+      }
+    expect([...rows].sort()).toEqual([0, 1]);
+  });
+
+  it("Ctrl or Shift with a move never names a numbered cell", () => {
+    const state = newState(FIX_PARAMS, FIX.desc);
+    const arrows = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT];
+    let declined = 0;
+    let painted = 0;
+    for (let i = 0; i < state.w * state.h; i++) {
+      if (state.grid[i] & (F_BOUND | COL_MASK)) continue;
+      for (const mod of [MOD_CTRL, MOD_SHFT])
+        for (const arrow of arrows) {
+          const ui = bricksGame.newUi(state);
+          const from = { x: i % state.w, y: (i / state.w) | 0 };
+          Object.assign(ui.cursor, from, { visible: true });
+          const answer = press(state, ui, mod | arrow, 0, 0);
+          const stayed = ui.cursor.x === from.x && ui.cursor.y === from.y;
+          if (answer === null) {
+            // Nothing to paint and nowhere to go: the key is not the game's.
+            expect(stayed).toBe(true);
+            declined++;
+            continue;
+          }
+          if (answer === UI_UPDATE) continue;
+          if (answer.kind !== "paint") throw new Error("not a paint move");
+          expect(answer.cells.map((c) => state.grid[c.index] & COL_MASK)).not.toContain(
+            0,
+          );
+          painted++;
+        }
+    }
+    // Both arms were reached: a numbered cell at the board's edge, and one
+    // with an empty cell beside it.
+    expect({ declined: declined > 0, painted: painted > 0 }).toEqual({
+      declined: true,
+      painted: true,
+    });
   });
 });
 

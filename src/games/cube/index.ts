@@ -15,13 +15,11 @@ import type { Game, UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
-  CURSOR_DOWN,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_UP,
+  cursorDelta,
   LEFT_BUTTON,
   MOD_MASK,
   MOD_NUM_KEYPAD,
+  numpadDirection,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
@@ -204,6 +202,14 @@ function newUi(_state: CubeState): CubeUi {
   return {};
 }
 
+/** The roll a key's step asks for, by `dy + 1` then `dx + 1`. No key steps
+ * nowhere, so the middle is never read. */
+const STEP_DIRECTIONS: readonly (readonly Direction[])[] = [
+  [Direction.UpLeft, Direction.Up, Direction.UpRight],
+  [Direction.Left, Direction.Left, Direction.Right],
+  [Direction.DownLeft, Direction.Down, Direction.DownRight],
+];
+
 function interpretMove(
   state: CubeState,
   _ui: CubeUi,
@@ -214,18 +220,8 @@ function interpretMove(
   const button = rawButton & (~MOD_MASK | MOD_NUM_KEYPAD);
 
   let direction: Direction;
-  if (button === CURSOR_UP || button === (MOD_NUM_KEYPAD | 0x38))
-    direction = Direction.Up;
-  else if (button === CURSOR_DOWN || button === (MOD_NUM_KEYPAD | 0x32))
-    direction = Direction.Down;
-  else if (button === CURSOR_LEFT || button === (MOD_NUM_KEYPAD | 0x34))
-    direction = Direction.Left;
-  else if (button === CURSOR_RIGHT || button === (MOD_NUM_KEYPAD | 0x36))
-    direction = Direction.Right;
-  else if (button === (MOD_NUM_KEYPAD | 0x37)) direction = Direction.UpLeft;
-  else if (button === (MOD_NUM_KEYPAD | 0x31)) direction = Direction.DownLeft;
-  else if (button === (MOD_NUM_KEYPAD | 0x39)) direction = Direction.UpRight;
-  else if (button === (MOD_NUM_KEYPAD | 0x33)) direction = Direction.DownRight;
+  const step = numpadDirection(button) ?? cursorDelta(button);
+  if (step) direction = STEP_DIRECTIONS[step.dy + 1][step.dx + 1];
   else if (button === LEFT_BUTTON) {
     const dir = directionFromClick(state, ds, p);
     if (dir === null) return null;

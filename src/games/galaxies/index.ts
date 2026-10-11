@@ -754,13 +754,17 @@ function interpretMove(
     return changed ? UI_UPDATE : null;
   }
 
-  // Enter or Space off an edge, or with a drag open, is the keyboard's drag:
-  // it picks up a dot or an arrow, starts the reverse drag from a square, or
-  // finishes the drag it started. On an edge it is the click's verb.
+  // Enter or Space on a dot, off an edge, or with a drag open, is the
+  // keyboard's drag: it picks up a dot or an arrow, starts the reverse drag
+  // from a square, or finishes the drag it started. On an edge it is the
+  // click's verb, but a dot is asked for first: an edge that holds one can
+  // take no line, so the drag is all the key could mean there.
   if (
     (button === CURSOR_SELECT || button === CURSOR_SELECT2) &&
     ui.cursor.visible &&
-    (ui.dragging || edgeGeometry.cursorTarget(s, ui) === null)
+    (ui.dragging ||
+      (s.flags[idx(s, ui.cursor.x, ui.cursor.y)] & F_DOT) !== 0 ||
+      edgeGeometry.cursorTarget(s, ui) === null)
   ) {
     const cx = ui.cursor.x;
     const cy = ui.cursor.y;

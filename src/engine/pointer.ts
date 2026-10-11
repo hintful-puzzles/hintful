@@ -108,7 +108,8 @@ export function isCancelKey(button: number): boolean {
  * convenience route to the same digit, never a different key
  * (docs/games/input.md § "The numeric keypad never arrives"). A game that gives
  * the **numpad's** digits another meaning — Ascent, Bricks, Cube and Twiddle use
- * them as a direction pad — resolves those before asking, as each already does.
+ * them as a direction pad — resolves those before asking
+ * ({@link numpadDirection}).
  */
 export function digitOf(button: number): number | null {
   const base = stripModifiers(button);
@@ -166,6 +167,48 @@ export function cursorDelta(button: number): { dx: number; dy: number } | null {
     default:
       return null;
   }
+}
+
+/**
+ * The step a number-pad digit stands for where a game uses the pad as a
+ * direction pad: 8, 2, 4 and 6 as the arrows, 7, 9, 1 and 3 the diagonals
+ * between them. `null` for the pad's 5 and 0, and for any key that is not a
+ * number-pad digit, the top row's digits among them.
+ *
+ * A game resolves this before it asks {@link digitOf}, which looks through
+ * the keypad bit: all eight directions leave here together, so none is left
+ * to be read as a digit as well.
+ */
+export function numpadDirection(button: number): { dx: number; dy: number } | null {
+  if ((button & MOD_NUM_KEYPAD) === 0) return null;
+  const digit = digitOf(button);
+  if (digit === null || digit === 0 || digit === 5) return null;
+  // The pad's rows read 7 8 9, 4 5 6, 1 2 3 from the top.
+  return { dx: ((digit - 1) % 3) - 1, dy: 1 - Math.floor((digit - 1) / 3) };
+}
+
+/**
+ * A cursor step on a hexagonal board held as a sheared grid, each row drawn
+ * half a cell right of the row above it. `step` is the step the key names on
+ * a square grid ({@link cursorDelta}, {@link numpadDirection}) and `y` the
+ * cursor's row of `h`.
+ *
+ * Straight up and down do not exist on such a board, so Up and Down zigzag:
+ * each takes the diagonal that keeps the cursor in the column it is drawn in.
+ * The number pad's 7 and 3 are the two diagonals the shear turns into a plain
+ * row step, and its 9 and 1 are the other two as they stand.
+ */
+export function shearedHexStep(
+  step: { dx: number; dy: number },
+  y: number,
+  h: number,
+): { dx: number; dy: number } {
+  if (step.dx === 0 && step.dy === -1 && y > 0 && (y & 1) === 0)
+    return { dx: 1, dy: -1 };
+  if (step.dx === 0 && step.dy === 1 && y < h - 1 && (y & 1) === 1)
+    return { dx: -1, dy: 1 };
+  if (step.dx === step.dy) return { dx: 0, dy: step.dy };
+  return step;
 }
 
 /** True iff `button` is one of the four cursor-direction keys. */

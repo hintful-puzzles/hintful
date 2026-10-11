@@ -672,7 +672,9 @@ move in `interpret_move`; seven ports had missed a case each, which is why
 the rule moved. A test of your own may stay where it is cheap and already
 there (out of the grid, in the gutter), and is needed where the answer is
 `null` for another reason: a key the game has no use for must fall through to
-the app. What the comparison reads is the whole state, so keep bookkeeping
+the app. No guard convicts a game for answering such a move, and the midend
+claims the key it came from: a key left unclaimed is the app's to act on, so
+declining a letter typed where it already stands would hand it to a shortcut. What the comparison reads is the whole state, so keep bookkeeping
 that changes on every move (a counter, a last-move marker) out of it unless a
 player can see it: with it, no move of yours is ever "the same board".
 
